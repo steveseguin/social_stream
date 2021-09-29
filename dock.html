@@ -115,8 +115,7 @@
 	<div id="menu">
 		<button id="hide_emoji" data-state="0" onclick="emoji(this);">Hide Emoji-only Messages</button>
 		<button id="pause" data-state="0" onclick="pause(this);">Pause Chat Stream</button>
-		<button id="clear_overlay" data-state="0" onclick="clear(this);">Clear Active Overlay</button>
-		<button id="clear_all" data-state="0" onclick="clearall(this);">Clear All Messages</button>
+		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);">Clear Active Overlay</button>
 	<div>
 	<script>
 	
@@ -143,7 +142,6 @@
 			ele.classList.remove("pressed");
 		}
 	}
-	
 	
 	(function (w) {
 		w.URLSearchParams = w.URLSearchParams || function (searchString) {
