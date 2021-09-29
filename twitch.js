@@ -64,7 +64,7 @@ function processMessage(ele = false){	// twitch
   data.hasMembership = "";
   data.type = "twitch";
   
-  chrome.runtime.sendMessage('oojehjgmkppocfckhpamkbieiaeehgkp', { "message": data }, function(e){console.log(e);});
+  chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){console.log(e);});
 }
 
 function onElementInsertedTwitch(containerSelector, className, callback) {

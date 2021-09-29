@@ -69,12 +69,12 @@ function processMessage(ele = false, wss=true){
 		toDataURL(data.chatimg, function(dataUrl) {
 			data.chatimg = dataUrl;
 			try {
-				chrome.runtime.sendMessage('oojehjgmkppocfckhpamkbieiaeehgkp', { "message": data }, function(){});
+				chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 			} catch(e){}
 		});
 	} else {
 		try {
-			chrome.runtime.sendMessage('oojehjgmkppocfckhpamkbieiaeehgkp', { "message": data }, function(){});
+			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 		} catch(e){}
 	}
 }
