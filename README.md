@@ -11,3 +11,7 @@ Press the Social Stream chrome extension button and ENABLE streaming of chat dat
 
 Using the provide two links, you can manage the social stream of chat messages and view selected chat messages as overlays
 
+### Video walk-thru
+
+https://youtu.be/w4jbZS5QgJs
+
