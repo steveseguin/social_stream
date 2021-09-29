@@ -1,0 +1,648 @@
+<html style="font-size: 10px;font-family: Roboto, Arial, sans-serif;">
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+	<meta content="utf-8" http-equiv="encoding" />
+	<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon" />
+	<title>Social Overlay Ninja</title>
+	<meta name="title" content="Social Overlay Ninja" />
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<style>
+:root {
+    /* basic colors */
+    --keyer-bg-color: #000; /* change for a chroma key if you want, beware profile avatars may key out */
+    --comment-color: #fff;
+    --comment-bg-color: #222; /* needs to be slightly above black to not get keyed out */
+    --comment-border-radius: 0px;
+    --comment-font-size: 40px;
+    --author-color: #222;
+    --author-bg-color: #ffa500;
+    --author-avatar-border-color: #ffa500;
+    --author-border-radius: 0px;
+    --author-avatar-border-size: 3px;
+    --author-avatar-size: 128px;
+    --author-font-size: 30px;
+	
+    /* donation/superchat specific */
+    --donation-color: #5a4211;
+    --donation-bg-color: #fff;
+    --donation-gradient-stop0: #BF953F;
+    --donation-gradient-stop1: #ede599;
+    --donation-gradient-stop2: #B38728;
+    --donation-label-color: #fff;
+    --donation-label-text: 'SUPERCHAT';
+    --donation-shadow-color: #fff;
+	
+	--cheer-color: #5a4211;
+    --cheer-bg-color: #fff;
+    --cheer-gradient-stop0: #BF953F;
+    --cheer-gradient-stop1: #ede599;
+    --cheer-gradient-stop2: #B38728;
+    --cheer-label-color: #fff;
+    --cheer-label-text: 'Cheer';
+    --cheer-shadow-color: #fff;
+	
+	--image-content-max-height: 300px;
+    --shown-comment-bg-color: #555555;
+    --highlighted-comment-bg-color: #f0f07d;
+	--highlight-chat-left: 0px;
+
+    /*
+    LAYOUT
+    */
+    --comment-width: auto; /* go 100% for a full screen lower third style*/
+    --comment-padding: 20px 35px 20px 145px;
+    --comment-area-height: 70vh;
+    --comment-scale: 1;
+    --comment-area-size-offset: 0;
+    --comment-area-bottom: 10px;
+    /*
+    STYLE
+    */
+    --font-family: Avenir Next, Helvetica, Geneva, Verdana, Arial, sans-serif;
+    --highlight-chat-font-weight: 600;
+    --author-font-weight: 700;
+    --comment-font-weight: 600;
+	
+}
+
+body {
+    background-color: #0000;
+	position: relative;
+    left: 0px;
+	background-color: rgba(0, 0, 0, 0); 
+	margin: 0px auto; 
+	overflow: hidden; 
+}
+
+#output {
+	transform: translateY(30px);
+    transition: .5s all cubic-bezier(0.250, 0.250, 0.105, 1.2);
+	margin: 0 0 0 15px;
+}
+.fadeout {
+	transform: translateY(340px) !important;
+	webkit-transition: opacity 0.5s ease-in-out;
+    -moz-transition: opacity 0.5 ease-in-out;
+    -ms-transition: opacity 0.5 ease-in-out;
+    -o-transition: opacity 0.5 ease-in-out;
+    opacity: 0;
+}
+
+.ffz--inline{
+	display:inline-block;
+}
+.bttv-tooltip-wrapper {
+	display:inline-block;
+}
+.chat-image__container{
+	display:inline-block;
+}
+yt-live-chat-app {
+    margin-bottom: var(--comment-area-height);
+    height: calc(100vh - var(--comment-area-height)) !important;
+}
+tp-yt-paper-tooltip {
+	display:none;
+}
+.chat-line__message--emote-button{
+	display:inline-block;
+}
+.chat-line__message{
+	cursor: pointer;
+}
+
+div#message > div {
+    display: inline-block;
+}
+
+.tooltip{
+	display:none;
+}
+.tw-tooltip{
+	display:none;
+}
+#tooltip{
+	display:none;
+}
+.btn-clear {
+    position: absolute;
+    z-index: 99999;
+    bottom: calc(var(--comment-area-height) + 60px);
+    right: 20px;
+    font-size: 30px;
+    border: 1px #bbb solid;
+    border-radius: 4px;
+    color: #fff;
+    background: #444;
+}
+.highlighted-comment {
+    background-color: var(--highlighted-comment-bg-color) !important;
+}
+html[dark] .highlighted-comment #message.yt-live-chat-text-message-renderer {
+    color: black;
+}
+html[dark] .highlighted-comment:hover #message.yt-live-chat-text-message-renderer {
+    color: white;
+}
+html[dark] .highlighted-comment #author-name.yt-live-chat-author-chip {
+    color: #444;
+}
+html[dark] .highlighted-comment:hover #author-name.yt-live-chat-author-chip {
+    color: #DDD;
+}
+yt-live-chat-text-message-renderer:hover {
+    background-color: #eee !important;
+}
+html[dark] yt-live-chat-text-message-renderer:hover {
+    background-color: #444 !important;
+}
+yt-live-chat-text-message-renderer.shown-comment {
+    background-color: var(--shown-comment-bg-color) !important;
+    opacity: 0.4;
+}
+.shown-comment:hover {
+    opacity: 0.5;
+}
+.highlight-chat {
+    font-family: var(--font-family);
+    font-weight: var(--highlight-chat-font-weight);
+	position:relative;
+	left: var(--highlight-chat-left); 
+    box-sizing: border-box;
+    font-size: 30px;
+}
+.highlight-chat.preview {
+    border: 1px #ccc solid;
+}
+.hl-c-cont {
+    position: relative;
+    padding: 20px;
+    width: 100%;
+    margin: 0 auto;
+    
+	z-index:1;
+}
+
+.hl-name {
+    position: absolute;
+    top: -20px;
+    left: 115px;
+    font-weight: var(--author-font-weight);
+    background: var(--author-bg-color);
+    color: var(--author-color);
+    padding: 10px;
+    transform: rotate(-0deg);
+    z-index: 1;
+    border-radius: var(--author-border-radius);
+    font-size: var(--author-font-size);
+	white-space: nowrap;
+	z-index:2;
+}
+.hl-message {
+    position: absolute;
+    width: var(--comment-width);
+    font-weight: var(--comment-font-weight);
+    padding: var(--comment-padding);
+    color: var(--comment-color);
+    background-color: var(--comment-bg-color);
+    border-radius: var(--comment-border-radius);
+    font-size: var(--comment-font-size);
+	word-break: break-word;
+	z-index:1;
+}
+.hl-message-img {
+    position: absolute;
+    width: 63%;
+    font-weight: var(--comment-font-weight);
+    padding: var(--comment-padding);
+    color: var(--comment-color);
+    background-color: var(--comment-bg-color);
+    border-radius: var(--comment-border-radius);
+    font-size: var(--comment-font-size);
+	word-break: break-word;
+	z-index:1;
+}
+
+.hl-message:empty {
+	background-color:#0000;
+	width:200px;
+}
+.hl-name:empty {
+    background-color:#0000;
+    z-index:1;
+}
+
+.hl-message img {
+	width: 50px;
+    height: 50px;
+    vertical-align: middle;
+    z-index: 1;
+    object-fit: contain;
+    padding: 2px;
+}
+.hl-message a {
+    color: white;
+	z-index:1;
+}
+.hl-img {
+    position: absolute;
+    top: 0;
+    z-index: 1;
+    left: 0px;
+    width: var(--author-avatar-size);
+    height: var(--author-avatar-size);
+    background-color: var(--author-avatar-border-color);
+    border-radius: 50%;
+    border: 0;
+    padding: var(--author-avatar-border-size);
+	z-index:3;
+	
+}
+.hl-img img {
+    display: block;
+    width: 100%;
+    border-radius: 50%;
+    z-index: 1;
+}
+.hl-imgContent {
+    max-height: 300px;
+    max-width: 40%;
+    display: inline-block;
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    right: 0;
+    z-index: 0;
+	top: -18px;
+}
+
+.hl-imgContent > img {
+    object-fit: scale-down;;
+    display: block;
+    margin: 0;
+    height: calc(100vh - 12px);
+	max-width:100%;
+	max-height: 300px;
+	min-height: calc(var(--author-avatar-size) + 30px);
+    
+}
+/* overlay a very faint white layer to bump the blacks above the luma key cutoff */
+.hl-img:after {
+    content: '';
+    display: block;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    border-radius: 50%;
+    position:absolute;
+    pointer-events: none;
+    z-index: 3;
+}
+.hl-img::after {
+    background: rgba(255,255,255,.04);
+    mix-blend-mode: lighten;
+}
+
+.hl-badges {
+  display: inline-block;
+  margin-left: 5px;
+}
+.hl-badges img.yt-live-chat-author-badge-renderer {
+  width: 24px;
+  height: 24px;
+}
+.hl-badges:empty {
+  background-color:#0000;
+}
+.cheer {
+    position: absolute;
+    display: block;
+    text-align: center;
+    left: 70px;
+    top: 108px;
+    z-index: 3;
+    min-width: 128px;
+    border-radius: 10px;
+    padding: 30px 5px 0;
+    overflow: hidden;
+    background: linear-gradient(to right, var(--cheer-gradient-stop0), var(--cheer-gradient-stop1), var(--cheer-gradient-stop2));
+    color: var(--cheer-color);
+    transform: rotate(-5deg) translateX(-50%);
+}
+.cheer::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    font-size: 18px;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.23);
+    border-radius: 10px 10px 0 0;
+    padding: 5px 0 0;
+    display: block;
+    content: var(--cheer-label-text);
+    color: var(--cheer-label-color);
+}
+.cheer::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 0;
+    height: 200%;
+    width: 1px;
+    background-color: var(--cheer-bg-color);
+    box-shadow: 0 0 20px 20px var(--cheer-shadow-color);
+    opacity: 0.7;
+    transform: rotate(9deg) translate3D(250px, 0, 0);
+    animation: bitties 3s ease-in-out infinite;
+}
+@keyframes bitties {
+    from {
+        transform: rotate(9deg) translate3D(-250px, 0, 0);
+    }
+}
+.donation {
+    position: absolute;
+    display: block;
+    text-align: center;
+    left: 70px;
+    top: 108px;
+    z-index: 3;
+    min-width: 128px;
+    border-radius: 10px;
+    padding: 30px 5px 0;
+    overflow: hidden;
+    background: linear-gradient(to right, var(--donation-gradient-stop0), var(--donation-gradient-stop1), var(--donation-gradient-stop2));
+    color: var(--donation-color);
+    transform: rotate(-5deg) translateX(-50%);
+}
+.donation::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    font-size: 18px;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.23);
+    border-radius: 10px 10px 0 0;
+    padding: 5px 0 0;
+    display: block;
+    content: var(--donation-label-text);
+    color: var(--donation-label-color);
+}
+.membership {
+    padding: 10px 10px 5px 10px;
+	font-size: 20px !important;
+}
+
+.membership::before {
+    content: '';
+}
+.donation::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 0;
+    height: 200%;
+    width: 1px;
+    background-color: var(--donation-bg-color);
+    box-shadow: 0 0 20px 20px var(--donation-shadow-color);
+    opacity: 0.7;
+    transform: rotate(9deg) translate3D(250px, 0, 0);
+    animation: superchat 3s ease-in-out infinite;
+}
+@keyframes superchat {
+    from {
+        transform: rotate(9deg) translate3D(-250px, 0, 0);
+    }
+}
+
+/* hide chat input to give more space to the chat */
+/*
+#input-panel, yt-live-chat-viewer-engagement-message-renderer {
+	display: none !important;
+}
+*/
+
+yt-live-chat-item-list-renderer {
+	margin-bottom: 20px;
+}
+
+yt-live-chat-text-message-renderer {
+    font-size: 24px !important;
+    line-height: 32px;
+}
+
+
+yt-live-chat-text-message-renderer,
+yt-live-chat-paid-message-renderer,
+yt-live-chat-membership-item-renderer {
+    cursor: pointer;
+}
+
+yt-live-chat-text-message-renderer[is-deleted],
+yt-live-chat-paid-message-renderer[is-deleted],
+yt-live-chat-membership-item-renderer[is-deleted] {
+    cursor: default;
+}
+	</style>
+</head>
+<body>
+
+	<div id="output" class="output"></div>
+	<script>
+	
+	(function (w) {
+		w.URLSearchParams = w.URLSearchParams || function (searchString) {
+			var self = this;
+			self.searchString = searchString;
+			self.get = function (name) {
+				var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+				if (results == null) {
+					return null;
+				} else {
+					return decodeURI(results[1]) || 0;
+				}
+			};
+		};
+
+	})(window);
+	var urlParams = new URLSearchParams(window.location.search);
+	
+	
+	var nextComment = null;
+	var roomID = "test";
+	
+	if (urlParams.has("session")){
+		roomID = urlParams.get("session");
+	} else if (urlParams.has("s")){
+		roomID = urlParams.get("s");
+	} else if (window.location.protocol=="file:"){
+		roomID = prompt("Enter your session ID here, or add it to the URL.");
+	} else {
+		window.location.href = "https://github.com/steveseguin/social_stream#readme";
+	}
+	
+	var centering = false;
+	if (urlParams.has("center")){
+		centering = true;
+	}
+	
+	var timeoutDelay = false;
+	if (urlParams.has("showtime")){
+		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
+	}
+	var timeoutTimer = null;
+	
+	function realign(){
+		if (centering){
+			try{
+				var offsetLeft =  (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth))/2;
+				document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft+"px");
+				console.log(offsetLeft);
+			} catch(e){}
+		}
+		try {
+			var img = document.getElementById("img");
+			if (!img){return;}
+			var width = img.clientWidth + 214;
+			var message = document.getElementById("message"); 
+			if (message.innerText.length){
+				message.style.width = "calc(100vw - "+width+"px)";
+				document.getElementById("imgContent").style.right = "unset";
+				document.getElementById("imgContent").style.left = (document.getElementById("message").clientWidth + 19) + "px";
+			} else {
+				message.style.maxWidth = "300px";
+				document.getElementById("imgContent").style.right = 0;
+				document.getElementById("imgContent").style.left = (300) + "px";
+			}	
+		} catch(e){console.warn(e);}
+		
+	}
+	
+	window.onresize = realign;
+	
+	try{
+		if (parseInt(window.innerHeight)<500){
+			document.documentElement.style.setProperty("--image-content-max-height", window.innerHeight)
+		}
+	}catch(e){console.error(e);}
+	
+	function RecvDataWindow(){
+		var iframe = document.createElement("iframe");
+		iframe.src = "https://vdo.ninja/?exclude="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
+		iframe.style.width = "0px";
+		iframe.style.height = "0px";
+		iframe.style.position = "fixed";
+		iframe.style.left = "-100px";
+		iframe.style.top = "-100px";
+		iframe.id = "frame1"
+		document.body.appendChild(iframe);
+		
+		var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+		var eventer = window[eventMethod];
+		var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+		
+		eventer(messageEvent, function (e) {
+		  if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
+		  if ("dataReceived" in e.data){ // raw data 
+			if ("overlayNinja" in e.data.dataReceived){
+				processData( {contents : e.data.dataReceived.overlayNinja} );
+			}
+			
+		  }
+		});
+	}
+	RecvDataWindow();
+	
+	function processData(data){
+		
+		if (data.contents){
+			if (data.contents.chatimg){
+				var tmpImage = new Image();
+				tmpImage.src = data.contents.chatimg  // preload the image
+			}
+		}
+		
+		if (data.contents){
+			clearTimeout(timeoutTimer);
+			document.getElementById("output").classList.add("fadeout");
+			clearInterval(nextComment);
+			nextComment = setTimeout(function(data){
+				console.log(data);
+			
+				var addImage = "";
+				if (data.contentimg){
+					 addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" onload="realign();"/></div>';
+				}
+				
+				if (data.hasDonation){
+					if (data.type === "twitch"){
+						data.hasDonation = '<div class="cheer">' + data.hasDonation + '</div>';
+					} else {
+						data.hasDonation = '<div class="donation">' + data.hasDonation + '</div>';
+					}
+				}
+				
+				document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat">'
+					 + '<div class="hl-name">' + data.chatname
+					 + '<div class="hl-badges">' + data.chatbadges + '</div>'
+					 + '</div>'
+					 + '<div id="message" class="hl-message" >' + data.chatmessage + '</div>'
+					 + '<div class="hl-img"><img id="img_'+data.chatname+'" src="' + data.chatimg + '" onerror="this.style.display=\'none\'"></div>'
+					 + addImage
+					 + data.hasDonation + data.hasMembership +'</div>';
+				
+
+				var fontsize = "";
+				var limitchar = parseInt(window.innerWidth/6.5);
+				
+				if (document.getElementById("message").innerText.length>limitchar){
+					fontsize = (parseInt((limitchar*100)/document.getElementById("message").innerText.length));
+					if (fontsize<43){fontsize=43;}
+					document.getElementById("message").style = data.backgroundColor +' '+ data.textColor+'; font-size: '+fontsize+'%;';
+				}
+				
+				if (centering){
+					try{
+						var offsetLeft =  (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth))/2;
+						document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft+"px");
+						console.log(offsetLeft);
+					} catch(e){}
+				}
+				
+				for (i = 0; i < document.getElementsByTagName("img").length; i++) {
+					document.getElementsByTagName("img")[i].onerror = function(){
+						if (this.alt.length!==2){
+							this.style.display='none';
+						} else {
+							this.outerHTML = this.alt;
+						}
+					}
+				}
+				document.getElementById("output").classList.remove("fadeout");
+				
+				if (timeoutDelay){
+					clearTimeout(timeoutTimer);
+					timeoutTimer = setTimeout(function(){
+						document.getElementById("output").classList.add("fadeout");
+						clearInterval(nextComment);
+					}, timeoutDelay);
+				}
+				
+			},500, data.contents);
+		} else {
+			if ("contents" in data){
+				clearTimeout(timeoutTimer);
+				document.getElementById("output").classList.add("fadeout");
+				clearInterval(nextComment);
+			} 
+		}
+	
+	}
+	
+	</script>
+	</body>
+</html>
