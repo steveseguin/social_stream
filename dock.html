@@ -1,0 +1,357 @@
+<html style="font-size: 20px; font-family: Roboto, Arial, sans-serif;">
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+	<meta content="utf-8" http-equiv="encoding" />
+	<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon" />
+	<title>Social Overlay Ninja</title>
+	<meta name="title" content="Social Overlay Ninja" />
+	<style>
+	
+				:root {
+					--show-emoji-only: flex;
+				}
+				
+				.noText {
+					display: var(--show-emoji-only) !important;
+				}
+	
+				output { 
+					zoom: .7; 
+					-moz-transform: scale(.7); 
+					-moz-transform-origin: 0 0;
+				} 
+				
+				.hl-name{
+					font-weight: 700;
+					margin: 0 10px;
+					position:relative;
+					top: 3px;
+					left: 0;
+					width: 220px;
+					overflow: hidden;
+				}
+				
+				.hl-badges{
+					max-width:28px;
+					max-height:28px;
+					object-fit: contain;
+					position:relative;
+					top:-6px;
+				}
+	
+				.hl-message{
+					width: 100%;
+				}
+				
+				div {
+					display:inline-block;
+				}
+	
+				.highlight{
+					background-color:yellow!important;
+				}
+				span {
+					
+				}
+				
+				img {
+					display:inline-block;
+					max-width:24px;
+					max-height:24px;
+					position:relative;
+					top:2px;
+					float: left;
+					padding: 0;
+					object-fit: contain;
+				}
+				
+				.highlight-chat{
+					display:flex;
+					cursor:pointer;
+					min-height:28px;
+					transition: .5s all cubic-bezier(0.250, 0.250, 0.105, 1.2);
+				}
+				
+				.highlight-chat:nth-child(odd){
+					background-color: #EEE;
+				}
+				
+				.highlight-chat:hover {
+					background-color: #DFD;
+				}
+				
+				.hl-message img{
+					position:relative;
+					top:1px;
+					padding: 0 2px;
+					display:inline-block;
+				}
+				
+				a {
+					pointer-events: none;
+				}
+				
+				#menu {
+					position:fixed;
+					top:0;
+					right:0;
+					display:block;
+				}
+				
+				#menu > button {
+					display:inline-block;
+					padding:5px;
+					margin: 5px;
+				}
+				.pressed {
+					background-color: #9C9;
+				}
+	
+	</style>
+</head>
+<body>
+	<div id="output" class="output"></div>
+	<div id="menu">
+		<button id="hide_emoji" data-state="0" onclick="emoji(this);">Hide Emoji-only Messages</button>
+		<button id="pause" data-state="0" onclick="pause(this);">Pause Chat Stream</button>
+		<button id="clear_overlay" data-state="0" onclick="clear(this);">Clear Active Overlay</button>
+		<button id="clear_all" data-state="0" onclick="clearall(this);">Clear All Messages</button>
+	<div>
+	<script>
+	
+	var emojis = true;
+	function emoji(ele){
+		console.log(ele);
+		if (ele.dataset.state=="0"){
+			ele.dataset.state = "1";
+			document.documentElement.style.setProperty("--show-emoji-only", "none");
+			this.classList.add("pressed");
+		} else {
+			ele.dataset.state = "0";
+			document.documentElement.style.setProperty("--show-emoji-only", "flex");
+			this.classList.remove("pressed");
+		}
+	}
+	
+	var pauseState = false;
+	function pause(ele){
+		pauseState = !pauseState;
+		if (pauseState){
+			ele.classList.add("pressed");
+		} else {
+			ele.classList.remove("pressed");
+		}
+	}
+	
+	
+	(function (w) {
+		w.URLSearchParams = w.URLSearchParams || function (searchString) {
+			var self = this;
+			self.searchString = searchString;
+			self.get = function (name) {
+				var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+				if (results == null) {
+					return null;
+				} else {
+					return decodeURI(results[1]) || 0;
+				}
+			};
+		};
+
+	})(window);
+	var urlParams = new URLSearchParams(window.location.search);
+	var channel = null;
+	var counter = 0;
+	var iframe = null;
+	
+	var nextComment = null;
+	var roomID = "test";
+	
+	if (urlParams.has("session")){
+		roomID = urlParams.get("session");
+	} else if (urlParams.has("s")){
+		roomID = urlParams.get("s");
+	} else if (window.location.protocol=="file:"){
+		roomID = prompt("Enter your session ID here, or add it to the URL.");
+	} else {
+		window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
+	}
+	
+	var centering = false;
+	if (urlParams.has("center")){
+		centering = true;
+	}
+	
+	var timeoutDelay = false;
+	if (urlParams.has("showtime")){
+		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
+	}
+	var timeoutTimer = null;
+	
+	function RecvDataWindow(){
+		iframe = document.createElement("iframe");
+		iframe.src = "https://vdo.ninja/?view="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID;
+		iframe.style.width = "0px";
+		iframe.style.height = "0px";
+		iframe.style.position = "fixed";
+		iframe.style.left = "-100px";
+		iframe.style.top = "-100px";
+		iframe.id = "frame1"
+		document.body.appendChild(iframe);
+		
+		var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+		var eventer = window[eventMethod];
+		var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+		
+		eventer(messageEvent, function (e) {
+		  if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
+		  if ("dataReceived" in e.data){ // raw data 
+			if ("overlayNinja" in e.data.dataReceived){
+				if (!pauseState){
+					processData( {contents : e.data.dataReceived.overlayNinja} );
+				}
+			}
+		  }
+		});
+	}
+	RecvDataWindow();
+
+	function applySettings(item){
+	
+	}
+	function createElementFromHTML(htmlString) {
+	  var div = document.createElement('div');
+	  div.innerHTML = htmlString.trim();
+	  return div.firstChild; 
+	}
+	
+	function processData(data){
+	
+		if (data.contents){
+			data = data.contents;
+			
+			if (data.chatimg){
+				var tmpImage = new Image();
+				tmpImage.src = data.chatimg  // preload the image
+			} 
+		
+			var addImage = "";
+			if (data.contentimg){
+				 addImage = '<div class="hl-imgContent"><img  src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></div>';
+			}
+			
+			if (data.chatmessage){
+				data.chatmessage = data.chatmessage.trim();
+			}
+			
+			if (data.hasDonation){
+				data.hasDonation = "<span>"+data.hasDonation+"</span>";
+			}
+			
+			var showType = data.type ;
+			var chatImg = data.chatimg;
+			
+			console.log(data);
+			
+			if (data.type && (data.type == "twitch") && !chatImg){
+				chatImg = 'https://social.overlay.ninja/twitch.png';
+				showType = "";
+			} else if (data.type && (data.type == "stageten") && !chatImg){
+				chatImg = 'stageten.png';
+				showType = "";
+			} else if (data.type && (data.type == "youtube") && !chatImg){
+				chatImg = 'youtube.png';
+				showType = "";
+			}
+			
+			if (showType){
+				showType = '<img src="' + showType + '.png" onerror="this.style.display=\'none\'" />';
+			}
+			
+			counter+=1;
+			
+			var node = createElementFromHTML('<div id="msg_'+counter+'" title='+data.type+' class="highlight-chat">'
+				 + showType
+				 + '<img id="img_'+counter+'" src="' + chatImg + '" onerror="this.style.display=\'none\'" />'
+				 + '<div class="hl-name">' + data.chatname
+					+ '<div class="hl-badges">' + data.chatbadges + '</div>'
+				 + '</div>'
+				 + '<div class="hl-message" id="content_'+counter+'">' + data.chatmessage + '</div>'
+				 + addImage
+				 + data.hasDonation + data.hasMembership +'</div>')
+				 
+			document.getElementById("output").appendChild(node)
+		
+			if (!document.getElementById("content_"+counter).innerText.trim().length){
+				document.getElementById("msg_"+counter).classList.add("noText");
+			}
+			
+			if (data.chatmessage.includes("!highlight")){
+				document.getElementById("msg_"+counter).classList.add("highlight");
+			}
+			
+			node.counter = counter;
+			node.rawContents = data;
+			node.onclick = function(ele){
+				console.log(this.rawContents);
+				if (this.rawContents.type && (this.rawContents.type == "twitch") && !this.rawContents.chatimg){
+					var data = this.rawContents;
+					var ccc = this.counter;
+					var imgnode = document.getElementById("img_"+node.counter);
+					fetch("https://api.action.wtf:667/username/"+this.rawContents.chatname).then(response => {
+						console.log(response);
+						response.text().then(function (text) {
+							console.log(text);
+							if (text.startsWith("https://")){
+								data.chatimg = text;
+								imgnode.src = text;
+								document.getElementById("msg_"+ccc).rawContents.chatimg = text;
+							} else {
+								data.chatimg = 'https://social.overlay.ninja/twitch.png';
+							}
+							sendDataP2P(data);
+						}).catch(function(){
+							data.chatimg = 'https://social.overlay.ninja/twitch.png';
+							sendDataP2P(data);
+						});
+					}).catch(error => {
+						console.error(error);
+						data.chatimg = 'https://social.overlay.ninja/twitch.png';
+						sendDataP2P(data);
+					});
+				} else {
+					sendDataP2P(this.rawContents);
+				}
+			};
+
+			for (i = 0; i < node.getElementsByTagName("img").length; i++) {
+				node.getElementsByTagName("img")[i].onerror = function(){
+					if (this.alt.length!==2){
+						this.style.display='none';
+					} else {
+						this.outerHTML = this.alt;
+					}
+				}
+			}
+			
+			var nodes = document.querySelectorAll(".highlight-chat");
+			if (nodes.length>100){
+				nodes[0].remove();
+			}
+			window.scrollTo(0,document.body.scrollHeight);
+		}
+	}
+	
+	function sendDataP2P(data){
+		var msg = {};
+		msg.overlayNinja = {};
+		msg.overlayNinja = data;
+		console.log(msg);
+		try {
+			iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs"}, '*'); // send only to viewers of this stream; not back to the chrome extension..
+		} catch(e){}
+	}
+	</script>
+	</body>
+</html>
