@@ -64,7 +64,11 @@ function processMessage(ele = false){	// twitch
   data.hasMembership = "";
   data.type = "twitch";
   
-  chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){console.log(e);});
+  try {
+	chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){console.log(e);});
+  } catch(e){
+	  //
+  }
 }
 
 function onElementInsertedTwitch(containerSelector, className, callback) {
@@ -84,7 +88,10 @@ function onElementInsertedTwitch(containerSelector, className, callback) {
 	var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 	var observer = new MutationObserver(onMutationsObserved);
 	observer.observe(target, config);
+	
 }
+
+
 
 onElementInsertedTwitch(".chat-scrollable-area__message-container", "chat-line__message", function(element){
   processMessage(element);

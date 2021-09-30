@@ -1,21 +1,23 @@
 var isExtensionOn = false;
+console.log("STARTED");
 
 document.addEventListener("DOMContentLoaded", function(event) {
 	
-
-	console.log("asdf");
 	var disableButton = document.getElementById("disableButton");
-
+	console.log("DOMContentLoaded");
 	disableButton.onclick = function(){
+		console.log("disableButton clicked");
 		chrome.extension.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}});
 		
 		chrome.extension.sendMessage({cmd: "getOnOffState"}, function (response) {
 			update(response)
+			console.log("getOnOffState callbacked");
 		});
 	};
 	
 	chrome.extension.sendMessage({cmd: "getOnOffState"}, function (response) {
 		update(response)
+		console.log("first getOnOffState callbacked");
 	});
 });
 
@@ -29,11 +31,13 @@ function update(response){
 				disableButton.className = "button button3";
 				disableButton.style.display = "";
 				document.body.style.backgroundColor = "#9F9";
+				console.log("ENABLE");
 			} else {
 				disableButton.innerHTML = "Enable streaming of chat data";
 				disableButton.className = "button button1";
 				disableButton.style.display = "";
 				document.body.style.backgroundColor = "#F99";
+				console.log("DISABLED?");
 			}
 		}
 		if ('streamID' in response){
