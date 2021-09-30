@@ -109,7 +109,7 @@
 					margin: 5px;
 				}
 				.pressed {
-					background-color: #9C9;
+					background-color: #9C9!important;
 				}
 	
 	</style>
@@ -295,8 +295,9 @@
 			
 			node.counter = counter;
 			node.rawContents = data;
-			node.onclick = function(ele){
+			node.onclick = function(e){
 				console.log(this.rawContents);
+				this.classList.add("pressed");
 				if (this.rawContents.type && (this.rawContents.type == "twitch") && !this.rawContents.chatimg){
 					var data = this.rawContents;
 					var ccc = this.counter;
