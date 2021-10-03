@@ -15,3 +15,6 @@ Using the provide two links, you can manage the social stream of chat messages a
 
 https://youtu.be/w4jbZS5QgJs
 
+### Support
+
+You can find me on discord over at https://discord.vdo.ninja (steve)
