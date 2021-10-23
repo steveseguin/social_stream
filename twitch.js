@@ -10,7 +10,10 @@ function processMessage(ele = false){	// twitch
   var chatname = ele.querySelector(".chat-author__display-name").innerText;
   
   try {
-	ele.querySelector('.bttv-tooltip').innerHTML = ""; // BTT support
+	var BTT = ele.querySelectorAll('.bttv-tooltip');
+	for (var i=0;i<BTT.length;i++){
+		BTT[i].outerHTML = "";
+	}
   } catch(e){}
   
   try {
@@ -94,6 +97,6 @@ function onElementInsertedTwitch(containerSelector, className, callback) {
 
 
 onElementInsertedTwitch(".chat-scrollable-area__message-container", "chat-line__message", function(element){
-  processMessage(element);
+  setTimeout(function(element){processMessage(element);},10, element);
 });
 

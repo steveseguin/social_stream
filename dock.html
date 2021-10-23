@@ -16,10 +16,11 @@
 					display: var(--show-emoji-only) !important;
 				}
 	
-				output { 
-					zoom: .7; 
-					-moz-transform: scale(.7); 
+				#output { 
+					zoom: .8; 
+					-moz-transform: scale(.8); 
 					-moz-transform-origin: 0 0;
+					width:100%;
 				} 
 				
 				body {
@@ -75,6 +76,7 @@
 					cursor:pointer;
 					min-height:28px;
 					transition: .5s all cubic-bezier(0.250, 0.250, 0.105, 1.2);
+					width:100%;
 				}
 				
 				.highlight-chat:nth-child(odd){
@@ -94,6 +96,15 @@
 				
 				a {
 					pointer-events: none;
+				}
+				
+				.time-arrived {
+					font-size: 10px;
+					display: block;
+					min-width: 39px;
+					top: 7px;
+					left: 3px;
+					position: relative;
 				}
 				
 				#menu {
@@ -144,6 +155,14 @@
 			ele.classList.add("pressed");
 		} else {
 			ele.classList.remove("pressed");
+			var queueR = queue.reverse();
+			queue = [];
+			if (!pauseState){
+				for (var i = 0 ; i<queueR.length; i++){
+					processData( queueR[i] );
+				}
+			}
+			
 		}
 	}
 	
@@ -166,7 +185,8 @@
 	var channel = null;
 	var counter = 0;
 	var iframe = null;
-	
+	var queue = [];
+	var datestamp = true;
 	var nextComment = null;
 	var roomID = "test";
 	
@@ -179,6 +199,10 @@
 	} else {
 		window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
 	}
+	
+	if (urlParams.has("nodate")){
+		datestamp = false;
+	} 
 	
 	var centering = false;
 	if (urlParams.has("center")){
@@ -212,6 +236,8 @@
 			if ("overlayNinja" in e.data.dataReceived){
 				if (!pauseState){
 					processData( {contents : e.data.dataReceived.overlayNinja} );
+				} else {
+					queue.push({contents : e.data.dataReceived.overlayNinja});
 				}
 			}
 		  }
@@ -254,7 +280,6 @@
 			var showType = data.type ;
 			var chatImg = data.chatimg;
 			
-			console.log(data);
 			
 			if (data.type && (data.type == "twitch") && !chatImg){
 				chatImg = 'https://social.overlay.ninja/twitch.png';
@@ -273,9 +298,17 @@
 			
 			counter+=1;
 			
+			var timeArrived = "";
+			if (datestamp){
+				var date = new Date();
+				timeArrived = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+				timeArrived = "<div class='time-arrived'>"+timeArrived+"</div>";
+			}
+			
 			var node = createElementFromHTML('<div id="msg_'+counter+'" title='+data.type+' class="highlight-chat">'
 				 + showType
 				 + '<img id="img_'+counter+'" src="' + chatImg + '" onerror="this.style.display=\'none\'" />'
+				 + timeArrived
 				 + '<div class="hl-name">' + data.chatname
 					+ '<div class="hl-badges">' + data.chatbadges + '</div>'
 				 + '</div>'
@@ -342,7 +375,16 @@
 			if (nodes.length>100){
 				nodes[0].remove();
 			}
-			window.scrollTo(0,document.body.scrollHeight);
+			var height = document.body.scrollTop + document.body.clientHeight;
+			if (document.body.scrollHeight<height+150){
+				setTimeout(function(){
+					window.scrollTo({
+					  top: document.body.scrollHeight,
+					  left: 0,
+					  behavior: 'smooth'
+					});
+				},0);
+			}
 		}
 	}
 	
