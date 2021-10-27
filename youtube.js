@@ -79,6 +79,19 @@ function processMessage(ele = false, wss=true){
 	}
 }
 
+chrome.runtime.onMessage.addListener(
+    function (request, sender, sendResponse) {
+		console.log(request);
+		try{
+			if ("focusChat" == request){
+				document.querySelector("div#input").focus();
+				//document.querySelector("yt-live-chat-text-input-field-renderer").focus();
+			}
+		} catch(e){}
+		sendResponse(document.querySelector("div#input").innerHTML);
+	}
+);
+
 function onElementInserted(containerSelector, tagName, callback) {
     var onMutationsObserved = function(mutations) {
         mutations.forEach(function(mutation) {

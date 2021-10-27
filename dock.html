@@ -101,7 +101,7 @@
 				.time-arrived {
 					font-size: 10px;
 					display: block;
-					min-width: 39px;
+					min-width: 43px;
 					top: 7px;
 					left: 3px;
 					position: relative;
@@ -131,6 +131,7 @@
 		<button id="hide_emoji" data-state="0" onclick="emoji(this);">Hide Emoji-only Messages</button>
 		<button id="pause" data-state="0" onclick="pause(this);">Pause Chat Stream</button>
 		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);">Clear Active Overlay</button>
+		<button id="say_hello" data-state="0" onclick="respondP2P();">Send Message</button>
 	<div>
 	<script>
 	
@@ -190,6 +191,8 @@
 	var nextComment = null;
 	var roomID = "test";
 	
+	var actionList={};
+	
 	if (urlParams.has("session")){
 		roomID = urlParams.get("session");
 	} else if (urlParams.has("s")){
@@ -202,6 +205,14 @@
 	
 	if (urlParams.has("nodate")){
 		datestamp = false;
+	} 
+	
+	if (urlParams.has("auto1")){
+		actionList['auto1'] = true;
+	} 
+	
+	if (urlParams.has("autohi")){
+		actionList['autohi'] = true;
 	} 
 	
 	var centering = false;
@@ -272,6 +283,7 @@
 			if (data.chatmessage){
 				data.chatmessage = data.chatmessage.trim();
 			}
+			
 			
 			if (data.hasDonation){
 				data.hasDonation = "<span>"+data.hasDonation+"</span>";
@@ -385,6 +397,28 @@
 					});
 				},0);
 			}
+			applyAnyActions(data);
+			
+		}
+	}
+	
+	var messageTimeout = Date.now();
+	function applyAnyActions(data){ // this can be customized to create bot-like auto-responses/actions.
+		if (actionList['auto1']){
+			if (data.chatmessage === "1"){
+				if (Date.now() - messageTimeout > 60000){ // respond to "1" with a "1" automatically; at most 1 time per minute.
+					messageTimeout = Date.now();
+					respondP2P("1");
+				}
+			}
+		}
+		if (actionList['autohi']){
+			if (data.chatmessage.toLowerCase() === "hi"){
+				if (Date.now() - messageTimeout > 60000){ // respond to "1" with a "1" automatically; at most 1 time per minute.
+					messageTimeout = Date.now();
+					respondP2P("Hi!");
+				}
+			}
 		}
 	}
 	
@@ -392,10 +426,21 @@
 		var msg = {};
 		msg.overlayNinja = {};
 		msg.overlayNinja = data;
-		console.log(msg);
 		try {
 			iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs"}, '*'); // send only to viewers of this stream; not back to the chrome extension..
 		} catch(e){}
+	}
+	
+	
+	function respondP2P(data=null){
+		if (data===null){
+			data = prompt("Enter something to say to all of chat");
+		}
+		if (!data){return;}
+		var msg = {};
+		msg.overlayNinja = {};
+		msg.overlayNinja.response = data;
+		iframe.contentWindow.postMessage({"sendData":msg, "type": "rpcs"}, '*'); // send only to 'viewers' of this stream
 	}
 	</script>
 	</body>

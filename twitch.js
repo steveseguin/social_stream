@@ -74,6 +74,19 @@ function processMessage(ele = false){	// twitch
   }
 }
 
+chrome.runtime.onMessage.addListener(
+    function (request, sender, sendResponse) {
+		console.log(request);
+		try{
+			if ("focusChat" == request){
+				document.querySelector('[data-a-target="chat-input"]').focus();
+			}
+		} catch(e){}
+		sendResponse(document.querySelector('[data-a-target="chat-input"]').innerHTML);
+	}
+);
+
+
 function onElementInsertedTwitch(containerSelector, className, callback) {
 	var onMutationsObserved = function(mutations) {
 		mutations.forEach(function(mutation) {
@@ -93,8 +106,6 @@ function onElementInsertedTwitch(containerSelector, className, callback) {
 	observer.observe(target, config);
 	
 }
-
-
 
 onElementInsertedTwitch(".chat-scrollable-area__message-container", "chat-line__message", function(element){
   setTimeout(function(element){processMessage(element);},10, element);
