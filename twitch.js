@@ -17,7 +17,12 @@ function processMessage(ele = false){	// twitch
   } catch(e){}
   
   try {
-	var chatmessage = ele.querySelector('*[data-test-selector="chat-line-message-body"').innerHTML;
+	var chatmessage = ele.querySelector('*[data-test-selector="chat-line-message-body"');
+	if ((chatmessage.children.length ===1) && (chatmessage.querySelectorAll("span.text-fragment").length)){
+		chatmessage = chatmessage.innerText;
+	} else {
+		chatmessage = chatmessage.innerHTML;
+	}
   } catch(e){}
   
   if (!chatmessage){
