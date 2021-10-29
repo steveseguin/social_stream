@@ -190,7 +190,7 @@
 	var datestamp = true;
 	var nextComment = null;
 	var roomID = "test";
-	
+	var messageTimeout = Date.now();
 	var actionList={};
 	
 	if (urlParams.has("session")){
@@ -402,7 +402,7 @@
 		}
 	}
 	
-	var messageTimeout = Date.now();
+	
 	function applyAnyActions(data){ // this can be customized to create bot-like auto-responses/actions.
 		if (actionList['auto1']){
 			if (data.chatmessage === "1"){
