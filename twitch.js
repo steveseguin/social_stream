@@ -19,7 +19,12 @@ function processMessage(ele = false){	// twitch
   try {
 	var chatmessage = ele.querySelector('*[data-test-selector="chat-line-message-body"');
 	if ((chatmessage.children.length ===1) && (chatmessage.querySelectorAll("span.text-fragment").length)){
-		chatmessage = chatmessage.innerText;
+		test = chatmessage.innerText.trim();
+		if (test == ""){
+			chatmessage = chatmessage.innerHTML;
+		} else {
+			chatmessage = test;
+		}
 	} else {
 		chatmessage = chatmessage.innerHTML;
 	}
