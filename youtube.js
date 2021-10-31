@@ -92,12 +92,14 @@ chrome.runtime.onMessage.addListener(
 	}
 );
 
-function onElementInserted(containerSelector, tagName, callback) {
+function onElementInserted(containerSelector, callback) {
     var onMutationsObserved = function(mutations) {
         mutations.forEach(function(mutation) {
             if (mutation.addedNodes.length) {
                 for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-                    if(mutation.addedNodes[i].tagName == tagName.toUpperCase()) {
+                    if (mutation.addedNodes[i].tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
+                        callback(mutation.addedNodes[i]);
+                    } else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-message-renderer".toUpperCase()) {
                         callback(mutation.addedNodes[i]);
                     }
                 }
@@ -111,6 +113,6 @@ function onElementInserted(containerSelector, tagName, callback) {
     observer.observe(target, config);
 }
 
-onElementInserted(".yt-live-chat-item-list-renderer#items", "yt-live-chat-text-message-renderer", function(element){
+onElementInserted(".yt-live-chat-item-list-renderer", function(element){
   processMessage(element, false);
 });
