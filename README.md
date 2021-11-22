@@ -9,23 +9,47 @@ Consolidate your live social messaging streams
 
 https://youtu.be/w4jbZS5QgJs
 
+### To install
+
+Currently you must download, extract, and load the browser extension manually.  It is not available yet in the browser's web store.
+
+Link to download: https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip
+
+Once extracted into a folder, you can go here to load it: chrome://extensions/
+
+![image](https://user-images.githubusercontent.com/2575698/142857841-ac4ad9d3-161e-4304-ba36-cd169353c596.png)
+
+Ensure you have Developer Mode enabled; then you can just load the extension via the load unpacked button and selecting the folder you extracted the fiels to.
+
+![image](https://user-images.githubusercontent.com/2575698/142857907-80428c61-c192-4bff-a1dc-b1a674f9cc4a.png)
+
+You're ready to start using it!
+
 ### To use
 
-Open Twitch or Youtube "Pop out" chat
+Open Twitch or Youtube "Pop out" chat; or just go to your Facebook Live chat while connected to Ethernet or WiFi. You must not minimize or close these windows, but they can be left in the background or moved to the side.
 
-Press the Social Stream chrome extension button and ENABLE streaming of chat data. (Red implies disabled. Green is enabled)
+Then, press the Social Stream chrome extension button and ENABLE streaming of chat data. (Red implies disabled. Green is enabled)
 
 ![image](https://user-images.githubusercontent.com/2575698/142856707-0a6bc4bd-51b4-4cd0-9fa3-ef5a1adfcbf7.png)
 
-Using the provide two links, you can manage the social stream of chat messages and view selected chat messages as overlays
+Using the provide two links, you can manage the social stream of chat messages and view selected chat messages as overlays.
 
 ![image](https://user-images.githubusercontent.com/2575698/142855500-23475cac-0859-47e4-921f-96a1727339ee.png)
 
+You can hold ALT on the keyboard to resize elements in OBS, allowing you to crop the chat stream if you want to hide aspects like the time or source icon.
+
 ![image](https://user-images.githubusercontent.com/2575698/142855087-30d6de29-1b70-4324-9677-2acc887865ce.png)
+
+Clicking on a message will have it appear in the overlay link. You can press the clear button to hide it or use the &showtime=20000 URL option added to the overlay page to auto-hide it after 20-seconds (20,000 ms).
 
 ![image](https://user-images.githubusercontent.com/2575698/142854951-fe1f34c9-0e24-495f-8bfe-a33ab69fa7cb.png)
 
+There is a &darkmode option, but the default is white, for the dock.
+
 ![image](https://user-images.githubusercontent.com/2575698/142855585-45c11625-c01c-4cc0-bfe0-cde4aed5fc44.png)
+
+A good resolution for the overlay is either 1280x222 or 1920x220; you can specify this in the OBS browser source.  You can edit the style of the overlay using the OBS CSS style input text box.
 
 ![image](https://user-images.githubusercontent.com/2575698/142855680-74f6055d-7b79-4e9a-ae7d-909c7f677a24.png)
 
