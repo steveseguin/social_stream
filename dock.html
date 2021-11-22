@@ -252,7 +252,7 @@
 	var messageTimeout = 0;
 	var filtering = false;
 	var applyCustomActions = false;
-	var showsource = false;
+	var showsource = true;
 	
 	
 	if (urlParams.has("session")){
@@ -271,8 +271,8 @@
 		datestamp = false;
 	} 
 	
-	if (urlParams.has("showsource")){
-		showsource = true;
+	if (urlParams.has("hidesource")){
+		showsource = false;
 	} 
 	
 	if (urlParams.has("scale")){
