@@ -57,12 +57,12 @@ If using the automated chat response options, like auto-hi, you must ensure the 
 
 ### Customize
 
-- &darkmode
-- &showtime=20000
-- &scale=2
-- &nodate
-- &autohi
-
+- &darkmode (Enables the dark-mode for the chat stream)
+- &showtime=20000 (auto-hides selected messages after 20s)
+- &scale=2 (doubles size/resolution of all elements)
+- &nodate (hides the date in the chat stream)
+- &autohi (responds by saying Hi! to anyone who says hi in chat)
+- &hidesource (hides the youtube/twitch/fb icons)
 
 ### Chat Commands
 
