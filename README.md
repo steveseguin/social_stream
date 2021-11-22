@@ -13,7 +13,7 @@ https://youtu.be/w4jbZS5QgJs
 
 Open Twitch or Youtube "Pop out" chat
 
-Press the Social Stream chrome extension button and ENABLE streaming of chat data.
+Press the Social Stream chrome extension button and ENABLE streaming of chat data. (Red implies disabled. Green is enabled)
 
 ![image](https://user-images.githubusercontent.com/2575698/142856707-0a6bc4bd-51b4-4cd0-9fa3-ef5a1adfcbf7.png)
 
