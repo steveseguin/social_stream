@@ -10,6 +10,12 @@ function generateStreamID(){
 	for (var i = 0; i < 10; i++){
 		text += possible.charAt(Math.floor(Math.random() * possible.length));
 	}
+	try{
+		text = text.replaceAll('AD', 'vDAv');  // avoiding adblockers
+		text = text.replaceAll('Ad', 'vdAv');
+		text = text.replaceAll('ad', 'vdav');
+		text = text.replaceAll('aD', 'vDav');
+	} catch(e){console.error(e);}
 	return text;
 };
 
