@@ -556,7 +556,7 @@
 			}
 		}
 		
-		if (data.chatmessage.toLowerCase() === "!joke"){
+		if (triggerState && (data.chatmessage.toLowerCase() === "!joke")){
 			if (Date.now() - messageTimeout > 1000){ // respond to "1" with a "1" automatically; at most 1 time per minute.
 				var score = parseInt(Math.random()* 378);
 				var joke = jokes[score];
