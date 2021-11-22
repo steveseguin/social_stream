@@ -151,6 +151,49 @@
 			padding:5px;
 			margin: 5px;
 		}
+		
+		@media only screen and (max-width: 1000px){
+			#menu > button {
+				display:inline-block;
+				padding:1px;
+				margin: 1px;
+				font-size:80%;
+			}
+			#menu > input {
+				display:inline-block;
+				padding:1px;
+				margin: 1px;
+				font-size:80%;
+			}
+		}
+		@media only screen and (max-width: 800px){
+			#menu > button {
+				display:inline-block;
+				padding:1px;
+				margin: 1px;
+				font-size:60%;
+			}
+			#menu > input {
+				display:inline-block;
+				padding:1px;
+				margin: 1px;
+				font-size:60%;
+			}
+		}
+		@media only screen and (max-width: 640px){
+			#menu > button {
+				display:inline-block;
+				padding:0px;
+				margin: 0px;
+				font-size:40%;
+			}
+			#menu > input {
+				display:inline-block;
+				padding:0px;
+				margin: 0px;
+				font-size:40%;
+			}
+		}
 		.pressed {
 			background-color: #9C9C !important;
 		}
@@ -209,6 +252,7 @@
 	var messageTimeout = 0;
 	var filtering = false;
 	var applyCustomActions = false;
+	var showsource = false;
 	
 	
 	if (urlParams.has("session")){
@@ -226,6 +270,11 @@
 	if (urlParams.has("nodate")){
 		datestamp = false;
 	} 
+	
+	if (urlParams.has("showsource")){
+		showsource = true;
+	} 
+	
 	if (urlParams.has("scale")){
 		var scale = urlParams.get("scale") || 1.0;
 		scale = parseFloat(scale);
@@ -378,7 +427,7 @@
 		if (fallbackImage){
 			ele.src = "unknown.png";
 			if (darkmode){
-				ele.classList.add(invert);
+				ele.classList.add("invert");
 			}
 		} else {
 			ele.style.display = "none";
@@ -411,7 +460,7 @@
 			counter+=1;
 			data.counter = counter;
 			
-			var showType = data.type ;
+			var showType = data.type;
 			var chatImg = data.chatimg;
 			
 			if (!chatImg){
@@ -429,7 +478,11 @@
 				chatImg = '<img id="img_'+counter+'" src="' + chatImg + '" class="icon" onerror="errorImage(this);" />'
 			}
 			
-			showType = '<img src="' + showType + '.png" class="icon" onerror="this.style.display=\'none\'" />';
+			if (showsource){
+				showType = '<img src="' + showType + '.png" class="icon" onerror="this.style.display=\'none\'" />';
+			} else {
+				showType = "";
+			}
 			
 			var timeArrived = "";
 			if (datestamp){

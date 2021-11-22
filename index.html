@@ -505,6 +505,11 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
 	}
 	var timeoutTimer = null;
+	var showsource = false;
+	
+	if (urlParams.has("showsource")){
+		showsource = true;
+	} 
 	
 	function realign(){
 		if (centering){
@@ -611,7 +616,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					tmpImage.src = "unknown.png"; 
 				}
 				
-				if (showType){
+				if (showType && showsource){
 					var tempShowType = new Image();
 					tempShowType.src = showType + ".png";
 					showType = '<img src="' + showType + '.png" class="icon sourcetype" onerror="this.style.display=\'none\'" />';
