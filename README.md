@@ -17,7 +17,7 @@ Link to download: https://github.com/steveseguin/social_stream/archive/refs/head
 
 Once extracted into a folder, you can go here to load it: chrome://extensions/
 
-![image](https://user-images.githubusercontent.com/2575698/142857841-ac4ad9d3-161e-4304-ba36-cd169353c596.png)
+![image](https://user-images.githubusercontent.com/2575698/142858940-62d88048-5254-4f27-be71-4d99ea5947ab.png)
 
 Ensure you have Developer Mode enabled; then you can just load the extension via the load unpacked button and selecting the folder you extracted the fiels to.
 
