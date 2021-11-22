@@ -12,47 +12,65 @@ function toDataURL(url, callback) {
   xhr.send();
 }
 
-function processMessage(ele = false, wss=true){
-
-  if (!ele){
-	  ele = this;
-  } 
+function processMessage(ele, wss=true){
 
   if(ele.hasAttribute("is-deleted")) {
-    console.log("Not showing deleted message");
     return;
   }
-
-  var chatname = $(ele).find("#author-name").text();
-
-  var chatmessage = $(ele).find("#message").html();
-  var chatimg = $(ele).find("#img").attr('src');
-  chatimg = chatimg.replace("32", "128");
-  var chatdonation = $(ele).find("#purchase-amount").html();
-  var chatmembership = $(ele).find(".yt-live-chat-membership-item-renderer #header-subtext").html();
-  var chatsticker = $(ele).find(".yt-live-chat-paid-sticker-renderer #img").attr("src");
-
-  if(chatsticker) {
-    chatdonation = $(ele).find("#purchase-amount-chip").html();
+  
+  var chatname = "";
+  try{
+	chatname = ele.querySelector("#author-name").innerText;
+  } catch(e){}
+  
+  var chatmessage = "";
+  try{
+	chatmessage = ele.querySelector("#message").innerHTML;
+  } catch(e){}
+  
+  var chatimg = "";
+  try{
+	chatimg = ele.querySelector("#img").src;
+	chatimg = chatimg.replace("32", "128");
+  } catch(e){}
+  
+  var chatdonation = "";
+  try{
+	chatdonation = ele.querySelector("#purchase-amount").innerHTML;
+  } catch(e){}
+  
+  var chatmembership = "";
+  try{
+	chatmembership = ele.querySelector(".yt-live-chat-membership-item-renderer #header-subtext").innerHTML;
+  } catch(e){}
+  
+  var chatsticker = "";
+  try{
+	chatsticker = ele.querySelector(".yt-live-chat-paid-sticker-renderer #img").src;
+  } catch(e){}
+  
+  if (chatsticker) {
+    chatdonation = ele.querySelector("#purchase-amount-chip").innerHTML;
   }
 
   var chatbadges = "";
-  if($(ele).find("#chat-badges .yt-live-chat-author-badge-renderer img").length > 0) {
-    chatbadges = $(ele).find("#chat-badges .yt-live-chat-author-badge-renderer img").parent().html();
-  }
+  try{
+	chatbadges = ele.querySelector("#chat-badges .yt-live-chat-author-badge-renderer img").parentNode.innerHTML;
+  } catch(e){}
+  
 
   var hasDonation = '';
-  if(chatdonation) {
+  if (chatdonation) {
     hasDonation = chatdonation
   }
 
   var hasMembership = '';
-  if(chatmembership) {
+  if (chatmembership) {
     hasMembership = '<div class="donation membership">NEW MEMBER!</div>';
     chatmessage = chatmembership;
   }
 
-  if(chatsticker) {
+  if (chatsticker) {
     chatmessage = '<img src="'+chatsticker+'">';
   }
 
@@ -81,7 +99,6 @@ function processMessage(ele = false, wss=true){
 
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
-		console.log(request);
 		try{
 			if ("focusChat" == request){
 				document.querySelector("div#input").focus();
@@ -107,6 +124,7 @@ function onElementInserted(containerSelector, callback) {
         });
     };
     var target = document.querySelectorAll(containerSelector)[0];
+	if (!target){return;}
     var config = { childList: true, subtree: true };
     var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
     var observer = new MutationObserver(onMutationsObserved);

@@ -3,9 +3,9 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
 	<meta content="utf-8" http-equiv="encoding" />
-	<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon" />
-	<title>Social Overlay Ninja</title>
-	<meta name="title" content="Social Overlay Ninja" />
+	<title>Social Stream - Overlay</title>
+	<meta name="title" content="Social Stream - Overlay" />
+	<link rel="icon" href="./icons/favicon.ico" />
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 	<style>
 :root {
@@ -124,6 +124,14 @@ div#message > div {
 }
 #tooltip{
 	display:none;
+}
+
+.sourcetype {
+	position: relative;
+    bottom: 44px;
+    max-width: 42px;
+    max-height: 42px;
+    left: 100px;
 }
 .btn-clear {
     position: absolute;
@@ -558,16 +566,23 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	}
 	RecvDataWindow();
 	
+	var fallbackImage = new Image();
+	fallbackImage.src = "unknown.png";
+	fallbackImage.onerror = function(){
+		fallbackImage=false;
+	}
+	
+	function errorImage(ele){
+		if (fallbackImage){
+			ele.src = "unknown.png";
+		} else {
+			ele.style.display = "none";
+		}
+	}
+	
 	function processData(data){
 		
 		console.log(data);
-		
-		if (data.contents){
-			if (data.contents.chatimg){
-				var tmpImage = new Image();
-				tmpImage.src = data.contents.chatimg  // preload the image
-			}
-		}
 		
 		if (data.contents){
 			clearTimeout(timeoutTimer);
@@ -580,6 +595,26 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				if (data.contentimg){
 					 addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" onload="realign();"/></div>';
 				}
+				
+				var showType = data.type ;
+				var chatimg = data.chatimg;
+				
+				if (chatimg){
+					var tmpImage = new Image();
+					tmpImage.src = chatimg;  // preload the image
+				} else {
+					var tmpImage = new Image();
+					tmpImage.src = "unknown.png"; 
+				}
+				
+				if (showType){
+					var tempShowType = new Image();
+					tempShowType.src = showType + ".png";
+					showType = '<img src="' + showType + '.png" class="icon sourcetype" onerror="this.style.display=\'none\'" />';
+				} else {
+					showType = "";
+				}
+				
 				
 				if (data.hasDonation){
 					if (data.type === "twitch"){
@@ -594,7 +629,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					 + '<div class="hl-badges">' + data.chatbadges + '</div>'
 					 + '</div>'
 					 + '<div id="message" class="hl-message" >' + data.chatmessage + '</div>'
-					 + '<div class="hl-img"><img id="img_'+data.chatname+'" src="' + data.chatimg + '" onerror="this.style.display=\'none\'"></div>'
+					 + '<div class="hl-img"><img id="img_'+data.chatname+'" src="' + data.chatimg + '" onerror="errorImage(this);">'+showType+'</div>'
 					 + addImage
 					 + data.hasDonation + data.hasMembership +'</div>';
 				
@@ -617,6 +652,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				}
 				
 				for (i = 0; i < document.getElementsByTagName("img").length; i++) {
+					if (document.getElementsByTagName("img")[i].onerror){continue;} // already has a catch
 					document.getElementsByTagName("img")[i].onerror = function(){
 						if (this.alt.length!==2){
 							this.style.display='none';

@@ -1,11 +1,7 @@
 
-function processMessage(ele = false){	// twitch
+function processMessage(ele){	// twitch
   var chatdonation = false;
   var chatsticker = false;
-  
-  if (!ele){
-	  ele = this;
-  } 
   
   var chatname = ele.querySelector(".chat-author__display-name").innerText;
   
@@ -43,12 +39,14 @@ function processMessage(ele = false){	// twitch
 	  if (chatdonation){
 		 chatmessage = "";
 		 chatdonation = 0;
-		 $(ele).find(".chat-line__message-container").find('span[data-test-selector="chat-message-separator"]').nextAll().each(function(index){
-			if (this.querySelector('.chat-line__message--cheer-amount').innerHTML){
-				chatdonation += parseInt(this.querySelector('.chat-line__message--cheer-amount').innerHTML);
+		 var elements = ele.querySelector(".chat-line__message-container").querySelector('span[data-test-selector="chat-message-separator"]').childNodes;
+		 for (var i=0;i<elements.length;i++){
+			elements[i]
+			if (elements[i].querySelector('.chat-line__message--cheer-amount').innerHTML){
+				chatdonation += parseInt(elements[i].querySelector('.chat-line__message--cheer-amount').innerHTML);
 			}
-			chatmessage += $(this).html();
-		});
+			chatmessage += elements[i].innerHTML;
+		 }
 		if (chatdonation==1){
 			chatdonation += " bit";
 		} else if (chatdonation>1){
@@ -58,8 +56,6 @@ function processMessage(ele = false){	// twitch
   }
   
   if (!chatmessage){
-	   console.log($(ele));
-	   console.log("No message found");
 	   return;
   }
 	
@@ -86,7 +82,6 @@ function processMessage(ele = false){	// twitch
 
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
-		console.log(request);
 		try{
 			if ("focusChat" == request){
 				document.querySelector('[data-a-target="chat-input"]').focus();

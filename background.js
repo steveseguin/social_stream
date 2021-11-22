@@ -2,6 +2,8 @@ var isExtensionOn = false;
 var iframe = null;
 var channel = null;
 
+
+
 function generateStreamID(){
 	var text = "";
 	var possible = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
@@ -24,7 +26,8 @@ chrome.storage.sync.get(properties, function(item){
 		});
 	}
 });
-						
+chrome.browserAction.setIcon({path: "/icons/off.png"});
+					
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
 		try{
@@ -50,6 +53,7 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "getOnOffState") {
 				sendResponse({"state":isExtensionOn,"streamID":channel});
 			} else if ("message" in request) {
+				request.message.tid = sender.tab.id;
 				sendDataP2P(request.message);
 				sendResponse({"state":isExtensionOn});
 			}
@@ -86,7 +90,7 @@ function onDetach(debuggeeId) {
 chrome.debugger.onDetach.addListener(onDetach);
 
 function onAttach(debuggeeId) {
-	console.log("debuggeeId "+debuggeeId.tabId);
+  console.log("debuggeeId "+debuggeeId.tabId);
   if (chrome.runtime.lastError) {
     console.warn(chrome.runtime.lastError.message);
     return;
@@ -102,120 +106,184 @@ eventer(messageEvent, function (e) {
 			chrome.tabs.query({}, function(tabs) {
 			    for (var i=0;i<tabs.length;i++){
 					try {
-						if ("url" in tabs[i]){
-							console.log(tabs[i]);
-							if (tabs[i].url.startsWith("https://www.twitch.tv/popout/")){
-								console.log(debuggerEnabled[tabs[i].id]);
-								
-								if (!debuggerEnabled[tabs[i].id]){
-									debuggerEnabled[tabs[i].id]=false;
-									chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }));
-								}
-								
-								setTimeout(function(tabid, message){
-									try{
-										
-										chrome.tabs.sendMessage(tabid, "focusChat", function(response=null) {
-											console.log(response);
-											
-											chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
-											
-											chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 
-												"type": "keyDown",
-												"key": "Enter",
-												"code": "Enter",
-												"nativeVirtualKeyCode": 13,
-												"windowsVirtualKeyCode": 13
-											}, function (e) {
-													console.log('dispatchKeyEvent', e);
-												}
-											);
-											
-											chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
-												"type": "keyUp",
-												"key": "Enter",
-												"code": "Enter",
-												"nativeVirtualKeyCode": 13,
-												"windowsVirtualKeyCode": 13
-											 }, function (e) {
-													console.log('insertText', e);
-													if (debuggerEnabled[tabid]){
-														chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-													}
-												}
-											);
-											
-										});
-										
-									} catch(e){
-										console.error(e);
-									}
-								},0,tabs[i].id, e.data.dataReceived.overlayNinja.response);
+						if (("tid" in e.data.dataReceived.overlayNinja) && (e.data.dataReceived.overlayNinja.tid!==false)){
+							if ( e.data.dataReceived.overlayNinja.tid !== tabs[i].id){continue;} // not the tab we want to respond to.
+						}
+						if (!tabs[i].url){continue;}
+						
+						if (tabs[i].url.startsWith("https://www.twitch.tv/popout/")){
+							console.log(debuggerEnabled[tabs[i].id]);
+							
+							if (!debuggerEnabled[tabs[i].id]){
+								debuggerEnabled[tabs[i].id]=false;
+								chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }));
 							}
 							
-							if (tabs[i].url.startsWith("https://www.youtube.com/live_chat")){
-								console.log(debuggerEnabled[tabs[i].id]);
-								if (!debuggerEnabled[tabs[i].id]){
-									debuggerEnabled[tabs[i].id]=false;
-									chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }));
+							setTimeout(function(tabid, message){
+								try{
+									
+									chrome.tabs.sendMessage(tabid, "focusChat", function(response=null) {
+										console.log(response);
+										
+										chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {console.log("1");});
+										
+										chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 
+											"type": "keyDown",
+											"key": "Enter",
+											"code": "Enter",
+											"nativeVirtualKeyCode": 13,
+											"windowsVirtualKeyCode": 13
+										}, function (e) {
+												console.log('dispatchKeyEvent', e);
+											}
+										);
+										
+										chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+											"type": "keyUp",
+											"key": "Enter",
+											"code": "Enter",
+											"nativeVirtualKeyCode": 13,
+											"windowsVirtualKeyCode": 13
+										 }, function (e) {
+												console.log('insertText', e);
+												if (debuggerEnabled[tabid]){
+													chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+												}
+											}
+										);
+										
+									});
+									
+								} catch(e){
+									console.error(e);
 								}
-								setTimeout(function(tabid, message){
-									try{
-										
-										chrome.tabs.sendMessage(tabid, "focusChat", function(response=null) {
-											console.log(response);
-											console.log("tabid:"+tabid);
-											
-											chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
-											
-												chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
-													"type": "keyDown",
-													"key": "Enter",
-													"code": "Enter",
-													"text": "\r",
-													"nativeVirtualKeyCode": 13,
-													"windowsVirtualKeyCode": 13
-												}, function (e) {
-													console.log("done enter down");
-													
-												});
-											
-												chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
-													"type": "char",
-													"key": "Enter",
-													"text": "\r",
-													"code": "Enter",
-													"nativeVirtualKeyCode": 13,
-													"windowsVirtualKeyCode": 13
-												}, function (e) {
-													console.log("done enter down");
-													
-												});
-											
-												chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 
-													"type": "keyUp",
-													"key": "Enter",
-													"code": "Enter",
-													"text": "\r",
-													"nativeVirtualKeyCode": 13,
-													"windowsVirtualKeyCode": 13
-												 }, function (e) {
-														console.log("done enter up");
-														console.log(debuggerEnabled[tabid]+"");
-														if (debuggerEnabled[tabid]){
-															console.log("Detatching");
-															chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-														}
-													}
-												);
-										});
-										
-									} catch(e){
-										console.error(e);
-									}
-								},0,tabs[i].id, e.data.dataReceived.overlayNinja.response);
+							},0,tabs[i].id, e.data.dataReceived.overlayNinja.response);
+							
+						} else if (tabs[i].url.startsWith("https://www.youtube.com/live_chat")){
+							console.log(debuggerEnabled[tabs[i].id]);
+							if (!debuggerEnabled[tabs[i].id]){
+								debuggerEnabled[tabs[i].id]=false;
+								chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }));
 							}
+							setTimeout(function(tabid, message){
+								try{
+									
+									chrome.tabs.sendMessage(tabid, "focusChat", function(response=null) {
+										console.log(response);
+										console.log("tabid:"+tabid);
+										
+										chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
+										
+										chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+											"type": "keyDown",
+											"key": "Enter",
+											"code": "Enter",
+											"text": "\r",
+											"nativeVirtualKeyCode": 13,
+											"windowsVirtualKeyCode": 13
+										}, function (e) {
+											console.log("done enter down");
+											
+										});
+									
+										chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+											"type": "char",
+											"key": "Enter",
+											"text": "\r",
+											"code": "Enter",
+											"nativeVirtualKeyCode": 13,
+											"windowsVirtualKeyCode": 13
+										}, function (e) {
+											console.log("done enter down");
+											
+										});
+									
+										chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 
+											"type": "keyUp",
+											"key": "Enter",
+											"code": "Enter",
+											"text": "\r",
+											"nativeVirtualKeyCode": 13,
+											"windowsVirtualKeyCode": 13
+										 }, function (e) {
+												console.log("done enter up");
+												console.log(debuggerEnabled[tabid]+"");
+												if (debuggerEnabled[tabid]){
+													console.log("Detatching");
+													chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+												}
+											}
+										);
+									});
+									
+								} catch(e){
+									console.error(e);
+								}
+							},0,tabs[i].id, e.data.dataReceived.overlayNinja.response);
+							
+						} else if (tabs[i].url.includes("facebook.com")){
+							console.log(debuggerEnabled[tabs[i].id]);
+							if (!debuggerEnabled[tabs[i].id]){
+								debuggerEnabled[tabs[i].id]=false;
+								chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }));
+							}
+							setTimeout(function(tabid, message){
+								try{
+									
+									chrome.tabs.sendMessage(tabid, "focusChat", function(response=null) {
+										console.log("tabid:"+tabid);
+										
+										chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {console.log("text entered");});
+										
+										chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+											"type": "keyDown",
+											"key": "Enter",
+											"code": "Enter",
+											"text": "\r",
+											"nativeVirtualKeyCode": 13,
+											"windowsVirtualKeyCode": 13
+										}, function (e) {
+											console.log("done enter down");
+											
+										});
+									
+										chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+											"type": "char",
+											"key": "Enter",
+											"text": "\r",
+											"code": "Enter",
+											"nativeVirtualKeyCode": 13,
+											"windowsVirtualKeyCode": 13
+										}, function (e) {
+											console.log("done enter down");
+											
+										});
+									
+										chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 
+											"type": "keyUp",
+											"key": "Enter",
+											"code": "Enter",
+											"text": "\r",
+											"nativeVirtualKeyCode": 13,
+											"windowsVirtualKeyCode": 13
+										 }, function (e) {
+												console.log("done enter up");
+												console.log(debuggerEnabled[tabid]+"");
+												if (debuggerEnabled[tabid]){
+													console.log("Detatching");
+													chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+												}
+											}
+										);
+									});
+									
+								} catch(e){
+									console.error(e);
+								}
+							},0,tabs[i].id, e.data.dataReceived.overlayNinja.response);
 						}
+						
+					
 					} catch(e){console.error(e);}
 			    }
 			});

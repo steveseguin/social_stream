@@ -1,9 +1,9 @@
 {
-  "name": "Consolidated social stream for Youtube, Twitch & more",
-  "description": "Tool for engaging live chat from Youtube, Twitch, Restream and more. Feature requests accepted!",
+  "name": "Consolidated social streaming for Youtube, Twitch & more",
+  "description": "Tool for engaging live chat from Youtube, Twitch, Facebook and more. Feature requests accepted!",
   "manifest_version": 2,
-  "version": "0.2.0",
-  "homepage_url": "http://social.overlay.ninja/",
+  "version": "0.5.0",
+  "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
   },
@@ -19,12 +19,16 @@
   },
   "content_scripts": [
 	  {
-		"js": ["jquery.js", "youtube.js"],
+		"js": ["youtube.js"],
 		"matches": ["https://youtube.com/live_chat*", "https://www.youtube.com/live_chat*", "https://studio.youtube.com/live_chat*"]
 	  },
 	  {
-		"js": ["jquery.js", "twitch.js"],
+		"js": ["twitch.js"],
 		"matches": ["https://www.twitch.tv/popout/*"]
+	  },
+	  {
+		"js": ["facebook.js"],
+		"matches": ["https://facebook.com/*", "https://www.facebook.com/*"]
 	  }
   ],
   "options_ui": {
