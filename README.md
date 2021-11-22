@@ -5,6 +5,8 @@ Consolidate your live social messaging streams
 - Includes a "feature chat" overlay, selectable via the dockable dashboard
 - Supports bot-commands and automated chat responses, with custom logic plugin support.
 
+Social Stream makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
+
 ### Video walk-thru
 
 https://youtu.be/w4jbZS5QgJs
