@@ -45,6 +45,8 @@
 		  }
 		}
 		
+		
+		
 		.hl-name{
 			font-weight: 700;
 			margin: auto 10px;
@@ -107,16 +109,28 @@
 			background-color: #AFA4;
 		}
 		
-		.highlight-chat .donation{
-			background-color: #FEFFAD;
+		.highlight-chat.donation{
+			background-color: #FEFFAD33;
 		}
 		
-		.highlight-chat:nth-child .donation(odd){
-			background-color: #FDFF65;
+		.highlight-chat:nth-child.donation(odd){
+			background-color: #FDFF6533;
 		}
 		
 		.donationAmount{
-			border: 3px solild black;
+			-webkit-animation: glow 1s ease-in-out infinite alternate;
+			-moz-animation: glow 1s ease-in-out infinite alternate;
+			animation: glow 1s ease-in-out infinite alternate;
+			padding-right:5px;
+		}
+
+		@-webkit-keyframes glow {
+		    from {
+				text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #FFe60073, 0 0 40px #FFe60073, 0 0 50px #FFe60073, 0 0 60px #FFe60073, 0 0 70px #FFe60073;
+			}
+			to {
+				text-shadow: 0 0 20px #fff, 0 0 30px #FFff4da6, 0 0 40px #FFff4da6, 0 0 50px #FFff4da6, 0 0 60px #FFff4da6, 0 0 70px #FFff4da6, 0 0 80px #FFff4da6;
+			}
 		}
 		
 		.hl-message img{
@@ -517,7 +531,7 @@
 			}
 			
 			node.rawContents = data;
-			node.onclick = function(e){
+			node.onmousedown = function(e){
 				this.classList.add("pressed");
 				if (this.rawContents.type && (this.rawContents.type == "twitch") && !this.rawContents.chatimg){
 					var data = this.rawContents;
