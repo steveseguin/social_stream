@@ -487,6 +487,8 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		roomID = urlParams.get("session");
 	} else if (urlParams.has("s")){
 		roomID = urlParams.get("s");
+	} else if (urlParams.has("id")){
+		roomID = urlParams.get("id");
 	} else if (window.location.protocol=="file:"){
 		roomID = prompt("Enter your session ID here, or add it to the URL.");
 	} else {

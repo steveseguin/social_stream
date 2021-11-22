@@ -208,12 +208,15 @@
 	var roomID = "test";
 	var messageTimeout = 0;
 	var filtering = false;
+	var applyCustomActions = false;
 	
 	
 	if (urlParams.has("session")){
 		roomID = urlParams.get("session");
 	} else if (urlParams.has("s")){
 		roomID = urlParams.get("s");
+	} else if (urlParams.has("id")){
+		roomID = urlParams.get("id");
 	} else if (window.location.protocol=="file:"){
 		roomID = prompt("Enter your session ID here, or add it to the URL.");
 	} else {

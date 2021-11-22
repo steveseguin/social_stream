@@ -48,8 +48,8 @@ function update(response){
 		}
 		if ('streamID' in response){
 			document.getElementById("streamID").innerHTML = "Stream ID is : "+response.streamID;
-			document.getElementById("dock").innerHTML = "https://socialstream.ninja/dock.html?session="+response.streamID;
-			document.getElementById("overlay").innerHTML = "https://socialstream.ninja/?session="+response.streamID;
+			document.getElementById("dock").innerHTML = "<a target='_blank' href='https://socialstream.ninja/dock.html?session="+response.streamID+"'>https://socialstream.ninja/dock.html?session="+response.streamID+"</a>";
+			document.getElementById("overlay").innerHTML = "<a target='_blank' href='https://socialstream.ninja/index.html?session="+response.streamID+"'>https://socialstream.ninja/index.html?session="+response.streamID+"</a>";
 		}
 	}
 }
