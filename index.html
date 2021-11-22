@@ -530,9 +530,9 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		
 	}
 	
-	window.onresize = realign;
 	
-	try{
+	try {
+		window.onresize = realign;
 		if (parseInt(window.innerHeight)<500){
 			document.documentElement.style.setProperty("--image-content-max-height", window.innerHeight)
 		}
@@ -566,11 +566,13 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	}
 	RecvDataWindow();
 	
-	var fallbackImage = new Image();
-	fallbackImage.src = "unknown.png";
-	fallbackImage.onerror = function(){
-		fallbackImage=false;
-	}
+	try {
+		var fallbackImage = new Image();
+		fallbackImage.src = "unknown.png";
+		fallbackImage.onerror = function(){
+			fallbackImage=false;
+		}
+	} catch(e){}
 	
 	function errorImage(ele){
 		if (fallbackImage){
@@ -652,14 +654,16 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				}
 				
 				for (i = 0; i < document.getElementsByTagName("img").length; i++) {
-					if (document.getElementsByTagName("img")[i].onerror){continue;} // already has a catch
-					document.getElementsByTagName("img")[i].onerror = function(){
-						if (this.alt.length!==2){
-							this.style.display='none';
-						} else {
-							this.outerHTML = this.alt;
+					try {
+						if (document.getElementsByTagName("img")[i].onerror){continue;} // already has a catch
+						document.getElementsByTagName("img")[i].onerror = function(){
+							if (this.alt.length!==2){
+								this.style.display='none';
+							} else {
+								this.outerHTML = this.alt;
+							}
 						}
-					}
+					} catch(e){}
 				}
 				document.getElementById("output").classList.remove("fadeout");
 				
