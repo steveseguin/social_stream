@@ -1,9 +1,9 @@
 # Social Stream
 Consolidate your live social messaging streams
 
-- Supports two-way chat messaging with Facebook, Youtube, and Twitch
+- Supports live automated two-way chat messaging with Facebook, Youtube, and Twitch
 - Includes a "feature chat" overlay, selectable via the dockable dashboard
-- Supports bot-commands and automated chat responses
+- Supports bot-commands and automated chat responses, with custom logic plugin support.
 
 ### Video walk-thru
 
