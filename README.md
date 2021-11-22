@@ -39,8 +39,6 @@ Using the provided two links, you can manage the social stream of chat messages 
 
 You can hold ALT on the keyboard to resize elements in OBS, allowing you to crop the chat stream if you want to hide aspects like the time or source icon.
 
-![image](https://user-images.githubusercontent.com/2575698/142855087-30d6de29-1b70-4324-9677-2acc887865ce.png)
-
 Clicking on a message will have it appear in the overlay link. You can press the clear button to hide it or use the &showtime=20000 URL option added to the overlay page to auto-hide it after 20-seconds (20,000 ms).
 
 ![image](https://user-images.githubusercontent.com/2575698/142854951-fe1f34c9-0e24-495f-8bfe-a33ab69fa7cb.png)
