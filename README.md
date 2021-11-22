@@ -53,6 +53,8 @@ A good resolution for the overlay is either 1280x222 or 1920x220; you can specif
 
 ![image](https://user-images.githubusercontent.com/2575698/142855680-74f6055d-7b79-4e9a-ae7d-909c7f677a24.png)
 
+If using the automated chat response options, like auto-hi, you must ensure the Youtube/Twitch/Facebook chat input options are enabled and that you are able to send a chat message. Manually entering a chat message into the pop-out window or into the Facebook live chat area first can help ensure things are working are intended, else automated message may not be sent.
+
 ### Customize
 
 - &darkmode
