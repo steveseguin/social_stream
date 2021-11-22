@@ -72,4 +72,4 @@ If using the automated chat response options, like auto-hi, you must ensure the 
 
 ### Support
 
-You can find me on discord over at https://discord.vdo.ninja (steve), offering free support in channel #chat-overlay-ninja 
+You can find me on discord over at https://discord.vdo.ninja (steve), offering free support in channel #chat-overlay-support 
