@@ -35,7 +35,7 @@ Then, press the Social Stream chrome extension button and ENABLE streaming of ch
 
 Using the provided two links, you can manage the social stream of chat messages and view selected chat messages as overlays.
 
-![image](https://user-images.githubusercontent.com/2575698/142934941-5cc07229-10b1-4507-a376-4c2380b8eade.png)
+![image](https://user-images.githubusercontent.com/2575698/142935393-4ca90418-a645-45e3-8e37-f4884e16457a.png)
 
 You can hold ALT on the keyboard to resize elements in OBS, allowing you to crop the chat stream if you want to hide aspects like the time or source icon.
 
