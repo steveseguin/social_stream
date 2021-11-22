@@ -17,4 +17,4 @@ https://youtu.be/w4jbZS5QgJs
 
 ### Support
 
-You can find me on discord over at https://discord.vdo.ninja (steve)
+You can find me on discord over at https://discord.vdo.ninja (steve), offering free support in channel #chat-overlay-ninja 
