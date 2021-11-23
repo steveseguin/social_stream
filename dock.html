@@ -45,8 +45,6 @@
 		  }
 		}
 		
-		
-		
 		.hl-name{
 			font-weight: 700;
 			margin: auto 10px;
@@ -109,6 +107,14 @@
 			background-color: #AFA4;
 		}
 		
+		.highlight-chat.obsmode{
+			background-color: #0000;
+		}
+		
+		.highlight-chat:nth-child(odd).obsmode{
+			background-color: #0003;
+		}
+		
 		.highlight-chat.donation{
 			background-color: #FEFFAD33;
 		}
@@ -122,6 +128,7 @@
 			-moz-animation: glow 1s ease-in-out infinite alternate;
 			animation: glow 1s ease-in-out infinite alternate;
 			padding-right:5px;
+			margin: auto;
 		}
 
 		@-webkit-keyframes glow {
@@ -281,16 +288,16 @@
 		window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
 	}
 	
-	if (urlParams.has("nodate")){
+	if (urlParams.has("nodate") || urlParams.has("notimestamp") || urlParams.has("notime")){
 		datestamp = false;
 	} 
 	
 	if (urlParams.has("hidesource")){
 		showsource = false;
 	} 
-	
+	var scale = 1;
 	if (urlParams.has("scale")){
-		var scale = urlParams.get("scale") || 1.0;
+		scale = urlParams.get("scale") || 1.0;
 		scale = parseFloat(scale);
 		document.documentElement.style.setProperty("--scale-output", scale);
 		document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
@@ -304,6 +311,8 @@
 	
 	var forceAutoscroll = false;
 	var triggerState = true;
+	
+	var obsmode = false;
 	if (window.obsstudio){
 		window.obsstudio.getStatus(function(obsStatus){
 			document.getElementById("menu").style.display = "none";
@@ -311,6 +320,10 @@
 			document.getElementById("output").style.overflow = "hidden";
 			triggerState=false;
 			forceAutoscroll=true;
+			obsmode=true;
+			scale = scale*2.0;
+			document.documentElement.style.setProperty("--scale-output", scale);
+			document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
 		});
 	}
 	
@@ -524,6 +537,10 @@
 			
 			if (data.hasDonation){
 				node.classList.add("donation");
+			}
+			
+			if (obsmode && darkmode){
+				node.classList.add("obsmode");
 			}
 		
 			if (!document.getElementById("content_"+counter).innerText.trim().length){
