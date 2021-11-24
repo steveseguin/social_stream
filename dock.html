@@ -350,7 +350,7 @@
 	var applyCustomActions = false;
 	var showsource = true;
 	var compactmode = false;
-	var darkmode = false;
+	var darkmode = true;
 	var scale = 1;
 	var forceAutoscroll = false;
 	var triggerState = true;
@@ -385,17 +385,18 @@
 		document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
 	}
 	
-	
+	if (urlParams.has("compact")){
+		compactmode = true;
+	} 
 	
 	if (window.obsstudio){
-		darkmode = true;
 		window.obsstudio.getStatus(function(obsStatus){
 			document.getElementById("menu").style.display = "none";
 			document.body.style.overflow = "hidden";
 			document.getElementById("output").style.overflow = "hidden";
 			triggerState=false;
 			forceAutoscroll=true;
-			compactmode=true;
+			//compactmode=true;
 			document.getElementById("output").classList.remove("notcompactmode");
 			scale = scale*2.0
 			document.documentElement.style.setProperty("--scale-output", scale);
@@ -541,7 +542,6 @@
 		filtering = keyword;
 		var eles = document.querySelectorAll("#output > div");
 		for (var i=0;i<eles.length;i++){
-			console.log(eles[i].textContent.toLowerCase());
 			if (!keyword){
 				eles[i].classList.remove("hide");
 			} else if (eles[i].textContent.toLowerCase().includes(keyword)){

@@ -105,7 +105,9 @@ function onElementInsertedTwitch(containerSelector, className, callback) {
 			if (mutation.addedNodes.length) {
 				for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 					if(mutation.addedNodes[i].className == className) {
+						if (mutation.addedNodes[i].ignore){continue;}
 						callback(mutation.addedNodes[i]);
+						mutation.addedNodes[i].ignore=true;
 					}
 				}
 			}
@@ -118,7 +120,13 @@ function onElementInsertedTwitch(containerSelector, className, callback) {
 	observer.observe(target, config);
 }
 
-onElementInsertedTwitch(".chat-scrollable-area__message-container", "chat-line__message", function(element){
-  setTimeout(function(element){processMessage(element);},10, element);
-});
+setTimeout(function(){
+	var clear = document.querySelectorAll(".chat-line__message");
+	for (var i = 0;i<clear.length;i++){
+		clear[i].ignore = true; // don't let already loaded messages to re-load.
+	}
+	onElementInsertedTwitch(".chat-scrollable-area__message-container", "chat-line__message", function(element){
+	  setTimeout(function(element){processMessage(element);},10, element);
+	});
+},2000);
 

@@ -11,18 +11,15 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		chrome.extension.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}});
 		chrome.extension.sendMessage({cmd: "getOnOffState"}, function (response) {
 			update(response);
-			console.log("getOnOffState callbacked");
 		});
 	};
 	
 	chrome.extension.sendMessage({cmd: "getSettings"}, function (response) {
 		update(response);
-		console.log("settings callbacked");
 	});
 	
 	chrome.extension.sendMessage({cmd: "getOnOffState"}, function (response) {
 		update(response);
-		console.log("first getOnOffState callbacked");
 	});
 	
 	var iii = document.querySelectorAll("input[type='checkbox']");
@@ -34,7 +31,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
 });
 	
 function update(response){
-	console.log(response);
 	if (response !== undefined){
 		if ("state" in response){
 			isExtensionOn = response.state;
@@ -81,9 +77,9 @@ function checkVersion(){
 		var manifestData = chrome.runtime.getManifest();
 		if ("version" in data){
 			if (manifestData.version !== data.version){
-				document.getElementById("version").innerHTML = "<b>There's a new version of Social Stream <a target='_blank' href='https://github.com/steveseguin/social_stream/'>available here</a>.</b>";
+				document.getElementById("newVersion").innerHTML = "<b>There's a new version of Social Stream <a target='_blank' href='https://github.com/steveseguin/social_stream/'>available here</a>.</b>";
 			} else {
-				document.getElementById("version").innerHTML = "";
+				document.getElementById("newVersion").innerHTML = "";
 			}
 		}
 		console.log(data)
