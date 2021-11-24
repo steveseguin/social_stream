@@ -13,8 +13,9 @@
 			--scale-output-moz: scale(1.0);
 			--scale-output: 1.0;
 			--font-color: #000;
-			--font-color-stroke: 0.1px #888;
+			--font-color-name: #000;
 			--background-color: #FFF0;
+			--link-color: #06F
 		}
 		
 		.noText {
@@ -29,7 +30,9 @@
 		} 
 		
 		a {
-			color: #07F;
+			color: var(--link-color);
+			display: contents;
+			text-decoration:none
 		}
 		
 		body {
@@ -39,22 +42,27 @@
 			background-color: var(--background-color);
 		}
 		
-		@supports (-webkit-text-stroke: 1px black) {
-		  body {
-			-webkit-text-stroke: var(--font-color-stroke);
-		  }
+		.bot {
+			padding: 5px 0;
 		}
 		
-		.hl-name{
+		.bot > .hl-message {
+			padding: 5px 0 5px 5px;
+			font-style: italic;
+		}
+		
+		.hl-name {
 			font-weight: 700;
-			margin: auto 10px;
+			margin: auto 5px auto 5px;
 			position:relative;
 			left: 0;
-			width: 220px;
+			width: fit-content;
 			overflow: hidden;
+			white-space: nowrap;
+			color: var(--font-color-name);
 		}
 		
-		.hl-badges{
+		.hl-badges {
 			max-width:28px;
 			max-height:28px;
 			object-fit: contain;
@@ -63,40 +71,54 @@
 		}
 
 		.hl-message{
-			width: 100%;
 			margin: auto 0;
 		}
 		
 		div {
 			display:inline-block;
 		}
-
+		
+		
 		.highlight {
 			background-color:yellow!important;
 		}
 		
 		img {
 			display:inline-block;
-			max-width:18px;
-			max-height:18px;
+			max-width:20px;
+			max-height:20px;
 			position:relative;
 			margin: auto;
-			float: left;
 			padding: 0;
 			object-fit: contain;
+			vertical-align:middle;
 		}
 		
 		.hide {
 			display: none !important;
 		}
 		
-		.highlight-chat{
+		.highlight-chat {
 			display:flex;
 			cursor:pointer;
 			min-height:28px;
 			transition: .5s all cubic-bezier(0.250, 0.250, 0.105, 1.2);
-			width:100%;
+			width:fit-content;
 			background-color: #FFF1;
+		}
+		
+		.notcompactmode>.hl-message{
+			width: 100%;
+		}
+		.notcompactmode>.hl-name{
+			font-weight: 700;
+			margin: auto 10px;
+			width: 220px;
+			overflow: hidden;
+			white-space: unset;
+		}
+		.notcompactmode>.highlight-chat{
+			width:100%;
 		}
 		
 		.highlight-chat:nth-child(odd){
@@ -107,12 +129,15 @@
 			background-color: #AFA4;
 		}
 		
-		.highlight-chat.obsmode{
-			background-color: #0000;
+		.highlight-chat.compactmode{
+			background-color: #3335;
+			border-top-right-radius: 3px;
+			border-bottom-right-radius: 3px;
+			padding-right:3px;
 		}
 		
-		.highlight-chat:nth-child(odd).obsmode{
-			background-color: #0003;
+		.highlight-chat:nth-child(odd).compactmode{
+			background-color: #3333;
 		}
 		
 		.highlight-chat.donation{
@@ -127,8 +152,9 @@
 			-webkit-animation: glow 1s ease-in-out infinite alternate;
 			-moz-animation: glow 1s ease-in-out infinite alternate;
 			animation: glow 1s ease-in-out infinite alternate;
-			padding-right:5px;
+			padding:5px;
 			margin: auto;
+			white-space: nowrap;
 		}
 
 		@-webkit-keyframes glow {
@@ -143,7 +169,7 @@
 		.hl-message img{
 			position:relative;
 			margin: auto 0;
-			padding: 0 2px;
+			padding: 0;
 			display:inline-block;
 		}
 		
@@ -154,10 +180,12 @@
 		.time-arrived {
 			font-size: 10px;
 			display: block;
-			min-width: 43px;
 			margin: auto 0;
-			left: 3px;
+			padding-right: 2px;
+			left: 1px;
 			position: relative;
+			white-space: nowrap;
+			vertical-align:middle;
 		}
 		
 		#menu {
@@ -171,6 +199,49 @@
 			display:inline-block;
 			padding:5px;
 			margin: 5px;
+			background-color: #DDD2;
+			opacity:0.9;
+		}
+		#menu > button:hover {
+			background-color: #DDDF;
+			cursor: pointer;
+			opacity:1.0;
+		}
+		#menu > button.red {
+			background-color: #FCC4;
+		}
+		#menu > button.red:hover {
+			background-color: #FCCF;
+		}
+		#menu > input {
+			padding: 5px;
+			background-color: #FFF4;
+			max-width: 120px;
+		}
+		#menu > input:focus {
+		  background-color: #FFFF;
+		}
+		
+		#menu.darkmode > button {
+			background-color: #0004;
+			color:white;
+		}
+		#menu.darkmode > button:hover {
+			background-color: #000F;
+			opacity:1.0;
+		}
+		#menu.darkmode > button.red {
+			background-color: #F004;
+		}
+		#menu.darkmode > button.red:hover {
+			background-color: #600F;
+		}
+		#menu.darkmode > input {
+			background-color: #0004;
+			color:white;
+		}
+		#menu.darkmode > input:hover {
+			background-color: #0000;
 		}
 		
 		@media only screen and (max-width: 1000px){
@@ -185,6 +256,7 @@
 				padding:1px;
 				margin: 1px;
 				font-size:80%;
+				max-width: 110px;
 			}
 		}
 		@media only screen and (max-width: 870px){
@@ -199,6 +271,7 @@
 				padding:1px;
 				margin: 1px;
 				font-size:60%;
+				max-width: 100px;
 			}
 		}
 		@media only screen and (max-width: 640px){
@@ -213,6 +286,7 @@
 				padding:0px;
 				margin: 0px;
 				font-size:40%;
+				max-width: 80px;
 			}
 		}
 		.pressed {
@@ -223,28 +297,29 @@
 			margin: auto 1px auto 3px;
 		}
 		
-		input {
-			padding: 5px;
-		}
-		
 		.invert {
 			filter: invert(1);
+		}
+		
+		#jumpto {
+			position: fixed !important;
+			right: 20px;
+			bottom: 20px;
 		}
 	</style>
 </head>
 <body>
-	<div id="output" class="output"></div>
+	<div id="output" class="output notcompactmode"></div>
 	<div id="menu">
-		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);">Clear Active Overlay</button>
+		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" class="red">Clear Current Overlay</button>
+		<button id="pause" data-state="0" onclick="pause(this);">⏯︎ Pause</button>
 		<input id="filter_messages" onchange="filterMessages(this.value);" placeholder="Filter messages" type="text" />
-		<button id="pause" data-state="0" onclick="pause(this);">Pause Chat Stream</button>
-		<button id="hide_emoji" data-state="0" onclick="emoji(this);">Hide Emoji-only Messages</button>
-		<button id="say_hello" data-state="0" onclick="respondP2P();">Send Message</button>
-		<button id="triggers" data-state="0" onclick="toggleTriggers(this);">Disable Triggers</button>
+		<button id="hide_emoji" data-state="0" onclick="emoji(this);" title="Hide all emoji-only messages">🚫🙂</button>
+		<button id="say_hello" data-state="0" onclick="respondP2P();" title="Send a text message to all social endpoints">💬</button>
+		<button id="triggers" data-state="0" onclick="toggleTriggers(this);" title="Adjust settings of this page and triggers">⚙️</button>
+		<button id="jumpto" data-state="0" onclick="jumptoBottom(this);" title="Jump to bottom">V</button>
 	<div>
 	<script>
-	
-	
 	
 	
 	(function (w) {
@@ -274,7 +349,14 @@
 	var filtering = false;
 	var applyCustomActions = false;
 	var showsource = true;
-	
+	var compactmode = false;
+	var darkmode = false;
+	var scale = 1;
+	var forceAutoscroll = false;
+	var triggerState = true;
+	var emojis = true;
+	var pauseState = false;
+	var timeoutTimer = null;
 	
 	if (urlParams.has("session")){
 		roomID = urlParams.get("session");
@@ -295,39 +377,46 @@
 	if (urlParams.has("hidesource")){
 		showsource = false;
 	} 
-	var scale = 1;
+	
 	if (urlParams.has("scale")){
 		scale = urlParams.get("scale") || 1.0;
 		scale = parseFloat(scale);
 		document.documentElement.style.setProperty("--scale-output", scale);
 		document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
 	}
-	var darkmode = false;
-	if (urlParams.has("darkmode")){
-		darkmode=true;
-		document.documentElement.style.setProperty("--font-color", "#FFF");
-		document.documentElement.style.setProperty("--background-color", "#000");
-	}
 	
-	var forceAutoscroll = false;
-	var triggerState = true;
 	
-	var obsmode = false;
+	
 	if (window.obsstudio){
+		darkmode = true;
 		window.obsstudio.getStatus(function(obsStatus){
 			document.getElementById("menu").style.display = "none";
 			document.body.style.overflow = "hidden";
 			document.getElementById("output").style.overflow = "hidden";
 			triggerState=false;
 			forceAutoscroll=true;
-			obsmode=true;
-			scale = scale*2.0;
+			compactmode=true;
+			document.getElementById("output").classList.remove("notcompactmode");
+			scale = scale*2.0
 			document.documentElement.style.setProperty("--scale-output", scale);
 			document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
 		});
 	}
 	
-	var emojis = true;
+	if (urlParams.has("darkmode")){
+		darkmode=true;
+	} else if (urlParams.has("lightmode")){
+		darkmode=false;
+	}
+	
+	if (darkmode){
+		document.documentElement.style.setProperty("--font-color", "#FFF");
+		document.documentElement.style.setProperty("--background-color", "#000");
+		document.documentElement.style.setProperty("--font-color-name", "#DDD");
+		document.documentElement.style.setProperty("--link-color", "#5AF");
+		document.getElementById("menu").classList.add("darkmode");
+	}
+	
 	function emoji(ele){
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
@@ -349,7 +438,7 @@
 		}
 	}
 	
-	var pauseState = false;
+	
 	function pause(ele){
 		pauseState = !pauseState;
 		if (pauseState){
@@ -378,11 +467,6 @@
 		document.head.appendChild(script);
 	} catch(e){}
 	
-	var timeoutDelay = false;
-	if (urlParams.has("showtime")){
-		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
-	}
-	var timeoutTimer = null;
 	
 	function RecvDataWindow(){
 		iframe = document.createElement("iframe");
@@ -418,6 +502,30 @@
 	  var div = document.createElement('div');
 	  div.innerHTML = htmlString.trim();
 	  return div.firstChild; 
+	}
+	
+	
+	if (forceAutoscroll){
+		document.getElementById("jumpto").classList.add("pressed");
+	}
+	
+	function jumptoBottom(ele){
+		forceAutoscroll = !forceAutoscroll;
+		if (forceAutoscroll){
+			ele.classList.add("pressed");
+		} else {
+			ele.classList.remove("pressed");
+		}
+		window.scrollTo({
+		  top: document.body.scrollHeight,
+		  left: 0,
+		  behavior: 'smooth'
+		});
+		window.scrollBy({
+		  top: 100,
+		  left: 0,
+		  behavior: 'smooth'
+		});
 	}
 	
 
@@ -515,34 +623,64 @@
 			if (datestamp){
 				var date = new Date();
 				timeArrived = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+				if (compactmode){
+					timeArrived = timeArrived.split(" ")[0];
+				}
 				timeArrived = "<div class='time-arrived'>"+timeArrived+"</div>";
+			}
+			var bot = false;
+			var chatname = "";
+			if (data.chatname){
+				if (compactmode){
+					if (data.chatname.toLowerCase() == "streamelements"){ 
+						bot = true;
+						//chatname = "";
+					} else if (data.chatname.toLowerCase() == "nightbot"){
+						bot = true;
+						//chatname = "";
+					} else if (data.chatname.toLowerCase() == "vdoninja"){ // because why not. :)
+						data.chatname = "VDO.Ninja";
+						chatname = '<div class="hl-name">' + data.chatname+":</div>";
+						bot = true;
+					} else {
+						chatname = '<div class="hl-name">' + data.chatname+":</div>";
+					}
+				} else {
+					chatname = '<div class="hl-name">' + data.chatname+"</div>";
+				}
 			}
 			
 			var node = createElementFromHTML('<div id="msg_'+counter+'" class="highlight-chat">'
 				 + showType
 				 + chatImg
 				 + timeArrived
-				 + '<div class="hl-name">' + data.chatname
-					+ '<div class="hl-badges">' + data.chatbadges + '</div>'
-				 + '</div>'
+				 + chatname
+				// + '<div class="hl-badges">' + data.chatbadges + '</div>'
 				 + '<div class="hl-message" id="content_'+counter+'">' + data.chatmessage + '</div>'
 				 + addImage
 				 + donation + '</div>')
 				 
-			document.getElementById("output").appendChild(node)
 			
 			if (filtering && !node.textContent.toLowerCase().includes(filtering)){
 				node.classList.add("hide");
+			}
+			
+			if (bot){
+				node.classList.add("bot");
 			}
 			
 			if (data.hasDonation){
 				node.classList.add("donation");
 			}
 			
-			if (obsmode && darkmode){
-				node.classList.add("obsmode");
+			if (compactmode && darkmode){
+				node.classList.add("compactmode");
+			} else if (!compactmode){
+				node.classList.add("notcompactmode");
 			}
 		
+			document.getElementById("output").appendChild(node);
+			
 			if (!document.getElementById("content_"+counter).innerText.trim().length){
 				document.getElementById("msg_"+counter).classList.add("noText");
 			}
@@ -579,12 +717,36 @@
 			};
 
 			for (i = 0; i < node.getElementsByTagName("img").length; i++) {
+			
+				node.getElementsByTagName("img")[i].onload = function(){
+					var body = document.body;
+					var html = document.documentElement;
+					var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
+					if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+150)) || forceAutoscroll){
+						window.scrollTo({
+						  top: height,
+						  left: 0,
+						  behavior: 'smooth'
+						});
+					}
+				}
+			
 				if (node.getElementsByTagName("img")[i].onerror){continue;}
 				if (!node.getElementsByTagName("img")[i].title && node.getElementsByTagName("img")[i].alt){
 					node.getElementsByTagName("img")[i].title = node.getElementsByTagName("img")[i].alt;
 				}
+				
+				if (darkmode && (node.rawContents.type == "twitch") && node.getElementsByTagName("img")[i].src.includes("/light/")){
+					node.getElementsByTagName("img")[i].srcBackup = node.getElementsByTagName("img")[i].src;
+					node.getElementsByTagName("img")[i].src = node.getElementsByTagName("img")[i].src.replaceAll("/light/","/dark/");
+				}
+				
 				node.getElementsByTagName("img")[i].onerror = function(){
-					if (this.alt.length!==2){
+					if (this.srcBackup){
+						this.src = this.srcBackup;
+						this.srcBackup = null;
+						delete this.srcBackup;
+					} else if (this.alt.length!==2){
 						this.style.display='none';
 					} else {
 						this.outerHTML = this.alt;
@@ -592,19 +754,22 @@
 				}
 			}
 			
+			
+			
 			var nodes = document.querySelectorAll(".highlight-chat");
 			if (nodes.length>100){
 				nodes[0].remove();
 			}
-			var height = document.body.scrollTop + document.body.clientHeight;
-			if (document.body.scrollHeight<height+150 || forceAutoscroll){
-				setTimeout(function(){
-					window.scrollTo({
-					  top: document.body.scrollHeight,
-					  left: 0,
-					  behavior: 'smooth'
-					});
-				},0);
+			
+			var body = document.body;
+			var html = document.documentElement;
+			var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
+			if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+150)) || forceAutoscroll){
+				window.scrollTo({
+				  top: height,
+				  left: 0,
+				  behavior: 'smooth'
+				});
 			}
 			
 			applyBotActions(data); // Official actions

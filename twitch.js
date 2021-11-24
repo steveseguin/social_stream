@@ -1,8 +1,7 @@
 
 function processMessage(ele){	// twitch
-  var chatdonation = false;
   var chatsticker = false;
-  
+  var chatmessage = "";
   var chatname = ele.querySelector(".chat-author__display-name").innerText;
   
   try {
@@ -12,56 +11,64 @@ function processMessage(ele){	// twitch
 	}
   } catch(e){}
   
+  
   try {
-	var chatmessage = ele.querySelector('*[data-test-selector="chat-line-message-body"');
-	if ((chatmessage.children.length ===1) && (chatmessage.querySelectorAll("span.text-fragment").length)){
+	chatmessage = ele.querySelector('*[data-test-selector="chat-line-message-body"');
+	if ((chatmessage && chatmessage.children.length ===1) && (chatmessage.querySelectorAll("span.text-fragment").length)){
 		test = chatmessage.innerText.trim();
 		if (test == ""){
 			chatmessage = chatmessage.innerHTML;
 		} else {
 			chatmessage = test;
 		}
-	} else {
+	} else if (chatmessage){
 		chatmessage = chatmessage.innerHTML;
 	}
   } catch(e){}
   
   if (!chatmessage){
+	  chatmessage="";
 	  try {
 		chatmessage = ele.querySelector('span.message').innerHTML; // FFZ support
-	  } catch(e){return;}
-  }
-  
-  if (!chatmessage){
-	  try {
-		chatdonation = ele.querySelector('.chat-line__message--cheer-amount').innerHTML; // FFZ support
-	  } catch(e){}
-	  if (chatdonation){
-		 chatmessage = "";
-		 chatdonation = 0;
-		 var elements = ele.querySelector(".chat-line__message-container").querySelector('span[data-test-selector="chat-message-separator"]').childNodes;
-		 for (var i=0;i<elements.length;i++){
-			elements[i]
-			if (elements[i].querySelector('.chat-line__message--cheer-amount').innerHTML){
-				chatdonation += parseInt(elements[i].querySelector('.chat-line__message--cheer-amount').innerHTML);
-			}
-			chatmessage += elements[i].innerHTML;
-		 }
-		if (chatdonation==1){
-			chatdonation += " bit";
-		} else if (chatdonation>1){
-			chatdonation += " bits";
-		}
+	  } catch(e){
+		  chatmessage="";
 	  }
   }
   
+  var donations = 0;
+  try {
+	var elements = ele.querySelectorAll('.chat-line__message--cheer-amount'); // FFZ support
+	
+	for (var i=0;i<elements.length;i++){
+		donations += parseInt(elements[i].innerText);
+	}
+	if (donations==1){
+		donations += " bit";
+	} else if (donations>1){
+		donations += " bits";
+	}
+  } catch(e){}
+  
   if (!chatmessage){
-	   return;
+	chatmessage = "";
+	var element = ele.querySelector(".chat-line__message-container").querySelector('span[data-test-selector="chat-message-separator"]');
+	while (element.nextSibling) {
+		try{
+		  element = element.nextSibling;
+		  if (element.innerHTML){
+			chatmessage += element.innerHTML;
+		  }
+		} catch(e){}
+	}
+  }
+  
+  if (!chatmessage){
+	return;
   }
 	
   var hasDonation = '';
-  if(chatdonation) {
-    hasDonation = chatdonation;
+  if (donations) {
+    hasDonation = donations;
   }
 
   var data = {};
@@ -74,7 +81,7 @@ function processMessage(ele){	// twitch
   data.type = "twitch";
   
   try {
-	chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){console.log(e);});
+	chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
   } catch(e){
 	  //
   }

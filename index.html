@@ -500,7 +500,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		centering = true;
 	}
 	
-	var timeoutDelay = false;
+	var timeoutDelay = 20000;
 	if (urlParams.has("showtime")){
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
 	}
@@ -660,11 +660,21 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					} catch(e){}
 				}
 				
+				
 				for (i = 0; i < document.getElementsByTagName("img").length; i++) {
 					try {
+						if ((data.type == "twitch") && document.getElementsByTagName("img")[i].src.includes("/light/")){ // dark mode
+							document.getElementsByTagName("img")[i].srcBackup = document.getElementsByTagName("img")[i].src;
+							document.getElementsByTagName("img")[i].src = document.getElementsByTagName("img")[i].src.replaceAll("/light/","/dark/");
+						}
+					
 						if (document.getElementsByTagName("img")[i].onerror){continue;} // already has a catch
 						document.getElementsByTagName("img")[i].onerror = function(){
-							if (this.alt.length!==2){
+							if (this.srcBackup){
+								this.src = this.srcBackup;
+								this.srcBackup = null;
+								delete this.srcBackup;
+							} else if (this.alt.length!==2){
 								this.style.display='none';
 							} else {
 								this.outerHTML = this.alt;
