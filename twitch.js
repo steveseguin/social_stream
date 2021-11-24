@@ -116,7 +116,6 @@ function onElementInsertedTwitch(containerSelector, className, callback) {
 	var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 	var observer = new MutationObserver(onMutationsObserved);
 	observer.observe(target, config);
-	
 }
 
 onElementInsertedTwitch(".chat-scrollable-area__message-container", "chat-line__message", function(element){

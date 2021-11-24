@@ -1,7 +1,8 @@
 <!doctype html>
 <html>
     <head>
-        <title>Chat Overlay messaing tunnel</title>
+		<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+		<meta content="utf-8" http-equiv="encoding" />
         <script src="popup.js"></script>
 		<style>
 			div {
@@ -10,7 +11,6 @@
 			body {
 				background-color:#FFF;
 				width:350px;
-				height:90px;
 			}
 			
 			/* The switch - the box around the slider */
@@ -86,16 +86,16 @@
 		</style>
     </head>
     <body>
-        <div id="status">
 			
-            <button id="disableButton">Toggle On/Off</button>
-			<div id="streamID"></div>
+            <button id="disableButton">Toggle On/Off</button><span id="version"></span>
+			
 			<h3>Dockable streaming chat link</h3>
 			<div id="dock"></div>
 			<h3>Single message overlay link</h3>
 			<div id="overlay"></div>
 			<div id="settings"></div>
 			<div id="newVersion"></div>
+			
 			<h3>Customize dockable streaming chat link</h3>
 			<label class="switch">
 			  <input type="checkbox" data-param1="darkmode">
@@ -113,6 +113,7 @@
 			  <input type="checkbox" data-param1="notime">
 			  <span class="slider round"></span>
 			</label> Hide timestamp
+			
 			<h3>Customize single message overlay link</h3>
 			<label class="switch">
 			  <input type="checkbox" data-param2="showtime=20000">
@@ -126,6 +127,17 @@
 			  <input type="checkbox" data-param2="center">
 			  <span class="slider round"></span>
 			</label> Center overlay<br />
-        </div>
+			
+			<h3>Customize direct actions (no dock needed)</h3>
+			<label class="switch">
+			  <input type="checkbox" id="autohi" data-setting="autohi">
+			  <span class="slider round"></span>
+			</label> Auto-reply to "<b>hi</b>" messages<br />
+			
+			<label class="switch">
+			  <input type="checkbox" id="joke" data-setting="joke">
+			  <span class="slider round"></span>
+			</label> Tell a random <b>!joke</b><br />
+    
     </body>
 </html>
