@@ -57,7 +57,6 @@
 			position:relative;
 			left: 0;
 			width: fit-content;
-			overflow: hidden;
 			white-space: nowrap;
 			color: var(--font-color-name);
 		}
@@ -113,10 +112,12 @@
 		.notcompactmode>.hl-name{
 			font-weight: 700;
 			margin: auto 10px;
-			width: 220px;
-			overflow: hidden;
+			min-width: 148px;
+			max-width: 220px;
 			white-space: unset;
+			overflow:hidden;
 		}
+		
 		.notcompactmode>.highlight-chat{
 			width:100%;
 		}
@@ -171,6 +172,7 @@
 			margin: auto 0;
 			padding: 0;
 			display:inline-block;
+			width: 20px;
 		}
 		
 		a {
@@ -295,6 +297,7 @@
 		
 		.icon {
 			margin: auto 1px auto 3px;
+			border-radius: 50%;
 		}
 		
 		.invert {
@@ -387,7 +390,13 @@
 	
 	if (urlParams.has("compact")){
 		compactmode = true;
+		document.getElementById("output").classList.remove("notcompactmode");
+		document.getElementById("menu").style.display = "none";
 	} 
+	
+	if (urlParams.has("hidemenu")){
+		document.getElementById("menu").style.display = "none";
+	}
 	
 	if (window.obsstudio){
 		window.obsstudio.getStatus(function(obsStatus){
@@ -397,7 +406,7 @@
 			triggerState=false;
 			forceAutoscroll=true;
 			//compactmode=true;
-			document.getElementById("output").classList.remove("notcompactmode");
+			//document.getElementById("output").classList.remove("notcompactmode");
 			scale = scale*2.0
 			document.documentElement.style.setProperty("--scale-output", scale);
 			document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
@@ -587,6 +596,7 @@
 				data.chatmessage = data.chatmessage.trim();
 			}
 			
+			
 			var donation = "";
 			if (data.hasDonation){
 				donation = "<span class='donationAmount'>"+data.hasDonation+"</span>";
@@ -630,6 +640,9 @@
 			}
 			var bot = false;
 			var chatname = "";
+			
+			data.chatname = data.chatname.trim();
+			
 			if (data.chatname){
 				if (compactmode){
 					if (data.chatname.toLowerCase() == "streamelements"){ 
@@ -685,6 +698,17 @@
 				document.getElementById("msg_"+counter).classList.add("noText");
 			}
 			
+			var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they don't fit
+			if (nameEle){
+				var ccc =0;
+				while (nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight){
+					var fontsize = parseInt(window.getComputedStyle(document.querySelector(".hl-name")).fontSize);
+					nameEle.style.fontSize = (fontsize-1)+"px";
+					ccc+=1;
+					if (ccc>10){break;}
+				}
+			}
+			
 			node.rawContents = data;
 			node.onmousedown = function(e){
 				this.classList.add("pressed");
@@ -697,18 +721,28 @@
 							if (text.startsWith("https://")){
 								data.chatimg = text;
 								imgnode.src = text;
+								imgnode.classList.remove("invert");
 								document.getElementById("msg_"+ccc).rawContents.chatimg = text;
 							} else {
 								data.chatimg = 'unknown.png';
+								if (darkmode){
+									imgnode.classList.add("invert");
+								}
 							}
 							sendDataP2P(data);
 						}).catch(function(){
 							data.chatimg = 'unknown.png';
+							if (darkmode){
+								imgnode.classList.add("invert");
+							}
 							sendDataP2P(data);
 						});
 					}).catch(error => {
 						console.error(error);
 						data.chatimg = 'unknown.png';
+						if (darkmode){
+							imgnode.classList.add("invert");
+						}
 						sendDataP2P(data);
 					});
 				} else {
