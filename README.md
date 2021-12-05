@@ -71,7 +71,7 @@ Included in the custom_sample.js file is the &auto1 trigger, as an example. Rena
 
 - &auto1 (auto responds "1" to any message that is also "1")
 
-##### Togglable Menu Commands 
+### Togglable Menu Commands 
 
 These are some generic auto-reply commands that can be toggled on/off via the extension's menu. They do not need a custom.js file to work
 
