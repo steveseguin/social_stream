@@ -61,14 +61,22 @@ If using the automated chat response options, like auto-hi, you must ensure the 
 - &showtime=20000 (auto-hides selected messages after 20s)
 - &scale=2 (doubles size/resolution of all elements)
 - &nodate (hides the date in the chat stream)
-- &autohi (responds by saying Hi! to anyone who says hi in chat)
 - &hidesource (hides the youtube/twitch/fb icons)
 
-### Chat Commands
+#### Auto responding / custom actions
 
-- !highlight  (will not trigger if loaded into OBS as an overlay)
-- !joke  (will not trigger if loaded into OBS as an overlay)
-- hi  (requires &autohi to be enabled)
+In the sample_custom.js file, you can create your own custom auto-responding triggers or other actions.
+
+Included in the custom_sample.js file is the &auto1 trigger, as an example. Rename the file to custom.js to use.
+
+- &auto1 (auto responds "1" to any message that is also "1")
+
+##### Togglable Menu Commands 
+
+These are some generic auto-reply commands that can be toggled on/off via the extension's menu. They do not need a custom.js file to work
+
+- !joke  (tells a random geeky dad joke)
+- hi  (Welcomes anyone who says "hi" into chat)
 
 ### Support
 
