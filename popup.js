@@ -27,6 +27,15 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		iii[i].onchange = updateSettings;
 	}
 	
+	var iii = document.querySelectorAll("button[data-action]");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onclick = function(){
+			var msg = {};
+			msg.cmd = this.dataset.action;
+			chrome.extension.sendMessage(msg, function (response) {});
+		};
+	}
+	
 	checkVersion();
 });
 	

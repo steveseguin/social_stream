@@ -72,6 +72,17 @@ chrome.runtime.onMessage.addListener(
 					} catch(e){}
 					sendDataP2P(request.message); // send the data to the dock
 				}
+			} else if (request.cmd && request.cmd === "tellajoke") {
+				
+				var score = parseInt(Math.random()* 378);
+				var joke = jokes[score];
+				
+				messageTimeout = Date.now();
+				var data = {};
+				data.response = joke["setup"] + "..  " + joke["punchline"] + " LUL";
+				processResponse(data);
+				
+				sendResponse({"state":isExtensionOn});		
 			} else {
 				sendResponse({"state":isExtensionOn});
 			}
