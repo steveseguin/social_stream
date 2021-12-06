@@ -13,7 +13,7 @@ function processMessage(ele){	// twitch
   
   
   try {
-	chatmessage = ele.querySelector('*[data-test-selector="chat-line-message-body"');
+	chatmessage = ele.querySelector('*[data-test-selector="chat-line-message-body"]');
 	if ((chatmessage && chatmessage.children.length ===1) && (chatmessage.querySelectorAll("span.text-fragment").length)){
 		test = chatmessage.innerText.trim();
 		if (test == ""){
@@ -104,10 +104,17 @@ function onElementInsertedTwitch(containerSelector, className, callback) {
 		mutations.forEach(function(mutation) {
 			if (mutation.addedNodes.length) {
 				for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-					if(mutation.addedNodes[i].className == className) {
-						if (mutation.addedNodes[i].ignore){continue;}
+					if (mutation.addedNodes[i].ignore){continue;}
+					if (mutation.addedNodes[i].className && mutation.addedNodes[i].classList.contains(className)) {
 						callback(mutation.addedNodes[i]);
 						mutation.addedNodes[i].ignore=true;
+					} else {
+						var childEle = mutation.addedNodes[i].querySelector("."+className);
+						if (childEle){
+							callback(childEle);
+							mutation.addedNodes[i].ignore=true;
+							childEle.ignore=true;
+						}
 					}
 				}
 			}

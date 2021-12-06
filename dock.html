@@ -539,6 +539,13 @@
 	}
 	
 
+	document.getElementById("filter_messages").addEventListener('keyup', function(e) {
+		if (e.key == "Escape") {
+			document.getElementById("filter_messages").value = "";
+		}
+		filterMessages(document.getElementById("filter_messages").value);
+	});
+	
 	document.getElementById("filter_messages").addEventListener('keydown', function(e) {
 		if (e.key == "Escape") {
 			document.getElementById("filter_messages").value = "";
