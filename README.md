@@ -13,6 +13,8 @@ https://youtu.be/w4jbZS5QgJs
 
 ### To install
 
+This extension should work with Chromium-based browser on systems that support webRTC. This includes Chrome, Edge, and Brave.
+
 Currently you must download, extract, and load the browser extension manually.  It is not available yet in the browser's web store.
 
 Link to download: https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip
@@ -25,7 +27,9 @@ Ensure you have Developer Mode enabled; then you can just load the extension via
 
 ![image](https://user-images.githubusercontent.com/2575698/142857907-80428c61-c192-4bff-a1dc-b1a674f9cc4a.png)
 
-You're ready to start using it!
+You're ready to start using it! 
+
+Please note that you will need to manually update the extension to access newer versions; it currently does not auto update.
 
 ### To use
 
@@ -57,11 +61,17 @@ If using the automated chat response options, like auto-hi, you must ensure the 
 
 ### Customize
 
-- &darkmode (Enables the dark-mode for the chat stream)
-- &showtime=20000 (auto-hides selected messages after 20s)
+- &lightmode (Enables the dark-mode for the chat stream)
+
 - &scale=2 (doubles size/resolution of all elements)
-- &nodate (hides the date in the chat stream)
-- &hidesource (hides the youtube/twitch/fb icons)
+- &notime (hides the date in the chat stream)
+- &hidesource (hides the youtube/twitch/fb icons from the stream)
+- &compact (Removes the spacing between name and message)
+
+To customize the overlay, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the and using the index.html file.
+
+- &showtime=20000 (auto-hides selected messages after 20s)
+- &showsource (shows the youtube/twitch/fb icons next to the name)
 
 #### Auto responding / custom actions
 
@@ -78,6 +88,26 @@ These are some generic auto-reply commands that can be toggled on/off via the ex
 - !joke  (tells a random geeky dad joke)
 - hi  (Welcomes anyone who says "hi" into chat)
 
+### Hotkey (MIDI / Streamlabs) support
+
+There's a toggle to enable MIDI hotkey support. This allows a user to issue commands to the extension when active, such as issue predefined chat messages to all social destinations.
+
+The hotkeys can be issued via MIDI, which can be applied to a Streamdeck also via a virtual MIDI device. The MIDI actions available currently include:
+
+Using Control Change MIDI Commands, on channel 1:
+
+- command 102, with value 1: Say "1" into all chats
+- command 102, with value 2: Say "LUL" into all chats
+- command 102, with value 3: Tell a random joke into all chats
+	
+![image](https://user-images.githubusercontent.com/2575698/144830051-20b11caa-ba63-4223-80e1-9315c479ebd6.png)
+
+The MIDI plugin can be found in the Streamdeck store pretty easily. If using Windows, you can find a virtual MIDI loopback device here: https://www.tobias-erichsen.de/software/loopmidi.html  There are some for macOS as well.
+
+Feedback welcomed
+
 ### Support
 
 You can find me on discord over at https://discord.vdo.ninja (steve), offering free support in channel #chat-overlay-support 
+
+Feedback and feature requests are welcomed
