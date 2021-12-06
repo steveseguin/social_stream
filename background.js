@@ -35,6 +35,7 @@ chrome.storage.sync.get(properties, function(item){
 	if (item.settings){
 		settings = item.settings;
 	}
+	toggleMidi();
 });
 chrome.browserAction.setIcon({path: "/icons/off.png"});
 					
@@ -43,11 +44,10 @@ chrome.runtime.onMessage.addListener(
 		try{
 			if (request.cmd && request.cmd === "setOnOffState") { // toggle the IFRAME (stream to the remote dock) on or off
 				isExtensionOn = request.data.value;
-				
 				if (isExtensionOn){
 					if (iframe==null){
 						loadIframe(channel);
-					} 
+					}
 				} else {
 					if (iframe.src){
 						iframe.src = null;
@@ -55,11 +55,15 @@ chrome.runtime.onMessage.addListener(
 					iframe.remove();
 					iframe = null;
 				}
+				toggleMidi();
 				sendResponse({"state":isExtensionOn,"streamID":channel, "settings":settings});
 			} else if (request.cmd && request.cmd === "getOnOffState") {
 				sendResponse({"state":isExtensionOn,"streamID":channel, "settings":settings});
 			} else if (request.cmd && request.cmd === "saveSetting") {
 				settings[request.setting] = request.value;
+				if (request.setting == "midi"){
+					toggleMidi();
+				}
 				chrome.storage.sync.set(settings);
 				sendResponse({"state":isExtensionOn});		
 			} else if ("message" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
@@ -73,15 +77,7 @@ chrome.runtime.onMessage.addListener(
 					sendDataP2P(request.message); // send the data to the dock
 				}
 			} else if (request.cmd && request.cmd === "tellajoke") {
-				
-				var score = parseInt(Math.random()* 378);
-				var joke = jokes[score];
-				
-				messageTimeout = Date.now();
-				var data = {};
-				data.response = joke["setup"] + "..  " + joke["punchline"] + " LUL";
-				processResponse(data);
-				
+				tellAJoke();
 				sendResponse({"state":isExtensionOn});		
 			} else {
 				sendResponse({"state":isExtensionOn});
@@ -331,6 +327,105 @@ function applyBotActions(data){ // this can be customized to create bot-like aut
 	}
 }
 
+var MidiInit = false;
+
+try {
+	function setupMIDI(MidiInput=false){ // setting up MIDI hotkey support.
+		var midiChannel = 1;
+		if (MidiInput){
+			MidiInput.addListener('controlchange', function(e) {
+				midiHotkeysCommand(e.controller.number, e.rawValue);
+			});
+			
+			MidiInput.addListener('noteon', function(e) {
+				var note = e.note.name + e.note.octave;
+				var velocity = e.velocity || false;
+				midiHotkeysNote(note,velocity);
+			});
+		} else {
+			for (var i = 0; i < WebMidi.inputs.length; i++) {
+				MidiInput = WebMidi.inputs[i];
+				
+				MidiInput.addListener('controlchange', function(e) {
+					if (settings.midi && isExtensionOn){
+						midiHotkeysCommand(e.controller.number, e.rawValue);
+					}
+				});
+				
+				MidiInput.addListener('noteon', function(e) {
+					if (settings.midi && isExtensionOn){
+						var note = e.note.name + e.note.octave;
+						var velocity = e.velocity || false;
+						midiHotkeysNote(note,velocity);
+					}
+				});
+			}
+		}
+	}
+	
+	function toggleMidi(){
+		if (!("midi" in settings)){return;}
+		
+		if (MidiInit===false){
+			MidiInit=true;
+			
+			WebMidi.enable().then(() =>{
+				setupMIDI();
+				
+				WebMidi.addListener("connected", function(e) {
+					console.log(e);
+					setupMIDI(e.target._midiInput);
+				});
+				WebMidi.addListener("disconnected", function(e) {
+					console.log(e);
+				});
+				console.log(WebMidi.inputs);
+				
+			});
+		}
+	}
+	
+} catch(e){console.error(e);}
+
+function midiHotkeysCommand(number, value){ // MIDI control change commands
+	if (number == 102 && value == 1){
+		respond1ToAll();
+	} else if (number == 102 && value == 2){
+		respondLULToAll();
+	} else if (number == 102 && value == 3){
+		tellAJoke();
+	}
+}
+
+function midiHotkeysNote(note, velocity){
+	// In case you want to use NOTES instead of Control Change commands; like if you have a MIDI piano
+}
+
+function tellAJoke(){
+	var score = parseInt(Math.random()* 378);
+	var joke = jokes[score];
+	console.log("Telling joke #"+score+" to everyone...");
+	messageTimeout = Date.now();
+	var data = {};
+	data.response = joke["setup"] + "..  " + joke["punchline"] + " LUL";
+	processResponse(data);
+}
+
+function respond1ToAll(){
+	console.log("Entering '1' into all chats");
+	messageTimeout = Date.now();
+	var data = {};
+	data.response = "1";
+	processResponse(data);
+}
+
+function respondLULToAll(){
+	console.log("Entering 'LUL' into all chats");
+	messageTimeout = Date.now();
+	var data = {};
+	data.response = "LUL";
+	processResponse(data);
+}
 
 var jokes = [ // jokes from reddit; sourced from github.
   {
