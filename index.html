@@ -505,10 +505,10 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
 	}
 	var timeoutTimer = null;
-	var showsource = true;
+	var showsource = false;
 	
-	if (urlParams.has("hidesource")){
-		showsource = false;
+	if (urlParams.has("showsource")){
+		showsource = true;
 	} 
 	
 	function realign(){
