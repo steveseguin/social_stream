@@ -9,7 +9,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 
 ### Video walk-thru
 
-https://youtu.be/w4jbZS5QgJs
+https://www.youtube.com/watch?v=X_11Np2JHNU
 
 ### To install
 
