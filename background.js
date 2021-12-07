@@ -70,10 +70,11 @@ chrome.runtime.onMessage.addListener(
 				request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from 
 				sendResponse({"state":isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
 				
+				
 				if (isExtensionOn){
 					try{
 						applyBotActions(request.message); // perform any immediate actions
-					} catch(e){}
+					} catch(e){console.error(e);}
 					sendDataP2P(request.message); // send the data to the dock
 				}
 			} else if (request.cmd && request.cmd === "tellajoke") {
@@ -310,7 +311,7 @@ function processResponse(data){
 							console.error(e);
 						}
 					},0,tabs[i].id, data.response);
-				} else if (tabs[i].url){  // all other destinations. ; generic
+				} else {  // all other destinations. ; generic
 					
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
@@ -321,7 +322,6 @@ function processResponse(data){
 						try{
 							
 							chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {
-								
 								if (!response){return;}; // make sure the response is valid, else don't inject text
 								
 								chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
@@ -351,12 +351,13 @@ function processResponse(data){
 							
 						} catch(e){
 							console.error(e);
+							if (debuggerEnabled[tabid]){
+								chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+							}
 						}
-					},0,tabs[i].id, data.response);
+					},0 ,tabs[i].id, data.response);
 					
 				} 
-				
-			
 			} catch(e){console.error(e);}
 		}
 	});
@@ -368,7 +369,6 @@ function processResponse(data){
 
 function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
-	
 	if (settings.autohi){
 		if (data.chatmessage.toLowerCase() === "hi"){
 			if (Date.now() - messageTimeout > 60000){ // respond to "1" with a "1" automatically; at most 1 time per minute.
@@ -387,10 +387,10 @@ function applyBotActions(data){ // this can be customized to create bot-like aut
 			messageTimeout = Date.now();
 			data.response = "@"+data.chatname+", "+joke["setup"];
 			processResponse(data);
-			
 			setTimeout(function(msg, punch){
 				msg.response = punch;
 				processResponse(msg);
+				
 			},5000, data, "@"+data.chatname+".. "+joke["punchline"]);
 		}
 	}
@@ -473,7 +473,6 @@ function midiHotkeysNote(note, velocity){
 function tellAJoke(){
 	var score = parseInt(Math.random()* 378);
 	var joke = jokes[score];
-	console.log("Telling joke #"+score+" to everyone...");
 	messageTimeout = Date.now();
 	var data = {};
 	data.response = joke["setup"] + "..  " + joke["punchline"] + " LUL";
@@ -481,7 +480,6 @@ function tellAJoke(){
 }
 
 function respond1ToAll(){
-	console.log("Entering '1' into all chats");
 	messageTimeout = Date.now();
 	var data = {};
 	data.response = "1";
@@ -489,7 +487,6 @@ function respond1ToAll(){
 }
 
 function respondLULToAll(){
-	console.log("Entering 'LUL' into all chats");
 	messageTimeout = Date.now();
 	var data = {};
 	data.response = "LUL";

@@ -55,11 +55,9 @@ chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
 		try{
 			if ("focusChat" == request){
-				if (document.querySelector("div#message-input")){
-					document.querySelector("div#message-input").focus();
-					sendResponse(true);
-					return;
-				} 
+				document.querySelector("div#message-input").focus();
+				sendResponse(true);
+				return;
 			}
 		} catch(e){}
 		sendResponse(false);
