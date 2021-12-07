@@ -92,9 +92,11 @@ chrome.runtime.onMessage.addListener(
 		try{
 			if ("focusChat" == request){
 				document.querySelector('[data-a-target="chat-input"]').focus();
+				sendResponse(true);
+				return;
 			}
 		} catch(e){}
-		sendResponse(document.querySelector('[data-a-target="chat-input"]').innerHTML);
+		sendResponse(false);
 	}
 );
 

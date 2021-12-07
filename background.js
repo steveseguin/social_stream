@@ -167,7 +167,9 @@ function processResponse(data){
 					setTimeout(function(tabid, message){ // fake a user input
 						try{
 							
-							chrome.tabs.sendMessage(tabid, "focusChat", function(response=null) {
+							chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {
+								
+								if (!response){return;};
 								
 								chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
 								
@@ -207,7 +209,10 @@ function processResponse(data){
 					setTimeout(function(tabid, message){
 						try{
 							
-							chrome.tabs.sendMessage(tabid, "focusChat", function(response=null) {
+							chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {
+								
+								if (!response){return;};
+								
 								chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
 								
 								chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
@@ -260,7 +265,10 @@ function processResponse(data){
 					setTimeout(function(tabid, message){
 						try{
 							
-							chrome.tabs.sendMessage(tabid, "focusChat", function(response=null) {
+							chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {
+								
+								if (!response){return;};
+								
 								chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
 								
 								chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
@@ -302,7 +310,51 @@ function processResponse(data){
 							console.error(e);
 						}
 					},0,tabs[i].id, data.response);
-				}
+				} else if (tabs[i].url){  // all other destinations. ; generic
+					
+					if (!debuggerEnabled[tabs[i].id]){
+						debuggerEnabled[tabs[i].id]=false;
+						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }));  // enable the debugger to let us fake a user input
+					}
+					
+					setTimeout(function(tabid, message){ // fake a user input
+						try{
+							
+							chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {
+								
+								if (!response){return;}; // make sure the response is valid, else don't inject text
+								
+								chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
+								
+								chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 
+									"type": "keyDown",
+									"key": "Enter",
+									"code": "Enter",
+									"nativeVirtualKeyCode": 13,
+									"windowsVirtualKeyCode": 13
+								}, function (e) {});
+								
+								chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+									"type": "keyUp",
+									"key": "Enter",
+									"code": "Enter",
+									"nativeVirtualKeyCode": 13,
+									"windowsVirtualKeyCode": 13
+								 }, function (e) {
+										if (debuggerEnabled[tabid]){
+											chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+										}
+									}
+								);
+								
+							});
+							
+						} catch(e){
+							console.error(e);
+						}
+					},0,tabs[i].id, data.response);
+					
+				} 
 				
 			
 			} catch(e){console.error(e);}

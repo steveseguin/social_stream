@@ -55,11 +55,14 @@ chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
 		try{
 			if ("focusChat" == request){
-				document.querySelector("div#message-input").focus();
-				//document.querySelector("yt-live-chat-text-input-field-renderer").focus();
+				if (document.querySelector("div#message-input")){
+					document.querySelector("div#message-input").focus();
+					sendResponse(true);
+					return;
+				} 
 			}
 		} catch(e){}
-		sendResponse(document.querySelector("div#message-input").innerHTML);
+		sendResponse(false);
 	}
 );
 
@@ -67,7 +70,6 @@ function onElementInserted(containerSelector, callback) {
     var onMutationsObserved = function(mutations) {
         mutations.forEach(function(mutation) {
             if (mutation.addedNodes.length) {
-				console.log(mutation.addedNodes);
                 for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
                     if (mutation.addedNodes[i] && mutation.addedNodes[i].className && mutation.addedNodes[i].classList.contains("message")) {
                         callback(mutation.addedNodes[i]);
@@ -83,7 +85,7 @@ function onElementInserted(containerSelector, callback) {
     var observer = new MutationObserver(onMutationsObserved);
     observer.observe(target, config);
 }
-console.log("starting");
+console.log("social stream injected");
 onElementInserted("#messages-only", function(element){
   processMessage(element, false);
 });

@@ -157,10 +157,12 @@
 				console.log(request);
 				if ("focusChat" == request){
 					document.querySelector('[contenteditable="true"]').childNodes[0].childNodes[0].childNodes[0].focus();
+					sendResponse(true);
+					return;
 				}
 			} catch(e){}
 			
-			sendResponse(document.querySelector('[contenteditable="true"]').childNodes[0].childNodes[0].childNodes[0].childNodes[0].childNodes[0].innerHTML);
+			sendResponse(false);
 		}
 	);
 

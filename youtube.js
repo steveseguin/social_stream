@@ -102,10 +102,12 @@ chrome.runtime.onMessage.addListener(
 		try{
 			if ("focusChat" == request){
 				document.querySelector("div#input").focus();
+				sendResponse(true);
+				return;
 				//document.querySelector("yt-live-chat-text-input-field-renderer").focus();
 			}
 		} catch(e){}
-		sendResponse(document.querySelector("div#input").innerHTML);
+		sendResponse(false);
 	}
 );
 
