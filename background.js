@@ -78,6 +78,23 @@ chrome.runtime.onMessage.addListener(
 				}
 			} else if (request.cmd && request.cmd === "tellajoke") {
 				tellAJoke();
+				sendResponse({"state":isExtensionOn});
+			} else if (request.cmd && request.cmd === "sidUpdated") {
+				if (request.value){
+					channel = request.value;
+				}
+				if (iframe){
+					if (iframe.src){
+						iframe.src = null;
+					}
+					
+					iframe.remove();
+					iframe = null;
+				}
+				if (isExtensionOn){
+					loadIframe(channel);
+				}
+				
 				sendResponse({"state":isExtensionOn});		
 			} else {
 				sendResponse({"state":isExtensionOn});

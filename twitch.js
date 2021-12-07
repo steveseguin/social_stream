@@ -109,12 +109,14 @@ function onElementInsertedTwitch(containerSelector, className, callback) {
 						callback(mutation.addedNodes[i]);
 						mutation.addedNodes[i].ignore=true;
 					} else {
-						var childEle = mutation.addedNodes[i].querySelector("."+className);
-						if (childEle){
-							callback(childEle);
-							mutation.addedNodes[i].ignore=true;
-							childEle.ignore=true;
-						}
+						try{
+							var childEle = mutation.addedNodes[i].querySelector("."+className);
+							if (childEle){
+								callback(childEle);
+								mutation.addedNodes[i].ignore=true;
+								childEle.ignore=true;
+							}
+						} catch(e){}
 					}
 				}
 			}

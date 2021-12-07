@@ -3,6 +3,10 @@ function saveOptions(e) {
   chrome.storage.sync.set({
 	streamID: document.querySelector("#streamID").value,
   });
+  
+    chrome.extension.sendMessage({cmd: "sidUpdated", value: document.querySelector("#streamID").value}, function (response) {
+	});
+  
   document.querySelector("#savedButton").innerHTML = "Saved";
 }
 function generateStreamID(){

@@ -131,6 +131,6 @@ function onElementInserted(containerSelector, callback) {
     observer.observe(target, config);
 }
 
-onElementInserted(".yt-live-chat-item-list-renderer", function(element){
+onElementInserted("yt-live-chat-app", function(element){
   processMessage(element, false);
 });
