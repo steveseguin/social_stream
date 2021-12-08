@@ -505,7 +505,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	})(window);
 	var urlParams = new URLSearchParams(window.location.search);
 	
-	
+	try {
 	var nextComment = null;
 	var roomID = "test";
 	
@@ -727,6 +727,9 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 			} 
 		}
 	
+	}
+	} catch(e){
+		document.body.innerHTML = "ERROR";
 	}
 	
 	</script>
