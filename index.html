@@ -6,7 +6,6 @@
 	<title>Social Stream - Overlay</title>
 	<meta name="title" content="Social Stream - Overlay" />
 	<link rel="icon" href="./icons/favicon.ico" />
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 	<style>
 :root {
     /* basic colors */
@@ -463,22 +462,21 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	<script>
 	
 	function log(msg){
-		console.log(msg);
+	//	console.log(msg);
 	}
 
 	function warnlog(msg, url=false, lineNumber=false){
-		console.warn(msg); 
+	//	console.warn(msg); 
 		if (lineNumber){
-			console.warn(lineNumber);
+	//		console.warn(lineNumber);
 		}
 	}
 
 	function errorlog(msg, url=false, lineNumber=false){
-		console.error(msg);
+	//	console.error(msg);
 		if (lineNumber){
-			console.error(lineNumber);
+		//	console.error(lineNumber);
 		}
-		document.body.innerHTML = "Unhandeled Error occured: "+errorMsg+" "+lineNumber;
 	}
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
 		errorlog(errorMsg);
