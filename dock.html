@@ -325,6 +325,13 @@
 	<script>
 	
 	
+	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
+		console.error(errorMsg);
+		console.error(lineNumber);
+		console.error("Unhandeled Error occured"); //or any message
+		return false;
+	};
+	
 	(function (w) {
 		w.URLSearchParams = w.URLSearchParams || function (searchString) {
 			var self = this;

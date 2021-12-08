@@ -16,7 +16,7 @@ function generateStreamID(){
 		text = text.replaceAll('Ad', 'vdAv');
 		text = text.replaceAll('ad', 'vdav');
 		text = text.replaceAll('aD', 'vDav');
-	} catch(e){console.error(e);}
+	} catch(e){console.log(e);}
 	return text;
 };
 
@@ -74,7 +74,7 @@ chrome.runtime.onMessage.addListener(
 				if (isExtensionOn){
 					try{
 						applyBotActions(request.message); // perform any immediate actions
-					} catch(e){console.error(e);}
+					} catch(e){console.log(e);}
 					sendDataP2P(request.message); // send the data to the dock
 				}
 			} else if (request.cmd && request.cmd === "tellajoke") {
@@ -132,7 +132,7 @@ chrome.debugger.onDetach.addListener(onDetach);
 
 function onAttach(debuggeeId) { // for faking user input
   if (chrome.runtime.lastError) {
-    console.warn(chrome.runtime.lastError.message);
+    console.log(chrome.runtime.lastError.message);
     return;
   }
   debuggerEnabled[debuggeeId.tabId] = true;
@@ -198,7 +198,7 @@ function processResponse(data){
 							});
 							
 						} catch(e){
-							console.error(e);
+							console.log(e);
 						}
 					},0,tabs[i].id, data.response);
 					
@@ -254,7 +254,7 @@ function processResponse(data){
 							});
 							
 						} catch(e){
-							console.error(e);
+							console.log(e);
 						}
 					},0,tabs[i].id, data.response);
 					
@@ -308,7 +308,7 @@ function processResponse(data){
 							});
 							
 						} catch(e){
-							console.error(e);
+							console.log(e);
 						}
 					},0,tabs[i].id, data.response);
 				} else {  // all other destinations. ; generic
@@ -350,7 +350,7 @@ function processResponse(data){
 							});
 							
 						} catch(e){
-							console.error(e);
+							console.log(e);
 							if (debuggerEnabled[tabid]){
 								chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
 							}
@@ -358,7 +358,7 @@ function processResponse(data){
 					},0 ,tabs[i].id, data.response);
 					
 				} 
-			} catch(e){console.error(e);}
+			} catch(e){console.log(e);}
 		}
 	});
 }
@@ -454,7 +454,7 @@ try {
 		}
 	}
 	
-} catch(e){console.error(e);}
+} catch(e){console.log(e);}
 
 function midiHotkeysCommand(number, value){ // MIDI control change commands
 	if (number == 102 && value == 1){
