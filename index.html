@@ -462,6 +462,32 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	<div id="output" class="output"></div>
 	<script>
 	
+	function log(msg){
+		console.log(msg);
+	}
+
+	function warnlog(msg, url=false, lineNumber=false){
+		console.warn(msg); 
+		if (lineNumber){
+			console.warn(lineNumber);
+		}
+	}
+
+	function errorlog(msg, url=false, lineNumber=false){
+		console.error(msg);
+		if (lineNumber){
+			console.error(lineNumber);
+		}
+		document.body.innerHTML = "Unhandeled Error occured: "+errorMsg+" "+lineNumber;
+	}
+	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
+		errorlog(errorMsg);
+		errorlog(lineNumber);
+		errorlog("Unhandeled Error occured"); //or any message
+		return false;
+	};
+
+	
 	(function (w) {
 		w.URLSearchParams = w.URLSearchParams || function (searchString) {
 			var self = this;
@@ -533,7 +559,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				document.getElementById("imgContent").style.right = 0;
 				document.getElementById("imgContent").style.left = (300) + "px";
 			}	
-		} catch(e){console.warn(e);}
+		} catch(e){errorlog(e);}
 		
 	}
 	
@@ -543,7 +569,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		if (parseInt(window.innerHeight)<500){
 			document.documentElement.style.setProperty("--image-content-max-height", window.innerHeight)
 		}
-	}catch(e){console.error(e);}
+	}catch(e){errorlog(e);}
 	
 	function RecvDataWindow(){
 		var iframe = document.createElement("iframe");
