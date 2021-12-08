@@ -2,7 +2,7 @@
 An issue with OBS for Linux and macOS systems has forced me to push a critical version update. You must update else you risk things not working.
 
 - OBS on Linux/macOS systems will now work with the newest version of Social Stream Ninja
-- For Linux/macOS users, OBS needs to be launched with a certain command line flag to allow custom/locally hosted docks/overlays to work. This is not needed if using the socialstream.ninja hosted versions of the overlay/dock though. The extension of course can be locally hosted and customized still, along with custom.js file.
+- For Linux/macOS users, OBS needs to be launched with a certain command line flag to allow custom/locally hosted docks/overlays to work. This is not needed if using the socialstream.ninja hosted versions of the overlay/dock though. The extension of course can be locally hosted and customized still, along with custom.js file, without any flags.
 - Windows PC need to just update their extension / overlay / dock to the newest version; they can still currently use custom overlays/docks locally.
 
 # Social Stream
