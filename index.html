@@ -505,7 +505,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	})(window);
 	var urlParams = new URLSearchParams(window.location.search);
 	
-	try {
+	
 	var nextComment = null;
 	var roomID = "test";
 	
@@ -580,6 +580,8 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		iframe.style.left = "-100px";
 		iframe.style.top = "-100px";
 		iframe.id = "frame1"
+		iframe.allow = "autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
+
 		document.body.appendChild(iframe);
 		
 		var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
@@ -727,9 +729,6 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 			} 
 		}
 	
-	}
-	} catch(e){
-		document.body.innerHTML = "ERROR";
 	}
 	
 	</script>
