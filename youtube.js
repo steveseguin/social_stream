@@ -31,7 +31,11 @@ function processMessage(ele, wss=true){
   var chatimg = "";
   try{
 	chatimg = ele.querySelector("#img").src;
-	chatimg = chatimg.replace("32", "128");
+	if (chatimg.includes("data:image/gif;base64") || (ele.getAttribute("author-type")=="owner")){
+		chatimg = document.querySelector("#panel-pages").querySelector("#img").src; // this is the owner
+	}
+	chatimg = chatimg.replace("=s32-", "=s128-");
+	chatimg = chatimg.replace("=s64-", "=s128-");
   } catch(e){}
   
   var chatdonation = "";

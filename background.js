@@ -202,55 +202,55 @@ function processResponse(data){
 						}
 					},0,tabs[i].id, data.response);
 					
-				} else if (tabs[i].url.startsWith("https://www.youtube.com/live_chat")){
+				} else if (tabs[i].url.startsWith("https://www.youtube.com/live_chat") || tabs[i].url.startsWith("https://studio.youtube.com/live_chat")){
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
 						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }));
 					}
 					setTimeout(function(tabid, message){
-						try{
-							
+						try {
 							chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {
 								
 								if (!response){return;};
 								
-								chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
+								chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {
+									
+									chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+										"type": "keyDown",
+										"key": "Enter",
+										"code": "Enter",
+										"text": "\r",
+										"nativeVirtualKeyCode": 13,
+										"windowsVirtualKeyCode": 13
+									}, function (e) {
+										
+									});
 								
-								chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
-									"type": "keyDown",
-									"key": "Enter",
-									"code": "Enter",
-									"text": "\r",
-									"nativeVirtualKeyCode": 13,
-									"windowsVirtualKeyCode": 13
-								}, function (e) {
-									
-								});
-							
-								chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
-									"type": "char",
-									"key": "Enter",
-									"text": "\r",
-									"code": "Enter",
-									"nativeVirtualKeyCode": 13,
-									"windowsVirtualKeyCode": 13
-								}, function (e) {
-									
-								});
-							
-								chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 
-									"type": "keyUp",
-									"key": "Enter",
-									"code": "Enter",
-									"text": "\r",
-									"nativeVirtualKeyCode": 13,
-									"windowsVirtualKeyCode": 13
-								 }, function (e) {
-										if (debuggerEnabled[tabid]){
-											chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+									chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+										"type": "char",
+										"key": "Enter",
+										"text": "\r",
+										"code": "Enter",
+										"nativeVirtualKeyCode": 13,
+										"windowsVirtualKeyCode": 13
+									}, function (e) {
+										
+									});
+								
+									chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+										"type": "keyUp",
+										"key": "Enter",
+										"code": "Enter",
+										"text": "\r",
+										"nativeVirtualKeyCode": 13,
+										"windowsVirtualKeyCode": 13
+									 }, function (e) {
+											if (debuggerEnabled[tabid]){
+												chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+											}
 										}
-									}
-								);
+									);
+								});
 							});
 							
 						} catch(e){
