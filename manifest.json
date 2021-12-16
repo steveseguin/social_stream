@@ -2,7 +2,7 @@
   "name": "Consolidated social streaming for Youtube, Twitch & more",
   "description": "Tool for engaging live chat from Youtube, Twitch, Facebook and more. Feature requests accepted!",
   "manifest_version": 2,
-  "version": "1.0.1",
+  "version": "1.1.0",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -12,7 +12,7 @@
     "persistent": true
   },
   "permissions": [
-    "https://youtube.com/*", "https://www.youtube.com/*", "https://studio.youtube.com/*", "https://www.twitch.tv/*", "https://glimesh.tv/*", "https://chat.restream.io/*", "https://www.instagram.com/*", "https://instagram.com/*", "https://trovo.live/chat/*", "https://www.twitter.com/*", "https://www.twitter.com/*", "https://facebook.com/*", "https://www.facebook.com/*", "https://play.rozy.tv/*", "https://watch.owncast.online/*", "storage", "debugger"
+    "https://youtube.com/*", "https://www.youtube.com/*", "https://studio.youtube.com/*", "https://www.twitch.tv/*", "https://chat.restream.io/*", "https://trovo.live/chat/*", "https://facebook.com/*", "https://www.facebook.com/*", "https://play.rozy.tv/*", "https://www.crowdcast.io/e/*", "https://*.zoom.us/*", "https://watch.owncast.online/*", "storage", "debugger"
   ],
   "browser_action": {
         "default_popup": "popup.html"
@@ -33,7 +33,16 @@
 	  {
 		"js": ["owncast.js"],
 		"matches": ["https://watch.owncast.online/*"]
+	  },
+	   {
+		"js": ["zoom.js"],
+		"matches": ["https://*.zoom.us/*"]
+	  },
+	   {
+		"js": ["crowdcast.js"],
+		"matches": ["https://www.crowdcast.io/e/*"]
 	  }
+	  
   ],
   "options_ui": {
     "page": "settings/options.html"

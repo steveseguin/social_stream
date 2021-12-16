@@ -1,4 +1,4 @@
-
+(function () {
 	function pushMessage(data){	  
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
@@ -98,31 +98,17 @@
 	  data.contentimg = "";
 	  data.type = "facebook";
 	  
-	  if (data.type === "facebook"){
-		   if (data.contentimg){
-			  toDataURL(contentimg, function(dataUrl) {
-				  data.contentimg = dataUrl;
-				  if (data.chatimg){
-						toDataURL(data.chatimg, function(dataUrl) {
-							data.chatimg = dataUrl;
-							pushMessage(data);
-						});
-				  } else {
-					   pushMessage(data);
-				  }
-			  });
-			} else if (data.chatimg){
-				toDataURL(data.chatimg, function(dataUrl) {
-					data.chatimg = dataUrl;
-					pushMessage(data);
-				});
-			} else {
-				data.chatimg = "";
+	  
+		if (data.chatimg){
+			toDataURL(data.chatimg, function(dataUrl) {
+				data.chatimg = dataUrl;
 				pushMessage(data);
-			}
-	  } else {
-		  pushMessage(data);
-	  }
+			});
+		} else {
+			data.chatimg = "";
+			pushMessage(data);
+		}
+	  
 	}
 	setTimeout(function(){ // clear existing messages; just too much for a stream.
 		try {
@@ -167,3 +153,4 @@
 	);
 
 	
+})();

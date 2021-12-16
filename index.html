@@ -128,9 +128,10 @@ div#message > div {
 .sourcetype {
 	position: relative;
     bottom: 44px;
-    max-width: 42px;
-    max-height: 42px;
+    max-width: 42px!important;
+    max-height: 42px!important;
     left: 100px;
+	margin:0!important;
 }
 .btn-clear {
     position: absolute;
@@ -268,9 +269,13 @@ yt-live-chat-text-message-renderer.shown-comment {
 }
 .hl-img img {
     display: block;
-    width: 100%;
+    width:100%;
+    height:100%;
+    object-fit: cover;
+    overflow: hidden;
     border-radius: 50%;
     z-index: 1;
+	margin: auto;
 }
 .hl-imgContent {
     max-height: 300px;
