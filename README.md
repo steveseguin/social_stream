@@ -9,11 +9,22 @@ An issue with OBS for Linux and macOS systems has forced me to push a critical v
 # Social Stream
 Consolidate your live social messaging streams
 
-- Supports live automated two-way chat messaging with Facebook, Youtube, and Twitch
+- Supports live automated two-way chat messaging with Facebook, Youtube, Twitch, and more
 - Includes a "feature chat" overlay, selectable via the dockable dashboard
 - Supports bot-commands and automated chat responses, with custom logic plugin support.
 
 Social Stream makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
+
+### Supported sites:
+
+- twitch.tv pop out chat
+- youtube live pop out chat (studio or guest)
+- facebook live (guest view on web)
+- zoom.us (web version)
+- owncast demo page (watch.owncast.online)
+- crowdcast.io
+
+More on request
 
 ### Video walk-thru
 
