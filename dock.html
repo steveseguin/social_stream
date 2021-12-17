@@ -218,7 +218,6 @@
 		#menu > input {
 			padding: 5px;
 			background-color: #FFF4;
-			max-width: 120px;
 		}
 		#menu > input:focus {
 		  background-color: #FFFF;
@@ -309,6 +308,28 @@
 			right: 20px;
 			bottom: 20px;
 		}
+		
+		#jumpto {
+			position: fixed !important;
+			right: 20px;
+			bottom: 20px;
+		}
+		
+		 input[type="text"] {
+			width: 110px;
+		}
+
+		input[type="text"]:focus {
+			width: 170px;
+		}
+
+		input[type="text"] {
+			-webkit-transition: all 0.4s ease 0s;
+			-moz-transition: all 0.4s ease 0s;
+			-o-transition: all 0.4s ease 0s;
+			transition: all 0.4s ease 0s;
+		}
+
 	</style>
 </head>
 <body>
@@ -318,11 +339,13 @@
 		<button id="pause" data-state="0" onclick="pause(this);">⏯︎ Pause</button>
 		<input id="filter_messages" onchange="filterMessages(this.value);" placeholder="Filter messages" type="text" />
 		<button id="hide_emoji" data-state="0" onclick="emoji(this);" title="Hide all emoji-only messages">🚫🙂</button>
-		<button id="say_hello" data-state="0" onclick="respondP2P();" title="Send a text message to all social endpoints">💬</button>
-		<button id="triggers" data-state="0" onclick="toggleTriggers(this);" title="Adjust settings of this page and triggers" style="display:none">⚙️</button>
+		<button id="say_hello" data-state="0" onclick="toggleChat();" title="Send a text message to all social endpoints">💬</button>
+		<input type="text" id="chatInput" style="display:none;" placeholder="Say something.." />
 		<button id="jumpto" data-state="0" onclick="jumptoBottom(this);" title="Jump to bottom">V</button>
+		
 	<div>
 	<script>
+	
 	
 	
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
@@ -460,6 +483,9 @@
 	
 	function pause(ele){
 		pauseState = !pauseState;
+		
+		ele.innerHTML = "⏯︎";
+		
 		if (pauseState){
 			ele.classList.add("pressed");
 		} else {
@@ -850,10 +876,26 @@
 		} catch(e){}
 	}
 	
+	document.getElementById("chatInput").addEventListener("keyup", function(event) {
+		if (event.keyCode === 13) {
+			event.preventDefault();
+			respondP2P(document.getElementById("chatInput").value);
+			document.getElementById("chatInput").value = "";
+		}
+	})
+	
+	function toggleChat(){
+		document.getElementById("chatInput").style.display = "inline-block";
+		document.getElementById("say_hello").style.display = "none";
+		document.getElementById("chatInput").focus();
+	}
+	
 	function respondP2P(data=null, tid=false){
 		if (data===null){
 			data = prompt("Enter something to say to all of chat");
 		}
+		if (!data){return;}
+		data = data.trim();
 		if (!data){return;}
 		var msg = {};
 		msg.overlayNinja = {};

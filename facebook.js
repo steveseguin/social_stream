@@ -142,11 +142,16 @@
 			try{
 				console.log(request);
 				if ("focusChat" == request){
+					if (!document.querySelector("div[role='complementary']")){
+						sendResponse(false);
+						return;
+					}
 					document.querySelector('[contenteditable="true"]').childNodes[0].childNodes[0].childNodes[0].focus();
 					sendResponse(true);
+					
 					return;
 				}
-			} catch(e){}
+			} catch(e){	}
 			
 			sendResponse(false);
 		}

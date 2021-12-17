@@ -204,6 +204,9 @@ function processResponse(data){
 							
 						} catch(e){
 							console.log(e);
+							if (debuggerEnabled[tabid]){
+								chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+							}
 						}
 					},0,tabs[i].id, data.response);
 					
@@ -264,6 +267,9 @@ function processResponse(data){
 							});
 							
 						} catch(e){
+							if (debuggerEnabled[tabid]){
+								chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+							}
 							console.log(e);
 						}
 					},0,tabs[i].id, data.response);
@@ -284,8 +290,6 @@ function processResponse(data){
 									}
 									return;
 								};
-								
-								
 								
 								chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
 								
@@ -325,6 +329,9 @@ function processResponse(data){
 							});
 							
 						} catch(e){
+							if (debuggerEnabled[tabid]){
+								chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+							}
 							console.log(e);
 						}
 					},0,tabs[i].id, data.response);
