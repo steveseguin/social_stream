@@ -135,8 +135,20 @@ The MIDI plugin can be found in the Streamdeck store pretty easily. If using Win
 
 Feedback welcomed
 
+### Known issues or solutions
+
+If the auto responder doesn't work -- you see a blue bar, but nothing happens, there's a couple things to do.
+- make sure if using Youtube/Twitch that the pop out window is open
+- go to `chrome://apps` and remove the Youtube(s) apps that might appear.  You can remove them all really if none are required.
+- Make sure you have permission to post into the chat first -- sometimes you need to be a subscriber for example to send chat messages.
+
+![image](https://user-images.githubusercontent.com/2575698/146602513-e3b7e69c-19fa-4e58-b907-6f08b3f873e0.png)
+
+
 ### Support
 
 You can find me on discord over at https://discord.vdo.ninja (steve), offering free support in channel #chat-overlay-support 
 
 Feedback and feature requests are welcomed
+
+
