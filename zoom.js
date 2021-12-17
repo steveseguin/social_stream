@@ -92,7 +92,7 @@
 		data.type = "zoom";
 		
 		
-		if (lastMessage === JSON.stringify(data)){
+		if (lastMessage === JSON.stringify(data)){ // prevent duplicates, as zoom is prone to it.
 			return;
 		}
 		lastMessage = JSON.stringify(data);
