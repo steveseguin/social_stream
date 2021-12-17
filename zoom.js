@@ -14,6 +14,9 @@
 	  xhr.send();
 	}
 
+
+	var lastMessage = {};
+	
 	function processMessage(ele){
 		
 		if (ele && ele.marked){
@@ -21,6 +24,15 @@
 		} else {
 		  ele.marked = true;
 		}
+		
+		if (document.querySelector("chat-message__container")){
+			if (document.querySelector("chat-message__container").marked){
+				return;
+			} else {
+				document.querySelector("chat-message__container").marked = true;
+			}
+		}
+		
 
 		var img = false;
 		var chatimg = "";
@@ -78,7 +90,13 @@
 		data.hasMembership = "";;
 		data.contentimg = "";
 		data.type = "zoom";
-	  
+		
+		
+		if (lastMessage === JSON.stringify(data)){
+			return;
+		}
+		lastMessage = JSON.stringify(data);
+		
 		if (data.chatimg && img){
 			toDataURL(data.chatimg, function(dataUrl) {
 				data.chatimg = dataUrl;
@@ -90,6 +108,7 @@
 	}
 
 	function pushMessage(data){
+		
 		try{
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 		} catch(e){}
@@ -108,15 +127,14 @@
 		}
 	);
 
-	function onElementInserted(containerSelector, callback) {
+	function onElementInserted(containerSelector) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						if (mutation.addedNodes[i].hasAttribute("role")){
-							callback(mutation.addedNodes[i]);
+							processMessage(mutation.addedNodes[i]);
 						}
-						
 					}
 				}
 			});
@@ -135,13 +153,9 @@
 		if (document.getElementById("chat-list-content")){
 			if (!document.getElementById("chat-list-content").marked){
 				document.getElementById("chat-list-content").marked=true;
-				onElementInserted("#chat-list-content", function(element){
-					setTimeout(function(eee){
-						processMessage(eee);
-					},500, element);
-				});
+				onElementInserted("#chat-list-content");
 			}
 		}
-	},3000);
+	},1000);
 
 })();
