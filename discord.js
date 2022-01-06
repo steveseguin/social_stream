@@ -117,8 +117,8 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				if ("focusChat" == request){
-					document.querySelector("textarea.chat-box__chat-textarea.window-content-bottom").focus();
+				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+					document.querySelector('div[class*="slateTextArea"]').focus();
 					sendResponse(true);
 					return;
 				}

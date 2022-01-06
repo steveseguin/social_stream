@@ -99,7 +99,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector("textarea.chat-box__chat-textarea.window-content-bottom").focus();
+					document.querySelector("textarea").focus();
 					sendResponse(true);
 					return;
 				}

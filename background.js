@@ -179,7 +179,7 @@ function processResponse(data){
 					} else {
 						generalFakeChat(tabs[i].id, data.response, false);
 					}
-			
+				
 				} else {  // all other destinations. ; generic
 				
 					if (!debuggerEnabled[tabs[i].id]){
