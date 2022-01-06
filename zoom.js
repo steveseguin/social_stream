@@ -1,5 +1,5 @@
 (function () {
-	 
+
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
@@ -16,15 +16,17 @@
 
 
 	var lastMessage = {};
-	
+	var lastName = "";
+	var lastImage = "";
+
 	function processMessage(ele){
-		
+
 		if (ele && ele.marked){
 		  return;
 		} else {
 		  ele.marked = true;
 		}
-		
+
 		if (document.querySelector("chat-message__container")){
 			if (document.querySelector("chat-message__container").marked){
 				return;
@@ -32,34 +34,56 @@
 				document.querySelector("chat-message__container").marked = true;
 			}
 		}
-		
+
 
 		var img = false;
 		var chatimg = "";
 		try{
 		   chatimg = ele.querySelector(".chat-item__user-avatar").querySelector("img").src;
 		   img = true;
+			// lastImage = chatimg;
 		} catch(e){
+		//	chatimg = lastImage;
 
 		}
-
+    var name = "";
 		if (ele.querySelector(".chat-item__sender")){
-		  var name = ele.querySelector(".chat-item__sender").innerText;
+		  name = ele.querySelector(".chat-item__sender").innerText;
 		  if (name){
-			name = name.trim();
+			  name = name.trim();
 		  }
-		} else {
-		  var sibling = ele;
-		  while (sibling.previousSibling && (sibling.previousSibling.role == "alert")){
-			sibling = sibling.previousSibling;
-			if (sibling.querySelector(".chat-item__sender")){
-				var name = sibling.querySelector(".chat-item__sender").innerText;
-				if (name){
-					name = name.trim();
-					break;
+		}// else {
+    //  name = lastName;
+		//}
+
+		if (!name){
+
+			try {
+				var prev = ele.previousElementSibling;
+				for (var i=0; i<50;i++){
+					if (prev.querySelector('.chat-item__sender')){
+						break;
+					} else {
+						prev = prev.previousElementSibling;
+					}
 				}
-			}
-		  }
+				try{
+
+
+				    if (prev.querySelector(".chat-item__sender")){
+					    name = prev.querySelector(".chat-item__sender").innerText;
+					    if (name){
+						    name = name.trim();
+					    }
+					    lastName = name;
+							chatimg = prev.querySelector(".chat-item__user-avatar").querySelector("img").src;
+					    //lastImage = chatimg
+					  }
+
+
+				} catch(e){console.error(e);}
+
+			} catch(e){console.error(e);}
 		}
 
 		var msg = "";
@@ -90,13 +114,13 @@
 		data.hasMembership = "";;
 		data.contentimg = "";
 		data.type = "zoom";
-		
-		
+
+
 		if (lastMessage === JSON.stringify(data)){ // prevent duplicates, as zoom is prone to it.
 			return;
 		}
 		lastMessage = JSON.stringify(data);
-		
+
 		if (data.chatimg && img){
 			toDataURL(data.chatimg, function(dataUrl) {
 				data.chatimg = dataUrl;
@@ -108,7 +132,7 @@
 	}
 
 	function pushMessage(data){
-		
+
 		try{
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 		} catch(e){}
@@ -132,6 +156,7 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+						console.log(mutation.addedNodes[i]);
 						if (mutation.addedNodes[i].hasAttribute("role")){
 							processMessage(mutation.addedNodes[i]);
 						}
@@ -145,13 +170,15 @@
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
-		
+
 	}
 	console.log("social stream injected");
 
 	setInterval(function(){
 		if (document.getElementById("chat-list-content")){
 			if (!document.getElementById("chat-list-content").marked){
+				lastName = "";
+				lastImage = "";
 				document.getElementById("chat-list-content").marked=true;
 				onElementInserted("#chat-list-content");
 			}
