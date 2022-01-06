@@ -61,20 +61,31 @@ chrome.runtime.onMessage.addListener(
 				sendResponse({"state":isExtensionOn,"streamID":channel, "settings":settings});
 			} else if (request.cmd && request.cmd === "saveSetting") {
 				settings[request.setting] = request.value;
+				chrome.storage.sync.set(settings);
+				
 				if (request.setting == "midi"){
 					toggleMidi();
 				}
-				chrome.storage.sync.set(settings);
+				
 				sendResponse({"state":isExtensionOn});		
 			} else if ("message" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from 
 				sendResponse({"state":isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
 				
-				
 				if (isExtensionOn){
+					
+					if (!settings.discord){
+						try {
+							if (request.message.type == "discord"){
+								return;
+							}
+						} catch(e){}
+					}
+					
 					try{
 						applyBotActions(request.message); // perform any immediate actions
 					} catch(e){console.log(e);}
+					
 					sendDataP2P(request.message); // send the data to the dock
 				}
 			} else if (request.cmd && request.cmd === "tellajoke") {
@@ -312,23 +323,31 @@ try {
 	
 	function toggleMidi(){
 		if (!("midi" in settings)){return;}
-		
-		if (MidiInit===false){
-			MidiInit=true;
-			
-			WebMidi.enable().then(() =>{
-				setupMIDI();
+		if (settings.midi){
+			if (MidiInit===false){
+				MidiInit=true;
 				
-				WebMidi.addListener("connected", function(e) {
-					console.log(e);
-					setupMIDI(e.target._midiInput);
+				WebMidi.enable().then(() =>{
+					setupMIDI();
+					
+					WebMidi.addListener("connected", function(e) {
+						console.log(e);
+						setupMIDI(e.target._midiInput);
+					});
+					WebMidi.addListener("disconnected", function(e) {
+						console.log(e);
+					});
+					console.log(WebMidi.inputs);
 				});
-				WebMidi.addListener("disconnected", function(e) {
-					console.log(e);
-				});
-				console.log(WebMidi.inputs);
-				
-			});
+			} else {
+				try {
+					WebMidi.enable();
+				} catch(e){}
+			}
+		} else if (MidiInit){
+			try {
+				WebMidi.disable();
+			} catch(e){}
 		}
 	}
 	
@@ -341,6 +360,11 @@ function midiHotkeysCommand(number, value){ // MIDI control change commands
 		respondLULToAll();
 	} else if (number == 102 && value == 3){
 		tellAJoke();
+	} else if (number == 102 && value == 4){
+		var msg = {};
+		msg.forward = false;
+		sendDataP2P(msg);
+		console.log("Pressed midi hotkey to clear remote overlays");
 	}
 }
 

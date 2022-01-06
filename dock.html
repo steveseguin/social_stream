@@ -16,6 +16,7 @@
 			--font-color-name: #000;
 			--background-color: #FFF0;
 			--link-color: #06F
+			--input-color: #FFF
 		}
 		
 		.noText {
@@ -217,12 +218,12 @@
 		}
 		#menu > input {
 			padding: 5px;
-			background-color: #FFF4;
-			border: 1px solid white;
+			background-color: var(--input-color);
+			border: 1px solid black;
 			border-radius: 5px;
 		}
 		#menu > input:focus {
-		  background-color: #FFFF;
+		  background-color: var(--input-color);
 		}
 		
 		#menu.darkmode > button {
@@ -242,6 +243,7 @@
 		#menu.darkmode > input {
 			background-color: #0004;
 			color:white;
+			border: 1px solid white;
 		}
 		#menu.darkmode > input:hover {
 			background-color: #0000;
@@ -349,6 +351,9 @@
 			-moz-transition: all 0.4s ease 0s;
 			-o-transition: all 0.4s ease 0s;
 			transition: all 0.4s ease 0s;
+		}
+		input::placeholder{
+			color: var(--input-color);
 		}
 
 	</style>
@@ -477,6 +482,7 @@
 		document.documentElement.style.setProperty("--background-color", "#000");
 		document.documentElement.style.setProperty("--font-color-name", "#DDD");
 		document.documentElement.style.setProperty("--link-color", "#5AF");
+		document.documentElement.style.setProperty("--input-color", "#5AF");
 		document.getElementById("menu").classList.add("darkmode");
 	}
 	
@@ -554,7 +560,9 @@
 		  if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
 		  if ("dataReceived" in e.data){ // raw data 
 			if ("overlayNinja" in e.data.dataReceived){
-				if (!pauseState){
+				if ("forward" in e.data.dataReceived.overlayNinja){
+					sendDataP2P(e.data.dataReceived.overlayNinja.forward);
+				} else if (!pauseState ){
 					processData( {contents : e.data.dataReceived.overlayNinja} );
 				} else {
 					queue.push({contents : e.data.dataReceived.overlayNinja});
@@ -670,6 +678,7 @@
 			data.counter = counter;
 			
 			var showType = data.type;
+			
 			var chatImg = data.chatimg;
 			
 			if (!chatImg){
