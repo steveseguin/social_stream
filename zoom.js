@@ -81,9 +81,9 @@
 					  }
 
 
-				} catch(e){console.error(e);}
+				} catch(e){}
 
-			} catch(e){console.error(e);}
+			} catch(e){}
 		}
 
 		var msg = "";

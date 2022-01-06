@@ -34,41 +34,22 @@
 		}
 		
 
-		var img = false;
 		var chatimg = "";
-		try{
-		   chatimg = ele.querySelector(".chat-item__user-avatar").querySelector("img").src;
-		   img = true;
-		} catch(e){
-
-		}
-
-		if (ele.querySelector(".chat-item__sender")){
-		  var name = ele.querySelector(".chat-item__sender").innerText;
-		  if (name){
-			name = name.trim();
-		  }
-		} else {
-		  var sibling = ele;
-		  while (sibling.previousSibling && (sibling.previousSibling.role == "alert")){
-			sibling = sibling.previousSibling;
-			if (sibling.querySelector(".chat-item__sender")){
-				var name = sibling.querySelector(".chat-item__sender").innerText;
-				if (name){
-					name = name.trim();
-					break;
-				}
-			}
-		  }
-		}
-
 		var msg = "";
-		try {
-			console.log(ele);
-			msg = ele.querySelector('.chat-message__text-content').innerText;
-		} catch(e){
-
-		}
+		
+		try{
+		   chatimg = ele.querySelector("img").src;
+		} catch(e){}
+		try{
+			if (ele.querySelector(".mixcloud-live-chat-row-link")){
+			  var name = ele.querySelector(".mixcloud-live-chat-row-link").innerText;
+			  if (name){
+				name = name.trim();
+			  }
+			  
+			  msg = ele.querySelector('.mixcloud-live-chat-row-link').parentNode.nextElementSibling.innerText;
+			} 
+		} catch(e){}
 		if (msg){
 			msg = msg.trim();
 			if (name){
@@ -89,7 +70,7 @@
 		data.hasDonation = "";
 		data.hasMembership = "";;
 		data.contentimg = "";
-		data.type = "zoom";
+		data.type = "mixcloud";
 		
 		
 		if (lastMessage === JSON.stringify(data)){ // prevent duplicates, as zoom is prone to it.
@@ -97,7 +78,7 @@
 		}
 		lastMessage = JSON.stringify(data);
 		
-		if (data.chatimg && img){
+		if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
 				data.chatimg = dataUrl;
 				pushMessage(data);
@@ -132,7 +113,7 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						if (mutation.addedNodes[i].hasAttribute("role")){
+						if (mutation.addedNodes[i].classList.contains("mixcloud-live-chat-row")){
 							processMessage(mutation.addedNodes[i]);
 						}
 					}
@@ -150,10 +131,10 @@
 	console.log("social stream injected");
 
 	setInterval(function(){
-		if (document.getElementById("chat-list-content")){
-			if (!document.getElementById("chat-list-content").marked){
-				document.getElementById("chat-list-content").marked=true;
-				onElementInserted("#chat-list-content");
+		if (document.querySelector(".mixcloud-live-chat-container")){
+			if (!document.querySelector(".mixcloud-live-chat-container").marked){
+				document.querySelector(".mixcloud-live-chat-container").marked=true;
+				onElementInserted(".mixcloud-live-chat-container");
 			}
 		}
 	},1000);
