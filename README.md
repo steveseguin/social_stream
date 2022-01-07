@@ -7,6 +7,8 @@ Consolidate your live social messaging streams
 
 Social Stream makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
 
+![image](https://user-images.githubusercontent.com/2575698/148505639-972eec38-7d8b-4bf3-9f15-2bd02182591e.png)
+
 ### Supported sites:
 
 - twitch.tv pop out chat
