@@ -131,6 +131,7 @@ Using Control Change MIDI Commands, on channel 1:
 - command 102, with value 1: Say "1" into all chats
 - command 102, with value 2: Say "LUL" into all chats
 - command 102, with value 3: Tell a random joke into all chats
+- command 102, with value 4: Clear all featured chat overlays
 	
 ![image](https://user-images.githubusercontent.com/2575698/144830051-20b11caa-ba63-4223-80e1-9315c479ebd6.png)
 
