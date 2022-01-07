@@ -82,17 +82,19 @@ function update(response){
 
 function checkVersion(){
 	//chrome-extension://[
-	fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/manifest.json').then(response => response.json()).then(data => {
-		var manifestData = chrome.runtime.getManifest();
-		if ("version" in data){
-			if (manifestData.version !== data.version){
-				document.getElementById("newVersion").innerHTML = "<b>There's a new version of Social Stream <a target='_blank' href='https://github.com/steveseguin/social_stream/'>available here</a>.</b>";
-			} else {
-				document.getElementById("newVersion").innerHTML = "";
+	try {
+		fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/manifest.json').then(response => response.json()).then(data => {
+			var manifestData = chrome.runtime.getManifest();
+			if ("version" in data){
+				if (manifestData.version !== data.version){
+					document.getElementById("newVersion").innerHTML = "<b>There's a new version of Social Stream <a target='_blank' href='https://github.com/steveseguin/social_stream/'>available here</a>.</b>";
+				} else {
+					document.getElementById("newVersion").innerHTML = "";
+				}
 			}
-		}
-		console.log(data)
-	});
+			console.log(data)
+		});
+	} catch(e){}
 }
 
 

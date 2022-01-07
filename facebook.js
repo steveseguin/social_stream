@@ -32,8 +32,15 @@
 			  //
 		  }
 	  }
-	 
 	  
+	  /* var userID = "";
+	  try {
+		  userID = ele.querySelector("a").href.split("?id=")[1].split("&")[0];
+	  }catch(e){
+		  userID = ele.querySelector("a").href.split("www.facebook.com/")[1].split("?")[0];
+	  }
+	 */
+	 
 	  var name = ele.childNodes[1].querySelector('a[role="link"]').innerText;
 	  if (name){
 		name = name.trim();
@@ -97,6 +104,10 @@
 	  data.hasMembership = "";;
 	  data.contentimg = "";
 	  data.type = "facebook";
+	  
+	 // if (userID){
+	//	data.userID = userID;
+	 // }
 	  
 	  
 		if (data.chatimg){
