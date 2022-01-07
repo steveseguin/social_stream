@@ -23,6 +23,9 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - zoom.us (web version)
 - owncast demo page (watch.owncast.online)
 - crowdcast.io
+- livestream.com
+- mixcloud.com (pop out chat)
+- discord.com (web version; toggle needed to enable)
 
 More on request
 
