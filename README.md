@@ -21,7 +21,8 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - livestream.com
 - mixcloud.com (pop out chat)
 - discord.com (web version; toggle needed to enable)
-- MS Teams (experimental support)
+- ms teams (experimental support)
+- vimeo.com (pop out chat)
 
 More on request
 
