@@ -88,7 +88,6 @@
 
 		var msg = "";
 		try {
-			console.log(ele);
 			msg = ele.querySelector('.chat-message__text-content').innerText;
 		} catch(e){
 
@@ -156,7 +155,6 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						console.log(mutation.addedNodes[i]);
 						if (mutation.addedNodes[i].hasAttribute("role")){
 							processMessage(mutation.addedNodes[i]);
 						}

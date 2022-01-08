@@ -12,7 +12,7 @@
     "persistent": true
   },
   "permissions": [
-    "https://youtube.com/*", "https://www.youtube.com/*", "https://studio.youtube.com/*", "https://www.twitch.tv/*", "https://chat.restream.io/*", "https://trovo.live/chat/*", "https://facebook.com/*", "https://www.facebook.com/*", "https://play.rozy.tv/*", "https://www.crowdcast.io/e/*", "https://*.zoom.us/*", "https://watch.owncast.online/*", "https://discord.com/channels/*", "https://www.mixcloud.com/live/*/chat/",  "https://www.vimeo.com/*", "https://livestream.com/accounts/*", "storage", "debugger"
+    "https://youtube.com/*", "https://www.youtube.com/*", "https://studio.youtube.com/*", "https://www.twitch.tv/*", "https://chat.restream.io/*", "https://trovo.live/chat/*", "https://facebook.com/*", "https://www.facebook.com/*", "https://play.rozy.tv/*", "https://www.crowdcast.io/e/*", "https://*.zoom.us/*", "https://watch.owncast.online/*", "https://discord.com/channels/*", "https://www.mixcloud.com/live/*/chat/",  "https://www.vimeo.com/*", "https://teams.live.com/*", "https://livestream.com/accounts/*", "storage", "debugger"
   ],
   "browser_action": {
         "default_popup": "popup.html"
@@ -57,8 +57,12 @@
 	   {
 		"js": ["livestream.js"],
 		"matches": ["https://livestream.com/accounts/*"] 
+	  },
+	   {
+		"js": ["teams.js"],
+		"matches": ["https://teams.live.com/*"],
+		"all_frames": true
 	  }
-	  
   ],
   "options_ui": {
     "page": "settings/options.html"
