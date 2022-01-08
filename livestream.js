@@ -116,7 +116,7 @@
 		if (document.querySelector(".chat_container")){
 			if (!document.querySelector(".chat_container").marked){
 				document.querySelector(".chat_container").marked=true;
-				onElementInserted(".chat_container");
+				onElementInserted(document.querySelector(".chat_container"));
 			}
 		}
 		//document.querySelectorAll('iframe').forEach( item =>{
