@@ -45,9 +45,10 @@
 		}
 		
 		try{
-			if (!name && !chatimg){
-				
+			if (!msg){
 				msg = main.nextElementSibling.childNodes[1].innerText;
+			}
+			if (!name && !chatimg){
 				name = [...main.nextElementSibling.childNodes[0].childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('');
 			}
 		} catch(e){
