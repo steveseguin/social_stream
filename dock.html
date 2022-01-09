@@ -455,6 +455,30 @@
 		document.getElementById("menu").style.display = "none";
 	}
 	
+	
+	var thirdPartyAPI = false;
+	if (urlParams.has("singular")){
+		thirdPartyAPI = function (data){
+			var API = "https://app.singular.live/apiv1/datanodes/"+urlParams.get("singular")+"/data";
+			var message = {"payload": data};
+			ajax(message, API, "PUT");
+		};
+	}
+	
+	function ajax(object2send, url, ajaxType="PUT"){
+		  var xhttp = new XMLHttpRequest();
+		  xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				// success
+			} else {
+				console.error("there was an error sending to the API");
+			}
+		  };
+		  xhttp.open(ajaxType, url, true); // async = true
+		  xhttp.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+		  xhttp.send(JSON.stringify(object2send));
+	}
+	
 	try {
 		if (window.obsstudio){
 			window.obsstudio.getStatus(function(obsStatus){
@@ -803,13 +827,21 @@
 									imgnode.classList.add("invert");
 								}
 							}
-							sendDataP2P(data);
+							if (thirdPartyAPI){
+								thirdPartyAPI(data);
+							} else {
+								sendDataP2P(data);
+							}
 						}).catch(function(){
 							data.chatimg = 'unknown.png';
 							if (darkmode){
 								imgnode.classList.add("invert");
 							}
-							sendDataP2P(data);
+							if (thirdPartyAPI){
+								thirdPartyAPI(data);
+							} else {
+								sendDataP2P(data);
+							}
 						});
 					}).catch(error => {
 						console.error(error);
@@ -817,10 +849,18 @@
 						if (darkmode){
 							imgnode.classList.add("invert");
 						}
-						sendDataP2P(data);
+						if (thirdPartyAPI){
+							thirdPartyAPI(data);
+						} else {
+							sendDataP2P(data);
+						}
 					});
 				} else {
-					sendDataP2P(this.rawContents);
+					if (thirdPartyAPI){
+						thirdPartyAPI(data);
+					} else {
+						sendDataP2P(data);
+					}
 				}
 			};
 
