@@ -810,11 +810,11 @@
 			node.rawContents = data;
 			node.onmousedown = function(e){
 				this.classList.add("pressed");
-				if (this.rawContents.type && (this.rawContents.type == "twitch") && !this.rawContents.chatimg){
-					var data = this.rawContents;
-					var ccc = this.rawContents.counter;
+				var data = this.rawContents;
+				if (data.type && (data.type == "twitch") && !data.chatimg){
+					var ccc = data.counter;
 					var imgnode = document.getElementById("img_"+ccc);
-					fetch("https://api.action.wtf:667/username/"+this.rawContents.chatname).then(response => {
+					fetch("https://api.action.wtf:667/username/"+data.chatname).then(response => {
 						response.text().then(function (text) {
 							if (text.startsWith("https://")){
 								data.chatimg = text;
