@@ -31,29 +31,33 @@
 			    main = ele.querySelector("svg");
 			    if (!main){
 					try {
-						chatimg =  JSON.parse(document.getElementById("app-data").innerHTML).user.avatar_url;
-						name = JSON.parse(document.getElementById("app-data").innerHTML).user.display_name;
 						msg = ele.innerText;
+						name = JSON.parse(document.getElementById("app-data").innerHTML).user.display_name;
+						chatimg = JSON.parse(document.getElementById("app-data").innerHTML).user.avatar_url;
 					} catch(e){
 						console.error(e);
 						return;
 					}
+				} else {
+					console.log("SVG FOUND?");
 				}
 			} catch(e){}
 		}
 		
 		try{
-			if (!name){
-				name = [...main.nextElementSibling.childNodes[0].childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('');
+			if (!name && !chatimg){
+				
 				msg = main.nextElementSibling.childNodes[1].innerText;
+				name = [...main.nextElementSibling.childNodes[0].childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('');
 			}
-		} catch(e){console.error(e);return;}
+		} catch(e){
+			console.error(e);
+			if (!msg){return;}
+		}
 		
 		if (name){
 			name = name.trim();
-		} else {
-			return;
-		}
+		} 
 		
 		var data = {};
 		data.chatname = name;
