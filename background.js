@@ -25,20 +25,32 @@ var properties = ["streamID"];
 channel = generateStreamID();
 
 chrome.storage.sync.get(properties, function(item){
-	if (item.streamID){
+	if (item && item.streamID){
 		channel = item.streamID;
 	} else {
 		chrome.storage.sync.set({
 			streamID: channel
 		});
 	}
-	if (item.settings){
+	if (item && item.settings){
 		settings = item.settings;
 	}
 	toggleMidi();
 });
 chrome.browserAction.setIcon({path: "/icons/off.png"});
-					
+
+function pushSettingChange(setting){
+	chrome.tabs.query({}, function(tabs) {
+		chrome.runtime.lastError;
+		for (var i=0;i<tabs.length;i++){
+			if (!tabs[i].url){continue;} 
+			chrome.tabs.sendMessage(tabs[i].id, setting, function(response=false) {
+				chrome.runtime.lastError;
+			});
+		}
+	});
+}
+		
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
 		try{
@@ -62,12 +74,18 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "saveSetting") {
 				settings[request.setting] = request.value;
 				chrome.storage.sync.set(settings);
+				sendResponse({"state":isExtensionOn});	
 				
 				if (request.setting == "midi"){
 					toggleMidi();
 				}
-				
-				sendResponse({"state":isExtensionOn});		
+				if (request.setting == "textonlymode"){
+					if (request.value){
+						pushSettingChange("textOnlyMode");
+					} else {
+						pushSettingChange("richTextMode");
+					}
+				} 
 			} else if ("message" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from 
 				sendResponse({"state":isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
@@ -88,6 +106,8 @@ chrome.runtime.onMessage.addListener(
 					
 					sendDataP2P(request.message); // send the data to the dock
 				}
+			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+				sendResponse({"settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
 			} else if (request.cmd && request.cmd === "tellajoke") {
 				tellAJoke();
 				sendResponse({"state":isExtensionOn});
@@ -139,8 +159,11 @@ var commandCounter = 0;
 function onDetach(debuggeeId) {  // for faking user input
 	debuggerEnabled[debuggeeId.tabId] = false;
 }
-chrome.debugger.onDetach.addListener(onDetach);
-
+try{
+	chrome.debugger.onDetach.addListener(onDetach);
+} catch(e){
+	console.log("'chrome.debugger' not supported by this browser");
+}
 function onAttach(debuggeeId, callback, message) { // for faking user input
   if (chrome.runtime.lastError) {
     console.log(chrome.runtime.lastError.message);
@@ -161,6 +184,9 @@ eventer(messageEvent, function (e) {
 });
 
 function processResponse(data){
+	
+	if (!chrome.debugger){return;}
+	
 	chrome.tabs.query({}, function(tabs) {
 		chrome.runtime.lastError;
 		for (var i=0;i<tabs.length;i++){
@@ -364,7 +390,6 @@ function midiHotkeysCommand(number, value){ // MIDI control change commands
 		var msg = {};
 		msg.forward = false;
 		sendDataP2P(msg);
-		console.log("Pressed midi hotkey to clear remote overlays");
 	}
 }
 

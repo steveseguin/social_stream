@@ -22,8 +22,6 @@
 		  ele.marked = true;
 	  }
 	  
-	  console.log(ele);
-	  
 	  var chatimg = "";
 	  try{
 		   chatimg = ele.querySelector(".avatar-s").style.backgroundImage.split(/"/)[1];
@@ -90,12 +88,30 @@
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 		} catch(e){}
 	}
+	
+	var textOnlyMode = false;
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if ("settings" in response){
+			if ("textonlymode" in response.settings){
+				textOnlyMode = response.settings.textonlymode;
+			}
+		}
+	});
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
 					document.querySelector("textarea#input-chat").focus();
+					sendResponse(true);
+					return;
+				}
+				if ("textOnlyMode" == request){
+					textOnlyMode = true;
+					sendResponse(true);
+					return;
+				} else if ("richTextMode" == request){
+					textOnlyMode = false;
 					sendResponse(true);
 					return;
 				}
@@ -119,15 +135,12 @@
 							}
 							if (ele && ele.className && ele.classList.contains("message")) {
 								callback(ele);
-								console.log(1);
 							} else if (ele.parentNode.parentNode && ele.parentNode.parentNode.className && ele.parentNode.parentNode.classList.contains("message")) {
 								callback(ele.parentNode.parentNode);
-								console.log(4);
 							} else if (ele.parentNode.parentNode.parentNode && ele.parentNode.parentNode.parentNode.className && ele.parentNode.parentNode.parentNode.classList.contains("message")) {
 								callback(ele.parentNode.parentNode.parentNode);
-								console.log(5);
 							}
-						} catch(e){console.error(e);}
+						} catch(e){}
 					}
 				}
 			});

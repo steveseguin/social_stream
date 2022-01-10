@@ -32,14 +32,6 @@
 			  //
 		  }
 	  }
-	  
-	  /* var userID = "";
-	  try {
-		  userID = ele.querySelector("a").href.split("?id=")[1].split("&")[0];
-	  }catch(e){
-		  userID = ele.querySelector("a").href.split("www.facebook.com/")[1].split("?")[0];
-	  }
-	 */
 	 
 	  var name = ele.childNodes[1].querySelector('a[role="link"]').innerText;
 	  if (name){
@@ -48,25 +40,43 @@
 	  
 	  var msg = "";
 	  
-	  try {
-		ele.childNodes[1].querySelector('a[role="link"]').parentNode.parentNode.parentNode.querySelector('span[lang]').querySelectorAll('*').forEach(function(node) {
-			
-			if (node.nodeName == "IMG"){
-				msg+=node.outerHTML;
-			} else {
-				node.childNodes.forEach(function(nn){
-					try{
-						if (nn.nodeName === "#text"){
-							msg+=nn.textContent;
-						}
-					}catch(e){}
+	  if (textOnlyMode){
+		  try {
+			ele.childNodes[1].querySelector('a[role="link"]').parentNode.parentNode.parentNode.querySelector('span[lang]').querySelectorAll('*').forEach(function(node) {
+				
+				if (node.nodeName == "IMG"){
+					//msg+=node.outerHTML;
+				} else {
+					node.childNodes.forEach(function(nn){
+						try{
+							if (nn.nodeName === "#text"){
+								msg+=nn.textContent;
+							}
+						}catch(e){}
+					});
+				}
+			});
+		  } catch(e){
+			  try{
+				ele.childNodes[1].querySelector('a[role="link"]').parentNode.parentNode.parentNode.querySelectorAll('*').forEach(function(node) {
+					if (node.nodeName == "IMG"){
+						//msg+=node.outerHTML;
+					} else {
+						node.childNodes.forEach(function(nn){
+							try{
+								if (nn.nodeName === "#text"){
+									msg+=nn.textContent;
+								}
+							}catch(e){}
+						});
+					}
 				});
-			}
-			
-		});
-	  } catch(e){
-		  try{
-			ele.childNodes[1].querySelector('a[role="link"]').parentNode.parentNode.parentNode.querySelectorAll('*').forEach(function(node) {
+			  } catch(e){}
+		  }
+	  } else {
+		  try {
+			ele.childNodes[1].querySelector('a[role="link"]').parentNode.parentNode.parentNode.querySelector('span[lang]').querySelectorAll('*').forEach(function(node) {
+				
 				if (node.nodeName == "IMG"){
 					msg+=node.outerHTML;
 				} else {
@@ -79,9 +89,24 @@
 					});
 				}
 			});
-		  } catch(e){}
+		  } catch(e){
+			  try{
+				ele.childNodes[1].querySelector('a[role="link"]').parentNode.parentNode.parentNode.querySelectorAll('*').forEach(function(node) {
+					if (node.nodeName == "IMG"){
+						msg+=node.outerHTML;
+					} else {
+						node.childNodes.forEach(function(nn){
+							try{
+								if (nn.nodeName === "#text"){
+									msg+=nn.textContent;
+								}
+							}catch(e){}
+						});
+					}
+				});
+			  } catch(e){}
+		  }
 	  }
-	  
 	  
 	  if (msg){
 		msg = msg.trim();
@@ -104,10 +129,6 @@
 	  data.hasMembership = "";;
 	  data.contentimg = "";
 	  data.type = "facebook";
-	  
-	 // if (userID){
-	//	data.userID = userID;
-	 // }
 	  
 	  
 		if (data.chatimg){
@@ -148,10 +169,18 @@
 		} catch(e){ }
 	},2000);
 
+	var textOnlyMode = false;
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if ("settings" in response){
+			if ("textonlymode" in response.settings){
+				textOnlyMode = response.settings.textonlymode;
+			}
+		}
+	});
+
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				console.log(request);
 				if ("focusChat" == request){
 					if (!document.querySelector("div[role='complementary']")){
 						sendResponse(false);
@@ -159,7 +188,15 @@
 					}
 					document.querySelector('[contenteditable="true"]').childNodes[0].childNodes[0].childNodes[0].focus();
 					sendResponse(true);
-					
+					return;
+				}
+				if ("textOnlyMode" == request){
+					textOnlyMode = true;
+					sendResponse(true);
+					return;
+				} else if ("richTextMode" == request){
+					textOnlyMode = false;
+					sendResponse(true);
 					return;
 				}
 			} catch(e){	}

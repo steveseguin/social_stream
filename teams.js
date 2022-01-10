@@ -1,6 +1,4 @@
 (function () {
-
-
 	function toDataURL(blobUrl, callback) {
 		var xhr = new XMLHttpRequest;
 		xhr.responseType = 'blob';
@@ -72,16 +70,10 @@
 		var msg = "";
 		try {
 			msg = ele.querySelector('.ui-chat__message__content').innerText;
-		} catch(e){
-		}
+		} catch(e){}
+		
 		if (msg){
 			msg = msg.trim();
-			/* if (name){
-				if (msg.startsWith(name)){
-					msg = msg.replace(name, '');
-					msg = msg.trim();
-				}
-			} */
 		}
 
 		var data = {};
@@ -124,11 +116,29 @@
 						sendResponse(true);
 						return;
 					}
+					if ("textOnlyMode" == request){
+						textOnlyMode = true;
+						sendResponse(true);
+						return;
+					} else if ("richTextMode" == request){
+						textOnlyMode = false;
+						sendResponse(true);
+						return;
+					}
 				} catch(e){}
 				sendResponse(false);
 			}
 		);
 	}
+	
+	var textOnlyMode = false;
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if ("settings" in response){
+			if ("textonlymode" in response.settings){
+				textOnlyMode = response.settings.textonlymode;
+			}
+		}
+	});
 
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {

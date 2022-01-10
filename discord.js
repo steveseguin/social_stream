@@ -69,11 +69,15 @@
 		}
 
 		var msg = "";
-		try {
-			console.log(ele);
-			msg = ele.querySelector('[id^="message-content-"]').innerHTML;
-		} catch(e){
-
+		
+		if (textOnlyMode){
+			try {
+				msg = ele.querySelector('[id^="message-content-"]').innerText;
+			} catch(e){}
+		} else {
+			try {
+				msg = ele.querySelector('[id^="message-content-"]').innerHTML;
+			} catch(e){}
 		}
 		if (msg){
 			msg = msg.trim();
@@ -91,7 +95,6 @@
 		data.contentimg = "";
 		data.type = "discord";
 		
-		console.log(data);
 		if (lastMessage === JSON.stringify(data)){ // prevent duplicates, as zoom is prone to it.
 			return;
 		}
@@ -113,12 +116,30 @@
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 		} catch(e){}
 	}
+	
+	var textOnlyMode = false;
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if ("settings" in response){
+			if ("textonlymode" in response.settings){
+				textOnlyMode = response.settings.textonlymode;
+			}
+		}
+	});
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 					document.querySelector('div[class*="slateTextArea"]').focus();
+					sendResponse(true);
+					return;
+				}
+				if ("textOnlyMode" == request){
+					textOnlyMode = true;
+					sendResponse(true);
+					return;
+				} else if ("richTextMode" == request){
+					textOnlyMode = false;
 					sendResponse(true);
 					return;
 				}

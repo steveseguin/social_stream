@@ -1,13 +1,8 @@
 var isExtensionOn = false;
-console.log("STARTED");
-
-
 document.addEventListener("DOMContentLoaded", function(event) {
 	
 	var disableButton = document.getElementById("disableButton");
-	console.log("DOMContentLoaded");
 	disableButton.onclick = function(){
-		console.log("disableButton clicked");
 		chrome.extension.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}});
 		chrome.extension.sendMessage({cmd: "getOnOffState"}, function (response) {
 			update(response);
@@ -48,14 +43,12 @@ function update(response){
 				disableButton.className = "button button3";
 				disableButton.style.display = "";
 				document.body.style.backgroundColor = "#9F9";
-				console.log("ENABLE");
 				chrome.browserAction.setIcon({path: "/icons/on.png"});
 			} else {
 				disableButton.innerHTML = "⚡ Enable extension";
 				disableButton.className = "button button1";
 				disableButton.style.display = "";
 				document.body.style.backgroundColor = "#F99";
-				console.log("DISABLED?");
 				chrome.browserAction.setIcon({path: "/icons/off.png"});
 			}
 			
@@ -68,7 +61,6 @@ function update(response){
 			document.getElementById("overlay").rawURL = "https://socialstream.ninja/index.html?session="+response.streamID;
 		}
 		if ('settings' in response){
-			console.log(response);
 			for (var key in response.settings){
 				var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
 				if (ele){
@@ -81,7 +73,6 @@ function update(response){
 }
 
 function checkVersion(){
-	//chrome-extension://[
 	try {
 		fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/manifest.json').then(response => response.json()).then(data => {
 			var manifestData = chrome.runtime.getManifest();
@@ -92,7 +83,6 @@ function checkVersion(){
 					document.getElementById("newVersion").innerHTML = "";
 				}
 			}
-			console.log(data)
 		});
 	} catch(e){}
 }
@@ -129,8 +119,6 @@ function updateURL(param, href) {
 	return newurl;
 	
 }
-
-
 	
 function updateSettings(ele){
 	if (ele.target){
@@ -142,7 +130,6 @@ function updateSettings(ele){
 		} else {
 			document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace(ele.dataset.param1, "");
 		}
-		
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
 		chrome.extension.sendMessage({cmd: "saveSetting", setting: ele.dataset.param1, "value": ele.checked}, function (response) {});
@@ -152,7 +139,6 @@ function updateSettings(ele){
 		} else {
 			document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace(ele.dataset.param2, "");
 		}
-		
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
 		chrome.extension.sendMessage({cmd: "saveSetting", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});

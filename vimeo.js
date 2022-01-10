@@ -18,7 +18,6 @@
 	var lastMessage = {};
 	
 	function processMessage(ele){
-		console.log(ele);
 		var chatimg = "";
 		var msg = "";
 		var name = "";
@@ -35,11 +34,9 @@
 						name = JSON.parse(document.getElementById("app-data").innerHTML).user.display_name;
 						chatimg = JSON.parse(document.getElementById("app-data").innerHTML).user.avatar_url;
 					} catch(e){
-						console.error(e);
 						return;
 					}
 				} else {
-					console.log("SVG FOUND?");
 				}
 			} catch(e){}
 		}
@@ -52,7 +49,6 @@
 				name = [...main.nextElementSibling.childNodes[0].childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('');
 			}
 		} catch(e){
-			console.error(e);
 			if (!msg){return;}
 		}
 		
@@ -72,8 +68,6 @@
 		data.contentimg = "";
 		data.type = "vimeo";
 		
-		console.log(data);
-		
 		if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
 				data.chatimg = dataUrl;
@@ -85,17 +79,34 @@
 	}
 
 	function pushMessage(data){
-		
 		try{
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 		} catch(e){}
 	}
+	
+	var textOnlyMode = false;
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if ("settings" in response){
+			if ("textonlymode" in response.settings){
+				textOnlyMode = response.settings.textonlymode;
+			}
+		}
+	});
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
 					document.querySelector('input').focus();
+					sendResponse(true);
+					return;
+				}
+				if ("textOnlyMode" == request){
+					textOnlyMode = true;
+					sendResponse(true);
+					return;
+				} else if ("richTextMode" == request){
+					textOnlyMode = false;
 					sendResponse(true);
 					return;
 				}
@@ -108,7 +119,6 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					console.log(mutation.addedNodes);
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try{
 							if (mutation.addedNodes[i].tagName == "LI"){

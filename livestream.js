@@ -18,7 +18,6 @@
 	var lastMessage = {};
 	
 	function processMessage(ele){
-		console.log(ele);
 		var chatimg = "";
 		var msg = "";
 		
@@ -66,17 +65,34 @@
 	}
 
 	function pushMessage(data){
-		
 		try{
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 		} catch(e){}
 	}
+	
+	var textOnlyMode = false;
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if ("settings" in response){
+			if ("textonlymode" in response.settings){
+				textOnlyMode = response.settings.textonlymode;
+			}
+		}
+	});
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
 					document.querySelector('#liveChatContainer').contentWindow.document.body.querySelector('textarea[ng-switch-when="message"]').focus();
+					sendResponse(true);
+					return;
+				}
+				if ("textOnlyMode" == request){
+					textOnlyMode = true;
+					sendResponse(true);
+					return;
+				} else if ("richTextMode" == request){
+					textOnlyMode = false;
 					sendResponse(true);
 					return;
 				}
@@ -89,7 +105,6 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					console.log(mutation.addedNodes);
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try{
 							if (mutation.addedNodes[i].classList.contains("comment")){
@@ -108,9 +123,6 @@
 		
 	}
 	console.log("social stream injected");
-
-
-	
 
 	setInterval(function(){
 		if (document.querySelector(".chat_container")){

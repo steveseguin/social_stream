@@ -13,12 +13,8 @@
 	  xhr.responseType = 'blob';
 	  xhr.send();
 	}
-
-
 	
 	function processMessage(ele){
-		console.log(ele);
-		
 		var chatimg = "";
 		var msg = "";
 		var name = "";
@@ -64,7 +60,6 @@
 		data.contentimg = "";
 		data.type = "peertube";
 		
-		console.log(data);
 		pushMessage(data);
 	}
 
@@ -73,12 +68,30 @@
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 		} catch(e){}
 	}
+	
+	var textOnlyMode = false;
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if ("settings" in response){
+			if ("textonlymode" in response.settings){
+				textOnlyMode = response.settings.textonlymode;
+			}
+		}
+	}); 
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
 					document.querySelector('textarea').focus();
+					sendResponse(true);
+					return;
+				}
+				if ("textOnlyMode" == request){
+					textOnlyMode = true;
+					sendResponse(true);
+					return;
+				} else if ("richTextMode" == request){
+					textOnlyMode = false;
 					sendResponse(true);
 					return;
 				}
