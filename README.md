@@ -145,6 +145,8 @@ If the auto responder doesn't work -- you see a blue bar, but nothing happens, t
 
 ![image](https://user-images.githubusercontent.com/2575698/146602513-e3b7e69c-19fa-4e58-b907-6f08b3f873e0.png)
 
+- Try refreshing the chat page; sometimes refreshing the page will retrigger the code and bypass any errors. This is particularly try if you install or refresh the extension after the chat page has already been loaded.
+
 
 ### Support
 
