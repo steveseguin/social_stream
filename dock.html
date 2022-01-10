@@ -417,6 +417,11 @@
 	var emojis = true;
 	var pauseState = false;
 	var timeoutTimer = null;
+	var isOBSBrowserSource = false;
+	
+	var body = document.body;
+	var html = document.documentElement;
+	var mainOutputWindow = document.getElementById("output");
 	
 	if (urlParams.has("session")){
 		roomID = urlParams.get("session");
@@ -447,7 +452,7 @@
 	
 	if (urlParams.has("compact")){
 		compactmode = true;
-		document.getElementById("output").classList.remove("notcompactmode");
+		mainOutputWindow.classList.remove("notcompactmode");
 		document.getElementById("menu").style.display = "none";
 	} 
 	
@@ -479,19 +484,21 @@
 		  xhttp.send(JSON.stringify(object2send));
 	}
 	
+	
 	try {
 		if (window.obsstudio){
 			window.obsstudio.getStatus(function(obsStatus){
 				document.getElementById("menu").style.display = "none";
 				document.body.style.overflow = "hidden";
-				document.getElementById("output").style.overflow = "hidden";
+				mainOutputWindow.style.overflow = "hidden";
 				triggerState=false;
 				forceAutoscroll=true;
 				//compactmode=true;
-				//document.getElementById("output").classList.remove("notcompactmode");
+				//mainOutputWindow.classList.remove("notcompactmode");
 				scale = scale*2.0
 				document.documentElement.style.setProperty("--scale-output", scale);
 				document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
+				isOBSBrowserSource = true;
 			});
 		}
 	} catch(e){}
@@ -591,6 +598,9 @@
 					processData( {contents : e.data.dataReceived.overlayNinja} );
 				} else {
 					queue.push({contents : e.data.dataReceived.overlayNinja});
+					if (queue.length>100){ // keep the queue from exploding in size
+						queue.shift();
+					}
 				}
 			}
 		  }
@@ -790,7 +800,7 @@
 				node.classList.add("notcompactmode");
 			}
 		
-			document.getElementById("output").appendChild(node);
+			mainOutputWindow.appendChild(node);
 			
 			if (!document.getElementById("content_"+counter).innerText.trim().length){
 				document.getElementById("msg_"+counter).classList.add("noText");
@@ -864,11 +874,9 @@
 				}
 			};
 
-			for (i = 0; i < node.getElementsByTagName("img").length; i++) {
-			
-				node.getElementsByTagName("img")[i].onload = function(){
-					var body = document.body;
-					var html = document.documentElement;
+			var imageElements = node.getElementsByTagName("img");
+			for (i = 0; i < imageElements.length; i++) {
+				imageElements[i].onload = function(){
 					var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
 					if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+150)) || forceAutoscroll){
 						window.scrollTo({
@@ -878,18 +886,15 @@
 						});
 					}
 				}
-			
-				if (node.getElementsByTagName("img")[i].onerror){continue;}
-				if (!node.getElementsByTagName("img")[i].title && node.getElementsByTagName("img")[i].alt){
-					node.getElementsByTagName("img")[i].title = node.getElementsByTagName("img")[i].alt;
+				if (imageElements[i].onerror){continue;}
+				if (!imageElements[i].title && imageElements[i].alt){
+					imageElements[i].title = imageElements[i].alt;
 				}
-				
-				if (darkmode && (node.rawContents.type == "twitch") && node.getElementsByTagName("img")[i].src.includes("/light/")){
-					node.getElementsByTagName("img")[i].srcBackup = node.getElementsByTagName("img")[i].src;
-					node.getElementsByTagName("img")[i].src = node.getElementsByTagName("img")[i].src.replaceAll("/light/","/dark/");
+				if (darkmode && (node.rawContents.type == "twitch") && imageElements[i].src.includes("/light/")){
+					imageElements[i].srcBackup = imageElements[i].src;
+					imageElements[i].src = imageElements[i].src.replaceAll("/light/","/dark/");
 				}
-				
-				node.getElementsByTagName("img")[i].onerror = function(){
+				imageElements[i].onerror = function(){
 					if (this.srcBackup){
 						this.src = this.srcBackup;
 						this.srcBackup = null;
@@ -902,13 +907,64 @@
 				}
 			}
 			
-			var nodes = document.querySelectorAll(".highlight-chat");
-			if (nodes.length>100){
+			var nodes = mainOutputWindow.childNodes; // lets delete old nodes based on some factors.
+			
+			if (isOBSBrowserSource){ // This is an OBS browser source, so lets go light on it.
+				if (window.innerHeight>1600){
+					if (nodes.length>39){
+						nodes[0].remove();
+						if (nodes.length>39){
+							nodes[0].remove();
+						}
+					}
+				} else if (window.innerHeight>1200){
+					if (nodes.length>30){
+						nodes[0].remove();
+						if (nodes.length>30){
+							nodes[0].remove();
+						}
+					}
+				} else if (window.innerHeight>800){
+					if (nodes.length>22){
+						nodes[0].remove();
+						if (nodes.length>22){
+							nodes[0].remove();
+						}
+					}
+				} else if (window.innerHeight>400){
+					if (nodes.length>14){
+						nodes[0].remove();
+						if (nodes.length>14){
+							nodes[0].remove();
+						}
+					}
+				} else if (nodes.length>10){
+					nodes[0].remove();
+					if (nodes.length>10){
+						nodes[0].remove();
+					}
+				}
+			} else if (window.innerHeight>900){
+				if (nodes.length>70){
+					nodes[0].remove();
+					if (nodes.length>70){
+						nodes[0].remove();
+					}
+				}
+			} else if (window.innerHeight>600){
+				if (nodes.length>50){
+					nodes[0].remove();
+					if (nodes.length>50){
+						nodes[0].remove();
+					}
+				}
+			} else if (nodes.length>40){
 				nodes[0].remove();
+				if (nodes.length>40){
+					nodes[0].remove();
+				}
 			}
 			
-			var body = document.body;
-			var html = document.documentElement;
 			var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
 			if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+150)) || forceAutoscroll){
 				window.scrollTo({
