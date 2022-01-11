@@ -60,13 +60,13 @@ Please note, neither Firefox option supports two-way message responding, but the
 
 Download+extract or clone the SocialStream code somewhere.
 
-Go to about:debugging#/runtime/this-firefox in Firefox and select Load Temporary Add-on. 
+Go to `about:debugging#/runtime/this-firefox` in Firefox and select Load Temporary Add-on. 
 
 Select any file inside the SocialStream folder.
 
 You're done.  This is a temporary install and none of the settings made will be persist, including your session ID.
 
-You will still need to manually redo these steps to update when needed.
+You will still need to manually redo these steps to update when needed, but you can use the newest version of the code.
 
 ##### Second way:
 
@@ -80,6 +80,7 @@ Accept any install pop ups. Storage functions should work with this approach.
 
 You are good to go, but you will need to manually update when needed by recompleting these steps.
 
+XPI files are currently provided on request or with major updates; XPI file creation hasn't yet been automated. (TODO)
 
 ### To use
 
