@@ -50,6 +50,37 @@ You're ready to start using it!
 
 Please note that you will need to manually update the extension to access newer versions; it currently does not auto update.
 
+#### Firefox support
+
+You have two ways to install the add-on for Firefox. 
+
+Please note, neither Firefox option supports two-way message responding, but the dock and featured chat overlay should work.  If you want to use the bot commands with auto-responding, please consider using a Chromium-based browser instead.
+
+##### First way:
+
+Download+extract or clone the SocialStream code somewhere.
+
+Go to about:debugging#/runtime/this-firefox in Firefox and select Load Temporary Add-on. 
+
+Select any file inside the SocialStream folder.
+
+You're done.  This is a temporary install and none of the settings made will be persist, including your session ID.
+
+You will still need to manually redo these steps to update when needed.
+
+##### Second way:
+
+Go to the release section of this repo and find a release that includes a Firefox XPI file. 
+
+https://github.com/steveseguin/social_stream/releases
+
+Download the XPI file and drag it into an Open Firefox window.
+
+Accept any install pop ups. Storage functions should work with this approach.
+
+You are good to go, but you will need to manually update when needed by recompleting these steps.
+
+
 ### To use
 
 Open Twitch or Youtube "Pop out" chat; or just go to your Facebook Live chat while connected to Ethernet or WiFi. You must not minimize or close these windows, but they can be left in the background or moved to the side.
