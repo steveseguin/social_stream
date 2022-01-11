@@ -80,7 +80,7 @@ Accept any install pop ups. Storage functions should work with this approach.
 
 You are good to go, but you will need to manually update when needed by recompleting these steps.
 
-XPI files are currently provided on request or with major updates; XPI file creation hasn't yet been automated. (TODO)
+Please note: XPI files are currently provided on request or with major updates; XPI file creation hasn't yet been automated. (TODO)
 
 ### To use
 
