@@ -3,7 +3,9 @@ var iframe = null;
 var channel = null;
 var settings = {};
 var messageTimeout = 0;
-
+var lastSentMessage = "";
+var lastSentTimestamp = 0;
+var lastMessageCounter = 0;
 
 function generateStreamID(){
 	var text = "";
@@ -91,7 +93,6 @@ chrome.runtime.onMessage.addListener(
 				sendResponse({"state":isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
 				
 				if (isExtensionOn){
-					
 					if (!settings.discord){
 						try {
 							if (request.message.type == "discord"){
@@ -104,7 +105,14 @@ chrome.runtime.onMessage.addListener(
 						applyBotActions(request.message); // perform any immediate actions
 					} catch(e){console.log(e);}
 					
-					sendDataP2P(request.message); // send the data to the dock
+					if (("firstsourceonly" in settings) && settings.firstsourceonly){
+						if (verifyOriginal(request.message)){
+							sendDataP2P(request.message); // send the data to the dock
+						}
+					} else {
+						sendDataP2P(request.message);
+					}
+					
 				}
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				sendResponse({"settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
@@ -134,6 +142,120 @@ chrome.runtime.onMessage.addListener(
 		} catch(e){}
     }
 );
+
+// The below "levenshtein" function is based on the follow work:
+// https://github.com/gustf/js-levenshtein
+// MIT License - Requires preservation of copyright and license notice
+// Copyright (c) 2017 Gustaf Andersson
+function levenshtein(a,b){
+	if (a === b) {
+	  return 0;
+	}
+	if (a.length > b.length) {
+	  var tmp = a;
+	  a = b;
+	  b = tmp;
+	}
+	var la = a.length;
+	var lb = b.length;
+	while (la > 0 && (a.charCodeAt(la - 1) === b.charCodeAt(lb - 1))) {
+	  la--;
+	  lb--;
+	}
+	var offset = 0;
+	while (offset < la && (a.charCodeAt(offset) === b.charCodeAt(offset))) {
+	  offset++;
+	}
+	la -= offset;
+	lb -= offset;
+	if (la === 0 || lb < 3) {
+	  return lb;
+	}
+	var x = 0;
+	var y;
+	var d0;
+	var d1;
+	var d2;
+	var d3;
+	var dd;
+	var dy;
+	var ay;
+	var bx0;
+	var bx1;
+	var bx2;
+	var bx3;
+	var vector = [];
+	for (y = 0; y < la; y++) {
+	  vector.push(y + 1);
+	  vector.push(a.charCodeAt(offset + y));
+	}
+	var len = vector.length - 1;
+	for (; x < lb - 3;) {
+	  bx0 = b.charCodeAt(offset + (d0 = x));
+	  bx1 = b.charCodeAt(offset + (d1 = x + 1));
+	  bx2 = b.charCodeAt(offset + (d2 = x + 2));
+	  bx3 = b.charCodeAt(offset + (d3 = x + 3));
+	  dd = (x += 4);
+	  for (y = 0; y < len; y += 2) {
+		dy = vector[y];
+		ay = vector[y + 1];
+		d0 = _min(dy, d0, d1, bx0, ay);
+		d1 = _min(d0, d1, d2, bx1, ay);
+		d2 = _min(d1, d2, d3, bx2, ay);
+		dd = _min(d2, d3, dd, bx3, ay);
+		vector[y] = dd;
+		d3 = d2;
+		d2 = d1;
+		d1 = d0;
+		d0 = dy;
+	  }
+	}
+	for (; x < lb;) {
+	  bx0 = b.charCodeAt(offset + (d0 = x));
+	  dd = ++x;
+	  for (y = 0; y < len; y += 2) {
+		dy = vector[y];
+		vector[y] = dd = _min(dy, d0, dd, bx0, vector[y + 1]);
+		d0 = dy;
+	  }
+	}
+	return dd;
+}
+function _min(d0, d1, d2, bx, ay){
+	return d0 < d1 || d2 < d1
+	? d0 > d2
+		? d2 + 1
+		: d0 + 1
+	: bx === ay
+		? d1
+		: d1 + 1;
+}
+//// End of levenshtein code
+////////////////////////////
+
+
+function verifyOriginal(msg){
+	try {
+		console.log(Date.now(), lastSentTimestamp, Date.now() - lastSentTimestamp);
+		if (Date.now() - lastSentTimestamp > 5000){ // 2 seconds has passed; assume good.
+			return true;
+		}
+		console.log( cleanText + " | " +lastSentMessage);
+		console.log(msg.chatmessage);
+		var cleanText = msg.chatmessage.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
+		cleanText = cleanText.replace(/\s\s+/g, ' ');
+		var score = levenshtein(cleanText, lastSentMessage);
+		// levenshtein(a,b)
+		console.log("score: "+score+  " - "+ cleanText + " | " +lastSentMessage);
+		if (score<7){
+			if (lastMessageCounter){return false;}
+			lastMessageCounter=1;
+		} else {
+			return false;
+		}
+	} catch(e){console.error(e);}
+	return true;
+}
 
 function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Ninja API
 	var msg = {};
@@ -186,15 +308,19 @@ eventer(messageEvent, function (e) {
 function processResponse(data){
 	
 	if (!chrome.debugger){return;}
+	if (!isExtensionOn){return;} // extension not active, so don't let responder happen. Probably safer this way.
 	
 	chrome.tabs.query({}, function(tabs) {
 		chrome.runtime.lastError;
+		var published = {};
 		for (var i=0;i<tabs.length;i++){
 			try {
 				if (("tid" in data) && (data.tid!==false)){ // if an action-response, we want to only respond to the tab that originated it
 					if ( data.tid !== tabs[i].id){continue;} 
 				}
 				if (!tabs[i].url){continue;} 
+				if (tabs[i].url in published){continue;} // skip. we already published to this tab.
+				published[tabs[i].url] = true;
 				messageTimeout = Date.now();
 				
 				if (tabs[i].url.startsWith("https://www.twitch.tv/popout/")){  // twitch, but there's also cases for youtube/facebook
@@ -235,6 +361,10 @@ function generalFakeChat(tabid, message, middle=true){ // fake a user input
 				return;
 			}; // make sure the response is valid, else don't inject text
 			
+			lastSentMessage = message.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
+			lastSentMessage = lastSentMessage.replace(/\s\s+/g, ' ');
+			lastSentTimestamp = Date.now();
+			lastMessageCounter = 0;
 			chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
 			
 			chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 

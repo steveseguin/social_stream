@@ -2,7 +2,10 @@
 	function processMessage(ele){	// twitch
 	  var chatsticker = false;
 	  var chatmessage = "";
-	  var chatname = ele.querySelector(".chat-author__display-name").innerText;
+	  
+	  try {
+		var chatname = ele.querySelector(".chat-author__display-name").innerText;
+	  } catch(e){return;}
 	  
 	  try {
 		var BTT = ele.querySelectorAll('.bttv-tooltip');

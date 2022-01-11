@@ -4,7 +4,7 @@ function saveOptions(e) {
 	streamID: document.querySelector("#streamID").value,
   });
   
-    chrome.extension.sendMessage({cmd: "sidUpdated", value: document.querySelector("#streamID").value}, function (response) {
+    chrome.runtime.sendMessage({cmd: "sidUpdated", value: document.querySelector("#streamID").value}, function (response) {
 	});
   
   document.querySelector("#savedButton").innerHTML = "Saved";
