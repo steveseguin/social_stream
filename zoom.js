@@ -166,6 +166,19 @@
 			sendResponse(false);
 		}
 	);
+	var lastHTML = "";
+	function streamPollRAW(element){
+		var html = element.outerHTML;       
+		var data = { html: html }; 
+		data.type = "zoom_poll";
+		var json = JSON.stringify(data);
+		if (lastHTML === json){ // prevent duplicates, as zoom is prone to it.
+			return;
+		}
+		lastHTML = json;
+		console.log(data);
+		pushMessage(data);
+	}
 
 	function onElementInserted(containerSelector) {
 		var onMutationsObserved = function(mutations) {
@@ -197,6 +210,10 @@
 				document.getElementById("chat-list-content").marked=true;
 				onElementInserted("#chat-list-content");
 			}
+		}
+		
+		if (document.getElementById("poll__body")){
+			streamPollRAW(document.getElementById("poll__body"));
 		}
 	},1000);
 

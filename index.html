@@ -543,7 +543,8 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	function realign(){
 		if (centering){
 			try{
-				var offsetLeft =  (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth))/2;
+				var offsetLeft =  (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth+20))/2;
+				offsetLeft -= 15;
 				document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft+"px");
 				console.log(offsetLeft);
 			} catch(e){}
@@ -699,7 +700,8 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				
 				if (centering){
 					try{
-						var offsetLeft =  (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth))/2;
+						var offsetLeft =  (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth+20))/2; // 20 and 15 are the offsets/margins used. might need to update if changed.
+						offsetLeft -= 15;
 						document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft+"px");
 						console.log(offsetLeft);
 					} catch(e){}

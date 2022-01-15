@@ -594,6 +594,8 @@
 			if ("overlayNinja" in e.data.dataReceived){
 				if ("forward" in e.data.dataReceived.overlayNinja){
 					sendDataP2P(e.data.dataReceived.overlayNinja.forward);
+				} else if ("html" in e.data.dataReceived.overlayNinja){
+					processHTML(e.data.dataReceived.overlayNinja);
 				} else if (!pauseState ){
 					processData( {contents : e.data.dataReceived.overlayNinja} );
 				} else {
@@ -684,6 +686,14 @@
 			ele.style.display = "none";
 		}
 	}
+	
+	function processHTML(data){
+		//counter+=1;
+		//data.counter = counter;
+		//var node = createElementFromHTML('<div id="msg_'+counter+'" class="highlight-chat">'+ data.html+'</div>')
+		//mainOutputWindow.appendChild(node);
+	}
+	
 	
 	function processData(data){
 		if (data.contents){
