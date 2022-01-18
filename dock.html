@@ -151,6 +151,14 @@
 			background-color: #FDFF6533;
 		}
 		
+		.highlight-chat.member{
+			background-color: #ADFEFF33;
+		}
+		
+		.highlight-chat:nth-child.member(odd){
+			background-color: #65FDFF33;
+		}
+		
 		.donationAmount{
 			-webkit-animation: glow 1s ease-in-out infinite alternate;
 			-moz-animation: glow 1s ease-in-out infinite alternate;
@@ -802,6 +810,10 @@
 			
 			if (data.hasDonation){
 				node.classList.add("donation");
+			}
+			
+			if (data.hasMembership){
+				node.classList.add("member");
 			}
 			
 			if (compactmode && darkmode){
