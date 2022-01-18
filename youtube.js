@@ -87,9 +87,14 @@
 	  }
 
 	  var hasMembership = '';
+	  
 	  if (chatmembership) {
-		hasMembership = '<div class="donation membership">NEW MEMBER!</div>';
-		chatmessage = chatmembership;
+		  if (chatmessage){
+			  hasMembership = '<div class="donation membership">MEMBER CHAT</div>';
+		  } else {
+			hasMembership = '<div class="donation membership">NEW MEMBER!</div>';
+			chatmessage = chatmembership;
+		  }
 	  }
 
 	  if (chatsticker) {
@@ -158,6 +163,8 @@
 						if (mutation.addedNodes[i].tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
 							callback(mutation.addedNodes[i]);
 						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-message-renderer".toUpperCase()) {
+							callback(mutation.addedNodes[i]);
+						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-membership-item-renderer".toUpperCase()) {
 							callback(mutation.addedNodes[i]);
 						}
 					}
