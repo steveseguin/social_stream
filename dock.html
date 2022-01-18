@@ -426,6 +426,7 @@
 	var pauseState = false;
 	var timeoutTimer = null;
 	var isOBSBrowserSource = false;
+	var customNodeLimit = false;
 	
 	var body = document.body;
 	var html = document.documentElement;
@@ -450,6 +451,10 @@
 	if (urlParams.has("hidesource")){
 		showsource = false;
 	} 
+	
+	if (urlParams.has("limit")){
+		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
+	}
 	
 	if (urlParams.has("scale")){
 		scale = urlParams.get("scale") || 1.0;
@@ -931,7 +936,14 @@
 			
 			var nodes = mainOutputWindow.childNodes; // lets delete old nodes based on some factors.
 			
-			if (isOBSBrowserSource){ // This is an OBS browser source, so lets go light on it.
+			if (customNodeLimit){
+				if (nodes.length>customNodeLimit){
+					nodes[0].remove();
+					if (nodes.length>customNodeLimit){
+						nodes[0].remove();
+					}
+				}
+			} else if (isOBSBrowserSource){ // This is an OBS browser source, so lets go light on it.
 				if (window.innerHeight>1600){
 					if (nodes.length>39){
 						nodes[0].remove();
@@ -967,22 +979,22 @@
 					}
 				}
 			} else if (window.innerHeight>900){
-				if (nodes.length>70){
+				if (nodes.length>90){
 					nodes[0].remove();
-					if (nodes.length>70){
+					if (nodes.length>90){
 						nodes[0].remove();
 					}
 				}
 			} else if (window.innerHeight>600){
-				if (nodes.length>50){
+				if (nodes.length>80){
 					nodes[0].remove();
-					if (nodes.length>50){
+					if (nodes.length>80){
 						nodes[0].remove();
 					}
 				}
-			} else if (nodes.length>40){
+			} else if (nodes.length>70){
 				nodes[0].remove();
-				if (nodes.length>40){
+				if (nodes.length>70){
 					nodes[0].remove();
 				}
 			}
