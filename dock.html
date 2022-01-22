@@ -535,6 +535,10 @@
 		document.getElementById("menu").classList.add("darkmode");
 	}
 	
+	if (urlParams.has("hideshadow")){
+		document.documentElement.style.setProperty("--background-color", "#0000", "important");
+	}
+	
 	function emoji(ele){
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
