@@ -184,7 +184,6 @@
 						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-sticker-renderer".toUpperCase()) {
 							callback(mutation.addedNodes[i]);
 						}
-						}
 					}
 				}
 			});
