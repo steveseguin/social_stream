@@ -546,7 +546,6 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				var offsetLeft =  (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth+20))/2;
 				offsetLeft -= 15;
 				document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft+"px");
-				console.log(offsetLeft);
 			} catch(e){}
 		}
 		try {
@@ -593,7 +592,6 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		
 		eventer(messageEvent, function (e) {
 		  if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
-		  console.log(e);
 		  if ("dataReceived" in e.data){ // raw data 
 			if ("overlayNinja" in e.data.dataReceived){
 				processData( {contents : e.data.dataReceived.overlayNinja} );
@@ -605,7 +603,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	RecvDataWindow();
 	
 	try {
-		var fallbackImage = new Image();
+		var fallbackImage = new Image(); // preload it.
 		fallbackImage.src = "unknown.png";
 		fallbackImage.onerror = function(){
 			fallbackImage=false;
@@ -622,14 +620,23 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	
 	function processData(data){
 		
-		console.log(data);
-		
 		if (data.contents){
 			clearTimeout(timeoutTimer);
 			document.getElementById("output").classList.add("fadeout");
 			clearInterval(nextComment);
+			
+			try {
+				if (data.contents.chatimg && data.contents.chatimg.startsWith("http")){ // preload URL based
+					var tmpImage = new Image();
+					tmpImage.src = chatimg;  // preload the image, since there is time for it.
+				}
+				if (data.contents.showType && data.contents.showsource){  // preload URL based
+					var tempShowType = new Image();
+					tempShowType.src = data.contents.showType + ".png";
+				}
+			} catch(e){warnlog(e);}
+			
 			nextComment = setTimeout(function(data){
-				console.log(data);
 			
 				var addImage = "";
 				if (data.contentimg){
@@ -638,14 +645,6 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				
 				var showType = data.type ;
 				var chatimg = data.chatimg;
-				
-				if (chatimg){
-					var tmpImage = new Image();
-					tmpImage.src = chatimg;  // preload the image
-				} else {
-					var tmpImage = new Image();
-					tmpImage.src = "unknown.png"; 
-				}
 				
 				<!-- try { -->
 					<!-- if (data.type && (data.type == "facebook") && data.userID ){ -->
@@ -658,8 +657,6 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				<!-- } catch(e){} -->
 				
 				if (showType && showsource){
-					var tempShowType = new Image();
-					tempShowType.src = showType + ".png";
 					showType = '<img src="' + showType + '.png" class="icon sourcetype" onerror="this.style.display=\'none\'" />';
 				} else {
 					showType = "";
@@ -703,7 +700,6 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 						var offsetLeft =  (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth+20))/2; // 20 and 15 are the offsets/margins used. might need to update if changed.
 						offsetLeft -= 15;
 						document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft+"px");
-						console.log(offsetLeft);
 					} catch(e){}
 				}
 				

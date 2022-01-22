@@ -33,6 +33,7 @@ chrome.storage.sync.get(properties, function(item){
 		chrome.storage.sync.set({
 			streamID: channel
 		});
+		chrome.runtime.lastError;
 	}
 	if (item && item.settings){
 		settings = item.settings;
@@ -76,6 +77,7 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "saveSetting") {
 				settings[request.setting] = request.value;
 				chrome.storage.sync.set(settings);
+				chrome.runtime.lastError;
 				sendResponse({"state":isExtensionOn});	
 				
 				if (request.setting == "midi"){

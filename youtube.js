@@ -49,7 +49,7 @@
 	  
 	  try{
 		chatimg = ele.querySelector("#img").src;
-		if (chatimg.includes("data:image/gif;base64") || (ele.getAttribute("author-type")=="owner")){
+		if (chatimg.startsWith("data:image/gif;base64") || (ele.getAttribute("author-type")=="owner")){
 			chatimg = document.querySelector("#panel-pages").querySelector("#img").src; // this is the owner
 		}
 		chatimg = chatimg.replace("=s32-", "=s128-");
@@ -100,10 +100,25 @@
 	  if (chatsticker) {
 		chatmessage = '<img src="'+chatsticker+'">';
 	  }
+	  
+	  var backgroundColor = "";
+	  
+	  var textColor = "";
+	  if (ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color')) {
+		backgroundColor = "background-color: "+ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color')+";";
+		textColor = "color: #111;";
+	  }
+
+	  if (ele.style.getPropertyValue('--yt-live-chat-sponsor-color')) {
+		backgroundColor = "background-color: "+ele.style.getPropertyValue('--yt-live-chat-sponsor-color')+";";
+		textColor = "color: #111;";
+	  }
 
 	  var data = {};
 	  data.chatname = chatname;
 	  data.chatbadges = chatbadges;
+	  data.backgroundColor = backgroundColor;
+      data.textColor = textColor;
 	  data.chatmessage = chatmessage;
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
@@ -166,6 +181,9 @@
 							callback(mutation.addedNodes[i]);
 						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-membership-item-renderer".toUpperCase()) {
 							callback(mutation.addedNodes[i]);
+						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-sticker-renderer".toUpperCase()) {
+							callback(mutation.addedNodes[i]);
+						}
 						}
 					}
 				}

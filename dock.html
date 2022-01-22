@@ -524,7 +524,11 @@
 	
 	if (darkmode){
 		document.documentElement.style.setProperty("--font-color", "#FFF");
-		document.documentElement.style.setProperty("--background-color", "#000");
+		if (!isOBSBrowserSource){
+			document.documentElement.style.setProperty("--background-color", "#000");
+		} else {
+			document.documentElement.style.setProperty("--background-color", "#0000");
+		}
 		document.documentElement.style.setProperty("--font-color-name", "#DDD");
 		document.documentElement.style.setProperty("--link-color", "#5AF");
 		document.documentElement.style.setProperty("--input-color", "#5AF");
@@ -712,11 +716,6 @@
 		if (data.contents){
 			data = data.contents;
 			
-			if (data.chatimg){
-				var tmpImage = new Image();
-				tmpImage.src = data.chatimg  // preload the image
-			} 
-		
 			var addImage = "";
 			if (data.contentimg){
 				 addImage = '<div class="hl-imgContent"><img  src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></div>';
@@ -936,14 +935,7 @@
 			
 			var nodes = mainOutputWindow.childNodes; // lets delete old nodes based on some factors.
 			
-			if (customNodeLimit){
-				if (nodes.length>customNodeLimit){
-					nodes[0].remove();
-					if (nodes.length>customNodeLimit){
-						nodes[0].remove();
-					}
-				}
-			} else if (isOBSBrowserSource){ // This is an OBS browser source, so lets go light on it.
+			if (isOBSBrowserSource){ // This is an OBS browser source, so lets go light on it.
 				if (window.innerHeight>1600){
 					if (nodes.length>39){
 						nodes[0].remove();
@@ -978,23 +970,30 @@
 						nodes[0].remove();
 					}
 				}
-			} else if (window.innerHeight>900){
-				if (nodes.length>90){
+			} else if (customNodeLimit){
+				if (nodes.length>customNodeLimit){
 					nodes[0].remove();
-					if (nodes.length>90){
+					if (nodes.length>customNodeLimit){
 						nodes[0].remove();
 					}
 				}
-			} else if (window.innerHeight>600){
+			} else if (window.innerHeight>900){
 				if (nodes.length>80){
 					nodes[0].remove();
 					if (nodes.length>80){
 						nodes[0].remove();
 					}
 				}
-			} else if (nodes.length>70){
-				nodes[0].remove();
+			} else if (window.innerHeight>600){
 				if (nodes.length>70){
+					nodes[0].remove();
+					if (nodes.length>70){
+						nodes[0].remove();
+					}
+				}
+			} else if (nodes.length>60){
+				nodes[0].remove();
+				if (nodes.length>60){
 					nodes[0].remove();
 				}
 			}
