@@ -15,8 +15,9 @@
 			--font-color: #000;
 			--font-color-name: #000;
 			--background-color: #FFF0;
-			--link-color: #06F
-			--input-color: #FFF
+			--link-color: #06F;
+			--input-color: #FFF;
+			--highlight-base: #FFF1;
 		}
 		
 		.noText {
@@ -105,7 +106,7 @@
 			min-height:28px;
 			transition: .5s all cubic-bezier(0.250, 0.250, 0.105, 1.2);
 			width:fit-content;
-			background-color: #FFF1;
+			background-color: var(--highlight-base);
 		}
 		
 		.notcompactmode>.hl-message{
@@ -524,11 +525,7 @@
 	
 	if (darkmode){
 		document.documentElement.style.setProperty("--font-color", "#FFF");
-		if (!isOBSBrowserSource){
-			document.documentElement.style.setProperty("--background-color", "#000");
-		} else {
-			document.documentElement.style.setProperty("--background-color", "#0000");
-		}
+		document.documentElement.style.setProperty("--background-color", "#000");
 		document.documentElement.style.setProperty("--font-color-name", "#DDD");
 		document.documentElement.style.setProperty("--link-color", "#5AF");
 		document.documentElement.style.setProperty("--input-color", "#5AF");
@@ -536,7 +533,7 @@
 	}
 	
 	if (urlParams.has("hideshadow")){
-		document.documentElement.style.setProperty("--background-color", "#0000", "important");
+		document.documentElement.style.setProperty("--highlight-base", "#0000", "important");
 	}
 	
 	function emoji(ele){
