@@ -18,8 +18,11 @@
 			--link-color: #06F;
 			--input-color: #FFF;
 			--highlight-base: #FFF1;
+			--highlight-base2: #4441;
+			--highlight-compact: #3335;
+			--highlight-compact2: #3333;
 		}
-		
+	
 		.noText {
 			display: var(--show-emoji-only) !important;
 		}
@@ -126,7 +129,7 @@
 		}
 		
 		.highlight-chat:nth-child(odd){
-			background-color: #4441;
+			background-color: var(--highlight-base2);
 		}
 		
 		.highlight-chat:hover {
@@ -134,14 +137,14 @@
 		}
 		
 		.highlight-chat.compactmode{
-			background-color: #3335;
+			background-color: var(--highlight-compact); 
 			border-top-right-radius: 3px;
 			border-bottom-right-radius: 3px;
 			padding-right:3px;
 		}
 		
 		.highlight-chat:nth-child(odd).compactmode{
-			background-color: #3333;
+			background-color: var(--highlight-compact2);
 		}
 		
 		.highlight-chat.donation{
@@ -534,6 +537,11 @@
 	
 	if (urlParams.has("hideshadow")){
 		document.documentElement.style.setProperty("--highlight-base", "#0000", "important");
+		document.documentElement.style.setProperty("--highlight-base2", "#0000", "important");
+		
+		document.documentElement.style.setProperty("--highlight-compact", "#0000", "important");
+		document.documentElement.style.setProperty("--highlight-compact2", "#0000", "important");
+		
 	}
 	
 	function emoji(ele){
