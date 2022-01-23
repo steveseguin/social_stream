@@ -186,7 +186,10 @@
 						sendResponse(false);
 						return;
 					}
-					document.querySelector('[contenteditable="true"]').childNodes[0].childNodes[0].childNodes[0].focus();
+					var eles= document.querySelectorAll('[contenteditable="true"]');
+					for (var i =0;i<eles.length;i++){
+						eles[i].childNodes[0].childNodes[0].childNodes[0].focus();
+					}
 					sendResponse(true);
 					return;
 				}
