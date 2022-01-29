@@ -190,7 +190,17 @@
 					}
 					var eles= document.querySelectorAll('[contenteditable="true"]');
 					for (var i =0;i<eles.length;i++){
-						eles[i].childNodes[0].childNodes[0].childNodes[0].focus();
+						try {
+							eles[i].childNodes[0].childNodes[0].childNodes[0].focus();
+						} catch(e){
+							try {
+								eles[i].childNodes[0].focus();
+							} catch(e){
+								try{
+									eles[i].querySelector("p").focus();
+								}catch(e){}
+							}
+						}
 					}
 					sendResponse(true);
 					return;
