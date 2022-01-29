@@ -147,27 +147,29 @@
 			var main = document.querySelector("div[role='complementary']").querySelectorAll("div[role='article']");
 			for (var j =0;j<main.length;j++){
 				try{
-					if (!main[j].dataset.set){
-						main[j].dataset.set = "true";
+					if (!main[j].dataset.set123){
+						main[j].dataset.set123 = "true";
 					} 
 				} catch(e){}
 			}
 		} catch(e){  }
-	},1600);
 	
-	var ttt = setInterval(function(){
-		try {
-			var main = document.querySelector("div[role='complementary']").querySelectorAll("div[role='article']");
-			for (var j =0;j<main.length;j++){
-				try{
-					if (!main[j].dataset.set){
-						main[j].dataset.set = "true";
-						processMessage(main[j]);
-					} 
-				} catch(e){}
-			}
-		} catch(e){ }
-	},2000);
+		console.log("LOADED SocialStream EXTENSION");
+	
+		var ttt = setInterval(function(){
+			try {
+				var main = document.querySelector("div[role='complementary']").querySelectorAll("div[role='article']");
+				for (var j =0;j<main.length;j++){
+					try{
+						if (!main[j].dataset.set123){
+							main[j].dataset.set123 = "true";
+							processMessage(main[j]);
+						} 
+					} catch(e){}
+				}
+			} catch(e){ }
+		},1000);
+	},1500);
 
 	var textOnlyMode = false;
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
