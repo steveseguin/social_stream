@@ -540,6 +540,11 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		showsource = true;
 	} 
 	
+	var isIFrame = false;
+	if ( parent && (window.location !== window.parent.location )) {
+		isIFrame = true;
+	}
+	
 	function realign(){
 		if (centering){
 			try{
@@ -618,6 +623,8 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		}
 	}
 	
+	var iframeTimeout = null;
+	
 	function processData(data){
 		
 		if (data.contents){
@@ -635,6 +642,11 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					tempShowType.src = data.contents.showType + ".png";
 				}
 			} catch(e){warnlog(e);}
+			
+			if (isIFrame){
+				clearTimeout(iframeTimeout);
+				iframeTimeout = setTimeout(function(){parent.postMessage({resizeWindow:{height:"220px"}}, "*");},300);
+			}
 			
 			nextComment = setTimeout(function(data){
 			
@@ -741,6 +753,11 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				clearTimeout(timeoutTimer);
 				document.getElementById("output").classList.add("fadeout");
 				clearInterval(nextComment);
+				
+				if (isIFrame){
+					clearTimeout(iframeTimeout);
+					iframeTimeout = setTimeout(function(){parent.postMessage({resizeWindow:{height:"0px"}}, "*");},300);
+				}
 			} 
 		}
 	
