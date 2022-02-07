@@ -376,6 +376,7 @@
 	<div id="menu">
 		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" class="red">Clear Current Overlay</button>
 		<button id="pause" data-state="0" onclick="pause(this);">⏯︎ Pause</button>
+		<button id="autoshow" data-state="0" onclick="autoShow(this);" title="Auto-feature chat messages as they come in">Auto</button>
 		<input id="filter_messages" onchange="filterMessages(this.value);" placeholder="Filter messages" type="text" />
 		<button id="hide_emoji" data-state="0" onclick="emoji(this);" title="Hide all emoji-only messages">🚫🙂</button>
 		<button id="say_hello" data-state="0" onclick="toggleChat();" title="Send a text message to all social endpoints">💬</button>
@@ -431,7 +432,7 @@
 	var timeoutTimer = null;
 	var isOBSBrowserSource = false;
 	var customNodeLimit = false;
-	
+	var autoTimeout = false;
 	var body = document.body;
 	var html = document.documentElement;
 	var mainOutputWindow = document.getElementById("output");
@@ -459,6 +460,12 @@
 	if (urlParams.has("limit")){
 		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
 	}
+	
+	var autoshow = false;
+	if (urlParams.has("autoshow")){
+		autoshow = true;
+		document.getElementById("autoshow").classList.add("pressed");
+	} 
 	
 	if (urlParams.has("scale")){
 		scale = urlParams.get("scale") || 1.0;
@@ -559,6 +566,15 @@
 	function toggleTriggers(ele){
 		triggerState = !triggerState;
 		if (triggerState){
+			ele.classList.add("pressed");
+		} else {
+			ele.classList.remove("pressed");
+		}
+	}
+	
+	function autoShow(ele){
+		autoshow = !autoshow;
+		if (autoshow){
 			ele.classList.add("pressed");
 		} else {
 			ele.classList.remove("pressed");
@@ -720,6 +736,65 @@
 		//mainOutputWindow.appendChild(node);
 	}
 	
+	function selectedMessage(event=false, element=false){
+		if (!element){
+			element = this;
+		}
+		element.classList.add("pressed");
+		var data = element.rawContents;
+		if (data.type && (data.type == "twitch") && !data.chatimg){
+			var ccc = data.counter;
+			var imgnode = document.getElementById("img_"+ccc);
+			fetch("https://api.action.wtf:667/username/"+data.chatname).then(response => {
+				response.text().then(function (text) {
+					if (text.startsWith("https://")){
+						data.chatimg = text;
+						imgnode.src = text;
+						imgnode.classList.remove("invert");
+						document.getElementById("msg_"+ccc).rawContents.chatimg = text;
+					} else {
+						data.chatimg = 'unknown.png';
+						if (darkmode){
+							imgnode.classList.add("invert");
+						}
+					}
+					if (thirdPartyAPI){
+						thirdPartyAPI(data);
+					} else {
+						sendDataP2P(data);
+					}
+				}).catch(function(){
+					data.chatimg = 'unknown.png';
+					if (darkmode){
+						imgnode.classList.add("invert");
+					}
+					if (thirdPartyAPI){
+						thirdPartyAPI(data);
+					} else {
+						sendDataP2P(data);
+					}
+				});
+			}).catch(error => {
+				console.error(error);
+				data.chatimg = 'unknown.png';
+				if (darkmode){
+					imgnode.classList.add("invert");
+				}
+				if (thirdPartyAPI){
+					thirdPartyAPI(data);
+				} else {
+					sendDataP2P(data);
+				}
+			});
+		} else {
+			if (thirdPartyAPI){
+				thirdPartyAPI(data);
+			} else {
+				sendDataP2P(data);
+			}
+		}
+	};
+	
 	
 	function processData(data){
 		if (data.contents){
@@ -853,61 +928,17 @@
 			}
 			
 			node.rawContents = data;
-			node.onmousedown = function(e){
-				this.classList.add("pressed");
-				var data = this.rawContents;
-				if (data.type && (data.type == "twitch") && !data.chatimg){
-					var ccc = data.counter;
-					var imgnode = document.getElementById("img_"+ccc);
-					fetch("https://api.action.wtf:667/username/"+data.chatname).then(response => {
-						response.text().then(function (text) {
-							if (text.startsWith("https://")){
-								data.chatimg = text;
-								imgnode.src = text;
-								imgnode.classList.remove("invert");
-								document.getElementById("msg_"+ccc).rawContents.chatimg = text;
-							} else {
-								data.chatimg = 'unknown.png';
-								if (darkmode){
-									imgnode.classList.add("invert");
-								}
-							}
-							if (thirdPartyAPI){
-								thirdPartyAPI(data);
-							} else {
-								sendDataP2P(data);
-							}
-						}).catch(function(){
-							data.chatimg = 'unknown.png';
-							if (darkmode){
-								imgnode.classList.add("invert");
-							}
-							if (thirdPartyAPI){
-								thirdPartyAPI(data);
-							} else {
-								sendDataP2P(data);
-							}
-						});
-					}).catch(error => {
-						console.error(error);
-						data.chatimg = 'unknown.png';
-						if (darkmode){
-							imgnode.classList.add("invert");
-						}
-						if (thirdPartyAPI){
-							thirdPartyAPI(data);
-						} else {
-							sendDataP2P(data);
-						}
-					});
-				} else {
-					if (thirdPartyAPI){
-						thirdPartyAPI(data);
-					} else {
-						sendDataP2P(data);
-					}
+			
+			if (autoshow){
+				if (!autoTimeout){
+					selectedMessage(false, node);
+					autoTimeout = setTimeout(function(){
+						autoTimeout=false;
+					},1500);
 				}
-			};
+			}
+			
+			node.onmousedown = selectedMessage;
 
 			var imageElements = node.getElementsByTagName("img");
 			for (i = 0; i < imageElements.length; i++) {
