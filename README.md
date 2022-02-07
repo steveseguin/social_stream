@@ -128,6 +128,7 @@ If using the automated chat response options, like auto-hi, you must ensure the 
 - &notime (hides the date in the chat stream)
 - &hidesource (hides the youtube/twitch/fb icons from the stream)
 - &compact (Removes the spacing between name and message)
+- &autoshow (will auto-feature chat messages as they come into the dock at a rate of about 2 per 3 seconds)
 
 To customize the overlay, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the and using the index.html file.
 
