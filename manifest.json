@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more",
   "manifest_version": 2,
-  "version": "1.10.0",
+  "version": "1.11.0",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -12,7 +12,7 @@
     "persistent": true
   },
   "permissions": [
-    "https://youtube.com/*", "https://www.youtube.com/*", "https://studio.youtube.com/*", "https://www.twitch.tv/*", "https://chat.restream.io/*", "https://trovo.live/chat/*", "https://facebook.com/*", "https://web.facebook.com/*", "https://www.facebook.com/*", "https://play.rozy.tv/*", "https://www.crowdcast.io/e/*", "https://*.zoom.us/*", "https://watch.owncast.online/*", "https://discord.com/channels/*", "https://www.mixcloud.com/live/*/chat/",  "https://vimeo.com/live-chat/*", "https://www.vimeo.com/live-chat/*", "https://teams.live.com/*", "https://livestream.com/accounts/*", "https://*/plugins/livechat/router/webchat/room/*", "storage", "debugger"
+    "https://youtube.com/*", "https://www.youtube.com/*", "https://studio.youtube.com/*", "https://www.twitch.tv/*", "https://www.instagram.com/*/live/", "https://chat.restream.io/*", "https://trovo.live/chat/*", "https://facebook.com/*", "https://web.facebook.com/*", "https://www.facebook.com/*", "https://play.rozy.tv/*", "https://www.crowdcast.io/e/*", "https://*.zoom.us/*", "https://watch.owncast.online/*", "https://discord.com/channels/*", "https://www.mixcloud.com/live/*/chat/",  "https://vimeo.com/live-chat/*", "https://www.vimeo.com/live-chat/*", "https://teams.live.com/*", "https://livestream.com/accounts/*", "https://*/plugins/livechat/router/webchat/room/*", "storage", "debugger"
   ],
   "browser_action": {
         "default_popup": "popup.html"
@@ -66,6 +66,10 @@
 	   {
 		"js": ["peertube.js"],
 		"matches": ["https://*/plugins/livechat/router/webchat/room/*"]
+	  },
+	   {
+		"js": ["instagramlive.js"],
+		"matches": ["https://www.instagram.com/*/live/"]
 	  }
   ],
   "options_ui": {
