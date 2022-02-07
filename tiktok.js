@@ -2,8 +2,7 @@
 	function pushMessage(data){	  
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
-			console.log(data);
-		} catch(e){console.error(e);}
+		} catch(e){}
 	}
 
 	function toDataURL(url, callback) {
