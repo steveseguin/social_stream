@@ -136,6 +136,9 @@ To customize the overlay, you can edit the CSS, in either the OBS browser source
 
 - &showtime=20000 (auto-hides selected messages after 20s)
 - &showsource (shows the youtube/twitch/fb icons next to the name)
+- &fade (will have featured messages fade in, rather than pop up)
+- &swipe (will have featured messages swipe in from the left side)
+- &center (center featured messages)
 
 #### Auto responding / custom actions
 
