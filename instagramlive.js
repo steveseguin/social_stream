@@ -23,10 +23,9 @@
 		var content = ele.childNodes[0].childNodes[1];
 		var chatname="";
 		try {
-			chatname = ele.childNodes[0].childNodes[0].childNodes[1].childNodes[0].textContent;
+			chatname = ele.childNodes[0].childNodes[0].childNodes[1].children[0].textContent;
 			chatname = chatname.replace(/ .*/,'');
 		} catch(e){
-			console.error(e);
 		}
 		var chatmessage="";
 		try{
@@ -35,13 +34,12 @@
 			 } else {
 				chatmessage = ele.childNodes[0].childNodes[0].childNodes[1].children[1].innerHTML;
 			 }
-		} catch(e){console.error(e);}
+		} catch(e){return;}
 
 		var chatimg="";
 		try{
 			chatimg = ele.childNodes[0].childNodes[0].childNodes[0].querySelectorAll("img")[0].src;
 		} catch(e){
-			console.error(e);
 		}
 	  
 
