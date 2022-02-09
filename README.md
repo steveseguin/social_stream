@@ -124,24 +124,55 @@ If using the automated chat response options, like auto-hi, you must ensure the 
 
 ### Customize
 
-- &lightmode (Enables the dark-mode for the chat stream)
+There are quite a few toggles available to customize functions and styles, but these toggles often just apply URL parameters. You can as a result, just manually apply the parameters yourself, opening up more fine-grain control.  A list of some of the options are available below.
 
+To customize the dock, you can use the following options:
+
+- &lightmode (Enables the dark-mode for the chat stream)
 - &scale=2 (doubles size/resolution of all elements)
 - &notime (hides the date in the chat stream)
 - &hidesource (hides the youtube/twitch/fb icons from the stream)
 - &compact (Removes the spacing between name and message)
 - &autoshow (will auto-feature chat messages as they come into the dock at a rate of about 2 per 3 seconds)
 
-To customize the overlay, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the and using the index.html file.
+To customize the featured chat overlay, the following URL parameters are available
 
 - &showtime=20000 (auto-hides selected messages after 20s)
 - &showsource (shows the youtube/twitch/fb icons next to the name)
+- &fade (will have featured messages fade in, rather than pop up)
+- &swipe (will have featured messages swipe in from the left side)
+- &center (center featured messages)
+
+To customize the color, font-size and styling, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the and using the index.html file. See below:
+
+#### More advanced styling customizations
+
+To further customize the appearance of the overlay or dock, you can make CSS style changes via OBS browser source, without any coding.  
+
+![image](https://user-images.githubusercontent.com/2575698/153123085-4cf2923e-fce3-40bd-bd66-3ba14a6ab321.png)
+
+```
+body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
+
+:root {
+     --author-bg-color: #FF0000;
+     --author-avatar-border-color: #FF0000;
+     --comment-color: #090;
+     --comment-bg-color: #DDD;
+     --comment-color: #FF0;
+     --comment-border-radius: 10px;
+     --author-border-radius: 10px;
+     --comment-font-size: 30px;
+     --author-color: blue;
+}
+```
+Sample CSS of which you can use to customize some of the basic styles. There's not much that you can't do via CSS in this way, but you can edit things further at a code-level if needed. Mac/Linux users may face issues with OBS not liking self-hosted versions of the index/dock file, but it's not an issue for the PC version.
 
 #### Auto responding / custom actions
 
-You can create your own custom auto-responding triggers or other actions by including a custom.js file.
+You can create your own custom auto-responding triggers or other actions by including a `custom.js` file. You don't need to host the index or dock file for this.
 
-Included in the code is the custom_sample.js file, which you can rename to custom.js to get started. Included in it is the `&auto1` trigger, which  auto responds "1" to any message that is also "1".  You need to add `&auto1` to the dock's URL to activate it.
+Included in the code is the `custom_sample.js` file, which you can rename to custom.js to get started. Included in it is the `&auto1` trigger, which  auto responds "1" to any message that is also "1".  You need to add `&auto1` to the dock's URL to activate it.
 
 It's fairly easy to modify the `auto1` trigger to do whatever you want. You can also customize or removee the URL-parameter trigger needed to activate it.
 
