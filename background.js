@@ -23,7 +23,7 @@ function generateStreamID(){
 };
 
 
-var properties = ["streamID"];
+var properties = ["streamID", "isExtensionOn"];
 channel = generateStreamID();
 
 chrome.storage.sync.get(properties, function(item){
@@ -38,8 +38,21 @@ chrome.storage.sync.get(properties, function(item){
 	if (item && item.settings){
 		settings = item.settings;
 	}
+	if (item && item.isExtensionOn){
+		isExtensionOn = item.isExtensionOn;
+		chrome.browserAction.setIcon({path: "/icons/on.png"});
+		if (iframe==null){
+			loadIframe(channel);
+		}
+	}  else {
+		chrome.storage.sync.set({
+			isExtensionOn: isExtensionOn
+		});
+		chrome.runtime.lastError;
+	}
 	toggleMidi();
 });
+
 chrome.browserAction.setIcon({path: "/icons/off.png"});
 
 function pushSettingChange(setting){
@@ -70,6 +83,10 @@ chrome.runtime.onMessage.addListener(
 					iframe.remove();
 					iframe = null;
 				}
+				chrome.storage.sync.set({
+					isExtensionOn: isExtensionOn
+				});
+				chrome.runtime.lastError;
 				toggleMidi();
 				sendResponse({"state":isExtensionOn,"streamID":channel, "settings":settings});
 			} else if (request.cmd && request.cmd === "getOnOffState") {

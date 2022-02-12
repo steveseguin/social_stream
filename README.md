@@ -23,6 +23,8 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - discord.com (web version; toggle needed to enable)
 - ms teams (experimental support)
 - vimeo.com (pop out chat)
+- instagram live (instagram.com/*/live/)
+- tiktok live (tiktok.com/*/live)
 
 More on request
 
@@ -122,23 +124,55 @@ If using the automated chat response options, like auto-hi, you must ensure the 
 
 ### Customize
 
-- &lightmode (Enables the dark-mode for the chat stream)
+There are quite a few toggles available to customize functions and styles, but these toggles often just apply URL parameters. You can as a result, just manually apply the parameters yourself, opening up more fine-grain control.  A list of some of the options are available below.
 
+To customize the dock, you can use the following options:
+
+- &lightmode (Enables the dark-mode for the chat stream)
 - &scale=2 (doubles size/resolution of all elements)
 - &notime (hides the date in the chat stream)
 - &hidesource (hides the youtube/twitch/fb icons from the stream)
 - &compact (Removes the spacing between name and message)
+- &autoshow (will auto-feature chat messages as they come into the dock at a rate of about 2 per 3 seconds)
 
-To customize the overlay, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the and using the index.html file.
+To customize the featured chat overlay, the following URL parameters are available
 
 - &showtime=20000 (auto-hides selected messages after 20s)
 - &showsource (shows the youtube/twitch/fb icons next to the name)
+- &fade (will have featured messages fade in, rather than pop up)
+- &swipe (will have featured messages swipe in from the left side)
+- &center (center featured messages)
+
+To customize the color, font-size and styling, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the and using the index.html file. See below:
+
+#### More advanced styling customizations
+
+To further customize the appearance of the overlay or dock, you can make CSS style changes via OBS browser source, without any coding.  
+
+![image](https://user-images.githubusercontent.com/2575698/153123085-4cf2923e-fce3-40bd-bd66-3ba14a6ab321.png)
+
+```
+body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
+
+:root {
+     --author-bg-color: #FF0000;
+     --author-avatar-border-color: #FF0000;
+     --comment-color: #090;
+     --comment-bg-color: #DDD;
+     --comment-color: #FF0;
+     --comment-border-radius: 10px;
+     --author-border-radius: 10px;
+     --comment-font-size: 30px;
+     --author-color: blue;
+}
+```
+Sample CSS of which you can use to customize some of the basic styles. There's not much that you can't do via CSS in this way, but you can edit things further at a code-level if needed. Mac/Linux users may face issues with OBS not liking self-hosted versions of the index/dock file, but it's not an issue for the PC version.
 
 #### Auto responding / custom actions
 
-You can create your own custom auto-responding triggers or other actions by including a custom.js file.
+You can create your own custom auto-responding triggers or other actions by including a `custom.js` file. You don't need to host the index or dock file for this.
 
-Included in the code is the custom_sample.js file, which you can rename to custom.js to get started. Included in it is the `&auto1` trigger, which  auto responds "1" to any message that is also "1".  You need to add `&auto1` to the dock's URL to activate it.
+Included in the code is the `custom_sample.js` file, which you can rename to custom.js to get started. Included in it is the `&auto1` trigger, which  auto responds "1" to any message that is also "1".  You need to add `&auto1` to the dock's URL to activate it.
 
 It's fairly easy to modify the `auto1` trigger to do whatever you want. You can also customize or removee the URL-parameter trigger needed to activate it.
 
@@ -181,6 +215,7 @@ If the auto responder doesn't work -- you see a blue bar, but nothing happens, t
 
 - Try to keep the chat window and dock page active and if possible, even partially visible on screen. If the windows are hidden or minimized, they may stop working. This is also true if the scroll bar for the chat window is not at the bottom; sometimes messages won't load unless you are seeing the newest messages.
 
+- If using OBS Studio on macOS or Linux, for some reason this extension will not work if hosted locally on your drive, so custom CSS needs to happen via the browser source style section. It works great on PC locally, and when hosted on socialstream.ninja, but locally on mac, it does not seem supported. This is an issue you'll need to take up with the OBS developers.
 
 ### Support
 
@@ -188,4 +223,10 @@ You can find me on discord over at https://discord.vdo.ninja (steve), offering f
 
 Feedback and feature requests are welcomed
 
+### Icons
 
+I do not claim rights of all the icons distributed. While I made some of the icons, trademarks and logos of third party companies/services are the rights of those respectivitive entities. Use them according to the terms that those entities may offer them under.
+
+### Credit
+
+This project contains inspiration by my other project, chat.overlay.ninja, which was a derivation of another Youtube-specific chat widget, which was inspired by the stylings of other featured-chat code sample, of which that was also inspired by existing chat overlay designs. May the many new innovations of this project inspire the future foundation of other awesome projects as well.

@@ -376,6 +376,7 @@
 	<div id="menu">
 		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" class="red">Clear Current Overlay</button>
 		<button id="pause" data-state="0" onclick="pause(this);">⏯︎ Pause</button>
+		<button id="autoshow" data-state="0" onclick="autoShow(this);" title="Auto-feature chat messages as they come in">Auto</button>
 		<input id="filter_messages" onchange="filterMessages(this.value);" placeholder="Filter messages" type="text" />
 		<button id="hide_emoji" data-state="0" onclick="emoji(this);" title="Hide all emoji-only messages">🚫🙂</button>
 		<button id="say_hello" data-state="0" onclick="toggleChat();" title="Send a text message to all social endpoints">💬</button>
@@ -431,7 +432,7 @@
 	var timeoutTimer = null;
 	var isOBSBrowserSource = false;
 	var customNodeLimit = false;
-	
+	var autoTimeout = false;
 	var body = document.body;
 	var html = document.documentElement;
 	var mainOutputWindow = document.getElementById("output");
@@ -456,9 +457,16 @@
 		showsource = false;
 	} 
 	
+	
 	if (urlParams.has("limit")){
 		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
 	}
+	
+	var autoshow = false;
+	if (urlParams.has("autoshow")){
+		autoshow = true;
+		document.getElementById("autoshow").classList.add("pressed");
+	} 
 	
 	if (urlParams.has("scale")){
 		scale = urlParams.get("scale") || 1.0;
@@ -559,6 +567,15 @@
 	function toggleTriggers(ele){
 		triggerState = !triggerState;
 		if (triggerState){
+			ele.classList.add("pressed");
+		} else {
+			ele.classList.remove("pressed");
+		}
+	}
+	
+	function autoShow(ele){
+		autoshow = !autoshow;
+		if (autoshow){
 			ele.classList.add("pressed");
 		} else {
 			ele.classList.remove("pressed");
@@ -720,6 +737,65 @@
 		//mainOutputWindow.appendChild(node);
 	}
 	
+	function selectedMessage(event=false, element=false){
+		if (!element){
+			element = this;
+		}
+		element.classList.add("pressed");
+		var data = element.rawContents;
+		if (data.type && (data.type == "twitch") && !data.chatimg){
+			var ccc = data.counter;
+			var imgnode = document.getElementById("img_"+ccc);
+			fetch("https://api.action.wtf:667/username/"+data.chatname).then(response => {
+				response.text().then(function (text) {
+					if (text.startsWith("https://")){
+						data.chatimg = text;
+						imgnode.src = text;
+						imgnode.classList.remove("invert");
+						document.getElementById("msg_"+ccc).rawContents.chatimg = text;
+					} else {
+						data.chatimg = 'unknown.png';
+						if (darkmode){
+							imgnode.classList.add("invert");
+						}
+					}
+					if (thirdPartyAPI){
+						thirdPartyAPI(data);
+					} else {
+						sendDataP2P(data);
+					}
+				}).catch(function(){
+					data.chatimg = 'unknown.png';
+					if (darkmode){
+						imgnode.classList.add("invert");
+					}
+					if (thirdPartyAPI){
+						thirdPartyAPI(data);
+					} else {
+						sendDataP2P(data);
+					}
+				});
+			}).catch(error => {
+				console.error(error);
+				data.chatimg = 'unknown.png';
+				if (darkmode){
+					imgnode.classList.add("invert");
+				}
+				if (thirdPartyAPI){
+					thirdPartyAPI(data);
+				} else {
+					sendDataP2P(data);
+				}
+			});
+		} else {
+			if (thirdPartyAPI){
+				thirdPartyAPI(data);
+			} else {
+				sendDataP2P(data);
+			}
+		}
+	};
+	
 	
 	function processData(data){
 		if (data.contents){
@@ -727,23 +803,36 @@
 			
 			var addImage = "";
 			if (data.contentimg){
-				 addImage = '<div class="hl-imgContent"><img  src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></div>';
+				addImage = '<div class="hl-imgContent"><img src="' + data.contentimg + '" class="hl-img-content" onerror="this.parent.style.display=\'none\'" /></div>';
+			} else {
+				data.contentimg = "";
 			}
 			
 			if (data.chatmessage){
 				data.chatmessage = data.chatmessage.trim();
+			} else {
+				data.chatmessage = "";
 			}
+			
 			
 			
 			var donation = "";
 			if (data.hasDonation){
-				donation = "<span class='donationAmount'>"+data.hasDonation+"</span>";
+				donation = "<span class='donationAmount hl-donation'>"+data.hasDonation+"</span>";
+			} else {
+				data.hasDonation = "";
 			}
 			
 			counter+=1;
 			data.counter = counter;
 			
-			var showType = data.type;
+			if (!data.type){
+				data.type= "none";
+				var showType = "";
+			} else {
+				data.type = data.type.toString();
+				var showType = data.type;
+			}
 			
 			var chatImg = data.chatimg;
 			
@@ -751,19 +840,19 @@
 				if (fallbackImage){
 					chatImg = "unknown.png";
 					if (darkmode){
-						chatImg = '<img id="img_'+counter+'" src="' + chatImg + '" class="icon invert" onerror="errorImage(this);" />'
+						chatImg = '<img id="img_'+counter+'" src="' + chatImg + '" class="icon invert hl-profile-pic" onerror="errorImage(this);" />'
 					} else {
-						chatImg = '<img id="img_'+counter+'" src="' + chatImg + '" class="icon" onerror="errorImage(this);" />'
+						chatImg = '<img id="img_'+counter+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
 					}
 				} else {
 					chatImg = "";
 				}
 			} else {
-				chatImg = '<img id="img_'+counter+'" src="' + chatImg + '" class="icon" onerror="errorImage(this);" />'
+				chatImg = '<img id="img_'+counter+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
 			}
 			
-			if (showsource){
-				showType = '<img src="' + showType + '.png" class="icon" onerror="this.style.display=\'none\'" />';
+			if (showType && showsource){
+				showType = '<img src="' + showType + '.png" class="icon hl-source-type" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
 			} else {
 				showType = "";
 			}
@@ -802,7 +891,7 @@
 				}
 			}
 			
-			var node = createElementFromHTML('<div id="msg_'+counter+'" class="highlight-chat">'
+			var node = createElementFromHTML('<div id="msg_'+counter+'" class="highlight-chat" data-source-type="'+data.type+'">'
 				 + showType
 				 + chatImg
 				 + timeArrived
@@ -853,61 +942,17 @@
 			}
 			
 			node.rawContents = data;
-			node.onmousedown = function(e){
-				this.classList.add("pressed");
-				var data = this.rawContents;
-				if (data.type && (data.type == "twitch") && !data.chatimg){
-					var ccc = data.counter;
-					var imgnode = document.getElementById("img_"+ccc);
-					fetch("https://api.action.wtf:667/username/"+data.chatname).then(response => {
-						response.text().then(function (text) {
-							if (text.startsWith("https://")){
-								data.chatimg = text;
-								imgnode.src = text;
-								imgnode.classList.remove("invert");
-								document.getElementById("msg_"+ccc).rawContents.chatimg = text;
-							} else {
-								data.chatimg = 'unknown.png';
-								if (darkmode){
-									imgnode.classList.add("invert");
-								}
-							}
-							if (thirdPartyAPI){
-								thirdPartyAPI(data);
-							} else {
-								sendDataP2P(data);
-							}
-						}).catch(function(){
-							data.chatimg = 'unknown.png';
-							if (darkmode){
-								imgnode.classList.add("invert");
-							}
-							if (thirdPartyAPI){
-								thirdPartyAPI(data);
-							} else {
-								sendDataP2P(data);
-							}
-						});
-					}).catch(error => {
-						console.error(error);
-						data.chatimg = 'unknown.png';
-						if (darkmode){
-							imgnode.classList.add("invert");
-						}
-						if (thirdPartyAPI){
-							thirdPartyAPI(data);
-						} else {
-							sendDataP2P(data);
-						}
-					});
-				} else {
-					if (thirdPartyAPI){
-						thirdPartyAPI(data);
-					} else {
-						sendDataP2P(data);
-					}
+			
+			if (autoshow){
+				if (!autoTimeout){
+					selectedMessage(false, node);
+					autoTimeout = setTimeout(function(){
+						autoTimeout=false;
+					},1500);
 				}
-			};
+			}
+			
+			node.onmousedown = selectedMessage;
 
 			var imageElements = node.getElementsByTagName("img");
 			for (i = 0; i < imageElements.length; i++) {

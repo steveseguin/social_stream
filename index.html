@@ -79,8 +79,30 @@ body {
     transition: .5s all cubic-bezier(0.250, 0.250, 0.105, 1.2);
 	margin: 0 0 0 15px;
 }
-.fadeout {
+.fade {
+	animation: fade 0.5s;
+	webkit-transition: opacity 0.5s ease-in-out;
+    -moz-transition: opacity 0.5 ease-in-out;
+    -ms-transition: opacity 0.5 ease-in-out;
+    -o-transition: opacity 0.5 ease-in-out;
+    opacity: 0;
+}
+@keyframes fade { 
+  0% {opacity:1;}
+  100% {opacity:0;}
+}
+
+.dropout {
 	transform: translateY(340px) !important;
+	webkit-transition: opacity 0.5s ease-in-out;
+    -moz-transition: opacity 0.5 ease-in-out;
+    -ms-transition: opacity 0.5 ease-in-out;
+    -o-transition: opacity 0.5 ease-in-out;
+    opacity: 0;
+}
+
+.swipe {
+	transform: translateX(-100vw) !important;
 	webkit-transition: opacity 0.5s ease-in-out;
     -moz-transition: opacity 0.5 ease-in-out;
     -ms-transition: opacity 0.5 ease-in-out;
@@ -545,6 +567,16 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		isIFrame = true;
 	}
 	
+	var transitionType = "dropout";
+	if (urlParams.has("transition")){
+		transitionType = urlParams.get("transition").toLowerCase() || "fade";
+	} else if (urlParams.has("fade")){
+		transitionType = "fade";
+	} else if (urlParams.has("swipe")){
+		transitionType = "swipe";
+	}
+	
+	
 	function realign(){
 		if (centering){
 			try{
@@ -629,13 +661,13 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		
 		if (data.contents){
 			clearTimeout(timeoutTimer);
-			document.getElementById("output").classList.add("fadeout");
+			document.getElementById("output").classList.add(transitionType);
 			clearInterval(nextComment);
 			
 			try {
 				if (data.contents.chatimg && data.contents.chatimg.startsWith("http")){ // preload URL based
 					var tmpImage = new Image();
-					tmpImage.src = chatimg;  // preload the image, since there is time for it.
+					tmpImage.src = data.contents.chatimg;  // preload the image, since there is time for it.
 				}
 				if (data.contents.showType && data.contents.showsource){  // preload URL based
 					var tempShowType = new Image();
@@ -653,10 +685,13 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				var addImage = "";
 				if (data.contentimg){
 					 addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" onload="realign();"/></div>';
+				} else {
+					data.contentimg = "";
 				}
 				
-				var showType = data.type ;
-				var chatimg = data.chatimg;
+				if (!data.chatimg){
+					data.chatimg = "";
+				}
 				
 				<!-- try { -->
 					<!-- if (data.type && (data.type == "facebook") && data.userID ){ -->
@@ -668,12 +703,43 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					<!-- } -->
 				<!-- } catch(e){} -->
 				
+				if (!data.type){
+					data.type= "none";
+					var showType = "";
+				} else {
+					data.type = data.type.toString();
+					var showType = data.type;
+				}
+				
 				if (showType && showsource){
 					showType = '<img src="' + showType + '.png" class="icon sourcetype" onerror="this.style.display=\'none\'" />';
 				} else {
 					showType = "";
 				}
 				
+				if (!data.chatname){
+					data.chatname = "";
+				} else {
+					data.chatname = data.chatname.toString();
+				}
+				
+				if (!data.hasMembership){
+					data.hasMembership = "";
+				} else {
+					data.hasMembership = data.hasMembership.toString();
+				}
+				
+				if (!data.chatmessage){
+					data.chatmessage = "";
+				} else {
+					data.chatmessage = data.chatmessage.toString();
+				}
+				
+				if (!data.chatbadges){
+					data.chatbadges = "";
+				} else {
+					data.chatbadges = data.chatbadges.toString();
+				}
 				
 				if (data.hasDonation){
 					if (data.type === "twitch"){
@@ -681,22 +747,23 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					} else {
 						data.hasDonation = '<div class="donation">' + data.hasDonation + '</div>';
 					}
+				} else {
+					data.hasDonation = "";
 				}
 				
-				document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat">'
-					 + '<div class="hl-name" id="#nameDIV">' + data.chatname
+				document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" data-source-type="'+data.type+'">'
+					 + '<div class="hl-name" id="nameDIV">' + data.chatname
 					 +   '<div class="hl-badges">' + data.chatbadges + '</div>'
 					 + '</div>'
 					 + '<div id="message" class="hl-message" >' + data.chatmessage + '</div>'
-					 + '<div class="hl-img"><img id="img_'+data.chatname+'" src="' + data.chatimg + '" onerror="errorImage(this);">'+showType+'</div>'
+					 + '<div class="hl-img"><img id="img_'+data.chatname+'" src="' + data.chatimg + '" class="hl-profile-pic" onerror="errorImage(this);">'+showType+'</div>'
 					 + addImage
 					 + data.hasDonation + data.hasMembership +'</div>';
 				
 				
 				if (!data.chatname && !data.chatbadges){
-					document.querySelector("#nameDIV").style.display = "none";
+					document.getElementById("nameDIV").style.display = "none";
 				}
-
 
 				var fontsize = "";
 				var limitchar = parseInt(window.innerWidth/6.5);
@@ -737,12 +804,12 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 						}
 					} catch(e){}
 				}
-				document.getElementById("output").classList.remove("fadeout");
+				document.getElementById("output").classList.remove(transitionType);
 				
 				if (timeoutDelay){
 					clearTimeout(timeoutTimer);
 					timeoutTimer = setTimeout(function(){
-						document.getElementById("output").classList.add("fadeout");
+						document.getElementById("output").classList.add(transitionType);
 						clearInterval(nextComment);
 					}, timeoutDelay);
 				}
@@ -751,7 +818,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		} else {
 			if ("contents" in data){
 				clearTimeout(timeoutTimer);
-				document.getElementById("output").classList.add("fadeout");
+				document.getElementById("output").classList.add(transitionType);
 				clearInterval(nextComment);
 				
 				if (isIFrame){
