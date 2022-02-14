@@ -21,29 +21,25 @@
 	  } else {
 		  ele.marked = true;
 	  }
-	  
-	  var chatimg = "";
-	 
-	  var name = ele.querySelector(".chat_name").innerText;
-	  if (name){
-		name = name.trim();
-	  }
+	  var name = "";
+	  try {
+		name = ele.querySelector(".chat_name").innerText;
+		if (name){
+			name = name.trim();
+		}
+	 } catch(e){}
 	  
 	  var msg = "";
 	  try {
 		msg = ele.querySelector('.chat_message ').innerText;
 	  } catch(e){
-		
+		return;
 	  }
 	  if (msg){
 		msg = msg.trim();
-		if (name){
-			if (msg.startsWith(name)){
-				msg = msg.replace(name, '');
-				msg = msg.trim();
-			}
-		}
-	 }
+	  }
+
+	 if (!msg){return;}
 
 	  var data = {};
 	  data.chatname = name;
@@ -51,7 +47,7 @@
 	  data.backgroundColor = "";
 	  data.textColor = "";
 	  data.chatmessage = msg;
-	  data.chatimg = chatimg;
+	  data.chatimg = "";
 	  data.hasDonation = "";
 	  data.hasMembership = "";;
 	  data.contentimg = "";
