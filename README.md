@@ -25,6 +25,9 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - vimeo.com (pop out chat)
 - instagram live (instagram.com/*/live/)
 - tiktok live (tiktok.com/*/live)
+- webex live chat (not the pop out)
+- linkedin events comments
+- vdo.ninja (pop-out chat)
 
 More on request
 
