@@ -24,17 +24,20 @@
 	  
 	  var chatimg = "";
 	  try{
-		   chatimg = ele.querySelector(".avatar-s").style.backgroundImage.split(/"/)[1];
+		   chatimg = ele.querySelector("img.presence-entity__image.avatar").src;
+		   if (chatimg.startsWith("data:image/gif;base64")){
+			   chatimg="";
+		   }
 	  } catch(e){ }
 	 
-	  var name = ele.querySelector(".name").innerText;
+	  var name = ele.querySelector(".comments-post-meta__name-text").innerText;
 	  if (name){
 		name = name.trim();
 	  }
 	  
 	  var msg = "";
 	  try {
-		msg = ele.querySelector('.message-content-main').innerText;
+		msg = ele.querySelector('.comments-comment-item__main-content').innerText;
 	  } catch(e){
 		
 	  }
@@ -58,7 +61,7 @@
 	  data.hasDonation = "";
 	  data.hasMembership = "";;
 	  data.contentimg = "";
-	  data.type = "crowdcast";
+	  data.type = "linkedin";
 	  
 	   if (data.contentimg){
 		  toDataURL(contentimg, function(dataUrl) {
@@ -102,7 +105,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector("textarea#input-chat").focus();
+					document.querySelector("div.editor-content.ql-container>div.ql-editor>p").focus();
 					sendResponse(true);
 					return;
 				}
@@ -125,21 +128,15 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					var xxx = mutation.addedNodes;
-					
 					for (var i = 0; i< xxx.length; i++) {
 						try {
 							var ele = xxx[i];
-							
 							if (ele.NodeType==8){
 								continue;
 							}
-							if (ele && ele.className && ele.classList.contains("message")) {
+							if (ele && ele.className && ele.classList.contains("video-live-comments__comment-item")) {
 								callback(ele);
-							} else if (ele.parentNode.parentNode && ele.parentNode.parentNode.className && ele.parentNode.parentNode.classList.contains("message")) {
-								callback(ele.parentNode.parentNode);
-							} else if (ele.parentNode.parentNode.parentNode && ele.parentNode.parentNode.parentNode.className && ele.parentNode.parentNode.parentNode.classList.contains("message")) {
-								callback(ele.parentNode.parentNode.parentNode);
-							}
+							} 
 						} catch(e){}
 					}
 				}
@@ -154,20 +151,20 @@
 	}
 	console.log("social stream injected");
 	
-	if (document.querySelectorAll("div.chat-messages").length){
-		if (!document.querySelector("div.chat-messages").marked){
-			document.querySelector("div.chat-messages").marked=true;
-			onElementInserted("div.chat-messages", function(element){
+	if (document.querySelectorAll(".video-live-comments").length){
+		if (!document.querySelector(".video-live-comments").marked){
+			document.querySelector(".video-live-comments").marked=true;
+			onElementInserted(".video-live-comments", function(element){
 			   processMessage(element);
 			});
 		}
 	}
 	
 	setInterval(function(){
-		if (document.querySelectorAll("div.chat-messages").length){
-			if (!document.querySelector("div.chat-messages").marked){
-				document.querySelector("div.chat-messages").marked=true;
-				onElementInserted("div.chat-messages", function(element){
+		if (document.querySelectorAll(".video-live-comments").length){
+			if (!document.querySelector(".video-live-comments").marked){
+				document.querySelector(".video-live-comments").marked=true;
+				onElementInserted(".video-live-comments", function(element){
 				   processMessage(element);
 				});
 			}

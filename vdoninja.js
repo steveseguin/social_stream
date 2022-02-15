@@ -118,9 +118,15 @@
 	}
 	
 	console.log("social stream injected");
-	onElementInserted("#chatBody", function(element){
-	   processMessage(element);
-	});
+	
+	if (document.querySelectorAll("#chatBody").length){
+		if (!document.querySelector("#chatBody").marked){
+			document.querySelector("#chatBody").marked=true;
+			onElementInserted("#chatBody", function(element){
+			   processMessage(element);
+			});
+		}
+	}
 	
 	setInterval(function(){
 		if (document.querySelectorAll("#chatBody").length){
