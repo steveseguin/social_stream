@@ -21,7 +21,6 @@
 
 	function processMessage(ele){
 	  if (ele == window){return;}
-	  console.warn(ele);
 	  var chatimg = "";
 	  try{
 		   chatimg = ele.childNodes[0].querySelector("img").src;
@@ -35,7 +34,6 @@
 	try{
 		var name = ele.childNodes[1].querySelector('a[role="link"]').innerText;
 	} catch(e){
-		console.log("F");
 		return;
 	}
 	  if (name){
@@ -156,7 +154,7 @@
 							main[j].dataset.set123 = "true";
 						//	processMessage(main[j]);
 						} 
-					} catch(e){console.error(e);}
+					} catch(e){}
 				}
 			} else if (window.location.href.includes("facebook.com/live/producer/")){
 				
@@ -167,7 +165,7 @@
 							main[j].parentNode.dataset.set123 = "true";
 							//processMessage(main[j].parentNode);
 						} 
-					} catch(e){console.error(e);}
+					} catch(e){}
 				}
 				if (!main || !main.length){
 					var main = document.querySelectorAll("div>div>div>div>dIv>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div:not([class])>div>div>div>span>a");
@@ -177,7 +175,7 @@
 								main[j].parentNode.parentNode.parentNode.dataset.set123 = "true";
 								//processMessage(main[j].parentNode.parentNode.parentNode);
 							} 
-						} catch(e){console.error(e);}
+						} catch(e){}
 					}
 				}
 				if (!main || !main.length){
@@ -223,7 +221,7 @@
 									processMessage(main[j]);
 								}
 							} 
-						} catch(e){console.error(e);}
+						} catch(e){}
 					}
 				} else if (window.location.href.includes("facebook.com/live/producer/")){
 					
@@ -241,7 +239,7 @@
 									processMessage(main[j].parentNode.parentNode);
 								}
 							} 
-						} catch(e){console.error(e);}
+						} catch(e){}
 					}
 					if (!main || !main.length){
 						var main = document.querySelectorAll("div>div>div>div>dIv>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div:not([class])>div>div>div>span>a");
@@ -259,7 +257,7 @@
 									}
 									
 								} 
-							} catch(e){console.error(e);}
+							} catch(e){}
 						}
 					}
 					if (!main || !main.length){

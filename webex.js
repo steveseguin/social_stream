@@ -152,19 +152,7 @@
 	console.log("social stream injected");
 	
 	document.querySelectorAll('iframe').forEach( item =>{
-		if (item.contentWindow.document.body.querySelectorAll("#chat-panel").length){
-			var ele = item.contentWindow.document.body.querySelector("#chat-panel");
-			if (!ele.marked){
-				ele.marked=true;
-				onElementInserted(ele, function(element){
-				   processMessage(element);
-				});
-			}
-		}
-	});
-	
-	setInterval(function(){
-		document.querySelectorAll('iframe').forEach( item =>{
+		try{
 			if (item.contentWindow.document.body.querySelectorAll("#chat-panel").length){
 				var ele = item.contentWindow.document.body.querySelector("#chat-panel");
 				if (!ele.marked){
@@ -174,6 +162,22 @@
 					});
 				}
 			}
+		} catch(e){}
+	});
+	
+	setInterval(function(){
+		document.querySelectorAll('iframe').forEach( item =>{
+			try{
+				if (item.contentWindow.document.body.querySelectorAll("#chat-panel").length){
+					var ele = item.contentWindow.document.body.querySelector("#chat-panel");
+					if (!ele.marked){
+						ele.marked=true;
+						onElementInserted(ele, function(element){
+						   processMessage(element);
+						});
+					}
+				}
+			} catch(e){}
 		});
 	},3000);
 

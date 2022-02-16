@@ -14,6 +14,9 @@
 	  xhr.send();
 	}
 
+
+	var lastDataIndex = -1;
+	
 	function processMessage(ele){
 
 	  if (ele && ele.marked){
@@ -21,6 +24,14 @@
 	  } else {
 		  ele.marked = true;
 	  }
+	  
+	  if (ele.dataset && ("listIndex" in ele.dataset) && (parseInt(ele.dataset.listIndex)<=lastDataIndex)){
+		  return;
+	  } else if ("listIndex" in ele.dataset){
+		  lastDataIndex = parseInt(ele.dataset.listIndex);
+	  }
+
+	  
 	  
 	  var chatimg = "";
 	  try{
