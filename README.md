@@ -222,7 +222,7 @@ If the auto responder doesn't work -- you see a blue bar, but nothing happens, t
 
 ### Support
 
-You can find me on discord over at https://discord.vdo.ninja (steve), offering free support in channel #chat-overlay-support 
+You can find me on discord over at https://discord.vdo.ninja or https://discord.gg/7U4ERn9y , offering free support in channel #chat-overlay-support 
 
 Feedback and feature requests are welcomed
 
