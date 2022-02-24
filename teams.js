@@ -33,7 +33,6 @@
 		var chatimg = "";
 		try{
 			chatimg = ele.querySelector('[data-tid="message-avatar"]').querySelector("img").src;
-			//document.querySelector("iframe").contentWindow.document.body.querySelectorAll("img")[document.querySelector("iframe").contentWindow.document.body.querySelectorAll("img").length-1].src;
 		} catch(e){
 			
 		}
@@ -97,6 +96,86 @@
 			pushMessage(data);
 		}
 	}
+	
+	function processMessage2(mainEle){
+		if (mainEle && mainEle.marked){
+		  return;
+		} else {
+		  mainEle.marked = true;
+		}
+		var ele = mainEle.querySelector('.message-body');
+		if (!ele){return;}
+		
+		var chatimg = "";
+		try{
+			chatimg = mainEle.querySelector('profile-picture').querySelector("img").src;
+		} catch(e){
+			
+		}
+		
+        var name = "";
+		try {
+			name = ele.querySelector("div[data-tid='threadBodyDisplayName']").innerText;
+		} catch(e){}
+		
+
+		if (!chatimg){
+			try {
+				var prev = mainEle;
+				for (var i=0; i<50;i++){
+					if (prev.querySelector('.timestamp-column')){ //  ts-message-list-item
+						if (window.getComputedStyle(prev.querySelector('.timestamp-column')).width != "1px"){
+							break;
+						} else {
+							prev = prev.previousElementSibling;
+						}
+					} else {
+						prev = prev.previousElementSibling;
+					}
+				}
+				chatimg = prev.querySelector('profile-picture').querySelector("img").src
+				name = prev.querySelector("div[data-tid='threadBodyDisplayName']").innerText;
+				
+			} catch(e){} 
+		}
+		
+		if (name){
+		  name = name.replace("(Guest)","");
+		  name = name.trim();
+	    }
+
+		var msg = "";
+		try {
+			msg = ele.querySelector("div[data-tid='messageBodyContent']").innerText;
+		} catch(e){}
+		
+		if (msg){
+			msg = msg.trim();
+		}
+		
+		if (!msg){return;}
+
+		var data = {};
+		data.chatname = name;
+		data.chatbadges = "";
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.chatmessage = msg;
+		data.chatimg = chatimg;
+		data.hasDonation = "";
+		data.hasMembership = "";;
+		data.contentimg = "";
+		data.type = "teams";
+
+		if (data.chatimg){
+			toDataURL(data.chatimg, function(dataUrl) {
+				data.chatimg = dataUrl;
+				pushMessage(data);
+			});
+		} else {
+			pushMessage(data);
+		}
+	}
 
 	function pushMessage(data){
 		try{
@@ -112,8 +191,25 @@
 			function (request, sender, sendResponse) {
 				try{
 					if ("focusChat" == request){
-						document.querySelector('iframe').contentWindow.document.body.querySelector(".cke_textarea_inline[contenteditable='true']").focus();
-						sendResponse(true);
+						try {
+							var ele = document.querySelector('iframe').contentWindow.document.body.querySelector(".cke_textarea_inline[contenteditable='true']");
+							if (ele){
+								ele.focus();
+								sendResponse(true);
+								return;
+							} 
+						} catch(e){}
+						
+						try {
+							ele = document.body.querySelector(".cke_textarea_inline[contenteditable='true']");
+							if (ele){
+								ele.focus();
+								sendResponse(false);
+								return;
+							}
+						} catch(e){}
+						
+						sendResponse(false);
 						return;
 					}
 					if ("textOnlyMode" == request){
@@ -140,14 +236,16 @@
 		}
 	});
 
-	function onElementInserted(target) {
+	function onElementInserted(target, callback) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i].classList.contains("ui-chat__item--message")){  // ui-chat__item--message
-								setTimeout(function(eee){processMessage(eee);},300, mutation.addedNodes[i]);
+								setTimeout(function(eee){callback(eee);},300, mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].classList.contains("ts-message-list-item")){  // ui-chat__item--message
+								setTimeout(function(eee){callback(eee);},300, mutation.addedNodes[i]);
 							}
 						} catch(e){}
 					}
@@ -172,12 +270,24 @@
 					lastImage = "";
 					item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]').marked=true;
 					
-					setTimeout(function(ele){onElementInserted(ele);},6000, item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]'));
+					setTimeout(function(ele){onElementInserted(ele, processMessage);},1000, item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]'));
 					
 					startListener();
 				}
 			} 
 		});
+		try{
+			if (document.querySelector('context-message-pane')){
+				if (!document.querySelector('context-message-pane').marked){
+					lastName = "";
+					lastImage = "";
+					document.querySelector('context-message-pane').marked=true;
+					setTimeout(function(ele){onElementInserted(ele, processMessage2);},1000, document.querySelector('context-message-pane'));
+					
+					startListener();
+				}
+			}
+		} catch(e){}
 	},1000);
 
 })();
