@@ -29,6 +29,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - linkedin events comments
 - vdo.ninja (pop-out chat)
 - telegram (web.telegram.org in stream mode)
+- restream.io chat supported (https://chat.restream.io/chat)
 
 More on request
 
