@@ -28,6 +28,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - webex live chat (not the pop out)
 - linkedin events comments
 - vdo.ninja (pop-out chat)
+- telegram (web.telegram.org in stream mode)
 
 More on request
 
