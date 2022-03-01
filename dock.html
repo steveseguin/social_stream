@@ -436,6 +436,11 @@
 	var html = document.documentElement;
 	var mainOutputWindow = document.getElementById("output");
 	
+	var timeoutDelay = 0;
+	if (urlParams.has("showtime")){
+		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
+	}
+	
 	if (urlParams.has("session")){
 		roomID = urlParams.get("session");
 	} else if (urlParams.has("s")){
@@ -924,8 +929,12 @@
 			} else if (!compactmode){
 				node.classList.add("notcompactmode");
 			}
-		
+			
 			mainOutputWindow.appendChild(node);
+			
+			if (timeoutDelay){
+				setTimeout(function(node){ node.remove();},timeoutDelay, node);
+			}
 			
 			if (!document.getElementById("content_"+counter).innerText.trim().length){
 				document.getElementById("msg_"+counter).classList.add("noText");
