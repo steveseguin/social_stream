@@ -118,9 +118,8 @@
 			function (request, sender, sendResponse) {
 				try{
 					if ("focusChat" == request){
-						
 						try {
-							ele = document.body.querySelector(".cke_textarea_inline[contenteditable='true']");
+							ele = document.querySelector("input");
 							if (ele){
 								ele.focus();
 								sendResponse(false);
@@ -178,13 +177,17 @@
 	}
 	console.log("social stream injected");
 
+
+	startListener();
+	
 	setInterval(function(){
 		try {
 			if (document.querySelector('#root')){
 				if (!document.querySelector('#root').marked){
 					document.querySelector('#root').marked=true;
+					
 					onElementInserted(document.querySelector('#root'), processMessage);
-					startListener();
+					
 				}
 			}
 		} catch(e){}

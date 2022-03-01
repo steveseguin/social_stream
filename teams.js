@@ -264,7 +264,7 @@
 	setInterval(function(){
 		
 		document.querySelectorAll('iframe').forEach( item =>{
-			if (item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]')){
+			if (item && item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]')){
 				if (!item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]').marked){
 					lastName = "";
 					lastImage = "";
