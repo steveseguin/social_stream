@@ -24,30 +24,42 @@
 	  var chatimg = "";
 	  try{
 		   chatimg = ele.querySelector("[data-testid='MessageClusterIncoming']").querySelector('img').src;
-	  } catch(e){ }
+	  } catch(e){ 
+		try{
+		   chatimg = ele.querySelector("[data-testid='MessageClusterOutgoing']").querySelector('img').src;
+		} catch(e){ }
+	  }
 	  
 	  if (chatimg){
 		  chatimg = chatimg.split("?")[0] + "?max_width=256&square=true";
 	  }
-	 
+	  var name = "";
+	  
 	  try{
-		  var name = ele.querySelector("[data-testid='MessageSenderName']").innerText;
+		  name = ele.querySelector("[data-testid='MessageSenderName']").innerText;
 		  if (name){
 			name = name.trim();
 		  }
-	  } catch(e){return;}
-	  
-	  var msg = ""; // TextMessage
-	  var msgs = ele.querySelectorAll("[data-testid='TextMessage']");
-	  for (var i = 0;i<msgs.length;i++){
+	  } catch(e){
 		  try {
-			if (msgs[i].checked){continue;}
-			msgs[i].checked = true;
-			msg = msgs[i].innerText;
-			break;
-		  } catch(e){ }
+			  if (ele.querySelector("[data-testid='MessageClusterOutgoing']")){
+				 name = document.querySelector(".nav-shortened-name").innerText;
+			  }
+		  } catch(e){}
 	  }
 	  
+	  var msg = ""; // TextMessage
+	  try {
+		  var msgs = ele.querySelectorAll("[data-testid='TextMessage']");
+		  for (var i = 0;i<msgs.length;i++){
+			  try {
+				if (msgs[i].checked){continue;}
+				msgs[i].checked = true;
+				msg = msgs[i].innerText;
+				break;
+			  } catch(e){ }
+		  }
+	  } catch(e){}
 	  if (msg){
 		msg = msg.trim();
 	  }
