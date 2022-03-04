@@ -16,16 +16,19 @@
 
 	function processMessage(ele){
 
-	  if (ele && ele.marked){
-		  return;
-	  } else {
-		  ele.marked = true;
+
+	  if (ele.dataset && ele.dataset.testid && (ele.dataset.testid=="MessageRow")){
+		  ele = ele.parentNode.parentNode.parentNode.parentNode;
 	  }
 	  
 	  var chatimg = "";
 	  try{
 		   chatimg = ele.querySelector("[data-testid='MessageClusterIncoming']").querySelector('img').src;
 	  } catch(e){ }
+	  
+	  if (chatimg){
+		  chatimg = chatimg.split("?")[0] + "?max_width=256&square=true";
+	  }
 	 
 	  try{
 		  var name = ele.querySelector("[data-testid='MessageSenderName']").innerText;
@@ -38,9 +41,10 @@
 	  var msgs = ele.querySelectorAll("[data-testid='TextMessage']");
 	  for (var i = 0;i<msgs.length;i++){
 		  try {
-			if (msgs[i].checked){break;}
+			if (msgs[i].checked){continue;}
 			msgs[i].checked = true;
 			msg = msgs[i].innerText;
+			break;
 		  } catch(e){ }
 	  }
 	  
