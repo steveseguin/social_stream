@@ -21,7 +21,6 @@
 	
 	
 	function processMessage(ele){
-		
 		var chatimg = "";
 		try{
 		   chatimg = ele.querySelector("img[class*='avatar-']").src;
@@ -31,6 +30,7 @@
 		}
 		
 		var name="";
+		
 		if (ele.querySelector('[id^="message-username-"]')){
 		  name = ele.querySelector('[id^="message-username-"]').innerText;
 		  if (name){
@@ -111,10 +111,10 @@
 	}
 
 	function pushMessage(data){
-		
 		try{
-			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
-		} catch(e){}
+			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+		} catch(e){
+		}
 	}
 	
 	var textOnlyMode = false;
@@ -153,6 +153,7 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+						
 						if (mutation.addedNodes[i].id && !mutation.addedNodes[i].skip){
 							setTimeout(function(id){
 								try{
@@ -175,7 +176,7 @@
 		observer.observe(target, config);
 		
 	}
-	console.log("social stream injected");
+	console.log("social stream injected -- MUST BE ENABLED VIA SETTING TOGGLE AS WELL TO USE!!!");
 
 	setInterval(function(){
 		if (document.querySelector('[data-list-id="chat-messages"]')){
