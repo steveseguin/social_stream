@@ -6,6 +6,7 @@ var messageTimeout = 0;
 var lastSentMessage = "";
 var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
+var sentimentAnalysisLoaded = false;
 
 function generateStreamID(){
 	var text = "";
@@ -51,6 +52,13 @@ chrome.storage.sync.get(properties, function(item){
 		chrome.runtime.lastError;
 	}
 	toggleMidi();
+	
+	if (settings.sentiment){
+		if (!sentimentAnalysisLoaded){
+			loadSentimentAnalysis();
+		}
+	}
+	
 });
 
 chrome.browserAction.setIcon({path: "/icons/off.png"});
@@ -68,7 +76,7 @@ function pushSettingChange(setting){
 }
 		
 chrome.runtime.onMessage.addListener(
-    function (request, sender, sendResponse) {
+    async function (request, sender, sendResponse) {
 		try{
 			if (request.cmd && request.cmd === "setOnOffState") { // toggle the IFRAME (stream to the remote dock) on or off
 				isExtensionOn = request.data.value;
@@ -107,6 +115,15 @@ chrome.runtime.onMessage.addListener(
 						pushSettingChange("richTextMode");
 					}
 				} 
+				
+				if (request.setting == "sentiment"){
+					if (request.value){
+						if (!sentimentAnalysisLoaded){
+							loadSentimentAnalysis();
+						}
+					}
+				}
+				
 			} else if ("message" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from 
 				sendResponse({"state":isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
@@ -121,7 +138,8 @@ chrome.runtime.onMessage.addListener(
 					}
 					
 					try{
-						applyBotActions(request.message); // perform any immediate actions
+						request.message = await applyBotActions(request.message); // perform any immediate actions
+						if (request.message===null){return;}
 					} catch(e){console.log(e);}
 					
 					if (("firstsourceonly" in settings) && settings.firstsourceonly){
@@ -428,17 +446,17 @@ function generalFakeChat(tabid, message, middle=true){ // fake a user input
 		}
 	}
 }
-////////////////////
 
-
-function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
+async function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
 	if (settings.autohi){
 		if (data.chatmessage.toLowerCase() === "hi"){
 			if (Date.now() - messageTimeout > 60000){ // respond to "1" with a "1" automatically; at most 1 time per minute.
 				messageTimeout = Date.now();
-				data.response = "Hi, @"+data.chatname+" !";
-				processResponse(data);
+				var msg = {};
+				msg.id = data.tid;
+				msg.response = "Hi, @"+data.chatname+" !";
+				processResponse(msg);
 			}
 		}
 	}
@@ -458,6 +476,22 @@ function applyBotActions(data){ // this can be customized to create bot-like aut
 			},5000, data, "@"+data.chatname+".. "+joke["punchline"]);
 		}
 	}
+	
+	if (settings.sentiment){
+		try {
+			if (!sentimentAnalysisLoaded){
+				loadSentimentAnalysis();
+				data.sentiment = inferSentiment(data.chatmessage);
+			} else {
+				data.sentiment = inferSentiment(data.chatmessage);
+			}
+			if (data.sentiment<.10){return null;} // 1.0 is good; 0.0 is bad, so 0.1 is likely bad.
+		}catch(e){}
+	} else {
+		console.log(settings);
+	}
+	
+	return data;
 }
 
 var MidiInit = false;
@@ -527,6 +561,7 @@ try {
 	}
 	
 } catch(e){console.log(e);}
+
 
 function midiHotkeysCommand(number, value){ // MIDI control change commands
 	if (number == 102 && value == 1){
