@@ -208,6 +208,7 @@
 			top:0;
 			right:0;
 			display:block;
+			background-color: #888;
 		}
 		
 		#menu > button {
@@ -435,6 +436,7 @@
 	var body = document.body;
 	var html = document.documentElement;
 	var mainOutputWindow = document.getElementById("output");
+	var fileStream, writer, encode;
 	
 	var timeoutDelay = 0;
 	if (urlParams.has("showtime")){
@@ -487,6 +489,10 @@
 	
 	if (urlParams.has("hidemenu")){
 		document.getElementById("menu").style.display = "none";
+	}
+	
+	if (urlParams.has("save")){
+		setupSaveToDisk();
 	}
 	
 	
@@ -805,6 +811,32 @@
 		if (data.contents){
 			data = data.contents;
 			
+			var showType = "";
+			if (!data.type){
+				data.type= "none";
+			} else {
+				data.type = data.type.toString();
+				showType = data.type;
+			}
+			
+			if (writer){
+				var date = new Date();
+				let text;
+				var date = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true });
+				if ("sentiment" in data){ 
+					text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "")  + "\t" + (data.sentiment || "") + "\n");
+				} else {
+					text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + "\n");
+				}
+				writer.write(text);
+			}
+			
+			if ("sentiment" in data){ 
+				if (data.sentiment<.10){ // 1.0 is good; 0.0 is bad, so 0.1 is likely bad.
+					return;
+				}
+			} 
+			
 			var addImage = "";
 			if (data.contentimg){
 				addImage = '<div class="hl-imgContent"><img src="' + data.contentimg + '" class="hl-img-content" onerror="this.parent.style.display=\'none\'" /></div>';
@@ -819,7 +851,6 @@
 			}
 			
 			
-			
 			var donation = "";
 			if (data.hasDonation){
 				donation = "<span class='donationAmount hl-donation'>"+data.hasDonation+"</span>";
@@ -830,13 +861,6 @@
 			counter+=1;
 			data.counter = counter;
 			
-			if (!data.type){
-				data.type= "none";
-				var showType = "";
-			} else {
-				data.type = data.type.toString();
-				var showType = data.type;
-			}
 			
 			var chatImg = data.chatimg;
 			
@@ -870,6 +894,7 @@
 				}
 				timeArrived = "<div class='time-arrived'>"+timeArrived+"</div>";
 			}
+			
 			
 			var bot = false;
 			var chatname = "";
@@ -1129,6 +1154,25 @@
 		msg.overlayNinja.tid = tid;
 		msg.overlayNinja.response = data;
 		iframe.contentWindow.postMessage({"sendData":msg, "type": "rpcs"}, '*'); // send only to 'viewers' of this stream
+	}
+	
+	function setupSaveToDisk(){
+	
+		var script = document.createElement('script');
+		script.onload = function() {
+			encode = TextEncoder.prototype.encode.bind(new TextEncoder);
+			if (!fileStream) {
+				fileStream = streamSaver.createWriteStream("chat_"+Date.now()+'.tsv' || 'sample.txt');
+				writer = fileStream.getWriter();
+			}
+
+			window.isSecureContext && window.addEventListener('beforeunload', evt => {
+				writer.close();
+			})
+		}
+		script.src = "./thirdparty/StreamSaver.js";
+		document.head.appendChild(script);
+		
 	}
 	
 	</script>

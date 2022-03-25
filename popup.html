@@ -57,6 +57,10 @@
 			input:checked + .slider {
 			  background-color: #2196F3;
 			}
+			
+			input {
+				margin: 2px;
+			}
 
 			input:focus + .slider {
 			  box-shadow: 0 0 1px #2196F3;
@@ -148,7 +152,11 @@
 			  <input type="checkbox" data-setting="sentiment">
 			  <span class="slider round"></span>
 			</label> Filter out messages with bad karma
-			
+			<br />
+			<label class="switch">
+			  <input type="checkbox" data-param1="save">
+			  <span class="slider round"></span>
+			</label> Save copy of messages to disk automatically
 			
 			
 			<h3>Customize single message overlay link</h3>
@@ -168,6 +176,22 @@
 			</label> Center overlay
 			<br />
 			
+			<input type="text" data-textsetting="comment_color" placeholder="#HEX value or color name" />
+			<label class="textinput">
+			</label> Comment Font Color
+			<br />
+			<input type="text" data-textsetting="comment_background" placeholder="#HEX value or color name" />
+			<label class="textinput">
+			</label> Comment Background Color
+			<br />
+			<input type="text" data-textsetting="name_color" placeholder="#HEX value or color name"/>
+			<label class="textinput">
+			</label> Name Font Color
+			<br />
+			<input type="text" data-textsetting="name_background" placeholder="#HEX value or color name"/>
+			<label class="textinput">
+			</label> Name Background Color
+			<br />
 			
 			<h3>General Settings / Features</h3>
 			<label class="switch">

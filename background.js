@@ -491,6 +491,26 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 		console.log(settings);
 	}
 	
+	if (settings.comment_background){
+		if (!data.backgroundColor){
+			data.backgroundColor = "background-color:"+settings.comment_background+";";
+		}
+	}
+	if (settings.comment_color){
+		if (!data.textColor){
+			data.textColor = "color:"+settings.comment_color+";";
+		}
+	}
+	if (settings.name_color){
+		if (!data.backgroundNameColor){
+			data.backgroundNameColor =  "background-color:"+settings.name_color+";";
+		}
+	}
+	if (settings.name_background){
+		if (!data.textNameColor){
+			data.textNameColor =  "color:"+settings.name_background+";";
+		}
+	}
 	return data;
 }
 

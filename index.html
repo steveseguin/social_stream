@@ -764,12 +764,23 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					styleOverride = 'style="'+styleOverride+'"';
 				}
 				
+				var styleOverrideName = "";
+				if (data.backgroundNameColor){
+					styleOverrideName = data.backgroundNameColor;
+				}
+				if (data.textNameColor){
+					styleOverrideName += " " + data.textNameColor;
+				}
+				if (styleOverrideName){
+					styleOverrideName = 'style="'+styleOverrideName+'"';
+				}
+				
 				document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" data-source-type="'+data.type+'">'
-					 + '<div class="hl-name" id="nameDIV">' + data.chatname
+					 + '<div class="hl-name" '+styleOverrideName+' id="nameDIV">' + data.chatname
 					 +   '<div class="hl-badges">' + data.chatbadges + '</div>'
 					 + '</div>'
 					 + '<div id="message" '+styleOverride+' class="hl-message" >' + data.chatmessage + '</div>'
-					 + '<div class="hl-img"><img id="img_'+data.chatname+'" src="' + data.chatimg + '" class="hl-profile-pic" onerror="errorImage(this);">'+showType+'</div>'
+					 + '<div class="hl-img" '+styleOverrideName+'><img id="img_'+data.chatname+'" src="' + data.chatimg + '" class="hl-profile-pic" onerror="errorImage(this);">'+showType+'</div>'
 					 + addImage
 					 + data.hasDonation + data.hasMembership +'</div>';
 				

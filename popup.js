@@ -22,6 +22,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		iii[i].onchange = updateSettings;
 	}
 	
+	var iii = document.querySelectorAll("input[type='text']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
+	
 	var iii = document.querySelectorAll("button[data-action]");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onclick = function(){
@@ -65,6 +70,11 @@ function update(response){
 				var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
 				if (ele){
 					ele.checked = response.settings[key];
+					updateSettings(ele);
+				}
+				var ele = document.querySelector("input[data-textsetting='"+key+"']");
+				if (ele){
+					ele.value = response.settings[key];
 					updateSettings(ele);
 				}
 			}
@@ -144,6 +154,9 @@ function updateSettings(ele){
 		chrome.runtime.sendMessage({cmd: "saveSetting", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
 	} else if (ele.dataset.setting){
 		chrome.runtime.sendMessage({cmd: "saveSetting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
+		return;
+	} else if (ele.dataset.textsetting){
+		chrome.runtime.sendMessage({cmd: "saveSetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
 		return;
 	}
 	
