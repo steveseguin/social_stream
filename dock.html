@@ -229,6 +229,14 @@
 		#menu > button.red:hover {
 			background-color: #FCCF;
 		}
+		
+		#menu > button.blue {
+			background-color: #99a8cc;
+		}
+		#menu > button.blue:hover {
+			background-color: #99c8ff;
+		}
+		
 		#menu > input {
 			padding: 5px;
 			background-color: var(--input-color);
@@ -247,8 +255,14 @@
 			background-color: #000F;
 			opacity:1.0;
 		}
+		#menu.darkmode > button.blue {
+			background-color: #99a8cc;
+		}
 		#menu.darkmode > button.red {
 			background-color: #F004;
+		}
+		#menu.darkmode > button.blue:hover {
+			background-color: #99c8ff;
 		}
 		#menu.darkmode > button.red:hover {
 			background-color: #600F;
@@ -322,6 +336,9 @@
 		.pressed {
 			background-color: #9C9C !important;
 		}
+		.queued {
+			background-color: #99a8cc !important;
+		}
 		
 		.icon {
 			margin: auto 1px auto 3px;
@@ -368,12 +385,29 @@
 		input::placeholder{
 			color: var(--input-color);
 		}
+		.hidden {
+			display:none!important;
+		}
+		#pinned{
+			position: fixed;
+			/* top: 41px; */
+			background-color: #712a65!important;
+			left: 0;
+			width: 100%;
+			border-bottom: solid 2px #fff;
+		}
+		
+		#pinned:empty {
+		   display:none;
+		}
 
 	</style>
 </head>
 <body>
 	<div id="output" class="output notcompactmode"></div>
+	<div id="pinned" class="output notcompactmode"></div>
 	<div id="menu">
+		<button id="next_in_queue" data-state="0" onclick="nextInQueue();" title="Hold CTRL when selecting messages to add them to the queue instead" class="hidden blue">Next in Queue</button>
 		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" class="red">Clear Current Overlay</button>
 		<button id="pause" data-state="0" onclick="pause(this);">⏯︎ Pause</button>
 		<button id="autoshow" data-state="0" onclick="autoShow(this);" title="Auto-feature chat messages as they come in">Auto</button>
@@ -382,7 +416,6 @@
 		<button id="say_hello" data-state="0" onclick="toggleChat();" title="Send a text message to all social endpoints">💬</button>
 		<input type="text" id="chatInput" style="display:none;" placeholder="Say something.." />
 		<button id="jumpto" data-state="0" onclick="jumptoBottom(this);" title="Jump to bottom">V</button>
-		
 	<div>
 	<script>
 	
@@ -415,6 +448,7 @@
 	var counter = 0;
 	var iframe = null;
 	var queue = [];
+	var selectedQueue = [];
 	var datestamp = true;
 	var nextComment = null;
 	var roomID = "test";
@@ -747,10 +781,44 @@
 		//mainOutputWindow.appendChild(node);
 	}
 	
+	function nextInQueue(){
+		if (!selectedQueue.length){
+			document.getElementById("next_in_queue").innerHTML = "Queue Empty";
+			return;
+		}
+		element = selectedQueue.shift();
+		selectedMessage(false, element);
+		element.classList.remove("queued");
+		if (!selectedQueue.length){
+			document.getElementById("next_in_queue").innerHTML = "Queue Empty";
+		} else {
+			document.getElementById("next_in_queue").innerHTML = "Next in Queue ("+selectedQueue.length+")";
+		}
+	}
+	
 	function selectedMessage(event=false, element=false){
 		if (!element){
 			element = this;
 		}
+		if (event && (event.ctrlKey || event.metaKey)) {
+			selectedQueue.push(element);
+			element.classList.add("queued");
+			document.getElementById("next_in_queue").classList.remove("hidden");
+			document.getElementById("next_in_queue").innerHTML = "Next in Queue ("+selectedQueue.length+")";
+			
+			return;
+		} else if (event && (event.altKey)) {
+			if (element.classList.contains("pinned")){
+				element.classList.remove("pinned");
+				element.remove();
+			} else {
+				element.classList.add("pinned");
+				element.title = "Alt + Click to remove pinned message";
+				document.getElementById("pinned").appendChild(element);
+			}
+			return;
+		}
+		
 		element.classList.add("pressed");
 		var data = element.rawContents;
 		if (data.type && (data.type == "twitch") && !data.chatimg){
@@ -805,7 +873,6 @@
 			}
 		}
 	};
-	
 	
 	function processData(data){
 		if (data.contents){
@@ -946,8 +1013,6 @@
 				node.classList.add("donation");
 			}
 			
-			
-			
 			if (data.hasMembership){
 				node.classList.add("member");
 			}
@@ -991,6 +1056,7 @@
 			}
 			
 			node.onmousedown = selectedMessage;
+			node.title = "Click to feature message instantly. CTRL + Click to add to the queue. Alt + Click to Pin.";
 
 			var imageElements = node.getElementsByTagName("img");
 			for (i = 0; i < imageElements.length; i++) {
