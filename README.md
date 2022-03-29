@@ -31,6 +31,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - telegram (web.telegram.org in stream mode)
 - restream.io chat supported (https://chat.restream.io/chat)
 - amazon.com/live
+- slack (https://app.slack.com/)
 
 More on request
 
