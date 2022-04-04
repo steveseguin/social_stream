@@ -21,6 +21,8 @@
 
 	function processMessage(ele){
 	  if (ele == window){return;}
+	  
+	  console.log(ele);
 	  var chatimg = "";
 	  try{
 		   chatimg = ele.childNodes[0].querySelector("img").src;
@@ -146,8 +148,8 @@
 	}
 	setTimeout(function(){ // clear existing messages; just too much for a stream.
 		try {
-			if (window.location.href.includes("facebook.com/live/producer/dashboard/")){
-				var main = document.querySelectorAll("body>div>div>div>div>dIv>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div:not([class])>div>div");
+			if (window.location.href.includes("facebook.com/live/producer/")){
+				var main = document.querySelectorAll("[role='article']");
 				for (var j =0;j<main.length;j++){
 					try{
 						if (!main[j].dataset.set123){
@@ -155,39 +157,6 @@
 						//	processMessage(main[j]);
 						} 
 					} catch(e){}
-				}
-			} else if (window.location.href.includes("facebook.com/live/producer/")){
-				
-				var main = document.querySelectorAll("body>div>div>div>div>dIv>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div:not([class])>div>div>div");
-				for (var j =0;j<main.length;j++){
-					try{
-						if (!main[j].parentNode.dataset.set123){
-							main[j].parentNode.dataset.set123 = "true";
-							//processMessage(main[j].parentNode);
-						} 
-					} catch(e){}
-				}
-				if (!main || !main.length){
-					var main = document.querySelectorAll("div>div>div>div>dIv>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div:not([class])>div>div>div>span>a");
-					for (var j =0;j<main.length;j++){
-						try{
-							if (!main[j].parentNode.parentNode.parentNode.dataset.set123){
-								main[j].parentNode.parentNode.parentNode.dataset.set123 = "true";
-								//processMessage(main[j].parentNode.parentNode.parentNode);
-							} 
-						} catch(e){}
-					}
-				}
-				if (!main || !main.length){
-					var main = document.querySelectorAll("div[role='article']");
-					for (var j =0;j<main.length;j++){
-						try{
-							if (!main[j].dataset.set123){
-								main[j].dataset.set123 = "true";
-							//	processMessage(main[j]);
-							} 
-						} catch(e){}
-					}
 				}
 			} else if (window.location.href.includes("/videos/")){
 				var main = document.querySelectorAll("div[role='article']");
@@ -206,12 +175,12 @@
 	
 		var ttt = setInterval(function(){
 			try {
-				if (window.location.href.includes("facebook.com/live/producer/dashboard/")){
-					var main = document.querySelectorAll("body>div>div>div>div>dIv>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div:not([class])>div>div");
+				if (window.location.href.includes("facebook.com/live/producer/")){
+					var main = document.querySelectorAll("[role='article']");
 					for (var j =0;j<main.length;j++){
 						try{
-							if (!main[j].parentNode.parentNode.dataset.set123){
-								main[j].parentNode.parentNode.dataset.set123 = "true";
+							if (!main[j].dataset.set123){
+								main[j].dataset.set123 = "true";
 								if (main[j].parentNode.parentNode.previousSibling && main[j].parentNode.parentNode.previousSibling.dataset.dupCheck){
 									//
 								} else {
@@ -222,61 +191,6 @@
 								}
 							} 
 						} catch(e){}
-					}
-				} else if (window.location.href.includes("facebook.com/live/producer/")){
-					
-					var main = document.querySelectorAll("body>div>div>div>div>dIv>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div:not([class])>div>div>div");
-					for (var j =0;j<main.length;j++){
-						try{
-							if (!main[j].parentNode.parentNode.parentNode.dataset.set123){
-								main[j].parentNode.parentNode.parentNode.dataset.set123 = "true";
-								if (main[j].parentNode.parentNode.parentNode.previousSibling && main[j].parentNode.parentNode.parentNode.previousSibling.dataset.dupCheck){
-									//
-								} else {
-									if (main[j].parentNode.parentNode.parentNode.previousSibling){
-										main[j].parentNode.parentNode.parentNode.previousSibling.dataset.dupCheck = "true";
-									}
-									processMessage(main[j].parentNode.parentNode);
-								}
-							} 
-						} catch(e){}
-					}
-					if (!main || !main.length){
-						var main = document.querySelectorAll("div>div>div>div>dIv>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div:not([class])>div>div>div>span>a");
-						for (var j =0;j<main.length;j++){
-							try{
-								if (!main[j].parentNode.parentNode.parentNode.parentNode.parentNode.dataset.set123){
-									main[j].parentNode.parentNode.parentNode.parentNode.parentNode.dataset.set123 = "true";
-									if (main[j].parentNode.parentNode.parentNode.parentNode.parentNode.previousSibling && main[j].parentNode.parentNode.parentNode.parentNode.parentNode.previousSibling.dataset.dupCheck){
-										//
-									} else {
-										if (main[j].parentNode.parentNode.parentNode.parentNode.parentNode.previousSibling){
-											main[j].parentNode.parentNode.parentNode.parentNode.parentNode.previousSibling.dataset.dupCheck = "true";
-										}
-										processMessage(main[j].parentNode.parentNode.parentNode);
-									}
-									
-								} 
-							} catch(e){}
-						}
-					}
-					if (!main || !main.length){
-						var main = document.querySelectorAll("div[role='article']");
-						for (var j =0;j<main.length;j++){
-							try{
-								if (!main[j].parentNode.parentNode.dataset.set123){
-									main[j].parentNode.parentNode.dataset.set123 = "true";
-									if (main[j].parentNode.parentNode.previousSibling && main[j].parentNode.parentNode.previousSibling.dataset.dupCheck){
-										//
-									} else {
-										if (main[j].parentNode.parentNode.previousSibling){
-											main[j].parentNode.parentNode.previousSibling.dataset.dupCheck = "true";
-										}
-										processMessage(main[j]);
-									}
-								}
-							} catch(e){}
-						}
 					}
 				} else if (window.location.href.includes("/videos/")){
 					var main = document.querySelectorAll("div[role='article']");
