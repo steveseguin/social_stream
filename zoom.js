@@ -39,7 +39,7 @@
 		var img = false;
 		var chatimg = "";
 		try{
-		   chatimg = ele.querySelector(".chat-item__user-avatar").querySelector("img").src;
+		   chatimg = ele.querySelector(".chat-item__chat-info-msg-avatar").src;
 		   img = true;
 			// lastImage = chatimg;
 		} catch(e){
