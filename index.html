@@ -29,7 +29,8 @@
     --donation-gradient-stop1: #ede599;
     --donation-gradient-stop2: #B38728;
     --donation-label-color: #fff;
-    --donation-label-text: 'SUPERCHAT';
+    --donation-label-text: 'Donation';
+	--youtubedonation-label-text: 'SUPERCHAT';
     --donation-shadow-color: #fff;
 	
 	--cheer-color: #5a4211;
@@ -426,6 +427,11 @@ yt-live-chat-text-message-renderer.shown-comment {
     content: var(--donation-label-text);
     color: var(--donation-label-color);
 }
+
+.youtubedonation::before {
+    content: var(--youtubedonation-label-text);
+}
+
 .membership {
     padding: 10px 10px 5px 10px;
 	font-size: 20px !important;
@@ -746,9 +752,12 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				if (data.hasDonation){
 					if (data.type === "twitch"){
 						data.hasDonation = '<div class="cheer">' + data.hasDonation + '</div>';
+					} else if (data.type === "youtube"){
+						data.hasDonation = '<div class="donation youtubedonation">' + data.hasDonation + '</div>';
 					} else {
 						data.hasDonation = '<div class="donation">' + data.hasDonation + '</div>';
 					}
+					
 				} else {
 					data.hasDonation = "";
 				}
