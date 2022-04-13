@@ -16,6 +16,8 @@
 
 	function processMessage(ele, wss=true){
 
+	  console.log(ele);
+	  
 	  if(ele.hasAttribute("is-deleted")) {
 		return;
 	  }
@@ -170,7 +172,7 @@
 		}
 	});  /////
 
-	function onElementInserted(containerSelector, callback) {
+	function onElementInserted(target, callback) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
@@ -188,7 +190,6 @@
 				}
 			});
 		};
-		var target = document.querySelectorAll(containerSelector)[0];
 		if (!target){return;}
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -196,7 +197,25 @@
 		observer.observe(target, config);
 	}
 
-	onElementInserted("yt-live-chat-app", function(element){
-	  processMessage(element, false);
-	});
+    console.log("Social stream inserted");
+	
+    var ele = document.querySelector("yt-live-chat-app");
+	if (ele){
+		onElementInserted(ele, function(element){
+		  processMessage(element, false);
+		});
+	}
+	
+	if (window.location.href.includes("youtube.com/watch")){
+		setTimeout(function(){
+			var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages");
+			if (ele){
+				onElementInserted(ele, function(element){
+				  processMessage(element, false);
+				});
+			}
+		},3000);
+	}
+	
+	
 })();

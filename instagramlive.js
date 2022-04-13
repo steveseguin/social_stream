@@ -20,25 +20,26 @@
 	}
 
 	function processMessage(ele){
-		var content = ele.childNodes[0].childNodes[1];
+		var content = ele.childNodes[0].childNodes[0];
 		var chatname="";
 		try {
-			chatname = ele.childNodes[0].childNodes[0].childNodes[1].children[0].textContent;
+			chatname = content.childNodes[0].childNodes[1].children[0].textContent;
 			chatname = chatname.replace(/ .*/,'');
 		} catch(e){
 		}
 		var chatmessage="";
 		try{
 			 if (textOnlyMode){
-				chatmessage = ele.childNodes[0].childNodes[0].childNodes[1].children[1].innerText;
+				chatmessage = content.childNodes[0].childNodes[1].children[1].innerText;
 			 } else {
-				chatmessage = ele.childNodes[0].childNodes[0].childNodes[1].children[1].innerHTML;
+				chatmessage = content.childNodes[0].childNodes[1].children[1].innerHTML;
 			 }
-		} catch(e){return;}
+		} catch(e){
+			return;}
 
 		var chatimg="";
 		try{
-			chatimg = ele.childNodes[0].childNodes[0].childNodes[0].querySelectorAll("img")[0].src;
+			chatimg = content.childNodes[0].childNodes[0].querySelectorAll("img")[0].src;
 		} catch(e){
 		}
 	  
@@ -55,7 +56,6 @@
 	  data.contentimg = "";
 	  data.type = "instagram";
 	  
-	  
 		if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
 				data.chatimg = dataUrl;
@@ -70,6 +70,7 @@
 	setTimeout(function(){ // clear existing messages; just too much for a stream.
 		try {
 			var main =  document.querySelectorAll("div>div>section>div");
+			
 			for (var j =0;j<main.length;j++){
 				try{
 					if (!main[j].dataset.set123){

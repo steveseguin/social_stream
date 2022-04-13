@@ -21,8 +21,6 @@
 
 	function processMessage(ele){
 	  if (ele == window){return;}
-	  
-	  console.log(ele);
 	  var chatimg = "";
 	  try{
 		   chatimg = ele.childNodes[0].querySelector("img").src;
@@ -196,13 +194,13 @@
 					var main = document.querySelectorAll("div[role='article']");
 					for (var j =0;j<main.length;j++){
 						try{
-							if (!main[j].parentNode.parentNode.dataset.set123){
-								main[j].parentNode.parentNode.dataset.set123 = "true";
-								if (main[j].parentNode.parentNode.previousSibling && main[j].parentNode.parentNode.previousSibling.dataset.dupCheck){
+							if (!main[j].dataset.set123){
+								main[j].dataset.set123 = "true";
+								if (main[j].previousSibling && main[j].previousSibling.dataset.dupCheck){
 										//
 									} else {
-										if (main[j].parentNode.parentNode.previousSibling){
-											main[j].parentNode.parentNode.previousSibling.dataset.dupCheck = "true";
+										if (main[j].previousSibling){
+											main[j].previousSibling.dataset.dupCheck = "true";
 										}
 										processMessage(main[j]);
 									}
