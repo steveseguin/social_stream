@@ -21,6 +21,7 @@
 
 	function processMessage(ele){
 		
+		
 		var chatimg="";
 		try{
 			chatimg = ele.childNodes[0].querySelector("img");
@@ -29,14 +30,23 @@
 			} else {
 				chatimg = chatimg.src;
 			}
-		} catch(e){}
+		} catch(e){console.error(e);}
 		var chatname = "";
 		var chatmessage = "";
 		
 		try{
-			chatname = ele.childNodes[1].childNodes[0].innerText;
-			chatmessage = ele.childNodes[1].childNodes[1].innerHTML;
-		} catch(e){}
+			if (ele.childNodes[1].childNodes[0].children.length){
+				chatname = ele.childNodes[1].childNodes[0].childNodes[0].innerText;
+			} else {
+				chatname = ele.childNodes[1].childNodes[0].innerText;
+			}
+			if (ele.childNodes[1].lastChild.children.length>1){
+				chatmessage = ele.childNodes[1].lastChild.childNodes[1].innerHTML;
+			} else {
+				chatmessage = ele.childNodes[1].lastChild.innerHTML;
+			}
+			
+		} catch(e){console.error(e);}
 	  
 	  
 	    if (!chatmessage){return;}
@@ -65,7 +75,7 @@
 	}
 	
 	
-	setTimeout(function(){
+	function start() {
 		console.log("STARTED SOCIAL STREAM");
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
@@ -73,26 +83,26 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.e2e && (mutation.addedNodes[i].dataset.e2e=="chat-message")){  // ui-chat__item--message
-								processMessage(mutation.addedNodes[i])
-							} else if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.testid && (mutation.addedNodes[i].dataset.testid=="chat-message")){  // ui-chat__item--message
-								processMessage(mutation.addedNodes[i])
-							} else if (document.querySelector('[class*="DivChatRoomMessage"]')){
+							if (mutation.addedNodes[i].className.indexOf("ChatMessageItem")>-1){
 								processMessage(mutation.addedNodes[i])
 							}
-							
 						} catch(e){}
 					}
 				}
 			});
 		};
 		var target = document.querySelector('[class*="DivChatRoomContainer"]');
-		if (!target){return;}
+		if (!target){
+			setTimeout(start,2000);
+			return;
+		}
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
-	},1000);
+	}
+	
+	setTimeout(start,2000);
 
 	var textOnlyMode = false;
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
