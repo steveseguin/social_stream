@@ -22,7 +22,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - mixcloud.com (pop out chat)
 - discord.com (web version; requires toggle enabled via the settings as well)
 - ms teams (experimental support)
-- vimeo.com (pop out chat)
+- vimeo.com (pop out chat page; https://vimeo.com/live-chat/xxxxxxxxx/interaction/)
 - instagram live (instagram.com/*/live/)
 - tiktok live (tiktok.com/*/live)
 - webex live chat (not the pop out)
@@ -32,6 +32,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - restream.io chat supported (https://chat.restream.io/chat)
 - amazon.com/live
 - slack (https://app.slack.com/)
+- rumble.com (no pop out; viewer page)
 
 More on request
 
