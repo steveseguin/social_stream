@@ -21,6 +21,7 @@
     --author-avatar-border-size: 3px;
     --author-avatar-size: 128px;
     --author-font-size: 30px;
+	--author-left: 115px;
 	
     /* donation/superchat specific */
     --donation-color: #5a4211;
@@ -46,6 +47,8 @@
     --shown-comment-bg-color: #555555;
     --highlighted-comment-bg-color: #f0f07d;
 	--highlight-chat-left: 0px;
+	
+	--rounded-border-radius: 0px;
 
     /*
     LAYOUT
@@ -156,6 +159,16 @@ div#message > div {
     left: 100px;
 	margin:0!important;
 }
+
+.noavatar-source {
+    bottom: -4px;
+    max-width: 50px!important;
+    max-height: 50px!important;
+    left: -20px;
+    margin: 0!important;
+    z-index: 20;
+}
+
 .btn-clear {
     position: absolute;
     z-index: 99999;
@@ -218,7 +231,7 @@ yt-live-chat-text-message-renderer.shown-comment {
 .hl-name {
     position: absolute;
     top: -20px;
-    left: 115px;
+    left: var(--author-left);
     font-weight: var(--author-font-weight);
     background: var(--author-bg-color);
     color: var(--author-color);
@@ -229,6 +242,7 @@ yt-live-chat-text-message-renderer.shown-comment {
     font-size: var(--author-font-size);
 	white-space: nowrap;
 	z-index:2;
+	border-radius: var(--rounded-border-radius);
 }
 .hl-message {
     position: absolute;
@@ -241,6 +255,7 @@ yt-live-chat-text-message-renderer.shown-comment {
     font-size: var(--comment-font-size);
 	word-break: break-word;
 	z-index:1;
+	border-radius: var(--rounded-border-radius);
 }
 .hl-message-img {
     position: absolute;
@@ -561,6 +576,14 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	if (urlParams.has("showtime")){
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
 	}
+	
+	var borderRadius = 0;
+	if (urlParams.has("rounded")){
+		borderRadius = parseInt(urlParams.get("rounded")) || 10;
+		borderRadius += "px";
+		document.documentElement.style.setProperty("--rounded-border-radius", borderRadius);
+	}
+	
 	var timeoutTimer = null;
 	var showsource = false;
 	
@@ -580,6 +603,13 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		transitionType = "fade";
 	} else if (urlParams.has("swipe")){
 		transitionType = "swipe";
+	}
+	
+	var avatar = true;
+	if (urlParams.has("noavatar")){
+		avatar = false;
+		document.documentElement.style.setProperty("--comment-padding", "20px 35px 20px 35px");
+		document.documentElement.style.setProperty("--author-left", "20px");
 	}
 	
 	
@@ -719,11 +749,14 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					var showType = data.type;
 				}
 				
-				if (showType && showsource){
+				if (showType && showsource && avatar){
 					showType = '<img src="' + showType + '.png" class="icon sourcetype" onerror="this.style.display=\'none\'" />';
+				} else if (showType && showsource && !avatar){
+					showType = '<img src="' + showType + '.png" class="icon sourcetype noavatar-source" onerror="this.style.display=\'none\'" />';
 				} else {
 					showType = "";
 				}
+				
 				
 				if (!data.chatname){
 					data.chatname = "";
@@ -784,12 +817,19 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					styleOverrideName = 'style="'+styleOverrideName+'"';
 				}
 				
+				var avatarImg = "";
+				if (avatar){
+					avatarImg = '<div class="hl-img" '+styleOverrideName+'><img id="img_'+data.chatname+'" src="' + data.chatimg + '" class="hl-profile-pic" onerror="errorImage(this);">'+showType+'</div>';
+				} else {
+					avatarImg = showType;
+				}
+				
 				document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" data-source-type="'+data.type+'">'
 					 + '<div class="hl-name" '+styleOverrideName+' id="nameDIV">' + data.chatname
 					 +   '<div class="hl-badges">' + data.chatbadges + '</div>'
 					 + '</div>'
 					 + '<div id="message" '+styleOverride+' class="hl-message" >' + data.chatmessage + '</div>'
-					 + '<div class="hl-img" '+styleOverrideName+'><img id="img_'+data.chatname+'" src="' + data.chatimg + '" class="hl-profile-pic" onerror="errorImage(this);">'+showType+'</div>'
+					 + avatarImg
 					 + addImage
 					 + data.hasDonation + data.hasMembership +'</div>';
 				
