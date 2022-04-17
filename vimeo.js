@@ -27,34 +27,56 @@
 		   chatimg = main.src;
 		} catch(e){
 			try{
-			    main = ele.querySelector("svg");
-			    if (!main){
-					try {
-						msg = ele.innerText;
+				if (ele.childNodes[0].childNodes[0].childNodes[0].nodeName.toLowerCase() == "svg"){
+					var main = ele.childNodes[0].childNodes[0].childNodes[0];
+					if (main.nextElementSibling.childNodes.length>1){
+						msg = main.nextElementSibling.childNodes[1].innerText;
+					} 
+					name = [...main.nextElementSibling.childNodes[0].childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('');
+				} else{
+					msg = ele.innerText;
+					name = JSON.parse(document.getElementById("app-data").innerHTML).user.display_name;
+					chatimg = JSON.parse(document.getElementById("app-data").innerHTML).user.avatar_url;
+				} 
+			} catch(e){
+				try {
+					if (ele.childNodes[1].childNodes[0].childNodes[0].nodeName.toLowerCase() == "svg"){
+						var main = ele.childNodes[1].childNodes[0].childNodes[0];
+						if (main.nextElementSibling.childNodes.length>1){
+							msg = main.nextElementSibling.childNodes[1].innerText;
+						} 
+						name = [...main.nextElementSibling.childNodes[0].childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('');
+					} else{
+						msg = ele.childNodes[1].innerText;
 						name = JSON.parse(document.getElementById("app-data").innerHTML).user.display_name;
 						chatimg = JSON.parse(document.getElementById("app-data").innerHTML).user.avatar_url;
-					} catch(e){
-						return;
-					}
-				} else {
+					} 
+				} catch(e){
 				}
-			} catch(e){}
+			}
 		}
 		
 		try{
 			if (!msg){
-				msg = main.nextElementSibling.childNodes[1].innerText;
+				if (main.nextElementSibling.childNodes.length>1){
+					msg = main.nextElementSibling.childNodes[1].innerText;
+				} else {
+					msg = main.nextElementSibling.childNodes[0].lastChild.innerText;
+				}
 			}
-			if (!name && !chatimg){
+		
+			if (!name){
 				name = [...main.nextElementSibling.childNodes[0].childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('');
 			}
 		} catch(e){
-			if (!msg){return;}
+			
 		}
 		
 		if (name){
 			name = name.trim();
 		} 
+		
+		if (!msg){return;}
 		
 		var data = {};
 		data.chatname = name;
@@ -142,6 +164,14 @@
 		if (document.querySelector("#live-chat-app")){
 			if (!document.querySelector("#live-chat-app").marked){
 				document.querySelector("#live-chat-app").marked=true;
+				var eles = document.querySelector("#live-chat-app").querySelectorAll("li");
+				for (var i=0; i < eles.length; i++) {
+					try{
+						if (eles[i].tagName == "LI"){
+							processMessage(eles[i]);
+						}
+					} catch(e){}
+				}
 				onElementInserted(document.querySelector("#live-chat-app"));
 			}
 		}
