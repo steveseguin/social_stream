@@ -121,6 +121,7 @@
 					sendResponse(true);
 					return;
 				}
+				// twitch doesn't capture avatars already.
 			} catch(e){}
 			sendResponse(false);
 		}

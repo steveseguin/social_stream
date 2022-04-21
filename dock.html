@@ -497,6 +497,11 @@
 		showsource = false;
 	} 
 	
+	var avatars = true;
+	if (urlParams.has("noavatar") || urlParams.has("noavatars")){
+		avatars = false;
+	} 
+	
 	
 	if (urlParams.has("limit")){
 		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
@@ -826,12 +831,14 @@
 		if (data.type && (data.type == "twitch") && !data.chatimg){
 			var ccc = data.counter;
 			var imgnode = document.getElementById("img_"+ccc);
-			fetch("https://api.action.wtf:667/username/"+data.chatname).then(response => {
+			fetch("https://twitch.action.wtf/username/"+encodeURIComponent(data.chatname)).then(response => {
 				response.text().then(function (text) {
 					if (text.startsWith("https://")){
+						if (avatars){
+							imgnode.src = text;
+							imgnode.classList.remove("invert");
+						}
 						data.chatimg = text;
-						imgnode.src = text;
-						imgnode.classList.remove("invert");
 						document.getElementById("msg_"+ccc).rawContents.chatimg = text;
 					} else {
 						data.chatimg = 'unknown.png';
@@ -933,7 +940,7 @@
 			
 			var chatImg = data.chatimg;
 			
-			if (!chatImg){
+			if (!chatImg && avatars){
 				if (fallbackImage){
 					chatImg = "unknown.png";
 					if (darkmode){
@@ -944,8 +951,10 @@
 				} else {
 					chatImg = "";
 				}
-			} else {
+			} else if (avatars){
 				chatImg = '<img id="img_'+counter+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
+			} else {
+				chatImg = "";
 			}
 			
 			if (showType && showsource){

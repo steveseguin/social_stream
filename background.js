@@ -116,6 +116,14 @@ chrome.runtime.onMessage.addListener(
 					}
 				} 
 				
+				if (request.setting == "noavatars"){
+					if (request.value){
+						pushSettingChange("noAvatars");
+					} else {
+						pushSettingChange("sendAvatars");
+					}
+				} 
+				
 				if (request.setting == "sentiment"){
 					if (request.value){
 						if (!sentimentAnalysisLoaded){
