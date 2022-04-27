@@ -33,6 +33,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - amazon.com/live
 - slack (https://app.slack.com/)
 - rumble.com (no pop out; viewer page)
+- trovo.live chat (open the chat pop-up page; ie: https://trovo.live/chat/xxxxxx)
 
 More on request
 
