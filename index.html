@@ -638,7 +638,22 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		} catch(e){errorlog(e);}
 		
 	}
+	var speech = false;
 	
+	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){
+		speech = new SpeechSynthesisUtterance();
+		speech.lang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || "en-US";
+		speech.volume = 1;
+		speech.rate = 1;
+		speech.pitch = 1;
+	}
+	
+	function speak(text){
+		if (!speech){return;}
+		if (!text){return;}
+		speech.text = text;
+		window.speechSynthesis.speak(speech);
+	}
 	
 	try {
 		window.onresize = realign;
@@ -822,6 +837,12 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					avatarImg = '<div class="hl-img" '+styleOverrideName+'><img id="img_'+data.chatname+'" src="' + data.chatimg + '" class="hl-profile-pic" onerror="errorImage(this);">'+showType+'</div>';
 				} else {
 					avatarImg = showType;
+				}
+				
+				if (data.chatname){
+					speak(data.chatname.toLowerCase() + " says! " +data.chatmessage.toLowerCase());
+				} else {
+					speak(data.chatmessage);
 				}
 				
 				document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" data-source-type="'+data.type+'">'
