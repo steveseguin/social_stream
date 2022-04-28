@@ -14,7 +14,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 
 - twitch.tv pop out chat
 - youtube live pop out chat (studio or guest)
-- facebook live (guest view on web)
+- facebook live (guest view on web; you can pause the video tho)
 - zoom.us (web version)
 - owncast demo page (watch.owncast.online)
 - crowdcast.io
@@ -33,6 +33,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - amazon.com/live
 - slack (https://app.slack.com/)
 - rumble.com (no pop out; viewer page)
+- trovo.live chat (open the chat pop-up page; ie: https://trovo.live/chat/xxxxxx)
 
 More on request
 
