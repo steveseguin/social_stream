@@ -2,8 +2,10 @@
 Consolidate your live social messaging streams
 
 - Supports live automated two-way chat messaging with Facebook, Youtube, Twitch, and more
-- Includes a "featured chat" overlay, selectable via the dockable dashboard
+- Includes a "featured chat" overlay, with messages selectable via the dockable dashboard
 - Supports bot-commands and automated chat responses, with custom logic plugin support.
+- Text-to-speech support, along with many other niche features supported.
+- No user login, API key, or permission needed to capture the chat messages from most sites and services.
 
 Social Stream makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
 
@@ -210,6 +212,20 @@ Using Control Change MIDI Commands, on channel 1:
 The MIDI plugin can be found in the Streamdeck store pretty easily. If using Windows, you can find a virtual MIDI loopback device here: https://www.tobias-erichsen.de/software/loopmidi.html  There are some for macOS as well.
 
 Feedback welcomed
+
+### Text to speech
+
+Text messages can be converted to speech, assuming your system supports TTS.  On my Windows machine running Chrome/OBS, it works.  I have it set to English-US by default, but you can change the language to something else by editing the URL. ()
+
+ie: `index.html?session=XXXXXX&speech=en-US` or `socialstream.ninja/?session=xxx&&speech=en-US`
+
+You can get a list of support languages on your system by running `speechSynthesis.getVoices()` from the Chrome browser console on your system.
+
+![image](https://user-images.githubusercontent.com/2575698/165753730-374498e7-7885-49ef-83ba-7fe2acde26ee.png)
+
+The audio will play out the default system audio output device. This might be a problem if using OBS for capture, as you'll need to use a virtual audio cable to capture the audio output of the system output and route it back into OBS for capture.  See the related issue here: https://github.com/w3c/mediacapture-output/issues/102
+
+If loading the app in the Chrome/Edge/Firefox browser, you will need to "click" the web page first before audio will play. This isn't the case with OBS, but most browsers require the user interact with the website on some level before it will play audio.  Please keep this in mind when testing things.
 
 ### Known issues or solutions
 
