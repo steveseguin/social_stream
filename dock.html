@@ -507,6 +507,13 @@
 		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
 	}
 	
+	
+	custombot = false;
+	if (urlParams.has("myname")){
+		custombot = urlParams.get("myname").toLowerCase() || false;
+	}
+	
+	
 	var autoshow = false;
 	if (urlParams.has("autoshow")){
 		autoshow = true;
@@ -1009,6 +1016,8 @@
 					//chatname = "";
 				} else if (data.chatname.toLowerCase() == "vdoninja"){ // because why not. :)
 					data.chatname = "VDO.Ninja";
+					bot = true;
+				} else if (custombot && (data.chatname.toLowerCase() == custombot)){ // because why not. :)
 					bot = true;
 				}
 				if (compactmode){
