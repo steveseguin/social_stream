@@ -511,6 +511,9 @@
 	custombot = false;
 	if (urlParams.has("myname")){
 		custombot = urlParams.get("myname").toLowerCase() || false;
+		if (custombot){
+			custombot = custombot.split(",");
+		}
 	}
 	
 	
@@ -1017,7 +1020,7 @@
 				} else if (data.chatname.toLowerCase() == "vdoninja"){ // because why not. :)
 					data.chatname = "VDO.Ninja";
 					bot = true;
-				} else if (custombot && (data.chatname.toLowerCase() == custombot)){ // because why not. :)
+				} else if (custombot && custombot.includes(data.chatname.toLowerCase())){ // because why not. :)
 					bot = true;
 				}
 				if (compactmode){
