@@ -520,6 +520,27 @@
 		document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
 	}
 	
+	var speech = false;
+	
+	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){
+		speech = true;
+	}
+	
+	function speak(text){
+		if (!speech){return;}
+		if (!text){return;}
+		
+		
+		var speechInput = new SpeechSynthesisUtterance();
+		speechInput.lang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || "en-US";
+		speechInput.volume = 1;
+		speechInput.rate = 1;
+		speechInput.pitch = 1;
+		speechInput.text = text;
+		window.speechSynthesis.speak(speechInput);
+	}
+	
+	
 	if (urlParams.has("compact")){
 		compactmode = true;
 		mainOutputWindow.classList.remove("notcompactmode");
@@ -944,15 +965,15 @@
 				if (fallbackImage){
 					chatImg = "unknown.png";
 					if (darkmode){
-						chatImg = '<img id="img_'+counter+'" src="' + chatImg + '" class="icon invert hl-profile-pic" onerror="errorImage(this);" />'
+						chatImg = '<img id="img_'+data.counter+'" src="' + chatImg + '" class="icon invert hl-profile-pic" onerror="errorImage(this);" />'
 					} else {
-						chatImg = '<img id="img_'+counter+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
+						chatImg = '<img id="img_'+data.counter+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
 					}
 				} else {
 					chatImg = "";
 				}
 			} else if (avatars){
-				chatImg = '<img id="img_'+counter+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
+				chatImg = '<img id="img_'+data.counter+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
 			} else {
 				chatImg = "";
 			}
@@ -980,17 +1001,19 @@
 			data.chatname = data.chatname.trim();
 			
 			if (data.chatname){
+				if (data.chatname.toLowerCase() == "streamelements"){ 
+					bot = true;
+					//chatname = "";
+				} else if (data.chatname.toLowerCase() == "nightbot"){
+					bot = true;
+					//chatname = "";
+				} else if (data.chatname.toLowerCase() == "vdoninja"){ // because why not. :)
+					data.chatname = "VDO.Ninja";
+					bot = true;
+				}
 				if (compactmode){
-					if (data.chatname.toLowerCase() == "streamelements"){ 
-						bot = true;
-						//chatname = "";
-					} else if (data.chatname.toLowerCase() == "nightbot"){
-						bot = true;
-						//chatname = "";
-					} else if (data.chatname.toLowerCase() == "vdoninja"){ // because why not. :)
-						data.chatname = "VDO.Ninja";
-						chatname = '<div class="hl-name">' + data.chatname+":</div>";
-						bot = true;
+					if (bot){
+						chatname = '<div class="hl-name"></div>';
 					} else {
 						chatname = '<div class="hl-name">' + data.chatname+":</div>";
 					}
@@ -1001,13 +1024,13 @@
 				chatname = '<div class="hl-name"></div>';
 			}
 			
-			var node = createElementFromHTML('<div id="msg_'+counter+'" class="highlight-chat" data-source-type="'+data.type+'">'
+			var node = createElementFromHTML('<div id="msg_'+data.counter+'" class="highlight-chat" data-source-type="'+data.type+'">'
 				 + showType
 				 + chatImg
 				 + timeArrived
 				 + chatname
 				// + '<div class="hl-badges">' + data.chatbadges + '</div>'
-				 + '<div class="hl-message" id="content_'+counter+'">' + data.chatmessage + '</div>'
+				 + '<div class="hl-message" id="content_'+data.counter+'">' + data.chatmessage + '</div>'
 				 + addImage
 				 + donation + '</div>')
 				 
@@ -1040,8 +1063,8 @@
 				setTimeout(function(node){ node.remove();},timeoutDelay, node);
 			}
 			
-			if (!document.getElementById("content_"+counter).innerText.trim().length){
-				document.getElementById("msg_"+counter).classList.add("noText");
+			if (!document.getElementById("content_"+data.counter).innerText.trim().length){
+				document.getElementById("msg_"+data.counter).classList.add("noText");
 			}
 			
 			var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they don't fit
@@ -1185,6 +1208,31 @@
 					}
 				} catch(e){
 					console.error(e);
+				}
+			}
+			
+			if (speech && !bot){
+				var msgPlain = document.getElementById('content_'+data.counter); // text only
+				console.log(data);
+				if (msgPlain){
+					msgPlain = msgPlain.innerText.trim();
+					msgPlain = msgPlain.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
+					msgPlain = msgPlain.replaceAll('_', ' ');
+					msgPlain = msgPlain.replaceAll('@', ' ');
+					msgPlain = msgPlain.replace(/catJAM/ig,"");
+					
+					if (msgPlain){
+						if (data.chatname){
+							var cc = data.chatname.toLowerCase().replace(/[^a-z0-9]+/gi, " ");
+							if (cc){
+								speak(cc + " says! " +msgPlain.toLowerCase());
+							} else {
+								speak("Someone says! " +msgPlain);
+							}
+						} else {
+							speak("Someone says! " +msgPlain);
+						}
+					}
 				}
 			}
 		}

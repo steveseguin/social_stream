@@ -641,18 +641,19 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	var speech = false;
 	
 	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){
-		speech = new SpeechSynthesisUtterance();
-		speech.lang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || "en-US";
-		speech.volume = 1;
-		speech.rate = 1;
-		speech.pitch = 1;
+		speech = true;
 	}
 	
 	function speak(text){
 		if (!speech){return;}
 		if (!text){return;}
-		speech.text = text;
-		window.speechSynthesis.speak(speech);
+		var speechInput = new SpeechSynthesisUtterance();
+		speechInput.lang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || "en-US";
+		speechInput.volume = 1;
+		speechInput.rate = 1;
+		speechInput.pitch = 1;
+		speechInput.text = text;
+		window.speechSynthesis.speak(speechInput);
 	}
 	
 	try {
@@ -839,11 +840,8 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					avatarImg = showType;
 				}
 				
-				if (data.chatname){
-					speak(data.chatname.toLowerCase() + " says! " +data.chatmessage.toLowerCase());
-				} else {
-					speak(data.chatmessage);
-				}
+				
+				
 				
 				document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" data-source-type="'+data.type+'">'
 					 + '<div class="hl-name" '+styleOverrideName+' id="nameDIV">' + data.chatname
@@ -901,6 +899,31 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					} catch(e){}
 				}
 				document.getElementById("output").classList.remove(transitionType);
+				
+				
+				if (speech){
+					var msgPlain = document.getElementById("message"); // text only
+					if (msgPlain){
+						msgPlain = msgPlain.innerText.trim();
+						msgPlain = msgPlain.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
+						msgPlain = msgPlain.replaceAll('_', ' ');
+						msgPlain = msgPlain.replaceAll('@', ' ');
+						msgPlain = msgPlain.replace(/catJAM/ig,"");
+						
+						if (msgPlain){
+							if (data.chatname){
+								var cc = data.chatname.toLowerCase().replace(/[^a-z0-9]+/gi, " ");
+								if (cc){
+									speak(cc + " says! " +msgPlain.toLowerCase());
+								} else {
+									speak("Someone says! " +msgPlain);
+								}
+							} else {
+								speak("Someone says! " +msgPlain);
+							}
+						}
+					}
+				}
 				
 				if (timeoutDelay){
 					clearTimeout(timeoutTimer);
