@@ -1214,6 +1214,22 @@
 			if (speech && !bot){
 				var msgPlain = document.getElementById('content_'+data.counter); // text only
 				console.log(data);
+				
+				if (data.hasDonation){
+					
+					if (data.chatname){
+						var cc = data.chatname.toLowerCase().replace(/[^a-z0-9]+/gi, " ");
+						if (cc){
+							speak(cc + " has donated " + data.hasDonation);
+						} else {
+							speak("Someone has donated " + data.hasDonation);
+						}
+					} else {
+						speak("Someone has donated " + data.hasDonation);
+					}
+					
+				}
+				
 				if (msgPlain){
 					msgPlain = msgPlain.innerText.trim();
 					msgPlain = msgPlain.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
@@ -1222,15 +1238,21 @@
 					msgPlain = msgPlain.replace(/catJAM/ig,"");
 					
 					if (msgPlain){
-						if (data.chatname){
-							var cc = data.chatname.toLowerCase().replace(/[^a-z0-9]+/gi, " ");
-							if (cc){
-								speak(cc + " says! " +msgPlain.toLowerCase());
+						
+						if (data.hasDonation && (msgPlain==parseInt(msgPlain))){
+							// this is a donation that we already read out
+						} else {
+					
+							if (data.chatname){
+								var cc = data.chatname.toLowerCase().replace(/[^a-z0-9]+/gi, " ");
+								if (cc){
+									speak(cc + " says! " +msgPlain.toLowerCase());
+								} else {
+									speak("Someone says! " +msgPlain);
+								}
 							} else {
 								speak("Someone says! " +msgPlain);
 							}
-						} else {
-							speak("Someone says! " +msgPlain);
 						}
 					}
 				}

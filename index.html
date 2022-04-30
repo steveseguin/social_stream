@@ -902,6 +902,22 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				
 				
 				if (speech){
+				
+					if (data.hasDonation){
+					
+						if (data.chatname){
+							var cc = data.chatname.toLowerCase().replace(/[^a-z0-9]+/gi, " ");
+							if (cc){
+								speak(cc + " has donated " + data.hasDonation);
+							} else {
+								speak("Someone has donated " + data.hasDonation);
+							}
+						} else {
+							speak("Someone has donated " + data.hasDonation);
+						}
+						
+					}
+				
 					var msgPlain = document.getElementById("message"); // text only
 					if (msgPlain){
 						msgPlain = msgPlain.innerText.trim();
@@ -910,16 +926,20 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 						msgPlain = msgPlain.replaceAll('@', ' ');
 						msgPlain = msgPlain.replace(/catJAM/ig,"");
 						
-						if (msgPlain){
-							if (data.chatname){
-								var cc = data.chatname.toLowerCase().replace(/[^a-z0-9]+/gi, " ");
-								if (cc){
-									speak(cc + " says! " +msgPlain.toLowerCase());
+						if (data.hasDonation && (msgPlain==parseInt(msgPlain))){
+							// this is a donation that we already read out
+						} else {
+							if (msgPlain){
+								if (data.chatname){
+									var cc = data.chatname.toLowerCase().replace(/[^a-z0-9]+/gi, " ");
+									if (cc){
+										speak(cc + " says! " +msgPlain.toLowerCase());
+									} else {
+										speak("Someone says! " +msgPlain);
+									}
 								} else {
 									speak("Someone says! " +msgPlain);
 								}
-							} else {
-								speak("Someone says! " +msgPlain);
 							}
 						}
 					}
