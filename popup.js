@@ -72,7 +72,7 @@ function update(response){
 					ele.checked = response.settings[key];
 					updateSettings(ele);
 				}
-				var ele = document.querySelector("input[data-textsetting='"+key+"']");
+				var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"']");
 				if (ele){
 					ele.value = response.settings[key];
 					updateSettings(ele);
@@ -143,6 +143,21 @@ function updateSettings(ele){
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", setting: ele.dataset.param1, "value": ele.checked}, function (response) {});
+		
+	} else if (ele.dataset.textparam1){
+		if (ele.value){
+			document.getElementById("dock").rawURL = updateURL(ele.dataset.textparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").rawURL);
+		} else {
+			var tmp = document.getElementById("dock").rawURL.split(ele.dataset.textparam1)
+			if (tmp.length>1){
+				document.getElementById("dock").rawURL = tmp[0] + tmp[1].split("&").shift().join("&");
+			} else {
+				document.getElementById("dock").rawURL = tmp[0];
+			}
+		}
+		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
+		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
+		chrome.runtime.sendMessage({cmd: "saveSetting", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
 	} else if (ele.dataset.param2){
 		if (ele.checked){
 			document.getElementById("overlay").rawURL = updateURL(ele.dataset.param2, document.getElementById("overlay").rawURL);
