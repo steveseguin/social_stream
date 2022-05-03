@@ -144,6 +144,9 @@
 		}
 	  
 	}
+	
+	var dupCheck = [];
+	
 	setTimeout(function(){ // clear existing messages; just too much for a stream.
 		try {
 			if (window.location.href.includes("facebook.com/live/producer/")){
@@ -152,8 +155,11 @@
 					try{
 						if (!main[j].dataset.set123){
 							main[j].dataset.set123 = "true";
-						//	processMessage(main[j]);
-						} 
+							dupCheck.push(main[j].id);
+						} else if(main[j].children[0].id && !(main[j].children[0].id in dupCheck)){
+							dupCheck.push(main[j].children[0].id);
+							processMessage(main[j]);
+						}
 					} catch(e){}
 				}
 			} else if (window.location.href.includes("/videos/")){
@@ -162,8 +168,11 @@
 					try{
 						if (!main[j].dataset.set123){
 							main[j].dataset.set123 = "true";
-							//processMessage(main[j]);
-						} 
+							dupCheck.push(main[j].id);
+						} else if(main[j].parentNode.id && !(main[j].parentNode.id in dupCheck)){
+							dupCheck.push(main[j].parentNode.id);
+							processMessage(main[j]);
+						}
 					} catch(e){}
 				}
 			}
@@ -172,19 +181,22 @@
 		console.log("LOADED SocialStream EXTENSION");
 	
 		var ttt = setInterval(function(){
+			dupCheck = dupCheck.slice(-100);
 			try {
 				if (window.location.href.includes("facebook.com/live/producer/")){
 					var main = document.querySelectorAll("[role='article']");
 					for (var j =0;j<main.length;j++){
 						try{
 							if (!main[j].dataset.set123){
+								console.log(main[j].parentNode);
 								main[j].dataset.set123 = "true";
-								if (main[j].parentNode.parentNode.previousSibling && main[j].parentNode.parentNode.previousSibling.dataset.dupCheck){
-									//
-								} else {
-									if (main[j].parentNode.parentNode.previousSibling){
-										main[j].parentNode.parentNode.previousSibling.dataset.dupCheck = "true";
-									}
+								if (main[j].id && !(main[j].id in dupCheck)){
+									dupCheck.push(main[j].id);
+									if (main[j].id.startsWith("client:")){continue;}
+									processMessage(main[j]);
+								} else if (main[j].parentNode && main[j].parentNode.id && !(main[j].parentNode.id in dupCheck)){
+									dupCheck.push(main[j].parentNode.id);
+									if (main[j].parentNode.id.startsWith("client:")){continue;}
 									processMessage(main[j]);
 								}
 							} 
@@ -195,15 +207,17 @@
 					for (var j =0;j<main.length;j++){
 						try{
 							if (!main[j].dataset.set123){
+								console.log(main[j].parentNode);
 								main[j].dataset.set123 = "true";
-								if (main[j].previousSibling && main[j].previousSibling.dataset.dupCheck){
-										//
-									} else {
-										if (main[j].previousSibling){
-											main[j].previousSibling.dataset.dupCheck = "true";
-										}
-										processMessage(main[j]);
-									}
+								if (main[j].id && !(main[j].id in dupCheck)){
+									dupCheck.push(main[j].id);
+									if (main[j].id.startsWith("client:")){continue;}
+									processMessage(main[j]);
+								} else if (main[j].parentNode && main[j].parentNode.id && !(main[j].parentNode.id in dupCheck)){
+									dupCheck.push(main[j].parentNode.id);
+									if (main[j].parentNode.id.startsWith("client:")){continue;}
+									processMessage(main[j]);
+								}
 							}
 						} catch(e){}
 					}
