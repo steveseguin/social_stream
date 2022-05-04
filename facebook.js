@@ -149,30 +149,22 @@
 	
 	setTimeout(function(){ // clear existing messages; just too much for a stream.
 		try {
-			if (window.location.href.includes("facebook.com/live/producer/")){
+			if (window.location.href.includes("facebook.com/live/producer/") || window.location.href.includes("/videos/")){
 				var main = document.querySelectorAll("[role='article']");
 				for (var j =0;j<main.length;j++){
 					try{
 						if (!main[j].dataset.set123){
 							main[j].dataset.set123 = "true";
-							dupCheck.push(main[j].id);
-						} else if(main[j].children[0].id && !(main[j].children[0].id in dupCheck)){
-							dupCheck.push(main[j].children[0].id);
-							processMessage(main[j]);
-						}
-					} catch(e){}
-				}
-			} else if (window.location.href.includes("/videos/")){
-				var main = document.querySelectorAll("div[role='article']");
-				for (var j =0;j<main.length;j++){
-					try{
-						if (!main[j].dataset.set123){
-							main[j].dataset.set123 = "true";
-							dupCheck.push(main[j].id);
-						} else if(main[j].parentNode.id && !(main[j].parentNode.id in dupCheck)){
-							dupCheck.push(main[j].parentNode.id);
-							processMessage(main[j]);
-						}
+							if (main[j].id && !(dupCheck.includes(main[j].id))){
+								dupCheck.push(main[j].id);
+								//if (main[j].id.startsWith("client:")){continue;}
+								//processMessage(main[j]);
+							} else if (main[j].parentNode && main[j].parentNode.id && !(dupCheck.includes(main[j].parentNode.id))){
+								dupCheck.push(main[j].parentNode.id);
+								//if (main[j].parentNode.id.startsWith("client:")){continue;}
+								//processMessage(main[j]);
+							}
+						} 
 					} catch(e){}
 				}
 			}
@@ -183,18 +175,17 @@
 		var ttt = setInterval(function(){
 			dupCheck = dupCheck.slice(-100);
 			try {
-				if (window.location.href.includes("facebook.com/live/producer/")){
+				if (window.location.href.includes("facebook.com/live/producer/") || window.location.href.includes("/videos/")){
 					var main = document.querySelectorAll("[role='article']");
 					for (var j =0;j<main.length;j++){
-						try{
+						try {
 							if (!main[j].dataset.set123){
-								console.log(main[j].parentNode);
 								main[j].dataset.set123 = "true";
-								if (main[j].id && !(main[j].id in dupCheck)){
+								if (main[j].id && !(dupCheck.includes(main[j].id))){
 									dupCheck.push(main[j].id);
 									if (main[j].id.startsWith("client:")){continue;}
 									processMessage(main[j]);
-								} else if (main[j].parentNode && main[j].parentNode.id && !(main[j].parentNode.id in dupCheck)){
+								} else if (main[j].parentNode && main[j].parentNode.id && !(dupCheck.includes(main[j].parentNode.id))){
 									dupCheck.push(main[j].parentNode.id);
 									if (main[j].parentNode.id.startsWith("client:")){continue;}
 									processMessage(main[j]);
@@ -202,26 +193,7 @@
 							} 
 						} catch(e){}
 					}
-				} else if (window.location.href.includes("/videos/")){
-					var main = document.querySelectorAll("div[role='article']");
-					for (var j =0;j<main.length;j++){
-						try{
-							if (!main[j].dataset.set123){
-								console.log(main[j].parentNode);
-								main[j].dataset.set123 = "true";
-								if (main[j].id && !(main[j].id in dupCheck)){
-									dupCheck.push(main[j].id);
-									if (main[j].id.startsWith("client:")){continue;}
-									processMessage(main[j]);
-								} else if (main[j].parentNode && main[j].parentNode.id && !(main[j].parentNode.id in dupCheck)){
-									dupCheck.push(main[j].parentNode.id);
-									if (main[j].parentNode.id.startsWith("client:")){continue;}
-									processMessage(main[j]);
-								}
-							}
-						} catch(e){}
-					}
-				}
+				} 
 			} catch(e){  }
 		},800);
 	},1500);

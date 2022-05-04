@@ -18,6 +18,7 @@
 	var lastMessage = {};
 	var lastName = "";
 	var lastImage = "";
+	var messageHistory = [];
 
 	function processMessage(ele){
 
@@ -25,6 +26,16 @@
 		  return;
 		} else {
 		  ele.marked = true;
+		}
+		
+		var id = ele.querySelector("div[id][class*='chat']");
+		if (id && id.id){
+			if (messageHistory.includes(id.id)){
+				return;
+			}
+			messageHistory.push(id.id);
+		} else {
+			return;
 		}
 
 		if (document.querySelector("chat-message__container")){
@@ -41,10 +52,8 @@
 		try{
 		   chatimg = ele.querySelector(".chat-item__chat-info-msg-avatar").src;
 		   img = true;
-			// lastImage = chatimg;
 		} catch(e){
-		//	chatimg = lastImage;
-
+			//
 		}
     var name = "";
 		if (ele.querySelector(".chat-item__sender")){
@@ -52,9 +61,7 @@
 		  if (name){
 			  name = name.trim();
 		  }
-		}// else {
-    //  name = lastName;
-		//}
+		}
 
 		if (!name){
 
@@ -75,8 +82,8 @@
 					    if (name){
 						    name = name.trim();
 					    }
-					    lastName = name;
-							chatimg = prev.querySelector(".chat-item__user-avatar").querySelector("img").src;
+					    
+						chatimg = prev.querySelector(".chat-item__user-avatar").querySelector("img").src;
 					    //lastImage = chatimg
 					  }
 
@@ -101,6 +108,14 @@
 				}
 			}
 		}
+		
+		if (name){
+			lastName = name;
+			lastImage = chatimg;
+		} else if (lastName){
+			name = lastName;
+			chatimg = lastImage;
+		}
 
 		var data = {};
 		data.chatname = name;
@@ -113,7 +128,6 @@
 		data.hasMembership = "";;
 		data.contentimg = "";
 		data.type = "zoom";
-
 
 		if (lastMessage === JSON.stringify(data)){ // prevent duplicates, as zoom is prone to it.
 			return;
@@ -176,9 +190,9 @@
 			return;
 		}
 		lastHTML = json;
-		console.log(data);
 		pushMessage(data);
 	}
+	
 
 	function onElementInserted(containerSelector) {
 		var onMutationsObserved = function(mutations) {
@@ -203,6 +217,7 @@
 	console.log("social stream injected");
 
 	setInterval(function(){
+		messageHistory = messageHistory.slice(-500);
 		if (document.getElementById("chat-list-content")){
 			if (!document.getElementById("chat-list-content").marked){
 				lastName = "";
@@ -211,7 +226,6 @@
 				onElementInserted("#chat-list-content");
 			}
 		}
-		
 		if (document.getElementById("poll__body")){
 			streamPollRAW(document.getElementById("poll__body"));
 		}
