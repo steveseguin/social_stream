@@ -572,6 +572,11 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		centering = true;
 	}
 	
+	var customSource = false;
+	if (urlParams.has("branded")){
+		customSource = true;
+	}
+	
 	var timeoutDelay = 0;
 	if (urlParams.has("showtime")){
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
@@ -757,22 +762,23 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					<!-- } -->
 				<!-- } catch(e){} -->
 				
+				var showType = "";
 				if (!data.type){
 					data.type= "none";
-					var showType = "";
 				} else {
 					data.type = data.type.toString();
-					var showType = data.type;
+					showType = data.type;
 				}
 				
-				if (showType && showsource && avatar){
-					showType = '<img src="' + showType + '.png" class="icon sourcetype" onerror="this.style.display=\'none\'" />';
+				if (data.sourceImg && showsource && avatar && customSource){
+					showType = '<img src="' + data.sourceImg  + '" class="icon sourcetype" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
+				} else if (showType && showsource && avatar){
+					showType = '<img src="' + showType + '.png" class="icon sourcetype" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
 				} else if (showType && showsource && !avatar){
-					showType = '<img src="' + showType + '.png" class="icon sourcetype noavatar-source" onerror="this.style.display=\'none\'" />';
+					showType = '<img src="' + showType + '.png" class="icon sourcetype noavatar-source" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
 				} else {
 					showType = "";
 				}
-				
 				
 				if (!data.chatname){
 					data.chatname = "";

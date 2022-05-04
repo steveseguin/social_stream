@@ -15,9 +15,6 @@
 	}
 
 	function processMessage(ele, wss=true){
-
-	  console.log(ele);
-	  
 	  if(ele.hasAttribute("is-deleted")) {
 		return;
 	  }
@@ -25,6 +22,7 @@
 	  var chatmessage = "";
 	  var chatname = "";
 	  var chatimg = "";
+	  var srcImg = ""; // what shows up as the source image; blank is default (dock decides).
 	  
 	  try{
 		chatname = ele.querySelector("#author-name").innerText;
@@ -115,6 +113,19 @@
 		backgroundColor = "background-color: "+ele.style.getPropertyValue('--yt-live-chat-sponsor-color')+";";
 		textColor = "color: #111;";
 	  }
+	  
+	  srcImg = document.querySelector("#input-panel");
+	  if (srcImg){
+		  srcImg = srcImg.querySelector("#img");
+		  if (srcImg){
+			  srcImg = srcImg.src || "";
+		  } else {
+			  srcImg = "";
+		  }
+	  } else {
+		  srcImg = "";
+	  }
+	  
 
 	  var data = {};
 	  data.chatname = chatname;
@@ -126,6 +137,7 @@
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = hasMembership;
 	  data.type = "youtube";
+	  data.sourceImg = srcImg;
 	  
 		if (data.chatimg && avatars){
 			toDataURL(data.chatimg, function(dataUrl) {

@@ -532,6 +532,11 @@
 		document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
 	}
 	
+	var customSource = false;
+	if (urlParams.has("branded")){
+		customSource = true;
+	}
+	
 	var speech = false;
 	
 	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){
@@ -990,7 +995,9 @@
 				chatImg = "";
 			}
 			
-			if (showType && showsource){
+			if (data.sourceImg && showsource && customSource){
+				showType = '<img src="' + data.sourceImg + '" class="icon hl-source-type" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
+			} else if (showType && showsource){
 				showType = '<img src="' + showType + '.png" class="icon hl-source-type" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
 			} else {
 				showType = "";
