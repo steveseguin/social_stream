@@ -168,7 +168,10 @@ div#message > div {
     margin: 0!important;
     z-index: 20;
 }
-
+.sourceOffset{
+	left: 78px;
+    top: -39px;
+}
 .btn-clear {
     position: absolute;
     z-index: 99999;
@@ -306,7 +309,7 @@ yt-live-chat-text-message-renderer.shown-comment {
 	
 }
 .hl-img img {
-    display: block;
+    display: inline-block;
     width:100%;
     height:100%;
     object-fit: cover;
@@ -770,14 +773,20 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					showType = data.type;
 				}
 				
-				if (data.sourceImg && showsource && avatar && customSource){
-					showType = '<img src="' + data.sourceImg  + '" class="icon sourcetype" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
-				} else if (showType && showsource && avatar){
+				var customSourceClass = "sourceOffset";
+				if (showType && showsource && avatar){
 					showType = '<img src="' + showType + '.png" class="icon sourcetype" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
 				} else if (showType && showsource && !avatar){
 					showType = '<img src="' + showType + '.png" class="icon sourcetype noavatar-source" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
 				} else {
+					customSourceClass = "";
 					showType = "";
+				}
+				
+				if (data.sourceImg && customSource && avatar){
+					showType += '<img src="' + data.sourceImg + '" class="icon sourcetype '+customSourceClass+'"  onerror="this.style.display=\'none\'" />';
+				} else if (data.sourceImg && customSource && !avatar){
+					showType += '<img src="' + + data.sourceImg + '" class="icon sourcetype '+customSourceClass+' noavatar-source" onerror="this.style.display=\'none\'" />';
 				}
 				
 				if (!data.chatname){

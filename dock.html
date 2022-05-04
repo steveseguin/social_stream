@@ -408,9 +408,10 @@
 	<div id="pinned" class="output notcompactmode"></div>
 	<div id="menu">
 		<button id="next_in_queue" data-state="0" onclick="nextInQueue();" title="Hold CTRL when selecting messages to add them to the queue instead" class="hidden blue">Next in Queue</button>
-		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" class="red">Clear Current Overlay</button>
-		<button id="pause" data-state="0" onclick="pause(this);">⏯︎ Pause</button>
+		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" title="Clear the featured chat overlay. (Not this dock)" class="red">Clear Current Overlay</button>
+		<button id="pause" data-state="0" onclick="pause(this);" title="Pause incoming chat messages">⏯︎ Pause</button>
 		<button id="autoshow" data-state="0" onclick="autoShow(this);" title="Auto-feature chat messages as they come in">Auto</button>
+		<button id="tts" data-state="0" onclick="speech = !speech; window.speechSynthesis.cancel(); this.classList.toggle('pressed');" title="Toggle whether to read out-loud incoming messages using text-to-speech">🔊</button>
 		<input id="filter_messages" onchange="filterMessages(this.value);" placeholder="Filter messages" type="text" />
 		<button id="hide_emoji" data-state="0" onclick="emoji(this);" title="Hide all emoji-only messages">🚫🙂</button>
 		<button id="say_hello" data-state="0" onclick="toggleChat();" title="Send a text message to all social endpoints">💬</button>
@@ -540,6 +541,9 @@
 	var speech = false;
 	
 	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){
+		document.getElementById("tts").dataset.state = 1;
+		document.getElementById("tts").classList.remove("hidden");
+		document.getElementById("tts").classList.add('pressed');
 		speech = true;
 	}
 	
@@ -841,6 +845,19 @@
 		}
 	}
 	
+	async function fetchWithTimeout(resource, options = {}) { // https://dmitripavlutin.com/timeout-fetch-request/
+	  const { timeout = 8000 } = options;
+	  
+	  const controller = new AbortController();
+	  const id = setTimeout(() => controller.abort(), timeout);
+	  const response = await fetch(resource, {
+		...options,
+		signal: controller.signal  
+	  });
+	  clearTimeout(id);
+	  return response;
+	}
+	
 	function selectedMessage(event=false, element=false){
 		if (!element){
 			element = this;
@@ -850,7 +867,6 @@
 			element.classList.add("queued");
 			document.getElementById("next_in_queue").classList.remove("hidden");
 			document.getElementById("next_in_queue").innerHTML = "Next in Queue ("+selectedQueue.length+")";
-			
 			return;
 		} else if (event && (event.altKey)) {
 			if (element.classList.contains("pinned")){
@@ -869,7 +885,10 @@
 		if (data.type && (data.type == "twitch") && !data.chatimg){
 			var ccc = data.counter;
 			var imgnode = document.getElementById("img_"+ccc);
-			fetch("https://twitch.action.wtf/username/"+encodeURIComponent(data.chatname)).then(response => {
+			
+			fetchWithTimeout("https://twitch.action.wtf/username/"+encodeURIComponent(data.chatname), {
+			  timeout: 2000 // in case server goes down, only wait two-seconds.
+			}).then(response => {
 				response.text().then(function (text) {
 					if (text.startsWith("https://")){
 						if (avatars){
@@ -995,12 +1014,15 @@
 				chatImg = "";
 			}
 			
-			if (data.sourceImg && showsource && customSource){
-				showType = '<img src="' + data.sourceImg + '" class="icon hl-source-type" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
-			} else if (showType && showsource){
+			
+			if (showType && showsource){
 				showType = '<img src="' + showType + '.png" class="icon hl-source-type" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
 			} else {
 				showType = "";
+			}
+			
+			if (data.sourceImg && customSource){
+				showType += '<img src="' + data.sourceImg + '" class="icon hl-source-type" onerror="this.style.display=\'none\'" />';
 			}
 			
 			var timeArrived = "";
@@ -1234,7 +1256,6 @@
 			
 			if (speech && !bot){
 				var msgPlain = document.getElementById('content_'+data.counter); // text only
-				console.log(data);
 				
 				if (data.hasDonation){
 					

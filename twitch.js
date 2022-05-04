@@ -1,4 +1,64 @@
 (function () {
+	
+	async function fetchWithTimeout(resource, options = {}) { // https://dmitripavlutin.com/timeout-fetch-request/
+	  const { timeout = 8000 } = options;
+	  
+	  const controller = new AbortController();
+	  const id = setTimeout(() => controller.abort(), timeout);
+	  const response = await fetch(resource, {
+		...options,
+		signal: controller.signal  
+	  });
+	  clearTimeout(id);
+	  return response;
+	}
+	
+	async function getTwitchAvatarImage(username){
+		const response = await fetchWithTimeout("https://twitch.action.wtf/username/"+encodeURIComponent(username), {
+		  timeout: 10000 // in case server goes down, only wait two-seconds.
+		}).then(response => {
+			response.text().then(function (text) {
+				if (text.startsWith("https://")){
+					brandedImageURL = text;
+				} else {
+					console.log("No avatar image URL found. Invalid username?");
+				}
+			});
+		}).catch(error => {
+			console.log("Couldn't get avatar image URL. API service down?");
+		});
+	}
+	
+	var brandedImageURL = "";
+	var xx = window.location.pathname.split("/");
+	var index = xx.indexOf("chat");
+	if (index > -1) {
+	  xx.splice(index, 1); // 2nd parameter means remove one item only
+	}
+	index = xx.indexOf("u");
+	if (index > -1) {
+	  xx.splice(index, 1); // 2nd parameter means remove one item only
+	}
+	index = xx.indexOf("moderator");
+	if (index > -1) {
+	  xx.splice(index, 1); // 2nd parameter means remove one item only
+	}
+	index = xx.indexOf("dashboard");
+	if (index > -1) {
+	  xx.splice(index, 1); // 2nd parameter means remove one item only
+	}
+	index = xx.indexOf("");
+	if (index > -1) {
+	  xx.splice(index, 1); // 2nd parameter means remove one item only
+	}
+	index = xx.indexOf("popout");
+	if (index > -1) {
+	  xx.splice(index, 1); // 2nd parameter means remove one item only
+	}
+	if (xx[0]){
+		getTwitchAvatarImage(xx[0]);
+	}
+	
 	function processMessage(ele){	// twitch
 	  var chatsticker = false;
 	  var chatmessage = "";
@@ -96,6 +156,9 @@
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = "";
 	  data.type = "twitch";
+	  if (brandedImageURL){
+		data.sourceImg = brandedImageURL;
+	  }
 	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
