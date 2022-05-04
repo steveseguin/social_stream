@@ -31,10 +31,15 @@
 			  //
 		  }
 	  }
+	var name = "";
 	try{
-		var name = ele.childNodes[1].querySelector('a[role="link"]').innerText;
+		name = ele.childNodes[1].childNodes[0].querySelector('span[dir="auto"]').innerText;
 	} catch(e){
-		return;
+		try{
+			name = ele.childNodes[1].childNodes[0].querySelector('a[role="link"]').innerText;
+		} catch(e){
+			return;
+		}
 	}
 	  if (name){
 		name = name.trim();
