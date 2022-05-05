@@ -74,6 +74,69 @@ function pushSettingChange(setting){
 		}
 	});
 }
+
+function sleep(ms = 0) {
+	return new Promise(r => setTimeout(r, ms)); // LOLz!
+}
+
+var Url2ChannelImg = {};
+var vid2ChannelImg = {};
+
+function getYoutubeAvatarImage(url, skip=false){
+	try {
+		if (url in Url2ChannelImg){return Url2ChannelImg[url];}
+		Url2ChannelImg[url] = ""; // prevent spamming of the API
+		//Url2ChannelImg = Url2ChannelImg.slice(-100); // caching limits
+		var videoid = YouTubeGetID(url);
+		if (videoid){
+			if (videoid in vid2ChannelImg){return vid2ChannelImg[videoid];}
+			vid2ChannelImg[videoid] = "";
+			//vid2ChannelImg = vid2ChannelImg.slice(-100); // caching limits
+			const xhttp = new XMLHttpRequest();
+			xhttp.onload = function() {
+				if (this.responseText.startsWith("https://")){
+					Url2ChannelImg[url] = this.responseText;
+					vid2ChannelImg[videoid] = this.responseText;
+				}
+			}
+			xhttp.open("GET", "https://api.socialstream.ninja/youtube/channel?video="+encodeURIComponent(videoid), true);
+			xhttp.send();
+			if (skip){return;}
+			sleep(200);
+			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];} // a hacky/lazy way to wait for the response to complete
+			sleep(200);
+			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];}
+			sleep(200);
+			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];}
+			sleep(200);
+			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];}
+			sleep(200);
+			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];}
+			sleep(200);
+			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];}
+			sleep(200);
+			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];}
+			sleep(200);
+			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];}
+			sleep(200);
+			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];}
+			sleep(200);
+			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];}
+		}
+	} catch(e){console.error(e);}
+	return false;
+}
+function YouTubeGetID(url){
+  var ID = '';
+  url = url.replace(/(>|<)/gi,'').split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/);
+  if(url[2] !== undefined) {
+	ID = url[2].split(/[^0-9a-z_\-]/i);
+	ID = ID[0];
+  } else {
+	ID = url;
+  }
+  return ID;
+}
 		
 chrome.runtime.onMessage.addListener(
     async function (request, sender, sendResponse) {
@@ -143,6 +206,15 @@ chrome.runtime.onMessage.addListener(
 								return;
 							}
 						} catch(e){}
+					}
+					
+					if (request.message.type == "youtube"){
+						if (sender.tab.url){
+							var brandURL = getYoutubeAvatarImage(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
+							if (brandURL){
+								request.message.sourceImg = brandURL;
+							}
+						}
 					}
 					
 					try{
@@ -281,17 +353,12 @@ function _min(d0, d1, d2, bx, ay){
 
 function verifyOriginal(msg){
 	try {
-		console.log(Date.now(), lastSentTimestamp, Date.now() - lastSentTimestamp);
 		if (Date.now() - lastSentTimestamp > 5000){ // 2 seconds has passed; assume good.
 			return true;
 		}
-		console.log( cleanText + " | " +lastSentMessage);
-		console.log(msg.chatmessage);
 		var cleanText = msg.chatmessage.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
 		cleanText = cleanText.replace(/\s\s+/g, ' ');
 		var score = levenshtein(cleanText, lastSentMessage);
-		// levenshtein(a,b)
-		console.log("score: "+score+  " - "+ cleanText + " | " +lastSentMessage);
 		if (score<7){
 			if (lastMessageCounter){return false;}
 			lastMessageCounter=1;
@@ -376,8 +443,11 @@ function processResponse(data){
 					} else {
 						generalFakeChat(tabs[i].id, data.response, false);
 					}
-				
 				} else {  // all other destinations. ; generic
+				
+					if (tabs[i].url.includes("youtube.com/live_chat")){
+						getYoutubeAvatarImage(tabs[i].url, true); // see if I can pre-cache the channel image, if not loaded.
+					}
 				
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
@@ -495,9 +565,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			}
 			if (data.sentiment<.10){return null;} // 1.0 is good; 0.0 is bad, so 0.1 is likely bad.
 		}catch(e){}
-	} else {
-		console.log(settings);
-	}
+	} 
 	
 	if (settings.comment_background){
 		if (!data.backgroundColor){
@@ -566,15 +634,11 @@ try {
 				
 				WebMidi.enable().then(() =>{
 					setupMIDI();
-					
 					WebMidi.addListener("connected", function(e) {
-						console.log(e);
 						setupMIDI(e.target._midiInput);
 					});
 					WebMidi.addListener("disconnected", function(e) {
-						console.log(e);
 					});
-					console.log(WebMidi.inputs);
 				});
 			} else {
 				try {

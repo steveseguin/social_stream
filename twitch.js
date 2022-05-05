@@ -1,31 +1,14 @@
 (function () {
 	
-	async function fetchWithTimeout(resource, options = {}) { // https://dmitripavlutin.com/timeout-fetch-request/
-	  const { timeout = 8000 } = options;
-	  
-	  const controller = new AbortController();
-	  const id = setTimeout(() => controller.abort(), timeout);
-	  const response = await fetch(resource, {
-		...options,
-		signal: controller.signal  
-	  });
-	  clearTimeout(id);
-	  return response;
-	}
-	
-	async function getTwitchAvatarImage(username){
-		const response = await fetchWithTimeout("https://twitch.action.wtf/username/"+encodeURIComponent(username), {
-		  timeout: 10000 // in case server goes down, only wait two-seconds.
-		}).then(response => {
+	function getTwitchAvatarImage(username){
+		fetch("https://twitch.action.wtf/username/"+encodeURIComponent(username)).then(response => {
 			response.text().then(function (text) {
 				if (text.startsWith("https://")){
 					brandedImageURL = text;
-				} else {
-					console.log("No avatar image URL found. Invalid username?");
-				}
+				} 
 			});
 		}).catch(error => {
-			console.log("Couldn't get avatar image URL. API service down?");
+			//console.log("Couldn't get avatar image URL. API service down?");
 		});
 	}
 	

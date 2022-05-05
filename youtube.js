@@ -13,139 +13,138 @@
 	  xhr.responseType = 'blob';
 	  xhr.send();
 	}
-
+	
 	function processMessage(ele, wss=true){
-	  if(ele.hasAttribute("is-deleted")) {
-		return;
-	  }
-	  
-	  var chatmessage = "";
-	  var chatname = "";
-	  var chatimg = "";
-	  var srcImg = ""; // what shows up as the source image; blank is default (dock decides).
-	  
-	  try{
-		chatname = ele.querySelector("#author-name").innerText;
-	  } catch(e){}
-	  
-	  if (!textOnlyMode){
-		  try{
-			chatmessage = ele.querySelector("#message").innerHTML;
-		  } catch(e){}
-	  } else {
-		  try{
-			var cloned = ele.querySelector("#message").cloneNode(true);
-			var children = cloned.querySelectorAll("[alt]");
-			for (var i =0;i<children.length;i++){
-				children[i].outerHTML = children[i].alt;
-			}
-			var children = cloned.querySelectorAll('[role="tooltip"]');
-			for (var i =0;i<children.length;i++){
-				children[i].outerHTML = "";
-			}
-			chatmessage = cloned.innerText;
-		  } catch(e){}
-	  }
-	  
-	  try{
-		chatimg = ele.querySelector("#img").src;
-		if (chatimg.startsWith("data:image/gif;base64") || (ele.getAttribute("author-type")=="owner")){
-			chatimg = document.querySelector("#panel-pages").querySelector("#img").src; // this is the owner
-		}
-		chatimg = chatimg.replace("=s32-", "=s128-");
-		chatimg = chatimg.replace("=s64-", "=s128-");
-	  } catch(e){}
-	  
-	  var chatdonation = "";
-	  try{
-		chatdonation = ele.querySelector("#purchase-amount").innerHTML;
-	  } catch(e){}
-	  
-	  var chatmembership = "";
-	  try{
-		chatmembership = ele.querySelector(".yt-live-chat-membership-item-renderer #header-subtext").innerHTML;
-	  } catch(e){}
-	  
-	  var chatsticker = "";
-	  try{
-		chatsticker = ele.querySelector(".yt-live-chat-paid-sticker-renderer #img").src;
-	  } catch(e){}
-	  
-	  if (chatsticker) {
-		chatdonation = ele.querySelector("#purchase-amount-chip").innerHTML;
-	  }
-
-	  var chatbadges = "";
-	  try{
-		chatbadges = ele.querySelector("#chat-badges .yt-live-chat-author-badge-renderer img").parentNode.innerHTML;
-	  } catch(e){}
-	  
-
-	  var hasDonation = '';
-	  if (chatdonation) {
-		hasDonation = chatdonation
-	  }
-
-	  var hasMembership = '';
-	  
-	  if (chatmembership) {
-		  if (chatmessage){
-			  hasMembership = '<div class="donation membership">MEMBER CHAT</div>';
-		  } else {
-			hasMembership = '<div class="donation membership">NEW MEMBER!</div>';
-			chatmessage = chatmembership;
+		  if(ele.hasAttribute("is-deleted")) {
+			return;
 		  }
-	  }
+		  
+		  var chatmessage = "";
+		  var chatname = "";
+		  var chatimg = "";
+		  var srcImg = ""; // what shows up as the source image; blank is default (dock decides).
+		  
+		  try{
+			chatname = ele.querySelector("#author-name").innerText;
+		  } catch(e){}
+		  
+		  if (!textOnlyMode){
+			  try{
+				chatmessage = ele.querySelector("#message").innerHTML;
+			  } catch(e){}
+		  } else {
+			  try{
+				var cloned = ele.querySelector("#message").cloneNode(true);
+				var children = cloned.querySelectorAll("[alt]");
+				for (var i =0;i<children.length;i++){
+					children[i].outerHTML = children[i].alt;
+				}
+				var children = cloned.querySelectorAll('[role="tooltip"]');
+				for (var i =0;i<children.length;i++){
+					children[i].outerHTML = "";
+				}
+				chatmessage = cloned.innerText;
+			  } catch(e){}
+		  }
+		  
+		  try{
+			chatimg = ele.querySelector("#img").src;
+			if (chatimg.startsWith("data:image/gif;base64") || (ele.getAttribute("author-type")=="owner")){
+				chatimg = document.querySelector("#panel-pages").querySelector("#img").src; // this is the owner
+			}
+		  } catch(e){}
+		  
+		  var chatdonation = "";
+		  try{
+			chatdonation = ele.querySelector("#purchase-amount").innerHTML;
+		  } catch(e){}
+		  
+		  var chatmembership = "";
+		  try{
+			chatmembership = ele.querySelector(".yt-live-chat-membership-item-renderer #header-subtext").innerHTML;
+		  } catch(e){}
+		  
+		  var chatsticker = "";
+		  try{
+			chatsticker = ele.querySelector(".yt-live-chat-paid-sticker-renderer #img").src;
+		  } catch(e){}
+		  
+		  if (chatsticker) {
+			chatdonation = ele.querySelector("#purchase-amount-chip").innerHTML;
+		  }
 
-	  if (chatsticker) {
-		chatmessage = '<img src="'+chatsticker+'">';
-	  }
-	  
-	  var backgroundColor = "";
-	  
-	  var textColor = "";
-	  if (ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color')) {
-		backgroundColor = "background-color: "+ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color')+";";
-		textColor = "color: #111;";
-	  }
+		  var chatbadges = "";
+		  try{
+			chatbadges = ele.querySelector("#chat-badges .yt-live-chat-author-badge-renderer img").parentNode.innerHTML;
+		  } catch(e){}
+		  
 
-	  if (ele.style.getPropertyValue('--yt-live-chat-sponsor-color')) {
-		backgroundColor = "background-color: "+ele.style.getPropertyValue('--yt-live-chat-sponsor-color')+";";
-		textColor = "color: #111;";
-	  }
-	  
-	  srcImg = document.querySelector("#input-panel");
-	  if (srcImg){
-		  srcImg = srcImg.querySelector("#img");
+		  var hasDonation = '';
+		  if (chatdonation) {
+			hasDonation = chatdonation
+		  }
+
+		  var hasMembership = '';
+		  
+		  if (chatmembership) {
+			  if (chatmessage){
+				  hasMembership = '<div class="donation membership">MEMBER CHAT</div>';
+			  } else {
+				hasMembership = '<div class="donation membership">NEW MEMBER!</div>';
+				chatmessage = chatmembership;
+			  }
+		  }
+
+		  if (chatsticker) {
+			chatmessage = '<img src="'+chatsticker+'">';
+		  }
+		  
+		  var backgroundColor = "";
+		  
+		  var textColor = "";
+		  if (ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color')) {
+			backgroundColor = "background-color: "+ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color')+";";
+			textColor = "color: #111;";
+		  }
+
+		  if (ele.style.getPropertyValue('--yt-live-chat-sponsor-color')) {
+			backgroundColor = "background-color: "+ele.style.getPropertyValue('--yt-live-chat-sponsor-color')+";";
+			textColor = "color: #111;";
+		  }
+		  
+		  srcImg = document.querySelector("#input-panel");
 		  if (srcImg){
-			  srcImg = srcImg.src || "";
+			  srcImg = srcImg.querySelector("#img");
+			  if (srcImg){
+				  srcImg = srcImg.src || "";
+			  } else {
+				  srcImg = "";
+			  }
 		  } else {
 			  srcImg = "";
 		  }
-	  } else {
-		  srcImg = "";
-	  }
-	  
-
-	  var data = {};
-	  data.chatname = chatname;
-	  data.chatbadges = chatbadges;
-	  data.backgroundColor = backgroundColor;
-      data.textColor = textColor;
-	  data.chatmessage = chatmessage;
-	  data.chatimg = chatimg;
-	  data.hasDonation = hasDonation;
-	  data.hasMembership = hasMembership;
-	  data.type = "youtube";
-	  data.sourceImg = srcImg;
+		
+		var data = {};
+		data.chatname = chatname;
+		data.chatbadges = chatbadges;
+		data.backgroundColor = backgroundColor;
+		data.textColor = textColor;
+		data.chatmessage = chatmessage;
+		data.chatimg = chatimg;
+		data.hasDonation = hasDonation;
+		data.hasMembership = hasMembership;
+		data.type = "youtube";
 	  
 		if (data.chatimg && avatars){
-			toDataURL(data.chatimg, function(dataUrl) {
-				data.chatimg = dataUrl;
-				try {
-					chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
-				} catch(e){}
-			});
+			//data.chatimg = data.chatimg.replace("=s32-", "=s128-");  // this is all for HD by default.  Too much CPU usage though
+			//data.chatimg = data.chatimg.replace("=s64-", "=s128-");
+			//
+			//toDataURL(data.chatimg, function(dataUrl) {
+			//	data.chatimg = dataUrl;
+			try {
+				chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
+			} catch(e){}
+			//});
 		} else {
 			data.chatimg = "";
 			try {
@@ -153,7 +152,10 @@
 			} catch(e){}
 		}
 	}
-
+	
+	var avatars = true;
+	var textOnlyMode = false;
+	
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
@@ -185,8 +187,7 @@
 			sendResponse(false);
 		}
 	);
-	var avatars = true;
-	var textOnlyMode = false;
+	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			if ("textonlymode" in response.settings){

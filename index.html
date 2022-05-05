@@ -708,7 +708,9 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	} catch(e){}
 	
 	function errorImage(ele){
-		if (fallbackImage){
+		if (ele.dataset.backupImage){
+			ele.src = ele.dataset.backupImage;
+		} else if (fallbackImage){
 			ele.src = "unknown.png";
 		} else {
 			ele.style.display = "none";
@@ -850,7 +852,11 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				
 				var avatarImg = "";
 				if (avatar){
-					avatarImg = '<div class="hl-img" '+styleOverrideName+'><img id="img_'+data.chatname+'" src="' + data.chatimg + '" class="hl-profile-pic" onerror="errorImage(this);">'+showType+'</div>';
+					if (data.backupChatimg){
+						avatarImg = '<div class="hl-img" '+styleOverrideName+'><img id="img_'+data.chatname+'" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="'+data.backupChatimg+'"onerror="errorImage(this);">'+showType+'</div>';
+					} else {
+						avatarImg = '<div class="hl-img" '+styleOverrideName+'><img id="img_'+data.chatname+'" src="' + data.chatimg + '" class="hl-profile-pic" onerror="errorImage(this);">'+showType+'</div>';
+					}
 				} else {
 					avatarImg = showType;
 				}

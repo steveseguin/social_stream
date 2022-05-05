@@ -806,6 +806,20 @@
 		}
 	}
 	
+	function toDataURL(url, callback) {
+	  var xhr = new XMLHttpRequest();
+	  xhr.onload = function() {
+		var reader = new FileReader();
+		reader.onloadend = function() {
+		  callback(reader.result);
+		}
+		reader.readAsDataURL(xhr.response);
+	  };
+	  xhr.open('GET', url);
+	  xhr.responseType = 'blob';
+	  xhr.send();
+	}
+	
 	var fallbackImage = new Image();
 	fallbackImage.src = "unknown.png";
 	fallbackImage.onerror = function(){
@@ -931,7 +945,29 @@
 					sendDataP2P(data);
 				}
 			});
+		} else if (data.type && (data.type == "youtube") && data.chatimg){
+			if (thirdPartyAPI){
+				thirdPartyAPI(data);
+			} else {
+				toDataURL(data.chatimg, function(base64Image){
+					data.chatimg = data.chatimg.replace("=s32-", "=s128-");  // Increases the resolution of the image
+					data.chatimg = data.chatimg.replace("=s64-", "=s128-");
+					if (base64Image){
+						data.backupChatimg = base64Image;
+					}
+					sendDataP2P(data);
+				});
+			}
+		
 		} else {
+		
+			// convert to base64 if Youtube; pass as a "backup" image.
+			
+			
+			//data.chatimg = data.chatimg.replace("=s32-", "=s128-");  // this is all for HD by default.  Too much CPU usage though
+			//data.chatimg = data.chatimg.replace("=s64-", "=s128-");
+		
+		
 			if (thirdPartyAPI){
 				thirdPartyAPI(data);
 			} else {
