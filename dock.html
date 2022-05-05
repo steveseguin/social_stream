@@ -900,7 +900,7 @@
 			var ccc = data.counter;
 			var imgnode = document.getElementById("img_"+ccc);
 			
-			fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?"+encodeURIComponent(data.chatname), {
+			fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username="+encodeURIComponent(data.chatname), {
 			  timeout: 2000 // in case server goes down, only wait two-seconds.
 			}).then(response => {
 				response.text().then(function (text) {

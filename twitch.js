@@ -1,7 +1,7 @@
 (function () {
 	
 	function getTwitchAvatarImage(username){
-		fetch("https://api.socialstream.ninja/twitch/avatar?"+encodeURIComponent(username)).then(response => {
+		fetch("https://api.socialstream.ninja/twitch/avatar?username="+encodeURIComponent(username)).then(response => {
 			response.text().then(function (text) {
 				if (text.startsWith("https://")){
 					brandedImageURL = text;
