@@ -1,10 +1,11 @@
 # Social Stream
 Consolidate your live social messaging streams
 
-- Supports live automated two-way chat messaging with Facebook, Youtube, Twitch, and more
-- Includes a "featured chat" overlay, with messages selectable via the dockable dashboard
-- Supports bot-commands and automated chat responses, with custom logic plugin support.
+- Supports live automated two-way chat messaging with Facebook, Youtube, Twitch, Zoom, and dozens more
+- Includes a "featured chat" overlay, with messages selectable via the dockable dashboard; auto or manual selection.
+- Supports bot-commands and automated chat responses, with custom logic supported via scriptable plugin file.
 - Text-to-speech support, along with many other niche features supported.
+- Multi-channel source-icon support, so you can differentiate between different streams and creators
 - No user login, API key, or permission needed to capture the chat messages from most sites and services.
 
 Social Stream makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
@@ -227,6 +228,18 @@ You can get a list of support languages on your system by running `speechSynthes
 The audio will play out the default system audio output device. This might be a problem if using OBS for capture, as you'll need to use a virtual audio cable to capture the audio output of the system output and route it back into OBS for capture.  See the related issue here: https://github.com/w3c/mediacapture-output/issues/102
 
 If loading the app in the Chrome/Edge/Firefox browser, you will need to "click" the web page first before audio will play. This isn't the case with OBS, but most browsers require the user interact with the website on some level before it will play audio.  Please keep this in mind when testing things.
+
+There is a toggle in the dock to turn off and on the text-to-speech; turning it off whill automatically stop any audio playout. Still, be careful when using text-to-speech with the dock, as viewers can exploit it to have your system read out unwanted things on air.
+
+### Branded channel support
+
+There is a toggle that lets you show the source of the chat messages.
+
+- &branded will show the channel-icon; Youtube and Twitch channels supported.  Use with the dock or index file.
+- &showsource can be added to the index.file, to show the main site the source is from; ie: Youtube, Facebook.
+
+![image](https://user-images.githubusercontent.com/2575698/166864138-00cd1e1c-2149-473f-be8d-d07a8d400c07.png)
+
 
 ### Known issues or solutions
 
