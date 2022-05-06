@@ -862,9 +862,11 @@
 		//mainOutputWindow.appendChild(node);
 	}
 	
-	function nextInQueue(){
+	function nextInQueue(){ 
 		if (!selectedQueue.length){
+			sendDataP2P(false);
 			document.getElementById("next_in_queue").innerHTML = "Queue Empty";
+			document.getElementById("next_in_queue").title = "Clicking will clear any active overlay, since no next-message left in queue";
 			return;
 		}
 		element = selectedQueue.shift();
@@ -872,8 +874,10 @@
 		element.classList.remove("queued");
 		if (!selectedQueue.length){
 			document.getElementById("next_in_queue").innerHTML = "Queue Empty";
+			document.getElementById("next_in_queue").title = "Clicking will clear the active overlay, since no next-message left in queue";
 		} else {
 			document.getElementById("next_in_queue").innerHTML = "Next in Queue ("+selectedQueue.length+")";
+			document.getElementById("next_in_queue").title = "Hold CTRL when selecting messages to add them to the queue instead";
 		}
 	}
 	
