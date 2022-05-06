@@ -207,6 +207,20 @@ chrome.runtime.onMessage.addListener(
 							}
 						} catch(e){}
 					}
+					if (!settings.slack){
+						try {
+							if (request.message.type == "slack"){
+								return;
+							}
+						} catch(e){}
+					}
+					if (!settings.telegram){
+						try {
+							if (request.message.type == "telegram"){
+								return;
+							}
+						} catch(e){}
+					}
 					
 					if (request.message.type == "youtube"){
 						if (sender.tab.url){

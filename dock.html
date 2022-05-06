@@ -10,6 +10,7 @@
 	
 		:root {
 			--show-emoji-only: flex;
+			--show-donos-only: flex;
 			--scale-output-moz: scale(1.0);
 			--scale-output: 1.0;
 			--font-color: #000;
@@ -25,6 +26,10 @@
 	
 		.noText {
 			display: var(--show-emoji-only) !important;
+		}
+		
+		.noDono {
+			display: var(--show-donos-only) !important;
 		}
 
 		#output { 
@@ -414,6 +419,7 @@
 		<button id="tts" data-state="0" onclick="speech = !speech; window.speechSynthesis.cancel(); this.classList.toggle('pressed');" title="Toggle whether to read out-loud incoming messages using text-to-speech">🔊</button>
 		<input id="filter_messages" onchange="filterMessages(this.value);" placeholder="Filter messages" type="text" />
 		<button id="hide_emoji" data-state="0" onclick="emoji(this);" title="Hide all emoji-only messages">🚫🙂</button>
+		<button id="only_donos" data-state="0" onclick="donos(this);" title="Show only messages that have donations/cheer">🤑</button>
 		<button id="say_hello" data-state="0" onclick="toggleChat();" title="Send a text message to all social endpoints">💬</button>
 		<input type="text" id="chatInput" style="display:none;" placeholder="Say something.." />
 		<button id="jumpto" data-state="0" onclick="jumptoBottom(this);" title="Jump to bottom">V</button>
@@ -653,6 +659,18 @@
 		} else {
 			ele.dataset.state = "0";
 			document.documentElement.style.setProperty("--show-emoji-only", "flex");
+			ele.classList.remove("pressed");
+		}
+	}
+	
+	function donos(ele){
+		if (ele.dataset.state=="0"){
+			ele.dataset.state = "1";
+			document.documentElement.style.setProperty("--show-donos-only", "none");
+			ele.classList.add("pressed");
+		} else {
+			ele.dataset.state = "0";
+			document.documentElement.style.setProperty("--show-donos-only", "flex");
 			ele.classList.remove("pressed");
 		}
 	}
@@ -1124,6 +1142,8 @@
 			
 			if (data.hasDonation){
 				node.classList.add("donation");
+			} else {
+				node.classList.add("noDono");
 			}
 			
 			if (data.hasMembership){
@@ -1145,6 +1165,7 @@
 			if (!document.getElementById("content_"+data.counter).innerText.trim().length){
 				document.getElementById("msg_"+data.counter).classList.add("noText");
 			}
+			
 			
 			var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they don't fit
 			if (nameEle){
