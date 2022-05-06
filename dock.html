@@ -9,8 +9,8 @@
 	<style>
 	
 		:root {
-			--show-emoji-only: flex;
-			--show-donos-only: flex;
+			--show-emoji-only: flex ;
+			--show-donos-only: visible;
 			--scale-output-moz: scale(1.0);
 			--scale-output: 1.0;
 			--font-color: #000;
@@ -29,7 +29,7 @@
 		}
 		
 		.noDono {
-			display: var(--show-donos-only) !important;
+			visibility: var(--show-donos-only);
 		}
 
 		#output { 
@@ -52,7 +52,7 @@
 			background-color: var(--background-color);
 		}
 		
-		.bot {
+		.bot.compactmode {
 			padding: 5px 0;
 		}
 		
@@ -87,7 +87,6 @@
 			display:inline-block;
 		}
 		
-		
 		.highlight {
 			background-color:yellow!important;
 		}
@@ -110,10 +109,10 @@
 		.highlight-chat {
 			display:flex;
 			cursor:pointer;
-			min-height:28px;
-			transition: .5s all cubic-bezier(0.250, 0.250, 0.105, 1.2);
 			width:fit-content;
 			background-color: var(--highlight-base);
+			min-height: 28px;
+			transition: translate 0.25s ease-in-out;
 		}
 		
 		.notcompactmode>.hl-message{
@@ -132,7 +131,7 @@
 			width:100%;
 		}
 		
-		.highlight-chat:nth-child(odd){
+		.highlight-chat.odd{
 			background-color: var(--highlight-base2);
 		}
 		
@@ -147,7 +146,7 @@
 			padding-right:3px;
 		}
 		
-		.highlight-chat:nth-child(odd).compactmode{
+		.highlight-chat.odd.compactmode{
 			background-color: var(--highlight-compact2);
 		}
 		
@@ -155,7 +154,7 @@
 			background-color: #FEFFAD33;
 		}
 		
-		.highlight-chat:nth-child.donation(odd){
+		.highlight-chat.odd.donation{
 			background-color: #FDFF6533;
 		}
 		
@@ -163,7 +162,7 @@
 			background-color: #ADFEFF33;
 		}
 		
-		.highlight-chat:nth-child.member(odd){
+		.highlight-chat.odd.member{
 			background-color: #65FDFF33;
 		}
 		
@@ -366,12 +365,9 @@
 			bottom: 20px;
 		}
 		
-		
-		
 		input[type="text"] {
 			width: 110px;
 		}
-
 		input[type="text"]:focus {
 			width: 170px;
 		}
@@ -425,9 +421,6 @@
 		<button id="jumpto" data-state="0" onclick="jumptoBottom(this);" title="Jump to bottom">V</button>
 	<div>
 	<script>
-	
-	
-	
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
 		console.error(errorMsg);
 		console.error(lineNumber);
@@ -478,6 +471,7 @@
 	var html = document.documentElement;
 	var mainOutputWindow = document.getElementById("output");
 	var fileStream, writer, encode;
+	var odd = false;
 	
 	var timeoutDelay = 0;
 	if (urlParams.has("showtime")){
@@ -524,7 +518,6 @@
 			custombot = custombot.split(",");
 		}
 	}
-	
 	
 	var autoshow = false;
 	if (urlParams.has("autoshow")){
@@ -645,10 +638,8 @@
 	if (urlParams.has("hideshadow")){
 		document.documentElement.style.setProperty("--highlight-base", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-base2", "#0000", "important");
-		
 		document.documentElement.style.setProperty("--highlight-compact", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact2", "#0000", "important");
-		
 	}
 	
 	function emoji(ele){
@@ -661,18 +652,37 @@
 			document.documentElement.style.setProperty("--show-emoji-only", "flex");
 			ele.classList.remove("pressed");
 		}
+		redoOdd();
 	}
 	
 	function donos(ele){
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
-			document.documentElement.style.setProperty("--show-donos-only", "none");
+			document.documentElement.style.setProperty("--show-donos-only", "hidden");
 			ele.classList.add("pressed");
 		} else {
 			ele.dataset.state = "0";
-			document.documentElement.style.setProperty("--show-donos-only", "flex");
+			document.documentElement.style.setProperty("--show-donos-only", "visible");
 			ele.classList.remove("pressed");
 		}
+		redoOdd();
+	}
+	
+	function redoOdd(){
+		odd = false;
+		var nodes = mainOutputWindow.childNodes;
+		for (var i = 0;i<nodes.length;i++){
+			var style = window.getComputedStyle(nodes[i]);
+			if ((style.visibility !== "hidden") && (style.display !== "none")){
+				if (odd){
+					nodes[i].classList.add("odd");
+				} else {
+					nodes[i].classList.remove("odd");
+				}
+				odd = !odd;
+			}
+		}
+		
 	}
 	
 	function toggleTriggers(ele){
@@ -692,8 +702,6 @@
 			ele.classList.remove("pressed");
 		}
 	}
-	
-	
 	function pause(ele){
 		pauseState = !pauseState;
 		
@@ -998,6 +1006,43 @@
 		}
 	};
 	
+	function removeNode(){
+		var nodes = mainOutputWindow.childNodes;
+		var total2Remove = 0;
+		if (isOBSBrowserSource){ // This is an OBS browser source, so lets go light on it.
+			if (window.innerHeight>1600){
+				total2Remove =  nodes.length - 39;
+			} else if (window.innerHeight>1200){
+				total2Remove =  nodes.length - 30;
+			} else if (window.innerHeight>800){
+				total2Remove =  nodes.length - 22;
+			} else if (window.innerHeight>400){
+				total2Remove =  nodes.length - 14;
+			} else {
+				total2Remove =  nodes.length - 10;
+			}
+		} else if (customNodeLimit){
+			total2Remove =  nodes.length - customNodeLimit;
+		} else if (window.innerHeight>900){
+			total2Remove =  nodes.length - 80;
+		} else if (window.innerHeight>600){
+			total2Remove =  nodes.length - 70;
+		} else {
+			total2Remove =  nodes.length - 60;
+		}
+		if (total2Remove>0){
+			for (var i = total2Remove-1;i>=0;i--){
+				if (!nodes[i].timeout){
+					nodes[i].style.height = "0px !important";
+					nodes[i].style.minHeight = "0px";
+					nodes[i].timeout = setTimeout(function(ele){
+						ele.remove();
+					},250,nodes[i]);
+				}
+			}
+		}
+	}
+	
 	function processData(data){
 		if (data.contents){
 			data = data.contents;
@@ -1125,7 +1170,7 @@
 				chatname = '<div class="hl-name"></div>';
 			}
 			
-			var node = createElementFromHTML('<div id="msg_'+data.counter+'" class="highlight-chat" data-source-type="'+data.type+'">'
+			var node = createElementFromHTML('<div id="msg_'+data.counter+'" class="highlight-chat data-source-type="'+data.type+'">'
 				 + showType
 				 + chatImg
 				 + timeArrived
@@ -1160,22 +1205,29 @@
 				node.classList.add("notcompactmode");
 			}
 			
+			if (!node.querySelector("#content_"+data.counter).innerText.trim().length){
+				node.classList.add("noText");
+			}
+			
+			var style = window.getComputedStyle(node);
+			if ((style.visibility !== "hidden") && (style.display !== "none")){
+				if (odd){
+					node.classList.add("odd");
+				} 
+				odd = !odd;
+			}
+				
 			mainOutputWindow.appendChild(node);
 			
 			if (timeoutDelay){
 				setTimeout(function(node){ node.remove();},timeoutDelay, node);
 			}
 			
-			if (!document.getElementById("content_"+data.counter).innerText.trim().length){
-				document.getElementById("msg_"+data.counter).classList.add("noText");
-			}
-			
-			
 			var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they don't fit
 			if (nameEle){
 				var ccc =0;
 				while (nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight){
-					var fontsize = parseInt(window.getComputedStyle(document.querySelector(".hl-name")).fontSize);
+					var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
 					nameEle.style.fontSize = (fontsize-1)+"px";
 					ccc+=1;
 					if (ccc>10){break;}
@@ -1229,70 +1281,11 @@
 				}
 			}
 			
-			var nodes = mainOutputWindow.childNodes; // lets delete old nodes based on some factors.
+			 // lets delete old nodes based on some factors.
 			
-			if (isOBSBrowserSource){ // This is an OBS browser source, so lets go light on it.
-				if (window.innerHeight>1600){
-					if (nodes.length>39){
-						nodes[0].remove();
-						if (nodes.length>39){
-							nodes[0].remove();
-						}
-					}
-				} else if (window.innerHeight>1200){
-					if (nodes.length>30){
-						nodes[0].remove();
-						if (nodes.length>30){
-							nodes[0].remove();
-						}
-					}
-				} else if (window.innerHeight>800){
-					if (nodes.length>22){
-						nodes[0].remove();
-						if (nodes.length>22){
-							nodes[0].remove();
-						}
-					}
-				} else if (window.innerHeight>400){
-					if (nodes.length>14){
-						nodes[0].remove();
-						if (nodes.length>14){
-							nodes[0].remove();
-						}
-					}
-				} else if (nodes.length>10){
-					nodes[0].remove();
-					if (nodes.length>10){
-						nodes[0].remove();
-					}
-				}
-			} else if (customNodeLimit){
-				if (nodes.length>customNodeLimit){
-					nodes[0].remove();
-					if (nodes.length>customNodeLimit){
-						nodes[0].remove();
-					}
-				}
-			} else if (window.innerHeight>900){
-				if (nodes.length>80){
-					nodes[0].remove();
-					if (nodes.length>80){
-						nodes[0].remove();
-					}
-				}
-			} else if (window.innerHeight>600){
-				if (nodes.length>70){
-					nodes[0].remove();
-					if (nodes.length>70){
-						nodes[0].remove();
-					}
-				}
-			} else if (nodes.length>60){
-				nodes[0].remove();
-				if (nodes.length>60){
-					nodes[0].remove();
-				}
-			}
+			
+			
+			removeNode();
 			
 			var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
 			if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+150)) || forceAutoscroll){
