@@ -112,7 +112,6 @@
 			width:fit-content;
 			background-color: var(--highlight-base);
 			min-height: 28px;
-			transition: translate 0.25s ease-in-out;
 		}
 		
 		.notcompactmode>.hl-message{
@@ -1032,13 +1031,7 @@
 		}
 		if (total2Remove>0){
 			for (var i = total2Remove-1;i>=0;i--){
-				if (!nodes[i].timeout){
-					nodes[i].style.height = "0px !important";
-					nodes[i].style.minHeight = "0px";
-					nodes[i].timeout = setTimeout(function(ele){
-						ele.remove();
-					},250,nodes[i]);
-				}
+				ele.remove();
 			}
 		}
 	}
@@ -1280,10 +1273,6 @@
 					}
 				}
 			}
-			
-			 // lets delete old nodes based on some factors.
-			
-			
 			
 			removeNode();
 			
