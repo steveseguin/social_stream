@@ -1243,9 +1243,17 @@
 				var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they are longer than the message's height
 				if (nameEle){
 					var msgNode = node.querySelector(".hl-message");
-					if (msgNode){
+					if (msgNode && msgNode.innerText){
 						var ccc =0;
 						while (msgNode.clientHeight < nameEle.clientHeight || nameEle.clientHeight < nameEle.scrollHeight || nameEle.clientWidth < nameEle.scrollWidth){
+							var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
+							nameEle.style.fontSize = (fontsize-1)+"px";
+							ccc+=1;
+							if (ccc>8){break;}
+						}
+					} else {
+						var ccc =0;
+						while (nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight){
 							var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
 							nameEle.style.fontSize = (fontsize-1)+"px";
 							ccc+=1;
