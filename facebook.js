@@ -168,6 +168,12 @@
 								dupCheck.push(main[j].parentNode.id);
 								//if (main[j].parentNode.id.startsWith("client:")){continue;}
 								//processMessage(main[j]);
+							} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id && (main[j].parentNode.tagName == "LI")){
+								var id = main[j].querySelector("[id]");
+								if (id && !(dupCheck.includes(id))){
+									dupCheck.push(id);
+									processMessage(main[j]); // might as well, since its an archived video
+								}
 							}
 						} 
 					} catch(e){}
@@ -194,6 +200,12 @@
 									dupCheck.push(main[j].parentNode.id);
 									if (main[j].parentNode.id.startsWith("client:")){continue;}
 									processMessage(main[j]);
+								}  else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id && (main[j].parentNode.tagName == "LI")){
+									var id = main[j].querySelector("[id]");  // an archived video
+									if (id && !(dupCheck.includes(id))){
+										dupCheck.push(id);
+										processMessage(main[j]);
+									}
 								}
 							} 
 						} catch(e){}
