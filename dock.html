@@ -61,14 +61,7 @@
 			font-style: italic;
 		}
 		
-		.hl-name {
-			font-weight: 700;
-			margin: auto 5px auto 5px;
-			position:relative;
-			left: 0;
-			width: fit-content;
-			color: var(--font-color-name);
-		}
+		
 		
 		.hl-badges {
 			max-width:28px;
@@ -115,17 +108,25 @@
 			min-height: 28px;
 		}
 		
+		.hl-name {
+			font-weight: 700;
+			margin: auto 5px auto 5px;
+			position:relative;
+			left: 0;
+			width: fit-content;
+			color: var(--font-color-name);
+			display:inline-block;
+		}
 		.notcompactmode>.hl-message{
 			width: 100%;
 			line-height:22px;
 		}
 		.notcompactmode>.hl-name{
-			font-weight: 700;
 			margin: auto 10px auto 5px;
 			min-width: 148px;
 			max-width: 220px;
 			white-space: unset;
-			overflow:hidden;
+			overflow: hidden;
 		}
 		
 		.notcompactmode>.highlight-chat{
@@ -642,6 +643,10 @@
 		document.documentElement.style.setProperty("--highlight-compact", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact2", "#0000", "important");
 	}
+	var firstNamesOnly = false
+	if (urlParams.has("firstnamesonly") || urlParams.has("firstname") || urlParams.has("firstnames")){
+		firstNamesOnly = true;
+	}
 	
 	function emoji(ele){
 		if (ele.dataset.state=="0"){
@@ -1152,6 +1157,22 @@
 				} else if (custombot && custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){ // because why not. :)
 					bot = true;
 				}
+				
+				if (firstNamesOnly){
+					var nn = data.chatname.split(" ");
+					if (nn.length>1){
+						if (nn[0].length<=2){
+							if (nn[1].length<6){
+								data.chatname = nn[0] + " " +nn[1];
+							} else {
+								data.chatname = nn[0];
+							}
+						} else {
+							data.chatname = nn[0];
+						}
+					}
+				}
+				
 				if (compactmode){
 					if (bot){
 						chatname = '<div class="hl-name"></div>';
@@ -1218,14 +1239,30 @@
 				setTimeout(function(node){ node.remove();},timeoutDelay, node);
 			}
 			
-			var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they don't fit
-			if (nameEle){
-				var ccc =0;
-				while (nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight){
-					var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
-					nameEle.style.fontSize = (fontsize-1)+"px";
-					ccc+=1;
-					if (ccc>10){break;}
+			if (compactmode){
+				var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they are longer than the message's height
+				if (nameEle){
+					var msgNode = node.querySelector(".hl-message");
+					if (msgNode){
+						var ccc =0;
+						while (msgNode.clientHeight < nameEle.clientHeight || nameEle.clientHeight < nameEle.scrollHeight || nameEle.clientWidth < nameEle.scrollWidth){
+							var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
+							nameEle.style.fontSize = (fontsize-1)+"px";
+							ccc+=1;
+							if (ccc>8){break;}
+						}
+					}
+				}
+			} else {
+				var nameEle = node.querySelector(".hl-name"); // we're going to resize long un-breaking names to be smaller if they don't fit
+				if (nameEle){
+					var ccc =0;
+					while (nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight){
+						var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
+						nameEle.style.fontSize = (fontsize-1)+"px";
+						ccc+=1;
+						if (ccc>8){break;}
+					}
 				}
 			}
 			
