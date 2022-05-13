@@ -7,6 +7,7 @@ Consolidate your live social messaging streams
 - Text-to-speech support, along with many other niche features supported.
 - Multi-channel source-icon support, so you can differentiate between different streams and creators
 - No user login, API key, or permission needed to capture the chat messages from most sites and services.
+- Queuing of messages for later highlighting
 
 Social Stream makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
 
@@ -188,6 +189,10 @@ You can create your own custom auto-responding triggers or other actions by incl
 Included in the code is the `custom_sample.js` file, which you can rename to custom.js to get started. Included in it is the `&auto1` trigger, which  auto responds "1" to any message that is also "1".  You need to add `&auto1` to the dock's URL to activate it.
 
 It's fairly easy to modify the `auto1` trigger to do whatever you want. You can also customize or removee the URL-parameter trigger needed to activate it.
+
+### Queuing messages
+
+If you hold CTRL (or cmd on mac), you can select messages in the dock that get added to a queue.  A button should appear in the top dock menu bar that will let you cycle through the queue, one at a time.  When pressing the Next in Queue button, messages from the queue will appear as featured chat messages in the overlay page.
 
 ### Togglable Menu Commands 
 
