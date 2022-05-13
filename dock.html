@@ -913,6 +913,17 @@
 			element = this;
 		}
 		if (event && (event.ctrlKey || event.metaKey)) {
+			if (element.classList.contains("queued")){
+				element.classList.remove("queued");
+				for (var i = 0; i < selectedQueue.length; i++){ 
+					if ( selectedQueue[i] === element) { 
+						selectedQueue.splice(i, 1); 
+						document.getElementById("next_in_queue").innerHTML = "Next in Queue ("+selectedQueue.length+")";
+						return;
+					}
+				}
+				return;
+			}
 			selectedQueue.push(element);
 			element.classList.add("queued");
 			document.getElementById("next_in_queue").classList.remove("hidden");
