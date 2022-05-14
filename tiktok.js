@@ -20,11 +20,11 @@
 	}
 
 	function processMessage(ele){
-		
+		console.log(ele);
 		
 		var chatimg="";
 		try{
-			chatimg = ele.childNodes[0].querySelector("img");
+			chatimg = ele.children[0].querySelector("img");
 			if (!chatimg){
 				chatimg = "";
 			} else {
@@ -62,47 +62,54 @@
 		data.hasMembership = "";;
 		data.contentimg = "";
 		data.type = "tiktok";
-	  
-		if (data.chatimg){
-			toDataURL(data.chatimg, function(dataUrl) {
-				data.chatimg = dataUrl;
-				pushMessage(data);
-			});
-		} else {
-			data.chatimg = "";
-			pushMessage(data);
-		}
+		
+		console.log(data);
+		
+		pushMessage(data);
 	}
 	
 	
 	function start() {
+		
+		var target = document.querySelector('[class*="DivChatRoomContainer"]');
+		if (!target){
+			return;
+		}
+		
+		if (!(window.location.pathname.includes("@") && window.location.pathname.includes("live"))){
+			return;
+		}
+		
+		if (target.set123){
+			return;
+		} else {
+			target.set123 = true;
+		}
+		
 		console.log("STARTED SOCIAL STREAM");
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
-				console.log(mutation.addedNodes);
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i].className.indexOf("ChatMessageItem")>-1){
-								processMessage(mutation.addedNodes[i])
+								setTimeout(function(ele){
+									processMessage(ele)
+								},500, mutation.addedNodes[i]);
 							}
 						} catch(e){}
 					}
 				}
 			});
 		};
-		var target = document.querySelector('[class*="DivChatRoomContainer"]');
-		if (!target){
-			setTimeout(start,2000);
-			return;
-		}
+		
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 	}
 	
-	setTimeout(start,2000);
+	setInterval(start,2000);
 
 	var textOnlyMode = false;
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
