@@ -200,7 +200,7 @@
 									dupCheck.push(main[j].parentNode.id);
 									if (main[j].parentNode.id.startsWith("client:")){continue;}
 									processMessage(main[j]);
-								}  else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id && (main[j].parentNode.tagName == "LI")){
+								} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id){
 									var id = main[j].querySelector("[id]");  // an archived video
 									if (id && !(dupCheck.includes(id))){
 										dupCheck.push(id);

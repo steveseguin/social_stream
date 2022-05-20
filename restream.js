@@ -44,13 +44,19 @@
         var name = "";
 		try {
 			name =  ele.children[0].children[0].children[1].innerText;
+			name = name.trim();
 		} catch(e){
 			//console.log(e);
 		}
 		
-		if (name){
-		  name = name.trim();
-	    }
+		if (!name){
+			try {
+				name = ele.querySelector(".MuiTypography-subtitle2").innerText;
+				name = name.trim();
+				} catch(e){
+				//console.log(e);
+			}
+		}
 
 		var msg = "";
 		try {
