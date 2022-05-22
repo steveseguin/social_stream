@@ -22,10 +22,20 @@
 		  var chatmessage = "";
 		  var chatname = "";
 		  var chatimg = "";
+		  var nameColor = "";
+		  
 		  var srcImg = ""; // what shows up as the source image; blank is default (dock decides).
 		  
 		  try{
-			chatname = ele.querySelector("#author-name").innerText;
+			var nameElement = ele.querySelector("#author-name");
+			chatname = nameElement.innerText;
+			
+			if (nameElement.classList.contains("member")){
+				nameColor = "#107516";
+			} else if (nameElement.classList.contains("moderator")){
+				nameColor = "#5f84f1";
+			}
+			
 		  } catch(e){}
 		  
 		  if (!textOnlyMode){
@@ -73,9 +83,12 @@
 			chatdonation = ele.querySelector("#purchase-amount-chip").innerHTML;
 		  }
 
-		  var chatbadges = "";
+		  var chatbadges = [];
 		  try{
-			chatbadges = ele.querySelector("#chat-badges .yt-live-chat-author-badge-renderer img").parentNode.innerHTML;
+			ele.querySelectorAll("#chat-badges .yt-live-chat-author-badge-renderer img").forEach(img=>{
+				chatbadges.push(img.src);
+			});
+			
 		  } catch(e){}
 		  
 
@@ -126,6 +139,7 @@
 		
 		var data = {};
 		data.chatname = chatname;
+		data.nameColor = nameColor;
 		data.chatbadges = chatbadges;
 		data.backgroundColor = backgroundColor;
 		data.textColor = textColor;
@@ -135,6 +149,7 @@
 		data.hasMembership = hasMembership;
 		data.type = "youtube";
 	  
+		console.log(data);
 		if (data.chatimg && avatars){
 			//data.chatimg = data.chatimg.replace("=s32-", "=s128-");  // this is all for HD by default.  Too much CPU usage though
 			//data.chatimg = data.chatimg.replace("=s64-", "=s128-");

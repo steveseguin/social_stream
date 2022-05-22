@@ -38,6 +38,15 @@
 			-moz-transform-origin: 0 0;
 			width:100%;
 		} 
+		.hl-badge{
+			padding: 2px 2px 1px 0px;
+			vertical-align: top;
+			max-width: 16px;
+			max-height: 14px;
+		}
+		.hl-badge:last-child{
+			padding: 2px 4px 1px 0px;
+		}
 		
 		a {
 			color: var(--link-color);
@@ -118,13 +127,12 @@
 			display:inline-block;
 		}
 		.notcompactmode>.hl-message{
-			width: 100%;
 			line-height:22px;
 		}
 		.notcompactmode>.hl-name{
 			margin: auto 10px auto 5px;
-			min-width: 148px;
-			max-width: 220px;
+			min-width: 155px;
+			max-width: 250px;
 			white-space: unset;
 			overflow: hidden;
 		}
@@ -474,6 +482,8 @@
 	var mainOutputWindow = document.getElementById("output");
 	var fileStream, writer, encode;
 	var odd = false;
+	var showbadges = true;
+	var colorized = false;
 	
 	var timeoutDelay = 0;
 	if (urlParams.has("showtime")){
@@ -505,9 +515,16 @@
 		avatars = false;
 	} 
 	
-	
 	if (urlParams.has("limit")){
 		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
+	}
+	
+	if (urlParams.has("hidebadges") || urlParams.has("nobadges")){
+		showbadges = false;
+	}
+	
+	if (urlParams.has("colorednames") || urlParams.has("color")){
+		colorized = true;
 	}
 	
 	
@@ -1163,6 +1180,18 @@
 			
 			data.chatname = data.chatname.trim();
 			
+			var nameColor = "";
+			if (data.nameColor && colorized){
+				nameColor = "style='color:"+data.nameColor+";'";
+			}
+			
+			var chatbadges = "";
+			if (data.chatbadges && showbadges){
+				data.chatbadges.forEach(badge=>{
+					chatbadges += "<img class='hl-badge' src='"+badge+"' />";
+				});
+			}
+			
 			if (data.chatname){
 				if (data.chatname.toLowerCase() == "streamelements"){ 
 					bot = true;
@@ -1195,14 +1224,16 @@
 				if (compactmode){
 					if (bot){
 						chatname = '<div class="hl-name"></div>';
+					} else if (chatbadges){
+						chatname = '<div '+nameColor+' class="hl-name">' +chatbadges+ data.chatname+":</div>";
 					} else {
-						chatname = '<div class="hl-name">' + data.chatname+":</div>";
+						chatname = '<div '+nameColor+' class="hl-name">' + data.chatname+":</div>";
 					}
 				} else {
-					chatname = '<div class="hl-name">' + data.chatname+"</div>";
+					chatname = '<div '+nameColor+' class="hl-name">' +chatbadges+ data.chatname+"</div>";
 				}
 			} else {
-				chatname = '<div class="hl-name"></div>';
+				chatname = '<div class="hl-name">'+chatbadges+'</div>';
 			}
 			
 			var node = createElementFromHTML('<div id="msg_'+data.counter+'" class="highlight-chat data-source-type="'+data.type+'">'
@@ -1210,7 +1241,7 @@
 				 + chatImg
 				 + timeArrived
 				 + chatname
-				// + '<div class="hl-badges">' + data.chatbadges + '</div>'
+				 //+ '<div class="hl-badges">' + chatbadges + '</div>'
 				 + '<div class="hl-message" id="content_'+data.counter+'">' + data.chatmessage + '</div>'
 				 + addImage
 				 + donation + '</div>')

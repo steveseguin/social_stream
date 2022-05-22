@@ -45,10 +45,25 @@
 	function processMessage(ele){	// twitch
 	  var chatsticker = false;
 	  var chatmessage = "";
+	  var nameColor = "";
 	  
 	  try {
-		var chatname = ele.querySelector(".chat-author__display-name").innerText;
+		var nameEle = ele.querySelector(".chat-author__display-name");
+		var chatname = nameEle.innerText;
+		try {
+			nameColor = nameEle.style.color;
+		} catch(e){}
 	  } catch(e){return;}
+	  
+	  nameColor 
+	  
+	  var chatbadges = [];
+	  
+	  ele.querySelectorAll("img.chat-badge[src]").forEach(badge=>{
+		chatbadges.push(badge.src);
+	  });
+	  
+	  
 	  
 	  try {
 		var BTT = ele.querySelectorAll('.bttv-tooltip');
@@ -133,7 +148,8 @@
 
 	  var data = {};
 	  data.chatname = chatname;
-	  data.chatbadges = "";
+	  data.chatbadges = chatbadges;
+	  data.nameColor = nameColor;
 	  data.chatmessage = chatmessage;
 	  data.chatimg = "";
 	  data.hasDonation = hasDonation;
