@@ -264,7 +264,7 @@
 			var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages");
 			if (ele){
 				onElementInserted(ele, function(element){
-				     setTimeout(function(element){processMessage(element, false);},5000,element);
+				     setTimeout(function(element){processMessage(element, false);},1000,element);
 				});
 			}
 		},3000);
