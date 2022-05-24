@@ -84,9 +84,20 @@
 		  }
 
 		  var chatbadges = [];
-		  try{
-			ele.querySelectorAll("#chat-badges .yt-live-chat-author-badge-renderer img").forEach(img=>{
-				chatbadges.push(img.src);
+		  try{ 
+			ele.querySelectorAll(".yt-live-chat-author-badge-renderer img, .yt-live-chat-author-badge-renderer svg").forEach(img=>{
+				if (img.tagName.toLowerCase()=="img"){
+					var html = {};
+					html.src = img.src;
+					html.type = "img";
+					chatbadges.push(html);
+				} else if (img.tagName.toLowerCase()=="svg"){
+					var html = {};
+					img.style.fill = window.getComputedStyle(img).color;
+					html.html = img.outerHTML;
+					html.type = "svg";
+					chatbadges.push(html);
+				}
 			});
 			
 		  } catch(e){}
@@ -149,7 +160,10 @@
 		data.hasMembership = hasMembership;
 		data.type = "youtube";
 	  
-		console.log(data);
+		if (data.chatbadges.length){
+			console.log(data);
+		}
+		
 		if (data.chatimg && avatars){
 			//data.chatimg = data.chatimg.replace("=s32-", "=s128-");  // this is all for HD by default.  Too much CPU usage though
 			//data.chatimg = data.chatimg.replace("=s64-", "=s128-");
@@ -246,7 +260,7 @@
     var ele = document.querySelector("yt-live-chat-app");
 	if (ele){
 		onElementInserted(ele, function(element){
-		  processMessage(element, false);
+		      setTimeout(function(element){processMessage(element, false);},5000,element);
 		});
 	}
 	
@@ -255,7 +269,7 @@
 			var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages");
 			if (ele){
 				onElementInserted(ele, function(element){
-				  processMessage(element, false);
+				     setTimeout(function(element){processMessage(element, false);},5000,element);
 				});
 			}
 		},3000);

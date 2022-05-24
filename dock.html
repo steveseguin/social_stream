@@ -43,9 +43,14 @@
 			vertical-align: top;
 			max-width: 16px;
 			max-height: 14px;
+			display:inline-block;
 		}
 		.hl-badge:last-child{
 			padding: 2px 4px 1px 0px;
+		}
+		span.hl-badge{
+			width: 16px;
+			height: 14px;
 		}
 		
 		a {
@@ -125,6 +130,7 @@
 			width: fit-content;
 			color: var(--font-color-name);
 			display:inline-block;
+			vertical-align: middle;
 		}
 		.notcompactmode>.hl-message{
 			line-height:22px;
@@ -1187,8 +1193,19 @@
 			
 			var chatbadges = "";
 			if (data.chatbadges && showbadges){
+				if (data.chatbadges.length){
+					console.log(data.chatbadges);
+				}
 				data.chatbadges.forEach(badge=>{
-					chatbadges += "<img class='hl-badge' src='"+badge+"' />";
+					if (typeof badge == "object"){
+						if (badge.type && (badge.type=="img") && badge.src){
+							chatbadges += "<img class='hl-badge' src='"+badge.src+"' />";
+						} else if (badge.type && (badge.type=="svg") && badge.html){
+							chatbadges += "<span class='hl-badge'>"+badge.html+"</span>";
+						}
+					} else {
+						chatbadges += "<img class='hl-badge' src='"+badge+"' />";
+					}
 				});
 			}
 			
@@ -1241,7 +1258,6 @@
 				 + chatImg
 				 + timeArrived
 				 + chatname
-				 //+ '<div class="hl-badges">' + chatbadges + '</div>'
 				 + '<div class="hl-message" id="content_'+data.counter+'">' + data.chatmessage + '</div>'
 				 + addImage
 				 + donation + '</div>')
