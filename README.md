@@ -226,7 +226,7 @@ Text messages can be converted to speech, assuming your system supports TTS.  On
 
 ie: `index.html?session=XXXXXX&speech=en-US` or `socialstream.ninja/?session=xxx&&speech=en-US`
 
-You can get a list of support languages on your system by running `speechSynthesis.getVoices()` from the Chrome browser console on your system.
+You can get a list of support languages on your system by running `speechSynthesis.getVoices()` from the Chrome browser console on your system.  You can install additional ones fairly easily, if on Windows. See: https://support.microsoft.com/en-us/windows/download-language-pack-for-speech-24d06ef3-ca09-ddcc-70a0-63606fd16394
 
 ![image](https://user-images.githubusercontent.com/2575698/165753730-374498e7-7885-49ef-83ba-7fe2acde26ee.png)
 
@@ -235,6 +235,12 @@ The audio will play out the default system audio output device. This might be a 
 If loading the app in the Chrome/Edge/Firefox browser, you will need to "click" the web page first before audio will play. This isn't the case with OBS, but most browsers require the user interact with the website on some level before it will play audio.  Please keep this in mind when testing things.
 
 There is a toggle in the dock to turn off and on the text-to-speech; turning it off whill automatically stop any audio playout. Still, be careful when using text-to-speech with the dock, as viewers can exploit it to have your system read out unwanted things on air.
+
+#### Installing different language-speech packs
+
+By default, the list of support languages on your computer could be slim. To add more speech options for different langauges, you'll need to install them.
+
+see: https://support.microsoft.com/en-us/windows/download-language-pack-for-speech-24d06ef3-ca09-ddcc-70a0-63606fd16394 for details
 
 ### Branded channel support
 
