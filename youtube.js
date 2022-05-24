@@ -255,7 +255,7 @@
     var ele = document.querySelector("yt-live-chat-app");
 	if (ele){
 		onElementInserted(ele, function(element){
-		      setTimeout(function(element){processMessage(element, false);},5000,element);
+		      setTimeout(function(element){processMessage(element, false);},1000,element);
 		});
 	}
 	
