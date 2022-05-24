@@ -159,11 +159,6 @@
 		data.hasDonation = hasDonation;
 		data.hasMembership = hasMembership;
 		data.type = "youtube";
-	  
-		if (data.chatbadges.length){
-			console.log(data);
-		}
-		
 		if (data.chatimg && avatars){
 			//data.chatimg = data.chatimg.replace("=s32-", "=s128-");  // this is all for HD by default.  Too much CPU usage though
 			//data.chatimg = data.chatimg.replace("=s64-", "=s128-");
