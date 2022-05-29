@@ -74,18 +74,28 @@
 	  
 	  if (!textOnlyMode){
 		  try {
-			chatmessage = ele.querySelector('*[data-test-selector="chat-line-message-body"]');
-			if ((chatmessage && chatmessage.children.length ===1) && (chatmessage.querySelectorAll("span.text-fragment").length)){
-				test = chatmessage.innerText.trim();
+			if (ele.querySelector(".seventv-message-context")){
+				test = ele.querySelector(".seventv-message-context").innerText.trim();
 				if (test == ""){
-					chatmessage = chatmessage.innerHTML;
+					chatmessage = ele.querySelector(".seventv-message-context").innerHTML;
 				} else {
 					chatmessage = test;
 				}
-			} else if (chatmessage){
-				chatmessage = chatmessage.innerHTML;
+			} else {
+				chatmessage = ele.querySelector('*[data-test-selector="chat-line-message-body"]');
+				if ((chatmessage && chatmessage.children.length ===1) && (chatmessage.querySelectorAll("span.text-fragment").length)){
+					test = chatmessage.innerText.trim();
+					if (test == ""){
+						chatmessage = chatmessage.innerHTML;
+					} else {
+						chatmessage = test;
+					}
+				} else if (chatmessage){
+					chatmessage = chatmessage.innerHTML;
+				}
 			}
 		  } catch(e){}
+		  
 		  
 		  if (!chatmessage){
 			  chatmessage="";
@@ -108,6 +118,17 @@
 				} catch(e){}
 			}
 		  }
+	  } else if (ele.querySelector(".seventv-message-context")){
+		    var cloned = ele.querySelector(".seventv-message-context").cloneNode(true);
+			var children = cloned.querySelectorAll("[alt]");
+			for (var i =0;i<children.length;i++){
+				children[i].outerHTML = children[i].alt;
+			}
+			/* var children = cloned.querySelectorAll('[role="tooltip"]');
+			for (var i =0;i<children.length;i++){
+				children[i].outerHTML = "";
+			} */
+			chatmessage = cloned.innerText;
 	  } else {
 		  try{
 			var cloned = ele.querySelector('*[data-test-selector="chat-line-message-body"]').cloneNode(true);
