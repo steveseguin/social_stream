@@ -68,32 +68,37 @@
 	  
 	}
 	setTimeout(function(){ // clear existing messages; just too much for a stream.
-		try {
-			var main =  document.querySelectorAll("div>div>section>div");
-			
-			for (var j =0;j<main.length;j++){
-				try{
-					if (!main[j].dataset.set123){
-						main[j].dataset.set123 = "true";
-					} 
-				} catch(e){}
-			}
-		} catch(e){  }
 	
 		console.log("LOADED SocialStream EXTENSION");
-	
-		var ttt = setInterval(function(){
-			try {
-				var main = document.querySelectorAll("div>div>section>div");
+		
+		try {
+			if (window.location.pathname.includes("/live/")){
+				var main =  document.querySelectorAll("div>div>section>div");
+				
 				for (var j =0;j<main.length;j++){
 					try{
 						if (!main[j].dataset.set123){
 							main[j].dataset.set123 = "true";
-							processMessage(main[j]);
 						} 
 					} catch(e){}
 				}
-			} catch(e){ }
+			}
+		} catch(e){  }
+	
+		var ttt = setInterval(function(){
+			if (window.location.pathname.includes("/live/")){
+				try {
+					var main = document.querySelectorAll("div>div>section>div");
+					for (var j =0;j<main.length;j++){
+						try{
+							if (!main[j].dataset.set123){
+								main[j].dataset.set123 = "true";
+								processMessage(main[j]);
+							} 
+						} catch(e){}
+					}
+				} catch(e){ }
+			}
 		},1000);
 	},1500);
 
