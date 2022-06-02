@@ -35,6 +35,11 @@
 				//
 			}
 		}
+		
+		if (chatimg){
+			chatimg = chatimg.replace("cp0_dst-jpg_p48x48", "dst-jpg_p100x100");
+		}
+		
 		var name = "";
 		try {
 			name = ele.childNodes[1].childNodes[0].querySelector('span[dir="auto"]').innerText;

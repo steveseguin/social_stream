@@ -591,14 +591,14 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			data.textColor = "color:"+settings.comment_color+";";
 		}
 	}
-	if (settings.name_color){
+	if (settings.name_background){
 		if (!data.backgroundNameColor){
-			data.backgroundNameColor =  "background-color:"+settings.name_color+";";
+			data.backgroundNameColor =  "background-color:"+settings.name_background+";";
 		}
 	}
-	if (settings.name_background){
+	if (settings.name_color){ // 
 		if (!data.textNameColor){
-			data.textNameColor =  "color:"+settings.name_background+";";
+			data.textNameColor =  "color:"+settings.name_color+";";
 		}
 	}
 	return data;
