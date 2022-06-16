@@ -577,7 +577,6 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			} else {
 				data.sentiment = inferSentiment(data.chatmessage);
 			}
-			if (data.sentiment<.10){return null;} // 1.0 is good; 0.0 is bad, so 0.1 is likely bad.
 		}catch(e){}
 	} 
 	

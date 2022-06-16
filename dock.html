@@ -563,21 +563,27 @@
 	}
 	
 	var speech = false;
+	var English = false;
 	
 	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){
 		document.getElementById("tts").dataset.state = 1;
 		document.getElementById("tts").classList.remove("hidden");
 		document.getElementById("tts").classList.add('pressed');
-		speech = true;
+		speech = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || "en-US";
+		
+		if (speech.includes("en-")){
+			English = true;
+		}
 	}
 	
 	function speak(text){
 		if (!speech){return;}
 		if (!text){return;}
-		
+		console.log(text);
 		
 		var speechInput = new SpeechSynthesisUtterance();
-		speechInput.lang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || "en-US";
+		speechInput.lang = speech;
+		
 		speechInput.volume = 1;
 		speechInput.rate = 1;
 		speechInput.pitch = 1;
@@ -1411,18 +1417,26 @@
 				var msgPlain = document.getElementById('content_'+data.counter); // text only
 				
 				if (data.hasDonation){
-					
 					if (data.chatname){
 						var cc = data.chatname.toLowerCase().replace(/[^a-z0-9]+/gi, " ");
 						if (cc){
-							speak(cc + " has donated " + data.hasDonation);
+							if (English){
+								speak(cc + " has donated " + data.hasDonation);
+							} else {
+								speak(cc + "! " + data.hasDonation);
+							}
 						} else {
-							speak("Someone has donated " + data.hasDonation);
+							if (English){
+								speak("Someone has donated " + data.hasDonation);
+							} else {
+								speak(data.hasDonation);
+							}
 						}
-					} else {
+					} else if (English){
 						speak("Someone has donated " + data.hasDonation);
+					} else {
+						speak(data.hasDonation);
 					}
-					
 				}
 				
 				if (msgPlain){
@@ -1441,12 +1455,20 @@
 							if (data.chatname){
 								var cc = data.chatname.toLowerCase().replace(/[^a-z0-9]+/gi, " ");
 								if (cc){
-									speak(cc + " says! " +msgPlain.toLowerCase());
-								} else {
+									if (English){
+										speak(cc + " says! " +msgPlain.toLowerCase());
+									} else {
+										speak(cc + "! " +msgPlain.toLowerCase());
+									}
+								} else if (English){
 									speak("Someone says! " +msgPlain);
+								} else {
+									speak(msgPlain);
 								}
-							} else {
+							} else if (English){
 								speak("Someone says! " +msgPlain);
+							} else {
+								speak(msgPlain);
 							}
 						}
 					}
