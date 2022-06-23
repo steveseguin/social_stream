@@ -39,6 +39,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - rumble.com (no pop out; viewer page)
 - trovo.live chat (open the chat pop-up page; ie: https://trovo.live/chat/xxxxxx)
 - Whatsapp.com (**Experimental** support; missing avatars and uploaded media/photo support). https://web.whatsapp.com/
+- Dlive.tv  (pop-out chat)
 
 More on request
 
