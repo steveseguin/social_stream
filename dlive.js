@@ -70,8 +70,6 @@
 	  data.contentimg = "";
 	  data.type = "dlive";
 	  
-	  console.log(data);
-	  
 	  pushMessage(data);
 	}
 	
