@@ -1,7 +1,22 @@
 (function () {
 	
+	
+	async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlutin.com/timeout-fetch-request/
+		try {
+			const controller = new AbortController();
+			const timeout_id = setTimeout(() => controller.abort(), timeout);
+			const response = await fetch(URL, {...{timeout:timeout}, signal: controller.signal});
+			clearTimeout(timeout_id);
+			return response;
+		} catch(e){
+			errorlog(e);
+			return await fetch(URL); // iOS 11.x/12.0
+		}
+	}
+
+
 	function getTwitchAvatarImage(username){
-		fetch("https://api.socialstream.ninja/twitch/avatar?username="+encodeURIComponent(username)).then(response => {
+		fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username="+encodeURIComponent(username)).then(response => {
 			response.text().then(function (text) {
 				if (text.startsWith("https://")){
 					brandedImageURL = text;
