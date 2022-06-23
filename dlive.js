@@ -134,11 +134,11 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					if (!document.querySelector("textarea")){
+					if (!document.querySelector("textarea[placeholder]")){
 						sendResponse(false);
 						return;
 					}
-					document.querySelector("textarea").focus();
+					document.querySelector("textarea[placeholder]").focus();
 					sendResponse(true);
 					return;
 				}
