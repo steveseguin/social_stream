@@ -27,7 +27,6 @@
 
 	async function processMessage(first, ele){
 		var content = ele;
-		console.log(first,ele);;
 		
 		var chatname="";
 		try {
@@ -38,7 +37,6 @@
 				chatname = first.querySelector("[class*='ChannelDisplayName__Name']").textContent;
 				chatname = chatname.trim();
 			} catch(e){
-				console.log(e);
 				return;
 			}
 		}
@@ -65,7 +63,6 @@
 				chatmessage = chatmessage.trim();
 			 }
 		} catch(e){
-			console.log(e);
 			return;
 		}
 
@@ -94,9 +91,6 @@
 	  data.hasMembership = "";;
 	  data.contentimg = "";
 	  data.type = "picarto";
-	  
-	  console.log(data);
-	  
 	  pushMessage(data);
 	}
 	
@@ -111,7 +105,7 @@
 							
 							if (mutation.addedNodes[i].dataset.set123){continue;}
 							mutation.addedNodes[i].dataset.set123 = "true";
-							console.log(mutation.addedNodes[i]);
+							
 							if (mutation.addedNodes[i].className.includes("ChannelChat__MessageBoxWrapper")){
 								callback(mutation.addedNodes[i], mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].className.includes("StandardTypeMessagecontainer__BlockRow")){

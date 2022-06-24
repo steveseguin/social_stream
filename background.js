@@ -194,7 +194,19 @@ chrome.runtime.onMessage.addListener(
 						}
 					}
 				}
-				
+			} else if ("inject" in request){
+				if (request.inject == "mobcrush"){
+					chrome.webNavigation.getAllFrames({tabId: sender.tab.id}, (frames) => {
+						frames.forEach(f=>{
+							if (f.frameId && (f.frameType==="sub_frame") && f.url.includes("https://www.mobcrush.com/")){
+								chrome.tabs.executeScript(sender.tab.id, {
+								  frameId: f.frameId,
+								  file: 'mobcrush.js'
+								});
+							}
+						});
+					});
+				}
 			} else if ("message" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from 
 				sendResponse({"state":isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
@@ -532,7 +544,6 @@ function generalFakeChat(tabid, message, middle=true){ // fake a user input
 		});
 		
 	} catch(e){
-		console.log(e);
 		if (debuggerEnabled[tabid]){
 			chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
 		}
