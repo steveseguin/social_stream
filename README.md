@@ -37,10 +37,11 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - amazon.com/live
 - slack (https://app.slack.com/)
 - rumble.com (no pop out; viewer page)
-- trovo.live chat (open the chat pop-up page; ie: https://trovo.live/chat/xxxxxx)
+- trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/xxxxxx)
 - Whatsapp.com (**Experimental** support; missing avatars and uploaded media/photo support). https://web.whatsapp.com/
 - Dlive.tv  (pop-out chat)
 - Picarto.tv (pop-out chat; ie: https://picarto.tv/chatpopout/CHANNELNAMEHERE/public)
+- Mobcrush (this page: https://studio.mobcrush.com/chatpopup.html)
 
 More on request
 
