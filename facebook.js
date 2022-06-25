@@ -7,7 +7,7 @@
 		} catch (e) {}
 	}
 
-	function toDataURL(url, callback) {
+	function toDataURL(url, callback) { // not needed with Facebook I think.
 		var xhr = new XMLHttpRequest();
 		xhr.onload = function() {
 			var reader = new FileReader();
@@ -25,19 +25,13 @@
 		if (ele == window) {
 			return;
 		}
+		
 		var chatimg = "";
 		try {
-			chatimg = ele.childNodes[0].querySelector("img").src;
-		} catch (e) {
-			try {
-				chatimg = ele.childNodes[0].querySelector("image").href.baseVal;
-			} catch (e) {
-				//
-			}
-		}
-		
-		if (chatimg){
-			chatimg = chatimg.replace("cp0_dst-jpg_p48x48", "dst-jpg_p100x100");
+			var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+			chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+		} catch(e){
+			console.log(e);
 		}
 		
 		var name = "";
@@ -150,18 +144,8 @@
 		data.hasMembership = "";;
 		data.contentimg = "";
 		data.type = "facebook";
-
-
-		if (data.chatimg) {
-			toDataURL(data.chatimg, function(dataUrl) {
-				data.chatimg = dataUrl;
-				pushMessage(data);
-			});
-		} else {
-			data.chatimg = "";
-			pushMessage(data);
-		}
-
+		
+		pushMessage(data);
 	}
 
 	var dupCheck = [];
@@ -174,19 +158,29 @@
 					try {
 						if (!main[j].dataset.set123) {
 							main[j].dataset.set123 = "true";
-							if (main[j].id && !(dupCheck.includes(main[j].id))) {
+							if (main[j].id){
+								if (main[j].id.startsWith("client:")) {
+									continue;
+								}
+								if (dupCheck.includes(main[j].id)) {
+									continue;
+								}
 								dupCheck.push(main[j].id);
-								//if (main[j].id.startsWith("client:")){continue;}
-								//processMessage(main[j]);
-							} else if (main[j].parentNode && main[j].parentNode.id && !(dupCheck.includes(main[j].parentNode.id))) {
+							//	processMessage(main[j]);
+							} else if (main[j].parentNode && main[j].parentNode.id) {
+								if (dupCheck.includes(main[j].parentNode.id)){
+									continue;
+								}
+								if (main[j].parentNode.id.startsWith("client:")) {
+									continue;
+								}
 								dupCheck.push(main[j].parentNode.id);
-								//if (main[j].parentNode.id.startsWith("client:")){continue;}
-								//processMessage(main[j]);
-							} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id && (main[j].parentNode.tagName == "LI")) {
-								var id = main[j].querySelector("[id]");
+							//	processMessage(main[j]);
+							} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id) {
+								var id = main[j].querySelector("[id]"); // an archived video
 								if (id && !(dupCheck.includes(id))) {
 									dupCheck.push(id);
-									processMessage(main[j]); // might as well, since its an archived video
+							//		processMessage(main[j]);
 								}
 							}
 						}
@@ -198,7 +192,7 @@
 		console.log("LOADED SocialStream EXTENSION");
 
 		var ttt = setInterval(function() {
-			dupCheck = dupCheck.slice(-100);
+			dupCheck = dupCheck.slice(-60); // facebook seems to keep around 40 messages, so this is overkill?
 			try {
 				if (window.location.href.includes("facebook.com/live/producer/") || window.location.href.includes("/videos/")) {
 					var main = document.querySelectorAll("[role='article']");
@@ -206,17 +200,23 @@
 						try {
 							if (!main[j].dataset.set123) {
 								main[j].dataset.set123 = "true";
-								if (main[j].id && !(dupCheck.includes(main[j].id))) {
-									dupCheck.push(main[j].id);
+								if (main[j].id){
 									if (main[j].id.startsWith("client:")) {
 										continue;
 									}
+									if (dupCheck.includes(main[j].id)) {
+										continue;
+									}
+									dupCheck.push(main[j].id);
 									processMessage(main[j]);
-								} else if (main[j].parentNode && main[j].parentNode.id && !(dupCheck.includes(main[j].parentNode.id))) {
-									dupCheck.push(main[j].parentNode.id);
+								} else if (main[j].parentNode && main[j].parentNode.id) {
+									if (dupCheck.includes(main[j].parentNode.id)){
+										continue;
+									}
 									if (main[j].parentNode.id.startsWith("client:")) {
 										continue;
 									}
+									dupCheck.push(main[j].parentNode.id);
 									processMessage(main[j]);
 								} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id) {
 									var id = main[j].querySelector("[id]"); // an archived video
