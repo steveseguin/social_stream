@@ -152,7 +152,7 @@
 
 	setTimeout(function() { // clear existing messages; just too much for a stream.
 		try {
-			//if (window.location.href.includes("file://") || window.location.href.includes("facebook.com/live/producer/") || window.location.href.includes("/videos/")) {
+			if (window.location.href.includes("facebook.com/live/producer/") || window.location.href.includes("/videos/")) {
 				var main = document.querySelectorAll("[role='article']");
 				for (var j = 0; j < main.length; j++) {
 					try {
@@ -166,7 +166,7 @@
 									continue;
 								}
 								dupCheck.push(main[j].id);
-								processMessage(main[j]);
+							//	processMessage(main[j]);
 							} else if (main[j].parentNode && main[j].parentNode.id) {
 								if (dupCheck.includes(main[j].parentNode.id)){
 									continue;
@@ -175,18 +175,18 @@
 									continue;
 								}
 								dupCheck.push(main[j].parentNode.id);
-								processMessage(main[j]);
+							//	processMessage(main[j]);
 							} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id) {
 								var id = main[j].querySelector("[id]"); // an archived video
 								if (id && !(dupCheck.includes(id))) {
 									dupCheck.push(id);
-									processMessage(main[j]);
+							//		processMessage(main[j]);
 								}
 							}
 						}
 					} catch (e) {}
 				}
-		//	}
+			}
 		} catch (e) {}
 
 		console.log("LOADED SocialStream EXTENSION");
