@@ -23,7 +23,7 @@
 	var savedavatars = {};
 
 	function processMessage(ele, ital=false){
-		console.log(ele);
+		//console.log(ele);
 		
 		var chatimg="";
 		try{
@@ -39,12 +39,11 @@
 		var chatbadges = "";
 		try{
 			var cb = ele.children[1].querySelectorAll("img[class*='ImgBadgeChatMessage']");
-			console.log(cb);
 			if (cb.length){
-				data.chatbadges = [];
+				chatbadges = [];
 				cb.forEach(cbimg =>{
 					if (cbimg.src){
-						data.chatbadges.push(cbimg.src);
+						chatbadges.push(cbimg.src);
 					}
 				});
 			}
@@ -127,7 +126,7 @@
 		data.contentimg = "";
 		data.type = "tiktok";
 		
-		console.log(data);
+	//	console.log(data);
 		
 		pushMessage(data);
 	}
