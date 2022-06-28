@@ -74,9 +74,11 @@
 			chatmembership = ele.querySelector(".yt-live-chat-membership-item-renderer #header-subtext").innerHTML;
 		  } catch(e){}
 		  
+		 
+		  
 		  var chatsticker = "";
 		  try{
-			chatsticker = ele.querySelector(".yt-live-chat-paid-sticker-renderer #img").src;
+			chatsticker = ele.querySelector(".yt-live-chat-paid-sticker-renderer #sticker>#img").src;
 		  } catch(e){}
 		  
 		  if (chatsticker) {
@@ -109,14 +111,21 @@
 		  }
 
 		  var hasMembership = '';
+		  var giftedmemembership = ele.querySelector("#primary-text.ytd-sponsorships-live-chat-header-renderer");
 		  
 		  if (chatmembership) {
 			  if (chatmessage){
-				  hasMembership = '<div class="donation membership">MEMBER CHAT</div>';
+				hasMembership = '<div class="donation membership">MEMBER CHAT</div>';
+			  } else if (giftedmemembership){
+				hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
+				chatmessage = "<i>"+giftedmemembership.innerHTML+"</i>";
 			  } else {
 				hasMembership = '<div class="donation membership">NEW MEMBER!</div>';
-				chatmessage = chatmembership;
+				chatmessage = "<i>"+chatmembership+"</i>";
 			  }
+		  } else if (!chatmessage && giftedmemembership){
+			chatmessage = "<i>"+giftedmemembership.innerHTML+"</i>";
+			hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
 		  }
 
 		  if (chatsticker) {
@@ -237,6 +246,8 @@
 						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-membership-item-renderer".toUpperCase()) {
 							callback(mutation.addedNodes[i]);
 						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-sticker-renderer".toUpperCase()) {
+							callback(mutation.addedNodes[i]);
+						} else if (mutation.addedNodes[i].tagName == "ytd-sponsorships-live-chat-gift-purchase-announcement-renderer".toUpperCase()) {
 							callback(mutation.addedNodes[i]);
 						}
 					}
