@@ -22,6 +22,9 @@
 			--highlight-base2: #4444;
 			--highlight-compact: #3335;
 			--highlight-compact2: #3333;
+			--stylized-emoji: 140%;
+			--stylized-img: 20px;
+			--message-line-height: 24px;
 		}
 	
 		.noText {
@@ -65,7 +68,6 @@
 			margin: 0 0;
 			background-color: var(--background-color);
 			text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
-		
 		}
 		
 		.bot.compactmode {
@@ -103,8 +105,8 @@
 		
 		img {
 			display:inline-block;
-			max-width:20px;
-			max-height:20px;
+			max-width: 20px;
+			max-height: 20px;
 			position:relative;
 			margin: auto;
 			padding: 0;
@@ -135,7 +137,7 @@
 			vertical-align: middle;
 		}
 		.notcompactmode>.hl-message{
-			line-height:22px;
+			line-height: var(--message-line-height);
 		}
 		.notcompactmode>.hl-name{
 			margin: auto 10px auto 5px;
@@ -204,10 +206,12 @@
 		
 		.hl-message img{
 			position:relative;
-			margin: auto 0;
+			margin: auto 1;
 			padding: 0;
 			display:inline-block;
-			width: 20px;
+			width: var(--stylized-img);
+			max-width: var(--stylized-img);
+			max-height: var(--stylized-img);
 		}
 		
 		.hl-message span > img{
@@ -423,6 +427,13 @@
 		#pinned:empty {
 		   display:none;
 		}
+		span.emoji{
+			font-size: var(--stylized-emoji);
+			top: -1px;
+			position: relative;
+			vertical-align: sub;
+			text-shadow: 0 0 #0000;
+		}
 
 	</style>
 </head>
@@ -561,6 +572,14 @@
 		scale = parseFloat(scale);
 		document.documentElement.style.setProperty("--scale-output", scale);
 		document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
+	}
+	
+	var stylizeEmoji = false;
+	if (urlParams.has("emoji") || urlParams.has("emojis")){
+		stylizeEmoji = urlParams.get("emoji") || urlParams.get("emojis") || "140%";
+		document.documentElement.style.setProperty("--stylized-emoji", stylizeEmoji);
+		document.documentElement.style.setProperty("--message-line-height", "30px");
+		document.documentElement.style.setProperty("--stylized-img", "30px");
 	}
 	
 	var customSource = false;
@@ -1136,6 +1155,9 @@
 			
 			if (data.chatmessage){
 				data.chatmessage = data.chatmessage.trim();
+				if (stylizeEmoji){
+					data.chatmessage = data.chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig, "<span class='emoji'>$1</span>");
+				}
 			} else {
 				data.chatmessage = "";
 			}
