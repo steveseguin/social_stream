@@ -57,6 +57,20 @@
 		getTwitchAvatarImage(xx[0]);
 	}
 	
+	function getAllContentNodes(element) {
+		var resp = "";
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 1)){
+				resp += node.textContent;
+			} else if (node.nodeType === 1){
+				resp += node.outerHTML;
+			}
+		});
+		return resp;
+	}
+	
 	function processMessage(ele){	// twitch
 	  var chatsticker = false;
 	  var chatmessage = "";
@@ -89,50 +103,26 @@
 	  
 	  if (!textOnlyMode){
 		  try {
-			if (ele.querySelector(".seventv-message-context")){
-				test = ele.querySelector(".seventv-message-context").innerText.trim();
-				if (test == ""){
-					chatmessage = ele.querySelector(".seventv-message-context").innerHTML;
-				} else {
-					chatmessage = test;
-				}
-			} else {
-				chatmessage = ele.querySelector('*[data-test-selector="chat-line-message-body"]');
-				if ((chatmessage && chatmessage.children.length ===1) && (chatmessage.querySelectorAll("span.text-fragment").length)){
-					test = chatmessage.innerText.trim();
-					if (test == ""){
-						chatmessage = chatmessage.innerHTML;
-					} else {
-						chatmessage = test;
-					}
-				} else if (chatmessage){
-					chatmessage = chatmessage.innerHTML;
-				}
-			}
+			var eleContent = ele.querySelector(".seventv-message-context") || ele.querySelector('*[data-test-selector="chat-line-message-body"]');
+			chatmessage = getAllContentNodes(eleContent);
 		  } catch(e){}
-		  
-		  
+		 
 		  if (!chatmessage){
-			  chatmessage="";
 			  try {
-				chatmessage = ele.querySelector('span.message').innerHTML; // FFZ support
-			  } catch(e){
-				  chatmessage="";
-			  }
+				var eleContent = getAllContentNodes(ele.querySelector('span.message'));
+				chatmessage = getAllContentNodes(eleContent);
+				
+			  } catch(e){}
 		  }
 		  
 		  if (!chatmessage){
-			chatmessage = "";
-			var element = ele.querySelector(".chat-line__message-container").querySelector('span[data-test-selector="chat-message-separator"]');
-			while (element.nextSibling) {
-				try{
-				  element = element.nextSibling;
-				  if (element.innerHTML){
-					chatmessage += element.innerHTML;
-				  }
-				} catch(e){}
-			}
+			  try {
+				var eleContent = ele.querySelector(".chat-line__message-container").querySelector('span[data-test-selector="chat-message-separator"]');
+				chatmessage = getAllContentNodes(eleContent);
+			  } catch(e){}
 		  }
+		  
+		  console.log(chatmessage);
 	  } else if (ele.querySelector(".seventv-message-context")){
 		    var cloned = ele.querySelector(".seventv-message-context").cloneNode(true);
 			var children = cloned.querySelectorAll("[alt]");
