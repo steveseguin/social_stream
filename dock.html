@@ -10,6 +10,7 @@
 	
 		:root {
 			--show-emoji-only: flex ;
+			--list-or-horizontal: flex;
 			--show-donos-only: visible;
 			--scale-output-moz: scale(1.0);
 			--scale-output: 1.0;
@@ -23,8 +24,9 @@
 			--highlight-compact: #3335;
 			--highlight-compact2: #3333;
 			--stylized-emoji: 140%;
-			--stylized-img: 20px;
-			--message-line-height: 24px;
+			--stylized-img: 23px;
+			--message-line-height: 20px;
+			--show-images: inline-block;
 		}
 	
 		.noText {
@@ -42,18 +44,15 @@
 			width:100%;
 		} 
 		.hl-badge{
-			padding: 2px 2px 1px 0px;
+			padding: 0px 2px 0px 0px;
 			vertical-align: top;
 			max-width: 100px;
-			max-height: 14px;
+			max-height: 20px;
+			height:20px;
 			display:inline-block;
 		}
 		.hl-badge:last-child{
-			padding: 2px 4px 1px 0px;
-		}
-		span.hl-badge{
-			width: 16px;
-			height: 14px;
+			padding: 0 4px 0px 0px;
 		}
 		
 		a {
@@ -71,15 +70,55 @@
 		}
 		
 		.bot.compactmode {
-			padding: 5px 0;
+			padding: 0;
 		}
 		
+		.hl-message{
+			margin: 5px 2px 5px 1px;
+			overflow-wrap: anywhere;
+		}
+		
+		.hl-message img{
+			position:relative;
+			margin: auto 1px;
+			padding: 0;
+			display:inline-block;
+			height: 20px;
+			max-width: 22px;
+			max-height: 20px;
+		}
+		
+		.hl-message span > img{
+			margin: auto 1px;
+		}
+
+		.highlight {
+			background-color:yellow!important;
+		}
+		
+		img {
+			display:inline-block;
+			max-width: 24px;
+			max-height: 24px;
+			position:relative;
+			margin: auto;
+			padding: 0;
+			object-fit: contain;
+			vertical-align: top;
+		}
+
 		.bot > .hl-message {
 			padding: 5px 0 5px 5px;
 			font-style: italic;
 		}
 		
-		
+		.hl-compact-message {
+			-webkit-box-decoration-break: clone;
+			box-decoration-break: clone;
+			padding-left: 5px;
+			display: inline-block;
+			height: 23px;
+		}
 		
 		.hl-badges {
 			max-width:28px;
@@ -89,64 +128,109 @@
 			top:-6px;
 		}
 
-		.hl-message{
-			margin: auto 0;
-			overflow-wrap: anywhere;
+		
+		.highlight-chat {
+			display:var(--list-or-horizontal);
+			cursor:pointer;
+			width:fit-content;
+			background-color: var(--highlight-base);
+			min-height: 28px;
+			line-height: var(--message-line-height);
+		}
+
+		.highlight-chat.expand{
+			animation: expand 2s;
 			overflow: hidden;
+			height: 35px;
+			word-break: break-all;
+			line-break: anywhere;
+		}
+
+
+		.larger-emojis{
+			top: 0px;
+			position: relative;
+			height: 35px;
+			max-height: 35px;
+		}
+		
+		.highlight-chat.larger-emojis{
+			overflow: hidden;
+			height: 40px;
+			max-height: 40px;
+		}
+
+		.highlight-chat.expand.larger-emojis{
+			line-height: 30px;
+		}
+
+		.larger-emojis img:not(.hl-badge, .icon) {
+			height: var(--stylized-img);
+			max-width: var(--stylized-img);
+			max-height: var(--stylized-img);
+			bottom: 2.5px;
+		}
+
+		.hl-message img:not(.hl-badge, .icon) {
+			display: var(--show-images);
+		}
+
+		.larger-emojis img.hl-badge{
+			top: 3px;
+		}
+		.larger-emojis img.icon {
+			top: 3px;
 		}
 		
 		div {
 			display:inline-block;
 		}
 		
-		.highlight {
-			background-color:yellow!important;
-		}
-		
-		img {
-			display:inline-block;
-			max-width: 20px;
-			max-height: 20px;
-			position:relative;
-			margin: auto;
-			padding: 0;
-			object-fit: contain;
-			vertical-align:middle;
-		}
-		
 		.hide {
 			display: none !important;
 		}
 		
-		.highlight-chat {
-			display:flex;
-			cursor:pointer;
-			width:fit-content;
-			background-color: var(--highlight-base);
-			min-height: 28px;
-		}
+		
+
+		@keyframes expand {
+            0% {
+               max-width: 0px;
+            }
+			20% {
+               max-width: 300px;
+            }
+			50% {
+               max-width: 800px;
+            }
+			100% {
+               max-width: 20000px;
+            }
+         }
 		
 		.hl-name {
 			font-weight: 700;
-			margin: 5px 5px auto 5px;
+			margin: auto 5px;
 			position:relative;
 			left: 0;
 			width: fit-content;
 			color: var(--font-color-name);
 			display:inline-block;
-			vertical-align: middle;
+			font-size: 17px;
+			line-height: 22px;
 		}
-		.notcompactmode>.hl-message{
-			line-height: var(--message-line-height);
-		}
+		
 		.notcompactmode>.hl-name{
 			margin: 6px 10px auto 5px;
 			min-width: 155px;
 			max-width: 250px;
 			white-space: unset;
 			overflow: hidden;
+			height: 24px;
 		}
 		
+		.larger-emojis>.hl-name{
+			height: 30px;
+		}
 		.notcompactmode>.highlight-chat{
 			width:100%;
 		}
@@ -204,35 +288,22 @@
 			}
 		}
 		
-		.hl-message img{
-			position:relative;
-			margin: auto 1;
-			padding: 0;
-			display:inline-block;
-			width: var(--stylized-img);
-			max-width: var(--stylized-img);
-			max-height: var(--stylized-img);
-		}
-		
-		.hl-message span > img{
-			margin: auto 5px;
-		}
-		
 		a {
 			pointer-events: none;
 		}
 		
 		.time-arrived {
 			font-size: 10px;
-			display: block;
-			margin: 10px 1px auto 1px;
-			padding-right: 2px;
-			left: 1px;
+			display: inline-block;
+			margin: auto 1px;
+			padding-right: 1px;
+			left: 2px;
+			top: 1;
 			position: relative;
 			white-space: nowrap;
-			vertical-align:middle;
+			vertical-align: top;
 		}
-		
+
 		#menu {
 			position:fixed;
 			top:0;
@@ -371,7 +442,7 @@
 		}
 		
 		.icon {
-			margin: 4px 1px auto 3px;
+			margin: 4px 2px auto 1px;
 			border-radius: 50%;
 		}
 		
@@ -507,6 +578,7 @@
 	var odd = false;
 	var showbadges = true;
 	var colorized = false;
+	var horizontal = false;
 	
 	var timeoutDelay = 0;
 	if (urlParams.has("showtime")){
@@ -531,6 +603,35 @@
 	
 	if (urlParams.has("hidesource")){
 		showsource = false;
+	} 
+
+	var stylizeEmoji = false;
+	if (urlParams.has("emoji") || urlParams.has("emojis")){
+		stylizeEmoji = urlParams.get("emoji") || urlParams.get("emojis") || "140%";
+		document.documentElement.style.setProperty("--stylized-emoji", stylizeEmoji);
+		document.documentElement.style.setProperty("--message-line-height", "30px");
+		document.documentElement.style.setProperty("--stylized-img", "35px");
+	}
+
+	if (urlParams.has("horizontal")){
+		horizontal = true;
+		document.documentElement.style.setProperty("--list-or-horizontal", "inline-block"); 
+		document.getElementById("output").style.width = "10000%";
+		document.getElementById("output").style.right = "0";
+		if (stylizeEmoji){
+			document.getElementById("output").style.maxHeight = "40px";
+		} else {
+			document.getElementById("output").style.maxHeight = "30px";
+		}
+		document.getElementById("output").style.overflow = "hidden";
+		document.getElementById("output").style.position = "absolute";
+		document.getElementById("output").style.textAlign = "right";
+		document.getElementById("output").style.whiteSpace = "nowrap";
+		document.getElementById("output").classList.remove("notcompactmode");
+		document.getElementById("menu").style.top = "42px";
+		compactmode = true;
+		customNodeLimit = 15;
+	
 	} 
 	
 	var avatars = true;
@@ -574,13 +675,7 @@
 		document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
 	}
 	
-	var stylizeEmoji = false;
-	if (urlParams.has("emoji") || urlParams.has("emojis")){
-		stylizeEmoji = urlParams.get("emoji") || urlParams.get("emojis") || "140%";
-		document.documentElement.style.setProperty("--stylized-emoji", stylizeEmoji);
-		document.documentElement.style.setProperty("--message-line-height", "30px");
-		document.documentElement.style.setProperty("--stylized-img", "30px");
-	}
+	
 	
 	var customSource = false;
 	if (urlParams.has("branded")){
@@ -619,7 +714,7 @@
 	
 	if (urlParams.has("compact")){
 		compactmode = true;
-		mainOutputWindow.classList.remove("notcompactmode");
+		document.getElementById("output").classList.remove("notcompactmode");
 		document.getElementById("menu").style.display = "none";
 	} 
 	
@@ -706,10 +801,12 @@
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
 			document.documentElement.style.setProperty("--show-emoji-only", "none");
+			//document.documentElement.style.setProperty("--show-images", "none");
 			ele.classList.add("pressed");
 		} else {
 			ele.dataset.state = "0";
 			document.documentElement.style.setProperty("--show-emoji-only", "flex");
+			//document.documentElement.style.setProperty("--show-images", "inline-block");
 			ele.classList.remove("pressed");
 		}
 		redoOdd();
@@ -1078,11 +1175,27 @@
 	};
 	
 	function fadeOutNode(node){
-		node.style.transition =  "all linear 0.5s";
-		node.style.height =  "0";
-		setTimeout(function(node){
+		if (horizontal){
 			node.remove();
-		},500,node);
+		} else {
+			node.style.transition =  "all linear 0.5s";
+			node.style.height =  "0";
+			setTimeout(function(node){
+				node.remove();
+			},500,node);
+		}
+	}
+
+	function slideIn(node){
+		if (horizontal){
+			node.remove();
+		} else {
+			node.style.transition =  "all linear 0.5s";
+			node.style.height =  "0";
+			setTimeout(function(node){
+				node.remove();
+			},500,node);
+		}
 	}
 	
 	function removeNode(){
@@ -1282,23 +1395,46 @@
 				}
 			} else {
 				chatname = '<div class="hl-name">'+chatbadges+'</div>';
+			} 
+
+			var larger = "";
+			if (stylizeEmoji){
+				larger = " larger-emojis";
 			}
-			
-			var node = createElementFromHTML('<div id="msg_'+data.counter+'" class="highlight-chat data-source-type="'+data.type+'">'
-				 + showType
-				 + chatImg
-				 + timeArrived
-				 + chatname
-				 + '<div class="hl-message" id="content_'+data.counter+'">' + data.chatmessage + '</div>'
-				 + addImage
-				 + donation + '</div>')
-				 
+
+			var expand = "";
+
+			if (horizontal){
+				expand = " expand"
+			}
+
+			if (compactmode){
+				var node = createElementFromHTML('<div id="msg_'+data.counter+'" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+					 + '<div class="hl-message" id="content_'+data.counter+'">'
+						+ showType
+						+ chatImg
+						+ timeArrived
+						+ chatname
+						+ data.chatmessage
+					 + '</div>'
+					 + addImage
+					 + donation + '</div>');
+			} else {
+				var node = createElementFromHTML('<div id="msg_'+data.counter+'" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+					 + showType
+					 + chatImg
+					 + timeArrived
+					 + chatname
+					 + '<div class="hl-message" id="content_'+data.counter+'">' + data.chatmessage + '</div>'
+					 + addImage
+					 + donation + '</div>');
+			}
 			
 			if (filtering && !node.textContent.toLowerCase().includes(filtering)){
 				node.classList.add("hide");
 			}
 			
-			if (bot){
+			if (bot && !horizontal){
 				node.classList.add("bot");
 			}
 			
@@ -1336,7 +1472,9 @@
 				setTimeout(function(node){ node.remove();},timeoutDelay, node);
 			}
 			
-			if (compactmode){
+			if (horizontal){
+				// do not shrink the names to fit
+			} else if (compactmode){
 				var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they are longer than the message's height
 				if (nameEle){
 					var msgNode = node.querySelector(".hl-message");
