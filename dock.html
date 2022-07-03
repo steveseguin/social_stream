@@ -25,7 +25,7 @@
 			--highlight-compact2: #3333;
 			--stylized-emoji: 140%;
 			--stylized-img: 23px;
-			--message-line-height: 20px;
+			--message-line-height: 22px;
 			--show-images: inline-block;
 		}
 	
@@ -67,6 +67,7 @@
 			margin: 0 0;
 			background-color: var(--background-color);
 			text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
+			overflow-x: hidden;
 		}
 		
 		.bot.compactmode {
@@ -74,7 +75,7 @@
 		}
 		
 		.hl-message{
-			margin: 5px 2px 5px 1px;
+			margin: auto 1px;
 			overflow-wrap: anywhere;
 		}
 		
@@ -84,9 +85,11 @@
 			padding: 0;
 			display:inline-block;
 			height: 20px;
-			max-width: 22px;
+			max-width: 24px;
 			max-height: 20px;
 		}
+
+		
 		
 		.hl-message span > img{
 			margin: auto 1px;
@@ -134,14 +137,12 @@
 			cursor:pointer;
 			width:fit-content;
 			background-color: var(--highlight-base);
-			min-height: 28px;
-			line-height: var(--message-line-height);
+			min-height: 24px;
 		}
 
 		.highlight-chat.expand{
 			animation: expand 2s;
 			overflow: hidden;
-			height: 35px;
 			word-break: break-all;
 			line-break: anywhere;
 		}
@@ -150,25 +151,36 @@
 		.larger-emojis{
 			top: 0px;
 			position: relative;
-			height: 35px;
-			max-height: 35px;
+			
 		}
 		
 		.highlight-chat.larger-emojis{
 			overflow: hidden;
-			height: 40px;
-			max-height: 40px;
+		}
+
+
+		.highlight-chat.compactmode.expand {
+			padding-top: 2px;
+			background-color: #0000;
+		}
+		
+		.compactmode.expand.time-arrived {
+			margin: auto 0;
+		}
+		.larger-emojis :not(.expand) > .hl-message {
+			line-height: 34px;
 		}
 
 		.highlight-chat.expand.larger-emojis{
 			line-height: 30px;
+			height: 40px;
+			max-height: 40px;
 		}
 
 		.larger-emojis img:not(.hl-badge, .icon) {
 			height: var(--stylized-img);
 			max-width: var(--stylized-img);
 			max-height: var(--stylized-img);
-			bottom: 2.5px;
 		}
 
 		.hl-message img:not(.hl-badge, .icon) {
@@ -177,11 +189,41 @@
 
 		.larger-emojis img.hl-badge{
 			top: 3px;
+			height: 22px;
+			max-height: 22px;
 		}
 		.larger-emojis img.icon {
 			top: 3px;
+			height: 24px;
+			max-height: 24px;
+		}
+
+		.notcompactmode>.highlight-chat>img.icon {
+			top: 0px;
+			margin: 2px 2px auto 1px;
+		}
+
+		
+		.notcompactmode>.time-arrived {
+			margin: 8px 2px auto 1px;
+		}
+
+		.notcompactmode:not(.expand)>.time-arrived {
+			margin: 9.5px 2px auto 1px;
+		}
+
+		.larger-emojis.notcompactmode>.time-arrived{
+			margin: 12px 2px auto 1px;
 		}
 		
+		.larger-emojis.notcompactmode>img.icon {
+			margin: 5px 2px auto 1px;
+		}
+
+		.larger-emojis.notcompactmode>.hl-name {
+			margin: 2px 5px 0 5px;
+		}
+
 		div {
 			display:inline-block;
 		}
@@ -216,26 +258,33 @@
 			color: var(--font-color-name);
 			display:inline-block;
 			font-size: 17px;
-			line-height: 22px;
+			
 		}
 		
 		.notcompactmode>.hl-name{
-			margin: 6px 10px auto 5px;
+			margin: 3.5px 5px 0 5px;
 			min-width: 155px;
 			max-width: 250px;
 			white-space: unset;
 			overflow: hidden;
 			height: 24px;
+			line-height: var(--message-line-height);
 		}
-		
 		.larger-emojis>.hl-name{
 			height: 30px;
+			line-height: 29px;
 		}
 		.notcompactmode>.highlight-chat{
 			width:100%;
+			padding: 2px 1px;
+			margin: 0 5px;
+		}
+
+		.notcompactmode>.highlight-chat{
+			min-height:28px;
 		}
 		
-		.highlight-chat.odd{
+		.highlight-chat.odd:not(.expand){
 			background-color: var(--highlight-base2);
 		}
 		
@@ -250,7 +299,7 @@
 			padding-right:3px;
 		}
 		
-		.highlight-chat.odd.compactmode{
+		.highlight-chat.odd.compactmode:not(.expand){
 			background-color: var(--highlight-compact2);
 		}
 		
@@ -258,7 +307,7 @@
 			background-color: #FEFFAD33;
 		}
 		
-		.highlight-chat.odd.donation{
+		.highlight-chat.odd.donation:not(.expand){
 			background-color: #FDFF6533;
 		}
 		
@@ -266,7 +315,7 @@
 			background-color: #ADFEFF33;
 		}
 		
-		.highlight-chat.odd.member{
+		.highlight-chat.odd.member:not(.expand){
 			background-color: #65FDFF33;
 		}
 		
@@ -298,10 +347,8 @@
 			margin: auto 1px;
 			padding-right: 1px;
 			left: 2px;
-			top: 1;
 			position: relative;
 			white-space: nowrap;
-			vertical-align: top;
 		}
 
 		#menu {
