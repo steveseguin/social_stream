@@ -1,3 +1,5 @@
+*** PLEASE NOTE:  If having a problem with the name of the faetured chat overlay being cropped, just increase the height of the Browser Source window; 600px might be enough.  The chat will now be relative to the bottom of the window, instead of the top.
+
 # Social Stream
 Consolidate your live social messaging streams
 
@@ -125,7 +127,7 @@ There is a &darkmode option, but the default is white, for the dock.
 
 ![image](https://user-images.githubusercontent.com/2575698/142855585-45c11625-c01c-4cc0-bfe0-cde4aed5fc44.png)
 
-A good resolution for the overlay is either 1280x222 or 1920x220; you can specify this in the OBS browser source.  You can edit the style of the overlay using the OBS CSS style input text box.
+A good resolution for the overlay is either 1280x600 or 1920x600; you can specify this in the OBS browser source.  You can edit the style of the overlay using the OBS CSS style input text box.  The chat overlay will appear 50-px from the bottom currently, but the height of the chat window can be quite tall; to avoid the name of the overlay being cropped, just make sure you give it enough room.
 
 ![image](https://user-images.githubusercontent.com/2575698/142855680-74f6055d-7b79-4e9a-ae7d-909c7f677a24.png)
 
