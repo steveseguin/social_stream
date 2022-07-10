@@ -17,33 +17,23 @@
 	function processMessage(ele){
 		
 		var name="";
-		name = ele.querySelector('b').innerText;
+		name = ele.querySelector('a[class*="comment__author"]').innerText;
 		if (name){
+			name = name.replace("@","");
 			name = name.trim();
 		} else {
 			name = "";
 		}
 		
-		var chatimg = "https://www.vimm.tv/"+name+"/avatar";
+		var chatimg = '';
 		
 		var msg = "";
-		var start = true;
-		ele.querySelector(".chatmessagerow").childNodes.forEach(ee=>{
+		ele.querySelector(".livestreamComment__text").querySelector("p").childNodes.forEach(ee=>{
 			if (ee.nodeType == Node.TEXT_NODE){
-				if (start){
-					var t = ee.textContent.split(":");
-					if (t.length>1){
-						start = false;
-					}
-					t.shift();
-					msg += t.join(":");
-				} else {
-					msg += ee.textContent;
-				}
+				msg += ee.textContent;
 				msg = msg.trim();
 			} else if (!textOnlyMode && (ee.nodeName  == "IMG")){
 				msg += "<img src='"+ee.src+"' />";
-				start = false;
 				msg = msg.trim();
 			} 
 		});
@@ -65,7 +55,7 @@
 		data.hasDonation = dono;
 		data.hasMembership = "";;
 		data.contentimg = "";
-		data.type = "vimm";
+		data.type = "odysee";
 		
 		pushMessage(data);
 		console.log(data);
@@ -91,7 +81,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('#chat-message-input').focus();
+					document.querySelector('#create__comment').focus();
 					sendResponse(true);
 					return;
 				}
@@ -133,10 +123,10 @@
 	console.log("social stream injected");
 
 	setInterval(function(){
-		if (document.querySelector('#chat-log')){
-			if (!document.querySelector('#chat-log').marked){
-				document.querySelector('#chat-log').marked=true;
-				onElementInserted(document.querySelector('#chat-log'));
+		if (document.querySelector('#main-content')){
+			if (!document.querySelector('#main-content').marked){
+				document.querySelector('#main-content').marked=true;
+				onElementInserted(document.querySelector('#main-content'));
 			}
 		}
 	},1000);
