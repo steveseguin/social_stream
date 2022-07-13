@@ -247,6 +247,9 @@ By default, the list of support languages on your computer could be slim. To add
 
 see: https://support.microsoft.com/en-us/windows/download-language-pack-for-speech-24d06ef3-ca09-ddcc-70a0-63606fd16394 for details
 
+There's a simplified test app for text-to-speech here also, that might also help try different languages on the fly: 
+https://mdn.github.io/dom-examples/web-speech-api/speak-easy-synthesis/
+
 ### Branded channel support
 
 There is a toggle that lets you show the source of the chat messages.
