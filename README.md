@@ -26,7 +26,6 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - crowdcast.io
 - livestream.com
 - mixcloud.com (pop out chat)
-- discord.com (web version; requires toggle enabled via the settings as well)
 - ms teams (experimental support)
 - vimeo.com (pop out chat page; https://vimeo.com/live-chat/xxxxxxxxx/interaction/)
 - instagram live (instagram.com/*/live/)
@@ -34,10 +33,12 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - webex live chat (not the pop out)
 - linkedin events comments
 - vdo.ninja (pop-out chat)
-- telegram (web.telegram.org in stream mode)
+![Requires toggling to enable certain integrations](https://user-images.githubusercontent.com/2575698/178857380-24b3a0fc-bf86-4645-91ec-24893df19279.png)
+- discord.com (web version; requires toggle enabled via the settings as well)
+- telegram (web.telegram.org in stream mode; requires toggle enabled)
+- slack (https://app.slack.com/ ; required toggle enabled to use)
 - restream.io chat supported (https://chat.restream.io/chat)
 - amazon.com/live
-- slack (https://app.slack.com/)
 - rumble.com (no pop out; viewer page)
 - trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/xxxxxx)
 - Whatsapp.com (**Experimental** support; missing avatars and uploaded media/photo support). https://web.whatsapp.com/
