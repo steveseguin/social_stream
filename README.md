@@ -26,7 +26,6 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - crowdcast.io
 - livestream.com
 - mixcloud.com (pop out chat)
-- discord.com (web version; requires toggle enabled via the settings as well)
 - ms teams (experimental support)
 - vimeo.com (pop out chat page; https://vimeo.com/live-chat/xxxxxxxxx/interaction/)
 - instagram live (instagram.com/*/live/)
@@ -34,16 +33,20 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - webex live chat (not the pop out)
 - linkedin events comments
 - vdo.ninja (pop-out chat)
-- telegram (web.telegram.org in stream mode)
+- discord.com (web version; requires toggle enabled via the settings as well) 
+- telegram (web.telegram.org in stream mode; requires toggle enabled)
+- slack (https://app.slack.com/ ; required toggle enabled to use)
+- ![Requires toggling to enable certain integrations](https://user-images.githubusercontent.com/2575698/178857380-24b3a0fc-bf86-4645-91ec-24893df19279.png) telegram, slack, discord require an extra step to enable
 - restream.io chat supported (https://chat.restream.io/chat)
 - amazon.com/live
-- slack (https://app.slack.com/)
 - rumble.com (no pop out; viewer page)
 - trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/xxxxxx)
 - Whatsapp.com (**Experimental** support; missing avatars and uploaded media/photo support). https://web.whatsapp.com/
 - Dlive.tv  (pop-out chat)
 - Picarto.tv (pop-out chat; ie: https://picarto.tv/chatpopout/CHANNELNAMEHERE/public)
 - Mobcrush (this page: https://studio.mobcrush.com/chatpopup.html)
+- vimm.tv (https://www.vimm.tv/chat/xxxxxxxxx/)
+- odysee.com (via the pop out chat I think)
 
 More on request
 
@@ -247,6 +250,9 @@ By default, the list of support languages on your computer could be slim. To add
 
 see: https://support.microsoft.com/en-us/windows/download-language-pack-for-speech-24d06ef3-ca09-ddcc-70a0-63606fd16394 for details
 
+There's a simplified test app for text-to-speech here also, that might also help try different languages on the fly: 
+https://mdn.github.io/dom-examples/web-speech-api/speak-easy-synthesis/
+
 ### Branded channel support
 
 There is a toggle that lets you show the source of the chat messages.
@@ -271,6 +277,8 @@ If the auto responder doesn't work -- you see a blue bar, but nothing happens, t
 - Try to keep the chat window and dock page active and if possible, even partially visible on screen. If the windows are hidden or minimized, they may stop working. This is also true if the scroll bar for the chat window is not at the bottom; sometimes messages won't load unless you are seeing the newest messages.
 
 - If using OBS Studio on macOS or Linux, for some reason this extension will not work if hosted locally on your drive, so custom CSS needs to happen via the browser source style section. It works great on PC locally, and when hosted on socialstream.ninja, but locally on mac, it does not seem supported. This is an issue you'll need to take up with the OBS developers.
+
+- For discord, slack, and telegram, for security reasons, you need to enable the TOGGLE switch in the settings to enable.
 
 ### Support
 
