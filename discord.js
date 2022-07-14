@@ -15,12 +15,13 @@
 	}
 
 
-	var lastMessage = {};
+	var lastMessage = "";
 	var lastName = "";
 	var lastImage = "";
 	
 	
-	function processMessage(ele){
+	function processMessage(ele2){
+		var ele = ele2.querySelectorAll("[class^='contents-']")[this.length];
 		var chatimg = "";
 		try{
 		   chatimg = ele.querySelector("img[class*='avatar-']").src;
@@ -30,7 +31,6 @@
 		}
 		
 		var name="";
-		
 		if (ele.querySelector('[id^="message-username-"]')){
 		  name = ele.querySelector('[id^="message-username-"]').innerText;
 		  if (name){
@@ -42,21 +42,23 @@
 		}
 		
 		if (!name && !chatimg){
-			var prev = ele.previousElementSibling;
+			ele2 = ele2.previousElementSibling;
+			var ele = ele2.querySelectorAll("[class^='contents-']")[this.length];
 			try {
 				for (var i=0; i<30;i++){
-					if (prev.querySelector('[id^="message-username-"]')){
+					if (ele.querySelector('[id^="message-username-"]')){
 						break;
 					} else {
-						prev = prev.previousElementSibling;
+						ele2 = ele2.previousElementSibling;
+						ele = ele2.querySelectorAll("[class^='contents-']")[this.length];
 					}
 				}
 				try{
-				    chatimg = prev.querySelector("img[class*='avatar-']").src;
+				    chatimg = ele.querySelector("img[class*='avatar-']").src;
 				    lastImage= chatimg
 				   
-				    if (prev.querySelector('[id^="message-username-"]')){
-					    name = prev.querySelector('[id^="message-username-"]').innerText;
+				    if (ele.querySelector('[id^="message-username-"]')){
+					    name = ele.querySelector('[id^="message-username-"]').innerText;
 					    if (name){
 						    name = name.trim();
 					    }
@@ -64,12 +66,10 @@
 					}
 				   
 				} catch(e){}
-				
 			} catch(e){}
 		}
-
-		var msg = "";
 		
+		var msg = "";
 		if (textOnlyMode){
 			try {
 				msg = ele.querySelector('[id^="message-content-"]').innerText;
@@ -153,7 +153,6 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						
 						if (mutation.addedNodes[i].id && !mutation.addedNodes[i].skip){
 							setTimeout(function(id){
 								try{

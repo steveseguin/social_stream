@@ -1,6 +1,5 @@
 (function () {
 	function pushMessage(data){
-		console.log(data);
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
 		} catch(e){}
@@ -63,7 +62,6 @@
 				} else if (ce.nodeName == "IMG"){
 					chatmessage+= "<img src='"+ce.src+"'/>";
 				} else {
-					console.log(ce);
 					chatmessage += ce.textContent;
 				}
 			});
@@ -87,8 +85,6 @@
 		data.hasMembership = "";;
 		data.contentimg = contentimg;
 		data.type = "telegram";
-		
-		console.log(data);
 		
 		if (!chatmessage && !contentimg){return;}
 		
@@ -118,7 +114,6 @@
 			}
 			pushMessage(data);
 		} catch(e){
-			console.error(e);
 		}
 	}
 	
