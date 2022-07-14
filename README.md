@@ -33,10 +33,10 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - webex live chat (not the pop out)
 - linkedin events comments
 - vdo.ninja (pop-out chat)
-![Requires toggling to enable certain integrations](https://user-images.githubusercontent.com/2575698/178857380-24b3a0fc-bf86-4645-91ec-24893df19279.png)
-- discord.com (web version; requires toggle enabled via the settings as well)
+- discord.com (web version; requires toggle enabled via the settings as well) 
 - telegram (web.telegram.org in stream mode; requires toggle enabled)
 - slack (https://app.slack.com/ ; required toggle enabled to use)
+- ![Requires toggling to enable certain integrations](https://user-images.githubusercontent.com/2575698/178857380-24b3a0fc-bf86-4645-91ec-24893df19279.png)
 - restream.io chat supported (https://chat.restream.io/chat)
 - amazon.com/live
 - rumble.com (no pop out; viewer page)
