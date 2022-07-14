@@ -1,5 +1,6 @@
 (function () {
-	function pushMessage(data){	  
+	function pushMessage(data){
+		console.log(data);
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
 		} catch(e){}
@@ -56,8 +57,18 @@
 			chatname = document.querySelector(".ChatInfo>.info>.title").innerText;
 		} catch(e){errorlog(e);}
 		try{
-			chatmessage = ele.querySelector(".content-inner").innerText;
+			ele.querySelector(".text-content").childNodes.forEach(ce=>{
+				if (ce.className && ce.className.includes("Reactions")){
+					return
+				} else if (ce.nodeName == "IMG"){
+					chatmessage+= "<img src='"+ce.src+"'/>";
+				} else {
+					console.log(ce);
+					chatmessage += ce.textContent;
+				}
+			});
 		} catch(e){errorlog(e);}
+		
 		try{
 			contentimg = ele.querySelector(".media-inner").querySelector("img").src;
 			if (!contentimg){
@@ -77,47 +88,42 @@
 		data.contentimg = contentimg;
 		data.type = "telegram";
 		
+		console.log(data);
+		
 		if (!chatmessage && !contentimg){return;}
 		
-		if (data.contentimg && !data.contentimg.startsWith("https://")){ // data.contentimg
-			toDataURL2(data.contentimg, function(dataUrl) {
-				data.contentimg = dataUrl;
-				if (data.chatimg && !data.chatimg.startsWith("https://")){
-					toDataURL2(data.chatimg, function(dataUrl) {
-						data.chatimg = dataUrl;
-						pushMessage(data);
+		try {
+			if (data.contentimg && !data.contentimg.startsWith("https://")){ // data.contentimg
+				toDataURL2(data.contentimg, function(dataUrl) {
+					data.contentimg = dataUrl;
+					if (data.chatimg && !data.chatimg.startsWith("https://")){
+						toDataURL2(data.chatimg, function(dataUrl) {
+							data.chatimg = dataUrl;
+							pushMessage(data);
+							return;
+						});
 						return;
-					});
-					return;
-				} else {
+					}
 					pushMessage(data);
 					return;
-				}
+				});
 				return;
-			});
-			return;
-		} else {
-			pushMessage(data);
-			return;
-		}
-	  
-		if (data.chatimg && !data.chatimg.startsWith("https://")){
-			toDataURL2(data.chatimg, function(dataUrl) {
-				data.chatimg = dataUrl;
-				pushMessage(data);
+			} else if (data.chatimg && !data.chatimg.startsWith("https://")){
+				toDataURL2(data.chatimg, function(dataUrl) {
+					data.chatimg = dataUrl;
+					pushMessage(data);
+					return;
+				});
 				return;
-			});
-			return;
-		} else {
+			}
 			pushMessage(data);
-			return;
+		} catch(e){
+			console.error(e);
 		}
-		return;
 	}
 	
-	
 	setInterval(function(){
-		var xxx = document.querySelectorAll('div.message-list-item');
+		var xxx = document.querySelectorAll('div.message-list-item'); // messages-container
 		for (var j = 0; j< xxx.length; j++){
 			if (xxx[j].marked){continue;}
 			xxx[j].marked = true;
