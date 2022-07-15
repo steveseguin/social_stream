@@ -802,6 +802,10 @@
 		window.speechSynthesis.speak(speechInput);
 	}
 	
+	if (urlParams.has("chroma")){
+		var chroma = urlParams.get("chroma") || "0F0";
+		document.body.style.backgroundColor = "#"+chroma;
+	}
 	
 	if (urlParams.has("compact")){
 		compactmode = true;

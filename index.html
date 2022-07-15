@@ -9,7 +9,6 @@
 	<style>
 :root {
     /* basic colors */
-    --keyer-bg-color: #000; /* change for a chroma key if you want, beware profile avatars may key out */
     --comment-color: #fff;
     --comment-bg-color: #222; /* needs to be slightly above black to not get keyed out */
     --comment-border-radius: 0px;
@@ -625,7 +624,10 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		isIFrame = true;
 	}
 	
-	
+	if (urlParams.has("chroma")){
+		var chroma = urlParams.get("chroma") || "FFF";
+		document.body.style.backgroundColor = "#"+chroma;
+	}
 	
 	var transitionType = "dropout";
 	if (urlParams.has("transition")){

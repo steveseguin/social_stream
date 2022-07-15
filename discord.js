@@ -16,8 +16,6 @@
 
 
 	var lastMessage = "";
-	var lastName = "";
-	var lastImage = "";
 	
 	
 	function processMessage(ele2){
@@ -25,9 +23,7 @@
 		var chatimg = "";
 		try{
 		   chatimg = ele.querySelector("img[class*='avatar-']").src;
-		   lastImage= chatimg
 		} catch(e){
-		  chatimg = lastImage;
 		}
 		
 		var name="";
@@ -36,10 +32,8 @@
 		  if (name){
 			name = name.trim();
 		  }
-		   lastName = name;
-		} else {
-			name = lastName;
-		}
+		  
+		} 
 		
 		var msg = "";
 		if (textOnlyMode){
@@ -59,7 +53,7 @@
 			ele2 = ele2.previousElementSibling;
 			var ele = ele2.querySelectorAll("[class^='contents-']")[this.length];
 			try {
-				for (var i=0; i<30;i++){
+				for (var i=0; i<50;i++){
 					if (ele.querySelector('[id^="message-username-"]')){
 						break;
 					} else {
@@ -69,16 +63,13 @@
 				}
 				try{
 				    chatimg = ele.querySelector("img[class*='avatar-']").src;
-				    lastImage= chatimg
 				   
 				    if (ele.querySelector('[id^="message-username-"]')){
 					    name = ele.querySelector('[id^="message-username-"]').innerText;
 					    if (name){
 						    name = name.trim();
 					    }
-					    lastName = name;
 					}
-				   
 				} catch(e){}
 			} catch(e){}
 		}
@@ -181,8 +172,6 @@
 	setInterval(function(){
 		if (document.querySelector('[data-list-id="chat-messages"]')){
 			if (!document.querySelector('[data-list-id="chat-messages"]').marked){
-				lastName = "";
-				lastImage = "";
 				document.querySelector('[data-list-id="chat-messages"]').marked=true;
 				onElementInserted('[data-list-id="chat-messages"]');
 			}
