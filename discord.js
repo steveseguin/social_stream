@@ -41,6 +41,20 @@
 			name = lastName;
 		}
 		
+		var msg = "";
+		if (textOnlyMode){
+			try {
+				msg = ele.querySelector('[id^="message-content-"]').innerText;
+			} catch(e){}
+		} else {
+			try {
+				msg = ele.querySelector('[id^="message-content-"]').innerHTML;
+			} catch(e){}
+		}
+		if (msg){
+			msg = msg.trim();
+		}
+		
 		if (!name && !chatimg){
 			ele2 = ele2.previousElementSibling;
 			var ele = ele2.querySelectorAll("[class^='contents-']")[this.length];
@@ -69,19 +83,6 @@
 			} catch(e){}
 		}
 		
-		var msg = "";
-		if (textOnlyMode){
-			try {
-				msg = ele.querySelector('[id^="message-content-"]').innerText;
-			} catch(e){}
-		} else {
-			try {
-				msg = ele.querySelector('[id^="message-content-"]').innerHTML;
-			} catch(e){}
-		}
-		if (msg){
-			msg = msg.trim();
-		}
 
 		var data = {};
 		data.chatname = name;
