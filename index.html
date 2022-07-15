@@ -669,22 +669,64 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		} catch(e){errorlog(e);}
 		
 	}
+	
+	var speechLang = "en-US";
 	var speech = false;
-	var English = false;
+	var English = true;
+	var voice = false;
+	var voices = window.speechSynthesis.getVoices();
 	
 	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){
-		speech = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || "en-US";
+		var speech = true;
+		speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || "en-US";
 		
-		if (speech.includes("en-")){
+		if (speechLang.split("-")[0].toLowerCase() == "en"){
 			English = true;
+		} else {
+			English = false;
 		}
 	}
 	
 	function speak(text){
 		if (!speech){return;}
 		if (!text){return;}
+		
+		if (!voice){
+			if (!voices || !voices.length){
+				voices = window.speechSynthesis.getVoices();
+			}
+			console.log(voices);
+			voices.forEach(vce=>{
+				if (vce.name && vce.name.includes("Siri")){ // SIRI sucks and breaks a lot, so lets skip if possible.
+					return; 
+				} else if (vce.lang && (vce.lang == speechLang)){
+					voice = vce;
+				} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
+					voice = vce;
+				}
+			});
+			if (!voice && voices.length){
+				voice = voices.shift(); // take the first/default voice
+			}
+			if (voice){
+				console.log("Voice being used:");
+				console.log(voice);
+				if (voice.lang && (voice.lang.split("-")[0].toLowerCase() != "en")){
+					English = false;
+				}
+			} else {
+				console.log("No voice found; using lang: "+speechLang);
+			}
+		}
+		
 		var speechInput = new SpeechSynthesisUtterance();
-		speechInput.lang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || "en-US";
+		
+		if (!voice){
+			speechInput.lang = speechLang;
+		} else {
+			speechInput.voice = voice;
+		}
+		
 		speechInput.volume = 1;
 		speechInput.rate = 1;
 		speechInput.pitch = 1;
