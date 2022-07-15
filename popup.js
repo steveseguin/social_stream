@@ -67,15 +67,54 @@ function update(response){
 		}
 		if ('settings' in response){
 			for (var key in response.settings){
-				var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
-				if (ele){
-					ele.checked = response.settings[key];
-					updateSettings(ele);
-				}
-				var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"']");
-				if (ele){
-					ele.value = response.settings[key];
-					updateSettings(ele);
+				
+				if (typeof response.settings[key] == "object"){ // newer method
+					if ("param1" in response.settings[key]){
+						var ele = document.querySelector("input[data-param1='"+key+"']");
+						if (ele){
+							ele.checked = response.settings[key].param1;
+							updateSettings(ele);
+						}
+					}
+					if ("param2" in response.settings[key]){
+						var ele = document.querySelector("input[data-param2='"+key+"']");
+						if (ele){
+							ele.checked = response.settings[key].param2;
+							updateSettings(ele);
+						}
+					} 
+					if ("setting" in response.settings[key]){
+						var ele = document.querySelector("input[data-setting='"+key+"']");
+						if (ele){
+							ele.checked = response.settings[key].setting;
+							updateSettings(ele);
+						}
+					} 
+					if ("textsetting" in response.settings[key]){
+						var ele = document.querySelector("input[data-textsetting='"+key+"']");
+						if (ele){
+							ele.value = response.settings[key].textsetting;
+							updateSettings(ele);
+						}
+					} 
+					if ("textparam1" in response.settings[key]){
+						var ele = document.querySelector("input[data-textparam1='"+key+"']");
+						if (ele){
+							ele.value = response.settings[key].textparam1;
+							updateSettings(ele);
+						}
+					}
+				} else { // obsolete method
+					var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
+					if (ele){
+						ele.checked = response.settings[key];
+						updateSettings(ele);
+					}
+					var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"']");
+					if (ele){
+						ele.value = response.settings[key];
+						updateSettings(ele);
+					}
 				}
 			}
 		}
@@ -142,7 +181,7 @@ function updateSettings(ele){
 		}
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", setting: ele.dataset.param1, "value": ele.checked}, function (response) {});
+		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "param1", setting: ele.dataset.param1, "value": ele.checked}, function (response) {});
 		
 	} else if (ele.dataset.textparam1){
 		if (ele.value){
@@ -157,7 +196,7 @@ function updateSettings(ele){
 		}
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
+		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
 	} else if (ele.dataset.param2){
 		if (ele.checked){
 			document.getElementById("overlay").rawURL = updateURL(ele.dataset.param2, document.getElementById("overlay").rawURL);
@@ -166,12 +205,12 @@ function updateSettings(ele){
 		}
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
+		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param2", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
 	} else if (ele.dataset.setting){
-		chrome.runtime.sendMessage({cmd: "saveSetting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
+		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
 		return;
 	} else if (ele.dataset.textsetting){
-		chrome.runtime.sendMessage({cmd: "saveSetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
+		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
 		return;
 	}
 	

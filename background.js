@@ -163,7 +163,16 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "getOnOffState") {
 				sendResponse({"state":isExtensionOn,"streamID":channel, "settings":settings});
 			} else if (request.cmd && request.cmd === "saveSetting") {
-				settings[request.setting] = request.value;
+				
+				if (typeof settings[request.setting] == "object"){
+					settings[request.setting][request.type] = request.value;
+				} else if ("type" in request){
+					settings[request.setting] = {};
+					settings[request.setting][request.type] = request.value;
+				} else {
+					settings[request.setting] = request.value;
+				}
+				
 				chrome.storage.sync.set(settings);
 				chrome.runtime.lastError;
 				sendResponse({"state":isExtensionOn});	

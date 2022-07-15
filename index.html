@@ -595,6 +595,27 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		customSource = true;
 	}
 	
+	var scale = false;
+	if (urlParams.has("scale")){
+		scale = urlParams.get("scale") || 0.5; // 1.0 = 100% size
+		document.body.style.transform = "scale("+scale+")";
+		document.body.style.transformOrigin = "bottom left";
+		
+		// -moz-transform: var(--scale-output-moz); // I'm too lazy to add this in
+		// -moz-transform-origin: 0 0;
+	}
+	
+	var zOffset= false;
+	if (urlParams.has("offset")){
+		zOffset = urlParams.get("offset") || 30; // 1.0 = 100% size
+		if (scale){
+			document.body.style.transform += " translateY(-"+zOffset+"px)";
+		} else {
+			document.body.style.transform = "translateY(-"+zOffset+"px)";
+		}
+	}
+	
+	
 	var timeoutDelay = 0;
 	if (urlParams.has("showtime")){
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
