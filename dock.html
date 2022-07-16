@@ -755,6 +755,26 @@
 		}
 	}
 	
+	var pitch = 1;
+	if (urlParams.has("pitch")){
+		pitch = urlParams.get("pitch") || 1;
+	}
+	
+	var rate = 1;
+	if (urlParams.has("rate")){
+		rate = urlParams.get("rate") || 1;
+	}
+	
+	var volume = 1;
+	if (urlParams.has("volume")){
+		volume = urlParams.get("volume") || 1;
+	}
+	
+	var voiceName = false;
+	if (urlParams.has("voice")){
+		voiceName = urlParams.get("voice") || "google";
+	}
+	
 	function speak(text){
 		if (!speech){return;}
 		if (!text){return;}
@@ -763,9 +783,16 @@
 			if (!voices || !voices.length){
 				voices = window.speechSynthesis.getVoices();
 			}
+			console.log("You can do &voice=VOICENAME to try to force select a voice based on a partial string match of its name.");
 			console.log(voices);
 			voices.forEach(vce=>{
-				if (vce.name && vce.name.includes("Siri")){ // SIRI sucks and breaks a lot, so lets skip if possible.
+				if (vce.name && voiceName && (vce.name.toLowerCase().includes(voiceName.toLowerCase()))){
+					if (vce.lang && (vce.lang == speechLang)){
+						voice = vce;
+					} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
+						voice = vce;
+					}
+				} else if (vce.name && vce.name.includes("Siri")){ // SIRI sucks and breaks a lot, so lets skip if possible.
 					return; 
 				} else if (vce.lang && (vce.lang == speechLang)){
 					voice = vce;
@@ -795,9 +822,9 @@
 			speechInput.voice = voice;
 		}
 		
-		speechInput.volume = 1;
-		speechInput.rate = 1;
-		speechInput.pitch = 1;
+		speechInput.volume = volume;
+		speechInput.rate = rate;
+		speechInput.pitch = pitch;
 		speechInput.text = text;
 		window.speechSynthesis.speak(speechInput);
 	}
