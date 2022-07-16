@@ -253,6 +253,14 @@ see: https://support.microsoft.com/en-us/windows/download-language-pack-for-spee
 There's a simplified test app for text-to-speech here also, that might also help try different languages on the fly: 
 https://mdn.github.io/dom-examples/web-speech-api/speak-easy-synthesis/
 
+You can manaul set the pitch, volume, rate, and even voice-name with the below URL parameters.  The voice just matches on a partial word, so "siri", "google", "bob", or whatever is being used will work.  This still assumes the language selected also matches. `&speech=en` (first english to match),  `&speech=en-US` (default), or `&speech=fr-CA` can specify the language, for example.
+```
+&pitch=1
+&volume=1
+&voice=google
+&rate=1
+```
+
 ### Branded channel support
 
 There is a toggle that lets you show the source of the chat messages.
