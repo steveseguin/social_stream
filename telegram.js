@@ -4,6 +4,10 @@
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
 		} catch(e){}
 	}
+	
+	function sleep(ms = 0) {
+		return new Promise(r => setTimeout(r, ms)); // LOLz!
+	}
 
 	function toDataURL2(blobUrl, callback) {
 		var xhr = new XMLHttpRequest;
@@ -61,6 +65,8 @@
 					return
 				} else if (ce.nodeName == "IMG"){
 					chatmessage+= "<img src='"+ce.src+"'/>";
+				} else if (ce.className && ce.className.includes("MessageMeta")){
+					// skip; this is date and stuff.
 				} else {
 					chatmessage += ce.textContent;
 				}
@@ -117,14 +123,47 @@
 		}
 	}
 	
-	setInterval(function(){
-		var xxx = document.querySelectorAll('div.message-list-item'); // messages-container
-		for (var j = 0; j< xxx.length; j++){
-			if (xxx[j].marked){continue;}
-			xxx[j].marked = true;
-			processMessage(xxx[j]);
+	var lastMessageID = 0;
+	var lastURL =  "";
+	
+	setInterval(async function(){
+		var highestMessage = 0;
+		var newChannel = false;
+		if (lastURL !== window.location.href){
+			lastURL = window.location.href;
+			lastMessageID = 0;
+			newChannel = true;
+		} 
+		try {
+			var xxx = document.querySelectorAll('div.message-list-item'); // messages-container
+			for (var j = 0; j< xxx.length; j++){
+				if (parseInt(xxx[j].dataset.messageId) && (parseInt(xxx[j].dataset.messageId)>=1) && (parseInt(xxx[j].dataset.messageId)< 1658053682710)){
+					if (lastMessageID<parseInt(xxx[j].dataset.messageId)){
+						highestMessage = parseInt(xxx[j].dataset.messageId);
+					} else {
+						console.log("SKIP " + highestMessage+ " " +lastMessageID +" " +parseInt(xxx[j].dataset.messageId));
+						continue;
+					}
+				}
+				if (xxx[j].marked){
+					console.log("MARKEED");
+					continue;
+				}
+				xxx[j].marked = true;
+				if (!newChannel){
+					processMessage(xxx[j]);
+					await sleep(10);
+				} else {
+					console.log("Skipping, since new channel/grop");
+				}
+			}
+			if (highestMessage>lastMessageID){
+				lastMessageID = highestMessage;
+			}
+		} catch(e){
+			console.error(e);
 		}
-	},3000);
+	},1000);
 
 	var textOnlyMode = false;
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
