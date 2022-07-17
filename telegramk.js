@@ -35,13 +35,14 @@
 
 	function processMessage(ele, chatimg, chatname){
 		
-		
 		var chatmessage = "";
 		var contentimg = "";
 		
 		try{
-			ele.querySelector(".text-content").childNodes.forEach(ce=>{
-				if (ce.className && ce.className.includes("Reactions")){
+			ele.querySelector("div.message").childNodes.forEach(ce=>{
+				if (ce.className && ce.className.includes("reactions")){
+					return
+				} else if (ce.className && ce.className.includes("time")){
 					return
 				} else if (ce.nodeName == "IMG"){
 					chatmessage+= "<img src='"+ce.src+"'/>";
@@ -54,7 +55,7 @@
 		} catch(e){errorlog(e);}
 		
 		try{
-			contentimg = ele.querySelector(".media-inner").querySelector("img").src;
+			contentimg = ele.querySelector(".media-container").querySelector("img").src;
 			if (!contentimg){
 				contentimg = ele.querySelector(".content-inner").querySelector("img").src;
 			}
@@ -117,34 +118,23 @@
 		
 		var chatimg="";
 		try{
-			chatimg = document.querySelector(".ChatInfo>.Avatar>img.avatar-media").src;
+			chatimg = document.querySelector("#column-center img.avatar-photo").src;
 			if (!chatimg){
 				chatimg = "";
 			} 
 		} catch(e){errorlog(e);}
-		
-		try{
-			if (!chatimg){
-				chatimg = document.querySelector("#MiddleColumn").querySelector("div.Avatar>img");
-			}
-			if (!chatimg){
-				chatimg = "";
-			} 
-		} catch(e){errorlog(e);}
-		
-		
 		var chatname = "";
 		try{
-			chatname = document.querySelector(".ChatInfo>.info>.title").innerText;
+			chatname = document.querySelector("#column-center  .user-title").innerText;
 		} catch(e){errorlog(e);}
 		
 		
 		try {
-			var xxx = document.querySelectorAll('div.message-list-item'); // messages-container
+			var xxx = document.querySelectorAll('div[data-mid]'); // messages-container
 			for (var j = 0; j< xxx.length; j++){
-				if (parseInt(xxx[j].dataset.messageId) && (parseInt(xxx[j].dataset.messageId)>=1) && (parseInt(xxx[j].dataset.messageId)< 1658053682710)){
-					if (lastMessageID<parseInt(xxx[j].dataset.messageId)){
-						highestMessage = parseInt(xxx[j].dataset.messageId);
+				if (parseInt(xxx[j].dataset.mid) && (parseInt(xxx[j].dataset.mid)>=1) && (parseInt(xxx[j].dataset.mid)< 1658053682710)){
+					if (lastMessageID<parseInt(xxx[j].dataset.mid)){
+						highestMessage = parseInt(xxx[j].dataset.mid);
 					} else {
 						continue;
 					}
@@ -154,7 +144,7 @@
 				}
 				xxx[j].marked = true;
 				if (!newChannel){
-					processMessage(xxx[j],chatimg,chatname);
+					processMessage(xxx[j], chatimg, chatname);
 					await sleep(10);
 				} 
 			}
@@ -162,7 +152,6 @@
 				lastMessageID = highestMessage;
 			}
 		} catch(e){
-			 errorlog(e)
 		}
 	},1000);
 
@@ -179,11 +168,11 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					if (!document.querySelector('.public-DraftEditorPlaceholder-inner')){
+					if (!document.querySelector('.input-message-input')){
 						sendResponse(false);
 						return;
 					}
-					document.querySelector(".public-DraftEditorPlaceholder-inner").focus();
+					document.querySelector(".input-message-input").focus();
 					sendResponse(true);
 					return;
 				}
