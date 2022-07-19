@@ -140,21 +140,62 @@
 		}
 	);
 
+	var lastURL =  "";
+	var lastMessageID = 0;
+	var observer = null;
+	
 	function onElementInserted(containerSelector) {
+		if (observer){
+			try {
+				observer.disconnect();
+			} catch(e){}
+			observer = null;
+		}
 		var onMutationsObserved = function(mutations) {
+			var highestMessage = 0;
+			if (lastURL !== window.location.href){
+				lastURL = window.location.href;
+				lastMessageID = 0;
+			}
+			if (!window.location.href.includes("/channels/")){
+				if (observer){
+					try {
+						observer.disconnect();
+					} catch(e){}
+					observer = null;
+				}
+				return;
+			}
+			
 			mutations.forEach(function(mutation) {
+				console.log(mutation.addedNodes);
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						if (mutation.addedNodes[i].id && !mutation.addedNodes[i].skip){
+							var mid = mutation.addedNodes[i].id.split("chat-messages-");
+							if (mid.length==2){
+								mid = parseInt(mid[1]);
+							} else {
+								continue;
+							}
+							if (highestMessage<mid){
+								highestMessage = mid;
+							} else {
+								continue;
+							}
 							setTimeout(function(id){
 								try{
 									if (document.getElementById(id).skip){return;}
 									document.getElementById(id).skip = true;
 									if (!document.getElementById(id).childNodes.length){return;}
+									console.log(id);
 									processMessage(document.getElementById(id));
 								} catch(e){}
 							},500, mutation.addedNodes[i].id);
 						}
+					}
+					if (highestMessage>lastMessageID){
+						lastMessageID = highestMessage;
 					}
 				}
 			});
@@ -163,13 +204,15 @@
 		if (!target){return;}
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		var observer = new MutationObserver(onMutationsObserved);
+		
+		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 	}
 	
 	console.log("social stream injected -- MUST BE ENABLED VIA SETTING TOGGLE AS WELL TO USE!!!");
 
 	setInterval(function(){
+		if (!window.location.href.includes("/channels/")){return;}
 		if (document.querySelector('[data-list-id="chat-messages"]')){
 			if (!document.querySelector('[data-list-id="chat-messages"]').marked){
 				document.querySelector('[data-list-id="chat-messages"]').marked=true;
