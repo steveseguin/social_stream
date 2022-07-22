@@ -261,6 +261,26 @@ You can manaul set the pitch, volume, rate, and even voice-name with the below U
 &rate=1
 ```
 
+#### Premium TTS voice options
+
+I've added support for Google Cloud Text to Speech API, but you must use your own API key to use this feature, as it is expensive to use.  
+
+Go to https://cloud.google.com/text-to-speech -> Enable the service, and then get an API key.
+
+![image](https://user-images.githubusercontent.com/2575698/180443408-5cc0f7a9-c015-420d-9541-fd94a520ef25.png)
+
+This premium text-to-speech is supported on the index.html page (the featured chat overlay), and currently not yet added to the dock page.(I'll add it there eventually)
+
+You need at least &speech and &ttskey to enable the premium TTS, but there are customizations:
+```
+&volume=1
+&voice=en-GB-Standard-A
+&gender=FEMALE
+&speech=en-us
+&ttskey=XXXXXXX
+```
+See the Google Cloud doc for more help
+
 ### Branded channel support
 
 There is a toggle that lets you show the source of the chat messages.
