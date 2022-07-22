@@ -701,9 +701,13 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	var voices = window.speechSynthesis.getVoices();
 	
 	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){
+		if (document.getElementById("tts")){
+			document.getElementById("tts").dataset.state = 1;
+			document.getElementById("tts").classList.remove("hidden");
+			document.getElementById("tts").classList.add('pressed');
+		}
 		var speech = true;
 		speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || "en-US";
-		
 		if (speechLang.split("-")[0].toLowerCase() == "en"){
 			English = true;
 		} else {
@@ -711,19 +715,61 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		}
 	}
 	
+	var pitch = 1;
+	if (urlParams.has("pitch")){
+		pitch = urlParams.get("pitch") || 1;
+	}
+	
+	var rate = 1;
+	if (urlParams.has("rate")){
+		rate = urlParams.get("rate") || 1;
+	}
+	
+	var volume = 1;
+	if (urlParams.has("volume")){
+		volume = urlParams.get("volume") || 1;
+	}
+	
+	var voiceName = false;
+	if (urlParams.has("voice")){
+		voiceName = urlParams.get("voice") || "google";
+	}
+	
+	var voiceGender = false;
+	if (urlParams.has("gender")){
+		voiceGender = urlParams.get("gender") || "MALE";
+	}
+	
+	var GoogleAPIKey =  false; // You can get your API key from Google Cloud ; KEEP IT PRIVATE/SECRET.  It will look like: "ahasdfuyu234hjjUASDtu1234gughasdguhaU" or somnething like that.
+	if (urlParams.has("ttskey")){
+		GoogleAPIKey = urlParams.get("ttskey") || false; 
+	}
+	
 	function speak(text){
 		if (!speech){return;}
 		if (!text){return;}
+	
+		if (GoogleAPIKey){
+			googleTTS(text);
+			return;
+		}
 		
 		if (!voice){
 			if (!voices || !voices.length){
 				voices = window.speechSynthesis.getVoices();
 			}
+			console.log("You can do &voice=VOICENAME to try to force select a voice based on a partial string match of its name.");
 			console.log(voices);
 			voices.forEach(vce=>{
-				if (vce.name && vce.name.includes("Siri")){ // SIRI sucks and breaks a lot, so lets skip if possible.
+				if (vce.name && voiceName && (vce.name.toLowerCase().includes(voiceName.toLowerCase()))){
+					if (vce.lang && (vce.lang == speechLang)){
+						voice = vce;
+					} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
+						voice = vce;
+					}
+				} else if (vce.name && vce.name.includes("Siri")){ // SIRI sucks and breaks a lot, so lets skip if possible.
 					return; 
-				} else if (vce.lang && (vce.lang == speechLang)){
+				} else if (!voice && vce.lang && (vce.lang == speechLang)){
 					voice = vce;
 				} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
 					voice = vce;
@@ -751,9 +797,9 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 			speechInput.voice = voice;
 		}
 		
-		speechInput.volume = 1;
-		speechInput.rate = 1;
-		speechInput.pitch = 1;
+		speechInput.volume = volume;
+		speechInput.rate = rate;
+		speechInput.pitch = pitch;
 		speechInput.text = text;
 		window.speechSynthesis.speak(speechInput);
 	}
@@ -764,6 +810,51 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 			document.documentElement.style.setProperty("--image-content-max-height", window.innerHeight)
 		}
 	}catch(e){errorlog(e);}
+	
+	function googleTTS(tts){
+		const url = 'https://texttospeech.googleapis.com/v1beta1/text:synthesize?key='+GoogleAPIKey;
+		var data = {
+		  'input':{
+			 'text':tts
+		  },
+		  'voice':{
+			 'languageCode': speechLang.toLowerCase(),
+			 'name':'en-GB-Standard-A',
+			 'ssmlGender':'FEMALE'
+		  },
+		  'audioConfig':{
+			'audioEncoding':'MP3'
+		  }
+		 };
+		 
+		 if (voiceName){
+			data.voice.name = voiceName;
+		 }
+		 if (voiceGender){
+			data.voice.ssmlGender = voiceGender.toUpperCase();
+		 }
+		 
+		 const otherparam={
+			headers:{
+			   "content-type":"application/json; charset=UTF-8"
+			},
+			body:JSON.stringify(data),
+			method:"POST"
+		 };
+		fetch(url,otherparam).then(data=>{
+			return data.json();
+		}).then(res=>{
+			//console.log(res.audioContent);
+			var audio = document.createElement("audio");
+			audio.src = "data:audio/mp3;base64,"+res.audioContent;
+			if (volume){
+				audio.volume = volume;
+			}
+			audio.play();
+		}).catch(error=>{
+			console.error(error);	
+		})
+	}
 	
 	function RecvDataWindow(){
 		var iframe = document.createElement("iframe");
