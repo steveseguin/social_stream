@@ -168,7 +168,6 @@
 			}
 			
 			mutations.forEach(function(mutation) {
-				console.log(mutation.addedNodes);
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						if (mutation.addedNodes[i].id && !mutation.addedNodes[i].skip){
@@ -188,7 +187,6 @@
 									if (document.getElementById(id).skip){return;}
 									document.getElementById(id).skip = true;
 									if (!document.getElementById(id).childNodes.length){return;}
-									console.log(id);
 									processMessage(document.getElementById(id));
 								} catch(e){}
 							},500, mutation.addedNodes[i].id);

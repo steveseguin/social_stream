@@ -84,15 +84,11 @@
 		} catch(e){}
 	  } catch(e){return;}
 	  
-	  nameColor 
-	  
 	  var chatbadges = [];
 	  
 	  ele.querySelectorAll("img.chat-badge[src]").forEach(badge=>{
 		chatbadges.push(badge.src);
 	  });
-	  
-	  
 	  
 	  try {
 		var BTT = ele.querySelectorAll('.bttv-tooltip');
@@ -109,9 +105,8 @@
 		 
 		  if (!chatmessage){
 			  try {
-				var eleContent = getAllContentNodes(ele.querySelector('span.message'));
+				var eleContent = ele.querySelector('span.message');
 				chatmessage = getAllContentNodes(eleContent);
-				
 			  } catch(e){}
 		  }
 		  
@@ -122,7 +117,6 @@
 			  } catch(e){}
 		  }
 		  
-		  console.log(chatmessage);
 	  } else if (ele.querySelector(".seventv-message-context")){
 		    var cloned = ele.querySelector(".seventv-message-context").cloneNode(true);
 			var children = cloned.querySelectorAll("[alt]");
@@ -152,7 +146,6 @@
 	  if (!chatmessage){
 		return;
 	  }
-
 	  var donations = 0;
 	  try {
 		var elements = ele.querySelectorAll('.chat-line__message--cheer-amount'); // FFZ support
@@ -181,10 +174,10 @@
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = "";
 	  data.type = "twitch";
+	  
 	  if (brandedImageURL){
 		data.sourceImg = brandedImageURL;
 	  }
-	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
 	  } catch(e){
