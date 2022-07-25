@@ -50,6 +50,8 @@
 			max-height: 20px;
 			height:20px;
 			display:inline-block;
+			width: auto;
+			object-fit: contain;
 		}
 		.hl-badge:last-child{
 			padding: 0 4px 0px 0px;
@@ -85,6 +87,8 @@
 			overflow-wrap: anywhere;
 		}
 		
+		
+		
 		.hl-message img{
 			position:relative;
 			margin: auto 1px;
@@ -95,8 +99,6 @@
 			max-height: 20px;
 		}
 
-		
-		
 		.hl-message span > img{
 			margin: auto 1px;
 		}
@@ -173,8 +175,8 @@
 		.compactmode.expand.time-arrived {
 			margin: auto 0;
 		}
-		.larger-emojis :not(.expand) > .hl-message {
-			line-height: 34px;
+		.larger-emojis:not(.expand) .hl-message {
+			line-height: 34px!important;
 		}
 
 		.highlight-chat.expand.larger-emojis{
@@ -269,12 +271,30 @@
 		
 		.notcompactmode>.hl-name{
 			margin: 3.5px 5px 0 5px;
-			min-width: 155px;
-			max-width: 250px;
+			min-width: max(175px,10vw);
+			max-width: max(220px, 25vw);
+			white-space: unset;
+			height: 24px;
+			line-height: var(--message-line-height);
+		}
+		
+		.splitMode.hl-name{
+		    text-align: right;
+			min-width: 0;
+			margin: 3.5px 5px 0 5px;
 			white-space: unset;
 			overflow: hidden;
 			height: 24px;
 			line-height: var(--message-line-height);
+		}
+		.leftside{
+			min-width: max(300px,15vw);
+			text-align: right;
+			margin-right: 8px;
+		}
+		.leftside>img{
+			top: 0px;
+			margin: 2px 2px auto 1px;
 		}
 		.larger-emojis>.hl-name{
 			height: 30px;
@@ -657,6 +677,11 @@
 	if (urlParams.has("hidesource")){
 		showsource = false;
 	} 
+	
+	var splitMode = "";
+	if (urlParams.has("split")){
+		splitMode = " splitMode";
+	} 
 
 	var stylizeEmoji = false;
 	if (urlParams.has("emoji") || urlParams.has("emojis")){
@@ -684,7 +709,6 @@
 		document.getElementById("menu").style.top = "42px";
 		compactmode = true;
 		customNodeLimit = 15;
-	
 	} 
 	
 	var avatars = true;
@@ -908,7 +932,7 @@
 		document.getElementById("menu").classList.add("darkmode");
 	}
 	
-	if (urlParams.has("hideshadow")){
+	if (urlParams.has("hideshadow") || urlParams.has("transparent")){
 		document.documentElement.style.setProperty("--highlight-base", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-base2", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact", "#0000", "important");
@@ -1254,7 +1278,7 @@
 					}
 				});
 			}).catch(error => {
-				console.error(error);
+				//console.error(error);
 				data.chatimg = 'unknown.png';
 				if (darkmode){
 					imgnode.classList.add("invert");
@@ -1506,17 +1530,17 @@
 				
 				if (compactmode){
 					if (bot){
-						chatname = '<div class="hl-name"></div>';
+						chatname = '<div class="hl-name'+splitMode+'"></div>';
 					} else if (chatbadges){
-						chatname = '<div '+nameColor+' class="hl-name">' +chatbadges+ data.chatname+":</div>";
+						chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' +chatbadges+ data.chatname+":</div>";
 					} else {
-						chatname = '<div '+nameColor+' class="hl-name">' + data.chatname+":</div>";
+						chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' + data.chatname+":</div>";
 					}
 				} else {
-					chatname = '<div '+nameColor+' class="hl-name">' +chatbadges+ data.chatname+"</div>";
+					chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' +chatbadges+ data.chatname+"</div>";
 				}
 			} else {
-				chatname = '<div class="hl-name">'+chatbadges+'</div>';
+				chatname = '<div class="hl-name'+splitMode+'">'+chatbadges+'</div>';
 			} 
 
 			var larger = "";
@@ -1530,7 +1554,17 @@
 				expand = " expand"
 			}
 
-			if (compactmode){
+			if (splitMode){
+				var node = createElementFromHTML('<div id="msg_'+data.counter+'" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+					 + "<div class='leftside "+larger+"'>"
+					 + chatname
+					 + showType
+					 + chatImg
+					 + "</div>"
+					 + '<div class="hl-message" id="content_'+data.counter+'">' + data.chatmessage + '</div>'
+					 + addImage
+					 + donation + '</div>');
+			} else if (compactmode){
 				var node = createElementFromHTML('<div id="msg_'+data.counter+'" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + '<div class="hl-message" id="content_'+data.counter+'">'
 						+ showType
@@ -1610,7 +1644,7 @@
 						}
 					} else {
 						var ccc =0;
-						while (nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight){
+						while (msgNode.clientHeight < nameEle.clientHeight || nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight){
 							var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
 							nameEle.style.fontSize = (fontsize-1)+"px";
 							ccc+=1;

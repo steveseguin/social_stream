@@ -33,10 +33,20 @@
 		} catch(e){
 			//console.log(e);
 		}
-		
+		var badges = [];
 		var name = "";
 		try {
-			name = ele.childNodes[1].childNodes[0].querySelector('span[dir="auto"]').innerText;
+			var nameElement = ele.childNodes[1].childNodes[0].querySelector('span[dir="auto"]');
+			name = nameElement.innerText;
+			try {
+				nameElement.parentNode.parentNode.childNodes[1].querySelectorAll('img[src]').forEach(img=>{
+					if (!img.src.startsWith("data:image/svg+xml,")){
+						badges.push(img.src);
+					}
+				});
+			} catch (e) {
+				
+			}
 		} catch (e) {
 			try {
 				name = ele.childNodes[1].childNodes[0].querySelector('a[role="link"]').innerText;
@@ -45,13 +55,15 @@
 			}
 		}
 
-		var badges = [];
-		if (name) {
+		
+		/* if (name && !badges.length) {
 			name = name.trim();
 			ele.childNodes[1].childNodes[0].querySelectorAll('img[src]').forEach(img=>{
-				badges.push(img.src);
+				if (!img.src.startsWith("data:image/svg+xml,")){
+					badges.push(img.src);
+				}
 			});
-		}
+		} */
 
 		var msg = "";
 
@@ -106,20 +118,39 @@
 				});
 			} catch (e) {
 				try {
-					ele.childNodes[1].querySelector('a[role="link"]').parentNode.parentNode.parentNode.querySelectorAll('*').forEach(function(node) {
-						if (node.nodeName == "IMG") {
-							msg += node.outerHTML;
-						} else {
-							node.childNodes.forEach(function(nn) {
-								try {
-									if (nn.nodeName === "#text") {
-										msg += nn.textContent;
-									}
-								} catch (e) {}
+					var sister = ele.childNodes[1].querySelectorAll('a[role="link"]');
+					if (sister.length){
+						try {
+							sister[sister.length-1].parentNode.parentNode.previousSibling.querySelector('span[lang]').querySelectorAll('*').forEach(function(node) {
+								if (node.nodeName == "IMG") {
+									msg += node.outerHTML;
+								} else {
+									node.childNodes.forEach(function(nn) {
+										try {
+											if (nn.nodeName === "#text") {
+												msg += nn.textContent;
+											}
+										} catch (e) {}
+									});
+								}
+							});
+						} catch(e){
+							sister[sister.length-1].parentNode.parentNode.previousSibling.querySelectorAll('*').forEach(function(node) {
+								if (node.nodeName == "IMG") {
+									msg += node.outerHTML;
+								} else {
+									node.childNodes.forEach(function(nn) {
+										try {
+											if (nn.nodeName === "#text") {
+												msg += nn.textContent;
+											}
+										} catch (e) {}
+									});
+								}
 							});
 						}
-					});
-				} catch (e) {}
+					}
+				} catch(e){errorlog(e);}
 			}
 		}
 
@@ -144,6 +175,8 @@
 		data.hasMembership = "";;
 		data.contentimg = "";
 		data.type = "facebook";
+		
+		//console.log(data);
 		
 		pushMessage(data);
 	}
