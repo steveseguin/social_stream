@@ -105,7 +105,7 @@
 				ele.childNodes[1].querySelector('a[role="link"]').parentNode.parentNode.parentNode.querySelector('span[lang]').querySelectorAll('*').forEach(function(node) {
 
 					if (node.nodeName == "IMG") {
-						msg += node.outerHTML;
+						msg += node.outerHTML; //////////////
 					} else {
 						node.childNodes.forEach(function(nn) {
 							try {
@@ -123,7 +123,7 @@
 						try {
 							sister[sister.length-1].parentNode.parentNode.previousSibling.querySelector('span[lang]').querySelectorAll('*').forEach(function(node) {
 								if (node.nodeName == "IMG") {
-									msg += node.outerHTML;
+									msg += node.outerHTML; ////////////////
 								} else {
 									node.childNodes.forEach(function(nn) {
 										try {
@@ -135,19 +135,36 @@
 								}
 							});
 						} catch(e){
-							sister[sister.length-1].parentNode.parentNode.previousSibling.querySelectorAll('*').forEach(function(node) {
-								if (node.nodeName == "IMG") {
-									msg += node.outerHTML;
-								} else {
-									node.childNodes.forEach(function(nn) {
-										try {
-											if (nn.nodeName === "#text") {
-												msg += nn.textContent;
-											}
-										} catch (e) {}
-									});
-								}
-							});
+							var test = sister[sister.length-1].parentNode.parentNode.previousSibling.querySelectorAll('[dir="auto"]');
+							if (test.length>2){
+								test[1].querySelectorAll('*').forEach(function(node) {
+									if (node.nodeName == "IMG") {
+										msg += node.outerHTML; ///////////////
+									} else {
+										node.childNodes.forEach(function(nn) {
+											try {
+												if (nn.nodeName === "#text") {
+													msg += nn.textContent;
+												}
+											} catch (e) {}
+										});
+									}
+								});
+							} else {
+								sister[sister.length-1].parentNode.parentNode.previousSibling.querySelectorAll('*').forEach(function(node) {
+									if (node.nodeName == "IMG") {
+										msg += node.outerHTML; ///////////////
+									} else {
+										node.childNodes.forEach(function(nn) {
+											try {
+												if (nn.nodeName === "#text") {
+													msg += nn.textContent;
+												}
+											} catch (e) {}
+										});
+									}
+								});
+							}
 						}
 					}
 				} catch(e){errorlog(e);}
