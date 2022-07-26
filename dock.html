@@ -76,6 +76,13 @@
 			background-color: var(--background-color);
 			text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
 			overflow-x: hidden;
+			-webkit-app-region: drag;
+		}
+		body > div {
+			 -webkit-app-region: no-drag;
+		}
+		body > div > #menu {
+			 -webkit-app-region: drag;
 		}
 		
 		.bot.compactmode {
@@ -271,11 +278,22 @@
 		
 		.notcompactmode>.hl-name{
 			margin: 3.5px 5px 0 5px;
-			min-width: max(175px,10vw);
+			min-width: max(135px,12vw);
 			max-width: max(220px, 25vw);
 			white-space: unset;
 			height: 24px;
 			line-height: var(--message-line-height);
+		}
+		
+		@media only screen and (max-width: 310px){
+			.notcompactmode>.highlight-chat {
+				display: inline-block;
+			}
+		}
+		@media only screen and (max-width: 180px){
+			.time-arrived { 
+				display: none!important;
+			}
 		}
 		
 		.splitMode.hl-name{
@@ -391,6 +409,7 @@
 			margin: 5px;
 			background-color: #DDD2;
 			opacity:0.9;
+			-webkit-app-region: no-drag;
 		}
 		#menu > button:hover {
 			background-color: #DDDF;
@@ -416,6 +435,7 @@
 			background-color: var(--input-color);
 			border: 1px solid black;
 			border-radius: 5px;
+			-webkit-app-region: no-drag;
 		}
 		#menu > input:focus {
 		  background-color: var(--input-color);
@@ -578,10 +598,10 @@
 			vertical-align: sub;
 			text-shadow: 0 0 #0000;
 		}
-
+		
 	</style>
 </head>
-<body>
+<body >
 	<div id="output" class="output notcompactmode"></div>
 	<div id="pinned" class="output notcompactmode"></div>
 	<div id="menu">

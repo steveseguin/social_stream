@@ -199,8 +199,21 @@
 	}
 
 	var dupCheck = [];
+	
+	var lastURL = "";
+	var processed = 0;
+	
+	console.log("LOADED SocialStream EXTENSION");
 
-	setTimeout(function() { // clear existing messages; just too much for a stream.
+	var ttt = setInterval(function() {
+		dupCheck = dupCheck.slice(-60); // facebook seems to keep around 40 messages, so this is overkill?
+		
+		if (lastURL !== window.location.href){
+			lastURL = window.location.href;
+			processed = 0;
+		}  else {
+			processed += 1;
+		}
 		try {
 			if (window.location.href.includes("facebook.com/live/producer/") || window.location.href.includes("/videos/")) {
 				var main = document.querySelectorAll("[role='article']");
@@ -216,7 +229,9 @@
 									continue;
 								}
 								dupCheck.push(main[j].id);
-							//	processMessage(main[j]);
+								if (processed>3){
+									processMessage(main[j]);
+								}
 							} else if (main[j].parentNode && main[j].parentNode.id) {
 								if (dupCheck.includes(main[j].parentNode.id)){
 									continue;
@@ -225,12 +240,16 @@
 									continue;
 								}
 								dupCheck.push(main[j].parentNode.id);
-							//	processMessage(main[j]);
+								if (processed>3){
+									processMessage(main[j]);
+								}
 							} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id) {
 								var id = main[j].querySelector("[id]"); // an archived video
 								if (id && !(dupCheck.includes(id))) {
 									dupCheck.push(id);
-							//		processMessage(main[j]);
+									if (processed>3){
+										processMessage(main[j]);
+									}
 								}
 							}
 						}
@@ -238,50 +257,7 @@
 				}
 			}
 		} catch (e) {}
-
-		console.log("LOADED SocialStream EXTENSION");
-
-		var ttt = setInterval(function() {
-			dupCheck = dupCheck.slice(-60); // facebook seems to keep around 40 messages, so this is overkill?
-			try {
-				if (window.location.href.includes("facebook.com/live/producer/") || window.location.href.includes("/videos/")) {
-					var main = document.querySelectorAll("[role='article']");
-					for (var j = 0; j < main.length; j++) {
-						try {
-							if (!main[j].dataset.set123) {
-								main[j].dataset.set123 = "true";
-								if (main[j].id){
-									if (main[j].id.startsWith("client:")) {
-										continue;
-									}
-									if (dupCheck.includes(main[j].id)) {
-										continue;
-									}
-									dupCheck.push(main[j].id);
-									processMessage(main[j]);
-								} else if (main[j].parentNode && main[j].parentNode.id) {
-									if (dupCheck.includes(main[j].parentNode.id)){
-										continue;
-									}
-									if (main[j].parentNode.id.startsWith("client:")) {
-										continue;
-									}
-									dupCheck.push(main[j].parentNode.id);
-									processMessage(main[j]);
-								} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id) {
-									var id = main[j].querySelector("[id]"); // an archived video
-									if (id && !(dupCheck.includes(id))) {
-										dupCheck.push(id);
-										processMessage(main[j]);
-									}
-								}
-							}
-						} catch (e) {}
-					}
-				}
-			} catch (e) {}
-		}, 800);
-	}, 1500);
+	}, 800);
 
 	var textOnlyMode = false;
 	chrome.runtime.sendMessage(chrome.runtime.id, {
