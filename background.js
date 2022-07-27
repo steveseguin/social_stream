@@ -19,7 +19,7 @@ function generateStreamID(){
 		text = text.replaceAll('Ad', 'vdAv');
 		text = text.replaceAll('ad', 'vdav');
 		text = text.replaceAll('aD', 'vDav');
-	} catch(e){console.log(e);}
+	} catch(e){}
 	return text;
 };
 
@@ -123,7 +123,7 @@ function getYoutubeAvatarImage(url, skip=false){
 			sleep(200);
 			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];}
 		}
-	} catch(e){console.error(e);}
+	} catch(e){}
 	return false;
 }
 function YouTubeGetID(url){
@@ -271,6 +271,28 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "tellajoke") {
 				tellAJoke();
 				sendResponse({"state":isExtensionOn});
+			} else if (request.cmd && request.cmd === "fakemsg") {
+				var data = {};
+				data.chatname = "TEST MSG";
+				data.nameColor = "";
+				data.chatbadges = "";
+				data.backgroundColor = "";
+				data.textColor = "";
+				data.chatmessage = "A test message for you to enjoy is here. 😘😘😊 or something 🎶🎵🎵🔨 ";
+				data.chatimg = "";
+				if (Math.random()>0.7){
+					data.hasDonation = "100 gold";
+					data.hasMembership = "";
+				} else if (Math.random()>0.2){
+					data.hasDonation = "";
+					data.hasMembership = "";
+				} else {
+					data.hasDonation = "";
+					data.hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
+				}
+				data.type = "youtube";
+				sendDataP2P(data);
+				
 			} else if (request.cmd && request.cmd === "sidUpdated") {
 				if (request.value){
 					channel = request.value;
@@ -400,7 +422,7 @@ function verifyOriginal(msg){
 		} else {
 			return false;
 		}
-	} catch(e){console.error(e);}
+	} catch(e){}
 	return true;
 }
 

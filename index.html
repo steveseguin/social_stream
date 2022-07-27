@@ -85,6 +85,10 @@ body {
     bottom: 50px;
 }
 
+.dono{
+	min-height: 160px;
+}
+
 #message {
     position: relative;
 }
@@ -282,10 +286,12 @@ yt-live-chat-text-message-renderer.shown-comment {
 .hl-message:empty {
 	background-color:#0000;
 	width:200px;
+	min-height:37px;
 }
 .hl-name:empty {
     background-color:#0000;
     z-index:1;
+	display:none;
 }
 
 .hl-message img {
@@ -386,10 +392,10 @@ span.hl-badge{
 }
 .cheer {
     position: absolute;
-    display: block;
+    display: inline-block;
     text-align: center;
+    top: 100px;
     left: 70px;
-    top: 108px;
     z-index: 3;
     min-width: 128px;
     border-radius: 10px;
@@ -433,10 +439,10 @@ span.hl-badge{
 }
 .donation {
     position: absolute;
-    display: block;
+    display: inline-block;
     text-align: center;
+    top: 100px;
     left: 70px;
-    top: 108px;
     z-index: 3;
     min-width: 128px;
     border-radius: 10px;
@@ -931,9 +937,6 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 			}
 			
 			nextComment = setTimeout(function(data){
-			
-				console.log(data);
-			
 				var addImage = "";
 				if (data.contentimg){
 					 addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" onload="realign();"/></div>';
@@ -999,6 +1002,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				
 				
 				if (data.hasDonation){
+				
 					if (data.type === "twitch"){
 						data.hasDonation = '<div class="cheer">' + data.hasDonation + '</div>';
 					} else if (data.type === "youtube"){
@@ -1053,9 +1057,6 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				
 				var chatbadges = "";
 				if (data.chatbadges && showbadges){
-					if (data.chatbadges.length){
-						console.log(data.chatbadges);
-					}
 					data.chatbadges.forEach(badge=>{
 						if (typeof badge == "object"){
 							if (badge.type && (badge.type=="img") && badge.src){
@@ -1069,15 +1070,24 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					});
 				}
 				
+				if (chatbadges){
+					chatbadges = '<div class="hl-badges" >' + chatbadges + '</div>';
+				}
+				
 				document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" data-source-type="'+data.type+'">'
 					 + '<div class="hl-name" '+styleOverrideName+' id="nameDIV">' + data.chatname
-					 +   '<div class="hl-badges" >' + chatbadges + '</div>'
+					 + chatbadges
 					 + '</div>'
 					 + '<div id="message" '+styleOverride+' class="hl-message" >' + data.chatmessage + '</div>'
 					 + avatarImg
 					 + addImage
 					 + data.hasDonation + data.hasMembership +'</div>';
 				
+				if (data.hasDonation || data.hasMembership){
+					document.getElementById("output").classList.add("dono");
+				} else {
+					document.getElementById("output").classList.remove("dono");
+				}
 				
 				if (!data.chatname && !data.chatbadges){
 					document.getElementById("nameDIV").style.display = "none";

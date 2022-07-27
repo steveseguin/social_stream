@@ -66,7 +66,7 @@
 		  
 		  var chatdonation = "";
 		  try{
-			chatdonation = ele.querySelector("#purchase-amount").innerHTML;
+			chatdonation = ele.querySelector("#purchase-amount").innerText;
 		  } catch(e){}
 		  
 		  var chatmembership = "";
