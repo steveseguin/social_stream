@@ -760,10 +760,16 @@
 	}
 	
 	var autoshow = false;
+	var autoshowdonos = false;
+	
 	if (urlParams.has("autoshow")){
 		autoshow = true;
 		document.getElementById("autoshow").classList.add("pressed");
 	} 
+	
+	if (urlParams.has("autoshowdonos")){
+		autoshowdonos = true;
+	}
 	
 	if (urlParams.has("scale")){
 		scale = urlParams.get("scale") || 1.0;
@@ -1688,11 +1694,13 @@
 			node.rawContents = data;
 			
 			if (autoshow && !bot){ 
-				if (!autoTimeout){
-					selectedMessage(false, node);
-					autoTimeout = setTimeout(function(){
-						autoTimeout=false;
-					},1500);
+				if (!autoshowdonos || (autoshowdonos && data.hasDonation)){ // dono or not to dono.
+					if (!autoTimeout){
+						selectedMessage(false, node);
+						autoTimeout = setTimeout(function(){
+							autoTimeout=false;
+						},1500);
+					}
 				}
 			}
 			
