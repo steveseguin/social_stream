@@ -229,6 +229,13 @@
 		if (document.getElementById("poll__body")){
 			streamPollRAW(document.getElementById("poll__body"));
 		}
-	},1000);
 
+		if (document.getElementById('chat-list-content')) {
+		    document.getElementById('chat-list-content').scrollTop = 10000; // prevent chat box from stop scrolling, which makes messages stop appearing
+		}
+
+		if (document.querySelector('[aria-label="open the chat pane"]')) { // prevent chat box from being closed after screen-share by keeping it always open
+		    document.querySelector('[aria-label="open the chat pane"]').click()
+		}
+	},1000);
 })();
