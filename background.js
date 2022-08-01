@@ -437,7 +437,7 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 	
 function loadIframe(channel){  // this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
 	iframe = document.createElement("iframe");
-	iframe.src = "https://vdo.socialstream.ninja/?password=false&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view"; // don't listen to any inbound events
+	iframe.src = "https://vdo.socialstream.ninja/?password=false&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
 	document.body.appendChild(iframe);
 }
 

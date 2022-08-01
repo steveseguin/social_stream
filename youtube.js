@@ -82,7 +82,7 @@
 		  } catch(e){}
 		  
 		  if (chatsticker) {
-			chatdonation = ele.querySelector("#purchase-amount-chip").innerHTML;
+				chatdonation = ele.querySelector("#purchase-amount-chip").innerText;
 		  }
 
 		  var chatbadges = [];
