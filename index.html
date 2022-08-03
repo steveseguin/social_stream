@@ -1176,9 +1176,9 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 									speak(chatname + " has donated " + donoText);
 								}
 							} else if (msgPlain){
-								speak(chatname + "! " + donoText + "! "+ msgPlain );
+								speak(chatname + "! ! .. " + donoText + "! ! .. "+ msgPlain );
 							} else {
-								speak(chatname + "! " + donoText);
+								speak(chatname + "! ! .. " + donoText);
 							}
 						} else if (English){ // no name but english
 								if (msgPlain){
@@ -1187,7 +1187,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 									speak("Someone has donated " + donoText);
 								}
 						} else if (msgPlain){ // no name; not english
-								speak(donoText + "! "+ msgPlain );
+								speak(donoText + "! ! .. "+ msgPlain );
 						} else {
 							speak(donoText);
 						}
@@ -1196,7 +1196,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 							if (English){
 								speak(chatname + " says! " +msgPlain);
 							} else {
-								speak(chatname + "! " +msgPlain);
+								speak(chatname + "! ! .. " +msgPlain);
 							}
 						} else if (English){ // NO NAME
 							speak("Someone says! " +msgPlain);

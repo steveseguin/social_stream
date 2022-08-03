@@ -287,12 +287,19 @@ chrome.runtime.onMessage.addListener(
 				data.textColor = "";
 				data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
 				data.chatimg = "";
-				if (Math.random()>0.7){
+				if (Math.random()>0.75){
 					data.hasDonation = "100 gold";
 					data.hasMembership = "";
+					data.chatname = "Bob";
+				} else if (Math.random()>0.7){
+					data.hasDonation = "3 hearts";
+					data.hasMembership = "";
+					data.chatmessage = "";
+					data.chatname = "Lucy";
 				} else if (Math.random()>0.6){
 					data.hasDonation = "";
 					data.hasMembership = "";
+					data.chatname = "Steve";
 					var score = parseInt(Math.random()* 378);
 					data.chatmessage  =  jokes[score]["setup"] + "..  " + jokes[score]["punchline"]  + " 😊";
 				} else if (Math.random()>0.2){
