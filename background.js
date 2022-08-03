@@ -280,16 +280,21 @@ chrome.runtime.onMessage.addListener(
 				sendResponse({"state":isExtensionOn});
 			} else if (request.cmd && request.cmd === "fakemsg") {
 				var data = {};
-				data.chatname = "TEST MSG";
+				data.chatname = "John Doe";
 				data.nameColor = "";
 				data.chatbadges = "";
 				data.backgroundColor = "";
 				data.textColor = "";
-				data.chatmessage = "A test message for you to enjoy is here. 😘😘😊 or something 🎶🎵🎵🔨 ";
+				data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
 				data.chatimg = "";
 				if (Math.random()>0.7){
 					data.hasDonation = "100 gold";
 					data.hasMembership = "";
+				} else if (Math.random()>0.6){
+					data.hasDonation = "";
+					data.hasMembership = "";
+					var score = parseInt(Math.random()* 378);
+					data.chatmessage  =  jokes[score]["setup"] + "..  " + jokes[score]["punchline"]  + " 😊";
 				} else if (Math.random()>0.2){
 					data.hasDonation = "";
 					data.hasMembership = "";

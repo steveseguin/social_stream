@@ -1004,17 +1004,15 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					data.chatmessage = data.chatmessage.toString();
 				}
 				
-				
+				var donationHTML = "";
 				if (data.hasDonation){
-				
 					if (data.type === "twitch"){
-						data.hasDonation = '<div class="cheer">' + data.hasDonation + '</div>';
+						donationHTML = '<div class="cheer">' + data.hasDonation + '</div>';
 					} else if (data.type === "youtube"){
-						data.hasDonation = '<div class="donation youtubedonation">' + data.hasDonation + '</div>';
+						donationHTML = '<div class="donation youtubedonation">' + data.hasDonation + '</div>';
 					} else {
-						data.hasDonation = '<div class="donation">' + data.hasDonation + '</div>';
+						donationHTML = '<div class="donation">' + data.hasDonation + '</div>';
 					}
-					
 				} else {
 					data.hasDonation = "";
 				}
@@ -1085,7 +1083,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					 + '<div id="message" '+styleOverride+' class="hl-message" >' + data.chatmessage + '</div>'
 					 + avatarImg
 					 + addImage
-					 + data.hasDonation + data.hasMembership +'</div>';
+					 + donationHTML + data.hasMembership +'</div>';
 				
 				if (data.hasDonation || data.hasMembership){
 					document.getElementById("output").classList.add("dono");
@@ -1162,28 +1160,36 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					}
 					
 					if (data.hasDonation){
+						var donoText = document.createElement("div");
+						donoText.innerHTML = data.hasDonation;
+						donoText = donoText.innerText.trim();
+						donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
+						donoText = donoText.replaceAll('_', ' ');
+						donoText = donoText.replaceAll('@', ' ');
+						donoText = donoText.replaceAll('!', ' ');
+						
 						if (chatname){  ///// NAME
 							if (English){
 								if (msgPlain){
-									speak(chatname + " has donated " + data.hasDonation + " and says "+ msgPlain);
+									speak(chatname + " has donated " + donoText + " and says "+ msgPlain);
 								} else {
-									speak(chatname + " has donated " + data.hasDonation);
+									speak(chatname + " has donated " + donoText);
 								}
 							} else if (msgPlain){
-								speak(chatname + "! " + data.hasDonation + "! "+ msgPlain );
+								speak(chatname + "! " + donoText + "! "+ msgPlain );
 							} else {
-								speak(chatname + "! " + data.hasDonation);
+								speak(chatname + "! " + donoText);
 							}
 						} else if (English){ // no name but english
 								if (msgPlain){
-									speak("Someone has donated " + data.hasDonation + " and says "+ msgPlain);
+									speak("Someone has donated " + donoText + " and says "+ msgPlain);
 								} else {
-									speak("Someone has donated " + data.hasDonation);
+									speak("Someone has donated " + donoText);
 								}
 						} else if (msgPlain){ // no name; not english
-								speak(data.hasDonation + "! "+ msgPlain );
+								speak(donoText + "! "+ msgPlain );
 						} else {
-							speak(data.hasDonation);
+							speak(donoText);
 						}
 					} else if (msgPlain && !readDonos){ // NO DONATION
 						if (chatname){ // NAME
