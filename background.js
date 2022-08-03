@@ -242,6 +242,13 @@ chrome.runtime.onMessage.addListener(
 							}
 						} catch(e){}
 					}
+					if (!settings.whatsapp){
+						try {
+							if (request.message.type == "whatsapp"){
+								return;
+							}
+						} catch(e){}
+					}
 					
 					if (request.message.type == "youtube"){
 						if (sender.tab.url){
