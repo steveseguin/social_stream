@@ -709,9 +709,13 @@
 		document.documentElement.style.setProperty("--stylized-img", "35px");
 	}
 
+	var flexOrNotToFlex = "flex";
+	
 	if (urlParams.has("horizontal")){
 		horizontal = true;
 		document.documentElement.style.setProperty("--list-or-horizontal", "inline-block"); 
+		flexOrNotToFlex = "inline-block";
+		document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
 		document.getElementById("output").style.width = "10000%";
 		document.getElementById("output").style.right = "0";
 		if (stylizeEmoji){
@@ -989,7 +993,7 @@
 			ele.classList.add("pressed");
 		} else {
 			ele.dataset.state = "0";
-			document.documentElement.style.setProperty("--show-donos-only", "flex");
+			document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
 			ele.classList.remove("pressed");
 		}
 		redoOdd();
