@@ -1,7 +1,7 @@
-*** PLEASE NOTE:  If having a problem with the name of the faetured chat overlay being cropped, just increase the height of the Browser Source window; 600px might be enough.  The chat will now be relative to the bottom of the window, instead of the top.
-
 # Social Stream
 Consolidate your live social messaging streams
+
+Download Here: https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip
 
 - Supports live automated two-way chat messaging with Facebook, Youtube, Twitch, Zoom, and dozens more
 - Includes a "featured chat" overlay, with messages selectable via the dockable dashboard; auto or manual selection.
@@ -14,7 +14,6 @@ Consolidate your live social messaging streams
 Social Stream makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
 
 ![image](https://user-images.githubusercontent.com/2575698/148505639-972eec38-7d8b-4bf3-9f15-2bd02182591e.png) ![image](https://user-images.githubusercontent.com/2575698/148505691-8a08e7b0-29e6-4eb5-9632-9dbcac50c204.png)
-
 
 ### Supported sites:
 
