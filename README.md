@@ -1,7 +1,7 @@
 # Social Stream
 Consolidate your live social messaging streams
 
-Download Here: https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip
+ [Jump to Download and Install instructions](https://github.com/steveseguin/social_stream/blob/main/README.md#to-install)
 
 - Supports live automated two-way chat messaging with Facebook, Youtube, Twitch, Zoom, and dozens more
 - Includes a "featured chat" overlay, with messages selectable via the dockable dashboard; auto or manual selection.
@@ -56,11 +56,11 @@ https://www.youtube.com/watch?v=X_11Np2JHNU
 
 ### To install
 
-This extension should work with Chromium-based browser on systems that support webRTC. This includes Chrome, Edge, and Brave.
+This extension should work with Chromium-based browser on systems that support webRTC. This includes Chrome, Edge, and Brave. [Firefox users see here](https://github.com/steveseguin/social_stream#firefox-support).
 
 Currently you must download, extract, and load the browser extension manually.  It is not available yet in the browser's web store.
 
-Link to download: https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip
+The link to download newest version is here: https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip
 
 Once extracted into a folder, you can go here to load it: chrome://extensions/
 
@@ -72,7 +72,13 @@ Ensure you have Developer Mode enabled; then you can just load the extension via
 
 You're ready to start using it! 
 
-Please note that you will need to manually update the extension to access newer versions; it currently does not auto update.
+Please note that you will need to manually update the extension to access newer versions; it currently does not auto-update aspects of the extension; just the dock and single overlay page auto-update as they are hosted online.
+
+#### Updating
+
+To update, just download the extension, replace the old files with the new files, and then reload the extension or completely restart the browser.  If just reloading the extension, you may then need to also reload any open chat sites that you wish to use Social Stream with.
+
+New app integrations do not auto-update; just the overlay and dock page will auto-update. It's suggeseted you update every now and then manually, or whenever you encounter a bug.  
 
 #### Firefox support
 
@@ -310,9 +316,9 @@ If the auto responder doesn't work -- you see a blue bar, but nothing happens, t
 
 ### Support
 
-You can find me on discord over at https://discord.vdo.ninja or https://discord.gg/7U4ERn9y , offering free support in channel #chat-overlay-support 
+You can find me on discord over at https://discord.vdo.ninja or [https://discord.gg/7U4ERn9y](https://discord.gg/vFU8AuwNf3), offering free support in channel #chat.overlay-support 
 
-Feedback and feature requests are welcomed
+Feedback and feature requests are welcomed.  Please also make a Github issue if you're not a fan of Discord, but still need to report a bug or feature request.
 
 ### Icons
 
