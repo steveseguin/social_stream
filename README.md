@@ -10,6 +10,7 @@ Consolidate your live social messaging streams
 - Multi-channel source-icon support, so you can differentiate between different streams and creators
 - No user login, API key, or permission needed to capture the chat messages from most sites and services.
 - Queuing of messages for later highlighting
+- Free community support at https://discord.socialstream.ninja
 
 Social Stream makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
 
@@ -316,7 +317,7 @@ If the auto responder doesn't work -- you see a blue bar, but nothing happens, t
 
 ### Support
 
-You can find me on discord over at https://discord.vdo.ninja or [https://discord.gg/7U4ERn9y](https://discord.gg/vFU8AuwNf3), offering free support in channel #chat.overlay-support 
+You can find me on discord over at https://discord.socialstream.ninja or [https://discord.gg/7U4ERn9y](https://discord.gg/vFU8AuwNf3), offering free support in channel #chat.overlay-support 
 
 Feedback and feature requests are welcomed.  Please also make a Github issue if you're not a fan of Discord, but still need to report a bug or feature request.
 
