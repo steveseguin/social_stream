@@ -26,7 +26,6 @@
 		
 		if (ele.marked){return;}
 		ele.marked = true;
-		console.log(ele);
 		
 		var chatimg = "";
 		try{
@@ -63,8 +62,6 @@
 		data.hasMembership = "";;
 		data.contentimg = "";
 		data.type = "minnit";
-
-		console.log(data);
 
 		pushMessage(data);
 	}
@@ -162,6 +159,5 @@
 	},1000);
 	
 	} catch(e){
-		console.error(e);
 	}
 })();
