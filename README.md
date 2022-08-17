@@ -42,7 +42,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - amazon.com/live
 - rumble.com (no pop out; viewer page)
 - trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/xxxxxx)
-
+- theta.tv (pop-out chat; https://www.theta.tv/chat/xxxxxxxxxxxxxxx)
 - Dlive.tv  (pop-out chat)
 - Picarto.tv (pop-out chat; ie: https://picarto.tv/chatpopout/CHANNELNAMEHERE/public)
 - Mobcrush (this page: https://studio.mobcrush.com/chatpopup.html)
