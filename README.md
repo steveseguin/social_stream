@@ -41,7 +41,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - restream.io chat supported (https://chat.restream.io/chat)
 - amazon.com/live
 - rumble.com (no pop out; viewer page)
-- trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/xxxxxx)
+- trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/CHANNEL_NAME_HERE)
 - theta.tv (pop-out chat; https://www.theta.tv/chat/xxxxxxxxxxxxxxx)
 - Dlive.tv  (pop-out chat)
 - Picarto.tv (pop-out chat; ie: https://picarto.tv/chatpopout/CHANNELNAMEHERE/public)
