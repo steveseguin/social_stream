@@ -30,8 +30,6 @@
 	  } else if ("listIndex" in ele.dataset){
 		  lastDataIndex = parseInt(ele.dataset.listIndex);
 	  }
-
-	  
 	  
 	  var chatimg = "";
 	  try{
@@ -162,23 +160,19 @@
 	}
 	console.log("social stream injected");
 	
-	if (document.querySelectorAll(".video-live-comments").length){
-		if (!document.querySelector(".video-live-comments").marked){
-			document.querySelector(".video-live-comments").marked=true;
-			onElementInserted(".video-live-comments", function(element){
-			   processMessage(element);
-			});
-		}
-	}
-	
-	setInterval(function(){
-		if (document.querySelectorAll(".video-live-comments").length){
-			if (!document.querySelector(".video-live-comments").marked){
-				document.querySelector(".video-live-comments").marked=true;
-				onElementInserted(".video-live-comments", function(element){
-				   processMessage(element);
-				});
+	var interval = setInterval(function(){
+		if (window.location.pathname.startsWith("/video/live") || window.location.pathname.startsWith("/video/events")){
+			console.log("socialstream loaded");
+			if (document.querySelectorAll(".video-live-comments").length){
+				if (!document.querySelector(".video-live-comments").marked){
+					document.querySelector(".video-live-comments").marked=true;
+					clearInterval(interval);
+					onElementInserted(".video-live-comments", function(element){
+					   processMessage(element);
+					});
+				}
 			}
+			
 		}
 	},3000);
 
