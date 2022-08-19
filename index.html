@@ -82,7 +82,8 @@ body {
     transition: .5s all cubic-bezier(0.250, 0.250, 0.105, 1.2);
 	margin: 0 0 0 15px;
     position: absolute;
-    bottom: 50px;
+    bottom: 30px;
+	min-height: calc(var(--author-avatar-size) + 15px + calc(2 * var( --author-avatar-border-size)));
 }
 
 .dono{
@@ -310,7 +311,7 @@ yt-live-chat-text-message-renderer.shown-comment {
     position: absolute;
     top: 0;
     z-index: 1;
-    left: 0px;
+    left: calc(-0.5 * var( --author-avatar-border-size));
     width: var(--author-avatar-size);
     height: var(--author-avatar-size);
     background-color: var(--author-avatar-border-color);
@@ -633,6 +634,11 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		borderRadius = parseInt(urlParams.get("rounded")) || 10;
 		borderRadius += "px";
 		document.documentElement.style.setProperty("--rounded-border-radius", borderRadius);
+	}
+	
+	if (urlParams.has("aligntop")){
+		document.getElementById("output").style.bottom = "unset";
+		document.getElementById("output").style.top = "0"
 	}
 	
 	var timeoutTimer = null;
