@@ -20,7 +20,7 @@
     --author-avatar-border-size: 3px;
     --author-avatar-size: 128px;
     --author-font-size: 30px;
-	--author-left: 115px;
+	--author-left: 113px;
 	
     /* donation/superchat specific */
     --donation-color: #5a4211;
@@ -605,8 +605,33 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	var scale = false;
 	if (urlParams.has("scale")){
 		scale = urlParams.get("scale") || 0.5; // 1.0 = 100% size
-		document.body.style.transform = "scale("+scale+")";
-		document.body.style.transformOrigin = "bottom left";
+		scale = parseFloat(scale);
+		if (centering){
+			//if (scale){
+				document.body.style.transform = "scale("+scale+") translate(-" + parseInt(scale * 50.0 - 50) +"%, 0%)";
+		//	} else {
+			//	document.body.style.transform = "scale("+scale+")";
+		//	}
+		} else {
+			//if (scale>1){
+				document.body.style.transform = "scale("+scale+") translate(-"+parseInt(50 - 50/scale)+"%, 0%)";
+			//} else {
+			//	document.body.style.transform = "scale("+scale+")";
+			//}
+		}
+		if (centering){
+			if (urlParams.has("aligntop")){
+				document.body.style.transformOrigin = "center top";
+			} else {
+				document.body.style.transformOrigin = "center bottom";
+			}
+		} else {
+			if (urlParams.has("aligntop")){
+				document.body.style.transformOrigin = "left top";
+			} else {
+				document.body.style.transformOrigin = "left bottom";
+			}
+		}
 		document.body.style.width = parseInt(100/scale)+"%";
 		
 		// -moz-transform: var(--scale-output-moz); // I'm too lazy to add this in
@@ -826,6 +851,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		if (parseInt(window.innerHeight)<500){
 			document.documentElement.style.setProperty("--image-content-max-height", window.innerHeight)
 		}
+	
 	}catch(e){errorlog(e);}
 	
 	function googleTTS(tts){
@@ -1128,18 +1154,23 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 							document.getElementsByTagName("img")[i].src = document.getElementsByTagName("img")[i].src.replaceAll("/light/","/dark/");
 						}
 					
-						if (document.getElementsByTagName("img")[i].onerror){continue;} // already has a catch
-						document.getElementsByTagName("img")[i].onerror = function(){
-							if (this.srcBackup){
-								this.src = this.srcBackup;
-								this.srcBackup = null;
-								delete this.srcBackup;
-							} else if (this.alt.length!==2){
-								this.style.display='none';
-							} else {
-								this.outerHTML = this.alt;
+						if (!document.getElementsByTagName("img")[i].onerror){
+							document.getElementsByTagName("img")[i].onerror = function(){
+								if (this.srcBackup){
+									this.src = this.srcBackup;
+									this.srcBackup = null;
+									delete this.srcBackup;
+								} else if (this.alt.length!==2){
+									this.style.display='none';
+								} else {
+									this.outerHTML = this.alt;
+								}
 							}
 						}
+						if (!document.getElementsByTagName("img")[i].onload){
+							document.getElementsByTagName("img")[i].onload = realign;
+						}
+						
 					} catch(e){}
 				}
 				document.getElementById("output").classList.remove(transitionType);
