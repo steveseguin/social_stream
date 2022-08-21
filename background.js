@@ -326,7 +326,7 @@ chrome.runtime.onMessage.addListener(
 				if (request.streamID){
 					channel = request.streamID;
 				}
-				if (request.password){
+				if ("password" in request){
 					password = request.password;
 				}
 				if (iframe){
