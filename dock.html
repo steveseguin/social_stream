@@ -688,6 +688,11 @@
 		window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
 	}
 	
+	var password = "false";
+	if (urlParams.has("password")){
+		password = urlParams.get("password") || "false";
+	}
+	
 	if (urlParams.has("nodate") || urlParams.has("notimestamp") || urlParams.has("notime")){
 		datestamp = false;
 	} 
@@ -1067,7 +1072,7 @@
 	
 	function RecvDataWindow(){
 		iframe = document.createElement("iframe");
-		iframe.src = "https://vdo.socialstream.ninja/?password=false&view="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID;
+		iframe.src = "https://vdo.socialstream.ninja/?salt=vdo.ninja&password="+password+"&view="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID;
 		
 		iframe.style.width = "0px";
 		iframe.style.height = "0px";

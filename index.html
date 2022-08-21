@@ -592,6 +592,11 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		window.location.href = "https://github.com/steveseguin/social_stream#readme";
 	}
 	
+	var password = "false";
+	if (urlParams.has("password")){
+		password = urlParams.get("password") || "false";
+	}
+	
 	var centering = false;
 	if (urlParams.has("center")){
 		centering = true;
@@ -903,7 +908,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	
 	function RecvDataWindow(){
 		var iframe = document.createElement("iframe");
-		iframe.src = "https://vdo.socialstream.ninja/?password=false&exclude="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
+		iframe.src = "https://vdo.socialstream.ninja/?password="+password+"&salt=vdo.ninja&exclude="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
 		
 		iframe.style.width = "0px";
 		iframe.style.height = "0px";

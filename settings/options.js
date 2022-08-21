@@ -2,10 +2,10 @@ function saveOptions(e) {
   e.preventDefault();
   chrome.storage.sync.set({
 	streamID: document.querySelector("#streamID").value,
+	password: document.querySelector("#password").value,
   });
   
-    chrome.runtime.sendMessage({cmd: "sidUpdated", value: document.querySelector("#streamID").value}, function (response) {
-	});
+  chrome.runtime.sendMessage({cmd: "sidUpdated", streamID: document.querySelector("#streamID").value, password: document.querySelector("#password").value}, function (response) {});
   
   document.querySelector("#savedButton").innerHTML = "Saved";
 }
@@ -21,10 +21,18 @@ function generateStreamID(){
 	return text;
 };
 function restoreOptions() {
-  var properties = ["streamID"];
+  var properties = ["streamID", "password"];
   chrome.storage.sync.get(properties, function(result){
 	try{
 		document.querySelector("#streamID").value = result.streamID || generateStreamID();
+	} catch(e){console.error(e);}
+	
+	try{
+		if (result.password){
+			document.querySelector("#password").value = result.password;
+		} else {
+			document.querySelector("#password").value = "";
+		}
 	} catch(e){console.error(e);}
   });
 

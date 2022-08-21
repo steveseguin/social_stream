@@ -58,13 +58,20 @@ function update(response){
 			}
 			
 		}
+		
+		var password = "";
+		if ('password' in response && response.password){
+			password = "&password="+response.password;
+		}
+		
 		if ('streamID' in response){
 			//document.getElementById("version").innerHTML = "Stream ID is : "+response.streamID;
-			document.getElementById("dock").rawURL = "https://socialstream.ninja/dock.html?session="+response.streamID;
-			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='https://socialstream.ninja/dock.html?session="+response.streamID+"'>https://socialstream.ninja/dock.html?session="+response.streamID+"</a>";
-			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='https://socialstream.ninja/index.html?session="+response.streamID+"'>https://socialstream.ninja/index.html?session="+response.streamID+"</a>";
-			document.getElementById("overlay").rawURL = "https://socialstream.ninja/index.html?session="+response.streamID;
+			document.getElementById("dock").rawURL = "https://socialstream.ninja/dock.html?session="+response.streamID+password;
+			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='https://socialstream.ninja/dock.html?session="+response.streamID+password+"'>https://socialstream.ninja/dock.html?session="+response.streamID+password+"</a>";
+			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='https://socialstream.ninja/index.html?session="+response.streamID+password+"'>https://socialstream.ninja/index.html?session="+response.streamID+password+"</a>";
+			document.getElementById("overlay").rawURL = "https://socialstream.ninja/index.html?session="+response.streamID+password;
 		}
+		
 		if ('settings' in response){
 			for (var key in response.settings){
 				
@@ -104,6 +111,7 @@ function update(response){
 							updateSettings(ele);
 						}
 					}
+				
 				} else { // obsolete method
 					var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
 					if (ele){
@@ -187,7 +195,7 @@ function updateSettings(ele){
 		if (ele.value){
 			document.getElementById("dock").rawURL = updateURL(ele.dataset.textparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").rawURL);
 		} else {
-			var tmp = document.getElementById("dock").rawURL.split(ele.dataset.textparam1)
+			var tmp = document.getElementById("dock").rawURL.split(ele.dataset.textparam1);
 			if (tmp.length>1){
 				document.getElementById("dock").rawURL = tmp[0] + tmp[1].split("&").shift().join("&");
 			} else {
@@ -197,6 +205,7 @@ function updateSettings(ele){
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
+		
 	} else if (ele.dataset.param2){
 		if (ele.checked){
 			document.getElementById("overlay").rawURL = updateURL(ele.dataset.param2, document.getElementById("overlay").rawURL);
@@ -206,9 +215,11 @@ function updateSettings(ele){
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param2", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
+		
 	} else if (ele.dataset.setting){
 		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
 		return;
+		
 	} else if (ele.dataset.textsetting){
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
 		return;

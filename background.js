@@ -1,6 +1,6 @@
 var isExtensionOn = false;
 var iframe = null;
-var channel = null;
+
 var settings = {};
 var messageTimeout = 0;
 var lastSentMessage = "";
@@ -24,8 +24,9 @@ function generateStreamID(){
 };
 
 
-var properties = ["streamID", "isExtensionOn"];
-channel = generateStreamID();
+var properties = ["streamID", "password", "isExtensionOn"];
+var channel = generateStreamID();
+var password = false;
 
 chrome.storage.sync.get(properties, function(item){
 	if (item && item.streamID){
@@ -36,6 +37,14 @@ chrome.storage.sync.get(properties, function(item){
 		});
 		chrome.runtime.lastError;
 	}
+	if (item && ("password" in item)){
+		password = item.password;
+	} else {
+		chrome.storage.sync.set({
+			password: password
+		});
+		chrome.runtime.lastError;
+	}
 	if (item && item.settings){
 		settings = item.settings;
 	}
@@ -43,7 +52,7 @@ chrome.storage.sync.get(properties, function(item){
 		isExtensionOn = item.isExtensionOn;
 		chrome.browserAction.setIcon({path: "/icons/on.png"});
 		if (iframe==null){
-			loadIframe(channel);
+			loadIframe(channel, password);
 		}
 	}  else {
 		chrome.storage.sync.set({
@@ -145,7 +154,7 @@ chrome.runtime.onMessage.addListener(
 				isExtensionOn = request.data.value;
 				if (isExtensionOn){
 					if (iframe==null){
-						loadIframe(channel);
+						loadIframe(channel, password);
 					}
 				} else {
 					if (iframe.src){
@@ -159,9 +168,9 @@ chrome.runtime.onMessage.addListener(
 				});
 				chrome.runtime.lastError;
 				toggleMidi();
-				sendResponse({"state":isExtensionOn,"streamID":channel, "settings":settings});
+				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
 			} else if (request.cmd && request.cmd === "getOnOffState") {
-				sendResponse({"state":isExtensionOn,"streamID":channel, "settings":settings});
+				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
 			} else if (request.cmd && request.cmd === "saveSetting") {
 				
 				if (typeof settings[request.setting] == "object"){
@@ -176,6 +185,7 @@ chrome.runtime.onMessage.addListener(
 				chrome.storage.sync.set(settings);
 				chrome.runtime.lastError;
 				sendResponse({"state":isExtensionOn});	
+				
 				
 				if (request.setting == "midi"){
 					toggleMidi();
@@ -313,8 +323,11 @@ chrome.runtime.onMessage.addListener(
 				sendDataP2P(data);
 				
 			} else if (request.cmd && request.cmd === "sidUpdated") {
-				if (request.value){
-					channel = request.value;
+				if (request.streamID){
+					channel = request.streamID;
+				}
+				if (request.password){
+					password = request.password;
 				}
 				if (iframe){
 					if (iframe.src){
@@ -325,7 +338,7 @@ chrome.runtime.onMessage.addListener(
 					iframe = null;
 				}
 				if (isExtensionOn){
-					loadIframe(channel);
+					loadIframe(channel, password);
 				}
 				
 				sendResponse({"state":isExtensionOn});		
@@ -454,9 +467,12 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 	} catch(e){}
 }
 	
-function loadIframe(channel){  // this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
+function loadIframe(channel, pass=false){  // this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
 	iframe = document.createElement("iframe");
-	iframe.src = "https://vdo.socialstream.ninja/?password=false&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
+	if (!pass){
+		pass = "false";
+	}
+	iframe.src = "https://vdo.socialstream.ninja/?salt=vdo.ninja&password="+pass+"&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
 	document.body.appendChild(iframe);
 }
 
