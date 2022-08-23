@@ -235,6 +235,7 @@ function updateSettings(ele){
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
+		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "both", setting: ele.dataset.both, "value": ele.checked}, function (response) {});
 		
 	} else if (ele.dataset.setting){
 		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
