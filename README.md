@@ -330,3 +330,9 @@ I do not claim rights of all the icons distributed. While I made some of the ico
 ### Credit
 
 This project contains inspiration by my other project, chat.overlay.ninja, which was a derivation of another Youtube-specific chat widget, which was inspired by the stylings of other featured-chat code sample, of which that was also inspired by existing chat overlay designs. May the many new innovations of this project inspire the future foundation of other awesome projects as well.
+
+### Contributors to this project
+
+<a href="https://github.com/steveseguin/social_stream/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=steveseguin/social_stream" />
+</a>
