@@ -736,6 +736,41 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		
 	}
 	
+	var conCon = 1;
+	var socketserver = false;
+	function setupSocket(){
+		socketserver.onclose = function (){
+			setTimeout(function(){
+				conCon+=1;
+				socketserver = new WebSocket("wss://api.overlay.ninja"); // version 1.x.x of the app.
+				setupSocket();
+			},100*conCon);
+		};
+		socketserver.onopen = function (){
+			conCon = 1;
+			socketserver.send(JSON.stringify({"join":roomID}));
+		};
+		socketserver.addEventListener('message', function (event) {
+			if (event.data){
+				var data = JSON.parse(event.data);
+				
+				if ("overlayNinja" in data){
+					data = data.overlayNinja;
+				}
+				
+				if (!("contents" in data)){
+					data.contents = data;
+				}
+				processData(data);
+			}
+		});
+	}
+	if (urlParams.has("server")){
+		var serverURL = urlParams.get("server") || "wss://api.overlay.ninja";
+		socketserver = new WebSocket(serverURL); 
+		setupSocket();
+	}
+	
 	var speechLang = "en-US";
 	var speech = false;
 	var English = true;
@@ -932,7 +967,10 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		  }
 		});
 	}
-	RecvDataWindow();
+	
+	if (!socketserver){
+		RecvDataWindow(); // only load the iframe if not connecting via wss
+	}
 	
 	try {
 		var fallbackImage = new Image(); // preload it.

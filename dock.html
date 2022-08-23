@@ -785,7 +785,35 @@
 		document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
 	}
 	
-	
+	var conCon = 1;
+	var socketserver = false;
+	function setupSocket(){
+		socketserver.onclose = function (){
+			setTimeout(function(){
+				conCon+=1;
+				socketserver = new WebSocket("wss://api.overlay.ninja"); // version 1.x.x of the app.
+				setupSocket();
+			},100*conCon);
+		};
+		socketserver.onopen = function (){
+			conCon = 1;
+			socketserver.send(JSON.stringify({"join":roomID}));
+		};
+		<!-- socket.addEventListener('message', function (event) { -->
+			<!-- if (event.data){ -->
+				<!-- var data = JSON.parse(event.data); -->
+				<!-- if (!("contents" in data)){ -->
+					<!-- data.contents = data; -->
+				<!-- } -->
+				<!-- processEvent(data); -->
+			<!-- } -->
+		<!-- }); -->
+	}
+	if (urlParams.has("server")){
+		var serverURL = urlParams.get("server") || "wss://api.overlay.ninja";
+		socketserver = new WebSocket(serverURL); 
+		setupSocket();
+	}
 	
 	var customSource = false;
 	if (urlParams.has("branded")){
@@ -1851,7 +1879,11 @@
 		msg.overlayNinja = {};
 		msg.overlayNinja = data;
 		try {
-			iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs"}, '*'); // send only to viewers of this stream; not back to the chrome extension..
+			if (socketserver){
+				socketserver.send(JSON.stringify(msg));
+			} else {
+				iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs"}, '*'); // send only to viewers of this stream; not back to the chrome extension..
+			}
 		} catch(e){}
 	}
 	

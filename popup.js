@@ -89,6 +89,13 @@ function update(response){
 							ele.checked = response.settings[key].param2;
 							updateSettings(ele);
 						}
+					}
+					if ("both" in response.settings[key]){
+						var ele = document.querySelector("input[data-both='"+key+"']");
+						if (ele){
+							ele.checked = response.settings[key].both;
+							updateSettings(ele);
+						}
 					} 
 					if ("setting" in response.settings[key]){
 						var ele = document.querySelector("input[data-setting='"+key+"']");
@@ -215,6 +222,19 @@ function updateSettings(ele){
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param2", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
+		
+	} else if (ele.dataset.both){
+		if (ele.checked){
+			document.getElementById("overlay").rawURL = updateURL(ele.dataset.both, document.getElementById("overlay").rawURL);
+			document.getElementById("dock").rawURL = updateURL(ele.dataset.both, document.getElementById("dock").rawURL);
+		} else {
+			document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace(ele.dataset.both, "");
+			document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace(ele.dataset.both, "");
+		}
+		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
+		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
+		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
+		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
 		
 	} else if (ele.dataset.setting){
 		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
