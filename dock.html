@@ -787,30 +787,29 @@
 	
 	var conCon = 1;
 	var socketserver = false;
+	var serverURL = "wss://api.overlay.ninja";
+	
 	function setupSocket(){
 		socketserver.onclose = function (){
 			setTimeout(function(){
 				conCon+=1;
-				socketserver = new WebSocket("wss://api.overlay.ninja"); // version 1.x.x of the app.
+				socketserver = new WebSocket(serverURL); 
 				setupSocket();
 			},100*conCon);
 		};
 		socketserver.onopen = function (){
 			conCon = 1;
-			socketserver.send(JSON.stringify({"join":roomID}));
+			socketserver.send(JSON.stringify({"join":roomID, "out":2, "in":1}));
 		};
-		<!-- socket.addEventListener('message', function (event) { -->
-			<!-- if (event.data){ -->
-				<!-- var data = JSON.parse(event.data); -->
-				<!-- if (!("contents" in data)){ -->
-					<!-- data.contents = data; -->
-				<!-- } -->
-				<!-- processEvent(data); -->
-			<!-- } -->
-		<!-- }); -->
+		socketserver.addEventListener('message', function (event) {
+			if (event.data){
+				var data = JSON.parse(event.data);
+				processInput(data);
+			}
+		});
 	}
 	if (urlParams.has("server")){
-		var serverURL = urlParams.get("server") || "wss://api.overlay.ninja";
+		serverURL = urlParams.get("server") || serverURL;
 		socketserver = new WebSocket(serverURL); 
 		setupSocket();
 	}
@@ -1097,6 +1096,20 @@
 		document.head.appendChild(script);
 	} catch(e){}
 	
+	function processInput(data){
+		if ("forward" in data){
+			sendDataP2P(data.forward);
+		} else if ("html" in data){
+			processHTML(data);
+		} else if (!pauseState ){
+			processData( {contents : data} );
+		} else {
+			queue.push({contents : data});
+			if (queue.length>100){ // keep the queue from exploding in size
+				queue.shift();
+			}
+		}
+	}
 	
 	function RecvDataWindow(){
 		iframe = document.createElement("iframe");
@@ -1118,22 +1131,12 @@
 		  if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
 		  if ("dataReceived" in e.data){ // raw data 
 			if ("overlayNinja" in e.data.dataReceived){
-				if ("forward" in e.data.dataReceived.overlayNinja){
-					sendDataP2P(e.data.dataReceived.overlayNinja.forward);
-				} else if ("html" in e.data.dataReceived.overlayNinja){
-					processHTML(e.data.dataReceived.overlayNinja);
-				} else if (!pauseState ){
-					processData( {contents : e.data.dataReceived.overlayNinja} );
-				} else {
-					queue.push({contents : e.data.dataReceived.overlayNinja});
-					if (queue.length>100){ // keep the queue from exploding in size
-						queue.shift();
-					}
-				}
+				processInput(e.data.dataReceived.overlayNinja);
 			}
 		  }
 		});
 	}
+	
 	RecvDataWindow();
 	
 	function createElementFromHTML(htmlString) {
@@ -1875,16 +1878,21 @@
 	}
 	
 	function sendDataP2P(data){
-		var msg = {};
-		msg.overlayNinja = {};
-		msg.overlayNinja = data;
+	
+		
 		try {
 			if (socketserver){
-				socketserver.send(JSON.stringify(msg));
-			} else {
+				socketserver.send(JSON.stringify(data));
+			}
+			if (iframe){ 
+				var msg = {};
+				msg.overlayNinja = {};
+				msg.overlayNinja = data;
 				iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs"}, '*'); // send only to viewers of this stream; not back to the chrome extension..
 			}
-		} catch(e){}
+		} catch(e){
+			console.error(e);
+		}
 	}
 	
 	document.getElementById("chatInput").addEventListener("keyup", function(event) {

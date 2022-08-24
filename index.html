@@ -737,22 +737,23 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				document.getElementById("imgContent").style.left = (300) + "px";
 			}	
 		} catch(e){errorlog(e);}
-		
 	}
 	
 	var conCon = 1;
 	var socketserver = false;
+	var serverURL = "wss://api.overlay.ninja";
+	
 	function setupSocket(){
 		socketserver.onclose = function (){
 			setTimeout(function(){
 				conCon+=1;
-				socketserver = new WebSocket("wss://api.overlay.ninja"); // version 1.x.x of the app.
+				socketserver = new WebSocket(serverURL); // version 1.x.x of the app.
 				setupSocket();
 			},100*conCon);
 		};
 		socketserver.onopen = function (){
 			conCon = 1;
-			socketserver.send(JSON.stringify({"join":roomID}));
+			socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":2}));
 		};
 		socketserver.addEventListener('message', function (event) {
 			if (event.data){
@@ -770,7 +771,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		});
 	}
 	if (urlParams.has("server")){
-		var serverURL = urlParams.get("server") || "wss://api.overlay.ninja";
+		serverURL = urlParams.get("server") || serverURL;
 		socketserver = new WebSocket(serverURL); 
 		setupSocket();
 	}
