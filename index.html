@@ -759,14 +759,15 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 			if (event.data){
 				var data = JSON.parse(event.data);
 				
-				if ("overlayNinja" in data){
+				if (data && "overlayNinja" in data){
 					data = data.overlayNinja;
-				}
+				}  
 				
-				if (!("contents" in data)){
-					data.contents = data;
+				if (!data || !("contents" in data)){
+					processData({contents:data});
+				} else {
+					processData(data);
 				}
-				processData(data);
 			}
 		});
 	}
