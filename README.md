@@ -242,7 +242,7 @@ Please note that you need a MIDI Loopback device installed if using the StreamDe
 
 Lastly, please note that you will need to enable the MIDI option in the menu options for it to work, as it is not loaded by default.
 
-![image](https://user-images.githubusercontent.com/2575698/186801053-6319d63e-fe92-42bc-b951-cad4d35753cc.png)
+![image](https://user-images.githubusercontent.com/2575698/186801053-6319d63e-fe92-42bc-b951-cad4d35753cc.png)![image](https://user-images.githubusercontent.com/2575698/186809963-5f8eb0c9-f4d3-4392-83b9-fe9823c5c623.png)
 
 Feedback welcomed
 
