@@ -362,9 +362,7 @@
 		}
 		
 		.donationAmount{
-			-webkit-animation: glow 1s ease-in-out infinite alternate;
-			-moz-animation: glow 1s ease-in-out infinite alternate;
-			animation: glow 1s ease-in-out infinite alternate;
+			text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #FFe60073, 0 0 40px #FFe60073, 0 0 50px #FFe60073, 0 0 60px #FFe60073, 0 0 70px #FFe60073;
 			padding:5px;
 			margin: auto;
 			white-space: nowrap;
@@ -416,6 +414,10 @@
 		}
 		#menu > button.red {
 			background-color: #FCC4;
+		}
+		#menu > button.green {
+			background-color: #affdff!important;
+			color: black!important;
 		}
 		#menu > button.red:hover {
 			background-color: #FCCF;
@@ -603,6 +605,7 @@
 	<div id="output" class="output notcompactmode"></div>
 	<div id="pinned" class="output notcompactmode"></div>
 	<div id="menu">
+		<button id="select_save_file" data-state="0" onclick="overwriteFile('setup');" title="Select the file you wish to save the most recent message to" class="green hidden">💾 Set Save File Location</button>
 		<button id="next_in_queue" data-state="0" onclick="nextInQueue();" title="Hold CTRL when selecting messages to add them to the queue instead" class="hidden blue">Next in Queue</button>
 		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" title="Clear the featured chat overlay. (Not this dock)" class="red">Clear Current Overlay</button>
 		<button id="pause" data-state="0" onclick="pause(this);" title="Pause incoming chat messages">⏯︎ Pause</button>
@@ -665,11 +668,15 @@
 	var body = document.body;
 	var html = document.documentElement;
 	var mainOutputWindow = document.getElementById("output");
-	var fileStream, writer, encode;
+	var fileStream, writer; // streaming message writer
+	var newFileHandle = false; // single message writer
+	var singlewriter = false;
 	var odd = false;
 	var showbadges = true;
 	var colorized = false;
 	var horizontal = false;
+	
+	var encode = false;
 	
 	var timeoutDelay = 0;
 	if (urlParams.has("showtime")){
@@ -934,7 +941,14 @@
 	}
 	
 	if (urlParams.has("save")){
+		encode = TextEncoder.prototype.encode.bind(new TextEncoder);
 		setupSaveToDisk();
+	}
+	
+	if (urlParams.has("savesingle")){
+		singlewriter = true;
+		document.getElementById("select_save_file").classList.remove('hidden');
+		//overwriteFile(); // setup , but this needs a gesture, so bleh
 	}
 	
 	
@@ -987,6 +1001,11 @@
 	} else if (urlParams.has("lightmode")){
 		darkmode=false;
 	}
+	
+	var syncDocks = false;
+	if (urlParams.has("sync")){
+		syncDocks = true;
+	} 
 	
 	if (darkmode){
 		document.documentElement.style.setProperty("--font-color", "#FFF");
@@ -1102,6 +1121,21 @@
 	} catch(e){}
 	
 	function processInput(data){
+		if ("mid" in data){
+			if (data.mid && syncDocks){
+				try {
+					document.querySelector("[data-mid='"+data.mid+"']").classList.add("pressed");
+				} catch(e){
+					setTimeout(function(mid){
+						try{
+							document.querySelector("[data-mid='"+mid+"']").classList.add("pressed");
+						} catch(e){}
+					},1000, data.mid);
+				}
+			}
+			return;
+		}
+	
 		if ("forward" in data){
 			sendDataP2P(data.forward);
 		} else if ("html" in data){
@@ -1116,10 +1150,15 @@
 		}
 	}
 	
+	var connectedPeers = {};
 	function RecvDataWindow(){
 		iframe = document.createElement("iframe");
-		iframe.src = "https://vdo.socialstream.ninja/?salt=vdo.ninja&password="+password+"&view="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID;
 		
+		if (syncDocks){ // TODO: CHANGE THIS AWAY FROM alpha at some point
+			iframe.src = "https://vdo.socialstream.ninja/alpha/?salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
+		} else {
+			iframe.src = "https://vdo.socialstream.ninja/?salt=vdo.ninja&password="+password+"&view="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID;
+		}
 		iframe.style.width = "0px";
 		iframe.style.height = "0px";
 		iframe.style.position = "fixed";
@@ -1128,14 +1167,30 @@
 		iframe.id = "frame1"
 		document.body.appendChild(iframe);
 		
-		var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+		var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent"; 
 		var eventer = window[eventMethod];
 		var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
 		
 		eventer(messageEvent, function (e) {
 		  if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
+		  
+		  if (("action" in e.data) && e.data.UUID && e.data.value && (e.data.action == "push-connection-info")){ // flip this
+		    if ("label" in e.data.value){
+				connectedPeers[e.data.UUID] = e.data.value.label;
+				//console.log(connectedPeers);
+			}
+		  }
+		  if (("action" in e.data) && e.data.UUID && ("value" in e.data) && !e.data.value && (e.data.action == "push-connection")){ // flip this
+			  if (e.data.UUID in connectedPeers){
+				  delete connectedPeers[e.data.UUID];
+			  }
+			  //console.log(connectedPeers);
+		  }
+		 
+		  
 		  if ("dataReceived" in e.data){ // raw data 
 			if ("overlayNinja" in e.data.dataReceived){
+				console.log(e.data);
 				processInput(e.data.dataReceived.overlayNinja);
 			}
 		  }
@@ -1498,8 +1553,16 @@
 				} else {
 					text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + "\n");
 				}
-				writer.write(text);
+				if (writer){
+					writer.write(text);
+				} 
 			}
+			
+			if (singlewriter){
+				data.timestamp = new Date().getTime();
+				overwriteFile(JSON.stringify(data));
+			}
+			
 			
 			if ("sentiment" in data){ 
 				if (data.sentiment<.10){ // 1.0 is good; 0.0 is bad, so 0.1 is likely bad.
@@ -1538,7 +1601,6 @@
 			} else {
 				data.chatmessage = "";
 			}
-			
 			
 			counter+=1;
 			data.counter = counter;
@@ -1665,9 +1727,14 @@
 			if (horizontal){
 				expand = " expand"
 			}
-
+			
+			var mid = "";
+			if (data.id){
+				mid = "data-mid='"+data.id+"'";
+			}
+			
 			if (splitMode){
-				var node = createElementFromHTML('<div id="msg_'+data.counter+'" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+				var node = createElementFromHTML('<div id="msg_'+data.counter+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + "<div class='leftside "+larger+"'>"
 					 + chatname
 					 + showType
@@ -1677,7 +1744,7 @@
 					 + addImage
 					 + donationHTML + '</div>');
 			} else if (compactmode){
-				var node = createElementFromHTML('<div id="msg_'+data.counter+'" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+				var node = createElementFromHTML('<div id="msg_'+data.counter+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + '<div class="hl-message" id="content_'+data.counter+'">'
 						+ showType
 						+ chatImg
@@ -1688,7 +1755,7 @@
 					 + addImage
 					 + donationHTML + '</div>');
 			} else {
-				var node = createElementFromHTML('<div id="msg_'+data.counter+'" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+				var node = createElementFromHTML('<div id="msg_'+data.counter+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + showType
 					 + chatImg
 					 + timeArrived
@@ -1925,8 +1992,6 @@
 	}
 	
 	function sendDataP2P(data){
-	
-		
 		try {
 			if (socketserver){
 				socketserver.send(JSON.stringify(data));
@@ -1935,7 +2000,28 @@
 				var msg = {};
 				msg.overlayNinja = {};
 				msg.overlayNinja = data;
-				iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs"}, '*'); // send only to viewers of this stream; not back to the chrome extension..
+				if (syncDocks){
+					var keys = Object.keys(connectedPeers);
+					for (var i = 0; i<keys.length;i++){
+						var UUID = keys[i];
+						var label = connectedPeers[keys[i]];
+						
+						if (label === "dock"){
+							if (data && data.id){
+								
+								iframe.contentWindow.postMessage({"sendData":{overlayNinja:{mid:data.id}}, "type":"pcs", "UUID":UUID}, '*');
+							} else {
+								iframe.contentWindow.postMessage({"sendData":{overlayNinja:{mid:false}}, "type":"pcs", "UUID":UUID}, '*');
+							}
+						} else if (label === "overlay"){
+							iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs", "UUID":UUID}, '*'); // send only to viewers of this stream; not back to the chrome extension..
+						} else if (label === false){
+							iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs", "UUID":UUID}, '*'); // send only to viewers of this stream; not back to the chrome extension..
+						}
+					}
+				} else {
+					iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs"}, '*'); // send only to viewers of this stream; not back to the chrome extension.. legacy?
+				}
 			}
 		} catch(e){
 			console.error(e);
@@ -1971,10 +2057,9 @@
 	}
 	
 	function setupSaveToDisk(){
-	
 		var script = document.createElement('script');
 		script.onload = function() {
-			encode = TextEncoder.prototype.encode.bind(new TextEncoder);
+			
 			if (!fileStream) {
 				fileStream = streamSaver.createWriteStream("chat_"+Date.now()+'.tsv' || 'sample.txt');
 				writer = fileStream.getWriter();
@@ -1986,7 +2071,19 @@
 		}
 		script.src = "./thirdparty/StreamSaver.js";
 		document.head.appendChild(script);
-		
+	}
+	
+	
+	async function overwriteFile(data=false) {
+	  if (data=="setup"){
+		  newFileHandle = await window.showSaveFilePicker();
+		  document.getElementById("select_save_file").classList.remove("green");
+		  document.getElementById("select_save_file").innerText = "💾";
+      } else if (newFileHandle && data){
+		  const writableStream = await newFileHandle.createWritable();
+		  await writableStream.write(data);
+		  await writableStream.close();
+	  }
 	}
 	
 	</script>

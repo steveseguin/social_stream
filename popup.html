@@ -201,7 +201,12 @@
 			<label class="switch">
 			  <input type="checkbox" data-param1="save">
 			  <span class="slider round"></span>
-			</label> Save copy of messages to disk automatically
+			</label> Save copy of all messages to disk automatically 💾
+			<br />
+			<label class="switch">
+			  <input type="checkbox" data-param1="savesingle">
+			  <span class="slider round"></span>
+			</label> Save last message to a specific file location 💾
 			<br />
 			<label class="switch">
 			  <input type="checkbox" data-param1="noavatar">
@@ -211,7 +216,7 @@
 			<label class="switch" title="HTML is removed from messages, donations, and names for this dock only">
 			  <input type="checkbox" data-param1="striphtml">
 			  <span class="slider round"></span>
-			</label> Strip HTML from messages
+			</label> Strip HTML from messages and donations
 			<br />
 			<label class="switch">
 			  <input type="checkbox" data-param1="nobadges">
@@ -242,6 +247,11 @@
 			  <input type="checkbox" data-param1="autoshowdonos">
 			  <span class="slider round"></span>
 			</label> When auto-selecting is on, only auto-select donations
+			<br />
+			<label class="switch">
+			  <input type="checkbox" data-param1="sync">
+			  <span class="slider round"></span>
+			</label> Multiple dock will stay in sync as to selected messages
 			<br />
 			
 			<label class="textinput" style="display:block;padding-top:8px;">
@@ -378,6 +388,9 @@
 			</label> Tell joke on <b>!joke</b> message
 			<button class="button" data-action="tellajoke" style="cursor:pointer;"> Tell a random joke now</button>
 			
+			Save the last message to a specific file (without needing the dock)
+			<button class="button" data-action="singlesave" style="cursor:pointer;"> 💾 Specify the file</button>
+			<button class="button" data-action="singlesaveStop" style="cursor:pointer;"> Stop saving (if active)</button>
 			<br />Fake a comment for testing
 			<button class="button" data-action="fakemsg" style="cursor:pointer;">Trigger now</button>
     

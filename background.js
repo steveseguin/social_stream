@@ -88,6 +88,17 @@ function sleep(ms = 0) {
 	return new Promise(r => setTimeout(r, ms)); // LOLz!
 }
 
+var newFileHandle = false;
+async function overwriteFile(data=false) {
+  if (data=="setup"){
+	  newFileHandle = await window.showSaveFilePicker();
+  } else if (newFileHandle && data){
+	  const writableStream = await newFileHandle.createWritable();
+	  await writableStream.write(data);
+	  await writableStream.close();
+  }
+}
+
 var Url2ChannelImg = {};
 var vid2ChannelImg = {};
 
@@ -288,6 +299,10 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "tellajoke") {
 				tellAJoke();
 				sendResponse({"state":isExtensionOn});
+			} else if (request.cmd && request.cmd === "singlesave") {
+				overwriteFile("setup");
+			} else if (request.cmd && request.cmd === "singlesaveStop") {
+				newFileHandle = false;
 			} else if (request.cmd && request.cmd === "fakemsg") {
 				var data = {};
 				data.chatname = "John Doe";
@@ -458,13 +473,26 @@ function verifyOriginal(msg){
 	return true;
 }
 
+var messageCounter = 0;
 function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Ninja API
 	var msg = {};
-	msg.overlayNinja = {};
+	if (typeof data == "object"){
+		messageCounter+=1;
+		data.id = messageCounter;
+	}
 	msg.overlayNinja = data;
 	try {
 		iframe.contentWindow.postMessage({"sendData":msg, "type": "pcs"}, '*'); // send only to 'viewers' of this stream
 	} catch(e){}
+	
+	if (newFileHandle){
+		try {
+			if (typeof data == "object"){
+				data.timestamp = new Date().getTime();
+				overwriteFile(JSON.stringify(data));
+			}
+		} catch(e){}
+	}
 }
 	
 function loadIframe(channel, pass=false){  // this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
