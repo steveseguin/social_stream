@@ -235,6 +235,10 @@ Using Control Change MIDI Commands, on channel 1:
 
 The MIDI plugin can be found in the Streamdeck store pretty easily. If using Windows, you can find a virtual MIDI loopback device here: https://www.tobias-erichsen.de/software/loopmidi.html  There are some for macOS as well.
 
+You will need to enable the MIDI option in the menu options for it to work, as it is not loaded by default.
+
+![image](https://user-images.githubusercontent.com/2575698/186801053-6319d63e-fe92-42bc-b951-cad4d35753cc.png)
+
 Feedback welcomed
 
 ### Text to speech
