@@ -705,6 +705,11 @@
 	if (urlParams.has("split")){
 		splitMode = " splitMode";
 	} 
+	
+	var stripHTML = false;
+	if (urlParams.has("strip") || urlParams.has("striphtml")){ // removes HTML from messages, donations, and names.
+		stripHTML = true;
+	} 
 
 	var stylizeEmoji = false;
 	if (urlParams.has("emoji") || urlParams.has("emojis")){
@@ -1240,7 +1245,7 @@
 	function nextInQueue(){ 
 		if (!selectedQueue.length){
 			sendDataP2P(false);
-			document.getElementById("next_in_queue").innerHTML = "Queue Empty";
+			document.getElementById("next_in_queue").innerText = "Queue Empty";
 			document.getElementById("next_in_queue").title = "Clicking will clear any active overlay, since no next-message left in queue";
 			return;
 		}
@@ -1248,10 +1253,10 @@
 		selectedMessage(false, element);
 		element.classList.remove("queued");
 		if (!selectedQueue.length){
-			document.getElementById("next_in_queue").innerHTML = "Queue Empty";
+			document.getElementById("next_in_queue").innerText = "Queue Empty";
 			document.getElementById("next_in_queue").title = "Clicking will clear the active overlay, since no next-message left in queue";
 		} else {
-			document.getElementById("next_in_queue").innerHTML = "Next in Queue ("+selectedQueue.length+")";
+			document.getElementById("next_in_queue").innerText = "Next in Queue ("+selectedQueue.length+")";
 			document.getElementById("next_in_queue").title = "Hold CTRL when selecting messages to add them to the queue instead";
 		}
 	}
@@ -1279,7 +1284,7 @@
 				for (var i = 0; i < selectedQueue.length; i++){ 
 					if ( selectedQueue[i] === element) { 
 						selectedQueue.splice(i, 1); 
-						document.getElementById("next_in_queue").innerHTML = "Next in Queue ("+selectedQueue.length+")";
+						document.getElementById("next_in_queue").innerText = "Next in Queue ("+selectedQueue.length+")";
 						return;
 					}
 				}
@@ -1288,7 +1293,7 @@
 			selectedQueue.push(element);
 			element.classList.add("queued");
 			document.getElementById("next_in_queue").classList.remove("hidden");
-			document.getElementById("next_in_queue").innerHTML = "Next in Queue ("+selectedQueue.length+")";
+			document.getElementById("next_in_queue").innerText = "Next in Queue ("+selectedQueue.length+")";
 			return;
 		} else if (event && (event.altKey)) {
 			if (element.classList.contains("pinned")){
@@ -1439,6 +1444,12 @@
 		}
 	}
 	
+	function stripHtmlFunction(html){
+	   let tmp = document.createElement("DIV");
+	   tmp.innerHTML = html;
+	   return tmp.textContent || tmp.innerText || "";
+	}
+	
 	function processData(data){
 		if (data.contents){
 			data = data.contents;
@@ -1449,6 +1460,33 @@
 			} else {
 				data.type = data.type.toString();
 				showType = data.type;
+			}
+			
+			if (data.hasDonation){
+				if (stripHTML){
+					data.hasDonation = stripHtmlFunction(data.hasDonation);
+				}
+				data.hasDonation = data.hasDonation.trim();
+			} else {
+				data.hasDonation = "";
+			}
+			
+			if (data.chatname){
+				if (stripHTML){
+					data.chatname = stripHtmlFunction(data.chatname);
+				}
+				data.chatname = data.chatname.trim();
+			} else {
+				data.chatname = "";
+			}
+			
+			if (data.chatmessage){
+				if (stripHTML){
+					data.chatmessage = stripHtmlFunction(data.chatmessage);
+				}
+				data.chatmessage = data.chatmessage.trim();
+			} else {
+				data.chatmessage = "";
 			}
 			
 			if (writer){
@@ -1469,6 +1507,10 @@
 				}
 			} 
 			
+			if (!data.chatmessage && !data.hasDonation && !data.contentimg){
+				return;
+			}
+			
 			var addImage = "";
 			if (data.contentimg){
 				addImage = '<div class="hl-imgContent"><img src="' + data.contentimg + '" class="hl-img-content" onerror="this.parent.style.display=\'none\'" /></div>';
@@ -1476,22 +1518,27 @@
 				data.contentimg = "";
 			}
 			
-			if (data.chatmessage){
-				data.chatmessage = data.chatmessage.trim();
-				if (stylizeEmoji){
-					data.chatmessage = data.chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig, "<span class='emoji'>$1</span>");
-				}
-			} else {
-				data.chatmessage = "";
-			}
-			
-			
 			var donationHTML = "";
 			if (data.hasDonation){
 				donationHTML = "<span class='donationAmount hl-donation'>"+data.hasDonation+"</span>";
 			} else {
 				data.hasDonation = "";
 			}
+			
+			var chatmessage = "";
+			if (data.chatmessage){
+				if (stylizeEmoji){
+					chatmessage = data.chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig, "<span class='emoji'>$1</span>");
+				} else {
+					chatmessage = data.chatmessage;
+				}
+				if (!stripHTML){ // we want to reuse this, but only if HTML is allowed
+					data.chatmessage = chatmessage;
+				}
+			} else {
+				data.chatmessage = "";
+			}
+			
 			
 			counter+=1;
 			data.counter = counter;
@@ -1539,9 +1586,7 @@
 			
 			
 			var bot = false;
-			var chatname = "";
 			
-			data.chatname = data.chatname.trim();
 			
 			var nameColor = "";
 			if (data.nameColor && colorized){
@@ -1563,7 +1608,10 @@
 				});
 			}
 			
+			var chatname = "";
+			
 			if (data.chatname){
+			
 				if (data.chatname.toLowerCase() == "streamelements"){ 
 					bot = true;
 					//chatname = "";
@@ -1625,7 +1673,7 @@
 					 + showType
 					 + chatImg
 					 + "</div>"
-					 + '<div class="hl-message" id="content_'+data.counter+'">' + data.chatmessage + '</div>'
+					 + '<div class="hl-message" id="content_'+data.counter+'">' + chatmessage + '</div>'
 					 + addImage
 					 + donationHTML + '</div>');
 			} else if (compactmode){
@@ -1635,7 +1683,7 @@
 						+ chatImg
 						+ timeArrived
 						+ chatname
-						+ data.chatmessage
+						+ chatmessage
 					 + '</div>'
 					 + addImage
 					 + donationHTML + '</div>');
@@ -1645,7 +1693,7 @@
 					 + chatImg
 					 + timeArrived
 					 + chatname
-					 + '<div class="hl-message" id="content_'+data.counter+'">' + data.chatmessage + '</div>'
+					 + '<div class="hl-message" id="content_'+data.counter+'">' + chatmessage + '</div>'
 					 + addImage
 					 + donationHTML + '</div>');
 			}
@@ -1802,10 +1850,9 @@
 			}
 			
 			if (speech && !bot){
-			
 				var msgPlain = document.getElementById('content_'+data.counter); // text only
 				if (msgPlain){
-					msgPlain = msgPlain.innerText.trim();
+					msgPlain = msgPlain.textContent || msgPlain.innerText || "";
 					msgPlain = msgPlain.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
 					msgPlain = msgPlain.replaceAll('_', ' ');
 					msgPlain = msgPlain.replaceAll('@', ' ');
@@ -1825,7 +1872,7 @@
 				
 					var donoText = document.createElement("div");
 					donoText.innerHTML = data.hasDonation;
-					donoText = donoText.innerText.trim();
+					donoText = donoText.textContent || donoText.innerText || "";
 					donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
 					donoText = donoText.replaceAll('_', ' ');
 					donoText = donoText.replaceAll('@', ' ');
