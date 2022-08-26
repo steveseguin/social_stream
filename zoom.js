@@ -1,20 +1,5 @@
 (function () {
 
-	function toDataURL(url, callback) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.onload = function() {
-		var reader = new FileReader();
-		reader.onloadend = function() {
-		  callback(reader.result);
-		}
-		reader.readAsDataURL(xhr.response);
-	  };
-	  xhr.open('GET', url);
-	  xhr.responseType = 'blob';
-	  xhr.send();
-	}
-
-
 	var lastMessage = {};
 	var lastName = "";
 	var lastImage = "";
@@ -50,7 +35,7 @@
 		var img = false;
 		var chatimg = "";
 		try{
-		   chatimg = ele.querySelector(".chat-item__chat-info-msg-avatar").src;
+		   chatimg = ele.querySelector(".chat-item__user-avatar").src;
 		   img = true;
 		} catch(e){
 			//
@@ -83,7 +68,7 @@
 						    name = name.trim();
 					    }
 					    
-						chatimg = prev.querySelector(".chat-item__user-avatar").querySelector("img").src;
+						chatimg = prev.querySelector(".chat-item__user-avatar").src;
 					    //lastImage = chatimg
 					  }
 
@@ -134,14 +119,8 @@
 		}
 		lastMessage = JSON.stringify(data);
 
-		if (data.chatimg && img){
-			toDataURL(data.chatimg, function(dataUrl) {
-				data.chatimg = dataUrl;
-				pushMessage(data);
-			});
-		} else {
-			pushMessage(data);
-		}
+		console.log(data)
+		pushMessage(data);
 	}
 
 	function pushMessage(data){
