@@ -233,9 +233,14 @@ Using Control Change MIDI Commands, on channel 1:
 	
 ![image](https://user-images.githubusercontent.com/2575698/144830051-20b11caa-ba63-4223-80e1-9315c479ebd6.png)
 
-The MIDI plugin can be found in the Streamdeck store pretty easily. If using Windows, you can find a virtual MIDI loopback device here: https://www.tobias-erichsen.de/software/loopmidi.html  There are some for macOS as well.
 
-You will need to enable the MIDI option in the menu options for it to work, as it is not loaded by default.
+
+The StreamDeck MIDI plugin can be found in the Streamdeck store pretty easily. 
+
+
+Please note that you need a MIDI Loopback device installed if using the StreamDeck MIDI plugin. For Windows, you can find a virtual MIDI loopback device here: https://www.tobias-erichsen.de/software/loopmidi.html  There are some for macOS as well.
+
+Lastly, please note that you will need to enable the MIDI option in the menu options for it to work, as it is not loaded by default.
 
 ![image](https://user-images.githubusercontent.com/2575698/186801053-6319d63e-fe92-42bc-b951-cad4d35753cc.png)
 
