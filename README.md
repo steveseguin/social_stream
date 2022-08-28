@@ -20,7 +20,8 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 
 - twitch.tv - pop out chat to trigger
 - youtube live - pop out the chat to trigger (studio or guest view); or add &socialstream to the YT link
-- facebook live (guest view on web; you can pause the video tho)
+- facebook live - guest or publisher view on web (you can pause the video if needed)
+- workplace.com - (same setup as Facebook)
 - zoom.us (web version)
 - owncast demo page (watch.owncast.online)
 - crowdcast.io
