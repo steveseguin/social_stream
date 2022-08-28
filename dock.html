@@ -248,6 +248,13 @@
 			display: none !important;
 		}
 		
+		.queueid::before {
+		    content: attr(data-qid);
+		}
+		
+		.queueid[data-qid] {
+			margin: auto 3px;
+		}
 		
 
 		@keyframes expand {
@@ -1134,20 +1141,98 @@
 				}
 			}
 			return;
+		} else if ("pin" in data){
+			if (data.pin && syncDocks){
+				if (typeof data.pin == "object"){
+					data.pin.forEach(mid=>{
+						try {
+							pinIt(document.querySelector("[data-mid='"+mid+"']"));
+						} catch(e){
+							
+						}
+					});
+				}
+			}
+			return;
+		} else if ("unpin" in data){
+			if (data.unpin && syncDocks){
+				if (typeof data.unpin == "object"){
+					data.unpin.forEach(mid=>{
+						try {
+							unpinIt(document.querySelector("[data-mid='"+mid+"']"));
+						} catch(e){
+							
+						}
+					});
+				}
+			}
+			return;
+		} else if ("queueInit" in data){
+			if (data.queueInit && syncDocks && !selectedQueue.length){
+				if (typeof data.queueInit == "object"){
+					var sq = [];
+					data.queueInit.forEach(dd=>{
+						try{
+							if (dd && dd.id){
+								var ele = document.querySelector("[data-mid='"+dd.id+"']");
+								if (!ele){
+									ele = processInput(dd);
+								}
+								if (ele){
+									sq.push(ele);
+									ele.children[0].dataset.qid = sq.length;
+									ele.classList.add("queued");
+								}
+							}
+						}catch(e){}
+					});
+					selectedQueue = sq;
+					updateQueueButton();
+				}
+			}
+			return;
+		} else if ("queue" in data){
+			if (data.queue && syncDocks){
+				if (typeof data.queue == "object"){
+					selectedQueue.forEach(xx=>{
+						if (xx.dataset.mid && !data.queue.includes(parseInt(xx.dataset.mid))){
+							removeQueue(xx);
+						}
+					});
+					var sq = [];
+					data.queue.forEach(mid=>{
+						try{
+							if (mid){
+								var ele = document.querySelector("[data-mid='"+mid+"']");
+								if (ele){
+									sq.push(ele);
+									ele.children[0].dataset.qid = sq.length;
+									ele.classList.add("queued");
+								}
+							}
+						}catch(e){}
+					});
+					selectedQueue = sq;
+					updateQueueButton();
+				}
+			}
+			return;
 		}
 	
+		
 		if ("forward" in data){
 			sendDataP2P(data.forward);
 		} else if ("html" in data){
 			processHTML(data);
 		} else if (!pauseState ){
-			processData( {contents : data} );
+			return processData( {contents : data} );
 		} else {
 			queue.push({contents : data});
 			if (queue.length>100){ // keep the queue from exploding in size
 				queue.shift();
 			}
 		}
+		return false;
 	}
 	
 	var connectedPeers = {};
@@ -1177,6 +1262,9 @@
 		  if (("action" in e.data) && e.data.UUID && e.data.value && (e.data.action == "push-connection-info")){ // flip this
 		    if ("label" in e.data.value){
 				connectedPeers[e.data.UUID] = e.data.value.label;
+				if (connectedPeers[e.data.UUID] === "dock"){ // this is a dock that wants to be synced with
+					syncDockAll(e.data.UUID);
+				}
 				//console.log(connectedPeers);
 			}
 		  }
@@ -1190,7 +1278,6 @@
 		  
 		  if ("dataReceived" in e.data){ // raw data 
 			if ("overlayNinja" in e.data.dataReceived){
-				console.log(e.data);
 				processInput(e.data.dataReceived.overlayNinja);
 			}
 		  }
@@ -1300,20 +1387,15 @@
 	function nextInQueue(){ 
 		if (!selectedQueue.length){
 			sendDataP2P(false);
-			document.getElementById("next_in_queue").innerText = "Queue Empty";
-			document.getElementById("next_in_queue").title = "Clicking will clear any active overlay, since no next-message left in queue";
+			updateQueueButton();
 			return;
 		}
 		element = selectedQueue.shift();
 		selectedMessage(false, element);
 		element.classList.remove("queued");
-		if (!selectedQueue.length){
-			document.getElementById("next_in_queue").innerText = "Queue Empty";
-			document.getElementById("next_in_queue").title = "Clicking will clear the active overlay, since no next-message left in queue";
-		} else {
-			document.getElementById("next_in_queue").innerText = "Next in Queue ("+selectedQueue.length+")";
-			document.getElementById("next_in_queue").title = "Hold CTRL when selecting messages to add them to the queue instead";
-		}
+		delete element.children[0].dataset.qid;
+		updateQueueButton(true);
+		syncQueueP2P();
 	}
 	
 	async function fetchWithTimeout(resource, options = {}) { // https://dmitripavlutin.com/timeout-fetch-request/
@@ -1329,35 +1411,73 @@
 	  return response;
 	}
 	
+	function unpinIt(element){
+		element.classList.remove("pinned");
+		document.getElementById("output").prepend(element);
+		element.title = "Alt + Click to pin message";
+	}
+	
+	function pinIt(element){
+		element.classList.add("pinned");
+		element.title = "Alt + Click to remove pinned message";
+		document.getElementById("pinned").appendChild(element);
+	}
+	
+	function updateQueueButton(relabel=false){
+		if (!selectedQueue.length){
+			document.getElementById("next_in_queue").innerText = "Queue Empty";
+			document.getElementById("next_in_queue").title = "Clicking will clear the active overlay, since no next-message left in queue";
+		} else {
+			document.getElementById("next_in_queue").classList.remove("hidden");
+			document.getElementById("next_in_queue").innerText = "Next in Queue ("+selectedQueue.length+")";
+			document.getElementById("next_in_queue").title = "Hold CTRL when selecting messages to add them to the queue instead";
+		}
+		if (relabel){
+			for (var i=0;i<selectedQueue.length;i++){
+				try {
+					selectedQueue[i].children[0].dataset.qid = i+1;
+				} catch(e){console.error(e);}
+			}
+		}
+	}
+	
+	function removeQueue(element){
+		element.classList.remove("queued");
+		delete element.children[0].dataset.qid;
+		var index = selectedQueue.indexOf(element);
+		if (index > -1) { // only splice array when item is found
+		   selectedQueue.splice(index, 1); // 2nd parameter means remove one item only
+		}
+		updateQueueButton(true);
+	}
+	
 	function selectedMessage(event=false, element=false){
 		if (!element){
 			element = this;
 		}
 		if (event && (event.ctrlKey || event.metaKey)) {
 			if (element.classList.contains("queued")){
-				element.classList.remove("queued");
-				for (var i = 0; i < selectedQueue.length; i++){ 
-					if ( selectedQueue[i] === element) { 
-						selectedQueue.splice(i, 1); 
-						document.getElementById("next_in_queue").innerText = "Next in Queue ("+selectedQueue.length+")";
-						return;
-					}
-				}
+				removeQueue(element);
+				syncQueueP2P();
 				return;
 			}
 			selectedQueue.push(element);
+			element.children[0].dataset.qid = selectedQueue.length;
 			element.classList.add("queued");
-			document.getElementById("next_in_queue").classList.remove("hidden");
-			document.getElementById("next_in_queue").innerText = "Next in Queue ("+selectedQueue.length+")";
+			updateQueueButton();
+			syncQueueP2P();
 			return;
 		} else if (event && (event.altKey)) {
-			if (element.classList.contains("pinned")){
-				element.classList.remove("pinned");
-				element.remove();
+			if (element.classList.contains("pinned")){ 
+				unpinIt(element);
+				if (element.dataset.mid){
+					syncDataP2P({unpin:[element.dataset.mid]});
+				}
 			} else {
-				element.classList.add("pinned");
-				element.title = "Alt + Click to remove pinned message";
-				document.getElementById("pinned").appendChild(element);
+				pinIt(element);
+				if (element.dataset.mid){
+					syncDataP2P({pin:[element.dataset.mid]});
+				}
 			}
 			return;
 		}
@@ -1735,6 +1855,7 @@
 			
 			if (splitMode){
 				var node = createElementFromHTML('<div id="msg_'+data.counter+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+					 + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>"
 					 + "<div class='leftside "+larger+"'>"
 					 + chatname
 					 + showType
@@ -1745,6 +1866,7 @@
 					 + donationHTML + '</div>');
 			} else if (compactmode){
 				var node = createElementFromHTML('<div id="msg_'+data.counter+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+					 + "<div class='queueid'></div>"
 					 + '<div class="hl-message" id="content_'+data.counter+'">'
 						+ showType
 						+ chatImg
@@ -1756,6 +1878,7 @@
 					 + donationHTML + '</div>');
 			} else {
 				var node = createElementFromHTML('<div id="msg_'+data.counter+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+					 + "<div class='queueid'></div>"
 					 + showType
 					 + chatImg
 					 + timeArrived
@@ -1982,12 +2105,57 @@
 					}
 				}
 			}
+			return node;
 		}
+		return false;
 	}
 	
 	function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
 		if (triggerState && data.chatmessage.includes("!highlight")){
 			document.getElementById("msg_"+data.counter).classList.add("highlight"); // sample method of highlighting
+		}
+	}
+	
+	function syncDockAll(UUID){
+		var pins = [];
+		document.querySelectorAll(".pinned[data-mid]").forEach(ele=>{
+			pins.push(ele.dataset.mid);
+		});
+		syncDataP2P({pin:pins}, UUID);
+		syncQueueP2P(UUID);
+	}
+	
+	function syncQueueP2P(UUID=false){
+		var data = [];
+		if (UUID){
+			if (selectedQueue.length){
+				selectedQueue.forEach(ele=>{
+					data.push(ele.rawContents);
+				});
+				syncDataP2P({queueInit:data}, UUID);
+			}
+		} else {
+			selectedQueue.forEach(ele=>{
+				data.push(ele.rawContents.id);
+			});
+			syncDataP2P({queue:data});
+		}
+	}
+	
+	function syncDataP2P(data, UUID=false){
+		if (iframe && syncDocks){
+			if (UUID){
+				iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*');
+			} else {
+				var keys = Object.keys(connectedPeers);
+				for (var i = 0; i<keys.length;i++){
+					var UUID = keys[i];
+					var label = connectedPeers[keys[i]];
+					if (label === "dock"){
+						iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*');
+					}
+				}
+			}
 		}
 	}
 	
@@ -2008,7 +2176,6 @@
 						
 						if (label === "dock"){
 							if (data && data.id){
-								
 								iframe.contentWindow.postMessage({"sendData":{overlayNinja:{mid:data.id}}, "type":"pcs", "UUID":UUID}, '*');
 							} else {
 								iframe.contentWindow.postMessage({"sendData":{overlayNinja:{mid:false}}, "type":"pcs", "UUID":UUID}, '*');
