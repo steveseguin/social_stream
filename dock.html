@@ -25,8 +25,12 @@
 			--highlight-compact2: #3333;
 			--stylized-emoji: 140%;
 			--stylized-img: 23px;
-			--message-line-height: 22px;
 			--show-images: inline-block;
+			
+			--comment-font-size: unset; 
+			--message-line-height: 22px;
+			
+			--author-font-size: 17px;
 		}
 	
 		.noText {
@@ -92,7 +96,8 @@
 		.hl-message{
 			margin: auto 1px;
 			overflow-wrap: anywhere;
-			line-height: var(--message-line-height);
+			line-height: max(var(--message-line-height) , var(--comment-font-size));
+			font-size: var(--comment-font-size); 
 		}
 		
 		
@@ -280,8 +285,7 @@
 			width: fit-content;
 			color: var(--font-color-name);
 			display:inline-block;
-			font-size: 17px;
-			
+			font-size: var(--author-font-size);
 		}
 		
 		.notcompactmode>.hl-name{
@@ -290,7 +294,7 @@
 			max-width: max(220px, 25vw);
 			white-space: unset;
 			min-height: 24px;
-			line-height: var(--message-line-height);
+			line-height: max(var(--author-font-size) , var(--message-line-height));
 		}
 		
 		@media only screen and (max-width: 310px){
@@ -311,7 +315,7 @@
 			white-space: unset;
 			overflow: hidden;
 			height: 24px;
-			line-height: var(--message-line-height);
+			line-height: max(var(--author-font-size) , var(--message-line-height));
 		}
 		.leftside{
 			min-width: max(300px,15vw);
