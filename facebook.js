@@ -34,7 +34,6 @@
 		if (ele == window) {
 			return;
 		}
-		console.log(ele);
 		var chatimg = "";
 		try {
 			var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
