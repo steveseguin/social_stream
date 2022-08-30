@@ -44,17 +44,18 @@ function update(response){
 		if ("state" in response){
 			isExtensionOn = response.state;
 			if (isExtensionOn){
-				disableButton.innerHTML = "⚡ Extension active";
 				document.body.className = "extension-enabled";
+				document.getElementById("disableButtonText").innerHTML = "⚡ Extension active";
 				disableButton.style.display = "";
+				document.getElementById("extensionState").checked = true;
 				chrome.browserAction.setIcon({path: "/icons/on.png"});
 			} else {
-				disableButton.innerHTML = "🔌 Extension Disabled";
+				document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
 				document.body.className = "extension-disabled";
 				disableButton.style.display = "";
 				chrome.browserAction.setIcon({path: "/icons/off.png"});
+				document.getElementById("extensionState").checked = null;
 			}
-			
 		}
 		
 		var password = "";

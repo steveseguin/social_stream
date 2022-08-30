@@ -118,7 +118,7 @@
 		}
 
 		.container {
-			padding: 0 1em;
+			padding: 0 0.5em;
 		}
 
 		.options-link {
@@ -157,13 +157,13 @@
 
 		.link {
 			margin-bottom: 1em;
-			margin: 2em 0;
+			margin: 1.5em 0;
 		}
 
 		.link h2 {
 			margin: 0;
 			font-size: 1rem;
-			margin-bottom: 0.2rem;
+			margin-bottom: 0.4rem;
 			font-weight: 600;
 			color: var(--section-title-color);
 			display: flex;
@@ -201,6 +201,7 @@
 		}
 
 		h3 {
+			margin-top: 0.8rem;
 			margin-bottom: 0.5rem;
 			font-weight: 600;
 			color: var(--h3-color);
@@ -305,12 +306,23 @@
 		.link {
 			cursor: help;
 		}
+		#disableButtonText{
+			margin-right:5px;
+		}
 	</style>
 </head>
 
-<body class="extension-disabled">
+<body>
 
-	<button id="disableButton">Toggle On/Off</button>
+	<button id="disableButton">
+		<span id="disableButtonText">
+			Toggle On/Off
+		</span>
+		<label class="switch">
+			<input type="checkbox" id="extensionState">
+			<span class="slider round"></span>
+		</label>
+	</button>
 	<div id="newVersion"></div>
 	<div class="container">
 
@@ -650,7 +662,7 @@
 
 
 		<div class="options">
-			<h3>General Settings / Features</h3>
+			<h3>Other settings and tools</h3>
 			<div class="options_group">
 				<div>
 					<label class="switch">
