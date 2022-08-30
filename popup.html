@@ -111,7 +111,8 @@
 
 		.options-link {
 			text-decoration: none;
-			float: right;
+			color: var(--button-text);
+			font-size: 0.6rem;
 		}
 
 		#disableButton {
@@ -153,6 +154,9 @@
 			margin-bottom: 0.2rem;
 			font-weight: 600;
 			color: var(--section-title-color);
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
 		}
 
 		.link div,
@@ -292,22 +296,22 @@
 	<div class="container">
 
 		<div class="link">
-			<h2>Dockable streaming chat link</h2>
+			<h2>Streaming chat <a class="options-link" href="#streaming-chat-options"
+				title="Jump to dockable streaming chat link options">[options]</a></h2>
 			<div id="dock" class="streaming_chat"></div>
-			<a class="options-link" href="#streaming-chat-options"
-				title="Jump to dockable streaming chat link options">⚙️</a>
+			
 		</div>
 		<div class="link">
-			<h2>Single message overlay link</h2>
+			<h2>Single message overlay <a class="options-link" href="#single-message-options"
+				title="Jump to single message overlay link options">[options]</a></h2>
 			<div id="overlay" class="single_message"></div>
-			<a class="options-link" href="#single-message-options"
-				title="Jump to single message overlay link options">⚙️</a>
+			
 		</div>
 		<div id="settings"></div>
 
 
 		<a href="" id="streaming-chat-options"></a>
-		<h2>⚙️ Dockable streaming chat link options</h2>
+		<h2>Streaming chat link options</h2>
 		<div class="options">
 			<h3>UI</h3>
 			<div class="options_group streaming_chat">
@@ -513,7 +517,7 @@
 
 
 		<a href="" id="single-message-options"></a>
-		<h2>⚙️ Single message overlay link options</h2>
+		<h2>Single message overlay link options</h2>
 		<div class="options">
 			<h3>Behaviour</h3>
 			<div class="options_group single_message">
