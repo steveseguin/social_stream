@@ -192,6 +192,17 @@
 	var processed = 0;
 	
 	console.log("LOADED SocialStream EXTENSION");
+	
+	var eles = document.querySelectorAll('div[contenteditable="true"] div[data-editor]>div[data-offset-key]');
+	if (eles.length) {
+		var i = eles.length-1;
+		while (i>=0){
+			try {
+				eles[i].focus();
+			} catch (e) {}
+			i--;
+		}
+	} 
 
 	var ttt = setInterval(function() {
 		dupCheck = dupCheck.slice(-60); // facebook seems to keep around 40 messages, so this is overkill?
@@ -269,16 +280,18 @@
 						while (i>=0){
 							try {
 								eles[i].focus();
-								eles[i].dataset.focus = "3";
+								eles[i].focus();
 								eles[i].click();
+								eles[i].focus();
 								break;
-							} catch (e) {
-							}
+							} catch (e) {}
 							i--;
 						}
 					} else if (document.querySelector("div[data-editor]>[data-offset-key]")) {
 						document.querySelector("div[data-editor]>[data-offset-key]").focus();
-						document.querySelector("div[data-editor]>[data-offset-key]").dataset.focus = "4"
+						document.querySelector("div[data-editor]>[data-offset-key]").focus();
+						eles[i].click();
+						document.querySelector("div[data-editor]>[data-offset-key]").focus();
 					} else {
 						sendResponse(true);
 						return;
