@@ -161,7 +161,7 @@
 	console.log("social stream injected");
 	
 	var interval = setInterval(function(){
-		if (window.location.pathname.startsWith("/video/live") || window.location.pathname.startsWith("/video/events")  || window.location.pathname.startsWith("/video/golive/")){
+		if (window.location.pathname.startsWith("/video/live") || window.location.pathname.startsWith("/video/event")  || window.location.pathname.startsWith("/video/golive/")){
 			console.log("socialstream loaded");
 			if (document.querySelectorAll(".video-live-comments").length){
 				if (!document.querySelector(".video-live-comments").marked){
