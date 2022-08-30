@@ -7,7 +7,8 @@
 	<script src="popup.js"></script>
 	<style>
 		:root {
-			--body-background: #FFF;
+			--body-background-enabled: #fcfffc;
+			--body-background-disabled: #fffcfc;
 			--section-title-color: black;
 			--button-background: #444;
 			--button-text: white;
@@ -32,7 +33,8 @@
 
 		@media (prefers-color-scheme: dark) {
 			:root {
-				--body-background: #121212;
+				--body-background-enabled: #121F12;
+				--body-background-disabled: #1F1212;
 				--section-title-color: white;
 				--button-background: #444;
 				--button-text: white;
@@ -68,9 +70,16 @@
 			width: 350px;
 			padding: 0;
 			margin: 0;
-			background-color: var(--body-background);
 		}
-
+		
+		body.extension-disabled {
+			background-color: var(--body-background-disabled);
+		}
+		
+		body.extension-enabled {
+			background-color: var(--body-background-enabled);
+		}
+		
 		p {
 			color: var(--button-text);
 		}
@@ -128,11 +137,11 @@
 			z-index: 100;
 		}
 
-		#disableButton.extension-enabled {
+		.extension-enabled #disableButton {
 			background-color: var(--extension-enabled-background-color)
 		}
 
-		#disableButton.extension-disabled {
+		.extension-disabled #disableButton{
 			background-color: var(--extension-disabled-background-color);
 			color: var(--extension-disabled-text-color)
 		}
@@ -289,7 +298,7 @@
 	</style>
 </head>
 
-<body>
+<body class="extension-disabled">
 
 	<button id="disableButton">Toggle On/Off</button>
 	<div id="newVersion"></div>

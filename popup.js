@@ -45,12 +45,12 @@ function update(response){
 			isExtensionOn = response.state;
 			if (isExtensionOn){
 				disableButton.innerHTML = "⚡ Extension active";
-				disableButton.className = "extension-enabled";
+				document.body.className = "extension-enabled";
 				disableButton.style.display = "";
 				chrome.browserAction.setIcon({path: "/icons/on.png"});
 			} else {
 				disableButton.innerHTML = "🔌 Extension Disabled";
-				disableButton.className = "extension-disabled";
+				document.body.className = "extension-disabled";
 				disableButton.style.display = "";
 				chrome.browserAction.setIcon({path: "/icons/off.png"});
 			}
