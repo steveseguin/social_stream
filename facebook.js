@@ -263,27 +263,22 @@
 			try {
 				if ("focusChat" == request) {
 
-					var eles = document.querySelectorAll('[contenteditable="true"]');
+					var eles = document.querySelectorAll('div[contenteditable="true"] div[data-editor]>div[data-offset-key]');
 					if (eles.length) {
-						for (var i = 0; i < eles.length; i++) {
+						var i = eles.length-1;
+						while (i>=0){
 							try {
-								eles[i].childNodes[0].childNodes[0].childNodes[0].focus();
+								eles[i].focus();
+								eles[i].dataset.focus = "3";
+								eles[i].click();
+								break;
 							} catch (e) {
-								if (document.querySelector("[data-editor]>[data-offset-key]")) {
-									document.querySelector("[data-editor]>[data-offset-key]").focus();
-									continue;
-								}
-								try {
-									eles[i].childNodes[0].focus();
-								} catch (e) {
-									try {
-										eles[i].querySelector("p").focus();
-									} catch (e) {}
-								}
 							}
+							i--;
 						}
-					} else if (document.querySelector("[data-editor]>[data-offset-key]")) {
-						document.querySelector("[data-editor]>[data-offset-key]").focus();
+					} else if (document.querySelector("div[data-editor]>[data-offset-key]")) {
+						document.querySelector("div[data-editor]>[data-offset-key]").focus();
+						document.querySelector("div[data-editor]>[data-offset-key]").dataset.focus = "4"
 					} else {
 						sendResponse(true);
 						return;
