@@ -1,398 +1,700 @@
 <!doctype html>
 <html>
-    <head>
-		<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
-		<meta content="utf-8" http-equiv="encoding" />
-        <script src="popup.js"></script>
-		<style>
-			div {
-				padding:2px;
-			}
-			body {
-				background-color:#FFF;
-				width:350px;
-			}
-			
-			/* The switch - the box around the slider */
-			.switch {
-			  position: relative;
-			  display: inline-block;
-			  width: 30px;
-			  height: 16px;
-			  margin: 2px;
-			}
 
-			.icon {
-				max-width:16px;
-				max-height:16px;
-				vertical-align: middle;
-			}
-			/* Hide default HTML checkbox */
-			.switch input {
-			  opacity: 0;
-			  width: 0;
-			  height: 0;
-			}
+<head>
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+	<meta content="utf-8" http-equiv="encoding" />
+	<script src="popup.js"></script>
+	<style>
+		:root {
+			--body-background: #FFF;
+			--section-title-color: black;
+			--button-background: #444;
+			--button-text: white;
+			--h2-color: black;
+			--h3-color: black;
+			--link-color: black;
+			--new-version-banner-background: #c8ffc8;
+			--new-version-banner-text: black;
+			--new-version-banner-border: 1px solid #7eff7e;
+			--new-version-link-color: green;
+			--new-version-installed-color: #3a413a;
+			--options-group-background-color: #e1e1e1;
+			--options-group-text-color: black;
+			--extension-enabled-background-color: rgb(153, 255, 153);
+			--extension-disabled-background-color: red;
+			--extension-disabled-text-color: white;
+			--streaming-chat-color: #dcfff3;
+			--streaming-chat-text-color: black;
+			--single-message-color: #fffddc;
+			--single-message-text-color: black;
+		}
 
-			/* The slider */
-			.slider {
-			  position: absolute;
-			  cursor: pointer;
-			  top: 0;
-			  left: 0;
-			  right: 0;
-			  bottom: 0;
-			  background-color: #ccc;
-			  -webkit-transition: .4s;
-			  transition: .4s;
+		@media (prefers-color-scheme: dark) {
+			:root {
+				--body-background: #121212;
+				--section-title-color: white;
+				--button-background: #444;
+				--button-text: white;
+				--h2-color: #b2b2b2;
+				--h3-color: #b2b2b2;
+				--link-color: white;
+				--new-version-banner-background: #066536;
+				--new-version-banner-text: white;
+				--new-version-banner-border: 1px solid #7eff7e;
+				--new-version-link-color: #90f190;
+				--new-version-installed-color: #bebebe;
+				--options-group-background-color: #292929;
+				--options-group-text-color: white;
+				--extension-enabled-background-color: rgb(153, 255, 153);
+				--extension-disabled-background-color: #781717;
+				--extension-disabled-text-color: white;
+				--streaming-chat-color: #064663;
+				--streaming-chat-text-color: white;
+				--single-message-color: #5a462b;
+				--single-message-text-color: white;
 			}
+		}
 
-			.slider:before {
-			  position: absolute;
-			  content: "";
-			  height: 14px;
-			  width: 14px;
-			  left: 1px;
-			  bottom: 1px;
-			  background-color: white;
-			  -webkit-transition: .4s;
-			  transition: .4s;
-			}
+		div {
+			padding: 2px;
+		}
 
-			input:checked + .slider {
-			  background-color: #2196F3;
-			}
-			
-			input {
-				margin: 2px;
-			}
+		html {
+			scroll-padding-top: 2em;
+		}
 
-			input:focus + .slider {
-			  box-shadow: 0 0 1px #2196F3;
-			}
+		body {
+			width: 350px;
+			padding: 0;
+			margin: 0;
+			background-color: var(--body-background);
+		}
 
-			input:checked + .slider:before {
-			  -webkit-transform: translateX(14px);
-			  -ms-transform: translateX(14px);
-			  transform: translateX(14px);
-			}
+		p {
+			color: var(--button-text);
+		}
 
-			/* Rounded sliders */
-			.slider.round {
-			  border-radius: 16px;
-			}
+		#newVersion {
+			padding: 1em;
+			background: var(--new-version-banner-background);
+			color: var(--new-version-banner-text);
+			border-bottom: var(--new-version-banner-border);
+			text-align: center;
+			font-weight: bold;
+			display: none;
+		}
 
-			.slider.round:before {
-			  border-radius: 50%;
-			}
-			h3 {
-				margin: 7px 0 3px 0;
-			}
-			button {
-				margin:0 0 10px 0;
-				padding: 2px;
-			}
-		</style>
-    </head>
-    <body>
-			
-            <button id="disableButton">Toggle On/Off</button> -- Press this to turn ON or OFF.
-			
-			<div id="newVersion"></div>
-			
-			<h3>Dockable streaming chat link</h3>
-			<div id="dock"></div>
-			<h3>Single message overlay link</h3>
-			<div id="overlay"></div>
-			<div id="settings"></div>
-			
-			
-			<h3>Customize dockable streaming chat link</h3>
-			<label class="switch">
-			  <input type="checkbox" data-param1="transparent">
-			  <span class="slider round"></span>
-			</label> No background shading
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="lightmode">
-			  <span class="slider round"></span>
-			</label> Light mode
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="hidesource">
-			  <span class="slider round"></span>
-			</label> Hide source icon <img src="youtube.png" class="icon" /><img src="twitch.png" class="icon" /><img src="facebook.png" class="icon" />
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="branded">
-			  <span class="slider round"></span>
-			</label> Show channel icon
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="scale=2">
-			  <span class="slider round"></span>
-			</label> Magnify view 🔍
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="notime">
-			  <span class="slider round"></span>
-			</label> Hide timestamp 🕘
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="firstnames">
-			  <span class="slider round"></span>
-			</label> Show first names only
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="compact">
-			  <span class="slider round"></span>
-			</label> Compact mode (good for OBS overlaying)
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="split">
-			  <span class="slider round"></span>
-			</label> Split mode (messages align relative to center)
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="horizontal">
-			  <span class="slider round"></span>
-			</label> Horizontal scrolling messages
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="emoji">
-			  <span class="slider round"></span>
-			</label> Make emojis larger 😊
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="showtime=20000">
-			  <span class="slider round"></span>
-			</label> Hide overlay after 20s
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-setting="discord">
-			  <span class="slider round"></span>
-			</label> Capture Discord chat <img class="icon" src="discord.png"></img>
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-setting="slack">
-			  <span class="slider round"></span>
-			</label> Capture Slack chat  <img class="icon" src="slack.png"></img>
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-setting="telegram">
-			  <span class="slider round"></span>
-			</label> Capture Telegram chat  <img class="icon" src="telegram.png"></img>
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-setting="whatsapp">
-			  <span class="slider round"></span>
-			</label> Capture Whatsapp chat  <img class="icon" src="whatsapp.png"></img>
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="limit=200">
-			  <span class="slider round"></span>
-			</label> Increase messages history to 200
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-setting="sentiment">
-			  <span class="slider round"></span>
-			</label> Filter out messages with bad karma
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="save">
-			  <span class="slider round"></span>
-			</label> Save copy of all messages to disk automatically 💾
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="savesingle">
-			  <span class="slider round"></span>
-			</label> Save last message to a specific file location 💾
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="noavatar">
-			  <span class="slider round"></span>
-			</label> Show no avatars <img src="unknown.png" class="icon" />
-			<br />
-			<label class="switch" title="HTML is removed from messages, donations, and names for this dock only">
-			  <input type="checkbox" data-param1="striphtml">
-			  <span class="slider round"></span>
-			</label> Strip HTML from messages and donations
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="nobadges">
-			  <span class="slider round"></span>
-			</label> Show no badges ✅ ✅
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="color">
-			  <span class="slider round"></span>
-			</label> Add unique Color to names if available
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="chroma">
-			  <span class="slider round"></span>
-			</label> Green page background
-			<br />
-			<label class="switch" title="tip: You can use &myname=name1,name2 to list names to exclude from TTS">
-			  <input type="checkbox" data-param1="speech=en-US">
-			  <span class="slider round"></span>
-			</label> Text-to-Speech incoming messages (careful!) 💬
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="autoshow">
-			  <span class="slider round"></span>
-			</label> Auto-select new messages (skipping as needed)
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="autoshowdonos">
-			  <span class="slider round"></span>
-			</label> When auto-selecting is on, only auto-select donations
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param1="sync">
-			  <span class="slider round"></span>
-			</label> Multiple dock will stay in sync as to selected messages
-			<br />
-			
-			<label class="textinput" style="display:block;padding-top:8px;">
-			</label> List of names to identify as the host or bot (comma separated): 
-			<input type="text" data-textparam1="myname" style="width:95%;" placeholder="ie: name1,name 2,Name3" />
-			<br />
-			
-			
-			
-			<h3>Customize single message overlay link</h3>
-			<label class="switch">
-			  <input type="checkbox" data-param2="showtime=20000">
-			  <span class="slider round"></span>
-			</label> Hide overlay after 20s
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param2="showsource">
-			  <span class="slider round"></span>
-			</label> Show source icon  <img src="youtube.png" class="icon" /><img src="twitch.png" class="icon" /><img src="facebook.png" class="icon" />
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param2="branded">
-			  <span class="slider round"></span>
-			</label> Show channel icon
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param2="center">
-			  <span class="slider round"></span>
-			</label> Center overlay
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param2="aligntop">
-			  <span class="slider round"></span>
-			</label> Align comment to top
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param2="fade">
-			  <span class="slider round"></span>
-			</label> Fade in/out instead
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param2="rounded=10">
-			  <span class="slider round"></span>
-			</label> Round edges ⬛=>⚫
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param2="noavatar">
-			  <span class="slider round"></span>
-			</label> Show no avatars <img src="unknown.png" class="icon" />
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param2="nobadges">
-			  <span class="slider round"></span>
-			</label> Show no badges ✅
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param2="speech=en-US">
-			  <span class="slider round"></span>
-			</label> Enable text-to-speech 💬
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param2="ttsdonos=en-US">
-			  <span class="slider round"></span>
-			</label> Enable text-to-speech for Donations only 💬
-			<br />
-			<label class="switch">
-			  <input type="checkbox" title="zoom out of overlay by 2x" data-param2="scale=0.5">
-			  <span class="slider round"></span>
-			</label> Make overlay smaller 🔎
-			<br />
-			<label class="switch">
-			  <input type="checkbox" title="Raise offset of overlay by 100px" data-param2="offset=100">
-			  <span class="slider round"></span>
-			</label> Raise overlay higher ⬆
-			<br />
-			<label class="switch">
-			  <input type="checkbox" data-param2="chroma">
-			  <span class="slider round"></span>
-			</label> Green page background 🟢
-			<br />
-			<input type="text" data-textsetting="comment_color" placeholder="#HEX value or color name" />
-			<label class="textinput">
-			</label> Comment Font Color
-			<br />
-			<input type="text" data-textsetting="comment_background" placeholder="#HEX value or color name" />
-			<label class="textinput">
-			</label> Comment Background Color
-			<br />
-			<input type="text" data-textsetting="name_color" placeholder="#HEX value or color name"/>
-			<label class="textinput">
-			</label> Name Font Color
-			<br />
-			<input type="text" data-textsetting="name_background" placeholder="#HEX value or color name"/>
-			<label class="textinput">
-			</label> Name Background Color
-			<br />
-			
-			
-			
+		#newVersion a {
+			text-decoration: none;
+			color: var(--new-version-link-color);
+		}
+
+		#newVersion .installed {
+			color: var(--new-version-installed-color);
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+			align-items: center;
+			gap: 1rem;
+			font-weight: 200;
+			margin-bottom: 0;
+		}
+
+		#newVersion.show {
+			display: block;
+		}
+
+		.container {
+			padding: 0 1em;
+		}
+
+		.options {}
+
+		.option {}
+
+		.options-link {
+			text-decoration: none;
+			float: right;
+		}
+
+		#disableButton {
+			appearance: none;
+			position: sticky;
+			top: 0;
+			border: none;
+			display: block;
+			width: 100%;
+			padding: 0.5em 0;
+			font-weight: bold;
+			cursor: pointer;
+			z-index: 100;
+		}
+
+		#disableButton.extension-enabled {
+			background-color: var(--extension-enabled-background-color)
+		}
+
+		#disableButton.extension-disabled {
+			background-color: var(--extension-disabled-background-color);
+			color: var(--extension-disabled-text-color)
+		}
+
+		.container > h2 {
+			margin-bottom: 0;
+			color: var(--h2-color);
+			font-size: 1.1rem;
+		}
+
+		.link {
+			margin-bottom: 1em;
+			margin: 2em 0;
+		}
+
+		.link h2 {
+			margin: 0;
+			font-size: 1rem;
+			margin-bottom: 0.2rem;
+			font-weight: 600;
+			color: var(--section-title-color);
+		}
+
+		.link div,
+		.options_group {
+			background-color: var(--options-group-background-color);
+			color: var(--options-group-text-color);
+			padding: 1em;
+			border-radius: 4px;
+		}
+
+		.link div.streaming_chat,
+		.streaming_chat {
+			color: var(--streaming-chat-text-color);
+			background-color: var(--streaming-chat-color);
+		}
+
+		.link div.single_message,
+		.single_message {
+			color: var(--single-message-text-color);
+			background-color: var(--single-message-color)
+		}
+
+		.link div a {
+			color: var(--link-color);
+			text-decoration: underline;
+		}
+
+		h3 {
+			margin-top: 1.5rem;
+			margin-bottom: 0.5rem;
+			font-weight: 400;
+			color: var(--h3-color);
+		}
+
+		.grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+		}
+
+		/* The switch - the box around the slider */
+		.switch {
+			position: relative;
+			display: inline-block;
+			width: 30px;
+			height: 16px;
+			margin: 2px;
+		}
+
+		.icon {
+			max-width: 16px;
+			max-height: 16px;
+			vertical-align: middle;
+			margin-left: 5px;
+		}
+
+		/* Hide default HTML checkbox */
+		.switch input {
+			opacity: 0;
+			width: 0;
+			height: 0;
+		}
+
+		/* The slider */
+		.slider {
+			position: absolute;
+			cursor: pointer;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background-color: #ccc;
+			-webkit-transition: .4s;
+			transition: .4s;
+		}
+
+		.slider:before {
+			position: absolute;
+			content: "";
+			height: 14px;
+			width: 14px;
+			left: 1px;
+			bottom: 1px;
+			background-color: white;
+			-webkit-transition: .4s;
+			transition: .4s;
+		}
+
+		input:checked+.slider {
+			background-color: #2196F3;
+		}
+
+		input {
+			margin: 2px;
+		}
+
+		input[type="text"] {
+			width: 50%;
+			display: block;
+			margin-bottom: 10px;
+		}
+
+		input:focus+.slider {
+			box-shadow: 0 0 1px #2196F3;
+		}
+
+		input:checked+.slider:before {
+			-webkit-transform: translateX(14px);
+			-ms-transform: translateX(14px);
+			transform: translateX(14px);
+		}
+
+		/* Rounded sliders */
+		.slider.round {
+			border-radius: 16px;
+		}
+
+		.slider.round:before {
+			border-radius: 50%;
+		}
+
+		button.button {
+			appearance: none;
+			display: inline-block;
+			padding: 5px;
+			margin: 5px;
+			background-color: var(--button-background);
+			border: 1px solid black;
+			color: var(--button-text);
+		}
+	</style>
+</head>
+
+<body>
+
+	<button id="disableButton">Toggle On/Off</button>
+	<div id="newVersion"></div>
+	<div class="container">
+
+		<div class="link">
+			<h2>Dockable streaming chat link</h2>
+			<div id="dock" class="streaming_chat"></div>
+			<a class="options-link" href="#streaming-chat-options"
+				title="Jump to dockable streaming chat link options">⚙️</a>
+		</div>
+		<div class="link">
+			<h2>Single message overlay link</h2>
+			<div id="overlay" class="single_message"></div>
+			<a class="options-link" href="#single-message-options"
+				title="Jump to single message overlay link options">⚙️</a>
+		</div>
+		<div id="settings"></div>
+
+
+		<a href="" id="streaming-chat-options"></a>
+		<h2>⚙️ Dockable streaming chat link options</h2>
+		<div class="options">
+			<h3>UI</h3>
+			<div class="options_group streaming_chat">
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="transparent">
+						<span class="slider round"></span>
+					</label> No background shading
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="lightmode">
+						<span class="slider round"></span>
+					</label> Light mode
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="hidesource">
+						<span class="slider round"></span>
+					</label> Hide source icon <img src="youtube.png" class="icon" /><img src="twitch.png"
+						class="icon" /><img src="facebook.png" class="icon" />
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="branded">
+						<span class="slider round"></span>
+					</label> Show channel icon
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="scale=2">
+						<span class="slider round"></span>
+					</label> Magnify view 🔍
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="notime">
+						<span class="slider round"></span>
+					</label> Hide timestamp 🕘
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="chroma">
+						<span class="slider round"></span>
+					</label> Green page background
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="firstnames">
+						<span class="slider round"></span>
+					</label> Show first names only
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="compact">
+						<span class="slider round"></span>
+					</label> Compact mode (good for OBS overlaying)
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="split">
+						<span class="slider round"></span>
+					</label> Split mode (messages align relative to center)
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="horizontal">
+						<span class="slider round"></span>
+					</label> Horizontal scrolling messages
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="emoji">
+						<span class="slider round"></span>
+					</label> Make emojis larger 😊
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="showtime=20000">
+						<span class="slider round"></span>
+					</label> Hide overlay after 20s
+				</div>
+			</div>
+
+			<h3>Additional chat services</h3>
+			<div class="options_group streaming_chat">
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-setting="discord">
+						<span class="slider round"></span>
+					</label> Capture Discord chat <img class="icon" src="discord.png"></img>
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-setting="slack">
+						<span class="slider round"></span>
+					</label> Capture Slack chat <img class="icon" src="slack.png"></img>
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-setting="telegram">
+						<span class="slider round"></span>
+					</label> Capture Telegram chat <img class="icon" src="telegram.png"></img>
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-setting="whatsapp">
+						<span class="slider round"></span>
+					</label> Capture WhatsApp chat <img class="icon" src="whatsapp.png"></img>
+				</div>
+			</div>
+
+			<h3>Behaviour</h3>
+			<div class="options_group streaming_chat">
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="limit=200">
+						<span class="slider round"></span>
+					</label> Increase messages history to 200
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-setting="sentiment">
+						<span class="slider round"></span>
+					</label> Filter out messages with bad karma
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="save">
+						<span class="slider round"></span>
+					</label> Save messages to disk 💾
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="savesingle">
+						<span class="slider round"></span>
+					</label> Save last message to a file 💾
+				</div>
+
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="noavatar">
+						<span class="slider round"></span>
+					</label> Show no avatars <img src="unknown.png" class="icon" />
+				</div>
+				<div>
+					<label class="switch"
+						title="HTML is removed from messages, donations, and names for this dock only">
+						<input type="checkbox" data-param1="striphtml">
+						<span class="slider round"></span>
+					</label> Strip HTML from messages and donations
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="nobadges">
+						<span class="slider round"></span>
+					</label> Show no badges ✅ ✅
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="color">
+						<span class="slider round"></span>
+					</label> Add unique color to names if available
+				</div>
+				<div>
+					<label class="switch"
+						title="tip: You can use &myname=name1,name2 to list names to exclude from TTS">
+						<input type="checkbox" data-param1="speech=en-US">
+						<span class="slider round"></span>
+					</label> Text-to-Speech incoming messages 💬
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="autoshow">
+						<span class="slider round"></span>
+					</label> Auto-select new messages (skipping as needed)
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="autoshowdonos">
+						<span class="slider round"></span>
+					</label> When auto-selecting is on, only auto-select donations
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="sync">
+						<span class="slider round"></span>
+					</label> Multiple docks will stay in sync as to selected messages
+				</div>
+			</div>
+
+			<h3>Host/bot identification</h3>
+			<div class="options_group streaming_chat">
+				<div>
+					<label class="textinput" style="display:block;padding-top:8px;">
+					</label> List of names to identify as the host or bot (comma separated):
+					<input type="text" data-textparam1="myname" style="width:95%;"
+						placeholder="ie: name1,name 2,Name3" />
+				</div>
+			</div>
+		</div>
+
+
+
+		<a href="" id="single-message-options"></a>
+		<h2>⚙️ Single message overlay link options</h2>
+		<div class="options">
+			<h3>Behaviour</h3>
+			<div class="options_group single_message">
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param2="showtime=20000">
+						<span class="slider round"></span>
+					</label> Hide overlay after 20s
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param2="showsource">
+						<span class="slider round"></span>
+					</label> Show source icon <img src="youtube.png" class="icon" /><img src="twitch.png"
+						class="icon" /><img src="facebook.png" class="icon" />
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param2="branded">
+						<span class="slider round"></span>
+					</label> Show channel icon
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param2="center">
+						<span class="slider round"></span>
+					</label> Center overlay
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param2="aligntop">
+						<span class="slider round"></span>
+					</label> Align comment to top
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param2="fade">
+						<span class="slider round"></span>
+					</label> Fade in/out instead
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param2="rounded=10">
+						<span class="slider round"></span>
+					</label> Round edges ⬛=>⚫
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param2="noavatar">
+						<span class="slider round"></span>
+					</label> Show no avatars <img src="unknown.png" class="icon" />
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param2="nobadges">
+						<span class="slider round"></span>
+					</label> Show no badges ✅
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param2="speech=en-US">
+						<span class="slider round"></span>
+					</label> Enable text-to-speech 💬
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param2="ttsdonos=en-US">
+						<span class="slider round"></span>
+					</label> Enable text-to-speech for Donations only 💬
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" title="zoom out of overlay by 2x" data-param2="scale=0.5">
+						<span class="slider round"></span>
+					</label> Make overlay smaller 🔎
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" title="Raise offset of overlay by 100px" data-param2="offset=100">
+						<span class="slider round"></span>
+					</label> Raise overlay higher ⬆
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param2="chroma">
+						<span class="slider round"></span>
+					</label> Green page background 🟢
+				</div>
+			</div>
+			<h3>Colors</h3>
+			<div class="options_group single_message">
+				<div>
+					<label for="comment_color">Comment Font Color</label>
+					<input type="text" id="comment_color" data-textsetting="comment_color"
+						placeholder="#HEX value or color name" />
+				</div>
+				<div>
+					<label for="comment_background">Comment Background Color</label>
+					<input type="text" id="comment_background data-textsetting=" comment_background"
+						placeholder="#HEX value or color name" />
+				</div>
+				<div>
+					<label for="name_color">Name Font Color</label>
+					<input type="text" id="name_color" data-textsetting="name_color"
+						placeholder="#HEX value or color name" />
+				</div>
+				<div>
+					<label for="name_background">Name Background Color</label>
+					<input type="text" id="name_background" data-textsetting="name_background"
+						placeholder="#HEX value or color name" />
+				</div>
+			</div>
+		</div>
+
+
+		<div class="options">
 			<h3>General Settings / Features</h3>
-			<label class="switch">
-			  <input type="checkbox" id="autohi" data-setting="autohi">
-			  <span class="slider round"></span>
-			</label> Auto-reply to "<b>hi</b>" messages
-			<br />
-			
-			<label class="switch">
-			  <input type="checkbox" id="midi" data-setting="midi">
-			  <span class="slider round"></span>
-			</label> Enable MIDI hotkeys 🎹
-			<br />
-			
-			<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
-			  <input type="checkbox" id="firstsourceonly" data-setting="firstsourceonly">
-			  <span class="slider round"></span>
-			</label> Filter out duplicate message echos
-			<br />
-			
-			<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
-			  <input type="checkbox" id="textonlymode" data-setting="textonlymode">
-			  <span class="slider round"></span>
-			</label> Strip HTML from messages
-			<br />
-			
-			<label class="switch">
-			  <input type="checkbox" id="server" data-both="server">
-			  <span class="slider round"></span>
-			</label> Send highlighted messages via WSS instead of WebRTC
-			<br />
-			
-			<label class="switch">
-			  <input type="checkbox" id="joke" data-setting="joke">
-			  <span class="slider round"></span>
-			</label> Tell joke on <b>!joke</b> message
-			<button class="button" data-action="tellajoke" style="cursor:pointer;"> Tell a random joke now</button>
-			
-			Save the last message to a specific file (without needing the dock)
-			<button class="button" data-action="singlesave" style="cursor:pointer;"> 💾 Specify the file</button>
-			<button class="button" data-action="singlesaveStop" style="cursor:pointer;"> Stop saving (if active)</button>
-			<br />Fake a comment for testing
+			<div class="options_group">
+				<div>
+					<label class="switch">
+						<input type="checkbox" id="autohi" data-setting="autohi">
+						<span class="slider round"></span>
+					</label> Auto-reply to "<b>hi</b>" messages
+				</div>
+				<div>
+
+					<label class="switch">
+						<input type="checkbox" id="midi" data-setting="midi">
+						<span class="slider round"></span>
+					</label> Enable MIDI hotkeys 🎹
+				</div>
+				<div>
+
+					<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
+						<input type="checkbox" id="firstsourceonly" data-setting="firstsourceonly">
+						<span class="slider round"></span>
+					</label> Filter out duplicate message echos
+				</div>
+				<div>
+
+					<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
+						<input type="checkbox" id="textonlymode" data-setting="textonlymode">
+						<span class="slider round"></span>
+					</label> Strip HTML from messages
+				</div>
+				<div>
+
+					<label class="switch">
+						<input type="checkbox" id="server" data-both="server">
+						<span class="slider round"></span>
+					</label> Send highlighted messages via WSS instead of WebRTC
+				</div>
+				<div>
+
+					<label class="switch">
+						<input type="checkbox" id="joke" data-setting="joke">
+						<span class="slider round"></span>
+					</label> Tell joke on <b>!joke</b> message
+				</div>
+				<button class="button" data-action="tellajoke" style="cursor:pointer;"> Tell a random joke now</button>
+
+			</div>
+
+
+			<h3>Save the last message to a file</h3>
+			<p>(without needing the dock)</p>
+			<div class="grid">
+				<button class="button" data-action="singlesave" style="cursor:pointer;"> 💾 Choose location</button>
+				<button class="button" data-action="singlesaveStop" style="cursor:pointer;"> Stop saving (if
+					active)</button>
+			</div>
+
+			<h3>Fake a comment for testing</h3>
 			<button class="button" data-action="fakemsg" style="cursor:pointer;">Trigger now</button>
-    
-    </body>
+		</div>
+
+	</div> <!-- end container -->
+</body>
+
 </html>
