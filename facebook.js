@@ -287,10 +287,15 @@
 							} catch (e) {}
 							i--;
 						}
+					} else if (document.querySelector('div.notranslate[contenteditable="true"] > p')){
+						document.querySelector('div.notranslate[contenteditable="true"] > p').focus();
+						document.querySelector('div.notranslate[contenteditable="true"] > p').focus();
+						document.querySelector('div.notranslate[contenteditable="true"] > p').click();
+						document.querySelector('div.notranslate[contenteditable="true"] > p').focus();
 					} else if (document.querySelector("div[data-editor]>[data-offset-key]")) {
 						document.querySelector("div[data-editor]>[data-offset-key]").focus();
 						document.querySelector("div[data-editor]>[data-offset-key]").focus();
-						eles[i].click();
+						document.querySelector("div[data-editor]>[data-offset-key]").click();
 						document.querySelector("div[data-editor]>[data-offset-key]").focus();
 					} else {
 						sendResponse(true);
