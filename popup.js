@@ -44,16 +44,14 @@ function update(response){
 		if ("state" in response){
 			isExtensionOn = response.state;
 			if (isExtensionOn){
-				disableButton.innerHTML = "🔌 Disable extension";
-				disableButton.className = "button button3";
+				disableButton.innerHTML = "⚡ Extension active";
+				disableButton.className = "extension-enabled";
 				disableButton.style.display = "";
-				document.body.style.backgroundColor = "#9F9";
 				chrome.browserAction.setIcon({path: "/icons/on.png"});
 			} else {
-				disableButton.innerHTML = "⚡ Enable extension";
-				disableButton.className = "button button1";
+				disableButton.innerHTML = "🔌 Extension Disabled";
+				disableButton.className = "extension-disabled";
 				disableButton.style.display = "";
-				document.body.style.backgroundColor = "#F99";
 				chrome.browserAction.setIcon({path: "/icons/off.png"});
 			}
 			
@@ -142,8 +140,10 @@ function checkVersion(){
 			var manifestData = chrome.runtime.getManifest();
 			if ("version" in data){
 				if (manifestData.version !== data.version){
-					document.getElementById("newVersion").innerHTML = "<b>There's a <a target='_blank' href='https://github.com/steveseguin/social_stream/'>new version available</a> ("+data.version+" vs "+manifestData.version+")</b>";
+					document.getElementById("newVersion").classList.add('show')
+					document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' href='https://github.com/steveseguin/social_stream/'>new version available</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span>`;
 				} else {
+					document.getElementById("newVersion").classList.remove('show')
 					document.getElementById("newVersion").innerHTML = "";
 				}
 			}
