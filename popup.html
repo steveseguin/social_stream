@@ -666,67 +666,73 @@
 
 
 		<div class="options">
-			<h3>Other settings and tools</h3>
+			<h2>Other settings and tools</h2>
 			<div class="options_group">
+			
+				<div>
+					<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
+						<input type="checkbox" id="firstsourceonly" data-setting="firstsourceonly">
+						<span class="slider round"></span>
+					</label> Filter out duplicate message echos
+				</div>
+				
+				<div>
+					<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
+						<input type="checkbox" id="textonlymode" data-setting="textonlymode">
+						<span class="slider round"></span>
+					</label> Strip HTML from messages
+				</div>
+				
 				<div>
 					<label class="switch">
 						<input type="checkbox" id="autohi" data-setting="autohi">
 						<span class="slider round"></span>
 					</label> Auto-reply to "<b>hi</b>" messages
 				</div>
+				
 				<div>
-
 					<label class="switch">
 						<input type="checkbox" id="midi" data-setting="midi">
 						<span class="slider round"></span>
 					</label> Enable MIDI hotkeys 🎹
 					<button id="midiConfig" class="button" data-action="loadmidi" style="cursor:pointer;"> Load Config</button>
 				</div>
+				
 				<div>
-
-					<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
-						<input type="checkbox" id="firstsourceonly" data-setting="firstsourceonly">
-						<span class="slider round"></span>
-					</label> Filter out duplicate message echos
-				</div>
-				<div>
-
-					<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
-						<input type="checkbox" id="textonlymode" data-setting="textonlymode">
-						<span class="slider round"></span>
-					</label> Strip HTML from messages
-				</div>
-				<div>
-
 					<label class="switch">
 						<input type="checkbox" id="server" data-both="server">
 						<span class="slider round"></span>
-					</label> Send highlighted messages via WSS instead of WebRTC
+					</label> Send featured chat via WSS instead of P2P
 				</div>
-				<div>
-
+				
+				<div style="display:inline-block;">
 					<label class="switch">
 						<input type="checkbox" id="joke" data-setting="joke">
 						<span class="slider round"></span>
 					</label> Tell joke on <b>!joke</b> message
 				</div>
-				<button class="button" data-action="tellajoke" style="cursor:pointer;"> Tell a random joke now</button>
-
+				
+				<button class="button" data-action="tellajoke" style="cursor:pointer;"> Tell a joke now</button>
 			</div>
-
 
 			<h3>Save the last message to a file</h3>
-			<p>(without needing the dock)</p>
-			<div class="grid">
-				<button class="button" data-action="singlesave" style="cursor:pointer;"> 💾 Choose location</button>
-				<button class="button" data-action="singlesaveStop" style="cursor:pointer;"> Stop saving (if
-					active)</button>
+			<div class="options_group">
+				An alterative method of saving the last message
+				<div class="grid">
+					<button class="button" data-action="singlesave" style="cursor:pointer;"> 💾 Choose location</button>
+					<button class="button" data-action="singlesaveStop" style="cursor:pointer;"> Stop saving (if active)</button>
+				</div>
 			</div>
-
+			
 			<h3>Fake a comment for testing</h3>
-			<button class="button" data-action="fakemsg" style="cursor:pointer;">Trigger now</button>
+			<div class="options_group">
+				Issue a random test message that will appear in the dock
+				<button class="button" data-action="fakemsg" style="cursor:pointer;">Trigger now</button>
+			</div>
+			<br />
+			Visit us at <a href='https://discord.vdo.ninja' target="_blank">discord.vdo.ninja</a>. Made with 💖 for the community. 
+			<br />
 		</div>
-
 	</div> <!-- end container -->
 </body>
 
