@@ -87,6 +87,27 @@ function pushSettingChange(setting){
 function sleep(ms = 0) {
 	return new Promise(r => setTimeout(r, ms)); // LOLz!
 }
+async function loadmidi(){
+	const opts = {
+		types: [{
+		  description: 'JSON file',
+		  accept: {'text/plain': ['.json', '.txt', '.data', '.midi']},
+		}],
+	  };
+	var midiFileHandler = await window.showOpenFilePicker();
+ 
+	try {
+		var midiConfigFile = await midiFileHandler[0].getFile();
+		midiConfigFile = await midiConfigFile.text();
+		settings.midiConfig = JSON.parse(midiConfigFile);
+	} catch(e){
+		settings.midiConfig = false;
+		console.log(e);
+		alert("File does not contain a valid JSON structure");
+	}
+	chrome.storage.sync.set(settings);
+	chrome.runtime.lastError;
+}
 
 var newFileHandle = false;
 async function overwriteFile(data=false) {
@@ -201,6 +222,7 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "midi"){
 					toggleMidi();
 				}
+				
 				if (request.setting == "textonlymode"){
 					if (request.value){
 						pushSettingChange("textOnlyMode");
@@ -301,6 +323,9 @@ chrome.runtime.onMessage.addListener(
 				sendResponse({"state":isExtensionOn});
 			} else if (request.cmd && request.cmd === "singlesave") {
 				overwriteFile("setup");
+			} else if (request.cmd && request.cmd === "loadmidi") {
+				await loadmidi(sendResponse);
+				sendResponse({"settings":settings});
 			} else if (request.cmd && request.cmd === "singlesaveStop") {
 				newFileHandle = false;
 			} else if (request.cmd && request.cmd === "fakemsg") {
@@ -494,6 +519,8 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 		} catch(e){}
 	}
 }
+
+
 	
 function loadIframe(channel, pass=false){  // this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
 	iframe = document.createElement("iframe");
@@ -775,15 +802,20 @@ try {
 
 function midiHotkeysCommand(number, value){ // MIDI control change commands
 	if (number == 102 && value == 1){
-		respond1ToAll();
+		respondToAll("1");
 	} else if (number == 102 && value == 2){
-		respondLULToAll();
+		respondToAll("LUL");
 	} else if (number == 102 && value == 3){
 		tellAJoke();
 	} else if (number == 102 && value == 4){
 		var msg = {};
 		msg.forward = false;
 		sendDataP2P(msg);
+	} else if (number == 102){
+		if (settings.midiConfig && ((value+"") in settings.midiConfig)){
+			var msg = settings.midiConfig[value+""];
+			respondToAll(msg);
+		}
 	}
 }
 
@@ -800,19 +832,13 @@ function tellAJoke(){
 	processResponse(data);
 }
 
-function respond1ToAll(){
+function respondToAll(msg){
 	messageTimeout = Date.now();
 	var data = {};
-	data.response = "1";
+	data.response = msg
 	processResponse(data);
 }
 
-function respondLULToAll(){
-	messageTimeout = Date.now();
-	var data = {};
-	data.response = "LUL";
-	processResponse(data);
-}
 
 var jokes = [ // jokes from reddit; sourced from github.
   {

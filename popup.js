@@ -32,7 +32,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		iii[i].onclick = function(){
 			var msg = {};
 			msg.cmd = this.dataset.action;
-			chrome.runtime.sendMessage(msg, function (response) {});
+			chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
+				update(response);
+			});
 		};
 	}
 	
@@ -73,6 +75,16 @@ function update(response){
 		
 		if ('settings' in response){
 			for (var key in response.settings){
+				
+				if (key === "midiConfig"){
+					if (response.settings[key]){
+						document.getElementById("midiConfig").classList.add("pressed");
+						document.getElementById("midiConfig").innerText = " Config Loaded";
+					} else {
+						document.getElementById("midiConfig").classList.remove("pressed");
+						document.getElementById("midiConfig").innerText = " Load Config";
+					}
+				}
 				
 				if (typeof response.settings[key] == "object"){ // newer method
 					if ("param1" in response.settings[key]){
