@@ -273,8 +273,12 @@
 		function(request, sender, sendResponse) {
 			try {
 				if ("focusChat" == request) {
-
-					var eles = document.querySelectorAll('div[contenteditable="true"] div[data-editor]>div[data-offset-key]');
+					
+					if (document.querySelectorAll('div[role="textbox"][contenteditable="true"] p').length){
+						var eles = document.querySelectorAll('div[role="textbox"][contenteditable="true"] p');
+					} else {
+						var eles = document.querySelectorAll('div[contenteditable="true"] div[data-editor]>div[data-offset-key]');
+					}
 					if (eles.length) {
 						var i = eles.length-1;
 						while (i>=0){
