@@ -30,7 +30,7 @@
 	  }
 	}
 
-	function processMessage(ele) {
+	async function processMessage(ele) {
 		if (ele == window) {
 			return;
 		}
@@ -72,6 +72,12 @@
 				}
 			});
 		} */
+		
+		var test = ele.querySelectorAll("div[dir='auto'] > div[role='button'][tabindex='0']")
+		if (test.length ===1){
+			test[0].click();
+			await new Promise(r => setTimeout(r, 100));
+		}
 
 		var msg = "";
 
