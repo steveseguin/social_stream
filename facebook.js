@@ -275,7 +275,7 @@
 				if ("focusChat" == request) {
 					
 					if (document.querySelectorAll('div[role="textbox"][contenteditable="true"] p').length){
-						var eles = document.querySelectorAll('div[role="textbox"][contenteditable="true"] p');
+						var eles = document.querySelectorAll('div[role="textbox"][contenteditable="true"] > p');
 					} else {
 						var eles = document.querySelectorAll('div[contenteditable="true"] div[data-editor]>div[data-offset-key]');
 					}
