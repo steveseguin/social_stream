@@ -215,10 +215,10 @@ function updateSettings(ele){
 		if (ele.value){
 			document.getElementById("dock").rawURL = updateURL(ele.dataset.textparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").rawURL);
 		} else {
-			var tmp = document.getElementById("dock").rawURL.split(ele.dataset.textparam1);
+			var tmp = document.getElementById("dock").rawURL.split("&"+ele.dataset.textparam1);
 			if (tmp.length>1){
 				var tt = tmp[1].split("&");
-				if (tt.length>1){
+				if (tt.length){
 					tt.shift();
 				}
 				tt = tt.join("&");
