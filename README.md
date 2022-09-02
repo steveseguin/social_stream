@@ -20,7 +20,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 
 - twitch.tv - pop out chat to trigger
 - youtube live - pop out the chat to trigger (studio or guest view); or add &socialstream to the YT link
-- facebook live - guest or publisher view on web (you can pause the video if needed)
+- facebook live - guest view, publisher view, or the producer's pop-up chat on the web is supported.
 - workplace.com - (same setup as Facebook)
 - zoom.us (web version)
 - owncast demo page (watch.owncast.online)
@@ -32,7 +32,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - instagram live (instagram.com/*/live/)
 - tiktok live (tiktok.com/*/live)
 - webex live chat (not the pop out)
-- linkedin events and live comments (linkedin.com/videos/live/******) and linkedin.com/videos/events/******)
+- linkedin events and live comments. (works with linkedin.com/videos/live/****** & linkedin.com/videos/events/******)
 - vdo.ninja (pop-out chat)
 - Whatsapp.com (REQUIRES the TOGGLE in menu to enable it; use @ https://web.whatsapp.com ; fyi, no avatar support)
 - discord.com (web version; requires toggle enabled via the settings as well) 
@@ -153,6 +153,7 @@ If using the automated chat response options, like auto-hi, you must ensure the 
 - Ensure that VDO.Ninja works with your browser, as if not, webRTC may be disabled and so this social stream extension will not work also.
 - If using Facebook live chat, please sure you are viewing the page as a "viewer", not as a publisher, and that you are connected to WiFi or Ethernet, and not mobile LTE/4G/5G.
 - The auto-responder requires you to be signed in to the social endpoint and that you have access to chat; ensure you accept any disclaimer and try issuing a test message first.
+- Try using the extension in Incognito mode or try disabling all other browser extensions, then reloading the browser, and trying again.  Many extension types will conflict with Socialstream, causing certain functions to fail.
 
 ### Customize
 
