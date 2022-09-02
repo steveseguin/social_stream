@@ -217,7 +217,12 @@ function updateSettings(ele){
 		} else {
 			var tmp = document.getElementById("dock").rawURL.split(ele.dataset.textparam1);
 			if (tmp.length>1){
-				document.getElementById("dock").rawURL = tmp[0] + tmp[1].split("&").shift().join("&");
+				var tt = tmp[1].split("&");
+				if (tt.length>1){
+					tt.shift();
+				}
+				tt = tt.join("&");
+				document.getElementById("dock").rawURL = tmp[0] + tt;
 			} else {
 				document.getElementById("dock").rawURL = tmp[0];
 			}

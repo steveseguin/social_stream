@@ -204,12 +204,21 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "getOnOffState") {
 				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
 			} else if (request.cmd && request.cmd === "saveSetting") {
-				
 				if (typeof settings[request.setting] == "object"){
-					settings[request.setting][request.type] = request.value;
+					if (!request.value){
+						delete settings[request.setting];
+					} else {
+						settings[request.setting][request.type] = request.value;
+						settings[request.setting].value = request.value;
+					}
 				} else if ("type" in request){
-					settings[request.setting] = {};
-					settings[request.setting][request.type] = request.value;
+					if (!request.value){
+						delete settings[request.setting];
+					} else {
+						settings[request.setting] = {};
+						settings[request.setting][request.type] = request.value;
+						settings[request.setting].value = request.value;
+					}
 				} else {
 					settings[request.setting] = request.value;
 				}
@@ -307,14 +316,13 @@ chrome.runtime.onMessage.addListener(
 						if (request.message===null){return;}
 					} catch(e){console.log(e);}
 					
-					if (("firstsourceonly" in settings) && settings.firstsourceonly){
+					if (settings.firstsourceonly){
 						if (verifyOriginal(request.message)){
 							sendDataP2P(request.message); // send the data to the dock
 						}
 					} else {
 						sendDataP2P(request.message);
 					}
-					
 				}
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				sendResponse({"settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
@@ -360,6 +368,7 @@ chrome.runtime.onMessage.addListener(
 					data.hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
 				}
 				data.type = "youtube";
+				data = await applyBotActions(data); // perform any immediate actions
 				sendDataP2P(data);
 				
 			} else if (request.cmd && request.cmd === "sidUpdated") {
@@ -714,22 +723,22 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 	
 	if (settings.comment_background){
 		if (!data.backgroundColor){
-			data.backgroundColor = "background-color:"+settings.comment_background+";";
+			data.backgroundColor = "background-color:"+settings.comment_background.value+";";
 		}
 	}
 	if (settings.comment_color){
 		if (!data.textColor){
-			data.textColor = "color:"+settings.comment_color+";";
+			data.textColor = "color:"+settings.comment_color.value+";";
 		}
 	}
 	if (settings.name_background){
 		if (!data.backgroundNameColor){
-			data.backgroundNameColor =  "background-color:"+settings.name_background+";";
+			data.backgroundNameColor =  "background-color:"+settings.name_background.value+";";
 		}
 	}
 	if (settings.name_color){ // 
 		if (!data.textNameColor){
-			data.textNameColor =  "color:"+settings.name_color+";";
+			data.textNameColor =  "color:"+settings.name_color.value+";";
 		}
 	}
 	return data;
