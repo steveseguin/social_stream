@@ -25,6 +25,8 @@
 		  ele.marked = true;
 		}
 		
+		//console.log(ele);
+		
 		if (document.querySelector("chat-message__container")){
 			if (document.querySelector("chat-message__container").marked){
 				return;
@@ -36,21 +38,37 @@
 
 		var chatimg = "";
 		var msg = "";
+		var name = "";
+		var dono = "";
 		
 		try{
 		   chatimg = ele.querySelector("img").src;
+		   name = ele.querySelector("img").alt;
 		} catch(e){}
+		
 		try{
 			if (ele.querySelector(".mixcloud-live-chat-row-link")){
-			  var name = ele.querySelector(".mixcloud-live-chat-row-link").innerText;
+			  name = ele.querySelector(".mixcloud-live-chat-row-link").innerText;
 			  if (name){
 				name = name.trim();
 			  }
-			  
 			  msg = ele.querySelector('.mixcloud-live-chat-row-link').parentNode.nextElementSibling.innerText;
 			} 
 		} catch(e){}
-		if (msg){
+		
+		if (!msg){
+			try {
+				msg = ele.querySelector("[class*='ChatSubscriptionMessageRow']").textContent || querySelector("[class*='ChatSubscriptionMessageRow']").innerText;
+				msg = msg.trim();
+				try {
+					dono = ele.querySelector("[class*='ChatSubscriptionMessageRow'] > p").childNodes;
+					dono = dono[dono.length-1].textContent || dono[dono.length-1].innerText || "";
+					dono = dono.trim();
+				} catch(e){
+				}
+			} catch(e){
+			}
+		} else {
 			msg = msg.trim();
 			if (name){
 				if (msg.startsWith(name)){
@@ -67,7 +85,7 @@
 		data.textColor = "";
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
-		data.hasDonation = "";
+		data.hasDonation = dono;
 		data.hasMembership = "";;
 		data.contentimg = "";
 		data.type = "mixcloud";
@@ -131,6 +149,9 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
+					if (mutation.addedNodes[0].previousElementSibling && mutation.addedNodes[0].previousElementSibling.previousElementSibling && mutation.addedNodes[0].previousElementSibling.previousElementSibling.previousElementSibling && mutation.addedNodes[0].previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling){
+						return; // don't allow old messages from loading
+					}
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						if (mutation.addedNodes[i].classList.contains("mixcloud-live-chat-row")){
 							processMessage(mutation.addedNodes[i]);
