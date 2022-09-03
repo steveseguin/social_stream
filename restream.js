@@ -24,6 +24,16 @@
 	var lastMessage = "";
 	var lastImg = "";
 	var lastTimestamp = Date.now();
+	
+	
+	function walkTheDOM(node, func) {
+	  func(node);
+	  node = node.firstChild;
+	  while (node) {
+		  walkTheDOM(node, func);
+		  node = node.nextSibling;
+	  }
+	}
 
 	function processMessage(ele){
 		if (ele && ele.marked){
@@ -40,7 +50,7 @@
 		} catch(e){
 			//console.log(e);
 		}
-		
+	
         var name = "";
 		try {
 			name =  ele.children[0].children[0].children[1].innerText;
@@ -60,7 +70,25 @@
 
 		var msg = "";
 		try {
-			msg = ele.querySelector('.chat-text-normal').innerText;
+			//msg = ele.querySelector('.chat-text-normal').innerText;
+			
+			walkTheDOM(ele.querySelector('.chat-text-normal'), function(node) {
+				if (node.nodeName === "#text") {
+					var text = node.data.trim();
+					if (text.length) {
+						msg += text;
+					}
+				} else if (node.nodeName == "IMG") {
+					if (textOnlyMode){
+						if (node.alt){
+							msg += node.alt;
+						}
+					} else {
+						msg += node.outerHTML;
+					}
+				}
+			});
+			
 		} catch(e){
 			//console.log(e);
 		}
@@ -68,6 +96,14 @@
 		if (msg){
 			msg = msg.trim();
 		}
+		
+		//data.sourceImg = brandedImageURL;
+		
+		var sourceImg = "";
+		try {
+			sourceImg = ele.querySelector("img[src^='https://restream.io/img/api/platforms/']").src;
+		} catch(e){}
+		
 
 		var data = {};
 		data.chatname = name;
@@ -77,9 +113,10 @@
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
-		data.hasMembership = "";;
+		data.hasMembership = "";
 		data.contentimg = "";
 		data.type = "restream";
+		data.sourceImg = sourceImg;
 		
 		
 		if (data.lastMessage === lastMessage){
@@ -97,14 +134,9 @@
 		lastImg = data.chatimg;
 		lastTimestamp = Date.now();
 		
-		if (data.chatimg){
-			toDataURL(data.chatimg, function(dataUrl) {
-				data.chatimg = dataUrl;
-				pushMessage(data);
-			});
-		} else {
-			pushMessage(data);
-		}
+		
+		pushMessage(data);
+		
 	}
 	
 	
