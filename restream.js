@@ -46,15 +46,21 @@
 
 		var chatimg = "";
 		try {
-			chatimg = ele.children[0].children[0].children[0].querySelector("img").src;
+			chatimg = ele.children[0].children[0].children[0].querySelector("img.MuiAvatar-img:last-child:not([src^='https://restream.io/img/api/platforms/'])").src;
 		} catch(e){
 			//console.log(e);
 		}
-	
+		
+		if (chatimg && (chatimg === "https://chat.restream.io/assets/icon-platform/restream-icon-white.svg")){
+			chatimg = "";
+		}
+		var nameColor = "";
         var name = "";
+		
 		try {
-			name =  ele.children[0].children[0].children[1].innerText;
+			name = ele.children[0].children[0].children[1].innerText;
 			name = name.trim();
+			nameColor = ele.children[0].children[0].children[1].children[0].style.color;
 		} catch(e){
 			//console.log(e);
 		}
@@ -63,6 +69,7 @@
 			try {
 				name = ele.querySelector(".MuiTypography-subtitle2").innerText;
 				name = name.trim();
+				nameColor = ele.querySelector(".MuiTypography-subtitle2").style.color;
 				} catch(e){
 				//console.log(e);
 			}
@@ -99,9 +106,9 @@
 		
 		//data.sourceImg = brandedImageURL;
 		
-		var sourceImg = "";
+		var sourceImg = "restream.png";
 		try {
-			sourceImg = ele.querySelector("img[src^='https://restream.io/img/api/platforms/']").src;
+			sourceImg = ele.querySelector("img:last-child[src^='https://restream.io/img/api/platforms/']").src;
 		} catch(e){}
 		
 
@@ -110,6 +117,7 @@
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
+		data.nameColor = nameColor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
