@@ -59,6 +59,7 @@ More on request
 https://www.youtube.com/watch?v=X_11Np2JHNU
 
 For a more recent guide focusing on setup for discord, slack, whatsapp, and telegram, see:
+
 https://www.youtube.com/watch?v=L3l0_8V1t0Q
 
 ### To install
