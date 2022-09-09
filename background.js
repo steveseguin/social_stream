@@ -238,7 +238,24 @@ chrome.runtime.onMessage.addListener(
 					} else {
 						pushSettingChange("richTextMode");
 					}
+				}
+				
+				if (request.setting == "socketserver"){
+					if (request.value){
+						allowSocketServer = true;
+						if (!socketserver){
+							socketserver = new WebSocket(serverURL); 
+							setupSocket();
+						}
+					} else {
+						allowSocketServer = false;
+						if (socketserver){
+							socketserver.close();
+						}
+					}
 				} 
+				
+				
 				
 				if (request.setting == "noavatars"){
 					if (request.value){
@@ -390,7 +407,7 @@ chrome.runtime.onMessage.addListener(
 					loadIframe(channel, password);
 				}
 				
-				sendResponse({"state":isExtensionOn});		
+				sendResponse({"state":isExtensionOn});	
 			} else {
 				sendResponse({"state":isExtensionOn});
 			}
@@ -506,6 +523,56 @@ function verifyOriginal(msg){
 	} catch(e){}
 	return true;
 }
+
+
+//
+
+var allowSocketServer = false;
+var socketserver = false;
+var serverURL = "wss://api.overlay.ninja";
+var conCon = 0;
+
+function setupSocket(){
+	
+	if (!socketserver && allowSocketServer){
+		socketserver = new WebSocket(serverURL);
+	}
+	
+	socketserver.onclose = function (){
+		if (allowSocketServer){
+			setTimeout(function(){
+				if (allowSocketServer){
+					conCon+=1;
+					socketserver = new WebSocket(serverURL); 
+					setupSocket();
+				} else {
+					socketserver = false;
+				}
+			},100*conCon);
+		} else {
+			socketserver = false;
+		}
+	};
+	socketserver.onopen = function (){
+		conCon = 0;
+		socketserver.send(JSON.stringify({"join":channel}));
+	};
+	socketserver.addEventListener('message', function (event) {
+		if (event.data){
+			var data = JSON.parse(event.data);
+			if (data.action && (data.action === "sendChat") && data.value){
+				var msg = {};
+				msg.response = data.value;
+				processResponse(msg);
+			} else if (data.action && (data.action === "sendEncodedChat") && data.value){
+				var msg = {};
+				msg.response = decodeURIComponent(data.value);
+				processResponse(msg);
+			}
+		}
+	});
+}
+
 
 var messageCounter = 0;
 function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Ninja API

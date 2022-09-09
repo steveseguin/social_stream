@@ -160,6 +160,8 @@
 		h2 {
 			color: var(--h2-color);
 			font-size: 1.1rem;
+			margin-top: 1.6rem;
+			margin-bottom: 0.3rem;
 		}
 
 		.link {
@@ -201,10 +203,6 @@
 		.link div a {
 			color: var(--link-color);
 			text-decoration: underline;
-		}
-
-		h2 {
-			margin-top: 1.6rem;
 		}
 
 		h3 {
@@ -386,16 +384,33 @@
 				</div>
 				<div>
 					<label class="switch">
-						<input type="checkbox" data-param1="lightmode">
+						<input type="checkbox" data-param1="compact">
 						<span class="slider round"></span>
-					</label> Light mode
+					</label> Compact mode (good for OBS overlaying)
 				</div>
 				<div>
 					<label class="switch">
 						<input type="checkbox" data-param1="hidesource">
 						<span class="slider round"></span>
-					</label> Hide source icon <img src="youtube.png" class="icon" /><img src="twitch.png"
-						class="icon" /><img src="facebook.png" class="icon" />
+					</label> Hide source icon <img src="youtube.png" class="icon" /><img src="twitch.png" class="icon" /><img src="facebook.png" class="icon" />
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="nobadges">
+						<span class="slider round"></span>
+					</label> Show no badges ✅ ✅
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="noavatar">
+						<span class="slider round"></span>
+					</label> Show no avatars <img src="unknown.png" class="icon" />
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="notime">
+						<span class="slider round"></span>
+					</label> Hide timestamp 🕘
 				</div>
 				<div>
 					<label class="switch">
@@ -408,12 +423,6 @@
 						<input type="checkbox" data-param1="scale=2">
 						<span class="slider round"></span>
 					</label> Magnify view 🔍
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="notime">
-						<span class="slider round"></span>
-					</label> Hide timestamp 🕘
 				</div>
 				<div>
 					<label class="switch">
@@ -435,12 +444,6 @@
 				</div>
 				<div>
 					<label class="switch">
-						<input type="checkbox" data-param1="compact">
-						<span class="slider round"></span>
-					</label> Compact mode (good for OBS overlaying)
-				</div>
-				<div>
-					<label class="switch">
 						<input type="checkbox" data-param1="split">
 						<span class="slider round"></span>
 					</label> Split mode (messages align relative to center)
@@ -453,15 +456,27 @@
 				</div>
 				<div>
 					<label class="switch">
-						<input type="checkbox" data-param1="emoji">
+						<input type="checkbox" data-param1="showtime=20000">
 						<span class="slider round"></span>
-					</label> Make emojis larger 😊
+					</label> Hide messages after 20s
 				</div>
 				<div>
 					<label class="switch">
-						<input type="checkbox" data-param1="showtime=20000">
+						<input type="checkbox" data-param1="color">
 						<span class="slider round"></span>
-					</label> Hide overlay after 20s
+					</label> Add unique color to names if available
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="lightmode">
+						<span class="slider round"></span>
+					</label> Light mode
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="emoji">
+						<span class="slider round"></span>
+					</label> Make emojis larger 😊
 				</div>
 			</div>
 
@@ -491,31 +506,12 @@
 						<span class="slider round"></span>
 					</label> Save last message to a file 💾
 				</div>
-
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="noavatar">
-						<span class="slider round"></span>
-					</label> Show no avatars <img src="unknown.png" class="icon" />
-				</div>
 				<div>
 					<label class="switch"
 						title="HTML is removed from messages, donations, and names for this dock only">
 						<input type="checkbox" data-param1="striphtml">
 						<span class="slider round"></span>
 					</label> Strip HTML from messages and donations
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="nobadges">
-						<span class="slider round"></span>
-					</label> Show no badges ✅ ✅
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="color">
-						<span class="slider round"></span>
-					</label> Add unique color to names if available
 				</div>
 				<div>
 					<label class="switch"
@@ -560,7 +556,7 @@
 		<a href="" id="single-message-options"></a>
 		<h2>Featured chat overlay options</h2>
 		<div class="options">
-			<h3>Behaviour</h3>
+			<h3>URL-based settings</h3>
 			<div class="options_group single_message">
 				<div>
 					<label class="switch">
@@ -668,8 +664,6 @@
 				</div>
 			</div>
 		</div>
-
-
 		<h2>Other settings and tools</h2>
 		<div class="options">
 			<div class="options_group">
@@ -704,10 +698,17 @@
 				</div>
 				
 				<div>
+					<label class="switch" title="See documentation on socialstream.ninja for details">
+						<input type="checkbox" data-setting="socketserver">
+						<span class="slider round"></span>
+					</label> Enable remote HTTP/WSS API control options
+				</div>
+				
+				<div>
 					<label class="switch">
 						<input type="checkbox" id="server" data-both="server">
 						<span class="slider round"></span>
-					</label> Send featured chat via WSS instead of P2P
+					</label> Send featured chat via server instead of P2P
 				</div>
 				
 				<div style="display:inline-block;">
