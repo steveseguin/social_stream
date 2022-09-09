@@ -264,7 +264,7 @@ An overly simple example of how to use the GET API would be: https://api.vdo.nin
 
 For full details, see the following link for sample functionality and refer to its source code for examples.
 
-https://socialstream.ninja/sampleapi.html?session=xxxxxxxxxxx (replacing xxxxxxxx with your Social Stream session ID to have it work)
+https://socialstream.ninja/sampleapi.html?session=xxxxxxxxxx (replacing xxxxxxxx with your Social Stream session ID to have it work)
 
 More functionality can be added on request.
 
