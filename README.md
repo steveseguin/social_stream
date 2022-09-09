@@ -56,7 +56,10 @@ More on request
 
 ### Video walk-thru
 
+An older guide covering the basics of setting up Social Stream:
+
 https://www.youtube.com/watch?v=X_11Np2JHNU
+
 
 For a more recent guide focusing on setup for discord, slack, whatsapp, and telegram, see:
 
