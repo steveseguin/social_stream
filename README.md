@@ -258,15 +258,18 @@ Lastly, please note that you will need to enable the MIDI option in the menu opt
 
 If using the MIDI API isn't something you can use, you can also check out the hosted API service to send messages to SocialStream, which will be redirected to your social live chat sites.
 
-This API end point supports WSS, HTTPS GET, and HTTP POST (JSON).
+This API end point supports WSS, HTTPS GET, and HTTP POST (JSON).  Support for this API must be toggled on in the menu settings.
 
-An overly simple example would be: https://api.vdo.ninja/XXXXXXXXXX/sendChat/null/Hello, which sends HELLO.  Replace XXXXX with your Social Stream session ID.
+An overly simple example of how to use the GET API would be: https://api.vdo.ninja/XXXXXXXXXX/sendChat/null/Hello, which sends HELLO.  Replace XXXXX with your Social Stream session ID.
 
-See the following link for sample functionality and refer to its source code for examples.
+For full details, see the following link for sample functionality and refer to its source code for examples.
 
-https://socialstream.ninja/sampleapi.html?session=xxxxxxxxxxx, replacing xxxxxxxx with your Social Stream session ID to have it work.
+https://socialstream.ninja/sampleapi.html?session=xxxxxxxxxxx (replacing xxxxxxxx with your Social Stream session ID to have it work)
 
 More functionality can be added on request.
+
+![image](https://user-images.githubusercontent.com/2575698/189367779-67969f47-a305-4347-9a37-053b33479602.png)
+
 
 ### Text to speech
 
