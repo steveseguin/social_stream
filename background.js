@@ -579,7 +579,9 @@ function processResponse(data){
 	if (!isExtensionOn){return;} // extension not active, so don't let responder happen. Probably safer this way.
 	
 	chrome.tabs.query({}, function(tabs) {
-		chrome.runtime.lastError;
+		if (chrome.runtime.lastError) {
+			console.warn(chrome.runtime.lastError.message);
+		}
 		var published = {};
 		for (var i=0;i<tabs.length;i++){
 			try {
@@ -588,6 +590,9 @@ function processResponse(data){
 				}
 				if (!tabs[i].url){continue;} 
 				if (tabs[i].url in published){continue;} // skip. we already published to this tab.
+				if (tabs[i].url.startsWith("https://socialstream.ninja/")){continue;}
+				if (tabs[i].url.startsWith("chrome-extension")){continue;}
+				
 				published[tabs[i].url] = true;
 				messageTimeout = Date.now();
 				
