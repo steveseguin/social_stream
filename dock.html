@@ -636,6 +636,11 @@
 			text-shadow: 0 0 #0000;
 		}
 		
+		.alignbottom {
+			bottom: 0;
+			position: absolute;
+		}
+		
 	</style>
 </head>
 <body >
@@ -753,7 +758,12 @@
 	var splitMode = "";
 	if (urlParams.has("split")){
 		splitMode = " splitMode";
+	}
+	
+	if (urlParams.has("alignbottom")){
+		document.getElementById("output").classList.add("alignbottom");
 	} 
+	
 	
 	var stripHTML = false;
 	if (urlParams.has("strip") || urlParams.has("striphtml")){ // removes HTML from messages, donations, and names.
