@@ -648,6 +648,7 @@
 		<button id="pause" data-state="0" onclick="pause(this);" title="Pause incoming chat messages">⏯︎ Pause</button>
 		<button id="autoshow" data-state="0" onclick="autoShow(this);" title="Auto-feature chat messages as they come in">Auto</button>
 		<button id="tts" data-state="0" onclick="speech = !speech; window.speechSynthesis.cancel(); this.classList.toggle('pressed');" title="Toggle whether to read out-loud incoming messages using text-to-speech">🔊</button>
+		<button id="notify" data-state="0" onclick="beep = !beep; if (beep){this.classList.add('pressed');this.innerText = '🔕';playtone();} else {this.classList.remove('pressed');this.innerText = '🔔';}" title="Toggle whether to notify by sound on new message">🔔</button>
 		<input id="filter_messages" onchange="filterMessages(this.value);" placeholder="Filter messages" type="text" />
 		<button id="hide_emoji" data-state="0" onclick="emoji(this);" title="Hide all emoji-only messages">🚫🙂</button>
 		<button id="only_donos" data-state="0" onclick="donos(this);" title="Show only messages that have donations/cheer">🤑</button>
@@ -655,6 +656,10 @@
 		<input type="text" id="chatInput" style="display:none;" placeholder="Say something.." />
 		<button id="jumpto" data-state="0" onclick="jumptoBottom(this);" title="Jump to bottom">V</button>
 	<div>
+	<audio id="testtone" style="display:none;" preload="metadata">
+		<source src="./audio/tone.mp3" type="audio/mpeg"> 
+		<source src="./audio/tone.ogg" type="audio/ogg"> 
+	</audio>
 	<script>
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
 		console.error(errorMsg);
@@ -753,6 +758,41 @@
 	var stripHTML = false;
 	if (urlParams.has("strip") || urlParams.has("striphtml")){ // removes HTML from messages, donations, and names.
 		stripHTML = true;
+	} 
+	
+	var audioContext = new AudioContext();
+	var timeoutTone = null;
+	
+	function playtone(tonename="testtone") {
+		if (timeoutTone){return;}
+		
+		setTimeout(function(){
+			timeoutTone = false;
+		},500);
+		
+		if (audioContext.state == "suspended"){
+			audioContext.resume();
+		}
+		if (audioContext.state == "suspended"){
+			return
+		}
+		var toneEle = document.getElementById(tonename);
+		if (toneEle){
+			toneEle.volume = 1.0;
+			toneEle.play().then(()=>{console.log("BEEP");}).catch((e)=>{
+				console.error(e);
+			});
+			timeoutTone = true;
+		}
+		
+	}
+	
+	var beep = false;
+	if (urlParams.has("beep")){ // removes HTML from messages, donations, and names.
+		beep = true;
+		document.getElementById("notify").innerHTML = "🔕";
+		document.getElementById("notify").classList.add("pressed");
+		playtone();
 	} 
 
 	var stylizeEmoji = false;
@@ -1081,6 +1121,8 @@
 		}
 		redoOdd();
 	}
+	
+	
 	
 	function donos(ele){
 		if (ele.dataset.state=="0"){
@@ -1958,6 +2000,9 @@
 			}
 				
 			mainOutputWindow.appendChild(node);
+			if (beep){
+				playtone();
+			}
 			
 			if (timeoutDelay){
 				setTimeout(function(node){ node.remove();},timeoutDelay, node);
