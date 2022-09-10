@@ -1106,12 +1106,17 @@
 		document.documentElement.style.setProperty("--highlight-base2", "#EEE4", "important");
 	}
 	
-	if (urlParams.has("hideshadow") || urlParams.has("transparent")){
+	if (urlParams.has("hideshadow")){
 		document.documentElement.style.setProperty("--highlight-base", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-base2", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact2", "#0000", "important");
 	}
+	
+	if (urlParams.has("transparent")){
+		document.documentElement.style.setProperty("--background-color", "#0000", "important");
+	}
+	
 	var firstNamesOnly = false
 	if (urlParams.has("firstnamesonly") || urlParams.has("firstname") || urlParams.has("firstnames")){
 		firstNamesOnly = true;
