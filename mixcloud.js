@@ -40,11 +40,26 @@
 		var msg = "";
 		var name = "";
 		var dono = "";
-		
+		var username= "";
 		try{
 		   chatimg = ele.querySelector("img").src;
+		   if (chatimg){
+			chatimg = chatimg.replace("26x26", "150x150");
+		   }
 		   name = ele.querySelector("img").alt;
 		} catch(e){}
+		
+		if (!name){
+			try {
+				name = ele.querySelector(".mixcloud-live-chat-row-link[href]").innerText;
+			} catch(e){}
+		}
+		try {
+			username = ele.querySelector(".mixcloud-live-chat-row-link[href]").href;
+			username = username.split("/");
+			username.pop();
+			username = username.pop();
+		}catch(e){}
 		
 		try{
 			if (ele.querySelector(".mixcloud-live-chat-row-link")){
@@ -80,6 +95,7 @@
 
 		var data = {};
 		data.chatname = name;
+		data.username = username;
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
@@ -96,14 +112,16 @@
 		}
 		lastMessage = JSON.stringify(data);
 		
-		if (data.chatimg){
+		pushMessage(data);
+		
+		/* if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
 				data.chatimg = dataUrl;
 				pushMessage(data);
 			});
 		} else {
 			pushMessage(data);
-		}
+		} */
 	}
 
 	function pushMessage(data){
