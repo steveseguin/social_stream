@@ -109,6 +109,10 @@
 			padding: 0;
 		}
 		
+		.randommode {
+			position:absolute!important;
+		}
+		
 		.hl-message{
 			margin: auto 1px;
 			overflow-wrap: anywhere;
@@ -1017,13 +1021,13 @@
 		document.body.style.backgroundColor = "#"+chroma;
 	}
 	
-	if (urlParams.has("compact")){
+	if (urlParams.has("compact") || urlParams.has("overlaymode")){
 		compactmode = true;
 		document.getElementById("output").classList.remove("notcompactmode");
 		document.getElementById("menu").style.display = "none";
 	} 
 	
-	if (urlParams.has("hidemenu")){
+	if (urlParams.has("hidemenu") || urlParams.has("nomenu")){
 		document.getElementById("menu").style.display = "none";
 	}
 	
@@ -1036,6 +1040,20 @@
 		singlewriter = true;
 		document.getElementById("select_save_file").classList.remove('hidden');
 		//overwriteFile(); // setup , but this needs a gesture, so bleh
+	}
+	
+	var random = false;
+	if (urlParams.has("random")){
+		random = true;
+		// enable compact mode also
+		compactmode = true;
+		document.getElementById("output").classList.remove("notcompactmode");
+		document.getElementById("menu").style.display = "none";
+		// hide shadows
+		<!-- position: absolute; -->
+		<!-- left: 400px; -->
+		<!-- top: 0px; -->
+		<!-- max-width: 300px; -->
 	}
 	
 	
@@ -2000,6 +2018,16 @@
 				node.classList.add("compactmode");
 			} else if (!compactmode){
 				node.classList.add("notcompactmode");
+			}
+			
+			if (random){
+				node.classList.add("randommode");
+				node.style.top = Math.random()*document.body.clientHeight*0.95;
+				node.style.left = Math.random()*document.body.clientWidth*0.8;
+				node.style.maxWidth = document.body.clientWidth*0.2;
+				if (!customNodeLimit){
+					customNodeLimit = 20;
+				}
 			}
 			
 			if (!node.querySelector("#content_"+data.counter).innerText.trim().length){
