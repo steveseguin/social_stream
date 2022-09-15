@@ -14,10 +14,10 @@
 			--show-donos-only: flex;
 			--scale-output-moz: scale(1.0);
 			--scale-output: 1.0;
-			--font-color: #000;
-			--font-color-name: #000;
-			--background-color: #FFF0;
-			--link-color: #06F;
+			--font-color: #FFF;
+			--font-color-name: #DDD;
+			--background-color: #000;
+			--link-color: #5AF;
 			--input-color: #FFF;
 			--highlight-base: #FFF4;
 			--highlight-base2: #4444;
@@ -1114,14 +1114,14 @@
 	} 
 	
 	if (darkmode){
-		document.documentElement.style.setProperty("--font-color", "#FFF");
-		document.documentElement.style.setProperty("--background-color", "#000");
-		document.documentElement.style.setProperty("--font-color-name", "#DDD");
-		document.documentElement.style.setProperty("--link-color", "#5AF");
-		document.documentElement.style.setProperty("--input-color", "#5AF");
 		document.getElementById("menu").classList.add("darkmode");
 	} else {
 		document.body.classList.add("lightmode");
+		document.documentElement.style.setProperty("--input-color", "#FFF");
+		document.documentElement.style.setProperty("--link-color", "#06F");
+		document.documentElement.style.setProperty("--font-color-name", "#000");
+		document.documentElement.style.setProperty("--background-color", "#FFF0");
+		document.documentElement.style.setProperty("--font-color", "#000");
 		document.documentElement.style.setProperty("--highlight-base2", "#EEE4", "important");
 	}
 	
