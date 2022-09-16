@@ -220,6 +220,10 @@ It's fairly easy to modify the `auto1` trigger to do whatever you want. You can 
 
 If you hold CTRL (or cmd on mac), you can select messages in the dock that get added to a queue.  A button should appear in the top dock menu bar that will let you cycle through the queue, one at a time.  When pressing the Next in Queue button, messages from the queue will appear as featured chat messages in the overlay page.
 
+### Pinning messages
+
+Like queuing a message, you can also instead hold down the ALT key while clicking a message to pin it; it will stay at the top of the page, until unpinned in the same fashion.
+
 ### Togglable Menu Commands 
 
 These are some generic auto-reply commands that can be toggled on/off via the extension's menu. They do not need a custom.js file to work
