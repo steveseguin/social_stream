@@ -223,7 +223,7 @@
 			sendResponse(false);
 		}
 	);
-
+	var lastMessage = "";
 	var textOnlyMode = false;
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
@@ -238,7 +238,19 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+						var textBody = mutation.addedNodes[i].innerText;
+						console.log(textBody);
+						if (textBody && (textBody === lastMessage)){
+							mutation.addedNodes[i].ignore = true;
+							continue;
+						} else if (!textBody){
+							continue;
+						}
+						
+						lastMessage = textBody;
+						
 						if (mutation.addedNodes[i].ignore){continue;}
+						
 						if (mutation.addedNodes[i].className && mutation.addedNodes[i].classList.contains(className)) {
 							callback(mutation.addedNodes[i]);
 							mutation.addedNodes[i].ignore=true;
