@@ -83,7 +83,9 @@ Ensure you have Developer Mode enabled; then you can just load the extension via
 
 You're ready to start using it! 
 
-Please note that you will need to manually update the extension to access newer versions; it currently does not auto-update aspects of the extension; just the dock and single overlay page auto-update as they are hosted online.
+If you see the browser say there is an "Error", specifically a manifest v2 warning or something, you can safely ignore it.  It is not actually an error and will not impact the function of the extension.
+
+Please note also that you will need to manually update the extension to access newer versions; it currently does not auto-update aspects of the extension; just the dock and single overlay page auto-update as they are hosted online.
 
 #### Updating
 
