@@ -245,7 +245,7 @@
 							textBody += ttt.getAttribute("alt");
 						});
 						
-						console.log(textBody);
+						//console.log(textBody);
 						
 						if (textBody && (textBody === lastMessage)){
 							mutation.addedNodes[i].ignore = true;
