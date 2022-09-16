@@ -18,8 +18,16 @@
 	var lastMessage = "";
 	
 	
-	function processMessage(ele2){
-		var ele = ele2.querySelectorAll("[class^='contents-']")[this.length];
+	function processMessage(ele){
+		console.log(ele);
+		
+		var mid = ele.id.split("chat-messages-");
+		if (mid.length==2){
+			mid = mid[1];
+		} else {
+			return;;
+		}
+	
 		var chatimg = "";
 		try{
 		   chatimg = ele.querySelector("img[class*='avatar-']").src;
@@ -27,51 +35,45 @@
 		}
 		
 		var name="";
-		if (ele.querySelector('[id^="message-username-"]')){
-		  name = ele.querySelector('[id^="message-username-"]').innerText;
-		  if (name){
-			name = name.trim();
-		  }
-		  
-		} 
+		try {
+			name = ele.querySelector("#message-username-"+mid).innerText.trim();
+		} catch(e){
+		}
+		console.log(chatimg, name);
 		
 		var msg = "";
 		if (textOnlyMode){
 			try {
-				msg = ele.querySelector('[id^="message-content-"]').innerText;
+				msg = ele.querySelector("#message-content-"+mid).innerText.trim();
 			} catch(e){}
 		} else {
 			try {
-				msg = ele.querySelector('[id^="message-content-"]').innerHTML;
+				msg = ele.querySelector("#message-content-"+mid).innerHTML.trim();
 			} catch(e){}
-		}
-		if (msg){
-			msg = msg.trim();
 		}
 		
+		
 		if (!name && !chatimg){
-			ele2 = ele2.previousElementSibling;
-			var ele = ele2.querySelectorAll("[class^='contents-']")[this.length];
-			try {
-				for (var i=0; i<50;i++){
-					if (ele.querySelector('[id^="message-username-"]')){
-						break;
-					} else {
-						ele2 = ele2.previousElementSibling;
-						ele = ele2.querySelectorAll("[class^='contents-']")[this.length];
-					}
+			for (var i=0; i<50;i++){
+				try {
+					ele = ele.previousElementSibling;
+				} catch(e){
+					break;
 				}
-				try{
-				    chatimg = ele.querySelector("img[class*='avatar-']").src;
-				   
-				    if (ele.querySelector('[id^="message-username-"]')){
-					    name = ele.querySelector('[id^="message-username-"]').innerText;
-					    if (name){
-						    name = name.trim();
-					    }
+				try {
+					if (!name){
+						name = ele.querySelector("[id^='message-username-']").innerText.trim();
 					}
-				} catch(e){}
-			} catch(e){}
+				} catch(e){
+				}
+				try {
+					if (!chatimg){
+						chatimg = ele.querySelector("img[class*='avatar-']").src;
+					}
+				} catch(e){
+				}
+				if (name){break;}
+			}
 		}
 		
 
@@ -86,6 +88,8 @@
 		data.hasMembership = "";;
 		data.contentimg = "";
 		data.type = "discord";
+		
+		console.log(data);
 		
 		if (lastMessage === JSON.stringify(data)){ // prevent duplicates, as zoom is prone to it.
 			return;
