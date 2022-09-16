@@ -76,6 +76,8 @@
 	  var chatmessage = "";
 	  var nameColor = "";
 	  
+	  //console.log(ele);
+	  
 	  try {
 		var nameEle = ele.querySelector(".chat-author__display-name");
 		var chatname = nameEle.innerText;
@@ -189,7 +191,7 @@
 	  data.hasMembership = "";
 	  data.type = "twitch";
 	  
-	  
+	 // console.log(data);
 	  
 	  if (brandedImageURL){
 		data.sourceImg = brandedImageURL;
@@ -239,6 +241,11 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						var textBody = mutation.addedNodes[i].innerText;
+						mutation.addedNodes[i].querySelectorAll("img[alt]").forEach(ttt=>{
+							textBody += ttt.getAttribute("alt");
+						});
+						
+						console.log(textBody);
 						
 						if (textBody && (textBody === lastMessage)){
 							mutation.addedNodes[i].ignore = true;
