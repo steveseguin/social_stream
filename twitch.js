@@ -239,7 +239,7 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						var textBody = mutation.addedNodes[i].innerText;
-						console.log(textBody);
+						
 						if (textBody && (textBody === lastMessage)){
 							mutation.addedNodes[i].ignore = true;
 							continue;
