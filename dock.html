@@ -12,6 +12,7 @@
 			--show-emoji-only: flex ;
 			--list-or-horizontal: flex;
 			--show-donos-only: flex;
+			--show-queue-only: flex;
 			--scale-output-moz: scale(1.0);
 			--scale-output: 1.0;
 			--font-color: #FFF;
@@ -39,6 +40,10 @@
 		
 		.noDono {
 			display: var(--show-donos-only)!important;
+		}
+		
+		.highlight-chat:not(.queued) {
+			display: var(--show-queue-only)!important;
 		}
 
 		#output { 
@@ -656,6 +661,7 @@
 	<div id="menu">
 		<button id="select_save_file" data-state="0" onclick="overwriteFile('setup');" title="Select the file you wish to save the most recent message to" class="green hidden">💾 Set Save File Location</button>
 		<button id="next_in_queue" data-state="0" onclick="nextInQueue();" title="Hold CTRL when selecting messages to add them to the queue instead" class="hidden blue">Next in Queue</button>
+		<button id="show_only_queue" data-state="0" onclick="filterQueued(this);" title="Show only the messages in queue" class="hidden">Show Only Queued</button>
 		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" title="Clear the featured chat overlay. (Not this dock)" class="red">Clear Current Overlay</button>
 		<button id="pause" data-state="0" onclick="pause(this);" title="Pause incoming chat messages">⏯︎ Pause</button>
 		<button id="autoshow" data-state="0" onclick="autoShow(this);" title="Auto-feature chat messages as they come in">Auto</button>
@@ -1534,12 +1540,26 @@
 		document.getElementById("pinned").appendChild(element);
 	}
 	
+	function filterQueued(ele){
+		if (ele.dataset.state=="0"){
+			ele.dataset.state = "1";
+			document.documentElement.style.setProperty("--show-queue-only", "none");
+			ele.classList.add("pressed");
+		} else {
+			ele.dataset.state = "0";
+			document.documentElement.style.setProperty("--show-queue-only", flexOrNotToFlex);
+			ele.classList.remove("pressed");
+		}
+		redoOdd();
+	}
+	
 	function updateQueueButton(relabel=false){
 		if (!selectedQueue.length){
 			document.getElementById("next_in_queue").innerText = "Queue Empty";
 			document.getElementById("next_in_queue").title = "Clicking will clear the active overlay, since no next-message left in queue";
 		} else {
 			document.getElementById("next_in_queue").classList.remove("hidden");
+			document.getElementById("show_only_queue").classList.remove("hidden");
 			document.getElementById("next_in_queue").innerText = "Next in Queue ("+selectedQueue.length+")";
 			document.getElementById("next_in_queue").title = "Hold CTRL when selecting messages to add them to the queue instead";
 		}
