@@ -1720,7 +1720,7 @@
 	}
 	
 	function removeNode(){
-		var nodes = mainOutputWindow.childNodes;
+		var nodes = document.querySelectorAll("#output>div:not(.queued)");
 		var total2Remove = 0;
 		if (isOBSBrowserSource){ // This is an OBS browser source, so lets go light on it.
 			if (window.innerHeight>1600){
