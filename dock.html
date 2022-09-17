@@ -621,7 +621,7 @@
 		.hidden {
 			display:none!important;
 		}
-		#pinned{
+		#msgpinned{
 			position: fixed;
 			/* top: 41px; */
 			background-color: #712a65!important;
@@ -630,7 +630,7 @@
 			border-bottom: solid 2px #fff;
 		}
 		
-		#pinned:empty {
+		#msgpinned:empty {
 		   display:none;
 		}
 		span.emoji{
@@ -650,7 +650,7 @@
 </head>
 <body >
 	<div id="output" class="output notcompactmode"></div>
-	<div id="pinned" class="output notcompactmode"></div>
+	<div id="msgpinned" class="output notcompactmode"></div>
 	<div id="menu">
 		<button id="select_save_file" data-state="0" onclick="overwriteFile('setup');" title="Select the file you wish to save the most recent message to" class="green hidden">💾 Set Save File Location</button>
 		<button id="next_in_queue" data-state="0" onclick="nextInQueue();" title="Hold CTRL when selecting messages to add them to the queue instead" class="hidden blue">Next in Queue</button>
@@ -1521,15 +1521,15 @@
 	}
 	
 	function unpinIt(element){
-		element.classList.remove("pinned");
+		element.classList.remove("msgpinned");
 		document.getElementById("output").prepend(element);
 		element.title = "Alt + Click to pin message";
 	}
 	
 	function pinIt(element){
-		element.classList.add("pinned");
+		element.classList.add("msgpinned");
 		element.title = "Alt + Click to remove pinned message";
-		document.getElementById("pinned").appendChild(element);
+		document.getElementById("msgpinned").appendChild(element);
 	}
 	
 	function updateQueueButton(relabel=false){
@@ -1577,7 +1577,7 @@
 			syncQueueP2P();
 			return;
 		} else if (event && (event.altKey)) {
-			if (element.classList.contains("pinned")){ 
+			if (element.classList.contains("msgpinned")){ 
 				unpinIt(element);
 				if (element.dataset.mid){
 					syncDataP2P({unpin:[element.dataset.mid]});
@@ -2239,7 +2239,7 @@
 	
 	function syncDockAll(UUID){
 		var pins = [];
-		document.querySelectorAll(".pinned[data-mid]").forEach(ele=>{
+		document.querySelectorAll(".msgpinned[data-mid]").forEach(ele=>{
 			pins.push(ele.dataset.mid);
 		});
 		syncDataP2P({pin:pins}, UUID);
