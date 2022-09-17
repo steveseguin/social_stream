@@ -621,16 +621,16 @@
 		.hidden {
 			display:none!important;
 		}
-		#msgpinned{
+		#pinned{
 			position: fixed;
-			/* top: 41px; */
+			top: 0!important;
 			background-color: #712a65!important;
 			left: 0;
 			width: 100%;
 			border-bottom: solid 2px #fff;
 		}
 		
-		#msgpinned:empty {
+		#pinned:empty {
 		   display:none;
 		}
 		span.emoji{
@@ -650,7 +650,7 @@
 </head>
 <body >
 	<div id="output" class="output notcompactmode"></div>
-	<div id="msgpinned" class="output notcompactmode"></div>
+	<div id="pinned" class="output notcompactmode"></div>
 	<div id="menu">
 		<button id="select_save_file" data-state="0" onclick="overwriteFile('setup');" title="Select the file you wish to save the most recent message to" class="green hidden">💾 Set Save File Location</button>
 		<button id="next_in_queue" data-state="0" onclick="nextInQueue();" title="Hold CTRL when selecting messages to add them to the queue instead" class="hidden blue">Next in Queue</button>
@@ -1521,15 +1521,15 @@
 	}
 	
 	function unpinIt(element){
-		element.classList.remove("msgpinned");
+		element.classList.remove("pinned");
 		document.getElementById("output").prepend(element);
 		element.title = "Alt + Click to pin message";
 	}
 	
 	function pinIt(element){
-		element.classList.add("msgpinned");
+		element.classList.add("pinned");
 		element.title = "Alt + Click to remove pinned message";
-		document.getElementById("msgpinned").appendChild(element);
+		document.getElementById("pinned").appendChild(element);
 	}
 	
 	function updateQueueButton(relabel=false){
@@ -1577,7 +1577,7 @@
 			syncQueueP2P();
 			return;
 		} else if (event && (event.altKey)) {
-			if (element.classList.contains("msgpinned")){ 
+			if (element.classList.contains("pinned")){ 
 				unpinIt(element);
 				if (element.dataset.mid){
 					syncDataP2P({unpin:[element.dataset.mid]});
@@ -2239,7 +2239,7 @@
 	
 	function syncDockAll(UUID){
 		var pins = [];
-		document.querySelectorAll(".msgpinned[data-mid]").forEach(ele=>{
+		document.querySelectorAll(".pinned[data-mid]").forEach(ele=>{
 			pins.push(ele.dataset.mid);
 		});
 		syncDataP2P({pin:pins}, UUID);
