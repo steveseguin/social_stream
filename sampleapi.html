@@ -290,7 +290,7 @@ function loadSelfCommands(){
 	button.onclick = function(){
 		if (this.input.value){
 			var msg = encodeURIComponent(this.input.value); // we can use sendChat for simple words that don't need encoding
-			ajax({"action":"sendEncodedChat","value":msg, "apiid":WID}); // GET based.
+			ajax({"action":"sendEncodedChat","value":msg, "apiid":WID}); 
 		} else {
 			alert("please enter a message first");
 		}
@@ -302,7 +302,7 @@ function loadSelfCommands(){
 	button.input = input;
 	button.onclick = function(){
 		if (this.input.value){
-			post({"action":"sendChat","value":this.input.value, "apiid":WID}); // GET based.
+			post({"action":"sendChat","value":this.input.value, "apiid":WID}); 
 		} else {
 			alert("please enter a message first");
 		}
@@ -314,7 +314,7 @@ function loadSelfCommands(){
 	button.innerHTML = "Clear featured overlay (via dashboard)";
 	button.input = input;
 	button.onclick = function(){
-		post({"action":"clearOverlay", "apiid":WID}); // GET based.
+		sendMessage(JSON.stringify({"action":"clearOverlay", "apiid":WID})); 
 		
 	};
 	target_self.appendChild(button);
@@ -323,7 +323,16 @@ function loadSelfCommands(){
 	button.innerHTML = "Next in Queue";
 	button.input = input;
 	button.onclick = function(){
-		post({"action":"nextInQueue", "apiid":WID}); // GET based.
+		sendMessage(JSON.stringify({"action":"nextInQueue", "apiid":WID})); 
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button"); 
+	button.innerHTML = "Get Current Queue Size";
+	button.title = "This is only needed when first connecting; auto-updates after";
+	button.input = input;
+	button.onclick = function(){
+		sendMessage(JSON.stringify({"action":"getQueueSize", "apiid":WID})); // WSS is ideal, since you don't get an echo then
 	};
 	target_self.appendChild(button);
 	

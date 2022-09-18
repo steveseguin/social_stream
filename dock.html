@@ -1354,6 +1354,8 @@
 				nextInQueue();
 			} else if (data.action == "clearOverlay"){ // or just send data=false
 				sendDataP2P(false);
+			} else if (data.action == "getQueueSize"){ // or just send data=false
+				updateQueueButton();
 			}
 		} else if ("forward" in data){
 			sendDataP2P(data.forward);
