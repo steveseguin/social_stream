@@ -120,6 +120,105 @@ async function overwriteFile(data=false) {
   }
 }
 
+
+/* var newFileHandleExcel = false;
+async function overwriteFileExcel(data=false) {
+  if (data=="setup"){
+	  newFileHandleExcel = await window.showSaveFilePicker();
+  } else if (newFileHandleExcel && data){
+	  const size = (await newFileHandleExcel.getFile()).size;
+	  const writableStream = await newFileHandleExcel.createWritable();
+	  await writableStream.write( type: "write",
+		  data: data,
+		  position: size // Set the position to the current file size.
+	  });
+	  await writableStream.close();
+  }
+} */
+
+var workbook = false;
+var worksheet = false;
+var table = [];
+
+var newFileHandleExcel = false;
+async function overwriteFileExcel(data=false) {
+	if (data=="setup"){
+		
+		 const opts = {
+			types: [{
+			  description: 'Excel file',
+			  accept: {'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']},
+			}],
+		  };
+  
+		newFileHandleExcel = await window.showSaveFilePicker(opts);
+		workbook = XLSX.utils.book_new();
+
+		data = [];
+
+		worksheet = XLSX.utils.aoa_to_sheet(data);
+		workbook.SheetNames.push("SocialStream-"+channel);
+		workbook.Sheets["SocialStream-"+channel] = worksheet;
+
+		var xlsbin = XLSX.write(workbook, {
+			bookType: "xlsx",
+			type: "binary"
+		});
+		
+		var buffer = new ArrayBuffer(xlsbin.length),
+		array = new Uint8Array(buffer);
+		for (var i=0; i<xlsbin.length; i++) {
+			array[i] = xlsbin.charCodeAt(i) & 0XFF;
+		}
+		var xlsblob = new Blob([buffer], {type:"application/octet-stream"});
+		delete array; delete buffer; delete xlsbin;
+
+		const writableStream = await newFileHandleExcel.createWritable();
+		await writableStream.write(xlsblob);
+		await writableStream.close();
+		
+	} else if (newFileHandleExcel && data){
+		
+		for (var key in data){
+			if (!table.includes(key)){
+				table.push(key);
+			}
+		}
+		var column = [];
+		table.forEach(key=>{
+			if (key in data){
+				column.push(data[key]);
+			} else {
+				column.push("");
+			}
+		});
+
+		
+		XLSX.utils.sheet_add_aoa(worksheet, [table], {origin: 0}); // replace header
+		XLSX.utils.sheet_add_aoa(worksheet, [column], {origin: -1}); // append new line
+		
+		var xlsbin = XLSX.write(workbook, {
+			bookType: "xlsx",
+			type: "binary"
+		})
+
+		var buffer = new ArrayBuffer(xlsbin.length),
+		array = new Uint8Array(buffer);
+		for (var i=0; i<xlsbin.length; i++) {
+			array[i] = xlsbin.charCodeAt(i) & 0XFF;
+		}
+		var xlsblob = new Blob([buffer], {type:"application/octet-stream"});
+		delete array; delete buffer; delete xlsbin;
+
+		const writableStream = await newFileHandleExcel.createWritable();
+		await writableStream.write(xlsblob);
+		await writableStream.close();
+	}
+}
+
+
+
+
 var Url2ChannelImg = {};
 var vid2ChannelImg = {};
 
@@ -348,11 +447,13 @@ chrome.runtime.onMessage.addListener(
 				sendResponse({"state":isExtensionOn});
 			} else if (request.cmd && request.cmd === "singlesave") {
 				overwriteFile("setup");
+			} else if (request.cmd && request.cmd === "excelsave") {
+				overwriteFileExcel("setup");
 			} else if (request.cmd && request.cmd === "loadmidi") {
 				await loadmidi(sendResponse);
 				sendResponse({"settings":settings});
-			} else if (request.cmd && request.cmd === "singlesaveStop") {
-				newFileHandle = false;
+			} else if (request.cmd && request.cmd === "excelsaveStop") {
+				newFileHandleExcel = false;
 			} else if (request.cmd && request.cmd === "fakemsg") {
 				var data = {};
 				data.chatname = "John Doe";
@@ -591,6 +692,14 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 			if (typeof data == "object"){
 				data.timestamp = new Date().getTime();
 				overwriteFile(JSON.stringify(data));
+			}
+		} catch(e){}
+	}
+	if (newFileHandleExcel){
+		try {
+			if (typeof data == "object"){
+				data.timestamp = new Date().getTime();
+				overwriteFileExcel(data);
 			}
 		} catch(e){}
 	}
