@@ -751,6 +751,19 @@
 		roomID = urlParams.get("id");
 	} else if (window.location.protocol=="file:"){
 		roomID = prompt("Enter your session ID here, or add it to the URL.");
+		if (roomID){
+			var href = window.location.href;
+			var arr = href.split('?');
+			var newurl;
+			if (arr.length > 1 && arr[1] !== '') {
+				newurl = href + '&session=' + roomID;
+			} else {
+				newurl = href + '?session=' + roomID;
+			}
+			window.history.pushState({path: newurl.toString()}, '', newurl.toString());
+		} else {
+			alert("You need to provide your extension's session ID for this page to work");
+		}
 	} else {
 		window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
 	}
@@ -1335,16 +1348,21 @@
 			}
 			return;
 		}
-	
-		
-		if ("forward" in data){
+		console.log(data);
+		if (data.action){
+			if (data.action == "nextInQueue"){
+				nextInQueue();
+			} else if (data.action == "clearOverlay"){ // or just send data=false
+				sendDataP2P(false);
+			}
+		} else if ("forward" in data){
 			sendDataP2P(data.forward);
 		} else if ("html" in data){
 			processHTML(data);
 		} else if (!pauseState ){
 			return processData( {contents : data} );
 		} else {
-			queue.push({contents : data});
+			queue.push({contents : data}); 
 			if (queue.length>100){ // keep the queue from exploding in size
 				queue.shift();
 			}
@@ -1502,6 +1520,7 @@
 	}
 	
 	function nextInQueue(){ 
+		
 		if (!selectedQueue.length){
 			sendDataP2P(false);
 			updateQueueButton();
@@ -1569,6 +1588,9 @@
 					selectedQueue[i].children[0].dataset.qid = i+1;
 				} catch(e){console.error(e);}
 			}
+		}
+		if (socketserver){
+			socketserver.send(JSON.stringify({"queueLength":selectedQueue.length}));
 		}
 	}
 	

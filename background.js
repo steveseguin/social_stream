@@ -669,7 +669,7 @@ function setupSocket(){
 				var msg = {};
 				msg.response = decodeURIComponent(data.value);
 				processResponse(msg);
-			}
+			} 
 		}
 	});
 }

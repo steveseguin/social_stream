@@ -13,7 +13,7 @@
 			margin:1%;
 			border:0;
 			background-image: linear-gradient(to left, #e1c5d5, #ddc5da, #d8c6e0, #d1c7e5, #c8c9e9, #c1cded, #bad2f0, #b4d6f2, #b1ddf3, #b1e4f3, #b4eaf0, #bbf0ed);
-			width:100%;
+			width:96%;
 			height:100%;
 		} 
 
@@ -32,12 +32,29 @@
 			background-color:#BBB;
 		}
 
+		#incoming_messages {
+			overflow: auto;
+			height: calc(100% - 146px);
+			margin: 10px;
+			display: inline;
+			width: calc(100% - 51px);
+			word-break: break-word;
+		}
+		.inbound {
+			margin: 40px 0;
+		}
 	</style>
 </head>
 <body>
+<h2>
+	Sample app using the Social Stream HTTP/WSS remote control API
+</h2>
+Make sure to have <b>&server</b>appended to the social stream dashboard URL<br />
+<br /> Also ensure you have matching session values; (&session=xxxxx)
+<br /><br />
 <div id="header"></div>
 <div id="target_self"></div>
-<div id="guest_1_container"></div>
+<div id="incoming_messages"></div>
 <script>
 function generateStreamID(){
 	var text = "";
@@ -92,15 +109,16 @@ if (urlParams.has("api")){
 } else if (urlParams.has("session")){
 	WID = urlParams.get("session");
 } else {
-	WID = generateStreamID(10);
+
+	WID = prompt("Enter your session ID here, or add it to the URL.") || generateStreamID(10);
 	
 	var href = window.location.href;
 	var arr = href.split('?');
 	var newurl;
 	if (arr.length > 1 && arr[1] !== '') {
-		newurl = href + '&api=' + WID;
+		newurl = href + '&session=' + WID;
 	} else {
-		newurl = href + '?api=' + WID;
+		newurl = href + '?session=' + WID;
 	}
 
 	window.history.pushState({path: newurl.toString()}, '', newurl.toString());
@@ -141,7 +159,7 @@ function connect(){
 	socket.onopen = function (){
 		failedCount = 0;
 		try{
-			socket.send(JSON.stringify({"join":WID}));
+			socket.send(JSON.stringify({"join":WID, "out":1, "in":2}));
 		} catch(e){
 			connecting = setTimeout(function(){connect();},1);
 		}
@@ -155,6 +173,11 @@ function connect(){
 				if (data.callback.value == callbackID){
 					alert("Received response. See developer console for the message.");
 				}
+			} else {
+				var ele = document.createElement("div");
+				ele.className = "inbound";
+				ele.innerText = event.data;
+				document.getElementById("incoming_messages").prepend(ele); 
 			}
 		}
 	});
@@ -255,6 +278,8 @@ function loadSelfCommands(){
 	button.onclick = function(){
 		if (this.input.value){
 			sendMessage(JSON.stringify({"action":"sendChat","value":this.input.value}));
+		} else {
+			alert("please enter a message first");
 		}
 	};
 	target_self.appendChild(button);
@@ -266,6 +291,8 @@ function loadSelfCommands(){
 		if (this.input.value){
 			var msg = encodeURIComponent(this.input.value); // we can use sendChat for simple words that don't need encoding
 			ajax({"action":"sendEncodedChat","value":msg, "apiid":WID}); // GET based.
+		} else {
+			alert("please enter a message first");
 		}
 	};
 	target_self.appendChild(button);
@@ -276,9 +303,30 @@ function loadSelfCommands(){
 	button.onclick = function(){
 		if (this.input.value){
 			post({"action":"sendChat","value":this.input.value, "apiid":WID}); // GET based.
+		} else {
+			alert("please enter a message first");
 		}
 	};
 	target_self.appendChild(button);
+	
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Clear featured overlay (via dashboard)";
+	button.input = input;
+	button.onclick = function(){
+		post({"action":"clearOverlay", "apiid":WID}); // GET based.
+		
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Next in Queue";
+	button.input = input;
+	button.onclick = function(){
+		post({"action":"nextInQueue", "apiid":WID}); // GET based.
+	};
+	target_self.appendChild(button);
+	
 	
 	
 	// https://api.vdo.ninja/XXXXXXXXXX/sendChat/null/Hello
