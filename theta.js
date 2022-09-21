@@ -151,7 +151,7 @@
 		observer.observe(target, config);
 	}
 
-	setTimeout(function(ele){onElementInserted(ele, processMessage);},1000, document.querySelector('.chat-popout'));
+	setTimeout(function(ele){onElementInserted(ele, processMessage);},1000, document.querySelector('.g-chat'));
 		
 	startListener();
 	
