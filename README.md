@@ -206,6 +206,18 @@ body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
      --author-border-radius: 10px;
      --comment-font-size: 30px;
      --author-color: blue;
+      --font-family:  "opendyslexic", opendyslexic, serif;
+}
+
+@font-face {
+  font-family: 'opendyslexic';
+    src: url('https://vdo.ninja/examples/OpenDyslexic-Regular.otf');
+    font-style: normal;
+    font-weight: normal;
+} 
+
+.hl-name{
+	padding: 2px 10px
 }
 ```
 Sample CSS of which you can use to customize some of the basic styles. There's not much that you can't do via CSS in this way, but you can edit things further at a code-level if needed. Mac/Linux users may face issues with OBS not liking self-hosted versions of the index/dock file, but it's not an issue for the PC version.
