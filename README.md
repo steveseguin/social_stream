@@ -83,9 +83,13 @@ Ensure you have Developer Mode enabled; then you can just load the extension via
 
 You're ready to start using it! 
 
+Please note also that you will need to manually update the extension to access newer versions; it currently does not auto-update aspects of the extension; just the dock and single overlay page auto-update as they are hosted online.
+
+#### Seeing an error message?
+
 If you see the browser say there is an "Error", specifically a manifest v2 warning or something, you can safely ignore it.  It is not actually an error and will not impact the function of the extension.
 
-Please note also that you will need to manually update the extension to access newer versions; it currently does not auto-update aspects of the extension; just the dock and single overlay page auto-update as they are hosted online.
+Something of concern though is Google will be updating Chrome browsers on January 2023 to block many popular Chrome extensions, including many Adblockers and also Social Stream. I'm working to resolve this concern, but Social Stream may end up having diminished functionality if Google has their way. If necessary, Social Stream may evolve into a downloadable app instead to avoid these limiations, but I'm hoping to avoid that if possible.
 
 #### Updating
 
