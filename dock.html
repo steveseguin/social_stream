@@ -34,18 +34,20 @@
 			--author-font-size: 17px;
 		}
 	
-		.noText {
-			display: var(--show-emoji-only) !important;
-		}
+		/*
+			.noText {
+				display: var(--show-emoji-only) !important;
+			}
+			
+			.noDono {
+				display: var(--show-donos-only) !important;
+			}
+			
+			.highlight-chat:not(.queued) {
+				display: var(--show-queue-only)!important;
+			}
+		*/
 		
-		.noDono {
-			display: var(--show-donos-only)!important;
-		}
-		
-		.highlight-chat:not(.queued) {
-			display: var(--show-queue-only)!important;
-		}
-
 		#output { 
 			zoom: var(--scale-output);
 			-moz-transform: var(--scale-output-moz);
@@ -843,9 +845,8 @@
 	
 	if (urlParams.has("horizontal")){
 		horizontal = true;
-		document.documentElement.style.setProperty("--list-or-horizontal", "inline-block"); 
 		flexOrNotToFlex = "inline-block";
-		document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
+		document.documentElement.style.setProperty("--list-or-horizontal", flexOrNotToFlex);
 		document.getElementById("output").style.width = "10000%";
 		document.getElementById("output").style.right = "0";
 		if (stylizeEmoji){
@@ -1162,31 +1163,37 @@
 		firstNamesOnly = true;
 	}
 	
+	var hideNotDonos = false;
+	var hideTextOnly = false;
+	var hideNotQueued = false;
+	
 	function emoji(ele){
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
-			document.documentElement.style.setProperty("--show-emoji-only", "none");
+			hideTextOnly = true;
+			//document.documentElement.style.setProperty("--show-emoji-only", "none");
 			//document.documentElement.style.setProperty("--show-images", "none");
 			ele.classList.add("pressed");
 		} else {
+			hideTextOnly = false;
 			ele.dataset.state = "0";
-			document.documentElement.style.setProperty("--show-emoji-only", "flex");
+			//document.documentElement.style.setProperty("--show-emoji-only", "flex");
 			//document.documentElement.style.setProperty("--show-images", "inline-block");
 			ele.classList.remove("pressed");
 		}
 		redoOdd();
 	}
 	
-	
-	
 	function donos(ele){
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
-			document.documentElement.style.setProperty("--show-donos-only", "none");
+			//document.documentElement.style.setProperty("--show-donos-only", "none");
+			hideNotDonos = true;
 			ele.classList.add("pressed");
 		} else {
 			ele.dataset.state = "0";
-			document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
+			//document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
+			hideNotDonos = false;
 			ele.classList.remove("pressed");
 		}
 		redoOdd();
@@ -1196,6 +1203,18 @@
 		odd = false;
 		var nodes = mainOutputWindow.childNodes;
 		for (var i = 0;i<nodes.length;i++){
+			if (hideNotDonos && nodes[i].classList.contains("noDono")){
+				nodes[i].classList.add("hidden");
+				continue;
+			} else if (hideNotQueued && !nodes[i].classList.contains("queued")){
+				nodes[i].classList.add("hidden");
+				continue;
+			} else if (hideTextOnly && nodes[i].classList.contains("noText")){
+				nodes[i].classList.add("hidden");
+				continue;
+			} else {
+				nodes[i].classList.remove("hidden");
+			}
 			var style = window.getComputedStyle(nodes[i]);
 			if ((style.visibility !== "hidden") && (style.display !== "none")){
 				if (odd){
@@ -1564,11 +1583,13 @@
 	function filterQueued(ele){
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
-			document.documentElement.style.setProperty("--show-queue-only", "none");
-			ele.classList.add("pressed");
+			//document.documentElement.style.setProperty("--show-queue-only", "none");
+			hideNotQueued = true;
+			ele.classList.add("pressed"); 
 		} else {
 			ele.dataset.state = "0";
-			document.documentElement.style.setProperty("--show-queue-only", flexOrNotToFlex);
+			//document.documentElement.style.setProperty("--show-queue-only", flexOrNotToFlex);
+			hideNotQueued = false;
 			ele.classList.remove("pressed");
 		}
 		redoOdd();
@@ -1780,9 +1801,12 @@
 	   return tmp.textContent || tmp.innerText || "";
 	}
 	
+	
 	function processData(data){
 		if (data.contents){
 			data = data.contents;
+			
+			var invisible = false;
 			
 			var showType = "";
 			if (!data.type){
@@ -2080,12 +2104,20 @@
 				node.classList.add("noText");
 			}
 			
-			var style = window.getComputedStyle(node);
-			if ((style.visibility !== "hidden") && (style.display !== "none")){
-				if (odd){
-					node.classList.add("odd");
-				} 
-				odd = !odd;
+			if (hideNotDonos && node.classList.contains("noDono")){
+				node.classList.add("hidden");
+			} else if (hideNotQueued && !node.classList.contains("queued")){
+				node.classList.add("hidden");
+			} else if (hideTextOnly && node.classList.contains("noText")){
+				node.classList.add("hidden");
+			} else {
+				var style = window.getComputedStyle(node);
+				if ((style.visibility !== "hidden") && (style.display !== "none")){
+					if (odd){
+						node.classList.add("odd");
+					} 
+					odd = !odd;
+				}
 			}
 				
 			mainOutputWindow.appendChild(node);

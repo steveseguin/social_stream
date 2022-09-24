@@ -1,0 +1,349 @@
+
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
+    <link href="./nes.min.css" rel="stylesheet" />
+	<style>
+		html, body, pre, code, kbd, samp {
+			font-family:"Press Start 2P";
+		}
+
+		body{
+			margin:1%;
+			border:0;
+			background-image: linear-gradient(to left, #e1c5d5, #ddc5da, #d8c6e0, #d1c7e5, #c8c9e9, #c1cded, #bad2f0, #b4d6f2, #b1ddf3, #b1e4f3, #b4eaf0, #bbf0ed);
+			width:96%;
+			height:100%;
+		} 
+
+		button {
+			margin:10px 3px;
+		}
+
+		button, input, optgroup, select, textarea {
+			font-family: inherit;
+			font-size: inherit;
+			line-height: inherit;
+			padding: 8px 12px;
+		}
+		
+		button:active{
+			background-color:#BBB;
+		}
+
+		#incoming_messages {
+			overflow: auto;
+			height: calc(100% - 146px);
+			margin: 10px;
+			display: inline;
+			width: calc(100% - 51px);
+			word-break: break-word;
+		}
+		.inbound {
+			margin: 40px 0;
+		}
+	</style>
+</head>
+<body>
+<h2>
+	Sample app using the Social Stream HTTP/WSS remote control API
+</h2>
+Make sure to have <b>&server</b>appended to the social stream dashboard URL<br />
+<br /> Also ensure you have matching session values; (&session=xxxxx)
+<br /><br />
+<div id="header"></div>
+<div id="target_self"></div>
+<div id="incoming_messages"></div>
+<script>
+function generateStreamID(){
+	var text = "";
+	var possible = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+	for (var i = 0; i < 10; i++){
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+	}
+	return text;
+};
+
+(function (w) {
+	w.URLSearchParams = w.URLSearchParams || function (searchString) {
+		var self = this;
+		self.searchString = searchString;
+		self.get = function (name) {
+			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+			if (results == null) {
+				return null;
+			}
+			else {
+				return decodeURI(results[1]) || 0;
+			}
+		};
+	};
+
+})(window);
+
+var urlParams = new URLSearchParams(window.location.search);
+
+window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
+	console.error(errorMsg);
+	console.error(lineNumber);
+	console.error("Unhandeled Error occured"); //or any message
+	return false;
+};
+
+window.onbeforeunload = function() {
+	return "Dude, are you sure you want to leave? Think of the kittens!"; // prevents accidental page reloads.
+}
+	
+var WID = "testOBSN";
+if (urlParams.has("api")){
+	WID = urlParams.get("api");
+} else if (urlParams.has("osc")){
+	WID = urlParams.get("osc");
+} else if (urlParams.has("id")){
+	WID = urlParams.get("id");
+} else if (urlParams.has("ID")){
+	WID = urlParams.get("ID");
+} else if (urlParams.has("wid")){
+	WID = urlParams.get("wid");
+} else if (urlParams.has("session")){
+	WID = urlParams.get("session");
+} else {
+
+	WID = prompt("Enter your session ID here, or add it to the URL.") || generateStreamID(10);
+	
+	var href = window.location.href;
+	var arr = href.split('?');
+	var newurl;
+	if (arr.length > 1 && arr[1] !== '') {
+		newurl = href + '&session=' + WID;
+	} else {
+		newurl = href + '?session=' + WID;
+	}
+
+	window.history.pushState({path: newurl.toString()}, '', newurl.toString());
+	
+}
+
+
+var socket = null;
+var connecting = false;
+var failedCount = 0;
+	
+var callbackID = parseInt(Math.random()*1000);
+
+
+	
+function connect(){
+	clearTimeout(connecting);
+	if (socket){
+		if (socket.readyState === socket.OPEN){return;}
+		try{
+			socket.close();
+		} catch(e){}
+	}
+	socket = new WebSocket("wss://api.overlay.ninja:443");
+	
+	socket.onclose = function (){
+		failedCount+=1;
+		clearTimeout(connecting);
+		connecting = setTimeout(function(){connect();},100*(failedCount-1));
+	};
+
+	socket.onerror = function (){
+		failedCount+=1;
+		clearTimeout(connecting);
+		connecting = setTimeout(function(){connect();},100*failedCount);
+	};
+
+	socket.onopen = function (){
+		failedCount = 0;
+		try{
+			socket.send(JSON.stringify({"join":WID, "out":1, "in":2}));
+		} catch(e){
+			connecting = setTimeout(function(){connect();},1);
+		}
+	};
+	
+	socket.addEventListener('message', function (event) {
+		if (event.data){
+			var data = JSON.parse(event.data);
+			console.log(data);
+			if ("callback" in data){
+				if (data.callback.value == callbackID){
+					alert("Received response. See developer console for the message.");
+				}
+			} else {
+				var ele = document.createElement("div");
+				ele.className = "inbound";
+				ele.innerText = event.data;
+				document.getElementById("incoming_messages").prepend(ele); 
+			}
+		}
+	});
+	
+}
+
+connect();
+
+function sendGuestCommand(target, action, value=null){
+	sendMessage(JSON.stringify({"target":target, "action":action, "value":value}));
+}
+
+function sendMessage(msg){
+	if (socket.readyState !== socket.OPEN){
+		console.log("not connected; msg didn't send");
+		connect();
+		return;
+	}
+	try {
+		socket.send(msg);
+	} catch(e){
+		connecting = setTimeout(function(){connect();},100);
+	}
+	
+}
+
+function log(msg){
+	console.log(msg);
+}
+
+function ajax(data) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      log("AJAX MESSAGE SENT SUCCESSFULL");
+    }
+  };
+  var action = false
+  if ("action" in data){
+	action=data['action'];
+  }
+  var value = "null"
+  if ("value" in data){
+	value=data['value'];
+  }
+  var apiid = false
+  if ("apiid" in data){
+	apiid=data['apiid'];
+  }
+  var target = "null";
+  if ("target" in data){
+	target=data['target'];
+  }
+  
+  if (!action || !apiid){
+	alert("no action or api ID provided; request won't work");
+  } else {
+	var URL = "https://api.vdo.ninja/"+apiid+"/"+action+"/"+target+"/"+value;
+	xhttp.open("GET", URL, true);
+	xhttp.send();
+  }
+}
+
+function post(data) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      log("AJAX MESSAGE SENT SUCCESSFULL");
+    }
+  };
+ 
+  var apiid = false
+  if ("apiid" in data){
+	apiid=data['apiid'];
+  }
+  
+  if (!apiid){
+	alert("no action or api ID provided; request won't work");
+  } else {
+	var URL = "https://api.vdo.ninja/"+apiid;
+	xhttp.open("POST", URL, true);
+	xhttp.setRequestHeader("Content-Type", "application/json");
+	xhttp.send(JSON.stringify(data));
+  }
+}
+
+function loadSelfCommands(){
+	
+	var target_self = document.getElementById("target_self");
+
+	var input = document.createElement("input");
+	input.placeholder = "Message to send goes here";
+	target_self.appendChild(input);
+
+	var button = document.createElement("button");
+	button.innerHTML = "Say message via WSS";
+	button.input = input;
+	button.onclick = function(){
+		if (this.input.value){
+			sendMessage(JSON.stringify({"action":"sendChat","value":this.input.value}));
+		} else {
+			alert("please enter a message first");
+		}
+	};
+	target_self.appendChild(button);
+
+	var button = document.createElement("button");
+	button.innerHTML = "Say message via HTTPS GET";
+	button.input = input;
+	button.onclick = function(){
+		if (this.input.value){
+			var msg = encodeURIComponent(this.input.value); // we can use sendChat for simple words that don't need encoding
+			ajax({"action":"sendEncodedChat","value":msg, "apiid":WID}); 
+		} else {
+			alert("please enter a message first");
+		}
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Say message via HTTPS POST";
+	button.input = input;
+	button.onclick = function(){
+		if (this.input.value){
+			post({"action":"sendChat","value":this.input.value, "apiid":WID}); 
+		} else {
+			alert("please enter a message first");
+		}
+	};
+	target_self.appendChild(button);
+	
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Clear featured overlay (via dashboard)";
+	button.input = input;
+	button.onclick = function(){
+		sendMessage(JSON.stringify({"action":"clearOverlay", "apiid":WID})); 
+		
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Next in Queue";
+	button.input = input;
+	button.onclick = function(){
+		sendMessage(JSON.stringify({"action":"nextInQueue", "apiid":WID})); 
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button"); 
+	button.innerHTML = "Get Current Queue Size";
+	button.title = "This is only needed when first connecting; auto-updates after";
+	button.input = input;
+	button.onclick = function(){
+		sendMessage(JSON.stringify({"action":"getQueueSize", "apiid":WID})); // WSS is ideal, since you don't get an echo then
+	};
+	target_self.appendChild(button);
+	
+	
+	
+	// https://api.vdo.ninja/XXXXXXXXXX/sendChat/null/Hello
+	
+	
+}
+
+loadSelfCommands();
+</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+{
+  "name": "Social Stream Ninja",
+  "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more",
+  "manifest_version": 3,
+  "version": "2.0.0",
+  "homepage_url": "http://socialstream.ninja/",
+  "icons": {
+    "128": "icons/icon-128.png"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+		"webNavigation", "storage", "debugger"
+  ],
+  "host_permissions": [
+		"https://*.workplace.com/*", "https://www.theta.tv/chat/*", "https://multichat.livepush.io/*", "https://minnit.chat/*&popout", "https://odysee.com/$/popout/*", "https://www.vimm.tv/chat/*", "https://studio.mobcrush.com/chatpopup.html", "https://mobcrush.com/*", "https://picarto.tv/chatpopout/*", "https://dlive.tv/c/*","https://web.whatsapp.com/", "https://rumble.com/*.html", "https://www.youtube.com/watch*&socialstream","https://www.amazon.com/live*", "https://chat.restream.io/chat*", "https://*.telegram.org/*", "https://*.webex.com/*", "https://webex.com/*", "https://www.linkedin.com/*", "https://*.vdo.ninja/*popout.html*","https://youtube.com/*", "https://www.youtube.com/*", "https://studio.youtube.com/*", "https://*.twitch.tv/*", "https://www.instagram.com/*/live/*", "https://www.instagram.com/*", "https://www.tiktok.com/*live*", "https://chat.restream.io/*", "https://trovo.live/chat/*", "https://facebook.com/*", "https://business.facebook.com/*", "https://web.facebook.com/*", "https://www.facebook.com/*", "https://play.rozy.tv/*", "https://www.crowdcast.io/e/*", "https://*.zoom.us/*", "https://watch.owncast.online/*", "https://discord.com/*", "https://www.mixcloud.com/live/*/chat/",  "https://vimeo.com/live-chat/*", "https://www.vimeo.com/live-chat/*", "https://teams.live.com/*", "https://teams.microsoft.com/*", "https://livestream.com/accounts/*", "https://*/plugins/livechat/*router/webchat/room/*", "https://app.slack.com/client/*"
+  ],
+  "action": {
+    "default_title": "Settings and Links",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+	  {
+		"js": ["youtube.js"],
+		"matches": ["https://www.youtube.com/watch*&socialstream", "https://youtube.com/live_chat*", "https://www.youtube.com/live_chat*", "https://studio.youtube.com/live_chat*"]
+	  },
+	  {
+		"js": ["vimm.js"],
+		"matches": ["https://www.vimm.tv/chat/*"]
+	  },
+	  {
+		"js": ["theta.js"],
+		"matches": ["https://www.theta.tv/chat/*"]
+	  },
+	   {
+		"js": ["minnit.js"],
+		"matches": ["https://minnit.chat/*&popout"],
+		"all_frames": true
+	  },
+	   {
+		"js": ["odysee.js"],
+		"matches": ["https://odysee.com/$/popout/*"]
+	  },
+	  {
+		"js": ["picarto.js"],
+		"matches": ["https://picarto.tv/chatpopout/*"]
+	  },
+	  {
+		"js": ["mobcrush.js"],
+		"matches": ["https://studio.mobcrush.com/chatpopup.html"]
+	  },
+	   {
+		"js": ["livepush.js"],
+		"matches": ["https://multichat.livepush.io/*"]
+	  },
+	  {
+		"js": ["dlive.js"],
+		"matches": ["https://dlive.tv/c/*"]
+	  },
+	  {
+		"js": ["whatsapp.js"],
+		"matches": ["https://web.whatsapp.com/"]
+	  },
+	  {
+		"js": ["twitch.js"],
+		"matches": ["https://*.twitch.tv/popout/*"]
+	  },
+	  {
+		"js": ["facebook.js"],
+		"matches": ["https://facebook.com/*", "https://web.facebook.com/*", "https://www.facebook.com/*", "https://business.facebook.com/*", "https://*.workplace.com/*"]
+	  },
+	  {
+		"js": ["trovo.js"],
+		"matches": ["https://trovo.live/chat/*"]
+	  },
+	  {
+		"js": ["owncast.js"],
+		"matches": ["https://watch.owncast.online/*"]
+	  },
+	   {
+		"js": ["zoom.js"],
+		"matches": ["https://*.zoom.us/*"]
+	  },
+	   {
+		"js": ["crowdcast.js"],
+		"matches": ["https://www.crowdcast.io/e/*"]
+	  },
+	   {
+		"js": ["discord.js"],
+		"matches": ["https://discord.com/*"]
+	  },
+	   {
+		"js": ["mixcloud.js"],
+		"matches": ["https://www.mixcloud.com/live/*/chat/"]
+	  },
+	   {
+		"js": ["vimeo.js"],
+		"matches": ["https://www.vimeo.com/live-chat/*", "https://vimeo.com/live-chat/*"]
+	  },
+	   {
+		"js": ["livestream.js"],
+		"matches": ["https://livestream.com/accounts/*"] 
+	  },
+	   {
+		"js": ["teams.js"],
+		"matches": ["https://teams.live.com/*", "https://teams.microsoft.com/*"]
+	  },
+	   {
+		"js": ["peertube.js"],
+		"matches": ["https://*/plugins/livechat/*router/webchat/room/*"]
+	  },
+	   {
+		"js": ["instagramlive.js"],
+		"matches": ["https://www.instagram.com/*"]
+	  },
+	   {
+		"js": ["tiktok.js"],
+		"matches": ["https://www.tiktok.com/*live*"]
+	  },
+	   {
+		"js": ["vdoninja.js"],
+		"matches": ["https://*.vdo.ninja/*popout.html*"]
+	  },
+	   {
+		"js": ["linkedin.js"],
+		"matches": ["https://www.linkedin.com/*"]
+	  }, 
+	   {
+		"js": ["webex.js"],
+		"matches": ["https://*.webex.com/*", "https://webex.com/*"],
+		"all_frames": true
+	  },
+	  {
+		"js": ["telegram.js"],
+		"matches": ["https://*.telegram.org/z/*"]
+	  },
+	  {
+		"js": ["telegramk.js"],
+		"matches": ["https://*.telegram.org/k/*"]
+	  },
+	  {
+		"js": ["restream.js"],
+		"matches": ["https://chat.restream.io/chat*"]
+	  },
+	  {
+		"js": ["amazon.js"],
+		"matches": ["https://www.amazon.com/live*"]
+	  },
+	  {
+		"js": ["rumble.js"],
+		"matches": ["https://rumble.com/*.html"]
+	  },
+	  {
+		"js": ["slack.js"],
+		"matches": ["https://app.slack.com/client/*"]
+	  }
+	],
+  "options_ui": {
+    "page": "settings/options.html"
+  }
+}
