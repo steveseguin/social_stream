@@ -40,11 +40,11 @@
 		  
 		  if (!textOnlyMode){
 			  try{
-				chatmessage = ele.querySelector("#message").innerHTML;
+				chatmessage = ele.querySelector("#message, .seventv-yt-message-content").innerHTML;
 			  } catch(e){}
 		  } else {
 			  try{
-				var cloned = ele.querySelector("#message").cloneNode(true);
+				var cloned = ele.querySelector("#message, .seventv-yt-message-content").cloneNode(true);
 				var children = cloned.querySelectorAll("[alt]");
 				for (var i =0;i<children.length;i++){
 					children[i].outerHTML = children[i].alt;
