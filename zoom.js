@@ -5,20 +5,26 @@
 	var lastImage = "";
 	var messageHistory = [];
 
-	function processMessage(ele){
+	function processMessage(ele, id=false){
 
 		if (ele && ele.marked){
 		  return;
 		} else {
 		  ele.marked = true;
 		}
-		
-		var id = ele.querySelector("div[id][class*='chat']");
-		if (id && id.id){
-			if (messageHistory.includes(id.id)){
+		if (!id){
+			id = ele.querySelector("div[id][class*='chat']");
+			if (!id.id){
 				return;
 			}
-			messageHistory.push(id.id);
+			id = id.id;
+		}
+		
+		if (id){
+			if (messageHistory.includes(id)){
+				return;
+			}
+			messageHistory.push(id);
 		} else {
 			return;
 		}
@@ -40,7 +46,8 @@
 		} catch(e){
 			//
 		}
-    var name = "";
+		
+		var name = "";
 		if (ele.querySelector(".chat-item__sender")){
 		  name = ele.querySelector(".chat-item__sender").innerText;
 		  if (name){
@@ -101,7 +108,7 @@
 			name = lastName;
 			chatimg = lastImage;
 		}
-
+		
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = "";
@@ -119,7 +126,6 @@
 		}
 		lastMessage = JSON.stringify(data);
 
-		console.log(data)
 		pushMessage(data);
 	}
 
@@ -180,6 +186,10 @@
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						if (mutation.addedNodes[i].hasAttribute("role")){
 							processMessage(mutation.addedNodes[i]);
+						} else if (mutation.addedNodes[i].hasAttribute("id")){
+							processMessage(mutation.addedNodes[i]);
+						} else{
+							console.log(mutation.addedNodes[i]);
 						}
 					}
 				}
