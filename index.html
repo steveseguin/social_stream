@@ -615,18 +615,20 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	if (urlParams.has("scale")){
 		scale = urlParams.get("scale") || 0.5; // 1.0 = 100% size
 		scale = parseFloat(scale);
-		if (centering){
-			//if (scale){
-				document.body.style.transform = "scale("+scale+") translate(-" + parseInt(scale * 50.0 - 50) +"%, 0%)";
-		//	} else {
-			//	document.body.style.transform = "scale("+scale+")";
-		//	}
+		if (scale<1){
+			if (centering){
+					document.body.style.transform = "scale("+scale+"), 0%)";
+					
+			} else {
+					document.body.style.transform = "scale("+scale+")";
+			}
 		} else {
-			//if (scale>1){
-				document.body.style.transform = "scale("+scale+") translate(-"+parseInt(50 - 50/scale)+"%, 0%)";
-			//} else {
-			//	document.body.style.transform = "scale("+scale+")";
-			//}
+			if (centering){
+					document.body.style.transform = "scale("+scale+") translate(-" + (-1*(scale * 50.0 - 50)) +"%, 0%)";
+					
+			} else {
+					document.body.style.transform = "scale("+scale+") translate("+(-1*(50 - 50/scale))+"%, 0%)";
+			}
 		}
 		if (centering){
 			if (urlParams.has("aligntop")){
