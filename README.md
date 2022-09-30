@@ -201,14 +201,16 @@ To further customize the appearance of the overlay or dock, you can make CSS sty
 body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
 
 :root {
-     --author-bg-color: #FF0000;
-     --author-avatar-border-color: #FF0000;
+     
      --comment-color: #090;
      --comment-bg-color: #DDD;
      --comment-color: #FF0;
      --comment-border-radius: 10px;
-     --author-border-radius: 10px;
      --comment-font-size: 30px;
+     --author-border-radius: 10px;
+     --author-bg-color: #FF0000;
+     --author-avatar-border-color: #FF0000;
+     --author-font-size: 32px;
      --author-color: blue;
       --font-family:  "opendyslexic", opendyslexic, serif;
 }
