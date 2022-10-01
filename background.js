@@ -24,7 +24,7 @@ function generateStreamID(){
 };
 
 
-var properties = ["streamID", "password", "isExtensionOn"];
+var properties = ["streamID", "password", "isExtensionOn", "settings"];
 var channel = generateStreamID();
 var password = false;
 
@@ -47,6 +47,11 @@ chrome.storage.sync.get(properties, function(item){
 	}
 	if (item && item.settings){
 		settings = item.settings;
+	} else {
+		chrome.storage.sync.set({
+			settings: settings
+		});
+		chrome.runtime.lastError;
 	}
 	if (item && item.isExtensionOn){
 		isExtensionOn = item.isExtensionOn;
@@ -105,7 +110,9 @@ async function loadmidi(){
 		console.log(e);
 		alert("File does not contain a valid JSON structure");
 	}
-	chrome.storage.sync.set(settings);
+	chrome.storage.sync.set({
+		settings: settings
+	});
 	chrome.runtime.lastError;
 }
 
@@ -322,7 +329,9 @@ chrome.runtime.onMessage.addListener(
 					settings[request.setting] = request.value;
 				}
 				
-				chrome.storage.sync.set(settings);
+				chrome.storage.sync.set({
+					settings: settings
+				});
 				chrome.runtime.lastError;
 				sendResponse({"state":isExtensionOn});	
 				

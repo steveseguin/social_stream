@@ -883,13 +883,18 @@
 	
 	
 	custombot = false;
-	if (urlParams.has("myname")){ 
-		custombot = urlParams.get("myname")|| false;
+	if (urlParams.has("myname") || urlParams.has("botlist")){ 
+		custombot = urlParams.get("myname") || urlParams.get("botlist") || false;
 		if (custombot){
 			custombot = decodeURIComponent(custombot);
 			custombot = custombot.toLowerCase().replace(/[^a-z0-9,_]+/gi, "");
 			custombot = custombot.split(",");
 		}
+	}
+	
+	var doNotShowBot = false;
+	if (urlParams.has("hidebots")){
+		doNotShowBot = true;
 	}
 	
 	var autoshow = false;
@@ -1984,6 +1989,10 @@
 					bot = true;
 				} else if (custombot && custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){ // because why not. :)
 					bot = true;
+				}
+				
+				if (bot && doNotShowBot){
+					return;
 				}
 				
 				if (firstNamesOnly){
