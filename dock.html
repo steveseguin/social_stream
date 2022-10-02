@@ -660,7 +660,7 @@
 		}
 		
 		.fade {
-			animation: fade 10s;
+			animation: fadeout var(--fade-out-time);
 			webkit-transition: opacity 0.5s ease-in-out;
 			-moz-transition: opacity 0.5 ease-in-out;
 			-ms-transition: opacity 0.5 ease-in-out;
@@ -682,6 +682,7 @@
 			-o-transition: opacity 0.5 ease-in-out;
 			opacity: 0;
 		}
+		
 		@keyframes fadeout {
 	      0% {opacity:1;}
 		  95% {opacity:1;}
@@ -698,6 +699,7 @@
 		}
 		@keyframes fadein {
 	      0% {opacity:0;}
+		  10% {opacity:0;}
 		  100% {opacity:1;}
 		}
 		
@@ -724,6 +726,47 @@
 	      0% {transform: translateY(-100vh);}
 		  100% {transform: translateY(0);}
 		}
+		
+		.fadeout.swipeup {
+			animation: fadeout var(--fade-out-time), swipeup 1s;
+		}
+		.fadein.swipeup {
+		    animation:  fadein 2s, swipeup 1s;
+		}
+		
+		.fadeout.fadein {
+			animation: fadeout var(--fade-out-time), fadein 1s;
+		}
+		
+		.swipeleft.fadein{
+			 animation: swipeleft 1s, fadein 1s;
+		}
+		.swipeleft.fadeout {
+			animation: fadeout var(--fade-out-time), swipeleft 1s;
+		}
+		
+		.swiperight.fadein{
+			 animation: swiperight 1s, fadein 1s;
+		}
+		.swiperight.fadeout{
+			 animation: swiperight 1s, fadeout var(--fade-out-time);
+		}
+		
+		.swipeup.fadeout {
+		    animation: fadeout var(--fade-out-time), swipeup 1s;
+		}
+		
+		.swipeleft.fadein.fadeout{
+			 animation: swipeleft 1s, fadein 1s, fadeout var(--fade-out-time);
+		}
+		.swipeup.fadein.fadeout{
+			 animation: swipeup 1s, fadein 1s, fadeout var(--fade-out-time);
+		}
+		.swiperight.fadein.fadeout{
+			 animation: swiperight 1s, fadein 1s, fadeout var(--fade-out-time);
+		}
+		
+		
 		
 	</style>
 </head>
