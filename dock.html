@@ -27,6 +27,7 @@
 			--stylized-emoji: 140%;
 			--stylized-img: 23px;
 			--show-images: inline-block;
+			--fade-out-time: 20s;
 			
 			--comment-font-size: unset; 
 			--message-line-height: 22px;
@@ -128,16 +129,19 @@
 			font-size: var(--comment-font-size); 
 		}
 		
-		
+		.notcompactmode .hl-message img{
+			height: 17px;
+			max-height: 17px;
+		}
 		
 		.hl-message img{
 			position:relative;
 			margin: auto 1px;
 			padding: 0;
 			display:inline-block;
-			height: 17px;
+			height: 24px;
 			max-width: 24px;
-			max-height: 17px;
+			max-height: 24px;
 		}
 		
 		
@@ -655,6 +659,72 @@
 			position: absolute;
 		}
 		
+		.fade {
+			animation: fade 10s;
+			webkit-transition: opacity 0.5s ease-in-out;
+			-moz-transition: opacity 0.5 ease-in-out;
+			-ms-transition: opacity 0.5 ease-in-out;
+			-o-transition: opacity 0.5 ease-in-out;
+			opacity: 0;
+		}
+		@keyframes fade {
+	      0% {opacity:0;}
+		  5% {opacity:1;}
+		  95% {opacity:1;}
+		  100% {opacity:0;}
+		}
+		
+		.fadeout {
+			animation: fadeout var(--fade-out-time);
+			webkit-transition: opacity 0.5s ease-in-out;
+			-moz-transition: opacity 0.5 ease-in-out;
+			-ms-transition: opacity 0.5 ease-in-out;
+			-o-transition: opacity 0.5 ease-in-out;
+			opacity: 0;
+		}
+		@keyframes fadeout {
+	      0% {opacity:1;}
+		  95% {opacity:1;}
+		  100% {opacity:0;}
+		}
+		
+		.fadein {
+			animation: fadein 1s;
+			webkit-transition: opacity 0.5s ease-in-out;
+			-moz-transition: opacity 0.5 ease-in-out;
+			-ms-transition: opacity 0.5 ease-in-out;
+			-o-transition: opacity 0.5 ease-in-out;
+			opacity: 1;
+		}
+		@keyframes fadein {
+	      0% {opacity:0;}
+		  100% {opacity:1;}
+		}
+		
+		.swiperight {
+		    animation: swiperight 1s;
+		}
+		@keyframes swiperight {
+	      0% {transform: translateX(-100vw);}
+		  100% {transform: translateX(0);}
+		}
+		
+		.swipeleft {
+		    animation: swipeleft 1s;
+		}
+		@keyframes swipeleft {
+	      0% {transform: translateX(100vw);}
+		  100% {transform: translateX(0);}
+		}
+		
+		.swipeup {
+		    animation: swipeup 1s;
+		}
+		@keyframes swipeup {
+	      0% {transform: translateY(-100vh);}
+		  100% {transform: translateY(0);}
+		}
+		
 	</style>
 </head>
 <body >
@@ -743,6 +813,7 @@
 	var timeoutDelay = 0;
 	if (urlParams.has("showtime")){
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
+		document.documentElement.style.setProperty("--fade-out-time", parseFloat(timeoutDelay/1000)+"s");
 	}
 	
 	if (urlParams.has("session")){
@@ -788,10 +859,9 @@
 		splitMode = " splitMode";
 	}
 	
-	if (urlParams.has("alignbottom")){
+	if ((!urlParams.has("aligntop") && !urlParams.has("horizontal")) || urlParams.has("alignbottom")){ 
 		document.getElementById("output").classList.add("alignbottom");
 	} 
-	
 	
 	var stripHTML = false;
 	if (urlParams.has("strip") || urlParams.has("striphtml")){ // removes HTML from messages, donations, and names.
@@ -825,6 +895,41 @@
 		
 	}
 	
+	var transitionType = [];
+	
+	if (urlParams.has("fadein")){
+		transitionType.push("fadein");
+	}
+	
+	if (urlParams.has("fadeout")){
+		transitionType.push("fadeout");
+	}
+	
+	if (urlParams.has("swiperight")){
+		transitionType.push("swiperight");
+	}
+	
+	if (urlParams.has("swipeleft")){
+		transitionType.push("swipeleft");
+	}
+	
+	if (urlParams.has("swipeup")){
+		transitionType.push("swipeup");
+	}
+	
+	if (urlParams.has("reverse")){
+		document.getElementById("output").style.flexDirection = "column-reverse";
+		document.getElementById("output").style.display = "flex";
+		customNodeLimit = 10;
+	}
+	
+	if (urlParams.has("dropdown")){
+		document.getElementById("output").style.flexDirection = "column-reverse";
+		document.getElementById("output").style.display = "flex";
+		customNodeLimit = 10;
+		transitionType.push("swipeup");
+	}
+	
 	var beep = false;
 	if (urlParams.has("beep")){ // removes HTML from messages, donations, and names.
 		beep = true;
@@ -839,6 +944,7 @@
 		document.documentElement.style.setProperty("--stylized-emoji", stylizeEmoji);
 		document.documentElement.style.setProperty("--message-line-height", "30px");
 		document.documentElement.style.setProperty("--stylized-img", "35px");
+		
 	}
 
 	var flexOrNotToFlex = "flex";
@@ -2128,7 +2234,11 @@
 					odd = !odd;
 				}
 			}
-				
+			
+			transitionType.forEach(classtype=>{
+				node.classList.add(classtype);
+			});
+			
 			mainOutputWindow.appendChild(node);
 			if (beep){
 				playtone();
