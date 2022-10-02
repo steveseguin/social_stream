@@ -7,6 +7,9 @@ To use the pretty.html example, you can load it up in OBS via:
 Just update the URL with your session ID.
 
 
+![image](https://user-images.githubusercontent.com/2575698/193437666-0f00ef2d-2932-41c4-95b4-9e132f06da83.png)
+
+
 If making your own custom style, you can refer to the pretty.html's code for example usage.
 
 You'll notice it uses IFRAMES, which makes it easy to keep your own template code separated from dock.html code. This helps reduce complexity and improves organization.
