@@ -1,0 +1,110 @@
+<html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+	<meta content="utf-8" http-equiv="encoding" />
+	<title>Social Stream - Dashboard</title>
+	<meta name="title" content="Social Stream - Dashboard" />
+	<link rel="icon" href="./icons/favicon.ico" />
+	<style>
+	
+		body {
+			display: grid;
+			place-items: center;
+			height: 100%;
+			overflow: hidden;
+			background-color:#0000;
+		}
+		iframe {
+			position: absolute;
+			background-color: #0004;
+			top: 0;
+			left: 0;
+			margin: 183px 143px;
+			width: 281px;
+			height: 370px;
+			z-index: 1;
+			border: 0;
+		}
+		
+		#iframeOverlay{
+			position:absolute;
+			top:0;
+			left:0;
+			width:600px;
+			height:800px;
+			
+		}
+	</style>
+</head>
+<body >
+	<img id="iframeOverlay" src='hologram.png' />
+	<iframe id="iframe"></iframe>
+	<script>
+	
+	function getById(id){
+		return document.getElementById(id) || document.createElement("span");
+	}
+	
+	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
+		console.error(errorMsg);
+		console.error(lineNumber);
+		console.error("Unhandeled Error occured"); //or any message
+		return false;
+	};
+	
+	(function (w) {
+		w.URLSearchParams = w.URLSearchParams || function (searchString) {
+			var self = this;
+			self.searchString = searchString;
+			self.get = function (name) {
+				var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+				if (results == null) {
+					return null;
+				} else {
+					return decodeURI(results[1]) || 0;
+				}
+			};
+		};
+
+	})(window);
+	var urlParams = new URLSearchParams(window.location.search);
+	
+	var params = "";
+	params+= "&transparent";
+	params+= "&hidemenu";
+	params+= "&scale=0.35";
+	
+	params += "&fadein&hidemenu&transparent&hideshadow&emoji&compact&notime&swipeleft&color&noavatar";
+	
+	
+	var css = `
+		:root {
+			 --comment-font-size: 20px;
+			 --font-family:  "opendyslexic", opendyslexic, serif;
+		}
+		
+		
+		.highlight-chat{
+			border-top: 3px solid #FFF6;
+			width:100%;
+		}
+		@font-face {
+		  font-family: "opendyslexic";
+			src: url("https://vdo.ninja/examples/OpenDyslexic-Regular.otf");
+			font-style: normal;
+			font-weight: normal;
+		} 
+	`;
+	 
+	var css64 = window.btoa(encodeURIComponent(css ));
+	
+	params += "&b64css="+css64;
+	
+	if (urlParams.has("session")){
+		getById("iframe").src = "./dock.html?session="+urlParams.get("session") + params;
+	}
+	
+	</script>
+	</body>
+</html>
