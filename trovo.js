@@ -81,12 +81,25 @@
 			try{
 				if ("focusChat" == request){
 					try{
-						document.querySelector(".input-box>.editor").focus();
+						var target = document.querySelector(".input-box>.editor");
+						if (target){
+							target.innerHTML = "";
+							target.focus();
+						} else {
+							sendResponse(false);
+							return
+						}
 					} catch(e){
 						sendResponse(false);
 						return
 					}
 					sendResponse(true);
+					setTimeout(function(){
+						var target = document.querySelector(".input-box>.editor");
+						if (target){
+							target.innerHTML = "";
+						}
+					},50);
 					return;
 				} 
 				if ("textOnlyMode" == request){

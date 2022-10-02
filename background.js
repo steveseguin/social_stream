@@ -789,14 +789,6 @@ function processResponse(data){
 					} else {
 						generalFakeChat(tabs[i].id, data.response, false);
 					}
-				} else if (tabs[i].url.startsWith("https://trovo.live/chat/")){  // trovo
-					
-					if (!debuggerEnabled[tabs[i].id]){
-						debuggerEnabled[tabs[i].id]=false;
-						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false));  // enable the debugger to let us fake a user 
-					} else {
-						generalFakeChat(tabs[i].id, data.response, false);
-					}
 				} else {  // all other destinations. ; generic
 				
 					if (tabs[i].url.includes("youtube.com/live_chat")){
