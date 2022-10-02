@@ -13,3 +13,4 @@ You'll notice it uses IFRAMES, which makes it easy to keep your own template cod
 
 You'll also notice in the that you can use `&cssb64` to pass custom stylesheets to the dock page, so you can still stylize it without needing an OBS style to be applied.
 
+Finally, you might also notice that you can use transparent images as an overlay for the chat, allowing for pretty complex framing effects for the chat. This allows you to make advanced designs in photoshop, without really needing to know much advanced CSS.
