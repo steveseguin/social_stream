@@ -139,7 +139,7 @@
 			return;
 		}
 		
-		if (window.location.pathname.includes("livecenter")){
+		if (window.location.href.includes("livecenter")){
 			//
 		} else if ((!(window.location.pathname.includes("@") && window.location.pathname.includes("live")))){
 			return;
