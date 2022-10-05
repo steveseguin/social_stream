@@ -84,6 +84,8 @@
 						var target = document.querySelector(".input-box>.editor");
 						if (target){
 							target.innerHTML = "";
+							window.focus();
+							document.hasFocus = true;
 							target.focus();
 						} else {
 							sendResponse(false);
