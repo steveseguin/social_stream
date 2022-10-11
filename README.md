@@ -228,6 +228,23 @@ body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
 ```
 Sample CSS of which you can use to customize some of the basic styles. There's not much that you can't do via CSS in this way, but you can edit things further at a code-level if needed. Mac/Linux users may face issues with OBS not liking self-hosted versions of the index/dock file, but it's not an issue for the PC version.
 
+### Changing CSS without OBS
+
+You can also pass custom CSS to the dock and index page via URL parameters using either &css or &b64css.
+
+`&css=https://youdomain.com/style.css` or `&b64css=YOUR_CSS_CODE_HERE`
+
+You can use this tool to encode the URL you want to link to:  https://www.urlencoder.org/
+
+For the base64 css option, you can create the base64 encoding using `btoa(encodeURIComponent(csshere))` via the browser's developer console. For example:
+
+```window.btoa(encodeURIComponent("#mainmenu{background-color: pink; ❤" ));```
+
+The above will return the base64 encoded string required. Special non-latin characters are supported with this approach; not just latin characters.
+
+Example of what it might look like:
+https://socialstream.ninja/?64css=JTIzbWFpbm1lbnUlN0JiYWNrZ3JvdW5kLWNvbG9yJTNBJTIwcGluayUzQiUyMCVFMiU5RCVBNA
+
 ### Pre-styled templates / themes
 
 You can try out some stylized chat overlays in the themes folder:
