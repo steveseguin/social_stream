@@ -481,12 +481,24 @@ chrome.runtime.onMessage.addListener(
 					data.hasMembership = "";
 					data.chatmessage = "";
 					data.chatname = "Lucy";
-				} else if (Math.random()>0.5){
+				} else if (Math.random()>0.7){
 					data.hasDonation = "";
 					data.hasMembership = "";
 					data.chatname = "Steve";
 					var score = parseInt(Math.random()* 378);
 					data.chatmessage  =  jokes[score]["setup"] + "..  " + jokes[score]["punchline"]  + " 😊";
+				} else if (Math.random()>0.6){
+					data.hasDonation = "100 gold";
+					data.hasMembership =  '';
+					data.chatname = "Steve";
+					var score = parseInt(Math.random()* 378);
+					data.chatmessage  =  '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">'; 
+				} else if (Math.random()>0.5){
+					data.hasDonation = "";
+					data.hasMembership =  '<div class="donation membership">SPONSORSHIP</div>';
+					data.chatname = "Steve";
+					var score = parseInt(Math.random()* 378);
+					data.chatmessage  =  jokes[score]["setup"] + "..  " + jokes[score]["punchline"]  + " 😊";	
 				} else if (Math.random()>0.2){
 					data.hasDonation = "";
 					data.hasMembership = "";
