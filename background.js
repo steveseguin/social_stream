@@ -712,6 +712,12 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 		try {
 			if (typeof data == "object"){
 				data.timestamp = new Date().getTime();
+				
+				if (data.type && (data.type == "youtube")){
+					data.chatimg = data.chatimg.replace("=s32-", "=s512-");  
+					data.chatimg = data.chatimg.replace("=s64-", "=s512-");
+				}
+				
 				overwriteFile(JSON.stringify(data));
 			}
 		} catch(e){}
@@ -720,6 +726,8 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 		try {
 			if (typeof data == "object"){
 				data.timestamp = new Date().getTime();
+				data.chatimg = data.chatimg.replace("=s32-", "=s256-");  
+				data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 				overwriteFileExcel(data);
 			}
 		} catch(e){}
