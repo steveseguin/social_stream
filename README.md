@@ -308,13 +308,15 @@ Lastly, please note that you will need to enable the MIDI option in the menu opt
 
 ### Server API support
 
-If using the MIDI API isn't something you can use, you can also check out the hosted API service to send messages to SocialStream, which will be redirected to your social live chat sites.
+If using the MIDI API isn't something you can use, you can also check out the hosted API service to send messages to SocialStream, which will be redirected to your social live chat sites.  This API works with a Stream Deck or custom applications.
 
-This API end point supports WSS, HTTPS GET, and HTTP POST (JSON).  Support for this API must be toggled on in the menu settings.
+This API end point supports WSS, HTTPS GET, and HTTP POST (JSON).  Support for this API must be toggled on in the menu settings (or by adding `&server` to the dock.html page).
 
-An overly simple example of how to use the GET API would be: https://api.vdo.ninja/XXXXXXXXXX/sendChat/null/Hello, which sends HELLO.  Replace XXXXX with your Social Stream session ID.
+An overly simple example of how to use the GET API would be: https://api.vdo.ninja/XXXXXXXXXX/sendChat/null/Hello, which sends HELLO.  Replace XXXXX with your Social Stream session ID.  Other options, like `https://api.vdo.ninja/XXXXXXXXXX/clearOverlay` should work, too.
 
-For full details, see the following link for sample functionality and refer to its source code for examples.
+You can use this API to clear the featured-chat, poke the next-in-queue item, and more. It works with WSS or HTTP requests.
+
+For details of the commands, see the following link for sample functionality and refer to its source code for examples.
 
 https://socialstream.ninja/sampleapi.html?session=xxxxxxxxxx (replacing xxxxxxxx with your Social Stream session ID to have it work)
 
