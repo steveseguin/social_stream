@@ -71,7 +71,12 @@ function update(response){
 			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='https://socialstream.ninja/dock.html?session="+response.streamID+password+"'>https://socialstream.ninja/dock.html?session="+response.streamID+password+"</a>";
 			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='https://socialstream.ninja/index.html?session="+response.streamID+password+"'>https://socialstream.ninja/index.html?session="+response.streamID+password+"</a>";
 			document.getElementById("overlay").rawURL = "https://socialstream.ninja/index.html?session="+response.streamID+password;
+			
+			
+			document.getElementById("remote_control_url").href='https://socialstream.ninja/sampleapi.html?session='+response.streamID;
 		}
+		
+		
 		
 		if ('settings' in response){
 			for (var key in response.settings){

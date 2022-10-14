@@ -677,7 +677,7 @@ function setupSocket(){
 	};
 	socketserver.onopen = function (){
 		conCon = 0;
-		socketserver.send(JSON.stringify({"join":channel}));
+		socketserver.send(JSON.stringify({"join":channel,"out":2,"in":1}));
 	};
 	socketserver.addEventListener('message', function (event) {
 		if (event.data){
