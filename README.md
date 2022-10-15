@@ -51,6 +51,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - odysee.com (via the pop out chat I think)
 - minnit.chat support (https://minnit.chat/xxxxxxxxxxx?mobile&popout)
 - livepush.io (chat overlay link provided; no input field support?)
+- omlet.gg (no pop out chat needed; just https://oblet.gg/stream/xxxxx)
 
 More on request
 
