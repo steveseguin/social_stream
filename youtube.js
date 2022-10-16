@@ -38,6 +38,13 @@
 			
 		  } catch(e){}
 		  
+		   try {
+			var BTT = ele.querySelectorAll('.bttv-tooltip');
+			for (var i=0;i<BTT.length;i++){
+				BTT[i].outerHTML = "";
+			}
+		  } catch(e){}
+	  
 		  if (!textOnlyMode){
 			  try{
 				chatmessage = ele.querySelector("#message, .seventv-yt-message-content").innerHTML;
