@@ -713,7 +713,7 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 			if (typeof data == "object"){
 				data.timestamp = new Date().getTime();
 				
-				if (data.type && (data.type == "youtube")){
+				if (data.type && data.chatimg && (data.type == "youtube")){
 					data.chatimg = data.chatimg.replace("=s32-", "=s512-");  
 					data.chatimg = data.chatimg.replace("=s64-", "=s512-");
 				}

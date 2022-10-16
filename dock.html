@@ -2718,6 +2718,17 @@
 		  document.getElementById("select_save_file").innerText = "💾";
       } else if (newFileHandle && data){
 		  const writableStream = await newFileHandle.createWritable();
+		  
+		  try {
+			if (typeof data == "object"){
+				if (data.type && data.chatimg && (data.type == "youtube")){
+					data.chatimg = data.chatimg.replace("=s32-", "=s512-");  
+					data.chatimg = data.chatimg.replace("=s64-", "=s512-");
+				}
+				overwriteFile(JSON.stringify(data));
+			}
+		  } catch(e){}
+		  
 		  await writableStream.write(data);
 		  await writableStream.close();
 	  }
