@@ -851,7 +851,7 @@
 		<button id="select_save_file" data-state="0" onclick="overwriteFile('setup');" title="Select the file you wish to save the most recent message to" class="green hidden">💾 Set Save File Location</button>
 		<button id="next_in_queue" data-state="0" onclick="nextInQueue();" title="Hold CTRL when selecting messages to add them to the queue instead" class="hidden blue">Next in Queue</button>
 		<button id="show_only_queue" data-state="0" onclick="filterQueued(this);" title="Show only the messages in queue" class="hidden">Show Only Queued</button>
-		<button id="clear_overlay" data-state="0" onclick="sendDataP2P({contents:false});" title="Clear the featured chat overlay. (Not this dock)" class="red">Clear Current Overlay</button>
+		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" title="Clear the featured chat overlay. (Not this dock)" class="red">Clear Current Overlay</button>
 		<button id="pause" data-state="0" onclick="pause(this);" title="Pause incoming chat messages">⏯︎ Pause</button>
 		<button id="autoshow" data-state="0" onclick="autoShow(this);" title="Auto-feature chat messages as they come in">Auto</button>
 		<button id="tts" data-state="0" onclick="speech = !speech; window.speechSynthesis.cancel(); this.classList.toggle('pressed');" title="Toggle whether to read out-loud incoming messages using text-to-speech">🔊</button>
@@ -1627,7 +1627,7 @@
 			if (data.action == "nextInQueue"){
 				nextInQueue();
 			} else if (data.action == "clearOverlay"){ // or just send data=false
-				sendDataP2P({contents:false});
+				sendDataP2P(false);
 			} else if (data.action == "getQueueSize"){ // or just send data=false
 				updateQueueButton();
 			}
@@ -1798,7 +1798,7 @@
 	function nextInQueue(){ 
 		
 		if (!selectedQueue.length){
-			sendDataP2P({contents:false});
+			sendDataP2P(false);
 			updateQueueButton();
 			return;
 		}
