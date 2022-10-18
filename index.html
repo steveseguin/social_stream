@@ -788,6 +788,8 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					data = data.overlayNinja;
 				}  
 				
+				if (data == false){return;}
+				
 				if (!data || !("contents" in data)){
 					if (!("action" in data) && ("chatmessage" in data)){
 						processData({contents:data});
