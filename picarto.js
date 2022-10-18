@@ -106,6 +106,8 @@
 							if (mutation.addedNodes[i].dataset.set123){continue;}
 							mutation.addedNodes[i].dataset.set123 = "true";
 							
+							if (mutation.addedNodes[i].nextSibling){continue;}
+							
 							if (mutation.addedNodes[i].className.includes("ChannelChat__MessageBoxWrapper")){
 								callback(mutation.addedNodes[i], mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].className.includes("StandardTypeMessagecontainer__BlockRow")){
