@@ -15,9 +15,9 @@
 	}
 	
 	function processMessage(ele){
-		
+		console.log(ele);
 		var name="";
-		name = ele.querySelector('a[class*="comment__author"]').innerText;
+		name = ele.querySelector('[class*="comment__author"]').innerText;
 		if (name){
 			name = name.replace("@","");
 			name = name.trim();
@@ -39,6 +39,10 @@
 		});
 		
 		if (!msg.length){return;}
+		
+		try {
+			chatimg = ele.querySelector("[class^='channel-thumbnail']  img[src]").src || "";
+		} catch (e){}
 		
 		var dono = "";
 		//if (ele.querySelector('.chat-history--rant-price')){
