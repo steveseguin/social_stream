@@ -24,7 +24,6 @@
 		}
 		
 		var name="";
-		console.log(ele);
 		if (ele.querySelector('.chat-history--username')){
 		  name = ele.querySelector('.chat-history--username').innerText;
 		  if (name){
@@ -138,6 +137,7 @@
 						try {
 							if (mutation.addedNodes[i].skip){return;}
 							mutation.addedNodes[i].skip = true;
+							if (mutation.addedNodes[i] && mutation.addedNodes[i].className && mutation.addedNodes[i].className.includes("chat-history--rant-sticky")){return;}
 							processMessage(mutation.addedNodes[i]);
 						} catch(e){}
 					}
