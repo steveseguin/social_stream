@@ -1033,7 +1033,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 	
 	function processData(data){
 		
-		if (data.contents){
+		if (data && data.contents){
 			clearTimeout(timeoutTimer);
 			document.getElementById("output").classList.add(transitionType);
 			clearInterval(nextComment);
@@ -1334,7 +1334,7 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				}
 				
 			},500, data.contents);
-		} else {
+		} else if (data){
 			if ("contents" in data){
 				clearTimeout(timeoutTimer);
 				document.getElementById("output").classList.add(transitionType);

@@ -18,7 +18,9 @@
 		
 		var chatimg = "";
 		if (ele.querySelector('.chat--profile-pic')){
-		  chatimg = document.querySelector('.chat--profile-pic').style.backgroundImage.split('"')[1];
+			try {
+				chatimg = document.querySelector('.chat--profile-pic').style.backgroundImage.split('"')[1];
+			} catch(e){}
 		}
 		
 		var name="";
