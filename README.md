@@ -399,6 +399,11 @@ If the auto responder doesn't work -- you see a blue bar, but nothing happens, t
 
 ![image](https://user-images.githubusercontent.com/2575698/146602513-e3b7e69c-19fa-4e58-b907-6f08b3f873e0.png)
 
+- If the blue bar warning about Debugging mode is a problem, start Chrome with this command line flag: `--silent-debugger-extension-api`
+
+![image](https://user-images.githubusercontent.com/2575698/196629133-6c06fedb-9f22-40aa-8031-d7f4c681ad95.png)
+
+
 - Try refreshing the chat page; sometimes refreshing the page will retrigger the code and bypass any errors. This is particularly try if you install or refresh the extension after the chat page has already been loaded.
 
 - Try to keep the chat window and dock page active and if possible, even partially visible on screen. If the windows are hidden or minimized, they may stop working. This is also true if the scroll bar for the chat window is not at the bottom; sometimes messages won't load unless you are seeing the newest messages.
