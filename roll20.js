@@ -52,7 +52,7 @@
 				}
 				try {
 					if (!name){
-						name = ele.querySelector("span.by]").innerText.trim();
+						name = ele.querySelector("span.by").innerText.trim();
 					}
 				} catch(e){
 				}
