@@ -189,12 +189,13 @@
 	console.log("social stream injected");
 
 	setInterval(function(){
+		try {
 		if (document.querySelector('#textchat .content').children.length){
 			if (!document.querySelector('#textchat').marked){
 				document.querySelector('#textchat').marked=true;
 				onElementInserted('#textchat');
 			}
-		}
+		}} catch(e){}
 	},2000);
 
 })();
