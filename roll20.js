@@ -43,7 +43,7 @@
 		var contentimg = "";
 		
 		
-		if (!name && !chatimg){
+		if (!name){
 			for (var i=0; i<50;i++){
 				try {
 					ele = ele.previousElementSibling;
@@ -65,8 +65,11 @@
 				if (name){break;}
 			}
 		}
+		if (name){
+			name = name.replace(":","");
+			name = name.trim();
+		}
 		
-
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = "";
