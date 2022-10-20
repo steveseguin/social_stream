@@ -19,8 +19,6 @@
 	
 	
 	function processMessage(ele){
-		console.log(ele);
-		
 		var mid = ele.id.split("chat-messages-");
 		if (mid.length==2){
 			mid = mid[1];
@@ -39,7 +37,6 @@
 			name = ele.querySelector("#message-username-"+mid).innerText.trim();
 		} catch(e){
 		}
-		console.log(chatimg, name);
 		
 		var msg = "";
 		if (textOnlyMode){
@@ -51,6 +48,11 @@
 				msg = ele.querySelector("#message-content-"+mid).innerHTML.trim();
 			} catch(e){}
 		}
+		
+		var contentimg = "";
+		try {
+			contentimg = ele.querySelector("div[class^='imageContent-'] img[src]").src;
+		} catch(e){}
 		
 		
 		if (!name && !chatimg){
@@ -86,24 +88,38 @@
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.hasMembership = "";;
-		data.contentimg = "";
+		data.contentimg = contentimg;
 		data.type = "discord";
 		
-		console.log(data);
+	//	console.log(data);
 		
 		if (lastMessage === JSON.stringify(data)){ // prevent duplicates, as zoom is prone to it.
 			return;
 		}
 		lastMessage = JSON.stringify(data);
-		
-		if (data.chatimg){
-			toDataURL(data.chatimg, function(dataUrl) {
-				data.chatimg = dataUrl;
-				pushMessage(data);
+		if (data.contentimg){
+			toDataURL(data.contentimg, function(dataUrl) {
+				data.contentimg = dataUrl;
+				if (data.chatimg){
+					toDataURL(data.chatimg, function(dataUrl2) {
+						data.chatimg = dataUrl2;
+						pushMessage(data);
+					});
+				} else {
+					pushMessage(data);
+				}
 			});
 		} else {
-			pushMessage(data);
+			if (data.chatimg){
+				toDataURL(data.chatimg, function(dataUrl) {
+					data.chatimg = dataUrl;
+					pushMessage(data);
+				});
+			} else {
+				pushMessage(data);
+			}
 		}
+		
 	}
 
 	function pushMessage(data){
