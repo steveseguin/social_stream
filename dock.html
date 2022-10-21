@@ -2305,12 +2305,12 @@
 			} else if (compactmode){
 				var node = createElementFromHTML('<div id="msg_'+data.counter+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + "<div class='queueid'></div>"
-					 + '<div class="hl-message" id="content_'+data.counter+'">'
+					 + '<div class="hl-message">'
 						+ showType
 						+ chatImg
 						+ timeArrived
 						+ chatname
-						+ chatmessage
+						+ '<span id="content_'+data.counter+'">' + chatmessage + '</span>'
 					 + '</div>'
 					 + addImage
 					 + donationHTML + '</div>');
