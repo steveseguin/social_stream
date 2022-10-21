@@ -128,6 +128,12 @@
 			document.querySelector("#PiczelChat").marked = true;
 			console.log("LOADED SocialStream EXTENSION");
 			
+			try{
+				document.querySelectorAll("nav button").forEach(ele=>{
+					ele.disabled = true;
+				});
+			} catch(e){}
+			
 			try { 
 				var main = document.querySelector("#PiczelChat").childNodes[0].childNodes[0].childNodes[3].childNodes[0].childNodes[0].childNodes;
 				for (var j =0;j<main.length;j++){
