@@ -23,8 +23,7 @@
 	function sleep(ms = 0) {
 		return new Promise(r => setTimeout(r, ms)); // LOLz!
 	}
-
-
+	
 	async function processMessage(first, ele){
 		var content = ele;
 		
@@ -106,7 +105,7 @@
 							if (mutation.addedNodes[i].dataset.set123){continue;}
 							mutation.addedNodes[i].dataset.set123 = "true";
 							
-							if (mutation.addedNodes[i].nextSibling){continue;}
+							if (mutation.addedNodes[i].nextSibling && mutation.addedNodes[i].nextSibling.innerText.length){continue;}
 							
 							if (mutation.addedNodes[i].className.includes("ChannelChat__MessageBoxWrapper")){
 								callback(mutation.addedNodes[i], mutation.addedNodes[i]);
@@ -136,32 +135,39 @@
 	console.log("social stream injected");
 	
 	
-	setTimeout(function(){ // clear existing messages; just too much for a stream.
-		console.log("LOADED SocialStream EXTENSION");
-		try { 
-			var main = document.querySelectorAll("[class*='ChannelChat__MessageBoxWrapper']");
-			for (var j =0;j<main.length;j++){
-				try{
-					if (!main[j].dataset.set123){
-						main[j].dataset.set123 = "true";
-						//processMessage(main[j]);
-					} 
-				} catch(e){}
-			}
-			var main = document.querySelectorAll("[class*='StandardTypeMessagecontainer__BlockRow']");
-			for (var j =0;j<main.length;j++){
-				try{
-					if (!main[j].dataset.set123){
-						main[j].dataset.set123 = "true";
-						//processMessage(main[j]);
-					} 
-				} catch(e){}
-			}
-		} catch(e){ }
+	setInterval(function(){ // clear existing messages; just too much for a stream.
 		
-		onElementInserted("[class*='styled__ChatContainer']", function(first, element){
-			processMessage(first, element);
-		});
+		
+		if (document.querySelector("[class*='styled__ChatContainer']") && !document.querySelector("[class*='styled__ChatContainer']").marked){
+			document.querySelector("[class*='styled__ChatContainer']").marked = true;
+			console.log("LOADED SocialStream EXTENSION");
+			
+			try { 
+				var main = document.querySelectorAll("[class*='ChannelChat__MessageBoxWrapper']");
+				for (var j =0;j<main.length;j++){
+					try{
+						if (!main[j].dataset.set123){
+							main[j].dataset.set123 = "true";
+							//processMessage(main[j]);
+						} 
+					} catch(e){}
+				}
+				var main = document.querySelectorAll("[class*='StandardTypeMessagecontainer__BlockRow']");
+				for (var j =0;j<main.length;j++){
+					try{
+						if (!main[j].dataset.set123){
+							main[j].dataset.set123 = "true";
+							//processMessage(main[j]);
+						} 
+					} catch(e){}
+				}
+			} catch(e){ }
+			
+			onElementInserted("[class*='styled__ChatContainer']", function(first, element){
+				processMessage(first, element);
+			});
+		}
+		
 		
 	},4000);
 
