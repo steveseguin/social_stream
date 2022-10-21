@@ -66,11 +66,9 @@
 			 if (textOnlyMode){
 				chatmessage = buttons[1].nextSibling.textContent;
 			 } else {
-				console.log(buttons[1].nextSibling.childNodes);
 				chatmessage = digInto(buttons[1].nextSibling.childNodes)
 			 }
 		} catch(e){
-			console.log(e);
 			return;
 		}
 
