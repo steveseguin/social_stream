@@ -980,6 +980,11 @@
 		document.getElementById("output").classList.add("alignbottom");
 	} 
 	
+	var attachmentsonly = false;
+	if (urlParams.has("attachmentsonly")){
+		attachmentsonly = true;
+	} 
+	
 	var stripHTML = false;
 	if (urlParams.has("strip") || urlParams.has("striphtml")){ // removes HTML from messages, donations, and names.
 		stripHTML = true;
@@ -2131,6 +2136,10 @@
 			var addImage = "";
 			if (data.contentimg){
 				addImage = '<div class="hl-imgContent"><img src="' + data.contentimg + '" class="hl-img-content" onerror="this.parent.style.display=\'none\'" /></div>';
+			} else if (attachmentsonly){
+				data.chatmessage = "";
+				data.hasDonation = "";
+				return;
 			} else {
 				data.contentimg = "";
 			}
