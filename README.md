@@ -183,6 +183,7 @@ To customize the dock, you can use the following options:
 - &hidesource (hides the youtube/twitch/fb icons from the stream)
 - &compact (Removes the spacing between name and message)
 - &autoshow (will auto-feature chat messages as they come into the dock at a rate of about 2 per 3 seconds)
+- &attachmentsonly (will only show image attachments in the dock; the messages will be wiped)
 
 To customize the featured chat overlay, the following URL parameters are available
 
