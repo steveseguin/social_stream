@@ -240,11 +240,9 @@
 	
 	
 	setInterval(function(){
-		var ele = document.querySelector("[role='region']")
-		//console.log("checking");
+		var ele = document.querySelector("#main");
 		if (ele && !ele.started){
 			ele.started = true;
-		//	console.log("GOOD");
 			
 			ele.querySelectorAll("[data-id]").forEach(ele=>{
 				ele.set123 = true;
