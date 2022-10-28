@@ -1407,11 +1407,15 @@
 		document.documentElement.style.setProperty("--highlight-base2", "#EEE4", "important");
 	}
 	
-	if (urlParams.has("hideshadow")){
+	if (urlParams.has("hideshadow")){ // alternating 
 		document.documentElement.style.setProperty("--highlight-base", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-base2", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact2", "#0000", "important");
+	}
+	
+	if (urlParams.has("nooutline")){
+		document.body.style.textShadow = "0 0 black";
 	}
 	
 	if (urlParams.has("transparent")){
