@@ -233,6 +233,13 @@ body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
 ```
 Sample CSS of which you can use to customize some of the basic styles. There's not much that you can't do via CSS in this way, but you can edit things further at a code-level if needed. Mac/Linux users may face issues with OBS not liking self-hosted versions of the index/dock file, but it's not an issue for the PC version.
 
+#### Removing text-outlines
+Try:
+```
+body {
+	text-shadow: 0 0 black;
+}
+```
 ### Changing CSS without OBS
 
 You can also pass custom CSS to the dock and index page via URL parameters using either &css or &b64css.
