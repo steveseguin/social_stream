@@ -42,6 +42,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - restream.io chat supported (https://chat.restream.io/chat)
 - amazon.com/live
 - glimesh
+- clouthub (no pop out; just the video page)
 - rumble.com (no pop out; viewer page)
 - trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/CHANNEL_NAME_HERE)
 - theta.tv (pop-out chat; https://www.theta.tv/chat/xxxxxxxxxxxxxxx)
@@ -232,6 +233,13 @@ body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
 ```
 Sample CSS of which you can use to customize some of the basic styles. There's not much that you can't do via CSS in this way, but you can edit things further at a code-level if needed. Mac/Linux users may face issues with OBS not liking self-hosted versions of the index/dock file, but it's not an issue for the PC version.
 
+#### Removing text-outlines
+Try:
+```
+body {
+	text-shadow: 0 0 black;
+}
+```
 ### Changing CSS without OBS
 
 You can also pass custom CSS to the dock and index page via URL parameters using either &css or &b64css.
