@@ -209,9 +209,29 @@ function updateSettings(ele){
 	if (ele.dataset.param1){
 		if (ele.checked){
 			document.getElementById("dock").rawURL = updateURL(ele.dataset.param1, document.getElementById("dock").rawURL);
+			
+			if (ele.dataset.param1 == "darkmode"){
+				var key = "lightmode";
+				var ele = document.querySelector("input[data-param1='"+key+"']");
+				if (ele && ele.checked){
+					ele.checked = false;
+					updateSettings(ele);
+				}
+				
+			} else if (ele.dataset.param1 == "lightmode"){
+				var key = "darkmode";
+				var ele = document.querySelector("input[data-param1='"+key+"']");
+				if (ele && ele.checked){
+					ele.checked = false;
+					updateSettings(ele);
+				}
+				
+			}
+			
 		} else {
 			document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace(ele.dataset.param1, "");
 		}
+		
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "param1", setting: ele.dataset.param1, "value": ele.checked}, function (response) {});

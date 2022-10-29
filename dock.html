@@ -904,7 +904,7 @@
 	var applyCustomActions = false;
 	var showsource = true;
 	var compactmode = false;
-	var darkmode = true;
+	var darkmode = null;
 	var scale = 1;
 	var forceAutoscroll = false;
 	var triggerState = true;
@@ -1397,6 +1397,10 @@
 	
 	if (darkmode){
 		document.getElementById("menu").classList.add("darkmode");
+		document.documentElement.style.setProperty("--background-color", "#000");
+	} else if (darkmode === null){ // defaultmode
+		document.getElementById("menu").classList.add("darkmode");
+		darkmode = true;
 	} else {
 		document.body.classList.add("lightmode");
 		document.documentElement.style.setProperty("--input-color", "#FFF");
