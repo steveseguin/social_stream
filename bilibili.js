@@ -22,53 +22,23 @@
 		
 	
 		var chatimg = "";
-		try{
-		   chatimg = ele.querySelector(".avatar img").src;
-		} catch(e){
-		}
 		
 		var name="";
 		try {
-			name = ele.querySelector(".by").innerText.trim();
+			name = ele.querySelector(".type-name").innerText.trim();
 		} catch(e){
 		}
 		
 		var msg = "";
-		for (var i=0;i<ele.childNodes.length;i++){
-			if (ele.childNodes[i].nodeName == "#text"){
-				msg += ele.childNodes[i].textContent.trim();
-			} 
+		try {
+			msg = ele.querySelector(".type-comment").textContent.trim();
+		} catch(e){
 		}
+		
 		
 		var contentimg = "";
 		
 		
-		if (!name){
-			for (var i=0; i<50;i++){
-				try {
-					ele = ele.previousElementSibling;
-				} catch(e){
-					break;
-				}
-				try {
-					if (!name){
-						name = ele.querySelector("span.by").innerText.trim();
-					}
-				} catch(e){
-				}
-				try {
-					if (!chatimg){
-						chatimg = ele.querySelector(".avatar img").src;
-					}
-				} catch(e){
-				}
-				if (name){break;}
-			}
-		}
-		if (name){
-			name = name.replace(":","");
-			name = name.trim();
-		}
 		
 		var data = {};
 		data.chatname = name;
@@ -80,7 +50,8 @@
 		data.hasDonation = "";
 		data.hasMembership = "";;
 		data.contentimg = contentimg;
-		data.type = "roll20";
+		data.type = "bilibili";
+		
 		
 		
 		if (data.contentimg){
@@ -156,7 +127,7 @@
 		var target = document.querySelector(containerSelector);
 		if (!target){return;}
 		
-		target.querySelectorAll("[data-messageid]").forEach(ele=>{
+		target.querySelectorAll("li").forEach(ele=>{
 			try{
 				ele.skip = true;
 			} catch(e){}
@@ -165,9 +136,8 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						if (mutation.addedNodes[i].dataset.messageid){
+						if (mutation.addedNodes[i].querySelector(".message-item:not(.action-msg)")){
 							try{
 								if (mutation.addedNodes[i].skip){continue;}
 								mutation.addedNodes[i].skip = true;
@@ -190,10 +160,10 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('#textchat .content').children.length){
-			if (!document.querySelector('#textchat').marked){
-				document.querySelector('#textchat').marked=true;
-				onElementInserted('#textchat');
+		if (document.querySelector('.comment-container').children.length){
+			if (!document.querySelector('.comment-container').marked){
+				document.querySelector('.comment-container').marked=true;
+				onElementInserted('.comment-container');
 			}
 		}} catch(e){}
 	},2000);
