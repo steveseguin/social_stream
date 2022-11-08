@@ -99,7 +99,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('#textchat-input textarea').focus();
+					document.querySelector('textarea.comment-sender_input').focus();
 					sendResponse(true);
 					return;
 				}
