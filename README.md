@@ -268,6 +268,12 @@ An example of one is available here: https://socialstream.ninja/themes/pretty.ht
 
 For anyone who wants to create a custom theme/style/template for their chat stream, you can share them via adding them to this repository as a Pull Request.
 
+#### Custom Javascript
+
+You can inject a bit of javascript into the dock or index pages using `&js={URL ENCODED JAVASCRIPT}`
+
+For example, 
+[https://socialstream.ninja/index.html?session=test123&js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js](https://socialstream.ninja/index.html?session=test123&js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js)
 
 #### Auto responding / custom actions
 
