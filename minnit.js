@@ -1,6 +1,16 @@
-(function () {
+(async function () {
 	try {
-	function toDataURL(blobUrl, callback) {
+	
+	
+	async function toDataURL(blobUrl) {
+		var res = null;
+		var rej = null;
+		var promise = new Promise((resolve, reject) => {
+			res = resolve;
+			rej = reject;
+		});
+		
+		
 		var xhr = new XMLHttpRequest;
 		xhr.responseType = 'blob';
 
@@ -10,11 +20,19 @@
 		   var reader = new FileReader;
 
 		   reader.onload = function() {
-			 callback(reader.result);
+			 res(reader.result);
 		   };
+		   
+		   reader.onerror = function(){
+			   rej(false);
+		   }
 
 		   reader.readAsDataURL(recoveredBlob);
 		};
+		
+		xhr.onerror = function(){
+			rej(false);
+		}
 
 		xhr.open('GET', blobUrl);
 		xhr.send();
@@ -22,7 +40,7 @@
 
 	console.log("social stream injected");
 	
-	function processMessage(ele){
+	async function processMessage(ele){
 		
 		if (ele.marked){return;}
 		ele.marked = true;
@@ -40,23 +58,68 @@
 		} catch(e){}
 		
 
-		var msg = "";
-		try {
-			msg = ele.querySelector(".msgTextOnly").innerText;
-		} catch(e){}
-		
-		if (msg){
-			msg = msg.trim();
+		var chatmessage="";
+		try{
+			if (textOnlyMode){
+				var eles = ele.querySelector(".msgTextOnly").childNodes;
+				for (var i = 0; i<eles.length; i++){
+					if (eles[i].nodeName == "#text"){
+						chatmessage += eles[i].textContent.trim();
+					} else if (!eles[i].classList.contains("minnit-tooltip")){
+						var emoji = eles[i].textContent.trim();
+						switch(emoji) {
+							case "(smile)":
+								chatmessage += "😀";
+								break;
+							case "(frown)":
+								chatmessage += "☹️";
+								break;
+							case "(biggrin)":
+								chatmessage += "😄";
+								break;
+							case "(mad)":
+								chatmessage += "😡";
+								break;
+							case "(cry)":
+								chatmessage += "😢";
+								break;
+							case "(love)":
+								chatmessage += "😍";
+								break; 
+							/// and whatever more you want to add
+							default:
+								break;
+						}
+					}
+				}
+			} else {
+				var eles = ele.querySelector(".msgTextOnly").childNodes;
+				for (var i = 0; i<eles.length; i++){
+					if (eles[i].querySelector && eles[i].querySelector("canvas")){ // converts the canvas into an actual image.
+						var png = eles[i].querySelector("canvas").toDataURL();
+						chatmessage += "<img src='"+png+"'/>";
+					} else if (eles[i].nodeName == "#text"){
+						chatmessage += eles[i].textContent.trim();
+					}
+				}
+			}
+		} catch(e){
+			console.error(e);
+			return;
 		}
 		
-		if (!msg){return;}
+		if (chatmessage){
+			chatmessage = chatmessage.trim();
+		}
+		
+		if (!chatmessage){return;}
 
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
-		data.chatmessage = msg;
+		data.chatmessage = chatmessage;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.hasMembership = "";;
@@ -141,7 +204,6 @@
 	
 
 	var timer = setInterval(function(){
-		console.log(".");
 		document.querySelectorAll('iframe').forEach( item =>{
 			
 			if (item && item.contentWindow.document.body.querySelector('#chat')){
