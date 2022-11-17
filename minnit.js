@@ -77,6 +77,18 @@
 							case "(biggrin)":
 								chatmessage += "😄";
 								break;
+							case "(eek)":
+								chatmessage += "😱";
+								break;
+							case "(tongue)":
+								chatmessage += "😝";
+								break;
+							case "(sleep)":
+								chatmessage += "😴";
+								break;
+							case "(biggrin)":
+								chatmessage += "😄";
+								break;
 							case "(mad)":
 								chatmessage += "😡";
 								break;
@@ -86,6 +98,147 @@
 							case "(love)":
 								chatmessage += "😍";
 								break; 
+							case "(love)":
+								chatmessage += "😍";
+								break; 
+							case "(xd)":
+								chatmessage += "😝";
+								break;
+							case "(sleep)":
+								chatmessage += "😴";
+								break;
+							case "(wink)":
+								chatmessage += "😉";
+								break;
+							case "(clap)":
+								chatmessage += "👏";
+								break;
+							case "(nod)":
+								chatmessage += "😌";
+								break; 
+							case "(smh)":
+								chatmessage += "😒";
+								break;
+							case "(evil)":
+								chatmessage += "🤪";
+								break;
+							case "(lol)":
+								chatmessage += "😂";
+								break;
+							case "(uncertain)":
+								chatmessage += "😐";
+								break;
+							case "(bye)":
+								chatmessage += "👋";
+								break; 
+							case "(smirk)":
+								chatmessage += "😏";
+								break;
+							case "(really)":
+								chatmessage += "😳";
+								break;
+							case "(sideeye)":
+								chatmessage += "🤨";
+								break;
+							case "(glare)":
+								chatmessage += "😠";
+								break;
+							case "(greed)":
+								chatmessage += "🤑";
+								break;
+							case "(confused)":
+								chatmessage += "😕";
+								break;
+							case "(meh)":
+								chatmessage += "😕";
+								break;
+							case "(dead)":
+								chatmessage += "😵";
+								break;
+							case "(groove)":
+								chatmessage += "🎶";
+								break;
+							case "(blush)":
+								chatmessage += "☺️";
+								break; 
+							case "(speechless)":
+								chatmessage += "😶";
+								break;
+							case "(ill)":
+								chatmessage += "🤮";
+								break;
+							case "(annoyed)":
+								chatmessage += "😡";
+								break;
+							case "(swear)":
+								chatmessage += "🤬";
+								break;
+							case "(emo)":
+								chatmessage += "😍";
+								break; 
+							case "(yum)":
+								chatmessage += "🤤";
+								break;
+							case "(bashful)":
+								chatmessage += "😌";
+								break;
+							case "(ticked)":
+								chatmessage += "😒";
+								break;
+							case "(kiss)":
+								chatmessage += "😘";
+								break;
+							case "(roll)":
+								chatmessage += "🙄";
+								break; 
+							case "(hug)":
+								chatmessage += "🤗";
+								break;
+							case "(party)":
+								chatmessage += "🥳";
+								break;
+							case "(awkward)":
+								chatmessage += "😬";
+								break;
+							case "(love)":
+								chatmessage += "😍";
+								break;
+							case "(whine)":
+								chatmessage += "😢";
+								break; 
+							case "(angel)":
+								chatmessage += "😇";
+								break;
+							case "(cool)":
+								chatmessage += "😎";
+								break;
+							case "(dealwithit)":
+								chatmessage += "😎";
+								break;
+							case "(dance)":
+								chatmessage += "💃";
+								break;
+							case "(thumbsup)":
+								chatmessage += "👍";
+								break; 
+							case "(thumbsdown)":
+								chatmessage += "👎";
+								break;
+							case "(heart)":
+								chatmessage += "❤️";
+								break;
+							case "(brokenheart)":
+								chatmessage += "💔";
+								break;
+							case "(wink)":
+								chatmessage += "😉";
+								break;
+							case "(cry)":
+								chatmessage += "😭";
+								break;
+							case "(xd)":
+								chatmessage += "😝";
+								break;
 							/// and whatever more you want to add
 							default:
 								break;
