@@ -86,7 +86,7 @@
 		}
 	});  /////
 
-	function onElementInserted(containerSelector, callback) {
+	function onElementInserted(target, callback) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
@@ -98,7 +98,7 @@
 				}
 			});
 		};
-		var target = document.querySelector(containerSelector);
+		
 		if (!target){return;}
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -106,7 +106,16 @@
 		observer.observe(target, config);
 	}
 	console.log("social stream injected");
-	onElementInserted("#messages-only", function(element){
-	  processMessage(element, false);
-	});
+	
+	var timer = setInterval(function(){
+		var target = document.querySelector("#messages-only, #messages-container");
+		if (target && !target.set123){
+			target.set123 = true;
+			onElementInserted(target, function(element){
+			  processMessage(element, false);
+			});
+		}
+	},1000);
+	
+	
 })();
