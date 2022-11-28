@@ -153,7 +153,6 @@
 				if (mutation.addedNodes.length) {
 					var xxx = mutation.addedNodes;
 					for (var i = 0; i< xxx.length; i++) {
-						console.log(xxx[i]);
 						try {
 							setTimeout(function(eee){callback(eee);},1000,xxx[i]);
 						} catch(e){}
@@ -177,20 +176,19 @@
 			   processMessage(element);
 			});
 		}
+		
+		if (remoteConnection && remoteConnection.datachannel){ // only poke ourselves if tab is hidden, to reduce cpu a tiny bit.
+			remoteConnection.datachannel.send("KEEPALIVE")
+		}
 	},1000);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
 	try {
 		var receiveChannelCallback = function(e){
 			remoteConnection.datachannel = event.channel;
-			remoteConnection.datachannel.onmessage = function(e){};;
-			remoteConnection.datachannel.onopen = function(e){};;
-			remoteConnection.datachannel.onclose = function(e){};;
-			setInterval(function(){
-				if (document.hidden){ // only poke ourselves if tab is hidden, to reduce cpu a tiny bit.
-					remoteConnection.datachannel.send("KEEPALIVE")
-				}
-			}, 800);
+			remoteConnection.datachannel.onmessage = function(e){};
+			remoteConnection.datachannel.onopen = function(e){};
+			remoteConnection.datachannel.onclose = function(e){};
 		}
 		var errorHandle = function(e){}
 		var localConnection = new RTCPeerConnection();
@@ -215,4 +213,42 @@
 	} catch(e){
 		console.log(e);
 	}
+	
+	 try {
+		window.onblur = null;
+		window.blurred = false;
+		document.hidden = false;
+		document.visibilityState = "visible";
+		document.mozHidden = false;
+		document.webkitHidden = false;
+	} catch(e){	}
+	
+	try {
+		document.hasFocus = function () {return true;};
+		window.onFocus = function () {return true;};
+
+		Object.defineProperty(document, "hidden", { value : false});
+		Object.defineProperty(document, "mozHidden", { value : false});
+		Object.defineProperty(document, "msHidden", { value : false});
+		Object.defineProperty(document, "webkitHidden", { value : false});
+		Object.defineProperty(document, 'visibilityState', { get: function () { return "visible"; } });
+	} catch(e){	}
+	
+	try {
+		document.onvisibilitychange = undefined;
+	} catch(e){	}
+
+	try {
+		for (event_name of ["visibilitychange",
+			"webkitvisibilitychange",
+			"blur", // may cause issues on some websites
+			"mozvisibilitychange",
+			"msvisibilitychange"]) {
+				try{
+					window.addEventListener(event_name, function(event) {
+						event.stopImmediatePropagation();
+					}, true);
+				} catch(e){}
+		}
+	} catch(e){	} 
 })();
