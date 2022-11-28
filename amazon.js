@@ -13,6 +13,8 @@
 	  xhr.responseType = 'blob';
 	  xhr.send();
 	}
+	
+	var imagenamelookup = {};
 
 	function processMessage(ele){
 
@@ -30,9 +32,7 @@
 		} catch(e){ }
 	  }
 	  
-	  if (chatimg){
-		  chatimg = chatimg.split("?")[0] + "?max_width=256&square=true";
-	  }
+	  
 	  var name = "";
 	  
 	  try{
@@ -46,6 +46,13 @@
 				 name = document.querySelector(".nav-shortened-name").innerText;
 			  }
 		  } catch(e){}
+	  }
+	  
+	  if (name && chatimg){
+			chatimg = chatimg.split("?")[0] + "?max_width=256&square=true";
+			imagenamelookup[name] = chatimg;
+	  } else if (name && imagenamelookup[name]){
+			chatimg = imagenamelookup[name];
 	  }
 	  
 	  var msg = ""; // TextMessage
@@ -162,7 +169,6 @@
 	}
 	console.log("social stream injected");
 	
-	
 	setInterval(function(){
 		var target = document.querySelector("[class*='chatContainer']");
 		if (target && !target.marked){
@@ -171,7 +177,42 @@
 			   processMessage(element);
 			});
 		}
-		
-	},3000);
-
+	},1000);
+	
+	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
+	try {
+		var receiveChannelCallback = function(e){
+			remoteConnection.datachannel = event.channel;
+			remoteConnection.datachannel.onmessage = function(e){};;
+			remoteConnection.datachannel.onopen = function(e){};;
+			remoteConnection.datachannel.onclose = function(e){};;
+			setInterval(function(){
+				if (document.hidden){ // only poke ourselves if tab is hidden, to reduce cpu a tiny bit.
+					remoteConnection.datachannel.send("KEEPALIVE")
+				}
+			}, 800);
+		}
+		var errorHandle = function(e){}
+		var localConnection = new RTCPeerConnection();
+		var remoteConnection = new RTCPeerConnection();
+		localConnection.onicecandidate = (e) => !e.candidate ||	remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.onicecandidate = (e) => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.ondatachannel = receiveChannelCallback;
+		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
+		localConnection.sendChannel.onopen = function(e){localConnection.sendChannel.send("CONNECTED");};
+		localConnection.sendChannel.onclose =  function(e){};
+		localConnection.sendChannel.onmessage = function(e){};
+		localConnection.createOffer()
+			.then((offer) => localConnection.setLocalDescription(offer))
+			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
+			.then(() => remoteConnection.createAnswer())
+			.then((answer) => remoteConnection.setLocalDescription(answer))
+			.then(() =>	{
+				localConnection.setRemoteDescription(remoteConnection.localDescription);
+				console.log("KEEP ALIVE TRICk ENABLED");
+			})
+			.catch(errorHandle);
+	} catch(e){
+		console.log(e);
+	}
 })();
