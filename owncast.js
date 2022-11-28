@@ -30,8 +30,12 @@
 	  } catch(e){}
 	  
 	  if (textOnlyMode){
-		  chatmessage = ele.querySelector(".message-text").innerText;
+		   try{
+				chatmessage = ele.querySelector(".message-text").innerText;
+		   } catch(e){}
 	  }
+	  
+	  if (!chatmessage && !hasDonation){return;}
 	  
 	  var chatimg = "";
 	  var chatdonation = "";

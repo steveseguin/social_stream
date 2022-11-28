@@ -68,7 +68,7 @@
 
 		var msg = "";
 		try {
-			msg = ele.querySelector('.ui-chat__message__content').innerText;
+			msg = ele.querySelector('.ui-chat__message__content, .ui-chat__messagecontent').innerText;
 		} catch(e){}
 		
 		if (msg){
