@@ -23,6 +23,8 @@
 		  var chatname = "";
 		  var chatimg = "";
 		  var nameColor = "";
+		  var memeber = false;
+		  var mod = false;
 		  
 		  var srcImg = ""; // what shows up as the source image; blank is default (dock decides).
 		  
@@ -32,8 +34,10 @@
 			
 			if (nameElement.classList.contains("member")){
 				nameColor = "#107516";
+				memeber = true;
 			} else if (nameElement.classList.contains("moderator")){
 				nameColor = "#5f84f1";
+				mod = true;
 			}
 			
 		  } catch(e){}
@@ -131,8 +135,12 @@
 				chatmessage = "<i>"+chatmembership+"</i>";
 			  }
 		  } else if (!chatmessage && giftedmemembership){
-			chatmessage = "<i>"+giftedmemembership.innerHTML+"</i>";
-			hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
+				chatmessage = "<i>"+giftedmemembership.innerHTML+"</i>";
+				hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
+		 // } else if (memeber){
+		//	  hasMembership = '<div class="membership">MEMEBER</div>'; // Just looks too green, and doesn't highlight those using special member options.
+		 // } else if (mod){
+		//	  hasMembership = '<div class="membership">MODERATOR</div>';
 		  }
 
 		  if (chatsticker) {

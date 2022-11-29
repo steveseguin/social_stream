@@ -329,6 +329,13 @@
 			height: 24px;
 			max-height: 24px;
 		}
+		
+		.hl-badge.svg {
+			vertical-align: middle;
+			object-fit: contain;
+			display:inline-block;
+			width: auto;
+		}
 
 		.notcompactmode>.highlight-chat>img.icon {
 			top: 0px;
@@ -1634,7 +1641,7 @@
 			}
 			return;
 		}
-		console.log(data);
+		
 		if (data.action){
 			if (data.action == "nextInQueue"){
 				nextInQueue();
@@ -2232,7 +2239,7 @@
 						if (badge.type && (badge.type=="img") && badge.src){
 							chatbadges += "<img class='hl-badge' src='"+badge.src+"' />";
 						} else if (badge.type && (badge.type=="svg") && badge.html){
-							chatbadges += "<span class='hl-badge'>"+badge.html+"</span>";
+							chatbadges += "<span class='hl-badge svg'>"+badge.html+"</span>";
 						}
 					} else {
 						chatbadges += "<img class='hl-badge' src='"+badge+"' />";

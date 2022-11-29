@@ -39,13 +39,11 @@
 				try {
 					chatimg = document.querySelector("profile-picture>.user-picture").src;
 				} catch(e){
-					console.error(e);
+					//console.error(e);
 				}
 			}
 				
 		}
-		
-		
 		
 		
         var name = "";
