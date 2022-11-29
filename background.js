@@ -741,7 +741,7 @@ function loadIframe(channel, pass=false){  // this is pretty important if you wa
 	if (!pass){
 		pass = "false";
 	}
-	iframe.src = "https://vdo.socialstream.ninja/?salt=vdo.ninja&password="+pass+"&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
+	iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+"&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
 	document.body.appendChild(iframe);
 }
 

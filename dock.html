@@ -7,9 +7,7 @@
 	<meta name="title" content="Social Stream - Dashboard" />
 	<link rel="icon" href="./icons/favicon.ico" />
 	
-
 	<style>
-	
 		:root {
 			--show-emoji-only: flex ;
 			--list-or-horizontal: flex;
@@ -30,10 +28,8 @@
 			--stylized-img: 23px;
 			--show-images: inline-block;
 			--fade-out-time: 20s;
-			
 			--comment-font-size: unset; 
 			--message-line-height: 22px;
-			
 			--author-font-size: 17px;
 		}
 	
@@ -875,6 +871,8 @@
 		return false;
 	};
 	
+	
+	
 	(function (w) {
 		w.URLSearchParams = w.URLSearchParams || function (searchString) {
 			var self = this;
@@ -890,6 +888,7 @@
 		};
 
 	})(window);
+	
 	var urlParams = new URLSearchParams(window.location.search);
 	var channel = null;
 	var counter = 0;
@@ -1664,9 +1663,9 @@
 		iframe = document.createElement("iframe");
 		
 		if (syncDocks){ // TODO: CHANGE THIS AWAY FROM alpha at some point
-			iframe.src = "https://vdo.socialstream.ninja/alpha/?salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
+			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
 		} else {
-			iframe.src = "https://vdo.socialstream.ninja/?salt=vdo.ninja&password="+password+"&view="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID;
+			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&view="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID;
 		}
 		iframe.style.width = "0px";
 		iframe.style.height = "0px";
