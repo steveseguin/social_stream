@@ -127,7 +127,10 @@ if (urlParams.has("api")){
 	window.history.pushState({path: newurl.toString()}, '', newurl.toString());
 	
 }
-
+var serverURL = "wss://api.overlay.ninja:443";
+if (urlParams.has("server")){
+	serverURL = urlParams.get("server") || serverURL;
+}
 
 var socket = null;
 var connecting = false;
@@ -145,7 +148,7 @@ function connect(){
 			socket.close();
 		} catch(e){}
 	}
-	socket = new WebSocket("wss://api.overlay.ninja:443");
+	socket = new WebSocket(serverURL);
 	
 	socket.onclose = function (){
 		failedCount+=1;
