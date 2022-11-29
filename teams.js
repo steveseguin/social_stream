@@ -35,11 +35,22 @@
 			chatimg = ele.querySelector('[data-tid="message-avatar"]').querySelector("img").src;
 		} catch(e){
 			
+			if (!chatimg){
+				try {
+					chatimg = document.querySelector("profile-picture>.user-picture").src;
+				} catch(e){
+					console.error(e);
+				}
+			}
+				
 		}
+		
+		
+		
 		
         var name = "";
 		if (ele.querySelector(".ui-chat__message__author")){
-		  name = ele.querySelector(".ui-chat__message__author").innerText;
+			name = ele.querySelector(".ui-chat__message__author").innerText;
 		} 
 
 		if (!chatimg){
