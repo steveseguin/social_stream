@@ -421,6 +421,17 @@ If the auto responder doesn't work -- you see a blue bar, but nothing happens, t
 ![image](https://user-images.githubusercontent.com/2575698/196629133-6c06fedb-9f22-40aa-8031-d7f4c681ad95.png)
 
 
+- If the chat capture stops when you minimize or hide a browser window, disable background throttling within your browser. Instructions as follows:
+```
+Go to chrome://flags/ (That's a real URL in Chrome, Edge, Brave, and others)
+
+In the search, type "throttle"
+
+You're going to get 3 options, the two labeled "Throttle Javascript timers in background" and "Calculate window occlusion on Windows", probably set as "default" right now, turn them to "disabled"
+
+In the bottom right corner, hit relaunch to relaunch chrome with new settings. Throttling should pause browser tabs or windows when occluded or minimized.
+```
+
 - Try refreshing the chat page; sometimes refreshing the page will retrigger the code and bypass any errors. This is particularly try if you install or refresh the extension after the chat page has already been loaded.
 
 - Try to keep the chat window and dock page active and if possible, even partially visible on screen. If the windows are hidden or minimized, they may stop working. This is also true if the scroll bar for the chat window is not at the bottom; sometimes messages won't load unless you are seeing the newest messages.
