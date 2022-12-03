@@ -48,7 +48,7 @@
         }
       }
     }
-    chatname = chatname.replace(/(‹.*?›)/g, "");
+    chatname = chatname.match(/‹(.+)›/) ? chatname.match(/‹(.+)›/)[1] : chatname;
 
     var data = {};
     data.chatname = chatname;
