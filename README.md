@@ -56,6 +56,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - omlet.gg (no pop out chat needed; just https://oblet.gg/stream/xxxxx)
 - piczel.tv (pop out chat @ https://piczel.tv/chat/xxxxxxxxx)
 - bilibili.tv added (just regular view page /w chat; no pop out)
+- Amazon Chime (https://app.chime.aws/meetings/xxxxxxxxx)
 
 More on request
 
