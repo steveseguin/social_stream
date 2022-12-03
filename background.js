@@ -412,6 +412,13 @@ chrome.runtime.onMessage.addListener(
 							}
 						} catch(e){}
 					}
+					if (!settings.chime){
+						try {
+							if (request.message.type == "chime"){
+								return;
+							}
+						} catch(e){}
+					}
 					if (!settings.telegram){
 						try {
 							if (request.message.type == "telegram"){
