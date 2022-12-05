@@ -658,6 +658,10 @@
 				max-width: 70px;
 			}
 		}
+		
+		.last-message{
+			border: 3px white solid;
+		}
 		.pressed {
 			background-color: #9C9C !important;
 		}
@@ -1906,11 +1910,6 @@
 			element = this;
 		}
 		
-		if (event && element.classList.contains("last-message")) { // Message is already featured! 
-			element.classList.remove("last-message", "pressed"); // remove classes
-			sendDataP2P(false);	// clear message
-			return;
-		}
 		
 		if (event && (event.ctrlKey || event.metaKey)) {
 			if (element.classList.contains("queued")){
@@ -1939,7 +1938,17 @@
 			return;
 		}
 		
+		if (event && element.classList.contains("last-message")) { // Message is already featured! 
+			element.classList.remove("last-message"); // remove classes
+			sendDataP2P(false);	// clear message
+			return;
+		}
+		document.querySelectorAll(".last-message").forEach(ele=>{ // last message sent was to clear the overlay
+			ele.classList.remove("last-message"); // no overlay is now active.
+		});
 		element.classList.add("pressed", "last-message"); // add last-message class
+		
+		
 		var data = element.rawContents;
 		if (data.type && (data.type == "twitch") && !data.chatimg){
 			var ccc = data.counter;
@@ -2662,6 +2671,12 @@
 	}
 	
 	function sendDataP2P(data){
+	
+		if (!data){
+			document.querySelectorAll(".last-message").forEach(ele=>{ // last message sent was to clear the overlay
+				ele.classList.remove("last-message"); // no overlay is now active.
+			});
+		}
 		try {
 			if (socketserver){
 				socketserver.send(JSON.stringify(data));
