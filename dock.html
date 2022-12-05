@@ -874,7 +874,7 @@
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
 		console.error(errorMsg);
 		console.error(lineNumber);
-		console.error("Unhandeled Error occured"); //or any message
+		console.error("Unhandled Error occured"); //or any message
 		return false;
 	};
 	
@@ -1905,6 +1905,13 @@
 		if (!element){
 			element = this;
 		}
+		
+		if (event && element.classList.contains("last-message")) { // Message is already featured! 
+			element.classList.remove("last-message", "pressed"); // remove classes
+			sendDataP2P(false);	// clear message
+			return;
+		}
+		
 		if (event && (event.ctrlKey || event.metaKey)) {
 			if (element.classList.contains("queued")){
 				removeQueue(element);
@@ -1932,7 +1939,7 @@
 			return;
 		}
 		
-		element.classList.add("pressed");
+		element.classList.add("pressed", "last-message"); // add last-message class
 		var data = element.rawContents;
 		if (data.type && (data.type == "twitch") && !data.chatimg){
 			var ccc = data.counter;
