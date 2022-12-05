@@ -874,7 +874,7 @@
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
 		console.error(errorMsg);
 		console.error(lineNumber);
-		console.error("Unhandeled Error occured"); //or any message
+		console.error("Unhandled Error occured"); //or any message
 		return false;
 	};
 	
@@ -1905,6 +1905,12 @@
 		if (!element){
 			element = this;
 		}
+		
+		if (event && element.classList.contains("pressed")) {
+			// Message is already featured, don't do anything at all!
+			return;
+		}
+		
 		if (event && (event.ctrlKey || event.metaKey)) {
 			if (element.classList.contains("queued")){
 				removeQueue(element);
