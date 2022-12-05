@@ -1906,8 +1906,9 @@
 			element = this;
 		}
 		
-		if (event && element.classList.contains("pressed")) {
-			// Message is already featured, don't do anything at all!
+		if (event && element.classList.contains("last-message")) { // Message is already featured! 
+			element.classList.remove("last-message", "pressed"); // remove classes
+			sendDataP2P(false);	// clear message
 			return;
 		}
 		
@@ -1938,7 +1939,7 @@
 			return;
 		}
 		
-		element.classList.add("pressed");
+		element.classList.add("pressed", "last-message"); // add last-message class
 		var data = element.rawContents;
 		if (data.type && (data.type == "twitch") && !data.chatimg){
 			var ccc = data.counter;
