@@ -34,7 +34,7 @@
 		var chatimg = "";
 
 		try{
-			chatname = ele.children[1].children[1].children[1].children[0].dataset.prePlainText
+			chatname = ele.children[1].children[1].children[0].children[0].textContent;
 			if (chatname.split("] ").length>1){
 				chatname = chatname.split("] ")[1];
 			}
@@ -92,6 +92,20 @@
 			}
 		}
 
+
+		try{
+			if (!chatname){
+				chatname = ele.children[1].children[1].children[0].children[0].textContent;
+				if (chatname.split("] ").length>1){
+					chatname = chatname.split("] ")[1];
+				}
+				chatname = chatname.split(":")[0];
+				chatname = chatname.trim();
+			}
+		} catch(e){
+			chatname = "";
+		}
+		
 		if (!textOnlyMode){
 			try {
 				chatmessage = ele.querySelector(".selectable-text.copyable-text");
@@ -118,10 +132,7 @@
 		} else {
 			try {
 				chatmessage = ele.querySelector(".selectable-text.copyable-text").innerText;
-				//console.log(chatmessage);
 			} catch(e){
-			//	console.error(e);
-				return;
 			}
 		}
 		
@@ -139,7 +150,7 @@
 		data.hasMembership = "";
 		data.type = "whatsapp";
 		
-		//console.log(data);
+		console.log(data);
 	  
 		if (data.chatimg && avatars){
 			toDataURL(data.chatimg, function(dataUrl) {
@@ -211,21 +222,13 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							if (mutation.addedNodes[i].dataset.id) {
-								//console.log(mutation.addedNodes[i]);
-								if (mutation.addedNodes[i].set123){continue;}
-								mutation.addedNodes[i].set123 = true;
-								//console.log(mutation.addedNodes[i]);
-								setTimeout(function(ele){
-									callback(ele);
-								}, 300, mutation.addedNodes[i]);
-							} else{
-								//console.warn(mutation.addedNodes[i]);
-							}
-						} catch(e){}
-					}
+					document.querySelector("#main").querySelectorAll("[data-id]:not([data-set123])").forEach((xx)=>{
+						xx.dataset.set123 = true;
+						console.log(xx);
+						setTimeout(function(ele){
+							callback(ele);
+						}, 300, xx); // give it time to load fully
+					});
 				}
 			});
 		};
@@ -244,13 +247,16 @@
 		if (ele && !ele.started){
 			ele.started = true;
 			
-			ele.querySelectorAll("[data-id]").forEach(ele=>{
-				ele.set123 = true;
-			});
-			
-			onElementInserted(ele, function(element){
-				processMessage(element);
-			});
+			setTimeout(function(ele){
+				if (ele){
+					document.querySelector("#main").querySelectorAll("[data-id]:not([data-set123])").forEach((xx)=>{
+						xx.dataset.set123 = true;
+					});
+					onElementInserted(ele, function(element){
+						processMessage(element);
+					});
+				}
+			}, 2000, ele);
 		}
 		
 	},1000);
