@@ -434,6 +434,14 @@ chrome.runtime.onMessage.addListener(
 						} catch(e){}
 					}
 					
+					if (!settings.instagram){
+						try {
+							if (request.message.type == "instagram"){ // "instagram live" is allowed still, just not comments
+								return;
+							}
+						} catch(e){}
+					}
+					
 					if (request.message.type == "youtube"){
 						if (sender.tab.url){
 							var brandURL = getYoutubeAvatarImage(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
