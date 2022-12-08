@@ -68,6 +68,18 @@
 		if (msg){
 			msg = msg.trim();
 		}
+		
+		var brandedImg = document.querySelector(".media-by-wrap .user-image");
+		if (brandedImg){
+			try {
+				brandedImg = getComputedStyle(document.querySelector(".media-by-wrap .user-image")).backgroundImage
+				brandedImg = "https://"+brandedImg.split("https://")[1];
+				brandedImg = brandedImg.split('")')[0];
+			} catch(e){
+				console.error(e);
+				brandedImg = "";
+			}
+		}
 
 		var data = {};
 		data.chatname = name;
@@ -81,13 +93,28 @@
 		data.contentimg = "";
 		data.type = "rumble";
 		
-		if (data.chatimg){
-			toDataURL(data.chatimg, function(dataUrl) {
-				data.chatimg = dataUrl;
-				pushMessage(data);
+		if (brandedImg){
+			data.sourceImg = brandedImg;
+			toDataURL(data.sourceImg, function(dataUrl) {
+				data.sourceImg = dataUrl;
+				if (data.chatimg){
+					toDataURL(data.chatimg, function(dataUrl) {
+						data.chatimg = dataUrl;
+						pushMessage(data);
+					});
+				} else {
+					pushMessage(data);
+				}
 			});
 		} else {
-			pushMessage(data);
+			if (data.chatimg){
+				toDataURL(data.chatimg, function(dataUrl) {
+					data.chatimg = dataUrl;
+					pushMessage(data);
+				});
+			} else {
+				pushMessage(data);
+			}
 		}
 	}
 
