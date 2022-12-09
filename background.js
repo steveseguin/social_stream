@@ -28,9 +28,15 @@ var properties = ["streamID", "password", "isExtensionOn", "settings"];
 var channel = generateStreamID();
 var password = false;
 
-chrome.storage.sync.get(properties, function(item){
+function loadSettings(item, resave=false){
 	if (item && item.streamID){
 		channel = item.streamID;
+		if (resave){
+			chrome.storage.sync.set({
+				streamID: channel
+			});
+			chrome.runtime.lastError;
+		}
 	} else {
 		chrome.storage.sync.set({
 			streamID: channel
@@ -39,6 +45,14 @@ chrome.storage.sync.get(properties, function(item){
 	}
 	if (item && ("password" in item)){
 		password = item.password;
+		
+		if (resave){
+			chrome.storage.sync.set({
+				password: password
+			});
+			chrome.runtime.lastError;
+		}
+		
 	} else {
 		chrome.storage.sync.set({
 			password: password
@@ -47,6 +61,13 @@ chrome.storage.sync.get(properties, function(item){
 	}
 	if (item && item.settings){
 		settings = item.settings;
+		
+		if (resave){
+			chrome.storage.sync.set({
+				settings: settings
+			});
+			chrome.runtime.lastError;
+		}
 	} else {
 		chrome.storage.sync.set({
 			settings: settings
@@ -58,6 +79,13 @@ chrome.storage.sync.get(properties, function(item){
 		chrome.browserAction.setIcon({path: "/icons/on.png"});
 		if (iframe==null){
 			loadIframe(channel, password);
+		}
+		
+		if (resave){
+			chrome.storage.sync.set({
+				isExtensionOn: isExtensionOn
+			});
+			chrome.runtime.lastError;
 		}
 	}  else {
 		chrome.storage.sync.set({
@@ -72,7 +100,11 @@ chrome.storage.sync.get(properties, function(item){
 			loadSentimentAnalysis();
 		}
 	}
-	
+}
+
+
+chrome.storage.sync.get(properties, function(item){
+	loadSettings(item);
 });
 
 chrome.browserAction.setIcon({path: "/icons/off.png"});
@@ -223,7 +255,40 @@ async function overwriteFileExcel(data=false) {
 	}
 }
 
+async function exportSettings(){
+	chrome.storage.sync.get(properties, async function(item){
+		 const opts = {
+			types: [{
+			  description: 'Data file',
+			  accept: {'application/data': ['.data']},
+			}],
+		  };
+  
+		fileExportHandler = await window.showSaveFilePicker(opts);
+		
+		const writableStream = await fileExportHandler.createWritable();
+		await writableStream.write(JSON.stringify(item));
+		await writableStream.close();
+		
+	})
+}
 
+async function importSettings(item){
+	const opts = {
+		types: [{
+		  description: 'JSON file',
+		  accept: {'text/plain': ['.data']},
+		}],
+	  };
+	var importFileHandler = await window.showOpenFilePicker();
+	try {
+		var importFile = await importFileHandler[0].getFile();
+		importFile = await importFile.text();
+		loadSettings(JSON.parse(importFile));
+	} catch(e){
+		alert("File does not contain a valid JSON structure");
+	}
+}
 
 
 var Url2ChannelImg = {};
@@ -470,15 +535,25 @@ chrome.runtime.onMessage.addListener(
 				tellAJoke();
 				sendResponse({"state":isExtensionOn});
 			} else if (request.cmd && request.cmd === "singlesave") {
+				sendResponse({"state":isExtensionOn});	
 				overwriteFile("setup");
 			} else if (request.cmd && request.cmd === "excelsave") {
+				sendResponse({"state":isExtensionOn});	
 				overwriteFileExcel("setup");
 			} else if (request.cmd && request.cmd === "loadmidi") {
 				await loadmidi(sendResponse);
 				sendResponse({"settings":settings});
+			} else if (request.cmd && request.cmd === "export") {
+				sendResponse({"state":isExtensionOn});	
+				await exportSettings();
+			} else if (request.cmd && request.cmd === "import") {
+				sendResponse({"state":isExtensionOn});	
+				await importSettings();
 			} else if (request.cmd && request.cmd === "excelsaveStop") {
+				sendResponse({"state":isExtensionOn});	
 				newFileHandleExcel = false;
 			} else if (request.cmd && request.cmd === "fakemsg") {
+				sendResponse({"state":isExtensionOn});	
 				var data = {};
 				data.chatname = "John Doe";
 				data.nameColor = "";

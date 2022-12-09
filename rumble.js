@@ -19,7 +19,8 @@
 		var chatimg = "";
 		if (ele.querySelector('.chat--profile-pic')){
 			try {
-				chatimg = document.querySelector('.chat--profile-pic').style.backgroundImage.split('"')[1];
+				//chatimg = ele.querySelector('.chat--profile-pic').style.backgroundImage.split('"')[1];
+				//chatimg = chatimg.split('"')[0];
 			} catch(e){}
 		}
 		
