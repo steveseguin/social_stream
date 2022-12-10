@@ -115,7 +115,7 @@
 		  
 		  if (!chatmessage){
 			  try {
-				var eleContent = ele.querySelector(".chat-line__message-container").querySelector('span[data-test-selector="chat-message-separator"]');
+				var eleContent = ele.querySelector(".chat-line__message-container .chat-line__username-container").nextElementSibling.nextElementSibling;
 				chatmessage = getAllContentNodes(eleContent);
 				
 				eleContent = eleContent.nextElementSibling;
