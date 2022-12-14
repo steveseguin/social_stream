@@ -31,6 +31,7 @@
 			--comment-font-size: unset; 
 			--message-line-height: 22px;
 			--author-font-size: 17px;
+			--electron-drag-fix: drag;
 		}
 	
 		/*
@@ -141,7 +142,6 @@
 			background-color: var(--background-color);
 			text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
 			overflow-x: hidden;
-			-webkit-app-region: drag;
 			scrollbar-color:#666 #201c29;
 		}
 
@@ -162,9 +162,6 @@
 
 		body > div {
 			 -webkit-app-region: no-drag;
-		}
-		body > div > #menu {
-			 -webkit-app-region: drag;
 		}
 		
 		body.lightmode {
@@ -847,14 +844,16 @@
 			 animation: swiperight 1s, fadein 1s, fadeout var(--fade-out-time);
 		}
 		
-		
+		.electronDraggable {
+			-webkit-app-region: var(--electron-drag-fix);
+		}
 		
 	</style>
 </head>
-<body >
+<body class='electronDraggable'>
 	<div id="pinned" class="output notcompactmode"></div>
 	<div id="output" class="output notcompactmode"></div>
-	<div id="menu">
+	<div id="menu" class="electronDraggable">
 		<button id="select_save_file" data-state="0" onclick="overwriteFile('setup');" title="Select the file you wish to save the most recent message to" class="green hidden">💾 Set Save File Location</button>
 		<button id="next_in_queue" data-state="0" onclick="nextInQueue();" title="Hold CTRL when selecting messages to add them to the queue instead" class="hidden blue">Next in Queue</button>
 		<button id="show_only_queue" data-state="0" onclick="filterQueued(this);" title="Show only the messages in queue" class="hidden">Show Only Queued</button>
@@ -936,6 +935,25 @@
 	var horizontal = false;
 	
 	var encode = false;
+	
+	try{
+		if (electronApi){ // fix for electron dragging.
+			document.body.style.width = "95%";
+			setTimeout(function(){
+				document.body.style.width = "100%";
+			},1000);
+			
+			setTimeout(function(){
+				document.body.style.width = "98%";
+			},2000);
+			
+			setTimeout(function(){
+				document.body.style.width = "100%";
+			},5000);
+		}
+	} catch(e){
+		console.error(e);
+	}
 	
 	var timeoutDelay = 0;
 	if (urlParams.has("showtime")){

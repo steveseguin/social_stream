@@ -159,7 +159,7 @@ function checkVersion(){
 			if ("version" in data){
 				if (manifestData.version !== data.version){
 					document.getElementById("newVersion").classList.add('show')
-					document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' href='https://github.com/steveseguin/social_stream/'>new version available</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span>`;
+					document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' style='text-decoration: underline;' title="Download the latest version as a zip" href='https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip'>new version available</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span><a title="See the list of recent code changes" href="https://github.com/steveseguin/social_stream/commits/main" target='_blank' style='text-decoration: underline;'>[change log]</a>`;
 				} else {
 					document.getElementById("newVersion").classList.remove('show')
 					document.getElementById("newVersion").innerHTML = "";
