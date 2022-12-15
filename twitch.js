@@ -241,37 +241,40 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						var textBody = mutation.addedNodes[i].innerText;
-						mutation.addedNodes[i].querySelectorAll("img[alt]").forEach(ttt=>{
-							textBody += ttt.getAttribute("alt");
-						});
-						
-						//console.log(textBody);
-						
-						if (textBody && (textBody === lastMessage)){
-							mutation.addedNodes[i].ignore = true;
-							continue;
-						} else if (!textBody){
-							continue;
-						}
-						
-						lastMessage = textBody;
-						
-						if (mutation.addedNodes[i].ignore){continue;}
-						
-						if (mutation.addedNodes[i].className && mutation.addedNodes[i].classList.contains(className)) {
-							callback(mutation.addedNodes[i]);
-							mutation.addedNodes[i].ignore=true;
-						} else {
-							try{
-								var childEle = mutation.addedNodes[i].querySelector("."+className);
-								if (childEle){
-									callback(childEle);
-									mutation.addedNodes[i].ignore=true;
-									childEle.ignore=true;
-								}
-							} catch(e){}
-						}
+						try {
+							var textBody = mutation.addedNodes[i].innerText;
+							
+							if (mutation.addedNodes[i].querySelectorAll){
+								mutation.addedNodes[i].querySelectorAll("img[alt]").forEach(ttt=>{
+									textBody += ttt.getAttribute("alt");
+								});
+							}
+							
+							if (textBody && (textBody === lastMessage)){
+								mutation.addedNodes[i].ignore = true;
+								continue;
+							} else if (!textBody){
+								continue;
+							}
+							
+							lastMessage = textBody;
+							
+							if (mutation.addedNodes[i].ignore){continue;}
+							
+							if (mutation.addedNodes[i].className && mutation.addedNodes[i].classList.contains(className)) {
+								callback(mutation.addedNodes[i]);
+								mutation.addedNodes[i].ignore=true;
+							} else {
+								try{
+									var childEle = mutation.addedNodes[i].querySelector("."+className);
+									if (childEle){
+										callback(childEle);
+										mutation.addedNodes[i].ignore=true;
+										childEle.ignore=true;
+									}
+								} catch(e){}
+							}
+						} catch(e){}
 					}
 				}
 			});
