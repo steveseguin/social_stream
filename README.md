@@ -60,6 +60,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - Amazon Chime (https://app.chime.aws/meetings/xxxxxxxxx)
 - Locals.com (no pop out needed)
 - Nimo.TV (pop out chat, ie: https://www.nimo.tv/popout/chat/xxxx)
+- kick.com (pop out chat)
 
 More on request
 
