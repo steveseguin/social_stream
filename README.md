@@ -332,6 +332,12 @@ Lastly, please note that you will need to enable the MIDI option in the menu opt
 
 ### Server API support
 
+You can send messages to Social Stream via the hosted server ingest API, and you can also send messages from Social Stream to remote third-parties. 
+
+So if you can a donation webhook, you can push those notifications to Social Stream. You can also use a third-party service to overlay messages captured by Social Stream. More below.
+
+#### Social Streams server API (ingest and clear messages via remote request)
+
 If using the MIDI API isn't something you can use, you can also check out the hosted API service to send messages to SocialStream, which will be redirected to your social live chat sites.  This API works with a Stream Deck or custom applications.
 
 This API end point supports WSS, HTTPS GET, and HTTP POST (JSON).  Support for this API must be toggled on in the menu settings (or by adding `&server` to the dock.html page).
@@ -348,6 +354,31 @@ More functionality can be added on request.
 
 ![image](https://user-images.githubusercontent.com/2575698/189367779-67969f47-a305-4347-9a37-053b33479602.png)
 
+#### Remote server API support (publish messages to third parties)
+
+Remote API support is available via dock page, configured by URL parameters. In the future, some support can be added to the extension itself directly, so no dock page needs to be open.  You can currently auto-publish messages via the dock with the &autoshow parameter, but otherwise messages will be issues to the remote API only when a message is selected manually.
+
+For some images provided in the outgoing data-structure, the assumed host location for certain files/images, if none provided, should be `https://socialstream.ninja/`.
+
+More destinations available on request.
+
+##### Singular Live
+`&singular=XXXXXXX` will send selected messages to singular live for featured message overlay.  The target address will be: `https://app.singular.live/apiv1/datanodes/XXXXXXX/data`
+
+##### H2R
+`&h2r=XXXXXXX` will send selected messages to local H2R server using its POST data structure. The target address will be: `"http://127.0.0.1:4001/data/XXXXXXX`
+
+You can manually set a custom H2R URL though with `&h2rurl` though, which will override the default one.
+
+##### Generic POST / PUT
+
+A generic JSON-POST can be made using `&postserver`, with the address provided
+`&postserver=https://domain.com/input-source`
+
+A generic JSON-PUT can be made using `&putserver`, with the address provided. There isn't much difference between POST and PUT, but some sites are picky.
+`&putserver=https://domain.com/input-source`
+
+In these cases, the JSON being delivered is in the Social Stream data-structure.
 
 ### Text to speech
 
