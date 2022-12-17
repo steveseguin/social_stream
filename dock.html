@@ -952,7 +952,7 @@
 			},5000);
 		}
 	} catch(e){
-		console.error(e);
+		//console.error(e);
 	}
 	
 	var timeoutDelay = 0;
@@ -1384,14 +1384,16 @@
 		thirdPartyAPI = function (data){
 			ajax(data, postServer, "PUT");
 		};
-	} else if (urlParams.has("h2r")){
+	} else if (urlParams.has("h2r") || urlParams.has("h2rurl")){
 		
 		postServer = "http://127.0.0.1:4001/data/";
-		if (urlParams.has("h2rurl")){
-			postServer = urlParams.get("h2rurl");
-		}
 		
-		postServer = postServer + (urlParams.get("h2r") || "socialstream"); 
+		if (urlParams.has("h2rurl")){
+			postServer = urlParams.get("h2rurl") || postServer;
+		}
+		if (urlParams.has("h2r")){
+			postServer = postServer + urlParams.get("h2r");
+		}
 		thirdPartyAPI = function (data){
 			var h2r = {};
 			h2r.messages = [];
@@ -1405,7 +1407,7 @@
 			h2r.messages.push(msg);
 			ajax(h2r, postServer, "POST");
 		};
-	}
+	} 
 	
 	function ajax(object2send, url, ajaxType="PUT"){
 		  var xhttp = new XMLHttpRequest();
