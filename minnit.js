@@ -1,7 +1,6 @@
 (async function () {
 	try {
 	
-	
 	async function toDataURL(blobUrl) {
 		var res = null;
 		var rej = null;
@@ -288,6 +287,7 @@
 		} catch(e){}
 	}
 	var listener = false;
+	var keepAlive = null;
 	
 	function startListener(){
 		if (listener){return;}
@@ -300,6 +300,7 @@
 							var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#textbox");
 							if (ele){
 								ele.focus();
+								ele.innerHTML = "";
 								sendResponse(true);
 								return;
 							} 
@@ -322,7 +323,21 @@
 				sendResponse(false);
 			}
 		);
+		clearInterval(keepAlive);
+		keepAlive = setInterval(function(){
+			console.log("KEEP ALIVE");
+			chrome.runtime.sendMessage(chrome.runtime.id, { "keepAlive": true }, function(response){});
+		},3000000);
 	}
+	
+	document.onkeydown = function(){
+		clearInterval(keepAlive);
+		keepAlive = setInterval(function(){
+			console.log("KEEP ALIVE");
+			chrome.runtime.sendMessage(chrome.runtime.id, { "keepAlive": true }, function(response){});
+		},3000000);
+	};
+
 	
 	var textOnlyMode = false;
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}

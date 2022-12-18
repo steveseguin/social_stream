@@ -531,6 +531,12 @@ chrome.runtime.onMessage.addListener(
 				}
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				sendResponse({"settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
+			} else if ("keepAlive" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+				var action = {};
+				action.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from 
+				action.response = ""; // empty response, as we just want to keep alive
+				processResponse(action);
+				sendResponse({"state":isExtensionOn});
 			} else if (request.cmd && request.cmd === "tellajoke") {
 				tellAJoke();
 				sendResponse({"state":isExtensionOn});
