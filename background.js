@@ -523,10 +523,10 @@ chrome.runtime.onMessage.addListener(
 					
 					if (settings.firstsourceonly){
 						if (verifyOriginal(request.message)){
-							sendDataP2P(request.message); // send the data to the dock
+							sendToDestinations(request.message); // send the data to the dock
 						}
 					} else {
-						sendDataP2P(request.message);
+						sendToDestinations(request.message); // send the data to the dock
 					}
 				}
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
@@ -610,8 +610,8 @@ chrome.runtime.onMessage.addListener(
 					data.hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
 				}
 				data.type = "youtube";
-				data = await applyBotActions(data); // perform any immediate actions
-				sendDataP2P(data);
+				data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
+				sendToDestinations(data);
 				
 			} else if (request.cmd && request.cmd === "sidUpdated") {
 				if (request.streamID){
@@ -749,8 +749,79 @@ function verifyOriginal(msg){
 	return true;
 }
 
+function ajax(object2send, url, ajaxType="PUT"){
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+	if (this.readyState == 4 && this.status == 200) {
+		// success
+	} else {
+		console.error("there was an error sending to the API");
+	}
+	};
+	xhttp.open(ajaxType, url, true); // async = true
+	xhttp.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+	xhttp.send(JSON.stringify(object2send));
+}
 
-//
+var messageCounter = 0;
+function sendToDestinations(message){
+	
+	if (typeof message == "object"){
+		messageCounter+=1;
+		message.id = messageCounter;
+	}
+	
+	sendDataP2P(message);
+	sendToDisk(message);
+	sendToH2R(message);
+}
+
+function sendToH2R(data){
+	
+	if (settings.h2r && settings.h2rserver && settings.h2rserver.textsetting){
+		try {
+			var postServer = "http://127.0.0.1:4001/data/";
+
+			if (settings.h2rserver.textsetting.startsWith("http")){ // full URL provided
+				postServer = settings.h2rserver.textsetting;
+			} else if (settings.h2rserver.textsetting.startsWith("127.0.0.1")){ // missing the HTTP, so assume what they mean
+				postServer = "http://"+settings.h2rserver.textsetting;
+			} else {
+				postServer += settings.h2rserver.textsetting; // Just going to assume they gave the token
+			}
+				
+			var msg = {};
+			
+			if ("id" in data){
+				msg.id = data.id;
+			}
+			
+			if (data.timestamp){
+				msg.timestamp = data.timestamp;
+			}
+			
+			msg.snippet = {};
+			msg.snippet.displayMessage = data.chatmessage || "";
+			
+			msg.authorDetails = {};
+			msg.authorDetails.displayName = data.chatname || "";
+			msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+			
+			if (data.type){
+				msg.platform = {};
+				msg.platform.name = data.type || "";
+				msg.platform.logoUrl = "https://socialstream.ninja/"+data.type+".png";
+			}
+			
+			var h2r = {};
+			h2r.messages = [];
+			h2r.messages.push(msg);
+			ajax(h2r, postServer, "POST");
+		} catch(e){
+			console.warn(e);
+		}
+	}
+}
 
 var allowSocketServer = false;
 var socketserver = false;
@@ -799,18 +870,16 @@ function setupSocket(){
 }
 
 
-var messageCounter = 0;
+
 function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Ninja API
 	var msg = {};
-	if (typeof data == "object"){
-		messageCounter+=1;
-		data.id = messageCounter;
-	}
 	msg.overlayNinja = data;
 	try {
 		iframe.contentWindow.postMessage({"sendData":msg, "type": "pcs"}, '*'); // send only to 'viewers' of this stream
 	} catch(e){}
-	
+}
+
+function sendToDisk(data){
 	if (newFileHandle){
 		try {
 			if (typeof data == "object"){
@@ -1131,7 +1200,7 @@ function midiHotkeysCommand(number, value){ // MIDI control change commands
 		tellAJoke();
 	} else if (number == 102 && value == 4){
 		var msg = {};
-		msg.forward = false;
+		msg.forward = false; // clears our featured chat overlay
 		sendDataP2P(msg);
 	} else if (number == 102){
 		if (settings.midiConfig && ((value+"") in settings.midiConfig)){

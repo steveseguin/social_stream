@@ -901,7 +901,6 @@
 	
 	var urlParams = new URLSearchParams(window.location.search);
 	var channel = null;
-	var counter = 0;
 	var iframe = null;
 	var queue = [];
 	var selectedQueue = [];
@@ -1395,15 +1394,34 @@
 			postServer = postServer + urlParams.get("h2r");
 		}
 		thirdPartyAPI = function (data){
+			
+			var msg = {};
+			
+			if ("id" in data){
+				msg.id = data.id;
+			}
+			
+			if (data.timestamp){
+				msg.timestamp = data.timestamp;
+			} else {
+				msg.timestamp = Date.now();
+			}
+			
+			msg.snippet = {};
+			msg.snippet.displayMessage = data.chatmessage || "";
+			
+			msg.authorDetails = {};
+			msg.authorDetails.displayName = data.chatname || "";
+			msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+			
+			if (data.type){
+				msg.platform = {};
+				msg.platform.name = data.type;
+				msg.platform.logoUrl = "https://socialstream.ninja/"+data.type+".png";
+			}
+			
 			var h2r = {};
 			h2r.messages = [];
-			var msg = {};
-			msg.id = data.counter;
-			msg.snippet = {};
-			msg.snippet.displayMessage = data.chatmessage;
-			msg.authorDetails = {};
-			msg.authorDetails.displayName = data.chatname;
-			msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
 			h2r.messages.push(msg);
 			ajax(h2r, postServer, "POST");
 		};
@@ -1863,9 +1881,7 @@
 	}
 	
 	function processHTML(data){
-		//counter+=1;
-		//data.counter = counter;
-		//var node = createElementFromHTML('<div id="msg_'+counter+'" class="highlight-chat">'+ data.html+'</div>')
+		//var node = createElementFromHTML('<div id="msg_'+data.id+'" class="highlight-chat">'+ data.html+'</div>')
 		//mainOutputWindow.appendChild(node);
 	}
 	
@@ -2002,7 +2018,7 @@
 		
 		var data = element.rawContents;
 		if (data.type && (data.type == "twitch") && !data.chatimg){
-			var ccc = data.counter;
+			var ccc = data.id;
 			var imgnode = document.getElementById("img_"+ccc);
 			
 			fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username="+encodeURIComponent(data.chatname), {
@@ -2146,6 +2162,7 @@
 	
 	
 	function processData(data){
+		//console.log(data);
 		if (data.contents){
 			data = data.contents;
 			
@@ -2248,25 +2265,21 @@
 				data.chatmessage = "";
 			}
 			
-			counter+=1;
-			data.counter = counter;
-			
-			
 			var chatImg = data.chatimg;
 			
 			if (!chatImg && avatars){
 				if (fallbackImage){
 					chatImg = "unknown.png";
 					if (darkmode){
-						chatImg = '<img id="img_'+data.counter+'" src="' + chatImg + '" class="icon invert hl-profile-pic" onerror="errorImage(this);" />'
+						chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="icon invert hl-profile-pic" onerror="errorImage(this);" />'
 					} else {
-						chatImg = '<img id="img_'+data.counter+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
+						chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
 					}
 				} else {
 					chatImg = "";
 				}
 			} else if (avatars){
-				chatImg = '<img id="img_'+data.counter+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
+				chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
 			} else {
 				chatImg = "";
 			}
@@ -2384,36 +2397,36 @@
 			}
 			
 			if (splitMode){
-				var node = createElementFromHTML('<div id="msg_'+data.counter+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>"
 					 + "<div class='leftside "+larger+"'>"
 					 + chatname
 					 + showType
 					 + chatImg
 					 + "</div>"
-					 + '<div class="hl-message" id="content_'+data.counter+'">' + chatmessage + '</div>'
+					 + '<div class="hl-message" id="content_'+data.id+'">' + chatmessage + '</div>'
 					 + addImage
 					 + donationHTML + '</div>');
 			} else if (compactmode){
-				var node = createElementFromHTML('<div id="msg_'+data.counter+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + "<div class='queueid'></div>"
 					 + '<div class="hl-message">'
 						+ showType
 						+ chatImg
 						+ timeArrived
 						+ chatname
-						+ '<span id="content_'+data.counter+'">' + chatmessage + '</span>'
+						+ '<span id="content_'+data.id+'">' + chatmessage + '</span>'
 					 + '</div>'
 					 + addImage
 					 + donationHTML + '</div>');
 			} else {
-				var node = createElementFromHTML('<div id="msg_'+data.counter+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + "<div class='queueid'></div>"
 					 + showType
 					 + chatImg
 					 + timeArrived
 					 + chatname
-					 + '<div class="hl-message" id="content_'+data.counter+'">' + chatmessage + '</div>'
+					 + '<div class="hl-message" id="content_'+data.id+'">' + chatmessage + '</div>'
 					 + addImage
 					 + donationHTML + '</div>');
 			}
@@ -2451,7 +2464,7 @@
 				}
 			}
 			
-			if (!node.querySelector("#content_"+data.counter).innerText.trim().length){
+			if (!node.querySelector("#content_"+data.id).innerText.trim().length){
 				node.classList.add("noText");
 			}
 			
@@ -2602,7 +2615,7 @@
 			}
 			
 			if (speech && !bot){
-				var msgPlain = document.getElementById('content_'+data.counter); // text only
+				var msgPlain = document.getElementById('content_'+data.id); // text only
 				if (msgPlain){
 					msgPlain = msgPlain.textContent || msgPlain.innerText || "";
 					msgPlain = msgPlain.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
@@ -2674,7 +2687,7 @@
 	
 	function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
 		if (triggerState && data.chatmessage.includes("!highlight")){
-			document.getElementById("msg_"+data.counter).classList.add("highlight"); // sample method of highlighting
+			document.getElementById("msg_"+data.id).classList.add("highlight"); // sample method of highlighting
 		}
 	}
 	
