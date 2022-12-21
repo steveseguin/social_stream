@@ -1987,10 +1987,9 @@
 		}
 		
 		e = event || window.event;
-		if (e.which != 1){
+		if (event && (e.which !== 1)){
 			return;
 		}
-		 
 		
 		if (event && (event.ctrlKey || event.metaKey)) {
 			if (element.classList.contains("queued")){
