@@ -1986,6 +1986,11 @@
 			element = this;
 		}
 		
+		e = event || window.event;
+		if (e.which != 1){
+			return;
+		}
+		 
 		
 		if (event && (event.ctrlKey || event.metaKey)) {
 			if (element.classList.contains("queued")){
@@ -2026,56 +2031,7 @@
 		
 		
 		var data = element.rawContents;
-		if (data.type && (data.type == "twitch") && !data.chatimg){
-			var ccc = data.id;
-			var imgnode = document.getElementById("img_"+ccc);
-			
-			fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username="+encodeURIComponent(data.chatname), {
-			  timeout: 2000 // in case server goes down, only wait two-seconds.
-			}).then(response => {
-				response.text().then(function (text) {
-					if (text.startsWith("https://")){
-						if (avatars){
-							imgnode.src = text;
-							imgnode.classList.remove("invert");
-						}
-						data.chatimg = text;
-						document.getElementById("msg_"+ccc).rawContents.chatimg = text;
-					} else {
-						data.chatimg = 'unknown.png';
-						if (darkmode){
-							imgnode.classList.add("invert");
-						}
-					}
-					if (thirdPartyAPI){
-						thirdPartyAPI(data);
-					} else {
-						sendDataP2P(data);
-					}
-				}).catch(function(){
-					data.chatimg = 'unknown.png';
-					if (darkmode){
-						imgnode.classList.add("invert");
-					}
-					if (thirdPartyAPI){
-						thirdPartyAPI(data);
-					} else {
-						sendDataP2P(data);
-					}
-				});
-			}).catch(error => {
-				//console.error(error);
-				data.chatimg = 'unknown.png';
-				if (darkmode){
-					imgnode.classList.add("invert");
-				}
-				if (thirdPartyAPI){
-					thirdPartyAPI(data);
-				} else {
-					sendDataP2P(data);
-				}
-			});
-		} else if (data.type && (data.type == "youtube") && data.chatimg){
+		if (data.type && (data.type == "youtube") && data.chatimg){
 			if (thirdPartyAPI){
 				thirdPartyAPI(data);
 			} else {
@@ -2088,16 +2044,10 @@
 					sendDataP2P(data);
 				});
 			}
-		
 		} else {
-		
 			// convert to base64 if Youtube; pass as a "backup" image.
-			
-			
 			//data.chatimg = data.chatimg.replace("=s32-", "=s128-");  // this is all for HD by default.  Too much CPU usage though
 			//data.chatimg = data.chatimg.replace("=s64-", "=s128-");
-		
-		
 			if (thirdPartyAPI){
 				thirdPartyAPI(data);
 			} else {
@@ -2523,8 +2473,11 @@
 						document.getElementById('img_'+data.id).src = data.chatimg;
 						document.getElementById('img_'+data.id).classList.remove("invert");
 						document.getElementById('img_'+data.id).classList.remove("fade-in-image");
+						node.querySelector('#img_'+data.id).src = data.chatimg;
+						node.querySelector('#img_'+data.id).classList.remove("invert");
+						node.querySelector('#img_'+data.id).classList.remove("fade-in-image");
 					} catch(e){}
-				}.bind(data);
+				}.bind(data, node);
 				twitchImage.src = data.chatimg;
 			}
 			

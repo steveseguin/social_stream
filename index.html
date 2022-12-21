@@ -1156,9 +1156,9 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				var avatarImg = "";
 				if (avatar){
 					if (data.backupChatimg){
-						avatarImg = '<div class="hl-img" '+styleOverrideName+'><img id="img_'+data.chatname+'" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="'+data.backupChatimg+'"onerror="errorImage(this);">'+showType+'</div>';
+						avatarImg = '<div class="hl-img" '+styleOverrideName+'><img id="img_'+data.id+'" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="'+data.backupChatimg+'"onerror="errorImage(this);">'+showType+'</div>';
 					} else {
-						avatarImg = '<div class="hl-img" '+styleOverrideName+'><img id="img_'+data.chatname+'" src="' + data.chatimg + '" class="hl-profile-pic" onerror="errorImage(this);">'+showType+'</div>';
+						avatarImg = '<div class="hl-img" '+styleOverrideName+'><img id="img_'+data.id+'" src="' + data.chatimg + '" class="hl-profile-pic" onerror="errorImage(this);">'+showType+'</div>';
 					}
 				} else {
 					avatarImg = showType;
@@ -1218,7 +1218,16 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					document.getElementById("message").style = data.backgroundColor +' '+ data.textColor+'; font-size: '+fontsize+'%;';
 				}
 				
-				
+				if ((data.type == "twitch") && avatar && data.chatname){
+					var twitchImage = new Image();
+					data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname);
+					twitchImage.onload = function (){
+						try {
+							document.getElementById('img_'+data.id).src = data.chatimg;
+						} catch(e){}
+					}.bind(data);
+					twitchImage.src = data.chatimg;
+				}
 				
 				if (centering){
 					try{
