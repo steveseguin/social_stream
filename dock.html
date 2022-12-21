@@ -179,6 +179,15 @@
 			background-color: #e9e9e9;
 		}
 		
+		.fade-in-image { 
+			animation: fadeIn .2s; 
+		}
+		
+		@keyframes fadeIn {
+		  0% { opacity: 0; }
+		  99% { opacity: 0.2; }
+		  100% { opacity: 1; }
+		}
 		
 		.bot.compactmode {
 			padding: 0;
@@ -2265,6 +2274,10 @@
 				data.chatmessage = "";
 			}
 			
+			if ((data.type == "twitch") && avatars && !data.chatimg && data.chatname){ // this is a temp fix until everyone updates.
+				data.chatimg = "https://api.socialstream.ninja/twitch/?username="+encodeURIComponent(data.chatname); // this is CORS restricted to socialstream, but this is to ensure reliability for all
+			}
+			
 			var chatImg = data.chatimg;
 			
 			if (!chatImg && avatars){
@@ -2279,7 +2292,19 @@
 					chatImg = "";
 				}
 			} else if (avatars){
-				chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
+			
+				if ((data.type == "twitch") && avatars){
+					
+					chatImg = "unknown.png";
+					if (darkmode){
+						chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="fade-in-image invert icon hl-profile-pic" onerror="errorImage(this);" />'
+					} else {
+						chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="fade-in-image icon hl-profile-pic" onerror="errorImage(this);" />'
+					}
+				} else {
+					chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
+				}
+				
 			} else {
 				chatImg = "";
 			}
@@ -2489,6 +2514,20 @@
 			});
 			
 			mainOutputWindow.appendChild(node);
+			
+			
+			if ((data.type == "twitch") && avatars && data.chatimg){
+				var twitchImage = new Image();
+				twitchImage.onload = function (){
+					try {
+						document.getElementById('img_'+data.id).src = data.chatimg;
+						document.getElementById('img_'+data.id).classList.remove("invert");
+						document.getElementById('img_'+data.id).classList.remove("fade-in-image");
+					} catch(e){}
+				}.bind(data);
+				twitchImage.src = data.chatimg;
+			}
+			
 			if (beep){
 				playtone();
 			}

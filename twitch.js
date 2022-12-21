@@ -186,7 +186,7 @@
 	  data.chatbadges = chatbadges;
 	  data.nameColor = nameColor;
 	  data.chatmessage = chatmessage;
-	  data.chatimg = "";
+	  data.chatimg = "https://api.socialstream.ninja/twitch/?username="+encodeURIComponent(chatname); // this is CORS restricted to socialstream, but this is to ensure reliability for all
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = "";
 	  data.type = "twitch";
