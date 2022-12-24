@@ -84,13 +84,16 @@
 		try {
 			nameColor = nameEle.style.color;
 		} catch(e){}
-	  } catch(e){return;}
+	  } catch(e){
+	  }
 	  
 	  var chatbadges = [];
-	  
-	  ele.querySelectorAll("img.chat-badge[src]").forEach(badge=>{
-		chatbadges.push(badge.src);
-	  });
+	  try {
+		  ele.querySelectorAll("img.chat-badge[src]").forEach(badge=>{
+			chatbadges.push(badge.src);
+		  });
+		  
+	  } catch(e){}
 	  
 	  try {
 		var BTT = ele.querySelectorAll('.bttv-tooltip');
@@ -132,6 +135,7 @@
 		  }
 		  
 	  } else if (ele.querySelector(".seventv-message-context")){
+		  try {
 		    var cloned = ele.querySelector(".seventv-message-context").cloneNode(true);
 			var children = cloned.querySelectorAll("[alt]");
 			for (var i =0;i<children.length;i++){
@@ -142,6 +146,7 @@
 				children[i].outerHTML = "";
 			} */
 			chatmessage = cloned.innerText;
+		 } catch(e){}
 	  } else {
 		  try{
 			var cloned = ele.querySelector('*[data-test-selector="chat-line-message-body"]').cloneNode(true);
@@ -177,7 +182,7 @@
 		hasDonation = donations;
 	  }
 	  
-	  if (!chatmessage && !hasDonation){
+	  if (!chatmessage && !hasDonation && !chatname){
 		return;
 	  }
 
@@ -186,7 +191,11 @@
 	  data.chatbadges = chatbadges;
 	  data.nameColor = nameColor;
 	  data.chatmessage = chatmessage;
-	  data.chatimg = "https://api.socialstream.ninja/twitch/?username="+encodeURIComponent(chatname); // this is CORS restricted to socialstream, but this is to ensure reliability for all
+	  try {
+		data.chatimg = "https://api.socialstream.ninja/twitch/?username="+encodeURIComponent(chatname); // this is CORS restricted to socialstream, but this is to ensure reliability for all
+	  } catch(e){
+		  data.chatimg = "";
+	  }
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = "";
 	  data.type = "twitch";
@@ -236,28 +245,28 @@
 		}
 	});  /////
 
-	function onElementInsertedTwitch(containerSelector, className, callback) {
+	function onElementInsertedTwitch(target, className, callback) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							var textBody = mutation.addedNodes[i].innerText;
-							
-							if (mutation.addedNodes[i].querySelectorAll){
-								mutation.addedNodes[i].querySelectorAll("img[alt]").forEach(ttt=>{
-									textBody += ttt.getAttribute("alt");
-								});
-							}
-							
-							if (textBody && (textBody === lastMessage)){
-								mutation.addedNodes[i].ignore = true;
-								continue;
-							} else if (!textBody){
-								continue;
-							}
-							
-							lastMessage = textBody;
+							try {
+								var textBody = mutation.addedNodes[i].innerText;
+								if (mutation.addedNodes[i].querySelectorAll){
+									mutation.addedNodes[i].querySelectorAll("img[alt]").forEach(ttt=>{
+										textBody += ttt.getAttribute("alt");
+									});
+								}
+								if (textBody && (textBody === lastMessage)){
+									mutation.addedNodes[i].ignore = true;
+									continue;
+								} else if (!textBody){
+									continue;
+								}
+								
+								lastMessage = textBody;
+							} catch(e){}
 							
 							if (mutation.addedNodes[i].ignore){continue;}
 							
@@ -279,22 +288,41 @@
 				}
 			});
 		};
-		var target = document.querySelectorAll(containerSelector)[0];
+		
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 	}
 	
-	setTimeout(function(){
-		
-		var clear = document.querySelectorAll(".chat-line__message");
-		for (var i = 0;i<clear.length;i++){
-			clear[i].ignore = true; // don't let already loaded messages to re-load.
+	console.log("Social Stream injected");
+	
+	var checkReady = setInterval(function(){
+		var target = document.querySelector(".chat-scrollable-area__message-container");
+		if (target){
+			console.log("Social Stream Start");
+			clearInterval(checkReady);
+			var clear = document.querySelectorAll(".chat-line__message");
+			for (var i = 0;i<clear.length;i++){
+				clear[i].ignore = true; // don't let already loaded messages to re-load.
+			}
+			onElementInsertedTwitch(target, "chat-line__message", function(element){
+			  setTimeout(function(element){processMessage(element);},20, element); // 20ms to give it time to load the message, rather than just the container
+			});
+		} else if (document.querySelector(".chat-line__message")){ // just in case 
+			var target = document.querySelector(".chat-line__message");
+			if (target && target.parentNode){
+				console.log("Social Stream Start");
+				clearInterval(checkReady);
+				var clear = document.querySelectorAll(".chat-line__message");
+				for (var i = 0;i<clear.length;i++){
+					clear[i].ignore = true; // don't let already loaded messages to re-load.
+				}
+				onElementInsertedTwitch(target.parentNode, "chat-line__message", function(element){
+				  setTimeout(function(element){processMessage(element);},20, element); // 20ms to give it time to load the message, rather than just the container
+				});
+			}
 		}
-		onElementInsertedTwitch(".chat-scrollable-area__message-container", "chat-line__message", function(element){
-		  setTimeout(function(element){processMessage(element);},10, element);
-		});
 	},2000);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.

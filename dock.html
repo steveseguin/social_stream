@@ -857,6 +857,54 @@
 			-webkit-app-region: var(--electron-drag-fix);
 		}
 		
+		.context-menu {
+			display: none;
+			position: fixed;
+			z-index: 10 !important;
+			padding: 12px 0 !important;
+			width: 240px !important;
+			background-color: #fff !important;
+			border: solid 1px #dfdfdf !important;
+			box-shadow: 1px 1px 2px #cfcfcf !important;
+		}
+		.context-menu--active {
+			display: block !important;
+		}
+		.context-menu__items {
+			list-style: none !important;
+			margin: 0;
+			padding: 0;
+		}
+		.context-menu__item {
+			display: block;
+			margin-bottom: 4px !important;
+			text-shadow: 0 0 black;
+			cursor:pointer;
+		}
+		.context-menu__item:last-child {
+			margin-bottom: 0 !important;
+		}
+		.context-menu__link {
+			display: block;
+			padding: 4px 12px;
+			color: #0066aa;;
+			text-decoration: none;
+		}
+		.context-menu__item:hover>*{
+			color: #fff !important;
+		}
+		.context-menu__item:hover {
+			color: #fff !important;
+			background-color: #0066aa !important;
+		}
+		.context-menu__tip {
+			margin-left: 15px;
+			color: #777;
+			margin-top: 10px;
+			padding-top: 10px;
+			position: relative;
+			top: 7px;
+		}
 	</style>
 </head>
 <body class='electronDraggable'>
@@ -877,11 +925,33 @@
 		<button id="say_hello" data-state="0" onclick="toggleChat();" title="Send a text message to all social endpoints">💬</button>
 		<input type="text" id="chatInput" style="display:none;" placeholder="Say something.." />
 		<button id="jumpto" data-state="0" onclick="jumptoBottom(this);" title="Jump to bottom">V</button>
-	<div>
+	</div>
 	<audio id="testtone" style="display:none;" preload="metadata">
 		<source src="./audio/tone.mp3" type="audio/mpeg"> 
 		<source src="./audio/tone.ogg" type="audio/ogg"> 
 	</audio>
+	<nav id="context-menu" class="context-menu">
+		<ul class="context-menu__items">
+			<li class="context-menu__item"  data-action="Delete">
+				<a href="#" class="context-menu__link" data-action="Delete">
+					<i class="las la-external-link"></i>
+					<span>Delete Message</span>
+				</a>
+			</li>
+			<li class="context-menu__item" data-action="Queue">
+				<a href="#" class="context-menu__link" data-action="Queue">
+					<i class="las la-paperclip"></i>
+					<span>Toggle Queue</span>
+				</a>
+			</li>
+			<li class="context-menu__item" data-action="Pin">
+				<a href="#" class="context-menu__link" data-action="Pin">
+					<i class="las la-pen"></i>
+					<span>Toggle Pin</span>
+				</a>
+			</li>
+		</ul>
+	</nav>
 	<script>
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
 		console.error(errorMsg);
@@ -890,7 +960,13 @@
 		return false;
 	};
 	
-	
+	function getById(id) { // js helper
+		var el = document.getElementById(id);
+		if (!el) {
+			el = document.createElement("span"); // create a fake element
+		}
+		return el;
+	}
 	
 	(function (w) {
 		w.URLSearchParams = w.URLSearchParams || function (searchString) {
@@ -1722,7 +1798,19 @@
 				}
 			}
 			return;
+		} else if ("deleteMessage" in data){
+			//if (syncDocks){
+				try{
+					var ele = document.querySelector("[data-mid='"+data.deleteMessage+"']");
+					if (ele){
+						ele.remove();
+					}
+				} catch(e){}
+			//}
+			return;
 		}
+		
+		
 		
 		if (data.action){
 			if (data.action == "nextInQueue"){
@@ -1751,11 +1839,11 @@
 	function RecvDataWindow(){
 		iframe = document.createElement("iframe");
 		
-		if (syncDocks){ // TODO: CHANGE THIS AWAY FROM alpha at some point
-			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
-		} else {
-			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&view="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID;
-		}
+		//if (syncDocks){ 
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
+		//} else {
+		//iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&view="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID;
+		//}
 		iframe.style.width = "0px";
 		iframe.style.height = "0px";
 		iframe.style.position = "fixed";
@@ -1932,6 +2020,11 @@
 		element.classList.add("pinned");
 		element.title = "Alt + Click to remove pinned message";
 		document.getElementById("pinned").appendChild(element);
+	}
+	
+	function deleteMessage(element){
+		syncDataP2P({deleteMessage: element.dataset.mid}, false, true); 
+		element.remove();
 	}
 	
 	function filterQueued(ele){
@@ -2371,7 +2464,7 @@
 			}
 			
 			if (splitMode){
-				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>"
 					 + "<div class='leftside "+larger+"'>"
 					 + chatname
@@ -2382,7 +2475,7 @@
 					 + addImage
 					 + donationHTML + '</div>');
 			} else if (compactmode){
-				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + "<div class='queueid'></div>"
 					 + '<div class="hl-message">'
 						+ showType
@@ -2394,7 +2487,7 @@
 					 + addImage
 					 + donationHTML + '</div>');
 			} else {
-				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + "<div class='queueid'></div>"
 					 + showType
 					 + chatImg
@@ -2708,8 +2801,8 @@
 		}
 	}
 	
-	function syncDataP2P(data, UUID=false){
-		if (iframe && syncDocks){
+	function syncDataP2P(data, UUID=false, force=false){
+		if (iframe && (syncDocks||force)){
 			if (UUID){
 				iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*');
 			} else {
@@ -2835,6 +2928,157 @@
 		  await writableStream.close();
 	  }
 	}
+	
+	
+	(function rightclickmenuthing() { // right click menu
+		"use strict";
+
+		function clickInsideElement(e, value="menu") {
+			var el = e.srcElement || e.target;
+			if (el.dataset && (value in el.dataset)) {
+				return el;
+			} else {
+				while (el = el.parentNode) {
+					if (el.dataset && (value in el.dataset)) {
+						return el;
+					}
+				}
+			}
+			return false;
+		}
+
+		function getPosition(event2) {
+			var posx = 0;
+			var posy = 0;
+
+			if (!event2){var event = window.event;}
+
+			if (event2.pageX || event2.pageY){
+				posx = event2.pageX;
+				posy = event2.pageY;
+			} else if (event2.clientX || event2.clientY) {
+				posx = event2.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+				posy = event2.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+			}
+
+			return {x: posx, y: posy};
+		}
+		
+		var taskItemInContext;
+		var clickCoordsX;
+		var clickCoordsY;
+		var menu = getById("context-menu");
+		var menuState = 0;
+		var lastMenu= false;
+		var menuWidth;
+		var menuHeight;
+		var windowWidth;
+		var windowHeight;
+
+		function contextListener() {
+			document.addEventListener("contextmenu", function(e) {
+				
+				if (navigator.userAgent.toLowerCase().indexOf(' electron/') > -1){
+					return;
+				} else if (e && (e.ctrlKey || e.metaKey)){return;} // allow for development ease
+					 
+				taskItemInContext = clickInsideElement(e, "menu");
+				
+				if (taskItemInContext) {
+					e.preventDefault();
+					e.stopPropagation();
+					toggleMenuOn();
+					positionMenu(e);
+					return false;
+				} else {
+					taskItemInContext = null;
+					toggleMenuOff();
+				}
+			});
+		}
+
+		function menuClickListener(e) {
+			var clickeElIsLink = clickInsideElement(e, "action");
+			if (clickeElIsLink) {
+				e.preventDefault();
+				e.stopPropagation();
+				menuItemListener(clickeElIsLink);
+				return false;
+			} else {
+				var button = e.which || e.button;
+				if (button === 1) {
+					toggleMenuOff();
+				}
+			}
+		}
+
+		function toggleMenuOn() {
+			
+			if (menuState !== 1) {
+				menuState = 1;
+				menu.classList.add("context-menu--active");
+				document.addEventListener("click", menuClickListener);
+			}
+			
+		}
+
+		function toggleMenuOff() {
+			if (menuState !== 0) {
+				menuState = 0;
+				menu.classList.remove("context-menu--active");
+				document.removeEventListener("click", menuClickListener);
+			}
+			lastMenu = false;
+		}
+		
+		function positionMenu(e) {
+			var clickCoords = getPosition(e);
+			clickCoordsX = clickCoords.x;
+			clickCoordsY = clickCoords.y;
+			
+			menuWidth = menu.offsetWidth + 4;
+			menuHeight = menu.offsetHeight + 4;
+
+			windowWidth = window.innerWidth;
+			windowHeight = window.innerHeight;
+
+			if ((windowWidth - clickCoordsX) < menuWidth) {
+				menu.style.left = windowWidth - menuWidth + "px";
+			} else {
+				menu.style.left = clickCoordsX + "px";
+			}
+			menu.style.top = "unset";
+			var offset = ((document.body.scrollHeight-clickCoordsY)-menuHeight);
+			if (offset<-10){
+				offset = -10;
+			}
+			menu.style.bottom =offset + "px";
+			
+		}
+
+		async function menuItemListener(link) {
+			if (link.getAttribute("data-action") === "Delete") {
+				deleteMessage(taskItemInContext);
+			} else if (link.getAttribute("data-action") === "Pin") {
+				if (taskItemInContext.classList.contains("pinned")){
+					unpinIt(taskItemInContext);
+				} else {
+					pinIt(taskItemInContext);
+				}
+			} else if (link.getAttribute("data-action") === "Queue") {
+				if (taskItemInContext.classList.contains("queued")){
+					removeQueue(taskItemInContext);
+				} else {
+					selectedMessage(false, taskItemInContext);
+				}
+			}
+			toggleMenuOff();
+		}
+		
+		contextListener();
+
+	})();
+
 	
 	if (urlParams.has('js')){  // ie: &js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js
 		console.warn("Third-party Javascript has been injected into the code. Security cannot be ensured.");
