@@ -1468,6 +1468,46 @@
 		thirdPartyAPI = function (data){
 			ajax(data, postServer, "PUT");
 		};
+	} else if (urlParams.has("spxserver") && urlParams.has("spxfunction") && urlParams.has("spxlayer")) {
+		let spxserver = urlParams.get("spxserver") || postServer;
+		let spxfunction = urlParams.get("spxfunction") || "";
+		let spxlayer = urlParams.get("spxlayer") || "";
+		
+		thirdPartyAPI = function (data){	
+			var msg = {};			
+			if ("id" in data){
+				msg.id = data.id;
+			}
+			
+			if (data.timestamp){
+				msg.timestamp = data.timestamp;
+			} else {
+				msg.timestamp = Date.now();
+			}
+			
+			msg.message = data.chatmessage || "";
+			msg.displayName = data.chatname || "";
+			msg.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+			
+			if (data.type){
+				msg.platform = {};
+				msg.platform.name = data.type;
+				msg.platform.logoUrl = "https://socialstream.ninja/"+data.type+".png";
+			}
+			
+			msg = JSON.stringify(msg);
+			let params = btoa(unescape(encodeURIComponent(msg)));
+			postServer = spxserver + "/api/v1/invokeTemplateFunction?webplayout=" + spxlayer + "&function=" + spxfunction + "&params=" + params;
+
+			const spxRequest = new XMLHttpRequest();
+			spxRequest.onreadystatechange = function() {
+				console.log(spxRequest.responseText);
+			  if (spxRequest.readyState === 4 && spxRequest.status === 200) {
+			  }
+			}
+			spxRequest.open('GET', postServer);
+			spxRequest.send();
+		};
 	} else if (urlParams.has("h2r") || urlParams.has("h2rurl")){
 		
 		postServer = "http://127.0.0.1:4001/data/";
