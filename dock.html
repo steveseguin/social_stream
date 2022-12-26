@@ -2360,7 +2360,7 @@
 				data.chatmessage = "";
 			}
 			
-			if ((data.type == "twitch") && avatars && !data.chatimg && data.chatname){ // this is a temp fix until everyone updates.
+			if (data.type && (data.type == "twitch") && avatars && !data.chatimg && data.chatname){ // this is a temp fix until everyone updates.
 				data.chatimg = "https://api.socialstream.ninja/twitch/?username="+encodeURIComponent(data.chatname); // this is CORS restricted to socialstream, but this is to ensure reliability for all
 			}
 			
@@ -2379,7 +2379,7 @@
 				}
 			} else if (avatars){
 			
-				if ((data.type == "twitch") && avatars){
+				if (data.type && (data.type == "twitch") && avatars){
 					
 					chatImg = "unknown.png";
 					if (darkmode){
@@ -2602,7 +2602,7 @@
 			mainOutputWindow.appendChild(node);
 			
 			
-			if ((data.type == "twitch") && avatars && data.chatimg){
+			if (data.type && (data.type == "twitch") && avatars && data.chatimg){
 				var twitchImage = new Image();
 				twitchImage.onload = function (){
 					try {

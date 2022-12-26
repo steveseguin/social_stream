@@ -841,7 +841,12 @@ function sendToH2R(data){
 			
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
-			msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+			
+			if (data.type && (data.type == "twitch") && data.chatname){
+				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
+			} else {
+				msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+			}
 			
 			if (data.type){
 				msg.platform = {};
@@ -926,6 +931,10 @@ function sendToDisk(data){
 					data.chatimg = data.chatimg.replace("=s64-", "=s512-");
 				}
 				
+				if (data.type && (data.type == "twitch") && data.chatname){
+					data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
+				}
+				
 				overwriteFile(JSON.stringify(data));
 			}
 		} catch(e){}
@@ -934,8 +943,15 @@ function sendToDisk(data){
 		try {
 			if (typeof data == "object"){
 				data.timestamp = new Date().getTime();
-				data.chatimg = data.chatimg.replace("=s32-", "=s256-");  
-				data.chatimg = data.chatimg.replace("=s64-", "=s256-");
+				
+				if (data.type && data.chatimg && (data.type == "youtube")){
+					data.chatimg = data.chatimg.replace("=s32-", "=s256-");  
+					data.chatimg = data.chatimg.replace("=s64-", "=s256-");
+				}
+				
+				if (data.type && (data.type == "twitch") && data.chatname){
+					data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
+				}
 				overwriteFileExcel(data);
 			}
 		} catch(e){}
