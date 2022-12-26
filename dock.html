@@ -2163,6 +2163,10 @@
 		
 		
 		var data = element.rawContents;
+		
+		if ((data.type == "twitch") && data.chatname){
+			data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
+		}
 		if (data.type && (data.type == "youtube") && data.chatimg){
 			if (thirdPartyAPI){
 				thirdPartyAPI(data);
@@ -2171,7 +2175,7 @@
 					data.chatimg = data.chatimg.replace("=s32-", "=s128-");  // Increases the resolution of the image
 					data.chatimg = data.chatimg.replace("=s64-", "=s128-");
 					if (base64Image){
-						data.backupChatimg = base64Image;
+						data.backupChatimg = base64Image; // there's code in the index page to fallback if the larger image doens't exist
 					}
 					sendDataP2P(data);
 				});
