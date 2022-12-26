@@ -2164,7 +2164,7 @@
 		
 		var data = element.rawContents;
 		
-		if ((data.type == "twitch") && data.chatname){
+		if (thirdPartyAPI && (data.type == "twitch") && data.chatname){
 			data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
 		}
 		if (data.type && (data.type == "youtube") && data.chatimg){
