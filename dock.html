@@ -1468,7 +1468,7 @@
 		thirdPartyAPI = function (data){
 			ajax(data, postServer, "PUT");
 		};
-	} else if (urlParams.has("spxserver") && urlParams.has("spxfunction") && urlParams.has("spxlayer")) {
+		} else if (urlParams.has("spxserver") && urlParams.has("spxfunction") && urlParams.has("spxlayer")) {
 		let spxserver = urlParams.get("spxserver") || postServer;
 		let spxfunction = urlParams.get("spxfunction") || "";
 		let spxlayer = urlParams.get("spxlayer") || "";
@@ -1494,9 +1494,13 @@
 				msg.platform.name = data.type;
 				msg.platform.logoUrl = "https://socialstream.ninja/"+data.type+".png";
 			}
-			
-			msg = JSON.stringify(msg);
-			let params = btoa(unescape(encodeURIComponent(msg)));
+				
+			params = encodeURIComponent(JSON.stringify(msg));
+
+			if (params.length > 3000) {
+				console.log("dropping message due to request length");
+				return; // HTTP request too long due to twitch emoji spam, skipping this message. 
+			}
 			postServer = spxserver + "/api/v1/invokeTemplateFunction?webplayout=" + spxlayer + "&function=" + spxfunction + "&params=" + params;
 
 			const spxRequest = new XMLHttpRequest();
