@@ -1017,6 +1017,7 @@
 	var showbadges = true;
 	var colorized = false;
 	var horizontal = false;
+	var autoTimeoutEnabled = true;
 	
 	var encode = false;
 	
@@ -1043,6 +1044,10 @@
 	if (urlParams.has("showtime")){
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
 		document.documentElement.style.setProperty("--fade-out-time", parseFloat(timeoutDelay/1000)+"s");
+	}
+		
+	if (urlParams.has("disabletimeout")) {
+		autoTimeoutEnabled = false;
 	}
 	
 	if (urlParams.has("session")){
@@ -2670,11 +2675,13 @@
 			
 			if (autoshow && !bot){ 
 				if (!autoshowdonos || (autoshowdonos && data.hasDonation)){ // dono or not to dono.
-					if (!autoTimeout){
+					if ((!autoTimeout) && (autoTimeoutEnabled)){
 						selectedMessage(false, node);
 						autoTimeout = setTimeout(function(){
 							autoTimeout=false;
 						},1500);
+					} else {
+						selectedMessage(false, node);
 					}
 				}
 			}
