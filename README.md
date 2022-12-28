@@ -61,6 +61,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - Locals.com (no pop out needed)
 - Nimo.TV (pop out chat, ie: https://www.nimo.tv/popout/chat/xxxx)
 - kick.com (pop out chat)
+- quickchannel.com (https://play.quickchannel.com/*)
 
 More on request
 
