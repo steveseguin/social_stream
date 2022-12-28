@@ -15,59 +15,48 @@
 	}
 	
 	function processMessage(ele){
-		var name="";
 		try {
-			name = ele.querySelector('.meeting-chat-body__header').childNodes[0].innerText;
-			name = name.replace("@","");
-			name = name.trim();
+			var name="";
+			try {
+				name = ele.querySelector('.author').innerText;
+				name = name.trim();
+			} catch(e){
+				name = "";
+			}
+			
+			var msg = "";
+			ele.querySelectorAll('.chatmessage > div').forEach(ee=>{
+				if (ee.nodeType == Node.TEXT_NODE){
+					msg += ee.textContent;
+					msg = msg.trim();
+				} else if (!textOnlyMode && (ee.nodeName  == "IMG")){
+					msg += "<img src='"+ee.src+"' />";
+					msg = msg.trim();
+				}  else {
+					msg += ee.textContent;
+					msg = msg.trim();
+				}
+			});
+			
+			if (!msg.length){return;}
+			
+			
+			var data = {};
+			data.chatname = name;
+			data.chatbadges = "";
+			data.backgroundColor = "";
+			data.textColor = "";
+			data.chatmessage = msg;
+			data.chatimg = "";
+			data.hasDonation = "";
+			data.hasMembership = "";
+			data.contentimg = "";
+			data.type = "quickchannel";
+			
+			pushMessage(data);
 		} catch(e){
-			name = "";
+			console.error(e);
 		}
-		
-		var msg = "";
-		var skip = false;
-		ele.querySelectorAll('.meeting-chat-body > div').forEach(ee=>{
-			if (!skip){
-				skip=true; // first node is the name
-				return;
-			}
-			if (ee.nodeType == Node.TEXT_NODE){
-				msg += ee.textContent;
-				msg = msg.trim();
-			} else if (!textOnlyMode && (ee.nodeName  == "IMG")){
-				msg += "<img src='"+ee.src+"' />";
-				msg = msg.trim();
-			}  else {
-				msg += ee.textContent;
-				msg = msg.trim();
-			}
-		});
-		
-		if (!msg.length){return;}
-		
-		var chatimg = '';
-		try {
-			chatimg = ele.querySelector(".ch-avatar  img[src]").src || "";
-		} catch (e){}
-		
-		var dono = "";
-		//if (ele.querySelector('.chat-history--rant-price')){
-		//	dono = ele.querySelector('.chat-history--rant-price').innerText;
-		//}
-		
-		var data = {};
-		data.chatname = name;
-		data.chatbadges = "";
-		data.backgroundColor = "";
-		data.textColor = "";
-		data.chatmessage = msg;
-		data.chatimg = chatimg;
-		data.hasDonation = dono;
-		data.hasMembership = "";;
-		data.contentimg = "";
-		data.type = "clouthub";
-		
-		pushMessage(data);
 	}
 
 	function pushMessage(data){
@@ -90,7 +79,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('textarea.post-chat-input').focus();
+					document.querySelector('textarea').focus();
 					sendResponse(true);
 					return;
 				}
@@ -131,13 +120,14 @@
 	
 	console.log("social stream injected");
 
-	setInterval(function(){
-		if (document.querySelector('.post-chat-messages')){
-			if (!document.querySelector('.post-chat-messages').marked){
-				document.querySelector('.post-chat-messages').marked=true;
-				onElementInserted(document.querySelector('.post-chat-messages'));
+	var timer = setInterval(function(){
+		if (document.querySelector('.chat-messages-container')){
+			if (!document.querySelector('.chat-messages-container').marked){
+				document.querySelector('.chat-messages-container').marked=true;
+				clearInterval(timer);
+				onElementInserted(document.querySelector('.chat-messages-container'));
 			}
 		}
-	},1000);
+	},3000);
 
 })();
