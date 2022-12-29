@@ -125,8 +125,8 @@
 		data.hasMembership = "";;
 		data.contentimg = "";
 		data.type = "tiktok";
+		data.event = ital; // if an event or actual message
 		
-	//	console.log(data);
 		
 		pushMessage(data);
 	}
@@ -161,11 +161,11 @@
 								setTimeout(function(ele){
 									processMessage(ele)
 								},500, mutation.addedNodes[i]);
-							} else if (mutation.addedNodes[i].className.indexOf("ivChatRoomMessage-StyledLikeMessageItem")>-1){
+							} else if (settings.streamevents && mutation.addedNodes[i].className.indexOf("ivChatRoomMessage-StyledLikeMessageItem")>-1){
 								setTimeout(function(ele){
 									processMessage(ele, true)
 								},500, mutation.addedNodes[i]);
-							} else if (mutation.addedNodes[i].className.indexOf("DivChatRoomMessage")>-1){
+							} else if (settings.streamevents && mutation.addedNodes[i].className.indexOf("DivChatRoomMessage")>-1){
 								setTimeout(function(ele){
 									processMessage(ele, true)
 								},500, mutation.addedNodes[i]);
@@ -184,12 +184,14 @@
 	
 	setInterval(start,2000);
 
-	var textOnlyMode = false;
+	var settings = {};
+	// settings.textonlymode
+	// settings.streamevents
+	// settings.noavatars
+	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
-			if ("textonlymode" in response.settings){
-				textOnlyMode = response.settings.textonlymode;
-			}
+			settings = response.settings;
 		}
 	});
 
@@ -205,14 +207,12 @@
 					sendResponse(true);
 					return;
 				}
-				if ("textOnlyMode" == request){
-					textOnlyMode = true;
-					sendResponse(true);
-					return;
-				} else if ("richTextMode" == request){
-					textOnlyMode = false;
-					sendResponse(true);
-					return;
+				if (typeof request === "object"){
+					if ("settings" in request){
+						settings = request.settings;
+						sendResponse(true);
+						return;
+					}
 				}
 			} catch(e){	}
 			

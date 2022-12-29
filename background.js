@@ -109,12 +109,12 @@ chrome.storage.sync.get(properties, function(item){
 
 chrome.browserAction.setIcon({path: "/icons/off.png"});
 
-function pushSettingChange(setting){
+function pushSettingChange(){
 	chrome.tabs.query({}, function(tabs) {
 		chrome.runtime.lastError;
 		for (var i=0;i<tabs.length;i++){
 			if (!tabs[i].url){continue;} 
-			chrome.tabs.sendMessage(tabs[i].id, setting, function(response=false) {
+			chrome.tabs.sendMessage(tabs[i].id, {settings:settings}, function(response=false) {
 				chrome.runtime.lastError;
 			});
 		}
@@ -437,13 +437,7 @@ chrome.runtime.onMessage.addListener(
 					toggleMidi();
 				}
 				
-				if (request.setting == "textonlymode"){
-					if (request.value){
-						pushSettingChange("textOnlyMode");
-					} else {
-						pushSettingChange("richTextMode");
-					}
-				}
+				
 				
 				if (request.setting == "socketserver"){
 					if (request.value){
@@ -458,16 +452,14 @@ chrome.runtime.onMessage.addListener(
 							socketserver.close();
 						}
 					}
-				} 
+				}
 				
+				if (request.setting == "textonlymode"){
+					pushSettingChange();
+				}
 				
-				
-				if (request.setting == "noavatars"){
-					if (request.value){
-						pushSettingChange("noAvatars");
-					} else {
-						pushSettingChange("sendAvatars");
-					}
+				if (request.setting == "captureevents"){
+					pushSettingChange();
 				} 
 				
 				if (request.setting == "sentiment"){
@@ -802,7 +794,6 @@ function sendToDestinations(message){
 		messageCounter+=1;
 		message.id = messageCounter;
 	}
-	console.log(message);
 	if (settings.randomcolor && message && ("nameColor" in message) && !message.nameColor && message.chatname){
 		message.nameColor = getColorFromName(message.chatname);
 	}

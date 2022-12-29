@@ -63,9 +63,19 @@
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
-				resp += node.textContent;
+				if (settings.textonlymode){
+					resp += node.textContent.trim()+" ";
+				} else {
+					resp += node.textContent;
+				}
 			} else if (node.nodeType === 1){
-				resp += node.outerHTML;
+				if (settings.textonlymode){
+					if ("alt" in node){
+						resp += node.alt.trim()+" ";
+					}
+				} else {
+					resp += node.outerHTML;
+				}
 			}
 		});
 		return resp;
@@ -102,66 +112,40 @@
 		}
 	  } catch(e){}
 	  
-	  if (!textOnlyMode){
+	  try {
+		var eleContent = ele.querySelector(".seventv-message-context") || ele.querySelector('*[data-test-selector="chat-line-message-body"]');
+		chatmessage = getAllContentNodes(eleContent);
+	  } catch(e){}
+	 
+	  if (!chatmessage){
 		  try {
-			var eleContent = ele.querySelector(".seventv-message-context") || ele.querySelector('*[data-test-selector="chat-line-message-body"]');
+			var eleContent = ele.querySelector('span.message');
+			
 			chatmessage = getAllContentNodes(eleContent);
-		  } catch(e){}
-		 
-		  if (!chatmessage){
-			  try {
-				var eleContent = ele.querySelector('span.message');
-				
-				chatmessage = getAllContentNodes(eleContent);
-			  } catch(e){}
-		  }
-		  
-		  if (!chatmessage){
-			  try {
-				var eleContent = ele.querySelector(".chat-line__message-container .chat-line__username-container").nextElementSibling.nextElementSibling;
-				chatmessage = getAllContentNodes(eleContent);
-				
-				eleContent = eleContent.nextElementSibling;
-				var count = 0;
-				while (eleContent){
-					count++;
-					chatmessage += getAllContentNodes(eleContent);
-					eleContent = eleContent.nextElementSibling;
-					if (count>20){
-						break
-					}
-				}
-			  } catch(e){}
-		  }
-		  
-	  } else if (ele.querySelector(".seventv-message-context")){
-		  try {
-		    var cloned = ele.querySelector(".seventv-message-context").cloneNode(true);
-			var children = cloned.querySelectorAll("[alt]");
-			for (var i =0;i<children.length;i++){
-				children[i].outerHTML = children[i].alt;
-			}
-			/* var children = cloned.querySelectorAll('[role="tooltip"]');
-			for (var i =0;i<children.length;i++){
-				children[i].outerHTML = "";
-			} */
-			chatmessage = cloned.innerText;
-		 } catch(e){}
-	  } else {
-		  try{
-			var cloned = ele.querySelector('*[data-test-selector="chat-line-message-body"]').cloneNode(true);
-			var children = cloned.querySelectorAll("[alt]");
-			for (var i =0;i<children.length;i++){
-				children[i].outerHTML = children[i].alt;
-			}
-			/* var children = cloned.querySelectorAll('[role="tooltip"]');
-			for (var i =0;i<children.length;i++){
-				children[i].outerHTML = "";
-			} */
-			chatmessage = cloned.innerText;
 		  } catch(e){}
 	  }
 	  
+	  if (!chatmessage){
+		  try {
+			var eleContent = ele.querySelector(".chat-line__message-container .chat-line__username-container").nextElementSibling.nextElementSibling;
+			chatmessage = getAllContentNodes(eleContent);
+			
+			eleContent = eleContent.nextElementSibling;
+			var count = 0;
+			while (eleContent){
+				count++;
+				chatmessage += getAllContentNodes(eleContent);
+				eleContent = eleContent.nextElementSibling;
+				if (count>20){
+					break
+				}
+			}
+		  } catch(e){}
+	  }
+		  
+	 if (chatmessage){
+		 chatmessage = chatmessage.trim();
+	 }
 	  
 	  var donations = 0;
 	  try {
@@ -220,14 +204,12 @@
 					sendResponse(true);
 					return;
 				}
-				if ("textOnlyMode" == request){
-					textOnlyMode = true;
-					sendResponse(true);
-					return;
-				} else if ("richTextMode" == request){
-					textOnlyMode = false;
-					sendResponse(true);
-					return;
+				if (typeof request === "object"){
+					if ("settings" in request){
+						settings = request.settings;
+						sendResponse(true);
+						return;
+					}
 				}
 				// twitch doesn't capture avatars already.
 			} catch(e){}
@@ -236,12 +218,10 @@
 	);
 	
 	var lastMessage = "";
-	var textOnlyMode = false;
+	var settings = {};
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
-			if ("textonlymode" in response.settings){
-				textOnlyMode = response.settings.textonlymode;
-			}
+			settings = response.settings;
 		}
 	});  /////
 
