@@ -1006,7 +1006,6 @@
 	var timeoutTimer = null;
 	var isOBSBrowserSource = false;
 	var customNodeLimit = false;
-	var autoTimeout = false;
 	var body = document.body;
 	var html = document.documentElement;
 	var mainOutputWindow = document.getElementById("output");
@@ -1275,6 +1274,8 @@
 		autoshow = true;
 		document.getElementById("autoshow").classList.add("pressed");
 	} 
+	
+	var autoShowQueue = [];
 	
 	if (urlParams.has("autoshowdonos")){
 		autoshowdonos = true;
@@ -1665,6 +1666,33 @@
 		redoOdd();
 	}
 	
+	var lastPushed = Date.now();
+	var checkTimeout = null;
+	function checkAutoShow(){
+		clearTimeout(checkTimeout);
+		if (lastPushed + 1500 < Date.now()){
+			if (autoShowQueue.length){
+				var post = autoShowQueue.shift();
+				if (post.classList.contains("pressed")){
+					if (autoShowQueue.length){
+						checkAutoShow();
+					}
+					return;
+				} else {
+					selectedMessage(false, post);
+				}
+			}
+		}
+		if (autoShowQueue.length>10){
+			autoShowQueue.shift(); // skip oldest, since too many are queued up
+			checkTimeout = setTimeout(function(){checkAutoShow()},1600);
+		} else if (autoShowQueue.length>3){
+			checkTimeout = setTimeout(function(){checkAutoShow()},1600);
+		} else if (autoShowQueue.length){
+			checkTimeout = setTimeout(function(){checkAutoShow()},2500);
+		}
+	}
+	
 	function donos(ele){
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
@@ -1760,6 +1788,11 @@
 	function processInput(data){
 		if ("mid" in data){
 			if (data.mid && syncDocks){
+			
+				if (autoTimeoutEnabled){
+					lastPushed = Date.now();
+				}
+			
 				try {
 					document.querySelector("[data-mid='"+data.mid+"']").classList.add("pressed");
 				} catch(e){
@@ -1767,7 +1800,7 @@
 						try{
 							document.querySelector("[data-mid='"+mid+"']").classList.add("pressed");
 						} catch(e){}
-					},1000, data.mid);
+					},500, data.mid); // if delayed, we will try again.
 				}
 			}
 			return;
@@ -2165,6 +2198,18 @@
 			sendDataP2P(false);	// clear message
 			return;
 		}
+		
+		
+		if (autoTimeoutEnabled){
+			lastPushed = Date.now();
+			if (event && autoShowQueue.length){ // user selected and an auto queue
+				var index = autoShowQueue.indexOf(element); // item exists in the queue; so lets remove it from it
+				if (index > -1) { // remove if
+				   autoShowQueue.splice(index, 1); // 2nd parameter means remove one item only
+				}
+			}
+		}
+		
 		document.querySelectorAll(".last-message").forEach(ele=>{ // last message sent was to clear the overlay
 			ele.classList.remove("last-message"); // no overlay is now active.
 		});
@@ -2675,11 +2720,9 @@
 			
 			if (autoshow && !bot){ 
 				if (!autoshowdonos || (autoshowdonos && data.hasDonation)){ // dono or not to dono.
-					if ((!autoTimeout) && (autoTimeoutEnabled)){
-						selectedMessage(false, node);
-						autoTimeout = setTimeout(function(){
-							autoTimeout=false;
-						},1500);
+					if (autoTimeoutEnabled){ 
+						autoShowQueue.push(node);
+						checkAutoShow();
 					} else {
 						selectedMessage(false, node);
 					}
@@ -2884,7 +2927,7 @@
 			if (socketserver){
 				socketserver.send(JSON.stringify(data));
 			}
-			if (iframe){ 
+			if (iframe){
 				var msg = {};
 				msg.overlayNinja = {};
 				msg.overlayNinja = data;
@@ -2893,7 +2936,6 @@
 					for (var i = 0; i<keys.length;i++){
 						var UUID = keys[i];
 						var label = connectedPeers[keys[i]];
-						
 						if (label === "dock"){
 							if (data && data.id){
 								iframe.contentWindow.postMessage({"sendData":{overlayNinja:{mid:data.id}}, "type":"pcs", "UUID":UUID}, '*');
@@ -2907,7 +2949,14 @@
 						}
 					}
 				} else {
-					iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs"}, '*'); // send only to viewers of this stream; not back to the chrome extension.. legacy?
+					var keys = Object.keys(connectedPeers);
+					for (var i = 0; i<keys.length;i++){
+						var UUID = keys[i];
+						var label = connectedPeers[keys[i]];
+						if (label !== "dock"){
+							iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs", "UUID":UUID}, '*'); // send only to viewers of this stream; not back to the chrome extension.. legacy?
+						}
+					}
 				}
 			}
 		} catch(e){
