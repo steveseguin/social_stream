@@ -49,7 +49,7 @@
 			}
 		  } catch(e){}
 	  
-		  if (!textOnlyMode){
+		  if (!settings.textonlymode){
 			  try{
 				chatmessage = ele.querySelector("#message, .seventv-yt-message-content").innerHTML;
 			  } catch(e){}
@@ -183,26 +183,12 @@
 		data.hasDonation = hasDonation;
 		data.hasMembership = hasMembership;
 		data.type = "youtube";
-		if (data.chatimg && avatars){
-			//data.chatimg = data.chatimg.replace("=s32-", "=s128-");  // this is all for HD by default.  Too much CPU usage though
-			//data.chatimg = data.chatimg.replace("=s64-", "=s128-");
-			//
-			//toDataURL(data.chatimg, function(dataUrl) {
-			//	data.chatimg = dataUrl;
-			try {
-				chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
-			} catch(e){}
-			//});
-		} else {
-			data.chatimg = "";
-			try {
-				chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
-			} catch(e){}
-		}
+		
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
+		} catch(e){}
+		
 	}
-	
-	var avatars = true;
-	var textOnlyMode = false;
 	
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
@@ -212,42 +198,29 @@
 					sendResponse(true);
 					return;
 				} 
-				if ("textOnlyMode" == request){
-					textOnlyMode = true;
-					sendResponse(true);
-					return;
-				} else if ("richTextMode" == request){
-					textOnlyMode = false;
-					sendResponse(true);
-					return;
+				if (typeof request === "object"){
+					if ("settings" in request){
+						settings = request.settings;
+						sendResponse(true);
+						return;
+					}
 				}
 				
-				if ("noAvatars" == request){
-					avatars = false;
-					sendResponse(true);
-					return;
-				} else if ("sendAvatars" == request){
-					avatars = true;
-					sendResponse(true);
-					return;
-				}
 			} catch(e){}
 			sendResponse(false);
 		}
 	);
 	
+	var settings = {};
+	// settings.textonlymode
+	// settings.streamevents
+	
+	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
-			if ("textonlymode" in response.settings){
-				textOnlyMode = response.settings.textonlymode;
-			}
+			settings = response.settings;
 		}
-		if ("settings" in response){
-			if ("noavatars" in response.settings){
-				avatars = !response.settings.noavatars;
-			}
-		}
-	});  /////
+	});
 
 	function onElementInserted(target, callback) {
 		var onMutationsObserved = function(mutations) {

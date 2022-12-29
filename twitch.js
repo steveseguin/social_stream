@@ -219,11 +219,15 @@
 	
 	var lastMessage = "";
 	var settings = {};
+	// settings.textonlymode
+	// settings.streamevents
+	
+	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
 		}
-	});  /////
+	});
 
 	function onElementInsertedTwitch(target, className, callback) {
 		var onMutationsObserved = function(mutations) {

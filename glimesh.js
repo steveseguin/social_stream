@@ -34,7 +34,7 @@
 		
 		var chatmessage="";
 		try{
-			 if (textOnlyMode){
+			 if (settings.textonlymode){
 				chatmessage = content.querySelector(".user-message").innerText;
 			 } else {
 				content.querySelectorAll(".user-message").forEach(ele2=>{
@@ -128,12 +128,14 @@
 		
 	},1500);
 
-	var textOnlyMode = false;
+	var settings = {};
+	// settings.textonlymode
+	// settings.streamevents
+	
+	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
-			if ("textonlymode" in response.settings){
-				textOnlyMode = response.settings.textonlymode;
-			}
+			settings = response.settings;
 		}
 	});
 
@@ -149,14 +151,12 @@
 					sendResponse(true);
 					return;
 				}
-				if ("textOnlyMode" == request){
-					textOnlyMode = true;
-					sendResponse(true);
-					return;
-				} else if ("richTextMode" == request){
-					textOnlyMode = false;
-					sendResponse(true);
-					return;
+				if (typeof request === "object"){
+					if ("settings" in request){
+						settings = request.settings;
+						sendResponse(true);
+						return;
+					}
 				}
 			} catch(e){	}
 			

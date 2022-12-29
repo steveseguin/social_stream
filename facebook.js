@@ -81,7 +81,7 @@
 
 		var msg = "";
 
-		if (textOnlyMode) {
+		if (settings.textonlymode) {
 			try {
 				walkTheDOM(ele.childNodes[1].querySelector('a[role="link"]').parentNode.parentNode.parentNode.querySelector('span[lang]'), function(node) {
 				  if (node.nodeName === "#text") {
@@ -264,14 +264,13 @@
 		} catch (e) {console.error(e);}
 	}, 800);
 
-	var textOnlyMode = false;
-	chrome.runtime.sendMessage(chrome.runtime.id, {
-		"getSettings": true
-	}, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if ("settings" in response) {
-			if ("textonlymode" in response.settings) {
-				textOnlyMode = response.settings.textonlymode;
-			}
+	var settings = {};
+	// settings.textonlymode
+	// settings.streamevents
+	
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if ("settings" in response){
+			settings = response.settings;
 		}
 	});
 
@@ -314,14 +313,12 @@
 					sendResponse(true);
 					return;
 				}
-				if ("textOnlyMode" == request) {
-					textOnlyMode = true;
-					sendResponse(true);
-					return;
-				} else if ("richTextMode" == request) {
-					textOnlyMode = false;
-					sendResponse(true);
-					return;
+				if (typeof request === "object"){
+					if ("settings" in request){
+						settings = request.settings;
+						sendResponse(true);
+						return;
+					}
 				}
 			} catch (e) {}
 

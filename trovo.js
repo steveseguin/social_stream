@@ -24,7 +24,7 @@
 		chatname = ele.querySelector(".nick-name").innerText;
 	  } catch(e){}
 	  
-	  if (!textOnlyMode){
+	  if (!settings.textonlymode){
 		  try{
 			chatmessage = ele.querySelector(".content").innerHTML;
 		  } catch(e){return;}
@@ -61,7 +61,7 @@
 	  data.hasMembership = hasMembership;
 	  data.type = "trovo";
 	  
-		if (data.chatimg && avatars){
+		if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
 				data.chatimg = dataUrl;
 				try {
@@ -104,41 +104,27 @@
 					},50);
 					return;
 				} 
-				if ("textOnlyMode" == request){
-					textOnlyMode = true;
-					sendResponse(true);
-					return;
-				} else if ("richTextMode" == request){
-					textOnlyMode = false;
-					sendResponse(true);
-					return;
+				if (typeof request === "object"){
+					if ("settings" in request){
+						settings = request.settings;
+						sendResponse(true);
+						return;
+					}
 				}
 				
-				if ("noAvatars" == request){
-					avatars = false;
-					sendResponse(true);
-					return;
-				} else if ("sendAvatars" == request){
-					avatars = true;
-					sendResponse(true);
-					return;
-				}
 			} catch(e){}
 			sendResponse(false);
 		}
 	);
-	var avatars = true;
-	var textOnlyMode = false;
+	
+	var settings = {};
+	// settings.textonlymode
+	// settings.streamevents
+	
+	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
-			if ("textonlymode" in response.settings){
-				textOnlyMode = response.settings.textonlymode;
-			}
-		}
-		if ("settings" in response){
-			if ("noavatars" in response.settings){
-				avatars = !response.settings.noavatars;
-			}
+			settings = response.settings;
 		}
 	});
 

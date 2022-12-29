@@ -187,7 +187,7 @@
 	var settings = {};
 	// settings.textonlymode
 	// settings.streamevents
-	// settings.noavatars
+	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
