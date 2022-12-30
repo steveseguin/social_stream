@@ -144,7 +144,7 @@
 		  }
 
 		  if (chatsticker) {
-			chatmessage = '<img src="'+chatsticker+'">';
+			chatmessage = '<img class="supersticker" src="'+chatsticker+'">';
 		  }
 		  
 		  var backgroundColor = "";
