@@ -109,21 +109,23 @@
 			if (!document.querySelector(".chatContainer").set123){
 				document.querySelector(".chatContainer").set123 = true;
 				console.log("LOADED SocialStream EXTENSION");
-				try {
-					var main = document.querySelectorAll("[class^='msg-container']");
-					for (var j =0;j<main.length;j++){
-						try{
-							if (!main[j].dataset.set123){
-								main[j].dataset.set123 = "true";
-								//processMessage(main[j]);
-							} 
-						} catch(e){}
-					}
-				} catch(e){ }
-				
-				onElementInserted(".chatContainer", function(element){
-					processMessage(element, false);
-				});
+				setTimeout(function(){
+					try {
+						var main = document.querySelectorAll("[class^='msg-container']");
+						for (var j =0;j<main.length;j++){
+							try{
+								if (!main[j].dataset.set123){
+									main[j].dataset.set123 = "true";
+									//processMessage(main[j]);
+								} 
+							} catch(e){}
+						}
+					} catch(e){ }
+					
+					onElementInserted(".chatContainer", function(element){
+						processMessage(element, false);
+					});
+				},1500);
 			}
 		}
 		
