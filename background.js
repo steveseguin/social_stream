@@ -974,13 +974,21 @@ try{
 } catch(e){
 	console.log("'chrome.debugger' not supported by this browser");
 }
-function onAttach(debuggeeId, callback, message) { // for faking user input
+function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for faking user input
   if (chrome.runtime.lastError) {
     console.log(chrome.runtime.lastError.message);
     return;
   }
   debuggerEnabled[debuggeeId.tabId] = true;
-  callback(debuggeeId.tabId, message);
+  if (c!==null){
+	  callback(debuggeeId.tabId, message, a,b,c);
+  } else if (b!==null){
+	  callback(debuggeeId.tabId, message, a,b);
+  } else if (a!==null){
+	  callback(debuggeeId.tabId, message, a);
+  } else {
+	  callback(debuggeeId.tabId, message);
+  }
 }
 
 eventer(messageEvent, function (e) {
@@ -1020,17 +1028,16 @@ function processResponse(data){
 					
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
-						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false));  // enable the debugger to let us fake a user 
+						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false));  // enable the debugger to let us fake a user 
 					} else {
-						generalFakeChat(tabs[i].id, data.response, false);
+						generalFakeChat(tabs[i].id, data.response, false, true, false);
 					}
 				} else if (tabs[i].url.startsWith("https://app.chime.aws/meetings/")){  // twitch, but there's also cases for youtube/facebook
-					
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
-						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, true, false));  // enable the debugger to let us fake a user 
+						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true));  // enable the debugger to let us fake a user 
 					} else {
-						generalFakeChat(tabs[i].id, data.response, false);
+						generalFakeChat(tabs[i].id, data.response, false, true, true); // middle=true, keypress=true, backspace=false
 					}
 				} else {  // all other destinations. ; generic
 				
@@ -1040,9 +1047,9 @@ function processResponse(data){
 				
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
-						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, true));  // enable the debugger to let us fake a user 
+						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, true, true, false));  // enable the debugger to let us fake a user 
 					} else {
-						generalFakeChat(tabs[i].id, data.response, true);
+						generalFakeChat(tabs[i].id, data.response, true, true, false);
 					}
 					
 				} 
@@ -1054,7 +1061,7 @@ function processResponse(data){
 	});
 }
 	
-function generalFakeChat(tabid, message, middle=true, keypress=true){ // fake a user input
+function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=false){ // fake a user input
 	try{
 		chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {
 			chrome.runtime.lastError;
@@ -1069,49 +1076,110 @@ function generalFakeChat(tabid, message, middle=true, keypress=true){ // fake a 
 			lastSentMessage = lastSentMessage.replace(/\s\s+/g, ' ');
 			lastSentTimestamp = Date.now();
 			lastMessageCounter = 0;
-			chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
 			
-			if (keypress){
-				chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 
-					"type": "keyDown",
-					"key": "Enter",
-					"code": "Enter",
-					"nativeVirtualKeyCode": 13,
-					"windowsVirtualKeyCode": 13
-				}, function (e) {});
-			}
-			
-			if (middle){
+			if (backspace){
 				chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
-					"type": "char",
-					"key": "Enter",
-					"text": "\r",
-					"code": "Enter",
-					"nativeVirtualKeyCode": 13,
-					"windowsVirtualKeyCode": 13
-				}, function (e) {
-					if (!last){
-						if (debuggerEnabled[tabid]){
-							chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-						}
-					}
-				});
-				
-			}
-			if (keypress){
-				chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
-					"type": "keyUp",
-					"key": "Enter",
-					"code": "Enter",
-					"nativeVirtualKeyCode": 13,
-					"windowsVirtualKeyCode": 13
+				   "key": "Backspace",
+				   "modifiers": 0,
+				   "nativeVirtualKeyCode": 8,
+				   "text": "",
+				   "type": "rawKeyDown",
+				   "unmodifiedText": "",
+				   "windowsVirtualKeyCode": 8
 				 }, function (e) {
-						if (debuggerEnabled[tabid]){
-							chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+						
+						chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
+					 
+						if (keypress){
+							chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 
+								"type": "keyDown",
+								"key": "Enter",
+								"code": "Enter",
+								"nativeVirtualKeyCode": 13,
+								"windowsVirtualKeyCode": 13
+							}, function (e) {});
 						}
-					}
-				);
+						
+						if (middle){
+							chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+								"type": "char",
+								"key": "Enter",
+								"text": "\r",
+								"code": "Enter",
+								"nativeVirtualKeyCode": 13,
+								"windowsVirtualKeyCode": 13
+							}, function (e) {
+								if (!keypress){
+									if (debuggerEnabled[tabid]){
+										chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+									}
+								}
+							});
+						}
+						
+						if (keypress){
+							chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+								"type": "keyUp",
+								"key": "Enter",
+								"code": "Enter",
+								"nativeVirtualKeyCode": 13,
+								"windowsVirtualKeyCode": 13
+							 }, function (e) {
+									if (debuggerEnabled[tabid]){
+										chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+									}
+								}
+							);
+						}
+					 
+				 }	);
+			} else {
+				
+				chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
+			
+				if (keypress){
+					chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 
+						"type": "keyDown",
+						"key": "Enter",
+						"code": "Enter",
+						"nativeVirtualKeyCode": 13,
+						"windowsVirtualKeyCode": 13
+					}, function (e) {});
+				}
+				
+				if (middle){
+					chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+						"type": "char",
+						"key": "Enter",
+						"text": "\r",
+						"code": "Enter",
+						"nativeVirtualKeyCode": 13,
+						"windowsVirtualKeyCode": 13
+					}, function (e) {
+						if (!keypress){
+							if (debuggerEnabled[tabid]){
+								chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+							}
+						}
+					});
+				}
+				
+				if (keypress){
+					chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+						"type": "keyUp",
+						"key": "Enter",
+						"code": "Enter",
+						"nativeVirtualKeyCode": 13,
+						"windowsVirtualKeyCode": 13
+					 }, function (e) {
+							if (debuggerEnabled[tabid]){
+								chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+							}
+						}
+					);
+				}
 			}
+			
 		});
 		
 	} catch(e){
