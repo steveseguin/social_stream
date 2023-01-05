@@ -73,12 +73,14 @@
   console.log("Social Stream injected");
 
   var oldRun = false;
+  var delay = 3000;
   
   setInterval(function () {
 		if (!oldRun){
 			if (document.querySelectorAll('.ChatMessageList__messagesWrapper').length || document.querySelectorAll("div.chatBubbleContainer").length){
 				
 				oldRun = true;
+				delay = 800;
 				
 				var xxx = document.querySelectorAll('[class="ChatMessageList__messageContainer"]');
 				for (var j = 0; j < xxx.length; j++) {
@@ -110,7 +112,7 @@
 			  processMessage(xxx[j]);
 			}
 		}
-  }, 800);
+  }, delay);
   
   var settings = {};
   
@@ -118,7 +120,9 @@
 	function (request, sender, sendResponse) {
 		try{
 			if ("focusChat" == request){
-				document.querySelector('.DraftEditor-editorContainer [data-offset-key]').focus();
+				document.querySelector('.DraftEditor-editorContainer .public-DraftStyleDefault-block[data-offset-key]').click();
+				document.querySelector('.DraftEditor-editorContainer .public-DraftStyleDefault-block[data-offset-key]').focus();
+				
 				sendResponse(true);
 				return;
 			}
