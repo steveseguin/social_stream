@@ -12,6 +12,8 @@
   function errorlog(e) {
     //console.error(e);
   }
+  
+  
 
   function processMessage(ele) {
     var chatimg = "";
@@ -30,7 +32,8 @@
 
     // Get the sender  name
     try {
-      chatname = ele.querySelector('[class="ChatMessage__sender"]').innerText;
+	  var chatele = ele.querySelector('[class="ChatMessage__sender"]') || ele.querySelector('[data-testid="chat-bubble-sender-name"]')
+      chatname = chatele.innerText;
     } catch (e) {
       errorlog(e);
     }
@@ -38,11 +41,12 @@
       // Sender name not found? Try in previous siblings
       var prev = ele;
       var count = 0;
-      while (chatname == "" && count < 10) {
+      while (chatname == "" && count < 20) {
         try {
           count++;
           prev = prev.previousElementSibling;
-          chatname = prev.querySelector('[class="ChatMessage__sender"]').innerText;
+          var chatele = prev.querySelector('[class="ChatMessage__sender"]') || prev.querySelector('[data-testid="chat-bubble-sender-name"]')
+		  chatname = chatele.innerText;
         } catch (e) {
           chatname = "";
         }
@@ -66,16 +70,70 @@
     return;
   }
 
+  console.log("Social Stream injected");
+
+  var oldRun = false;
+  
   setInterval(function () {
-    var xxx = document.querySelectorAll('[class="ChatMessageList__messageContainer"]');
-    for (var j = 0; j < xxx.length; j++) {
-      if (xxx[j].marked) {
-        continue;
-      }
-      xxx[j].marked = true;
-      processMessage(xxx[j]);
-    }
-  }, 3000);
+		if (!oldRun){
+			if (document.querySelectorAll('.ChatMessageList__messagesWrapper').length || document.querySelectorAll("div.chatBubbleContainer").length){
+				
+				oldRun = true;
+				
+				var xxx = document.querySelectorAll('[class="ChatMessageList__messageContainer"]');
+				for (var j = 0; j < xxx.length; j++) {
+				  xxx[j].marked = true;
+				}
+				
+				var xxx = document.querySelectorAll("div.chatBubbleContainer");
+				for (var j = 0; j < xxx.length; j++) {
+				  xxx[j].marked = true;
+				}
+				
+			}
+		} else {
+			var xxx = document.querySelectorAll('[class="ChatMessageList__messageContainer"]');
+			for (var j = 0; j < xxx.length; j++) {
+			  if (xxx[j].marked) {
+				continue;
+			  }
+			  xxx[j].marked = true;
+			  processMessage(xxx[j]);
+			}
+			
+			var xxx = document.querySelectorAll('div.chatBubbleContainer');
+			for (var j = 0; j < xxx.length; j++) {
+			  if (xxx[j].marked) {
+				continue;
+			  }
+			  xxx[j].marked = true;
+			  processMessage(xxx[j]);
+			}
+		}
+  }, 800);
+  
+  var settings = {};
+  
+  chrome.runtime.onMessage.addListener(
+	function (request, sender, sendResponse) {
+		try{
+			if ("focusChat" == request){
+				document.querySelector('.DraftEditor-editorContainer [data-offset-key]').focus();
+				sendResponse(true);
+				return;
+			}
+			if (typeof request === "object"){
+				if ("settings" in request){
+					settings = request.settings;
+					sendResponse(true);
+					return;
+				}
+			}
+			// twitch doesn't capture avatars already.
+		} catch(e){}
+		sendResponse(false);
+	}
+  );
 
   // Does not support sending messages in Chime
 })();
