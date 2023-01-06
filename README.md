@@ -39,6 +39,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - discord.com (web version; requires toggle enabled via the settings as well) 
 - telegram (web.telegram.org in stream mode; requires toggle enabled)
 - slack (https://app.slack.com/ ; required toggle enabled to use)
+- Google Meet ; required toggle enabled to use
 - ![Requires toggling to enable certain integrations](https://user-images.githubusercontent.com/2575698/178857380-24b3a0fc-bf86-4645-91ec-24893df19279.png) telegram, slack, whatsapp, discord require an extra step to enable.  See this video for more help: https://www.youtube.com/watch?v=L3l0_8V1t0Q
 - restream.io chat supported (https://chat.restream.io/chat)
 - amazon.com/live
@@ -62,6 +63,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - Nimo.TV (pop out chat, ie: https://www.nimo.tv/popout/chat/xxxx)
 - kick.com (pop out chat)
 - quickchannel.com (https://play.quickchannel.com/*)
+
 
 More on request
 
