@@ -508,6 +508,13 @@ chrome.runtime.onMessage.addListener(
 							}
 						} catch(e){}
 					}
+					if (!settings.meet){
+						try {
+							if (request.message.type == "meet"){
+								return;
+							}
+						} catch(e){}
+					}
 					if (!settings.telegram){
 						try {
 							if (request.message.type == "telegram"){
