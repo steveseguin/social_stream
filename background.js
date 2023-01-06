@@ -552,13 +552,18 @@ chrome.runtime.onMessage.addListener(
 						if (request.message===null){return;}
 					} catch(e){console.log(e);}
 					
-					if (settings.firstsourceonly){
-						if (verifyOriginal(request.message)){
-							sendToDestinations(request.message); // send the data to the dock
-						}
-					} else {
-						sendToDestinations(request.message); // send the data to the dock
+					
+					if (settings.filtercommands && request.message.chatmessage && request.message.chatmessage.startsWith("!")){
+						return;
 					}
+					
+					if (settings.firstsourceonly){
+						if (!verifyOriginal(request.message)){
+							return;
+						}
+					}
+					
+					sendToDestinations(request.message); // send the data to the dock
 				}
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				sendResponse({"settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
