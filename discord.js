@@ -20,8 +20,6 @@
 	
 	function processMessage(ele){
 		
-		console.log(ele);
-		
 		var mid = ele.id.split("chat-messages-");
 		if (mid.length==2){
 			mid = mid[1];
