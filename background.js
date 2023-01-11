@@ -939,7 +939,7 @@ function setupSocket(){
 			if (data.get){
 				var ret = {};
 				ret.callback = {};
-				msg.callback.get = data.get
+				ret.callback.get = data.get
 				ret.callback.result = true;
 				socketserver.send(JSON.stringify(ret));
 			}
