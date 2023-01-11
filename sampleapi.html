@@ -273,13 +273,21 @@ function post(data) {
 
 function loadSelfCommands(){
 	
+	
+	
 	var target_self = document.getElementById("target_self");
+	
+	var title = document.createElement("h2");
+	title.innerText = "Extension-specific options";
+	target_self.appendChild(title);
 
 	var input = document.createElement("input");
-	input.placeholder = "Message to send to chat rooms here";
-	input.style = "width: 600px;";
+	input.placeholder = "Message to send to external chat here as the host";
+	input.style = "width:100%";
 	target_self.appendChild(input);
 
+	var br = document.createElement("br");
+	target_self.appendChild(br);
 	// https://api.vdo.ninja/XXXXXXXXXX/sendChat/null/Hello
 
 	var button = document.createElement("button");
@@ -319,6 +327,9 @@ function loadSelfCommands(){
 	};
 	target_self.appendChild(button);
 	
+	var title = document.createElement("h2");
+	title.innerText = "Dock-specific options";
+	target_self.appendChild(title);
 	
 	var button = document.createElement("button");
 	button.innerHTML = "Clear featured overlay (via dashboard)";
