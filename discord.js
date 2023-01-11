@@ -19,11 +19,21 @@
 	
 	
 	function processMessage(ele){
+		
+		console.log(ele);
+		
 		var mid = ele.id.split("chat-messages-");
 		if (mid.length==2){
 			mid = mid[1];
 		} else {
 			return;;
+		}
+		
+		mid = mid.split("-");
+		if (mid.length==2){
+			mid = mid[1];
+		} else {
+			mid = mid[0];
 		}
 	
 		var chatimg = "";
