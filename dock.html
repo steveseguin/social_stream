@@ -1305,10 +1305,16 @@
 			socketserver.send(JSON.stringify({"join":roomID, "out":2, "in":1}));
 		};
 		socketserver.addEventListener('message', function (event) {
+			var resp = false
 			if (event.data){
 				var data = JSON.parse(event.data);
-				processInput(data);
+				resp = processInput(data); 
 			}
+			var ret = {};
+			data.result = resp || false;
+			ret.callback = data;
+			socketserver.send(JSON.stringify(ret));
+			
 		});
 	}
 	if (urlParams.has("server")){
@@ -1802,6 +1808,7 @@
 						} catch(e){}
 					},500, data.mid); // if delayed, we will try again.
 				}
+				return true
 			}
 			return;
 		} else if ("pin" in data){
@@ -1814,6 +1821,7 @@
 							
 						}
 					});
+					return true
 				}
 			}
 			return;
@@ -1827,6 +1835,7 @@
 							
 						}
 					});
+					return true
 				}
 			}
 			return;
@@ -1851,6 +1860,7 @@
 					});
 					selectedQueue = sq;
 					updateQueueButton();
+					return true
 				}
 			}
 			return;
@@ -1877,6 +1887,7 @@
 					});
 					selectedQueue = sq;
 					updateQueueButton();
+					return true
 				}
 			}
 			return;
@@ -1887,6 +1898,7 @@
 					if (ele){
 						ele.remove();
 					}
+					return true
 				} catch(e){}
 			//}
 			return;
@@ -1897,15 +1909,28 @@
 		if (data.action){
 			if (data.action == "nextInQueue"){
 				nextInQueue();
+				return true
 			} else if (data.action == "clearOverlay"){ // or just send data=false
 				sendDataP2P(false);
+				return true
 			} else if (data.action == "getQueueSize"){ // or just send data=false
 				updateQueueButton();
+				return true
+			} else if (data.action == "content"){ // or just send data=false
+				if (data.value){
+					let content = decodeURIComponent(data.value);
+					content = JSON.parse(content);
+					processData( {contents : content} );
+					return true
+				} 
+				return false;
 			}
 		} else if ("forward" in data){
 			sendDataP2P(data.forward);
+			return true
 		} else if ("html" in data){
 			processHTML(data);
+			return true
 		} else if (!pauseState ){
 			return processData( {contents : data} );
 		} else {
@@ -1913,6 +1938,7 @@
 			if (queue.length>100){ // keep the queue from exploding in size
 				queue.shift();
 			}
+			return true
 		}
 		return false;
 	}

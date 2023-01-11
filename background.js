@@ -813,6 +813,7 @@ function sendToDestinations(message){
 	sendDataP2P(message);
 	sendToDisk(message);
 	sendToH2R(message);
+	return true;
 }
 
 function sendToH2R(data){
@@ -897,18 +898,45 @@ function setupSocket(){
 		conCon = 0;
 		socketserver.send(JSON.stringify({"join":channel,"out":2,"in":1}));
 	};
-	socketserver.addEventListener('message', function (event) {
+	socketserver.addEventListener('message', async function (event) {
 		if (event.data){
 			var data = JSON.parse(event.data);
+			var resp = false;
 			if (data.action && (data.action === "sendChat") && data.value){
 				var msg = {};
 				msg.response = data.value;
-				processResponse(msg);
+				resp = processResponse(msg);
 			} else if (data.action && (data.action === "sendEncodedChat") && data.value){
 				var msg = {};
 				msg.response = decodeURIComponent(data.value);
-				processResponse(msg);
+				resp = processResponse(msg);
+			} else if (!data.action && data.extContent){ // Not flattened
+				try {
+					var msg = await applyBotActions(data.extContent); // perform any immediate (custom) actions, including modifying the message before sending it out
+					if (msg){
+						resp = sendToDestinations(msg);
+					}
+				} catch(e){
+					console.error(e);
+				}
+			} else if (data.action && (data.action === "extContent") && data.value){ // flattened
+				try {
+					var msg = decodeURIComponent(data.value);
+					msg = JSON.parse(msg);
+					msg = await applyBotActions(msg); // perform any immediate (custom) actions, including modifying the message before sending it out
+					if (msg){
+						resp = sendToDestinations(msg);
+					}
+				} catch(e){
+					console.error(e);
+				}
 			} 
+			if (resp!==null){
+				var ret = {};
+				data.result = resp;
+				ret.callback = data;
+				socketserver.send(JSON.stringify(ret));
+			}
 		}
 	});
 }
@@ -1015,8 +1043,8 @@ eventer(messageEvent, function (e) {
 
 function processResponse(data){
 	
-	if (!chrome.debugger){return;}
-	if (!isExtensionOn){return;} // extension not active, so don't let responder happen. Probably safer this way.
+	if (!chrome.debugger){return false;}
+	if (!isExtensionOn){return false;} // extension not active, so don't let responder happen. Probably safer this way.
 	
 	chrome.tabs.query({}, function(tabs) {
 		if (chrome.runtime.lastError) {
@@ -1071,6 +1099,7 @@ function processResponse(data){
 			}
 		}
 	});
+	return true;
 }
 	
 function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=false){ // fake a user input
