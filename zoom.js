@@ -125,7 +125,9 @@
 			return;
 		}
 		lastMessage = JSON.stringify(data);
-
+		
+		console.log(data);
+		
 		pushMessage(data);
 	}
 
