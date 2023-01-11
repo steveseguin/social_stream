@@ -931,12 +931,19 @@ function setupSocket(){
 					console.error(e);
 				}
 			} 
-			if (resp!==null){
+			
+			var ret = {};
+			if (typeof resp == "object"){
+				resp = true;
+			}
+			if (data.get){
 				var ret = {};
-				data.result = resp;
-				ret.callback = data;
+				ret.callback = {};
+				msg.callback.get = data.get
+				ret.callback.result = true;
 				socketserver.send(JSON.stringify(ret));
 			}
+			
 		}
 	});
 }

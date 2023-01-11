@@ -1308,13 +1308,15 @@
 			var resp = false
 			if (event.data){
 				var data = JSON.parse(event.data);
-				resp = processInput(data); 
-			}
-			var ret = {};
-			data.result = resp || false;
-			ret.callback = data;
-			socketserver.send(JSON.stringify(ret));
-			
+				processInput(data);
+				if (data.get){
+					var ret = {};
+					ret.callback = {};
+					msg.callback.get = data.get
+					ret.callback.result = true;
+					socketserver.send(JSON.stringify(ret));
+				}
+			} 
 		});
 	}
 	if (urlParams.has("server")){
