@@ -49,15 +49,17 @@
 <h2>
 	Sample app using the Social Stream HTTP/WSS remote control API
 </h2>
-👉🏻Make sure to have <b>&server</b> appended to the social stream dashboard URL<br />
-<br /> Also ensure you have matching session values; ( for example,👁️ dock.html?session=xxxx&server)
+👉🏻Make sure to have <b>&server</b> appended to the social stream dock.html URL if intending to send messages to it directly. (This includes dock-specific actions, like next-in-queue actions)<br />
+<br /> Of course, also ensure you have matching session values; ( for example,👁️ dock.html?session=xxxx&server)
 <br />
+If sending messages/actions to the extension, you just need to make sure the extension is on and the enable-server toggle is enabled in the extension menu.
+<br /><br />
 See <a href='https://github.com/steveseguin/social_stream/blob/main/README.md#server-api-support' target='_blank'>this link for details</a> on how to add these commands to your stream deck or application.
 <br /><br />
 <div id="header"></div>
 <div id="target_self"></div>
 <div id="incoming_messages"></div>
-K
+
 <script>
 function generateStreamID(){
 	var text = "";
@@ -343,9 +345,145 @@ function loadSelfCommands(){
 	};
 	target_self.appendChild(button);
 	
+	////////
+	
+	var title = document.createElement("h2");
+	title.innerText = "POST sample for server-side message source";
+	target_self.appendChild(title);
+	
 	var button = document.createElement("button");
-	button.innerHTML = "Sample server -> dock message";
-	button.input = input;
+	button.innerHTML = "Server -> extension message";
+	button.onclick = function(){
+		
+		var data = {};
+		data.chatname = "John Doe";
+		data.nameColor = "";
+		data.chatbadges = "";
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
+		data.chatimg = "";
+		data.hasDonation = "100 gold";
+		data.hasMembership = "";
+		data.chatname = "Bob";
+		data.type = "twitch"; // twitch.png gets used as an icon, as a result
+		
+		var html = {};
+		html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
+		html.type = "svg";
+		data.chatbadges = [];
+		data.chatbadges.push(html);
+		
+		post({"extContent":data, "apiid":WID}); 
+		
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Server -> dock message";
+	button.onclick = function(){
+		
+		var data = {};
+		data.chatname = "John Doe";
+		data.nameColor = "";
+		data.chatbadges = "";
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
+		data.chatimg = "";
+		data.hasDonation = "100 gold";
+		data.hasMembership = "";
+		data.chatname = "Bob";
+		data.type = "twitch"; // twitch.png gets used as an icon, as a result
+		
+		var html = {};
+		html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
+		html.type = "svg";
+		data.chatbadges = [];
+		data.chatbadges.push(html);
+		
+		post({content:data, "apiid":WID}); 
+		
+	};
+	target_self.appendChild(button);
+	
+	/////
+	
+	var title = document.createElement("h2");
+	title.innerText = "GET sample for server-side message source";
+	target_self.appendChild(title);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Server -> extension message";
+	button.onclick = function(){
+		
+		var data = {};
+		data.chatname = "John Doe";
+		data.nameColor = "";
+		data.chatbadges = "";
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
+		data.chatimg = "";
+		data.hasDonation = "100 gold";
+		data.hasMembership = "";
+		data.chatname = "Bob";
+		data.type = "twitch"; // twitch.png gets used as an icon, as a result
+		
+		var html = {};
+		html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
+		html.type = "svg";
+		data.chatbadges = [];
+		data.chatbadges.push(html);
+		
+		var encoded = JSON.stringify(data);
+		encoded = encodeURIComponent(encoded);
+		
+		ajax({"action":"extContent","value":encoded, "apiid":WID}); 
+		
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Server -> dock message";
+	button.onclick = function(){
+		
+		var data = {};
+		data.chatname = "John Doe";
+		data.nameColor = "";
+		data.chatbadges = "";
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
+		data.chatimg = "";
+		data.hasDonation = "100 gold";
+		data.hasMembership = "";
+		data.chatname = "Bob";
+		data.type = "twitch"; // twitch.png gets used as an icon, as a result
+		
+		var html = {};
+		html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
+		html.type = "svg";
+		data.chatbadges = [];
+		data.chatbadges.push(html);
+		
+		var encoded = JSON.stringify(data);
+		encoded = encodeURIComponent(encoded);
+		
+		ajax({"action":"content","value":encoded, "apiid":WID}); 
+		
+	};
+	target_self.appendChild(button);
+	
+	/////
+	
+	
+	var title = document.createElement("h2");
+	title.innerText = "WebSocket sample for server-side message source";
+	target_self.appendChild(title);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Server -> dock message";
 	button.onclick = function(){
 
 		var data = {};
@@ -367,13 +505,44 @@ function loadSelfCommands(){
 		data.chatbadges = [];
 		data.chatbadges.push(html);
 		
-		data.apiid= WID; // session ID key 
+		var message = {};
+		message.content = data;
+		message.apiid = WID; // session ID key 
 
-		sendMessage(JSON.stringify(data)); 
+		sendMessage(JSON.stringify(message)); 
 	};
 	target_self.appendChild(button);
 	
-	
+	var button = document.createElement("button");
+	button.innerHTML = "Server -> extension message";
+	button.onclick = function(){
+
+		var data = {};
+		data.chatname = "John Doe";
+		data.nameColor = "";
+		data.chatbadges = "";
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
+		data.chatimg = "";
+		data.hasDonation = "100 gold";
+		data.hasMembership = "";
+		data.chatname = "Bob";
+		data.type = "twitch"; // twitch.png gets used as an icon, as a result
+		
+		var html = {};
+		html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
+		html.type = "svg";
+		data.chatbadges = [];
+		data.chatbadges.push(html);
+		
+		var message = {};
+		message.extContent = data;
+		message.apiid = WID; // session ID key 
+
+		sendMessage(JSON.stringify(message)); 
+	};
+	target_self.appendChild(button);
 	
 	
 	

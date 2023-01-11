@@ -900,6 +900,7 @@ function setupSocket(){
 	};
 	socketserver.addEventListener('message', async function (event) {
 		if (event.data){
+			
 			var data = JSON.parse(event.data);
 			var resp = false;
 			if (data.action && (data.action === "sendChat") && data.value){
@@ -921,8 +922,7 @@ function setupSocket(){
 				}
 			} else if (data.action && (data.action === "extContent") && data.value){ // flattened
 				try {
-					var msg = decodeURIComponent(data.value);
-					msg = JSON.parse(msg);
+					let msg = JSON.parse(data.value);
 					msg = await applyBotActions(msg); // perform any immediate (custom) actions, including modifying the message before sending it out
 					if (msg){
 						resp = sendToDestinations(msg);

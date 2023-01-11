@@ -1918,9 +1918,17 @@
 				return true
 			} else if (data.action == "content"){ // or just send data=false
 				if (data.value){
-					let content = decodeURIComponent(data.value);
-					content = JSON.parse(content);
-					processData( {contents : content} );
+					console.log(data.value);
+					//let content = decodeURI(data.value);
+					let content = JSON.parse(data.value);
+					if (!pauseState ){
+						processData( {contents : content} );
+					} else {
+						queue.push({contents : content}); 
+						if (queue.length>100){ // keep the queue from exploding in size
+							queue.shift();
+						}
+					}
 					return true
 				} 
 				return false;
@@ -1930,6 +1938,16 @@
 			return true
 		} else if ("html" in data){
 			processHTML(data);
+			return true
+		} else if (data.content){
+			if (!pauseState ){
+				processData( {contents : data.content} );
+			} else {
+				queue.push({contents : data.content}); 
+				if (queue.length>100){ // keep the queue from exploding in size
+					queue.shift();
+				}
+			}
 			return true
 		} else if (!pauseState ){
 			return processData( {contents : data} );
@@ -2342,6 +2360,11 @@
 			data = data.contents;
 			
 			var invisible = false;
+			
+			
+			if (!("id" in data)){
+				data.id = parseInt(Math.random*100000000);
+			}
 			
 			var showType = "";
 			if (!data.type){
