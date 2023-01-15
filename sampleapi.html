@@ -357,6 +357,14 @@ function loadSelfCommands(){
 	};
 	target_self.appendChild(button);
 	
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Toggle auto-show";
+	button.input = input;
+	button.onclick = function(){
+		ajax({"action":"autoShow","value":"toggle", "apiid":WID});  // true, false, or "toggle"
+	};
+	target_self.appendChild(button);
 	////////
 	
 	var title = document.createElement("h2");
