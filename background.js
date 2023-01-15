@@ -486,56 +486,9 @@ chrome.runtime.onMessage.addListener(
 				request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from 
 				sendResponse({"state":isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
 				
-				if (isExtensionOn){
-					if (!settings.discord){
-						try {
-							if (request.message.type == "discord"){
-								return;
-							}
-						} catch(e){}
-					}
-					if (!settings.slack){
-						try {
-							if (request.message.type == "slack"){
-								return;
-							}
-						} catch(e){}
-					}
-					if (!settings.chime){
-						try {
-							if (request.message.type == "chime"){
-								return;
-							}
-						} catch(e){}
-					}
-					if (!settings.meet){
-						try {
-							if (request.message.type == "meet"){
-								return;
-							}
-						} catch(e){}
-					}
-					if (!settings.telegram){
-						try {
-							if (request.message.type == "telegram"){
-								return;
-							}
-						} catch(e){}
-					}
-					if (!settings.whatsapp){
-						try {
-							if (request.message.type == "whatsapp"){
-								return;
-							}
-						} catch(e){}
-					}
-					
-					if (!settings.instagram){
-						try {
-							if (request.message.type == "instagram"){ // "instagram live" is allowed still, just not comments
-								return;
-							}
-						} catch(e){}
+				if (isExtensionOn && request.message.type){
+					if (!checkIfAllowed(request.message.type)){ // toggled is not enabled for this site
+						return;
 					}
 					
 					if (request.message.type == "youtube"){
@@ -1048,11 +1001,95 @@ eventer(messageEvent, function (e) {
   }
 });
 
+function checkIfAllowed(sitename){
+	if (!settings.discord){
+		try {
+			if (sitename == "discord"){
+				return false;
+			}
+			if (sitename.startsWith("https://discord.com/")){
+				return false;
+			}
+		} catch(e){}
+	}
+	if (!settings.slack){
+		try {
+			if (sitename == "slack"){
+				return false;
+			}
+			if (sitename.startsWith("https://app.slack.com/")){
+				return false;
+			}
+		} catch(e){}
+	}
+	if (!settings.chime){
+		try {
+			if (sitename == "chime"){
+				return false;
+			}
+			if (sitename.startsWith("https://app.chime.aws/")){
+				return false;
+			}
+		} catch(e){}
+	}
+	if (!settings.meet){
+		try {
+			if (sitename == "meet"){
+				return false;
+			}
+			if (sitename.startsWith("https://meet.google.com/")){
+				return false;
+			}
+		} catch(e){}
+	}
+	if (!settings.telegram){
+		try {
+			if (sitename == "telegram"){
+				return false;
+			}
+			if (sitename.includes(".telegram.org/")){
+				return false;
+			}
+		} catch(e){}
+	}
+	if (!settings.whatsapp){
+		try {
+			if (sitename == "whatsapp"){
+				return false;
+			}
+			if (sitename.startsWith("https://web.whatsapp.com/")){
+				return false;
+			}
+		} catch(e){}
+	}
+	
+	if (!settings.instagram){
+		try {
+			if (sitename == "instagram"){ // "instagram live" is allowed still, just not comments
+				return false;
+			}
+			if (sitename.startsWith("https://www.instagram.com/")){
+				return false;
+			}
+		} catch(e){}
+	}
+	return true;
+}
+
 function processResponse(data){
 	
 	if (!chrome.debugger){return false;}
 	if (!isExtensionOn){return false;} // extension not active, so don't let responder happen. Probably safer this way.
-	
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
 	chrome.tabs.query({}, function(tabs) {
 		if (chrome.runtime.lastError) {
 			console.warn(chrome.runtime.lastError.message);
@@ -1067,6 +1104,7 @@ function processResponse(data){
 				if (tabs[i].url in published){continue;} // skip. we already published to this tab.
 				if (tabs[i].url.startsWith("https://socialstream.ninja/")){continue;}
 				if (tabs[i].url.startsWith("chrome-extension")){continue;}
+				if (!checkIfAllowed((tabs[i].url))){continue;}
 				
 				published[tabs[i].url] = true;
 				messageTimeout = Date.now();
