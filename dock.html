@@ -1918,6 +1918,20 @@
 			} else if (data.action == "getQueueSize"){ // or just send data=false
 				updateQueueButton();
 				return true
+			} else if (data.action == "autoShow"){ // or just send data=false
+				if (data.value=="toggle"){
+					autoshow = !autoshow;
+				} else if (data.value){
+					autoshow = true;
+				} else {
+					autoshow = false;
+				}
+				if (autoshow){
+					document.getElementById("autoshow").classList.add("pressed");
+				} else {
+					document.getElementById("autoshow").classList.remove("pressed");
+				}
+				return true
 			} else if (data.action == "content"){ // or just send data=false
 				if (data.value){
 					console.log(data.value);
