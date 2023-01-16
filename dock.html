@@ -1555,7 +1555,13 @@
 			
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
-			msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+			//msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+			
+			if (data.type && (data.type == "twitch") && data.chatname){
+				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
+			} else {
+				msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+			}
 			
 			if (data.type){
 				msg.platform = {};
