@@ -1469,17 +1469,26 @@
 	if (urlParams.has("singular")){
 		thirdPartyAPI = function (data){
 			var API = "https://app.singular.live/apiv1/datanodes/"+urlParams.get("singular")+"/data";
+			
+			data.chatimg = upscaleImages(data);
+			
 			var message = {"payload": data};
 			ajax(message, API, "PUT");
 		};
 	} else if (urlParams.has("postserver")){
 		postServer = urlParams.get("postserver") || postServer;
 		thirdPartyAPI = function (data){
+		
+			data.chatimg = upscaleImages(data);
+		
 			ajax(data, postServer, "POST");
 		};
 	} else if (urlParams.has("putserver")){
 		postServer = urlParams.get("putserver") || postServer;
 		thirdPartyAPI = function (data){
+			
+			data.chatimg = upscaleImages(data);
+		
 			ajax(data, postServer, "PUT");
 		};
 	} else if (urlParams.has("spxserver") && urlParams.has("spxfunction") && urlParams.has("spxlayer")) {
@@ -1499,9 +1508,10 @@
 				msg.timestamp = Date.now();
 			}
 			
+			
 			msg.message = data.chatmessage || "";
 			msg.displayName = data.chatname || "";
-			msg.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+			msg.profileImageUrl = upscaleImages(data);
 			
 			if (data.type){
 				msg.platform = {};
@@ -1555,13 +1565,7 @@
 			
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
-			//msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
-			
-			if (data.type && (data.type == "twitch") && data.chatname){
-				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
-			} else {
-				msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
-			}
+			msg.authorDetails.profileImageUrl = upscaleImages(data);
 			
 			if (data.type){
 				msg.platform = {};
@@ -1570,11 +1574,24 @@
 			}
 			
 			var h2r = {};
-			h2r.messages = [];
+			h2r.messages = []; 
 			h2r.messages.push(msg);
 			ajax(h2r, postServer, "POST");
 		};
 	} 
+	
+	function upscaleImages(data){ // for third party APIs
+		let chatimg = "";
+		if (data.type && (data.type == "twitch") && data.chatname){
+			chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
+		} else if (data.type && (data.type == "youtube") && data.chatimg){
+			chatimg = data.chatimg.replace("=s32-", "=s256-");
+			chatimg = chatimg.replace("=s64-", "=s256-");
+		} else {
+			chatimg = data.chatimg || "https://socialstream.ninja/unknown.png";
+		}
+		return chatimg;
+	}
 	
 	function ajax(object2send, url, ajaxType="PUT"){
 		  var xhttp = new XMLHttpRequest();
@@ -2283,32 +2300,26 @@
 		
 		
 		var data = element.rawContents;
-		
-		if (thirdPartyAPI && (data.type == "twitch") && data.chatname){
-			data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
-		}
-		if (data.type && (data.type == "youtube") && data.chatimg){
-			if (thirdPartyAPI){
-				thirdPartyAPI(data);
-			} else {
-				toDataURL(data.chatimg, function(base64Image){
-					data.chatimg = data.chatimg.replace("=s32-", "=s128-");  // Increases the resolution of the image
-					data.chatimg = data.chatimg.replace("=s64-", "=s128-");
+		 
+		if (thirdPartyAPI){ // we upscale using a generic upsizing function for third parties. 
+			thirdPartyAPI(data); // not going to send base64 to the third party API, since that would kill my server, but third parties won't expect a blob.
+		} else if (data.type && (data.type == "youtube") && data.chatimg){ // youtube's images are a bit tricky; larger images don't always exist.
+			try {
+				toDataURL(data.chatimg, function(base64Image){ // we upscale 
+					data.chatimg = data.chatimg.replace("=s32-", "=s256-");  // Increases the resolution of the image
+					data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 					if (base64Image){
 						data.backupChatimg = base64Image; // there's code in the index page to fallback if the larger image doens't exist
 					}
 					sendDataP2P(data);
 				});
-			}
-		} else {
-			// convert to base64 if Youtube; pass as a "backup" image.
-			//data.chatimg = data.chatimg.replace("=s32-", "=s128-");  // this is all for HD by default.  Too much CPU usage though
-			//data.chatimg = data.chatimg.replace("=s64-", "=s128-");
-			if (thirdPartyAPI){
-				thirdPartyAPI(data);
-			} else {
+			} catch(e){
+				data.chatimg = data.chatimg.replace("=s32-", "=s256-");  // Increases the resolution of the image
+				data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 				sendDataP2P(data);
 			}
+		} else {
+			sendDataP2P(data); // we handle twitch upsizing in the index.html instead.
 		}
 	};
 	
@@ -3091,10 +3102,7 @@
 		  
 		  try {
 			if (typeof data == "object"){
-				if (data.type && data.chatimg && (data.type == "youtube")){
-					data.chatimg = data.chatimg.replace("=s32-", "=s512-");  
-					data.chatimg = data.chatimg.replace("=s64-", "=s512-");
-				}
+				data.chatimg = upscaleImages(data);
 				overwriteFile(JSON.stringify(data));
 			}
 		  } catch(e){}

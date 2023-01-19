@@ -799,11 +799,19 @@ function sendToH2R(data){
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
 			
+			
+			
 			if (data.type && (data.type == "twitch") && data.chatname){
 				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
+				
+			} else if (data.type && (data.type == "youtube") && data.chatimg){
+				let chatimg = data.chatimg.replace("=s32-", "=s256-");  
+				msg.authorDetails.profileImageUrl = chatimg.replace("=s64-", "=s256-");
+				
 			} else {
 				msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
 			}
+			
 			
 			if (data.type){
 				msg.platform = {};
