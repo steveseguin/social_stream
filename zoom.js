@@ -87,7 +87,7 @@
 
 		var msg = "";
 		try {
-			msg = ele.querySelector('.chat-message__text-content').innerText;
+			msg = ele.querySelector('.chat-message__text-content, .new-chat-message__content').innerText;
 		} catch(e){
 
 		}

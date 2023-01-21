@@ -904,7 +904,6 @@ function setupSocket(){
 				ret.callback.result = true;
 				socketserver.send(JSON.stringify(ret));
 			}
-			
 		}
 	});
 }
@@ -926,7 +925,7 @@ function sendToDisk(data){
 				data.timestamp = new Date().getTime();
 				
 				if (data.type && data.chatimg && (data.type == "youtube")){
-					data.chatimg = data.chatimg.replace("=s32-", "=s512-");  
+					data.chatimg = data.chatimg.replace("=s32-", "=s512-");  // high, but meh.
 					data.chatimg = data.chatimg.replace("=s64-", "=s512-");
 				}
 				
