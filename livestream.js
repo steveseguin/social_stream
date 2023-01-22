@@ -18,6 +18,7 @@
 	var lastMessage = {};
 	
 	function processMessage(ele){
+		
 		var chatimg = "";
 		var msg = "";
 		
@@ -35,6 +36,10 @@
 			  msg = ele.querySelector('.commenter_content').innerText;
 			} 
 		} catch(e){}
+		
+		if (!name){
+			return; // this might be a duplicate. 
+		}
 		
 		var data = {};
 		data.chatname = name;
@@ -54,14 +59,8 @@
 		}
 		lastMessage = JSON.stringify(data);
 		
-		if (data.chatimg){
-			toDataURL(data.chatimg, function(dataUrl) {
-				data.chatimg = dataUrl;
-				pushMessage(data);
-			});
-		} else {
-			pushMessage(data);
-		}
+		pushMessage(data);
+		
 	}
 
 	function pushMessage(data){
