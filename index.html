@@ -792,8 +792,14 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 			socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":2}));
 		};
 		socketserver.addEventListener('message', function (event) {
+			
 			if (event.data){
-				var data = JSON.parse(event.data);
+			
+				if (typeof event.data !=="object"){
+					var data = JSON.parse(event.data);
+				} else {
+					data = event.data;
+				}
 				
 				if (data && "overlayNinja" in data){
 					data = data.overlayNinja;
@@ -802,6 +808,24 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 				if (data == false){
 					processData({contents:false});
 					return;
+				}
+				
+				if ("content" in data){
+					if (data.content){
+						processData({contents:data.content});
+					} else {
+						processData({contents:false});
+						return;
+					}
+				} 
+				
+				if (data.action && ("value" in data) && (data.action == "content")){
+					if (data.value){
+						data = JSON.parse(data.value);
+					} else {
+						processData({contents:false});
+						return;
+					}
 				}
 				
 				if (!data || !("contents" in data)){
