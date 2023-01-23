@@ -674,7 +674,9 @@
 		.queued {
 			background-color: #99a8cc !important;
 		}
-		
+		#pinned .queued {
+			background-color: #9d99cc !important;
+		}
 		.icon {
 			margin: 4px 2px auto 1px;
 			border-radius: 50%;
@@ -1739,22 +1741,26 @@
 		redoOdd();
 	}
 	
+	function applyHiddenState(node){
+		if (hideNotDonos && node.classList.contains("noDono")){
+			node.classList.add("hidden");
+			
+		} else if (hideNotQueued && !node.classList.contains("queued") && !node.classList.contains("pinned")){
+			node.classList.add("hidden");
+			
+		} else if (hideTextOnly && node.classList.contains("noText")){
+			node.classList.add("hidden");
+		
+		} else {
+			node.classList.remove("hidden");
+		}
+	}
+	
 	function redoOdd(){
 		odd = false;
 		var nodes = mainOutputWindow.childNodes;
 		for (var i = 0;i<nodes.length;i++){
-			if (hideNotDonos && nodes[i].classList.contains("noDono")){
-				nodes[i].classList.add("hidden");
-				continue;
-			} else if (hideNotQueued && !nodes[i].classList.contains("queued")){
-				nodes[i].classList.add("hidden");
-				continue;
-			} else if (hideTextOnly && nodes[i].classList.contains("noText")){
-				nodes[i].classList.add("hidden");
-				continue;
-			} else {
-				nodes[i].classList.remove("hidden");
-			}
+			applyHiddenState(nodes[i]);
 			var style = window.getComputedStyle(nodes[i]);
 			if ((style.visibility !== "hidden") && (style.display !== "none")){
 				if (odd){
@@ -1765,7 +1771,6 @@
 				odd = !odd;
 			}
 		}
-		
 	}
 	
 	function toggleTriggers(ele){
@@ -1842,6 +1847,7 @@
 					data.pin.forEach(mid=>{
 						try {
 							pinIt(document.querySelector("[data-mid='"+mid+"']"));
+							applyHiddenState(document.querySelector("[data-mid='"+mid+"']"));
 						} catch(e){
 							
 						}
@@ -1856,6 +1862,7 @@
 					data.unpin.forEach(mid=>{
 						try {
 							unpinIt(document.querySelector("[data-mid='"+mid+"']"));
+							applyHiddenState(document.querySelector("[data-mid='"+mid+"']"));
 						} catch(e){
 							
 						}
@@ -1879,6 +1886,7 @@
 									sq.push(ele);
 									ele.children[0].dataset.qid = sq.length;
 									ele.classList.add("queued");
+									applyHiddenState(ele);
 								}
 							}
 						}catch(e){}
@@ -1906,6 +1914,7 @@
 									sq.push(ele);
 									ele.children[0].dataset.qid = sq.length;
 									ele.classList.add("queued");
+									applyHiddenState(ele);
 								}
 							}
 						}catch(e){}
@@ -2179,12 +2188,14 @@
 		element.classList.remove("pinned");
 		document.getElementById("output").prepend(element);
 		element.title = "Alt + Click to pin message";
+		applyHiddenState(element);
 	}
 	
 	function pinIt(element){
 		element.classList.add("pinned");
 		element.title = "Alt + Click to remove pinned message";
 		document.getElementById("pinned").appendChild(element);
+		applyHiddenState(element);
 	}
 	
 	function deleteMessage(element){
