@@ -1673,6 +1673,7 @@
 		document.documentElement.style.setProperty("--background-color", "#0000", "important");
 	}
 	
+	
 	var firstNamesOnly = false
 	if (urlParams.has("firstnamesonly") || urlParams.has("firstname") || urlParams.has("firstnames")){
 		firstNamesOnly = true;
@@ -1681,6 +1682,12 @@
 	var hideNotDonos = false;
 	var hideTextOnly = false;
 	var hideNotQueued = false;
+	
+	if (urlParams.has("queueonly")){
+		hideNotQueued = true;
+		document.getElementById("show_only_queue").dataset.state = "1";
+		document.getElementById("show_only_queue").classList.add("pressed"); 
+	}
 	
 	function emoji(ele){
 		if (ele.dataset.state=="0"){
@@ -2203,7 +2210,7 @@
 		element.remove();
 	}
 	
-	function filterQueued(ele){
+	function filterQueued(ele){ // #show_only_queue
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
 			//document.documentElement.style.setProperty("--show-queue-only", "none");
