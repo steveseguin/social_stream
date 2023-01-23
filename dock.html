@@ -2715,11 +2715,6 @@
 				node.classList.add("noText");
 			}
 			
-			if (data.type){
-				var sourceType = data.type.replace(/[\W_]+/g,"_");
-				node.classList.add("source_"+sourceType);
-			}
-			
 			if (hideNotDonos && node.classList.contains("noDono")){
 				node.classList.add("hidden");
 			} else if (hideNotQueued && !node.classList.contains("queued")){
