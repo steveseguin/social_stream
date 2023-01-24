@@ -3269,9 +3269,19 @@
 				}
 			} else if (link.getAttribute("data-action") === "Queue") {
 				if (taskItemInContext.classList.contains("queued")){
-					removeQueue(taskItemInContext);
+					removeQueue(taskItemInContext); 
 				} else {
-					selectedMessage(false, taskItemInContext);
+				
+					if (taskItemInContext.classList.contains("queued")){
+						removeQueue(taskItemInContext);
+						syncQueueP2P();
+						return;
+					}
+					selectedQueue.push(taskItemInContext);
+					taskItemInContext.children[0].dataset.qid = selectedQueue.length;
+					taskItemInContext.classList.add("queued");
+					updateQueueButton();
+					syncQueueP2P();
 				}
 			}
 			toggleMenuOff();
