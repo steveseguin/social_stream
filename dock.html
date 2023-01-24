@@ -6,7 +6,7 @@
 	<title>Social Stream - Dashboard</title>
 	<meta name="title" content="Social Stream - Dashboard" />
 	<link rel="icon" href="./icons/favicon.ico" />
-	
+
 	<style>
 		:root {
 			--show-emoji-only: flex ;
@@ -28,32 +28,32 @@
 			--stylized-img: 23px;
 			--show-images: inline-block;
 			--fade-out-time: 20s;
-			--comment-font-size: unset; 
+			--comment-font-size: unset;
 			--message-line-height: 22px;
 			--author-font-size: 17px;
 			--electron-drag-fix: drag;
 		}
-	
+
 		/*
 			.noText {
 				display: var(--show-emoji-only) !important;
 			}
-			
+
 			.noDono {
 				display: var(--show-donos-only) !important;
 			}
-			
+
 			.highlight-chat:not(.queued) {
 				display: var(--show-queue-only)!important;
 			}
 		*/
-		
-		#output { 
+
+		#output {
 			zoom: var(--scale-output);
 			-moz-transform: var(--scale-output-moz);
 			-moz-transform-origin: 0 0;
 			width:100%;
-		} 
+		}
 		.hl-badge{
 			padding: 0px 2px 0px 0px;
 			vertical-align: top;
@@ -67,19 +67,19 @@
 		.hl-badge:last-child{
 			padding: 0 4px 0px 0px;
 		}
-		
+
 		a {
 			color: var(--link-color);
 			display: contents;
 			text-decoration:none
 		}
-		
+
 		.hl-img-content {
 			max-width: 80px;
 			margin: 0 2px;
 			max-height: 30px;
 		}
-		
+
 		/* latin-ext */
 		@font-face {
 		  font-family: 'Sora';
@@ -134,7 +134,7 @@
 		  src: url(./thirdparty//xMQbuFFYT72XzQUpDg.woff2) format('woff2');
 		  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 		}
-		
+
 		body {
 			font-family: 'Sora', Roboto, Arial, sans-serif;
 			color: var(--font-color);
@@ -163,53 +163,53 @@
 		body > div {
 			 -webkit-app-region: no-drag;
 		}
-		
+
 		body.lightmode {
 			font-weight: 500;
-			text-shadow: -2px -2px #FFF, -2px -1px #FFF, -2px 0px #FFF, -2px 1px #FFF, -2px 2px #FFF, -1px -2px #FFF, -1px -1px #FFF, -1px 0px #FFF, -1px 1px #FFF, -1px 2px #FFF, 0px -2px #FFF, 0px -1px #FFF, 0px 0px #FFF, 0px 1px #FFF, 0px 2px #FFF, 1px -2px #FFF, 1px -1px #FFF, 1px 0px #FFF, 1px 1px #FFF, 1px 2px #FFF, 2px -2px #FFF, 2px -1px #FFF, 2px 0px #FFF, 2px 1px #FFF, 2px 2px #FFF;			
+			text-shadow: -2px -2px #FFF, -2px -1px #FFF, -2px 0px #FFF, -2px 1px #FFF, -2px 2px #FFF, -1px -2px #FFF, -1px -1px #FFF, -1px 0px #FFF, -1px 1px #FFF, -1px 2px #FFF, 0px -2px #FFF, 0px -1px #FFF, 0px 0px #FFF, 0px 1px #FFF, 0px 2px #FFF, 1px -2px #FFF, 1px -1px #FFF, 1px 0px #FFF, 1px 1px #FFF, 1px 2px #FFF, 2px -2px #FFF, 2px -1px #FFF, 2px 0px #FFF, 2px 1px #FFF, 2px 2px #FFF;
 		}
-		
+
 		body.lightmode input::placeholder {
-			
+
 				  color: black;
 				  opacity: 1; /* Firefox */
-			
+
 		}
 		body.lightmode #menu{
 			background-color: #e9e9e9;
 		}
-		
-		.fade-in-image { 
-			animation: fadeIn .2s; 
+
+		.fade-in-image {
+			animation: fadeIn .2s;
 		}
-		
+
 		@keyframes fadeIn {
 		  0% { opacity: 0; }
 		  99% { opacity: 0.2; }
 		  100% { opacity: 1; }
 		}
-		
+
 		.bot.compactmode {
 			padding: 0;
 		}
-		
+
 		.randommode {
 			position:absolute!important;
 			max-width: 20vw;
 		}
-		
+
 		.hl-message{
 			margin: auto 1px;
 			overflow-wrap: anywhere;
 			line-height: max(var(--message-line-height) , var(--comment-font-size));
-			font-size: var(--comment-font-size); 
+			font-size: var(--comment-font-size);
 		}
-		
+
 		.notcompactmode .hl-message img{
 			height: 17px;
 			max-height: 17px;
 		}
-		
+
 		.hl-message img{
 			position:relative;
 			margin: auto 1px;
@@ -219,12 +219,12 @@
 			max-width: 24px;
 			max-height: 24px;
 		}
-		
-		
+
+
 		img:first-child:not(:last-child){
 			margin: auto 1px auto 5px;
 		}
-		
+
 		img:not(:first-child):last-child{
 			margin: auto 5px auto 1px;
 		}
@@ -236,7 +236,7 @@
 		.highlight {
 			background-color:yellow!important;
 		}
-		
+
 		img {
 			display:inline-block;
 			max-width: 48px;
@@ -252,7 +252,7 @@
 			padding: 5px 0 5px 5px;
 			font-style: italic;
 		}
-		
+
 		.hl-compact-message {
 			-webkit-box-decoration-break: clone;
 			box-decoration-break: clone;
@@ -260,7 +260,7 @@
 			display: inline-block;
 			height: 23px;
 		}
-		
+
 		.hl-badges {
 			max-width:28px;
 			max-height:28px;
@@ -269,7 +269,7 @@
 			top:-6px;
 		}
 
-		
+
 		.highlight-chat {
 			display:var(--list-or-horizontal);
 			cursor:pointer;
@@ -289,9 +289,9 @@
 		.larger-emojis{
 			top: 0px;
 			position: relative;
-			
+
 		}
-		
+
 		.highlight-chat.larger-emojis{
 			overflow: hidden;
 		}
@@ -301,7 +301,7 @@
 			padding-top: 3px;
 			background-color: #0000;
 		}
-		
+
 		.compactmode.expand.time-arrived {
 			margin: auto 0;
 		}
@@ -335,7 +335,7 @@
 			height: 24px;
 			max-height: 24px;
 		}
-		
+
 		.hl-badge.svg {
 			vertical-align: middle;
 			object-fit: contain;
@@ -348,7 +348,7 @@
 			margin: 1.6px 2px auto 1px;
 		}
 
-		
+
 		.notcompactmode>.time-arrived {
 			margin: 8px 2px auto 1px;
 		}
@@ -360,7 +360,7 @@
 		.larger-emojis.notcompactmode>.time-arrived{
 			margin: 12px 2px auto 1px;
 		}
-		
+
 		.larger-emojis.notcompactmode>img.icon {
 			margin: 5px 2px auto 1px;
 		}
@@ -372,19 +372,19 @@
 		div {
 			display:inline-block;
 		}
-		
+
 		.hide {
 			display: none !important;
 		}
-		
+
 		.queueid::before {
 		    content: attr(data-qid);
 		}
-		
+
 		.queueid[data-qid] {
 			margin: auto 3px;
 		}
-		
+
 
 		@keyframes expand {
             0% {
@@ -400,7 +400,7 @@
                max-width: 20000px;
             }
          }
-		
+
 		.hl-name {
 			font-weight: 700;
 			margin: auto 5px;
@@ -411,8 +411,8 @@
 			display:inline-block;
 			font-size: var(--author-font-size);
 		}
-		
-		
+
+
 		.notcompactmode>.hl-name{
 			margin: 3.14px 5px 0 5px;
 			min-width: max(135px,12vw);
@@ -421,18 +421,18 @@
 			min-height: 24px;
 			line-height: max(var(--author-font-size) , var(--message-line-height));
 		}
-		
+
 		@media only screen and (max-width: 310px){
 			.notcompactmode>.highlight-chat {
 				display: inline-block;
 			}
 		}
 		@media only screen and (max-width: 180px){
-			.time-arrived { 
+			.time-arrived {
 				display: none!important;
 			}
 		}
-		
+
 		.splitMode.hl-name{
 		    text-align: right;
 			min-width: 0;
@@ -461,42 +461,42 @@
 			margin: 0;
 			min-height:27px;
 		}
-		
+
 		.highlight-chat.odd:not(.expand){
 			background-color: var(--highlight-base2);
 		}
-		
+
 		.highlight-chat:hover {
 			background-color: #AFA4;
 		}
-		
+
 		.highlight-chat.compactmode{
-			background-color: var(--highlight-compact); 
+			background-color: var(--highlight-compact);
 			border-top-right-radius: 3px;
 			border-bottom-right-radius: 3px;
 			padding-right:3px;
 		}
-		
+
 		.highlight-chat.odd.compactmode:not(.expand){
 			background-color: var(--highlight-compact2);
 		}
-		
+
 		.highlight-chat.donation{
 			background-color: #FEFFAD33;
 		}
-		
+
 		.highlight-chat.odd.donation:not(.expand){
 			background-color: #FDFF6533;
 		}
-		
+
 		.highlight-chat.member{
 			background-color: #ADFEFF33;
 		}
-		
+
 		.highlight-chat.odd.member:not(.expand){
 			background-color: #65FDFF33;
 		}
-		
+
 		.donationAmount{
 			text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #FFe60073, 0 0 40px #FFe60073, 0 0 50px #FFe60073, 0 0 60px #FFe60073, 0 0 70px #FFe60073;
 			padding:5px;
@@ -512,11 +512,11 @@
 				text-shadow: 0 0 20px #fff, 0 0 30px #FFff4da6, 0 0 40px #FFff4da6, 0 0 50px #FFff4da6, 0 0 60px #FFff4da6, 0 0 70px #FFff4da6, 0 0 80px #FFff4da6;
 			}
 		}
-		
+
 		a {
 			pointer-events: none;
 		}
-		
+
 		.time-arrived {
 			font-size: 10px;
 			display: inline-block;
@@ -535,7 +535,7 @@
 			background-color: #888;
 			z-index:2;
 		}
-		
+
 		#menu > button {
 			display:inline-block;
 			padding:5px;
@@ -559,14 +559,14 @@
 		#menu > button.red:hover {
 			background-color: #FCCF;
 		}
-		
+
 		#menu > button.blue {
 			background-color: #99a8cc;
 		}
 		#menu > button.blue:hover {
 			background-color: #99c8ff;
 		}
-		
+
 		#menu > input {
 			padding: 5px;
 			background-color: var(--input-color);
@@ -577,7 +577,7 @@
 		#menu > input:focus {
 		  background-color: var(--input-color);
 		}
-		
+
 		#menu.darkmode > button {
 			background-color: #0004;
 			color:white;
@@ -606,7 +606,7 @@
 		#menu.darkmode > input:hover {
 			background-color: #0000;
 		}
-		
+
 		@media only screen and (max-width: 1000px){
 			#menu > button {
 				display:inline-block;
@@ -664,7 +664,7 @@
 				max-width: 70px;
 			}
 		}
-		
+
 		.last-message{
 			border: 3px white solid;
 		}
@@ -681,23 +681,23 @@
 			margin: 4px 2px auto 1px;
 			border-radius: 50%;
 		}
-		
+
 		.invert {
 			filter: invert(1);
 		}
-		
+
 		#jumpto {
 			position: fixed !important;
 			right: 20px;
 			bottom: 20px;
 		}
-		
+
 		#jumpto {
 			position: fixed !important;
 			right: 20px;
 			bottom: 20px;
 		}
-		
+
 		input[type="text"] {
 			width: 110px;
 		}
@@ -730,8 +730,9 @@
 			width: 100%;
 			border-bottom: solid 2px #fff;
 			z-index:1;
+			zoom: var(--scale-output);
 		}
-		
+
 		#pinned:empty {
 		   display:none;
 		}
@@ -742,12 +743,12 @@
 			vertical-align: sub;
 			text-shadow: 0 0 #0000;
 		}
-		
+
 		.alignbottom {
 			bottom: 0;
 			position: absolute;
 		}
-		
+
 		.fade {
 			animation: fadeout var(--fade-out-time);
 			webkit-transition: opacity 0.5s ease-in-out;
@@ -762,7 +763,7 @@
 		  95% {opacity:1;}
 		  100% {opacity:0;}
 		}
-		
+
 		.fadeout {
 			animation: fadeout var(--fade-out-time);
 			webkit-transition: opacity 0.5s ease-in-out;
@@ -771,13 +772,13 @@
 			-o-transition: opacity 0.5 ease-in-out;
 			opacity: 0;
 		}
-		
+
 		@keyframes fadeout {
 	      0% {opacity:1;}
 		  95% {opacity:1;}
 		  100% {opacity:0;}
 		}
-		
+
 		.fadein {
 			animation: fadein 1s;
 			webkit-transition: opacity 0.5s ease-in-out;
@@ -791,7 +792,7 @@
 		  10% {opacity:0;}
 		  100% {opacity:1;}
 		}
-		
+
 		.swiperight {
 		    animation: swiperight 1s;
 		}
@@ -799,7 +800,7 @@
 	      0% {transform: translateX(-100vw);}
 		  100% {transform: translateX(0);}
 		}
-		
+
 		.swipeleft {
 		    animation: swipeleft 1s;
 		}
@@ -807,7 +808,7 @@
 	      0% {transform: translateX(100vw);}
 		  100% {transform: translateX(0);}
 		}
-		
+
 		.swipeup {
 		    animation: swipeup 1s;
 		}
@@ -815,36 +816,36 @@
 	      0% {transform: translateY(-100vh);}
 		  100% {transform: translateY(0);}
 		}
-		
+
 		.fadeout.swipeup {
 			animation: fadeout var(--fade-out-time), swipeup 1s;
 		}
 		.fadein.swipeup {
 		    animation:  fadein 2s, swipeup 1s;
 		}
-		
+
 		.fadeout.fadein {
 			animation: fadeout var(--fade-out-time), fadein 1s;
 		}
-		
+
 		.swipeleft.fadein{
 			 animation: swipeleft 1s, fadein 1s;
 		}
 		.swipeleft.fadeout {
 			animation: fadeout var(--fade-out-time), swipeleft 1s;
 		}
-		
+
 		.swiperight.fadein{
 			 animation: swiperight 1s, fadein 1s;
 		}
 		.swiperight.fadeout{
 			 animation: swiperight 1s, fadeout var(--fade-out-time);
 		}
-		
+
 		.swipeup.fadeout {
 		    animation: fadeout var(--fade-out-time), swipeup 1s;
 		}
-		
+
 		.swipeleft.fadein.fadeout{
 			 animation: swipeleft 1s, fadein 1s, fadeout var(--fade-out-time);
 		}
@@ -854,11 +855,11 @@
 		.swiperight.fadein.fadeout{
 			 animation: swiperight 1s, fadein 1s, fadeout var(--fade-out-time);
 		}
-		
+
 		.electronDraggable {
 			-webkit-app-region: var(--electron-drag-fix);
 		}
-		
+
 		.context-menu {
 			display: none;
 			position: fixed;
@@ -929,8 +930,8 @@
 		<button id="jumpto" data-state="0" onclick="jumptoBottom(this);" title="Jump to bottom">V</button>
 	</div>
 	<audio id="testtone" style="display:none;" preload="metadata">
-		<source src="./audio/tone.mp3" type="audio/mpeg"> 
-		<source src="./audio/tone.ogg" type="audio/ogg"> 
+		<source src="./audio/tone.mp3" type="audio/mpeg">
+		<source src="./audio/tone.ogg" type="audio/ogg">
 	</audio>
 	<nav id="context-menu" class="context-menu">
 		<ul class="context-menu__items">
@@ -961,7 +962,7 @@
 		console.error("Unhandled Error occured"); //or any message
 		return false;
 	};
-	
+
 	function getById(id) { // js helper
 		var el = document.getElementById(id);
 		if (!el) {
@@ -969,7 +970,7 @@
 		}
 		return el;
 	}
-	
+
 	(function (w) {
 		w.URLSearchParams = w.URLSearchParams || function (searchString) {
 			var self = this;
@@ -985,7 +986,7 @@
 		};
 
 	})(window);
-	
+
 	var urlParams = new URLSearchParams(window.location.search);
 	var channel = null;
 	var iframe = null;
@@ -1019,20 +1020,20 @@
 	var colorized = false;
 	var horizontal = false;
 	var autoTimeoutEnabled = true;
-	
+
 	var encode = false;
-	
+
 	try{
 		if (electronApi){ // fix for electron dragging.
 			document.body.style.width = "95%";
 			setTimeout(function(){
 				document.body.style.width = "100%";
 			},1000);
-			
+
 			setTimeout(function(){
 				document.body.style.width = "98%";
 			},2000);
-			
+
 			setTimeout(function(){
 				document.body.style.width = "100%";
 			},5000);
@@ -1040,17 +1041,17 @@
 	} catch(e){
 		//console.error(e);
 	}
-	
+
 	var timeoutDelay = 0;
 	if (urlParams.has("showtime")){
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
 		document.documentElement.style.setProperty("--fade-out-time", parseFloat(timeoutDelay/1000)+"s");
 	}
-		
+
 	if (urlParams.has("disabletimeout")) {
 		autoTimeoutEnabled = false;
 	}
-	
+
 	if (urlParams.has("session")){
 		roomID = urlParams.get("session");
 	} else if (urlParams.has("s")){
@@ -1075,49 +1076,49 @@
 	} else {
 		window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
 	}
-	
+
 	var password = "false";
 	if (urlParams.has("password")){
 		password = urlParams.get("password") || "false";
 	}
-	
+
 	if (urlParams.has("nodate") || urlParams.has("notimestamp") || urlParams.has("notime")){
 		datestamp = false;
-	} 
-	
+	}
+
 	if (urlParams.has("hidesource")){
 		showsource = false;
-	} 
-	
+	}
+
 	var splitMode = "";
 	if (urlParams.has("split")){
 		splitMode = " splitMode";
 	}
-	
+
 	if (urlParams.has("alignbottom")){
 		document.getElementById("output").classList.add("alignbottom");
-	} 
-	
+	}
+
 	var attachmentsonly = false;
 	if (urlParams.has("attachmentsonly")){
 		attachmentsonly = true;
-	} 
-	
+	}
+
 	var stripHTML = false;
 	if (urlParams.has("strip") || urlParams.has("striphtml")){ // removes HTML from messages, donations, and names.
 		stripHTML = true;
-	} 
-	
+	}
+
 	var audioContext = new AudioContext();
 	var timeoutTone = null;
-	
+
 	function playtone(tonename="testtone") {
 		if (timeoutTone){return;}
-		
+
 		setTimeout(function(){
 			timeoutTone = false;
 		},500);
-		
+
 		if (audioContext.state == "suspended"){
 			audioContext.resume();
 		}
@@ -1132,22 +1133,22 @@
 			});
 			timeoutTone = true;
 		}
-		
+
 	}
-	
+
 	if (urlParams.has('css')){
 		var cssURL = urlParams.get('css');
 		cssURL = decodeURI(cssURL);
-		
+
 		var cssStylesheet = document.createElement('link');
 		cssStylesheet.rel = 'stylesheet';
 		cssStylesheet.type = 'text/css';
 		cssStylesheet.media = 'screen';
 		cssStylesheet.href = cssURL;
 		document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
-		
+
 	}
-	
+
 	if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
 		try {
 			var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
@@ -1157,29 +1158,29 @@
 			document.querySelector("head").appendChild(cssStyleSheet);
 		} catch(e){console.error(e);}
 	};
-	
+
 	var transitionType = [];
-	
+
 	if (urlParams.has("fadein")){
 		transitionType.push("fadein");
 	}
-	
+
 	if (urlParams.has("fadeout")){
 		transitionType.push("fadeout");
 	}
-	
+
 	if (urlParams.has("swiperight")){
 		transitionType.push("swiperight");
 	}
-	
+
 	if (urlParams.has("swipeleft")){
 		transitionType.push("swipeleft");
 	}
-	
+
 	if (urlParams.has("swipeup")){
 		transitionType.push("swipeup");
 	}
-	
+
 	var reversed = false;
 	if (urlParams.has("reverse")){
 		reversed = true;
@@ -1187,7 +1188,7 @@
 		document.getElementById("output").style.flexDirection = "column-reverse";
 		document.getElementById("output").style.display = "flex";
 	}
-	
+
 	if (urlParams.has("dropdown")){
 		reversed = true;
 		forceAutoscroll=false
@@ -1195,14 +1196,14 @@
 		document.getElementById("output").style.display = "flex";
 		transitionType.push("swipeup");
 	}
-	
+
 	var beep = false;
 	if (urlParams.has("beep")){ // removes HTML from messages, donations, and names.
 		beep = true;
 		document.getElementById("notify").innerHTML = "🔕";
 		document.getElementById("notify").classList.add("pressed");
 		playtone();
-	} 
+	}
 
 	var stylizeEmoji = false;
 	if (urlParams.has("emoji") || urlParams.has("emojis")){
@@ -1210,11 +1211,11 @@
 		document.documentElement.style.setProperty("--stylized-emoji", stylizeEmoji);
 		document.documentElement.style.setProperty("--message-line-height", "30px");
 		document.documentElement.style.setProperty("--stylized-img", "35px");
-		
+
 	}
 
 	var flexOrNotToFlex = "flex";
-	
+
 	if (urlParams.has("horizontal")){
 		horizontal = true;
 		flexOrNotToFlex = "inline-block";
@@ -1234,28 +1235,28 @@
 		document.getElementById("menu").style.top = "42px";
 		compactmode = true;
 		customNodeLimit = 15;
-	} 
-	
+	}
+
 	var avatars = true;
 	if (urlParams.has("noavatar") || urlParams.has("noavatars")){
 		avatars = false;
-	} 
-	
+	}
+
 	if (urlParams.has("limit")){
 		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
 	}
-	
+
 	if (urlParams.has("hidebadges") || urlParams.has("nobadges")){
 		showbadges = false;
 	}
-	
+
 	if (urlParams.has("colorednames") || urlParams.has("color")){
 		colorized = true;
 	}
-	
-	
+
+
 	custombot = false;
-	if (urlParams.has("myname") || urlParams.has("botlist")){ 
+	if (urlParams.has("myname") || urlParams.has("botlist")){
 		custombot = urlParams.get("myname") || urlParams.get("botlist") || false;
 		if (custombot){
 			custombot = decodeURIComponent(custombot);
@@ -1263,42 +1264,42 @@
 			custombot = custombot.split(",");
 		}
 	}
-	
+
 	var doNotShowBot = false;
 	if (urlParams.has("hidebots")){
 		doNotShowBot = true;
 	}
-	
+
 	var autoshow = false;
 	var autoshowdonos = false;
-	
+
 	if (urlParams.has("autoshow")){
 		autoshow = true;
 		document.getElementById("autoshow").classList.add("pressed");
-	} 
-	
+	}
+
 	var autoShowQueue = [];
-	
+
 	if (urlParams.has("autoshowdonos")){
 		autoshowdonos = true;
 	}
-	
+
 	if (urlParams.has("scale")){
 		scale = urlParams.get("scale") || 1.0;
 		scale = parseFloat(scale);
 		document.documentElement.style.setProperty("--scale-output", scale);
 		document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
 	}
-	
+
 	var conCon = 1;
 	var socketserver = false;
 	var serverURL = "wss://api.overlay.ninja";
-	
+
 	function setupSocket(){
 		socketserver.onclose = function (){
 			setTimeout(function(){
 				conCon+=1;
-				socketserver = new WebSocket(serverURL); 
+				socketserver = new WebSocket(serverURL);
 				setupSocket();
 			},100*conCon);
 		};
@@ -1318,64 +1319,64 @@
 					ret.callback.result = true;
 					socketserver.send(JSON.stringify(ret));
 				}
-			} 
+			}
 		});
 	}
 	if (urlParams.has("server")){
 		serverURL = urlParams.get("server") || serverURL;
-		socketserver = new WebSocket(serverURL); 
+		socketserver = new WebSocket(serverURL);
 		setupSocket();
 	}
-	
+
 	var customSource = false;
 	if (urlParams.has("branded")){
 		customSource = true;
 	}
-	
+
 	var speechLang = "en-US";
 	var speech = false;
 	var English = true;
 	var voice = false;
 	var voices = window.speechSynthesis.getVoices();
-	
+
 	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){
 		document.getElementById("tts").dataset.state = 1;
 		document.getElementById("tts").classList.remove("hidden");
 		document.getElementById("tts").classList.add('pressed');
 		var speech = true;
 		speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || "en-US";
-		
+
 		if (speechLang.split("-")[0].toLowerCase() == "en"){
 			English = true;
 		} else {
 			English = false;
 		}
 	}
-	
+
 	var pitch = 1;
 	if (urlParams.has("pitch")){
 		pitch = urlParams.get("pitch") || 1;
 	}
-	
+
 	var rate = 1;
 	if (urlParams.has("rate")){
 		rate = urlParams.get("rate") || 1;
 	}
-	
+
 	var volume = 1;
 	if (urlParams.has("volume")){
 		volume = urlParams.get("volume") || 1;
 	}
-	
+
 	var voiceName = false;
 	if (urlParams.has("voice")){
 		voiceName = urlParams.get("voice") || "google";
 	}
-	
+
 	function speak(text){
 		if (!speech){return;}
 		if (!text){return;}
-		
+
 		if (!voice){
 			if (!voices || !voices.length){
 				voices = window.speechSynthesis.getVoices();
@@ -1390,7 +1391,7 @@
 						voice = vce;
 					}
 				} else if (vce.name && vce.name.includes("Siri")){ // SIRI sucks and breaks a lot, so lets skip if possible.
-					return; 
+					return;
 				} else if (!voice && vce.lang && (vce.lang == speechLang)){
 					voice = vce;
 				} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
@@ -1410,48 +1411,48 @@
 				console.log("No voice found; using lang: "+speechLang);
 			}
 		}
-		
+
 		var speechInput = new SpeechSynthesisUtterance();
-		
+
 		if (!voice){
 			speechInput.lang = speechLang;
 		} else {
 			speechInput.voice = voice;
 		}
-		
+
 		speechInput.volume = volume;
 		speechInput.rate = rate;
 		speechInput.pitch = pitch;
 		speechInput.text = text;
 		window.speechSynthesis.speak(speechInput);
 	}
-	
+
 	if (urlParams.has("chroma")){
 		var chroma = urlParams.get("chroma") || "0F0";
 		document.body.style.backgroundColor = "#"+chroma;
 	}
-	
+
 	if (urlParams.has("compact") || urlParams.has("overlaymode")){
 		compactmode = true;
 		document.getElementById("output").classList.remove("notcompactmode");
 		//document.getElementById("menu").style.display = "none";
-	} 
-	
+	}
+
 	if (urlParams.has("hidemenu") || urlParams.has("nomenu")){
 		document.getElementById("menu").style.display = "none";
 	}
-	
+
 	if (urlParams.has("save")){
 		encode = TextEncoder.prototype.encode.bind(new TextEncoder);
 		setupSaveToDisk();
 	}
-	
+
 	if (urlParams.has("savesingle")){
 		singlewriter = true;
 		document.getElementById("select_save_file").classList.remove('hidden');
 		//overwriteFile(); // setup , but this needs a gesture, so bleh
 	}
-	
+
 	var random = false;
 	if (urlParams.has("random")){
 		random = true;
@@ -1465,67 +1466,67 @@
 		<!-- top: 0px; -->
 		<!-- max-width: 300px; -->
 	}
-	
+
 	var postServer = "http://127.0.0.1";
 	var thirdPartyAPI = false;
 	if (urlParams.has("singular")){
 		thirdPartyAPI = function (data){
 			var API = "https://app.singular.live/apiv1/datanodes/"+urlParams.get("singular")+"/data";
-			
+
 			data.chatimg = upscaleImages(data);
-			
+
 			var message = {"payload": data};
 			ajax(message, API, "PUT");
 		};
 	} else if (urlParams.has("postserver")){
 		postServer = urlParams.get("postserver") || postServer;
 		thirdPartyAPI = function (data){
-		
+
 			data.chatimg = upscaleImages(data);
-		
+
 			ajax(data, postServer, "POST");
 		};
 	} else if (urlParams.has("putserver")){
 		postServer = urlParams.get("putserver") || postServer;
 		thirdPartyAPI = function (data){
-			
+
 			data.chatimg = upscaleImages(data);
-		
+
 			ajax(data, postServer, "PUT");
 		};
 	} else if (urlParams.has("spxserver") && urlParams.has("spxfunction") && urlParams.has("spxlayer")) {
 		let spxserver = urlParams.get("spxserver") || postServer;
 		let spxfunction = urlParams.get("spxfunction") || "";
 		let spxlayer = urlParams.get("spxlayer") || "";
-		
-		thirdPartyAPI = function (data){	
-			var msg = {};			
+
+		thirdPartyAPI = function (data){
+			var msg = {};
 			if ("id" in data){
 				msg.id = data.id;
 			}
-			
+
 			if (data.timestamp){
 				msg.timestamp = data.timestamp;
 			} else {
 				msg.timestamp = Date.now();
 			}
-			
-			
+
+
 			msg.message = data.chatmessage || "";
 			msg.displayName = data.chatname || "";
 			msg.profileImageUrl = upscaleImages(data);
-			
+
 			if (data.type){
 				msg.platform = {};
 				msg.platform.name = data.type;
 				msg.platform.logoUrl = "https://socialstream.ninja/"+data.type+".png";
 			}
-				
+
 			params = encodeURIComponent(JSON.stringify(msg));
 
 			if (params.length > 3000) {
 				console.log("dropping message due to request length");
-				return; // HTTP request too long due to twitch emoji spam, skipping this message. 
+				return; // HTTP request too long due to twitch emoji spam, skipping this message.
 			}
 			postServer = spxserver + "/api/v1/invokeTemplateFunction?webplayout=" + spxlayer + "&function=" + spxfunction + "&params=" + params;
 
@@ -1539,9 +1540,9 @@
 			spxRequest.send();
 		};
 	} else if (urlParams.has("h2r") || urlParams.has("h2rurl")){
-		
+
 		postServer = "http://127.0.0.1:4001/data/";
-		
+
 		if (urlParams.has("h2rurl")){
 			postServer = urlParams.get("h2rurl") || postServer;
 		}
@@ -1549,39 +1550,39 @@
 			postServer = postServer + urlParams.get("h2r");
 		}
 		thirdPartyAPI = function (data){
-			
+
 			var msg = {};
-			
+
 			if ("id" in data){
 				msg.id = data.id;
 			}
-			
+
 			if (data.timestamp){
 				msg.timestamp = data.timestamp;
 			} else {
 				msg.timestamp = Date.now();
 			}
-			
+
 			msg.snippet = {};
 			msg.snippet.displayMessage = data.chatmessage || "";
-			
+
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
 			msg.authorDetails.profileImageUrl = upscaleImages(data);
-			
+
 			if (data.type){
 				msg.platform = {};
 				msg.platform.name = data.type;
 				msg.platform.logoUrl = "https://socialstream.ninja/"+data.type+".png";
 			}
-			
+
 			var h2r = {};
-			h2r.messages = []; 
+			h2r.messages = [];
 			h2r.messages.push(msg);
 			ajax(h2r, postServer, "POST");
 		};
-	} 
-	
+	}
+
 	function upscaleImages(data){ // for third party APIs
 		let chatimg = "";
 		if (data.type && (data.type == "twitch") && data.chatname){
@@ -1594,7 +1595,7 @@
 		}
 		return chatimg;
 	}
-	
+
 	function ajax(object2send, url, ajaxType="PUT"){
 		  var xhttp = new XMLHttpRequest();
 		  xhttp.onreadystatechange = function() {
@@ -1608,7 +1609,7 @@
 		  xhttp.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
 		  xhttp.send(JSON.stringify(object2send));
 	}
-	
+
 	if (urlParams.has("showmenu")){
 		document.getElementById("menu").style.display = "block";
 	} else {
@@ -1630,18 +1631,18 @@
 			}
 		} catch(e){}
 	}
-	
+
 	if (urlParams.has("darkmode")){
 		darkmode=true;
 	} else if (urlParams.has("lightmode")){
 		darkmode=false;
 	}
-	
+
 	var syncDocks = false;
 	if (urlParams.has("sync")){
 		syncDocks = true;
-	} 
-	
+	}
+
 	if (darkmode){
 		document.getElementById("menu").classList.add("darkmode");
 		document.documentElement.style.setProperty("--background-color", "#000");
@@ -1657,38 +1658,38 @@
 		document.documentElement.style.setProperty("--font-color", "#000");
 		document.documentElement.style.setProperty("--highlight-base2", "#EEE4", "important");
 	}
-	
-	if (urlParams.has("hideshadow")){ // alternating 
+
+	if (urlParams.has("hideshadow")){ // alternating
 		document.documentElement.style.setProperty("--highlight-base", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-base2", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact2", "#0000", "important");
 	}
-	
+
 	if (urlParams.has("nooutline")){
 		document.body.style.textShadow = "0 0 black";
 	}
-	
+
 	if (urlParams.has("transparent")){
 		document.documentElement.style.setProperty("--background-color", "#0000", "important");
 	}
-	
-	
+
+
 	var firstNamesOnly = false
 	if (urlParams.has("firstnamesonly") || urlParams.has("firstname") || urlParams.has("firstnames")){
 		firstNamesOnly = true;
 	}
-	
+
 	var hideNotDonos = false;
 	var hideTextOnly = false;
 	var hideNotQueued = false;
-	
+
 	if (urlParams.has("queueonly")){
 		hideNotQueued = true;
 		document.getElementById("show_only_queue").dataset.state = "1";
-		document.getElementById("show_only_queue").classList.add("pressed"); 
+		document.getElementById("show_only_queue").classList.add("pressed");
 	}
-	
+
 	function emoji(ele){
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
@@ -1705,7 +1706,7 @@
 		}
 		redoOdd();
 	}
-	
+
 	var lastPushed = Date.now();
 	var checkTimeout = null;
 	function checkAutoShow(){
@@ -1732,7 +1733,7 @@
 			checkTimeout = setTimeout(function(){checkAutoShow()},2500);
 		}
 	}
-	
+
 	function donos(ele){
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
@@ -1747,22 +1748,22 @@
 		}
 		redoOdd();
 	}
-	
+
 	function applyHiddenState(node){
 		if (hideNotDonos && node.classList.contains("noDono")){
 			node.classList.add("hidden");
-			
+
 		} else if (hideNotQueued && !node.classList.contains("queued") && !node.classList.contains("pinned")){
 			node.classList.add("hidden");
-			
+
 		} else if (hideTextOnly && node.classList.contains("noText")){
 			node.classList.add("hidden");
-		
+
 		} else {
 			node.classList.remove("hidden");
 		}
 	}
-	
+
 	function redoOdd(){
 		odd = false;
 		var nodes = mainOutputWindow.childNodes;
@@ -1779,7 +1780,7 @@
 			}
 		}
 	}
-	
+
 	function toggleTriggers(ele){
 		triggerState = !triggerState;
 		if (triggerState){
@@ -1788,7 +1789,7 @@
 			ele.classList.remove("pressed");
 		}
 	}
-	
+
 	function autoShow(ele){
 		autoshow = !autoshow;
 		if (autoshow){
@@ -1799,9 +1800,9 @@
 	}
 	function pause(ele){
 		pauseState = !pauseState;
-		
+
 		ele.innerHTML = "⏯︎";
-		
+
 		if (pauseState){
 			ele.classList.add("pressed");
 		} else {
@@ -1815,7 +1816,7 @@
 			}
 		}
 	}
-	
+
 	try {
 		var script = document.createElement('script');
 		script.onload = function() {
@@ -1827,15 +1828,15 @@
 		script.src = "custom.js";
 		document.head.appendChild(script);
 	} catch(e){}
-	
+
 	function processInput(data){
 		if ("mid" in data){
 			if (data.mid && syncDocks){
-			
+
 				if (autoTimeoutEnabled){
 					lastPushed = Date.now();
 				}
-			
+
 				try {
 					document.querySelector("[data-mid='"+data.mid+"']").classList.add("pressed");
 				} catch(e){
@@ -1856,7 +1857,7 @@
 							pinIt(document.querySelector("[data-mid='"+mid+"']"));
 							applyHiddenState(document.querySelector("[data-mid='"+mid+"']"));
 						} catch(e){
-							
+
 						}
 					});
 					return true
@@ -1871,7 +1872,7 @@
 							unpinIt(document.querySelector("[data-mid='"+mid+"']"));
 							applyHiddenState(document.querySelector("[data-mid='"+mid+"']"));
 						} catch(e){
-							
+
 						}
 					});
 					return true
@@ -1944,9 +1945,9 @@
 			//}
 			return;
 		}
-		
-		
-		
+
+
+
 		if (data.action){
 			if (data.action == "nextInQueue"){
 				nextInQueue();
@@ -1979,13 +1980,13 @@
 					if (!pauseState ){
 						processData( {contents : content} );
 					} else {
-						queue.push({contents : content}); 
+						queue.push({contents : content});
 						if (queue.length>100){ // keep the queue from exploding in size
 							queue.shift();
 						}
 					}
 					return true
-				} 
+				}
 				return false;
 			}
 		} else if ("forward" in data){
@@ -1998,7 +1999,7 @@
 			if (!pauseState ){
 				processData( {contents : data.content} );
 			} else {
-				queue.push({contents : data.content}); 
+				queue.push({contents : data.content});
 				if (queue.length>100){ // keep the queue from exploding in size
 					queue.shift();
 				}
@@ -2007,7 +2008,7 @@
 		} else if (!pauseState ){
 			return processData( {contents : data} );
 		} else {
-			queue.push({contents : data}); 
+			queue.push({contents : data});
 			if (queue.length>100){ // keep the queue from exploding in size
 				queue.shift();
 			}
@@ -2015,12 +2016,12 @@
 		}
 		return false;
 	}
-	
+
 	var connectedPeers = {};
 	function RecvDataWindow(){
 		iframe = document.createElement("iframe");
-		
-		//if (syncDocks){ 
+
+		//if (syncDocks){
 		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
 		//} else {
 		//iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&view="+roomID+"&push&vd=0&ad=0&autostart&cleanoutput&room="+roomID;
@@ -2032,14 +2033,14 @@
 		iframe.style.top = "-100px";
 		iframe.id = "frame1"
 		document.body.appendChild(iframe);
-		
-		var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent"; 
+
+		var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
 		var eventer = window[eventMethod];
 		var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-		
+
 		eventer(messageEvent, function (e) {
 		  if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
-		  
+
 		  if (("action" in e.data) && e.data.UUID && e.data.value && (e.data.action == "push-connection-info")){ // flip this
 		    if ("label" in e.data.value){
 				connectedPeers[e.data.UUID] = e.data.value.label;
@@ -2055,29 +2056,29 @@
 			  }
 			  //console.log(connectedPeers);
 		  }
-		 
-		  
-		  if ("dataReceived" in e.data){ // raw data 
+
+
+		  if ("dataReceived" in e.data){ // raw data
 			if ("overlayNinja" in e.data.dataReceived){
 				processInput(e.data.dataReceived.overlayNinja);
 			}
 		  }
 		});
 	}
-	
+
 	RecvDataWindow();
-	
+
 	function createElementFromHTML(htmlString) {
 	  var div = document.createElement('div');
 	  div.innerHTML = htmlString.trim();
-	  return div.firstChild; 
+	  return div.firstChild;
 	}
-	
-	
+
+
 	if (forceAutoscroll){
 		document.getElementById("jumpto").classList.add("pressed");
 	}
-	
+
 	function jumptoBottom(ele){
 		forceAutoscroll = !forceAutoscroll;
 		if (forceAutoscroll){
@@ -2096,7 +2097,7 @@
 		  behavior: 'smooth'
 		});
 	}
-	
+
 
 	document.getElementById("filter_messages").addEventListener('keyup', function(e) {
 		if (e.key == "Escape") {
@@ -2104,14 +2105,14 @@
 		}
 		filterMessages(document.getElementById("filter_messages").value);
 	});
-	
+
 	document.getElementById("filter_messages").addEventListener('keydown', function(e) {
 		if (e.key == "Escape") {
 			document.getElementById("filter_messages").value = "";
 		}
 		filterMessages(document.getElementById("filter_messages").value);
 	});
-	
+
 	function filterMessages(keyword=""){
 		keyword = keyword.trim().toLowerCase();
 		filtering = keyword;
@@ -2126,7 +2127,7 @@
 			}
 		}
 	}
-	
+
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
@@ -2140,13 +2141,13 @@
 	  xhr.responseType = 'blob';
 	  xhr.send();
 	}
-	
+
 	var fallbackImage = new Image();
 	fallbackImage.src = "unknown.png";
 	fallbackImage.onerror = function(){
 		fallbackImage=false;
 	}
-	
+
 	function errorImage(ele){
 		if (fallbackImage){
 			ele.src = "unknown.png";
@@ -2157,14 +2158,14 @@
 			ele.style.display = "none";
 		}
 	}
-	
+
 	function processHTML(data){
 		//var node = createElementFromHTML('<div id="msg_'+data.id+'" class="highlight-chat">'+ data.html+'</div>')
 		//mainOutputWindow.appendChild(node);
 	}
-	
-	function nextInQueue(){ 
-		
+
+	function nextInQueue(){
+
 		if (!selectedQueue.length){
 			sendDataP2P(false);
 			updateQueueButton();
@@ -2177,45 +2178,45 @@
 		updateQueueButton(true);
 		syncQueueP2P();
 	}
-	
+
 	async function fetchWithTimeout(resource, options = {}) { // https://dmitripavlutin.com/timeout-fetch-request/
 	  const { timeout = 8000 } = options;
-	  
+
 	  const controller = new AbortController();
 	  const id = setTimeout(() => controller.abort(), timeout);
 	  const response = await fetch(resource, {
 		...options,
-		signal: controller.signal  
+		signal: controller.signal
 	  });
 	  clearTimeout(id);
 	  return response;
 	}
-	
+
 	function unpinIt(element){
 		element.classList.remove("pinned");
 		document.getElementById("output").prepend(element);
 		element.title = "Alt + Click to pin message";
 		applyHiddenState(element);
 	}
-	
+
 	function pinIt(element){
 		element.classList.add("pinned");
 		element.title = "Alt + Click to remove pinned message";
 		document.getElementById("pinned").appendChild(element);
 		applyHiddenState(element);
 	}
-	
+
 	function deleteMessage(element){
-		syncDataP2P({deleteMessage: element.dataset.mid}, false, true); 
+		syncDataP2P({deleteMessage: element.dataset.mid}, false, true);
 		element.remove();
 	}
-	
+
 	function filterQueued(ele){ // #show_only_queue
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
 			//document.documentElement.style.setProperty("--show-queue-only", "none");
 			hideNotQueued = true;
-			ele.classList.add("pressed"); 
+			ele.classList.add("pressed");
 		} else {
 			ele.dataset.state = "0";
 			//document.documentElement.style.setProperty("--show-queue-only", flexOrNotToFlex);
@@ -2224,7 +2225,7 @@
 		}
 		redoOdd();
 	}
-	
+
 	function updateQueueButton(relabel=false){
 		if (!selectedQueue.length){
 			document.getElementById("next_in_queue").innerText = "Queue Empty";
@@ -2246,7 +2247,7 @@
 			socketserver.send(JSON.stringify({"queueLength":selectedQueue.length}));
 		}
 	}
-	
+
 	function removeQueue(element){
 		element.classList.remove("queued");
 		delete element.children[0].dataset.qid;
@@ -2256,17 +2257,17 @@
 		}
 		updateQueueButton(true);
 	}
-	
+
 	function selectedMessage(event=false, element=false){
 		if (!element){
 			element = this;
 		}
-		
+
 		e = event || window.event;
 		if (event && (e.which !== 1)){
 			return;
 		}
-		
+
 		if (event && (event.ctrlKey || event.metaKey)) {
 			if (element.classList.contains("queued")){
 				removeQueue(element);
@@ -2280,7 +2281,7 @@
 			syncQueueP2P();
 			return;
 		} else if (event && (event.altKey)) {
-			if (element.classList.contains("pinned")){ 
+			if (element.classList.contains("pinned")){
 				unpinIt(element);
 				if (element.dataset.mid){
 					syncDataP2P({unpin:[element.dataset.mid]});
@@ -2293,14 +2294,14 @@
 			}
 			return;
 		}
-		
-		if (event && element.classList.contains("last-message")) { // Message is already featured! 
+
+		if (event && element.classList.contains("last-message")) { // Message is already featured!
 			element.classList.remove("last-message"); // remove classes
 			sendDataP2P(false);	// clear message
 			return;
 		}
-		
-		
+
+
 		if (autoTimeoutEnabled){
 			lastPushed = Date.now();
 			if (event && autoShowQueue.length){ // user selected and an auto queue
@@ -2310,20 +2311,20 @@
 				}
 			}
 		}
-		
+
 		document.querySelectorAll(".last-message").forEach(ele=>{ // last message sent was to clear the overlay
 			ele.classList.remove("last-message"); // no overlay is now active.
 		});
 		element.classList.add("pressed", "last-message"); // add last-message class
-		
-		
+
+
 		var data = element.rawContents;
-		 
-		if (thirdPartyAPI){ // we upscale using a generic upsizing function for third parties. 
+
+		if (thirdPartyAPI){ // we upscale using a generic upsizing function for third parties.
 			thirdPartyAPI(data); // not going to send base64 to the third party API, since that would kill my server, but third parties won't expect a blob.
 		} else if (data.type && (data.type == "youtube") && data.chatimg){ // youtube's images are a bit tricky; larger images don't always exist.
 			try {
-				toDataURL(data.chatimg, function(base64Image){ // we upscale 
+				toDataURL(data.chatimg, function(base64Image){ // we upscale
 					data.chatimg = data.chatimg.replace("=s32-", "=s256-");  // Increases the resolution of the image
 					data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 					if (base64Image){
@@ -2340,7 +2341,7 @@
 			sendDataP2P(data); // we handle twitch upsizing in the index.html instead.
 		}
 	};
-	
+
 	function fadeOutNode(node){
 		if (horizontal){
 			node.remove();
@@ -2364,7 +2365,7 @@
 			},500,node);
 		}
 	}
-	
+
 	function removeNode(){
 		var nodes = document.querySelectorAll("#output>div:not(.queued)");
 		var total2Remove = 0;
@@ -2397,26 +2398,26 @@
 			}
 		}
 	}
-	
+
 	function stripHtmlFunction(html){
 	   let tmp = document.createElement("DIV");
 	   tmp.innerHTML = html;
 	   return tmp.textContent || tmp.innerText || "";
 	}
-	
-	
+
+
 	function processData(data){
 		//console.log(data);
 		if (data.contents){
 			data = data.contents;
-			
+
 			var invisible = false;
-			
-			
+
+
 			if (!("id" in data)){
 				data.id = parseInt(Math.random*100000000);
 			}
-			
+
 			var showType = "";
 			if (!data.type){
 				data.type= "none";
@@ -2424,7 +2425,7 @@
 				data.type = data.type.toString();
 				showType = data.type;
 			}
-			
+
 			if (data.hasDonation){
 				if (stripHTML){
 					data.hasDonation = stripHtmlFunction(data.hasDonation);
@@ -2433,7 +2434,7 @@
 			} else {
 				data.hasDonation = "";
 			}
-			
+
 			if (data.chatname){
 				if (stripHTML){
 					data.chatname = stripHtmlFunction(data.chatname);
@@ -2442,7 +2443,7 @@
 			} else {
 				data.chatname = "";
 			}
-			
+
 			if (data.chatmessage){
 				if (stripHTML){
 					data.chatmessage = stripHtmlFunction(data.chatmessage);
@@ -2451,37 +2452,37 @@
 			} else {
 				data.chatmessage = "";
 			}
-			
+
 			if (writer){
 				var date = new Date();
 				let text;
 				var date = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true });
-				if ("sentiment" in data){ 
+				if ("sentiment" in data){
 					text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "")  + "\t" + (data.sentiment || "") + "\n");
 				} else {
 					text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + "\n");
 				}
 				if (writer){
 					writer.write(text);
-				} 
+				}
 			}
-			
+
 			if (singlewriter){
 				data.timestamp = new Date().getTime();
 				overwriteFile(JSON.stringify(data));
 			}
-			
-			
-			if ("sentiment" in data){ 
+
+
+			if ("sentiment" in data){
 				if (data.sentiment<.10){ // 1.0 is good; 0.0 is bad, so 0.1 is likely bad.
 					return;
 				}
-			} 
-			
+			}
+
 			if (!data.chatmessage && !data.hasDonation && !data.contentimg){
 				return;
 			}
-			
+
 			var addImage = "";
 			if (data.contentimg){
 				addImage = '<div class="hl-imgContent"><img src="' + data.contentimg + '" class="hl-img-content" onerror="this.parent.style.display=\'none\'" /></div>';
@@ -2492,14 +2493,14 @@
 			} else {
 				data.contentimg = "";
 			}
-			
+
 			var donationHTML = "";
 			if (data.hasDonation){
 				donationHTML = "<span class='donationAmount hl-donation'>"+data.hasDonation+"</span>";
 			} else {
 				data.hasDonation = "";
 			}
-			
+
 			var chatmessage = "";
 			if (data.chatmessage){
 				if (stylizeEmoji){
@@ -2513,13 +2514,13 @@
 			} else {
 				data.chatmessage = "";
 			}
-			
+
 			if (data.type && (data.type == "twitch") && avatars && !data.chatimg && data.chatname){ // this is a temp fix until everyone updates.
 				data.chatimg = "https://api.socialstream.ninja/twitch/?username="+encodeURIComponent(data.chatname); // this is CORS restricted to socialstream, but this is to ensure reliability for all
 			}
-			
+
 			var chatImg = data.chatimg;
-			
+
 			if (!chatImg && avatars){
 				if (fallbackImage){
 					chatImg = "unknown.png";
@@ -2532,9 +2533,9 @@
 					chatImg = "";
 				}
 			} else if (avatars){
-			
+
 				if (data.type && (data.type == "twitch") && avatars){
-					
+
 					chatImg = "unknown.png";
 					if (darkmode){
 						chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="fade-in-image invert icon hl-profile-pic" onerror="errorImage(this);" />'
@@ -2544,22 +2545,22 @@
 				} else {
 					chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
 				}
-				
+
 			} else {
 				chatImg = "";
 			}
-			
-			
+
+
 			if (showType && showsource){
 				showType = '<img src="' + showType + '.png" class="icon hl-source-type" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
 			} else {
 				showType = "";
 			}
-			
+
 			if (data.sourceImg && customSource){
 				showType += '<img src="' + data.sourceImg + '" class="icon hl-source-type" onerror="this.style.display=\'none\'" />';
 			}
-			
+
 			var timeArrived = "";
 			if (datestamp){
 				var date = new Date();
@@ -2569,16 +2570,16 @@
 				}
 				timeArrived = "<div class='time-arrived'>"+timeArrived+"</div>";
 			}
-			
-			
+
+
 			var bot = false;
-			
-			
+
+
 			var nameColor = "";
 			if (data.nameColor && colorized){
 				nameColor = "style='color:"+data.nameColor+";'";
 			}
-			
+
 			var chatbadges = "";
 			if (data.chatbadges && showbadges){
 				data.chatbadges.forEach(badge=>{
@@ -2593,12 +2594,12 @@
 					}
 				});
 			}
-			
+
 			var chatname = "";
-			
+
 			if (data.chatname){
-			
-				if (data.chatname.toLowerCase() == "streamelements"){ 
+
+				if (data.chatname.toLowerCase() == "streamelements"){
 					bot = true;
 					//chatname = "";
 				} else if (data.chatname.toLowerCase() == "nightbot"){
@@ -2610,11 +2611,11 @@
 				} else if (custombot && custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){ // because why not. :)
 					bot = true;
 				}
-				
+
 				if (bot && doNotShowBot){
 					return;
 				}
-				
+
 				if (firstNamesOnly){
 					var nn = data.chatname.split(" ");
 					if (nn.length>1){
@@ -2629,7 +2630,7 @@
 						}
 					}
 				}
-				
+
 				if (compactmode){
 					if (bot){
 						chatname = '<div class="hl-name'+splitMode+'"></div>';
@@ -2643,7 +2644,7 @@
 				}
 			} else {
 				chatname = '<div class="hl-name'+splitMode+'">'+chatbadges+'</div>';
-			} 
+			}
 
 			var larger = "";
 			if (stylizeEmoji){
@@ -2655,12 +2656,12 @@
 			if (horizontal){
 				expand = " expand"
 			}
-			
+
 			var mid = "";
 			if (data.id){
 				mid = "data-mid='"+data.id+"'";
 			}
-			
+
 			if (splitMode){
 				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>"
@@ -2695,31 +2696,31 @@
 					 + addImage
 					 + donationHTML + '</div>');
 			}
-			
+
 			if (filtering && !node.textContent.toLowerCase().includes(filtering)){
 				node.classList.add("hide");
 			}
-			
+
 			if (bot && !horizontal){
 				node.classList.add("bot");
 			}
-			
+
 			if (data.hasDonation){
 				node.classList.add("donation");
 			} else {
 				node.classList.add("noDono");
 			}
-			
+
 			if (data.hasMembership){
 				node.classList.add("member");
 			}
-			
+
 			if (compactmode && darkmode){
 				node.classList.add("compactmode");
 			} else if (!compactmode){
 				node.classList.add("notcompactmode");
 			}
-			
+
 			if (random){
 				node.classList.add("randommode");
 				node.style.top = Math.random()*document.body.clientHeight*0.95;
@@ -2728,11 +2729,11 @@
 					customNodeLimit = 20;
 				}
 			}
-			
+
 			if (!node.querySelector("#content_"+data.id).innerText.trim().length){
 				node.classList.add("noText");
 			}
-			
+
 			if (hideNotDonos && node.classList.contains("noDono")){
 				node.classList.add("hidden");
 			} else if (hideNotQueued && !node.classList.contains("queued")){
@@ -2744,18 +2745,18 @@
 				if ((style.visibility !== "hidden") && (style.display !== "none")){
 					if (odd){
 						node.classList.add("odd");
-					} 
+					}
 					odd = !odd;
 				}
 			}
-			
+
 			transitionType.forEach(classtype=>{
 				node.classList.add(classtype);
 			});
-			
+
 			mainOutputWindow.appendChild(node);
-			
-			
+
+
 			if (data.type && (data.type == "twitch") && avatars && data.chatimg){
 				var twitchImage = new Image();
 				twitchImage.onload = function (){
@@ -2770,15 +2771,15 @@
 				}.bind(data, node);
 				twitchImage.src = data.chatimg;
 			}
-			
+
 			if (beep){
 				playtone();
 			}
-			
+
 			if (timeoutDelay){
 				setTimeout(function(node){ node.remove();},timeoutDelay, node);
 			}
-			
+
 			if (horizontal){
 				// do not shrink the names to fit
 			} else if (compactmode){
@@ -2815,12 +2816,12 @@
 					}
 				}
 			}
-			
+
 			node.rawContents = data;
-			
-			if (autoshow && !bot){ 
+
+			if (autoshow && !bot){
 				if (!autoshowdonos || (autoshowdonos && data.hasDonation)){ // dono or not to dono.
-					if (autoTimeoutEnabled){ 
+					if (autoTimeoutEnabled){
 						autoShowQueue.push(node);
 						checkAutoShow();
 					} else {
@@ -2828,7 +2829,7 @@
 					}
 				}
 			}
-			
+
 			node.onmousedown = selectedMessage;
 			node.title = "Click to feature message instantly. CTRL + Click to add to the queue. Alt + Click to Pin.";
 
@@ -2868,9 +2869,9 @@
 					}
 				}
 			}
-			
+
 			removeNode();
-			
+
 			if (reversed && !forceAutoscroll){
 				//
 			} else {
@@ -2883,9 +2884,9 @@
 					});
 				}
 			}
-			
+
 			applyBotActions(data); // Official actions
-			
+
 			if (triggerState){
 				try {
 					if (applyCustomActions){
@@ -2895,7 +2896,7 @@
 					console.error(e);
 				}
 			}
-			
+
 			if (speech && !bot){
 				var msgPlain = document.getElementById('content_'+data.id); // text only
 				if (msgPlain){
@@ -2906,7 +2907,7 @@
 					msgPlain = msgPlain.replaceAll('!', ' ');
 					msgPlain = msgPlain.replace(/catJAM/ig,"");
 				}
-				
+
 				var chatname = "";
 				if (data.chatname){
 					chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
@@ -2914,9 +2915,9 @@
 					chatname = chatname.replaceAll('@', ' ');
 					chatname = chatname.replaceAll('!', ' ');
 				}
-				
+
 				if (data.hasDonation){
-				
+
 					var donoText = document.createElement("div");
 					donoText.innerHTML = data.hasDonation;
 					donoText = donoText.textContent || donoText.innerText || "";
@@ -2924,7 +2925,7 @@
 					donoText = donoText.replaceAll('_', ' ');
 					donoText = donoText.replaceAll('@', ' ');
 					donoText = donoText.replaceAll('!', ' ');
-				
+
 					if (chatname){  ///// NAME
 						if (English){
 							if (msgPlain){
@@ -2966,13 +2967,13 @@
 		}
 		return false;
 	}
-	
+
 	function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
 		if (triggerState && data.chatmessage.includes("!highlight")){
 			document.getElementById("msg_"+data.id).classList.add("highlight"); // sample method of highlighting
 		}
 	}
-	
+
 	function syncDockAll(UUID){
 		var pins = [];
 		document.querySelectorAll(".pinned[data-mid]").forEach(ele=>{
@@ -2981,7 +2982,7 @@
 		syncDataP2P({pin:pins}, UUID);
 		syncQueueP2P(UUID);
 	}
-	
+
 	function syncQueueP2P(UUID=false){
 		var data = [];
 		if (UUID){
@@ -2998,7 +2999,7 @@
 			syncDataP2P({queue:data});
 		}
 	}
-	
+
 	function syncDataP2P(data, UUID=false, force=false){
 		if (iframe && (syncDocks||force)){
 			if (UUID){
@@ -3015,9 +3016,9 @@
 			}
 		}
 	}
-	
+
 	function sendDataP2P(data){
-	
+
 		if (!data){
 			document.querySelectorAll(".last-message").forEach(ele=>{ // last message sent was to clear the overlay
 				ele.classList.remove("last-message"); // no overlay is now active.
@@ -3063,7 +3064,7 @@
 			console.error(e);
 		}
 	}
-	
+
 	document.getElementById("chatInput").addEventListener("keyup", function(event) {
 		if (event.keyCode === 13) {
 			event.preventDefault();
@@ -3071,13 +3072,13 @@
 			document.getElementById("chatInput").value = "";
 		}
 	})
-	
+
 	function toggleChat(){
 		document.getElementById("chatInput").style.display = "inline-block";
 		document.getElementById("say_hello").style.display = "none";
 		document.getElementById("chatInput").focus();
 	}
-	
+
 	function respondP2P(data=null, tid=false){
 		if (data===null){
 			data = prompt("Enter something to say to all of chat");
@@ -3091,11 +3092,11 @@
 		msg.overlayNinja.response = data;
 		iframe.contentWindow.postMessage({"sendData":msg, "type": "rpcs"}, '*'); // send only to 'viewers' of this stream
 	}
-	
+
 	function setupSaveToDisk(){
 		var script = document.createElement('script');
 		script.onload = function() {
-			
+
 			if (!fileStream) {
 				fileStream = streamSaver.createWriteStream("chat_"+Date.now()+'.tsv' || 'sample.txt');
 				writer = fileStream.getWriter();
@@ -3108,8 +3109,8 @@
 		script.src = "./thirdparty/StreamSaver.js";
 		document.head.appendChild(script);
 	}
-	
-	
+
+
 	async function overwriteFile(data=false) {
 	  if (data=="setup"){
 		  newFileHandle = await window.showSaveFilePicker();
@@ -3117,20 +3118,20 @@
 		  document.getElementById("select_save_file").innerText = "💾";
       } else if (newFileHandle && data){
 		  const writableStream = await newFileHandle.createWritable();
-		  
+
 		  try {
 			if (typeof data == "object"){
 				data.chatimg = upscaleImages(data);
 				overwriteFile(JSON.stringify(data));
 			}
 		  } catch(e){}
-		  
+
 		  await writableStream.write(data);
 		  await writableStream.close();
 	  }
 	}
-	
-	
+
+
 	(function rightclickmenuthing() { // right click menu
 		"use strict";
 
@@ -3164,7 +3165,7 @@
 
 			return {x: posx, y: posy};
 		}
-		
+
 		var taskItemInContext;
 		var clickCoordsX;
 		var clickCoordsY;
@@ -3178,13 +3179,13 @@
 
 		function contextListener() {
 			document.addEventListener("contextmenu", function(e) {
-				
+
 				if (navigator.userAgent.toLowerCase().indexOf(' electron/') > -1){
 					return;
 				} else if (e && (e.ctrlKey || e.metaKey)){return;} // allow for development ease
-					 
+
 				taskItemInContext = clickInsideElement(e, "menu");
-				
+
 				if (taskItemInContext) {
 					e.preventDefault();
 					e.stopPropagation();
@@ -3214,13 +3215,13 @@
 		}
 
 		function toggleMenuOn() {
-			
+
 			if (menuState !== 1) {
 				menuState = 1;
 				menu.classList.add("context-menu--active");
 				document.addEventListener("click", menuClickListener);
 			}
-			
+
 		}
 
 		function toggleMenuOff() {
@@ -3231,12 +3232,12 @@
 			}
 			lastMenu = false;
 		}
-		
+
 		function positionMenu(e) {
 			var clickCoords = getPosition(e);
 			clickCoordsX = clickCoords.x;
 			clickCoordsY = clickCoords.y;
-			
+
 			menuWidth = menu.offsetWidth + 4;
 			menuHeight = menu.offsetHeight + 4;
 
@@ -3254,7 +3255,7 @@
 				offset = -10;
 			}
 			menu.style.bottom =offset + "px";
-			
+
 		}
 
 		async function menuItemListener(link) {
@@ -3275,12 +3276,12 @@
 			}
 			toggleMenuOff();
 		}
-		
+
 		contextListener();
 
 	})();
 
-	
+
 	if (urlParams.has('js')){  // ie: &js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js
 		console.warn("Third-party Javascript has been injected into the code. Security cannot be ensured.");
 		var jsURL = urlParams.get('js');
@@ -3299,7 +3300,7 @@
 		};
 		document.head.appendChild(externalJavaascript);
 	}
-	
+
 	</script>
 	</body>
 </html>
