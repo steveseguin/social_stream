@@ -29,8 +29,8 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - mixcloud.com (pop out chat)
 - ms teams (experimental support)
 - vimeo.com (pop out chat page; https://vimeo.com/live-chat/xxxxxxxxx/interaction/)
-- instagram live (instagram.com/*/live/)
-- Instagram post non-live comments (REQUIRES the TOGGLE in menu to enable it)
+- instagram live (instagram.com/*/live/),  css note:  `[data.type = "instagramlive"]`
+- Instagram post non-live comments (REQUIRES the TOGGLE in menu to enable it), css note: `[data.type = "instagram"]`
 - tiktok live (tiktok.com/*/live)
 - webex live chat (not the pop out)
 - linkedin events and live comments. (works with linkedin.com/videos/live/****** & linkedin.com/videos/events/******)
