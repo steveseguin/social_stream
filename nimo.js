@@ -153,7 +153,7 @@
 		}
 	});
 
-	function onElementInsertedTwitch(containerSelector, className, callback) {
+	function onElementInserted(containerSelector, className, callback) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
@@ -181,7 +181,7 @@
 		for (var i = 0;i<clear.length;i++){
 			clear[i].ignore = true; // don't let already loaded messages to re-load.
 		}
-		onElementInsertedTwitch(".nimo-room__chatroom", "nimo-room__chatroom__message-item", function(element){
+		onElementInserted(".nimo-room__chatroom, .MessageList, chatbox-messages", "nimo-room__chatroom__message-item", function(element){
 		  setTimeout(function(element){processMessage(element);},10, element);
 		});
 	},2000);
