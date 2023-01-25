@@ -32,12 +32,14 @@
 			var nameElement = ele.querySelector("#author-name");
 			chatname = nameElement.innerText;
 			
-			if (nameElement.classList.contains("member")){
-				nameColor = "#107516";
-				memeber = true;
-			} else if (nameElement.classList.contains("moderator")){
-				nameColor = "#5f84f1";
-				mod = true;
+			if (!settings.nosubcolor){
+				if (nameElement.classList.contains("member")){
+					nameColor = "#107516";
+					memeber = true;
+				} else if (nameElement.classList.contains("moderator")){
+					nameColor = "#5f84f1";
+					mod = true;
+				}
 			}
 			
 		  } catch(e){}
@@ -212,9 +214,6 @@
 	);
 	
 	var settings = {};
-	// settings.textonlymode
-	// settings.streamevents
-	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){

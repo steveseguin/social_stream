@@ -458,6 +458,10 @@ chrome.runtime.onMessage.addListener(
 					pushSettingChange();
 				}
 				
+				if (request.setting == "nosubcolor"){
+					pushSettingChange();
+				}
+				
 				if (request.setting == "captureevents"){
 					pushSettingChange();
 				} 
