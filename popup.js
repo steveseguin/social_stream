@@ -76,8 +76,6 @@ function update(response){
 			document.getElementById("remote_control_url").href='https://socialstream.ninja/sampleapi.html?session='+response.streamID;
 		}
 		
-		
-		
 		if ('settings' in response){
 			for (var key in response.settings){
 				

@@ -1344,8 +1344,17 @@
 		document.getElementById("tts").classList.remove("hidden");
 		document.getElementById("tts").classList.add('pressed');
 		var speech = true;
-		speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || "en-US";
+		speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || speechLang;
 
+		if (speechLang.split("-")[0].toLowerCase() == "en"){
+			English = true;
+		} else {
+			English = false;
+		}
+	} else
+	
+	if (urlParams.has("language") || urlParams.has("lang") || urlParams.has("ln")){
+		speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || speechLang;
 		if (speechLang.split("-")[0].toLowerCase() == "en"){
 			English = true;
 		} else {
