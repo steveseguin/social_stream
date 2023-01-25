@@ -953,6 +953,12 @@
 					<span>Toggle Pin</span>
 				</a>
 			</li>
+			<li class="context-menu__item" data-action="TTS">
+				<a href="#" class="context-menu__link" data-action="TTS">
+					<i class="las la-pen"></i>
+					<span>Text to Speech</span>
+				</a>
+			</li>
 		</ul>
 	</nav>
 	<script>
@@ -1338,6 +1344,11 @@
 	var English = true;
 	var voice = false;
 	var voices = window.speechSynthesis.getVoices();
+	
+	//var voiceGender = false;   // I'll need to add the Google Speech API to the dock to make this work
+	//if (urlParams.has("gender")){
+	//	voiceGender = urlParams.get("gender") || "MALE";
+	//}
 
 	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){
 		document.getElementById("tts").dataset.state = 1;
@@ -1382,8 +1393,9 @@
 		voiceName = urlParams.get("voice") || "google";
 	}
 
-	function speak(text){
-		if (!speech){return;}
+	function speak(text, allow=false){
+		console.log(text);
+		if (!speech && !allow){return;}
 		if (!text){return;}
 
 		if (!voice){
@@ -2907,74 +2919,78 @@
 			}
 
 			if (speech && !bot){
-				var msgPlain = document.getElementById('content_'+data.id); // text only
-				if (msgPlain){
-					msgPlain = msgPlain.textContent || msgPlain.innerText || "";
-					msgPlain = msgPlain.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
-					msgPlain = msgPlain.replaceAll('_', ' ');
-					msgPlain = msgPlain.replaceAll('@', ' ');
-					msgPlain = msgPlain.replaceAll('!', ' ');
-					msgPlain = msgPlain.replace(/catJAM/ig,"");
-				}
-
-				var chatname = "";
-				if (data.chatname){
-					chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
-					chatname = chatname.replaceAll('_', ' ');
-					chatname = chatname.replaceAll('@', ' ');
-					chatname = chatname.replaceAll('!', ' ');
-				}
-
-				if (data.hasDonation){
-
-					var donoText = document.createElement("div");
-					donoText.innerHTML = data.hasDonation;
-					donoText = donoText.textContent || donoText.innerText || "";
-					donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
-					donoText = donoText.replaceAll('_', ' ');
-					donoText = donoText.replaceAll('@', ' ');
-					donoText = donoText.replaceAll('!', ' ');
-
-					if (chatname){  ///// NAME
-						if (English){
-							if (msgPlain){
-								speak(chatname + " has donated " + donoText + " and says "+ msgPlain);
-							} else {
-								speak(chatname + " has donated " + donoText);
-							}
-						} else if (msgPlain){
-							speak(chatname + "! ! .. " + donoText + "! ! .. "+ msgPlain );
-						} else {
-							speak(chatname + "! ! .. " + donoText);
-						}
-					} else if (English){ // no name but english
-							if (msgPlain){
-								speak("Someone has donated " + donoText + " and says "+ msgPlain);
-							} else {
-								speak("Someone has donated " + donoText);
-							}
-					} else if (msgPlain){ // no name; not english
-							speak(donoText + "! ! .. "+ msgPlain );
-					} else {
-						speak(donoText);
-					}
-				} else if (msgPlain){ // NO DONATION
-					if (chatname){ // NAME
-						if (English){
-							speak(chatname + " says! " +msgPlain);
-						} else {
-							speak(chatname + "! ! .. " +msgPlain);
-						}
-					} else if (English){ // NO NAME
-						speak("Someone says! " +msgPlain);
-					} else {
-						speak(msgPlain);
-					}
-				}
+				speechMeta(data);
 			}
 			return node;
 		}
 		return false;
+	}
+	
+	function speechMeta(data, allow=false){
+		var msgPlain = document.getElementById('content_'+data.id); // text only
+		if (msgPlain){
+			msgPlain = msgPlain.textContent || msgPlain.innerText || "";
+			msgPlain = msgPlain.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
+			msgPlain = msgPlain.replaceAll('_', ' ');
+			msgPlain = msgPlain.replaceAll('@', ' ');
+			msgPlain = msgPlain.replaceAll('!', ' ');
+			msgPlain = msgPlain.replace(/catJAM/ig,"");
+		}
+
+		var chatname = "";
+		if (data.chatname){
+			chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
+			chatname = chatname.replaceAll('_', ' ');
+			chatname = chatname.replaceAll('@', ' ');
+			chatname = chatname.replaceAll('!', ' ');
+		}
+
+		if (data.hasDonation){
+
+			var donoText = document.createElement("div");
+			donoText.innerHTML = data.hasDonation;
+			donoText = donoText.textContent || donoText.innerText || "";
+			donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
+			donoText = donoText.replaceAll('_', ' ');
+			donoText = donoText.replaceAll('@', ' ');
+			donoText = donoText.replaceAll('!', ' ');
+
+			if (chatname){  ///// NAME
+				if (English){
+					if (msgPlain){
+						speak(chatname + " has donated " + donoText + " and says "+ msgPlain, allow);
+					} else {
+						speak(chatname + " has donated " + donoText, allow);
+					}
+				} else if (msgPlain){
+					speak(chatname + "! ! .. " + donoText + "! ! .. "+ msgPlain, allow);
+				} else {
+					speak(chatname + "! ! .. " + donoText, allow);
+				}
+			} else if (English){ // no name but english
+					if (msgPlain){
+						speak("Someone has donated " + donoText + " and says "+ msgPlain, allow);
+					} else {
+						speak("Someone has donated " + donoText, allow);
+					}
+			} else if (msgPlain){ // no name; not english
+					speak(donoText + "! ! .. "+ msgPlain , allow);
+			} else {
+				speak(donoText, allow);
+			}
+		} else if (msgPlain){ // NO DONATION
+			if (chatname){ // NAME
+				if (English){
+					speak(chatname + " says! " +msgPlain, allow);
+				} else {
+					speak(chatname + "! ! .. " +msgPlain, allow);
+				}
+			} else if (English){ // NO NAME
+				speak("Someone says! " +msgPlain, allow);
+			} else {
+				speak(msgPlain, allow);
+			}
+		}
 	}
 
 	function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
@@ -3276,6 +3292,8 @@
 				} else {
 					pinIt(taskItemInContext);
 				}
+			} else if (link.getAttribute("data-action") === "TTS") {
+				speechMeta(taskItemInContext.rawContents, true);
 			} else if (link.getAttribute("data-action") === "Queue") {
 				if (taskItemInContext.classList.contains("queued")){
 					removeQueue(taskItemInContext); 
