@@ -14,11 +14,14 @@
 		return resp;
 	}
 	
+	
 	function processMessage(ele){	// twitch
+	
+	  if (!ele){return;}
+		
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
-	  
 	  
 	  var tmp = ele.children;
 	  var children = []
@@ -95,7 +98,6 @@
 	  }
 	  
 	 
-
 	  var data = {};
 	  data.chatname = chatname;
 	  data.chatbadges = chatbadges;
@@ -126,7 +128,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector('.chat-input-wrapper > textarea').focus();
+					document.querySelector('#message-input').focus();
 					sendResponse(true);
 					return;
 				}
@@ -160,6 +162,7 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+						if (mutation.addedNodes[i].id && mutation.addedNodes[i].id.startsWith("message-temp")){continue;}
 						if (mutation.addedNodes[i].ignore){continue;}
 						try {
 							mutation.addedNodes[i].ignore=true;
