@@ -533,6 +533,9 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "tellajoke") {
 				tellAJoke();
 				sendResponse({"state":isExtensionOn});
+			} else if (request.cmd && request.cmd === "enableYouTube") {
+				enableYouTube();
+				sendResponse({"state":isExtensionOn});	
 			} else if (request.cmd && request.cmd === "singlesave") {
 				sendResponse({"state":isExtensionOn});	
 				overwriteFile("setup");
@@ -912,7 +915,13 @@ function setupSocket(){
 	});
 }
 
-
+function enableYouTube(){ // function to send data to the DOCk via the VDO.Ninja API
+	try {
+		iframe.contentWindow.postMessage({"enableYouTube":true}, '*'); // send only to 'viewers' of this stream
+	} catch(e){
+		console.error(e);
+	}
+}
 
 function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Ninja API
 	var msg = {};
@@ -967,7 +976,7 @@ function loadIframe(channel, pass=false){  // this is pretty important if you wa
 	if (!pass){
 		pass = "false";
 	}
-	iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+"&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
+	iframe.src = "https://vdo.socialstream.ninja/alpha/?ln&salt=vdo.ninja&password="+pass+"&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
 	document.body.appendChild(iframe);
 }
 
@@ -1002,14 +1011,40 @@ function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for 
   }
 }
 
-eventer(messageEvent, function (e) {
-  if ("dataReceived" in e.data){ // raw data 
-	if ("overlayNinja" in e.data.dataReceived){
-		if ("response" in e.data.dataReceived.overlayNinja){ // we receieved a response from the dock
-			processResponse(e.data.dataReceived.overlayNinja);
+eventer(messageEvent, async function (e) {
+	if (e.data && (typeof e.data == "object")){
+		if (("dataReceived" in e.data) && ("overlayNinja" in e.data.dataReceived)){
+			if ("response" in e.data.dataReceived.overlayNinja){ // we receieved a response from the dock
+				processResponse(e.data.dataReceived.overlayNinja);
+			}
+		} else if ("action" in e.data){
+			if (e.data.action === "YoutubeChat"){
+				if (e.data.value && data.value.snippet && data.value.authorDetails){
+					var data = {};
+					data.chatname = e.data.value.authorDetails.displayName || "";
+					data.chatimg = e.data.value.authorDetails.profileImageUrl || "";
+
+					data.nameColor = "";
+					data.chatbadges = "";
+					data.backgroundColor = "";
+					data.textColor = "";
+					
+					data.chatmessage = data.value.snippet.displayMessage || "";
+					
+					data.hasDonation = "";
+					data.hasMembership = "";
+					
+					data.type = "youtube";
+					
+					console.log(data);
+					data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
+					sendToDestinations(data);
+				} else {
+					console.log(e.data);
+				}
+			}
 		}
 	}
-  }
 });
 
 function checkIfAllowed(sitename){
@@ -1091,15 +1126,6 @@ function processResponse(data){
 	
 	if (!chrome.debugger){return false;}
 	if (!isExtensionOn){return false;} // extension not active, so don't let responder happen. Probably safer this way.
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
 	 
 	chrome.tabs.query({}, function(tabs) {
 		if (chrome.runtime.lastError) {
