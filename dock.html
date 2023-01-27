@@ -55,20 +55,6 @@
 			background-color: #7a7a7a;
 		}
 		
-		/*
-			.noText {
-				display: var(--show-emoji-only) !important;
-			}
-
-			.noDono {
-				display: var(--show-donos-only) !important;
-			}
-
-			.highlight-chat:not(.queued) {
-				display: var(--show-queue-only)!important;
-			}
-		*/
-
 		#output {
 			zoom: var(--scale-output);
 			-moz-transform: var(--scale-output-moz);
@@ -487,7 +473,7 @@
 		}
 
 		.highlight-chat:hover {
-			background-color: #AFA4;
+			box-shadow: inset 7px 7px 20px #08080444,inset -7px -7px 20px #FcFcFc22, inset 1px 1px 2px #080804AA,inset -1px -1px 3px #FcFcFc77;
 		}
 
 		.highlight-chat.compactmode{
@@ -808,12 +794,7 @@
 		input[type="text"]:focus {
 			width: 170px;
 		}
-		#filter_messages{
-			width: 45px;
-		}
-		#filter_messages:focus{
-			width: 150px;
-		}
+		
 		input[type="text"] {
 			-webkit-transition: all 0.4s ease 0s;
 			-moz-transition: all 0.4s ease 0s;
@@ -825,6 +806,52 @@
 		}
 		.hidden {
 			display:none!important;
+		}
+		.popInInput {
+			z-index: 10;
+			position: absolute;
+			z-index: 10;
+			background-color: #00000040;
+			position: absolute;
+			margin: 0;
+			padding: 7px;
+			border-radius: 3px;
+			box-shadow: inset 1px 1px grey;
+		}
+		
+		#chatInput_parent:empty{
+			width: 0;
+			opacity: .6;
+		}
+		#chatInput{
+			color: black;
+			background-color:#e8edf1;
+			width: 250px;
+			opacity: 1;
+		}
+		#chatInput::placeholder {
+		  color: #3338;
+		  opacity: 1;
+		}
+		
+		#filter_messages_parent:empty{
+			width: 0;
+			opacity: .6;
+		}
+		#filter_messages{
+			background-color:#dbe1e5;
+			color:black;
+			width: 0;
+		}
+		#filter_messages:focus {
+			color: black;
+			background-color:#e8edf1;
+			width: 150px;
+			opacity: 1;
+		}
+		#filter_messages::placeholder {
+		  color: #333A;
+		  opacity: 1;
 		}
 		#pinned{
 			position: sticky;
@@ -1054,19 +1081,9 @@
 
 		<!-- Filter buttons -->
 
-		<button id="filter" data-state="0" onclick="" style="background-image: url(./icons/filter_msg.png);" title="Filter — 🔽 Filter messages based on what you have entered"></button> <!-- TODO: it should open a modal window with a field to type the message which will be used as filter -->
+		<button id="filter" data-state="0" style="background-image: url(./icons/filter_msg.png);" title="Filter — 🔽 Filter messages based on what you have entered"></button> <!-- TODO: it should open a modal window with a field to type the message which will be used as filter -->
 		<button id="hide_emoji" class="menubuttonsmall" data-state="0" onclick="emoji(this);" style="background-image: url(./icons/filter_hideemojionly_off.png);" title="Filter — 😀🚫 Hide messages that contains emojis only"></button>
 		<button id="only_donos" class="menubuttonsmall" data-state="0" onclick="donos(this);" style="background-image: url(./icons/filter_showpaidonly_on.png);" title="Filter — 💲 Show only messages that have donations/cheer"></button>
-
-
-
-		<!-- To put within a modal of button id 'say_hello' -->
-		<input type="text" id="chatInput" style="display:none;" placeholder="Type a message..." /> <!-- I didn't comment this line because it would give an error that makes the context menu (right click on a message) stop working -->
-
-		<!-- To put within a modal of button id 'filter' -->
-		<!-- <input id="filter_messages" onchange="filterMessages(this.value);" placeholder="Filter messages" type="text" /> -->
-		<input id="filter_messages" style="display:none;" onchange="filterMessages(this.value);" placeholder="Filter messages" type="text" /> <!-- I putted the same line as above with style="display:none;", because uncomment the line above would give an error that makes the context menu (right click on a message) stop working -->
-
 
 
 		<button id="jumpto" class="menubuttonsmall" data-state="0" onclick="jumptoBottom(this);" style="background-image: url(./icons/scroll_to_bottom_off.png);" title="Scroll to bottom"></button>
@@ -1104,6 +1121,17 @@
 			</li>
 		</ul>
 	</nav>
+	
+	<div id="chatInput_parent" class="hidden popInInput">
+		<input type="text" id="chatInput" placeholder="Type a message..." />
+		<button id="chatInputButton" type="button">Send</button>
+		<button id="chatInputCloseButton" type="button">X</button>
+	</div>
+	
+	<div id="filter_messages_parent" class="hidden popInInput">
+		<input id="filter_messages" onchange="filterMessages(this.value);" placeholder="Filter messages" type="text" />
+	</div>
+	
 	<script>
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
 		console.error(errorMsg);
@@ -3261,19 +3289,9 @@
 		}
 	}
 
-	document.getElementById("chatInput").addEventListener("keyup", function(event) {
-		if (event.keyCode === 13) {
-			event.preventDefault();
-			respondP2P(document.getElementById("chatInput").value);
-			document.getElementById("chatInput").value = "";
-		}
-	})
+	
 
-	function toggleChat(){
-		document.getElementById("chatInput").style.display = "inline-block";
-		document.getElementById("say_hello").style.display = "none";
-		document.getElementById("chatInput").focus();
-	}
+
 
 	function respondP2P(data=null, tid=false){
 		if (data===null){
@@ -3327,10 +3345,35 @@
 		}
 	}
 
+	function getPosition(event) {
+		var posx = 0;
+		var posy = 0;
+
+		if (event.pageX || event.pageY){
+			posx = event.pageX;
+			posy = event.pageY;
+		} else if (event.clientX || event.clientY) {
+			posx = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+			posy = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+		}
+
+		return {x: posx, y: posy};
+	}
 
 	(function rightclickmenuthing() { // right click menu
 		"use strict";
 
+		var taskItemInContext;
+		var clickCoordsX;
+		var clickCoordsY;
+		var menu = getById("context-menu");
+		var menuState = 0;
+		var lastMenu= false;
+		var menuWidth;
+		var menuHeight;
+		var windowWidth;
+		var windowHeight;
+		
 		function clickInsideElement(e, value="menu") {
 			var el = e.srcElement || e.target;
 			if (el.dataset && (value in el.dataset)) {
@@ -3344,34 +3387,6 @@
 			}
 			return false;
 		}
-
-		function getPosition(event2) {
-			var posx = 0;
-			var posy = 0;
-
-			if (!event2){var event = window.event;}
-
-			if (event2.pageX || event2.pageY){
-				posx = event2.pageX;
-				posy = event2.pageY;
-			} else if (event2.clientX || event2.clientY) {
-				posx = event2.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-				posy = event2.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-			}
-
-			return {x: posx, y: posy};
-		}
-
-		var taskItemInContext;
-		var clickCoordsX;
-		var clickCoordsY;
-		var menu = getById("context-menu");
-		var menuState = 0;
-		var lastMenu= false;
-		var menuWidth;
-		var menuHeight;
-		var windowWidth;
-		var windowHeight;
 
 		function contextListener() {
 			document.addEventListener("contextmenu", function(e) {
@@ -3483,6 +3498,138 @@
 		}
 
 		contextListener();
+	})();
+	
+	
+	(function userFilterInputModalBox() { // filter 
+		"use strict";
+
+		var menu = getById("filter_messages_parent");
+		var input = getById("filter_messages");
+		
+		function positionMenu(e) {
+		
+			var clickCoords = getPosition(e);
+			
+			var source  = e.target;
+			var style = window.getComputedStyle(source);
+			
+			var clickCoordsX = clickCoords.x + parseInt(style.width) - 10;
+
+			var menuWidth = menu.offsetWidth + 4;
+
+			if (( window.innerWidth - clickCoordsX) < menuWidth) {
+				menu.style.left =  window.innerWidth - menuWidth + "px";
+			} else {
+				menu.style.left = clickCoordsX + "px";
+			}
+			menu.style.top = "unset";
+			menu.style.bottom = "5px";
+		}
+		
+		function toggleInput(event){
+			event.preventDefault();
+			event.stopPropagation();
+			positionMenu(event);
+			menu.classList.toggle("hidden");
+			input.focus();
+			return false;
+		}
+		
+		input.addEventListener("blur", function(event){
+			event.preventDefault();
+			event.stopPropagation();
+			getById("filter").removeEventListener("click", toggleInput);
+			menu.classList.add("hidden");
+			setTimeout(function(){ // click vs hold
+				getById("filter").addEventListener("click", toggleInput);
+			},300)
+			return false;
+		});
+		getById("filter").addEventListener("click", toggleInput);
+
+	})();
+	
+	
+	document.onkeydown = function(evt) {
+		evt = evt || window.event;
+		var isEscape = false;
+		if ("key" in evt) {
+			isEscape = (evt.key === "Escape" || evt.key === "Esc");
+		} else {
+			isEscape = (evt.keyCode === 27);
+		}
+		if (isEscape) {
+			getById("chatInput_parent").classList.add("hidden");
+			getById("filter_messages_parent").classList.add("hidden");
+		}
+	};
+	
+	(function userChatInputModalBox() { // filter 
+		"use strict";
+
+		var menu = getById("chatInput_parent");
+		var input = getById("chatInput");
+		var chatInputButton = getById("chatInputButton");
+		var chatInputCloseButton = getById("chatInputCloseButton");
+		
+		
+		function positionMenu(e) {
+		
+			var clickCoords = getPosition(e);
+			
+			var source  = e.target;
+			var style = window.getComputedStyle(source);
+			
+			var clickCoordsX = clickCoords.x + parseInt(style.width) - 10;
+
+			var menuWidth = menu.offsetWidth + 4;
+
+			if (( window.innerWidth - clickCoordsX) < menuWidth) {
+				menu.style.left =  window.innerWidth - menuWidth + "px";
+			} else {
+				menu.style.left = clickCoordsX + "px";
+			}
+			menu.style.top = "unset";
+			menu.style.bottom = "5px";
+		}
+		
+		function toggleInput(event){
+			event.preventDefault();
+			event.stopPropagation();
+			positionMenu(event);
+			menu.classList.toggle("hidden");
+			input.focus();
+			return false;
+		}
+		
+		input.addEventListener("keyup", function(event) {
+			if (event.keyCode === 13) {
+				event.preventDefault();
+				if (input.value){
+					respondP2P(input.value);
+				}
+				input.value = "";
+			}
+		})
+	
+		chatInputButton.addEventListener("click", function(event) {
+			event.preventDefault();
+			if (input.value){
+				respondP2P(input.value);
+			}
+			input.value = "";
+		})
+		
+		chatInputCloseButton.addEventListener("click", function(event){
+			event.preventDefault();
+			event.stopPropagation();
+			menu.classList.add("hidden");
+			input.value = "";
+			return false;
+		});
+		getById("say_hello").addEventListener("click", toggleInput);
+
 	})();
 
 
