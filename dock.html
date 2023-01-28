@@ -216,7 +216,7 @@
 			max-height: 17px;
 		}
 
-		.hl-message img{
+		.hl-message img {
 			position:relative;
 			margin: auto 1px;
 			padding: 0;
@@ -225,7 +225,16 @@
 			max-width: 24px;
 			max-height: 24px;
 		}
-
+		
+		.hl-message svg {
+			position:relative;
+			margin: auto 1px;
+			padding: 0;
+			display:inline-block;
+			height: 24px;
+			max-width: 24px;
+			max-height: 24px;
+		}
 
 		img:first-child:not(:last-child){
 			margin: auto 1px auto 5px;
@@ -1039,6 +1048,20 @@
 			position: relative;
 			top: 7px;
 		}
+		.hideMenuKeepScrollLock {
+			height: 0!important;
+			border: 0!important;
+			box-shadow: unset!important;
+			padding: 0!important;
+			margin: 0!important;
+		}
+		.hideMenuKeepScrollLock > *{
+			display:none!important;
+		}
+		.hideMenuKeepScrollLock > #jumpto{
+			display:block!important;
+		}
+		
 	</style>
 </head>
 <body class='electronDraggable'>
@@ -1620,9 +1643,16 @@
 		document.getElementById("output").classList.remove("notcompactmode");
 		//document.getElementById("menu").style.display = "none";
 	}
+	
 
 	if (urlParams.has("hidemenu") || urlParams.has("nomenu")){
-		document.getElementById("menu").style.display = "none";
+		if ((urlParams.get("hidemenu")=="2") || (urlParams.get("nomenu")=="2")){
+			document.getElementById("menu").classList.add("hideMenuKeepScrollLock");
+			document.getElementById("output").style.marginBottom = "0";
+		} else{
+			document.getElementById("menu").style.display = "none";
+			document.getElementById("output").style.marginBottom = "0";
+		}
 	}
 
 	if (urlParams.has("save")){
