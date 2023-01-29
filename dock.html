@@ -19,7 +19,6 @@
 			--font-color-name: #DDD;
 			--background-color: #36393F;
 			--link-color: #5AF;
-			--input-color: #FFF;
 			--highlight-base: #FFF4;
 			--highlight-base2: #4444;
 			--highlight-compact: #3335;
@@ -46,21 +45,21 @@
 			border: 2px solid black;
 			cursor: pointer;
 		}
-		
+
 		.closeBtn:hover {
 			background-color: #9a9a9a;
 		}
-		
+
 		.closeBtn:active {
 			background-color: #7a7a7a;
 		}
-		
+
 		#output {
 			zoom: var(--scale-output);
 			-moz-transform: var(--scale-output-moz);
 			-moz-transform-origin: 0 0;
 			width:100%;
-			margin-bottom: 42px; /* Same as menu height */
+			margin-bottom: 46px; /* Same as menu height + menu padding-top + menu padding-bottom */
 		}
 		.hl-badge{
 			padding: 0px 2px 0px 0px;
@@ -177,14 +176,6 @@
 			text-shadow: -2px -2px #FFF, -2px -1px #FFF, -2px 0px #FFF, -2px 1px #FFF, -2px 2px #FFF, -1px -2px #FFF, -1px -1px #FFF, -1px 0px #FFF, -1px 1px #FFF, -1px 2px #FFF, 0px -2px #FFF, 0px -1px #FFF, 0px 0px #FFF, 0px 1px #FFF, 0px 2px #FFF, 1px -2px #FFF, 1px -1px #FFF, 1px 0px #FFF, 1px 1px #FFF, 1px 2px #FFF, 2px -2px #FFF, 2px -1px #FFF, 2px 0px #FFF, 2px 1px #FFF, 2px 2px #FFF;
 		}
 
-		body.lightmode input::placeholder {
-			color: black;
-			opacity: 1; /* Firefox */
-		}
-		body.lightmode #menu{
-			background-color: #e9e9e9;
-		}
-
 		.fade-in-image {
 			animation: fadeIn .2s;
 		}
@@ -225,7 +216,7 @@
 			max-width: 24px;
 			max-height: 24px;
 		}
-		
+
 		.hl-message svg {
 			position:relative;
 			margin: auto 1px;
@@ -548,227 +539,397 @@
 			width: 100%;
 			height: 42px;
 			padding-top: 4px;
+			padding-bottom: 0px;
 			display: flex;
 			justify-content: center;
 			background-color: #2F3136;
 			box-shadow: 0 0 5px #000;
 			z-index: 2;
 		}
+		body.lightmode #menu{
+			background-color: #f5f5f5;
+		}
 
-		#menu > button {
+		.imgButton {
 			position: relative;
 			display: block;
 			background-repeat: no-repeat;
-			background-color: #2F3136; /* Same as menu */
+			background-color: transparent; /* alpha */
 			-webkit-app-region: no-drag;
 			border: none;
-			margin-left: 2px;
-			margin-right: 2px;
 
 			width: 32px;
 			height: 32px;
 			background-size: 32px;
-			margin-top: 6px;
+			margin-top: 3px;
+			margin-left: 2px;
+			margin-right: 2px;
+
+			-webkit-app-region: no-drag;
 		}
-		#menu > button:hover {
+		.imgButton:hover {
 			cursor: pointer;
 			box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.05); /* Light the button */
 		}
 
-		#menu > input {
-			margin: 6px 2px 6px;
-			background-color: var(--input-color);
-			border: 1px solid black;
-			border-radius: 5px;
-			-webkit-app-region: no-drag;
-		}
-		#menu > input:focus {
-			background-color: var(--input-color);
-		}
-
-		#menu .menubuttonsmall {
+		.imgSmallButton { /* Used with imgButton class */
 			width: 20px;
 			height: 20px;
 			background-size: 20px;
-			margin-top: 12px;
+			margin-top: 9px;
 		}
 
-		#menu .menuseparator {
-			background-image: url(./icons/separator.png);
+		.horizontalSeparator {
+			background-image: url(./icons/horizontal_separator.png);
 			background-repeat: no-repeat;
 			width: 1px;
 			height: 32px;
+			background-size: 1px 32px;
 			margin-top: 6px;
 			margin-left: 4px;
 			margin-right: 4px;
 		}
 
-		.menubuttonbadge {
+		.buttonBadge {
 			position: absolute;
-			top: -8px;
+			display: flex;
+			justify-content: center;
+			background: #604080;
+			color: white;
+			border-radius: 50%;
+
+			top: -7px;
 			left: 11px;
 			width: 10px;
 			height: 10px;
-			display: flex;
-			justify-content: center;
-			background: #604080;
-			color: white;
 			font-size: 10px;
-			border-radius: 50%;
 		}
-		.menusmallbuttonbadge {
-			position: absolute;
-			top: -10px;
-			left: 4px;
+		.smallButtonBadge { /* Used with buttonBadge class */
+			top: -8px;
+			left: 5px;
 			width: 10px;
 			height: 10px;
+			font-size: 10px;
+		}
+
+		.popInModal {
+			position: fixed!important;
+			padding: 4px 14px 4px;
+			background-color: #2F3136dd;
+			border-width: 2px;
+			border-style: solid;
+			border-color: #00000080;
+			border-radius: 20px;
+			position: absolute;
+			margin: 0;
 			display: flex;
 			justify-content: center;
-			background: #604080;
-			color: white;
-			font-size: 10px;
-			border-radius: 50%;
-		}
-
-		/*
-		#menu {
-			position:fixed;
-			top:0;
-			right:0;
-			display:block;
-			background-color: #888;
-			z-index:2;
-		}
-
-		#menu > button {
-			display:inline-block;
-			padding:5px;
-			margin: 5px;
-			background-color: #DDD2;
-			opacity:0.9;
 			-webkit-app-region: no-drag;
+			z-index: 10;
 		}
-		#menu > button:hover {
-			background-color: #DDDF;
+		.popInModal > .imgButton {
+			margin-top: 2px;
+		}
+
+		.modalTextInput {
+			height: 20px;
+			font-size: 18px;
+			background-color: transparent;
+			flex: 1;
+			border: 0;
+			outline: none;
+
+			color: #f5f5f5;
+			opacity: 1; /* Firefox */
+		}
+
+		input[type="text"] {
+			width: 110px;
+		}
+		input[type="text"]:focus {
+			width: 170px;
+		}
+
+		input[type="text"] {
+			-webkit-transition: all 0.3s ease 0s;
+			-moz-transition: all 0.3s ease 0s;
+			-o-transition: all 0.3s ease 0s;
+			transition: all 0.3s ease 0s;
+		}
+
+		#chatInput{
+			width: 0;
+		}
+		#chatInput_parent:empty{
+			width: 0;
+		}
+		#chatInput:focus {
+			width: 250px;
+		}
+
+		#filter_messages{
+			width: 0;
+		}
+		#filter_messages_parent:empty{
+			width: 0;
+		}
+		#filter_messages:focus {
+			width: 144px;
+		}
+
+		body.lightmode .popInModal {
+			background-color: #f5f5f5dd;
+			border-color: #00000080;
+			color: black;
+		}
+		body.lightmode .modalTextInput {
+			color: #0a0a0a;
+			opacity: 1; /* Firefox */
+		}
+		#menu.lightmode .imgButton:hover {
 			cursor: pointer;
-			opacity:1.0;
-		}
-		#menu > button.red {
-			background-color: #FCC4;
-		}
-		#menu > button.green {
-			background-color: #affdff!important;
-			color: black!important;
-		}
-		#menu > button.red:hover {
-			background-color: #FCCF;
+			box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.2); /* Light the button */
 		}
 
-		#menu > button.blue {
-			background-color: #99a8cc;
+
+		@media only screen and (max-width: 720px) {
+			#menu {
+				height: 38px;
+				padding-top: 3px;
+				padding-bottom: 0px;
+			}
+			#menu .horizontalSeparator {
+				width: 1px;
+				height: 28px;
+				background-size: 1px 28px;
+				margin-top: 4px;
+				margin-left: 3px;
+				margin-right: 3px;
+			}
+			.imgButton {
+				width: 28px;
+				height: 28px;
+				background-size: 28px;
+				margin-top: 4px;
+				margin-left: 1px;
+				margin-right: 1px;
+			}
+			.imgSmallButton { /* Used with imgButton class */
+				width: 18px;
+				height: 18px;
+				background-size: 18px;
+				margin-top: 8px;
+			}
+			.buttonBadge {
+				top: -7px;
+				left: 9px;
+				width: 9px;
+				height: 9px;
+				font-size: 9px;
+			}
+			.smallButtonBadge { /* Used with buttonBadge class */
+				top: -7px;
+				left: 4px;
+				width: 9px;
+				height: 9px;
+				font-size: 9px;
+			}
+			.popInModal {
+				padding: 3px 10px 3px;
+			}
+			.modalTextInput {
+				height: 18px;
+				font-size: 16px;
+			}
+			#chatInput:focus {
+				width: 216px;
+			}
+			#filter_messages:focus {
+				width: 126px;
+			}
+			#output {
+				margin-bottom: 41px; /* Same as menu height + menu padding-top + menu padding-bottom */
+			}
 		}
-		#menu > button.blue:hover {
-			background-color: #99c8ff;
+		@media only screen and (max-width: 576px) {
+			#menu {
+				height: 34px;
+				padding-top: 2px;
+				padding-bottom: 0px;
+			}
+			#menu .horizontalSeparator {
+				width: 1px;
+				height: 24px;
+				background-size: 1px 24px;
+				margin-top: 4px;
+				margin-left: 2px;
+				margin-right: 2px;
+			}
+			.imgButton {
+				width: 24px;
+				height: 24px;
+				background-size: 24px;
+				margin-top: 4px;
+				margin-left: 0px;
+				margin-right: 0px;
+			}
+			.imgSmallButton { /* Used with imgButton class */
+				width: 16px;
+				height: 16px;
+				background-size: 16px;
+				margin-top: 8px;
+			}
+			.buttonBadge {
+				top: -6px;
+				left: 8px;
+				width: 8px;
+				height: 8px;
+				font-size: 8px;
+			}
+			.smallButtonBadge { /* Used with buttonBadge class */
+				top: -6px;
+				left: 4px;
+				width: 8px;
+				height: 8px;
+				font-size: 8px;
+			}
+			.popInModal {
+				padding: 2px 6px 2px;
+			}
+			.modalTextInput {
+				height: 16px;
+				font-size: 14px;
+			}
+			#chatInput:focus {
+				width: 144px;
+			}
+			#filter_messages:focus {
+				width: 108px;
+			}
+			#output {
+				margin-bottom: 36px; /* Same as menu height + menu padding-top + menu padding-bottom */
+			}
+		}
+		@media only screen and (max-width: 432px) {
+			#menu {
+				height: 30px;
+				padding-top: 1px;
+				padding-bottom: 0px;
+			}
+			#menu .horizontalSeparator {
+				width: 1px;
+				height: 20px;
+				background-size: 1px 20px;
+				margin-top: 4px;
+				margin-left: 1px;
+				margin-right: 1px;
+			}
+			.imgButton {
+				width: 20px;
+				height: 20px;
+				background-size: 20px;
+				margin-top: 4px;
+				margin-left: 0px;
+				margin-right: 0px;
+			}
+			.imgSmallButton { /* Used with imgButton class */
+				width: 14px;
+				height: 14px;
+				background-size: 14px;
+				margin-top: 7px;
+			}
+			.buttonBadge {
+				top: -6px;
+				left: 6px;
+				width: 7px;
+				height: 7px;
+				font-size: 7px;
+			}
+			.smallButtonBadge { /* Used with buttonBadge class */
+				top: -6px;
+				left: 3px;
+				width: 7px;
+				height: 7px;
+				font-size: 7px;
+			}
+			.popInModal {
+				padding: 1px 2px 1px;
+			}
+			.modalTextInput {
+				height: 14px;
+				font-size: 12px;
+			}
+			#chatInput:focus {
+				width: 108px;
+			}
+			#filter_messages:focus {
+				width: 90px;
+			}
+			#output {
+				margin-bottom: 31px; /* Same as menu height + menu padding-top + menu padding-bottom */
+			}
+		}
+		@media only screen and (max-width: 288px) {
+			#menu {
+				height: 26px;
+				padding-top: 0px;
+				padding-bottom: 0px;
+			}
+			#menu .horizontalSeparator {
+				width: 0px;
+				height: 16px;
+				background-size: 0px 16px;
+				margin-top: 5px;
+				margin-left: 0px;
+				margin-right: 0px;
+				display: none !important;
+			}
+			.imgButton {
+				width: 16px;
+				height: 16px;
+				background-size: 16px;
+				margin-top: 5px;
+				margin-left: 0px;
+				margin-right: 0px;
+			}
+			.imgSmallButton { /* Used with imgButton class */
+				width: 12px;
+				height: 12px;
+				background-size: 12px;
+				margin-top: 7px;
+			}
+			.buttonBadge {
+				top: -5px;
+				left: 4px;
+				width: 7px;
+				height: 7px;
+				font-size: 7px;
+			}
+			.smallButtonBadge { /* Used with buttonBadge class */
+				top: -6px;
+				left: 2px;
+				width: 7px;
+				height: 7px;
+				font-size: 7px;
+			}
+			.popInModal {
+				padding: 0px 0px 0px;
+			}
+			.modalTextInput {
+				height: 12px;
+				font-size: 10px;
+			}
+			#chatInput:focus {
+				width: 72px;
+			}
+			#filter_messages:focus {
+				width: 72px;
+			}
+			#output {
+				margin-bottom: 26px; /* Same as menu height + menu padding-top + menu padding-bottom */
+			}
 		}
 
-		#menu > input {
-			padding: 5px;
-			background-color: var(--input-color);
-			border: 1px solid black;
-			border-radius: 5px;
-			-webkit-app-region: no-drag;
-		}
-		#menu > input:focus {
-		  background-color: var(--input-color);
-		}
-
-		#menu.darkmode > button {
-			background-color: #0004;
-			color:white;
-		}
-		#menu.darkmode > button:hover {
-			background-color: #000F;
-			opacity:1.0;
-		}
-		#menu.darkmode > button.blue {
-			background-color: #99a8cc;
-		}
-		#menu.darkmode > button.red {
-			background-color: #F004;
-		}
-		#menu.darkmode > button.blue:hover {
-			background-color: #99c8ff;
-		}
-		#menu.darkmode > button.red:hover {
-			background-color: #600F;
-		}
-		#menu.darkmode > input {
-			background-color: #0004;
-			color:white;
-			border: 1px solid white;
-		}
-		#menu.darkmode > input:hover {
-			background-color: #0000;
-		}
-		*/
-
-		@media only screen and (max-width: 1000px){
-			#menu > button {
-				display:inline-block;
-				padding:2px;
-				margin: 1px;
-				font-size:95%;
-			}
-			#menu > input {
-				display:inline-block;
-				padding:5px 4px;
-				margin: 1px;
-				font-size:85%;
-				max-width: 110px;
-			}
-		}
-		@media only screen and (max-width: 870px){
-			#menu > button {
-				display:inline-block;
-				margin: 1px;
-				font-size:80%;
-			}
-			#menu > input {
-				display:inline-block;
-				padding:5px 3px;
-				margin: 1px;
-				font-size:75%;
-				max-width: 100px;
-			}
-		}
-		@media only screen and (max-width: 640px){
-			#menu > button {
-				display:inline-block;
-				margin: 0px;
-				font-size:75%;
-			}
-			#menu > input {
-				display:inline-block;
-				padding:4px 2px;
-				margin: 0px;
-				font-size:70%;
-				max-width: 80px;
-			}
-		}
-		@media only screen and (max-width: 480px){
-			#menu > button {
-				display:inline-block;
-				margin: 0px;
-				font-size:70%;
-			}
-			#menu > input {
-				display:inline-block;
-				padding:3px 1px;
-				margin: 0px;
-				font-size:70%;
-				max-width: 70px;
-			}
-		}
 
 		.last-message{
 			border: 3px white solid;
@@ -793,75 +954,17 @@
 
 		#jumpto {
 			position: fixed !important;
-			right: 10px;
-			bottom: 12px;
+			top: 4px;
+			right: 4px;
+			margin-top: 0;
+			margin-right: 0;
 		}
 
-		input[type="text"] {
-			width: 110px;
-		}
-		input[type="text"]:focus {
-			width: 170px;
-		}
-		
-		input[type="text"] {
-			-webkit-transition: all 0.4s ease 0s;
-			-moz-transition: all 0.4s ease 0s;
-			-o-transition: all 0.4s ease 0s;
-			transition: all 0.4s ease 0s;
-		}
-		input::placeholder{
-			color: var(--input-color);
-		}
 		.hidden {
 			display:none!important;
 		}
-		.popInInput {
-			z-index: 10;
-			position: fixed!important;
-			z-index: 10;
-			background-color: #00000040;
-			position: absolute;
-			margin: 0;
-			padding: 7px;
-			border-radius: 3px;
-			box-shadow: inset 1px 1px grey;
-		}
-		
-		#chatInput_parent:empty{
-			width: 0;
-			opacity: .6;
-		}
-		#chatInput{
-			color: black;
-			background-color:#e8edf1;
-			width: 250px;
-			opacity: 1;
-		}
-		#chatInput::placeholder {
-		  color: #3338;
-		  opacity: 1;
-		}
-		
-		#filter_messages_parent:empty{
-			width: 0;
-			opacity: .6;
-		}
-		#filter_messages{
-			background-color:#dbe1e5;
-			color:black;
-			width: 0;
-		}
-		#filter_messages:focus {
-			color: black;
-			background-color:#e8edf1;
-			width: 150px;
-			opacity: 1;
-		}
-		#filter_messages::placeholder {
-		  color: #333A;
-		  opacity: 1;
-		}
+
+
 		#pinned{
 			position: sticky;
 			top: 0!important;
@@ -1061,7 +1164,7 @@
 		.hideMenuKeepScrollLock > #jumpto{
 			display:block!important;
 		}
-		
+
 	</style>
 </head>
 <body class='electronDraggable'>
@@ -1070,43 +1173,43 @@
 	<div id="menu" class="electronDraggable">
 		<!-- Main buttons -->
 
-		<button id="pause" data-state="0" onclick="pause(this);" style="background-image: url(./icons/main_msg_pause.png);" title="Main — ⏸ Pause incoming chat messages"></button>
-		<button id="say_hello" data-state="0" onclick="" style="background-image: url(./icons/main_msg_send.png);" title="Main — 💬 Send a text message to all social endpoints"></button> <!-- TODO: it should open a modal window with a field to type the message which will be sent | Don't forget to add "toggleChat();" to onclick -->
-		<button id="notify" class="menubuttonsmall" data-state="0" onclick="notify(this);" style="background-image: url(./icons/main_msg_notify_on.png);" title="Main — 🔔 Start beeping when there is a new message"></button>
-		<button id="select_save_file" class="menubuttonsmall" data-state="0" onclick="overwriteFile('setup');" style="background-image: url(./icons/main_msg_save.png);" title="Main — 💾 Select the file you want to save the most recent message to"></button>
+		<button class="imgButton" id="pause" data-state="0" onclick="pause(this);" style="background-image: url(./icons/main_msg_pause.png);" title="Main — ⏸ Pause incoming chat messages"></button>
+		<button class="imgButton" id="say_hello" data-state="0" onclick="" style="background-image: url(./icons/main_msg_send.png);" title="Main — 💬 Send a text message to all social endpoints"></button> <!-- TODO: it should open a modal window with a field to type the message which will be sent | Don't forget to add "toggleChat();" to onclick -->
+		<button class="imgButton imgSmallButton" id="notify" data-state="0" onclick="notify(this);" style="background-image: url(./icons/main_msg_notify_on.png);" title="Main — 🔔 Start beeping when there is a new message"></button>
+		<button class="imgButton imgSmallButton" id="select_save_file" data-state="0" onclick="overwriteFile('setup');" style="background-image: url(./icons/main_msg_save.png);" title="Main — 💾 Select the file you want to save the most recent message to"></button>
 
-		<div class="menuseparator"></div>
-
-		<!-- Queue buttons -->
-
-		<button id="next_in_queue" data-state="0" onclick="nextInQueue();" style="background-image: url(./icons/queue_show_next.png);" title="Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)"><span id="next_in_queue_badge" class="menubuttonbadge">0</span></button>
-		<button id="show_only_queue" class="menubuttonsmall" data-state="0" onclick="filterQueued(this);" style="background-image: url(./icons/queue_show_listonly_on.png);" title="Queue — 📑 Show only the messages in queue"></button>
-
-		<div class="menuseparator"></div>
-
-		<!-- Featured message buttons -->
-
-		<button id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" style="background-image: url(./icons/featured_clear.png);" title="Featured — 🧹🌟 Clear the featured message (not this chat)"></button>
-		<button id="autoshow" class="menubuttonsmall" data-state="0" onclick="autoShow(this);" style="background-image: url(./icons/featured_auto_play.png);" title="Featured — 🌟 Auto-feature messages as they come in"></button>
-
-		<div class="menuseparator"></div>
-
-		<!-- Text-to-speech buttons -->
-
-		<button id="featured_tts" data-state="0" onclick="" style="background-image: url(./icons/tts_play_featured.png);" title="Text-to-speech — ▶️🌟 Read featured message out-loud with text-to-speech"></button> <!-- TODO: it should read tts the featured message (maybe it could stop tts before, to avoid it was speaking already) -->
-		<button id="tts_stop" data-state="0" onclick="" style="background-image: url(./icons/tts_stop.png);" title="Text-to-speech — ⏹🔊 Stop to read out-loud with text-to-speech"></button> <!-- TODO: it should stop the tts and clear its list -->
-		<button id="tts" class="menubuttonsmall" data-state="0" onclick="tts(this);" style="background-image: url(./icons/tts_incoming_messages_on.png);" title="Text-to-speech — 🔊 Start to read incoming messages out-loud with text-to-speech"></button>
-
-		<div class="menuseparator"></div>
+		<div class="horizontalSeparator"></div>
 
 		<!-- Filter buttons -->
 
-		<button id="filter" data-state="0" style="background-image: url(./icons/filter_msg.png);" title="Filter — 🔽 Filter messages based on what you have entered"></button> <!-- TODO: it should open a modal window with a field to type the message which will be used as filter -->
-		<button id="hide_emoji" class="menubuttonsmall" data-state="0" onclick="emoji(this);" style="background-image: url(./icons/filter_hideemojionly_off.png);" title="Filter — 😀🚫 Hide messages that contains emojis only"></button>
-		<button id="only_donos" class="menubuttonsmall" data-state="0" onclick="donos(this);" style="background-image: url(./icons/filter_showpaidonly_on.png);" title="Filter — 💲 Show only messages that have donations/cheer"></button>
+		<button class="imgButton" id="filter" data-state="0" style="background-image: url(./icons/filter_msg.png);" title="Filter — 🔽 Filter messages based on what you have entered"></button> <!-- TODO: it should open a modal window with a field to type the message which will be used as filter -->
+		<button class="imgButton imgSmallButton" id="hide_emoji" data-state="0" onclick="emoji(this);" style="background-image: url(./icons/filter_hideemojionly_off.png);" title="Filter — 😀🚫 Hide messages that contains emojis only"></button>
+		<button class="imgButton imgSmallButton" id="only_donos" data-state="0" onclick="donos(this);" style="background-image: url(./icons/filter_showpaidonly_on.png);" title="Filter — 💲 Show only messages that have donations/cheer"></button>
 
+		<div class="horizontalSeparator"></div>
 
-		<button id="jumpto" class="menubuttonsmall" data-state="0" onclick="jumptoBottom(this);" style="background-image: url(./icons/scroll_to_bottom_off.png);" title="Scroll to bottom"></button>
+		<!-- Queue buttons -->
+
+		<button class="imgButton" id="next_in_queue" data-state="0" onclick="nextInQueue();" style="background-image: url(./icons/queue_show_next.png);" title="Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)"><span id="next_in_queue_badge" class="buttonBadge">0</span></button>
+		<button class="imgButton imgSmallButton" id="show_only_queue" data-state="0" onclick="filterQueued(this);" style="background-image: url(./icons/queue_show_listonly_on.png);" title="Queue — 📑 Show only the messages in queue"></button>
+
+		<div class="horizontalSeparator"></div>
+
+		<!-- Featured message buttons -->
+
+		<button class="imgButton" id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" style="background-image: url(./icons/featured_clear.png);" title="Featured — 🧹🌟 Clear the featured message (not this chat)"></button>
+		<button class="imgButton imgSmallButton" id="autoshow" data-state="0" onclick="autoShow(this);" style="background-image: url(./icons/featured_auto_play.png);" title="Featured — 🌟 Auto-feature messages as they come in"></button>
+
+		<div class="horizontalSeparator"></div>
+
+		<!-- Text-to-speech buttons -->
+
+		<button class="imgButton" id="featured_tts" data-state="0" onclick="" style="background-image: url(./icons/tts_play_featured.png);" title="Text-to-speech — ▶️🌟 Read featured message out-loud with text-to-speech"></button> <!-- TODO: it should read tts the featured message (maybe it could stop tts before, to avoid it was speaking already) -->
+		<button class="imgButton" id="tts_stop" data-state="0" onclick="" style="background-image: url(./icons/tts_stop.png);" title="Text-to-speech — ⏹🔊 Stop to read out-loud with text-to-speech"></button> <!-- TODO: it should stop the tts and clear its list -->
+		<button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts(this);" style="background-image: url(./icons/tts_incoming_messages_on.png);" title="Text-to-speech — 🔊 Start to read incoming messages out-loud with text-to-speech"></button>
+
+		<!-- Scroll button -->
+		<button class="imgButton imgSmallButton" id="jumpto" data-state="0" onclick="jumptoBottom(this);" style="background-image: url(./icons/scroll_to_bottom_off.png);" title="Scroll to bottom"></button>
 	</div>
 	<audio id="testtone" style="display:none;" preload="metadata">
 		<source src="./audio/tone.mp3" type="audio/mpeg">
@@ -1141,17 +1244,19 @@
 			</li>
 		</ul>
 	</nav>
-	
-	<div id="chatInput_parent" class="hidden popInInput">
-		<input type="text" id="chatInput" placeholder="Type a message..." />
-		<button id="chatInputButton" type="button">Send</button>
-		<button id="chatInputCloseButton" type="button">X</button>
+
+	<div id="chatInput_parent" class="popInModal hidden">
+		<input id="chatInput" class="modalTextInput" type="text" placeholder="Type..." />
+		<button id="chatInputButton" class="imgButton imgSmallButton" style="background-image: url(./icons/send_confirm.png);" title="💬 Send this message"></button>
+		<button id="chatClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png);" title="🧹 Clear this message"></button>
+		<button id="chatInputCloseButton" class="imgButton imgSmallButton" style="background-image: url(./icons/close.png);" title="❌ Close this dialog"></button>
 	</div>
-	
-	<div id="filter_messages_parent" class="hidden popInInput">
-		<input id="filter_messages" onchange="filterMessages(this.value);" placeholder="Filter messages" type="text" />
+
+	<div id="filter_messages_parent" class="popInModal hidden">
+		<input id="filter_messages" class="modalTextInput" type="text" placeholder="Type..." onchange="filterMessages(this.value);" />
+		<button id="filterClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png);" title="🧹 Clear this filter"></button>
 	</div>
-	
+
 	<script>
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
 		console.error(errorMsg);
@@ -1197,7 +1302,7 @@
 	var applyCustomActions = false;
 	var showsource = true;
 	var compactmode = false;
-	var darkmode = null;
+	var darkmode = false;
 	var scale = 1;
 	var forceAutoscroll = false;
 	var triggerState = true;
@@ -1308,10 +1413,10 @@
 
 	var audioContext = new AudioContext();
 	var timeoutTone = null;
-	
+
 	async function playtone(tonename="testtone") {
 		if (timeoutTone){return;}
-		
+
 		setTimeout(function(){
 			timeoutTone = false;
 		},500);
@@ -1331,7 +1436,7 @@
 			timeoutTone = true;
 		}
 	}
-	
+
 	if (urlParams.has('css')){
 		var cssURL = urlParams.get('css');
 		cssURL = decodeURI(cssURL);
@@ -1643,7 +1748,7 @@
 		document.getElementById("output").classList.remove("notcompactmode");
 		//document.getElementById("menu").style.display = "none";
 	}
-	
+
 
 	if (urlParams.has("hidemenu") || urlParams.has("nomenu")){
 		if ((urlParams.get("hidemenu")=="2") || (urlParams.get("nomenu")=="2")){
@@ -1855,18 +1960,14 @@
 		syncDocks = true;
 	}
 
-	if (darkmode){
-		document.getElementById("menu").classList.add("darkmode");
-		document.documentElement.style.setProperty("--background-color", "#000");
-	} else if (darkmode === null){ // defaultmode
-		document.getElementById("menu").classList.add("darkmode");
-		darkmode = true;
-	} else {
+	if (darkmode === false){
 		document.body.classList.add("lightmode");
-		document.documentElement.style.setProperty("--input-color", "#FFF");
+		document.getElementById("menu").classList.add("lightmode");
+		document.getElementById("chatInput_parent").classList.add("lightmode");
+		document.getElementById("filter_messages_parent").classList.add("lightmode");
 		document.documentElement.style.setProperty("--link-color", "#06F");
 		document.documentElement.style.setProperty("--font-color-name", "#000");
-		document.documentElement.style.setProperty("--background-color", "#FFF0");
+		document.documentElement.style.setProperty("--background-color", "#FFF");
 		document.documentElement.style.setProperty("--font-color", "#000");
 		document.documentElement.style.setProperty("--highlight-base2", "#EEE4", "important");
 	}
@@ -2345,20 +2446,6 @@
 	}
 
 
-	document.getElementById("filter_messages").addEventListener('keyup', function(e) {
-		if (e.key == "Escape") {
-			document.getElementById("filter_messages").value = "";
-		}
-		filterMessages(document.getElementById("filter_messages").value);
-	});
-
-	document.getElementById("filter_messages").addEventListener('keydown', function(e) {
-		if (e.key == "Escape") {
-			document.getElementById("filter_messages").value = "";
-		}
-		filterMessages(document.getElementById("filter_messages").value);
-	});
-
 	function filterMessages(keyword=""){
 		keyword = keyword.trim().toLowerCase();
 		filtering = keyword;
@@ -2768,32 +2855,18 @@
 			}
 
 			var chatImg = data.chatimg;
-
 			if (!chatImg && avatars){
 				if (fallbackImage){
-					chatImg = "unknown.png";
-					if (darkmode){
-						chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="icon invert hl-profile-pic" onerror="errorImage(this);" />'
-					} else {
-						chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
-					}
+					chatImg = '<img id="img_' + data.id + '" src="unknown.png" class="icon ' + (darkmode ? 'invert' : '') + ' hl-profile-pic" onerror="errorImage(this);" />'
 				} else {
 					chatImg = "";
 				}
 			} else if (avatars){
-
 				if (data.type && (data.type == "twitch") && avatars){
-
-					chatImg = "unknown.png";
-					if (darkmode){
-						chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="fade-in-image invert icon hl-profile-pic" onerror="errorImage(this);" />'
-					} else {
-						chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="fade-in-image icon hl-profile-pic" onerror="errorImage(this);" />'
-					}
+					chatImg = '<img id="img_' + data.id + '" src="unknown.png" class="fade-in-image ' + (darkmode ? 'invert' : '') + ' icon hl-profile-pic" onerror="errorImage(this);" />'
 				} else {
 					chatImg = '<img id="img_'+data.id+'" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />'
 				}
-
 			} else {
 				chatImg = "";
 			}
@@ -3316,7 +3389,7 @@
 		}
 	}
 
-	
+
 
 
 
@@ -3355,7 +3428,6 @@
 	async function overwriteFile(data=false) {
 		if (data=="setup"){
 			newFileHandle = await window.showSaveFilePicker();
-			document.getElementById("select_save_file").classList.remove("green");
 			document.getElementById("select_save_file").innerText = "💾";
 		} else if (newFileHandle && data){
 			const writableStream = await newFileHandle.createWritable();
@@ -3400,7 +3472,7 @@
 		var menuHeight;
 		var windowWidth;
 		var windowHeight;
-		
+
 		function clickInsideElement(e, value="menu") {
 			var el = e.srcElement || e.target;
 			if (el.dataset && (value in el.dataset)) {
@@ -3526,21 +3598,47 @@
 
 		contextListener();
 	})();
-	
-	
-	(function userFilterInputModalBox() { // filter 
-		"use strict";
 
+
+	function isEscape(evt) {
+		_evt = evt || window.event;
+		return "key" in _evt ? (_evt.key === "Escape" || _evt.key === "Esc") : _evt.keyCode === 27;
+	}
+
+	document.onkeydown = function(evt) {
+		if (isEscape(evt)) {
+			getById("chatInput_parent").classList.add("hidden");
+			getById("filter_messages_parent").classList.add("hidden");
+		} else {
+			filterMessages(document.getElementById("filter_messages").value);
+		}
+	};
+
+	document.getElementById("filter_messages").addEventListener('keyup', function(e) {
+		if (e.key == "Escape") {
+			document.getElementById("filter_messages").value = "";
+		}
+		filterMessages(document.getElementById("filter_messages").value);
+	});
+
+	document.getElementById("filter_messages").addEventListener('keydown', function(e) {
+		if (e.key == "Escape") {
+			document.getElementById("filter_messages").value = "";
+		}
+		filterMessages(document.getElementById("filter_messages").value);
+	});
+
+	(function userFilterInputModalBox() { // filter
 		var menu = getById("filter_messages_parent");
 		var input = getById("filter_messages");
-		
+		var filterClearButton = getById("filterClearButton");
+
 		function positionMenu(e) {
-		
 			var clickCoords = getPosition(e);
-			
+
 			var source  = e.target;
 			var style = window.getComputedStyle(source);
-			
+
 			var clickCoordsX = clickCoords.x + parseInt(style.width) - 10;
 
 			var menuWidth = menu.offsetWidth + 4;
@@ -3553,7 +3651,7 @@
 			menu.style.top = "unset";
 			menu.style.bottom = "5px";
 		}
-		
+
 		function toggleInput(event){
 			event.preventDefault();
 			event.stopPropagation();
@@ -3562,7 +3660,7 @@
 			input.focus();
 			return false;
 		}
-		
+
 		input.addEventListener("blur", function(event){
 			event.preventDefault();
 			event.stopPropagation();
@@ -3573,54 +3671,41 @@
 			},300)
 			return false;
 		});
+
+		filterClearButton.addEventListener("click", function(event) {
+			input.value = "";
+		})
+
 		getById("filter").addEventListener("click", toggleInput);
-
 	})();
-	
-	
-	document.onkeydown = function(evt) {
-		evt = evt || window.event;
-		var isEscape = false;
-		if ("key" in evt) {
-			isEscape = (evt.key === "Escape" || evt.key === "Esc");
-		} else {
-			isEscape = (evt.keyCode === 27);
-		}
-		if (isEscape) {
-			getById("chatInput_parent").classList.add("hidden");
-			getById("filter_messages_parent").classList.add("hidden");
-		}
-	};
-	
-	(function userChatInputModalBox() { // filter 
-		"use strict";
 
+
+	(function userChatInputModalBox() { // chat input
 		var menu = getById("chatInput_parent");
 		var input = getById("chatInput");
 		var chatInputButton = getById("chatInputButton");
+		var chatClearButton = getById("chatClearButton")
 		var chatInputCloseButton = getById("chatInputCloseButton");
-		
-		
+
 		function positionMenu(e) {
-		
 			var clickCoords = getPosition(e);
-			
-			var source  = e.target;
+
+			var source = e.target;
 			var style = window.getComputedStyle(source);
-			
+
 			var clickCoordsX = clickCoords.x + parseInt(style.width) - 10;
 
 			var menuWidth = menu.offsetWidth + 4;
 
 			if (( window.innerWidth - clickCoordsX) < menuWidth) {
-				menu.style.left =  window.innerWidth - menuWidth + "px";
+				menu.style.left = window.innerWidth - menuWidth + "px";
 			} else {
 				menu.style.left = clickCoordsX + "px";
 			}
 			menu.style.top = "unset";
 			menu.style.bottom = "5px";
 		}
-		
+
 		function toggleInput(event){
 			event.preventDefault();
 			event.stopPropagation();
@@ -3629,25 +3714,29 @@
 			input.focus();
 			return false;
 		}
-		
-		input.addEventListener("keyup", function(event) {
-			if (event.keyCode === 13) {
-				event.preventDefault();
-				if (input.value){
-					respondP2P(input.value);
-				}
-				input.value = "";
-			}
-		})
-	
-		chatInputButton.addEventListener("click", function(event) {
+
+		function sendMessage(event) {
 			event.preventDefault();
 			if (input.value){
 				respondP2P(input.value);
 			}
 			input.value = "";
+		}
+
+		input.addEventListener("keyup", function(event) {
+			if (event.keyCode === 13) { // Enter
+				sendMessage(event);
+			}
 		})
-		
+
+		chatInputButton.addEventListener("click", function(event) {
+			sendMessage(event);
+		})
+
+		chatClearButton.addEventListener("click", function(event) {
+			input.value = "";
+		})
+
 		chatInputCloseButton.addEventListener("click", function(event){
 			event.preventDefault();
 			event.stopPropagation();
@@ -3655,8 +3744,8 @@
 			input.value = "";
 			return false;
 		});
-		getById("say_hello").addEventListener("click", toggleInput);
 
+		getById("say_hello").addEventListener("click", toggleInput);
 	})();
 
 
