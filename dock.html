@@ -666,7 +666,7 @@
 		}
 
 		#chatInput{
-			width: 45px;
+			width: 0;
 			top: 2px;
 			position: relative;
 		}
@@ -1750,29 +1750,23 @@
 		speechInput.pitch = pitch;
 		speechInput.text = text;
 		
-		if (speech){
-			getById("tts").style['background-image']='url(./icons/tts_incoming_messages_off.png)';
-			getById("tts").title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
-		} else {
-			getById("tts").style['background-image']='url(./icons/tts_stop.png)';
-			getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
-		}
+		
+		getById("tts").style['background-image']='url(./icons/tts_stop.png)';
+		getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
 		
 		window.speechSynthesis.speak(speechInput);
 		
 		try{
 			speechInput.addEventListener('end',function(e){
-				if (window.speechSynthesis.pending || window.speechSynthesis.speaking){
-					if (speech){
-						getById("tts").style['background-image']='url(./icons/tts_incoming_messages_off.png)';
-						getById("tts").title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
-					} else {
-						getById("tts").style['background-image']='url(./icons/tts_stop.png)';
-						getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
-					}
+				if (window.speechSynthesis.pending || window.speechSynthesis.speaking){					
+					getById("tts").style['background-image']='url(./icons/tts_stop.png)';
+					getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
 				} else if (!speech){
 					getById("tts").style['background-image']='url(./icons/tts_incoming_messages_on.png)';
 					getById("tts").title = 'Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech';
+				} else {
+					getById("tts").style['background-image']='url(./icons/tts_incoming_messages_off.png)';
+					getById("tts").title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
 				}
 			});
 		} catch(e){
@@ -3682,6 +3676,8 @@
 		var menu = getById("filter_messages_parent");
 		var input = getById("filter_messages");
 		var filterClearButton = getById("filterClearButton");
+		menu.style.top = "unset";
+		menu.style.bottom = "7px";
 
 		function positionMenu(e) {
 			var rect = getById("filter").getBoundingClientRect();
@@ -3694,8 +3690,6 @@
 		window.addEventListener("resize",function(event){
 			var rect = getById("filter").getBoundingClientRect();
 			menu.style.left = rect.right + "px";
-			menu.style.top = "unset";
-			menu.style.bottom = "7px";
 		});
 
 		function toggleInput(event){
@@ -3708,6 +3702,10 @@
 		}
 
 		input.addEventListener("blur", function(event){
+			if (menu.matches(':focus-within:not(:focus)') || menu.matches(':focus-within')){ // if a sibling has focus, don't close and retake focus
+				input.focus(); // re-refocus text input.
+				return;
+			}
 			event.preventDefault();
 			event.stopPropagation();
 			getById("filter").removeEventListener("click", toggleInput);
@@ -3735,6 +3733,9 @@
 		var chatInputButton = getById("chatInputButton");
 		var chatClearButton = getById("chatClearButton")
 		var chatInputCloseButton = getById("chatInputCloseButton");
+		
+		menu.style.top = "unset";
+		menu.style.bottom = "7px";
 
 		function positionMenu(e) {
 			var rect = getById("say_hello").getBoundingClientRect();
@@ -3747,8 +3748,6 @@
 		window.addEventListener("resize",function(event){
 			var rect = getById("say_hello").getBoundingClientRect();
 			menu.style.left = rect.right + "px";
-			menu.style.top = "unset";
-			menu.style.bottom = "7px";
 		});
 
 		function toggleInput(event){
@@ -3773,6 +3772,23 @@
 				sendMessage(event);
 			}
 		})
+		
+		input.addEventListener("blur", function(event){
+			if (menu.matches(':focus-within:not(:focus)') || menu.matches(':focus-within')){ // if a sibling has focus, don't close and retake focus
+				input.focus(); // re-refocus text input.
+				return;
+			}
+		
+			event.preventDefault();
+			event.stopPropagation();
+			
+			getById("say_hello").removeEventListener("click", toggleInput);
+			menu.classList.add("hidden");
+			setTimeout(function(){ // click vs hold
+				getById("say_hello").addEventListener("click", toggleInput);
+			},300)
+			return false;
+		});
 
 		chatInputButton.addEventListener("click", function(event) {
 			sendMessage(event);
@@ -3791,6 +3807,7 @@
 		});
 
 		getById("say_hello").addEventListener("click", toggleInput);
+		
 	})();
 
 
