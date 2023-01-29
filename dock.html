@@ -1269,6 +1269,7 @@
 	<div id="filter_messages_parent" class="popInModal hidden">
 		<input id="filter_messages" class="modalTextInput" type="text" placeholder="Type..." onchange="filterMessages(this.value);" />
 		<button id="filterClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png);" title="🧹 Clear this filter"></button>
+		<button id="filterCloseButton" class="imgButton imgSmallButton" style="background-image: url(./icons/close.png);" title="❌ Close this dialog"></button>
 	</div>
 
 	<script>
@@ -3676,6 +3677,7 @@
 		var menu = getById("filter_messages_parent");
 		var input = getById("filter_messages");
 		var filterClearButton = getById("filterClearButton");
+		var filterCloseButton = getById("filterCloseButton");
 		menu.style.top = "unset";
 		menu.style.bottom = "7px";
 
@@ -3719,6 +3721,13 @@
 		filterClearButton.addEventListener("click", function(event) {
 			input.value = "";
 		})
+
+		filterCloseButton.addEventListener("click", function(event){
+			event.preventDefault();
+			event.stopPropagation();
+			menu.classList.add("hidden");
+			return false;
+		});
 
 		getById("filter").addEventListener("click", toggleInput);
 
