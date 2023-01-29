@@ -666,7 +666,9 @@
 		}
 
 		#chatInput{
-			width: 0;
+			width: 45px;
+			top: 2px;
+			position: relative;
 		}
 		#chatInput_parent:empty{
 			width: 0;
@@ -677,6 +679,8 @@
 
 		#filter_messages{
 			width: 0;
+			top: 2px;
+			position: relative;
 		}
 		#filter_messages_parent:empty{
 			width: 0;
@@ -1184,7 +1188,7 @@
 		<button class="imgButton" id="pause" data-state="0" onclick="pause(this);" style="background-image: url(./icons/main_msg_pause.png);" title="Main — ⏸ Pause incoming chat messages"></button>
 		<button class="imgButton" id="say_hello" data-state="0" onclick="" style="background-image: url(./icons/main_msg_send.png);" title="Main — 💬 Send a text message to all social endpoints"></button> <!-- TODO: it should open a modal window with a field to type the message which will be sent | Don't forget to add "toggleChat();" to onclick -->
 		<button class="imgButton imgSmallButton" id="notify" data-state="0" onclick="notify(this);" style="background-image: url(./icons/main_msg_notify_on.png);" title="Main — 🔔 Start beeping when there is a new message"></button>
-		<button class="imgButton imgSmallButton" id="select_save_file" data-state="0" onclick="overwriteFile('setup');" style="background-image: url(./icons/main_msg_save.png);" title="Main — 💾 Select the file you want to save the most recent message to"></button>
+		<button class="imgButton imgSmallButton hidden" id="select_save_file" data-state="0" onclick="overwriteFile('setup');" style="background-image: url(./icons/main_msg_save.png);" title="Main — 💾 Select the file you want to save the most recent message to"></button>
 
 		<div class="horizontalSeparator"></div>
 
@@ -1759,8 +1763,13 @@
 		try{
 			speechInput.addEventListener('end',function(e){
 				if (window.speechSynthesis.pending || window.speechSynthesis.speaking){
-					getById("tts").style['background-image']='url(./icons/tts_incoming_messages_off.png)';
-					getById("tts").title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
+					if (speech){
+						getById("tts").style['background-image']='url(./icons/tts_incoming_messages_off.png)';
+						getById("tts").title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
+					} else {
+						getById("tts").style['background-image']='url(./icons/tts_stop.png)';
+						getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
+					}
 				} else if (!speech){
 					getById("tts").style['background-image']='url(./icons/tts_incoming_messages_on.png)';
 					getById("tts").title = 'Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech';
@@ -3675,23 +3684,19 @@
 		var filterClearButton = getById("filterClearButton");
 
 		function positionMenu(e) {
-			var clickCoords = getPosition(e);
-
-			var source  = e.target;
-			var style = window.getComputedStyle(source);
-
-			var clickCoordsX = clickCoords.x + parseInt(style.width) - 10;
-
-			var menuWidth = menu.offsetWidth + 4;
-
-			if (( window.innerWidth - clickCoordsX) < menuWidth) {
-				menu.style.left =  window.innerWidth - menuWidth + "px";
-			} else {
-				menu.style.left = clickCoordsX + "px";
-			}
+			var rect = getById("filter").getBoundingClientRect();
+			menu.style.left = rect.right + "px";
 			menu.style.top = "unset";
-			menu.style.bottom = "5px";
+			menu.style.bottom = "7px";
 		}
+		
+		var lastWidth =  window.innerWidth;
+		window.addEventListener("resize",function(event){
+			var rect = getById("filter").getBoundingClientRect();
+			menu.style.left = rect.right + "px";
+			menu.style.top = "unset";
+			menu.style.bottom = "7px";
+		});
 
 		function toggleInput(event){
 			event.preventDefault();
@@ -3718,8 +3723,11 @@
 		})
 
 		getById("filter").addEventListener("click", toggleInput);
+		
 	})();
 
+
+	
 
 	(function userChatInputModalBox() { // chat input
 		var menu = getById("chatInput_parent");
@@ -3729,23 +3737,19 @@
 		var chatInputCloseButton = getById("chatInputCloseButton");
 
 		function positionMenu(e) {
-			var clickCoords = getPosition(e);
-
-			var source = e.target;
-			var style = window.getComputedStyle(source);
-
-			var clickCoordsX = clickCoords.x + parseInt(style.width) - 10;
-
-			var menuWidth = menu.offsetWidth + 4;
-
-			if (( window.innerWidth - clickCoordsX) < menuWidth) {
-				menu.style.left = window.innerWidth - menuWidth + "px";
-			} else {
-				menu.style.left = clickCoordsX + "px";
-			}
+			var rect = getById("say_hello").getBoundingClientRect();
+			menu.style.left = rect.right + "px";
 			menu.style.top = "unset";
-			menu.style.bottom = "5px";
+			menu.style.bottom = "7px";
 		}
+		
+		var lastWidth =  window.innerWidth;
+		window.addEventListener("resize",function(event){
+			var rect = getById("say_hello").getBoundingClientRect();
+			menu.style.left = rect.right + "px";
+			menu.style.top = "unset";
+			menu.style.bottom = "7px";
+		});
 
 		function toggleInput(event){
 			event.preventDefault();
