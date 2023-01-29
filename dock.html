@@ -611,11 +611,11 @@
 			height: 10px;
 			font-size: 10px;
 		}
-		
+
 		#queueSection{
 			display:flex;
 		}
-		
+
 		#next_in_queue,#show_only_queue{
 			display:inline-block;
 		}
@@ -1201,12 +1201,12 @@
 		<div class="horizontalSeparator"></div>
 
 		<!-- Queue buttons -->
-		<div id="queueSection" class="hidden">																																	 
+		<div id="queueSection" class="hidden">
 			<button class="imgButton" id="next_in_queue" data-state="0" onclick="nextInQueue();" style="background-image: url(./icons/queue_show_next.png);" title="Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)"><span id="next_in_queue_badge" class="buttonBadge">0</span></button>
 			<button class="imgButton imgSmallButton" id="show_only_queue" data-state="0" onclick="filterQueued(this);" style="background-image: url(./icons/queue_show_listonly_on.png);" title="Queue — 📑 Show only the messages in queue"></button>
 			<div class="horizontalSeparator"></div>
-		</div>	
-		
+		</div>
+
 		<!-- Featured message buttons -->
 
 		<button class="imgButton" id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" style="background-image: url(./icons/featured_clear.png);" title="Featured — 🧹🌟 Clear the featured message (not this chat)"></button>
@@ -1215,10 +1215,10 @@
 		<div class="horizontalSeparator"></div>
 
 		<!-- Text-to-speech buttons -->
-		
+
 		<!--
-			<button class="imgButton" id="featured_tts" data-state="0" onclick="" style="background-image: url(./icons/tts_play_featured.png);" title="Text-to-speech — ▶️🌟 Read featured message out-loud with text-to-speech"></button> <!-- TODO: it should read tts the featured message (maybe it could stop tts before, to avoid it was speaking already) 
-			<button class="imgButton" id="tts_stop" data-state="0" onclick="" style="background-image: url(./icons/tts_stop.png);" title="Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech"></button> <!-- TODO: it should stop the tts and clear its list 
+			<button class="imgButton" id="featured_tts" data-state="0" onclick="" style="background-image: url(./icons/tts_play_featured.png);" title="Text-to-speech — ▶️🌟 Read featured message out-loud with text-to-speech"></button> <!-- TODO: it should read tts the featured message (maybe it could stop tts before, to avoid it was speaking already)
+			<button class="imgButton" id="tts_stop" data-state="0" onclick="" style="background-image: url(./icons/tts_stop.png);" title="Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech"></button> <!-- TODO: it should stop the tts and clear its list
 		-->
 		<button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts(this);" style="background-image: url(./icons/tts_incoming_messages_on.png);" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
 
@@ -1749,16 +1749,16 @@
 		speechInput.rate = rate;
 		speechInput.pitch = pitch;
 		speechInput.text = text;
-		
-		
+
+
 		getById("tts").style['background-image']='url(./icons/tts_stop.png)';
 		getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
-		
+
 		window.speechSynthesis.speak(speechInput);
-		
+
 		try{
 			speechInput.addEventListener('end',function(e){
-				if (window.speechSynthesis.pending || window.speechSynthesis.speaking){					
+				if (window.speechSynthesis.pending || window.speechSynthesis.speaking){
 					getById("tts").style['background-image']='url(./icons/tts_stop.png)';
 					getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
 				} else if (!speech){
@@ -2199,7 +2199,7 @@
 		} else {
 			speech = !speech;
 		}
-		
+
 		if (speech) {
 			ele.style['background-image']='url(./icons/tts_incoming_messages_off.png)';
 			ele.title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
@@ -3685,7 +3685,7 @@
 			menu.style.top = "unset";
 			menu.style.bottom = "7px";
 		}
-		
+
 		var lastWidth =  window.innerWidth;
 		window.addEventListener("resize",function(event){
 			var rect = getById("filter").getBoundingClientRect();
@@ -3721,11 +3721,11 @@
 		})
 
 		getById("filter").addEventListener("click", toggleInput);
-		
+
 	})();
 
 
-	
+
 
 	(function userChatInputModalBox() { // chat input
 		var menu = getById("chatInput_parent");
@@ -3733,7 +3733,7 @@
 		var chatInputButton = getById("chatInputButton");
 		var chatClearButton = getById("chatClearButton")
 		var chatInputCloseButton = getById("chatInputCloseButton");
-		
+
 		menu.style.top = "unset";
 		menu.style.bottom = "7px";
 
@@ -3743,7 +3743,7 @@
 			menu.style.top = "unset";
 			menu.style.bottom = "7px";
 		}
-		
+
 		var lastWidth =  window.innerWidth;
 		window.addEventListener("resize",function(event){
 			var rect = getById("say_hello").getBoundingClientRect();
@@ -3772,16 +3772,16 @@
 				sendMessage(event);
 			}
 		})
-		
+
 		input.addEventListener("blur", function(event){
 			if (menu.matches(':focus-within:not(:focus)') || menu.matches(':focus-within')){ // if a sibling has focus, don't close and retake focus
 				input.focus(); // re-refocus text input.
 				return;
 			}
-		
+
 			event.preventDefault();
 			event.stopPropagation();
-			
+
 			getById("say_hello").removeEventListener("click", toggleInput);
 			menu.classList.add("hidden");
 			setTimeout(function(){ // click vs hold
@@ -3807,7 +3807,7 @@
 		});
 
 		getById("say_hello").addEventListener("click", toggleInput);
-		
+
 	})();
 
 
