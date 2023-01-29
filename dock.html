@@ -611,6 +611,14 @@
 			height: 10px;
 			font-size: 10px;
 		}
+		
+		#queueSection{
+			display:flex;
+		}
+		
+		#next_in_queue,show_only_queue{
+			display:inline-block;
+		}
 
 		.popInModal {
 			position: fixed!important;
@@ -1189,12 +1197,12 @@
 		<div class="horizontalSeparator"></div>
 
 		<!-- Queue buttons -->
-
-		<button class="imgButton" id="next_in_queue" data-state="0" onclick="nextInQueue();" style="background-image: url(./icons/queue_show_next.png);" title="Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)"><span id="next_in_queue_badge" class="buttonBadge">0</span></button>
-		<button class="imgButton imgSmallButton" id="show_only_queue" data-state="0" onclick="filterQueued(this);" style="background-image: url(./icons/queue_show_listonly_on.png);" title="Queue — 📑 Show only the messages in queue"></button>
-
-		<div class="horizontalSeparator"></div>
-
+		<div id="queueSection" class="hidden">																																	 
+			<button class="imgButton" id="next_in_queue" data-state="0" onclick="nextInQueue();" style="background-image: url(./icons/queue_show_next.png);" title="Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)"><span id="next_in_queue_badge" class="buttonBadge">0</span></button>
+			<button class="imgButton imgSmallButton" id="show_only_queue" data-state="0" onclick="filterQueued(this);" style="background-image: url(./icons/queue_show_listonly_on.png);" title="Queue — 📑 Show only the messages in queue"></button>
+			<div class="horizontalSeparator"></div>
+		</div>	
+		
 		<!-- Featured message buttons -->
 
 		<button class="imgButton" id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" style="background-image: url(./icons/featured_clear.png);" title="Featured — 🧹🌟 Clear the featured message (not this chat)"></button>
@@ -1203,9 +1211,11 @@
 		<div class="horizontalSeparator"></div>
 
 		<!-- Text-to-speech buttons -->
-
-		<button class="imgButton" id="featured_tts" data-state="0" onclick="" style="background-image: url(./icons/tts_play_featured.png);" title="Text-to-speech — ▶️🌟 Read featured message out-loud with text-to-speech"></button> <!-- TODO: it should read tts the featured message (maybe it could stop tts before, to avoid it was speaking already) -->
-		<button class="imgButton" id="tts_stop" data-state="0" onclick="" style="background-image: url(./icons/tts_stop.png);" title="Text-to-speech — ⏹🔊 Stop to read out-loud with text-to-speech"></button> <!-- TODO: it should stop the tts and clear its list -->
+		
+		<!--
+			<button class="imgButton" id="featured_tts" data-state="0" onclick="" style="background-image: url(./icons/tts_play_featured.png);" title="Text-to-speech — ▶️🌟 Read featured message out-loud with text-to-speech"></button> <!-- TODO: it should read tts the featured message (maybe it could stop tts before, to avoid it was speaking already) 
+			<button class="imgButton" id="tts_stop" data-state="0" onclick="" style="background-image: url(./icons/tts_stop.png);" title="Text-to-speech — ⏹🔊 Stop to read out-loud with text-to-speech"></button> <!-- TODO: it should stop the tts and clear its list 
+		-->
 		<button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts(this);" style="background-image: url(./icons/tts_incoming_messages_on.png);" title="Text-to-speech — 🔊 Start to read incoming messages out-loud with text-to-speech"></button>
 
 		<!-- Scroll button -->
@@ -1302,7 +1312,7 @@
 	var applyCustomActions = false;
 	var showsource = true;
 	var compactmode = false;
-	var darkmode = false;
+	var darkmode = null;
 	var scale = 1;
 	var forceAutoscroll = false;
 	var triggerState = true;
@@ -1735,7 +1745,25 @@
 		speechInput.rate = rate;
 		speechInput.pitch = pitch;
 		speechInput.text = text;
+		
+		getById("tts").style['background-image']='url(./icons/tts_incoming_messages_off.png)';
+		getById("tts").title = 'Text-to-speech — 🔊⏹ Stop to read incoming messages out-loud with text-to-speech';
+		
 		window.speechSynthesis.speak(speechInput);
+		
+		try{
+			speechInput.addEventListener('end',function(e){
+				if (window.speechSynthesis.pending || window.speechSynthesis.speaking){
+					getById("tts").style['background-image']='url(./icons/tts_incoming_messages_off.png)';
+					getById("tts").title = 'Text-to-speech — 🔊⏹ Stop to read incoming messages out-loud with text-to-speech';
+				} else if (!speech){
+					getById("tts").style['background-image']='url(./icons/tts_incoming_messages_on.png)';
+					getById("tts").title = 'Text-to-speech — 🔊 Start to read incoming messages out-loud with text-to-speech';
+				}
+			});
+		} catch(e){
+			console.error(e);
+		}
 	}
 
 	if (urlParams.has("chroma")){
@@ -1960,14 +1988,20 @@
 		syncDocks = true;
 	}
 
-	if (darkmode === false){
+	if (darkmode){
+		document.getElementById("menu").classList.add("darkmode");
+		document.documentElement.style.setProperty("--background-color", "#000");
+	} else if (darkmode === null){ // defaultmode
+		document.getElementById("menu").classList.add("darkmode");
+		darkmode = true;
+	} else {
 		document.body.classList.add("lightmode");
 		document.getElementById("menu").classList.add("lightmode");
 		document.getElementById("chatInput_parent").classList.add("lightmode");
 		document.getElementById("filter_messages_parent").classList.add("lightmode");
 		document.documentElement.style.setProperty("--link-color", "#06F");
 		document.documentElement.style.setProperty("--font-color-name", "#000");
-		document.documentElement.style.setProperty("--background-color", "#FFF");
+		document.documentElement.style.setProperty("--background-color", "#FFF0");
 		document.documentElement.style.setProperty("--font-color", "#000");
 		document.documentElement.style.setProperty("--highlight-base2", "#EEE4", "important");
 	}
@@ -2151,8 +2185,13 @@
 	}
 
 	function tts(ele) {
-		speech = !speech;
-		window.speechSynthesis.cancel();
+		if (window.speechSynthesis.pending || window.speechSynthesis.speaking){
+			speech = false;
+			window.speechSynthesis.cancel();
+		} else {
+			speech = !speech;
+		}
+		
 		if (speech) {
 			ele.style['background-image']='url(./icons/tts_incoming_messages_off.png)';
 			ele.title = 'Text-to-speech — 🔊⏹ Stop to read incoming messages out-loud with text-to-speech';
@@ -2444,8 +2483,6 @@
 			behavior: 'smooth'
 		});
 	}
-
-
 	function filterMessages(keyword=""){
 		keyword = keyword.trim().toLowerCase();
 		filtering = keyword;
@@ -2566,8 +2603,7 @@
 			document.getElementById("next_in_queue_badge").innerText = "0";
 			document.getElementById("next_in_queue").title = "Queue — ⏭ Feature next message in queue (since queue is empty, it will clear the active overlay)";
 		} else {
-			document.getElementById("next_in_queue").classList.remove("hidden");
-			document.getElementById("show_only_queue").classList.remove("hidden");
+			document.getElementById("queueSection").classList.remove("hidden");
 			document.getElementById("next_in_queue_badge").innerText = selectedQueue.length;
 			document.getElementById("next_in_queue").title = "Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)";
 		}
