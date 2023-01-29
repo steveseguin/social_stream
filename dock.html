@@ -616,7 +616,7 @@
 			display:flex;
 		}
 		
-		#next_in_queue,show_only_queue{
+		#next_in_queue,#show_only_queue{
 			display:inline-block;
 		}
 
@@ -1214,9 +1214,9 @@
 		
 		<!--
 			<button class="imgButton" id="featured_tts" data-state="0" onclick="" style="background-image: url(./icons/tts_play_featured.png);" title="Text-to-speech — ▶️🌟 Read featured message out-loud with text-to-speech"></button> <!-- TODO: it should read tts the featured message (maybe it could stop tts before, to avoid it was speaking already) 
-			<button class="imgButton" id="tts_stop" data-state="0" onclick="" style="background-image: url(./icons/tts_stop.png);" title="Text-to-speech — ⏹🔊 Stop to read out-loud with text-to-speech"></button> <!-- TODO: it should stop the tts and clear its list 
+			<button class="imgButton" id="tts_stop" data-state="0" onclick="" style="background-image: url(./icons/tts_stop.png);" title="Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech"></button> <!-- TODO: it should stop the tts and clear its list 
 		-->
-		<button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts(this);" style="background-image: url(./icons/tts_incoming_messages_on.png);" title="Text-to-speech — 🔊 Start to read incoming messages out-loud with text-to-speech"></button>
+		<button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts(this);" style="background-image: url(./icons/tts_incoming_messages_on.png);" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
 
 		<!-- Scroll button -->
 		<button class="imgButton imgSmallButton" id="jumpto" data-state="0" onclick="jumptoBottom(this);" style="background-image: url(./icons/scroll_to_bottom_off.png);" title="Scroll to bottom"></button>
@@ -1746,8 +1746,13 @@
 		speechInput.pitch = pitch;
 		speechInput.text = text;
 		
-		getById("tts").style['background-image']='url(./icons/tts_incoming_messages_off.png)';
-		getById("tts").title = 'Text-to-speech — 🔊⏹ Stop to read incoming messages out-loud with text-to-speech';
+		if (speech){
+			getById("tts").style['background-image']='url(./icons/tts_incoming_messages_off.png)';
+			getById("tts").title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
+		} else {
+			getById("tts").style['background-image']='url(./icons/tts_stop.png)';
+			getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
+		}
 		
 		window.speechSynthesis.speak(speechInput);
 		
@@ -1755,10 +1760,10 @@
 			speechInput.addEventListener('end',function(e){
 				if (window.speechSynthesis.pending || window.speechSynthesis.speaking){
 					getById("tts").style['background-image']='url(./icons/tts_incoming_messages_off.png)';
-					getById("tts").title = 'Text-to-speech — 🔊⏹ Stop to read incoming messages out-loud with text-to-speech';
+					getById("tts").title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
 				} else if (!speech){
 					getById("tts").style['background-image']='url(./icons/tts_incoming_messages_on.png)';
-					getById("tts").title = 'Text-to-speech — 🔊 Start to read incoming messages out-loud with text-to-speech';
+					getById("tts").title = 'Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech';
 				}
 			});
 		} catch(e){
@@ -2194,10 +2199,10 @@
 		
 		if (speech) {
 			ele.style['background-image']='url(./icons/tts_incoming_messages_off.png)';
-			ele.title = 'Text-to-speech — 🔊⏹ Stop to read incoming messages out-loud with text-to-speech';
+			ele.title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
 		} else {
 			ele.style['background-image']='url(./icons/tts_incoming_messages_on.png)';
-			ele.title = 'Text-to-speech — 🔊 Start to read incoming messages out-loud with text-to-speech';
+			ele.title = 'Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech';
 		}
 	}
 
