@@ -3524,7 +3524,6 @@
 	async function overwriteFile(data=false) {
 		if (data=="setup"){
 			newFileHandle = await window.showSaveFilePicker();
-			document.getElementById("select_save_file").innerText = "💾";
 		} else if (newFileHandle && data){
 			const writableStream = await newFileHandle.createWritable();
 
