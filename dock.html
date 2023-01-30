@@ -757,7 +757,7 @@
 				width: 216px;
 			}
 			#filter_messages:focus {
-				width: 126px;
+				width: 120px;
 			}
 			#output {
 				margin-bottom: 41px; /* Same as menu height + menu padding-top + menu padding-bottom */
@@ -816,7 +816,7 @@
 				width: 144px;
 			}
 			#filter_messages:focus {
-				width: 108px;
+				width: 96px;
 			}
 			#output {
 				margin-bottom: 36px; /* Same as menu height + menu padding-top + menu padding-bottom */
@@ -875,7 +875,7 @@
 				width: 108px;
 			}
 			#filter_messages:focus {
-				width: 90px;
+				width: 72px;
 			}
 			#output {
 				margin-bottom: 31px; /* Same as menu height + menu padding-top + menu padding-bottom */
@@ -935,7 +935,7 @@
 				width: 72px;
 			}
 			#filter_messages:focus {
-				width: 72px;
+				width: 48px;
 			}
 			#output {
 				margin-bottom: 26px; /* Same as menu height + menu padding-top + menu padding-bottom */
@@ -1269,6 +1269,7 @@
 	<div id="filter_messages_parent" class="popInModal hidden">
 		<input id="filter_messages" class="modalTextInput" type="text" placeholder="Type..." onchange="filterMessages(this.value);" />
 		<button id="filterClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png);" title="🧹 Clear this filter"></button>
+		<button id="filterAddNameAndTimeButton" class="imgButton imgSmallButton" data-state="0" onclick="onClickFilterAddNameAndTimeButton(this);" style="background-image: url(./icons/filter_addnametime_on.png);" title="🆔 Add name and time on filter"></button>
 		<button id="filterCloseButton" class="imgButton imgSmallButton" style="background-image: url(./icons/close.png);" title="❌ Close this dialog"></button>
 	</div>
 
@@ -1313,7 +1314,8 @@
 	var nextComment = null;
 	var roomID = "test";
 	var messageTimeout = 0;
-	var filtering = false;
+	var filtering = "";
+	var filterAddNameAndTime = false;
 	var applyCustomActions = false;
 	var showsource = true;
 	var compactmode = false;
@@ -2109,6 +2111,24 @@
 		redoOdd();
 	}
 
+	function onClickFilterAddNameAndTimeButton(ele) {
+		filterAddNameAndTime = !filterAddNameAndTime;
+		if (ele.dataset.state == "0") {
+			ele.dataset.state = "1";
+			filterAddNameAndTime = true;
+			ele.style['background-image']='url(./icons/filter_addnametime_off.png)';
+			ele.title = '🆔 Remove name and time on filter';
+		} else {
+			ele.dataset.state = "0";
+			filterAddNameAndTime = false;
+			ele.style['background-image']='url(./icons/filter_addnametime_on.png)';
+			ele.title = '🆔 Add name and time on filter';
+		}
+
+		// Update search after add/remove name and time
+		filterMessages(document.getElementById("filter_messages").value);
+	}
+
 	function applyHiddenState(node){
 		if (hideNotDonos && node.classList.contains("noDono")){
 			node.classList.add("hidden");
@@ -2492,17 +2512,48 @@
 			behavior: 'smooth'
 		});
 	}
-	function filterMessages(keyword=""){
+
+	function filterMessages(keyword="") {
+		var eles = document.querySelectorAll("#output > div");
+		var elesValue = document.querySelectorAll("#output .hl-message");
+		if (eles.length !== elesValue.length)
+			return;
+
 		keyword = keyword.trim().toLowerCase();
 		filtering = keyword;
-		var eles = document.querySelectorAll("#output > div");
-		for (var i=0;i<eles.length;i++){
-			if (!keyword){
-				eles[i].classList.remove("hide");
-			} else if (eles[i].textContent.toLowerCase().includes(keyword)){
-				eles[i].classList.remove("hide");
-			} else {
-				eles[i].classList.add("hide");
+
+		// With user name and message time
+		if (filterAddNameAndTime) {
+			for (var i = 0; i < eles.length; i++) {
+				// No filter is typed; then show all
+				if (!keyword) {
+					eles[i].classList.remove("hide");
+
+				// Filter is typed - Found; then show them
+				} else if (eles[i].textContent.toLowerCase().includes(keyword)) {
+					eles[i].classList.remove("hide");
+
+				// Filter is typed - Not found; them hide them
+				} else {
+					eles[i].classList.add("hide");
+				}
+			}
+
+		// Message only
+		} else {
+			for (var i = 0; i < eles.length; i++) {
+				// No filter is typed; then show all
+				if (!keyword) {
+					eles[i].classList.remove("hide");
+
+				// Filter is typed - Found; then show them
+				} else if (elesValue[i].innerText.toLowerCase().includes(keyword)) {
+					eles[i].classList.remove("hide");
+
+				// Filter is typed - Not found; them hide them
+				} else {
+					eles[i].classList.add("hide");
+				}
 			}
 		}
 	}
@@ -3473,7 +3524,6 @@
 	async function overwriteFile(data=false) {
 		if (data=="setup"){
 			newFileHandle = await window.showSaveFilePicker();
-			document.getElementById("select_save_file").innerText = "💾";
 		} else if (newFileHandle && data){
 			const writableStream = await newFileHandle.createWritable();
 
@@ -3654,16 +3704,10 @@
 		if (isEscape(evt)) {
 			getById("chatInput_parent").classList.add("hidden");
 			getById("filter_messages_parent").classList.add("hidden");
-		} else {
-			filterMessages(document.getElementById("filter_messages").value);
 		}
 	};
 
 	document.getElementById("filter_messages").addEventListener('keyup', function(e) {
-		filterMessages(document.getElementById("filter_messages").value);
-	});
-
-	document.getElementById("filter_messages").addEventListener('keydown', function(e) {
 		filterMessages(document.getElementById("filter_messages").value);
 	});
 
@@ -3714,6 +3758,7 @@
 
 		filterClearButton.addEventListener("click", function(event) {
 			input.value = "";
+			filterMessages(input.value);
 		})
 
 		filterCloseButton.addEventListener("click", function(event){
