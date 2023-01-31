@@ -154,7 +154,11 @@
 				}
 				xxx[j].marked = true;
 				if (!newChannel){
-					processMessage(xxx[j],chatimg,chatname);
+					var posibleName = chatname;
+					if (settings.myname && settings.myname.value){
+						posibleName = settings.myname.value.split(",")[0];
+					}
+					processMessage(xxx[j],chatimg, posibleName);
 					await sleep(10);
 				} 
 			}

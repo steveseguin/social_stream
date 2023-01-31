@@ -480,6 +480,12 @@
 				</div>
 				<div>
 					<label class="switch">
+						<input type="checkbox" data-param1="twolines">
+						<span class="slider round"></span>
+					</label> Message appears on its own line under name
+				</div>
+				<div>
+					<label class="switch">
 						<input type="checkbox" data-param1="split">
 						<span class="slider round"></span>
 					</label> Split mode (messages align relative to center)
@@ -623,16 +629,16 @@
 						<span class="slider round"></span>
 					</label> Do not show host or bot messages
 				</div>
-				
 			</div>
 
 			<h3>Specify host or bot</h3>
 			<div class="options_group streaming_chat">
 				<div>
 					<label class="textinput" style="display:block;padding-top:8px;">
-					</label> List of names to identify as the host or bot (comma separated):
-					<input type="text" data-textparam1="myname" style="width:95%;"
+					</label> Name or list of names to help identify the host and bots.:
+					<input type="text" data-textparam1="myname" style="width:95%;" 
 						placeholder="ie: name1,name 2,Name3" />
+					<p>Note: The first name listed may be used as the host's name in stream when their name is not otherwise known. The list of names should be comma separated.</p>
 				</div>
 			</div>
 		</div>
@@ -841,6 +847,8 @@
 				</div>
 				
 				<button class="button" data-action="tellajoke" style="cursor:pointer;"> Tell a joke now</button>
+				
+				<button class="button" data-action="enableYouTube" style="display:none;cursor:pointer;"> Connect Youtube API</button>
 			</div>
 
 			<h3>Save the last message to a file</h3>

@@ -223,7 +223,6 @@ function updateSettings(ele){
 					ele.checked = false;
 					updateSettings(ele);
 				}
-				
 			}
 			
 		} else {
@@ -292,7 +291,6 @@ function updateSettings(ele){
 	
 	document.getElementById("overlaylink").innerText = document.getElementById("overlay").rawURL;
 	document.getElementById("overlaylink").href = document.getElementById("overlay").rawURL;
-	
 }
 
 
