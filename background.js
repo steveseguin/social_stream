@@ -458,6 +458,10 @@ chrome.runtime.onMessage.addListener(
 					pushSettingChange();
 				}
 				
+				if (request.setting == "myname"){
+					pushSettingChange();
+				}
+				
 				if (request.setting == "nosubcolor"){
 					pushSettingChange();
 				}

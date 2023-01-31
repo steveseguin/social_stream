@@ -179,7 +179,6 @@
 		if ("settings" in response){
 			settings = response.settings;
 		}
-		console.error(settings);
 	});
 
 	chrome.runtime.onMessage.addListener(
