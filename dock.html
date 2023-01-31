@@ -31,6 +31,7 @@
 			--message-line-height: 22px;
 			--author-font-size: 17px;
 			--electron-drag-fix: drag;
+			--time-arrived-padding: 1px;
 		}
 		.closeBtn {
 			position: absolute;
@@ -49,7 +50,7 @@
 		.closeBtn:hover {
 			background-color: #9a9a9a;
 		}
-
+		
 		.closeBtn:active {
 			background-color: #7a7a7a;
 		}
@@ -195,6 +196,24 @@
 			max-width: 20vw;
 		}
 
+		.hl-firstline {
+			display:block;
+			line-height: 100%;
+			padding-bottom: 3px;
+		}
+		
+		.hl-firstline .hl-name {
+			line-height: 100%;
+			font-size: 130%;
+			vertical-align: bottom;
+			bottom:1px;
+		}
+		
+		.hl-firstline .hl-name .hl-badge {
+			vertical-align: inherit;
+			margin: 1px 0px;
+		}
+
 		.hl-message{
 			margin: auto 1px;
 			overflow-wrap: anywhere;
@@ -286,11 +305,10 @@
 
 		.highlight-chat.expand{
 			animation: expand 2s;
-			overflow: hidden;
+			overflow: visible;
 			word-break: break-all;
 			line-break: anywhere;
 		}
-
 
 		.larger-emojis{
 			top: 0px;
@@ -527,7 +545,7 @@
 			font-size: 10px;
 			display: inline-block;
 			margin: auto 1px;
-			padding-right: 1px;
+			padding-right: var(--time-arrived-padding);
 			left: 2px;
 			position: relative;
 			white-space: nowrap;
@@ -1412,7 +1430,14 @@
 	if (urlParams.has("split")){
 		splitMode = " splitMode";
 	}
-
+	
+	var twoLines = false;
+	if (urlParams.has("twolines")){
+		twoLines = true;
+		document.documentElement.style.setProperty("--list-or-horizontal", "block");
+		document.documentElement.style.setProperty("--time-arrived-padding", "8px");
+	}
+	
 	if (urlParams.has("alignbottom")){
 		document.getElementById("output").classList.add("alignbottom");
 	}
@@ -1536,17 +1561,24 @@
 		document.documentElement.style.setProperty("--list-or-horizontal", flexOrNotToFlex);
 		document.getElementById("output").style.width = "10000%";
 		document.getElementById("output").style.right = "0";
-		if (stylizeEmoji){
+		if (twoLines){
+			document.getElementById("output").style.maxHeight = "70px";
+			document.getElementById("menu").style.top = "72px";
+			document.getElementById("output").style.overflow = "visible";
+		} else if (stylizeEmoji){
 			document.getElementById("output").style.maxHeight = "40px";
+			document.getElementById("menu").style.top = "42px";
+			document.getElementById("output").style.overflow = "hidden";
 		} else {
 			document.getElementById("output").style.maxHeight = "30px";
+			document.getElementById("menu").style.top = "42px";
+			document.getElementById("output").style.overflow = "hidden";
 		}
-		document.getElementById("output").style.overflow = "hidden";
+		
 		document.getElementById("output").style.position = "absolute";
 		document.getElementById("output").style.textAlign = "right";
 		document.getElementById("output").style.whiteSpace = "nowrap";
 		document.getElementById("output").classList.remove("notcompactmode");
-		document.getElementById("menu").style.top = "42px";
 		compactmode = true;
 		customNodeLimit = 15;
 	}
@@ -3078,7 +3110,21 @@
 				mid = "data-mid='"+data.id+"'";
 			}
 
-			if (splitMode){
+
+			if (twoLines){
+				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+					+ '<div class="hl-firstline">'
+						+ "<div class='queueid'></div>"
+						+ showType
+						+ chatImg
+						+ chatname
+					+ '</div><div class="hl-message">'
+						+ timeArrived
+						+ '<span id="content_'+data.id+'">' + chatmessage + '</span>'
+						+ '</div>'
+					+ addImage
+					+ donationHTML + '</div>');
+			} else if (splitMode){
 				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>"
 					 + "<div class='leftside "+larger+"'>"
@@ -3196,7 +3242,7 @@
 				setTimeout(function(node){ node.remove();},timeoutDelay, node);
 			}
 
-			if (horizontal){
+			if (horizontal || twoLines){
 				// do not shrink the names to fit
 			} else if (compactmode){
 				var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they are longer than the message's height
