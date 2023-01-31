@@ -966,8 +966,8 @@
 
 		#jumpto {
 			position: fixed !important;
-			top: 4px;
-			right: 4px;
+			bottom: min(14px, 3%);
+			right: min(14px, 3%);
 			margin-top: 0;
 			margin-right: 0;
 		}
@@ -1186,7 +1186,7 @@
 		<!-- Main buttons -->
 
 		<button class="imgButton" id="pause" data-state="0" onclick="pause(this);" style="background-image: url(./icons/main_msg_pause.png);" title="Main — ⏸ Pause incoming chat messages"></button>
-		<button class="imgButton" id="say_hello" data-state="0" onclick="" style="background-image: url(./icons/main_msg_send.png);" title="Main — 💬 Send a text message to all social endpoints"></button> <!-- TODO: it should open a modal window with a field to type the message which will be sent | Don't forget to add "toggleChat();" to onclick -->
+		<button class="imgButton" id="say_hello" data-state="0" onclick="" style="background-image: url(./icons/main_msg_send.png);" title="Main — 💬 Send a text message to all social endpoints"></button> 
 		<button class="imgButton imgSmallButton" id="notify" data-state="0" onclick="notify(this);" style="background-image: url(./icons/main_msg_notify_on.png);" title="Main — 🔔 Start beeping when there is a new message"></button>
 		<button class="imgButton imgSmallButton hidden" id="select_save_file" data-state="0" onclick="overwriteFile('setup');" style="background-image: url(./icons/main_msg_save.png);" title="Main — 💾 Select the file you want to save the most recent message to"></button>
 
@@ -1194,7 +1194,7 @@
 
 		<!-- Filter buttons -->
 
-		<button class="imgButton" id="filter" data-state="0" style="background-image: url(./icons/filter_msg.png);" title="Filter — 🔽 Filter messages based on what you have entered"></button> <!-- TODO: it should open a modal window with a field to type the message which will be used as filter -->
+		<button class="imgButton" id="filter" data-state="0" style="background-image: url(./icons/filter_msg.png);" title="Filter — 🔽 Filter messages based on what you have entered"></button>
 		<button class="imgButton imgSmallButton" id="hide_emoji" data-state="0" onclick="emoji(this);" style="background-image: url(./icons/filter_hideemojionly_off.png);" title="Filter — 😀🚫 Hide messages that contains emojis only"></button>
 		<button class="imgButton imgSmallButton" id="only_donos" data-state="0" onclick="donos(this);" style="background-image: url(./icons/filter_showpaidonly_on.png);" title="Filter — 💲 Show only messages that have donations/cheer"></button>
 
@@ -1218,7 +1218,6 @@
 
 		<!--
 			<button class="imgButton" id="featured_tts" data-state="0" onclick="" style="background-image: url(./icons/tts_play_featured.png);" title="Text-to-speech — ▶️🌟 Read featured message out-loud with text-to-speech"></button> <!-- TODO: it should read tts the featured message (maybe it could stop tts before, to avoid it was speaking already)
-			<button class="imgButton" id="tts_stop" data-state="0" onclick="" style="background-image: url(./icons/tts_stop.png);" title="Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech"></button> <!-- TODO: it should stop the tts and clear its list
 		-->
 		<button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts(this);" style="background-image: url(./icons/tts_incoming_messages_on.png);" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
 
