@@ -223,7 +223,6 @@ function updateSettings(ele){
 					ele.checked = false;
 					updateSettings(ele);
 				}
-				
 			}
 			
 		} else {
@@ -277,22 +276,13 @@ function updateSettings(ele){
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "both", setting: ele.dataset.both, "value": ele.checked}, function (response) {});
-		
-	} else if (ele.dataset.setting){
-		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
-		return;
-		
+	} 
+	
+	if (ele.dataset.setting){
+		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});	
 	} else if (ele.dataset.textsetting){
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
-		return;
 	}
-	
-	document.getElementById("docklink").innerText = document.getElementById("dock").rawURL;
-	document.getElementById("docklink").href = document.getElementById("dock").rawURL;
-	
-	document.getElementById("overlaylink").innerText = document.getElementById("overlay").rawURL;
-	document.getElementById("overlaylink").href = document.getElementById("overlay").rawURL;
-	
 }
 
 
