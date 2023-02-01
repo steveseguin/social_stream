@@ -1615,6 +1615,13 @@
 	if (urlParams.has("hidebots")){
 		doNotShowBot = true;
 	}
+	
+	var doNotShowBotNames = false;
+	if (urlParams.has("hidebotnames")){
+		doNotShowBotNames = true;
+	}
+	
+	
 
 	var autoshow = false;
 	var autoshowdonos = false;
@@ -2067,6 +2074,11 @@
 	var firstNamesOnly = false
 	if (urlParams.has("firstnamesonly") || urlParams.has("firstname") || urlParams.has("firstnames")){
 		firstNamesOnly = true;
+	}
+	
+	var hideNames = false
+	if (urlParams.has("hidenames")){
+		hideNames = true;
 	}
 
 	var hideNotDonos = false;
@@ -3043,16 +3055,16 @@
 				});
 			}
 
-			var chatname = "";
+			var specialMessage = false;
 
 			if (data.chatname){
 
 				if (data.chatname.toLowerCase() == "streamelements"){
 					bot = true;
-					//chatname = "";
+					//specialMessage = true;
 				} else if (data.chatname.toLowerCase() == "nightbot"){
 					bot = true;
-					//chatname = "";
+					//specialMessage = true;
 				} else if (data.chatname.toLowerCase() == "vdoninja"){ // because why not. :)
 					data.chatname = "VDO.Ninja";
 					bot = true;
@@ -3063,8 +3075,16 @@
 				if (bot && doNotShowBot){
 					return;
 				}
+				
+				if (bot && doNotShowBotNames){
+					specialMessage = true;
+					data.chatname = "";
+				}
+				
 
-				if (firstNamesOnly){
+				if (hideNames){
+					data.chatname = "";
+				} else if (firstNamesOnly){
 					var nn = data.chatname.split(" ");
 					if (nn.length>1){
 						if (nn[0].length<=2){
@@ -3078,9 +3098,13 @@
 						}
 					}
 				}
-
+			}
+			
+			var chatname = "";
+			
+			if (data.chatname){
 				if (compactmode){
-					if (bot){
+					if (specialMessage){
 						chatname = '<div class="hl-name'+splitMode+'"></div>';
 					} else if (chatbadges){
 						chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' +chatbadges+ data.chatname+":</div>";
@@ -3090,6 +3114,8 @@
 				} else {
 					chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' +chatbadges+ data.chatname+"</div>";
 				}
+			} else if (specialMessage && compactmode){
+				chatname = '<div class="hl-name'+splitMode+'"></div>';
 			} else {
 				chatname = '<div class="hl-name'+splitMode+'">'+chatbadges+'</div>';
 			}

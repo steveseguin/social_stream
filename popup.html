@@ -474,12 +474,6 @@
 				</div>
 				<div>
 					<label class="switch">
-						<input type="checkbox" data-param1="firstnames">
-						<span class="slider round"></span>
-					</label> Show first names only
-				</div>
-				<div>
-					<label class="switch">
 						<input type="checkbox" data-param1="twolines">
 						<span class="slider round"></span>
 					</label> Message appears on its own line under name
@@ -556,6 +550,41 @@
 						<span class="slider round"></span>
 					</label> Green page background
 				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="firstnames">
+						<span class="slider round"></span>
+					</label> Use first names only
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="hidenames">
+						<span class="slider round"></span>
+					</label> Delete names entirely
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="hidebotnames">
+						<span class="slider round"></span>
+					</label> Delete names for specified host or bots
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="hidebots">
+						<span class="slider round"></span>
+					</label> Do not show host or bot messages (see below)
+				</div>
+			</div>
+			
+			<h3>Specify host or bot</h3>
+			<div class="options_group streaming_chat">
+				<div>
+					<label class="textinput" style="display:block;padding-top:8px;">
+					</label> Name or list of names to help identify the host and bots.:
+					<input type="text" data-textparam1="myname" style="width:95%;" 
+						placeholder="ie: name1,name 2,Name3" />
+					<p>Note: The first name listed may be used as the host's name in stream when their name is not otherwise known. The list of names should be comma separated.</p>
+				</div>
 			</div>
 
 			<h3>Behaviour and functions</h3>
@@ -623,24 +652,8 @@
 						<span class="slider round"></span>
 					</label> Multiple docks will stay in sync as to selected messages
 				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="hidebots">
-						<span class="slider round"></span>
-					</label> Do not show host or bot messages
-				</div>
 			</div>
 
-			<h3>Specify host or bot</h3>
-			<div class="options_group streaming_chat">
-				<div>
-					<label class="textinput" style="display:block;padding-top:8px;">
-					</label> Name or list of names to help identify the host and bots.:
-					<input type="text" data-textparam1="myname" style="width:95%;" 
-						placeholder="ie: name1,name 2,Name3" />
-					<p>Note: The first name listed may be used as the host's name in stream when their name is not otherwise known. The list of names should be comma separated.</p>
-				</div>
-			</div>
 		</div>
 
 
