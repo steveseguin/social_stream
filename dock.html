@@ -3066,15 +3066,14 @@
 
 			if (data.chatname){
 
-				if (data.chatname.toLowerCase() == "streamelements"){
-					bot = true;
+				//if (data.chatname.toLowerCase() == "streamelements"){
+				//	bot = true;
 					//specialMessage = true;
-				} else if (data.chatname.toLowerCase() == "nightbot"){
-					bot = true;
+				//} else if (data.chatname.toLowerCase() == "nightbot"){
+				//	bot = true;
 					//specialMessage = true;
-				} else if (data.chatname.toLowerCase() == "vdoninja"){ // because why not. :)
+				if (data.chatname.toLowerCase() == "vdoninja"){ // because why not. :)
 					data.chatname = "VDO.Ninja";
-					bot = true;
 				} else if (custombot && custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){ // because why not. :)
 					bot = true;
 				}
