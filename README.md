@@ -31,6 +31,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - vimeo.com (pop out chat page; https://vimeo.com/live-chat/xxxxxxxxx/interaction/)
 - instagram live (instagram.com/*/live/),  css note:  `[data.type = "instagramlive"]`
 - Instagram post non-live comments (REQUIRES the TOGGLE in menu to enable it), css note: `[data.type = "instagram"]`
+- instafeed.me (no pop out; alternative instagram live support)
 - tiktok live (tiktok.com/*/live)
 - webex live chat (not the pop out)
 - linkedin events and live comments. (works with linkedin.com/videos/live/****** & linkedin.com/videos/events/******)
@@ -63,6 +64,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - Nimo.TV (pop out chat, ie: https://www.nimo.tv/popout/chat/xxxx)
 - kick.com (pop out chat)
 - quickchannel.com (https://play.quickchannel.com/*)
+
 
 
 More on request
