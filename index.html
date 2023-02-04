@@ -1035,7 +1035,11 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		  if ("dataReceived" in e.data){ // raw data 
 			if ("overlayNinja" in e.data.dataReceived){
 				console.log(e.data.dataReceived.overlayNinja);
-				processData( {contents : e.data.dataReceived.overlayNinja} );
+				if (e.data.dataReceived.overlayNinja && ("response" in e.data.dataReceived.overlayNinja)){
+					// pass
+				} else {
+					processData( {contents : e.data.dataReceived.overlayNinja} );
+				}
 			}
 			
 		  }
