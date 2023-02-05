@@ -338,6 +338,37 @@
 			height: 40px;
 			max-height: 40px;
 		}
+		
+	@keyframes ani {
+		 0% {
+			transform: rotate(0deg);
+			  -webkit-transform: rotate(0deg);
+			   -moz-transform: rotate(0deg);
+				-ms-transform: rotate(0deg);
+				 -o-transform: rotate(0deg);
+					transform: rotate(0deg);
+		  }
+		  50% {
+		   transform: rotate(45deg);
+			  -webkit-transform: rotate(45deg);
+			   -moz-transform: rotate(45deg);
+				-ms-transform: rotate(45deg);
+				 -o-transform: rotate(45deg);
+					transform: rotate(45deg);
+		  }
+		  100% {
+			transform: rotate(0deg);
+			-webkit-transform: rotate(0deg);
+			   -moz-transform: rotate(0deg);
+				-ms-transform: rotate(0deg);
+				 -o-transform: rotate(0deg);
+					transform: rotate(0deg);
+		  }
+		}
+		
+		.brush{
+			animation: ani 400ms alternate 1;
+		}
 
 		.larger-emojis img:not(.hl-badge, .icon) {
 			height: var(--stylized-img);
@@ -575,6 +606,7 @@
 			background-color: transparent; /* alpha */
 			-webkit-app-region: no-drag;
 			border: none;
+			border-radius: 10px;
 
 			width: 32px;
 			height: 32px;
@@ -1227,7 +1259,7 @@
 
 		<!-- Featured message buttons -->
 
-		<button class="imgButton" id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" style="background-image: url(./icons/featured_clear.png);" title="Featured — 🧹🌟 Clear the featured message (not this chat)"></button>
+		<button class="imgButton" id="clear_overlay" data-state="0" onclick="this.classList.remove('brush');setTimeout(function(ele){ele.classList.add('brush');},0,this);sendDataP2P(false);" style="background-image: url(./icons/featured_clear.png);" title="Featured — 🧹🌟 Clear the featured message (not this chat)"></button>
 		<button class="imgButton" id="autoshow" data-state="0" onclick="autoShow(this);" style="background-image: url(./icons/featured_auto_stop.png);" title="Featured — 🌟 Auto-feature messages as they come in"></button>
 
 		<div class="horizontalSeparator"></div>
