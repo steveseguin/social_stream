@@ -50,7 +50,7 @@
 		.closeBtn:hover {
 			background-color: #9a9a9a;
 		}
-		
+
 		.closeBtn:active {
 			background-color: #7a7a7a;
 		}
@@ -201,14 +201,14 @@
 			line-height: 100%;
 			padding-bottom: 3px;
 		}
-		
+
 		.hl-firstline .hl-name {
 			line-height: 100%;
 			font-size: 130%;
 			vertical-align: bottom;
 			bottom:1px;
 		}
-		
+
 		.hl-firstline .hl-name .hl-badge {
 			vertical-align: inherit;
 			margin: 1px 0px;
@@ -595,13 +595,6 @@
 			height: 20px;
 			background-size: 20px;
 			margin-top: 9px;
-		}
-		
-		.imgWideButton { /* Used with imgButton class */
-			background-size: 30px;
-			height: 20px;
-			margin-top: 11.5px;
-			width: 30px;
 		}
 
 		.horizontalSeparator {
@@ -1211,8 +1204,8 @@
 		<!-- Main buttons -->
 
 		<button class="imgButton" id="pause" data-state="0" onclick="pause(this);" style="background-image: url(./icons/main_msg_pause.png);" title="Main — ⏸ Pause incoming chat messages"></button>
-		<button class="imgButton" id="say_hello" data-state="0" onclick="" style="background-image: url(./icons/main_msg_send.png);" title="Main — 💬 Send a text message to all social endpoints"></button> 
-		<button class="imgButton imgSmallButton" id="notify" data-state="0" onclick="notify(this);" style="background-image: url(./icons/main_msg_notify_on.png);" title="Main — 🔔 Start beeping when there is a new message"></button>
+		<button class="imgButton" id="say_hello" data-state="0" onclick="" style="background-image: url(./icons/main_msg_send.png);" title="Main — 💬 Send a text message to all social endpoints"></button>
+		<button class="imgButton imgSmallButton" id="notify" data-state="0" onclick="notify(this);" style="background-image: url(./icons/main_msg_notify_off.png);" title="Main — 🔔 Start beeping when there is a new message"></button>
 		<button class="imgButton imgSmallButton hidden" id="select_save_file" data-state="0" onclick="overwriteFile('setup');" style="background-image: url(./icons/main_msg_save.png);" title="Main — 💾 Select the file you want to save the most recent message to"></button>
 
 		<div class="horizontalSeparator"></div>
@@ -1220,31 +1213,28 @@
 		<!-- Filter buttons -->
 
 		<button class="imgButton" id="filter" data-state="0" style="background-image: url(./icons/filter_msg.png);" title="Filter — 🔽 Filter messages based on what you have entered"></button>
-		<button class="imgButton imgSmallButton" id="hide_emoji" data-state="0" onclick="emoji(this);" style="background-image: url(./icons/filter_hideemojionly_off.png);" title="Filter — 😀🚫 Hide messages that contains emojis only"></button>
-		<button class="imgButton imgSmallButton" id="only_donos" data-state="0" onclick="donos(this);" style="background-image: url(./icons/filter_showpaidonly_on.png);" title="Filter — 💲 Show only messages that have donations/cheer"></button>
+		<button class="imgButton imgSmallButton" id="hide_emoji" data-state="0" onclick="emoji(this);" style="background-image: url(./icons/filter_hideemojionly_on.png);" title="Filter — 😀🚫 Hide messages that contains emojis only"></button>
+		<button class="imgButton imgSmallButton" id="only_donos" data-state="0" onclick="donos(this);" style="background-image: url(./icons/filter_showpaidonly_off.png);" title="Filter — 💲 Show only messages that have donations/cheer"></button>
 
 		<div class="horizontalSeparator"></div>
 
 		<!-- Queue buttons -->
 		<div id="queueSection" class="hidden">
 			<button class="imgButton" id="next_in_queue" data-state="0" onclick="nextInQueue();" style="background-image: url(./icons/queue_show_next.png);" title="Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)"><span id="next_in_queue_badge" class="buttonBadge">0</span></button>
-			<button class="imgButton imgSmallButton" id="show_only_queue" data-state="0" onclick="filterQueued(this);" style="background-image: url(./icons/queue_show_listonly_on.png);" title="Queue — 📑 Show only the messages in queue"></button>
+			<button class="imgButton imgSmallButton" id="show_only_queue" data-state="0" onclick="filterQueued(this);" style="background-image: url(./icons/queue_show_listonly_off.png);" title="Queue — 📑 Show only the messages in queue"></button>
 			<div class="horizontalSeparator"></div>
 		</div>
 
 		<!-- Featured message buttons -->
 
 		<button class="imgButton" id="clear_overlay" data-state="0" onclick="sendDataP2P(false);" style="background-image: url(./icons/featured_clear.png);" title="Featured — 🧹🌟 Clear the featured message (not this chat)"></button>
-		<button class="imgButton imgWideButton" id="autoshow" data-state="0" onclick="autoShow(this);" style="background-image: url(./icons/featured_auto_play.png);" title="Featured — 🌟 Auto-feature messages as they come in"></button>
+		<button class="imgButton" id="autoshow" data-state="0" onclick="autoShow(this);" style="background-image: url(./icons/featured_auto_stop.png);" title="Featured — 🌟 Auto-feature messages as they come in"></button>
 
 		<div class="horizontalSeparator"></div>
 
 		<!-- Text-to-speech buttons -->
 
-		<!--
-			<button class="imgButton" id="featured_tts" data-state="0" onclick="" style="background-image: url(./icons/tts_play_featured.png);" title="Text-to-speech — ▶️🌟 Read featured message out-loud with text-to-speech"></button> <!-- TODO: it should read tts the featured message (maybe it could stop tts before, to avoid it was speaking already)
-		-->
-		<button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts(this);" style="background-image: url(./icons/tts_incoming_messages_on.png);" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
+		<button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts(this);" style="background-image: url(./icons/tts_incoming_messages_off.png);" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
 
 		<!-- Scroll button -->
 		<button class="imgButton imgSmallButton" id="jumpto" data-state="0" onclick="jumptoBottom(this);" style="background-image: url(./icons/scroll_to_bottom_off.png);" title="Scroll to bottom"></button>
@@ -1292,8 +1282,8 @@
 
 	<div id="filter_messages_parent" class="popInModal hidden">
 		<input id="filter_messages" class="modalTextInput" type="text" placeholder="Type..." onchange="filterMessages(this.value);" />
+		<button id="filterAddNameAndTimeButton" class="imgButton imgSmallButton" data-state="0" onclick="onClickFilterAddNameAndTimeButton(this);" style="background-image: url(./icons/filter_addnametime_off.png);" title="🆔 Add name and time on filter"></button>
 		<button id="filterClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png);" title="🧹 Clear this filter"></button>
-		<button id="filterAddNameAndTimeButton" class="imgButton imgSmallButton" data-state="0" onclick="onClickFilterAddNameAndTimeButton(this);" style="background-image: url(./icons/filter_addnametime_on.png);" title="🆔 Add name and time on filter"></button>
 		<button id="filterCloseButton" class="imgButton imgSmallButton" style="background-image: url(./icons/close.png);" title="❌ Close this dialog"></button>
 	</div>
 
@@ -1437,14 +1427,14 @@
 	if (urlParams.has("split")){
 		splitMode = " splitMode";
 	}
-	
+
 	var twoLines = false;
 	if (urlParams.has("twolines")){
 		twoLines = true;
 		document.documentElement.style.setProperty("--list-or-horizontal", "block");
 		document.documentElement.style.setProperty("--time-arrived-padding", "8px");
 	}
-	
+
 	if (urlParams.has("alignbottom")){
 		document.getElementById("output").classList.add("alignbottom");
 	}
@@ -1581,7 +1571,7 @@
 			document.getElementById("menu").style.top = "42px";
 			document.getElementById("output").style.overflow = "hidden";
 		}
-		
+
 		document.getElementById("output").style.position = "absolute";
 		document.getElementById("output").style.textAlign = "right";
 		document.getElementById("output").style.whiteSpace = "nowrap";
@@ -1622,13 +1612,13 @@
 	if (urlParams.has("hidebots")){
 		doNotShowBot = true;
 	}
-	
+
 	var doNotShowBotNames = false;
 	if (urlParams.has("hidebotnames")){
 		doNotShowBotNames = true;
 	}
-	
-	
+
+
 
 	var autoshow = false;
 	var autoshowdonos = false;
@@ -1810,10 +1800,10 @@
 					getById("tts").style['background-image']='url(./icons/tts_stop.png)';
 					getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
 				} else if (!speech){
-					getById("tts").style['background-image']='url(./icons/tts_incoming_messages_on.png)';
+					getById("tts").style['background-image']='url(./icons/tts_incoming_messages_off.png)';
 					getById("tts").title = 'Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech';
 				} else {
-					getById("tts").style['background-image']='url(./icons/tts_incoming_messages_off.png)';
+					getById("tts").style['background-image']='url(./icons/tts_incoming_messages_on.png)';
 					getById("tts").title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
 				}
 			});
@@ -2082,7 +2072,7 @@
 	if (urlParams.has("firstnamesonly") || urlParams.has("firstname") || urlParams.has("firstnames")){
 		firstNamesOnly = true;
 	}
-	
+
 	var hideNames = false
 	if (urlParams.has("hidenames")){
 		hideNames = true;
@@ -2104,14 +2094,14 @@
 			hideTextOnly = true;
 			//document.documentElement.style.setProperty("--show-emoji-only", "none");
 			//document.documentElement.style.setProperty("--show-images", "none");
-			ele.style['background-image']='url(./icons/filter_hideemojionly_on.png)';
+			ele.style['background-image']='url(./icons/filter_hideemojionly_off.png)';
 			ele.title = 'Filter — 📄 Show all messages, including with emojis only';
 		} else {
 			hideTextOnly = false;
 			ele.dataset.state = "0";
 			//document.documentElement.style.setProperty("--show-emoji-only", "flex");
 			//document.documentElement.style.setProperty("--show-images", "inline-block");
-			ele.style['background-image']='url(./icons/filter_hideemojionly_off.png)';
+			ele.style['background-image']='url(./icons/filter_hideemojionly_on.png)';
 			ele.title = 'Filter — 😀🚫 Hide messages that contains emojis only';
 		}
 		redoOdd();
@@ -2149,13 +2139,13 @@
 			ele.dataset.state = "1";
 			//document.documentElement.style.setProperty("--show-donos-only", "none");
 			hideNotDonos = true;
-			ele.style['background-image']='url(./icons/filter_showpaidonly_off.png)';
+			ele.style['background-image']='url(./icons/filter_showpaidonly_on.png)';
 			ele.title = 'Filter — 📄 Show all messages, including the ones that have donations/cheer';
 		} else {
 			ele.dataset.state = "0";
 			//document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
 			hideNotDonos = false;
-			ele.style['background-image']='url(./icons/filter_showpaidonly_on.png)';
+			ele.style['background-image']='url(./icons/filter_showpaidonly_off.png)';
 			ele.title = 'Filter — 💲 Show only messages that have donations/cheer';
 		}
 		redoOdd();
@@ -2166,12 +2156,12 @@
 		if (ele.dataset.state == "0") {
 			ele.dataset.state = "1";
 			filterAddNameAndTime = true;
-			ele.style['background-image']='url(./icons/filter_addnametime_off.png)';
+			ele.style['background-image']='url(./icons/filter_addnametime_on.png)';
 			ele.title = '🆔 Remove name and time on filter';
 		} else {
 			ele.dataset.state = "0";
 			filterAddNameAndTime = false;
-			ele.style['background-image']='url(./icons/filter_addnametime_on.png)';
+			ele.style['background-image']='url(./icons/filter_addnametime_off.png)';
 			ele.title = '🆔 Add name and time on filter';
 		}
 
@@ -2223,10 +2213,10 @@
 	function autoShow(ele){
 		autoshow = !autoshow;
 		if (autoshow){
-			ele.style['background-image']='url(./icons/featured_auto_stop.png)';
+			ele.style['background-image']='url(./icons/featured_auto_play.png)';
 			ele.title = 'Featured — ⏹🌟 Stop auto-featuring messages';
 		} else {
-			ele.style['background-image']='url(./icons/featured_auto_play.png)';
+			ele.style['background-image']='url(./icons/featured_auto_stop.png)';
 			ele.title = 'Featured — 🌟 Auto-feature messages as they come in';
 		}
 	}
@@ -2253,12 +2243,12 @@
 		beep = !beep;
 		if (beep) {
 			ele.dataset.state = beep*1;
-			ele.style['background-image']='url(./icons/main_msg_notify_off.png)';
+			ele.style['background-image']='url(./icons/main_msg_notify_on.png)';
 			ele.title = 'Main — 🔕 Stop beeping when there is a new message';
 			playtone();
 		} else {
 			ele.dataset.state = beep*1;
-			ele.style['background-image']='url(./icons/main_msg_notify_on.png)';
+			ele.style['background-image']='url(./icons/main_msg_notify_off.png)';
 			ele.title = 'Main — 🔔 Start beeping when there is a new message';
 		}
 	}
@@ -2272,10 +2262,10 @@
 		}
 
 		if (speech) {
-			ele.style['background-image']='url(./icons/tts_incoming_messages_off.png)';
+			ele.style['background-image']='url(./icons/tts_incoming_messages_on.png)';
 			ele.title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
 		} else {
-			ele.style['background-image']='url(./icons/tts_incoming_messages_on.png)';
+			ele.style['background-image']='url(./icons/tts_incoming_messages_off.png)';
 			ele.title = 'Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech';
 		}
 	}
@@ -2696,13 +2686,13 @@
 			ele.dataset.state = "1";
 			//document.documentElement.style.setProperty("--show-queue-only", "none");
 			hideNotQueued = true;
-			ele.style['background-image']='url(./icons/queue_show_listonly_off.png)';
+			ele.style['background-image']='url(./icons/queue_show_listonly_on.png)';
 			ele.title = 'Queue — 📄 Show all messages, including the ones in queue';
 		} else {
 			ele.dataset.state = "0";
 			//document.documentElement.style.setProperty("--show-queue-only", flexOrNotToFlex);
 			hideNotQueued = false;
-			ele.style['background-image']='url(./icons/queue_show_listonly_on.png)';
+			ele.style['background-image']='url(./icons/queue_show_listonly_off.png)';
 			ele.title = 'Queue — 📑 Show only the messages in queue';
 		}
 		redoOdd();
@@ -3081,12 +3071,12 @@
 				if (bot && doNotShowBot){
 					return;
 				}
-				
+
 				if (bot && doNotShowBotNames){
 					specialMessage = true;
 					data.chatname = "";
 				}
-				
+
 
 				if (hideNames){
 					data.chatname = "";
@@ -3105,9 +3095,9 @@
 					}
 				}
 			}
-			
+
 			var chatname = "";
-			
+
 			if (data.chatname){
 				if (compactmode){
 					if (specialMessage){
