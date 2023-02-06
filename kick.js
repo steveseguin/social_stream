@@ -29,9 +29,10 @@
 	  children.push(tmp[tmp.length-2]);
 	  
 	  try {
-		var chatname = children[1].innerText;
+		var name = children[1].querySelector("span[style]");
+		var chatname = name.innerText;
 		try {
-			nameColor = children[1].style.color;
+			nameColor = name.style.color;
 		} catch(e){}
 	  } catch(e){return;}
 	  
@@ -94,9 +95,12 @@
 
 	  var hasDonation = '';
 	  if (donations) {
-		hasDonation = donations;
+		  hasDonation = donations;
 	  }
 	  
+	  chatname = chatname.replace("Channel Host", "");
+	  chatname = chatname.replace(":", "");
+	  chatname = chatname.trim();
 	 
 	  var data = {};
 	  data.chatname = chatname;
