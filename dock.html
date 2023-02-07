@@ -1732,7 +1732,11 @@
 	var speech = false;
 	var English = true;
 	var voice = false;
-	var voices = window.speechSynthesis.getVoices();
+	try {
+		var voices = window.speechSynthesis.getVoices();
+	} catch(e){
+		var voices = null;
+	}
 
 	//var voiceGender = false;   // I'll need to add the Google Speech API to the dock to make this work
 	//if (urlParams.has("gender")){
@@ -1784,6 +1788,7 @@
 		console.log(text);
 		if (!speech && !allow){return;}
 		if (!text){return;}
+		if (!voices && (voices===null)){return;}
 
 		if (!voice){
 			if (!voices || !voices.length){
