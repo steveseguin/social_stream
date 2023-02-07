@@ -753,11 +753,22 @@
 			box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.2); /* Light the button */
 		}
 		
+		@media only screen and (max-width: 620px) {
+			#chatInput:focus {
+				width: 200px;
+			}
+		}
 		
 		@media only screen and (min-width: 560px) {
 			.imgButton {
 				margin-left: 6px;
 				margin-right: 6px;
+			}
+		}
+		
+		@media only screen and (max-width: 560px) {
+			#chatInput:focus {
+				width: 180px;
 			}
 		}
 		
@@ -811,7 +822,7 @@
 				font-size: 16px;
 			}
 			#chatInput:focus {
-				width: 216px;
+				width: 170px;
 			}
 			#filter_messages:focus {
 				width: 120px;
@@ -1319,14 +1330,14 @@
 	</nav>
 
 	<div id="chatInput_parent" class="popInModal hidden">
-		<input id="chatInput" class="modalTextInput" type="text" placeholder="Chat..." />
+		<input id="chatInput" class="modalTextInput" type="text" placeholder="Send message..." />
 		<button id="chatInputButton" class="imgButton imgSmallButton" style="background-image: url(./icons/send_confirm.png);" title="💬 Send this message"></button>
 		<button id="chatClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png);" title="🧹 Clear this message"></button>
 		<button id="chatInputCloseButton" class="imgButton imgSmallButton" style="background-image: url(./icons/close.png);" title="❌ Close this dialog"></button>
 	</div>
 
 	<div id="filter_messages_parent" class="popInModal hidden">
-		<input id="filter_messages" class="modalTextInput" type="text" placeholder="Filter" onchange="filterMessages(this.value);" />
+		<input id="filter_messages" class="modalTextInput" type="text" placeholder="Filter..." onchange="filterMessages(this.value);" />
 		<button id="filterAddNameAndTimeButton" class="imgButton imgSmallButton" data-state="0" onclick="onClickFilterAddNameAndTimeButton(this);" style="background-image: url(./icons/filter_addnametime_off.png);" title="🆔 Add name and time on filter"></button>
 		<button id="filterClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png);" title="🧹 Clear this filter"></button>
 		<button id="filterCloseButton" class="imgButton imgSmallButton" style="background-image: url(./icons/close.png);" title="❌ Close this dialog"></button>
