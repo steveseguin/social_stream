@@ -1725,9 +1725,9 @@
 	
 	if (!socketserver){
 		if (!RTCPeerConnection){
-			processInput({content:{chatname:"SocialStream", chatmessage:"WebRTC is not supported in this browser; try using the server-based mode instead");
+			document.body.innerHTML = "RTC FAILED";
 		} else if (iframesFail){
-			processInput({content:{chatname:"SocialStream", chatmessage:"IFrames are not supported by this browser; try using the server-based mode instead");
+			document.body.innerHTML = "iframesFail FAILED";
 		}
 	}
 
