@@ -1330,12 +1330,13 @@
 
 	<script>
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
+		document.body.innerText = errorMsg;
 		console.error(errorMsg);
 		console.error(lineNumber);
 		console.error("Unhandled Error occured"); //or any message
 		return false;
 	};
-
+	try {
 	function getById(id) { // js helper
 		var el = document.getElementById(id);
 		if (!el) {
@@ -3994,6 +3995,9 @@
 			console.log("Third-party Javascript loaded");
 		};
 		document.head.appendChild(externalJavaascript);
+	}
+	} catch(e){
+		document.body.innerText = JSON.stringify(e);;
 	}
 
 	</script>
