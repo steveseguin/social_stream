@@ -150,15 +150,26 @@
 		}
 	});
 
-	function onElementInserted(containerSelector, className, callback) {
+	function onElementInserted(containerSelector, className) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						var ele = mutation.addedNodes[i].querySelector(".ant-comment");
-						if (ele.ignore){continue;}
-						ele.ignore=true;
-						callback(ele);
+						console.log(mutation.addedNodes[i]);
+						if ( mutation.addedNodes[i] && mutation.addedNodes[i].querySelector){
+							if (mutation.addedNodes[i].classList.contains("ant-comment")){
+								if (mutation.addedNodes[i].ignore){continue;}
+								mutation.addedNodes[i].ignore=true;
+								processMessage(mutation.addedNodes[i]);
+							} else {
+								var ele = mutation.addedNodes[i].querySelector(".ant-comment");
+								if (ele){
+									if (ele.ignore){continue;}
+									ele.ignore=true;
+									processMessage(ele);
+								}
+							}
+						}
 					}
 				}
 			});
@@ -176,9 +187,7 @@
 			clear[i].ignore = true; // don't let already loaded messages to re-load.
 			//processMessage(clear[i])
 		}
-		onElementInserted("#root", function(element){
-		  setTimeout(function(element){processMessage(element);},10, element);
-		});
+		onElementInserted("#root");
 	},2000);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
