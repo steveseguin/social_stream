@@ -30,6 +30,8 @@
 			--streaming-chat-text-color: black;
 			--single-message-color: #fffddc;
 			--single-message-text-color: black;
+			--emotes-wall-color: #fef1ff;
+			--emotes-wall-text-color: black;
 		}
 
 		@media (prefers-color-scheme: dark) {
@@ -199,6 +201,13 @@
 			color: var(--single-message-text-color);
 			background-color: var(--single-message-color)
 		}
+		
+		.link div.emotes_wall,
+		.emotes_wall {
+			color: var(--emotes-wall-text-color);
+			background-color: var(--emotes-wall-color)
+		}
+		
 
 		.link div a {
 			color: var(--link-color);
@@ -341,6 +350,11 @@
 			<h2>Featured chat overlay <a class="options-link" href="#single-message-options"
 				title="Jump to single message overlay link options">[options]</a></h2>
 			<div id="overlay" class="single_message"></div>
+		</div>
+		<div class="link" title="This link will only show the inbound emotes, bouncing them around the full page">
+			<h2>Emotes Wall <a class="options-link" href="#emote-wall-options"
+				title="Jump to the emote wall link options">[emotes]</a></h2>
+			<div id="emoteswall" class="emotes_wall"></div>
 		</div>
 		
 		<h3 title="These services require you to manually opt-in, for security purposes">Opt-in additional chat services</h3>
@@ -653,10 +667,7 @@
 					</label> Multiple docks will stay in sync as to selected messages
 				</div>
 			</div>
-
 		</div>
-
-
 
 		<a href="" id="single-message-options"></a>
 		<h2>Featured chat overlay options</h2>
@@ -769,6 +780,28 @@
 				</div>
 			</div>
 		</div>
+		
+		
+		<a href="" id="emote-wall-options"></a>
+		<h2>Emote wall options</h2>
+		<div class="options">
+			<h3>Basic options</h3>
+			<div class="options_group emotes_wall">
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param3="hidedupes">
+						<span class="slider round"></span>
+					</label> Remove duplicate emotes per message
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param3="showtime=20000">
+						<span class="slider round"></span>
+					</label> Show messages for 20s, rather than 5s.
+				</div>
+			</div>
+		</div>
+		
 		<h2>Global settings and tools</h2>
 		<div class="options">
 			<div class="options_group">

@@ -3,8 +3,8 @@
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
 	<meta content="utf-8" http-equiv="encoding" />
-	<title>Social Stream - Excited Emotes</title>
-	<meta name="title" content="Social Stream - Dashboard" />
+	<title>Social Stream - Emotes Wall</title>
+	<meta name="title" content="Social Stream - Emotes Wall" />
 	<link rel="icon" href="./icons/favicon.ico" />
 
 	<style>
@@ -31,7 +31,7 @@
 			--author-font-size: 17px;
 			--electron-drag-fix: drag;
 			--time-arrived-padding: 1px;
-			--width: 24px;
+			--width: 48px;
 			--x-speed: 13s;
 			--y-speed: 7s;
 		}
@@ -331,7 +331,7 @@
 	var showbadges = true;
 	var colorized = false;
 	var horizontal = false;
-	var autoTimeoutEnabled = true;
+	var showdupes = true;
 
 	var encode = false;
 
@@ -359,8 +359,8 @@
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 0; // 0 disables.
 	}
 
-	if (urlParams.has("disabletimeout")) {
-		autoTimeoutEnabled = false;
+	if (urlParams.has("hidedupes")) {
+		showdupes = false;
 	}
 
 	if (urlParams.has("session")){
@@ -593,7 +593,6 @@
 	}
 
 	function processInput(data){
-		console.log(data);
 		if ("mid" in data){
 			return;
 		} else if ("pin" in data){
@@ -672,7 +671,6 @@
 
 	function fadeOutNode(node){
 		if (node.timer){return;}
-		console.log(node);
 		node.style.animation += ", fadeOut 1s normal forwards ease";
 		node.timer = setTimeout(function(node){
 		//	node.remove();
@@ -735,24 +733,53 @@
 		let tmp = document.createElement("div");
 		tmp.innerHTML = data.chatmessage;
 		
-		var svgs = tmp.querySelectorAll("svg");
+		var svgs = tmp.querySelectorAll("svg"); // not bothering to check for dupes.
+		var images = tmp.querySelectorAll("img");
 		
 		var emojis = [];
 		var text = tmp.textContent || tmp.innerText || "";
 		emojis = text.match(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g);
-		//console.log(emojis);
-		//emojis = emojis.filter(elm => elm);
 		
-		var images = tmp.querySelectorAll("img");
-		images.forEach(ele=>{
-			ele.onerror = function(){
-				this.style.display='none';
-				this.remove();
+		
+		if (!showdupes){
+			try {
+				emojis = [...new Set(emojis)];
+			}catch(e){console.error(e);}
+			try{	
+				var images2 = {};
+				var images3 = [];
+			
+				for (var i=0;i<images.length;i++){
+					if (images[i].src && images2[images[i].src]){
+						continue;
+					}
+					images[i].onerror = function(){
+						this.style.display='none';
+						this.remove();
+					}
+					images2[images[i].src] = true;
+					images3.push(images[i]);
+				};
+				images = images3;
+			} catch(e){
+				console.error(e);
 			}
-		});
+		} else {
+			images.forEach(ele=>{
+				ele.onerror = function(){
+					this.style.display='none';
+					this.remove();
+				}
+			});
+		}
 
 
 		if (emojis){
+			
+			if (!showdupes){
+				emojis = [...new Set(emojis)];
+			}
+			
 			emojis.forEach(img=>{
 				var node = document.createElement('div');
 				var node2 = document.createElement('div');
@@ -790,6 +817,7 @@
 		}
 		
 		images.forEach(img=>{
+			if (!img){return;}
 			var node = document.createElement('div');
 			node.appendChild(img);
 			
