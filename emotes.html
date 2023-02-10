@@ -9,36 +9,17 @@
 
 	<style>
 		:root {
-			--show-emoji-only: flex ;
-			--list-or-horizontal: flex;
-			--show-donos-only: flex;
-			--show-queue-only: flex;
-			--scale-output-moz: scale(1.0);
-			--scale-output: 1.0;
 			--font-color: #FFF;
 			--font-color-name: #DDD;
 			--background-color: #36393F;
-			--link-color: #5AF;
-			--highlight-base: #FFF4;
-			--highlight-base2: #4444;
-			--highlight-compact: #3335;
-			--highlight-compact2: #3333;
-			--stylized-emoji: 200%;
-			--stylized-img: 23px;
-			--show-images: inline-block;
-			--comment-font-size: unset;
-			--message-line-height: 22px;
-			--author-font-size: 17px;
+			--font-size: 240%;
 			--electron-drag-fix: drag;
-			--time-arrived-padding: 1px;
 			--width: 48px;
 			--x-speed: 13s;
 			--y-speed: 7s;
 		}
 
 		body {
-			zoom: var(--scale-output);
-			-moz-transform: var(--scale-output-moz);
 			-moz-transform-origin: 0 0;
 			width:100%;
 			height:100%;
@@ -72,8 +53,6 @@
 			transform: translateY(calc(100vh - var(--width)));
 		  }
 		}
-
-		
 
 		/* latin-ext */
 		@font-face {
@@ -169,11 +148,9 @@
 			100% { opacity: 1; }
 		}
 		
-		
-
 		img {
-			max-width: 72px;
-			max-height: 48px;
+			max-width: calc(var(--width) * 1.5);
+			max-height: var(--width);
 			position:relative;
 			margin: auto;
 			padding: 0;
@@ -182,76 +159,19 @@
 		}
 
 
-		
-		@keyframes ani {
-		 0% {
-			transform: rotate(0deg);
-			  -webkit-transform: rotate(0deg);
-			   -moz-transform: rotate(0deg);
-				-ms-transform: rotate(0deg);
-				 -o-transform: rotate(0deg);
-					transform: rotate(0deg);
-		  }
-		  50% {
-		   transform: rotate(45deg);
-			  -webkit-transform: rotate(45deg);
-			   -moz-transform: rotate(45deg);
-				-ms-transform: rotate(45deg);
-				 -o-transform: rotate(45deg);
-					transform: rotate(45deg);
-		  }
-		  100% {
-			transform: rotate(0deg);
-			-webkit-transform: rotate(0deg);
-			   -moz-transform: rotate(0deg);
-				-ms-transform: rotate(0deg);
-				 -o-transform: rotate(0deg);
-					transform: rotate(0deg);
-		  }
-		}
-		
-		.brush{
-			animation: ani 400ms alternate 1;
-		}
-
-		@keyframes expand {
-			0% {
-				max-width: 0px;
-			}
-			20% {
-				max-width: 300px;
-			}
-			50% {
-				max-width: 800px;
-			}
-			100% {
-				max-width: 20000px;
-			}
-		}
-
-		.icon {
-			margin: 4px 2px auto 1px;
-			border-radius: 50%;
-		}
-
-		.invert {
-			filter: invert(1);
-		}
-
 		.hidden {
 			display:none!important;
 		}
 
-
 		.emoji{
-			font-size: 200%;
+			font-size: var(--font-size);
 			vertical-align: sub;
 			text-shadow: 0 0 #0000;
 			width: var(--width);
 			height: var(--width);
 			position:absolute;
+			object-fit:contain;
 		}
-		
 		
 		.electronDraggable {
 			-webkit-app-region: var(--electron-drag-fix);
@@ -261,8 +181,6 @@
 			0% { opacity: 1; }
 			100% { opacity: 0; }
 		}
-		
-		
 
 	</style>
 </head>
@@ -300,41 +218,16 @@
 	})(window);
 
 	var urlParams = new URLSearchParams(window.location.search);
-	var channel = null;
 	var iframe = null;
-	var queue = [];
-	var selectedQueue = [];
-	var datestamp = true;
-	var nextComment = null;
 	var roomID = "test";
-	var messageTimeout = 0;
-	var filtering = "";
-	var filterAddNameAndTime = false;
-	var applyCustomActions = false;
-	var showsource = true;
-	var compactmode = false;
 	var darkmode = null;
 	var scale = 1;
-	var forceAutoscroll = false;
-	var triggerState = true;
-	var emojis = true;
-	var pauseState = false;
-	var timeoutTimer = null;
 	var isOBSBrowserSource = false;
 	var customNodeLimit = false;
 	var body = document.body;
 	var html = document.documentElement;
 	var mainOutputWindow = document.getElementById("output");
-	var fileStream, writer; // streaming message writer
-	var newFileHandle = false; // single message writer
-	var singlewriter = false;
-	var odd = false;
-	var showbadges = true;
-	var colorized = false;
-	var horizontal = false;
 	var showdupes = true;
-
-	var encode = false;
 
 	try {
 		if (electronApi){ // fix for electron dragging.
@@ -417,16 +310,6 @@
 	};
 
 
-	var stylizeEmoji = true;
-	if (urlParams.has("emojisize") || urlParams.has("size")){
-		var emojisize = urlParams.get("emojisize") || urlParams.get("size") || 110;
-		
-		document.documentElement.style.setProperty("--stylized-emoji", parseInt(emojisize)+"%");
-		document.documentElement.style.setProperty("--message-line-height", "30px");
-		document.documentElement.style.setProperty("--stylized-img", "35px");
-	}
-
-	
 	if (urlParams.has("limit")){
 		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
 	}
@@ -446,26 +329,14 @@
 		doNotShowBot = true;
 	}
 
-	
-	var autoshow = false;
-	var autoshowdonos = false;
-
-	if (urlParams.has("autoshow")){
-		autoshow = true;
-		document.getElementById("autoshow").classList.add("pressed");
-	}
-
-	var autoShowQueue = [];
-
-	if (urlParams.has("autoshowdonos")){
-		autoshowdonos = true;
-	}
-
 	if (urlParams.has("scale")){
 		scale = urlParams.get("scale") || 1.0;
 		scale = parseFloat(scale);
-		document.documentElement.style.setProperty("--scale-output", scale);
-		document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
+		let width = parseInt(48 * scale);
+		document.documentElement.style.setProperty("--width", width+"px");
+		let fontsize = parseInt(240 * scale);
+		document.documentElement.style.setProperty("--font-size", fontsize+"%");
+		
 	}
 
 	var conCon = 1;
@@ -511,46 +382,13 @@
 		document.body.style.backgroundColor = "#"+chroma;
 	}
 	
-	function upscaleImages(data){ // for third party APIs
-		let chatimg = "";
-		if (data.type && (data.type == "twitch") && data.chatname){
-			chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
-		} else if (data.type && (data.type == "youtube") && data.chatimg){
-			chatimg = data.chatimg.replace("=s32-", "=s256-");
-			chatimg = chatimg.replace("=s64-", "=s256-");
-		} else {
-			chatimg = data.chatimg || "https://socialstream.ninja/unknown.png";
+	try {
+		if (window.obsstudio){
+			window.obsstudio.getStatus(function(obsStatus){
+				isOBSBrowserSource = true;
+			});
 		}
-		return chatimg;
-	}
-
-	function ajax(object2send, url, ajaxType="PUT"){
-		var xhttp = new XMLHttpRequest();
-		xhttp.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-				// success
-			} else {
-				console.error("there was an error sending to the API");
-			}
-		};
-		xhttp.open(ajaxType, url, true); // async = true
-		xhttp.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-		xhttp.send(JSON.stringify(object2send));
-	}
-
-	
-		try {
-			if (window.obsstudio){
-				window.obsstudio.getStatus(function(obsStatus){
-					document.body.style.overflow = "hidden";
-					mainOutputWindow.style.overflow = "hidden";
-					scale = scale*2.0
-					document.documentElement.style.setProperty("--scale-output", scale);
-					document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
-					isOBSBrowserSource = true;
-				});
-			}
-		} catch(e){}
+	} catch(e){}
 	
 
 	if (urlParams.has("darkmode")){
@@ -565,32 +403,13 @@
 		darkmode = true;
 	} else {
 		document.body.classList.add("lightmode");
-		document.documentElement.style.setProperty("--link-color", "#06F");
 		document.documentElement.style.setProperty("--font-color-name", "#000");
 		document.documentElement.style.setProperty("--background-color", "#FFF0");
 		document.documentElement.style.setProperty("--font-color", "#000");
-		document.documentElement.style.setProperty("--highlight-base2", "#EEE4", "important");
 	}
-
-
 
 	if (urlParams.has("transparent")){
 		document.documentElement.style.setProperty("--background-color", "#0000", "important");
-	}
-
-	function applyHiddenState(node){
-		if (hideNotDonos && node.classList.contains("noDono")){
-			node.classList.add("hidden");
-
-		} else if (hideNotQueued && !node.classList.contains("queued") && !node.classList.contains("pinned")){
-			node.classList.add("hidden");
-
-		} else if (hideTextOnly && node.classList.contains("noText")){
-			node.classList.add("hidden");
-
-		} else {
-			node.classList.remove("hidden");
-		}
 	}
 
 	function processInput(data){
@@ -641,35 +460,6 @@
 		}
 	});
 	
-
-	function createElementFromHTML(htmlString) {
-		var div = document.createElement('div');
-		div.innerHTML = htmlString.trim();
-		return div.firstChild;
-	}
-
-
-	function errorImage(ele){
-		ele.style.display = "none";
-	}
-
-	function processHTML(data){
-		//
-	}
-
-	async function fetchWithTimeout(resource, options = {}) { // https://dmitripavlutin.com/timeout-fetch-request/
-		const { timeout = 8000 } = options;
-
-		const controller = new AbortController();
-		const id = setTimeout(() => controller.abort(), timeout);
-		const response = await fetch(resource, {
-			...options,
-			signal: controller.signal
-		});
-		clearTimeout(id);
-		return response;
-	}
-
 	function fadeOutNode(node){
 		if (node.timer){return;}
 		node.style.animation += ", fadeOut 1s normal forwards ease";
@@ -712,7 +502,6 @@
 		}
 	}
 
-
 	function processData(data){
 
 		var invisible = false;
@@ -739,8 +528,13 @@
 		
 		var emojis = [];
 		var text = tmp.textContent || tmp.innerText || "";
+		text = text.replace("’","");
+		text = text.replace('"',"");
+		text = text.replace("'","");
+		
 		emojis = text.match(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g);
 		
+		console.log(emojis);
 		
 		if (!showdupes){
 			try {
@@ -887,51 +681,6 @@
 		
 		removeNode()
 		
-	}
-
-
-	function sendDataP2P(data){
-		if (!data){
-			document.querySelectorAll(".last-message").forEach(ele=>{ // last message sent was to clear the overlay
-				ele.classList.remove("last-message"); // no overlay is now active.
-			});
-		}
-		try {
-			if (socketserver){
-				socketserver.send(JSON.stringify(data));
-			}
-			if (iframe){
-				var msg = {};
-				msg.overlayNinja = {};
-				msg.overlayNinja = data;
-				
-				var keys = Object.keys(connectedPeers);
-				for (var i = 0; i<keys.length;i++){
-					var UUID = keys[i];
-					var label = connectedPeers[keys[i]];
-					if (label !== "dock"){
-						iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs", "UUID":UUID}, '*'); // send only to viewers of this stream; not back to the chrome extension.. legacy?
-					}
-				}
-			}
-		} catch(e){
-			console.error(e);
-		}
-	}
-
-	function getPosition(event) {
-		var posx = 0;
-		var posy = 0;
-
-		if (event.pageX || event.pageY){
-			posx = event.pageX;
-			posy = event.pageY;
-		} else if (event.clientX || event.clientY) {
-			posx = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-			posy = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-		}
-
-		return {x: posx, y: posy};
 	}
 
 	if (urlParams.has('js')){  // ie: &js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js
