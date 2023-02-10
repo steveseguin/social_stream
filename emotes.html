@@ -673,7 +673,7 @@
 		if (node.timer){return;}
 		node.style.animation += ", fadeOut 1s normal forwards ease";
 		node.timer = setTimeout(function(node){
-		//	node.remove();
+			node.remove();
 		},1000,node);
 		
 	}
@@ -735,6 +735,8 @@
 		
 		var svgs = tmp.querySelectorAll("svg"); // not bothering to check for dupes.
 		var images = tmp.querySelectorAll("img");
+		
+		console.log(images);
 		
 		var emojis = [];
 		var text = tmp.textContent || tmp.innerText || "";
