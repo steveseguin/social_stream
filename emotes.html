@@ -6,7 +6,6 @@
 	<title>Social Stream - Emotes Wall</title>
 	<meta name="title" content="Social Stream - Emotes Wall" />
 	<link rel="icon" href="./icons/favicon.ico" />
-
 	<style>
 		:root {
 			--font-color: #FFF;
@@ -189,14 +188,14 @@
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
 		console.error(errorMsg);
 		console.error(lineNumber);
-		console.error("Unhandled Error occured"); //or any message
+		console.error("Unhandled Error occured");
 		return false;
 	};
 
-	function getById(id) { // js helper
+	function getById(id) {
 		var el = document.getElementById(id);
 		if (!el) {
-			el = document.createElement("span"); // create a fake element
+			el = document.createElement("span");
 		}
 		return el;
 	}
@@ -245,7 +244,6 @@
 			},5000);
 		}
 	} catch(e){
-		//console.error(e);
 	}
 
 	var timeoutDelay = 5000;
@@ -336,7 +334,6 @@
 		document.documentElement.style.setProperty("--width", width+"px");
 		let fontsize = parseInt(240 * scale);
 		document.documentElement.style.setProperty("--font-size", fontsize+"%");
-		
 	}
 
 	var conCon = 1;
@@ -534,11 +531,11 @@
 		
 		emojis = text.match(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g);
 		
-		console.log(emojis);
-		
 		if (!showdupes){
 			try {
-				emojis = [...new Set(emojis)];
+				if (emojis){
+					emojis = [...new Set(emojis)];
+				}
 			}catch(e){console.error(e);}
 			try{	
 				var images2 = {};
@@ -568,9 +565,7 @@
 			});
 		}
 
-
 		if (emojis){
-			
 			if (!showdupes){
 				emojis = [...new Set(emojis)];
 			}
@@ -581,11 +576,8 @@
 				
 				node.classList.add("emoji");
 				node.classList.add("el-wrap");
-				//node.classList.add("x");
 				node2.classList.add("el");
-				//node2.classList.add("y");
 				
-				//node.style.animation = "x "+(Math.random()*10+5)+"s linear infinite alternate, fadeIn 2s normal forwards ease";
 				node2.style.animation = "y "+(Math.random()*5+5)+"s linear infinite alternate";
 				
 				node2.style.animationDelay = Math.random()*-35+"s";
@@ -596,9 +588,7 @@
 				if (data.type){
 					node.dataset.sourceType = data.type;
 				}
-				//transitionType.forEach(classtype=>{
-				//	node.classList.add(classtype);
-				//});
+				
 				setTimeout(function(node){
 					mainOutputWindow.appendChild(node);
 					node.style.animation = (Math.random()*10+5)+"s linear "+(Math.random()*-35)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
@@ -618,24 +608,13 @@
 			
 			node.classList.add("emoji");
 			node.classList.add("el-wrap");
-			//node.classList.add("x");
 			img.classList.add("el");
-			//img.classList.add("y");
-			
-			//node.style.animation = "x "+(Math.random()*10+5)+"s linear infinite alternate, fadeIn 2s normal forwards ease";
 			img.style.animation = "y "+(Math.random()*5+5)+"s linear infinite alternate";
-			
-			//node.style.animationDelay = Math.random()*-35+"s";
 			img.style.animationDelay = Math.random()*-35+"s";
 			
 			if (data.type){
 				node.dataset.sourceType = data.type;
 			}
-			//transitionType.forEach(classtype=>{
-			//	node.classList.add(classtype);
-			//});
-			//mainOutputWindow.appendChild(node);
-			
 			setTimeout(function(node){
 				mainOutputWindow.appendChild(node);
 				node.style.animation = (Math.random()*10+5)+"s linear "+(Math.random()*-35)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
@@ -650,28 +629,15 @@
 			node.appendChild(img);
 			node.classList.add("emoji");
 			node.classList.add("el-wrap");
-			//node.classList.add("x");
 			img.classList.add("el");
-			//img.classList.add("y");
-									
-			//node.style.animation = "x "+(Math.random()*10+5)+"s linear infinite alternate, fadeIn 2s normal forwards ease";
 			img.style.animation = "y "+(Math.random()*5+5)+"s linear infinite alternate";
-			
-			//node.style.animationDelay = Math.random()*-35+"s";
 			img.style.animationDelay = Math.random()*-35+"s";
 			
 			if (data.type){
 				node.dataset.sourceType = data.type;
 			}
-			//transitionType.forEach(classtype=>{
-			//	node.classList.add(classtype);
-			//});
-		//	mainOutputWindow.appendChild(node);
-			
 			setTimeout(function(node){
 				mainOutputWindow.appendChild(node);  // 3s ease-in 1s 2 reverse both paused slidein
-				
-				// 3s ease-in 1s 2 reverse both paused slidein
 				node.style.animation = (Math.random()*10+5)+"s linear "+(Math.random()*-35)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
 				if (timeoutDelay){
 					setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
@@ -688,7 +654,6 @@
 		var jsURL = urlParams.get('js');
 		jsURL = decodeURI(jsURL);
 		console.log(jsURL);
-		// type="text/javascript" crossorigin="anonymous"
 		var externalJavaascript = document.createElement('script');
 		externalJavaascript.type = 'text/javascript';
 		externalJavaascript.crossorigin = 'anonymous';
