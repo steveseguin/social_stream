@@ -247,8 +247,8 @@
 			font-size: 100%;
 			vertical-align: sub;
 			text-shadow: 0 0 #0000;
-			width:0;
-			height:0;
+			width: var(--width);
+			height: var(--width);
 		}
 		
 		
@@ -735,8 +735,6 @@
 		
 		var svgs = tmp.querySelectorAll("svg"); // not bothering to check for dupes.
 		var images = tmp.querySelectorAll("img");
-		
-		console.log(images);
 		
 		var emojis = [];
 		var text = tmp.textContent || tmp.innerText || "";
