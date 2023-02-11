@@ -23,13 +23,9 @@
 	  var chatmessage = "";
 	  var nameColor = "";
 	  
-	  var tmp = ele.children;
-	  var children = []
-	  children.push(tmp[tmp.length-1]);
-	  children.push(tmp[tmp.length-2]);
-	  
+	 
 	  try {
-		var name = children[1].querySelector("span[style]");
+		var name = ele.children[0].querySelector("span[style]");
 		var chatname = name.innerText;
 		try {
 			nameColor = name.style.color;
@@ -38,7 +34,7 @@
 	  
 	  var chatbadges = [];
 	  
-	  children[1].querySelectorAll("[class*='badge'] img[src], .LevelNumber svg").forEach(badge=>{
+	  ele.children[0].querySelectorAll("[class*='badge'] img[src], .LevelNumber svg").forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "IMG"){
 				var tmp = {};
@@ -54,27 +50,28 @@
 		} catch(e){  }
 	  });
 	  
+	  console.log(ele);
+	  
+	  var cloned =  ele.cloneNode(true);
+	  cloned.children[0].outerHTML = "";
+	  for (var i=cloned.children.length-1;i>=0;i--){
+		  if (cloned.children[i].nodeName.toLowerCase() === "div"){
+			  cloned.children[i].outerHTML = "";
+		  }
+	  }
 	  
 	  if (!settings.textonlymode){
-		  if (!chatmessage){
-			  try {
-				chatmessage = getAllContentNodes(children[0]);
-			  } catch(e){}
-		  }
+		  try {
+			chatmessage = getAllContentNodes(cloned);
+		  } catch(e){}
 		  
-		  if (!chatmessage){
-			  try {
-				chatmessage = children[0].textContent;
-			  } catch(e){}
-		  }
 	  } else {
 		  try{
-			var cloned = children[0].cloneNode(true);
 			var childrens = cloned.querySelectorAll("[alt]");
 			for (var i =0;i<childrens.length;i++){
 				childrens[i].outerHTML = childrens[i].alt;
 			}
-			chatmessage = children[0].innerText;
+			chatmessage = cloned.innerText;
 		  } catch(e){}
 	  }
 	  
@@ -151,8 +148,6 @@
 	
 	var lastMessage = "";
 	var settings = {};
-	// settings.textonlymode
-	// settings.streamevents
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
@@ -161,16 +156,17 @@
 		}
 	});
 
-	function onElementInserted(target, callback) {
+	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						if (mutation.addedNodes[i].id && mutation.addedNodes[i].id.startsWith("message-temp")){continue;}
-						if (mutation.addedNodes[i].ignore){continue;}
+						if (pastMessages.includes(mutation.addedNodes[i].id)){continue;}
 						try {
-							mutation.addedNodes[i].ignore=true;
-							callback(mutation.addedNodes[i].childNodes[0].childNodes[0].childNodes[0].childNodes[0]);
+							pastMessages.push(mutation.addedNodes[i].id)
+							pastMessages = pastMessages.slice(-200);
+							processMessage(mutation.addedNodes[i].childNodes[0].childNodes[0].childNodes[0].childNodes[0]);
 						} catch(e){}
 					}
 				}
@@ -181,18 +177,19 @@
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 	}
+	
+	var pastMessages = [];
+	
 	console.log("Social stream injected");
 	var xxx = setInterval(function(){
-		
 		if (document.getElementById("app")){
 			clearInterval(xxx);
+			
 			var clear = document.querySelectorAll(".message > [id*='message-']");
 			for (var i = 0;i<clear.length;i++){
-				clear[i].ignore = true; // don't let already loaded messages to re-load.
+				pastMessages.push(clear[i].id);
 			}
-			onElementInserted(document.getElementById("app"), function(element){
-			  setTimeout(function(element){processMessage(element);},10, element);
-			});
+			onElementInserted(document.getElementById("app"));
 		}
 	},2000);
 	

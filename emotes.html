@@ -511,6 +511,9 @@
 			return;
 		}
 		
+		
+		console.log(data);
+		
 		if (data.chatname){
 			if (custombot && doNotShowBot && custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){ // because why not. :)
 				return;
@@ -520,11 +523,11 @@
 		let tmp = document.createElement("div");
 		tmp.innerHTML = data.chatmessage;
 		
-		var svgs = tmp.querySelectorAll("svg"); // not bothering to check for dupes.
-		var images = tmp.querySelectorAll("img");
+		let svgs = tmp.querySelectorAll("svg"); // not bothering to check for dupes.
+		let images = tmp.querySelectorAll("img");
 		
-		var emojis = [];
-		var text = tmp.textContent || tmp.innerText || "";
+		let emojis = [];
+		let text = tmp.textContent || tmp.innerText || "";
 		text = text.replace("’","");
 		text = text.replace('"',"");
 		text = text.replace("'","");
@@ -538,8 +541,8 @@
 				}
 			}catch(e){console.error(e);}
 			try{	
-				var images2 = {};
-				var images3 = [];
+				let images2 = {};
+				let images3 = [];
 			
 				for (var i=0;i<images.length;i++){
 					if (images[i].src && images2[images[i].src]){
@@ -566,9 +569,6 @@
 		}
 
 		if (emojis){
-			if (!showdupes){
-				emojis = [...new Set(emojis)];
-			}
 			
 			emojis.forEach(img=>{
 				var node = document.createElement('div');
