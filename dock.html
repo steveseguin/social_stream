@@ -1077,6 +1077,10 @@
 		.alignbottom {
 			bottom: 0;
 			position: absolute;
+			right:0px;
+			overflow-y:auto;
+			max-height:100%;
+			overflow-x: hidden;
 		}
 
 		.fade {
@@ -1254,7 +1258,7 @@
 
 	</style>
 </head>
-<body class='electronDraggable'>
+<body id="main" class='electronDraggable'>
 	<div id="pinned" class="output notcompactmode"></div>
 	<div id="output" class="output notcompactmode"></div>
 	<div id="menu" class="electronDraggable">
@@ -1491,9 +1495,10 @@
 		document.documentElement.style.setProperty("--list-or-horizontal", "block");
 		document.documentElement.style.setProperty("--time-arrived-padding", "8px");
 	}
-
+	var alignbottom = false;
 	if (urlParams.has("alignbottom")){
 		document.getElementById("output").classList.add("alignbottom");
+		alignbottom = true;
 	}
 
 	var attachmentsonly = false;
@@ -2605,16 +2610,29 @@
 			ele.style['background-image']='url(./icons/scroll_to_bottom_off.png)';
 			ele.title = 'Scroll to bottom';
 		}
-		window.scrollTo({
-			top: document.body.scrollHeight,
-			left: 0,
-			behavior: 'smooth'
-		});
-		window.scrollBy({
-			top: 100,
-			left: 0,
-			behavior: 'smooth'
-		});
+		if (alignbottom){
+			getById("output").scrollTo({
+				top: getById("output").scrollHeight,
+				left: 0,
+				behavior: 'smooth'
+			});
+			getById("output").scrollBy({
+				top: 100,
+				left: 0,
+				behavior: 'smooth'
+			});
+		} else {
+			document.body.scrollTo({
+				top: getById("output").scrollHeight,
+				left: 0,
+				behavior: 'smooth'
+			});
+			document.body.scrollBy({
+				top: 100,
+				left: 0,
+				behavior: 'smooth'
+			});
+		}
 	}
 
 	function filterMessages(keyword="") {
@@ -3386,6 +3404,15 @@
 				imageElements[i].onload = function(){
 					if (reversed && !forceAutoscroll){
 						//
+					} else if (alignbottom){
+						var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight );
+						if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+150)) || forceAutoscroll){
+							getById("output").scrollTo({
+								top: height,
+								left: 0,
+								behavior: 'smooth'
+							});
+						}
 					} else {
 						var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
 						if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+150)) || forceAutoscroll){
@@ -3425,7 +3452,7 @@
 			} else {
 				var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
 				if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+150)) || forceAutoscroll){
-					window.scrollTo({
+					getById("output").scrollTo({
 						top: height,
 						left: 0,
 						behavior: 'smooth'
