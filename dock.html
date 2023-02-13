@@ -1455,6 +1455,7 @@
 	var colorized = false;
 	var horizontal = false;
 	var autoTimeoutEnabled = true;
+	var autoScrollCatch = 200;
 
 	var encode = false;
 
@@ -1548,6 +1549,7 @@
 	var scrolltype = "instant";
 	if (urlParams.has("smooth")){
 		scrolltype = "smooth";
+		autoScrollCatch = autoScrollCatch*2;
 	}
 
 	var twoLines = false;
@@ -1762,6 +1764,7 @@
 		scale = parseFloat(scale);
 		document.documentElement.style.setProperty("--scale-output", scale);
 		document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
+		autoScrollCatch *= scale;
 	}
 
 	var conCon = 1;
@@ -3488,7 +3491,7 @@
 						//
 					} else if (alignbottom){
 						var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight );
-						if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+150)) || forceAutoscroll){
+						if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){
 							getById("output").scrollTo({
 								top: height,
 								left: 0,
@@ -3497,7 +3500,7 @@
 						}
 					} else {
 						var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-						if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+150)) || forceAutoscroll){
+						if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){
 							window.scrollTo({
 								top: height,
 								left: 0,
@@ -3533,7 +3536,7 @@
 				//
 			} else if (alignbottom){
 				var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight );
-				if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+150)) || forceAutoscroll){
+				if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){
 					getById("output").scrollTo({
 						top: height,
 						left: 0,
@@ -3542,7 +3545,7 @@
 				}
 			} else { 
 				var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-				if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+150)) || forceAutoscroll){
+				if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){
 					getById("output").scrollTo({
 						top: height,
 						left: 0,
