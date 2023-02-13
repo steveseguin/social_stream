@@ -573,20 +573,34 @@
 			background-color: var(--highlight-compact2);
 		}
 
-		.highlight-chat.donation{
+		.donation{
 			background-color: #FEFFAD33;
 		}
 
-		.highlight-chat.odd.donation:not(.expand){
+		.odd.donation:not(.expand){
 			background-color: #FDFF6533;
 		}
 
-		.highlight-chat.member{
+		.member{
 			background-color: #ADFEFF33;
 		}
 
-		.highlight-chat.odd.member:not(.expand){
+		.odd.member:not(.expand){
 			background-color: #65FDFF33;
+		}
+		
+		.bubble {
+			border-radius: 20px;
+			padding: 10px;
+			background-color: #000;
+			margin: 0px 0 0px 5px;
+		}
+		
+		body.lightmode .bubble {
+			border-radius: 20px;
+			padding: 10px;
+			background-color: #FFF;
+			margin: 0px 0 0px 5px;
 		}
 
 		.donationAmount{
@@ -1486,6 +1500,21 @@
 
 	if (urlParams.has("disabletimeout")) {
 		autoTimeoutEnabled = false;
+	}
+	
+	var highlightMembers = true;
+	if (urlParams.has("nomemberhighlight")) {
+		highlightMembers = false;
+	}
+	
+	var highlightDonos = true;
+	if (urlParams.has("nodonohighlight")) {
+		highlightDonos = false;
+	}
+	
+	var bubble = false;
+	if (urlParams.has("bubble")) {
+		bubble = true;
 	}
 
 	if (urlParams.has("session")){
@@ -3353,14 +3382,16 @@
 			if (bot && !horizontal){
 				node.classList.add("bot");
 			}
-
-			if (data.hasDonation){
+			
+			if (!highlightDonos || !bubble){
+				// pass
+			} else if (data.hasDonation){
 				node.classList.add("donation");
 			} else {
 				node.classList.add("noDono");
 			}
 
-			if (data.hasMembership){
+			if (!bubble && highlightMembers && data.hasMembership){
 				node.classList.add("member");
 			}
 
@@ -3404,7 +3435,36 @@
 			});
 
 			mainOutputWindow.appendChild(node);
+			
+			if (bubble && largeavatar){
+				node.querySelector(".hl-rightside").classList.add("bubble");
+				
+				if (!highlightDonos){ 
+					//
+				} else if (data.hasDonation){
+					node.querySelector(".hl-rightside").classList.add("donation");
+				} else {
+					node.querySelector(".hl-rightside").classList.add("noDono");
+				}
 
+				if (highlightMembers && data.hasMembership){
+					node.querySelector(".hl-rightside").classList.add("member");
+				}
+			} else if (bubble){
+				node.querySelector(".hl-message").classList.add("bubble");
+				
+				if (!highlightDonos){ 
+					//
+				} else if (data.hasDonation){
+					node.querySelector(".hl-message").classList.add("donation");
+				} else {
+					node.querySelector(".hl-message").classList.add("noDono");
+				}
+
+				if (highlightMembers && data.hasMembership){
+					node.querySelector(".hl-message").classList.add("member");
+				}
+			}
 
 			if (data.type && (data.type == "twitch") && avatars && data.chatimg){
 				var twitchImage = new Image();
