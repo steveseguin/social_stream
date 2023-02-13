@@ -1534,10 +1534,14 @@
 		}
 	}
 	
-	
+	var twoLines = false;
 	var largeavatar = false;
 	if (urlParams.has("largeavatar")){
 		largeavatar = true;
+	} else if (urlParams.has("twolines")){
+		twoLines = true;
+		document.documentElement.style.setProperty("--list-or-horizontal", "block");
+		document.documentElement.style.setProperty("--time-arrived-padding", "8px");
 	}
 
 	var splitMode = "";
@@ -1551,12 +1555,7 @@
 		autoScrollCatch = autoScrollCatch*2;
 	}
 
-	var twoLines = false;
-	if (urlParams.has("twolines")){
-		twoLines = true;
-		document.documentElement.style.setProperty("--list-or-horizontal", "block");
-		document.documentElement.style.setProperty("--time-arrived-padding", "8px");
-	}
+	
 	var alignbottom = false;
 	if (urlParams.has("alignbottom")){
 		document.getElementById("output").classList.add("alignbottom");
