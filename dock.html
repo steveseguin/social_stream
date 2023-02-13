@@ -32,6 +32,7 @@
 			--author-font-size: 17px;
 			--electron-drag-fix: drag;
 			--time-arrived-padding: 1px;
+			--profile-pic-border: 0 solid black;
 		}
 		.closeBtn {
 			position: absolute;
@@ -272,7 +273,43 @@
 			object-fit: contain;
 			vertical-align: top;
 		}
-
+		
+		.hl-leftside{
+			width:75px;
+			height:75px;
+			display:inline-block;
+			margin:3px;
+			
+		}
+		.hl-leftside img {
+			max-height:100%;
+			max-width:100%;
+			object-fit: contain;
+			margin:0;
+			padding:0;
+		}
+		
+		.hl-righttopline {
+			max-height:16px;
+			display:block;
+			margin: 8px 2px;
+		}
+		.hl-righttopline .hl-source-type {
+			max-height: 11px;
+			vertical-align: baseline;
+			top: 1px;
+		}
+		.hl-righttopline .hl-badge {
+			max-height: 19px;
+		}
+		.hl-rightside {
+			display:inline-block;
+			margin: 0px 0px 0px 5px
+		}
+		.hl-rightside .hl-message{
+			margin: 1px 7px;
+		}
+		
 		.bot > .hl-message {
 			padding: 5px 0 5px 5px;
 			font-style: italic;
@@ -1082,6 +1119,10 @@
 			max-height:100%;
 			overflow-x: hidden;
 		}
+		
+		 .hl-profile-pic {
+			border: var(--profile-pic-border);
+		}
 
 		.fade {
 			animation: fadeout var(--fade-out-time);
@@ -1482,6 +1523,21 @@
 
 	if (urlParams.has("hidesource")){
 		showsource = false;
+	}
+	
+	if (urlParams.has("border")){
+		if (urlParams.get("border")){
+			document.documentElement.style.setProperty("--profile-pic-border", "3px solid "+urlParams.get("border"));
+		} else {
+			document.documentElement.style.setProperty("--profile-pic-border", "3px solid black");
+		}
+	}
+	
+	
+	var bubbleMode = false;
+	if (urlParams.has("bubble")){
+		bubbleMode = true;
+		
 	}
 
 	var splitMode = "";
@@ -3186,7 +3242,9 @@
 
 			var chatname = "";
 
-			if (data.chatname){
+			if (bubbleMode){
+				chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' + (data.chatname||"") +chatbadges +"</div>";
+			} else if (data.chatname){
 				if (compactmode){
 					if (specialMessage){
 						chatname = '<div class="hl-name'+splitMode+'"></div>';
@@ -3221,7 +3279,25 @@
 			}
 
 
-			if (twoLines){
+			if (bubbleMode){
+				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+					+ '<div class="hl-leftside">'
+						+ chatImg
+					+ '</div>'
+					+ '<div class="hl-rightside">'
+						+ '<div class="hl-righttopline">'
+							+ chatname
+							+ showType
+							+ timeArrived
+							+ "<div class='queueid'></div>"
+						+ '</div>'
+						+ '<div class="hl-message">'
+							+ '<span id="content_'+data.id+'">' + chatmessage + '</span>'
+							+ addImage
+							+ donationHTML 
+						+ '</div>'
+					+ '</div></div>');
+			} else if (twoLines){
 				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					+ '<div class="hl-firstline">'
 						+ "<div class='queueid'></div>"
@@ -3455,7 +3531,16 @@
 
 			if (reversed && !forceAutoscroll){
 				//
-			} else {
+			} else if (alignbottom){
+				var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight );
+				if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+150)) || forceAutoscroll){
+					getById("output").scrollTo({
+						top: height,
+						left: 0,
+						behavior:scrolltype
+					});
+				}
+			} else { 
 				var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
 				if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+150)) || forceAutoscroll){
 					getById("output").scrollTo({

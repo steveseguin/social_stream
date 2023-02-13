@@ -598,6 +598,7 @@ chrome.runtime.onMessage.addListener(
 				} else if (Math.random()>0.5){
 					data.hasDonation = "";
 					data.nameColor = "#107516";
+					data.chatimg = "sampleavatar.png";
 					data.hasMembership =  '<div class="donation membership">SPONSORSHIP</div>';
 					data.chatname = "Steve";
 					var score = parseInt(Math.random()* 378);
