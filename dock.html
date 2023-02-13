@@ -1535,10 +1535,9 @@
 	}
 	
 	
-	var bubbleMode = false;
-	if (urlParams.has("bubble")){
-		bubbleMode = true;
-		
+	var largeavatar = false;
+	if (urlParams.has("largeavatar")){
+		largeavatar = true;
 	}
 
 	var splitMode = "";
@@ -3245,7 +3244,7 @@
 
 			var chatname = "";
 
-			if (bubbleMode){
+			if (largeavatar){
 				chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' + (data.chatname||"") +chatbadges +"</div>";
 			} else if (data.chatname){
 				if (compactmode){
@@ -3282,7 +3281,7 @@
 			}
 
 
-			if (bubbleMode){
+			if (largeavatar){
 				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					+ '<div class="hl-leftside">'
 						+ chatImg
