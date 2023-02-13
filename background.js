@@ -1148,7 +1148,7 @@ function processResponse(data){
 				if (!checkIfAllowed((tabs[i].url))){continue;}
 				
 				published[tabs[i].url] = true;
-				messageTimeout = Date.now();
+				//messageTimeout = Date.now();
 				
 				if (tabs[i].url.startsWith("https://www.twitch.tv/popout/")){  // twitch, but there's also cases for youtube/facebook
 					
@@ -1330,14 +1330,18 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 		}
 	}
 	
+	console.log("applyBotActions");
+	console.log(data);
 	if (settings.joke && (data.chatmessage.toLowerCase() === "!joke")){
-		if (Date.now() - messageTimeout > 5100){
+		if (Date.now() - messageTimeout > 5100){ 
 			var score = parseInt(Math.random()* 378);
 			var joke = jokes[score];
 			
 			messageTimeout = Date.now();
-			data.response = "@"+data.chatname+", "+joke["setup"];
-			processResponse(data);
+			var msg = {};
+			msg.response = "@"+data.chatname+", "+joke["setup"];
+			console.log(msg);
+			processResponse(msg);
 			setTimeout(function(msg, punch){
 				msg.response = punch;
 				processResponse(msg);
