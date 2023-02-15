@@ -26,17 +26,22 @@
 			--stylized-emoji: 140%;
 			--stylized-img: 23px;
 			--show-images: inline-block;
-			--fade-out-time: 20s;
 			--comment-font-size: unset;
 			--message-line-height: 22px;
 			--author-font-size: 17px;
 			--electron-drag-fix: drag;
 			--time-arrived-padding: 1px;
 			--profile-pic-border: 0 solid black;
+			
 			--donation-bgcolor: #FEFFAD33;
 			--donation-bgcolor-odd: #FDFF6533;
-			--donation-bgcolor-bubble: #FEFFAD33;
-			--donation-bgcolor-bubble-odd: #FDFF6533;
+			--donation-bgcolor-bubble: #171703e0;
+			--donation-bgcolor-bubble-odd: #171700e0;
+			
+			--member-bgcolor: #ADFEFF33;;
+			--member-bgcolor-odd: #65FDFF33;;
+			--member-bgcolor-bubble: #0f1620d1;
+			--member-bgcolor-bubble-odd: #060c16d1;
 		}
 		.closeBtn {
 			position: absolute;
@@ -605,38 +610,42 @@
 		}
 
 		.bubble.dono-highlight{
-			background-color: var(--donation-bgcolor-bubble-odd);
+			background-color: var(--donation-bgcolor-bubble);
+			box-shadow: inset 0 0 6px #ffff00a1;
 		}
 		.bubble.odd.dono-highlight:not(.expand){
-			background-color: var(--donation-bgcolor-bubble);
+			background-color: var(--donation-bgcolor-bubble-odd);
+			box-shadow: inset 0 0 6px #ffff00a1;
 		}
 
-		.member{
-			background-color: #ADFEFF33;
+		.member{  
+			background-color: var(--member-bgcolor);
 		}
 
 		.odd.member:not(.expand){
-			background-color: #65FDFF33;
+			background-color: var(--member-bgcolor-odd);
 		}
 		
 		.bubble.member{
-			background-color: #ADFEFFDD;
+			background-color: var(--member-bgcolor-bubble);
+			box-shadow: inset 0 0 6px #008f22b0;
 		}
 
 		.bubble.odd.member:not(.expand){
-			background-color: #65FDFFDD;
+			background-color: var(--member-bgcolor-bubble-odd);
+			box-shadow: inset 0 0 6px #008f22b0;
 		}
 		
 		body.lightmode .bubble {
 			border-radius: 20px;
 			padding: 10px;
-			background-color: #FFFD;
+			background-color: #EEED;
 			margin: 0px 0 0px 5px;
 		}
 		body.lightmode .bubble.odd{
 			border-radius: 20px;
 			padding: 10px;
-			background-color: #EEED;
+			background-color: #EEE7;
 			margin: 0px 0 0px 5px;
 		}
 		
@@ -1179,14 +1188,6 @@
 			border: var(--profile-pic-border);
 		}
 
-		.fade {
-			animation: fadeout var(--fade-out-time);
-			webkit-transition: opacity 0.5s ease-in-out;
-			-moz-transition: opacity 0.5 ease-in-out;
-			-ms-transition: opacity 0.5 ease-in-out;
-			-o-transition: opacity 0.5 ease-in-out;
-			opacity: 0;
-		}
 		@keyframes fade {
 			0% { opacity:0; }
 			5% { opacity:1; }
@@ -1195,7 +1196,7 @@
 		}
 
 		.fadeout {
-			animation: fadeout var(--fade-out-time);
+			animation: fadeout 1s;
 			webkit-transition: opacity 0.5s ease-in-out;
 			-moz-transition: opacity 0.5 ease-in-out;
 			-ms-transition: opacity 0.5 ease-in-out;
@@ -1205,7 +1206,7 @@
 
 		@keyframes fadeout {
 			0% {opacity:1;}
-			95% {opacity:1;}
+			50% {opacity:0;}
 			100% {opacity:0;}
 		}
 
@@ -1248,42 +1249,42 @@
 		}
 
 		.fadeout.swipeup {
-			animation: fadeout var(--fade-out-time), swipeup 1s;
+			animation: fadeout 1s, swipeup 1s;
 		}
 		.fadein.swipeup {
 			animation:  fadein 2s, swipeup 1s;
 		}
 
 		.fadeout.fadein {
-			animation: fadeout var(--fade-out-time), fadein 1s;
+			animation: fadeout 1s, fadein 1s;
 		}
 
 		.swipeleft.fadein{
 			animation: swipeleft 1s, fadein 1s;
 		}
 		.swipeleft.fadeout {
-			animation: fadeout var(--fade-out-time), swipeleft 1s;
+			animation: fadeout 1s, swipeleft 1s;
 		}
 
 		.swiperight.fadein{
 			animation: swiperight 1s, fadein 1s;
 		}
 		.swiperight.fadeout{
-			animation: swiperight 1s, fadeout var(--fade-out-time);
+			animation: swiperight 1s, fadeout 1s;
 		}
 
 		.swipeup.fadeout {
-			animation: fadeout var(--fade-out-time), swipeup 1s;
+			animation: fadeout 1s, swipeup 1s;
 		}
 
 		.swipeleft.fadein.fadeout{
-			animation: swipeleft 1s, fadein 1s, fadeout var(--fade-out-time);
+			animation: swipeleft 1s, fadein 1s, fadeout 1s;
 		}
 		.swipeup.fadein.fadeout{
-			animation: swipeup 1s, fadein 1s, fadeout var(--fade-out-time);
+			animation: swipeup 1s, fadein 1s, fadeout 1s;
 		}
 		.swiperight.fadein.fadeout{
-			animation: swiperight 1s, fadein 1s, fadeout var(--fade-out-time);
+			animation: swiperight 1s, fadein 1s, fadeout 1s;
 		}
 
 		.electronDraggable {
@@ -1350,6 +1351,15 @@
 		}
 		.hideMenuKeepScrollLock > #jumpto{
 			display:block!important;
+		}
+		
+		.avatar-badge{
+			width: 30%!important;
+			height: 30%!important;
+			position: relative;
+			float: right;
+			bottom: 20px;
+			right: -5px;
 		}
 
 	</style>
@@ -1536,7 +1546,6 @@
 	var timeoutDelay = 0;
 	if (urlParams.has("showtime")){
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
-		document.documentElement.style.setProperty("--fade-out-time", parseFloat(timeoutDelay/1000)+"s");
 	}
 
 	if (urlParams.has("disabletimeout")) {
@@ -1702,8 +1711,9 @@
 		transitionType.push("fadein");
 	}
 
+	var fadeout = false;
 	if (urlParams.has("fadeout")){
-		transitionType.push("fadeout");
+		fadeout = true;
 	}
 
 	if (urlParams.has("swiperight")){
@@ -2257,7 +2267,13 @@
 		document.documentElement.style.setProperty("--font-color-name", "#000");
 		document.documentElement.style.setProperty("--background-color", "#FFF0");
 		document.documentElement.style.setProperty("--font-color", "#000");
-		document.documentElement.style.setProperty("--highlight-base2", "#EEE4", "important");
+		document.documentElement.style.setProperty("--highlight-base2", "#EEE7");
+		
+		document.documentElement.style.setProperty("--donation-bgcolor-bubble", "#EEED");
+		document.documentElement.style.setProperty("--donation-bgcolor-bubble-odd", "#EEE7");
+		
+		document.documentElement.style.setProperty("--member-bgcolor-bubble", "#EEED");
+		document.documentElement.style.setProperty("--member-bgcolor-bubble-odd", "#EEE7");
 	}
 
 	if (urlParams.has("hideshadow")){ // alternating
@@ -2319,7 +2335,7 @@
 	var checkTimeout = null;
 	function checkAutoShow(){
 		clearTimeout(checkTimeout);
-		if (lastPushed + 1500 < Date.now()){
+		if (lastPushed + 3000 < Date.now()){
 			if (autoShowQueue.length){
 				var post = autoShowQueue.shift();
 				if (post.classList.contains("pressed")){
@@ -3047,14 +3063,19 @@
 	};
 
 	function fadeOutNode(node){
-		if (horizontal){
+		if (fadeout && horizontal){
+			node.classList.add("fadeout");
+			setTimeout(function(node){
+				node.remove();
+			},499,node);
+		} else if (horizontal){
 			node.remove();
 		} else {
 			node.style.transition =  "all linear 0.5s";
-			node.style.height =  "0";
+			node.style.height =  "0"; 
 			setTimeout(function(node){
 				node.remove();
-			},500,node);
+			},499,node);
 		}
 	}
 
@@ -3241,8 +3262,11 @@
 			}
 
 
-			if (showType && showsource){
+			if (largeavatar && showType && showsource){
+				showType = '<img src="' + showType + '.png" class="icon hl-source-type avatar-badge" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
+			} else if (showType && showsource){
 				showType = '<img src="' + showType + '.png" class="icon hl-source-type" data-icon-name="'+showType+'" onerror="this.style.display=\'none\'" />';
+			
 			} else {
 				showType = "";
 			}
@@ -3372,11 +3396,11 @@
 				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+expand+'" data-source-type="'+data.type+'">'
 					+ '<div class="hl-leftside">'
 						+ chatImg
+						+ showType
 					+ '</div>'
 					+ '<div class="hl-rightside'+larger+'">'
 						+ '<div class="hl-righttopline">'
 							+ chatname
-							+ showType
 							+ timeArrived
 							+ "<div class='queueid'></div>"
 						+ '</div>'
@@ -3443,7 +3467,7 @@
 			}
 			
 			if (data.hasDonation){
-				if (highlightDonos){
+				if (highlightDonos && !bubble){
 					node.classList.add("dono-highlight");
 				}
 				node.classList.add("donation");
@@ -3505,12 +3529,10 @@
 			}
 			
 			if (bubble && largeavatar){
-				node.querySelector(".hl-rightside").classList.add("bubble");
+				node.querySelector(".hl-rightside").classList.add("bubble"); 
 				
-				if (data.hasDonation){
-					node.querySelector(".hl-rightside").classList.add("donation");
-				} else {
-					node.querySelector(".hl-rightside").classList.add("noDono");
+				if (highlightDonos && data.hasDonation){
+					node.querySelector(".hl-rightside").classList.add("dono-highlight");
 				}
 
 				if (highlightMembers && data.hasMembership){
@@ -3519,10 +3541,9 @@
 			} else if (bubble){
 				node.querySelector(".hl-message").classList.add("bubble");
 				
-				if (data.hasDonation){
-					node.querySelector(".hl-message").classList.add("donation");
-				} else {
-					node.querySelector(".hl-message").classList.add("noDono");
+				
+				if (highlightDonos &&  data.hasDonation){
+					node.querySelector(".hl-rightside").classList.add("dono-highlight");
 				}
 
 				if (highlightMembers && data.hasMembership){
@@ -3550,7 +3571,12 @@
 			}
 
 			if (timeoutDelay){
-				setTimeout(function(node){ node.remove();},timeoutDelay, node);
+				setTimeout(function(node){ 
+					node.classList.add("fadeout"); 
+					setTimeout(function(node){
+						node.remove();
+					},499,node);
+				},timeoutDelay, node);
 			}
 
 			if (horizontal || twoLines){
