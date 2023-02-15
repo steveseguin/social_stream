@@ -42,6 +42,9 @@
 			--member-bgcolor-odd: #65FDFF33;;
 			--member-bgcolor-bubble: #0f1620d1;
 			--member-bgcolor-bubble-odd: #060c16d1;
+			
+			--bgcolor-bubble: #000D;
+			--bgcolor-bubble-odd: #111D;
 		}
 		.closeBtn {
 			position: absolute;
@@ -598,24 +601,24 @@
 		.bubble {
 			border-radius: 20px;
 			padding: 7px 10px;
-			background-color: #000D;
+			background-color:  var(--bgcolor-bubble);
 			margin: 0px 0 0px 5px;
 		}
 		
 		.bubble.odd{
 			border-radius: 20px;
 			padding: 7px 10px;
-			background-color: #111D;
+			background-color: var(--bgcolor-bubble-odd); 
 			margin: 0px 0 0px 5px;
 		}
 
 		.bubble.dono-highlight{
 			background-color: var(--donation-bgcolor-bubble);
-			box-shadow: inset 0 0 6px #ffff00a1;
+			box-shadow: inset 0 0 2px #ffff00a1;
 		}
 		.bubble.odd.dono-highlight:not(.expand){
 			background-color: var(--donation-bgcolor-bubble-odd);
-			box-shadow: inset 0 0 6px #ffff00a1;
+			box-shadow: inset 0 0 2px #ffff00a1;
 		}
 
 		.member{  
@@ -628,12 +631,12 @@
 		
 		.bubble.member{
 			background-color: var(--member-bgcolor-bubble);
-			box-shadow: inset 0 0 6px #008f22b0;
+			box-shadow: inset 0 0 2px #008f22b0;
 		}
 
 		.bubble.odd.member:not(.expand){
 			background-color: var(--member-bgcolor-bubble-odd);
-			box-shadow: inset 0 0 6px #008f22b0;
+			box-shadow: inset 0 0 2px #008f22b0;
 		}
 		
 		body.lightmode .bubble {
@@ -2281,6 +2284,9 @@
 		document.documentElement.style.setProperty("--highlight-base2", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact2", "#0000", "important");
+		document.documentElement.style.setProperty("--donation-bgcolor-bubble-odd", document.documentElement.style.getPropertyValue("--donation-bgcolor-bubble"));
+		document.documentElement.style.setProperty("--member-bgcolor-bubble-odd", document.documentElement.style.getPropertyValue("--member-bgcolor-bubble"));
+		document.documentElement.style.setProperty("--bgcolor-bubble-odd", document.documentElement.style.getPropertyValue("--bgcolor-bubble"));
 	}
 
 	if (urlParams.has("nooutline")){
