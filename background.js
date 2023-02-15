@@ -778,6 +778,7 @@ function sendToDestinations(message){
 	sendDataP2P(message);
 	sendToDisk(message);
 	sendToH2R(message);
+	sendToPost(message);
 	return true;
 }
 
@@ -835,6 +836,43 @@ function sendToH2R(data){
 			h2r.messages = [];
 			h2r.messages.push(msg);
 			ajax(h2r, postServer, "POST");
+		} catch(e){
+			console.warn(e);
+		}
+	}
+}
+
+function sendToPost(data){
+	
+	if (settings.post && settings.postserver && settings.postserver.textsetting){
+		try {
+			var postServer = "http://127.0.0.1:80";
+
+			if (settings.postserver.textsetting.startsWith("http")){ // full URL provided
+				postServer = settings.postserver.textsetting;
+			} else if (settings.postserver.textsetting.startsWith("127.0.0.1")){ // missing the HTTP, so assume what they mean
+				postServer = "http://"+settings.postserver.textsetting;
+			} else {
+				postServer += settings.postserver.textsetting; // Just going to assume they gave the token
+			}
+			
+			if (data.type && !data.chatimg && (data.type == "twitch") && data.chatname){
+				data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
+				
+			} else if (data.type && (data.type == "youtube") && data.chatimg){
+				let chatimg = data.chatimg.replace("=s32-", "=s256-");  
+				data.chatimg = chatimg.replace("=s64-", "=s256-");
+				
+			} else {
+				data.chatimg = data.chatimg || "https://socialstream.ninja/unknown.png";
+			}
+			
+			
+			if (data.type){
+				data.logo = "https://socialstream.ninja/"+data.type+".png";
+			}
+			
+			ajax(data, postServer, "POST");
 		} catch(e){
 			console.warn(e);
 		}

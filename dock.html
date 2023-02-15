@@ -33,6 +33,10 @@
 			--electron-drag-fix: drag;
 			--time-arrived-padding: 1px;
 			--profile-pic-border: 0 solid black;
+			--donation-bgcolor: #FEFFAD33;
+			--donation-bgcolor-odd: #FDFF6533;
+			--donation-bgcolor-bubble: #FEFFAD33;
+			--donation-bgcolor-bubble-odd: #FDFF6533;
 		}
 		.closeBtn {
 			position: absolute;
@@ -61,7 +65,7 @@
 			-moz-transform: var(--scale-output-moz);
 			-moz-transform-origin: 0 0;
 			width:100%;
-			margin-bottom: 46px; /* Same as menu height + menu padding-top + menu padding-bottom */
+			margin-bottom: calc(46px / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
 		}
 		.hl-badge{
 			padding: 0px 2px 0px 0px;
@@ -196,7 +200,8 @@
 			position:absolute!important;
 			max-width: 20vw;
 		}
-
+		
+		
 		.hl-firstline {
 			display:block;
 			line-height: 100%;
@@ -214,13 +219,15 @@
 			vertical-align: inherit;
 			margin: 1px 0px;
 		}
-
+		
+		
 		.hl-message{
 			margin: auto 1px;
 			overflow-wrap: anywhere;
 			line-height: max(var(--message-line-height) , var(--comment-font-size));
 			font-size: var(--comment-font-size);
 		}
+		
 
 		.notcompactmode .hl-message img{
 			height: 17px;
@@ -284,7 +291,9 @@
 		.hl-leftside img {
 			max-height:100%;
 			max-width:100%;
-			object-fit: contain;
+			height:100%;
+			width:100%;
+			object-fit: cover;
 			margin:0;
 			padding:0;
 		}
@@ -476,8 +485,7 @@
 		.queueid[data-qid] {
 			margin: auto 3px;
 		}
-
-
+		
 		@keyframes expand {
 			0% {
 				max-width: 0px;
@@ -554,10 +562,11 @@
 			min-height:27px;
 		}
 
-		.highlight-chat.odd:not(.expand){
+		.odd:not(.expand){ 
 			background-color: var(--highlight-base2);
 		}
-
+		
+		
 		.highlight-chat:hover {
 			box-shadow: inset 7px 7px 20px #08080444,inset -7px -7px 20px #FcFcFc22, inset 1px 1px 2px #080804AA,inset -1px -1px 3px #FcFcFc77;
 		}
@@ -569,16 +578,37 @@
 			padding-right:3px;
 		}
 
-		.highlight-chat.odd.compactmode:not(.expand){
+		.odd.compactmode:not(.expand){
 			background-color: var(--highlight-compact2);
 		}
 
-		.donation{
-			background-color: #FEFFAD33;
+		.dono-highlight{
+			background-color: var(--donation-bgcolor);
 		}
 
-		.odd.donation:not(.expand){
-			background-color: #FDFF6533;
+		.odd.dono-highlight:not(.expand){
+			background-color: var(--donation-bgcolor-odd);
+		}
+
+		.bubble {
+			border-radius: 20px;
+			padding: 7px 10px;
+			background-color: #000D;
+			margin: 0px 0 0px 5px;
+		}
+		
+		.bubble.odd{
+			border-radius: 20px;
+			padding: 7px 10px;
+			background-color: #111D;
+			margin: 0px 0 0px 5px;
+		}
+
+		.bubble.dono-highlight{
+			background-color: var(--donation-bgcolor-bubble-odd);
+		}
+		.bubble.odd.dono-highlight:not(.expand){
+			background-color: var(--donation-bgcolor-bubble);
 		}
 
 		.member{
@@ -589,19 +619,27 @@
 			background-color: #65FDFF33;
 		}
 		
-		.bubble {
-			border-radius: 20px;
-			padding: 7px 10px;
-			background-color: #000;
-			margin: 0px 0 0px 5px;
+		.bubble.member{
+			background-color: #ADFEFFDD;
+		}
+
+		.bubble.odd.member:not(.expand){
+			background-color: #65FDFFDD;
 		}
 		
 		body.lightmode .bubble {
 			border-radius: 20px;
 			padding: 10px;
-			background-color: #FFF;
+			background-color: #FFFD;
 			margin: 0px 0 0px 5px;
 		}
+		body.lightmode .bubble.odd{
+			border-radius: 20px;
+			padding: 10px;
+			background-color: #EEED;
+			margin: 0px 0 0px 5px;
+		}
+		
 
 		.donationAmount{
 			text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #FFe60073, 0 0 40px #FFe60073, 0 0 50px #FFe60073, 0 0 60px #FFe60073, 0 0 70px #FFe60073;
@@ -645,7 +683,6 @@
 			background-color: #2F3136;
 			box-shadow: 0 0 5px #000;
 			z-index: 2;
-			zoom: var(--scale-output);
 		}
 		body.lightmode #menu{
 			background-color: #f5f5f5;
@@ -789,6 +826,10 @@
 		}
 		#filter_messages:focus {
 			width: 124px;
+		}
+		
+		.hl-message:empty{
+			background-color: #0000;
 		}
 
 		body.lightmode .popInModal {
@@ -1510,6 +1551,12 @@
 	var highlightDonos = true;
 	if (urlParams.has("nodonohighlight")) {
 		highlightDonos = false;
+		
+		document.documentElement.style.setProperty("--donation-bgcolor-odd", "unset");
+		document.documentElement.style.setProperty("--donation-bgcolor", "unset");
+		document.documentElement.style.setProperty("--donation-bgcolor-bubble-odd", "unset");
+		document.documentElement.style.setProperty("--donation-bgcolor-bubble", "unset");
+		
 	}
 	
 	var bubble = false;
@@ -2353,9 +2400,21 @@
 			var style = window.getComputedStyle(nodes[i]);
 			if ((style.visibility !== "hidden") && (style.display !== "none")){
 				if (odd){
-					nodes[i].classList.add("odd");
+					if (bubble && largeavatar){
+						nodes[i].querySelector(".hl-rightside").classList.add("odd"); 
+					} else if (bubble){
+						nodes[i].querySelector(".hl-message").classList.add("odd"); 
+					} else {
+						nodes[i].classList.add("odd"); 
+					}
 				} else {
-					nodes[i].classList.remove("odd");
+					if (bubble && largeavatar){
+						nodes[i].querySelector(".hl-rightside").classList.remove("odd"); 
+					} else if (bubble){
+						nodes[i].querySelector(".hl-message").classList.remove("odd"); 
+					} else {
+						nodes[i].classList.remove("odd"); 
+					}
 				}
 				odd = !odd;
 			}
@@ -3310,11 +3369,11 @@
 
 
 			if (largeavatar){
-				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
+				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+expand+'" data-source-type="'+data.type+'">'
 					+ '<div class="hl-leftside">'
 						+ chatImg
 					+ '</div>'
-					+ '<div class="hl-rightside">'
+					+ '<div class="hl-rightside'+larger+'">'
 						+ '<div class="hl-righttopline">'
 							+ chatname
 							+ showType
@@ -3383,9 +3442,10 @@
 				node.classList.add("bot");
 			}
 			
-			if (!highlightDonos || !bubble){
-				// pass
-			} else if (data.hasDonation){
+			if (data.hasDonation){
+				if (highlightDonos){
+					node.classList.add("dono-highlight");
+				}
 				node.classList.add("donation");
 			} else {
 				node.classList.add("noDono");
@@ -3414,6 +3474,14 @@
 				node.classList.add("noText");
 			}
 
+			
+
+			transitionType.forEach(classtype=>{
+				node.classList.add(classtype);
+			});
+
+			mainOutputWindow.appendChild(node);
+			
 			if (hideNotDonos && node.classList.contains("noDono")){
 				node.classList.add("hidden");
 			} else if (hideNotQueued && !node.classList.contains("queued")){
@@ -3423,25 +3491,23 @@
 			} else {
 				var style = window.getComputedStyle(node);
 				if ((style.visibility !== "hidden") && (style.display !== "none")){
-					if (odd){
-						node.classList.add("odd");
+					if (odd){ 
+						if (bubble && largeavatar){
+							node.querySelector(".hl-rightside").classList.add("odd"); 
+						} else if (bubble){
+							node.querySelector(".hl-message").classList.add("odd"); 
+						} else {
+							node.classList.add("odd"); 
+						}
 					}
 					odd = !odd;
 				}
 			}
-
-			transitionType.forEach(classtype=>{
-				node.classList.add(classtype);
-			});
-
-			mainOutputWindow.appendChild(node);
 			
 			if (bubble && largeavatar){
 				node.querySelector(".hl-rightside").classList.add("bubble");
 				
-				if (!highlightDonos){ 
-					//
-				} else if (data.hasDonation){
+				if (data.hasDonation){
 					node.querySelector(".hl-rightside").classList.add("donation");
 				} else {
 					node.querySelector(".hl-rightside").classList.add("noDono");
@@ -3453,9 +3519,7 @@
 			} else if (bubble){
 				node.querySelector(".hl-message").classList.add("bubble");
 				
-				if (!highlightDonos){ 
-					//
-				} else if (data.hasDonation){
+				if (data.hasDonation){
 					node.querySelector(".hl-message").classList.add("donation");
 				} else {
 					node.querySelector(".hl-message").classList.add("noDono");
