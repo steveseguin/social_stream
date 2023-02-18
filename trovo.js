@@ -46,7 +46,7 @@
 	  }
 	  
 	  try{
-		chatimg = ele.querySelector('div.avatar.wrapper').querySelector('img.img-face').src;
+		chatimg = ele.querySelector('div.avatar').querySelector('img.img-face[src]').src;
 	  } catch(e){}
 	  
 	  var chatdonation = "";
