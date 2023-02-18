@@ -19,11 +19,20 @@
 	  var chatmessage = "";
 	  var chatname = "";
 	  var chatimg = "";
+	  var nameColor = "";
 	  
 	  try{
 		chatname = ele.querySelector(".nick-name").innerText;
 	  } catch(e){}
 	  
+	  
+	  
+	  if (!settings.nosubcolor){
+		  try{
+			nameColor = getComputedStyle(ele.querySelector(".nick-name")).color;
+		  }catch(e){}
+	  }
+		
 	  if (!settings.textonlymode){
 		  try{
 			chatmessage = ele.querySelector(".content").innerHTML;
@@ -56,6 +65,7 @@
 	  data.backgroundColor = backgroundColor;
       data.textColor = textColor;
 	  data.chatmessage = chatmessage;
+	  data.nameColor = nameColor;
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = hasMembership;
