@@ -538,6 +538,12 @@
 				</div>
 				<div>
 					<label class="switch">
+						<input type="checkbox" data-param1="fixed">
+						<span class="slider round"></span>
+					</label> Messages overlap on another
+				</div>
+				<div>
+					<label class="switch">
 						<input type="checkbox" data-param1="smooth">
 						<span class="slider round"></span>
 					</label> Messages smoothly scroll in
@@ -608,18 +614,7 @@
 						<span class="slider round"></span>
 					</label> Delete names entirely
 				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="hidebotnames">
-						<span class="slider round"></span>
-					</label> Delete names for specified host or bots
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="hidebots">
-						<span class="slider round"></span>
-					</label> Do not show host or bot messages (see below)
-				</div>
+				
 			</div>
 			
 			<h3>Specify host or bot</h3>
@@ -631,6 +626,18 @@
 						placeholder="ie: name1,name 2,Name3" />
 					<p>Note: The first name listed may be used as the host's name in stream when their name is not otherwise known. The list of names should be comma separated.</p>
 				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="hidebotnames">
+						<span class="slider round"></span>
+					</label> Delete names for specified host or bots
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-param1="hidebots">
+						<span class="slider round"></span>
+					</label> Do not show host or bot messages
+				</div>
 			</div>
 
 			<h3>Behaviour and functions</h3>
@@ -640,6 +647,12 @@
 						<input type="checkbox" data-param1="limit=200">
 						<span class="slider round"></span>
 					</label> Increase messages history to 200
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" data-incompatible="limit=200" data-param1="limit=1">
+						<span class="slider round"></span>
+					</label> Show only the last message
 				</div>
 				<div>
 					<label class="switch">

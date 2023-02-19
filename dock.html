@@ -95,6 +95,10 @@
 			text-decoration:none
 		}
 
+		.fixed {
+			position:fixed!important;
+		}
+		
 		.hl-img-content {
 			max-width: 80px;
 			margin: 0 2px;
@@ -657,6 +661,7 @@
 			text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #FFe60073, 0 0 40px #FFe60073, 0 0 50px #FFe60073, 0 0 60px #FFe60073, 0 0 70px #FFe60073;
 			padding:5px;
 			margin: auto;
+			white-space: nowrap;
 			white-space: nowrap;
 		}
 
@@ -1604,6 +1609,10 @@
 	var password = "false";
 	if (urlParams.has("password")){
 		password = urlParams.get("password") || "false";
+	}
+	var fixed=false;
+	if (urlParams.has("fixed")){
+		fixed = true;
 	}
 
 	if (urlParams.has("nodate") || urlParams.has("notimestamp") || urlParams.has("notime")){
@@ -3073,15 +3082,22 @@
 			node.classList.add("fadeout");
 			setTimeout(function(node){
 				node.remove();
-			},499,node);
+			},500,node);
 		} else if (horizontal){
 			node.remove();
-		} else {
+		} else if (fadeout){
+			node.classList.add("fadeout");
+			setTimeout(function(node){
+				node.remove();
+			},500,node);
+		} else if (scrolltype === "smooth"){
 			node.style.transition =  "all linear 0.5s";
 			node.style.height =  "0"; 
 			setTimeout(function(node){
 				node.remove();
-			},499,node);
+			},500,node);
+		} else {
+			node.remove();
 		}
 	}
 
@@ -3389,7 +3405,11 @@
 			var expand = "";
 
 			if (horizontal){
-				expand = " expand"
+				expand = " expand";
+			}
+			
+			if (fixed){
+				expand += " fixed";
 			}
 
 			var mid = "";
@@ -3397,6 +3417,7 @@
 				mid = "data-mid='"+data.id+"'";
 			}
 
+			
 
 			if (largeavatar){
 				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+expand+'" data-source-type="'+data.type+'">'
