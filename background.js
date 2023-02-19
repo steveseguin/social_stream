@@ -568,6 +568,7 @@ chrome.runtime.onMessage.addListener(
 				data.textColor = "";
 				data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
 				data.chatimg = "";
+				data.type = "youtube";
 				if (Math.random()>0.90){
 					data.hasDonation = "100 gold";
 					data.hasMembership = "";
@@ -586,7 +587,8 @@ chrome.runtime.onMessage.addListener(
 				} else if (Math.random()>0.7){
 					data.hasDonation = "";
 					data.hasMembership = "";
-					data.chatname = "Steve";
+					data.chatname = "vdoninja";
+					data.type = "twitch";
 					var score = parseInt(Math.random()* 378);
 					data.chatmessage  =  jokes[score]["setup"] + "..  " + jokes[score]["punchline"]  + " 😊";
 				} else if (Math.random()>0.6){
@@ -601,6 +603,7 @@ chrome.runtime.onMessage.addListener(
 					data.chatimg = "sampleavatar.png";
 					data.hasMembership =  '<div class="donation membership">SPONSORSHIP</div>';
 					data.chatname = "Steve";
+					data.type = "facebook";
 					var score = parseInt(Math.random()* 378);
 					data.chatmessage  =  jokes[score]["setup"] + "..  " + jokes[score]["punchline"]  + " 😊";	
 				} else if (Math.random()>0.2){
@@ -610,7 +613,7 @@ chrome.runtime.onMessage.addListener(
 					data.hasDonation = "";
 					data.hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
 				}
-				data.type = "youtube";
+				
 				data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
 				sendToDestinations(data);
 				

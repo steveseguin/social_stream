@@ -1560,6 +1560,12 @@
 	if (urlParams.has("showtime")){
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
 	}
+	var timePerCharacter = 60;
+	if (urlParams.has("chartime")){
+		timePerCharacter = parseInt(urlParams.get("chartime")) || 60;
+	}
+	
+	
 
 	if (urlParams.has("disabletimeout")) {
 		autoTimeoutEnabled = false;
@@ -2350,31 +2356,79 @@
 		}
 		redoOdd();
 	}
+	
+	
 
 	var lastPushed = Date.now();
+	var activeWordLength = 0;
+	var activeDonation = false;
 	var checkTimeout = null;
 	function checkAutoShow(){
-		clearTimeout(checkTimeout);
-		if (lastPushed + 3000 < Date.now()){
-			if (autoShowQueue.length){
-				var post = autoShowQueue.shift();
-				if (post.classList.contains("pressed")){
-					if (autoShowQueue.length){
-						checkAutoShow();
-					}
-					return;
-				} else {
-					selectedMessage(false, post);
-				}
-			}
+		if (checkTimeout){return;}
+		
+		let waitTime = activeWordLength * timePerCharacter;
+		let minimumTime = timePerCharacter*42; // 42; the answer to life. the universe. and everything
+		
+		if (waitTime<minimumTime){
+			waitTime = minimumTime;
+		} else if (waitTime>minimumTime*10){
+			waitTime = minimumTime*10;
 		}
-		if (autoShowQueue.length>10){
-			autoShowQueue.shift(); // skip oldest, since too many are queued up
-			checkTimeout = setTimeout(function(){checkAutoShow()},1600);
+		
+		if (autoShowQueue.length){
+		
+			if (lastPushed + waitTime > Date.now()+timePerCharacter){
+				checkTimeout = setTimeout(function(){
+					checkTimeout = false;
+					checkAutoShow();
+				}, (lastPushed + waitTime) - Date.now() + timePerCharacter*2);
+				return;
+			}
+		
+			var post = autoShowQueue.shift();
+			if (post.classList.contains("pressed")){
+				if (autoShowQueue.length){
+					checkAutoShow();
+				}
+				return;
+			} else {
+				activeWordLength = post.contentLength;
+				if (post.rawContents){
+					activeDonation = post.rawContents.hasDonation || false;
+				} else {
+					activeDonation = false;
+				}
+			
+				selectedMessage(false, post);
+			}
+		} else {
+			return;
+		}
+		
+		
+		if (activeDonation){
+			checkTimeout = setTimeout(function(){
+				checkTimeout = false;
+				checkAutoShow()
+			},waitTime);
+		} else if (autoShowQueue.length>10){
+			if (!autoShowQueue.hasDonation){
+				autoShowQueue.shift(); // skip oldest, since too many are queued up
+			}
+			checkTimeout = setTimeout(function(){
+				checkTimeout = false;
+				checkAutoShow();
+			},waitTime*0.6);
 		} else if (autoShowQueue.length>3){
-			checkTimeout = setTimeout(function(){checkAutoShow()},1600);
+			checkTimeout = setTimeout(function(){
+				checkTimeout = false;
+				checkAutoShow()
+			},waitTime*0.8);
 		} else if (autoShowQueue.length){
-			checkTimeout = setTimeout(function(){checkAutoShow()},2500);
+			checkTimeout = setTimeout(function(){
+				checkTimeout = false;
+				checkAutoShow()
+			},waitTime);
 		}
 	}
 
@@ -3056,8 +3110,11 @@
 			ele.classList.remove("last-message"); // no overlay is now active.
 		});
 		element.classList.add("pressed", "last-message"); // add last-message class
-
-
+		
+		try {
+			activeWordLength = element.contentLength;
+		} catch(e){}
+		
 		var data = element.rawContents;
 
 		if (thirdPartyAPI){ // we upscale using a generic upsizing function for third parties.
@@ -3527,11 +3584,14 @@
 				if (!customNodeLimit){
 					customNodeLimit = 20;
 				}
-			}
 
-			if (!node.querySelector("#content_"+data.id).innerText.trim().length){
-				node.classList.add("noText");
 			}
+			var contentLength = node.querySelector("#content_"+data.id).innerText.trim().length || 0;
+			contentLength += node.querySelectorAll("#content_"+data.id+" img").length || 0;
+			if (!contentLength){
+				node.classList.add("noText");
+			} 
+			node.contentLength = contentLength;
 
 			
 
@@ -3563,7 +3623,7 @@
 				}
 			}
 			
-			if (bubble && largeavatar){
+			if (bubble && largeavatar && node.contentLength){
 				node.querySelector(".hl-rightside").classList.add("bubble"); 
 				
 				if (highlightDonos && data.hasDonation){
@@ -3573,12 +3633,12 @@
 				if (highlightMembers && data.hasMembership){
 					node.querySelector(".hl-rightside").classList.add("member");
 				}
-			} else if (bubble){
+			} else if (bubble  && node.contentLength){
 				node.querySelector(".hl-message").classList.add("bubble");
 				
 				
 				if (highlightDonos &&  data.hasDonation){
-					node.querySelector(".hl-rightside").classList.add("dono-highlight");
+					node.querySelector(".hl-message").classList.add("dono-highlight");
 				}
 
 				if (highlightMembers && data.hasMembership){
