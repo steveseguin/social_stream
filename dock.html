@@ -99,6 +99,10 @@
 			position:fixed!important;
 		}
 		
+		.bottom {
+			bottom:0;
+		}
+		
 		.hl-img-content {
 			max-width: 80px;
 			margin: 0 2px;
@@ -3410,14 +3414,17 @@
 			
 			if (fixed){
 				expand += " fixed";
+				if (alignbottom){
+					expand += " bottom";
+				}					
 			}
+			
 
 			var mid = "";
 			if (data.id){
 				mid = "data-mid='"+data.id+"'";
 			}
 
-			
 
 			if (largeavatar){
 				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+expand+'" data-source-type="'+data.type+'">'
