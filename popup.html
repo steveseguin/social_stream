@@ -963,9 +963,30 @@
 					</label> Tell joke on <b>!joke</b> message
 				</div>
 				
-				<button class="button" data-action="tellajoke" style="cursor:pointer;"> Tell a joke now</button>
+				<div style="display:inline-block;">
+					<button class="button" data-action="tellajoke" style="cursor:pointer;"> Tell a joke now</button>
+				</div>
+			</div>
+
+			<h3>Quick-open chat pop-ups</h3>
+			<div class="options_group">			
 				
-				<button class="button" data-action="enableYouTube" style="display:none;cursor:pointer;"> Connect Youtube API</button>
+				<div style="display:inline-block;">
+					YouTube <input type="text" style="display:inline-block;" data-textsetting="youtube_username" placeholder="YouTube @channel name" />
+					<button class="button" data-action="openchat" data-value="youtube" style="cursor:pointer;"> Open Chat</button>
+				</div>
+				
+				<div style="display:inline-block;;">
+					Twitch <input type="text" style="display:inline-block;" data-textsetting="twitch_username" placeholder="Twitch channel name" />
+					<button class="button" data-action="openchat" data-value="twitch" style="cursor:pointer;"> Open Chat</button>
+				</div>
+				
+				<button class="button" data-action="openchat" style="cursor:pointer;"> Open All Chat</button>
+				
+				
+				<div style="display:none;">
+					<button class="button" data-action="enableYouTube" style="cursor:pointer;"> Connect Youtube API</button><input type="text" style="display:inline-block;" data-textsetting="youtubeapikey" placeholder="Provide YouTube API Key" />
+				</div>
 			</div>
 
 			<h3>Save the last message to a file</h3>

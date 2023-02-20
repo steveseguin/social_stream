@@ -540,6 +540,9 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "enableYouTube") {
 				enableYouTube();
 				sendResponse({"state":isExtensionOn});	
+			} else if (request.cmd && request.cmd === "openchat") {
+				openchat(request.value);
+				sendResponse({"state":isExtensionOn});	
 			} else if (request.cmd && request.cmd === "singlesave") {
 				sendResponse({"state":isExtensionOn});	
 				overwriteFile("setup");
@@ -962,9 +965,30 @@ function setupSocket(){
 
 function enableYouTube(){ // function to send data to the DOCk via the VDO.Ninja API
 	try {
-		iframe.contentWindow.postMessage({"enableYouTube":true}, '*'); // send only to 'viewers' of this stream
+		iframe.contentWindow.postMessage({"enableYouTube":settings.youtubeapikey.textsetting}, '*'); // send only to 'viewers' of this stream
 	} catch(e){
 		console.error(e);
+	}
+}
+
+function openchat(target=null){
+	if ((target=="youtube" || !target)  && settings.youtube_username){
+		if (!settings.youtube_username.textsetting.startsWith("@")){
+			settings.youtube_username.textsetting = "@"+settings.youtube_username.textsetting;
+		}
+		fetch("https://www.youtube.com/c/"+settings.youtube_username.textsetting+"/live").then((response) => response.text()).then((data) => {
+			try{
+				var videoID = data.split('{"videoId":"')[1].split('"')[0];
+				console.log(videoID);
+				window.open("https://www.youtube.com/live_chat?is_popout=1&v="+videoID, '_blank');
+			} catch(e){
+				// not live?
+			}
+		});
+	}
+	
+	if ((target=="twitch" || !target)  && settings.twitch_username){
+		window.open("https://www.twitch.tv/popout/"+settings.twitch_username.textsetting+"/chat?popout=", '_blank');
 	}
 }
 
