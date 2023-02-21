@@ -1,6 +1,6 @@
 var isExtensionOn = false;
 document.addEventListener("DOMContentLoaded", async function(event) {
-	
+
 	var disableButton = document.getElementById("disableButton");
 	disableButton.onclick = function(){
 		chrome.runtime.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}});
@@ -8,25 +8,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			update(response);
 		});
 	};
-	
+
 	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
 		update(response);
 	});
-	
+
 	chrome.runtime.sendMessage({cmd: "getOnOffState"}, function (response) {
 		update(response);
 	});
-	
+
 	var iii = document.querySelectorAll("input[type='checkbox']");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
-	
+
 	var iii = document.querySelectorAll("input[type='text']");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
-	
+
 	var iii = document.querySelectorAll("button[data-action]");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onclick = function(){
@@ -38,17 +38,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			});
 		};
 	}
-	
-	
+
+
 	document.getElementById("ytcopy").onclick = async function(){
 		document.getElementById("ytcopy").innerHTML = "Copying video ID to clipboard";
 		var YoutubeChannel = document.querySelector('input[data-textsetting="youtube_username"]').value;
 		if (!YoutubeChannel){return;}
-		
+
 		if (!YoutubeChannel.startsWith("@")){
 			YoutubeChannel = "@"+YoutubeChannel;
 		}
-		
+
 		fetch("https://www.youtube.com/c/"+YoutubeChannel+"/live").then((response) => response.text()).then((data) => {
 			document.getElementById("ytcopy").innerHTML = "Copying video ID to clipboard...";
 			try{
@@ -66,10 +66,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 	};
-	
+
 	checkVersion();
 });
-	
+
 function update(response){
 	if (response !== undefined){
 		if ("state" in response){
@@ -88,29 +88,29 @@ function update(response){
 				document.getElementById("extensionState").checked = null;
 			}
 		}
-		
+
 		var password = "";
 		if ('password' in response && response.password){
 			password = "&password="+response.password;
 		}
-		
+
 		if ('streamID' in response){
 			//document.getElementById("version").innerHTML = "Stream ID is : "+response.streamID;
 			document.getElementById("dock").rawURL = "https://socialstream.ninja/dock.html?session="+response.streamID+password;
 			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='https://socialstream.ninja/dock.html?session="+response.streamID+password+"'>https://socialstream.ninja/dock.html?session="+response.streamID+password+"</a>";
-			
+
 			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='https://socialstream.ninja/index.html?session="+response.streamID+password+"'>https://socialstream.ninja/index.html?session="+response.streamID+password+"</a>";
 			document.getElementById("overlay").rawURL = "https://socialstream.ninja/index.html?session="+response.streamID+password;
-			
+
 			document.getElementById("emoteswall").innerHTML = "<a target='_blank' id='emoteswalllink' href='https://socialstream.ninja/emotes.html?session="+response.streamID+password+"'>https://socialstream.ninja/emotes.html?session="+response.streamID+password+"</a>";
 			document.getElementById("emoteswall").rawURL = "https://socialstream.ninja/emotes.html?session="+response.streamID+password;
-			
+
 			document.getElementById("remote_control_url").href='https://socialstream.ninja/sampleapi.html?session='+response.streamID;
 		}
-		
+
 		if ('settings' in response){
 			for (var key in response.settings){
-				
+
 				if (key === "midiConfig"){
 					if (response.settings[key]){
 						document.getElementById("midiConfig").classList.add("pressed");
@@ -120,7 +120,7 @@ function update(response){
 						document.getElementById("midiConfig").innerText = " Load Config";
 					}
 				}
-				
+
 				if (typeof response.settings[key] == "object"){ // newer method
 					if ("param1" in response.settings[key]){
 						var ele = document.querySelector("input[data-param1='"+key+"']");
@@ -149,21 +149,21 @@ function update(response){
 							ele.checked = response.settings[key].both;
 							updateSettings(ele);
 						}
-					} 
+					}
 					if ("setting" in response.settings[key]){
 						var ele = document.querySelector("input[data-setting='"+key+"']");
 						if (ele){
 							ele.checked = response.settings[key].setting;
 							updateSettings(ele);
 						}
-					} 
+					}
 					if ("textsetting" in response.settings[key]){
 						var ele = document.querySelector("input[data-textsetting='"+key+"']");
 						if (ele){
 							ele.value = response.settings[key].textsetting;
 							updateSettings(ele);
 						}
-					} 
+					}
 					if ("textparam1" in response.settings[key]){
 						var ele = document.querySelector("input[data-textparam1='"+key+"']");
 						if (ele){
@@ -171,7 +171,7 @@ function update(response){
 							updateSettings(ele);
 						}
 					}
-				
+
 				} else { // obsolete method
 					var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
 					if (ele){
@@ -225,7 +225,7 @@ function checkVersion(){
 var urlParams = new URLSearchParams(window.location.search);
 
 function updateURL(param, href) {
-	
+
 	href = href.replace("??", "?");
 	var arr = href.split('?');
 	var newurl;
@@ -236,9 +236,9 @@ function updateURL(param, href) {
 	}
 	newurl = newurl.replace("?&", "?");
 	return newurl;
-	
+
 }
-	
+
 function updateSettings(ele){
 	if (ele.target){
 		ele = this;
@@ -246,7 +246,7 @@ function updateSettings(ele){
 	if (ele.dataset.param1){
 		if (ele.checked){
 			document.getElementById("dock").rawURL = updateURL(ele.dataset.param1, document.getElementById("dock").rawURL);
-			
+
 			if (ele.dataset.param1 == "darkmode"){
 				var key = "lightmode";
 				var ele = document.querySelector("input[data-param1='"+key+"']");
@@ -254,7 +254,7 @@ function updateSettings(ele){
 					ele.checked = false;
 					updateSettings(ele);
 				}
-				
+
 			} else if (ele.dataset.param1 == "lightmode"){
 				var key = "darkmode";
 				var ele = document.querySelector("input[data-param1='"+key+"']");
@@ -263,15 +263,15 @@ function updateSettings(ele){
 					updateSettings(ele);
 				}
 			}
-			
+
 		} else {
 			document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace(ele.dataset.param1, "");
 		}
-		
+
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "param1", setting: ele.dataset.param1, "value": ele.checked}, function (response) {});
-		
+
 	} else if (ele.dataset.textparam1){
 		if (ele.value){
 			document.getElementById("dock").rawURL = updateURL(ele.dataset.textparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").rawURL);
@@ -291,7 +291,7 @@ function updateSettings(ele){
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
-		
+
 	} else if (ele.dataset.param2){
 		if (ele.checked){
 			document.getElementById("overlay").rawURL = updateURL(ele.dataset.param2, document.getElementById("overlay").rawURL);
@@ -301,7 +301,7 @@ function updateSettings(ele){
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param2", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
-		
+
 	} else if (ele.dataset.param3){
 		if (ele.checked){
 			document.getElementById("emoteswall").rawURL = updateURL(ele.dataset.param3, document.getElementById("emoteswall").rawURL);
@@ -310,8 +310,8 @@ function updateSettings(ele){
 		}
 		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("&&", "&");
 		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param3", setting: ele.dataset.param3, "value": ele.checked}, function (response) {});	
-		
+		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param3", setting: ele.dataset.param3, "value": ele.checked}, function (response) {});
+
 	} else if (ele.dataset.both){
 		if (ele.checked){
 			document.getElementById("overlay").rawURL = updateURL(ele.dataset.both, document.getElementById("overlay").rawURL);
@@ -325,22 +325,22 @@ function updateSettings(ele){
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "both", setting: ele.dataset.both, "value": ele.checked}, function (response) {});
-		
+
 	} else if (ele.dataset.setting){
 		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
 		return;
-		
+
 	} else if (ele.dataset.textsetting){
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
 		return;
 	}
-	
+
 	document.getElementById("docklink").innerText = document.getElementById("dock").rawURL;
 	document.getElementById("docklink").href = document.getElementById("dock").rawURL;
-	
+
 	document.getElementById("overlaylink").innerText = document.getElementById("overlay").rawURL;
 	document.getElementById("overlaylink").href = document.getElementById("overlay").rawURL;
-	
+
 	document.getElementById("emoteswalllink").innerText = document.getElementById("emoteswall").rawURL;
 	document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").rawURL;
 }
