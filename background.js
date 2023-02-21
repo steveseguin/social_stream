@@ -45,14 +45,14 @@ function loadSettings(item, resave=false){
 	}
 	if (item && ("password" in item)){
 		password = item.password;
-		
+
 		if (resave){
 			chrome.storage.sync.set({
 				password: password
 			});
 			chrome.runtime.lastError;
 		}
-		
+
 	} else {
 		chrome.storage.sync.set({
 			password: password
@@ -61,7 +61,7 @@ function loadSettings(item, resave=false){
 	}
 	if (item && item.settings){
 		settings = item.settings;
-		
+
 		if (resave){
 			chrome.storage.sync.set({
 				settings: settings
@@ -80,7 +80,7 @@ function loadSettings(item, resave=false){
 		if (iframe==null){
 			loadIframe(channel, password);
 		}
-		
+
 		if (resave){
 			chrome.storage.sync.set({
 				isExtensionOn: isExtensionOn
@@ -94,7 +94,7 @@ function loadSettings(item, resave=false){
 		chrome.runtime.lastError;
 	}
 	toggleMidi();
-	
+
 	if (settings.sentiment){
 		if (!sentimentAnalysisLoaded){
 			loadSentimentAnalysis();
@@ -113,7 +113,7 @@ function pushSettingChange(){
 	chrome.tabs.query({}, function(tabs) {
 		chrome.runtime.lastError;
 		for (var i=0;i<tabs.length;i++){
-			if (!tabs[i].url){continue;} 
+			if (!tabs[i].url){continue;}
 			chrome.tabs.sendMessage(tabs[i].id, {settings:settings}, function(response=false) {
 				chrome.runtime.lastError;
 			});
@@ -132,7 +132,7 @@ async function loadmidi(){
 		}],
 	  };
 	var midiFileHandler = await window.showOpenFilePicker();
- 
+
 	try {
 		var midiConfigFile = await midiFileHandler[0].getFile();
 		midiConfigFile = await midiConfigFile.text();
@@ -182,14 +182,14 @@ var table = [];
 var newFileHandleExcel = false;
 async function overwriteFileExcel(data=false) {
 	if (data=="setup"){
-		
+
 		 const opts = {
 			types: [{
 			  description: 'Excel file',
 			  accept: {'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']},
 			}],
 		  };
-  
+
 		newFileHandleExcel = await window.showSaveFilePicker(opts);
 		workbook = XLSX.utils.book_new();
 
@@ -203,7 +203,7 @@ async function overwriteFileExcel(data=false) {
 			bookType: "xlsx",
 			type: "binary"
 		});
-		
+
 		var buffer = new ArrayBuffer(xlsbin.length),
 		array = new Uint8Array(buffer);
 		for (var i=0; i<xlsbin.length; i++) {
@@ -215,9 +215,9 @@ async function overwriteFileExcel(data=false) {
 		const writableStream = await newFileHandleExcel.createWritable();
 		await writableStream.write(xlsblob);
 		await writableStream.close();
-		
+
 	} else if (newFileHandleExcel && data){
-		
+
 		for (var key in data){
 			if (!table.includes(key)){
 				table.push(key);
@@ -232,10 +232,10 @@ async function overwriteFileExcel(data=false) {
 			}
 		});
 
-		
+
 		XLSX.utils.sheet_add_aoa(worksheet, [table], {origin: 0}); // replace header
 		XLSX.utils.sheet_add_aoa(worksheet, [column], {origin: -1}); // append new line
-		
+
 		var xlsbin = XLSX.write(workbook, {
 			bookType: "xlsx",
 			type: "binary"
@@ -263,13 +263,13 @@ async function exportSettings(){
 			  accept: {'application/data': ['.data']},
 			}],
 		  };
-  
+
 		fileExportHandler = await window.showSaveFilePicker(opts);
-		
+
 		const writableStream = await fileExportHandler.createWritable();
 		await writableStream.write(JSON.stringify(item));
 		await writableStream.close();
-		
+
 	})
 }
 
@@ -381,7 +381,7 @@ function getColorFromName(str) {
   out = rainbow(out)
   return out;
 }
-		
+
 chrome.runtime.onMessage.addListener(
     async function (request, sender, sendResponse) {
 		try{
@@ -425,25 +425,25 @@ chrome.runtime.onMessage.addListener(
 				} else {
 					settings[request.setting] = request.value;
 				}
-				
+
 				chrome.storage.sync.set({
 					settings: settings
 				});
 				chrome.runtime.lastError;
-				sendResponse({"state":isExtensionOn});	
-				
-				
+				sendResponse({"state":isExtensionOn});
+
+
 				if (request.setting == "midi"){
 					toggleMidi();
 				}
-				
-				
-				
+
+
+
 				if (request.setting == "socketserver"){
 					if (request.value){
 						allowSocketServer = true;
 						if (!socketserver){
-							socketserver = new WebSocket(serverURL); 
+							socketserver = new WebSocket(serverURL);
 							setupSocket();
 						}
 					} else {
@@ -453,23 +453,23 @@ chrome.runtime.onMessage.addListener(
 						}
 					}
 				}
-				
+
 				if (request.setting == "textonlymode"){
 					pushSettingChange();
 				}
-				
+
 				if (request.setting == "myname"){
 					pushSettingChange();
 				}
-				
+
 				if (request.setting == "nosubcolor"){
 					pushSettingChange();
 				}
-				
+
 				if (request.setting == "captureevents"){
 					pushSettingChange();
-				} 
-				
+				}
+
 				if (request.setting == "sentiment"){
 					if (request.value){
 						if (!sentimentAnalysisLoaded){
@@ -491,14 +491,14 @@ chrome.runtime.onMessage.addListener(
 					});
 				}
 			} else if ("message" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-				request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from 
+				request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
 				sendResponse({"state":isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
-				
+
 				if (isExtensionOn && request.message.type){
 					if (!checkIfAllowed(request.message.type)){ // toggled is not enabled for this site
 						return;
 					}
-					
+
 					if (request.message.type == "youtube"){
 						if (sender.tab.url){
 							var brandURL = getYoutubeAvatarImage(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
@@ -507,30 +507,30 @@ chrome.runtime.onMessage.addListener(
 							}
 						}
 					}
-					
+
 					try{
 						request.message = await applyBotActions(request.message); // perform any immediate actions
 						if (request.message===null){return;}
 					} catch(e){console.log(e);}
-					
-					
+
+
 					if (settings.filtercommands && request.message.chatmessage && request.message.chatmessage.startsWith("!")){
 						return;
 					}
-					
+
 					if (settings.firstsourceonly){
 						if (!verifyOriginal(request.message)){
 							return;
 						}
 					}
-					
+
 					sendToDestinations(request.message); // send the data to the dock
 				}
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				sendResponse({"settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
 			} else if ("keepAlive" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				var action = {};
-				action.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from 
+				action.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
 				action.response = ""; // empty response, as we just want to keep alive
 				processResponse(action);
 				sendResponse({"state":isExtensionOn});
@@ -539,30 +539,30 @@ chrome.runtime.onMessage.addListener(
 				sendResponse({"state":isExtensionOn});
 			} else if (request.cmd && request.cmd === "enableYouTube") {
 				enableYouTube();
-				sendResponse({"state":isExtensionOn});	
+				sendResponse({"state":isExtensionOn});
 			} else if (request.cmd && request.cmd === "openchat") {
 				openchat(request.value);
-				sendResponse({"state":isExtensionOn});	
+				sendResponse({"state":isExtensionOn});
 			} else if (request.cmd && request.cmd === "singlesave") {
-				sendResponse({"state":isExtensionOn});	
+				sendResponse({"state":isExtensionOn});
 				overwriteFile("setup");
 			} else if (request.cmd && request.cmd === "excelsave") {
-				sendResponse({"state":isExtensionOn});	
+				sendResponse({"state":isExtensionOn});
 				overwriteFileExcel("setup");
 			} else if (request.cmd && request.cmd === "loadmidi") {
 				await loadmidi(sendResponse);
 				sendResponse({"settings":settings});
 			} else if (request.cmd && request.cmd === "export") {
-				sendResponse({"state":isExtensionOn});	
+				sendResponse({"state":isExtensionOn});
 				await exportSettings();
 			} else if (request.cmd && request.cmd === "import") {
-				sendResponse({"state":isExtensionOn});	
+				sendResponse({"state":isExtensionOn});
 				await importSettings();
 			} else if (request.cmd && request.cmd === "excelsaveStop") {
-				sendResponse({"state":isExtensionOn});	
+				sendResponse({"state":isExtensionOn});
 				newFileHandleExcel = false;
 			} else if (request.cmd && request.cmd === "fakemsg") {
-				sendResponse({"state":isExtensionOn});	
+				sendResponse({"state":isExtensionOn});
 				var data = {};
 				data.chatname = "John Doe";
 				data.nameColor = "";
@@ -581,7 +581,7 @@ chrome.runtime.onMessage.addListener(
 					html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
 					html.type = "svg";
 					data.chatbadges.push(html);
-					
+
 				} else if (Math.random()>0.83){
 					data.hasDonation = "3 hearts";
 					data.hasMembership = "";
@@ -599,7 +599,7 @@ chrome.runtime.onMessage.addListener(
 					data.hasMembership =  '';
 					data.chatname = "Steve";
 					var score = parseInt(Math.random()* 378);
-					data.chatmessage  =  '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">'; 
+					data.chatmessage  =  '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">';
 				} else if (Math.random()>0.5){
 					data.hasDonation = "";
 					data.nameColor = "#107516";
@@ -615,10 +615,10 @@ chrome.runtime.onMessage.addListener(
 					data.hasDonation = "";
 					data.hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
 				}
-				
+
 				data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
 				sendToDestinations(data);
-				
+
 			} else if (request.cmd && request.cmd === "sidUpdated") {
 				if (request.streamID){
 					channel = request.streamID;
@@ -630,15 +630,15 @@ chrome.runtime.onMessage.addListener(
 					if (iframe.src){
 						iframe.src = null;
 					}
-					
+
 					iframe.remove();
 					iframe = null;
 				}
 				if (isExtensionOn){
 					loadIframe(channel, password);
 				}
-				
-				sendResponse({"state":isExtensionOn});	
+
+				sendResponse({"state":isExtensionOn});
 			} else {
 				sendResponse({"state":isExtensionOn});
 			}
@@ -771,7 +771,7 @@ function ajax(object2send, url, ajaxType="PUT"){
 
 var messageCounter = 0;
 function sendToDestinations(message){
-	
+
 	if (typeof message == "object"){
 		messageCounter+=1;
 		message.id = messageCounter;
@@ -779,7 +779,7 @@ function sendToDestinations(message){
 	if (settings.randomcolor && message && ("nameColor" in message) && !message.nameColor && message.chatname){
 		message.nameColor = getColorFromName(message.chatname);
 	}
-	
+
 	sendDataP2P(message);
 	sendToDisk(message);
 	sendToH2R(message);
@@ -788,7 +788,7 @@ function sendToDestinations(message){
 }
 
 function sendToH2R(data){
-	
+
 	if (settings.h2r && settings.h2rserver && settings.h2rserver.textsetting){
 		try {
 			var postServer = "http://127.0.0.1:4001/data/";
@@ -800,43 +800,43 @@ function sendToH2R(data){
 			} else {
 				postServer += settings.h2rserver.textsetting; // Just going to assume they gave the token
 			}
-				
+
 			var msg = {};
-			
+
 			if ("id" in data){
 				msg.id = data.id;
 			}
-			
+
 			if (data.timestamp){
 				msg.timestamp = data.timestamp;
 			}
-			
+
 			msg.snippet = {};
 			msg.snippet.displayMessage = data.chatmessage || "";
-			
+
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
-			
-			
-			
+
+
+
 			if (data.type && (data.type == "twitch") && data.chatname){
 				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
-				
+
 			} else if (data.type && (data.type == "youtube") && data.chatimg){
-				let chatimg = data.chatimg.replace("=s32-", "=s256-");  
+				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				msg.authorDetails.profileImageUrl = chatimg.replace("=s64-", "=s256-");
-				
+
 			} else {
 				msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
 			}
-			
-			
+
+
 			if (data.type){
 				msg.platform = {};
 				msg.platform.name = data.type || "";
 				msg.platform.logoUrl = "https://socialstream.ninja/"+data.type+".png";
 			}
-			
+
 			var h2r = {};
 			h2r.messages = [];
 			h2r.messages.push(msg);
@@ -848,7 +848,7 @@ function sendToH2R(data){
 }
 
 function sendToPost(data){
-	
+
 	if (settings.post && settings.postserver && settings.postserver.textsetting){
 		try {
 			var postServer = "http://127.0.0.1:80";
@@ -860,23 +860,23 @@ function sendToPost(data){
 			} else {
 				postServer += settings.postserver.textsetting; // Just going to assume they gave the token
 			}
-			
+
 			if (data.type && !data.chatimg && (data.type == "twitch") && data.chatname){
 				data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
-				
+
 			} else if (data.type && (data.type == "youtube") && data.chatimg){
-				let chatimg = data.chatimg.replace("=s32-", "=s256-");  
+				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				data.chatimg = chatimg.replace("=s64-", "=s256-");
-				
+
 			} else {
 				data.chatimg = data.chatimg || "https://socialstream.ninja/unknown.png";
 			}
-			
-			
+
+
 			if (data.type){
 				data.logo = "https://socialstream.ninja/"+data.type+".png";
 			}
-			
+
 			ajax(data, postServer, "POST");
 		} catch(e){
 			console.warn(e);
@@ -890,17 +890,17 @@ var serverURL = "wss://api.overlay.ninja";
 var conCon = 0;
 
 function setupSocket(){
-	
+
 	if (!socketserver && allowSocketServer){
 		socketserver = new WebSocket(serverURL);
 	}
-	
+
 	socketserver.onclose = function (){
 		if (allowSocketServer){
 			setTimeout(function(){
 				if (allowSocketServer){
 					conCon+=1;
-					socketserver = new WebSocket(serverURL); 
+					socketserver = new WebSocket(serverURL);
 					setupSocket();
 				} else {
 					socketserver = false;
@@ -916,7 +916,7 @@ function setupSocket(){
 	};
 	socketserver.addEventListener('message', async function (event) {
 		if (event.data){
-			
+
 			var data = JSON.parse(event.data);
 			var resp = false;
 			if (data.action && (data.action === "sendChat") && data.value){
@@ -946,8 +946,8 @@ function setupSocket(){
 				} catch(e){
 					console.error(e);
 				}
-			} 
-			
+			}
+
 			var ret = {};
 			if (typeof resp == "object"){
 				resp = true;
@@ -986,7 +986,7 @@ function openchat(target=null){
 			}
 		});
 	}
-	
+
 	if ((target=="twitch" || !target)  && settings.twitch_username){
 		window.open("https://www.twitch.tv/popout/"+settings.twitch_username.textsetting+"/chat?popout=", '_blank');
 	}
@@ -1005,16 +1005,16 @@ function sendToDisk(data){
 		try {
 			if (typeof data == "object"){
 				data.timestamp = new Date().getTime();
-				
+
 				if (data.type && data.chatimg && (data.type == "youtube")){
 					data.chatimg = data.chatimg.replace("=s32-", "=s512-");  // high, but meh.
 					data.chatimg = data.chatimg.replace("=s64-", "=s512-");
 				}
-				
+
 				if (data.type && (data.type == "twitch") && data.chatname){
 					data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
 				}
-				
+
 				overwriteFile(JSON.stringify(data));
 			}
 		} catch(e){}
@@ -1023,12 +1023,12 @@ function sendToDisk(data){
 		try {
 			if (typeof data == "object"){
 				data.timestamp = new Date().getTime();
-				
+
 				if (data.type && data.chatimg && (data.type == "youtube")){
-					data.chatimg = data.chatimg.replace("=s32-", "=s256-");  
+					data.chatimg = data.chatimg.replace("=s32-", "=s256-");
 					data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 				}
-				
+
 				if (data.type && (data.type == "twitch") && data.chatname){
 					data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
 				}
@@ -1039,7 +1039,7 @@ function sendToDisk(data){
 }
 
 
-	
+
 function loadIframe(channel, pass=false){  // this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
 	iframe = document.createElement("iframe");
 	if (!pass){
@@ -1097,14 +1097,14 @@ eventer(messageEvent, async function (e) {
 					data.chatbadges = "";
 					data.backgroundColor = "";
 					data.textColor = "";
-					
+
 					data.chatmessage = data.value.snippet.displayMessage || "";
-					
+
 					data.hasDonation = "";
 					data.hasMembership = "";
-					
+
 					data.type = "youtube";
-					
+
 					console.log(data);
 					data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
 					sendToDestinations(data);
@@ -1177,7 +1177,7 @@ function checkIfAllowed(sitename){
 			}
 		} catch(e){}
 	}
-	
+
 	if (!settings.instagram){
 		try {
 			if (sitename == "instagram"){ // "instagram live" is allowed still, just not comments
@@ -1192,10 +1192,10 @@ function checkIfAllowed(sitename){
 }
 
 function processResponse(data){
-	
+
 	if (!chrome.debugger){return false;}
 	if (!isExtensionOn){return false;} // extension not active, so don't let responder happen. Probably safer this way.
-	 
+
 	chrome.tabs.query({}, function(tabs) {
 		if (chrome.runtime.lastError) {
 			console.warn(chrome.runtime.lastError.message);
@@ -1204,46 +1204,46 @@ function processResponse(data){
 		for (var i=0;i<tabs.length;i++){
 			try {
 				if (("tid" in data) && (data.tid!==false)){ // if an action-response, we want to only respond to the tab that originated it
-					if ( data.tid !== tabs[i].id){continue;} 
+					if ( data.tid !== tabs[i].id){continue;}
 				}
-				if (!tabs[i].url){continue;} 
+				if (!tabs[i].url){continue;}
 				if (tabs[i].url in published){continue;} // skip. we already published to this tab.
 				if (tabs[i].url.startsWith("https://socialstream.ninja/")){continue;}
 				if (tabs[i].url.startsWith("chrome-extension")){continue;}
 				if (!checkIfAllowed((tabs[i].url))){continue;}
-				
+
 				published[tabs[i].url] = true;
 				//messageTimeout = Date.now();
-				
+
 				if (tabs[i].url.startsWith("https://www.twitch.tv/popout/")){  // twitch, but there's also cases for youtube/facebook
-					
+
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
-						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false));  // enable the debugger to let us fake a user 
+						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false));  // enable the debugger to let us fake a user
 					} else {
 						generalFakeChat(tabs[i].id, data.response, false, true, false);
 					}
 				} else if (tabs[i].url.startsWith("https://app.chime.aws/meetings/")){  // twitch, but there's also cases for youtube/facebook
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
-						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true));  // enable the debugger to let us fake a user 
+						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true));  // enable the debugger to let us fake a user
 					} else {
 						generalFakeChat(tabs[i].id, data.response, false, true, true); // middle=true, keypress=true, backspace=false
 					}
 				} else {  // all other destinations. ; generic
-				
+
 					if (tabs[i].url.includes("youtube.com/live_chat")){
 						getYoutubeAvatarImage(tabs[i].url, true); // see if I can pre-cache the channel image, if not loaded.
 					}
-				
+
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
-						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, true, true, false));  // enable the debugger to let us fake a user 
+						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, true, true, false));  // enable the debugger to let us fake a user
 					} else {
 						generalFakeChat(tabs[i].id, data.response, true, true, false);
 					}
-					
-				} 
+
+				}
 			} catch(e){
 				chrome.runtime.lastError;
 				console.log(e);
@@ -1252,7 +1252,7 @@ function processResponse(data){
 	});
 	return true;
 }
-	
+
 function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=false){ // fake a user input
 	try{
 		chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {
@@ -1263,12 +1263,12 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 				}
 				return;
 			}; // make sure the response is valid, else don't inject text
-			
+
 			lastSentMessage = message.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
 			lastSentMessage = lastSentMessage.replace(/\s\s+/g, ' ');
 			lastSentTimestamp = Date.now();
 			lastMessageCounter = 0;
-			
+
 			if (backspace){
 				chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
 				   "key": "Backspace",
@@ -1279,11 +1279,11 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 				   "unmodifiedText": "",
 				   "windowsVirtualKeyCode": 8
 				 }, function (e) {
-						
+
 						chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
-					 
+
 						if (keypress){
-							chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 
+							chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
 								"type": "keyDown",
 								"key": "Enter",
 								"code": "Enter",
@@ -1291,7 +1291,7 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 								"windowsVirtualKeyCode": 13
 							}, function (e) {});
 						}
-						
+
 						if (middle){
 							chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
 								"type": "char",
@@ -1308,7 +1308,7 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 								}
 							});
 						}
-						
+
 						if (keypress){
 							chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
 								"type": "keyUp",
@@ -1323,14 +1323,14 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 								}
 							);
 						}
-					 
+
 				 }	);
 			} else {
-				
+
 				chrome.debugger.sendCommand({ tabId:tabid }, "Input.insertText", { text: message }, function (e) {});
-			
+
 				if (keypress){
-					chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", { 
+					chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
 						"type": "keyDown",
 						"key": "Enter",
 						"code": "Enter",
@@ -1338,7 +1338,7 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 						"windowsVirtualKeyCode": 13
 					}, function (e) {});
 				}
-				
+
 				if (middle){
 					chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
 						"type": "char",
@@ -1355,7 +1355,7 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 						}
 					});
 				}
-				
+
 				if (keypress){
 					chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
 						"type": "keyUp",
@@ -1371,9 +1371,9 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 					);
 				}
 			}
-			
+
 		});
-		
+
 	} catch(e){
 		if (debuggerEnabled[tabid]){
 			chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
@@ -1394,14 +1394,14 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			}
 		}
 	}
-	
+
 	console.log("applyBotActions");
 	console.log(data);
 	if (settings.joke && (data.chatmessage.toLowerCase() === "!joke")){
-		if (Date.now() - messageTimeout > 5100){ 
+		if (Date.now() - messageTimeout > 5100){
 			var score = parseInt(Math.random()* 378);
 			var joke = jokes[score];
-			
+
 			messageTimeout = Date.now();
 			var msg = {};
 			msg.response = "@"+data.chatname+", "+joke["setup"];
@@ -1410,11 +1410,11 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			setTimeout(function(msg, punch){
 				msg.response = punch;
 				processResponse(msg);
-				
+
 			},5000, data, "@"+data.chatname+".. "+joke["punchline"]);
 		}
 	}
-	
+
 	if (settings.sentiment){
 		try {
 			if (!sentimentAnalysisLoaded){
@@ -1424,8 +1424,8 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 				data.sentiment = inferSentiment(data.chatmessage);
 			}
 		}catch(e){}
-	} 
-	
+	}
+
 	if (settings.comment_background){
 		if (!data.backgroundColor){
 			data.backgroundColor = "background-color:"+settings.comment_background.value+";";
@@ -1441,7 +1441,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			data.backgroundNameColor =  "background-color:"+settings.name_background.value+";";
 		}
 	}
-	if (settings.name_color){ // 
+	if (settings.name_color){ //
 		if (!data.textNameColor){
 			data.textNameColor =  "color:"+settings.name_color.value+";";
 		}
@@ -1458,7 +1458,7 @@ try {
 			MidiInput.addListener('controlchange', function(e) {
 				midiHotkeysCommand(e.controller.number, e.rawValue);
 			});
-			
+
 			MidiInput.addListener('noteon', function(e) {
 				var note = e.note.name + e.note.octave;
 				var velocity = e.velocity || false;
@@ -1467,13 +1467,13 @@ try {
 		} else {
 			for (var i = 0; i < WebMidi.inputs.length; i++) {
 				MidiInput = WebMidi.inputs[i];
-				
+
 				MidiInput.addListener('controlchange', function(e) {
 					if (settings.midi && isExtensionOn){
 						midiHotkeysCommand(e.controller.number, e.rawValue);
 					}
 				});
-				
+
 				MidiInput.addListener('noteon', function(e) {
 					if (settings.midi && isExtensionOn){
 						var note = e.note.name + e.note.octave;
@@ -1484,13 +1484,13 @@ try {
 			}
 		}
 	}
-	
+
 	function toggleMidi(){
 		if (!("midi" in settings)){return;}
 		if (settings.midi){
 			if (MidiInit===false){
 				MidiInit=true;
-				
+
 				WebMidi.enable().then(() =>{
 					setupMIDI();
 					WebMidi.addListener("connected", function(e) {
@@ -1510,7 +1510,7 @@ try {
 			} catch(e){}
 		}
 	}
-	
+
 } catch(e){console.log(e);}
 
 
