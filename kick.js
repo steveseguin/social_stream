@@ -24,36 +24,79 @@
 	  var nameColor = "";
 	  
 	 
-	  try {
-		var name = ele.children[0].querySelector("span[style]");
-		var chatname = name.innerText;
-		try {
-			nameColor = name.style.color;
-		} catch(e){}
-	  } catch(e){return;}
-	  
+	  var chatname = "";
+	  var name ="";
 	  var chatbadges = [];
 	  
-	  ele.children[0].querySelectorAll("[class*='badge'] img[src], .LevelNumber svg").forEach(badge=>{
-		try {
-			if (badge && badge.nodeName == "IMG"){
-				var tmp = {};
-				tmp.src = badge.src;
-				tmp.type = "img";
-				chatbadges.push(tmp);
-			} else {
-				var tmp = {};
-				tmp.html = badge.outerHTML;
-				tmp.type = "svg";
-				chatbadges.push(tmp);
-			}
-		} catch(e){  }
-	  });
+	  
 	  
 	  console.log(ele);
 	  
 	  var cloned =  ele.cloneNode(true);
-	  cloned.children[0].outerHTML = "";
+	  if (cloned.children[0].classList.contains("inline-block")){
+		  
+		  try {
+			  
+			  ele.children[0].querySelectorAll("[class*='badge'] img[src], .LevelNumber svg, [class*='group/role'] svg, [class*='group/role'] img[src]").forEach(badge=>{
+				try {
+					if (badge && badge.nodeName == "IMG"){
+						var tmp = {};
+						tmp.src = badge.src;
+						tmp.type = "img";
+						chatbadges.push(tmp);
+					} else if (badge && badge.nodeName.toLowerCase() == "svg"){
+						var tmp = {};
+						tmp.html = badge.outerHTML;
+						tmp.type = "svg";
+						chatbadges.push(tmp);
+					}
+				} catch(e){  }
+			  });
+	  
+	  
+			name = ele.children[0].querySelector("span[style]");
+			chatname = name.innerText;
+			try {
+				nameColor = name.style.color;
+			} catch(e){}
+		  } catch(e){return;}
+		  cloned.children[0].outerHTML = "";
+	  } else if (cloned.children[1].classList.contains("inline-block")){
+		  
+		   ele.children[1].querySelectorAll("[class*='badge'] img[src], .LevelNumber svg, [class*='group/role'] svg, [class*='group/role'] img[src]").forEach(badge=>{
+				try {
+					if (badge && badge.nodeName == "IMG"){
+						var tmp = {};
+						tmp.src = badge.src;
+						tmp.type = "img";
+						chatbadges.push(tmp);
+					} else if (badge && badge.nodeName.toLowerCase() == "svg"){
+						var tmp = {};
+						tmp.html = badge.outerHTML;
+						tmp.type = "svg";
+						chatbadges.push(tmp);
+					}
+				} catch(e){  }
+			  });
+			  
+			  
+		  try {
+			name = ele.children[1].querySelector("span[style]");
+			chatname = name.innerText;
+			try {
+				nameColor = name.style.color;
+			} catch(e){}
+		  } catch(e){return;}
+		  cloned.children[1].outerHTML = "";
+	  } else {
+		  try {
+			name = ele.querySelector("span[style]");
+			chatname = name.innerText;
+			try {
+				nameColor = name.style.color;
+			} catch(e){}
+		  } catch(e){return;}
+	  }
 	  for (var i=cloned.children.length-1;i>=0;i--){
 		  if (cloned.children[i].nodeName.toLowerCase() === "div"){
 			  cloned.children[i].outerHTML = "";
