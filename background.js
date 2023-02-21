@@ -1017,7 +1017,7 @@ async function openchat(target=null){
 		openURL(url);
 	}
 	
-	if ((target=="picarto" || !target) && settings.trovo_username){
+	if ((target=="picarto" || !target) && settings.picarto_username){
 		let url = "https://picarto.tv/chatpopout/"+settings.picarto_username.textsetting+"/public";
 		openURL(url);
 	}
