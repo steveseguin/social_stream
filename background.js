@@ -972,28 +972,30 @@ function enableYouTube(){ // function to send data to the DOCk via the VDO.Ninja
 }
 
 async function openchat(target=null){
-	async function openURL(input){
-		
-		var res;
-		var promise =  new Promise((resolve, reject) => {
-			res = resolve;
-		});
 	
-		chrome.tabs.query({}, function(tabs) { // tabs[i].url
-			if (chrome.runtime.lastError) {
-				console.warn(chrome.runtime.lastError.message);
-			}
-			let urls = [];
-			tabs.forEach(tab=>{
-				if (tab.url){
-					urls.push(tab.url);
-				}
-			});
-			res(urls);
-		});
+	var res;
+	var promise =  new Promise((resolve, reject) => {
+		res = resolve;
+	});
 
-		var activeurls = await promise;
-		
+	
+	chrome.tabs.query({}, function(tabs) { // tabs[i].url
+		if (chrome.runtime.lastError) {
+			console.warn(chrome.runtime.lastError.message);
+		}
+		let urls = [];
+		tabs.forEach(tab=>{
+			if (tab.url){
+				urls.push(tab.url);
+			}
+		});
+		res(urls);
+	});
+
+	var activeurls = await promise;
+	console.log(activeurls);
+	
+	function openURL(input){
 		var matched = false;
 		activeurls.forEach(url=>{
 			if (url.startsWith(input)){
@@ -1144,7 +1146,7 @@ function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for 
 }
 
 eventer(messageEvent, async function (e) {
-	
+	if (e.source != iframe.contentWindow){return}
 	if (e.data && (typeof e.data == "object")){
 		if (("dataReceived" in e.data) && ("overlayNinja" in e.data.dataReceived)){ 
 			if ("response" in e.data.dataReceived.overlayNinja){ // we receieved a response from the dock
@@ -1153,7 +1155,7 @@ eventer(messageEvent, async function (e) {
 				if (e.data.dataReceived.overlayNinja.action === "openChat"){
 					openchat(e.data.dataReceived.overlayNinja.value || null);
 				}
-			}
+			} 
 		} else if ("action" in e.data){ // this is from vdo.ninja, not socialstream. 
 			if (e.data.action === "YoutubeChat"){
 				if (e.data.value && data.value.snippet && data.value.authorDetails){

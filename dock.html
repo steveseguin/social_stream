@@ -2826,13 +2826,12 @@
 					if (connectedPeers[e.data.UUID] === "dock"){ // this is a dock that wants to be synced with
 						syncDockAll(e.data.UUID);
 					}
-					//console.log(connectedPeers);
 				}
 			} else if (("action" in e.data) && e.data.UUID && e.data.value && (e.data.action == "view-connection-info")){ // flip this
 				if ("label" in e.data.value){
 					connectedPeers[e.data.UUID] = e.data.value.label;
 					if (openChatAutomatically){
-						send2Extension({action:"openChat", value:null});
+						send2Extension({action:"openChat", value:null}, e.data.UUID);
 					}
 				}
 			}
@@ -3947,16 +3946,25 @@
 		}
 	}
 	
-	function send2Extension(data){
+	function send2Extension(data, uid=null){
 		if (iframe){
-			var keys = Object.keys(connectedPeers);
-			for (var i = 0; i<keys.length;i++){
-				var UUID = keys[i];
-				var label = connectedPeers[keys[i]];
+			if (!uid){
+				var keys = Object.keys(connectedPeers);
+				for (var i = 0; i<keys.length;i++){
+					var UUID = keys[i];
+					var label = connectedPeers[UUID];
+					if (label === "SocialStream"){
+						iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"rpcs", "UUID":UUID}, '*');
+						console.log("sent message to extension");
+					}
+				}
+			} else {
+				var label = connectedPeers[uid];
 				if (label === "SocialStream"){
-					iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"rpcs", "UUID":UUID}, '*');
+					iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"rpcs", "UUID":uid}, '*');
 					console.log("sent message to extension");
 				}
+				
 			}
 		}
 	}
