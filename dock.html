@@ -3955,16 +3955,13 @@
 					var label = connectedPeers[UUID];
 					if (label === "SocialStream"){
 						iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"rpcs", "UUID":UUID}, '*');
-						console.log("sent message to extension");
 					}
 				}
 			} else {
 				var label = connectedPeers[uid];
 				if (label === "SocialStream"){
 					iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"rpcs", "UUID":uid}, '*');
-					console.log("sent message to extension");
 				}
-				
 			}
 		}
 	}
