@@ -972,30 +972,28 @@ function enableYouTube(){ // function to send data to the DOCk via the VDO.Ninja
 }
 
 async function openchat(target=null){
-	
-	var res;
-	var promise =  new Promise((resolve, reject) => {
-		res = resolve;
-	});
-
-	
-	chrome.tabs.query({}, function(tabs) { // tabs[i].url
-		if (chrome.runtime.lastError) {
-			console.warn(chrome.runtime.lastError.message);
-		}
-		let urls = [];
-		tabs.forEach(tab=>{
-			if (tab.url){
-				urls.push(tab.url);
-			}
+	async function openURL(input){
+		
+		var res;
+		var promise =  new Promise((resolve, reject) => {
+			res = resolve;
 		});
-		res(urls);
-	});
-
-	var activeurls = await promise;
-	console.log(activeurls);
 	
-	function openURL(input){
+		chrome.tabs.query({}, function(tabs) { // tabs[i].url
+			if (chrome.runtime.lastError) {
+				console.warn(chrome.runtime.lastError.message);
+			}
+			let urls = [];
+			tabs.forEach(tab=>{
+				if (tab.url){
+					urls.push(tab.url);
+				}
+			});
+			res(urls);
+		});
+
+		var activeurls = await promise;
+		
 		var matched = false;
 		activeurls.forEach(url=>{
 			if (url.startsWith(input)){
