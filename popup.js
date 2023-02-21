@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	
 	document.getElementById("ytcopy").onclick = async function(){
-		document.getElementById("ytcopy").innerHTML = "Copying..";
+		document.getElementById("ytcopy").innerHTML = "Copying video ID to clipboard";
 		var YoutubeChannel = document.querySelector('input[data-textsetting="youtube_username"]').value;
 		if (!YoutubeChannel){return;}
 		
@@ -50,15 +50,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		
 		fetch("https://www.youtube.com/c/"+YoutubeChannel+"/live").then((response) => response.text()).then((data) => {
-			document.getElementById("ytcopy").innerHTML = "Copying...";
+			document.getElementById("ytcopy").innerHTML = "Copying video ID to clipboard...";
 			try{
 				var videoID = data.split('{"videoId":"')[1].split('"')[0];
 				console.log(videoID);
 				if (videoID){
 					navigator.clipboard.writeText(videoID).then(() => {
-						document.getElementById("ytcopy").innerHTML = "Copied";
+						document.getElementById("ytcopy").innerHTML = "Video ID copied to clipbaord";
 					}, () => {
-						document.getElementById("ytcopy").innerHTML = "Failed to copy";
+						document.getElementById("ytcopy").innerHTML = "Failed to copy to clipboard";
 					});
 				}
 			} catch(e){
