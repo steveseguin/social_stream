@@ -1383,9 +1383,9 @@
 	<div id="menu" class="electronDraggable">
 		<!-- Main buttons -->
 
-		<button class="imgButton" id="pause" data-state="0" onclick="pause(this);" style="background-image: url(./icons/main_msg_pause.png);" title="Main — ⏸ Pause incoming chat messages"></button>
-		<button class="imgButton" id="say_hello" data-state="0" onclick="" style="background-image: url(./icons/main_msg_send.png);" title="Main — 💬 Send a text message to all social endpoints"></button>
-		<button class="imgButton imgSmallButton" id="notify" data-state="0" onclick="notify(this);" style="background-image: url(./icons/main_msg_notify_off.png);" title="Main — 🔔 Start beeping when there is a new message"></button>
+		<button class="imgButton" id="pause" data-state="0" onclick="pause();" style="background-image: url(./icons/main_msg_pause.png);" title="Main — ⏸ Pause incoming chat messages"></button>
+		<button class="imgButton" id="say_hello" data-state="0" style="background-image: url(./icons/main_msg_send.png);" title="Main — 💬 Send a text message to all social endpoints"></button>
+		<button class="imgButton imgSmallButton" id="notify" data-state="0" onclick="notify();" style="background-image: url(./icons/main_msg_notify_off.png);" title="Main — 🔔 Start beeping when there is a new message"></button>
 		<button class="imgButton imgSmallButton hidden" id="select_save_file" data-state="0" onclick="overwriteFile('setup');" style="background-image: url(./icons/main_msg_save.png);" title="Main — 💾 Select the file you want to save the most recent message to"></button>
 
 		<div class="horizontalSeparator"></div>
@@ -1393,15 +1393,15 @@
 		<!-- Filter buttons -->
 
 		<button class="imgButton" id="filter" data-state="0" style="background-image: url(./icons/filter_msg.png);" title="Filter — 🔽 Filter messages based on what you have entered"></button>
-		<button class="imgButton imgSmallButton" id="hide_emoji" data-state="0" onclick="emoji(this);" style="background-image: url(./icons/filter_hideemojionly_on.png);" title="Filter — 😀🚫 Hide messages that contains emojis only"></button>
-		<button class="imgButton imgSmallButton" id="only_donos" data-state="0" onclick="donos(this);" style="background-image: url(./icons/filter_showpaidonly_off.png);" title="Filter — 💲 Show only messages that have donations/cheer"></button>
+		<button class="imgButton imgSmallButton" id="hide_emoji" data-state="0" onclick="emoji();" style="background-image: url(./icons/filter_hideemojionly_on.png);" title="Filter — 😀🚫 Hide messages that contains emojis only"></button>
+		<button class="imgButton imgSmallButton" id="only_donos" data-state="0" onclick="donos();" style="background-image: url(./icons/filter_showpaidonly_off.png);" title="Filter — 💲 Show only messages that have donations/cheer"></button>
 
 		<div class="horizontalSeparator"></div>
 
 		<!-- Queue buttons -->
 		<div id="queueSection" class="hidden">
 			<button class="imgButton" id="next_in_queue" data-state="0" onclick="nextInQueue();" style="background-image: url(./icons/queue_show_next.png);" title="Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)"><span id="next_in_queue_badge" class="buttonBadge">0</span></button>
-			<button class="imgButton imgSmallButton" id="show_only_queue" data-state="0" onclick="filterQueued(this);" style="background-image: url(./icons/queue_show_listonly_off.png);" title="Queue — 📑 Show only the messages in queue"></button>
+			<button class="imgButton imgSmallButton" id="show_only_queue" data-state="0" onclick="filterQueued();" style="background-image: url(./icons/queue_show_listonly_off.png);" title="Queue — 📑 Show only the messages in queue"></button>
 			<div class="horizontalSeparator"></div>
 		</div>
 
@@ -1414,10 +1414,10 @@
 
 		<!-- Text-to-speech buttons -->
 
-		<button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts(this);" style="background-image: url(./icons/tts_incoming_messages_off.png);" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
+		<button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts();" style="background-image: url(./icons/tts_incoming_messages_off.png);" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
 
 		<!-- Scroll button -->
-		<button class="imgButton imgSmallButton" id="jumpto" data-state="0" onclick="jumptoBottom(this);" style="background-image: url(./icons/scroll_to_bottom_off.png);" title="Scroll to bottom"></button>
+		<button class="imgButton imgSmallButton" id="jumpto" data-state="0" onclick="jumptoBottom();" style="background-image: url(./icons/scroll_to_bottom_off.png);" title="Scroll to bottom"></button>
 	</div>
 	<audio id="testtone" style="display:none;" preload="metadata">
 		<source src="./audio/tone.mp3" type="audio/mpeg">
@@ -1768,7 +1768,10 @@
 	var beep = false;
 	if (urlParams.has("beep")){ // removes HTML from messages, donations, and names.
 		beep = true;
-		document.getElementById("notify").dataset.state = beep*1;
+		let ele = document.getElementById("notify");
+		ele.dataset.state = beep*1;
+		ele.style['background-image']='url(./icons/main_msg_notify_on.png)';
+		ele.title = 'Main — 🔕 Stop beeping when there is a new message';
 		playtone();
 	}
 
@@ -1930,7 +1933,7 @@
 	//	voiceGender = urlParams.get("gender") || "MALE";
 	//}
 
-	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){
+	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){ //  tts();
 		document.getElementById("tts").dataset.state = 1;
 		document.getElementById("tts").classList.remove("hidden");
 		document.getElementById("tts").classList.add('pressed');
@@ -2326,7 +2329,7 @@
 	}
 
 	var hideNotDonos = false;
-	var hideTextOnly = false;
+	var hideEmojiOnly = false;
 	var hideNotQueued = false;
 
 	if (urlParams.has("queueonly")){
@@ -2335,16 +2338,17 @@
 		document.getElementById("show_only_queue").classList.add("pressed");
 	}
 
-	function emoji(ele){
+	function emoji(){
+		var ele = document.getElementById("hide_emoji");
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
-			hideTextOnly = true;
+			hideEmojiOnly = true;
 			//document.documentElement.style.setProperty("--show-emoji-only", "none");
 			//document.documentElement.style.setProperty("--show-images", "none");
 			ele.style['background-image']='url(./icons/filter_hideemojionly_off.png)';
 			ele.title = 'Filter — 📄 Show all messages, including with emojis only';
 		} else {
-			hideTextOnly = false;
+			hideEmojiOnly = false;
 			ele.dataset.state = "0";
 			//document.documentElement.style.setProperty("--show-emoji-only", "flex");
 			//document.documentElement.style.setProperty("--show-images", "inline-block");
@@ -2437,7 +2441,8 @@
 		}
 	}
 
-	function donos(ele){
+	function donos(){
+		var ele = document.getElementById("only_donos");
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
 			//document.documentElement.style.setProperty("--show-donos-only", "none");
@@ -2479,7 +2484,7 @@
 		} else if (hideNotQueued && !node.classList.contains("queued") && !node.classList.contains("pinned")){
 			node.classList.add("hidden");
 
-		} else if (hideTextOnly && node.classList.contains("noText")){
+		} else if (hideEmojiOnly && node.classList.contains("noText")){
 			node.classList.add("hidden");
 
 		} else {
@@ -2535,9 +2540,9 @@
 			getById("autoshow").title = 'Featured — 🌟 Auto-feature messages as they come in';
 		}
 	}
-	function pause(ele){
+	function pause(){
 		pauseState = !pauseState;
-
+		var ele = document.getElementById("pause");
 		if (pauseState){
 			ele.style['background-image']='url(./icons/main_msg_play.png)';
 			ele.title = 'Main — ▶️ Play incoming chat messages';
@@ -2554,8 +2559,9 @@
 		}
 	}
 
-	function notify(ele) {
+	function notify() {
 		beep = !beep;
+		var ele = document.getElementById("notify");
 		if (beep) {
 			ele.dataset.state = beep*1;
 			ele.style['background-image']='url(./icons/main_msg_notify_on.png)';
@@ -2568,7 +2574,8 @@
 		}
 	}
 
-	function tts(ele) {
+	function tts() {
+		var ele = document.getElementById("tts");
 		if (window.speechSynthesis.pending || window.speechSynthesis.speaking){
 			speech = false;
 			window.speechSynthesis.cancel();
@@ -2847,7 +2854,8 @@
 		document.getElementById("jumpto").classList.add("pressed");
 	}
 
-	function jumptoBottom(ele){
+	function jumptoBottom(){
+		var ele = document.getElementById("jumpto");
 		forceAutoscroll = !forceAutoscroll;
 		if (forceAutoscroll){
 			ele.style['background-image']='url(./icons/scroll_to_bottom_on.png)';
@@ -3009,7 +3017,8 @@
 		element.remove();
 	}
 
-	function filterQueued(ele){ // #show_only_queue
+	function filterQueued(){ // #show_only_queue
+		var ele = document.getElementById("show_only_queue");
 		if (ele.dataset.state=="0"){
 			ele.dataset.state = "1";
 			//document.documentElement.style.setProperty("--show-queue-only", "none");
@@ -3315,7 +3324,7 @@
 				data.hasDonation = "";
 			}
 
-			var chatmessage = "";
+			var chatmessage = "";  
 			if (data.chatmessage){
 				if (stylizeEmoji){
 					chatmessage = data.chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig, "<span class='emoji'>$1</span>");
@@ -3591,14 +3600,16 @@
 				}
 
 			}
-			var contentLength = node.querySelector("#content_"+data.id).innerText.trim().length || 0;
-			contentLength += node.querySelectorAll("#content_"+data.id+" img").length || 0;
-			if (!contentLength){
+			// this part is used to filter out emojis, but also calculate the character-length of a message, to know how long to show it for
+			// emojis and images are counted with char-length zero-value
+			
+			var textContentLength = node.querySelector("#content_"+data.id).innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig, "").length || 0;
+			node.dataset.contentLength = textContentLength;
+			if (!textContentLength){
 				node.classList.add("noText");
 			} 
-			node.contentLength = contentLength;
-
-			
+			// textContentLength += node.querySelectorAll("#content_"+data.id+" img").length || 0; // must come after noText set, if we want to include images as a character
+			node.contentLength = textContentLength;
 
 			transitionType.forEach(classtype=>{
 				node.classList.add(classtype);
@@ -3610,7 +3621,7 @@
 				node.classList.add("hidden");
 			} else if (hideNotQueued && !node.classList.contains("queued")){
 				node.classList.add("hidden");
-			} else if (hideTextOnly && node.classList.contains("noText")){
+			} else if (hideEmojiOnly && node.classList.contains("noText")){
 				node.classList.add("hidden");
 			} else {
 				var style = window.getComputedStyle(node);

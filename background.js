@@ -595,11 +595,11 @@ chrome.runtime.onMessage.addListener(
 					var score = parseInt(Math.random()* 378);
 					data.chatmessage  =  jokes[score]["setup"] + "..  " + jokes[score]["punchline"]  + " 😊";
 				} else if (Math.random()>0.6){
-					data.hasDonation = "100 gold";
+					data.hasDonation = "";
 					data.hasMembership =  '';
 					data.chatname = "Steve";
 					var score = parseInt(Math.random()* 378);
-					data.chatmessage  =  '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">';
+					data.chatmessage  =  '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁';
 				} else if (Math.random()>0.5){
 					data.hasDonation = "";
 					data.nameColor = "#107516";
