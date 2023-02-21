@@ -1148,7 +1148,6 @@ function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for 
 eventer(messageEvent, async function (e) {
 	
 	if (e.data && (typeof e.data == "object")){
-		console.log(e.data);
 		if (("dataReceived" in e.data) && ("overlayNinja" in e.data.dataReceived)){ 
 			if ("response" in e.data.dataReceived.overlayNinja){ // we receieved a response from the dock
 				processResponse(e.data.dataReceived.overlayNinja);
@@ -1466,8 +1465,6 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 		}
 	}
 
-	console.log("applyBotActions");
-	console.log(data);
 	if (settings.joke && (data.chatmessage.toLowerCase() === "!joke")){
 		if (Date.now() - messageTimeout > 5100){
 			var score = parseInt(Math.random()* 378);

@@ -1981,7 +1981,6 @@
 	}
 
 	function speak(text, allow=false){
-		console.log(text);
 		if (!speech && !allow){return;}
 		if (!text){return;}
 		if (!voices && (voices===null)){return;}
@@ -2755,7 +2754,6 @@
 				return true
 			} else if (data.action == "content"){ // or just send data=false
 				if (data.value){
-					console.log(data.value);
 					//let content = decodeURI(data.value);
 					let content = JSON.parse(data.value);
 					if (!pauseState ){
