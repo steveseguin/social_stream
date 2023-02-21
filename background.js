@@ -972,7 +972,7 @@ function enableYouTube(){ // function to send data to the DOCk via the VDO.Ninja
 }
 
 function openchat(target=null){
-	if ((target=="youtube" || !target)  && settings.youtube_username){
+	if ((target=="youtube" || !target) && settings.youtube_username){
 		if (!settings.youtube_username.textsetting.startsWith("@")){
 			settings.youtube_username.textsetting = "@"+settings.youtube_username.textsetting;
 		}
@@ -987,8 +987,31 @@ function openchat(target=null){
 		});
 	}
 
-	if ((target=="twitch" || !target)  && settings.twitch_username){
+	if ((target=="twitch" || !target) && settings.twitch_username){
 		window.open("https://www.twitch.tv/popout/"+settings.twitch_username.textsetting+"/chat?popout=", '_blank');
+	}
+
+	if ((target=="trovo" || !target) && settings.trovo_username){
+		window.open("https://trovo.live/chat/"+settings.trovo_username.textsetting, '_blank');
+	}
+
+	if ((target=="tiktok" || !target) && settings.tiktok_username){
+		if (!settings.tiktok_username.textsetting.startsWith("@")){
+			settings.tiktok_username.textsetting = "@"+settings.tiktok_username.textsetting;
+		}
+		window.open("https://www.tiktok.com/"+settings.tiktok_username.textsetting+"/live", '_blank');
+	}
+
+	if ((target=="instagramlive" || !target) && settings.instagramlive_username){
+		window.open("https://www.instagram.com/"+settings.instagramlive_username.textsetting+"/live", '_blank');
+	}
+
+	if ((target=="kick" || !target) && settings.kick_username){
+		window.open("https://kick.com/"+settings.kick_username.textsetting+"/chatroom", '_blank');
+	}
+
+	if ((target=="discord" || !target) && settings.discord_serverid && settings.discord_channelid){
+		window.open("https://discord.com/channels/"+settings.discord_serverid.textsetting+"/"+settings.discord_channelid.textsetting, '_blank')
 	}
 }
 
