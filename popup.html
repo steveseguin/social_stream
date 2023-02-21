@@ -78,15 +78,15 @@
 			padding: 0;
 			margin: 0;
 		}
-		
+
 		body.extension-disabled {
 			background-color: var(--body-background-disabled);
 		}
-		
+
 		body.extension-enabled {
 			background-color: var(--body-background-enabled);
 		}
-		
+
 		p {
 			color: var(--text-button-text);
 		}
@@ -203,13 +203,13 @@
 			color: var(--single-message-text-color);
 			background-color: var(--single-message-color)
 		}
-		
+
 		.link div.emotes_wall,
 		.emotes_wall {
 			color: var(--emotes-wall-text-color);
 			background-color: var(--emotes-wall-color)
 		}
-		
+
 
 		.link div a {
 			color: var(--link-color);
@@ -318,7 +318,7 @@
 			border: 1px solid black;
 			color: var(--button-text);
 		}
-		
+
 		.link {
 			cursor: help;
 		}
@@ -346,7 +346,7 @@
 			<h2>Streaming chat (dockable) <a class="options-link" href="#streaming-chat-options"
 				title="Jump to dockable streaming chat link options">[options]</a></h2>
 			<div id="dock" class="streaming_chat"></div>
-			
+
 		</div>
 		<div class="link" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
 			<h2>Featured chat overlay <a class="options-link" href="#single-message-options"
@@ -358,7 +358,7 @@
 				title="Jump to the emote wall link options">[emotes]</a></h2>
 			<div id="emoteswall" class="emotes_wall"></div>
 		</div>
-		
+
 		<h3 title="These services require you to manually opt-in, for security purposes">Opt-in additional chat services</h3>
 		<div class="options_group options">
 			<div>
@@ -404,7 +404,7 @@
 				</label> Capture Instagram non-live comments<img class="icon" src="instagram.png"></img>
 			</div>
 		</div>
-		
+
 		<a href="" id="streaming-chat-options"></a>
 		<h2>Streaming chat (dock) options</h2>
 		<div class="options">
@@ -614,15 +614,15 @@
 						<span class="slider round"></span>
 					</label> Delete names entirely
 				</div>
-				
+
 			</div>
-			
+
 			<h3>Specify host or bot</h3>
 			<div class="options_group streaming_chat">
 				<div>
 					<label class="textinput" style="display:block;padding-top:8px;">
 					</label> Name or list of names to help identify the host and bots.:
-					<input type="text" data-textparam1="myname" style="width:95%;" 
+					<input type="text" data-textparam1="myname" style="width:95%;"
 						placeholder="ie: name1,name 2,Name3" />
 					<p>Note: The first name listed may be used as the host's name in stream when their name is not otherwise known. The list of names should be comma separated.</p>
 				</div>
@@ -837,8 +837,8 @@
 				</div>
 			</div>
 		</div>
-		
-		
+
+
 		<a href="" id="emote-wall-options"></a>
 		<h2>Emote wall options</h2>
 		<div class="options">
@@ -864,53 +864,53 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<h2>Global settings and tools</h2>
 		<div class="options">
 			<div class="options_group">
-			
+
 				<div>
 					<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
 						<input type="checkbox" id="firstsourceonly" data-setting="firstsourceonly">
 						<span class="slider round"></span>
 					</label> Filter out duplicate message echos
 				</div>
-				
+
 				<div>
 					<label class="switch" title="Filter out messages that might be chat commands">
 						<input type="checkbox"  data-setting="filtercommands">
 						<span class="slider round"></span>
 					</label> Filter out messages starting with: <b><i>!</i></b>
 				</div>
-				
+
 				<div>
 					<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
 						<input type="checkbox" id="textonlymode" data-setting="textonlymode">
 						<span class="slider round"></span>
 					</label> Strip HTML from messages
 				</div>
-				
+
 				<div>
 					<label class="switch" title="Capture likes, subs, and other available event data.">
 						<input type="checkbox" data-setting="captureevents">
 						<span class="slider round"></span>
 					</label> Capture stream events and actions
 				</div>
-				
+
 				<div>
 					<label class="switch" title="If a name lacks color data, randomly add one">
 						<input type="checkbox" data-setting="randomcolor">
 						<span class="slider round"></span>
 					</label>  Add random colors to uncolored names
 				</div>
-				
+
 				<div>
 					<label class="switch" title="Members on Youtube won't have green names, for example">
 						<input type="checkbox" data-setting="nosubcolor">
 						<span class="slider round"></span>
 					</label> Do not color names based on sub or member status
 				</div>
-				
+
 				<div>
 					<label class="switch">
 						<input type="checkbox" data-setting="h2r">
@@ -918,7 +918,7 @@
 					</label> Send all to H2R server:
 					<input type="text" style="margin:0px;max-width:43%;display:inline-block;" data-textsetting="h2rserver" placeholder="Provide ID or full URL" />
 				</div>
-				
+
 				<div>
 					<label class="switch">
 						<input type="checkbox" data-setting="post">
@@ -926,14 +926,14 @@
 					</label> Send all to POST server:
 					<input type="text" style="margin:0px;max-width:43%;display:inline-block;" data-textsetting="postserver" placeholder="Provide ID or full URL" />
 				</div>
-				
+
 				<div>
 					<label class="switch">
 						<input type="checkbox" id="autohi" data-setting="autohi">
 						<span class="slider round"></span>
 					</label> Auto-reply to "<b>hi</b>" messages
 				</div>
-				
+
 				<div>
 					<label class="switch">
 						<input type="checkbox" id="midi" data-setting="midi">
@@ -941,49 +941,81 @@
 					</label> Enable MIDI hotkeys 🎹
 					<button id="midiConfig" class="button" data-action="loadmidi" style="cursor:pointer;"> Load Config</button>
 				</div>
-				
+
 				<div>
 					<label class="switch" title="See documentation on socialstream.ninja for details">
 						<input type="checkbox" data-setting="socketserver">
 						<span class="slider round"></span>
 					</label> Enable <a target='_blank' id='remote_control_url' href='https://socialstream.ninja/sampleapi.html'>remote HTTP/WSS API control options</a>
 				</div>
-				
+
 				<div>
 					<label class="switch">
 						<input type="checkbox" id="server" data-both="server">
 						<span class="slider round"></span>
 					</label> Send featured chat via server instead of P2P
 				</div>
-				
+
 				<div style="display:inline-block;">
 					<label class="switch">
 						<input type="checkbox" id="joke" data-setting="joke">
 						<span class="slider round"></span>
 					</label> Tell joke on <b>!joke</b> message
 				</div>
-				
+
 				<div style="display:inline-block;">
 					<button class="button" data-action="tellajoke" style="cursor:pointer;"> Tell a joke now</button>
 				</div>
 			</div>
 
 			<h3>Quick-open chat pop-ups</h3>
-			<div class="options_group">			
-				
-				<div style="display:inline-block;">
-					YouTube <input type="text" style="display:inline-block;" data-textsetting="youtube_username" placeholder="YouTube @channel name" />
-					<button class="button" data-action="openchat" data-value="youtube" style="cursor:pointer;"> Open Chat</button>
+			<div class="options_group">
+				<div>
+					<label>YouTube</label>
+					<input type="text" style="margin-bottom: 0px;" data-textsetting="youtube_username" placeholder="Channel name" />
+					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="youtube" style="cursor:pointer;"> Open Chat</button>
 				</div>
-				
-				<div style="display:inline-block;;">
-					Twitch <input type="text" style="display:inline-block;" data-textsetting="twitch_username" placeholder="Twitch channel name" />
-					<button class="button" data-action="openchat" data-value="twitch" style="cursor:pointer;"> Open Chat</button>
+
+				<div>
+					<label>Twitch</label>
+					<input type="text" style="margin-bottom: 0px;" data-textsetting="twitch_username" placeholder="Channel name" />
+					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="twitch" style="cursor:pointer;"> Open Chat</button>
 				</div>
-				
-				<button class="button" data-action="openchat" style="cursor:pointer;"> Open All Chat</button>
-				
-				
+
+				<div>
+					<label>Trovo</label>
+					<input type="text" style="margin-bottom: 0px;" data-textsetting="trovo_username" placeholder="Channel name" />
+					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="trovo" style="cursor:pointer;"> Open Chat</button>
+				</div>
+
+				<div>
+					<label>TikTok</label>
+					<input type="text" style="margin-bottom: 0px;" data-textsetting="tiktok_username" placeholder="Channel name" />
+					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="tiktok" style="cursor:pointer;"> Open Chat</button>
+				</div>
+
+				<div>
+					<label>Instagram Live</label>
+					<input type="text" style="margin-bottom: 0px;" data-textsetting="instagramlive_username" placeholder="Channel name" />
+					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="instagramlive" style="cursor:pointer;"> Open Chat</button>
+				</div>
+
+				<div>
+					<label>Kick</label>
+					<input type="text" style="margin-bottom: 0px;" data-textsetting="kick_username" placeholder="Channel name" />
+					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="kick" style="cursor:pointer;"> Open Chat</button>
+				</div>
+
+				<div>
+					<label>Discord</label>
+					<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_serverid" placeholder="Server id" />
+					<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_channelid" placeholder="Channel id" />
+					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="discord" style="cursor:pointer;"> Open Chat</button>
+				</div>
+
+				<button class="button" style="margin-left: 0px;" data-action="openchat" style="cursor:pointer;"> Open All Chat</button>
+
+
 				<div style="display:none;">
 					<button class="button" data-action="enableYouTube" style="cursor:pointer;"> Connect Youtube API</button><input type="text" style="display:inline-block;" data-textsetting="youtubeapikey" placeholder="Provide YouTube API Key" />
 				</div>
@@ -1005,7 +1037,7 @@
 					<button class="button" data-action="excelsaveStop" style="cursor:pointer;"> Stop saving (if active)</button>
 				</div>
 			</div>
-			
+
 			<h3>Export/import settings</h3>
 			<div class="options_group">
 				Backup and load your extension settings.
@@ -1014,15 +1046,15 @@
 					<button class="button" data-action="import" style="cursor:pointer;"> Import settings</button>
 				</div>
 			</div>
-			
-			
+
+
 			<h3>Fake a comment for testing</h3>
 			<div class="options_group">
 				Issue a random test message that will appear in the dock
 				<button class="button" data-action="fakemsg" style="cursor:pointer;">Trigger now</button>
 			</div>
 			<p>
-			Visit us at <a href='https://discord.socialstream.ninja' target="_blank"discord.socialstream.ninja</a>. Made with 💖 for the community. 
+			Visit us at <a href='https://discord.socialstream.ninja' target="_blank"discord.socialstream.ninja</a>. Made with 💖 for the community.
 			</p>
 		</div>
 	</div> <!-- end container -->
