@@ -1016,6 +1016,11 @@ async function openchat(target=null){
 		let url = "https://trovo.live/chat/"+settings.trovo_username.textsetting;
 		openURL(url);
 	}
+	
+	if ((target=="picarto" || !target) && settings.trovo_username){
+		let url = "https://picarto.tv/chatpopout/"+settings.picarto_username.textsetting+"/public";
+		openURL(url);
+	}
 
 	if ((target=="tiktok" || !target) && settings.tiktok_username){
 		if (!settings.tiktok_username.textsetting.startsWith("@")){
@@ -1029,6 +1034,8 @@ async function openchat(target=null){
 		try {
 			fetch(url, { method: 'GET', redirect: 'error'}).then((response) => response.text()).then((data) => {
 				openURL(url);
+			}).catch(error => {
+				// not live?
 			});
 		} catch(e){
 			// not live
@@ -1059,6 +1066,8 @@ async function openchat(target=null){
 			} catch(e){
 				// not live?
 			}
+		}).catch(error => {
+			// not live?
 		});
 	}
 }
