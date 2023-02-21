@@ -1865,6 +1865,12 @@
 	if (urlParams.has("autoshowdonos")){
 		autoshowdonos = true;
 	}
+	
+	var openChatAutomatically = false;
+	if (urlParams.has("openchat")){
+		openChatAutomatically = true;
+	}
+	
 
 	if (urlParams.has("scale")){
 		scale = urlParams.get("scale") || 1.0;
@@ -2824,15 +2830,26 @@
 					}
 					//console.log(connectedPeers);
 				}
+			} else if (("action" in e.data) && e.data.UUID && e.data.value && (e.data.action == "view-connection-info")){ // flip this
+				if ("label" in e.data.value){
+					connectedPeers[e.data.UUID] = e.data.value.label;
+					if (openChatAutomatically){
+						send2Extension({action:"openChat", value:null});
+					}
+				}
 			}
+			
 			if (("action" in e.data) && e.data.UUID && ("value" in e.data) && !e.data.value && (e.data.action == "push-connection")){ // flip this
 				if (e.data.UUID in connectedPeers){
 					delete connectedPeers[e.data.UUID];
 				}
 				//console.log(connectedPeers);
+			} else if (("action" in e.data) && e.data.UUID && ("value" in e.data) && !e.data.value && (e.data.action == "view-connection")){ // flip this
+				if (e.data.UUID in connectedPeers){
+					delete connectedPeers[e.data.UUID];
+				}
 			}
-
-
+			
 			if ("dataReceived" in e.data){ // raw data
 				if ("overlayNinja" in e.data.dataReceived){
 					processInput(e.data.dataReceived.overlayNinja);
@@ -3929,6 +3946,20 @@
 				data.push(ele.rawContents.id);
 			});
 			syncDataP2P({queue:data});
+		}
+	}
+	
+	function send2Extension(data){
+		if (iframe){
+			var keys = Object.keys(connectedPeers);
+			for (var i = 0; i<keys.length;i++){
+				var UUID = keys[i];
+				var label = connectedPeers[keys[i]];
+				if (label === "SocialStream"){
+					iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"rpcs", "UUID":UUID}, '*');
+					console.log("sent message to extension");
+				}
+			}
 		}
 	}
 

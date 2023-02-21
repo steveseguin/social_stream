@@ -1146,12 +1146,18 @@ function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for 
 }
 
 eventer(messageEvent, async function (e) {
+	
 	if (e.data && (typeof e.data == "object")){
-		if (("dataReceived" in e.data) && ("overlayNinja" in e.data.dataReceived)){
+		console.log(e.data);
+		if (("dataReceived" in e.data) && ("overlayNinja" in e.data.dataReceived)){ 
 			if ("response" in e.data.dataReceived.overlayNinja){ // we receieved a response from the dock
 				processResponse(e.data.dataReceived.overlayNinja);
+			} else if ("action" in e.data.dataReceived.overlayNinja){
+				if (e.data.dataReceived.overlayNinja.action === "openChat"){
+					openchat(e.data.dataReceived.overlayNinja.value || null);
+				}
 			}
-		} else if ("action" in e.data){
+		} else if ("action" in e.data){ // this is from vdo.ninja, not socialstream. 
 			if (e.data.action === "YoutubeChat"){
 				if (e.data.value && data.value.snippet && data.value.authorDetails){
 					var data = {};
