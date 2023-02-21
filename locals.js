@@ -17,14 +17,19 @@
 	function processMessage(ele){
 		var name="";
 		try {
-			name = ele.dataset.username;
+			name = ele.dataset.username || "";
+			
 		} catch(e){
-			return;
+			name = "";
+		}
+		
+		if (!name){
+			name = document.querySelector(".nameContainer > .name").innerText;
 		}
 		
 		var msg = "";
 		try {
-			ele.querySelector('.msg-text').childNodes.forEach(ee=>{
+			ele.querySelector('.msg-text, .mchat__chatmessage').childNodes.forEach(ee=>{
 				if (ee.nodeType == Node.TEXT_NODE){
 					msg += ee.textContent;
 				} else if (settings.textonlymode && ee.alt && (ee.nodeName  == "IMG")){
@@ -37,11 +42,20 @@
 			});
 		}catch(e){msg = "";}
 		
+		msg = msg.trim();
+		
 		var chatimg = '';
 		try {
-			chatimg = ele.querySelector(".pmessage__avaimg");
-			chatimg = "https://cdn.locals.com/images/avatars/" + chatimg.style.cssText.split("https://cdn.locals.com/images/avatars/")[1];
-			chatimg = chatimg.split(".png")[0] + ".png";
+			chatimg = ele.querySelector(".pmessage__avaimg") || "";
+			if (chatimg){
+				chatimg = "https://cdn.locals.com/images/avatars/" + chatimg.style.cssText.split("https://cdn.locals.com/images/avatars/")[1] || "";
+				chatimg = chatimg.split(".png")[0] + ".png";
+			} else {
+				chatimg = ele.querySelector(".ava-container img[src]") || "";
+				if (chatimg){
+					chatimg = chatimg.src;
+				}
+			}
 		} catch (e){
 			chatimg = "";
 		}
@@ -142,16 +156,18 @@
 	console.log("social stream injected");
 
 	setInterval(function(){
-		if (document.getElementById('chat-history')){
-			if (!document.getElementById('chat-history').marked){
-				document.getElementById('chat-history').marked=true;
+		var chatContainer = document.querySelector('#chat-history,#chatscroller')
+		if (chatContainer){
+			if (!chatContainer.marked){
+				chatContainer.marked=true;
 				setTimeout(function(){
-					document.getElementById('chat-history').childNodes.forEach(ele=>{
+					var chatContainer = document.querySelector('#chat-history,#chatscroller')
+					chatContainer.childNodes.forEach(ele=>{
 						if (ele && ele.nodeName && ele.nodeName == "DIV"){
 							ele.skip = true;
 						}
 					});
-					onElementInserted(document.getElementById('chat-history'));
+					onElementInserted(chatContainer);
 				},3000);
 			}
 		}
