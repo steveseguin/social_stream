@@ -1,5 +1,5 @@
 var isExtensionOn = false;
-document.addEventListener("DOMContentLoaded", function(event) {
+document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	var disableButton = document.getElementById("disableButton");
 	disableButton.onclick = function(){
@@ -38,6 +38,34 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			});
 		};
 	}
+	
+	
+	document.getElementById("ytcopy").onclick = async function(){
+		document.getElementById("ytcopy").innerHTML = "Copying..";
+		var YoutubeChannel = document.querySelector('input[data-textsetting="youtube_username"]').value;
+		if (!YoutubeChannel){return;}
+		
+		if (!YoutubeChannel.startsWith("@")){
+			YoutubeChannel = "@"+YoutubeChannel;
+		}
+		
+		fetch("https://www.youtube.com/c/"+YoutubeChannel+"/live").then((response) => response.text()).then((data) => {
+			document.getElementById("ytcopy").innerHTML = "Copying...";
+			try{
+				var videoID = data.split('{"videoId":"')[1].split('"')[0];
+				console.log(videoID);
+				if (videoID){
+					navigator.clipboard.writeText(videoID).then(() => {
+						document.getElementById("ytcopy").innerHTML = "Copied";
+					}, () => {
+						document.getElementById("ytcopy").innerHTML = "Failed to copy";
+					});
+				}
+			} catch(e){
+				document.getElementById("ytcopy").innerHTML = "Video not found";
+			}
+		});
+	};
 	
 	checkVersion();
 });
