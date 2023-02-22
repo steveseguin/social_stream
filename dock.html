@@ -18,6 +18,7 @@
 			--font-color: #FFF;
 			--font-color-name: #DDD;
 			--background-color: #36393F;
+			--menu-background-color: #2F3136;
 			--link-color: #5AF;
 			--highlight-base: #FFF2;
 			--highlight-base2: #4444;
@@ -702,7 +703,7 @@
 			padding-bottom: 0px;
 			display: flex;
 			justify-content: center;
-			background-color: #2F3136;
+			background-color: var(--menu-background-color);
 			box-shadow: 0 0 5px #000;
 			z-index: 2;
 		}
@@ -2283,7 +2284,7 @@
 	if (darkmode){
 		document.getElementById("menu").classList.add("darkmode");
 		document.documentElement.style.setProperty("--background-color", "#000");
-		
+		document.documentElement.style.setProperty("--menu-background-color", "#1c1d1d");
 	} else if (darkmode === null){ // defaultmode
 		document.getElementById("menu").classList.add("darkmode");
 		darkmode = true;

@@ -252,18 +252,18 @@ function updateSettings(ele){
 
 			if (ele.dataset.param1 == "darkmode"){
 				var key = "lightmode";
-				var ele = document.querySelector("input[data-param1='"+key+"']");
-				if (ele && ele.checked){
-					ele.checked = false;
-					updateSettings(ele);
+				var ele1 = document.querySelector("input[data-param1='"+key+"']");
+				if (ele1 && ele1.checked){
+					ele1.checked = false;
+					updateSettings(ele1);
 				}
 
 			} else if (ele.dataset.param1 == "lightmode"){
 				var key = "darkmode";
-				var ele = document.querySelector("input[data-param1='"+key+"']");
-				if (ele && ele.checked){
-					ele.checked = false;
-					updateSettings(ele);
+				var ele1 = document.querySelector("input[data-param1='"+key+"']");
+				if (ele1 && ele1.checked){
+					ele1.checked = false;
+					updateSettings(ele1);
 				}
 			}
 
