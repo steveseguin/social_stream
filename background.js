@@ -1021,6 +1021,29 @@ async function openchat(target=null){
 		let url = "https://picarto.tv/chatpopout/"+settings.picarto_username.textsetting+"/public";
 		openURL(url);
 	}
+	
+	if ((target=="custom1" || !target) && settings.custom1_url){
+		let url = settings.custom1_url.textsetting;
+		if (!url.startsWith("http")){
+			url="https://"+url;
+		}
+		openURL(url);
+	}
+	if ((target=="custom2" || !target) && settings.custom2_url){
+		let url = settings.custom2_url.textsetting;
+		if (!url.startsWith("http")){
+			url="https://"+url;
+		}
+		openURL(url);
+	}
+	if ((target=="custom3" || !target) && settings.custom3_url){
+		let url = settings.custom3_url.textsetting;
+		if (!url.startsWith("http")){
+			url="https://"+url;
+		}
+		openURL(url);
+	}
+	
 
 	if ((target=="tiktok" || !target) && settings.tiktok_username){
 		if (!settings.tiktok_username.textsetting.startsWith("@")){
@@ -1314,6 +1337,13 @@ function processResponse(data){
 						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true));  // enable the debugger to let us fake a user
 					} else {
 						generalFakeChat(tabs[i].id, data.response, false, true, true); // middle=true, keypress=true, backspace=false
+					}
+				} else if (tabs[i].url.startsWith("https://app.slack.com")){  // twitch, but there's also cases for youtube/facebook
+					if (!debuggerEnabled[tabs[i].id]){
+						debuggerEnabled[tabs[i].id]=false;
+						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true));  // enable the debugger to let us fake a user
+					} else {
+						generalFakeChat(tabs[i].id, data.response, false, false, false); // middle=true, keypress=true, backspace=false
 					}
 				} else {  // all other destinations. ; generic
 
