@@ -19,7 +19,7 @@
 			--font-color-name: #DDD;
 			--background-color: #36393F;
 			--link-color: #5AF;
-			--highlight-base: #FFF4;
+			--highlight-base: #FFF2;
 			--highlight-base2: #4444;
 			--highlight-compact: #3335;
 			--highlight-compact2: #3333;
@@ -784,7 +784,7 @@
 		.popInModal {
 			position: fixed!important;
 			padding: 4px 14px 4px;
-			background-color: #2F3136ee;
+			background-color: var(--background-color);
 			border-width: 2px;
 			border-style: solid;
 			border-color: #00000080;
@@ -2283,6 +2283,7 @@
 	if (darkmode){
 		document.getElementById("menu").classList.add("darkmode");
 		document.documentElement.style.setProperty("--background-color", "#000");
+		
 	} else if (darkmode === null){ // defaultmode
 		document.getElementById("menu").classList.add("darkmode");
 		darkmode = true;
