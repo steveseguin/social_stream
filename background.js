@@ -997,7 +997,7 @@ async function openchat(target=null){
 	var activeurls = await promise;
 	console.log(activeurls);
 
-	function openURL(input, newWindow=true, poke=false){
+	function openURL(input, newWindow=false, poke=false){
 		var matched = false;
 		activeurls.forEach(url2=>{
 			if (url2.startsWith(input)){
