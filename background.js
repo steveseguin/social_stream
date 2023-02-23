@@ -995,7 +995,7 @@ async function openchat(target=null){
 	var activeurls = await promise;
 	console.log(activeurls);
 	
-	function openURL(input){
+	function openURL(input, poke=false){
 		var matched = false;
 		activeurls.forEach(url2=>{
 			if (url2.startsWith(input)){
@@ -1004,6 +1004,9 @@ async function openchat(target=null){
 		});
 		if (!matched){
 			window.open(input, '_blank');
+			if (poke){
+				setTimeout(function(){pokeSite(input);},1500,input);
+			}
 		}
 	}
  
@@ -1057,7 +1060,7 @@ async function openchat(target=null){
 		let url = "https://www.instagram.com/"+settings.instagramlive_username.textsetting+"/live/";
 		try {
 			fetch(url, { method: 'GET', redirect: 'error'}).then((response) => response.text()).then((data) => {
-				openURL(url);
+				openURL(url, true);
 			}).catch(error => {
 				// not live?
 			});
@@ -1298,6 +1301,89 @@ function checkIfAllowed(sitename){
 	return true;
 }
 
+function pokeSite(url){
+	if (!chrome.debugger){return false;}
+	if (!isExtensionOn){return false;} // extension not active, so don't let responder happen. Probably safer this way.
+
+	chrome.tabs.query({}, function(tabs) {
+		if (chrome.runtime.lastError) {
+			console.warn(chrome.runtime.lastError.message);
+		}
+		var published = {};
+		for (var i=0;i<tabs.length;i++){
+			try {
+				
+				if (!tabs[i].url){continue;}
+				if (tabs[i].url in published){continue;} // skip. we already published to this tab.
+				if (tabs[i].url.startsWith("https://socialstream.ninja/")){continue;}
+				if (tabs[i].url.startsWith("chrome-extension")){continue;}
+				// if (!checkIfAllowed((tabs[i].url))){continue;} 
+
+				published[tabs[i].url] = true;
+				//messageTimeout = Date.now();
+				// console.log(tabs[i].url);
+				if (tabs[i].url.startsWith(url)){ 
+					if (!debuggerEnabled[tabs[i].id]){
+						debuggerEnabled[tabs[i].id]=false;
+						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakePoke));  // enable the debugger to let us fake a user
+					} else {
+						generalFakePoke(tabs[i].id);
+					}
+				} 
+			} catch(e){
+				chrome.runtime.lastError;
+			}
+		}
+	});
+	return true;
+}
+
+function generalFakePoke(tabid){ // fake a user input
+	try{
+		chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+			"type": "keyDown",
+			"key": "Enter",
+			"code": "Enter",
+			"nativeVirtualKeyCode": 13,
+			"windowsVirtualKeyCode": 13
+		}, function (e) {
+			chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {
+				"type": "keyUp",
+				"key": "Enter",
+				"code": "Enter",
+				"nativeVirtualKeyCode": 13,
+				"windowsVirtualKeyCode": 13
+			 }, function (e) {
+					chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchMouseEvent", {
+						"type": "mousePressed",
+						"x": 1,
+						"y": 1,
+						"button": "left",
+						"clickCount": 1
+					}, function (e) {
+						chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchMouseEvent", {
+							"type": "mouseReleased",
+							"x": 1,
+							"y": 1,
+							"button": "left",
+							"clickCount": 1
+						}, function (e) {
+							if (debuggerEnabled[tabid]){
+								chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+							}
+						});
+					});
+				}
+			);
+		});
+
+	} catch(e){
+		if (debuggerEnabled[tabid]){
+			chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+		}
+	}
+}
+
 function processResponse(data){
 
 	if (!chrome.debugger){return false;}
@@ -1366,6 +1452,7 @@ function processResponse(data){
 	});
 	return true;
 }
+
 
 function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=false){ // fake a user input
 	try{
@@ -1517,7 +1604,6 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			messageTimeout = Date.now();
 			var msg = {};
 			msg.response = "@"+data.chatname+", "+joke["setup"];
-			console.log(msg);
 			processResponse(msg);
 			setTimeout(function(msg, punch){
 				msg.response = punch;
