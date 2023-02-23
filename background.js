@@ -997,7 +997,7 @@ async function openchat(target=null){
 	var activeurls = await promise;
 	console.log(activeurls);
 
-	function openURL(input, poke=false){
+	function openURL(input, newWindow=true, poke=false){
 		var matched = false;
 		activeurls.forEach(url2=>{
 			if (url2.startsWith(input)){
@@ -1005,7 +1005,11 @@ async function openchat(target=null){
 			}
 		});
 		if (!matched){
-			window.open(input, '_blank');
+			if (newWindow) {
+				window.open(input, '_blank', 'toolbar=0,location=0,menubar=0');
+			} else {
+				window.open(input, '_blank');
+			}
 			if (poke){
 				setTimeout(function(){pokeSite(input);},3000,input);
 				setTimeout(function(){pokeSite(input);},6000,input);
@@ -1018,44 +1022,8 @@ async function openchat(target=null){
 		openURL(url);
 	}
 
-	if ((target=="trovo" || !target) && settings.trovo_username){
-		let url = "https://trovo.live/chat/"+settings.trovo_username.textsetting;
-		openURL(url);
-	}
-
-	if ((target=="picarto" || !target) && settings.picarto_username){
-		let url = "https://picarto.tv/chatpopout/"+settings.picarto_username.textsetting+"/public";
-		openURL(url);
-	}
-
-	if ((target=="custom1" || !target) && settings.custom1_url){
-		let url = settings.custom1_url.textsetting;
-		if (!url.startsWith("http")){
-			url="https://"+url;
-		}
-		openURL(url);
-	}
-	if ((target=="custom2" || !target) && settings.custom2_url){
-		let url = settings.custom2_url.textsetting;
-		if (!url.startsWith("http")){
-			url="https://"+url;
-		}
-		openURL(url);
-	}
-	if ((target=="custom3" || !target) && settings.custom3_url){
-		let url = settings.custom3_url.textsetting;
-		if (!url.startsWith("http")){
-			url="https://"+url;
-		}
-		openURL(url);
-	}
-
-
-	if ((target=="tiktok" || !target) && settings.tiktok_username){
-		if (!settings.tiktok_username.textsetting.startsWith("@")){
-			settings.tiktok_username.textsetting = "@"+settings.tiktok_username.textsetting;
-		}
-		let url = "https://www.tiktok.com/"+settings.tiktok_username.textsetting+"/live";
+	if ((target=="kick" || !target) && settings.kick_username){
+		let url = "https://kick.com/"+settings.kick_username.textsetting+"/chatroom"
 		openURL(url);
 	}
 
@@ -1063,7 +1031,7 @@ async function openchat(target=null){
 		let url = "https://www.instagram.com/"+settings.instagramlive_username.textsetting+"/live/";
 		try {
 			fetch(url, { method: 'GET', redirect: 'error'}).then((response) => response.text()).then((data) => {
-				openURL(url, true);
+				openURL(url, false, true);
 			}).catch(error => {
 				// not live?
 			});
@@ -1072,14 +1040,11 @@ async function openchat(target=null){
 		}
 	}
 
-	if ((target=="kick" || !target) && settings.kick_username){
-		let url = "https://kick.com/"+settings.kick_username.textsetting+"/chatroom"
-		openURL(url);
-	}
-
 	if ((target=="discord" || !target) && settings.discord_serverid && settings.discord_channelid  && settings.discord_serverid.textsetting && settings.discord_channelid.textsetting){
 		openURL("https://discord.com/channels/"+settings.discord_serverid.textsetting+"/"+settings.discord_channelid.textsetting);
 	}
+
+	// Opened in new window
 
 	if ((target=="youtube" || !target) && settings.youtube_username){
 		if (!settings.youtube_username.textsetting.startsWith("@")){
@@ -1090,13 +1055,57 @@ async function openchat(target=null){
 				let videoID = data.split('{"videoId":"')[1].split('"')[0];
 				console.log(videoID);
 				let url = "https://www.youtube.com/live_chat?is_popout=1&v="+videoID;
-				openURL(url);
+				openURL(url, true);
 			} catch(e){
 				// not live?
 			}
 		}).catch(error => {
 			// not live?
 		});
+	}
+
+	if ((target=="tiktok" || !target) && settings.tiktok_username){
+		if (!settings.tiktok_username.textsetting.startsWith("@")){
+			settings.tiktok_username.textsetting = "@"+settings.tiktok_username.textsetting;
+		}
+		let url = "https://www.tiktok.com/"+settings.tiktok_username.textsetting+"/live";
+		openURL(url, true);
+	}
+
+	if ((target=="trovo" || !target) && settings.trovo_username){
+		let url = "https://trovo.live/chat/"+settings.trovo_username.textsetting;
+		openURL(url, true);
+	}
+
+	if ((target=="picarto" || !target) && settings.picarto_username){
+		let url = "https://picarto.tv/chatpopout/"+settings.picarto_username.textsetting+"/public";
+		openURL(url, true);
+	}
+
+	// Custom
+
+	if ((target=="custom1" || !target) && settings.custom1_url){
+		let url = settings.custom1_url.textsetting;
+		if (!url.startsWith("http")){
+			url="https://"+url;
+		}
+		openURL(url);
+	}
+
+	if ((target=="custom2" || !target) && settings.custom2_url){
+		let url = settings.custom2_url.textsetting;
+		if (!url.startsWith("http")){
+			url="https://"+url;
+		}
+		openURL(url);
+	}
+
+	if ((target=="custom3" || !target) && settings.custom3_url){
+		let url = settings.custom3_url.textsetting;
+		if (!url.startsWith("http")){
+			url="https://"+url;
+		}
+		openURL(url);
 	}
 }
 
