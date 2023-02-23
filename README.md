@@ -462,6 +462,9 @@ If the auto responder doesn't work -- you see a blue bar, but nothing happens, t
 
 ![image](https://user-images.githubusercontent.com/2575698/196629133-6c06fedb-9f22-40aa-8031-d7f4c681ad95.png)
 
+- If you can't save to disk, like export the settings to disk, ensure your browser allows the `File System Access API`
+
+In Brave, this can be enabled via `brave://flags/#file-system-access-api` ; open that link and enable the setting (then restart)
 
 - If the chat capture stops when you minimize or hide a browser window, disable background throttling within your browser. Instructions as follows:
 ```
