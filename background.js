@@ -974,13 +974,13 @@ function enableYouTube(){ // function to send data to the DOCk via the VDO.Ninja
 }
 
 async function openchat(target=null){
-	
+
 	var res;
 	var promise =  new Promise((resolve, reject) => {
 		res = resolve;
 	});
 
-	
+
 	chrome.tabs.query({}, function(tabs) { // tabs[i].url
 		if (chrome.runtime.lastError) {
 			console.warn(chrome.runtime.lastError.message);
@@ -996,7 +996,7 @@ async function openchat(target=null){
 
 	var activeurls = await promise;
 	console.log(activeurls);
-	
+
 	function openURL(input, poke=false){
 		var matched = false;
 		activeurls.forEach(url2=>{
@@ -1012,7 +1012,7 @@ async function openchat(target=null){
 			}
 		}
 	}
- 
+
 	if ((target=="twitch" || !target) && settings.twitch_username){
 		let url = "https://www.twitch.tv/popout/"+settings.twitch_username.textsetting+"/chat?popout=";
 		openURL(url);
@@ -1022,12 +1022,12 @@ async function openchat(target=null){
 		let url = "https://trovo.live/chat/"+settings.trovo_username.textsetting;
 		openURL(url);
 	}
-	
+
 	if ((target=="picarto" || !target) && settings.picarto_username){
 		let url = "https://picarto.tv/chatpopout/"+settings.picarto_username.textsetting+"/public";
 		openURL(url);
 	}
-	
+
 	if ((target=="custom1" || !target) && settings.custom1_url){
 		let url = settings.custom1_url.textsetting;
 		if (!url.startsWith("http")){
@@ -1049,7 +1049,7 @@ async function openchat(target=null){
 		}
 		openURL(url);
 	}
-	
+
 
 	if ((target=="tiktok" || !target) && settings.tiktok_username){
 		if (!settings.tiktok_username.textsetting.startsWith("@")){
@@ -1080,7 +1080,7 @@ async function openchat(target=null){
 	if ((target=="discord" || !target) && settings.discord_serverid && settings.discord_channelid  && settings.discord_serverid.textsetting && settings.discord_channelid.textsetting){
 		openURL("https://discord.com/channels/"+settings.discord_serverid.textsetting+"/"+settings.discord_channelid.textsetting);
 	}
-	
+
 	if ((target=="youtube" || !target) && settings.youtube_username){
 		if (!settings.youtube_username.textsetting.startsWith("@")){
 			settings.youtube_username.textsetting = "@"+settings.youtube_username.textsetting;
@@ -1191,15 +1191,15 @@ function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for 
 eventer(messageEvent, async function (e) {
 	if (e.source != iframe.contentWindow){return}
 	if (e.data && (typeof e.data == "object")){
-		if (("dataReceived" in e.data) && ("overlayNinja" in e.data.dataReceived)){ 
+		if (("dataReceived" in e.data) && ("overlayNinja" in e.data.dataReceived)){
 			if ("response" in e.data.dataReceived.overlayNinja){ // we receieved a response from the dock
 				processResponse(e.data.dataReceived.overlayNinja);
 			} else if ("action" in e.data.dataReceived.overlayNinja){
 				if (e.data.dataReceived.overlayNinja.action === "openChat"){
 					openchat(e.data.dataReceived.overlayNinja.value || null);
 				}
-			} 
-		} else if ("action" in e.data){ // this is from vdo.ninja, not socialstream. 
+			}
+		} else if ("action" in e.data){ // this is from vdo.ninja, not socialstream.
 			if (e.data.action === "YoutubeChat"){
 				if (e.data.value && data.value.snippet && data.value.authorDetails){
 					var data = {};
@@ -1315,24 +1315,24 @@ function pokeSite(url){
 		var published = {};
 		for (var i=0;i<tabs.length;i++){
 			try {
-				
+
 				if (!tabs[i].url){continue;}
 				if (tabs[i].url in published){continue;} // skip. we already published to this tab.
 				if (tabs[i].url.startsWith("https://socialstream.ninja/")){continue;}
 				if (tabs[i].url.startsWith("chrome-extension")){continue;}
-				// if (!checkIfAllowed((tabs[i].url))){continue;} 
+				// if (!checkIfAllowed((tabs[i].url))){continue;}
 
 				published[tabs[i].url] = true;
 				//messageTimeout = Date.now();
 				// console.log(tabs[i].url);
-				if (tabs[i].url.startsWith(url)){ 
+				if (tabs[i].url.startsWith(url)){
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
 						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakePoke));  // enable the debugger to let us fake a user
 					} else {
 						generalFakePoke(tabs[i].id);
 					}
-				} 
+				}
 			} catch(e){
 				chrome.runtime.lastError;
 			}
@@ -1647,9 +1647,9 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			data.textNameColor =  "color:"+settings.name_color.value+";";
 		}
 	}
-	
+
 	 // respond to "1" with a "1" automatically; at most 1 time per minute.
-	if (data.chatmessage && settings.chatevent1 && settings.chatcommand1 && settings.chatwebhook1){ 
+	if (data.chatmessage && settings.chatevent1 && settings.chatcommand1 && settings.chatwebhook1){
 		if (data.chatmessage === settings.chatcommand1.textsetting){
 			if (Date.now() - messageTimeout > 1000){
 				messageTimeout = Date.now();
@@ -1665,7 +1665,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			}
 	   }
 	}
-	if (data.chatmessage && settings.chatevent2 && settings.chatcommand2 && settings.chatwebhook2){ 
+	if (data.chatmessage && settings.chatevent2 && settings.chatcommand2 && settings.chatwebhook2){
 		if (data.chatmessage === settings.chatcommand2.textsetting){
 			if (Date.now() - messageTimeout > 1000){
 				messageTimeout = Date.now();
@@ -1681,7 +1681,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			}
 	   }
 	}
-	if (data.chatmessage && settings.chatevent3 && settings.chatcommand3 && settings.chatwebhook3){ 
+	if (data.chatmessage && settings.chatevent3 && settings.chatcommand3 && settings.chatwebhook3){
 		if (data.chatmessage === settings.chatcommand3.textsetting){
 			if (Date.now() - messageTimeout > 1000){
 				messageTimeout = Date.now();
