@@ -224,7 +224,7 @@
 			color: var(--emotes-wall-text-color);
 			background-color: var(--emotes-wall-color)
 		}
-		
+
 		#quickopenbutton {
 			background-color: lightblue;
 			margin: 0 34px;
@@ -380,12 +380,12 @@
 				title="Jump to the emote wall link options">[emotes]</a></h2>
 			<div id="emoteswall" class="emotes_wall"></div>
 		</div>
-		
-		
+
+
 		<div class="link hidden" title="Quick open all saved chat links">
 			<h3>Quick Open Chat <a class="options-link" href="#quick-open-chat-options" title="Jump to quick open chat chat setup and options"><button id="quickopenbutton" class="button" style="margin-left: 0px;" data-action="openchat" style="cursor:pointer;">Open All</button>[configure]</a></h2>
 		</div>
-		
+
 
 		<h3 title="These services require you to manually opt-in, for security purposes">Opt-in additional chat services</h3>
 		<div class="options_group options">
@@ -977,7 +977,7 @@
 						<span class="slider round"></span>
 					</label> Send featured chat via server instead of P2P
 				</div>
-				
+
 				<div style="margin: 6px 0 0 0">
 					<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
 						<input type="checkbox" data-setting="chatevent1">
@@ -990,7 +990,7 @@
 						<input type="text" style="margin:0 0 0 7px;max-width:66%;display:inline-block;" data-textsetting="chatwebhook1" placeholder="Full URL" />
 					</div>
 				</div>
-				
+
 				<div>
 					<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
 						<input type="checkbox" data-setting="chatevent2">
@@ -1003,7 +1003,7 @@
 						<input type="text" style="margin:0 0 0 7px;max-width:66%;display:inline-block;" data-textsetting="chatwebhook2" placeholder="Full URL" />
 					</div>
 				</div>
-				
+
 				<div>
 					<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
 						<input type="checkbox" data-setting="chatevent3">
@@ -1032,29 +1032,12 @@
 			<a href="" id="quick-open-chat-options"></a>
 			<h3>Quick-open chat pop-ups</h3>
 			<div class="options_group">
-				<div>
-					<label class="chat_open_label">YouTube</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="youtube_username" placeholder="Channel name" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="youtube" style="cursor:pointer;"> Open Chat</button>
-					<button class="button" style="display:inline-block; width: 30px;" id="ytcopy" title="Copy YouTube Video ID to the clipboard">📎</button>
-				</div>
+				<center><i>Opened in new tab</i></center>
 
 				<div>
 					<label class="chat_open_label">Twitch</label>
 					<input type="text" style="margin-bottom: 0px;" data-textsetting="twitch_username" placeholder="Channel name" class="chat_open_input" />
 					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="twitch" style="cursor:pointer;"> Open Chat</button>
-				</div>
-
-				<div>
-					<label class="chat_open_label">Trovo</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="trovo_username" placeholder="Channel name" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="trovo" style="cursor:pointer;"> Open Chat</button>
-				</div>
-
-				<div>
-					<label class="chat_open_label">TikTok</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="tiktok_username" placeholder="Channel name" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="tiktok" style="cursor:pointer;"> Open Chat</button>
 				</div>
 
 				<div>
@@ -1068,38 +1051,61 @@
 					<input type="text" style="margin-bottom: 0px;" data-textsetting="kick_username" placeholder="Channel name" class="chat_open_input" />
 					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="kick" style="cursor:pointer;"> Open Chat</button>
 				</div>
-				
-				<div>
-					<label class="chat_open_label">Picarto</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="picarto_username" placeholder="Channel name" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="picarto" style="cursor:pointer;"> Open Chat</button>
-				</div>
-				
+
 				<div>
 					<label class="chat_open_label">Discord</label>
 					<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_serverid" placeholder="Server id"class="chat_open_input" />
 					<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_channelid" placeholder="Channel id" class="chat_open_input" />
 					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="discord" style="cursor:pointer;"> Open Chat</button>
 				</div>
-				
+
+				<center><i>Opened in new window<br>Note: Do NOT minimize them!</i></center>
+
+				<div>
+					<label class="chat_open_label">YouTube</label>
+					<input type="text" style="margin-bottom: 0px;" data-textsetting="youtube_username" placeholder="Channel name" class="chat_open_input" />
+					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="youtube" style="cursor:pointer;"> Open Chat</button>
+					<button class="button" style="display:inline-block; width: 30px;" id="ytcopy" title="Copy YouTube Video ID to the clipboard">📎</button>
+				</div>
+
+				<div>
+					<label class="chat_open_label">TikTok</label>
+					<input type="text" style="margin-bottom: 0px;" data-textsetting="tiktok_username" placeholder="Channel name" class="chat_open_input" />
+					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="tiktok" style="cursor:pointer;"> Open Chat</button>
+				</div>
+
+				<div>
+					<label class="chat_open_label">Trovo</label>
+					<input type="text" style="margin-bottom: 0px;" data-textsetting="trovo_username" placeholder="Channel name" class="chat_open_input" />
+					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="trovo" style="cursor:pointer;"> Open Chat</button>
+				</div>
+
+				<div>
+					<label class="chat_open_label">Picarto</label>
+					<input type="text" style="margin-bottom: 0px;" data-textsetting="picarto_username" placeholder="Channel name" class="chat_open_input" />
+					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="picarto" style="cursor:pointer;"> Open Chat</button>
+				</div>
+
+				<center><i>Custom</i></center>
+
 				<div>
 					<label class="chat_open_label">Custom URL 1</label>
 					<input type="text" style="margin-bottom: 0px;" data-textsetting="custom1_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
 					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom1" style="cursor:pointer;"> Open Chat</button>
 				</div>
-				
+
 				<div>
 					<label class="chat_open_label">Custom URL 2</label>
 					<input type="text" style="margin-bottom: 0px;" data-textsetting="custom2_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
 					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom2" style="cursor:pointer;"> Open Chat</button>
 				</div>
-				
+
 				<div>
 					<label class="chat_open_label">Custom URL 3</label>
 					<input type="text" style="margin-bottom: 0px;" data-textsetting="custom3_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
 					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom3" style="cursor:pointer;"> Open Chat</button>
 				</div>
-				
+
 				<button class="button" style="margin-left: 0px;" data-action="openchat" style="cursor:pointer;"> Open All Chat</button>
 
 				<div>
