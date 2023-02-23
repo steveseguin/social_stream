@@ -997,8 +997,8 @@ async function openchat(target=null){
 	
 	function openURL(input){
 		var matched = false;
-		activeurls.forEach(url=>{
-			if (url.startsWith(input)){
+		activeurls.forEach(url2=>{
+			if (url2.startsWith(input)){
 				matched = true;
 			}
 		});
@@ -1049,12 +1049,12 @@ async function openchat(target=null){
 		if (!settings.tiktok_username.textsetting.startsWith("@")){
 			settings.tiktok_username.textsetting = "@"+settings.tiktok_username.textsetting;
 		}
-		var url = "https://www.tiktok.com/"+settings.tiktok_username.textsetting+"/live";
+		let url = "https://www.tiktok.com/"+settings.tiktok_username.textsetting+"/live";
 		openURL(url);
 	}
 
-	if ((target=="instagramlive" || !target) && settings.instagramlive_username){
-		var url = "https://www.instagram.com/"+settings.instagramlive_username.textsetting+"/live/";
+	if ((target=="instagramlive" || !target) && settings.instagramlive_username && settings.instagramlive_username.textsetting){
+		let url = "https://www.instagram.com/"+settings.instagramlive_username.textsetting+"/live/";
 		try {
 			fetch(url, { method: 'GET', redirect: 'error'}).then((response) => response.text()).then((data) => {
 				openURL(url);
@@ -1067,13 +1067,12 @@ async function openchat(target=null){
 	}
 
 	if ((target=="kick" || !target) && settings.kick_username){
-		var url = "https://kick.com/"+settings.kick_username.textsetting+"/chatroom"
+		let url = "https://kick.com/"+settings.kick_username.textsetting+"/chatroom"
 		openURL(url);
 	}
 
-	if ((target=="discord" || !target) && settings.discord_serverid && settings.discord_channelid){
-		var url = "https://discord.com/channels/"+settings.discord_serverid.textsetting+"/"+settings.discord_channelid.textsetting;
-		openURL(url);
+	if ((target=="discord" || !target) && settings.discord_serverid && settings.discord_channelid  && settings.discord_serverid.textsetting && settings.discord_channelid.textsetting){
+		openURL("https://discord.com/channels/"+settings.discord_serverid.textsetting+"/"+settings.discord_channelid.textsetting);
 	}
 	
 	if ((target=="youtube" || !target) && settings.youtube_username){
@@ -1082,9 +1081,9 @@ async function openchat(target=null){
 		}
 		fetch("https://www.youtube.com/c/"+settings.youtube_username.textsetting+"/live").then((response) => response.text()).then((data) => {
 			try{
-				var videoID = data.split('{"videoId":"')[1].split('"')[0];
+				let videoID = data.split('{"videoId":"')[1].split('"')[0];
 				console.log(videoID);
-				var url = "https://www.youtube.com/live_chat?is_popout=1&v="+videoID;
+				let url = "https://www.youtube.com/live_chat?is_popout=1&v="+videoID;
 				openURL(url);
 			} catch(e){
 				// not live?
