@@ -1005,7 +1005,7 @@ async function openchat(target=null){
 		if (!matched){
 			window.open(input, '_blank');
 			if (poke){
-				setTimeout(function(){pokeSite(input);},1500,input);
+				setTimeout(function(){pokeSite(input);},3000,input);
 			}
 		}
 	}
