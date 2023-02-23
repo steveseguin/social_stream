@@ -3256,6 +3256,16 @@
 			if (!("id" in data)){
 				data.id = parseInt(Math.random*100000000);
 			}
+			
+			
+			try {
+				if (applyCustomActions){
+					applyCustomActions(data); // Any custom actions (not synced with github)
+				}
+			} catch(e){
+				console.error(e);
+			}
+			
 
 			var showType = "";
 			if (!data.type){
@@ -3830,16 +3840,6 @@
 			}
 
 			applyBotActions(data); // Official actions
-
-			if (triggerState){
-				try {
-					if (applyCustomActions){
-						applyCustomActions(data); // Any custom actions (not synced with github)
-					}
-				} catch(e){
-					console.error(e);
-				}
-			}
 
 			if (speech && !bot){
 				speechMeta(data);
