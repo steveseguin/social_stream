@@ -1647,8 +1647,59 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			data.textNameColor =  "color:"+settings.name_color.value+";";
 		}
 	}
+	
+	 // respond to "1" with a "1" automatically; at most 1 time per minute.
+	if (data.chatmessage && settings.chatevent1 && settings.chatcommand1 && settings.chatwebhook1){ 
+		if (data.chatmessage === settings.chatcommand1.textsetting){
+			if (Date.now() - messageTimeout > 1000){
+				messageTimeout = Date.now();
+				let fetchURL = document.createElement("IFRAME");
+				fetchURL.src = settings.chatwebhook1.textsetting;
+				fetchURL.onload = function(e){
+					e.target.remove();
+					delete e.target;};
+				fetchURL.onerror = function(e){
+					e.target.remove();
+					delete e.target;};
+				document.body.appendChild(fetchURL);
+			}
+	   }
+	}
+	if (data.chatmessage && settings.chatevent2 && settings.chatcommand2 && settings.chatwebhook2){ 
+		if (data.chatmessage === settings.chatcommand2.textsetting){
+			if (Date.now() - messageTimeout > 1000){
+				messageTimeout = Date.now();
+				let fetchURL = document.createElement("IFRAME");
+				fetchURL.src = settings.chatwebhook2.textsetting;
+				fetchURL.onload = function(e){
+					e.target.remove();
+					delete e.target;};
+				fetchURL.onerror = function(e){
+					e.target.remove();
+					delete e.target;};
+				document.body.appendChild(fetchURL);
+			}
+	   }
+	}
+	if (data.chatmessage && settings.chatevent3 && settings.chatcommand3 && settings.chatwebhook3){ 
+		if (data.chatmessage === settings.chatcommand3.textsetting){
+			if (Date.now() - messageTimeout > 1000){
+				messageTimeout = Date.now();
+				let fetchURL = document.createElement("IFRAME");
+				fetchURL.src = settings.chatwebhook3.textsetting;
+				fetchURL.onload = function(e){
+					e.target.remove();
+					delete e.target;};
+				fetchURL.onerror = function(e){
+					e.target.remove();
+					delete e.target;};
+				document.body.appendChild(fetchURL);
+			}
+	   }
+	}
 	return data;
 }
+var store = [];
 
 var MidiInit = false;
 
