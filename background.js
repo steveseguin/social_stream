@@ -1054,6 +1054,7 @@ async function openchat(target=null){
 	}
 
 	if ((target=="instagramlive" || !target) && settings.instagramlive_username){
+		var url = "https://www.instagram.com/"+settings.instagramlive_username.textsetting+"/live/";
 		try {
 			fetch(url, { method: 'GET', redirect: 'error'}).then((response) => response.text()).then((data) => {
 				openURL(url);
@@ -1063,7 +1064,6 @@ async function openchat(target=null){
 		} catch(e){
 			// not live
 		}
-		
 	}
 
 	if ((target=="kick" || !target) && settings.kick_username){
