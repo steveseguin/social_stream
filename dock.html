@@ -87,7 +87,7 @@
 			object-fit: contain;
 		}
 		.hl-badge:last-child{
-			padding: 0 4px 0px 0px;
+			padding: 0 2px 0px 0px;
 		}
 
 		a {
@@ -245,12 +245,6 @@
 			font-size: var(--comment-font-size);
 		}
 		
-
-		.notcompactmode .hl-message img{
-			height: 17px;
-			max-height: 17px;
-		}
-
 		.hl-message img {
 			position:relative;
 			margin: auto 1px;
@@ -269,18 +263,36 @@
 			height: 24px;
 			max-width: 24px;
 			max-height: 24px;
+		} 
+		.notcompactmode .hl-message img{
+			height: 17px;
+			max-height: 17px;
 		}
 
-		img:first-child:not(:last-child){
+		.hl-message .hl-badge svg {
+			max-height: 16px;
+			margin-top: 1px;
+		}
+		
+		.hl-message .hl-badge.img {
+			max-height: 16px;
+			margin-top: 4px;
+		}
+
+		.hl-message img:first-child:not(:last-child){
 			margin: auto 1px auto 5px;
 		}
-
-		img:not(:first-child):last-child{
-			margin: auto 5px auto 1px;
+		
+		.hl-message img:not(:first-child):last-child{
+			margin: auto 3px auto 1px;
 		}
 
 		.hl-message span > img{
 			margin: auto 1px;
+		}
+		
+		.hl-message  img:first-child:not(:last-child){
+			margin: auto 1px auto 1px;
 		}
 
 		.highlight {
@@ -327,7 +339,20 @@
 			top: 1px;
 		}
 		.hl-righttopline .hl-badge {
-			max-height: 19px;
+			max-height: 16px;
+			vertical-align: middle;
+			object-fit: contain;
+			display: inline-block;
+		}
+		.hl-righttopline .hl-name {
+			margin-right:0;
+		}
+		.hl-righttopline .time-arrived {
+			bottom:1px;
+			position:relative;
+		}
+		.hl-righttopline .hl-badges {
+			margin: auto 0px auto 6px;
 		}
 		.hl-rightside {
 			display:inline-block;
@@ -351,13 +376,10 @@
 		}
 
 		.hl-badges {
-			max-width:28px;
-			max-height:28px;
-			object-fit: contain;
-			position:relative;
-			top:-6px;
+			margin-left:4px;
 		}
-
+		
+		
 
 		.highlight-chat {
 			display:var(--list-or-horizontal);
@@ -444,6 +466,10 @@
 			display: var(--show-images);
 		}
 
+		.hl-message .hl-badges .hl-badge.svg svg{
+			max-height: 20px;
+		}
+		
 		.larger-emojis img.hl-badge{
 			top: 3px;
 			height: 22px;
@@ -456,7 +482,6 @@
 		}
 
 		.hl-badge.svg {
-			vertical-align: middle;
 			object-fit: contain;
 			display:inline-block;
 			width: auto;
@@ -2498,6 +2523,9 @@
 			node.classList.remove("hidden");
 		}
 	}
+	
+	var hashCode = s => s.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)
+
 
 	function redoOdd(){
 		odd = false;
@@ -3480,13 +3508,13 @@
 			var chatname = "";
 
 			if (largeavatar){
-				chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' + (data.chatname||"") +chatbadges +"</div>";
+				chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' + (data.chatname||"") + '<span class="hl-badges">'+chatbadges +"</span></div>";
 			} else if (data.chatname){
 				if (compactmode){
 					if (specialMessage){
 						chatname = '<div class="hl-name'+splitMode+'"></div>';
 					} else if (chatbadges){
-						chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' +chatbadges+ data.chatname+":</div>";
+						chatname = '<span class="hl-badges">'+chatbadges+'</span><div '+nameColor+' class="hl-name'+splitMode+'">'+ data.chatname+":</div>";
 					} else {
 						chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' + data.chatname+":</div>";
 					}
@@ -3629,6 +3657,9 @@
 			// this part is used to filter out emojis, but also calculate the character-length of a message, to know how long to show it for
 			// emojis and images are counted with char-length zero-value
 			
+			
+			
+			
 			var textContentLength = node.querySelector("#content_"+data.id).innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig, "").length || 0;
 			node.dataset.contentLength = textContentLength;
 			if (!textContentLength){
@@ -3642,6 +3673,17 @@
 			});
 
 			mainOutputWindow.appendChild(node);
+			
+			var svgs = node.querySelectorAll("svg");
+			svgs.forEach(svg=>{
+				svg.setAttribute("width","100%");
+				svg.setAttribute("height","100%");
+				if (!svg.getAttribute("fill") && !svg.innerHTML.includes(" fill=")){
+					svg.setAttribute("fill","currentColor");
+				}
+				svg.dataset.hash = Math.abs(hashCode(svg.innerHTML));
+				console.log(svg);
+			});
 			
 			if (hideNotDonos && node.classList.contains("noDono")){
 				node.classList.add("hidden");

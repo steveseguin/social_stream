@@ -263,7 +263,9 @@ async function exportSettings(){
 			  accept: {'application/data': ['.data']},
 			}],
 		  };
-
+		if (!window.showSaveFilePicker){
+			console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
+		}
 		fileExportHandler = await window.showSaveFilePicker(opts);
 
 		const writableStream = await fileExportHandler.createWritable();
