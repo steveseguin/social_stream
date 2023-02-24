@@ -1706,7 +1706,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			}
 	   }
 	}
-	if (data.chatmessage && settings.chatevent1 && settings.chatcommand2 && settings.chatwebhook3){
+	if (data.chatmessage && settings.chatevent3 && settings.chatcommand2 && settings.chatwebhook3){
 		if (data.chatmessage === settings.chatcommand2.textsetting){
 			if (Date.now() - messageTimeout > 1000){
 				messageTimeout = Date.now();
@@ -1719,6 +1719,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 						chrome.tabs.create({
 						  url: URL
 						},function(tab){
+							console.log(tab);
 							setTimeout(function(id){
 								chrome.tabs.remove(id, function() { });
 							},3000,tab.id)
