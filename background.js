@@ -1662,15 +1662,23 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 		if (data.chatmessage === settings.chatcommand1.textsetting){
 			if (Date.now() - messageTimeout > 1000){
 				messageTimeout = Date.now();
-				let fetchURL = document.createElement("IFRAME");
-				fetchURL.src = settings.chatwebhook1.textsetting;
-				fetchURL.onload = function(e){
-					e.target.remove();
-					delete e.target;};
-				fetchURL.onerror = function(e){
-					e.target.remove();
-					delete e.target;};
-				document.body.appendChild(fetchURL);
+				var URL = settings.chatwebhook1.textsetting;
+				if (!URL.startsWith("http")){
+					if (!URL.includes("://")){
+						URL = "https://"+URL;
+						fetch(URL).catch(console.error);
+					} else {
+						chrome.tabs.create({
+						  url: URL
+						},function(tab){
+							setTimeout(function(id){
+								chrome.tabs.remove(id, function() { });
+							},10,tab.id)
+						});
+					}
+				} else {
+					fetch(URL).catch(console.error);
+				}
 			}
 	   }
 	}
@@ -1678,31 +1686,47 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 		if (data.chatmessage === settings.chatcommand2.textsetting){
 			if (Date.now() - messageTimeout > 1000){
 				messageTimeout = Date.now();
-				let fetchURL = document.createElement("IFRAME");
-				fetchURL.src = settings.chatwebhook2.textsetting;
-				fetchURL.onload = function(e){
-					e.target.remove();
-					delete e.target;};
-				fetchURL.onerror = function(e){
-					e.target.remove();
-					delete e.target;};
-				document.body.appendChild(fetchURL);
+				var URL = settings.chatwebhook2.textsetting;
+				if (!URL.startsWith("http")){
+					if (!URL.includes("://")){
+						URL = "https://"+URL;
+						fetch(URL).catch(console.error);
+					} else {
+						chrome.tabs.create({
+						  url: URL
+						},function(tab){
+							setTimeout(function(id){
+								chrome.tabs.remove(id, function() { });
+							},10,tab.id)
+						});
+					}
+				} else {
+					fetch(URL).catch(console.error);
+				}
 			}
 	   }
 	}
-	if (data.chatmessage && settings.chatevent3 && settings.chatcommand3 && settings.chatwebhook3){
-		if (data.chatmessage === settings.chatcommand3.textsetting){
+	if (data.chatmessage && settings.chatevent1 && settings.chatcommand2 && settings.chatwebhook3){
+		if (data.chatmessage === settings.chatcommand2.textsetting){
 			if (Date.now() - messageTimeout > 1000){
 				messageTimeout = Date.now();
-				let fetchURL = document.createElement("IFRAME");
-				fetchURL.src = settings.chatwebhook3.textsetting;
-				fetchURL.onload = function(e){
-					e.target.remove();
-					delete e.target;};
-				fetchURL.onerror = function(e){
-					e.target.remove();
-					delete e.target;};
-				document.body.appendChild(fetchURL);
+				var URL = settings.chatwebhook3.textsetting;
+				if (!URL.startsWith("http")){
+					if (!URL.includes("://")){
+						URL = "https://"+URL;
+						fetch(URL).catch(console.error);
+					} else {
+						chrome.tabs.create({
+						  url: URL
+						},function(tab){
+							setTimeout(function(id){
+								chrome.tabs.remove(id, function() { });
+							},10,tab.id)
+						});
+					}
+				} else {
+					fetch(URL).catch(console.error);
+				}
 			}
 	   }
 	}
