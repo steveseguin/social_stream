@@ -207,6 +207,54 @@
 			border-radius: 4px;
 		}
 
+		.alert {
+			position: relative;
+			padding: 0.75rem 1.25rem;
+			margin-bottom: 1rem;
+			border: 1px solid transparent;
+			border-radius: 0.25rem;
+		}
+		.alert_primary {
+			color: #004085;
+			background-color: #cce5ff;
+			border-color: #b8daff;
+		}
+		.alert_secondary {
+			color: #383d41;
+			background-color: #e2e3e5;
+			border-color: #d6d8db;
+		}
+		.alert_success {
+			color: #155724;
+			background-color: #d4edda;
+			border-color: #c3e6cb;
+		}
+		.alert_danger {
+			color: #721c24;
+			background-color: #f8d7da;
+			border-color: #f5c6cb;
+		}
+		.alert_warning {
+			color: #856404;
+			background-color: #fff3cd;
+			border-color: #ffeeba;
+		}
+		.alert_info {
+			color: #0c5460;
+			background-color: #d1ecf1;
+			border-color: #bee5eb;
+		}
+		.alert_light {
+			color: #818182;
+			background-color: #fefefe;
+			border-color: #fdfdfe;
+		}
+		.alert_dark {
+			color: #1b1e21;
+			background-color: #d6d8d9;
+			border-color: #c6c8ca;
+		}
+
 		.link div.streaming_chat,
 		.streaming_chat {
 			color: var(--streaming-chat-text-color);
@@ -1032,6 +1080,29 @@
 			<a href="" id="quick-open-chat-options"></a>
 			<h3>Quick-open chat pop-ups</h3>
 			<div class="options_group">
+				<!--
+					<div class="alert alert_danger">
+						This is an example of an important <b>error</b> message.
+					</div>
+				-->
+
+				<center><i>Main</i></center>
+
+				<button class="button" style="margin-left: 0px;" data-action="openchat" style="cursor:pointer;"> Open All Chat</button>
+
+				<div>
+					<label class="switch">
+						<input type="checkbox" id="openchatdock" data-param1="openchat">
+						<span class="slider round"></span>
+					</label> Auto open all chat windows on dock connect
+				</div>
+
+				<div style="display:none;">
+					<button class="button" data-action="enableYouTube" style="cursor:pointer;"> Connect Youtube API</button><input type="text" style="display:inline-block;" data-textsetting="youtubeapikey" placeholder="Provide YouTube API Key" />
+				</div>
+
+				<hr>
+
 				<center><i>Opened in new tab</i></center>
 
 				<div>
@@ -1058,6 +1129,8 @@
 					<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_channelid" placeholder="Channel id" class="chat_open_input" />
 					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="discord" style="cursor:pointer;"> Open Chat</button>
 				</div>
+
+				<hr>
 
 				<center><i>Opened in new window<br>Note: Do NOT minimize them!</i></center>
 
@@ -1086,6 +1159,8 @@
 					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="picarto" style="cursor:pointer;"> Open Chat</button>
 				</div>
 
+				<hr>
+
 				<center><i>Custom</i></center>
 
 				<div>
@@ -1093,11 +1168,23 @@
 					<input type="text" style="margin-bottom: 0px;" data-textsetting="custom1_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
 					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom1" style="cursor:pointer;"> Open Chat</button>
 				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" id="custom1_url_newwindow" data-setting="custom1_url_newwindow">
+						<span class="slider round"></span>
+					</label> Open custom URL 1 on new window
+				</div>
 
 				<div>
 					<label class="chat_open_label">Custom URL 2</label>
 					<input type="text" style="margin-bottom: 0px;" data-textsetting="custom2_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
 					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom2" style="cursor:pointer;"> Open Chat</button>
+				</div>
+				<div>
+					<label class="switch">
+						<input type="checkbox" id="custom2_url_newwindow" data-setting="custom2_url_newwindow">
+						<span class="slider round"></span>
+					</label> Open custom URL 2 on new window
 				</div>
 
 				<div>
@@ -1105,18 +1192,11 @@
 					<input type="text" style="margin-bottom: 0px;" data-textsetting="custom3_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
 					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom3" style="cursor:pointer;"> Open Chat</button>
 				</div>
-
-				<button class="button" style="margin-left: 0px;" data-action="openchat" style="cursor:pointer;"> Open All Chat</button>
-
 				<div>
 					<label class="switch">
-						<input type="checkbox" id="openchatdock" data-param1="openchat">
+						<input type="checkbox" id="custom3_url_newwindow" data-setting="custom3_url_newwindow">
 						<span class="slider round"></span>
-					</label> Auto open all chat windows on dock connect
-				</div>
-
-				<div style="display:none;">
-					<button class="button" data-action="enableYouTube" style="cursor:pointer;"> Connect Youtube API</button><input type="text" style="display:inline-block;" data-textsetting="youtubeapikey" placeholder="Provide YouTube API Key" />
+					</label> Open custom URL 3 on new window
 				</div>
 			</div>
 

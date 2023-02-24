@@ -1089,7 +1089,7 @@ async function openchat(target=null){
 		if (!url.startsWith("http")){
 			url="https://"+url;
 		}
-		openURL(url);
+		openURL(url, settings.custom1_url_newwindow);
 	}
 
 	if ((target=="custom2" || !target) && settings.custom2_url){
@@ -1097,7 +1097,7 @@ async function openchat(target=null){
 		if (!url.startsWith("http")){
 			url="https://"+url;
 		}
-		openURL(url);
+		openURL(url, settings.custom2_url_newwindow);
 	}
 
 	if ((target=="custom3" || !target) && settings.custom3_url){
@@ -1105,7 +1105,7 @@ async function openchat(target=null){
 		if (!url.startsWith("http")){
 			url="https://"+url;
 		}
-		openURL(url);
+		openURL(url, settings.custom3_url_newwindow);
 	}
 }
 
