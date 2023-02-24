@@ -1594,6 +1594,19 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 	}
 }
 
+function createTab(url) {
+    return new Promise(resolve => {
+        chrome.windows.create({focused:false,height:200,width:400,left:0, top:0,type:"popup",url:url}, async tab => {
+            chrome.tabs.onUpdated.addListener(function listener (tabId, info) {
+                if (info.status === 'complete' && tabId === tab.id) {
+                    chrome.tabs.onUpdated.removeListener(listener);
+                    resolve(tab);
+                }
+            });
+        });
+    });
+}
+
 async function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
 	if (settings.autohi){
@@ -1668,13 +1681,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 						URL = "https://"+URL;
 						fetch(URL).catch(console.error);
 					} else {
-						chrome.tabs.create({
-						  url: URL
-						},function(tab){
-							setTimeout(function(id){
-								chrome.tabs.remove(id, function() { });
-							},3000,tab.id)
-						});
+						window.open(URL, '_blank');
 					}
 				} else {
 					fetch(URL).catch(console.error);
@@ -1682,6 +1689,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			}
 	   }
 	}
+	try {
 	if (data.chatmessage && settings.chatevent2 && settings.chatcommand2 && settings.chatwebhook2){
 		if (data.chatmessage === settings.chatcommand2.textsetting){
 			if (Date.now() - messageTimeout > 1000){
@@ -1692,21 +1700,19 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 						URL = "https://"+URL;
 						fetch(URL).catch(console.error);
 					} else {
-						
-						chrome.tabs.create({
-						  url: URL
-						},function(tab){
-							console.log(tab);
-							setTimeout(function(id){
-								chrome.tabs.remove(id, function() { });
-							},3000,tab.id)
-						});
+						window.open(URL, '_blank');
+						//var tab = await createTab(URL);
+						//chrome.tabs.remove(tab.id, function() {console.log("DONE"); });
+						//console.log("DONE");
 					}
 				} else {
 					fetch(URL).catch(console.error);
 				}
 			}
 	   }
+	}
+	} catch(e){
+		console.error(e);
 	}
 	if (data.chatmessage && settings.chatevent3 && settings.chatcommand2 && settings.chatwebhook3){
 		if (data.chatmessage === settings.chatcommand2.textsetting){
@@ -1718,13 +1724,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 						URL = "https://"+URL;
 						fetch(URL).catch(console.error);
 					} else {
-						chrome.tabs.create({
-						  url: URL
-						},function(tab){
-							setTimeout(function(id){
-								chrome.tabs.remove(id, function() { });
-							},3000,tab.id)
-						});
+						window.open(URL, '_blank');
 					}
 				} else {
 					fetch(URL).catch(console.error);
