@@ -2010,6 +2010,7 @@
 		if (!speech && !allow){return;}
 		if (!text){return;}
 		if (!voices && (voices===null)){return;}
+		if (text.startsWith("!"){return;} // do not TTS commands.
 
 		if (!voice){
 			if (!voices || !voices.length){
