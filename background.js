@@ -1673,7 +1673,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 						},function(tab){
 							setTimeout(function(id){
 								chrome.tabs.remove(id, function() { });
-							},10,tab.id)
+							},3000,tab.id)
 						});
 					}
 				} else {
@@ -1692,12 +1692,14 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 						URL = "https://"+URL;
 						fetch(URL).catch(console.error);
 					} else {
+						
 						chrome.tabs.create({
 						  url: URL
 						},function(tab){
+							console.log(tab);
 							setTimeout(function(id){
 								chrome.tabs.remove(id, function() { });
-							},10,tab.id)
+							},3000,tab.id)
 						});
 					}
 				} else {
@@ -1719,7 +1721,6 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 						chrome.tabs.create({
 						  url: URL
 						},function(tab){
-							console.log(tab);
 							setTimeout(function(id){
 								chrome.tabs.remove(id, function() { });
 							},3000,tab.id)
