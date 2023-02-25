@@ -2572,6 +2572,7 @@
 			getById("autoshow").style['background-image']='url(./icons/featured_auto_play.png)';
 			getById("autoshow").title = 'Featured — ⏹🌟 Stop auto-featuring messages';
 		} else {
+			autoShowQueue = []; // empty the auto show queue to stop messages
 			getById("autoshow").style['background-image']='url(./icons/featured_auto_stop.png)';
 			getById("autoshow").title = 'Featured — 🌟 Auto-feature messages as they come in';
 		}
