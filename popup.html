@@ -7,9 +7,14 @@
 	<script src="popup.js"></script>
 	<style>
 		:root {
-			--body-background-enabled: #fcfffc;
-			--body-background-disabled: #fffcfc;
-			--section-title-color: black;
+			--body-background-enabled: #fff;
+			--body-background-disabled: #ffdcdd;
+			--default-text-color: #362e26;
+			--section-title-color: #362e26;
+			--color-accent-subtle: #ddf4ff;
+			--collapsible-label-color: #dcf4ff;
+			--collapsible-border-color: #b7defe;
+			--color-wrapper-background: #e9e4dd;
 			--button-background: #444;
 			--button-text: white;
 			--text-button-text: #222;
@@ -21,24 +26,26 @@
 			--new-version-banner-border: 1px solid #7eff7e;
 			--new-version-link-color: green;
 			--new-version-installed-color: #3a413a;
-			--options-group-background-color: #f3f1f1;
-			--options-group-text-color: black;
+			--options-group-background-color: #f6f8fa;
+			--options-group-text-color: #362e26;
 			--extension-enabled-background-color: rgb(153, 255, 153);
 			--extension-disabled-background-color: red;
 			--extension-disabled-text-color: white;
-			--streaming-chat-color: #dcfff3;
-			--streaming-chat-text-color: black;
-			--single-message-color: #fffddc;
-			--single-message-text-color: black;
-			--emotes-wall-color: #fef1ff;
-			--emotes-wall-text-color: black;
+			--streaming-chat-color: #00a6ff;
+			--single-message-color: #ff7f00;
+			--emotes-wall-color: #ffd400;
 		}
 
 		@media (prefers-color-scheme: dark) {
 			:root {
-				--body-background-enabled: #101810;
-				--body-background-disabled: #1F1212;
-				--section-title-color: white;
+				--body-background-enabled: #0d1117;
+				--body-background-disabled: #170d0e;
+				--default-text-color: #c9d1d9;
+				--section-title-color: #c9d1d9;
+				--color-accent-subtle: rgba(56, 139, 253, 0.15);
+				--collapsible-label-color: #112339;
+				--collapsible-border-color: rgba(56, 139, 253, 0.4);
+				--color-wrapper-background: #161b22;
 				--button-background: #444;
 				--button-text: white;
 				--text-button-text: white;
@@ -50,17 +57,14 @@
 				--new-version-banner-border: 1px solid #7eff7e;
 				--new-version-link-color: #90f190;
 				--new-version-installed-color: #bebebe;
-				--options-group-background-color: #292929;
-				--options-group-text-color: white;
+				--options-group-background-color: #161b22;
+				--options-group-text-color: #c9d1d9;
 				--extension-enabled-background-color: rgb(153, 255, 153);
 				--extension-disabled-background-color: #781717;
 				--extension-disabled-text-color: white;
-				--streaming-chat-color: #064663;
-				--streaming-chat-text-color: white;
-				--single-message-color: #5a462b;
-				--single-message-text-color: white;
-				--emotes-wall-color: #4e3e4c;
-				--emotes-wall-text-color: black;
+				--streaming-chat-color: #00a6ff66;
+				--single-message-color: #ff7f0066;
+				--emotes-wall-color: #ffd40066;
 			}
 		}
 
@@ -77,6 +81,22 @@
 			width: 350px;
 			padding: 0;
 			margin: 0;
+			scrollbar-color:#666 #201c29;
+		}
+
+		::-webkit-scrollbar {
+			width: 15px;
+		}
+
+		::-webkit-scrollbar-track {
+			-webkit-box-shadow: inset 0 0 13px rgb(0 0 0 / 90%);
+			border-radius: 4px;
+		}
+
+		::-webkit-scrollbar-thumb {
+			border-radius: 4px;
+			-webkit-box-shadow: inset 0 0 16px rgb(150 150 150 / 100%);
+			border: solid 3px transparent;
 		}
 
 		.hidden {
@@ -95,8 +115,22 @@
 			background-color: var(--body-background-enabled);
 		}
 
+		.rounded_area {
+			background-color: var(--color-accent-subtle);
+			border-radius: 6px;
+			padding: 0 4px;
+		}
+
+		a {
+			text-decoration: none;
+		}
+
+		a:hover {
+			text-decoration: underline;
+		}
+
 		p {
-			color: var(--text-button-text);
+			color: var(--default-text-color);
 		}
 
 		p a {
@@ -180,7 +214,7 @@
 			color: var(--h2-color);
 			font-size: 1.1rem;
 			margin-top: 1.6rem;
-			margin-bottom: 0.3rem;
+			margin-bottom: 0.4rem;
 		}
 
 		.link {
@@ -189,14 +223,17 @@
 		}
 
 		.link h2 {
-			margin: 0;
-			font-size: 1rem;
+			margin-top: 0;
 			margin-bottom: 0.4rem;
 			font-weight: 600;
 			color: var(--section-title-color);
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
+		}
+
+		.options {
+			padding: 0;
 		}
 
 		.link div,
@@ -255,35 +292,20 @@
 			border-color: #c6c8ca;
 		}
 
-		.link div.streaming_chat,
-		.streaming_chat {
-			color: var(--streaming-chat-text-color);
-			background-color: var(--streaming-chat-color);
+		h2.streaming_chat_title {
+			color: var(--streaming-chat-color);
 		}
 
-		.link div.single_message,
-		.single_message {
-			color: var(--single-message-text-color);
-			background-color: var(--single-message-color)
+		h2.single_message_title {
+			color: var(--single-message-color)
 		}
 
-		.link div.emotes_wall,
-		.emotes_wall {
-			color: var(--emotes-wall-text-color);
-			background-color: var(--emotes-wall-color)
+		h2.emotes_wall_title {
+			color: var(--emotes-wall-color)
 		}
-
-		#quickopenbutton {
-			background-color: lightblue;
-			margin: 0 34px;
-			padding: 4px 25px;
-			color: black;
-		}
-
 
 		.link div a {
 			color: var(--link-color);
-			text-decoration: underline;
 		}
 
 		h3 {
@@ -370,6 +392,10 @@
 			transform: translateX(14px);
 		}
 
+		input[type="text"].input-text-fullwidth {
+			width:95%;
+		}
+
 		/* Rounded sliders */
 		.slider.round {
 			border-radius: 16px;
@@ -395,6 +421,84 @@
 		#disableButtonText{
 			margin-right:5px;
 		}
+
+		/* Wrapper */
+
+		.wrapper {
+			display: flex;
+			justify-content: center;
+		}
+
+		.collapsible {
+			width: 100%; /* max-width: 350px; */
+			overflow: hidden;
+			padding: 0;
+		}
+
+		.collapsible-input {
+			display: none;
+		}
+
+		.collapsible-label {
+			position: relative;
+			font-size: 1.17em;
+			font-weight: 600;
+			color: var(--h3-color);
+			background: var(--collapsible-label-color);
+			border: 1px solid var(--collapsible-border-color);
+			border-radius: 4px;
+			box-shadow: 0 5px 11px 0 rgba(0, 0, 0, .1), 0 4px 11px 0 rgba(0, 0, 0, .08);
+			display: block;
+			margin-bottom: 10px;
+			cursor: pointer;
+			padding: 4px 8px;
+			z-index: 1;
+
+			/* Disable selection */
+			-webkit-user-select: none; /* Safari */
+			-ms-user-select: none; /* IE 10 and IE 11 */
+			user-select: none; /* Standard syntax */
+		}
+
+		.collapsible-label:after {
+			content: "";
+			position: absolute;
+			width: 18px;
+			height: 18px;
+			top: 4px;
+			right: 8px;
+			background: url(./icons/wrapper_button.png) no-repeat 0 0;
+			background-size: 18px;
+			transition: all 0.25s ease;
+		}
+
+		.collapsible-input:checked + label:after {
+			transform: rotate(90deg);
+		}
+
+		.collapsible-text {
+			padding: 0;
+			max-height: 1px;
+			overflow: hidden;
+			border-radius: 4px;
+			line-height: 1.4;
+			position: relative;
+			top: -100%;
+			opacity: 0.5;
+			transition: all 0.25s ease;
+		}
+
+		.collapsible-input:checked ~ .collapsible-text {
+			max-height: none;
+			/* padding-bottom: 25px; */
+			margin-bottom: 16px;
+			background: var(--color-wrapper-background);
+			box-shadow: 0 5px 11px 0 rgba(0, 0, 0, .1), 0 4px 11px 0 rgba(0, 0, 0, .08);
+			opacity: 1;
+			top: 0;
+			border: 1px solid var(--collapsible-border-color);
+			border-radius: 4px;
+		}
 	</style>
 </head>
 
@@ -413,846 +517,971 @@
 	<div class="container">
 
 		<div class="link" title="This link will display chat messages as a streaming list; use as an overlay or as a control dock">
-			<h2>Streaming chat (dockable) <a class="options-link" href="#streaming-chat-options"
-				title="Jump to dockable streaming chat link options">[options]</a></h2>
+			<h2 class="streaming_chat_title">Streaming chat (dockable) <a class="options-link rounded_area" href="#streaming-chat-options"
+				title="Jump to dockable streaming chat link options">options</a></h2>
 			<div id="dock" class="streaming_chat"></div>
-
 		</div>
+		<a href="" id="streaming-chat-options"></a>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-style-options">
+				<label class="collapsible-label" for="wrapper-style-options">Styling</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group streaming_chat">
+
+							<h3>Menu</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="hidemenu">
+									<span class="slider round"></span>
+								</label> Hide menu bar
+							</div>
+
+							<h3>Overlay</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="scale=2">
+									<span class="slider round"></span>
+								</label> Magnify the view (larger font/images) 🔍
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="compact">
+									<span class="slider round"></span>
+								</label> Compact mode (good for video overlaying)
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="transparent">
+									<span class="slider round"></span>
+								</label> Force transparent background
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="lightmode">
+									<span class="slider round"></span>
+								</label> Light mode (white background)
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="darkmode">
+									<span class="slider round"></span>
+								</label> Dark mode (black background)
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="chroma">
+									<span class="slider round"></span>
+								</label> Green page background
+							</div>
+
+							<h3>Message mechanics</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="showtime=20000">
+									<span class="slider round"></span>
+								</label> Hide messages after 20s
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="alignbottom">
+									<span class="slider round"></span>
+								</label> Messages start at bottom rather than top
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="dropdown">
+									<span class="slider round"></span>
+								</label> Messages drop down (reversed order)
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="random">
+									<span class="slider round"></span>
+								</label> Messages appear randomly on the screen
+							</div>
+
+							<h3>Message visibility</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="hidesource">
+									<span class="slider round"></span>
+								</label> Hide source icon <img src="youtube.png" class="icon" /><img src="twitch.png" class="icon" /><img src="facebook.png" class="icon" />
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="branded">
+									<span class="slider round"></span>
+								</label> Show channel icon
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="noavatar">
+									<span class="slider round"></span>
+								</label> Hide avatars <img src="unknown.png" class="icon" />
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="notime">
+									<span class="slider round"></span>
+								</label> Hide timestamp 🕘
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="nobadges">
+									<span class="slider round"></span>
+								</label> Hide badges ✅
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="firstnames">
+									<span class="slider round"></span>
+								</label> Use first names only
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="hidenames">
+									<span class="slider round"></span>
+								</label> Delete names entirely
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="color">
+									<span class="slider round"></span>
+								</label> Color names if color info available
+							</div>
+
+							<h3>Message styling</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="largeavatar">
+									<span class="slider round"></span>
+								</label> Large avatar profile pic on left side
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="emoji">
+									<span class="slider round"></span>
+								</label> Make emojis larger 😊
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="nooutline">
+									<span class="slider round"></span>
+								</label> No text outlining
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="hideshadow">
+									<span class="slider round"></span>
+								</label> No alternating background shading
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="nomemberhighlight">
+									<span class="slider round"></span>
+								</label> No background shading for members
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="nodonohighlight">
+									<span class="slider round"></span>
+								</label> No background shading for donations
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="twolines">
+									<span class="slider round"></span>
+								</label> Message appears on its own line under name
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="split">
+									<span class="slider round"></span>
+								</label> Split mode (messages align relative to center)
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="bubble">
+									<span class="slider round"></span>
+								</label> Turn message portion into a rounded bubble
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="horizontal">
+									<span class="slider round"></span>
+								</label> Horizontal scrolling messages
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="fixed">
+									<span class="slider round"></span>
+								</label> Messages overlap on another
+							</div>
+
+							<h3>Message effects</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="fadein">
+									<span class="slider round"></span>
+								</label> Messages fade in
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="fadeout">
+									<span class="slider round"></span>
+								</label> Messages fade out when hiding
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="swipeleft">
+									<span class="slider round"></span>
+								</label> Messages slide in from the right
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="smooth">
+									<span class="slider round"></span>
+								</label> Messages smoothly scroll in
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-hostbot-options">
+				<label class="collapsible-label" for="wrapper-hostbot-options">Host & bot</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group streaming_chat">
+
+							<div>
+								<label for="botnames">Name or list of names to help identify the host and bots</label>
+								<input type="text" class="input-text-fullwidth" id="botnames" data-textparam1="myname" placeholder="ie: name1,name 2,Name3" />
+								<p>Note: The first name listed may be used as the host's name in stream when their name is not otherwise known. The list of names should be comma separated.</p>
+							</div>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="hidebotnames">
+									<span class="slider round"></span>
+								</label> Delete names for specified host or bots
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="hidebots">
+									<span class="slider round"></span>
+								</label> Do not show host or bot messages
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-behaviour-and-functions-options">
+				<label class="collapsible-label" for="wrapper-behaviour-and-functions-options">Behaviour and functions</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group streaming_chat">
+
+							<h3>Message visibility</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="limit=200">
+									<span class="slider round"></span>
+								</label> Increase messages history to 200
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-incompatible="limit=200" data-param1="limit=1">
+									<span class="slider round"></span>
+								</label> Show only the last message
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="sentiment">
+									<span class="slider round"></span>
+								</label> Filter out messages with bad karma
+							</div>
+							<div>
+								<label class="switch"
+									title="HTML is removed from messages, donations, and names for this dock only">
+									<input type="checkbox" data-param1="striphtml">
+									<span class="slider round"></span>
+								</label> Strip HTML from messages and donations
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="chartime=100">
+									<span class="slider round"></span>
+								</label> Increase the minimum time messages auto-show for
+							</div>
+
+							<h3>Message mechanics</h3>
+
+							<div>
+								<label class="switch"
+									title="note: You must first interact with the dock-page for any audio to be audible">
+									<input type="checkbox" data-param1="beep">
+									<span class="slider round"></span>
+								</label> Beep when there is a new message 🔔
+							</div>
+							<div>
+								<label class="switch"
+									title="tip: You can use &myname=name1,name2 to list names to exclude from TTS">
+									<input type="checkbox" data-param1="speech=en-US">
+									<span class="slider round"></span>
+								</label> Text-to-Speech incoming messages 💬
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="autoshow">
+									<span class="slider round"></span>
+								</label> Auto-select new messages (skipping as needed)
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="autoshowdonos">
+									<span class="slider round"></span>
+								</label> When auto-selecting is on, only auto-select donations
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="sync">
+									<span class="slider round"></span>
+								</label> Multiple docks will stay in sync as to selected messages
+							</div>
+
+							<h3>Export</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="savesingle">
+									<span class="slider round"></span>
+								</label> Save last message to a file 💾
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="save">
+									<span class="slider round"></span>
+								</label> Save messages to disk 💾
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div class="link" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
-			<h2>Featured chat overlay <a class="options-link" href="#single-message-options"
-				title="Jump to single message overlay link options">[options]</a></h2>
+			<h2 class="single_message_title">Featured chat overlay <a class="options-link rounded_area" href="#single-message-options"
+				title="Jump to single message overlay link options">options</a></h2>
 			<div id="overlay" class="single_message"></div>
 		</div>
+		<a href="" id="single-message-options"></a>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-url-based-options">
+				<label class="collapsible-label" for="wrapper-url-based-options">URL-based</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group single_message">
+
+							<h3>Overlay</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" title="zoom out of overlay by 2x" data-param2="scale=0.5">
+									<span class="slider round"></span>
+								</label> Make overlay smaller 🔎
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="chroma">
+									<span class="slider round"></span>
+								</label> Green page background 🟢
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="center">
+									<span class="slider round"></span>
+								</label> Center overlay
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" title="Raise offset of overlay by 100px" data-param2="offset=100">
+									<span class="slider round"></span>
+								</label> Raise overlay higher ⬆
+							</div>
+
+							<h3>Message mechanics</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="showtime=20000">
+									<span class="slider round"></span>
+								</label> Hide overlay after 20s
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="speech=en-US">
+									<span class="slider round"></span>
+								</label> Enable text-to-speech 💬
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="ttsdonos=en-US">
+									<span class="slider round"></span>
+								</label> Enable text-to-speech for Donations only 💬
+							</div>
+
+							<h3>Message visibility</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="showsource">
+									<span class="slider round"></span>
+								</label> Show source icon <img src="youtube.png" class="icon" /><img src="twitch.png"
+									class="icon" /><img src="facebook.png" class="icon" />
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="branded">
+									<span class="slider round"></span>
+								</label> Show channel icon
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="noavatar">
+									<span class="slider round"></span>
+								</label> Hide avatars <img src="unknown.png" class="icon" />
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="nobadges">
+									<span class="slider round"></span>
+								</label> Hide badges ✅
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="firstnames">
+									<span class="slider round"></span>
+								</label> Use first names only
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="hidenames">
+									<span class="slider round"></span>
+								</label> Delete names entirely
+							</div>
+
+							<h3>Message styling</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="aligntop">
+									<span class="slider round"></span>
+								</label> Align comment to top
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="rounded=10">
+									<span class="slider round"></span>
+								</label> Round edges ⬛=>⚫
+							</div>
+
+							<h3>Message effects</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="fade">
+									<span class="slider round"></span>
+								</label> Fade in/out instead
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-featured-chat-colors-options">
+				<label class="collapsible-label" for="wrapper-featured-chat-colors-options">Colors</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group single_message">
+
+							<div>
+								<label for="comment_color">Comment Font Color</label>
+								<input type="text" class="input-text-fullwidth" id="comment_color" data-textsetting="comment_color" placeholder="#HEX value or color name" />
+							</div>
+							<div>
+								<label for="comment_background">Comment Background Color</label>
+								<input type="text" class="input-text-fullwidth" id="comment_background" data-textsetting="comment_background" placeholder="#HEX value or color name" />
+							</div>
+							<div>
+								<label for="name_color">Name Font Color</label>
+								<input type="text" class="input-text-fullwidth" id="name_color" data-textsetting="name_color" placeholder="#HEX value or color name" />
+							</div>
+							<div>
+								<label for="name_background">Name Background Color</label>
+								<input type="text" class="input-text-fullwidth" id="name_background" data-textsetting="name_background" placeholder="#HEX value or color name" />
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div class="link" title="This link will only show the inbound emotes, bouncing them around the full page">
-			<h2>Emotes Wall <a class="options-link" href="#emote-wall-options"
-				title="Jump to the emote wall link options">[emotes]</a></h2>
+			<h2 class="emotes_wall_title">Emotes wall <a class="options-link rounded_area" href="#emote-wall-options"
+				title="Jump to the emote wall link options">options</a></h2>
 			<div id="emoteswall" class="emotes_wall"></div>
 		</div>
-
-
-		<div class="link hidden" title="Quick open all saved chat links">
-			<h3>Quick Open Chat <a class="options-link" href="#quick-open-chat-options" title="Jump to quick open chat chat setup and options"><button id="quickopenbutton" class="button" style="margin-left: 0px;" data-action="openchat" style="cursor:pointer;">Open All</button>[configure]</a></h2>
-		</div>
-
-
-		<h3 title="These services require you to manually opt-in, for security purposes">Opt-in additional chat services</h3>
-		<div class="options_group options">
-			<div>
-				<label class="switch">
-					<input type="checkbox" data-setting="discord">
-					<span class="slider round"></span>
-				</label> Capture Discord chat <img class="icon" src="discord.png"></img>
-			</div>
-			<div>
-				<label class="switch">
-					<input type="checkbox" data-setting="slack">
-					<span class="slider round"></span>
-				</label> Capture Slack chat <img class="icon" src="slack.png"></img>
-			</div>
-			<div>
-				<label class="switch">
-					<input type="checkbox" data-setting="chime">
-					<span class="slider round"></span>
-				</label> Capture Chime chat <img class="icon" src="chime.png"></img>
-			</div>
-			<div>
-				<label class="switch">
-					<input type="checkbox" data-setting="meet">
-					<span class="slider round"></span>
-				</label> Capture Google Meet chat <img class="icon" src="meet.png"></img>
-			</div>
-			<div>
-				<label class="switch">
-					<input type="checkbox" data-setting="telegram">
-					<span class="slider round"></span>
-				</label> Capture Telegram chat <img class="icon" src="telegram.png"></img>
-			</div>
-			<div>
-				<label class="switch">
-					<input type="checkbox" data-setting="whatsapp">
-					<span class="slider round"></span>
-				</label> Capture WhatsApp chat <img class="icon" src="whatsapp.png"></img>
-			</div>
-			<div>
-				<label class="switch">
-					<input type="checkbox" data-setting="instagram">
-					<span class="slider round"></span>
-				</label> Capture Instagram non-live comments<img class="icon" src="instagram.png"></img>
-			</div>
-		</div>
-
-		<a href="" id="streaming-chat-options"></a>
-		<h2>Streaming chat (dock) options</h2>
-		<div class="options">
-			<h3>Styling options</h3>
-			<div class="options_group streaming_chat">
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="hidemenu">
-						<span class="slider round"></span>
-					</label> Hide menu bar
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="transparent">
-						<span class="slider round"></span>
-					</label> Force transparent background
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="hideshadow">
-						<span class="slider round"></span>
-					</label> No alternating background shading
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="nomemberhighlight">
-						<span class="slider round"></span>
-					</label> No background shading for members
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="nodonohighlight">
-						<span class="slider round"></span>
-					</label> No background shading for donations
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="nooutline">
-						<span class="slider round"></span>
-					</label> No text outlining
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="scale=2">
-						<span class="slider round"></span>
-					</label> Magnify the view (larger font/images) 🔍
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="emoji">
-						<span class="slider round"></span>
-					</label> Make emojis larger 😊
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="compact">
-						<span class="slider round"></span>
-					</label> Compact mode (good for video overlaying)
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="hidesource">
-						<span class="slider round"></span>
-					</label> Hide source icon <img src="youtube.png" class="icon" /><img src="twitch.png" class="icon" /><img src="facebook.png" class="icon" />
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="nobadges">
-						<span class="slider round"></span>
-					</label> Show no badges ✅ ✅
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="noavatar">
-						<span class="slider round"></span>
-					</label> Show no avatars <img src="unknown.png" class="icon" />
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="notime">
-						<span class="slider round"></span>
-					</label> Hide timestamp 🕘
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="branded">
-						<span class="slider round"></span>
-					</label> Show channel icon
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="color">
-						<span class="slider round"></span>
-					</label> Color names if color info available
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="twolines">
-						<span class="slider round"></span>
-					</label> Message appears on its own line under name
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="split">
-						<span class="slider round"></span>
-					</label> Split mode (messages align relative to center)
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="largeavatar">
-						<span class="slider round"></span>
-					</label> Large avatar profile pic on left side
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="bubble">
-						<span class="slider round"></span>
-					</label> Turn message portion into a rounded bubble
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="horizontal">
-						<span class="slider round"></span>
-					</label> Horizontal scrolling messages
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="random">
-						<span class="slider round"></span>
-					</label> Messages appear randomly on the screen
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="fixed">
-						<span class="slider round"></span>
-					</label> Messages overlap on another
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="smooth">
-						<span class="slider round"></span>
-					</label> Messages smoothly scroll in
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="alignbottom">
-						<span class="slider round"></span>
-					</label> Messages start at bottom rather than top
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="dropdown">
-						<span class="slider round"></span>
-					</label> Messages drop down (reversed order)
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="swipeleft">
-						<span class="slider round"></span>
-					</label> Messages slide in from the right
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="fadein">
-						<span class="slider round"></span>
-					</label> Messages fade in
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="showtime=20000">
-						<span class="slider round"></span>
-					</label> Hide messages after 20s
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="fadeout">
-						<span class="slider round"></span>
-					</label> Messages fade out when hiding
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="lightmode">
-						<span class="slider round"></span>
-					</label> Light mode (white background)
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="darkmode">
-						<span class="slider round"></span>
-					</label> Dark mode (black background)
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="chroma">
-						<span class="slider round"></span>
-					</label> Green page background
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="firstnames">
-						<span class="slider round"></span>
-					</label> Use first names only
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="hidenames">
-						<span class="slider round"></span>
-					</label> Delete names entirely
-				</div>
-			</div>
-
-			<h3>Specify host or bot</h3>
-			<div class="options_group streaming_chat">
-				<div>
-					<label class="textinput" style="display:block;padding-top:8px;">
-					</label> Name or list of names to help identify the host and bots.:
-					<input type="text" data-textparam1="myname" style="width:95%;"
-						placeholder="ie: name1,name 2,Name3" />
-					<p>Note: The first name listed may be used as the host's name in stream when their name is not otherwise known. The list of names should be comma separated.</p>
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="hidebotnames">
-						<span class="slider round"></span>
-					</label> Delete names for specified host or bots
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="hidebots">
-						<span class="slider round"></span>
-					</label> Do not show host or bot messages
-				</div>
-			</div>
-
-			<h3>Behaviour and functions</h3>
-			<div class="options_group streaming_chat">
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="limit=200">
-						<span class="slider round"></span>
-					</label> Increase messages history to 200
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-incompatible="limit=200" data-param1="limit=1">
-						<span class="slider round"></span>
-					</label> Show only the last message
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-setting="sentiment">
-						<span class="slider round"></span>
-					</label> Filter out messages with bad karma
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="save">
-						<span class="slider round"></span>
-					</label> Save messages to disk 💾
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="savesingle">
-						<span class="slider round"></span>
-					</label> Save last message to a file 💾
-				</div>
-				<div>
-					<label class="switch"
-						title="HTML is removed from messages, donations, and names for this dock only">
-						<input type="checkbox" data-param1="striphtml">
-						<span class="slider round"></span>
-					</label> Strip HTML from messages and donations
-				</div>
-				<div>
-					<label class="switch"
-						title="tip: You can use &myname=name1,name2 to list names to exclude from TTS">
-						<input type="checkbox" data-param1="speech=en-US">
-						<span class="slider round"></span>
-					</label> Text-to-Speech incoming messages 💬
-				</div>
-				<div>
-					<label class="switch"
-						title="note: You must first interact with the dock-page for any audio to be audible">
-						<input type="checkbox" data-param1="beep">
-						<span class="slider round"></span>
-					</label> Beep when there is a new message 🔔
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="autoshow">
-						<span class="slider round"></span>
-					</label> Auto-select new messages (skipping as needed)
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="autoshowdonos">
-						<span class="slider round"></span>
-					</label> When auto-selecting is on, only auto-select donations
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="chartime=100">
-						<span class="slider round"></span>
-					</label> Increase the minimum time messages auto-show for
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param1="sync">
-						<span class="slider round"></span>
-					</label> Multiple docks will stay in sync as to selected messages
-				</div>
-			</div>
-		</div>
-
-		<a href="" id="single-message-options"></a>
-		<h2>Featured chat overlay options</h2>
-		<div class="options">
-			<h3>URL-based settings</h3>
-			<div class="options_group single_message">
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="showtime=20000">
-						<span class="slider round"></span>
-					</label> Hide overlay after 20s
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="showsource">
-						<span class="slider round"></span>
-					</label> Show source icon <img src="youtube.png" class="icon" /><img src="twitch.png"
-						class="icon" /><img src="facebook.png" class="icon" />
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="branded">
-						<span class="slider round"></span>
-					</label> Show channel icon
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="center">
-						<span class="slider round"></span>
-					</label> Center overlay
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="aligntop">
-						<span class="slider round"></span>
-					</label> Align comment to top
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="fade">
-						<span class="slider round"></span>
-					</label> Fade in/out instead
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="rounded=10">
-						<span class="slider round"></span>
-					</label> Round edges ⬛=>⚫
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="noavatar">
-						<span class="slider round"></span>
-					</label> Show no avatars <img src="unknown.png" class="icon" />
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="nobadges">
-						<span class="slider round"></span>
-					</label> Show no badges ✅
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="firstnames">
-						<span class="slider round"></span>
-					</label> Use first names only
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="hidenames">
-						<span class="slider round"></span>
-					</label> Delete names entirely
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="speech=en-US">
-						<span class="slider round"></span>
-					</label> Enable text-to-speech 💬
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="ttsdonos=en-US">
-						<span class="slider round"></span>
-					</label> Enable text-to-speech for Donations only 💬
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" title="zoom out of overlay by 2x" data-param2="scale=0.5">
-						<span class="slider round"></span>
-					</label> Make overlay smaller 🔎
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" title="Raise offset of overlay by 100px" data-param2="offset=100">
-						<span class="slider round"></span>
-					</label> Raise overlay higher ⬆
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param2="chroma">
-						<span class="slider round"></span>
-					</label> Green page background 🟢
-				</div>
-			</div>
-			<h3>Colors</h3>
-			<div class="options_group single_message">
-				<div>
-					<label for="comment_color">Comment Font Color</label>
-					<input type="text" id="comment_color" data-textsetting="comment_color" placeholder="#HEX value or color name" />
-				</div>
-				<div>
-					<label for="comment_background">Comment Background Color</label>
-					<input type="text" id="comment_background" data-textsetting="comment_background" placeholder="#HEX value or color name" />
-				</div>
-				<div>
-					<label for="name_color">Name Font Color</label>
-					<input type="text" id="name_color" data-textsetting="name_color" placeholder="#HEX value or color name" />
-				</div>
-				<div>
-					<label for="name_background">Name Background Color</label>
-					<input type="text" id="name_background" data-textsetting="name_background" placeholder="#HEX value or color name" />
-				</div>
-			</div>
-		</div>
-
-
 		<a href="" id="emote-wall-options"></a>
-		<h2>Emote wall options</h2>
-		<div class="options">
-			<h3>Basic options</h3>
-			<div class="options_group emotes_wall">
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param3="hidedupes">
-						<span class="slider round"></span>
-					</label> Remove duplicate emotes per message
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param3="showtime=20000">
-						<span class="slider round"></span>
-					</label> Show messages for 20s, rather than 5s.
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-param3="scale=0.5">
-						<span class="slider round"></span>
-					</label> Make all emojis half the size
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-emote-general-options">
+				<label class="collapsible-label" for="wrapper-emote-general-options">General</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group emotes_wall">
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param3="hidedupes">
+									<span class="slider round"></span>
+								</label> Remove duplicate emotes per message
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param3="showtime=20000">
+									<span class="slider round"></span>
+								</label> Show messages for 20s, rather than 5s.
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param3="scale=0.5">
+									<span class="slider round"></span>
+								</label> Make all emojis half the size
+							</div>
+
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
 
-		<h2>Global settings and tools</h2>
-		<div class="options">
-			<div class="options_group">
-
-				<div>
-					<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
-						<input type="checkbox" id="firstsourceonly" data-setting="firstsourceonly">
-						<span class="slider round"></span>
-					</label> Filter out duplicate message echos
-				</div>
-
-				<div>
-					<label class="switch" title="Filter out messages that might be chat commands">
-						<input type="checkbox"  data-setting="filtercommands">
-						<span class="slider round"></span>
-					</label> Filter out messages starting with: <b><i>!</i></b>
-				</div>
-
-				<div>
-					<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
-						<input type="checkbox" id="textonlymode" data-setting="textonlymode">
-						<span class="slider round"></span>
-					</label> Strip HTML from messages
-				</div>
-
-				<div>
-					<label class="switch" title="Capture likes, subs, and other available event data.">
-						<input type="checkbox" data-setting="captureevents">
-						<span class="slider round"></span>
-					</label> Capture stream events and actions
-				</div>
-
-				<div>
-					<label class="switch" title="If a name lacks color data, randomly add one">
-						<input type="checkbox" data-setting="randomcolor">
-						<span class="slider round"></span>
-					</label>  Add random colors to uncolored names
-				</div>
-
-				<div>
-					<label class="switch" title="Members on Youtube won't have green names, for example">
-						<input type="checkbox" data-setting="nosubcolor">
-						<span class="slider round"></span>
-					</label> Do not color names based on sub or member status
-				</div>
-
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-setting="h2r">
-						<span class="slider round"></span>
-					</label> Send all to H2R server:
-					<input type="text" style="margin:0px;max-width:43%;display:inline-block;" data-textsetting="h2rserver" placeholder="Provide ID or full URL" />
-				</div>
-
-				<div>
-					<label class="switch">
-						<input type="checkbox" data-setting="post">
-						<span class="slider round"></span>
-					</label> Send all to POST server:
-					<input type="text" style="margin:0px;max-width:43%;display:inline-block;" data-textsetting="postserver" placeholder="Provide ID or full URL" />
-				</div>
-
-				<div>
-					<label class="switch">
-						<input type="checkbox" id="autohi" data-setting="autohi">
-						<span class="slider round"></span>
-					</label> Auto-reply to "<b>hi</b>" messages
-				</div>
-
-				<div>
-					<label class="switch">
-						<input type="checkbox" id="midi" data-setting="midi">
-						<span class="slider round"></span>
-					</label> Enable MIDI hotkeys 🎹
-					<button id="midiConfig" class="button" data-action="loadmidi" style="cursor:pointer;"> Load Config</button>
-				</div>
-
-				<div>
-					<label class="switch" title="See documentation on socialstream.ninja for details">
-						<input type="checkbox" data-setting="socketserver">
-						<span class="slider round"></span>
-					</label> Enable <a target='_blank' id='remote_control_url' href='https://socialstream.ninja/sampleapi.html'>remote HTTP/WSS API control options</a>
-				</div>
-
-				<div>
-					<label class="switch">
-						<input type="checkbox" id="server" data-both="server">
-						<span class="slider round"></span>
-					</label> Send featured chat via server instead of P2P
-				</div>
-
-				<div style="margin: 6px 0 0 0">
-					<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
-						<input type="checkbox" data-setting="chatevent1">
-						<span class="slider round"></span>
-					</label>
-					<div style="display:inline-block";>
-						Chat Command:
-						<input type="text" style="margin:0px;max-width:66%;display:inline-block;" data-textsetting="chatcommand1" placeholder="!someevent3" /><br />
-						Webhook URL:
-						<input type="text" style="margin:0 0 0 7px;max-width:66%;display:inline-block;" data-textsetting="chatwebhook1" placeholder="Full URL" />
-					</div>
-				</div>
-
-				<div>
-					<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
-						<input type="checkbox" data-setting="chatevent2">
-						<span class="slider round"></span>
-					</label>
-					<div style="display:inline-block";>
-						Chat Command:
-						<input type="text" style="margin:0px;max-width:66%;display:inline-block;" data-textsetting="chatcommand2" placeholder="!someevent3" /><br />
-						Webhook URL:
-						<input type="text" style="margin:0 0 0 7px;max-width:66%;display:inline-block;" data-textsetting="chatwebhook2" placeholder="Full URL" />
-					</div>
-				</div>
-
-				<div>
-					<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
-						<input type="checkbox" data-setting="chatevent3">
-						<span class="slider round"></span>
-					</label>
-					<div style="display:inline-block";>
-						Chat Command:
-						<input type="text" style="margin:0px;max-width:66%;display:inline-block;" data-textsetting="chatcommand3" placeholder="!someevent3" /><br />
-						Webhook URL:
-						<input type="text" style="margin:0 0 0 7px;max-width:66%;display:inline-block;" data-textsetting="chatwebhook3" placeholder="Full URL" />
-					</div>
-				</div>
-
-				<div style="display:inline-block;">
-					<label class="switch">
-						<input type="checkbox" id="joke" data-setting="joke">
-						<span class="slider round"></span>
-					</label> Tell joke on <b>!joke</b> message
-				</div>
-
-				<div style="display:inline-block;">
-					<button class="button" data-action="tellajoke" style="cursor:pointer;"> Tell a joke now</button>
-				</div>
-			</div>
-
-			<a href="" id="quick-open-chat-options"></a>
-			<h3>Quick-open chat pop-ups</h3>
-			<div class="options_group">
-				<!--
-					<div class="alert alert_danger">
-						This is an example of an important <b>error</b> message.
-					</div>
-				-->
-
-				<center><i>Main</i></center>
-
-				<button class="button" style="margin-left: 0px;" data-action="openchat" style="cursor:pointer;"> Open All Chat</button>
-
-				<div>
-					<label class="switch">
-						<input type="checkbox" id="openchatdock" data-param1="openchat">
-						<span class="slider round"></span>
-					</label> Auto open all chat windows on dock connect
-				</div>
-
-				<div style="display:none;">
-					<button class="button" data-action="enableYouTube" style="cursor:pointer;"> Connect Youtube API</button><input type="text" style="display:inline-block;" data-textsetting="youtubeapikey" placeholder="Provide YouTube API Key" />
-				</div>
-
-				<hr>
-
-				<center><i>Opened in new tab</i></center>
-
-				<div>
-					<label class="chat_open_label">Twitch</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="twitch_username" placeholder="Channel name" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="twitch" style="cursor:pointer;"> Open Chat</button>
-				</div>
-
-				<div>
-					<label class="chat_open_label">Instagram Live</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="instagramlive_username" placeholder="Channel name" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="instagramlive" style="cursor:pointer;"> Open Chat</button>
-				</div>
-
-				<div>
-					<label class="chat_open_label">Facebook</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="facebook_username" placeholder="Channel name" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="facebook" style="cursor:pointer;">Open Chat</button>
-				</div>
-
-				<div>
-					<label class="chat_open_label">Kick</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="kick_username" placeholder="Channel name" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="kick" style="cursor:pointer;"> Open Chat</button>
-				</div>
-
-				<div>
-					<label class="chat_open_label">Discord</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_serverid" placeholder="Server id"class="chat_open_input" />
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_channelid" placeholder="Channel id" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="discord" style="cursor:pointer;"> Open Chat</button>
-				</div>
-
-				<hr>
-
-				<center><i>Opened in new window<br>Note: Do NOT minimize them!</i></center>
-
-				<div>
-					<label class="chat_open_label">YouTube</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="youtube_username" placeholder="Channel name" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="youtube" style="cursor:pointer;"> Open Chat</button>
-					<button class="button" style="display:inline-block; width: 30px;" id="ytcopy" title="Copy YouTube Video ID to the clipboard">📎</button>
-				</div>
-
-				<div>
-					<label class="chat_open_label">TikTok</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="tiktok_username" placeholder="Channel name" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="tiktok" style="cursor:pointer;"> Open Chat</button>
-				</div>
-
-				<div>
-					<label class="chat_open_label">Trovo</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="trovo_username" placeholder="Channel name" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="trovo" style="cursor:pointer;"> Open Chat</button>
-				</div>
-
-				<div>
-					<label class="chat_open_label">Picarto</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="picarto_username" placeholder="Channel name" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="picarto" style="cursor:pointer;"> Open Chat</button>
-				</div>
-
-				<hr>
-
-				<center><i>Custom</i></center>
-
-				<div>
-					<label class="chat_open_label">Custom URL 1</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="custom1_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom1" style="cursor:pointer;"> Open Chat</button>
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" id="custom1_url_newwindow" data-setting="custom1_url_newwindow">
-						<span class="slider round"></span>
-					</label> Open custom URL 1 on new window
-				</div>
-
-				<div>
-					<label class="chat_open_label">Custom URL 2</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="custom2_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom2" style="cursor:pointer;"> Open Chat</button>
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" id="custom2_url_newwindow" data-setting="custom2_url_newwindow">
-						<span class="slider round"></span>
-					</label> Open custom URL 2 on new window
-				</div>
-
-				<div>
-					<label class="chat_open_label">Custom URL 3</label>
-					<input type="text" style="margin-bottom: 0px;" data-textsetting="custom3_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
-					<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom3" style="cursor:pointer;"> Open Chat</button>
-				</div>
-				<div>
-					<label class="switch">
-						<input type="checkbox" id="custom3_url_newwindow" data-setting="custom3_url_newwindow">
-						<span class="slider round"></span>
-					</label> Open custom URL 3 on new window
-				</div>
-			</div>
-
-			<h3>Save the last message to a file</h3>
-			<div class="options_group">
-				An alterative method of saving the <b>last</b> message
-				<div class="grid">
-					<button class="button" data-action="singlesave" style="cursor:pointer;"> 💾 Choose location</button>
-					<button class="button" data-action="singlesaveStop" style="cursor:pointer;"> Stop saving (if active)</button>
-				</div>
-			</div>
-			<h3>Save all messages to 📗 <b>Excel</b> file</h3>
-			<div class="options_group">
-				An alterative method of saving all messages
-				<div class="grid">
-					<button class="button" data-action="excelsave" style="cursor:pointer;"> 💾 Choose location</button>
-					<button class="button" data-action="excelsaveStop" style="cursor:pointer;"> Stop saving (if active)</button>
-				</div>
-			</div>
-
-			<h3>Export/import settings</h3>
-			<div class="options_group">
-				Backup and load your extension settings.
-				<div class="grid">
-					<button class="button" data-action="export" style="cursor:pointer;"> 💾 Export to disk</button>
-					<button class="button" data-action="import" style="cursor:pointer;"> Import settings</button>
-				</div>
-			</div>
-
-
-			<h3>Fake a comment for testing</h3>
-			<div class="options_group">
-				Issue a random test message that will appear in the dock
-				<button class="button" data-action="fakemsg" style="cursor:pointer;">Trigger now</button>
-			</div>
-			<p>
-			Visit us at <a href='https://discord.socialstream.ninja' target="_blank"discord.socialstream.ninja</a>. Made with 💖 for the community.
-			</p>
+		<div class="link" title="This link will show the global settings and tools">
+			<h2>Global settings and tools <a class="options-link rounded_area" href="#global-settings-and-tools-options"
+			title="Jump to the global settings and tools">options</a></h2>
+			<!-- <div id="emoteswall" class="emotes_wall"></div> -->
 		</div>
+		<a href="" id="global-settings-and-tools-options"></a>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-general-options">
+				<label class="collapsible-label" for="wrapper-general-options">General</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group">
+
+							<h3>Message visibility</h3>
+
+							<div>
+								<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
+									<input type="checkbox" id="firstsourceonly" data-setting="firstsourceonly">
+									<span class="slider round"></span>
+								</label> Filter out duplicate message echos
+							</div>
+							<div>
+								<label class="switch" title="Filter out messages that might be chat commands">
+									<input type="checkbox"  data-setting="filtercommands">
+									<span class="slider round"></span>
+								</label> Filter out messages starting with: <b><i>!</i></b>
+							</div>
+							<div>
+								<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
+									<input type="checkbox" id="textonlymode" data-setting="textonlymode">
+									<span class="slider round"></span>
+								</label> Strip HTML from messages
+							</div>
+
+							<h3>Message styling</h3>
+
+							<div>
+								<label class="switch" title="If a name lacks color data, randomly add one">
+									<input type="checkbox" data-setting="randomcolor">
+									<span class="slider round"></span>
+								</label> Add random colors to uncolored names
+							</div>
+							<div>
+								<label class="switch" title="Members on Youtube won't have green names, for example">
+									<input type="checkbox" data-setting="nosubcolor">
+									<span class="slider round"></span>
+								</label> Do not color names based on sub or member status
+							</div>
+
+							<h3>Mechanics</h3>
+
+							<div>
+								<label class="switch" title="Capture likes, subs, and other available event data.">
+									<input type="checkbox" data-setting="captureevents">
+									<span class="slider round"></span>
+								</label> Capture stream events and actions
+							</div>
+							<div>
+								<label class="switch" title="See documentation on socialstream.ninja for details">
+									<input type="checkbox" data-setting="socketserver">
+									<span class="slider round"></span>
+								</label> Enable <a target='_blank' class="options-link rounded_area" id='remote_control_url' href='https://socialstream.ninja/sampleapi.html'>remote HTTP/WSS API control options</a>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" id="server" data-both="server">
+									<span class="slider round"></span>
+								</label> Send featured chat via server instead of P2P
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="h2r">
+									<span class="slider round"></span>
+								</label> Send all to H2R server:
+								<input type="text" class="input-text-fullwidth" data-textsetting="h2rserver" placeholder="Provide ID or full URL" />
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="post">
+									<span class="slider round"></span>
+								</label> Send all to POST server:
+								<input type="text" class="input-text-fullwidth" data-textsetting="postserver" placeholder="Provide ID or full URL" />
+							</div>
+
+							<h3>Commands</h3>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" id="autohi" data-setting="autohi">
+									<span class="slider round"></span>
+								</label> Auto-reply to "<b>hi</b>" messages
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" id="midi" data-setting="midi">
+									<span class="slider round"></span>
+								</label> Enable MIDI hotkeys 🎹
+								<button id="midiConfig" class="button" data-action="loadmidi" style="cursor:pointer;"> Load Config</button>
+							</div>
+							<div style="display:inline-block;">
+								<label class="switch">
+									<input type="checkbox" id="joke" data-setting="joke">
+									<span class="slider round"></span>
+								</label> Tell joke on <b>!joke</b> message
+							</div>
+							<div style="display:inline-block;">
+								<button class="button" data-action="tellajoke" style="cursor:pointer;"> Tell a joke now</button>
+							</div>
+							<div style="margin: 6px 0 0 0">
+								<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
+									<input type="checkbox" data-setting="chatevent1">
+									<span class="slider round"></span>
+								</label>
+								<div style="display:inline-block";>
+									Chat Command:
+									<input type="text" style="margin:0px;max-width:66%;display:inline-block;" data-textsetting="chatcommand1" placeholder="!someevent3" /><br />
+									Webhook URL:
+									<input type="text" style="margin:0 0 0 7px;max-width:66%;display:inline-block;" data-textsetting="chatwebhook1" placeholder="Full URL" />
+								</div>
+							</div>
+							<div>
+								<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
+									<input type="checkbox" data-setting="chatevent2">
+									<span class="slider round"></span>
+								</label>
+								<div style="display:inline-block";>
+									Chat Command:
+									<input type="text" style="margin:0px;max-width:66%;display:inline-block;" data-textsetting="chatcommand2" placeholder="!someevent3" /><br />
+									Webhook URL:
+									<input type="text" style="margin:0 0 0 7px;max-width:66%;display:inline-block;" data-textsetting="chatwebhook2" placeholder="Full URL" />
+								</div>
+							</div>
+							<div>
+								<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
+									<input type="checkbox" data-setting="chatevent3">
+									<span class="slider round"></span>
+								</label>
+								<div style="display:inline-block";>
+									Chat Command:
+									<input type="text" style="margin:0px;max-width:66%;display:inline-block;" data-textsetting="chatcommand3" placeholder="!someevent3" /><br />
+									Webhook URL:
+									<input type="text" style="margin:0 0 0 7px;max-width:66%;display:inline-block;" data-textsetting="chatwebhook3" placeholder="Full URL" />
+								</div>
+							</div>
+
+							<h3>Fake a comment for testing</h3>
+
+							Issue a random test message that will appear in the dock
+							<button class="button" data-action="fakemsg" style="cursor:pointer;">Trigger now</button>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-quick-open-chats-options">
+				<label class="collapsible-label" for="wrapper-quick-open-chats-options">Quick-open chat pop-ups</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group">
+
+							<!--
+								<div class="alert alert_danger">
+									This is an example of an important <b>error</b> message.
+								</div>
+							-->
+
+							<h3>Main</h3>
+
+							<button class="button" style="margin-left: 0px;" data-action="openchat" style="cursor:pointer;"> Open All Chat</button>
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" id="openchatdock" data-param1="openchat">
+									<span class="slider round"></span>
+								</label> Auto open all chat windows on dock connect
+							</div>
+
+							<div style="display:none;">
+								<button class="button" data-action="enableYouTube" style="cursor:pointer;"> Connect Youtube API</button><input type="text" style="display:inline-block;" data-textsetting="youtubeapikey" placeholder="Provide YouTube API Key" />
+							</div>
+
+							<h3>Opened in new tab</h3>
+
+							<div>
+								<label class="chat_open_label">Twitch</label>
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="twitch_username" placeholder="Channel name" class="chat_open_input" />
+								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="twitch" style="cursor:pointer;"> Open Chat</button>
+							</div>
+
+							<div>
+								<label class="chat_open_label">Instagram Live</label>
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="instagramlive_username" placeholder="Channel name" class="chat_open_input" />
+								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="instagramlive" style="cursor:pointer;"> Open Chat</button>
+							</div>
+
+							<div>
+								<label class="chat_open_label">Facebook</label>
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="facebook_username" placeholder="Channel name" class="chat_open_input" />
+								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="facebook" style="cursor:pointer;">Open Chat</button>
+							</div>
+
+							<div>
+								<label class="chat_open_label">Kick</label>
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="kick_username" placeholder="Channel name" class="chat_open_input" />
+								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="kick" style="cursor:pointer;"> Open Chat</button>
+							</div>
+
+							<div>
+								<label class="chat_open_label">Discord</label>
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_serverid" placeholder="Server id"class="chat_open_input" />
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_channelid" placeholder="Channel id" class="chat_open_input" />
+								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="discord" style="cursor:pointer;"> Open Chat</button>
+							</div>
+
+							<h3>Opened in new window</h3>
+							<center><span style="color: darkred;"><b>Note</b>: Do NOT minimize them!</span></center>
+
+							<div>
+								<label class="chat_open_label">YouTube</label>
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="youtube_username" placeholder="Channel name" class="chat_open_input" />
+								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="youtube" style="cursor:pointer;"> Open Chat</button>
+								<button class="button" style="display:inline-block; width: 30px;" id="ytcopy" title="Copy YouTube Video ID to the clipboard">📎</button>
+							</div>
+
+							<div>
+								<label class="chat_open_label">TikTok</label>
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="tiktok_username" placeholder="Channel name" class="chat_open_input" />
+								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="tiktok" style="cursor:pointer;"> Open Chat</button>
+							</div>
+
+							<div>
+								<label class="chat_open_label">Trovo</label>
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="trovo_username" placeholder="Channel name" class="chat_open_input" />
+								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="trovo" style="cursor:pointer;"> Open Chat</button>
+							</div>
+
+							<div>
+								<label class="chat_open_label">Picarto</label>
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="picarto_username" placeholder="Channel name" class="chat_open_input" />
+								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="picarto" style="cursor:pointer;"> Open Chat</button>
+							</div>
+
+							<h3>Custom</h3>
+
+							<div>
+								<label class="chat_open_label">Custom URL 1</label>
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="custom1_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
+								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom1" style="cursor:pointer;"> Open Chat</button>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" id="custom1_url_newwindow" data-setting="custom1_url_newwindow">
+									<span class="slider round"></span>
+								</label> Open custom URL 1 on new window
+							</div>
+
+							<div>
+								<label class="chat_open_label">Custom URL 2</label>
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="custom2_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
+								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom2" style="cursor:pointer;"> Open Chat</button>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" id="custom2_url_newwindow" data-setting="custom2_url_newwindow">
+									<span class="slider round"></span>
+								</label> Open custom URL 2 on new window
+							</div>
+
+							<div>
+								<label class="chat_open_label">Custom URL 3</label>
+								<input type="text" style="margin-bottom: 0px;" data-textsetting="custom3_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
+								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom3" style="cursor:pointer;"> Open Chat</button>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" id="custom3_url_newwindow" data-setting="custom3_url_newwindow">
+									<span class="slider round"></span>
+								</label> Open custom URL 3 on new window
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-additional-chat-services-options">
+				<label class="collapsible-label" for="wrapper-additional-chat-services-options">Additional chat services</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group">
+
+							<p>These services require you to manually opt-in, for security purposes</p>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="discord">
+									<span class="slider round"></span>
+								</label><img class="icon" src="discord.png"></img> Capture Discord chat
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="whatsapp">
+									<span class="slider round"></span>
+								</label><img class="icon" src="whatsapp.png"></img> Capture WhatsApp chat
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="telegram">
+									<span class="slider round"></span>
+								</label><img class="icon" src="telegram.png"></img> Capture Telegram chat
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="instagram">
+									<span class="slider round"></span>
+								</label><img class="icon" src="instagram.png"></img> Capture Instagram non-live comment
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="slack">
+									<span class="slider round"></span>
+								</label><img class="icon" src="slack.png"></img> Capture Slack chat
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="meet">
+									<span class="slider round"></span>
+								</label><img class="icon" src="meet.png"></img> Capture Google Meet chat
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="chime">
+									<span class="slider round"></span>
+								</label><img class="icon" src="chime.png"></img> Capture Chime chat
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-export-options">
+				<label class="collapsible-label" for="wrapper-export-options">Export / import</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group">
+
+							<h3>Save the last message to a file</h3>
+							An alterative method of saving the <b>last</b> message
+							<div class="grid">
+								<button class="button" data-action="singlesave" style="cursor:pointer;"> 💾 Choose location</button>
+								<button class="button" data-action="singlesaveStop" style="cursor:pointer;"> Stop saving (if active)</button>
+							</div>
+
+							<h3>Save all messages to 📗 <b>Excel</b> file</h3>
+							An alterative method of saving <b>all</b> messages
+							<div class="grid">
+								<button class="button" data-action="excelsave" style="cursor:pointer;"> 💾 Choose location</button>
+								<button class="button" data-action="excelsaveStop" style="cursor:pointer;"> Stop saving (if active)</button>
+							</div>
+
+							<h3>Export/import settings</h3>
+							Backup and load your extension settings.
+							<div class="grid">
+								<button class="button" data-action="export" style="cursor:pointer;"> 💾 Export to disk</button>
+								<button class="button" data-action="import" style="cursor:pointer;"> Import settings</button>
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<p style="text-align: right;">
+			Visit us at <a href='https://discord.socialstream.ninja' target="_blank">Discord<img class="icon" src="discord.png"></img></a>.<br />
+			<i>Made with</i> 💖 <i>for the community</i>.
+		</p>
 	</div> <!-- end container -->
 </body>
 
