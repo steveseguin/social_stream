@@ -635,6 +635,16 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 		
 	}
 	
+	var firstNamesOnly = false
+	if (urlParams.has("firstnamesonly") || urlParams.has("firstname") || urlParams.has("firstnames")){
+		firstNamesOnly = true;
+	}
+
+	var hideNames = false
+	if (urlParams.has("hidenames")){
+		hideNames = true;
+	}
+	
 	if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
 		try {
 			var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
@@ -1139,7 +1149,23 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					showType += '<img src="' + + data.sourceImg + '" class="icon sourcetype '+customSourceClass+' noavatar-source" onerror="this.style.display=\'none\'" />';
 				}
 				
-				if (!data.chatname){
+				if (hideNames){
+					data.chatname = "";
+				} else if (firstNamesOnly && data.chatname){
+					data.chatname = data.chatname.toString();
+					var nn = data.chatname.split(" ");
+					if (nn.length>1){
+						if (nn[0].length<=2){
+							if (nn[1].length<6){
+								data.chatname = nn[0] + " " +nn[1];
+							} else {
+								data.chatname = nn[0];
+							}
+						} else {
+							data.chatname = nn[0];
+						}
+					}
+				} else if (!data.chatname){
 					data.chatname = "";
 				} else {
 					data.chatname = data.chatname.toString();

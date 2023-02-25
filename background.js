@@ -1675,7 +1675,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 		if (data.chatmessage === settings.chatcommand1.textsetting){
 			if (Date.now() - messageTimeout > 1000){
 				messageTimeout = Date.now();
-				var URL = settings.chatwebhook1.textsetting;
+				let URL = settings.chatwebhook1.textsetting;
 				if (!URL.startsWith("http")){
 					if (!URL.includes("://")){
 						URL = "https://"+URL;
@@ -1694,7 +1694,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 		if (data.chatmessage === settings.chatcommand2.textsetting){
 			if (Date.now() - messageTimeout > 1000){
 				messageTimeout = Date.now();
-				var URL = settings.chatwebhook2.textsetting;
+				let URL = settings.chatwebhook2.textsetting;
 				if (!URL.startsWith("http")){
 					if (!URL.includes("://")){
 						URL = "https://"+URL;
@@ -1718,7 +1718,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 		if (data.chatmessage === settings.chatcommand2.textsetting){
 			if (Date.now() - messageTimeout > 1000){
 				messageTimeout = Date.now();
-				var URL = settings.chatwebhook3.textsetting;
+				let URL = settings.chatwebhook3.textsetting;
 				if (!URL.startsWith("http")){
 					if (!URL.includes("://")){
 						URL = "https://"+URL;
