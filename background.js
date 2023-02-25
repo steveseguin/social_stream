@@ -1040,6 +1040,11 @@ async function openchat(target=null){
 		}
 	}
 
+	if ((target=="facebook" || !target) && settings.facebook_username){
+		let url = "https://www.facebook.com/"+settings.facebook_username.textsetting+"/live"
+		openURL(url);
+	}
+
 	if ((target=="discord" || !target) && settings.discord_serverid && settings.discord_channelid  && settings.discord_serverid.textsetting && settings.discord_channelid.textsetting){
 		openURL("https://discord.com/channels/"+settings.discord_serverid.textsetting+"/"+settings.discord_channelid.textsetting);
 	}
