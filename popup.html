@@ -222,7 +222,8 @@
 			margin: 1.5em 0;
 		}
 
-		.link h2 {
+		.link h2,
+		h2.global_settings_title {
 			margin-top: 0;
 			margin-bottom: 0.4rem;
 			font-weight: 600;
@@ -525,13 +526,11 @@
 
 		<div class="wrapper">
 			<div class="collapsible">
-				<input type="checkbox" class="collapsible-input" id="wrapper-style-options">
-				<label class="collapsible-label" for="wrapper-style-options">Styling</label>
+				<input type="checkbox" class="collapsible-input" id="wrapper-chat-menu-options">
+				<label class="collapsible-label" for="wrapper-chat-menu-options">Menu</label>
 				<div class="collapsible-text">
 					<div class="options">
 						<div class="options_group streaming_chat">
-
-							<h3>Menu</h3>
 
 							<div>
 								<label class="switch">
@@ -540,7 +539,19 @@
 								</label> Hide menu bar
 							</div>
 
-							<h3>Overlay</h3>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-chat-overlay-options">
+				<label class="collapsible-label" for="wrapper-chat-overlay-options">Overlay</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group streaming_chat">
 
 							<div>
 								<label class="switch">
@@ -579,7 +590,19 @@
 								</label> Green page background
 							</div>
 
-							<h3>Message mechanics</h3>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-chat-message-mechanics-options">
+				<label class="collapsible-label" for="wrapper-chat-message-mechanics-options">Message — Mechanics</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group streaming_chat">
 
 							<div>
 								<label class="switch">
@@ -605,8 +628,52 @@
 									<span class="slider round"></span>
 								</label> Messages appear randomly on the screen
 							</div>
+							<div>
+								<label class="switch"
+									title="note: You must first interact with the dock-page for any audio to be audible">
+									<input type="checkbox" data-param1="beep">
+									<span class="slider round"></span>
+								</label> Beep when there is a new message 🔔
+							</div>
+							<div>
+								<label class="switch"
+									title="tip: You can use &myname=name1,name2 to list names to exclude from TTS">
+									<input type="checkbox" data-param1="speech=en-US">
+									<span class="slider round"></span>
+								</label> Text-to-Speech incoming messages 💬
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="autoshow">
+									<span class="slider round"></span>
+								</label> Auto-select new messages (skipping as needed)
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="autoshowdonos">
+									<span class="slider round"></span>
+								</label> When auto-selecting is on, only auto-select donations
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="sync">
+									<span class="slider round"></span>
+								</label> Multiple docks will stay in sync as to selected messages
+							</div>
 
-							<h3>Message visibility</h3>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-chat-message-visibility-options">
+				<label class="collapsible-label" for="wrapper-chat-message-visibility-options">Message — Visibility</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group streaming_chat">
 
 							<div>
 								<label class="switch">
@@ -656,8 +723,51 @@
 									<span class="slider round"></span>
 								</label> Color names if color info available
 							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="limit=200">
+									<span class="slider round"></span>
+								</label> Increase messages history to 200
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-incompatible="limit=200" data-param1="limit=1">
+									<span class="slider round"></span>
+								</label> Show only the last message
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="sentiment">
+									<span class="slider round"></span>
+								</label> Filter out messages with bad karma
+							</div>
+							<div>
+								<label class="switch"
+									title="HTML is removed from messages, donations, and names for this dock only">
+									<input type="checkbox" data-param1="striphtml">
+									<span class="slider round"></span>
+								</label> Strip HTML from messages and donations
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="chartime=100">
+									<span class="slider round"></span>
+								</label> Increase the minimum time messages auto-show for
+							</div>
 
-							<h3>Message styling</h3>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-chat-message-styling-options">
+				<label class="collapsible-label" for="wrapper-chat-message-styling-options">Message — Styling</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group streaming_chat">
 
 							<div>
 								<label class="switch">
@@ -726,7 +836,19 @@
 								</label> Messages overlap on another
 							</div>
 
-							<h3>Message effects</h3>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-chat-message-effects-options">
+				<label class="collapsible-label" for="wrapper-chat-message-effects-options">Message — Effects</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group streaming_chat">
 
 							<div>
 								<label class="switch">
@@ -751,6 +873,33 @@
 									<input type="checkbox" data-param1="smooth">
 									<span class="slider round"></span>
 								</label> Messages smoothly scroll in
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-chat-message-export-options">
+				<label class="collapsible-label" for="wrapper-chat-message-export-options">Message — Export</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group streaming_chat">
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="savesingle">
+									<span class="slider round"></span>
+								</label> Save last message to a file 💾
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="save">
+									<span class="slider round"></span>
+								</label> Save messages to disk 💾
 							</div>
 
 						</div>
@@ -792,104 +941,6 @@
 			</div>
 		</div>
 
-		<div class="wrapper">
-			<div class="collapsible">
-				<input type="checkbox" class="collapsible-input" id="wrapper-behaviour-and-functions-options">
-				<label class="collapsible-label" for="wrapper-behaviour-and-functions-options">Behaviour and functions</label>
-				<div class="collapsible-text">
-					<div class="options">
-						<div class="options_group streaming_chat">
-
-							<h3>Message visibility</h3>
-
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-param1="limit=200">
-									<span class="slider round"></span>
-								</label> Increase messages history to 200
-							</div>
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-incompatible="limit=200" data-param1="limit=1">
-									<span class="slider round"></span>
-								</label> Show only the last message
-							</div>
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-setting="sentiment">
-									<span class="slider round"></span>
-								</label> Filter out messages with bad karma
-							</div>
-							<div>
-								<label class="switch"
-									title="HTML is removed from messages, donations, and names for this dock only">
-									<input type="checkbox" data-param1="striphtml">
-									<span class="slider round"></span>
-								</label> Strip HTML from messages and donations
-							</div>
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-param1="chartime=100">
-									<span class="slider round"></span>
-								</label> Increase the minimum time messages auto-show for
-							</div>
-
-							<h3>Message mechanics</h3>
-
-							<div>
-								<label class="switch"
-									title="note: You must first interact with the dock-page for any audio to be audible">
-									<input type="checkbox" data-param1="beep">
-									<span class="slider round"></span>
-								</label> Beep when there is a new message 🔔
-							</div>
-							<div>
-								<label class="switch"
-									title="tip: You can use &myname=name1,name2 to list names to exclude from TTS">
-									<input type="checkbox" data-param1="speech=en-US">
-									<span class="slider round"></span>
-								</label> Text-to-Speech incoming messages 💬
-							</div>
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-param1="autoshow">
-									<span class="slider round"></span>
-								</label> Auto-select new messages (skipping as needed)
-							</div>
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-param1="autoshowdonos">
-									<span class="slider round"></span>
-								</label> When auto-selecting is on, only auto-select donations
-							</div>
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-param1="sync">
-									<span class="slider round"></span>
-								</label> Multiple docks will stay in sync as to selected messages
-							</div>
-
-							<h3>Export</h3>
-
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-param1="savesingle">
-									<span class="slider round"></span>
-								</label> Save last message to a file 💾
-							</div>
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-param1="save">
-									<span class="slider round"></span>
-								</label> Save messages to disk 💾
-							</div>
-
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
 		<div class="link" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
 			<h2 class="single_message_title">Featured chat overlay <a class="options-link rounded_area" href="#single-message-options"
 				title="Jump to single message overlay link options">options</a></h2>
@@ -897,15 +948,15 @@
 		</div>
 		<a href="" id="single-message-options"></a>
 
+
+
 		<div class="wrapper">
 			<div class="collapsible">
-				<input type="checkbox" class="collapsible-input" id="wrapper-url-based-options">
-				<label class="collapsible-label" for="wrapper-url-based-options">URL-based</label>
+				<input type="checkbox" class="collapsible-input" id="wrapper-featured-overlay-options">
+				<label class="collapsible-label" for="wrapper-featured-overlay-options">Overlay</label>
 				<div class="collapsible-text">
 					<div class="options">
 						<div class="options_group single_message">
-
-							<h3>Overlay</h3>
 
 							<div>
 								<label class="switch">
@@ -932,7 +983,19 @@
 								</label> Raise overlay higher ⬆
 							</div>
 
-							<h3>Message mechanics</h3>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-featured-mechanics-options">
+				<label class="collapsible-label" for="wrapper-featured-mechanics-options">Mechanics</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group single_message">
 
 							<div>
 								<label class="switch">
@@ -953,7 +1016,19 @@
 								</label> Enable text-to-speech for Donations only 💬
 							</div>
 
-							<h3>Message visibility</h3>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-featured-visibility-options">
+				<label class="collapsible-label" for="wrapper-featured-visibility-options">Visibility</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group single_message">
 
 							<div>
 								<label class="switch">
@@ -993,7 +1068,19 @@
 								</label> Delete names entirely
 							</div>
 
-							<h3>Message styling</h3>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-featured-styling-options">
+				<label class="collapsible-label" for="wrapper-featured-styling-options">Styling</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group single_message">
 
 							<div>
 								<label class="switch">
@@ -1008,28 +1095,7 @@
 								</label> Round edges ⬛=>⚫
 							</div>
 
-							<h3>Message effects</h3>
-
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-param2="fade">
-									<span class="slider round"></span>
-								</label> Fade in/out instead
-							</div>
-
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="wrapper">
-			<div class="collapsible">
-				<input type="checkbox" class="collapsible-input" id="wrapper-featured-chat-colors-options">
-				<label class="collapsible-label" for="wrapper-featured-chat-colors-options">Colors</label>
-				<div class="collapsible-text">
-					<div class="options">
-						<div class="options_group single_message">
+							<h3>Colors</h3>
 
 							<div>
 								<label for="comment_color">Comment Font Color</label>
@@ -1046,6 +1112,27 @@
 							<div>
 								<label for="name_background">Name Background Color</label>
 								<input type="text" class="input-text-fullwidth" id="name_background" data-textsetting="name_background" placeholder="#HEX value or color name" />
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-featured-effects-options">
+				<label class="collapsible-label" for="wrapper-featured-effects-options">Effects</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group single_message">
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="fade">
+									<span class="slider round"></span>
+								</label> Fade in/out instead
 							</div>
 
 						</div>
@@ -1094,58 +1181,18 @@
 			</div>
 		</div>
 
-		<div class="link" title="This link will show the global settings and tools">
-			<h2>Global settings and tools <a class="options-link rounded_area" href="#global-settings-and-tools-options"
+		<h2 class="global_settings_title">Global settings and tools <a class="options-link rounded_area" href="#global-settings-and-tools-options"
 			title="Jump to the global settings and tools">options</a></h2>
-			<!-- <div id="emoteswall" class="emotes_wall"></div> -->
-		</div>
+		<div id="globalsettings" class="global_settings"></div>
 		<a href="" id="global-settings-and-tools-options"></a>
 
 		<div class="wrapper">
 			<div class="collapsible">
-				<input type="checkbox" class="collapsible-input" id="wrapper-general-options">
-				<label class="collapsible-label" for="wrapper-general-options">General</label>
+				<input type="checkbox" class="collapsible-input" id="wrapper-global-mechanics-options">
+				<label class="collapsible-label" for="wrapper-global-mechanics-options">Mechanics</label>
 				<div class="collapsible-text">
 					<div class="options">
 						<div class="options_group">
-
-							<h3>Message visibility</h3>
-
-							<div>
-								<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
-									<input type="checkbox" id="firstsourceonly" data-setting="firstsourceonly">
-									<span class="slider round"></span>
-								</label> Filter out duplicate message echos
-							</div>
-							<div>
-								<label class="switch" title="Filter out messages that might be chat commands">
-									<input type="checkbox"  data-setting="filtercommands">
-									<span class="slider round"></span>
-								</label> Filter out messages starting with: <b><i>!</i></b>
-							</div>
-							<div>
-								<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
-									<input type="checkbox" id="textonlymode" data-setting="textonlymode">
-									<span class="slider round"></span>
-								</label> Strip HTML from messages
-							</div>
-
-							<h3>Message styling</h3>
-
-							<div>
-								<label class="switch" title="If a name lacks color data, randomly add one">
-									<input type="checkbox" data-setting="randomcolor">
-									<span class="slider round"></span>
-								</label> Add random colors to uncolored names
-							</div>
-							<div>
-								<label class="switch" title="Members on Youtube won't have green names, for example">
-									<input type="checkbox" data-setting="nosubcolor">
-									<span class="slider round"></span>
-								</label> Do not color names based on sub or member status
-							</div>
-
-							<h3>Mechanics</h3>
 
 							<div>
 								<label class="switch" title="Capture likes, subs, and other available event data.">
@@ -1180,7 +1227,19 @@
 								<input type="text" class="input-text-fullwidth" data-textsetting="postserver" placeholder="Provide ID or full URL" />
 							</div>
 
-							<h3>Commands</h3>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-global-commands-options">
+				<label class="collapsible-label" for="wrapper-global-commands-options">Commands</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group">
 
 							<div>
 								<label class="switch">
@@ -1245,6 +1304,66 @@
 
 							Issue a random test message that will appear in the dock
 							<button class="button" data-action="fakemsg" style="cursor:pointer;">Trigger now</button>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-global-message-visibility-options">
+				<label class="collapsible-label" for="wrapper-global-message-visibility-options">Message — Visibility</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group">
+
+							<div>
+								<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
+									<input type="checkbox" id="firstsourceonly" data-setting="firstsourceonly">
+									<span class="slider round"></span>
+								</label> Filter out duplicate message echos
+							</div>
+							<div>
+								<label class="switch" title="Filter out messages that might be chat commands">
+									<input type="checkbox"  data-setting="filtercommands">
+									<span class="slider round"></span>
+								</label> Filter out messages starting with: <b><i>!</i></b>
+							</div>
+							<div>
+								<label class="switch" title="Just text is captured; no HTML, so no BTTV emotes, etc.">
+									<input type="checkbox" id="textonlymode" data-setting="textonlymode">
+									<span class="slider round"></span>
+								</label> Strip HTML from messages
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-global-message-styling-options">
+				<label class="collapsible-label" for="wrapper-global-message-styling-options">Message — Styling</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group">
+
+							<div>
+								<label class="switch" title="If a name lacks color data, randomly add one">
+									<input type="checkbox" data-setting="randomcolor">
+									<span class="slider round"></span>
+								</label> Add random colors to uncolored names
+							</div>
+							<div>
+								<label class="switch" title="Members on Youtube won't have green names, for example">
+									<input type="checkbox" data-setting="nosubcolor">
+									<span class="slider round"></span>
+								</label> Do not color names based on sub or member status
+							</div>
 
 						</div>
 					</div>
