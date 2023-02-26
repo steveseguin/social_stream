@@ -222,8 +222,21 @@
 			margin: 1.5em 0;
 		}
 
-		.link h2,
-		h2.global_settings_title {
+		.link h2 {
+			margin-top: 0;
+			margin-bottom: 0.4rem;
+			font-weight: 600;
+			color: var(--section-title-color);
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.generic_category_title {
+			margin-top: 1.5em;
+		}
+
+		.generic_category_title h2 {
 			margin-top: 0;
 			margin-bottom: 0.4rem;
 			font-weight: 600;
@@ -1181,9 +1194,11 @@
 			</div>
 		</div>
 
-		<h2 class="global_settings_title">Global settings and tools <a class="options-link rounded_area" href="#global-settings-and-tools-options"
-			title="Jump to the global settings and tools">options</a></h2>
-		<div id="globalsettings" class="global_settings"></div>
+		<div class="generic_category_title">
+			<h2>Global settings and tools <a class="options-link rounded_area" href="#global-settings-and-tools-options"
+				title="Jump to the global settings and tools">options</a></h2>
+				<div id="globalsettings" class="global_settings"></div>
+		</div>
 		<a href="" id="global-settings-and-tools-options"></a>
 
 		<div class="wrapper">
@@ -1385,15 +1400,13 @@
 								</div>
 							-->
 
-							<h3>Main</h3>
-
 							<button class="button" style="margin-left: 0px;" data-action="openchat" style="cursor:pointer;"> Open All Chat</button>
 
 							<div>
 								<label class="switch">
 									<input type="checkbox" id="openchatdock" data-param1="openchat">
 									<span class="slider round"></span>
-								</label> Auto open all chat windows on dock connect
+								</label> Auto open all chat windows on dock connect or refresh
 							</div>
 
 							<div style="display:none;">
