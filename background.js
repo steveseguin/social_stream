@@ -1006,7 +1006,9 @@ async function openchat(target=null){
 		});
 		if (!matched){
 			if (newWindow) {
-				window.open(input, '_blank', 'toolbar=0,location=0,menubar=0');
+				var popup = window.open(input, '_blank', 'toolbar=0,location=0,menubar=0,fullscreen=1'); // fullscreen param is for IE 11
+				popup.moveTo(0, 0); // Reset position
+				popup.resizeTo(screen.availWidth, screen.availHeight); // Almost fullscreen window
 			} else {
 				window.open(input, '_blank');
 			}
