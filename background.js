@@ -613,6 +613,8 @@ chrome.runtime.onMessage.addListener(
 				} else if (Math.random()>0.2){
 					data.hasDonation = "";
 					data.hasMembership = "";
+					data.chatname = "Nicholaos Syrpis";
+					data.chatimg = 'https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj';
 				} else {
 					data.hasDonation = "";
 					data.hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
