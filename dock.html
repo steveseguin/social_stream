@@ -2729,12 +2729,32 @@
 					data.queue.forEach(mid=>{
 						try{
 							if (mid){
-								var ele = document.querySelector("[data-mid='"+mid+"']");
-								if (ele){
-									sq.push(ele);
-									ele.children[0].dataset.qid = sq.length;
-									ele.classList.add("queued");
-									applyHiddenState(ele);
+								if (typeof mid === "object"){
+									if ("id" in mid){
+										var ele = document.querySelector("[data-mid='"+mid.id+"']");
+										if (ele){
+											sq.push(ele);
+											ele.children[0].dataset.qid = sq.length;
+											ele.classList.add("queued");
+											applyHiddenState(ele);
+										} else {
+											ele = processInput(mid);
+											if (ele){
+												sq.push(ele);
+												ele.children[0].dataset.qid = sq.length;
+												ele.classList.add("queued");
+												applyHiddenState(ele);
+											}
+										}
+									}
+								} else {
+									var ele = document.querySelector("[data-mid='"+mid+"']");
+									if (ele){
+										sq.push(ele);
+										ele.children[0].dataset.qid = sq.length;
+										ele.classList.add("queued");
+										applyHiddenState(ele);
+									}
 								}
 							}
 						}catch(e){}
@@ -3132,14 +3152,14 @@
 		if (event && (event.ctrlKey || event.metaKey)) {
 			if (element.classList.contains("queued")){
 				removeQueue(element);
-				syncQueueP2P();
+				syncQueueP2P(false, element);
 				return;
 			}
 			selectedQueue.push(element);
 			element.children[0].dataset.qid = selectedQueue.length;
 			element.classList.add("queued");
 			updateQueueButton();
-			syncQueueP2P();
+			syncQueueP2P(false, element);
 			return;
 		} else if (event && (event.altKey)) {
 			if (element.classList.contains("pinned")){
@@ -3691,7 +3711,6 @@
 					svg.setAttribute("fill","currentColor");
 				}
 				svg.dataset.hash = Math.abs(hashCode(svg.innerHTML));
-				console.log(svg);
 			});
 			
 			if (hideNotDonos && node.classList.contains("noDono")){
@@ -3982,7 +4001,7 @@
 		syncQueueP2P(UUID);
 	}
 
-	function syncQueueP2P(UUID=false){
+	function syncQueueP2P(UUID=false, newele=false){
 		var data = [];
 		if (UUID){
 			if (selectedQueue.length){
@@ -3993,10 +4012,20 @@
 			}
 		} else {
 			selectedQueue.forEach(ele=>{
-				data.push(ele.rawContents.id);
+				if (newele && (newele.rawContents.id === ele.rawContents.id)){
+					data.push(ele.rawContents);
+				} else {
+					data.push(ele.rawContents.id);
+				}
 			});
 			syncDataP2P({queue:data});
 		}
+	}
+	
+	function syncNewQueueP2P(ele){
+		var data = [];
+		data.push(ele.rawContents);
+		syncDataP2P({queueInit:data});
 	}
 	
 	function send2Extension(data, uid=null){
@@ -4283,7 +4312,7 @@
 					taskItemInContext.children[0].dataset.qid = selectedQueue.length;
 					taskItemInContext.classList.add("queued");
 					updateQueueButton();
-					syncQueueP2P();
+					syncQueueP2P(false, taskItemInContext);
 				}
 			}
 			toggleMenuOff();
