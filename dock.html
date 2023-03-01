@@ -4005,7 +4005,7 @@
 	function syncDockAll(UUID){
 		var pins = [];
 		document.querySelectorAll(".pinned[data-mid]").forEach(ele=>{
-			pins.push(ele.dataset.mid);
+			pins.push(ele.rawContents);
 		});
 		syncDataP2P({pin:pins}, UUID);
 		syncQueueP2P(UUID);
@@ -4030,12 +4030,6 @@
 			});
 			syncDataP2P({queue:data});
 		}
-	}
-	
-	function syncNewQueueP2P(ele){
-		var data = [];
-		data.push(ele.rawContents);
-		syncDataP2P({queueInit:data});
 	}
 	
 	function send2Extension(data, uid=null){
