@@ -3216,8 +3216,7 @@
 
 		if (thirdPartyAPI){ // we upscale using a generic upsizing function for third parties.
 			thirdPartyAPI(data); // not going to send base64 to the third party API, since that would kill my server, but third parties won't expect a blob.
-		}
-		if (data.type && (data.type == "youtube") && data.chatimg){ // youtube's images are a bit tricky; larger images don't always exist.
+		} else if (data.type && (data.type == "youtube") && data.chatimg){ // youtube's images are a bit tricky; larger images don't always exist.
 			try {
 				toDataURL(data.chatimg, function(base64Image){ // we upscale
 					data.chatimg = data.chatimg.replace("=s32-", "=s256-");  // Increases the resolution of the image
