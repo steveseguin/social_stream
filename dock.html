@@ -2665,11 +2665,19 @@
 			if (data.pin && syncDocks){
 				if (typeof data.pin == "object"){
 					data.pin.forEach(mid=>{
-						try {
-							pinIt(document.querySelector("[data-mid='"+mid+"']"));
-							applyHiddenState(document.querySelector("[data-mid='"+mid+"']"));
-						} catch(e){
+						if (typeof mid === "object"){
+							try{
+								let ele = processInput(mid);
+								pinIt(ele);
+								applyHiddenState(ele);
+							} catch(e){}
+						} else {
+							try {
+								pinIt(document.querySelector("[data-mid='"+mid+"']"));
+								applyHiddenState(document.querySelector("[data-mid='"+mid+"']"));
+							} catch(e){
 
+							}
 						}
 					});
 					return true
@@ -3169,7 +3177,9 @@
 				}
 			} else {
 				pinIt(element);
-				if (element.dataset.mid){
+				if (element.dataset.mid && element.rawContents){
+					syncDataP2P({pin:[element.rawContents]});
+				} else if (element.dataset.mid){
 					syncDataP2P({pin:[element.dataset.mid]});
 				}
 			}
@@ -3206,7 +3216,8 @@
 
 		if (thirdPartyAPI){ // we upscale using a generic upsizing function for third parties.
 			thirdPartyAPI(data); // not going to send base64 to the third party API, since that would kill my server, but third parties won't expect a blob.
-		} else if (data.type && (data.type == "youtube") && data.chatimg){ // youtube's images are a bit tricky; larger images don't always exist.
+		}
+		if (data.type && (data.type == "youtube") && data.chatimg){ // youtube's images are a bit tricky; larger images don't always exist.
 			try {
 				toDataURL(data.chatimg, function(base64Image){ // we upscale
 					data.chatimg = data.chatimg.replace("=s32-", "=s256-");  // Increases the resolution of the image
@@ -4293,8 +4304,10 @@
 			} else if (link.getAttribute("data-action") === "Pin") {
 				if (taskItemInContext.classList.contains("pinned")){
 					unpinIt(taskItemInContext);
+					syncDataP2P({unpin:[taskItemInContext.dataset.mid]});
 				} else {
-					pinIt(taskItemInContext);
+					pinIt(taskItemInContext); 
+					syncDataP2P({pin:[taskItemInContext]});
 				}
 			} else if (link.getAttribute("data-action") === "TTS") {
 				speechMeta(taskItemInContext.rawContents, true);
