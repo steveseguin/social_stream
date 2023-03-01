@@ -4306,7 +4306,7 @@
 					syncDataP2P({unpin:[taskItemInContext.dataset.mid]});
 				} else {
 					pinIt(taskItemInContext); 
-					syncDataP2P({pin:[taskItemInContext]});
+					syncDataP2P({pin:[taskItemInContext.rawContents]});
 				}
 			} else if (link.getAttribute("data-action") === "TTS") {
 				speechMeta(taskItemInContext.rawContents, true);
