@@ -486,6 +486,8 @@ In the bottom right corner, hit relaunch to relaunch chrome with new settings. T
 
 - For discord, slack, and telegram, for security reasons, you need to enable the TOGGLE switch in the settings to enable.
 
+- To set the Session ID to your own value, go to Extensions settings to set it. On Chrome: Settings -> Extensions -> Social Stream Ninja -> Details -> Extension options.
+
 ### Support
 
 You can find me on discord over at https://discord.socialstream.ninja or [https://discord.gg/7U4ERn9y](https://discord.gg/vFU8AuwNf3), offering free support in channel #chat.overlay-support 
