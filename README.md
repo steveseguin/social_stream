@@ -45,6 +45,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - restream.io chat supported (https://chat.restream.io/chat)
 - amazon.com/live
 - glimesh
+- wix.com (https://manage.wix.com/dashboard/*/live-video/*)
 - clouthub (no pop out; just the video page)
 - rumble.com (no pop out; viewer page)
 - trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/CHANNEL_NAME_HERE)
