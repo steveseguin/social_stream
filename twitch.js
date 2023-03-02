@@ -66,7 +66,7 @@
 				if (settings.textonlymode){
 					resp += node.textContent.trim()+" ";
 				} else {
-					resp += node.textContent;
+					resp += node.textContent.trim()+" ";
 				}
 			} else if (node.nodeType === 1){
 				if (settings.textonlymode){
@@ -76,17 +76,19 @@
 				} else {
 					resp += node.outerHTML;
 				}
-			}
+			} 
 		});
 		return resp;
 	}
+	
+	var lastMessage = "";
+	var lastUser  = "";
 	
 	function processMessage(ele){	// twitch
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
 	  
-	  //console.log(ele);
 	  
 	  try {
 		var nameEle = ele.querySelector(".chat-author__display-name");
@@ -146,6 +148,15 @@
 	 if (chatmessage){
 		 chatmessage = chatmessage.trim();
 	 }
+	 
+	 if ((lastMessage === chatmessage) && (lastUser === chatname)){
+		  lastMessage = "";
+		  chatname = "";
+		  return;
+	  } else {
+		lastMessage = chatmessage;
+		lastUser = chatname;
+	  }
 	  
 	  var donations = 0;
 	  try {
@@ -217,7 +228,6 @@
 		}
 	);
 	
-	var lastMessage = "";
 	var settings = {};
 	// settings.textonlymode
 	// settings.streamevents
@@ -235,24 +245,11 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							try {
-								var textBody = mutation.addedNodes[i].innerText;
-								if (mutation.addedNodes[i].querySelectorAll){
-									mutation.addedNodes[i].querySelectorAll("img[alt]").forEach(ttt=>{
-										textBody += ttt.getAttribute("alt");
-									});
-								}
-								if (textBody && (textBody === lastMessage)){
-									mutation.addedNodes[i].ignore = true;
-									continue;
-								} else if (!textBody){
-									continue;
-								}
-								
-								lastMessage = textBody;
-							} catch(e){}
+							
 							
 							if (mutation.addedNodes[i].ignore){continue;}
+							mutation.addedNodes[i].ignore=true;
+							
 							
 							if (mutation.addedNodes[i].className && mutation.addedNodes[i].classList.contains(className)) {
 								callback(mutation.addedNodes[i]);
@@ -261,6 +258,7 @@
 								try{
 									var childEle = mutation.addedNodes[i].querySelector("."+className);
 									if (childEle){
+										if (childEle.ignore){continue;}
 										callback(childEle);
 										mutation.addedNodes[i].ignore=true;
 										childEle.ignore=true;
