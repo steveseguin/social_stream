@@ -192,12 +192,48 @@ function update(response){
 	}
 }
 
+function compareVersions(a, b) { // https://stackoverflow.com/a/6832706
+    if (a === b) {
+       return 0;
+    }
+
+    var a_components = a.split(".");
+    var b_components = b.split(".");
+
+    var len = Math.min(a_components.length, b_components.length);
+
+    // loop while the components are equal
+    for (var i = 0; i < len; i++) {
+        // A bigger than B
+        if (parseInt(a_components[i]) > parseInt(b_components[i])) {
+            return 1;
+        }
+
+        // B bigger than A
+        if (parseInt(a_components[i]) < parseInt(b_components[i])) {
+            return -1;
+        }
+    }
+
+    // If one's a prefix of the other, the longer one is greater.
+    if (a_components.length > b_components.length) {
+        return 1;
+    }
+
+    if (a_components.length < b_components.length) {
+        return -1;
+    }
+
+    // Otherwise they are the same.
+    return 0;
+}
+
 function checkVersion(){
 	try {
 		fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/manifest.json').then(response => response.json()).then(data => {
 			var manifestData = chrome.runtime.getManifest();
 			if ("version" in data){
-				if (manifestData.version !== data.version){
+				if (compareVersions(manifestData.version, data.version)==-1){
 					document.getElementById("newVersion").classList.add('show')
 					document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' style='text-decoration: underline;' title="Download the latest version as a zip" href='https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip'>new version available</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span><a title="See the list of recent code changes" href="https://github.com/steveseguin/social_stream/commits/main" target='_blank' style='text-decoration: underline;'>[change log]</a>`;
 				} else {

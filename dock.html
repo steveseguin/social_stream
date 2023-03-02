@@ -44,6 +44,11 @@
 			--member-bgcolor-bubble: #0f1620d1;
 			--member-bgcolor-bubble-odd: #060c16d1;
 			
+			--special-bgcolor: #0f2bfd33;;
+			--special-bgcolor-odd: #273de433;;
+			--special-bgcolor-bubble: #0d2240d1;
+			--special-bgcolor-bubble-odd: #08244cd1;
+			
 			--bgcolor-bubble: #000D;
 			--bgcolor-bubble-odd: #111D;
 		}
@@ -671,6 +676,24 @@
 
 		.bubble.odd.member:not(.expand){
 			background-color: var(--member-bgcolor-bubble-odd);
+			box-shadow: inset 0 0 2px #008f22b0;
+		}
+		
+		.special{  
+			background-color: var(--special-bgcolor);
+		}
+
+		.odd.special:not(.expand){
+			background-color: var(--special-bgcolor-odd);
+		}
+		
+		.bubble.special{
+			background-color: var(--special-bgcolor-bubble);
+			box-shadow: inset 0 0 2px #008f22b0;
+		}
+
+		.bubble.odd.special:not(.expand){
+			background-color: var(--special-bgcolor-bubble-odd);
 			box-shadow: inset 0 0 2px #008f22b0;
 		}
 		
@@ -1600,6 +1623,8 @@
 		highlightMembers = false;
 	}
 	
+	var highlightSpecial = true;
+	
 	var highlightDonos = true;
 	if (urlParams.has("nodonohighlight")) {
 		highlightDonos = false;
@@ -2330,6 +2355,9 @@
 		
 		document.documentElement.style.setProperty("--member-bgcolor-bubble", "#EEED");
 		document.documentElement.style.setProperty("--member-bgcolor-bubble-odd", "#EEE7");
+		
+		document.documentElement.style.setProperty("--special-bgcolor-bubble", "#EEED");
+		document.documentElement.style.setProperty("--special-bgcolor-bubble-odd", "#EEE7");
 	}
 
 	if (urlParams.has("hideshadow")){ // alternating
@@ -2339,6 +2367,7 @@
 		document.documentElement.style.setProperty("--highlight-compact2", "#0000", "important");
 		document.documentElement.style.setProperty("--donation-bgcolor-bubble-odd", document.documentElement.style.getPropertyValue("--donation-bgcolor-bubble"));
 		document.documentElement.style.setProperty("--member-bgcolor-bubble-odd", document.documentElement.style.getPropertyValue("--member-bgcolor-bubble"));
+		document.documentElement.style.setProperty("--special-bgcolor-bubble-odd", document.documentElement.style.getPropertyValue("--special-bgcolor-bubble"));
 		document.documentElement.style.setProperty("--bgcolor-bubble-odd", document.documentElement.style.getPropertyValue("--bgcolor-bubble"));
 	}
 
@@ -3677,6 +3706,10 @@
 			if (!bubble && highlightMembers && data.hasMembership){
 				node.classList.add("member");
 			}
+			
+			if (!bubble && highlightSpecial && (data.question)){
+				node.classList.add("special");
+			}
 
 			if (compactmode && darkmode){
 				node.classList.add("compactmode");
@@ -3755,6 +3788,10 @@
 				if (highlightMembers && data.hasMembership){
 					node.querySelector(".hl-rightside").classList.add("member");
 				}
+				
+				if (highlightSpecial && data.question){
+					node.querySelector(".hl-rightside").classList.add("special");
+				}
 			} else if (bubble  && node.contentLength){
 				node.querySelector(".hl-message").classList.add("bubble");
 				
@@ -3765,6 +3802,10 @@
 
 				if (highlightMembers && data.hasMembership){
 					node.querySelector(".hl-message").classList.add("member");
+				}
+				
+				if (highlightSpecial && data.question){
+					node.querySelector(".hl-message").classList.add("special");
 				}
 			}
 
