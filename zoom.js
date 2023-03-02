@@ -4,7 +4,21 @@
 	var lastName = "";
 	var lastImage = "";
 	var messageHistory = [];
-
+	
+	function toDataURL(url, callback) { // not needed with Facebook I think.
+		var xhr = new XMLHttpRequest();
+		xhr.onload = function() {
+			var reader = new FileReader();
+			reader.onloadend = function() {
+				callback(reader.result);
+			}
+			reader.readAsDataURL(xhr.response);
+		};
+		xhr.open('GET', url);
+		xhr.responseType = 'blob';
+		xhr.send();
+	}
+	
 	function processMessage(ele, id=false){
 
 		if (ele && ele.marked){
@@ -75,8 +89,10 @@
 						    name = name.trim();
 					    }
 					    
-						chatimg = prev.querySelector(".chat-item__user-avatar").src;
-					    //lastImage = chatimg
+						chatimg = prev.querySelector(".chat-item__user-avatar") || "";
+						if (chatimg){
+							chatimg = chatimg.src;
+						}
 					  }
 
 
@@ -87,7 +103,7 @@
 
 		var msg = "";
 		try {
-			msg = ele.querySelector('.chat-message__text-content, .new-chat-message__content').innerText;
+			msg = getAllContentNodes(ele.querySelector('.chat-message__text-content, .new-chat-message__content'));
 		} catch(e){
 
 		}
@@ -109,6 +125,11 @@
 			chatimg = lastImage;
 		}
 		
+		var ctt = ele.querySelector(".chat-image-preview-wrapper img[src]") || "";
+		if (ctt){
+			ctt = ctt.src;
+		}
+		
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = "";
@@ -118,7 +139,7 @@
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.hasMembership = "";;
-		data.contentimg = "";
+		data.contentimg = ""; // ctt;
 		data.type = "zoom";
 
 		if (lastMessage === JSON.stringify(data)){ // prevent duplicates, as zoom is prone to it.
@@ -126,9 +147,19 @@
 		}
 		lastMessage = JSON.stringify(data);
 		
-		console.log(data);
+		if (data.contentimg){
+			try {
+				toDataURL(data.contentimg, function(dataUrl) {
+					data.contentimg = dataUrl;
+					pushMessage(data);
+					return;
+				});
+			} catch(e){
+			}
+		} else {
+			pushMessage(data);
+		}
 		
-		pushMessage(data);
 	}
 
 	function pushMessage(data){
@@ -180,6 +211,72 @@
 		pushMessage(data);
 	}
 	
+	function getAllContentNodes(element) {
+		var resp = "";
+		element.childNodes.forEach(node=>{
+			
+			if (node.childNodes.length){
+				if (node.classList.contains("new-chat-message__options")){return;}
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
+				if (settings.textonlymode){
+					resp += node.textContent.trim()+" ";
+				} else {
+					resp += node.textContent.trim()+" ";
+				}
+			} else if (node.nodeType === 1){
+				if (settings.textonlymode){
+					if ("alt" in node){
+						resp += node.alt.trim()+" ";
+					}
+				} else {
+					resp += node.outerHTML;
+				}
+			} 
+		});
+		return resp;
+	}
+	
+	var questionList = [];
+	function processQuestion(ele){
+		var question = getAllContentNodes(ele.querySelector(".q-a-question__question-content"));
+		var name = ele.querySelector(".q-a-question__q-owner-name").innerText;
+		
+		var hash = name+":"+question;
+		hash = hash.slice(0, 500);
+		if (questionList.includes(hash)){
+			return;
+		} else {
+			questionList.push(hash);
+		}
+		
+		questionList = questionList.slice(-100);
+		
+		var chatimg = ele.querySelector(".q-a-question__avatar img[src]") || ""
+		if (chatimg){
+			chatimg = chatimg.src;
+		}
+		
+		if (chatimg === "https://us02st1.zoom.us/web_client/enuunvk/image/default-avatar.png"){
+			chatimg = "";
+		}
+		
+		var data = {};
+		data.chatname = name;
+		data.chatbadges = "";
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.chatmessage = question;
+		data.chatimg = chatimg;
+		data.hasDonation = "";
+		data.hasMembership = "";;
+		data.contentimg = "";
+		data.question = true;
+		data.type = "zoom";
+		
+		pushMessage(data);
+	}
+	
 
 	function onElementInserted(containerSelector) {
 		var onMutationsObserved = function(mutations) {
@@ -190,9 +287,7 @@
 							processMessage(mutation.addedNodes[i]);
 						} else if (mutation.addedNodes[i].hasAttribute("id")){
 							processMessage(mutation.addedNodes[i]);
-						} else{
-							console.log(mutation.addedNodes[i]);
-						}
+						} 
 					}
 				}
 			});
@@ -228,5 +323,15 @@
 		if (document.querySelector('[aria-label="open the chat pane"]')) { // prevent chat box from being closed after screen-share by keeping it always open
 		    document.querySelector('[aria-label="open the chat pane"]').click()
 		}
+		
+		if (document.querySelector("#q-a-container-window")){
+			document.querySelectorAll("#q-a-container-window .q-a-question").forEach(ele=>{
+				if (ele.ignore){return;}
+				ele.ignore = true;
+				processQuestion(ele);
+				
+			});
+		}
+		
 	},1000);
 })();
