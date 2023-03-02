@@ -14,10 +14,6 @@
 	  xhr.send();
 	}
 	
-	var lastMessage = "";
-	var lastName = "";
-	var timer = null;
-	
 	function processMessage(ele){
 		var name="";
 		try {
@@ -28,12 +24,12 @@
 		}
 		
 		if (!name){
-			name = ele.childNodes[0].childNodes[1].innerText;
+			name = document.querySelector(".annoto-comment-author-name").innerText;
 		}
 		
 		var msg = "";
 		try {
-			ele.childNodes[1].childNodes.forEach(ee=>{
+			ele.querySelector('.annoto-comment-body').childNodes.forEach(ee=>{
 				if (ee.nodeType == Node.TEXT_NODE){
 					msg += ee.textContent;
 				} else if (settings.textonlymode && ee.alt && (ee.nodeName  == "IMG")){
@@ -49,6 +45,22 @@
 		msg = msg.trim();
 		
 		var chatimg = '';
+		try {
+			chatimg = ele.querySelector(".annoto-avatar .annoto-photo") || "";
+			if (chatimg){
+				chatimg = chatimg.style.cssText.split('background-image: url("')[1] || "";
+				chatimg = chatimg.split('");')[0];
+			} else {
+				chatimg = ele.querySelector(".annoto-photo img[src]") || "";
+				if (chatimg){
+					chatimg = chatimg.src;
+				}
+			}
+		} catch (e){
+			chatimg = "";
+		}
+		
+		var contentimg = "";
 		
 		var data = {};
 		data.chatname = name;
@@ -59,21 +71,12 @@
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.hasMembership = "";;
-		data.contentimg = "";
+		data.contentimg = contentimg;
 		data.type = "wix";
 		
-		if ((lastMessage == msg) && (lastName == name)){
-			return;
-		}
-		lastMessage = msg;
-		lastName = name;
-		clearTimeout(timer);
-		timer = setTimeout(function(){
-			lastMessage = null;
-			lastName = null;
-		},2000);
+		console.log(data);
 		
-		if (!msg){return;}
+		if (!contentimg && !msg){return;}
 		
 		pushMessage(data);
 		
@@ -125,7 +128,8 @@
 				for (var i=0;i<nodes.length;i++){
 					try {
 						var ele = nodes[i];
-						if (ele && ele.parentNode && (ele.parentNode.dataset.hook=="MESSAGES_CONTAINER")){
+						console.log(ele);
+						if (ele && ele.nodeName && ele.nodeName == "LI"){
 							if (!ele.skip){
 								ele.skip = true;
 								processMessage(ele);
@@ -145,16 +149,19 @@
 	console.log("social stream injected");
 
 	setInterval(function(){
-		var chatContainer = document.querySelector('[data-hook="MESSAGES_CONTAINER"]')
+		var chatContainer = document.querySelector('ol[slot="content"]')
 		if (chatContainer){
 			if (!chatContainer.marked){
 				chatContainer.marked=true;
-				chatContainer.childNodes.forEach(ele=>{
-					if (ele && ele.nodeName && ele.nodeName == "DIV"){
-						ele.skip = true;
-					}
-				});
-				onElementInserted(chatContainer);
+				setTimeout(function(){
+					var chatContainer = document.querySelector('ol[slot="content"]')
+					chatContainer.childNodes.forEach(ele=>{
+						if (ele && ele.nodeName && ele.nodeName == "DIV"){
+							ele.skip = true;
+						}
+					});
+					onElementInserted(chatContainer);
+				},3000);
 			}
 		}
 	},1000);
