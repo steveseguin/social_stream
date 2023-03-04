@@ -2595,8 +2595,10 @@
 		}
 	}
 
-	function autoShow(){
-		autoshow = !autoshow;
+	function autoShow(toggle=true){
+		if (toggle){
+			autoshow = !autoshow;
+		}
 		if (autoshow){
 			getById("autoshow").style['background-image']='url(./icons/featured_auto_play.png)';
 			getById("autoshow").title = 'Featured — ⏹🌟 Stop auto-featuring messages';
@@ -2815,7 +2817,7 @@
 			return;
 		}
 
-
+		console.log(data);
 
 		if (data.action){
 			if (data.action == "nextInQueue"){
@@ -2835,11 +2837,7 @@
 				} else {
 					autoshow = false;
 				}
-				if (autoshow){
-					document.getElementById("autoshow").classList.add("pressed");
-				} else {
-					document.getElementById("autoshow").classList.remove("pressed");
-				}
+				autoShow(false);
 				return true
 			} else if (data.action == "content"){ // or just send data=false
 				if (data.value){
