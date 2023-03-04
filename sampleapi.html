@@ -327,6 +327,20 @@ function loadSelfCommands(){
 	};
 	target_self.appendChild(button);
 	
+	var button = document.createElement("button");
+	button.innerHTML = "Send message only to Twitch chat";
+	button.input = input;
+	button.onclick = function(){
+		if (this.input.value){
+			var msg = encodeURIComponent(this.input.value); // we can use sendChat for simple words that don't need encoding
+			ajax({"action":"sendEncodedChat","value":msg, "apiid":WID, "target": "twitch"}); 
+		} else {
+			alert("please enter a message first");
+		}
+	};
+	target_self.appendChild(button);
+	
+	
 	var title = document.createElement("h2");
 	title.innerText = "Dock-specific options";
 	target_self.appendChild(title);
