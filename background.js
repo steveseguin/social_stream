@@ -74,12 +74,15 @@ function loadSettings(item, resave=false){
 		});
 		chrome.runtime.lastError;
 	}
+	
 	if (item && item.isExtensionOn){
 		isExtensionOn = item.isExtensionOn;
 		chrome.browserAction.setIcon({path: "/icons/on.png"});
 		if (iframe==null){
 			loadIframe(channel, password);
 		}
+
+		setupSocket();
 
 		if (resave){
 			chrome.storage.sync.set({
@@ -94,7 +97,8 @@ function loadSettings(item, resave=false){
 		chrome.runtime.lastError;
 	}
 	toggleMidi();
-
+	
+	
 	if (settings.sentiment){
 		if (!sentimentAnalysisLoaded){
 			loadSentimentAnalysis();
@@ -393,12 +397,17 @@ chrome.runtime.onMessage.addListener(
 					if (iframe==null){
 						loadIframe(channel, password);
 					}
+					setupSocket();
 				} else {
 					if (iframe.src){
 						iframe.src = null;
 					}
 					iframe.remove();
 					iframe = null;
+					
+					if (socketserver){
+						socketserver.close();
+					}
 				}
 				chrome.storage.sync.set({
 					isExtensionOn: isExtensionOn
@@ -439,17 +448,13 @@ chrome.runtime.onMessage.addListener(
 					toggleMidi();
 				}
 
-
-
 				if (request.setting == "socketserver"){
 					if (request.value){
-						allowSocketServer = true;
 						if (!socketserver){
 							socketserver = new WebSocket(serverURL);
 							setupSocket();
 						}
 					} else {
-						allowSocketServer = false;
 						if (socketserver){
 							socketserver.close();
 						}
@@ -889,21 +894,23 @@ function sendToPost(data){
 	}
 }
 
-var allowSocketServer = false;
 var socketserver = false;
 var serverURL = "wss://api.overlay.ninja";
 var conCon = 0;
 
 function setupSocket(){
 
-	if (!socketserver && allowSocketServer){
+	if (!settings.socketserver){return;}
+	else if (!isExtensionOn){return;}
+	else if (!socketserver){
 		socketserver = new WebSocket(serverURL);
 	}
+	
 
 	socketserver.onclose = function (){
-		if (allowSocketServer){
+		if (settings.socketserver && isExtensionOn){
 			setTimeout(function(){
-				if (allowSocketServer){
+				if (settings.socketserver && isExtensionOn){
 					conCon+=1;
 					socketserver = new WebSocket(serverURL);
 					setupSocket();
@@ -927,10 +934,18 @@ function setupSocket(){
 			if (data.action && (data.action === "sendChat") && data.value){
 				var msg = {};
 				msg.response = data.value;
+				if (data.target){
+					msg.destination = data.target;
+				}
+				console.log(msg);
 				resp = processResponse(msg);
 			} else if (data.action && (data.action === "sendEncodedChat") && data.value){
 				var msg = {};
 				msg.response = decodeURIComponent(data.value);
+				if (data.target){
+					msg.destination = decodeURIComponent(data.target);
+				}
+				console.log(msg);
 				resp = processResponse(msg);
 			} else if (!data.action && data.extContent){ // Not flattened
 				try {
@@ -1426,6 +1441,8 @@ function processResponse(data){
 				if (tabs[i].url.startsWith("https://socialstream.ninja/")){continue;}
 				if (tabs[i].url.startsWith("chrome-extension")){continue;}
 				if (!checkIfAllowed((tabs[i].url))){continue;}
+				
+				if (data.destination && !tabs[i].url.includes(data.destination)){continue;}
 
 				published[tabs[i].url] = true;
 				//messageTimeout = Date.now();
