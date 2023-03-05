@@ -11,6 +11,7 @@
 			--body-background-disabled: #ffdcdd;
 			--default-text-color: #362e26;
 			--section-title-color: #362e26;
+			--color-accent: #00a6ff;
 			--color-accent-subtle: #ddf4ff;
 			--collapsible-label-color: #dcf4ff;
 			--collapsible-border-color: #b7defe;
@@ -41,9 +42,10 @@
 				--body-background-disabled: #170d0e;
 				--default-text-color: #c9d1d9;
 				--section-title-color: #c9d1d9;
-				--color-accent-subtle: rgba(56, 139, 253, 0.15);
+				--color-accent: #00a6ffdd;
+				--color-accent-subtle: #112339;
 				--collapsible-label-color: #112339;
-				--collapsible-border-color: rgba(56, 139, 253, 0.4);
+				--collapsible-border-color: #194c86;
 				--color-wrapper-background: #161b22;
 				--button-background: #1d4778;
 				--text-button-text: white;
@@ -140,13 +142,6 @@
 			color: var(--link-color);
 		}
 
-		.chat_open_input{
-			display:inline-block!important;
-		}
-		.chat_open_label{
-			display:block!important;
-			font-weight: 600;
-		}
 		#newVersion {
 			padding: 1em;
 			background: var(--new-version-banner-background);
@@ -261,6 +256,8 @@
 			border-radius: 4px;
 		}
 
+		/* Alert */
+
 		.alert {
 			position: relative;
 			padding: 0.75rem 1.25rem;
@@ -309,6 +306,8 @@
 			border-color: #c6c8ca;
 		}
 
+		/* Headers */
+
 		h2.streaming_chat_title {
 			color: var(--streaming-chat-color);
 		}
@@ -338,6 +337,7 @@
 		}
 
 		/* The switch - the box around the slider */
+
 		.switch {
 			position: relative;
 			display: inline-block;
@@ -354,6 +354,7 @@
 		}
 
 		/* Hide default HTML checkbox */
+
 		.switch input {
 			opacity: 0;
 			width: 0;
@@ -361,6 +362,7 @@
 		}
 
 		/* The slider */
+
 		.slider {
 			position: absolute;
 			cursor: pointer;
@@ -393,12 +395,6 @@
 			margin: 2px;
 		}
 
-		input[type="text"] {
-			width: 50%;
-			display: block;
-			margin-bottom: 10px;
-		}
-
 		input:focus+.slider {
 			box-shadow: 0 0 1px #2196F3;
 		}
@@ -409,11 +405,8 @@
 			transform: translateX(14px);
 		}
 
-		input[type="text"].input-text-fullwidth {
-			width:95%;
-		}
-
 		/* Rounded sliders */
+
 		.slider.round {
 			border-radius: 16px;
 		}
@@ -555,6 +548,80 @@
 			color: var(--default-text-color);
 			justify-content: center;
 			align-items: center;
+		}
+
+		/* Text input */
+
+		.textInputContainer {
+			position: relative;
+			width: 200px;
+			margin-top: 2px;
+			margin-bottom: 4px;
+		}
+
+		.textInput {
+			width: 100%;
+			height: 100%;
+			padding: 2px;
+			background-color: var(--color-accent-subtle);
+			color: var(--default-text-color);
+			border: 1px solid var(--collapsible-border-color);
+			border-radius: 4px;
+			font-size: 1.0em;
+			font-weight: 400;
+			outline: none;
+			transition: all .3s;
+		}
+
+		.textInput:focus {
+			border: 1px solid var(--color-accent);
+		}
+
+		.textInput + label { /*down*/
+			position: absolute;
+			left: 8px;
+			top: 2px;
+			padding: 0 2px;
+			color: var(--default-text-color);
+			font-size: 1.2em;
+			transition: all 0.2s;
+			cursor: text;
+			z-index: 1;
+		}
+
+		.textInput + label::before {
+			position: absolute;
+			width: 100%;
+			left: 0;
+			top: 8px;
+			border-radius: 4px;
+			content: '';
+			z-index: -1;
+		}
+
+		.textInput:focus + label::before,
+		.textInput:valid + label::before {
+			height: 6px;
+			background-color: var(--color-accent-subtle);
+		}
+
+		.textInput:focus + label,
+		/*.textInput:valid + label,*//* if 'required' and input is valid */
+		input:not(:placeholder-shown).textInput + label /* input is not empty */ {
+			top: -7px;
+			color: var(--color-accent);
+			font-size: 1.0em;
+		}
+
+		.textInput::placeholder {
+			font-size: 1.0em;
+			opacity: 0;
+			transition: all .2s;
+		}
+
+		.textInput:focus::placeholder {
+			opacity: 1;
+			animation-delay: 0.2s;
 		}
 	</style>
 </head>
@@ -969,10 +1036,9 @@
 					<div class="options">
 						<div class="options_group streaming_chat">
 
-							<div>
-								<label for="botnames">Name or list of names to help identify the host and bots</label>
-								<input type="text" class="input-text-fullwidth" id="botnames" data-textparam1="myname" placeholder="ie: name1,name 2,Name3" />
-								<p>Note: The first name listed may be used as the host's name in stream when their name is not otherwise known. The list of names should be comma separated.</p>
+							<div class="textInputContainer" style="width: 95%" title="Note:&#10;Host/bot name(s) to help identify them.&#10;The list of names should be comma separated.&#10;The first name listed may be used as the host's name in stream when their name is not otherwise known.">
+								<input type="text" id="botnames" class="textInput" autocomplete="off" placeholder="ie: name1,name 2,Name3" data-textparam1="myname">
+								<label for="botnames">&gt; Host/bot name(s)</label>
 							</div>
 
 							<div>
@@ -1149,21 +1215,24 @@
 
 							<h3>Colors</h3>
 
-							<div>
-								<label for="comment_color">Comment Font Color</label>
-								<input type="text" class="input-text-fullwidth" id="comment_color" data-textsetting="comment_color" placeholder="#HEX value or color name" />
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="comment_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_color">
+								<label for="comment_color">&gt; Comment font color</label>
 							</div>
-							<div>
-								<label for="comment_background">Comment Background Color</label>
-								<input type="text" class="input-text-fullwidth" id="comment_background" data-textsetting="comment_background" placeholder="#HEX value or color name" />
+
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="comment_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_background">
+								<label for="comment_background">&gt; Comment background color</label>
 							</div>
-							<div>
-								<label for="name_color">Name Font Color</label>
-								<input type="text" class="input-text-fullwidth" id="name_color" data-textsetting="name_color" placeholder="#HEX value or color name" />
+
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="name_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_color">
+								<label for="name_color">&gt; Name font color</label>
 							</div>
-							<div>
-								<label for="name_background">Name Background Color</label>
-								<input type="text" class="input-text-fullwidth" id="name_background" data-textsetting="name_background" placeholder="#HEX value or color name" />
+
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="name_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_background">
+								<label for="name_background">&gt; Name background color</label>
 							</div>
 
 						</div>
@@ -1270,15 +1339,21 @@
 								<label class="switch">
 									<input type="checkbox" data-setting="h2r">
 									<span class="slider round"></span>
-								</label> Send all to H2R server:
-								<input type="text" class="input-text-fullwidth" data-textsetting="h2rserver" placeholder="Provide ID or full URL" />
+								</label>
+								<div class="textInputContainer" style="display: inline-block; width: 250px">
+									<input type="text" id="h2rserver" class="textInput" autocomplete="off" placeholder="Provide ID or full URL" data-textsetting="h2rserver">
+									<label for="h2rserver">&gt; Send all to H2R server</label>
+								</div>
 							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-setting="post">
 									<span class="slider round"></span>
-								</label> Send all to POST server:
-								<input type="text" class="input-text-fullwidth" data-textsetting="postserver" placeholder="Provide ID or full URL" />
+								</label>
+								<div class="textInputContainer" style="display: inline-block; width: 250px">
+									<input type="text" id="postserver" class="textInput" autocomplete="off" placeholder="Provide ID or full URL" data-textsetting="postserver">
+									<label for="postserver">&gt; Send all to POST server</label>
+								</div>
 							</div>
 
 						</div>
@@ -1319,40 +1394,55 @@
 							<div>
 								<button class="glowingButton" data-action="tellajoke" style="width: 120px"><span>Tell a joke now</span></button>
 							</div>
-							<div style="margin: 6px 0 0 0">
-								<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
+
+							<div>
+								<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">
 									<input type="checkbox" data-setting="chatevent1">
 									<span class="slider round"></span>
 								</label>
-								<div style="display:inline-block";>
-									Chat Command:
-									<input type="text" style="margin:0px;max-width:66%;display:inline-block;" data-textsetting="chatcommand1" placeholder="!someevent3" /><br />
-									Webhook URL:
-									<input type="text" style="margin:0 0 0 7px;max-width:66%;display:inline-block;" data-textsetting="chatwebhook1" placeholder="Full URL" />
+								<div style="display:inline-block">
+									<div class="textInputContainer" style="width: 250px">
+										<input type="text" id="chatcommand1" class="textInput" autocomplete="off" placeholder="!someevent1" data-textsetting="chatcommand1">
+										<label for="chatcommand1">&gt; Chat Command</label>
+									</div>
+									<div class="textInputContainer" style="width: 250px">
+										<input type="text" id="chatwebhook1" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook1">
+										<label for="chatwebhook1">&gt; Webhook URL</label>
+									</div>
 								</div>
 							</div>
+
 							<div>
-								<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
+								<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">
 									<input type="checkbox" data-setting="chatevent2">
 									<span class="slider round"></span>
 								</label>
-								<div style="display:inline-block";>
-									Chat Command:
-									<input type="text" style="margin:0px;max-width:66%;display:inline-block;" data-textsetting="chatcommand2" placeholder="!someevent3" /><br />
-									Webhook URL:
-									<input type="text" style="margin:0 0 0 7px;max-width:66%;display:inline-block;" data-textsetting="chatwebhook2" placeholder="Full URL" />
+								<div style="display:inline-block">
+									<div class="textInputContainer" style="width: 250px">
+										<input type="text" id="chatcommand2" class="textInput" autocomplete="off" placeholder="!someevent2" data-textsetting="chatcommand2">
+										<label for="chatcommand2">&gt; Chat Command</label>
+									</div>
+									<div class="textInputContainer" style="width: 250px">
+										<input type="text" id="chatwebhook2" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook2">
+										<label for="chatwebhook2">&gt; Webhook URL</label>
+									</div>
 								</div>
 							</div>
+
 							<div>
-								<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
+								<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">
 									<input type="checkbox" data-setting="chatevent3">
 									<span class="slider round"></span>
 								</label>
-								<div style="display:inline-block";>
-									Chat Command:
-									<input type="text" style="margin:0px;max-width:66%;display:inline-block;" data-textsetting="chatcommand3" placeholder="!someevent3" /><br />
-									Webhook URL:
-									<input type="text" style="margin:0 0 0 7px;max-width:66%;display:inline-block;" data-textsetting="chatwebhook3" placeholder="Full URL" />
+								<div style="display:inline-block">
+									<div class="textInputContainer" style="width: 250px">
+										<input type="text" id="chatcommand3" class="textInput" autocomplete="off" placeholder="!someevent3" data-textsetting="chatcommand3">
+										<label for="chatcommand3">&gt; Chat Command</label>
+									</div>
+									<div class="textInputContainer" style="width: 250px">
+										<input type="text" id="chatwebhook3" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook3">
+										<label for="chatwebhook3">&gt; Webhook URL</label>
+									</div>
 								</div>
 							</div>
 
@@ -1441,7 +1531,7 @@
 								</div>
 							-->
 
-							<center><button class="glowingButton" style="width: 120px; margin-left: 0px" data-action="openchat"><span>Open All Chat</span></button></center>
+							<center><button class="glowingButton" style="width: 160px; margin-left: 0px" data-action="openchat"><span>Open chat pop-ups</span></button></center>
 
 							<br />
 
@@ -1454,108 +1544,122 @@
 							</div>
 
 							<div style="display: none">
-								<input type="text" style="margin-bottom: 2px" data-textsetting="youtubeapikey" placeholder="Provide YouTube API Key" />
-								<button class="glowingButton" style="width: 180px" data-action="enableYouTube"><span>Connect YouTube API</span></button>
+								<h3>YouTube API</h3>
+
+								<div class="textInputContainer" style="width: 95%">
+									<input type="text" id="youtubeapikey" class="textInput" autocomplete="off" placeholder="Provide YouTube API key" data-textsetting="youtubeapikey">
+									<label for="youtubeapikey">&gt; YouTube API key</label>
+								</div>
+								<center><button class="glowingButton" style="width: 180px" data-action="enableYouTube"><span>Connect YouTube API</span></button></center>
 							</div>
 
 							<h3>Opened in new tab</h3>
 
-							<div>
-								<label class="chat_open_label">Twitch</label>
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="twitch_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="twitch"><span>Open Chat</span></button>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="twitch_username" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="twitch_username">
+								<label for="twitch_username">&gt; Twitch</label>
 							</div>
+							<center><button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="twitch"><span>Open chat</span></button></center>
+							<br />
 
-							<div>
-								<label class="chat_open_label">Instagram Live</label>
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="instagramlive_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="instagramlive"><span>Open Chat</span></button>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="instagramlive_username" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="instagramlive_username">
+								<label for="instagramlive_username">&gt; Instagram Live</label>
 							</div>
+							<center><button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="instagramlive"><span>Open chat</span></button></center>
+							<br />
 
-							<div>
-								<label class="chat_open_label">Facebook</label>
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="facebook_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="facebook"><span>Open Chat</span></button>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="facebook_username" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="facebook_username">
+								<label for="facebook_username">&gt; Facebook</label>
 							</div>
+							<center><button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="facebook"><span>Open chat</span></button></center>
+							<br />
 
-							<div>
-								<label class="chat_open_label">Kick</label>
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="kick_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="kick"><span>Open Chat</span></button>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="kick_username" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="kick_username">
+								<label for="kick_username">&gt; Kick</label>
 							</div>
+							<center><button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="kick"><span>Open chat</span></button></center>
+							<br />
 
-							<div>
-								<label class="chat_open_label">Discord</label>
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_serverid" placeholder="Server id"class="chat_open_input" />
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_channelid" placeholder="Channel id" class="chat_open_input" />
-								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="discord"><span>Open Chat</span></button>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="discord_serverid" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="discord_serverid">
+								<label for="discord_serverid">&gt; Discord server id</label>
 							</div>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="discord_channelid" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="discord_channelid">
+								<label for="discord_channelid">&gt; Discord channel id</label>
+							</div>
+							<center><button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="discord"><span>Open chat</span></button></center>
 
 							<h3>Opened in new window</h3>
 							<center><span style="color: #ff0000dd;"><b>Note</b>: Do <u>NOT</u> minimize them!</span></center>
 
-							<div>
-								<label class="chat_open_label">YouTube</label>
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="youtube_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px" data-action="openchat" data-value="youtube"><span>Open Chat</span></button>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="youtube_username" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="youtube_username">
+								<label for="youtube_username">&gt; YouTube</label>
+							</div>
+							<center>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px" data-action="openchat" data-value="youtube"><span>Open chat</span></button>
 								<button class="glowingButton" style="display:inline-block; width: 16px" id="ytcopy" title="Copy YouTube video ID to the clipboard."><span>📎</span></button>
-							</div>
+							</center>
 
-							<div>
-								<label class="chat_open_label">TikTok</label>
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="tiktok_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="tiktok"><span>Open Chat</span></button>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="tiktok_username" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="tiktok_username">
+								<label for="tiktok_username">&gt; TikTok</label>
 							</div>
+							<center><button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="tiktok"><span>Open chat</span></button></center>
 
-							<div>
-								<label class="chat_open_label">Trovo</label>
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="trovo_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="trovo"><span>Open Chat</span></button>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="trovo_username" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="trovo_username">
+								<label for="trovo_username">&gt; Trovo</label>
 							</div>
+							<center><button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="trovo"><span>Open chat</span></button></center>
 
-							<div>
-								<label class="chat_open_label">Picarto</label>
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="picarto_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="picarto"><span>Open Chat</span></button>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="picarto_username" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="picarto_username">
+								<label for="picarto_username">&gt; Picarto</label>
 							</div>
+							<center><button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="picarto"><span>Open chat</span></button></center>
 
 							<h3>Custom</h3>
 
-							<div>
-								<label class="chat_open_label">Custom URL 1</label>
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="custom1_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
-								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom1"><span>Open Chat</span></button>
-							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" id="custom1_url_newwindow" data-setting="custom1_url_newwindow">
 									<span class="slider round"></span>
 								</label> Open custom URL 1 on new window
 							</div>
-
-							<div>
-								<label class="chat_open_label">Custom URL 2</label>
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="custom2_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
-								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom2"><span>Open Chat</span></button>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="custom1_url" class="textInput" autocomplete="off" placeholder="ie: https://somedomain/chat/popup" data-textsetting="custom1_url">
+								<label for="custom1_url">&gt; Custom URL 1</label>
 							</div>
+							<center><button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom1"><span>Open chat</span></button></center>
+
 							<div>
 								<label class="switch">
 									<input type="checkbox" id="custom2_url_newwindow" data-setting="custom2_url_newwindow">
 									<span class="slider round"></span>
 								</label> Open custom URL 2 on new window
 							</div>
-
-							<div>
-								<label class="chat_open_label">Custom URL 3</label>
-								<input type="text" style="margin-bottom: 0px;" data-textsetting="custom3_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
-								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom3"><span>Open Chat</span></button>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="custom2_url" class="textInput" autocomplete="off" placeholder="ie: https://somedomain/chat/popup" data-textsetting="custom2_url">
+								<label for="custom2_url">&gt; Custom URL 2</label>
 							</div>
+							<center><button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom2"><span>Open chat</span></button></center>
+
 							<div>
 								<label class="switch">
 									<input type="checkbox" id="custom3_url_newwindow" data-setting="custom3_url_newwindow">
 									<span class="slider round"></span>
 								</label> Open custom URL 3 on new window
 							</div>
+							<div class="textInputContainer" style="width: 95%">
+								<input type="text" id="custom3_url" class="textInput" autocomplete="off" placeholder="ie: https://somedomain/chat/popup" data-textsetting="custom3_url">
+								<label for="custom3_url">&gt; Custom URL 3</label>
+							</div>
+							<center><button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom3"><span>Open chat</span></button></center>
 
 						</div>
 					</div>
