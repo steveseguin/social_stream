@@ -786,7 +786,7 @@ function sendToDestinations(message){
 		messageCounter+=1;
 		message.id = messageCounter;
 	}
-	if (settings.randomcolor && message && ("nameColor" in message) && !message.nameColor && message.chatname){
+	if (settings.randomcolor && message && !message.nameColor && message.chatname){
 		message.nameColor = getColorFromName(message.chatname);
 	}
 
