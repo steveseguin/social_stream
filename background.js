@@ -1741,8 +1741,8 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 	} catch(e){
 		console.error(e);
 	}
-	if (data.chatmessage && settings.chatevent3 && settings.chatcommand2 && settings.chatwebhook3){
-		if (data.chatmessage === settings.chatcommand2.textsetting){
+	if (data.chatmessage && settings.chatevent3 && settings.chatcommand3 && settings.chatwebhook3){
+		if (data.chatmessage === settings.chatcommand3.textsetting){
 			if (Date.now() - messageTimeout > 1000){
 				messageTimeout = Date.now();
 				let URL = settings.chatwebhook3.textsetting;
