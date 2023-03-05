@@ -15,8 +15,7 @@
 			--collapsible-label-color: #dcf4ff;
 			--collapsible-border-color: #b7defe;
 			--color-wrapper-background: #e9e4dd;
-			--button-background: #444;
-			--button-text: white;
+			--button-background: #b7defe;
 			--text-button-text: #222;
 			--h2-color: black;
 			--h3-color: #111;
@@ -46,8 +45,7 @@
 				--collapsible-label-color: #112339;
 				--collapsible-border-color: rgba(56, 139, 253, 0.4);
 				--color-wrapper-background: #161b22;
-				--button-background: #444;
-				--button-text: white;
+				--button-background: #1d4778;
 				--text-button-text: white;
 				--h2-color: #b2b2b2;
 				--h3-color: #b2b2b2;
@@ -424,16 +422,6 @@
 			border-radius: 50%;
 		}
 
-		button.button {
-			appearance: none;
-			display: inline-block;
-			padding: 5px;
-			margin: 5px;
-			background-color: var(--button-background);
-			border: 1px solid black;
-			color: var(--button-text);
-		}
-
 		.link {
 			cursor: help;
 		}
@@ -517,6 +505,56 @@
 			top: 0;
 			border: 1px solid var(--collapsible-border-color);
 			border-radius: 4px;
+		}
+
+		/* Glowing button */
+
+		.glowingButton {
+			position: relative;
+			width: 100px;
+			height: 16px;
+			display: inline-block;
+			background: #fff;
+			margin: 2px;
+			padding: 4px;
+			border: none;
+			cursor: pointer;
+		}
+
+		.glowingButton:before,
+		.glowingButton:after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			/* background: #ff0000; */
+			transition: 0.2s;
+			background: linear-gradient(45deg, #00ccff, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0), #ff075b);
+		}
+
+		.glowingButton:hover:before {
+			inset: -2px;
+		}
+
+		.glowingButton:hover:after {
+			inset: -2px;
+			filter: blur(10px);
+		}
+
+		.glowingButton span {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			display: flex;
+			background: var(--button-background);
+			z-index: 10;
+			font-size: 1.0em;
+			font-weight: 600;
+			letter-spacing: 1px;
+			color: var(--default-text-color);
+			justify-content: center;
+			align-items: center;
 		}
 	</style>
 </head>
@@ -1268,7 +1306,9 @@
 									<input type="checkbox" id="midi" data-setting="midi">
 									<span class="slider round"></span>
 								</label>🎹 Enable MIDI hotkeys
-								<button id="midiConfig" class="button" data-action="loadmidi" style="cursor:pointer;"> Load Config</button>
+							</div>
+							<div>
+								<button id="midiConfig" class="glowingButton" data-action="loadmidi"><span>Load config</span></button>
 							</div>
 							<div style="display:inline-block;">
 								<label class="switch">
@@ -1276,8 +1316,8 @@
 									<span class="slider round"></span>
 								</label>🃏 Tell joke on <b>!joke</b> message
 							</div>
-							<div style="display:inline-block;">
-								<button class="button" data-action="tellajoke" style="cursor:pointer;"> Tell a joke now</button>
+							<div>
+								<button class="glowingButton" data-action="tellajoke" style="width: 120px"><span>Tell a joke now</span></button>
 							</div>
 							<div style="margin: 6px 0 0 0">
 								<label class="switch" style="margin: 16px 0 0 0; vertical-align: top;">
@@ -1319,7 +1359,7 @@
 							<h3>Fake a comment for testing</h3>
 
 							Issue a random test message that will appear in the dock
-							<button class="button" data-action="fakemsg" style="cursor:pointer;">Trigger now</button>
+							<button class="glowingButton" data-action="fakemsg"><span>Trigger now</span></button>
 
 						</div>
 					</div>
@@ -1401,9 +1441,8 @@
 								</div>
 							-->
 
-							<button class="button" style="margin-left: 0px;" data-action="openchat" style="cursor:pointer;"> Open All Chat</button>
+							<center><button class="glowingButton" style="width: 120px; margin-left: 0px" data-action="openchat"><span>Open All Chat</span></button></center>
 
-							<br />
 							<br />
 
 							<div>
@@ -1414,8 +1453,9 @@
 								<p style="text-align: justify; margin-top: 0 !important;"><b>Usage examples</b><br><i>1. To open your chat pop-up(s) on start your OBS program, if you open/refresh the streaming chat as an OBS dock.<br><b>Note</b>: This will not work for YouTube in this case, since you should to be in live for it to get the live chat link correctly.<br>2. When you are away from your streaming PC and wants to open your chat pop-up(s), if you open/refresh the streaming chat with another PC or smartphone.</i></p>
 							</div>
 
-							<div style="display:none;">
-								<button class="button" data-action="enableYouTube" style="cursor:pointer;"> Connect Youtube API</button><input type="text" style="display:inline-block;" data-textsetting="youtubeapikey" placeholder="Provide YouTube API Key" />
+							<div style="display: none">
+								<input type="text" style="margin-bottom: 2px" data-textsetting="youtubeapikey" placeholder="Provide YouTube API Key" />
+								<button class="glowingButton" style="width: 180px" data-action="enableYouTube"><span>Connect YouTube API</span></button>
 							</div>
 
 							<h3>Opened in new tab</h3>
@@ -1423,32 +1463,32 @@
 							<div>
 								<label class="chat_open_label">Twitch</label>
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="twitch_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="twitch" style="cursor:pointer;"> Open Chat</button>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="twitch"><span>Open Chat</span></button>
 							</div>
 
 							<div>
 								<label class="chat_open_label">Instagram Live</label>
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="instagramlive_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="instagramlive" style="cursor:pointer;"> Open Chat</button>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="instagramlive"><span>Open Chat</span></button>
 							</div>
 
 							<div>
 								<label class="chat_open_label">Facebook</label>
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="facebook_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="facebook" style="cursor:pointer;">Open Chat</button>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="facebook"><span>Open Chat</span></button>
 							</div>
 
 							<div>
 								<label class="chat_open_label">Kick</label>
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="kick_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="kick" style="cursor:pointer;"> Open Chat</button>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="kick"><span>Open Chat</span></button>
 							</div>
 
 							<div>
 								<label class="chat_open_label">Discord</label>
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_serverid" placeholder="Server id"class="chat_open_input" />
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="discord_channelid" placeholder="Channel id" class="chat_open_input" />
-								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="discord" style="cursor:pointer;"> Open Chat</button>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="discord"><span>Open Chat</span></button>
 							</div>
 
 							<h3>Opened in new window</h3>
@@ -1457,26 +1497,26 @@
 							<div>
 								<label class="chat_open_label">YouTube</label>
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="youtube_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="youtube" style="cursor:pointer;"> Open Chat</button>
-								<button class="button" style="display:inline-block; width: 30px;" id="ytcopy" title="Copy YouTube video ID to the clipboard.">📎</button>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px" data-action="openchat" data-value="youtube"><span>Open Chat</span></button>
+								<button class="glowingButton" style="display:inline-block; width: 16px" id="ytcopy" title="Copy YouTube video ID to the clipboard."><span>📎</span></button>
 							</div>
 
 							<div>
 								<label class="chat_open_label">TikTok</label>
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="tiktok_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="tiktok" style="cursor:pointer;"> Open Chat</button>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="tiktok"><span>Open Chat</span></button>
 							</div>
 
 							<div>
 								<label class="chat_open_label">Trovo</label>
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="trovo_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="trovo" style="cursor:pointer;"> Open Chat</button>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="trovo"><span>Open Chat</span></button>
 							</div>
 
 							<div>
 								<label class="chat_open_label">Picarto</label>
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="picarto_username" placeholder="Channel name" class="chat_open_input" />
-								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="picarto" style="cursor:pointer;"> Open Chat</button>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="picarto"><span>Open Chat</span></button>
 							</div>
 
 							<h3>Custom</h3>
@@ -1484,7 +1524,7 @@
 							<div>
 								<label class="chat_open_label">Custom URL 1</label>
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="custom1_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
-								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom1" style="cursor:pointer;"> Open Chat</button>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom1"><span>Open Chat</span></button>
 							</div>
 							<div>
 								<label class="switch">
@@ -1496,7 +1536,7 @@
 							<div>
 								<label class="chat_open_label">Custom URL 2</label>
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="custom2_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
-								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom2" style="cursor:pointer;"> Open Chat</button>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom2"><span>Open Chat</span></button>
 							</div>
 							<div>
 								<label class="switch">
@@ -1508,7 +1548,7 @@
 							<div>
 								<label class="chat_open_label">Custom URL 3</label>
 								<input type="text" style="margin-bottom: 0px;" data-textsetting="custom3_url" placeholder="ie: https://somedomain/chat/popup" class="chat_open_input" />
-								<button class="button" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom3" style="cursor:pointer;"> Open Chat</button>
+								<button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom3"><span>Open Chat</span></button>
 							</div>
 							<div>
 								<label class="switch">
@@ -1597,22 +1637,22 @@
 							<h3>Save the last message to a file</h3>
 							An alterative method of saving the <b>last</b> message
 							<div class="grid">
-								<button class="button" data-action="singlesave" style="cursor:pointer;"> 💾 Choose location</button>
-								<button class="button" data-action="singlesaveStop" style="cursor:pointer;"> Stop saving (if active)</button>
+								<button class="glowingButton" style="width: 140px" data-action="singlesave"><span style="font-size: 0.8em">💾 Choose location</span></button>
+								<button class="glowingButton" style="width: 140px" data-action="singlesaveStop"><span style="font-size: 0.8em">Stop saving (if active)</span></button>
 							</div>
 
 							<h3>Save all messages to 📗 <b>Excel</b> file</h3>
 							An alterative method of saving <b>all</b> messages
 							<div class="grid">
-								<button class="button" data-action="excelsave" style="cursor:pointer;"> 💾 Choose location</button>
-								<button class="button" data-action="excelsaveStop" style="cursor:pointer;"> Stop saving (if active)</button>
+								<button class="glowingButton" style="width: 140px" data-action="excelsave"><span style="font-size: 0.8em">💾 Choose location</span></button>
+								<button class="glowingButton" style="width: 140px" data-action="excelsaveStop"><span style="font-size: 0.8em">Stop saving (if active)</span></button>
 							</div>
 
 							<h3>Export/import settings</h3>
 							Backup and load your extension settings.
 							<div class="grid">
-								<button class="button" data-action="export" style="cursor:pointer;"> 💾 Export to disk</button>
-								<button class="button" data-action="import" style="cursor:pointer;"> Import settings</button>
+								<button class="glowingButton" style="width: 140px" data-action="export"><span style="font-size: 0.8em">💾 Export to disk</span></button>
+								<button class="glowingButton" style="width: 140px" data-action="import"><span style="font-size: 0.8em">Import settings</span></button>
 							</div>
 
 						</div>
