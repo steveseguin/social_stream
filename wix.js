@@ -102,9 +102,11 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('textarea').focus();
-					sendResponse(true);
-					return;
+					if (window.location.pathname.includes("live-video")){
+						document.querySelector('textarea').focus();
+						sendResponse(true);
+						return;
+					}
 				}
 				if (typeof request === "object"){
 					if ("settings" in request){
@@ -145,16 +147,19 @@
 	console.log("social stream injected");
 
 	setInterval(function(){
-		var chatContainer = document.querySelector('[data-hook="MESSAGES_CONTAINER"]')
-		if (chatContainer){
-			if (!chatContainer.marked){
-				chatContainer.marked=true;
-				chatContainer.childNodes.forEach(ele=>{
-					if (ele && ele.nodeName && ele.nodeName == "DIV"){
-						ele.skip = true;
-					}
-				});
-				onElementInserted(chatContainer);
+		if (window.location.pathname.includes("live-video")){
+			var chatContainer = document.querySelector('[data-hook="MESSAGES_CONTAINER"]')
+			if (chatContainer){
+				if (!chatContainer.marked){
+					console.log("social stream activated");
+					chatContainer.marked=true;
+					chatContainer.childNodes.forEach(ele=>{
+						if (ele && ele.nodeName && ele.nodeName == "DIV"){
+							ele.skip = true;
+						}
+					});
+					onElementInserted(chatContainer);
+				}
 			}
 		}
 	},1000);
