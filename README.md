@@ -67,6 +67,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - quickchannel.com (https://play.quickchannel.com/*)
 - rokfin.com (https://www.rokfin.com/popout/chat/xxxxxx?stream=yyyyyy)
 - sli.do (https://app.sli.do/event/XXXXXXXXXXXXXX/live/questions)
+- castr.io (https://chat.castr.io/room/XXXXXXXX)
 
 
 More on request
