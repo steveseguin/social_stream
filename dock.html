@@ -1633,6 +1633,11 @@
 		hidequestions = true
 	}
 	
+	var stripEmojis = false;
+	if (urlParams.has("stripemoji")) {
+		stripEmojis = true;
+	}
+	
 	if (blockMessageSelecting){
 		getById("say_hello").classList.add("hidden");
 		getById("clear_overlay").classList.add("hidden");
@@ -3455,10 +3460,6 @@
 				}
 			}
 
-			if (!data.chatmessage && !data.hasDonation && !data.contentimg){
-				return;
-			}
-
 			var addImage = "";
 			if (data.contentimg){
 				addImage = '<div class="hl-imgContent"><img src="' + data.contentimg + '" class="hl-img-content" onerror="this.parent.style.display=\'none\'" /></div>';
@@ -3477,6 +3478,10 @@
 				data.hasDonation = "";
 			}
 
+			if (data.chatmessage && stripEmojis){
+				data.chatmessage = data.chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig, "");
+			} 
+
 			var chatmessage = "";  
 			if (data.chatmessage){
 				if (stylizeEmoji){
@@ -3490,6 +3495,11 @@
 			} else {
 				data.chatmessage = "";
 			}
+			
+			if (!chatmessage && !data.contentimg && !data.hasDonation){
+				return;
+			}
+			
 
 			if (data.type && (data.type == "twitch") && avatars && !data.chatimg && data.chatname){ // this is a temp fix until everyone updates.
 				data.chatimg = "https://api.socialstream.ninja/twitch/?username="+encodeURIComponent(data.chatname); // this is CORS restricted to socialstream, but this is to ensure reliability for all
