@@ -33,6 +33,7 @@
 			--electron-drag-fix: drag;
 			--time-arrived-padding: 1px;
 			--profile-pic-border: 0 solid black;
+			--cursor-type: pointer;
 			
 			--donation-bgcolor: #FEFFAD33;
 			--donation-bgcolor-odd: #FDFF6533;
@@ -388,7 +389,7 @@
 
 		.highlight-chat {
 			display:var(--list-or-horizontal);
-			cursor:pointer;
+			cursor: var(--cursor-type);
 			width:fit-content;
 			background-color: var(--highlight-base);
 			min-height: 24px;
@@ -1616,6 +1617,21 @@
 
 	if (urlParams.has("disabletimeout")) {
 		autoTimeoutEnabled = false;
+	}
+	
+	var blockMessageSelecting = false;
+	if (urlParams.has("viewonly")) {
+		blockMessageSelecting = true;
+	}
+	
+	if (blockMessageSelecting){
+		getById("say_hello").classList.add("hidden");
+		getById("clear_overlay").classList.add("hidden");
+		getById("autoshow").classList.add("hidden");
+		document.documentElement.style.setProperty("--cursor-type", "unset");
+		document.querySelectorAll(".horizontalSeparator").forEach(ele=>{
+			ele.classList.add("hidden");
+		});
 	}
 	
 	var highlightMembers = true;
@@ -3173,6 +3189,11 @@
 	}
 
 	function selectedMessage(event=false, element=false){
+	
+		if (blockMessageSelecting){
+			return;
+		}
+	
 		if (!element){
 			element = this;
 		}
@@ -4040,6 +4061,10 @@
 	}
 
 	function syncDockAll(UUID){
+		if (blockMessageSelecting){
+			return;
+		}
+		
 		var pins = [];
 		document.querySelectorAll(".pinned[data-mid]").forEach(ele=>{
 			pins.push(ele.rawContents);
@@ -4049,6 +4074,10 @@
 	}
 
 	function syncQueueP2P(UUID=false, newele=false){
+		if (blockMessageSelecting){
+			return;
+		}
+	
 		var data = [];
 		if (UUID){
 			if (selectedQueue.length){
@@ -4070,6 +4099,10 @@
 	}
 	
 	function send2Extension(data, uid=null){
+		if (blockMessageSelecting){
+			return;
+		}
+	
 		if (iframe){
 			if (!uid){
 				var keys = Object.keys(connectedPeers);
@@ -4090,6 +4123,10 @@
 	}
 
 	function syncDataP2P(data, UUID=false, force=false){
+		if (blockMessageSelecting){
+			return;
+		}
+	
 		if (iframe && (syncDocks||force)){
 			if (UUID){
 				iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*');
@@ -4107,6 +4144,10 @@
 	}
 
 	function sendDataP2P(data){
+		if (blockMessageSelecting){
+			return;
+		}
+	
 		if (!data){
 			document.querySelectorAll(".last-message").forEach(ele=>{ // last message sent was to clear the overlay
 				ele.classList.remove("last-message"); // no overlay is now active.
@@ -4158,6 +4199,10 @@
 
 
 	function respondP2P(data=null, tid=false){
+		if (blockMessageSelecting){
+			return;
+		}
+	
 		if (data===null){
 			data = prompt("Enter something to say to all of chat");
 		}
@@ -4222,148 +4267,149 @@
 		return {x: posx, y: posy};
 	}
 
-	(function rightclickmenuthing() { // right click menu
-		"use strict";
+	if (!blockMessageSelecting){
+		(function rightclickmenuthing() { // right click menu
+			"use strict";
 
-		var taskItemInContext;
-		var clickCoordsX;
-		var clickCoordsY;
-		var menu = getById("context-menu");
-		var menuState = 0;
-		var lastMenu= false;
-		var menuWidth;
-		var menuHeight;
-		var windowWidth;
-		var windowHeight;
+			var taskItemInContext;
+			var clickCoordsX;
+			var clickCoordsY;
+			var menu = getById("context-menu");
+			var menuState = 0;
+			var lastMenu= false;
+			var menuWidth;
+			var menuHeight;
+			var windowWidth;
+			var windowHeight;
 
-		function clickInsideElement(e, value="menu") {
-			var el = e.srcElement || e.target;
-			if (el.dataset && (value in el.dataset)) {
-				return el;
-			} else {
-				while (el = el.parentNode) {
-					if (el.dataset && (value in el.dataset)) {
-						return el;
+			function clickInsideElement(e, value="menu") {
+				var el = e.srcElement || e.target;
+				if (el.dataset && (value in el.dataset)) {
+					return el;
+				} else {
+					while (el = el.parentNode) {
+						if (el.dataset && (value in el.dataset)) {
+							return el;
+						}
 					}
 				}
+				return false;
 			}
-			return false;
-		}
 
-		function contextListener() {
-			document.addEventListener("contextmenu", function(e) {
+			function contextListener() {
+				document.addEventListener("contextmenu", function(e) {
 
-				if (navigator.userAgent.toLowerCase().indexOf(' electron/') > -1){
-					return;
-				} else if (e && (e.ctrlKey || e.metaKey)){return;} // allow for development ease
+					if (navigator.userAgent.toLowerCase().indexOf(' electron/') > -1){
+						return;
+					} else if (e && (e.ctrlKey || e.metaKey)){return;} // allow for development ease
 
-				taskItemInContext = clickInsideElement(e, "menu");
+					taskItemInContext = clickInsideElement(e, "menu");
 
-				if (taskItemInContext) {
+					if (taskItemInContext) {
+						e.preventDefault();
+						e.stopPropagation();
+						toggleMenuOn();
+						positionMenu(e);
+						return false;
+					} else {
+						taskItemInContext = null;
+						toggleMenuOff();
+					}
+				});
+			}
+
+			function menuClickListener(e) {
+				var clickeElIsLink = clickInsideElement(e, "action");
+				if (clickeElIsLink) {
 					e.preventDefault();
 					e.stopPropagation();
-					toggleMenuOn();
-					positionMenu(e);
+					menuItemListener(clickeElIsLink);
 					return false;
 				} else {
-					taskItemInContext = null;
-					toggleMenuOff();
-				}
-			});
-		}
-
-		function menuClickListener(e) {
-			var clickeElIsLink = clickInsideElement(e, "action");
-			if (clickeElIsLink) {
-				e.preventDefault();
-				e.stopPropagation();
-				menuItemListener(clickeElIsLink);
-				return false;
-			} else {
-				var button = e.which || e.button;
-				if (button === 1) {
-					toggleMenuOff();
+					var button = e.which || e.button;
+					if (button === 1) {
+						toggleMenuOff();
+					}
 				}
 			}
-		}
 
-		function toggleMenuOn() {
-			if (menuState !== 1) {
-				menuState = 1;
-				menu.classList.add("context-menu--active");
-				document.addEventListener("click", menuClickListener);
+			function toggleMenuOn() {
+				if (menuState !== 1) {
+					menuState = 1;
+					menu.classList.add("context-menu--active");
+					document.addEventListener("click", menuClickListener);
+				}
 			}
-		}
 
-		function toggleMenuOff() {
-			if (menuState !== 0) {
-				menuState = 0;
-				menu.classList.remove("context-menu--active");
-				document.removeEventListener("click", menuClickListener);
+			function toggleMenuOff() {
+				if (menuState !== 0) {
+					menuState = 0;
+					menu.classList.remove("context-menu--active");
+					document.removeEventListener("click", menuClickListener);
+				}
+				lastMenu = false;
 			}
-			lastMenu = false;
-		}
 
-		function positionMenu(e) {
-			var clickCoords = getPosition(e);
-			clickCoordsX = clickCoords.x;
-			clickCoordsY = clickCoords.y;
+			function positionMenu(e) {
+				var clickCoords = getPosition(e);
+				clickCoordsX = clickCoords.x;
+				clickCoordsY = clickCoords.y;
 
-			menuWidth = menu.offsetWidth + 4;
-			menuHeight = menu.offsetHeight + 4;
+				menuWidth = menu.offsetWidth + 4;
+				menuHeight = menu.offsetHeight + 4;
 
-			windowWidth = window.innerWidth;
-			windowHeight = window.innerHeight;
+				windowWidth = window.innerWidth;
+				windowHeight = window.innerHeight;
 
-			if ((windowWidth - clickCoordsX) < menuWidth) {
-				menu.style.left = windowWidth - menuWidth + "px";
-			} else {
-				menu.style.left = clickCoordsX + "px";
-			}
-			menu.style.top = "unset";
-			var offset = ((document.body.scrollHeight-clickCoordsY)-menuHeight);
-			if (offset<-10){
-				offset = -10;
-			}
-			menu.style.bottom =offset + "px";
-		}
-
-		async function menuItemListener(link) {
-			if (link.getAttribute("data-action") === "Delete") {
-				deleteMessage(taskItemInContext);
-			} else if (link.getAttribute("data-action") === "Pin") {
-				if (taskItemInContext.classList.contains("pinned")){
-					unpinIt(taskItemInContext);
-					syncDataP2P({unpin:[taskItemInContext.dataset.mid]});
+				if ((windowWidth - clickCoordsX) < menuWidth) {
+					menu.style.left = windowWidth - menuWidth + "px";
 				} else {
-					pinIt(taskItemInContext); 
-					syncDataP2P({pin:[taskItemInContext.rawContents]});
+					menu.style.left = clickCoordsX + "px";
 				}
-			} else if (link.getAttribute("data-action") === "TTS") {
-				speechMeta(taskItemInContext.rawContents, true);
-			} else if (link.getAttribute("data-action") === "Queue") {
-				if (taskItemInContext.classList.contains("queued")){
-					removeQueue(taskItemInContext);
-				} else {
+				menu.style.top = "unset";
+				var offset = ((document.body.scrollHeight-clickCoordsY)-menuHeight);
+				if (offset<-10){
+					offset = -10;
+				}
+				menu.style.bottom =offset + "px";
+			}
 
+			async function menuItemListener(link) {
+				if (link.getAttribute("data-action") === "Delete") {
+					deleteMessage(taskItemInContext);
+				} else if (link.getAttribute("data-action") === "Pin") {
+					if (taskItemInContext.classList.contains("pinned")){
+						unpinIt(taskItemInContext);
+						syncDataP2P({unpin:[taskItemInContext.dataset.mid]});
+					} else {
+						pinIt(taskItemInContext); 
+						syncDataP2P({pin:[taskItemInContext.rawContents]});
+					}
+				} else if (link.getAttribute("data-action") === "TTS") {
+					speechMeta(taskItemInContext.rawContents, true);
+				} else if (link.getAttribute("data-action") === "Queue") {
 					if (taskItemInContext.classList.contains("queued")){
 						removeQueue(taskItemInContext);
-						syncQueueP2P();
-						return;
+					} else {
+
+						if (taskItemInContext.classList.contains("queued")){
+							removeQueue(taskItemInContext);
+							syncQueueP2P();
+							return;
+						}
+						selectedQueue.push(taskItemInContext);
+						taskItemInContext.children[0].dataset.qid = selectedQueue.length;
+						taskItemInContext.classList.add("queued");
+						updateQueueButton();
+						syncQueueP2P(false, taskItemInContext);
 					}
-					selectedQueue.push(taskItemInContext);
-					taskItemInContext.children[0].dataset.qid = selectedQueue.length;
-					taskItemInContext.classList.add("queued");
-					updateQueueButton();
-					syncQueueP2P(false, taskItemInContext);
 				}
+				toggleMenuOff();
 			}
-			toggleMenuOff();
-		}
 
-		contextListener();
-	})();
-
+			contextListener();
+		})();
+	}
 
 	function isEscape(evt) {
 		_evt = evt || window.event;
