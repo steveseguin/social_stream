@@ -1624,6 +1624,15 @@
 		blockMessageSelecting = true;
 	}
 	
+	var onlyquestions = false;
+	if (urlParams.has("onlyquestions")) {
+		onlyquestions = true
+	}
+	var hidequestions = false;
+	if (urlParams.has("hidequestions")) {
+		hidequestions = true
+	}
+	
 	if (blockMessageSelecting){
 		getById("say_hello").classList.add("hidden");
 		getById("clear_overlay").classList.add("hidden");
@@ -3370,6 +3379,11 @@
 				data.id = parseInt(Math.random*100000000);
 			}
 			
+			if (data.question && hidequestions){
+				return;
+			} else if (!data.question && onlyquestions){
+				return;
+			}
 			
 			try {
 				if (applyCustomActions){
