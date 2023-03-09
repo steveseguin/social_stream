@@ -26,7 +26,7 @@
 			//console.log("Couldn't get avatar image URL. API service down?");
 		});
 	}
-	
+	var channelName = "";
 	var brandedImageURL = "";
 	var xx = window.location.pathname.split("/");
 	var index = xx.indexOf("chat");
@@ -54,6 +54,7 @@
 	  xx.splice(index, 1); // 2nd parameter means remove one item only
 	}
 	if (xx[0]){
+		channelName = xx[0];
 		getTwitchAvatarImage(xx[0]);
 	}
 	
@@ -85,6 +86,9 @@
 	var lastUser  = "";
 	
 	function processMessage(ele){	// twitch
+	
+	  
+	
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
@@ -156,6 +160,14 @@
 	  } else {
 		lastMessage = chatmessage;
 		lastUser = chatname;
+	  }
+	  
+	  if (channelName && settings.customtwitchstate){
+		if (settings.customtwitchaccount && settings.customtwitchaccount.textsetting && (settings.customtwitchaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
+			return;
+		} else if (!settings.customtwitchaccount){
+			return;
+		}
 	  }
 	  
 	  var donations = 0;
@@ -241,6 +253,7 @@
 
 	function onElementInsertedTwitch(target, className, callback) {
 		var onMutationsObserved = function(mutations) {
+			
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {

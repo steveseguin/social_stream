@@ -14,10 +14,23 @@
 	  xhr.send();
 	}
 	
+	//var channelName = "";
+	
 	function processMessage(ele, wss=true){
 		  if(ele.hasAttribute("is-deleted")) {
 			return;
 		  }
+		  
+		  if (settings.customyoutubestate){
+			  return;
+		  }
+		//if (channelName && settings.customyoutubestate){
+			//if (settings.customyoutubeaccount && settings.customyoutubeaccount.textsetting && (settings.customyoutubeaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
+			//	return;
+			//} else if (!settings.customyoutubeaccount){
+			//	return;
+			//}
+		//  }
 		  
 		  var chatmessage = "";
 		  var chatname = "";

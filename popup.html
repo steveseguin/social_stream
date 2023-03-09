@@ -1693,59 +1693,85 @@
 		<div class="wrapper">
 			<div class="collapsible">
 				<input type="checkbox" class="collapsible-input" id="wrapper-additional-chat-services-options">
-				<label class="collapsible-label" for="wrapper-additional-chat-services-options">🗨️ Opt-in chat services
-					<img class="icon" src="discord.png"></img>
-					<img class="icon" src="whatsapp.png"></img>
-					<img class="icon" src="telegram.png"></img>
-					<img class="icon" src="slack.png"></img>
+				<label class="collapsible-label" for="wrapper-additional-chat-services-options">🗨️ Optional chat services
+					<img class="icon" src="discord.png" />
+					<img class="icon" src="whatsapp.png" />
+					<img class="icon" src="telegram.png" />
+					<img class="icon" src="slack.png" />
 					...
 				</label>
 				<div class="collapsible-text">
 					<div class="options">
 						<div class="options_group">
-
+							<h3>Opt-in options</h3>
 							<p>These services require you to manually opt-in, for security purposes</p>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-setting="discord">
 									<span class="slider round"></span>
-								</label><img class="icon" src="discord.png"></img> Capture Discord chat
+								</label><img class="icon" src="discord.png" /> Capture Discord chat
 							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-setting="whatsapp">
 									<span class="slider round"></span>
-								</label><img class="icon" src="whatsapp.png"></img> Capture WhatsApp chat
+								</label><img class="icon" src="whatsapp.png" /> Capture WhatsApp chat
 							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-setting="telegram">
 									<span class="slider round"></span>
-								</label><img class="icon" src="telegram.png"></img> Capture Telegram chat
+								</label><img class="icon" src="telegram.png" /> Capture Telegram chat
 							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-setting="instagram">
 									<span class="slider round"></span>
-								</label><img class="icon" src="instagram.png"></img> Capture Instagram non-live comment
+								</label><img class="icon" src="instagram.png" /> Capture Instagram non-live comment
 							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-setting="slack">
 									<span class="slider round"></span>
-								</label><img class="icon" src="slack.png"></img> Capture Slack chat
+								</label><img class="icon" src="slack.png" /> Capture Slack chat
 							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-setting="meet">
 									<span class="slider round"></span>
-								</label><img class="icon" src="meet.png"></img> Capture Google Meet chat
+								</label><img class="icon" src="meet.png" /> Capture Google Meet chat
 							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-setting="chime">
 									<span class="slider round"></span>
-								</label><img class="icon" src="chime.png"></img> Capture Chime chat
+								</label><img class="icon" src="chime.png" /> Capture Chime chat
+							</div>
+							
+							<h3>Opt-out options</h3>
+							<p>Disable chat services or filter by specific channels</p>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="customtwitchstate">
+									<span class="slider round"></span>
+									
+								</label>
+								<img class="icon" src="twitch.png" style="display: inline-block;" />  
+								<div class="textInputContainer" style="display: inline-block; width: 215px">
+									<input type="text" id="customtwitch" class="textInput" autocomplete="off" placeholder="Provide channel name to allow" data-textsetting="customtwitchaccount">
+									<label for="customtwitch">&gt; Twitch channel name to allow</label>
+								</div>
+							</div>
+							<div >
+								<label class="switch">
+									<input type="checkbox" data-setting="customyoutubestate">
+									<span class="slider round"></span>
+								</label><img class="icon" src="youtube.png" /> Disable YouTube chat
+								
+								<div class="textInputContainer hidden" style="display: inline-block; width: 250px">
+									<input type="text" id="customyoutube" class="textInput" autocomplete="off" placeholder="Provide channel name to allow" data-textsetting="customyoutubeaccount">
+									<label for="customyoutube">&gt; YouTube channel name to allow</label>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -1789,7 +1815,7 @@
 		</div>
 
 		<p style="text-align: right;">
-			Visit us at <a href='https://discord.socialstream.ninja' target="_blank">Discord<img class="icon" src="discord.png"></img></a>.<br />
+			Visit us at <a href='https://discord.socialstream.ninja' target="_blank">Discord<img class="icon" src="discord.png" /></a>.<br />
 			<i>Made with</i> 💖 <i>for the community</i>.
 		</p>
 	</div> <!-- end container -->

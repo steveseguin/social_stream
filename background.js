@@ -464,6 +464,19 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "textonlymode"){
 					pushSettingChange();
 				}
+				
+				if (request.setting == "customtwitchstate"){
+					pushSettingChange();
+				}
+				if (request.setting == "customtwitchaccount"){
+					pushSettingChange();
+				}
+				if (request.setting == "customyoutubestate"){
+					pushSettingChange();
+				}
+				if (request.setting == "customyoutubeaccount"){
+					pushSettingChange();
+				}
 
 				if (request.setting == "myname"){
 					pushSettingChange();
