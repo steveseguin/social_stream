@@ -47,7 +47,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - glimesh
 - wix.com (https://manage.wix.com/dashboard/*/live-video/*)
 - clouthub (no pop out; just the video page)
-- rumble.com (no pop out; viewer page)
+- rumble.com (pop out chat)
 - trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/CHANNEL_NAME_HERE)
 - theta.tv (pop-out chat; https://www.theta.tv/chat/xxxxxxxxxxxxxxx)
 - Dlive.tv  (pop-out chat)
