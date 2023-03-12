@@ -71,10 +71,10 @@
 		  } else {
 			  try{
 				var cloned = ele.querySelector("#message, .seventv-yt-message-content").cloneNode(true);
-				var children = cloned.querySelectorAll("[alt]");
-				for (var i =0;i<children.length;i++){
-					children[i].outerHTML = children[i].alt;
-				}
+				//var children = cloned.querySelectorAll("[alt]");
+				//for (var i =0;i<children.length;i++){
+				//	children[i].outerHTML = children[i].alt;
+				//}
 				var children = cloned.querySelectorAll('[role="tooltip"]');
 				for (var i =0;i<children.length;i++){
 					children[i].outerHTML = "";

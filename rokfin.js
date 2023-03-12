@@ -63,10 +63,10 @@
 	  } else {
 		  try{
 			var cloned = ele.querySelector('.ant-comment-content-detail').cloneNode(true);
-			var children = cloned.querySelectorAll("[alt]");
-			for (var i =0;i<children.length;i++){
-				children[i].outerHTML = children[i].alt;
-			}
+			//var children = cloned.querySelectorAll("[alt]");
+			//for (var i =0;i<children.length;i++){
+			//	children[i].outerHTML = children[i].alt;
+			//}
 			chatmessage = cloned.innerText;
 		  } catch(e){}
 	  }

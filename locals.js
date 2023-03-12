@@ -33,7 +33,7 @@
 				if (ee.nodeType == Node.TEXT_NODE){
 					msg += ee.textContent;
 				} else if (settings.textonlymode && ee.alt && (ee.nodeName  == "IMG")){
-					msg += ee.alt;
+					//msg += ee.alt;
 				} else if (!settings.textonlymode&& (ee.nodeName  == "IMG")){
 					msg += "<img src='"+ee.src+"' />";
 				}  else {

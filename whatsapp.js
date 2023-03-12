@@ -109,15 +109,15 @@
 		if (!settings.textonlymode){
 			try {
 				chatmessage = ele.querySelector(".selectable-text.copyable-text");
-				if (chatmessage && chatmessage.tagName && (chatmessage.tagName == "IMG")){
-					if (chatmessage.alt){
-						chatmessage = chatmessage.alt;
-					}
-				} else if (chatmessage && chatmessage.querySelector("img")){
-					chatmessage.querySelectorAll("img[alt]").forEach(ele=>{
-						ele.outerHTML = ele.alt;
-					});
-				} 
+				//if (chatmessage && chatmessage.tagName && (chatmessage.tagName == "IMG")){
+				//	if (chatmessage.alt){
+				//		chatmessage = chatmessage.alt;
+				//	}
+				//} else if (chatmessage && chatmessage.querySelector("img")){
+				//	chatmessage.querySelectorAll("img[alt]").forEach(ele=>{
+				//		ele.outerHTML = ele.alt;
+				//	});
+				//} 
 				chatmessage = chatmessage.innerHTML;
 			} catch(e){
 				chatmessage = "";

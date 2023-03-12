@@ -41,10 +41,10 @@
 	  } else {
 		  try{
 			var cloned = ele.querySelector('.question-item__body').cloneNode(true);
-			var children = cloned.querySelectorAll("[alt]");
-			for (var i =0;i<children.length;i++){
-				children[i].outerHTML = children[i].alt;
-			}
+			//var children = cloned.querySelectorAll("[alt]");
+			//for (var i =0;i<children.length;i++){
+			//	children[i].outerHTML = children[i].alt;
+		//	}
 			chatmessage = cloned.innerText;
 		  } catch(e){}
 	  }

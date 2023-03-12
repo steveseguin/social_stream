@@ -47,7 +47,7 @@
 			chatimg = chatimg.replace("26x26", "150x150");
 			chatimg = chatimg.replace("24x24", "150x150");
 		   }
-		   name = ele.querySelector("img").alt;
+		  // name = ele.querySelector("img").alt;
 		} catch(e){}
 		
 		if (!name){

@@ -226,9 +226,9 @@
 				}
 			} else if (node.nodeType === 1){
 				if (settings.textonlymode){
-					if ("alt" in node){
-						resp += node.alt.trim()+" ";
-					}
+					//if ("alt" in node){
+					//	resp += node.alt.trim()+" ";
+					//}
 				} else {
 					resp += node.outerHTML;
 				}

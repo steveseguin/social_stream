@@ -87,9 +87,9 @@
 					}
 				} else if (node.nodeName == "IMG") {
 					if (settings.textonlymode){
-						if (node.alt){
-							msg += node.alt;
-						}
+						//if (node.alt){
+						//	msg += node.alt;
+						//}
 					} else {
 						msg += node.outerHTML;
 					}

@@ -110,10 +110,10 @@
 		  
 	  } else {
 		  try{
-			var childrens = cloned.querySelectorAll("[alt]");
-			for (var i =0;i<childrens.length;i++){
-				childrens[i].outerHTML = childrens[i].alt;
-			}
+			//var childrens = cloned.querySelectorAll("[alt]");
+			//for (var i =0;i<childrens.length;i++){
+			//	childrens[i].outerHTML = childrens[i].alt;
+			//}
 			chatmessage = cloned.innerText;
 		  } catch(e){}
 	  }

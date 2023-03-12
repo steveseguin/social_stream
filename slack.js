@@ -46,10 +46,10 @@
 		  
 	} else {
 		  try{
-			var childrens = ele.querySelector('[data-qa="message-text"]').querySelectorAll("[alt]");
-			for (var i =0;i<childrens.length;i++){
-				childrens[i].outerHTML = childrens[i].alt;
-			}
+			//var childrens = ele.querySelector('[data-qa="message-text"]').querySelectorAll("[alt]");
+			//for (var i =0;i<childrens.length;i++){
+			//	childrens[i].outerHTML = childrens[i].alt;
+			//}
 			chatmessage = ele.querySelector('[data-qa="message-text"]').innerText;
 		  } catch(e){}
 	}
