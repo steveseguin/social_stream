@@ -1624,6 +1624,11 @@
 		blockMessageSelecting = true;
 	}
 	
+	var blockMessageSelecting2 = false;
+	if (urlParams.has("chatmode")) {
+		blockMessageSelecting2 = true;
+	}
+	
 	var onlyquestions = false;
 	if (urlParams.has("onlyquestions")) {
 		onlyquestions = true
@@ -1640,6 +1645,14 @@
 	
 	if (blockMessageSelecting){
 		getById("say_hello").classList.add("hidden");
+		getById("clear_overlay").classList.add("hidden");
+		getById("autoshow").classList.add("hidden");
+		document.documentElement.style.setProperty("--cursor-type", "unset");
+		document.querySelectorAll(".horizontalSeparator").forEach(ele=>{
+			ele.classList.add("hidden");
+		});
+	} else if (blockMessageSelecting2){
+		//getById("say_hello").classList.add("hidden");
 		getById("clear_overlay").classList.add("hidden");
 		getById("autoshow").classList.add("hidden");
 		document.documentElement.style.setProperty("--cursor-type", "unset");
@@ -3204,7 +3217,7 @@
 
 	function selectedMessage(event=false, element=false){
 	
-		if (blockMessageSelecting){
+		if (blockMessageSelecting || blockMessageSelecting2){
 			return;
 		}
 	
@@ -4085,7 +4098,7 @@
 	}
 
 	function syncDockAll(UUID){
-		if (blockMessageSelecting){
+		if (blockMessageSelecting || blockMessageSelecting2){
 			return;
 		}
 		
@@ -4098,7 +4111,7 @@
 	}
 
 	function syncQueueP2P(UUID=false, newele=false){
-		if (blockMessageSelecting){
+		if (blockMessageSelecting || blockMessageSelecting2){
 			return;
 		}
 	
@@ -4147,7 +4160,7 @@
 	}
 
 	function syncDataP2P(data, UUID=false, force=false){
-		if (blockMessageSelecting){
+		if (blockMessageSelecting || blockMessageSelecting2){
 			return;
 		}
 	
@@ -4168,7 +4181,7 @@
 	}
 
 	function sendDataP2P(data){
-		if (blockMessageSelecting){
+		if (blockMessageSelecting || blockMessageSelecting2){
 			return;
 		}
 	
@@ -4291,7 +4304,7 @@
 		return {x: posx, y: posy};
 	}
 
-	if (!blockMessageSelecting){
+	if (!blockMessageSelecting || blockMessageSelecting2){
 		(function rightclickmenuthing() { // right click menu
 			"use strict";
 
