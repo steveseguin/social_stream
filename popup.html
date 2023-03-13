@@ -119,6 +119,14 @@
 		body.extension-enabled {
 			background-color: var(--body-background-enabled);
 		}
+		
+		#chatCommands{
+			overflow-y: auto;
+			max-height:216px;
+			box-shadow: inset 0px 0px 5px #0000002e;
+			border-radius:10px;
+			margin-top:10px;
+		}
 
 		.rounded_area {
 			background-color: var(--color-accent-subtle);
@@ -1424,61 +1432,13 @@
 								<button class="glowingButton" data-action="tellajoke" style="width: 120px"><span>Tell a joke now</span></button>
 							</div>
 
-							<div>
-								<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">
-									<input type="checkbox" data-setting="chatevent1">
-									<span class="slider round"></span>
-								</label>
-								<div style="display:inline-block">
-									<div class="textInputContainer" style="width: 250px">
-										<input type="text" id="chatcommand1" class="textInput" autocomplete="off" placeholder="!someevent1" data-textsetting="chatcommand1">
-										<label for="chatcommand1">&gt; Chat Command</label>
-									</div>
-									<div class="textInputContainer" style="width: 250px">
-										<input type="text" id="chatwebhook1" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook1">
-										<label for="chatwebhook1">&gt; Webhook URL</label>
-									</div>
-								</div>
-							</div>
-
-							<div>
-								<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">
-									<input type="checkbox" data-setting="chatevent2">
-									<span class="slider round"></span>
-								</label>
-								<div style="display:inline-block">
-									<div class="textInputContainer" style="width: 250px">
-										<input type="text" id="chatcommand2" class="textInput" autocomplete="off" placeholder="!someevent2" data-textsetting="chatcommand2">
-										<label for="chatcommand2">&gt; Chat Command</label>
-									</div>
-									<div class="textInputContainer" style="width: 250px">
-										<input type="text" id="chatwebhook2" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook2">
-										<label for="chatwebhook2">&gt; Webhook URL</label>
-									</div>
-								</div>
-							</div>
-
-							<div>
-								<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">
-									<input type="checkbox" data-setting="chatevent3">
-									<span class="slider round"></span>
-								</label>
-								<div style="display:inline-block">
-									<div class="textInputContainer" style="width: 250px">
-										<input type="text" id="chatcommand3" class="textInput" autocomplete="off" placeholder="!someevent3" data-textsetting="chatcommand3">
-										<label for="chatcommand3">&gt; Chat Command</label>
-									</div>
-									<div class="textInputContainer" style="width: 250px">
-										<input type="text" id="chatwebhook3" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook3">
-										<label for="chatwebhook3">&gt; Webhook URL</label>
-									</div>
-								</div>
-							</div>
-
 							<h3>Fake a comment for testing</h3>
 
 							Issue a random test message that will appear in the dock
 							<button class="glowingButton" data-action="fakemsg"><span>Trigger now</span></button>
+							
+							<div id="chatCommands">
+							</div>
 
 						</div>
 					</div>

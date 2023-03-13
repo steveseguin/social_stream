@@ -16,6 +16,28 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	chrome.runtime.sendMessage({cmd: "getOnOffState"}, function (response) {
 		update(response);
 	});
+	
+	
+		
+	for (var i=1;i<=20;i++){
+		var chat = document.createElement("div");
+		chat.innerHTML = '<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">\
+				<input type="checkbox" data-setting="chatevent'+ i +'">\
+				<span class="slider round"></span>\
+			</label>\
+			<div style="display:inline-block">\
+				<div class="textInputContainer" style="width: 235px">\
+					<input type="text" id="chatcommand'+ i +'" class="textInput" autocomplete="off" placeholder="!someevent'+ i +'" data-textsetting="chatcommand'+ i +'">\
+					<label for="chatcommand'+ i +'">&gt; Chat Command</label>\
+				</div>\
+				<div class="textInputContainer" style="width: 235px">\
+					<input type="text" id="chatwebhook'+ i +'" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook'+ i +'">\
+					<label for="chatwebhook'+ i +'">&gt; Webhook URL</label>\
+				</div>\
+			</div>';
+		document.getElementById("chatCommands").appendChild(chat);
+	}
+	
 
 	var iii = document.querySelectorAll("input[type='checkbox']");
 	for (var i=0;i<iii.length;i++){

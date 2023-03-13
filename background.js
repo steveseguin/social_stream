@@ -1711,66 +1711,25 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 	}
 
 	 // respond to "1" with a "1" automatically; at most 1 time per minute.
-	if (data.chatmessage && settings.chatevent1 && settings.chatcommand1 && settings.chatwebhook1){
-		if (data.chatmessage === settings.chatcommand1.textsetting){
-			if (Date.now() - messageTimeout > 1000){
-				messageTimeout = Date.now();
-				let URL = settings.chatwebhook1.textsetting;
-				if (!URL.startsWith("http")){
-					if (!URL.includes("://")){
-						URL = "https://"+URL;
-						fetch(URL).catch(console.error);
+	for (var i = 1;i<=20;i++){
+		if (data.chatmessage && settings["chatevent"+i] && settings["chatcommand"+i] && settings["chatwebhook"+i]){
+			if (data.chatmessage === settings["chatcommand"+i].textsetting){
+				if (Date.now() - messageTimeout > 1000){
+					messageTimeout = Date.now();
+					let URL = settings["chatwebhook"+i].textsetting;
+					if (!URL.startsWith("http")){
+						if (!URL.includes("://")){
+							URL = "https://"+URL;
+							fetch(URL).catch(console.error);
+						} else {
+							window.open(URL, '_blank');
+						}
 					} else {
-						window.open(URL, '_blank');
-					}
-				} else {
-					fetch(URL).catch(console.error);
-				}
-			}
-	   }
-	}
-	try {
-	if (data.chatmessage && settings.chatevent2 && settings.chatcommand2 && settings.chatwebhook2){
-		if (data.chatmessage === settings.chatcommand2.textsetting){
-			if (Date.now() - messageTimeout > 1000){
-				messageTimeout = Date.now();
-				let URL = settings.chatwebhook2.textsetting;
-				if (!URL.startsWith("http")){
-					if (!URL.includes("://")){
-						URL = "https://"+URL;
 						fetch(URL).catch(console.error);
-					} else {
-						window.open(URL, '_blank');
-						//var tab = await createTab(URL);
-						//chrome.tabs.remove(tab.id, function() {console.log("DONE"); });
-						//console.log("DONE");
 					}
-				} else {
-					fetch(URL).catch(console.error);
 				}
-			}
-	   }
-	}
-	} catch(e){
-		console.error(e);
-	}
-	if (data.chatmessage && settings.chatevent3 && settings.chatcommand3 && settings.chatwebhook3){
-		if (data.chatmessage === settings.chatcommand3.textsetting){
-			if (Date.now() - messageTimeout > 1000){
-				messageTimeout = Date.now();
-				let URL = settings.chatwebhook3.textsetting;
-				if (!URL.startsWith("http")){
-					if (!URL.includes("://")){
-						URL = "https://"+URL;
-						fetch(URL).catch(console.error);
-					} else {
-						window.open(URL, '_blank');
-					}
-				} else {
-					fetch(URL).catch(console.error);
-				}
-			}
-	   }
+		   }
+		}
 	}
 	return data;
 }
