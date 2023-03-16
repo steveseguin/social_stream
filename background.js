@@ -398,6 +398,7 @@ chrome.runtime.onMessage.addListener(
 						loadIframe(channel, password);
 					}
 					setupSocket();
+					setupSocketDock();
 				} else {
 					if (iframe.src){
 						iframe.src = null;
@@ -407,6 +408,10 @@ chrome.runtime.onMessage.addListener(
 					
 					if (socketserver){
 						socketserver.close();
+					}
+					
+					if (socketserverDock){
+						socketserverDock.close();
 					}
 				}
 				chrome.storage.sync.set({
@@ -460,6 +465,19 @@ chrome.runtime.onMessage.addListener(
 					} else {
 						if (socketserver){
 							socketserver.close();
+						}
+					}
+				}
+				
+				if (request.setting == "server2"){
+					if (request.value){
+						if (!socketserverDock){
+							socketserverDock = new WebSocket(serverURLDock);
+							setupSocketDock();
+						}
+					} else {
+						if (socketserverDock){
+							socketserverDock.close();
 						}
 					}
 				}
@@ -909,9 +927,47 @@ function sendToPost(data){
 		}
 	}
 }
+var socketserverDock = false;
+var serverURLDock = "wss://api.overlay.ninja/dock";
+var conConDock = 0;
+
+function setupSocketDock(){
+
+	if (!settings.server2){return;}
+	else if (!isExtensionOn){return;}
+	else if (!socketserverDock){
+		socketserverDock = new WebSocket(serverURLDock);
+	}
+	
+	socketserverDock.onclose = function (){
+		if (settings.server2 && isExtensionOn){
+			setTimeout(function(){
+				if (settings.server2 && isExtensionOn){
+					conConDock+=1;
+					socketserverDock = new WebSocket(serverURLDock);
+					setupSocketDock();
+				} else {
+					socketserverDock = false;
+				}
+			},100*conConDock);
+		} else {
+			socketserverDock = false;
+		}
+	};
+	socketserverDock.onopen = function (){
+		conConDock = 0;
+		socketserverDock.send(JSON.stringify({"join":channel,"out":4,"in":3}));
+	};
+	socketserverDock.addEventListener('message', async function (event) {
+		if (event.data){
+			
+		}
+	})
+}
+//
 
 var socketserver = false;
-var serverURL = "wss://api.overlay.ninja";
+var serverURL = "wss://api.overlay.ninja/api";
 var conCon = 0;
 
 function setupSocket(){
@@ -922,7 +978,6 @@ function setupSocket(){
 		socketserver = new WebSocket(serverURL);
 	}
 	
-
 	socketserver.onclose = function (){
 		if (settings.socketserver && isExtensionOn){
 			setTimeout(function(){
@@ -1151,8 +1206,20 @@ async function openchat(target=null){
 }
 
 function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Ninja API
+	
+	if (settings.server2 && socketserverDock){
+		try{
+			socketserverDock.send(JSON.stringify(data));
+			return;
+		} catch(e){
+			console.error(e);
+			// lets try to send it via P2P as a backup option
+		}
+	}
+	
 	var msg = {};
 	msg.overlayNinja = data;
+	
 	try {
 		iframe.contentWindow.postMessage({"sendData":msg, "type": "pcs"}, '*'); // send only to 'viewers' of this stream
 	} catch(e){}

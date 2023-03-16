@@ -1976,7 +1976,7 @@
 
 	var conCon = 1;
 	var socketserver = false;
-	var serverURL = "wss://api.overlay.ninja";
+	var serverURL = "wss://api.overlay.ninja/api";
 
 	function setupSocket(){
 		socketserver.onclose = function (){
@@ -2011,6 +2011,42 @@
 		socketserver = new WebSocket(serverURL);
 		setupSocket();
 	}
+	
+	
+	//
+	
+	var conConExtension = 1;
+	var socketserverExtension = false;
+	var serverURLExtension = "wss://api.overlay.ninja/extension";
+
+	function setupSocketExtension(){
+		socketserverExtension.onclose = function (){
+			setTimeout(function(){
+				conConExtension+=1;
+				socketserverExtension = new WebSocket(serverURLExtension);
+				setupSocketExtension();
+			},100*conCon);
+		};
+		socketserverExtension.onopen = function (){
+			conConExtension = 1;
+			socketserverExtension.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+		};
+		socketserverExtension.addEventListener('message', function (event) {
+			var resp = false
+			if (event.data){
+				var data = JSON.parse(event.data);
+				processInput(data);
+			}
+		});
+	}
+	
+	if (urlParams.has("server2")){
+		serverURLExtension = urlParams.get("server2") || serverURLExtension;
+		socketserverExtension = new WebSocket(serverURLExtension);
+		setupSocketExtension();
+	}
+	
+	//
 
 	var customSource = false;
 	if (urlParams.has("branded")){
@@ -4139,6 +4175,16 @@
 		if (blockMessageSelecting){
 			return;
 		}
+		
+		if (socketserverExtension){
+			try{
+				socketserverExtension.send(JSON.stringify(data));
+				return;
+			} catch(e){ // if failed, try p2p
+				console.error(e);
+			}
+		}
+		
 	
 		if (iframe){
 			if (!uid){
@@ -4191,7 +4237,7 @@
 			});
 		}
 		try {
-			if (socketserver){
+			if (socketserver){ // send a copy to the remote API
 				socketserver.send(JSON.stringify(data));
 			}
 			if (iframe){
