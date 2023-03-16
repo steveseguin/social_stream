@@ -118,7 +118,7 @@ function pushSettingChange(){
 		chrome.runtime.lastError;
 		for (var i=0;i<tabs.length;i++){
 			if (!tabs[i].url){continue;}
-			chrome.tabs.sendMessage(tabs[i].id, {settings:settings}, function(response=false) {
+			chrome.tabs.sendMessage(tabs[i].id, {settings:settings, isExtensionOn:isExtensionOn}, function(response=false) {
 				chrome.runtime.lastError;
 			});
 		}
@@ -415,6 +415,9 @@ chrome.runtime.onMessage.addListener(
 				chrome.runtime.lastError;
 				toggleMidi();
 				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
+				
+				pushSettingChange();
+				
 			} else if (request.cmd && request.cmd === "getOnOffState") {
 				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
 			} else if (request.cmd && request.cmd === "saveSetting") {
@@ -547,7 +550,7 @@ chrome.runtime.onMessage.addListener(
 					sendToDestinations(request.message); // send the data to the dock
 				}
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-				sendResponse({"settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
+				sendResponse({"settings":settings, isExtensionOn:isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
 			} else if ("keepAlive" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				var action = {};
 				action.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from

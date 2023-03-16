@@ -15,6 +15,8 @@
 	  xhr.send();
 	}
 	
+	var isExtensionOn = false;
+	
 	function pushMessage(data){
 		try{
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
@@ -29,6 +31,18 @@
 		if ("settings" in response){
 			settings = response.settings;
 		}
+		if ("isExtensionOn" in response){
+			isExtensionOn = response.isExtensionOn;
+			
+			
+			if (document.getElementById("startupbutton")){
+				if (isExtensionOn){
+					document.getElementById("startupbutton").style.display = "block";
+				} else {
+					document.getElementById("startupbutton").style.display = "none";
+				}
+			}
+		}
 	});
 	
 	chrome.runtime.onMessage.addListener(
@@ -42,9 +56,21 @@
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
-						sendResponse(true);
-						return;
+						
 					}
+					if ("isExtensionOn" in request){
+						isExtensionOn = request.isExtensionOn;
+						
+						if (document.getElementById("startupbutton")){
+							if (isExtensionOn){
+								document.getElementById("startupbutton").style.display = "block";
+							} else {
+								document.getElementById("startupbutton").style.display = "none";
+							}
+						}
+					}
+					sendResponse(true);
+					return;
 				}
 			} catch(e){}
 			sendResponse(false);
@@ -180,6 +206,9 @@
 	};
 	
 	function checkButtons(){
+		
+		if (!isExtensionOn){return;}
+		
 		var bases = document.querySelector('main[role="main"]').querySelectorAll('article[role="article"]');
 		for (var i=0;i<bases.length;i++) {
 			try {
@@ -224,6 +253,11 @@
 			button.id = "startupbutton";
 			button.innerHTML = "Enable Overlay Service";
 			button.style = "border: 0; width:100%; transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; margin: 10px 0; background-color: lightgreen; cursor:pointer;";
+			
+			if (!isExtensionOn){
+				button.style.display = "none";
+			}
+			
 			try{
 				document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label="Tweet"]')[0].parentNode.appendChild(button);
 			} catch (e){
