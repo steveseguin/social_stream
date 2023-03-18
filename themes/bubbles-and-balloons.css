@@ -1,0 +1,117 @@
+/* a cute chat theme targetted at youtube or other single platforms with profile-pics. Visually based on the StreamElements chat theme as used by
+   such cute streamers as punkalopi and pippa pipkin, and part of my project to create a fully free and platform-independent alternative to StreamElements
+   for anyone who wants to stream from a reliable operating system ;o)
+NOTES:
+ requires certain switches in the link: &hideshadow
+					&nooutline
+					&alignbottom
+					&viewonly
+					&hidesource
+					&notime
+					&largeavatar
+					&twolines
+					&smooth
+					&lightmode
+					&emoji
+Add  @import url('file:///Path/to/this/file.css')  into the css section in the OBS browser-source properties window.
+I also use hight 2160 in the source with 
+					&scale=1.5
+						and scale down into the OBS view.
+The --font-family value below does nothing unless the dock.html version is the one in this fork.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Genos&display=swap');
+
+:root {	--font-color: #000;
+	--font-color-name: white;
+	--font-family: 'Genos';
+	--fade-time: 60s;
+	--font-size: 20px;
+}
+
+html {
+  background-color: rgba(0,0,0,0);
+}
+
+.hl-leftside {
+	width: 48px !important;
+	min-width: 48px !important;
+	min-height: 0px !important;
+}
+
+.hl-rightside .hl-righttopline .notcompactmode .notcompactmode>.highlight-chat {
+	min-height: 0px !important;
+}
+
+.hl-profile-pic {
+	max-height: 48px !important;
+	min-height: 0px;
+	transform-origin: 50%, 50%;
+	transform-style: flat;
+
+	animation: blobble-pic 1s ease, slow-fade var(--fade-time) ease forwards;
+}
+
+#output {
+	padding-bottom: 20px;
+}
+
+
+.hl-name {
+	background-color: rgba(255,192,192,1);
+	border-radius: 1em;
+	color: white;
+	font-size: var(--font-size);
+	font-weight: 600;
+	text-shadow: 0px 0px 6px #8000ff;
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-bottom: 3px;
+	transform-origin: bottom left;
+	transform-style: flat;
+	
+	animation: blobble-name 1s ease forwards, slow-fade var(--fade-time) ease forwards;
+}
+
+.hl-message {
+	background-color: rgba(255,255,255,1);
+	border-radius: 1em;
+	border-color: rgba(255,192,192,1);
+	border-width: 4px !important;
+	transform-origin: top left;
+	transform-style: flat;
+	font-size: var(--font-size);
+	padding-left: 5px;
+	padding-right: 5px;
+	animation: blobble-msg 1s ease, slow-fade var(--fade-time) ease forwards;
+}
+
+@keyframes blobble-name {
+	0% {	transform: scale(0) rotate(3deg); }
+	64% {	transform: scale(0) rotate(3deg); }
+	88% {	transform: scale(1.1) rotate(-7deg); }
+	100% {	transform: scale(1) rotate(-5deg); }
+}
+
+@keyframes blobble-msg {
+	0% {	transform: scale(0) rotate(10deg); }
+	52% {	transform: scale(0) rotate(10deg); }
+	76% {	transform: scale(1.1) rotate(2deg); }
+	88% {	transform: scale(1) rotate(0deg); }
+}
+
+@keyframes blobble-pic {
+	0% {	transform: scale(0) rotate(135deg); }
+	40% {	transform: scale(0) rotate(135deg); }
+	46% {	transform: scale(0.1) rotate(135deg); }
+	64% {	transform: scale(1.1) rotate(-20deg); }
+	82% {	transform: scale(1.03) rotate(5deg); }
+	91% {	transform: scale(1.01) rotate(-2deg); }
+	100% {	transform: scale(1) rotate(0deg); }
+}
+
+@keyframes slow-fade {
+	0% {	opacity: 1; }
+	90% {	opacity: 1; }
+	100% {	opacity: 0; }
+}
