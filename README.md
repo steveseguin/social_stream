@@ -69,6 +69,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - sli.do (https://app.sli.do/event/XXXXXXXXXXXXXX/live/questions)
 - cbox.ws (no pop out needed)
 - castr.io (https://chat.castr.io/room/XXXXXXXX)
+- tellonym.me
 
 
 More on request
@@ -114,7 +115,9 @@ Something of concern though is Google will be updating Chrome browsers on Januar
 
 To update, just download the extension, replace the old files with the new files, and then reload the extension or completely restart the browser.  If just reloading the extension, you may then need to also reload any open chat sites that you wish to use Social Stream with.
 
-New app integrations do not auto-update; just the overlay and dock page will auto-update. It's suggeseted you update every now and then manually, or whenever you encounter a bug.  
+DO NOT Uninstall the extension if you want to update it. This will delete all your settings.  Replace the files, and reload the extension or browser instead.  If you MUST uninstall, you can export your settings to disk and reload them after you have reinstalled.  
+
+New app integrations do not auto-update; just the overlay and dock page will auto-update. It's suggeseted you update every now and then manually, or whenever you encounter a bug.  I'll try to resolve this issue down the road, perhaps with a standalone desktop app eventually.
 
 #### Firefox support
 
