@@ -3494,7 +3494,7 @@
 
 
 			if (!("id" in data)){
-				data.id = parseInt(Math.random()*100000000+1000000);
+				data.id = Date.now() + parseInt(Math.random()*1000000);
 			}
 			
 			if (data.question && hidequestions){
