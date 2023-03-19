@@ -324,7 +324,7 @@
 			display:inline-block;
 			margin:3px;
 			min-width: 75px;
-			min-height: 75px;
+/*			min-height: 75px;*/
 		}
 		.hl-leftside img {
 			max-height:100%;
@@ -394,7 +394,7 @@
 			cursor: var(--cursor-type);
 			width:fit-content;
 			background-color: var(--highlight-base);
-/* ?#2			min-height: 24px; */
+			max-height: 500px; 
 		}
 
 		.highlight-chat.expand{
@@ -3389,11 +3389,11 @@
 				node.remove();
 			},500,node);
 		} else if (scrolltype === "smooth"){
-			node.style.transition =  "all linear 0.5s";
-			node.style.height =  "0"; 
+			node.style.transition =  "all ease 5s";
+			node.style.maxHeight =  "0"; 
 			setTimeout(function(node){
 				node.remove();
-			},500,node);
+			},5200,node);
 		} else {
 			node.remove();
 		}
@@ -3417,34 +3417,17 @@
 		if (isOBSBrowserSource){ // This is an OBS browser source, so lets go light on it.
 			if (customNodeLimit){
 				total2Remove =  nodes.length - customNodeLimit;
-			} else { // a more efficient way to cull no-longer-visible nodes. Cull without delay or animation prevents aborted smooth scrolls
-				for (var i = total2Remove-1; getBoundingClientRectangle(nodes[i]).bottom < -100; i--){
-					nodes[i].remove(); // if the .bottom of the node is negative it's not visible any more. I used -100 just to be safe.
-				}	
-					// bypassing the fadeOutNode() may break some other chat styles, but this loop only culls invisible nodes anyway.
-			}		// The only issue I see here is that if an animation style that isn't scrolling is used, messages never dissapear.
-					// An alternate way to do dissapearing fadeouts on non-scrolling display types would be to use a long or delayed css
-					// animation on opacity: that leaves it with opacity:0 and check the opacity value in this or another loop to delete 
-					// anything that's no longer visible.
-
-					// this is the bit thet fixes the scroll issue, nothing else was actually needed, though I included the rest here becuase this is
-					// the state that actually worked in the end.
-					// basically the default scroll behaviour is to do nothing that changes the display if anode is removed unless flow
-					// rules dictate it should. ensuring that there is always enough in the mainOutputWindow div to require scrolling
-					// and that things only get deleted off-screen is enough. new elements are generated off-screen, then scrolled smoothly into view.
-					// elements that are deleted off-screen, even after a scroll-destination has been calculated, should not affect anything visual. 
-			
-					// the issue seems to have been a conflict between the asychronous node removals, height animation
-					// (that couldn't complete because of min-height attributes on various elements) and the smooth scrolling of the browser:
-					// probably that the scroll destination is calculated halfway through a height animation, it arrives there and then realises
-					// its not in the right place, and jerks to that place, looking quite scuffed in the result.
-			
-					// after some hours of smoothness though, the scroll starts to become increasingly granular, like the framerate is dropping.
-					// resetting the browser source fixes that, and it becomes smooth again. I think this is due to the renderer using increasingly
-					// displaced floats in its calculations, so perhaps some kind of workarround is needed that resets the scroll-ed-ness of the view.
-					// My first thought is to periodically create a new mainOutputWindow div, moving the old one to be a child of that one, which
-					// then gets scrolled off the top of the screen and deleted like everything else. 
-
+			} else if (window.innerHeight>1600){
+				total2Remove =  nodes.length - 39;
+			} else if (window.innerHeight>1200){
+				total2Remove =  nodes.length - 30;
+			} else if (window.innerHeight>800){
+				total2Remove =  nodes.length - 22;
+			} else if (window.innerHeight>400){
+				total2Remove =  nodes.length - 14;
+			} else {
+				total2Remove =  nodes.length - 10;
+			}
 		} else if (customNodeLimit){
 			total2Remove =  nodes.length - customNodeLimit;
 		} else if (window.innerHeight>900){
@@ -3882,12 +3865,6 @@
 
 			mainOutputWindow.appendChild(node);
 			
-			node.scrollIntoView({behavior: scrolltype, block: 'end', inline: 'start'});
-				// this takes the place of all the complicated math and conditions resulting in scrollTo()'s below
-				// I think a basic scroll-into-view takes everything into account? no? but you're dealing with a wider variety of
-				// chat cases than I can comprehend - I'm just thinking about youtube/twitch type chats where anything beyond text
-				// and emoji's doesn't exist.
-			
 			var svgs = node.querySelectorAll("svg");
 			svgs.forEach(svg=>{
 				svg.setAttribute("width","100%");
@@ -4035,7 +4012,7 @@
 			var imageElements = node.getElementsByTagName("img");
 			for (i = 0; i < imageElements.length; i++) {
 				imageElements[i].onload = function(){
-				/*	if (reversed && !forceAutoscroll){
+					if (reversed && !forceAutoscroll){
 						//
 					} else if (alignbottom){
 						var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight );
@@ -4055,7 +4032,7 @@
 								behavior: scrolltype
 							});
 						}
-					} */ // this could also be replaced with a scrollIntoView of the <img>, I think?
+					}
 				}
 				if (imageElements[i].onerror){continue;}
 				if (!imageElements[i].title && imageElements[i].alt){
@@ -4080,7 +4057,7 @@
 
 			removeNode();
 
-/*			if (reversed && !forceAutoscroll){
+			if (reversed && !forceAutoscroll){
 				//
 			} else if (alignbottom){
 				var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight );
@@ -4100,7 +4077,7 @@
 						behavior: scrolltype
 					});
 				}
-			} */ // this is replaced by the scrollIntoView that is immediately after the appendNode() (line 3864)
+			}
 
 			applyBotActions(data); // Official actions
 
