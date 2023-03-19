@@ -3494,7 +3494,7 @@
 
 
 			if (!("id" in data)){
-				data.id = parseInt(Math.random*100000000);
+				data.id = parseInt(Math.random()*100000000+1000000);
 			}
 			
 			if (data.question && hidequestions){
@@ -3771,6 +3771,8 @@
 			var mid = "";
 			if (data.id){
 				mid = "data-mid='"+data.id+"'";
+			} else {
+			
 			}
 
 
