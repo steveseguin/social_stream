@@ -1,5 +1,7 @@
 (function () {
 	
+	var cachedUserProfiles = {};
+	
 	function getAllContentNodes(element) {
 		var resp = "";
 		element.childNodes.forEach(node=>{
@@ -14,8 +16,39 @@
 		return resp;
 	}
 	
+	async function fetchWithTimeout(URL, timeout=2000){ // ref: https://dmitripavlutin.com/timeout-fetch-request/
+		try {
+			const controller = new AbortController();
+			const timeout_id = setTimeout(() => controller.abort(), timeout);
+			const response = await fetch(URL, {...{timeout:timeout}, signal: controller.signal});
+			clearTimeout(timeout_id);
+			return response;
+		} catch(e){
+			errorlog(e);
+			return await fetch(URL);
+		}
+	}
 	
-	function processMessage(ele){	// twitch
+	async function getKickAvatarImage(username, channelname){
+		
+		if (username in cachedUserProfiles){
+			return cachedUserProfiles[username];
+		} 
+		cachedUserProfiles[username] = "";
+		
+		return await fetchWithTimeout("https://kick.com/channels/"+encodeURIComponent(channelname)+"/"+encodeURIComponent(username)).then(async response => {
+			return await response.json().then(function (data) {
+				if (data && data.profilepic){
+					cachedUserProfiles[username] = data.profilepic;
+					return data.profilepic;
+				}
+			});
+		}).catch(error => {
+			//console.log("Couldn't get avatar image URL. API service down?");
+		});
+	}
+	
+	async function processMessage(ele){	// twitch
 	
 	  if (!ele){return;}
 		
@@ -28,12 +61,8 @@
 	  var name ="";
 	  var chatbadges = [];
 	  
-	  
-	  
-	  console.log(ele);
-	  
 	  var cloned =  ele.cloneNode(true);
-	  if (cloned.children[0].classList.contains("inline-block")){
+	  if (cloned.children[0] && cloned.children[0].classList.contains("inline-block")){
 		  
 		  try {
 			  
@@ -61,7 +90,7 @@
 			} catch(e){}
 		  } catch(e){return;}
 		  cloned.children[0].outerHTML = "";
-	  } else if (cloned.children[1].classList.contains("inline-block")){
+	  } else if (cloned.children[1] && cloned.children[1].classList.contains("inline-block")){
 		  
 		   ele.children[1].querySelectorAll("[class*='badge'] img[src], .LevelNumber svg, [class*='group/role'] svg, [class*='group/role'] img[src]").forEach(badge=>{
 				try {
@@ -141,13 +170,21 @@
 	  chatname = chatname.replace("Channel Host", "");
 	  chatname = chatname.replace(":", "");
 	  chatname = chatname.trim();
-	 
+	  
+	  
+	  var chatimg = "";
+	  var channelName = window.location.pathname.split("/")[1];
+	  
+	  if (channelName && chatname){
+		  chatimg = await getKickAvatarImage(chatname, channelName) || "";
+	  }
+	  
 	  var data = {};
 	  data.chatname = chatname;
 	  data.chatbadges = chatbadges;
 	  data.nameColor = nameColor;
 	  data.chatmessage = chatmessage;
-	  data.chatimg = "";
+	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = "";
 	  data.type = "kick";
@@ -155,7 +192,6 @@
 	  if (!chatmessage && !hasDonation){
 		return;
 	  }
-	  
 	  
 	  //if (brandedImageURL){
 	  //  data.sourceImg = brandedImageURL;
