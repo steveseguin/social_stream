@@ -20,11 +20,11 @@ I also use hight 2160 in the source with
 The --font-family value below does nothing unless the dock.html version is the one in this fork.
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Genos&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
 
 :root {	--font-color: #000;
 	--font-color-name: white;
-	--font-family: 'Genos';
+	--font-family: 'Indie Flower';
 	--fade-time: 60s;
 	--font-size: 20px;
 }
@@ -48,12 +48,13 @@ html {
 	min-height: 0px;
 	transform-origin: 50%, 50%;
 	transform-style: flat;
-
 	animation: blobble-pic 1s ease, slow-fade var(--fade-time) ease forwards;
 }
 
 #output {
 	padding-bottom: 20px;
+	width: 90% !important;
+	padding-right: 10% !important;
 }
 
 
@@ -68,12 +69,14 @@ html {
 	padding-right: 5px;
 	padding-bottom: 3px;
 	transform-origin: bottom left;
-	transform-style: flat;
-	
+	transform-style: flat;	
 	animation: blobble-name 1s ease forwards, slow-fade var(--fade-time) ease forwards;
 }
 
 .hl-message {
+	position: relative !important;
+	top: 0;
+	left: 0;
 	background-color: rgba(255,255,255,1);
 	border-radius: 1em;
 	border-color: rgba(255,192,192,1);
@@ -84,6 +87,19 @@ html {
 	padding-left: 5px;
 	padding-right: 5px;
 	animation: blobble-msg 1s ease, slow-fade var(--fade-time) ease forwards;
+}
+
+.hl-message::before {
+	content: "";
+	position: absolute;
+	border: 0 solid transparent;
+	border-bottom: 6px solid white;
+	border-radius: 0 0 0 20px;
+	top: -9px;
+	left: -9px;
+	width: 18px;
+	height: 18px;
+	transform: rotate(-20deg);
 }
 
 @keyframes blobble-name {
