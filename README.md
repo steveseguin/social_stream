@@ -70,6 +70,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - cbox.ws (no pop out needed)
 - castr.io (https://chat.castr.io/room/XXXXXXXX)
 - tellonym.me
+- IRC (via https://webchat.quakenet.org/)
 
 
 More on request
