@@ -1275,6 +1275,20 @@
 			100% {opacity:0;}
 		}
 
+		.fadeout-slideup {
+			animation: fadeout 1s forwards, scrolloutattop 0.5s ease-out forwards;
+			webkit-transition: opacity 0.5s ease-in-out;
+			-moz-transition: opacity 0.5 ease-in-out;
+			-ms-transition: opacity 0.5 ease-in-out;
+			-o-transition: opacity 0.5 ease-in-out;
+			opacity: 0;
+		}
+
+		@keyframes scrolloutattop {
+			0% {	max-height: 500px; }
+			100% {	max-height: 0px; }
+		}
+
 		.fadein {
 			animation: fadein 1s;
 			webkit-transition: opacity 0.5s ease-in-out;
@@ -1416,6 +1430,19 @@
 		}
 		.hideMenuKeepScrollLock > #jumpto{
 			display:block!important;
+		}
+
+		.slideinfromtop {
+			position: relative;
+			animation: 0.5s slideinfromabove ease-out forwards, 1s scrolldownsmoothly ease-in, forwards;
+		}
+		@keyframes slideinfromabove {
+			0% { 	top: -500px; }
+			100% { 	top: 0px; }
+		}
+		@keyframes scrolldownsmoothly {
+			0% { 	max-height: 0px; }
+			100% {	max-height: 500px; }
 		}
 		
 		.avatar-badge{
@@ -1828,6 +1855,8 @@
 	if (urlParams.has("alignbottom")){
 		document.getElementById("output").classList.add("alignbottom");
 		alignbottom = true;
+	} else {
+		document.getElementById("blank").remove();
 	}
 
 	var attachmentsonly = false;
@@ -1917,6 +1946,9 @@
 		forceAutoscroll=false;
 		document.getElementById("output").style.flexDirection = "column-reverse";
 		document.getElementById("output").style.display = "flex";
+		var blank = document.getElementById("blank");
+		if(blank) { blank.remove(); }
+		if (scrolltype === "smooth") { transitionType.push("slideinfromtop"); }
 	}
 
 	if (urlParams.has("dropdown")){
@@ -1925,6 +1957,12 @@
 		document.getElementById("output").style.flexDirection = "column-reverse";
 		document.getElementById("output").style.display = "flex";
 		transitionType.push("swipeup");
+		var blank = document.getElementById("blank");
+		if(blank) { blank.remove(); }
+	}
+
+	if(document.getElementById("blank")) {
+		if(!alignbottom) { document.getElementById("blank").remove(); }
 	}
 
 	var beep = false;
@@ -3418,19 +3456,27 @@
 	};
 
 	function fadeOutNode(node){
-		if (fadeout && horizontal){
+		var smooth = (scrolltype === "smooth");
+		if ((fadeout && horizontal) || (reversed && smooth)) {
 			node.classList.add("fadeout");
 			setTimeout(function(node){
 				node.remove();
 			},500,node);
 		} else if (horizontal){
 			node.remove();
-		} else if (fadeout){
-			node.classList.add("fadeout");
-			setTimeout(function(node){
-				node.remove();
-			},500,node);
-		} else if (scrolltype === "smooth"){
+		} else if (fadeout || timeoutDelay){
+			if(smooth) {
+				node.classList.add("fadeout-slideup");
+				setTimeout(function(node){
+					node.remove();
+				},1200,node);
+			} else {
+				node.classList.add("fadeout");
+				setTimeout(function(node){
+					node.remove();
+				},500,node);
+			}
+		} else if (smooth){
 			node.style.transition =  "all ease 5s";
 			node.style.maxHeight =  "0"; 
 			setTimeout(function(node){
@@ -3991,11 +4037,12 @@
 
 			if (timeoutDelay){
 				setTimeout(function(node){ 
-					node.classList.add("fadeout"); 
+					fadeOutNode(node);
+/*					node.classList.add("fadeout"); 
 					setTimeout(function(node){
 						node.remove();
 					},499,node);
-				},timeoutDelay, node);
+*/				},timeoutDelay, node);
 			}
 
 			if (horizontal || twoLines){
@@ -4054,8 +4101,12 @@
 			var imageElements = node.getElementsByTagName("img");
 			for (i = 0; i < imageElements.length; i++) {
 				imageElements[i].onload = function(){
-					if (reversed && !forceAutoscroll){
-						//
+					if (reversed && forceAutoscroll){
+						getById("output").scrollTo({
+							top: 0,
+							left: 0,
+							behavior:scrolltype
+						});
 					} else if (alignbottom){
 						var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight );
 						if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){
@@ -4099,8 +4150,12 @@
 
 			removeNode();
 
-			if (reversed && !forceAutoscroll){
-				//
+			if (reversed && forceAutoscroll){
+				getById("output").scrollTo({
+					top: 0,
+					left: 0,
+					behavior:scrolltype
+				});
 			} else if (alignbottom){
 				var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight );
 				if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){
