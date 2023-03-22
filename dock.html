@@ -3103,27 +3103,25 @@
 			ele.title = 'Scroll to bottom';
 		}
 		if (alignbottom){
-			getById("output").scrollTo({
-				top: getById("output").scrollHeight,
-				left: 0,
-				behavior: scrolltype
-			});
-			getById("output").scrollBy({
-				top: 100,
-				left: 0,
-				behavior: scrolltype
-			});
+			if (scrolltype=="instant"){
+				getById("output").scrollTop = getById("output").scrollHeight;
+			} else {
+				getById("output").scrollTo({
+					top: getById("output").scrollHeight,
+					left: 0,
+					behavior:scrolltype
+				});
+			}
 		} else {
-			document.body.scrollTo({
-				top: getById("output").scrollHeight,
-				left: 0,
-				behavior: scrolltype
-			});
-			document.body.scrollBy({
-				top: 100,
-				left: 0,
-				behavior: scrolltype
-			});
+			if (scrolltype=="instant"){
+				document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
+			} else {
+				document.scrollingElement.scrollTo({
+					top: document.scrollingElement.scrollHeight,
+					left: 0,
+					behavior:scrolltype
+				});
+			}
 		}
 	}
 
@@ -4048,29 +4046,29 @@
 
 			var imageElements = node.getElementsByTagName("img");
 			for (i = 0; i < imageElements.length; i++) {
-				imageElements[i].onload = function(){
-					if (reversed && !forceAutoscroll){
-						//
-					} else if (alignbottom){
-						var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight );
-						if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){
-							getById("output").scrollTo({
-								top: height,
-								left: 0,
-								behavior:scrolltype
-							});
-						}
-					} else {
-						var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-						if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){
-							window.scrollTo({
-								top: height,
-								left: 0,
-								behavior: scrolltype
-							});
-						}
-					}
-				}
+				<!-- imageElements[i].onload = function(){ -->
+					<!-- if (reversed && !forceAutoscroll){ -->
+						<!-- // -->
+					<!-- } else if (alignbottom){ -->
+						<!-- var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight ); -->
+						<!-- if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
+							<!-- getById("output").scrollTo({ -->
+								<!-- top: height, -->
+								<!-- left: 0, -->
+								<!-- behavior:scrolltype -->
+							<!-- }); -->
+						<!-- } -->
+					<!-- } else { -->
+						<!-- var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ); -->
+						<!-- if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
+							<!-- window.scrollTo({ -->
+								<!-- top: height, -->
+								<!-- left: 0, -->
+								<!-- behavior: scrolltype -->
+							<!-- }); -->
+						<!-- } -->
+					<!-- } -->
+				<!-- } -->
 				if (imageElements[i].onerror){continue;}
 				if (!imageElements[i].title && imageElements[i].alt){
 					imageElements[i].title = imageElements[i].alt;
@@ -4094,27 +4092,27 @@
 
 			removeNode();
 
-			if (reversed && !forceAutoscroll){
-				//
-			} else if (alignbottom){
-				var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight );
-				if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){
-					getById("output").scrollTo({
-						top: height,
-						left: 0,
-						behavior:scrolltype
-					});
-				}
-			} else { 
-				var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-				if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){
-					getById("output").scrollTo({
-						top: height,
-						left: 0,
-						behavior: scrolltype
-					});
-				}
-			}
+			<!-- if (reversed && !forceAutoscroll){ -->
+						<!-- // -->
+			<!-- } else if (alignbottom){ -->
+				<!-- var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight ); -->
+				<!-- if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
+					<!-- getById("output").scrollTo({ -->
+						<!-- top: height, -->
+						<!-- left: 0, -->
+						<!-- behavior:scrolltype -->
+					<!-- }); -->
+				<!-- } -->
+			<!-- } else { -->
+				<!-- var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ); -->
+				<!-- if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
+					<!-- window.scrollTo({ -->
+						<!-- top: height, -->
+						<!-- left: 0, -->
+						<!-- behavior: scrolltype -->
+					<!-- }); -->
+				<!-- } -->
+			<!-- } -->
 
 			applyBotActions(data); // Official actions
 
@@ -4124,6 +4122,48 @@
 			return node;
 		}
 		return false;
+	}
+	
+	
+	
+	if (alignbottom){
+		const ro = new MutationObserver(mutations => {
+			if (reversed && !forceAutoscroll){
+			
+			} else {
+				if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){
+					if (scrolltype=="instant"){
+						getById("output").scrollTop = getById("output").scrollHeight;
+					} else {
+						getById("output").scrollTo({
+							top: getById("output").scrollHeight,
+							left: 0,
+							behavior:scrolltype
+						});
+					}
+				}
+			}
+		});
+		ro.observe(getById("output"), {childList: true,attributes: false, subtree: false,});
+	} else {
+		const ro = new ResizeObserver(entries => {
+			if (reversed && !forceAutoscroll){
+			
+			} else {
+				if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){
+					if (scrolltype=="instant"){
+						document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
+					} else {
+						document.scrollingElement.scrollTo({
+							top: document.scrollingElement.scrollHeight,
+							left: 0,
+							behavior:scrolltype
+						});
+					}
+				}
+			}
+		});
+		ro.observe(document.scrollingElement);
 	}
 
 	function speechMeta(data, allow=false){

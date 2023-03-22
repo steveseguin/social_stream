@@ -95,7 +95,7 @@
 	  
 	  
 	  try {
-		var nameEle = ele.querySelector(".chat-author__display-name");
+		var nameEle = ele.querySelector(".chat-author__display-name") || ele.querySelector(".seventv-chat-user-username");
 		var chatname = nameEle.innerText;
 		try {
 			nameColor = nameEle.style.color;
@@ -105,8 +105,10 @@
 	  
 	  var chatbadges = [];
 	  try {
-		  ele.querySelectorAll("img.chat-badge[src]").forEach(badge=>{
-			chatbadges.push(badge.src);
+		  ele.querySelectorAll("img.chat-badge[src], .seventv-chat-badge>img[src]").forEach(badge=>{
+			 if (!chatbadges.includes(badge.src)){
+				chatbadges.push(badge.src);
+			 }
 		  });
 		  
 	  } catch(e){}
@@ -119,14 +121,13 @@
 	  } catch(e){}
 	  
 	  try {
-		var eleContent = ele.querySelector(".seventv-message-context") || ele.querySelector('*[data-test-selector="chat-line-message-body"]');
+		var eleContent = ele.querySelector(".seventv-chat-message-body") || ele.querySelector(".seventv-message-context")  || ele.querySelector('*[data-test-selector="chat-line-message-body"]');
 		chatmessage = getAllContentNodes(eleContent);
 	  } catch(e){}
 	 
 	  if (!chatmessage){
 		  try {
 			var eleContent = ele.querySelector('span.message');
-			
 			chatmessage = getAllContentNodes(eleContent);
 		  } catch(e){}
 	  }
@@ -251,7 +252,7 @@
 		}
 	});
 
-	function onElementInsertedTwitch(target, className, callback) {
+	function onElementInsertedTwitch(target, callback) {
 		var onMutationsObserved = function(mutations) {
 			
 			mutations.forEach(function(mutation) {
@@ -259,24 +260,13 @@
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							
-							
 							if (mutation.addedNodes[i].ignore){continue;}
 							mutation.addedNodes[i].ignore=true;
 							
 							
-							if (mutation.addedNodes[i].className && mutation.addedNodes[i].classList.contains(className)) {
-								callback(mutation.addedNodes[i]);
+							if (mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message"))) {
 								mutation.addedNodes[i].ignore=true;
-							} else {
-								try{
-									var childEle = mutation.addedNodes[i].querySelector("."+className);
-									if (childEle){
-										if (childEle.ignore){continue;}
-										callback(childEle);
-										mutation.addedNodes[i].ignore=true;
-										childEle.ignore=true;
-									}
-								} catch(e){}
+								callback(mutation.addedNodes[i]);
 							}
 						} catch(e){}
 					}
@@ -293,32 +283,23 @@
 	console.log("Social Stream injected");
 	
 	var checkReady = setInterval(function(){
-		var target = document.querySelector(".chat-scrollable-area__message-container");
-		if (target){
+		if (document.querySelector(".chat-room__content")){ // just in case 
 			console.log("Social Stream Start");
 			clearInterval(checkReady);
-			var clear = document.querySelectorAll(".chat-line__message");
-			for (var i = 0;i<clear.length;i++){
-				clear[i].ignore = true; // don't let already loaded messages to re-load.
-			}
-			onElementInsertedTwitch(target, "chat-line__message", function(element){
-			  setTimeout(function(element){processMessage(element);},20, element); // 20ms to give it time to load the message, rather than just the container
-			});
-		} else if (document.querySelector(".chat-line__message")){ // just in case 
-			var target = document.querySelector(".chat-line__message");
-			if (target && target.parentNode){
-				console.log("Social Stream Start");
-				clearInterval(checkReady);
-				var clear = document.querySelectorAll(".chat-line__message");
+			
+			
+			setTimeout(function(){
+				var clear = document.querySelectorAll(".seventv-message, .chat-line__message");
 				for (var i = 0;i<clear.length;i++){
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
 				}
-				onElementInsertedTwitch(target.parentNode, "chat-line__message", function(element){
+				console.log("Social Stream ready to go");
+				onElementInsertedTwitch(document.querySelector(".chat-room__content"), function(element){
 				  setTimeout(function(element){processMessage(element);},20, element); // 20ms to give it time to load the message, rather than just the container
 				});
-			}
-		}
-	},2000);
+			},4500);
+		} 
+	},500);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
 	try {
