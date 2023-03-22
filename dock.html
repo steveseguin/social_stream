@@ -2132,7 +2132,9 @@
 	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){ //  tts();
 		document.getElementById("tts").dataset.state = 1;
 		document.getElementById("tts").classList.remove("hidden");
-		document.getElementById("tts").classList.add('pressed');
+		//document.getElementById("tts").classList.add('pressed');
+		getById("tts").style['background-image']='url(./icons/tts_incoming_messages_on.png)';
+		getById("tts").title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
 		var speech = true;
 		speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || speechLang;
 
@@ -2148,6 +2150,15 @@
 		} else {
 			English = false;
 		}
+	}
+	
+	if (urlParams.has("simpletts")){
+		English = false;
+	}
+	
+	var skipTTLMessages = false;
+	if (urlParams.has("skipmessages")){
+		skipTTLMessages = parseInt(urlParams.get("skipmessages")) || 3;
 	}
 
 	var pitch = 1;
@@ -4167,6 +4178,13 @@
 	}
 
 	function speechMeta(data, allow=false){
+	
+		if (skipTTLMessages && !data.hasDonation){
+			if (parseInt(data.id) % skipTTLMessages !== 0){
+				return;
+			}
+		}
+	
 		var msgPlain = document.getElementById('content_'+data.id); // text only
 		if (msgPlain){
 			msgPlain = msgPlain.textContent || msgPlain.innerText || "";
