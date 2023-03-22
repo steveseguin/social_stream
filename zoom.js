@@ -27,11 +27,11 @@
 		  ele.marked = true;
 		}
 		if (!id){
-			id = ele.querySelector("div[id][class*='chat']");
-			if (!id.id){
+			var mid = ele.querySelector("div[id][class*='chat']");
+			if (!mid || !("id" in mid)){
 				return;
 			}
-			id = id.id;
+			id = mid.id;
 		}
 		
 		if (id){
@@ -283,11 +283,15 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						if (mutation.addedNodes[i].hasAttribute("role")){
-							processMessage(mutation.addedNodes[i]);
-						} else if (mutation.addedNodes[i].hasAttribute("id")){
-							processMessage(mutation.addedNodes[i]);
-						} 
+						try {
+							if (mutation.addedNodes[i].hasAttribute("role")){
+								processMessage(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].hasAttribute("id")){
+								processMessage(mutation.addedNodes[i]);
+							} 
+						} catch(e){
+							
+						}
 					}
 				}
 			});
