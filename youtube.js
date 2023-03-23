@@ -37,7 +37,6 @@
 		  if (ele.querySelector("[in-banner]")){
 			  return;
 		  }
-		  console.log(ele);
 		//if (channelName && settings.customyoutubestate){
 			//if (settings.customyoutubeaccount && settings.customyoutubeaccount.textsetting && (settings.customyoutubeaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
 			//	return;
