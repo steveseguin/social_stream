@@ -28,7 +28,7 @@
 		  }
 		  
 		  
-		  if (ele.id && (ele.id in messageHistory)){
+		  if (ele.id && messageHistory.includes(ele.id)){
 			  return;
 		  } else if (ele.id){
 			  messageHistory.push(ele.id);
