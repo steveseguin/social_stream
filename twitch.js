@@ -98,7 +98,7 @@
 		var nameEle = ele.querySelector(".chat-author__display-name") || ele.querySelector(".seventv-chat-user-username");
 		var chatname = nameEle.innerText;
 		try {
-			nameColor = nameEle.style.color;
+			nameColor = nameEle.style.color || ele.querySelector(".seventv-chat-user").style.color;
 		} catch(e){}
 	  } catch(e){
 	  }

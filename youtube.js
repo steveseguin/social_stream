@@ -16,6 +16,8 @@
 	
 	//var channelName = "";
 	
+	var messageHistory = [];
+	
 	function processMessage(ele, wss=true){
 		  if(ele.hasAttribute("is-deleted")) {
 			return;
@@ -24,6 +26,18 @@
 		  if (settings.customyoutubestate){
 			  return;
 		  }
+		  
+		  
+		  if (ele.id && (ele.id in messageHistory)){
+			  return;
+		  } else if (ele.id){
+			  messageHistory.push(ele.id);
+			  messageHistory = messageHistory.slice(-200);
+		  }
+		  if (ele.querySelector("[in-banner]")){
+			  return;
+		  }
+		  console.log(ele);
 		//if (channelName && settings.customyoutubestate){
 			//if (settings.customyoutubeaccount && settings.customyoutubeaccount.textsetting && (settings.customyoutubeaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
 			//	return;
@@ -239,7 +253,9 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						if (mutation.addedNodes[i].tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
+						if (mutation.addedNodes[i].classList.contains("yt-live-chat-banner-renderer")) {
+							continue;
+						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
 							callback(mutation.addedNodes[i]);
 						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-message-renderer".toUpperCase()) {
 							callback(mutation.addedNodes[i]);
@@ -266,7 +282,7 @@
     var ele = document.querySelector("yt-live-chat-app");
 	if (ele){
 		onElementInserted(ele, function(element){
-		      setTimeout(function(element){processMessage(element, false);},1000,element);
+		      processMessage(element, false);
 		});
 	}
 	
@@ -275,7 +291,7 @@
 			var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages");
 			if (ele){
 				onElementInserted(ele, function(element){
-				     setTimeout(function(element){processMessage(element, false);},1000,element);
+				     processMessage(element, false);
 				});
 			}
 		},3000);
