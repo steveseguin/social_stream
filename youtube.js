@@ -253,19 +253,21 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						if (mutation.addedNodes[i].classList.contains("yt-live-chat-banner-renderer")) {
-							continue;
-						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
-							callback(mutation.addedNodes[i]);
-						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-message-renderer".toUpperCase()) {
-							callback(mutation.addedNodes[i]);
-						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-membership-item-renderer".toUpperCase()) {
-							callback(mutation.addedNodes[i]);
-						} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-sticker-renderer".toUpperCase()) {
-							callback(mutation.addedNodes[i]);
-						} else if (mutation.addedNodes[i].tagName == "ytd-sponsorships-live-chat-gift-purchase-announcement-renderer".toUpperCase()) {
-							callback(mutation.addedNodes[i]);
-						}
+						try{
+							if (mutation.addedNodes[i] && mutation.addedNodes[i].classList && mutation.addedNodes[i].classList.contains("yt-live-chat-banner-renderer")) {
+								continue;
+							} else if (mutation.addedNodes[i].tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
+								callback(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-message-renderer".toUpperCase()) {
+								callback(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].tagName == "yt-live-chat-membership-item-renderer".toUpperCase()) {
+								callback(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-sticker-renderer".toUpperCase()) {
+								callback(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].tagName == "ytd-sponsorships-live-chat-gift-purchase-announcement-renderer".toUpperCase()) {
+								callback(mutation.addedNodes[i]);
+							}
+						} catch(e){console.error(e);}
 					}
 				}
 			});
