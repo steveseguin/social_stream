@@ -19,6 +19,7 @@
 			--font-color-name: #DDD;
 			--background-color: #36393F;
 			--menu-background-color: #2F3136;
+			--menu-border-color: 0 0 5px #000;
 			--link-color: #5AF;
 			--highlight-base: #FFF2;
 			--highlight-base2: #4444;
@@ -753,7 +754,7 @@
 			display: flex;
 			justify-content: center;
 			background-color: var(--menu-background-color);
-			box-shadow: 0 0 5px #000;
+			box-shadow: var(--menu-border-color);
 			z-index: 2;
 		}
 		body.lightmode #menu{
@@ -1589,6 +1590,8 @@
 		}
 		return item.value;
 	}
+
+	document.addEventListener("click", e => alert("Capturing: ${elem.tagName}"), {capture: true})
 
 
 	var urlParams = new URLSearchParams(window.location.search);
@@ -2525,8 +2528,10 @@
 		document.body.style.textShadow = "0 0 black";
 	}
 
-	if (urlParams.has("transparent")){
+	if (urlParams.has("transparent") || urlParams.has("transparency")){
 		document.documentElement.style.setProperty("--background-color", "#0000", "important");
+		document.documentElement.style.setProperty("--menu-background-color", "#0000", "important");
+		document.documentElement.style.setProperty("--menu-border-color", "0 0 0 #0000", "important");
 	}
 
 
