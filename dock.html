@@ -1591,9 +1591,6 @@
 		return item.value;
 	}
 
-	document.addEventListener("click", e => alert("Capturing: ${elem.tagName}"), {capture: true})
-
-
 	var urlParams = new URLSearchParams(window.location.search);
 	var channel = null;
 	var iframe = null;
@@ -2532,6 +2529,7 @@
 		document.documentElement.style.setProperty("--background-color", "#0000", "important");
 		document.documentElement.style.setProperty("--menu-background-color", "#0000", "important");
 		document.documentElement.style.setProperty("--menu-border-color", "0 0 0 #0000", "important");
+		document.getElementById("main").style.overflow = "hidden";
 	}
 
 
