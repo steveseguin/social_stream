@@ -4187,13 +4187,18 @@
 				return;
 			}
 		}
-	
+		var isCommand = false;
 		var msgPlain = document.getElementById('content_'+data.id); // text only
 		if (msgPlain){
 			msgPlain = msgPlain.textContent || msgPlain.innerText || "";
 			msgPlain = msgPlain.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
 			msgPlain = msgPlain.replaceAll('_', ' ');
 			msgPlain = msgPlain.replaceAll('@', ' ');
+			
+			if (msgPlain.startsWith("!")){
+				return; // do not say anything if a command
+			}
+			
 			msgPlain = msgPlain.replaceAll('!', ' ');
 			msgPlain = msgPlain.replace(/catJAM/ig,"");
 		}
