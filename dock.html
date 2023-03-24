@@ -1676,6 +1676,10 @@
 		blockMessageSelecting3 = true;
 	}
 	
+	if (urlParams.has("opacity")) {
+		getById("main").style.opacity = urlParams.get("opacity") || 0.3;
+	}
+	
 	var onlyquestions = false;
 	if (urlParams.has("onlyquestions")) {
 		onlyquestions = true
