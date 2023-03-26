@@ -1677,7 +1677,7 @@
 	}
 	
 	if (urlParams.has("opacity")) {
-		getById("main").style.opacity = urlParams.get("opacity") || 0.3;
+		getById("main").style.opacity = urlParams.get("opacity") || 0.3
 	}
 	
 	var onlyquestions = false;
@@ -2457,6 +2457,61 @@
 	} else {
 		try {
 			if (window.obsstudio){
+				if (!reversed){
+				
+					setInterval(function(){
+						if (forceAutoscroll && !isOBSBrowserSource){
+							if (alignbottom){
+								if (scrolltype=="instant"){
+									getById("output").scrollTop = getById("output").scrollHeight;
+								} else {
+									getById("output").scrollTo({
+										top: getById("output").scrollHeight,
+										left: 0,
+										behavior:scrolltype
+									});
+								}
+							} else {
+								if (scrolltype=="instant"){
+									document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
+								} else {
+									document.scrollingElement.scrollTo({
+										top: document.scrollingElement.scrollHeight,
+										left: 0,
+										behavior:scrolltype
+									});
+								}
+							}
+						}
+					},2000);
+				
+				
+					window.addEventListener("resize",function(event){
+						if (alignbottom){
+							if (scrolltype=="instant"){
+								getById("output").scrollTop = getById("output").scrollHeight;
+							} else {
+								getById("output").scrollTo({
+									top: getById("output").scrollHeight,
+									left: 0,
+									behavior:scrolltype
+								});
+							}
+						} else {
+							if (scrolltype=="instant"){
+								document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
+							} else {
+								document.scrollingElement.scrollTo({
+									top: document.scrollingElement.scrollHeight,
+									left: 0,
+									behavior:scrolltype
+								});
+							}
+						}
+					});
+				}
+				
+				
 				window.obsstudio.getStatus(function(obsStatus){
 					document.getElementById("menu").style.display = "none";
 					document.getElementById("output").style.marginBottom = "0";
@@ -3109,6 +3164,7 @@
 	if (forceAutoscroll){
 		document.getElementById("jumpto").classList.add("pressed");
 	}
+	
 
 	function jumptoBottom(){
 		var ele = document.getElementById("jumpto");
