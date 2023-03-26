@@ -112,12 +112,21 @@
 				} catch(e){}
 			}
 		} catch(e){ }
-		
-		onElementInserted("#chat-body", function(element){
-		  processMessage(element, false);
-		});
-		
-	},1500);
+	},1900);
+	
+	
+	setInterval(function(){ // lets just see if the chat has been updated or something
+	
+		if (document.getElementById("chat-body")){
+			if (!document.getElementById("chat-body").dataset.set123){
+				console.log("SocialStream Active");
+				document.getElementById("chat-body").dataset.set123 = "true";
+				onElementInserted("#chat-body", function(element){
+				  processMessage(element, false);
+				});
+			}
+		}
+	}, 2000);
 
 	var settings = {};
 	// settings.textonlymode
@@ -154,6 +163,43 @@
 			sendResponse(false);
 		}
 	);
+	
+	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
+	try {
+		var receiveChannelCallback = function(e){
+			remoteConnection.datachannel = event.channel;
+			remoteConnection.datachannel.onmessage = function(e){};;
+			remoteConnection.datachannel.onopen = function(e){};;
+			remoteConnection.datachannel.onclose = function(e){};;
+			setInterval(function(){
+				if (document.hidden){ // only poke ourselves if tab is hidden, to reduce cpu a tiny bit.
+					remoteConnection.datachannel.send("KEEPALIVE")
+				}
+			}, 800);
+		}
+		var errorHandle = function(e){}
+		var localConnection = new RTCPeerConnection();
+		var remoteConnection = new RTCPeerConnection();
+		localConnection.onicecandidate = (e) => !e.candidate ||	remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.onicecandidate = (e) => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.ondatachannel = receiveChannelCallback;
+		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
+		localConnection.sendChannel.onopen = function(e){localConnection.sendChannel.send("CONNECTED");};
+		localConnection.sendChannel.onclose =  function(e){};
+		localConnection.sendChannel.onmessage = function(e){};
+		localConnection.createOffer()
+			.then((offer) => localConnection.setLocalDescription(offer))
+			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
+			.then(() => remoteConnection.createAnswer())
+			.then((answer) => remoteConnection.setLocalDescription(answer))
+			.then(() =>	{
+				localConnection.setRemoteDescription(remoteConnection.localDescription);
+				console.log("KEEP ALIVE TRICk ENABLED");
+			})
+			.catch(errorHandle);
+	} catch(e){
+		console.log(e);
+	}
 
 	
 })();
