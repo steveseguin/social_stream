@@ -1177,7 +1177,12 @@ async function openchat(target=null){
 		let url = "https://picarto.tv/chatpopout/"+settings.picarto_username.textsetting+"/public";
 		openURL(url, true);
 	}
-
+	
+	if ((target=="dlive" || !target) && settings.dlive_username){
+		let url = "https://dlive.tv/c/"+settings.dlive_username.textsetting+"/"+settings.dlive_username.textsetting;
+		openURL(url, true);
+	}
+	
 	// Custom
 
 	if ((target=="custom1" || !target) && settings.custom1_url){
