@@ -87,8 +87,6 @@
 	
 	function processMessage(ele){	// twitch
 	
-	  
-	
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
@@ -161,6 +159,10 @@
 	  } else {
 		lastMessage = chatmessage;
 		lastUser = chatname;
+	  }
+	  
+	  if (chatmessage && chatmessage.includes(" (Deleted by ")){
+		  return; // I'm assuming this is a deleted message
 	  }
 	  
 	  if (channelName && settings.customtwitchstate){
