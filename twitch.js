@@ -170,7 +170,7 @@
 	  }
 	  
 	   if (chatmessage && chatmessage.includes(" (Banned by ")){
-		  return; // I'm assuming this is a timed out message
+		  return; // I'm assuming this is a banning message
 	  }
 	  
 	  if (channelName && settings.customtwitchstate){
@@ -277,6 +277,14 @@
 							if (mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message"))) {
 								mutation.addedNodes[i].ignore=true;
 								callback(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].querySelector(".chat-line__message")){
+								var ele = mutation.addedNodes[i].querySelector(".chat-line__message");
+								if (ele.ignore){
+									continue;
+								} else {
+									ele.ignore = true;
+									callback(ele);
+								}
 							}
 						} catch(e){}
 					}
