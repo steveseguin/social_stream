@@ -165,7 +165,11 @@
 		  return; // I'm assuming this is a deleted message
 	  }
 	  
-	  if (chatmessage && chatmessage.includes(" Timedout by ")){
+	  if (chatmessage && chatmessage.includes(" Timeout by ")){
+		  return; // I'm assuming this is a timed out message
+	  }
+	  
+	   if (chatmessage && chatmessage.includes(" (Banned by ")){
 		  return; // I'm assuming this is a timed out message
 	  }
 	  
