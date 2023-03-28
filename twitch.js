@@ -165,6 +165,10 @@
 		  return; // I'm assuming this is a deleted message
 	  }
 	  
+	  if (chatmessage && chatmessage.includes(" Timedout by ")){
+		  return; // I'm assuming this is a timed out message
+	  }
+	  
 	  if (channelName && settings.customtwitchstate){
 		if (settings.customtwitchaccount && settings.customtwitchaccount.textsetting && (settings.customtwitchaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
 			return;
