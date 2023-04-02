@@ -71,6 +71,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - castr.io (https://chat.castr.io/room/XXXXXXXX)
 - tellonym.me
 - IRC (via https://webchat.quakenet.org/)
+- Tradingview.com (just the normal viewer page; no pop out)
 
 
 More on request
