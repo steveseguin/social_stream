@@ -476,8 +476,14 @@
 		text = text.replace("’","");
 		text = text.replace('"',"");
 		text = text.replace("'","");
+		
+		emojis = text.replace(/([\u0145-\u0148]|[\u1F1E1-\u1F1FF]|\u2026)/ig, "");
+		
+		emojis = emojis.replace(/[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDE8-\uDDFF][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDEA-\uDDF8][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDEC-\uDDF9][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDEE-\uDDF9][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDF0-\uDDF7][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDF8-\uDDFF][\uD83C][\uDDE6-\uDDFF]/g, ""); // country codes
 							
-		emojis = text.match(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig);
+		emojis = emojis.replace(/[^\p{Emoji}\s]/ug, ''); // filters out puncuation and text characters
+							
+		emojis = emojis.match(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig);
 		
 		if (!showdupes){
 			try {
