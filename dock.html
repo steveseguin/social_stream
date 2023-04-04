@@ -2906,18 +2906,24 @@
 			return;
 		} else if ("pin" in data){
 			if (data.pin && syncDocks){
+				console.log(data);
 				if (typeof data.pin == "object"){
-					data.pin.forEach(mid=>{
-						if (typeof mid === "object"){
+					data.pin.forEach(dddd=>{
+						if (typeof dddd === "object"){
 							try{
-								let ele = processInput(mid);
-								pinIt(ele);
-								applyHiddenState(ele);
+								if (dddd.id && document.querySelector("[data-mid='"+dddd.id+"']")){
+									pinIt(document.querySelector("[data-mid='"+dddd.id+"']"));
+									applyHiddenState(document.querySelector("[data-mid='"+dddd.id+"']"));
+								} else {
+									let ele = processInput(dddd);
+									pinIt(ele);
+									applyHiddenState(ele);
+								}
 							} catch(e){}
 						} else {
 							try {
-								pinIt(document.querySelector("[data-mid='"+mid+"']"));
-								applyHiddenState(document.querySelector("[data-mid='"+mid+"']"));
+								pinIt(document.querySelector("[data-mid='"+dddd+"']"));
+								applyHiddenState(document.querySelector("[data-mid='"+dddd+"']"));
 							} catch(e){
 
 							}
@@ -2935,7 +2941,7 @@
 							unpinIt(document.querySelector("[data-mid='"+mid+"']"));
 							applyHiddenState(document.querySelector("[data-mid='"+mid+"']"));
 						} catch(e){
-
+							// doesn't exist or whatever.
 						}
 					});
 					return true
@@ -2953,12 +2959,14 @@
 								if (!ele){
 									ele = processInput(dd);
 								}
-								if (ele){
-									sq.push(ele);
-									ele.children[0].dataset.qid = sq.length;
-									ele.classList.add("queued");
-									applyHiddenState(ele);
-								}
+							} else {
+								var ele = processInput(dd);
+							}				
+							if (ele){
+								sq.push(ele);
+								ele.children[0].dataset.qid = sq.length;
+								ele.classList.add("queued");
+								applyHiddenState(ele);
 							}
 						}catch(e){}
 					});
