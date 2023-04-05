@@ -103,8 +103,13 @@
 	  
 	  var chatbadges = [];
 	  try {
-		  ele.querySelectorAll("img.chat-badge[src], .seventv-chat-badge>img[src]").forEach(badge=>{
-			 if (!chatbadges.includes(badge.src)){
+		  ele.querySelectorAll("img.chat-badge[src], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset]").forEach(badge=>{
+			  if (badge.srcset){
+				 let bb = badge.srcset.split(" ")[0];
+				 if (!chatbadges.includes(bb)){
+					chatbadges.push(bb);
+				 }
+			 } else if (!chatbadges.includes(badge.src)){
 				chatbadges.push(badge.src);
 			 }
 		  });
