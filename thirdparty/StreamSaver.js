@@ -29,8 +29,8 @@
     createWriteStream,
     WritableStream: global.WritableStream || ponyfill.WritableStream,
     supported: true,
-    version: { full: '2.0.5', major: 2, minor: 0, dot: 5 },
-    mitm: 'https://jimmywarting.github.io/StreamSaver.js/mitm.html?version=2.0.0'
+    version: { full: '2.0.7', major: 2, minor: 0, dot: 7 },
+    mitm: 'https://vdo.socialstream.ninja/thirdparty/mitm.html?version=2.0.0'
   }
 
   /**
