@@ -95,8 +95,12 @@
 	  try {
 		var nameEle = ele.querySelector(".chat-author__display-name") || ele.querySelector(".seventv-chat-user-username");
 		var chatname = nameEle.innerText;
+		var displayName = chatname;
 		var displayNameEle = ele.querySelector(".chat-author__intl-login");
-		var displayName = displayNameEle.innerText.slice(2, -1);
+		if ( displayNameEle ) {
+			var displayName = displayNameEle.innerText.slice(2, -1);
+		}
+		
 		try {
 			nameColor = nameEle.style.color || ele.querySelector(".seventv-chat-user").style.color;
 		} catch(e){}
@@ -226,7 +230,7 @@
 	  data.type = "twitch";
 	  data.displayName = displayName;
 	  
-	 // console.log(data);
+	//  console.log(data);
 	  
 	  if (brandedImageURL){
 		data.sourceImg = brandedImageURL;
