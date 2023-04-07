@@ -18,6 +18,30 @@
 	
 	var messageHistory = [];
 	
+	function getAllContentNodes(element) {
+		var resp = "";
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
+				if (settings.textonlymode){
+					resp += node.textContent.trim()+" ";
+				} else {
+					resp += node.textContent.trim()+" ";
+				}
+			} else if (node.nodeType === 1){
+				if (settings.textonlymode){
+				//	if ("alt" in node){
+				//		resp += node.alt.trim()+" ";
+					//}
+				} else {
+					resp += node.outerHTML;
+				}
+			} 
+		});
+		return resp;
+	}
+	
 	function processMessage(ele, wss=true){
 		  if(ele.hasAttribute("is-deleted")) {
 			return;
@@ -79,7 +103,7 @@
 	  
 		  if (!settings.textonlymode){
 			  try{
-				chatmessage = ele.querySelector("#message, .seventv-yt-message-content").innerHTML;
+				chatmessage = getAllContentNodes(ele.querySelector("#message, .seventv-yt-message-content"));
 			  } catch(e){}
 		  } else {
 			  try{
@@ -92,7 +116,7 @@
 				for (var i =0;i<children.length;i++){
 					children[i].outerHTML = "";
 				}
-				chatmessage = cloned.innerText;
+				chatmessage = getAllContentNodes(cloned);
 			  } catch(e){}
 		  }
 		  
@@ -212,6 +236,8 @@
 		data.hasMembership = hasMembership;
 		data.type = "youtube";
 		
+		
+		console.log(data);
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 		} catch(e){}
@@ -283,7 +309,7 @@
     var ele = document.querySelector("yt-live-chat-app");
 	if (ele){
 		onElementInserted(ele, function(element){
-		      processMessage(element, false);
+		     setTimeout(function(){processMessage(element, false)},100);
 		});
 	}
 	
@@ -292,7 +318,7 @@
 			var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages");
 			if (ele){
 				onElementInserted(ele, function(element){
-				     processMessage(element, false);
+				    setTimeout(function(){processMessage(element, false)},100);
 				});
 			}
 		},3000);
