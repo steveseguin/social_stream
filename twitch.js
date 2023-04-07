@@ -100,7 +100,7 @@
 		if ( displayNameEle ) {
 			var displayName = displayNameEle.innerText.slice(2, -1);
 		}
-		
+
 		try {
 			nameColor = nameEle.style.color || ele.querySelector(".seventv-chat-user").style.color;
 		} catch(e){}
