@@ -51,7 +51,6 @@
 			  return;
 		  }
 		  
-		  
 		  if (ele.id && messageHistory.includes(ele.id)){
 			  return;
 		  } else if (ele.id){
@@ -308,8 +307,8 @@
 	
     var ele = document.querySelector("yt-live-chat-app");
 	if (ele){
-		onElementInserted(ele, function(element){
-		     setTimeout(function(){processMessage(element, false)},100);
+		onElementInserted(ele, function(ele2){
+		     setTimeout(function(ele2){processMessage(ele2, false)}, 100, ele2);
 		});
 	}
 	
@@ -317,8 +316,8 @@
 		setTimeout(function(){
 			var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages");
 			if (ele){
-				onElementInserted(ele, function(element){
-				    setTimeout(function(){processMessage(element, false)},100);
+				onElementInserted(ele, function(ele2){
+				    setTimeout(function(ele2){processMessage(ele2, false)}, 100, ele2);
 				});
 			}
 		},3000);
