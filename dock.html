@@ -2876,7 +2876,7 @@
 	}
 
 	try {
-		if (window.location.host === "socialstream.ninja"){ // don't check if not private hosted, since it won't exist
+		if (window.location.host !== "socialstream.ninja"){ // don't check if not private hosted, since it won't exist
 			var script = document.createElement('script');
 			script.onload = function() {
 				console.log("Loaded personal actions");
