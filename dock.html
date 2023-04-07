@@ -2876,15 +2876,17 @@
 	}
 
 	try {
-		var script = document.createElement('script');
-		script.onload = function() {
-			console.log("Loaded personal actions");
+		if (window.location.host === "socialstream.ninja"){ // don't check if not private hosted, since it won't exist
+			var script = document.createElement('script');
+			script.onload = function() {
+				console.log("Loaded personal actions");
+			}
+			script.onerror = function(){
+				console.log("no personal actions file found. skipping.");
+			}
+			script.src = "custom.js";
+			document.head.appendChild(script);
 		}
-		script.onerror = function(){
-			console.log("no personal actions file found. skipping.");
-		}
-		script.src = "custom.js";
-		document.head.appendChild(script);
 	} catch(e){}
 
 	function processInput(data){
