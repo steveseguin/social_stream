@@ -98,7 +98,7 @@
 		var displayName = chatname;
 		var displayNameEle = ele.querySelector(".chat-author__intl-login");
 		if ( displayNameEle ) {
-			var displayName = displayNameEle.innerText.slice(2, -1);
+			displayName = displayNameEle.innerText.slice(2, -1);
 		}
 
 		try {
