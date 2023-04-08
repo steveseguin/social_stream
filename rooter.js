@@ -31,6 +31,8 @@
 				//	if ("alt" in node){
 				//		resp += node.alt.trim()+" ";
 					//}
+				} else if (node && node.src && node.src.startsWith("data:")){
+					return; // I'm not going to wait
 				} else {
 					resp += node.outerHTML;
 				}
@@ -42,15 +44,42 @@
 	var lastMessage = "";
 	var lastUser  = "";
 	
-	function processMessage(ele){	// twitch
+	async function processMessage(ele){	// twitch
 	
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
 	  
+	  
+	  var chatimg = "";
+	  try {
+			chatimg =  ele.querySelector("img[class^='avatarImage'][src]").src;
+	  } catch(e){}
+	  
+	  if (chatimg.startsWith("data:")){
+		  try {
+			  await new Promise(r => setTimeout(r, 50));
+			  chatimg =  ele.querySelector("img[class^='avatarImage'][src]").src;
+			  if (chatimg.startsWith("data:")){
+				  await new Promise(r => setTimeout(r, 100));
+				  chatimg =  ele.querySelector("img[class^='avatarImage'][src]").src;
+				  if (chatimg.startsWith("data:")){
+						await new Promise(r => setTimeout(r, 200));
+						chatimg =  ele.querySelector("img[class^='avatarImage'][src]").src;
+						if (chatimg.startsWith("data:")){
+							chatimg = ""; // and I give up if it still isn't loaded.
+						}
+				  }
+			  }
+		  } catch(e){
+			  console.log(e);
+			  chatimg = "";
+		  }
+	  }
+	  
 	  try {
 		  try {
-			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1)");
+			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(1)");
 			var chatname = nameEle.innerText;
 		  } catch(e){
 			  console.log(ele);
@@ -58,14 +87,7 @@
 			 return;
 		  }
 	 } catch(e){
-		try {
-			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)");
-			var chatname = nameEle.innerText;
-		  } catch(e){
-			console.log(ele);
-			console.log(e);
-			return;
-		  }
+		return;
 	  }
 	  
 	  chatname = chatname.trim();
@@ -75,16 +97,12 @@
 	  var hasDonation = '';
 	  
 	  try {
-		var eleContent = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(2)");
-		chatmessage = getAllContentNodes(eleContent);
+		  var eleContent = ele.querySelector("[class^='commentText']");
+		  chatmessage = getAllContentNodes(eleContent);
 	  } catch(e){ // donation?
 		  try {
-			var eleContent = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2)");
+			var eleContent = ele.querySelector("div:nth-of-type(2) > span:nth-of-type(2)");
 			chatmessage = getAllContentNodes(eleContent);
-			if (chatmessage && (chatmessage == parseInt(chatmessage))){
-				// hasDonation = parseInt(chatmessage) + " gold"; // this is way too annoying to show..
-				chatmessage = "";
-			}
 		  } catch(e){
 			  return;
 		  }
@@ -108,16 +126,8 @@
 	  }
 	  
 	  
-	  var chatimg = "";
-	  try {
-			chatimg =  ele.querySelector("div:nth-of-type(1) > span>img[src]").src;
-			if (chatimg && !chatimg.startsWith("https://loco.gg/")){
-				chatimg = "https://loco.gg" + chatimg;
-			}
-			chatimg = chatimg.replace(".jpg&w=48&q=25", ".jpg&w=128&q=80");
-	  } catch(e){}
-
 	  
+
 	 
 	  if (!chatmessage && !hasDonation){
 		return;
@@ -131,7 +141,7 @@
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = "";
-	  data.type = "loco";
+	  data.type = "rooter";
 	  
 	//  console.log(data);
 	  
@@ -186,7 +196,9 @@
 							if (mutation.addedNodes[i].role){continue;}
 							if (mutation.addedNodes[i].ignore){continue;}
 							mutation.addedNodes[i].ignore=true;
-							processMessage(mutation.addedNodes[i]);
+							if (mutation.addedNodes[i].className && mutation.addedNodes[i].className.startsWith("nameAndCommentContainerInNormalChat")){
+								processMessage(mutation.addedNodes[i]);
+							}
 								
 						} catch(e){console.log(e);}
 					}
@@ -203,13 +215,13 @@
 	console.log("Social Stream injected");
 	
 	var checkReady = setInterval(function(){
-		var mainChat = document.querySelector("body> div > div > div > div > div > div > div > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > div > div");
+		var mainChat = document.querySelector("[class*='rightSideBarContainerLive']");
 		if (mainChat){ // just in case 
 			console.log("Social Stream Start");
 			clearInterval(checkReady);
 			
 			setTimeout(function(){
-				var clear = mainChat.querySelectorAll("div");
+				var clear = mainChat.querySelectorAll("[class^='nameAndCommentContainerInNormalChat']");
 				for (var i = 0;i<clear.length;i++){
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
 				}
