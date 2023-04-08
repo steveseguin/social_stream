@@ -94,7 +94,7 @@
 		 chatmessage = chatmessage.trim();
 	 }
 	 
-	  if (chatmessage && chatmessage.includes("[Message ");
+	  if (chatmessage && chatmessage.includes("[Message "));
 		  return; // I'm assuming this is a deleted message
 	  }
 	 
@@ -147,7 +147,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector('div>div>input[placeholder][type="text"]').focus();
+					document.querySelector('#commentInput').focus();
 					sendResponse(true);
 					return;
 				}
