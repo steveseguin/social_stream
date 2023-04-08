@@ -1283,9 +1283,10 @@ yt-live-chat-membership-item-renderer[is-deleted] {
 					document.getElementById("message").style = data.backgroundColor +' '+ data.textColor+'; font-size: '+fontsize+'%;';
 				}
 				
-				if ((data.type == "twitch") && avatar && data.username){
+				var username = data.username || data.chatname;
+				if ((data.type == "twitch") && avatar && username){
 					var twitchImage = new Image();
-					data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.username);
+					data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(username);
 					twitchImage.onload = function (){
 						try {
 							document.getElementById('img_'+data.id).src = data.chatimg;
