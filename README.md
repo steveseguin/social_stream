@@ -350,16 +350,26 @@ You can send messages to Social Stream via the hosted server ingest API, and you
 
 So if you can a donation webhook, you can push those notifications to Social Stream. You can also use a third-party service to overlay messages captured by Social Stream. More below.
 
-#### Social Streams server API (ingest and clear messages via remote request)
+#### Social Stream's server API (ingest and clear messages via remote request)
 
 If using the MIDI API isn't something you can use, you can also check out the hosted API service to send messages to SocialStream, which will be redirected to your social live chat sites.  This API works with a Stream Deck or custom applications.
 
 This API end point supports WSS, HTTPS GET, and HTTP POST (JSON).  Support for this API must be toggled on in the menu settings (or by adding `&server` to the dock.html page).
 
+##### A couple common examples
+ 
 An overly simple example of how to use the GET API would be: https://api.vdo.ninja/XXXXXXXXXX/sendChat/null/Hello, which sends HELLO.  Replace XXXXX with your Social Stream session ID.  Other options, like `https://api.vdo.ninja/XXXXXXXXXX/clearOverlay` should work, too.
 
 You can use this API to clear the featured-chat, poke the next-in-queue item, and more. It works with WSS or HTTP requests.
 
+##### Target specific docks
+
+You can also target specific docks with your API requests by assigning a target name to each dock.html page using `&label`.
+
+For example, to set a dock with the target name of "NAMEHERE", we'd do: `https://socialstream.ninja/dock.html?session=XXXXXXXXXXXXX&server&sync&label=NAMEHERE`.  From there, we can target it with the API format like this: `https://api.vdo.ninja/XXXXXXXXXXXXX/nextInQueue/NAMEHERE/null`.  This all may be needed because if you have multiple docks connected to the API interface, you may not want to trigger the same command multiple times in all cases.
+
+##### More details
+ 
 For details of the commands, see the following link for sample functionality and refer to its source code for examples.
 
 https://socialstream.ninja/sampleapi.html?session=xxxxxxxxxx (replacing xxxxxxxx with your Social Stream session ID to have it work)
