@@ -86,26 +86,24 @@
 	var lastUser  = "";
 	
 	function processMessage(ele){	// twitch
-	
+
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
-	  
-	  
+
 	  try {
-		var nameEle = ele.querySelector(".chat-author__display-name") || ele.querySelector(".seventv-chat-user-username");
-		var chatname = nameEle.innerText;
-		var displayName = chatname;
-		var displayNameEle = ele.querySelector(".chat-author__intl-login");
-		if ( displayNameEle ) {
-			displayName = displayNameEle.innerText.slice(2, -1);
+		var displayNameEle = ele.querySelector(".chat-author__display-name") || ele.querySelector(".seventv-chat-user-username");
+		var displayName = displayNameEle.innerText;
+		var username = displayName;
+		var usernameEle = ele.querySelector(".chat-author__intl-login");
+		if (usernameEle) {
+			username = usernameEle.innerText.slice(2, -1);
 		}
 
 		try {
 			nameColor = nameEle.style.color || ele.querySelector(".seventv-chat-user").style.color;
 		} catch(e){}
-	  } catch(e){
-	  }
+	  } catch(e){}
 	  
 	  var chatbadges = [];
 	  try {
@@ -163,13 +161,13 @@
 		 chatmessage = chatmessage.trim();
 	 }
 	 
-	 if ((lastMessage === chatmessage) && (lastUser === chatname)){
+	 if ((lastMessage === chatmessage) && (lastUser === username)){
 		  lastMessage = "";
-		  chatname = "";
+		  username = "";
 		  return;
 	  } else {
 		lastMessage = chatmessage;
-		lastUser = chatname;
+		lastUser = username;
 	  }
 	  
 	  if (chatmessage && chatmessage.includes(" (Deleted by ")){
@@ -211,24 +209,24 @@
 		hasDonation = donations;
 	  }
 	  
-	  if (!chatmessage && !hasDonation && !chatname){
+	  if (!chatmessage && !hasDonation && !username){
 		return;
 	  }
 
 	  var data = {};
-	  data.chatname = chatname;
+	  data.chatname = displayName;
+	  data.username = username;
 	  data.chatbadges = chatbadges;
 	  data.nameColor = nameColor;
 	  data.chatmessage = chatmessage;
 	  try {
-		data.chatimg = "https://api.socialstream.ninja/twitch/?username="+encodeURIComponent(displayName); // this is CORS restricted to socialstream, but this is to ensure reliability for all
+		data.chatimg = "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(username); // this is CORS restricted to socialstream, but this is to ensure reliability for all
 	  } catch(e){
-		  data.chatimg = "";
+		data.chatimg = "";
 	  }
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = "";
 	  data.type = "twitch";
-	  data.displayName = displayName;
 	  
 	//  console.log(data);
 	  
