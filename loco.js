@@ -94,7 +94,7 @@
 		 chatmessage = chatmessage.trim();
 	 }
 	 
-	  if (chatmessage && chatmessage.includes("[Message ");
+	  if (chatmessage && chatmessage.startsWith("[Message ")){
 		  return; // I'm assuming this is a deleted message
 	  }
 	 
