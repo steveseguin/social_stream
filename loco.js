@@ -53,8 +53,6 @@
 			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1)");
 			var chatname = nameEle.innerText;
 		  } catch(e){
-			  console.log(ele);
-			  console.log(e);
 			 return;
 		  }
 	 } catch(e){
@@ -62,8 +60,6 @@
 			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)");
 			var chatname = nameEle.innerText;
 		  } catch(e){
-			console.log(ele);
-			console.log(e);
 			return;
 		  }
 	  }
@@ -188,7 +184,7 @@
 							mutation.addedNodes[i].ignore=true;
 							processMessage(mutation.addedNodes[i]);
 								
-						} catch(e){console.log(e);}
+						} catch(e){}
 					}
 				}
 			});

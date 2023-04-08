@@ -72,7 +72,6 @@
 				  }
 			  }
 		  } catch(e){
-			  console.log(e);
 			  chatimg = "";
 		  }
 	  }
@@ -82,8 +81,6 @@
 			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(1)");
 			var chatname = nameEle.innerText;
 		  } catch(e){
-			  console.log(ele);
-			  console.log(e);
 			 return;
 		  }
 	 } catch(e){
@@ -125,10 +122,6 @@
 		lastUser = chatname;
 	  }
 	  
-	  
-	  
-
-	 
 	  if (!chatmessage && !hasDonation){
 		return;
 	  }
@@ -200,7 +193,7 @@
 								processMessage(mutation.addedNodes[i]);
 							}
 								
-						} catch(e){console.log(e);}
+						} catch(e){}
 					}
 				}
 			});
