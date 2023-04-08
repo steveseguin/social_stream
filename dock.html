@@ -1661,6 +1661,12 @@
 		autoTimeoutEnabled = false;
 	}
 	
+	
+	var thisLabel = false;
+	if (urlParams.has("label")) {
+		thisLabel = urlParams.get("label") || false;
+	}
+	
 	var blockMessageSelecting = false;
 	if (urlParams.has("viewonly")) {
 		blockMessageSelecting = true;
@@ -3043,6 +3049,13 @@
 		}
 
 		if (data.action){
+		
+			if ("target" in  data){
+				if (data.target && (data.target !== thisLabel)){
+					return; // does not match, so we assume this isn't for us.
+				}
+			}
+		
 			if (data.action == "nextInQueue"){
 				nextInQueue();
 				return true
