@@ -208,6 +208,9 @@
 	console.log("Social Stream injected");
 	
 	var checkReady = setInterval(function(){
+		
+		if (!window.location.pathname.startsWith("/stream/")){return;}
+		
 		var mainChat = document.querySelector("[class*='rightSideBarContainerLive']");
 		if (mainChat){ // just in case 
 			console.log("Social Stream Start");
@@ -220,7 +223,7 @@
 				}
 				console.log("Social Stream ready to go");
 				onElementInserted(mainChat);
-			},1500);
+			},1000);
 		} 
 	},500);
 	
