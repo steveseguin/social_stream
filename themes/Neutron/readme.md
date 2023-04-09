@@ -9,5 +9,5 @@ Why is it called Neutron?
 > and one of its themes is called Neutron.
 
 Preview:
-> ![chatOnly.html]('./preview.png')  
-> ![stream.html]('./preview_stream.png')
+> ![chatOnly.html](https://raw.githubusercontent.com/as2648as/social_stream/main/themes/Neutron/preview.png)  
+> ![stream.html](https://raw.githubusercontent.com/as2648as/social_stream/main/themes/Neutron/preview.png)
