@@ -31,8 +31,6 @@
 				//	if ("alt" in node){
 				//		resp += node.alt.trim()+" ";
 					//}
-				} else if (node && node.src && node.src.startsWith("data:")){
-					return; // I'm not going to wait
 				} else {
 					resp += node.outerHTML;
 				}
@@ -44,74 +42,50 @@
 	var lastMessage = "";
 	var lastUser  = "";
 	
-	async function processMessage(ele){	// twitch
+	function processMessage(ele, bot=false){	// twitch
 	
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
 	  
-	  
-	  var chatimg = "";
 	  try {
-			chatimg =  ele.querySelector("img[class^='avatarImage'][src]").src;
-	  } catch(e){}
-	  
-	  if (chatimg.startsWith("data:")){
-		  try {
-			  await new Promise(r => setTimeout(r, 50));
-			  chatimg =  ele.querySelector("img[class^='avatarImage'][src]").src;
-			  if (chatimg.startsWith("data:")){
-				  await new Promise(r => setTimeout(r, 100));
-				  chatimg =  ele.querySelector("img[class^='avatarImage'][src]").src;
-				  if (chatimg.startsWith("data:")){
-						await new Promise(r => setTimeout(r, 200));
-						chatimg =  ele.querySelector("img[class^='avatarImage'][src]").src;
-						if (chatimg.startsWith("data:")){
-							chatimg = ""; // and I give up if it still isn't loaded.
-						}
-				  }
-			  }
-		  } catch(e){
-			  chatimg = "";
-		  }
-	  }
-	  
-	  try {
-		  try {
-			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(1)");
-			var chatname = nameEle.innerText;
-		  } catch(e){
-			 return;
-		  }
-	 } catch(e){
-		return;
+		var chatname = ele.querySelector(".username").innerText;
+	  } catch(e){
+		 return;
 	  }
 	  
 	  chatname = chatname.trim();
 	  if (!chatname){return;}
 	  
+	  try {
+		  nameColor = ele.querySelector(".username>span").style.color;
+	  } catch(e){
+	  }
+	  
 	  var chatbadges = [];
 	  var hasDonation = '';
 	  
+	  
+	  if (ele.querySelector("[title='Streamer']")){ // host.
+		  var badge = {};
+		  badge.html = '<?xml version="1.0" encoding="utf-8"?><svg width="24px" height="24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.965 8.521C19.988 8.347 20 8.173 20 8c0-2.379-2.143-4.288-4.521-3.965C14.786 2.802 13.466 2 12 2s-2.786.802-3.479 2.035C6.138 3.712 4 5.621 4 8c0 .173.012.347.035.521C2.802 9.215 2 10.535 2 12s.802 2.785 2.035 3.479A3.976 3.976 0 0 0 4 16c0 2.379 2.138 4.283 4.521 3.965C9.214 21.198 10.534 22 12 22s2.786-.802 3.479-2.035C17.857 20.283 20 18.379 20 16c0-.173-.012-.347-.035-.521C21.198 14.785 22 13.465 22 12s-.802-2.785-2.035-3.479zm-9.01 7.895-3.667-3.714 1.424-1.404 2.257 2.286 4.327-4.294 1.408 1.42-5.749 5.706z"/></svg>';
+		  badge.type = "svg";
+		  chatbadges.push(badge);
+	  }
+	  
+	  // need to add dono support
+	  
 	  try {
-		  var eleContent = ele.querySelector("[class^='commentText']");
-		  chatmessage = getAllContentNodes(eleContent);
-	  } catch(e){ // donation?
-		  try {
-			var eleContent = ele.querySelector("div:nth-of-type(2) > span:nth-of-type(2)");
-			chatmessage = getAllContentNodes(eleContent);
-		  } catch(e){
-			  return;
-		  }
+		var eleContent = ele.querySelector(".content > span:nth-of-type(2):not([class])");
+		chatmessage = getAllContentNodes(eleContent);
+	  } catch(e){
+		  return;
 	  }
 	  
 	 if (chatmessage){
 		 chatmessage = chatmessage.trim();
 	 }
 	 
-	  if (chatmessage && chatmessage.startsWith("[Message ")){
-		  return; // I'm assuming this is a deleted message
-	  }
 	 
 	 if ((lastMessage === chatmessage) && (lastUser === chatname)){
 		  lastMessage = "";
@@ -122,6 +96,10 @@
 		lastUser = chatname;
 	  }
 	  
+	  
+	  var chatimg = "";
+	
+	 
 	  if (!chatmessage && !hasDonation){
 		return;
 	  }
@@ -134,8 +112,10 @@
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = "";
-	  data.type = "rooter";
-	  
+	  data.type = "joystick";
+	  if (bot){
+		data.bot = bot;
+	  }
 	//  console.log(data);
 	  
 	 
@@ -150,7 +130,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector('#commentInput').focus();
+					document.querySelector('input[flow-id="chat-message-text-input"]').focus();
 					sendResponse(true);
 					return;
 				}
@@ -186,13 +166,15 @@
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i].nodeName.toLowerCase() !== "div"){continue;}
-							if (mutation.addedNodes[i].role){continue;}
 							if (mutation.addedNodes[i].ignore){continue;}
 							mutation.addedNodes[i].ignore=true;
-							if (mutation.addedNodes[i].className && mutation.addedNodes[i].className.startsWith("nameAndCommentContainerInNormalChat")){
-								processMessage(mutation.addedNodes[i]);
+							if (mutation.addedNodes[i].classList.contains("chat-message")){
+								if (!mutation.addedNodes[i].classList.contains("event_bot_message")){
+									processMessage(mutation.addedNodes[i]);
+								} else {
+									processMessage(mutation.addedNodes[i], true);
+								}
 							}
-								
 						} catch(e){}
 					}
 				}
@@ -208,18 +190,16 @@
 	console.log("Social Stream injected");
 	
 	var checkReady = setInterval(function(){
-		
-		if (!window.location.pathname.startsWith("/stream/")){return;}
-		
-		var mainChat = document.querySelector("[class*='rightSideBarContainerLive']");
+		var mainChat = document.querySelector("#chat-messages");
 		if (mainChat){ // just in case 
 			console.log("Social Stream Start");
 			clearInterval(checkReady);
 			
 			setTimeout(function(){
-				var clear = mainChat.querySelectorAll("[class^='nameAndCommentContainerInNormalChat']");
+				var clear = mainChat.querySelectorAll(".chat-message");
 				for (var i = 0;i<clear.length;i++){
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
+					//processMessage(clear[i]); // testing only.
 				}
 				console.log("Social Stream ready to go");
 				onElementInserted(mainChat);

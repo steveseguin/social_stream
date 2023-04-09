@@ -42,7 +42,7 @@
 	var lastMessage = "";
 	var lastUser  = "";
 	
-	function processMessage(ele){	// twitch
+	async function processMessage(ele){	// twitch
 	
 	  var chatsticker = false;
 	  var chatmessage = "";
@@ -107,6 +107,28 @@
 	  var chatimg = "";
 	  try {
 			chatimg =  ele.querySelector("div:nth-of-type(1) > span>img[src]").src;
+			
+			 if (chatimg.startsWith("data:")){
+				  try {
+					 await new Promise(r => setTimeout(r, 50));
+					 chatimg =  ele.querySelector("div:nth-of-type(1) > span>img[src]").src;
+					  if (chatimg.startsWith("data:")){
+						  await new Promise(r => setTimeout(r, 100));
+						  chatimg =  ele.querySelector("div:nth-of-type(1) > span>img[src]").src;
+						  if (chatimg.startsWith("data:")){
+								await new Promise(r => setTimeout(r, 200));
+								chatimg =  ele.querySelector("div:nth-of-type(1) > span>img[src]").src;
+								if (chatimg.startsWith("data:")){
+									chatimg = ""; // and I give up if it still isn't loaded.
+								}
+						  }
+					  }
+				  } catch(e){
+					  chatimg = "";
+				  }
+			  }
+	  
+			
 			if (chatimg && !chatimg.startsWith("https://loco.gg/")){
 				chatimg = "https://loco.gg" + chatimg;
 			}
@@ -199,6 +221,9 @@
 	console.log("Social Stream injected");
 	
 	var checkReady = setInterval(function(){
+		
+		if (!window.location.pathname.startsWith("/streamers/")){return;}
+		
 		var mainChat = document.querySelector("body> div > div > div > div > div > div > div > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > div > div");
 		if (mainChat){ // just in case 
 			console.log("Social Stream Start");
@@ -211,7 +236,7 @@
 				}
 				console.log("Social Stream ready to go");
 				onElementInserted(mainChat);
-			},1500);
+			},1000);
 		} 
 	},500);
 	

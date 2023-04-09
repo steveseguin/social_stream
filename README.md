@@ -72,6 +72,9 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - tellonym.me
 - IRC (via https://webchat.quakenet.org/)
 - Tradingview.com (just the normal viewer page; no pop out)
+- rooter.gg (no pop out; just pause the video I guess)
+- loco.gg (no pop out; just pause the video I guess)
+- joystick.tv (+18, pop-out chat, ie: https://joystick.tv/u/USERNAMEHERE/chat)
 
 
 More on request
