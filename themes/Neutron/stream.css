@@ -1,0 +1,62 @@
+:root {
+    --backgroundColor: rgba(0, 0, 0, .3);
+    --backgroundBlur: 80px;
+    --backgroundOpacity: .9;
+    --borderColor: rgb(255, 255, 255);
+}
+
+body::-webkit-scrollbar {
+    display: none;
+}
+
+/* Background */
+
+div.background {
+    position: absolute;
+    opacity: var(--backgroundOpacity);
+}
+
+img#bg {
+    position: absolute;
+    left: 100px;
+    top: 100px;
+    width: 1720px;
+    height: 880px;
+    filter: blur(var(--backgroundBlur))
+}
+
+div.border {
+    position: absolute;
+    margin: 98px 20px 0px 1568px;
+    border-style: solid;
+    border-color: var(--borderColor);
+    border-width: 8px;
+    width: 308;
+    height: 508;
+    filter: blur(1.5px);
+    box-shadow: 0px 0px 3px black;
+}
+
+/* chat */
+
+#iframeOverlay {
+    position: absolute;
+    margin: 110px 0px 0px 1580px;
+    width: 300px;
+    height: 500px;
+    border: 0;
+}
+
+/* Time */
+
+#dateTime {
+    position: absolute;
+    top: 15;
+    left: 1565;
+    font-size: 54px;
+    /* font-family: "Dekko"; */
+    font-family: "Minecraft", sans-serif;
+    color:rgba(255, 255, 255, 1);
+    text-shadow: 1px 1px 1px black;
+    white-space: nowrap;
+}
