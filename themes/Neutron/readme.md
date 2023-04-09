@@ -10,4 +10,4 @@ Why is it called Neutron?
 
 Preview:
 > ![chatOnly.html](https://raw.githubusercontent.com/as2648as/social_stream/main/themes/Neutron/preview.png)  
-> ![stream.html](https://raw.githubusercontent.com/as2648as/social_stream/main/themes/Neutron/preview.png)
+> ![stream.html](https://raw.githubusercontent.com/as2648as/social_stream/main/themes/Neutron/preview_stream.png)
