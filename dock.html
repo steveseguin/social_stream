@@ -3583,7 +3583,7 @@
 	}
 
 
-	function processData(data){
+	function processData(data, reloaded=false){
 		//console.log(data);
 		if (data.contents){
 			data = data.contents;
@@ -3695,7 +3695,7 @@
 
 			var chatmessage = "";  
 			if (data.chatmessage){
-				if (stylizeEmoji){
+				if (stylizeEmoji && !reloaded){
 					chatmessage = data.chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig, "<span class='emoji'>$1</span>");
 				} else {
 					chatmessage = data.chatmessage;
@@ -4902,7 +4902,7 @@
 				if (reload){
 					reload = JSON.parse(reload);
 					for (var i = 0 ; i<reload.length; i++){
-						processData(  {contents : reload[i]} );
+						processData(  {contents : reload[i]} , true);
 					}
 					console.log("PAGE REFRESHED");
 				}
