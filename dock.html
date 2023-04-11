@@ -2102,10 +2102,10 @@
 			socketserverExtension.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
 		};
 		socketserverExtension.addEventListener('message', function (event) {
-			var resp = false;
+			var resp = false
 			if (event.data){
 				var data = JSON.parse(event.data);
-				processInput(data, true);
+				processInput(data);
 			}
 		});
 	}
@@ -2895,7 +2895,7 @@
 		}
 	} catch(e){}
 
-	function processInput(data, server2=false){
+	function processInput(data){
 		if ("mid" in data){
 			if (data.mid && syncDocks){
 
@@ -3048,7 +3048,7 @@
 			return;
 		}
 
-		if (data.action && !server2){
+		if (data.action){
 		
 			if ("target" in  data){
 				if (data.target && (data.target !== thisLabel)){
