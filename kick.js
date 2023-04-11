@@ -116,7 +116,7 @@
 				nameColor = name.style.color;
 			} catch(e){}
 		  } catch(e){return;}
-		  cloned.children[1].outerHTML = "";
+		  cloned.children[1].outerHTML = ""
 	  } else {
 		  try {
 			name = ele.querySelector("span[style]");
@@ -240,7 +240,7 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						if (mutation.addedNodes[i].id && mutation.addedNodes[i].id.startsWith("message-temp")){continue;}
+						//if (mutation.addedNodes[i].id && mutation.addedNodes[i].id.startsWith("message-temp")){continue;}
 						if (pastMessages.includes(mutation.addedNodes[i].id)){continue;}
 						try {
 							pastMessages.push(mutation.addedNodes[i].id)
