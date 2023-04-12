@@ -155,10 +155,45 @@ async function loadmidi(){
 var newFileHandle = false;
 async function overwriteFile(data=false) {
   if (data=="setup"){
-	  newFileHandle = await window.showSaveFilePicker();
+	  
+	   const opts = {
+		types: [
+		  {
+			description: "JSON data",
+			accept: { "text/plain": [".txt"], "application/json": [".json"] },
+		  },
+		],
+	  };
+	  
+	  newFileHandle = await window.showSaveFilePicker(opts);
   } else if (newFileHandle && data){
 	  const writableStream = await newFileHandle.createWritable();
 	  await writableStream.write(data);
+	  await writableStream.close();
+  }
+}
+
+var newSavedNamesFileHandle = false;
+var uniqueNameSet = [];
+async function overwriteSavedNames(data=false) {
+  if (data=="setup"){
+	  uniqueNameSet = [];
+	  
+	  const opts = {
+		types: [
+		  {
+			description: "Text file",
+			accept: { "text/plain": [".txt"] },
+		  },
+		],
+	  };
+		  
+	  newSavedNamesFileHandle = await window.showSaveFilePicker(opts);
+  } else if (newSavedNamesFileHandle && data){
+	  if (uniqueNameSet.includes(data)){return;}
+	  uniqueNameSet.push(data);
+	  const writableStream = await newSavedNamesFileHandle.createWritable();
+	  await writableStream.write(uniqueNameSet.join("\r\n"));
 	  await writableStream.close();
   }
 }
@@ -590,6 +625,9 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "excelsave") {
 				sendResponse({"state":isExtensionOn});
 				overwriteFileExcel("setup");
+			} else if (request.cmd && request.cmd === "savenames") {
+				sendResponse({"state":isExtensionOn});
+				overwriteSavedNames("setup");
 			} else if (request.cmd && request.cmd === "loadmidi") {
 				await loadmidi(sendResponse);
 				sendResponse({"settings":settings});
@@ -602,6 +640,12 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "excelsaveStop") {
 				sendResponse({"state":isExtensionOn});
 				newFileHandleExcel = false;
+			} else if (request.cmd && request.cmd === "singlesaveStop") {
+				sendResponse({"state":isExtensionOn});
+				newFileHandle = false;
+			} else if (request.cmd && request.cmd === "singlesaveStop") {
+				sendResponse({"state":isExtensionOn});	
+				newSavedNamesFileHandle = false;
 			} else if (request.cmd && request.cmd === "fakemsg") {
 				sendResponse({"state":isExtensionOn});
 				var data = {};
@@ -1266,6 +1310,11 @@ function sendToDisk(data){
 			}
 		} catch(e){}
 	}
+	
+	if (newSavedNamesFileHandle && data.chatname){
+		overwriteSavedNames(data.chatname);
+	}
+	
 }
 
 
@@ -1734,7 +1783,6 @@ const alternativeChars = {
   't': ['7'],
   'c': ['<']
 };
-
 function generateVariations(word) {
   const variations = [word];
   for (let i = 0; i < word.length; i++) {
@@ -1753,7 +1801,6 @@ function generateVariations(word) {
   }
   return variations;
 }
-
 function generateVariationsList(words) {
   const variationsList = [];
   for (const word of words) {
@@ -1762,7 +1809,6 @@ function generateVariationsList(words) {
   return variationsList.filter(word => !word.match(/[A-Z]/));
 }
 const badWordsExanded = generateVariationsList(badWords)
-
 function createProfanityHashTable(profanityVariationsList) {
   const hashTable = {};
   for (let i = 0; i < profanityVariationsList.length; i++) {
@@ -1777,9 +1823,7 @@ function createProfanityHashTable(profanityVariationsList) {
   }
   return hashTable;
 }
-
 const profanityHashTable = createProfanityHashTable(badWordsExanded);;
-
 function isProfanity(word) {
   const wordLower = word.toLowerCase();
   const firstChar = wordLower[0];
@@ -1789,7 +1833,6 @@ function isProfanity(word) {
   }
   return Boolean(words[wordLower]);
 }
-
 function filterProfanity(sentence) {
   let words = sentence.toLowerCase().split(/[\s\.\-_!?,]+/);
   const uniqueWords = new Set(words);
