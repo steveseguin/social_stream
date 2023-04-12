@@ -1722,46 +1722,93 @@ function createTab(url) {
     });
 }
 
-// black list logic start
-function generateRegexes(word) {
-  const variations = [
-    word.replace(/a/g, "[a@4]")
-        .replace(/i/g, "[i1!|]")
-        .replace(/o/g, "[o0]")
-        .replace(/s/g, "[s5$]"),
-    word.replace(/a/g, "[a@4]")
-        .replace(/i/g, "[i1!|]")
-        .replace(/s/g, "[s5$]")
-        + "+",
-    word.replace(/o/g, "[o0]")
-        .replace(/s/g, "[s5$]")
-        + "+",
-    word.replace(/s/g, "[s5$]")
-        .replace(/i/g, "[i1!|]")
-        + "+"
-  ];
-  return variations.concat(word);
-}
-function createRegexBlacklist(words) {
-  const regexes = words.map(word => new RegExp(generateRegexes(word).join("|")));
-  return new RegExp(regexes.join("|"), 'gi');
-}
+/////////////// bad word filter
 // just to keep things PG, I encode the naughty list.
-const profanityList = JSON.parse(atob('WyJmdWNrIiwic2hpdCIsImN1bnQiLCJiaXRjaCIsIm5pZ2dlciIsImZhZyIsInJldGFyZCIsInJhcGUiLCJwdXNzeSIsImNvY2siLCJhc3Nob2xlIiwid2hvcmUiLCJzbHV0IiwiZ2F5IiwibGVzYmlhbiIsInRyYW5zZ2VuZGVyIiwidHJhbnNzZXh1YWwiLCJ0cmFubnkiLCJjaGluayIsInNwaWMiLCJraWtlIiwiamFwIiwid29wIiwicmVkbmVjayIsImhpbGxiaWxseSIsIndoaXRlIHRyYXNoIiwiZG91Y2hlIiwiZGljayIsImJhc3RhcmQiLCJmdWNrZXIiLCJtb3RoZXJmdWNrZXIiLCJhc3MiLCJhbnVzIiwidmFnaW5hIiwicGVuaXMiLCJ0ZXN0aWNsZXMiLCJtYXN0dXJiYXRlIiwib3JnYXNtIiwiZWphY3VsYXRlIiwiY2xpdG9yaXMiLCJwdWJpYyIsImdlbml0YWwiLCJlcmVjdCIsImVyb3RpYyIsInBvcm4iLCJ4eHgiLCJkaWxkbyIsImJ1dHQgcGx1ZyIsImFuYWwiLCJzb2RvbXkiLCJwZWRvcGhpbGUiLCJiZXN0aWFsaXR5IiwibmVjcm9waGlsaWEiLCJpbmNlc3QiLCJzdWljaWRlIiwibXVyZGVyIiwidGVycm9yaXNtIiwiZHJ1Z3MiLCJhbGNvaG9sIiwic21va2luZyIsIndlZWQiLCJtZXRoIiwiY3JhY2siLCJoZXJvaW4iLCJjb2NhaW5lIiwib3BpYXRlIiwib3BpdW0iLCJiZW56b2RpYXplcGluZSIsInhhbmF4IiwiYWRkZXJhbGwiLCJyaXRhbGluIiwic3Rlcm9pZHMiLCJ2aWFncmEiLCJjaWFsaXMiLCJwcm9zdGl0dXRpb24iLCJlc2NvcnQiXQ=='));
-const profanityRegexBlacklist = createRegexBlacklist(profanityList);
+const badWords = JSON.parse(atob('WyJmdWNrIiwic2hpdCIsImN1bnQiLCJiaXRjaCIsIm5pZ2dlciIsImZhZyIsInJldGFyZCIsInJhcGUiLCJwdXNzeSIsImNvY2siLCJhc3Nob2xlIiwid2hvcmUiLCJzbHV0IiwiZ2F5IiwibGVzYmlhbiIsInRyYW5zZ2VuZGVyIiwidHJhbnNzZXh1YWwiLCJ0cmFubnkiLCJjaGluayIsInNwaWMiLCJraWtlIiwiamFwIiwid29wIiwicmVkbmVjayIsImhpbGxiaWxseSIsIndoaXRlIHRyYXNoIiwiZG91Y2hlIiwiZGljayIsImJhc3RhcmQiLCJmdWNrZXIiLCJtb3RoZXJmdWNrZXIiLCJhc3MiLCJhbnVzIiwidmFnaW5hIiwicGVuaXMiLCJ0ZXN0aWNsZXMiLCJtYXN0dXJiYXRlIiwib3JnYXNtIiwiZWphY3VsYXRlIiwiY2xpdG9yaXMiLCJwdWJpYyIsImdlbml0YWwiLCJlcmVjdCIsImVyb3RpYyIsInBvcm4iLCJ4eHgiLCJkaWxkbyIsImJ1dHQgcGx1ZyIsImFuYWwiLCJzb2RvbXkiLCJwZWRvcGhpbGUiLCJiZXN0aWFsaXR5IiwibmVjcm9waGlsaWEiLCJpbmNlc3QiLCJzdWljaWRlIiwibXVyZGVyIiwidGVycm9yaXNtIiwiZHJ1Z3MiLCJhbGNvaG9sIiwic21va2luZyIsIndlZWQiLCJtZXRoIiwiY3JhY2siLCJoZXJvaW4iLCJjb2NhaW5lIiwib3BpYXRlIiwib3BpdW0iLCJiZW56b2RpYXplcGluZSIsInhhbmF4IiwiYWRkZXJhbGwiLCJyaXRhbGluIiwic3Rlcm9pZHMiLCJ2aWFncmEiLCJjaWFsaXMiLCJwcm9zdGl0dXRpb24iLCJlc2NvcnQiXQ=='));
+const alternativeChars = {
+  'a': ['@', '4'],
+  'e': ['3'],
+  'i': ['1', '!'],
+  'o': ['0'],
+  's': ['$', '5'],
+  't': ['7'],
+  'c': ['<']
+};
 
-function filterProfanity(sentence, regexBlacklist=profanityRegexBlacklist) {
-  return sentence.replace(regexBlacklist, (match) => {
-	  return "*".repeat(match.length);
-  });
+function generateVariations(word) {
+  const variations = [word];
+  for (let i = 0; i < word.length; i++) {
+    const char = word[i].toLowerCase();
+    if (alternativeChars.hasOwnProperty(char)) {
+      const charVariations = alternativeChars[char];
+      const newVariations = [];
+      for (const variation of variations) {
+        for (const altChar of charVariations) {
+          const newWord = variation.slice(0, i) + altChar + variation.slice(i + 1);
+          newVariations.push(newWord);
+        }
+      }
+      variations.push(...newVariations);
+    }
+  }
+  return variations;
 }
-// black list logic end
+
+function generateVariationsList(words) {
+  const variationsList = [];
+  for (const word of words) {
+    variationsList.push(...generateVariations(word));
+  }
+  return variationsList.filter(word => !word.match(/[A-Z]/));
+}
+const badWordsExanded = generateVariationsList(badWords)
+
+function createProfanityHashTable(profanityVariationsList) {
+  const hashTable = {};
+  for (let i = 0; i < profanityVariationsList.length; i++) {
+    const word = profanityVariationsList[i].toLowerCase();
+    for (let j = 0; j < word.length; j++) {
+      const character = word[j];
+      if (!hashTable[character]) {
+        hashTable[character] = {};
+      }
+      hashTable[character][word] = true;
+    }
+  }
+  return hashTable;
+}
+
+const profanityHashTable = createProfanityHashTable(badWordsExanded);;
+
+function isProfanity(word) {
+  const wordLower = word.toLowerCase();
+  const firstChar = wordLower[0];
+  const words = profanityHashTable[firstChar];
+  if (!words) {
+    return false;
+  }
+  return Boolean(words[wordLower]);
+}
+
+function filterProfanity(sentence) {
+  let words = sentence.toLowerCase().split(/[\s\.\-_!?,]+/);
+  const uniqueWords = new Set(words);
+  for (let word of uniqueWords) {
+	if (isProfanity(word)){
+		sentence = sentence.replace(new RegExp('\\b' + word + '\\b', 'gi'), '*'.repeat(word.length));
+	}
+  }
+  return sentence;
+}
+/////// end of bad word filter
 
 async function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
 
 	if (settings.blacklist && data.chatmessage){
-		data.chatmessage = filterProfanity(data.chatmessage);
+		try {
+			data.chatmessage = filterProfanity(data.chatmessage);
+		} catch(e){console.error(e);}
 	}
 	
 	if (settings.autohi){
