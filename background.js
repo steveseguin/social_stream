@@ -1722,8 +1722,48 @@ function createTab(url) {
     });
 }
 
+// black list logic start
+function generateRegexes(word) {
+  const variations = [
+    word.replace(/a/g, "[a@4]")
+        .replace(/i/g, "[i1!|]")
+        .replace(/o/g, "[o0]")
+        .replace(/s/g, "[s5$]"),
+    word.replace(/a/g, "[a@4]")
+        .replace(/i/g, "[i1!|]")
+        .replace(/s/g, "[s5$]")
+        + "+",
+    word.replace(/o/g, "[o0]")
+        .replace(/s/g, "[s5$]")
+        + "+",
+    word.replace(/s/g, "[s5$]")
+        .replace(/i/g, "[i1!|]")
+        + "+"
+  ];
+  return variations.concat(word);
+}
+function createRegexBlacklist(words) {
+  const regexes = words.map(word => new RegExp(generateRegexes(word).join("|")));
+  return new RegExp(regexes.join("|"), 'gi');
+}
+// just to keep things PG, I encode the naughty list.
+const profanityList = JSON.parse(atob('WyJmdWNrIiwic2hpdCIsImN1bnQiLCJiaXRjaCIsIm5pZ2dlciIsImZhZyIsInJldGFyZCIsInJhcGUiLCJwdXNzeSIsImNvY2siLCJhc3Nob2xlIiwid2hvcmUiLCJzbHV0IiwiZ2F5IiwibGVzYmlhbiIsInRyYW5zZ2VuZGVyIiwidHJhbnNzZXh1YWwiLCJ0cmFubnkiLCJjaGluayIsInNwaWMiLCJraWtlIiwiamFwIiwid29wIiwicmVkbmVjayIsImhpbGxiaWxseSIsIndoaXRlIHRyYXNoIiwiZG91Y2hlIiwiZGljayIsImJhc3RhcmQiLCJmdWNrZXIiLCJtb3RoZXJmdWNrZXIiLCJhc3MiLCJhbnVzIiwidmFnaW5hIiwicGVuaXMiLCJ0ZXN0aWNsZXMiLCJtYXN0dXJiYXRlIiwib3JnYXNtIiwiZWphY3VsYXRlIiwiY2xpdG9yaXMiLCJwdWJpYyIsImdlbml0YWwiLCJlcmVjdCIsImVyb3RpYyIsInBvcm4iLCJ4eHgiLCJkaWxkbyIsImJ1dHQgcGx1ZyIsImFuYWwiLCJzb2RvbXkiLCJwZWRvcGhpbGUiLCJiZXN0aWFsaXR5IiwibmVjcm9waGlsaWEiLCJpbmNlc3QiLCJzdWljaWRlIiwibXVyZGVyIiwidGVycm9yaXNtIiwiZHJ1Z3MiLCJhbGNvaG9sIiwic21va2luZyIsIndlZWQiLCJtZXRoIiwiY3JhY2siLCJoZXJvaW4iLCJjb2NhaW5lIiwib3BpYXRlIiwib3BpdW0iLCJiZW56b2RpYXplcGluZSIsInhhbmF4IiwiYWRkZXJhbGwiLCJyaXRhbGluIiwic3Rlcm9pZHMiLCJ2aWFncmEiLCJjaWFsaXMiLCJwcm9zdGl0dXRpb24iLCJlc2NvcnQiXQ=='));
+const profanityRegexBlacklist = createRegexBlacklist(profanityList);
+
+function filterProfanity(sentence, regexBlacklist=profanityRegexBlacklist) {
+  return sentence.replace(regexBlacklist, (match) => {
+	  return "*".repeat(match.length);
+  });
+}
+// black list logic end
+
 async function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
+
+	if (settings.blacklist && data.chatmessage){
+		data.chatmessage = filterProfanity(data.chatmessage);
+	}
+	
 	if (settings.autohi){
 		if (data.chatmessage.toLowerCase() === "hi"){
 			if (Date.now() - messageTimeout > 60000){ // respond to "1" with a "1" automatically; at most 1 time per minute.
@@ -1779,13 +1819,13 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			data.backgroundNameColor =  "background-color:"+settings.name_background.value+";";
 		}
 	}
-	if (settings.name_color){ //
+	if (settings.name_color){
 		if (!data.textNameColor){
 			data.textNameColor =  "color:"+settings.name_color.value+";";
 		}
 	}
 
-	 // respond to "1" with a "1" automatically; at most 1 time per minute.
+	// webhook for configured custom chat commands
 	for (var i = 1;i<=20;i++){
 		if (data.chatmessage && settings["chatevent"+i] && settings["chatcommand"+i] && settings["chatwebhook"+i]){
 			if (data.chatmessage === settings["chatcommand"+i].textsetting){

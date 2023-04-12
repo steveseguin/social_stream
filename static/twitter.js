@@ -264,7 +264,9 @@
 				try{
 					var eles = document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label][role="link"]');
 					var ele = eles[eles.length - 1].parentNode.parentNode.appendChild(button);
-				catch (e){
+				} catch (e){
+					
+				}
 			}
 		}
 	}
