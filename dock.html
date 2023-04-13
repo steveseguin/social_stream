@@ -2627,6 +2627,12 @@
 		document.getElementById("show_only_queue").classList.add("pressed");
 	}
 
+	var ttsSpeakChatname = true;
+	if (urlParams.has("simpletts2")){ // You don't want to hear the chatname when TTS is enabled. ＞﹏＜
+		ttsSpeakChatname = false;
+		English = false;
+	}
+
 	function emoji(){
 		var ele = document.getElementById("hide_emoji");
 		if (ele.dataset.state=="0"){
@@ -4150,29 +4156,29 @@
 
 			var imageElements = node.getElementsByTagName("img");
 			for (i = 0; i < imageElements.length; i++) {
-				<!-- imageElements[i].onload = function(){ -->
-					<!-- if (reversed && !forceAutoscroll){ -->
-						<!-- // -->
-					<!-- } else if (alignbottom){ -->
-						<!-- var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight ); -->
-						<!-- if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
-							<!-- getById("output").scrollTo({ -->
-								<!-- top: height, -->
-								<!-- left: 0, -->
-								<!-- behavior:scrolltype -->
-							<!-- }); -->
-						<!-- } -->
-					<!-- } else { -->
-						<!-- var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ); -->
-						<!-- if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
-							<!-- window.scrollTo({ -->
-								<!-- top: height, -->
-								<!-- left: 0, -->
-								<!-- behavior: scrolltype -->
-							<!-- }); -->
-						<!-- } -->
-					<!-- } -->
-				<!-- } -->
+				// <!-- imageElements[i].onload = function(){ -->
+				// 	<!-- if (reversed && !forceAutoscroll){ -->
+				// 		<!-- // -->
+				// 	<!-- } else if (alignbottom){ -->
+				// 		<!-- var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight ); -->
+				// 		<!-- if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
+				// 			<!-- getById("output").scrollTo({ -->
+				// 				<!-- top: height, -->
+				// 				<!-- left: 0, -->
+				// 				<!-- behavior:scrolltype -->
+				// 			<!-- }); -->
+				// 		<!-- } -->
+				// 	<!-- } else { -->
+				// 		<!-- var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ); -->
+				// 		<!-- if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
+				// 			<!-- window.scrollTo({ -->
+				// 				<!-- top: height, -->
+				// 				<!-- left: 0, -->
+				// 				<!-- behavior: scrolltype -->
+				// 			<!-- }); -->
+				// 		<!-- } -->
+				// 	<!-- } -->
+				// <!-- } -->
 				if (imageElements[i].onerror){continue;}
 				if (!imageElements[i].title && imageElements[i].alt){
 					imageElements[i].title = imageElements[i].alt;
@@ -4196,27 +4202,27 @@
 
 			removeNode();
 
-			<!-- if (reversed && !forceAutoscroll){ -->
-						<!-- // -->
-			<!-- } else if (alignbottom){ -->
-				<!-- var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight ); -->
-				<!-- if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
-					<!-- getById("output").scrollTo({ -->
-						<!-- top: height, -->
-						<!-- left: 0, -->
-						<!-- behavior:scrolltype -->
-					<!-- }); -->
-				<!-- } -->
-			<!-- } else { -->
-				<!-- var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ); -->
-				<!-- if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
-					<!-- window.scrollTo({ -->
-						<!-- top: height, -->
-						<!-- left: 0, -->
-						<!-- behavior: scrolltype -->
-					<!-- }); -->
-				<!-- } -->
-			<!-- } -->
+			// <!-- if (reversed && !forceAutoscroll){ -->
+			// 			<!-- // -->
+			// <!-- } else if (alignbottom){ -->
+			// 	<!-- var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight ); -->
+			// 	<!-- if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
+			// 		<!-- getById("output").scrollTo({ -->
+			// 			<!-- top: height, -->
+			// 			<!-- left: 0, -->
+			// 			<!-- behavior:scrolltype -->
+			// 		<!-- }); -->
+			// 	<!-- } -->
+			// <!-- } else { -->
+			// 	<!-- var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ); -->
+			// 	<!-- if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
+			// 		<!-- window.scrollTo({ -->
+			// 			<!-- top: height, -->
+			// 			<!-- left: 0, -->
+			// 			<!-- behavior: scrolltype -->
+			// 		<!-- }); -->
+			// 	<!-- } -->
+			// <!-- } -->
 
 			applyBotActions(data); // Official actions
 
@@ -4294,7 +4300,7 @@
 		}
 
 		var chatname = "";
-		if (data.chatname){
+		if (ttsSpeakChatname && data.chatname){
 			chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
 			chatname = chatname.replaceAll('_', ' ');
 			chatname = chatname.replaceAll('@', ' ');
