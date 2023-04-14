@@ -92,6 +92,7 @@
 	  var nameColor = "";
 
 	  try {
+		
 		var displayNameEle = ele.querySelector(".chat-author__display-name") || ele.querySelector(".seventv-chat-user-username");
 		var displayName = displayNameEle.innerText;
 		var username = displayName;
@@ -101,7 +102,7 @@
 		}
 
 		try {
-			nameColor = nameEle.style.color || ele.querySelector(".seventv-chat-user").style.color;
+			nameColor = displayNameEle.style.color || ele.querySelector(".seventv-chat-user").style.color;
 		} catch(e){}
 	  } catch(e){}
 	  
