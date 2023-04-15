@@ -110,9 +110,12 @@
 	  try {
 		  ele.querySelectorAll("img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset]").forEach(badge=>{
 			  if (badge.srcset){
-				 let bb = badge.srcset.split(" ")[0];
-				 if (!chatbadges.includes(bb)){
-					chatbadges.push(bb);
+				 let bb = badge.srcset.split("https://").pop();
+				 if (bb){
+					 bb = "https://"+bb.split(" ")[0];
+					 if (!chatbadges.includes(bb)){
+						chatbadges.push(bb);
+					 }
 				 }
 			 } else if (!chatbadges.includes(badge.src)){
 				chatbadges.push(badge.src);

@@ -3153,6 +3153,8 @@
 		eventer(messageEvent, function (e) {
 			if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
 
+			console.log(e.data);
+
 			if (("action" in e.data) && e.data.UUID && e.data.value && (e.data.action == "push-connection-info")){ // flip this
 				if ("label" in e.data.value){
 					connectedPeers[e.data.UUID] = e.data.value.label;

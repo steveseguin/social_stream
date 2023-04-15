@@ -44,7 +44,7 @@
 	
 	function processMessage(ele, wss=true){
 		if (ele.hasAttribute("is-deleted")) {
-			console.log("Message is deleted already");
+			//console.log("Message is deleted already");
 			return;
 		}
 
@@ -53,14 +53,14 @@
 		}
 		try {
 			if (ele.id && messageHistory.includes(ele.id)) {
-				console.log("Message already exists");
+				//console.log("Message already exists");
 				return;
 			} else if (ele.id) {
 				messageHistory.push(ele.id);
 				messageHistory = messageHistory.slice(-200);
 			}
 			if (ele.querySelector("[in-banner]")) {
-				console.log("Message in-banner");
+				//console.log("Message in-banner");
 				return;
 			}
 		} catch (e) {}
@@ -229,7 +229,8 @@
 
 
 		if (!chatmessage && !hasDonation) {
-			console.error("No message or donation");
+			//console.error("No message or donation");
+			return;
 		}
 
 		var data = {};
@@ -243,15 +244,11 @@
 		data.hasDonation = hasDonation;
 		data.hasMembership = hasMembership;
 		data.type = "youtube";
-
-
-		console.log(data);
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, {
 				"message": data
 			}, function() {});
 		} catch(e){
-			console.error(e);
 		}
 		
 	}
@@ -292,7 +289,6 @@
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try{
 							if (mutation.addedNodes[i] && mutation.addedNodes[i].classList && mutation.addedNodes[i].classList.contains("yt-live-chat-banner-renderer")) {
-								console.error("yt banner rendered");
 								continue;
 							} else if (mutation.addedNodes[i].tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
 								callback(mutation.addedNodes[i]);
@@ -307,7 +303,7 @@
 							} else {
 								//console.error("unknown: "+mutation.addedNodes[i].tagName);
 							}
-						} catch(e){console.error(e);}
+						} catch(e){}
 					}
 				}
 			});
