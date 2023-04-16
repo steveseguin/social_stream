@@ -16,20 +16,38 @@
 	
 	function processMessage(ele){
 		try {
-			var name = ele.querySelector('.hyperlink-whois').innerText;
+			
+			var msgEle = ele.querySelector('.hyperlink-whois');
+			
+			if (!msgEle){return;}
+			console.log(msgEle);
+			var name = msgEle.innerText;
 			if (name){
 				name = name.trim();
 			} else {
 				return;
 			}
 			
+			console.log(msgEle.parentNode);
 			
-			var msg = ele.querySelector('.hyperlink-whois').parentNode.nextSibling.textContent;
-			
+			if (msgEle.nextNode){
+				var  msg = msgEle.nextNode().textContent;
+			} else if (msgEle.nextSibling && msgEle.nextSibling.textContent){
+				var msg = msgEle.nextSibling.textContent;
+			} else {
+				try{
+					var msg = msgEle.parentNode.nextSibling.textContent;
+				} catch(e){
+					console.log(e);
+					return;
+				}
+			} 
+			console.log(msg);
 			msg = msg.replace("> ", "");
 			
 			msg = msg.trim();
 		} catch(e){
+			console.log(e);
 			return;
 		}
 		
