@@ -1914,6 +1914,12 @@
 	}
 
 	var reversed = false;
+	
+	if (urlParams.has("autoscroll")){
+		forceAutoscroll=false;
+		jumptoBottom();
+	}
+	
 	if (urlParams.has("reverse")){
 		reversed = true;
 		forceAutoscroll=false;
@@ -1929,11 +1935,6 @@
 		transitionType.push("swipeup");
 	}
 	
-	if (urlParams.has("autoscroll")){
-		forceAutoscroll=false;
-		jumptoBottom();
-	}
-
 	var beep = false;
 	if (urlParams.has("beep")){ // removes HTML from messages, donations, and names.
 		beep = true;
@@ -2392,7 +2393,6 @@
 
 			const spxRequest = new XMLHttpRequest();
 			spxRequest.onreadystatechange = function() {
-				console.log(spxRequest.responseText);
 				if (spxRequest.readyState === 4 && spxRequest.status === 200) {
 				}
 			}
@@ -2708,7 +2708,6 @@
 		
 		
 		if (autoShowQueue.length>20){
-			console.log(autoShowQueue[0].rawContents.hasDonation );
 			while (autoShowQueue[0].rawContents && !autoShowQueue[0].rawContents.hasDonation && (autoShowQueue.length>10)){
 				autoShowQueue.shift(); // skip oldest, since too many are queued up
 			}
@@ -2934,7 +2933,6 @@
 			return;
 		} else if ("pin" in data){
 			if (data.pin && syncDocks){
-				console.log(data);
 				if (typeof data.pin == "object"){
 					data.pin.forEach(dddd=>{
 						if (typeof dddd === "object"){
@@ -3157,8 +3155,6 @@
 
 		eventer(messageEvent, function (e) {
 			if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
-
-			console.log(e.data);
 
 			if (("action" in e.data) && e.data.UUID && e.data.value && (e.data.action == "push-connection-info")){ // flip this
 				if ("label" in e.data.value){
