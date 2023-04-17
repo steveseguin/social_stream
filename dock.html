@@ -3521,8 +3521,10 @@
 	};
 	
 	
-	function nodeRemove(node){
-		node.remove();
+	function nodeRemove(node=null){
+		if (node){
+			node.remove();
+		}
 		if (reversed && !forceAutoscroll){
 		
 		} else {
@@ -4191,29 +4193,7 @@
 
 			var imageElements = node.getElementsByTagName("img");
 			for (i = 0; i < imageElements.length; i++) {
-				// <!-- imageElements[i].onload = function(){ -->
-				// 	<!-- if (reversed && !forceAutoscroll){ -->
-				// 		<!-- // -->
-				// 	<!-- } else if (alignbottom){ -->
-				// 		<!-- var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight ); -->
-				// 		<!-- if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
-				// 			<!-- getById("output").scrollTo({ -->
-				// 				<!-- top: height, -->
-				// 				<!-- left: 0, -->
-				// 				<!-- behavior:scrolltype -->
-				// 			<!-- }); -->
-				// 		<!-- } -->
-				// 	<!-- } else { -->
-				// 		<!-- var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ); -->
-				// 		<!-- if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
-				// 			<!-- window.scrollTo({ -->
-				// 				<!-- top: height, -->
-				// 				<!-- left: 0, -->
-				// 				<!-- behavior: scrolltype -->
-				// 			<!-- }); -->
-				// 		<!-- } -->
-				// 	<!-- } -->
-				// <!-- } -->
+				
 				if (imageElements[i].onerror){continue;}
 				if (!imageElements[i].title && imageElements[i].alt){
 					imageElements[i].title = imageElements[i].alt;
@@ -4237,28 +4217,6 @@
 
 			removeNode();
 
-			// <!-- if (reversed && !forceAutoscroll){ -->
-			// 			<!-- // -->
-			// <!-- } else if (alignbottom){ -->
-			// 	<!-- var height = Math.max( getById("output").scrollHeight, getById("output").offsetHeight ); -->
-			// 	<!-- if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
-			// 		<!-- getById("output").scrollTo({ -->
-			// 			<!-- top: height, -->
-			// 			<!-- left: 0, -->
-			// 			<!-- behavior:scrolltype -->
-			// 		<!-- }); -->
-			// 	<!-- } -->
-			// <!-- } else { -->
-			// 	<!-- var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ); -->
-			// 	<!-- if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){ -->
-			// 		<!-- window.scrollTo({ -->
-			// 			<!-- top: height, -->
-			// 			<!-- left: 0, -->
-			// 			<!-- behavior: scrolltype -->
-			// 		<!-- }); -->
-			// 	<!-- } -->
-			// <!-- } -->
-
 			applyBotActions(data); // Official actions
 
 			if (speech && !bot){
@@ -4268,8 +4226,6 @@
 		}
 		return false;
 	}
-	
-	
 	
 	if (alignbottom){
 		const ro = new MutationObserver(mutations => {
