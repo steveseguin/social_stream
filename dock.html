@@ -3519,39 +3519,71 @@
 			sendDataP2P(data); // we handle twitch upsizing in the index.html instead.
 		}
 	};
+	
+	
+	function nodeRemove(node){
+		node.remove();
+		if (reversed && !forceAutoscroll){
+		
+		} else {
+			if (alignbottom) {
+				if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){
+					if (scrolltype=="instant"){
+						getById("output").scrollTop = getById("output").scrollHeight;
+					} else {
+						getById("output").scrollTo({
+							top: getById("output").scrollHeight,
+							left: 0,
+							behavior:scrolltype
+						});
+					}
+				}
+			} else if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){
+				if (scrolltype=="instant"){
+					document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
+				} else {
+					document.scrollingElement.scrollTo({
+						top: document.scrollingElement.scrollHeight,
+						left: 0,
+						behavior:scrolltype
+					});
+				}
+			}
+		}
+	}
 
 	function fadeOutNode(node){
 		if (fadeout && horizontal){
 			node.classList.add("fadeout");
 			setTimeout(function(node){
-				node.remove();
+				nodeRemove(node);
 			},500,node);
 		} else if (horizontal){
-			node.remove();
+			nodeRemove(node);
 		} else if (fadeout){
 			node.classList.add("fadeout");
 			setTimeout(function(node){
-				node.remove();
+				nodeRemove(node);
 			},500,node);
 		} else if (scrolltype === "smooth"){
 			node.style.transition =  "all linear 0.5s";
 			node.style.height =  "0"; 
 			setTimeout(function(node){
-				node.remove();
+				nodeRemove(node);
 			},500,node);
 		} else {
-			node.remove();
+			nodeRemove(node);
 		}
 	}
 
 	function slideIn(node){
 		if (horizontal){
-			node.remove();
+			nodeRemove(node);
 		} else {
 			node.style.transition =  "all linear 0.5s";
 			node.style.height =  "0";
 			setTimeout(function(node){
-				node.remove();
+				nodeRemove(node);
 			},500,node);
 		}
 	}
@@ -4099,7 +4131,7 @@
 				setTimeout(function(node){ 
 					node.classList.add("fadeout"); 
 					setTimeout(function(node){
-						node.remove();
+						nodeRemove(node);
 					},499,node);
 				},timeoutDelay, node);
 			}
