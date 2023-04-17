@@ -3237,6 +3237,35 @@
 			}
 		}
 	}
+	
+	function filterMessage(node) {
+	
+		if (filterAddNameAndTime) {
+			if (node.textContent.toLowerCase().includes(filtering)) {
+			
+			} else if (node.dataset.sourceType && (("source:"+node.dataset.sourceType) == filtering)){ // youtube, twitch, etc.
+			
+			} else {
+				node.classList.add("hide"); // Filter is typed - Not found; them hide them
+			}
+			
+
+		// Message only
+		} else {
+		    var nodeValue = node.querySelector(".hl-message");
+			
+			
+			if (!nodeValue){
+				nodeValue.classList.add("hide");
+				return;
+			} else if (nodeValue.innerText.toLowerCase().includes(filtering)) {
+			
+			} else {
+				node.classList.add("hide");
+			}
+			
+		}
+	}
 
 	function filterMessages(keyword="") {
 		var eles = document.querySelectorAll("#output > div");
@@ -3251,16 +3280,17 @@
 		if (filterAddNameAndTime) {
 			for (var i = 0; i < eles.length; i++) {
 				// No filter is typed; then show all
+				console.log(("source:"+eles[i].dataset.sourceType) + " " +keyword);
 				if (!keyword) {
 					eles[i].classList.remove("hide");
-
+					
 				// Filter is typed - Found; then show them
 				} else if (eles[i].textContent.toLowerCase().includes(keyword)) {
 					eles[i].classList.remove("hide");
-
-				// Filter is typed - Not found; them hide them
+				} else if (eles[i].dataset.sourceType && (("source:"+eles[i].dataset.sourceType) == keyword)){ // youtube, twitch, etc.
+					eles[i].classList.remove("hide");
 				} else {
-					eles[i].classList.add("hide");
+					eles[i].classList.add("hide"); // Filter is typed - Not found; them hide them
 				}
 			}
 
@@ -3987,8 +4017,8 @@
 					 + donationHTML + '</div>');
 			}
 
-			if (filtering && !node.textContent.toLowerCase().includes(filtering)){
-				node.classList.add("hide");
+			if (filtering){
+				filterMessage(node)
 			}
 
 			if (bot && !horizontal){
