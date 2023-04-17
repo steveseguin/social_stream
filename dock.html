@@ -1928,6 +1928,10 @@
 		document.getElementById("output").style.display = "flex";
 		transitionType.push("swipeup");
 	}
+	
+	if (urlParams.has("autoscroll")){
+		forceAutoscroll=true;
+	}
 
 	var beep = false;
 	if (urlParams.has("beep")){ // removes HTML from messages, donations, and names.
