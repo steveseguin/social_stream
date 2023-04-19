@@ -55,117 +55,50 @@
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
-	  
-	 
 	  var chatname = "";
 	  var name ="";
 	  var chatbadges = [];
 	  
-	  var cloned =  ele.cloneNode(true);
-	  if (cloned.children[0] && cloned.children[0].classList.contains("inline-block")){
-		  
-		  try {
-			  
-			  ele.children[0].querySelectorAll("[class*='badge'] img[src], .LevelNumber svg, [class*='group/role'] svg, [class*='group/role'] img[src]").forEach(badge=>{
-				try {
-					if (badge && badge.nodeName == "IMG"){
-						var tmp = {};
-						tmp.src = badge.src;
-						tmp.type = "img";
-						chatbadges.push(tmp);
-					} else if (badge && badge.nodeName.toLowerCase() == "svg"){
-						var tmp = {};
-						tmp.html = badge.outerHTML;
-						tmp.type = "svg";
-						chatbadges.push(tmp);
-					}
-				} catch(e){  }
-			  });
 	  
-	  
-			name = ele.children[0].querySelector("span[style]");
-			chatname = name.innerText;
-			try {
-				nameColor = name.style.color;
-			} catch(e){}
-		  } catch(e){return;}
-		  cloned.children[0].outerHTML = "";
-	  } else if (cloned.children[1] && cloned.children[1].classList.contains("inline-block")){
-		  
-		   ele.children[1].querySelectorAll("[class*='badge'] img[src], .LevelNumber svg, [class*='group/role'] svg, [class*='group/role'] img[src]").forEach(badge=>{
-				try {
-					if (badge && badge.nodeName == "IMG"){
-						var tmp = {};
-						tmp.src = badge.src;
-						tmp.type = "img";
-						chatbadges.push(tmp);
-					} else if (badge && badge.nodeName.toLowerCase() == "svg"){
-						var tmp = {};
-						tmp.html = badge.outerHTML;
-						tmp.type = "svg";
-						chatbadges.push(tmp);
-					}
-				} catch(e){  }
-			  });
-			  
-			  
-		  try {
-			name = ele.children[1].querySelector("span[style]");
-			chatname = name.innerText;
-			try {
-				nameColor = name.style.color;
-			} catch(e){}
-		  } catch(e){return;}
-		  cloned.children[1].outerHTML = ""
-	  } else {
-		  try {
-			name = ele.querySelector("span[style]");
-			chatname = name.innerText;
-			try {
-				nameColor = name.style.color;
-			} catch(e){}
-		  } catch(e){return;}
+	  try {
+		chatname = ele.querySelector(".chat-entry-username").innerText;
+		
+	  } catch(e){
+		  return;
 	  }
-	  for (var i=cloned.children.length-1;i>=0;i--){
-		  if (cloned.children[i].nodeName.toLowerCase() === "div"){
-			  cloned.children[i].outerHTML = "";
-		  }
-	  }
+	  try {
+		nameColor = ele.querySelector(".chat-entry-username").style.color;
+	  } catch(e){}
 	  
 	  if (!settings.textonlymode){
 		  try {
-			chatmessage = getAllContentNodes(cloned);
+			chatmessage = getAllContentNodes(ele.querySelector(".chat-entry-content"));
 		  } catch(e){}
-		  
 	  } else {
 		  try{
-			//var childrens = cloned.querySelectorAll("[alt]");
-			//for (var i =0;i<childrens.length;i++){
-			//	childrens[i].outerHTML = childrens[i].alt;
-			//}
-			chatmessage = cloned.innerText;
+			chatmessage = ele.querySelector(".chat-entry-content").innerText;
 		  } catch(e){}
 	  }
 	  
-	  
-	  var donations = 0;
-	  try {
-		// var elements = ele.querySelectorAll('.chat-line__message--cheer-amount'); // FFZ support
-		
-		// for (var i=0;i<elements.length;i++){
-			// donations += parseInt(elements[i].innerText);
-		// }
-		// if (donations==1){
-			// donations += " bit";
-		// } else if (donations>1){
-			// donations += " bits";
-		// }
-	  } catch(e){}
+	  ele.querySelector(".chat-message-identity").querySelectorAll(".badge img[src], .badge svg").forEach(badge=>{
+		try {
+			if (badge && badge.nodeName == "IMG"){
+				var tmp = {};
+				tmp.src = badge.src;
+				tmp.type = "img";
+				chatbadges.push(tmp);
+			} else if (badge && badge.nodeName.toLowerCase() == "svg"){
+				var tmp = {};
+				tmp.html = badge.outerHTML;
+				tmp.type = "svg";
+				chatbadges.push(tmp);
+			}
+		} catch(e){  }
+	  });
+
 
 	  var hasDonation = '';
-	  if (donations) {
-		  hasDonation = donations;
-	  }
+	
 	  
 	  chatname = chatname.replace("Channel Host", "");
 	  chatname = chatname.replace(":", "");
@@ -240,12 +173,15 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						//if (mutation.addedNodes[i].id && mutation.addedNodes[i].id.startsWith("message-temp")){continue;}
-						if (pastMessages.includes(mutation.addedNodes[i].id)){continue;}
 						try {
-							pastMessages.push(mutation.addedNodes[i].id)
-							pastMessages = pastMessages.slice(-200);
-							processMessage(mutation.addedNodes[i].childNodes[0].childNodes[0].childNodes[0].childNodes[0]);
+							if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.chatEntry){
+								if (pastMessages.includes(mutation.addedNodes[i].dataset.chatEntry)){continue;}
+								
+									pastMessages.push(mutation.addedNodes[i].dataset.chatEntry)
+									pastMessages = pastMessages.slice(-200);
+									processMessage(mutation.addedNodes[i]);
+								
+							}
 						} catch(e){}
 					}
 				}
@@ -261,14 +197,14 @@
 	
 	console.log("Social stream injected");
 	var xxx = setInterval(function(){
-		if (document.getElementById("app")){
+		if (document.getElementById("chatroom")){
 			clearInterval(xxx);
 			
-			var clear = document.querySelectorAll(".message > [id*='message-']");
+			var clear = document.querySelectorAll("div[data-chat-entry]");
 			for (var i = 0;i<clear.length;i++){
-				pastMessages.push(clear[i].id);
+				pastMessages.push(clear[i].dataset.chatEntry);
 			}
-			onElementInserted(document.getElementById("app"));
+			onElementInserted(document.getElementById("chatroom"));
 		}
 	},2000);
 	
