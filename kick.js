@@ -90,7 +90,38 @@
 		});
 	}
 
-	chatmessage = settings.textonlymode ? cloned.innerText : getAllContentNodes(cloned);
+	if (settings.textonlymode) {
+		chatmessage = cloned.innerText; // <=== not fix right now
+	}
+	else {
+		var tmp = ele.children;
+		var msg_tmp = "";
+
+		switch(tmp.length) {
+			case 1: // only have message
+				for (var i=2; i < tmp[0].children.length; i++) {
+					if(tmp[0].children[i].innerText !== "") { // only text
+						msg_tmp += tmp[0].children[i].innerText;
+					} else {
+						img = `<img src="${tmp[0].children[i].querySelector("svg, img[src]").src}">`
+						msg_tmp += img;
+					}
+				}
+				break;
+			case 2: // a reply message
+				for (var i=2; i < tmp[1].children.length; i++) {
+					if (tmp[1].children[i].innerText !== "") { // only text
+						msg_tmp += tmp[1].children[i].innerText;
+					}
+					else { // had img or svg 
+						img = `<img src="${tmp[1].children[i].querySelector("svg, img[src]").src}">`
+						msg_tmp += img;
+					}
+				}
+				break;
+		}
+		chatmessage = msg_tmp;
+	}
 
 	// console.log(chatbadges)
 	// console.log(chatname)
