@@ -72,13 +72,20 @@
 	  
 	  if (!settings.textonlymode){
 		  try {
-			chatmessage = getAllContentNodes(ele.querySelector(".chat-entry-content, .chat-emote-container"));
-		  } catch(e){}
+			var chatNodes = ele.querySelectorAll(".chat-entry-content, .chat-emote-container");
+			for (var i=0;i<chatNodes.length;i++){
+				chatmessage += getAllContentNodes(chatNodes[i]);
+			}
+		  } catch(e){
+			  console.log(chatmessage);
+		  }
 	  } else {
 		  try{
 			chatmessage = ele.querySelector(".chat-entry-content").innerText;
 		  } catch(e){}
 	  }
+	  
+	  if (!chatmessage){return;}
 	  
 	  ele.querySelector(".chat-message-identity").querySelectorAll(".badge img[src], .badge svg").forEach(badge=>{
 		try {
@@ -103,7 +110,6 @@
 	  chatname = chatname.replace("Channel Host", "");
 	  chatname = chatname.replace(":", "");
 	  chatname = chatname.trim();
-	  
 	  
 	  var chatimg = "";
 	  var channelName = window.location.pathname.split("/")[1];
