@@ -50,8 +50,8 @@
 	
 	async function processMessage(ele){	// twitch
 	
+	  console.log(ele)
 	  if (!ele){return;}
-		
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
@@ -62,114 +62,152 @@
 	  var chatbadges = [];
 	  
 	  var cloned =  ele.cloneNode(true);
-	  if (cloned.children[0] && cloned.children[0].classList.contains("inline-block")){
-		  
-		  try {
-			  
-			  ele.children[0].querySelectorAll("[class*='badge'] img[src], .LevelNumber svg, [class*='group/role'] svg, [class*='group/role'] img[src]").forEach(badge=>{
-				try {
-					if (badge && badge.nodeName == "IMG"){
-						var tmp = {};
-						tmp.src = badge.src;
-						tmp.type = "img";
-						chatbadges.push(tmp);
-					} else if (badge && badge.nodeName.toLowerCase() == "svg"){
-						var tmp = {};
-						tmp.html = badge.outerHTML;
-						tmp.type = "svg";
-						chatbadges.push(tmp);
-					}
-				} catch(e){  }
-			  });
-	  
-	  
-			name = ele.children[0].querySelector("span[style]");
-			chatname = name.innerText;
-			try {
-				nameColor = name.style.color;
-			} catch(e){}
-		  } catch(e){return;}
-		  cloned.children[0].outerHTML = "";
-	  } else if (cloned.children[1] && cloned.children[1].classList.contains("inline-block")){
-		  
-		   ele.children[1].querySelectorAll("[class*='badge'] img[src], .LevelNumber svg, [class*='group/role'] svg, [class*='group/role'] img[src]").forEach(badge=>{
-				try {
-					if (badge && badge.nodeName == "IMG"){
-						var tmp = {};
-						tmp.src = badge.src;
-						tmp.type = "img";
-						chatbadges.push(tmp);
-					} else if (badge && badge.nodeName.toLowerCase() == "svg"){
-						var tmp = {};
-						tmp.html = badge.outerHTML;
-						tmp.type = "svg";
-						chatbadges.push(tmp);
-					}
-				} catch(e){  }
-			  });
-			  
-			  
-		  try {
-			name = ele.children[1].querySelector("span[style]");
-			chatname = name.innerText;
-			try {
-				nameColor = name.style.color;
-			} catch(e){}
-		  } catch(e){return;}
-		  cloned.children[1].outerHTML = ""
-	  } else {
-		  try {
-			name = ele.querySelector("span[style]");
-			chatname = name.innerText;
-			try {
-				nameColor = name.style.color;
-			} catch(e){}
-		  } catch(e){return;}
-	  }
-	  for (var i=cloned.children.length-1;i>=0;i--){
-		  if (cloned.children[i].nodeName.toLowerCase() === "div"){
-			  cloned.children[i].outerHTML = "";
-		  }
-	  }
-	  
-	  if (!settings.textonlymode){
-		  try {
-			chatmessage = getAllContentNodes(cloned);
-		  } catch(e){}
-		  
-	  } else {
-		  try{
-			//var childrens = cloned.querySelectorAll("[alt]");
-			//for (var i =0;i<childrens.length;i++){
-			//	childrens[i].outerHTML = childrens[i].alt;
-			//}
-			chatmessage = cloned.innerText;
-		  } catch(e){}
-	  }
-	  
-	  
-	  var donations = 0;
-	  try {
-		// var elements = ele.querySelectorAll('.chat-line__message--cheer-amount'); // FFZ support
-		
-		// for (var i=0;i<elements.length;i++){
-			// donations += parseInt(elements[i].innerText);
-		// }
-		// if (donations==1){
-			// donations += " bit";
-		// } else if (donations>1){
-			// donations += " bits";
-		// }
-	  } catch(e){}
+	  var chat_message_identity = cloned.querySelectorAll("[class*='chat-message-identity']")[0];
+	  var author = chat_message_identity.querySelector("span .chat-entry-username");
+	  chatname = author.innerText;
+	  nameColor = author.style.color;
+	  badges = chat_message_identity.children[0].querySelectorAll("svg, img[src]");
 
-	  var hasDonation = '';
-	  if (donations) {
-		  hasDonation = donations;
-	  }
+	if (badges.length > 0) {
+		badges.forEach( (badge) => {
+			var tmp = {};
+			switch(badge.nodeName.toLowerCase()) {
+				case 'img':
+					tmp = {
+						src: badge.src,
+						type: "img"
+					}
+					chatbadges.push(tmp);
+					break;
+				case 'svg':
+					tmp = {
+						html: badge.outerHTML,
+						type: "svg",
+					}
+					chatbadges.push(tmp);
+					break;
+			}
+		});
+	}
+
+	chatmessage = settings.textonlymode ? cloned.innerText : getAllContentNodes(cloned);
+
+	console.log(chatbadges)
+	console.log(chatname)
+	console.log(nameColor)
+	console.log(chatmessage)
+	console.log("========================")
+
+	//   =====================================
+
+	//   if (cloned.children[0] && cloned.children[0].classList.contains("inline-block")){
+		  
+	// 	  try {
+			  
+	// 		  ele.children[0].querySelectorAll("[class*='badge'] img[src], .LevelNumber svg, [class*='group/role'] svg, [class*='group/role'] img[src]").forEach(badge=>{
+	// 			try {
+	// 				if (badge && badge.nodeName == "IMG"){
+	// 					var tmp = {};
+	// 					tmp.src = badge.src;
+	// 					tmp.type = "img";
+	// 					chatbadges.push(tmp);
+	// 				} else if (badge && badge.nodeName.toLowerCase() == "svg"){
+	// 					var tmp = {};
+	// 					tmp.html = badge.outerHTML;
+	// 					tmp.type = "svg";
+	// 					chatbadges.push(tmp);
+	// 				}
+	// 			} catch(e){  }
+	// 		  });
 	  
-	  chatname = chatname.replace("Channel Host", "");
-	  chatname = chatname.replace(":", "");
-	  chatname = chatname.trim();
+	  
+	// 		name = ele.children[0].querySelector("span[style]");
+	// 		chatname = name.innerText;
+	// 		try {
+	// 			nameColor = name.style.color;
+	// 		} catch(e){}
+	// 	  } catch(e){return;}
+	// 	  cloned.children[0].outerHTML = "";
+	//   } else if (cloned.children[1] && cloned.children[1].classList.contains("inline-block")){
+		  
+	// 	   ele.children[1].querySelectorAll("[class*='badge'] img[src], .LevelNumber svg, [class*='group/role'] svg, [class*='group/role'] img[src]").forEach(badge=>{
+	// 			try {
+	// 				if (badge && badge.nodeName == "IMG"){
+	// 					var tmp = {};
+	// 					tmp.src = badge.src;
+	// 					tmp.type = "img";
+	// 					chatbadges.push(tmp);
+	// 				} else if (badge && badge.nodeName.toLowerCase() == "svg"){
+	// 					var tmp = {};
+	// 					tmp.html = badge.outerHTML;
+	// 					tmp.type = "svg";
+	// 					chatbadges.push(tmp);
+	// 				}
+	// 			} catch(e){  }
+	// 		  });
+			  
+			  
+	// 	  try {
+	// 		name = ele.children[1].querySelector("span[style]");
+	// 		chatname = name.innerText;
+	// 		try {
+	// 			nameColor = name.style.color;
+	// 		} catch(e){}
+	// 	  } catch(e){return;}
+	// 	  cloned.children[1].outerHTML = ""
+	//   } else {
+	// 	  try {
+	// 		name = ele.querySelector("span[style]");
+	// 		chatname = name.innerText;
+	// 		try {
+	// 			nameColor = name.style.color;
+	// 		} catch(e){}
+	// 	  } catch(e){return;}
+	//   }
+	//   for (var i=cloned.children.length-1;i>=0;i--){
+	// 	  if (cloned.children[i].nodeName.toLowerCase() === "div"){
+	// 		  cloned.children[i].outerHTML = "";
+	// 	  }
+	//   }
+	  
+	//   if (!settings.textonlymode){
+	// 	  try {
+	// 		chatmessage = getAllContentNodes(cloned);
+	// 	  } catch(e){}
+		  
+	//   } else {
+	// 	  try{
+	// 		//var childrens = cloned.querySelectorAll("[alt]");
+	// 		//for (var i =0;i<childrens.length;i++){
+	// 		//	childrens[i].outerHTML = childrens[i].alt;
+	// 		//}
+	// 		chatmessage = cloned.innerText;
+	// 	  } catch(e){}
+	//   }
+	  
+	  
+	//   var donations = 0;
+	//   try {
+	// 	// var elements = ele.querySelectorAll('.chat-line__message--cheer-amount'); // FFZ support
+		
+	// 	// for (var i=0;i<elements.length;i++){
+	// 		// donations += parseInt(elements[i].innerText);
+	// 	// }
+	// 	// if (donations==1){
+	// 		// donations += " bit";
+	// 	// } else if (donations>1){
+	// 		// donations += " bits";
+	// 	// }
+	//   } catch(e){}
+
+	//   var hasDonation = '';
+	//   if (donations) {
+	// 	  hasDonation = donations;
+	//   }
+	  
+	//   chatname = chatname.replace("Channel Host", "");
+	//   chatname = chatname.replace(":", "");
+	//   chatname = chatname.trim();
 	  
 	  
 	  var chatimg = "";
@@ -185,7 +223,8 @@
 	  data.nameColor = nameColor;
 	  data.chatmessage = chatmessage;
 	  data.chatimg = chatimg;
-	  data.hasDonation = hasDonation;
+	//   data.hasDonation = hasDonation; // <==== I'm not fix this
+	  data.hasDonation = "";
 	  data.hasMembership = "";
 	  data.type = "kick";
 	  
@@ -243,9 +282,9 @@
 						//if (mutation.addedNodes[i].id && mutation.addedNodes[i].id.startsWith("message-temp")){continue;}
 						if (pastMessages.includes(mutation.addedNodes[i].id)){continue;}
 						try {
-							pastMessages.push(mutation.addedNodes[i].id)
-							pastMessages = pastMessages.slice(-200);
-							processMessage(mutation.addedNodes[i].childNodes[0].childNodes[0].childNodes[0].childNodes[0]);
+							// pastMessages.push(mutation.addedNodes[i].id) <==== id is not work
+							// pastMessages = pastMessages.slice(-200);
+							processMessage(mutation.addedNodes[i].childNodes[0]);
 						} catch(e){}
 					}
 				}
