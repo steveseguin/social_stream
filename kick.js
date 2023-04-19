@@ -72,7 +72,7 @@
 	  
 	  if (!settings.textonlymode){
 		  try {
-			chatmessage = getAllContentNodes(ele.querySelector(".chat-entry-content"));
+			chatmessage = getAllContentNodes(ele.querySelector(".chat-entry-content, .chat-emote-container"));
 		  } catch(e){}
 	  } else {
 		  try{
