@@ -92,11 +92,11 @@
 
 	chatmessage = settings.textonlymode ? cloned.innerText : getAllContentNodes(cloned);
 
-	console.log(chatbadges)
-	console.log(chatname)
-	console.log(nameColor)
-	console.log(chatmessage)
-	console.log("========================")
+	// console.log(chatbadges)
+	// console.log(chatname)
+	// console.log(nameColor)
+	// console.log(chatmessage)
+	// console.log("========================")
 
 	//   =====================================
 
