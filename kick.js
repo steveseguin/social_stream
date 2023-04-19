@@ -77,7 +77,7 @@
 				chatmessage += getAllContentNodes(chatNodes[i]);
 			}
 		  } catch(e){
-			  console.log(chatmessage);
+			  //console.log(chatmessage);
 		  }
 	  } else {
 		  try{
