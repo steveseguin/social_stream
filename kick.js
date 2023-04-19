@@ -50,7 +50,7 @@
 	
 	async function processMessage(ele){	// twitch
 	
-	  console.log(ele)
+	//   console.log(ele)
 	  if (!ele){return;}
 	  var chatsticker = false;
 	  var chatmessage = "";
