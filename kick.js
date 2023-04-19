@@ -63,9 +63,9 @@
 	  
 	  var cloned =  ele.cloneNode(true);
 	  var chat_message_identity = cloned.querySelectorAll("[class*='chat-message-identity']")[0];
-	  var author = chat_message_identity.querySelector("span .chat-entry-username");
-	  chatname = author.innerText;
-	  nameColor = author.style.color;
+	  name = chat_message_identity.querySelector("span .chat-entry-username");
+	  chatname = name.innerText;
+	  nameColor = name.style.color;
 	  badges = chat_message_identity.children[0].querySelectorAll("svg, img[src]");
 
 	if (badges.length > 0) {
@@ -97,8 +97,6 @@
 	// console.log(nameColor)
 	// console.log(chatmessage)
 	// console.log("========================")
-
-	//   =====================================
 
 	//   if (cloned.children[0] && cloned.children[0].classList.contains("inline-block")){
 		  
@@ -188,27 +186,28 @@
 	  
 	//   var donations = 0;
 	//   try {
-	// 	// var elements = ele.querySelectorAll('.chat-line__message--cheer-amount'); // FFZ support
+		// 	// var elements = ele.querySelectorAll('.chat-line__message--cheer-amount'); // FFZ support
 		
-	// 	// for (var i=0;i<elements.length;i++){
-	// 		// donations += parseInt(elements[i].innerText);
-	// 	// }
-	// 	// if (donations==1){
-	// 		// donations += " bit";
-	// 	// } else if (donations>1){
-	// 		// donations += " bits";
-	// 	// }
-	//   } catch(e){}
-
-	//   var hasDonation = '';
-	//   if (donations) {
-	// 	  hasDonation = donations;
-	//   }
-	  
-	//   chatname = chatname.replace("Channel Host", "");
+		// 	// for (var i=0;i<elements.length;i++){
+			// 		// donations += parseInt(elements[i].innerText);
+			// 	// }
+			// 	// if (donations==1){
+				// 		// donations += " bit";
+				// 	// } else if (donations>1){
+					// 		// donations += " bits";
+					// 	// }
+					//   } catch(e){}
+					
+					
+					//   chatname = chatname.replace("Channel Host", "");
 	//   chatname = chatname.replace(":", "");
 	//   chatname = chatname.trim();
-	  
+	
+	  var donations = 0;
+	  var hasDonation = '';
+	  if (donations) {
+		  hasDonation = donations;
+	  }
 	  
 	  var chatimg = "";
 	  var channelName = window.location.pathname.split("/")[1];
@@ -223,7 +222,7 @@
 	  data.nameColor = nameColor;
 	  data.chatmessage = chatmessage;
 	  data.chatimg = chatimg;
-	//   data.hasDonation = hasDonation; // <==== I'm not fix this
+	  data.hasDonation = hasDonation;
 	  data.hasDonation = "";
 	  data.hasMembership = "";
 	  data.type = "kick";
