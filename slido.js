@@ -20,7 +20,6 @@
 	  var nameColor = "";
 	  var chatname = "";
 	  
-	 
 	  chatname = ele.querySelector(".question-item__author").innerText;
 	  if (!chatname){return;}
 	  
@@ -165,13 +164,12 @@
 		}
 	});
 
-	function onElementInserted(target, className) {
+	function onElementInserted(target) {
 		if (!target){return;}
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						console.log(mutation.addedNodes[i]);
 						if ( mutation.addedNodes[i] && mutation.addedNodes[i].querySelector){
 							if (mutation.addedNodes[i].ignore){continue;}
 							mutation.addedNodes[i].ignore=true;
@@ -191,15 +189,24 @@
 	
 	console.log("SOCIAL STREAM INSERTED");
 	
-	setTimeout(function(){
-		
-		var clear = document.querySelectorAll(".question-list__item");
-		for (var i = 0;i<clear.length;i++){
-			clear[i].ignore = true; // don't let already loaded messages to re-load.
-			//processMessage(clear[i])
+	var checknig = setInterval(function(){
+		if (document.querySelector(".question-list__container")){
+			clearInterval(checknig);
+		} else {
+			return;
 		}
-		onElementInserted(document.querySelector(".question-list__container"));
-	},2000);
+		setTimeout(function(){
+			try{
+				
+				var clear = document.querySelectorAll(".question-list__item");
+				for (var i = 0;i<clear.length;i++){
+					clear[i].ignore = true; // don't let already loaded messages to re-load.
+				}
+			} catch(e){}
+			onElementInserted(document.querySelector(".question-list__container"));
+		},1000);
+		document.querySelectorAll(".content-nav-tabs > button")[1].click()
+	},1000);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
 	try {
