@@ -157,15 +157,12 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].className.indexOf("ChatMessageItem")>-1){
+							if (!mutation.addedNodes[i].dataset.e2e){continue;}
+							if (mutation.addedNodes[i].dataset.e2e == "chat-message"){
 								setTimeout(function(ele){
 									processMessage(ele)
 								},500, mutation.addedNodes[i]);
-							} else if (settings.streamevents && mutation.addedNodes[i].className.indexOf("ivChatRoomMessage-StyledLikeMessageItem")>-1){
-								setTimeout(function(ele){
-									processMessage(ele, true)
-								},500, mutation.addedNodes[i]);
-							} else if (settings.streamevents && mutation.addedNodes[i].className.indexOf("DivChatRoomMessage")>-1){
+							} else if (settings.streamevents){
 								setTimeout(function(ele){
 									processMessage(ele, true)
 								},500, mutation.addedNodes[i]);
