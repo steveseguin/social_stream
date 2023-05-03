@@ -415,11 +415,29 @@ function getColorFromName(str) {
   if (len>6){
 	  len = 6;
   }
-  for (pos = 0; pos < len; pos++) {
-    out += (str.charCodeAt(pos) - 64) * Math.pow(26, len - pos - 1);
+  
+  if (settings.colorseed){
+		var seed = parseInt(settings.colorseed.numbersetting) || 1;
+  } else {
+	    var seed = 26;
   }
-  out = out%colours; // get modulus
-  out = rainbow(out)
+  
+  for (var pos = 0; pos < len; pos++) {
+    out += (str.charCodeAt(pos) - 64) * Math.pow(seed, len - pos - 1);
+  }
+  
+  if (settings.totalcolors){
+	  colours = parseInt(settings.totalcolors.numbersetting);
+	  if (colours>167772){
+		  colours = 167772;
+	  } else if (colours<1){
+		  colours = 1;
+	  }
+  } else {
+	  colours = 167772;
+  }
+  out = parseInt(out%colours); // get modulus
+  out = rainbow(out);
   return out;
 }
 
@@ -865,6 +883,8 @@ function sendToDestinations(message){
 		message.id = messageCounter;
 	}
 	if (settings.randomcolor && message && !message.nameColor && message.chatname){
+		message.nameColor = getColorFromName(message.chatname);
+	} else if (settings.randomcolorall && message && message.chatname){
 		message.nameColor = getColorFromName(message.chatname);
 	}
 

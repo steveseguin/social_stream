@@ -48,6 +48,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
+	
+	var iii = document.querySelectorAll("input[type='number']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
 
 	var iii = document.querySelectorAll("button[data-action]");
 	for (var i=0;i<iii.length;i++){
@@ -186,6 +191,14 @@ function update(response){
 						var ele = document.querySelector("input[data-textsetting='"+key+"']");
 						if (ele){
 							ele.value = response.settings[key].textsetting;
+							updateSettings(ele);
+						}
+					}
+					if ("numbersetting" in response.settings[key]){
+						var ele = document.querySelector("input[data-numbersetting='"+key+"']");
+						console.log(ele);
+						if (ele){
+							ele.value = response.settings[key].numbersetting;
 							updateSettings(ele);
 						}
 					}
@@ -394,6 +407,10 @@ function updateSettings(ele){
 
 	} else if (ele.dataset.textsetting){
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
+		return;
+	} else if (ele.dataset.numbersetting){
+		console.log("saving: "+ele.dataset.numbersetting);
+		chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting", setting: ele.dataset.numbersetting, "value": ele.value}, function (response) {});
 		return;
 	}
 
