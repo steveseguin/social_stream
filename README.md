@@ -75,6 +75,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - rooter.gg (no pop out; just pause the video I guess)
 - loco.gg (no pop out; just pause the video I guess)
 - joystick.tv (+18, pop-out chat, ie: https://joystick.tv/u/USERNAMEHERE/chat)
+- buzzit.ca (community member submitted integration)
 
 
 More on request
