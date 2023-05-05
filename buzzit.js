@@ -14,35 +14,68 @@
 	  xhr.send();
 	}
 	
-	function processMessage(ele){
+	function sleep(ms = 0) {
+		return new Promise(r => setTimeout(r, ms)); // LOLz!
+	}
+	
+	var namePhotoList = {};
+	
+	async function processMessage(ele){
 		
-		if (!ele.classList.contains('row')){return;}
+		if (!ele || !ele.classList || !ele.classList.contains('row')){return;}
+		
 		try {
 			var name="";
 			var img="";
 			try {
 				name = ele.querySelector('.v-avatar').querySelector('.v-image').ariaLabel.replace("avatar","").trim();
-
-				/*
-				img = ele.querySelector('.v-avatar').querySelector('.v-image').querySelector('.v-image__image--cover');
-				console.log(img);
-				img = img.currentStyle || window.getComputedStyle(img, false);
-				console.log(img);
-				img = img.backgroundImage.slice(4, -1).replace(/"/g, "");
-				console.log(img);
-				*/
-				
 			} catch(e){
-				name = "";
+				return; // no name, no game.
 			}
 			
-			var msg = "";
+			try {	
+				img = ele.querySelector('.v-avatar').querySelector('.v-image').querySelector('.v-image__image--cover').style.backgroundImage.split('url("')[1].split('")')[0];
+			} catch(e){
+				img = "";
+				await sleep(300)
+				try {	
+					img = ele.querySelector('.v-avatar').querySelector('.v-image').querySelector('.v-image__image--cover').style.backgroundImage.split('url("')[1].split('")')[0];
+				} catch(e){
+					await sleep(300)
+					try {	
+						img = ele.querySelector('.v-avatar').querySelector('.v-image').querySelector('.v-image__image--cover').style.backgroundImage.split('url("')[1].split('")')[0];
+					} catch(e){
+						await sleep(300)
+						try {	
+							img = ele.querySelector('.v-avatar').querySelector('.v-image').querySelector('.v-image__image--cover').style.backgroundImage.split('url("')[1].split('")')[0];
+						} catch(e){
+							await sleep(300)
+							try {	
+								img = ele.querySelector('.v-avatar').querySelector('.v-image').querySelector('.v-image__image--cover').style.backgroundImage.split('url("')[1].split('")')[0];
+							} catch(e){
+								// check to see if there is a saved image..  I do this after a delay time out as I don't want to give someone an easy opportunity to hijack a guest's photo with a spoofed name
+								img = namePhotoList[name] || "";
+								if (img){
+									console.log("Name list used:"+ img);
+								}
+								// give up after 1.5-seconds of delay otherwise
+							}
+						}
+					}
+				}
+			}
 			
+			if (img){
+				namePhotoList[name] = img; // saving the image to the name list, just in case.
+			}
+			
+			
+			var msg = "";
 			ele.querySelectorAll('.message-body').forEach(ee=>{
 				if (ee.nodeType == Node.TEXT_NODE){
 					msg += ee.textContent;
 					msg = msg.trim();
-				} else if (!settings.textonlymode && (ee.nodeName  == "IMG")){
+				} else if ( (ee.nodeName  == "IMG")){
 					msg += "<img src='"+ee.src+"' />";
 					msg = msg.trim();
 				}  else {
@@ -53,8 +86,6 @@
 
 			if (!msg.length){return;}
 			
-			
-
 			
 			var data = {};
 			data.chatname = name;
@@ -67,6 +98,8 @@
 			data.hasMembership = "";
 			data.contentimg = "";
 			data.type = "buzzit";
+			
+			console.log(data);
 			
 			pushMessage(data);
 		} catch(e){
@@ -120,7 +153,9 @@
 						try {
 							if (mutation.addedNodes[i].skip){return;}
 							mutation.addedNodes[i].skip = true;
-							processMessage(mutation.addedNodes[i]);
+							setTimeout(function(node){ // let the image load async
+								processMessage(node);
+							},300,mutation.addedNodes[i]);
 						} catch(e){}
 					}
 				}
