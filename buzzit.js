@@ -99,8 +99,6 @@
 			data.contentimg = "";
 			data.type = "buzzit";
 			
-			console.log(data);
-			
 			pushMessage(data);
 		} catch(e){
 			console.error(e);
