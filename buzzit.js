@@ -66,7 +66,7 @@
 			data.hasDonation = "";
 			data.hasMembership = "";
 			data.contentimg = "";
-			data.type = "quickchannel";
+			data.type = "buzzit";
 			
 			pushMessage(data);
 		} catch(e){
