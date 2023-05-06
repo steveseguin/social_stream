@@ -75,7 +75,11 @@
 				//		resp += node.alt.trim()+" ";
 					//}
 				} else {
-					resp += node.outerHTML;
+					if (node && node.classList && node.classList.contains("zero-width-emote")){
+						resp += "<span class='zero-width-parent'>"+node.outerHTML+"</span>";
+					} else {
+						resp += node.outerHTML;
+					}
 				}
 			} 
 		});
