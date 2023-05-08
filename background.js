@@ -437,7 +437,37 @@ function getColorFromName(str) {
 	  colours = 167772;
   }
   out = parseInt(out%colours); // get modulus
-  out = rainbow(out);
+  if (colours===1){
+	  return "#F00";
+  } else if (colours===2){
+	  switch(out){
+		case 0: return "#F00";
+		case 1: return "#00ABFA";
+		}
+  } else if (colours===3){
+	   switch(out){
+		case 0: return "#F00";
+		case 1: return "#00A800";
+		case 2: return "#00ABFA";
+	   }
+  } else if (colours===4){
+	  switch(out){
+		case 0: return "#F00";
+		case 1: return "#FFA500";
+		case 2: return "#00A800";
+		case 3: return "#00ABFA";
+	   }
+  } else if (colours===5){
+	  switch(out){
+		case 0: return "#F00";
+		case 1: return "#FFA500";
+		case 2: return "#00A800";
+		case 3: return "#00ABFA";
+		case 4: return "#FF39C5";
+	  }
+	} else {
+	out = rainbow(out);
+  }
   return out;
 }
 
