@@ -3840,7 +3840,11 @@
 			}
 
 			if (data.sourceImg && customSource){
-				showType += '<img src="' + data.sourceImg + '" class="icon hl-source-type" onerror="this.style.display=\'none\'" />';
+				if (largeavatar){
+					showType += '<img src="' + data.sourceImg + '" class="icon hl-source-type  avatar-badge" onerror="this.style.display=\'none\'" />';
+				} else {
+					showType += '<img src="' + data.sourceImg + '" class="icon hl-source-type" onerror="this.style.display=\'none\'" />';
+				}
 			}
 
 			var timeArrived = "";
