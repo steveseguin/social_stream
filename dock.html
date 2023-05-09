@@ -2161,7 +2161,7 @@
 		//document.getElementById("tts").classList.add('pressed');
 		getById("tts").style['background-image']='url(./icons/tts_incoming_messages_on.png)';
 		getById("tts").title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
-		var speech = true;
+		speech = true;
 		speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || speechLang;
 
 		if (speechLang.split("-")[0].toLowerCase() == "en"){
@@ -4260,7 +4260,9 @@
 			applyBotActions(data); // Official actions
 
 			if (speech && !bot){
-				speechMeta(data);
+				if (!node.classList.contains("hide")){
+					speechMeta(data);
+				}
 			}
 			return node;
 		}
