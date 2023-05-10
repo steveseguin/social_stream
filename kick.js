@@ -184,7 +184,7 @@
 								if (pastMessages.includes(mutation.addedNodes[i].dataset.chatEntry)){continue;}
 								
 									pastMessages.push(mutation.addedNodes[i].dataset.chatEntry)
-									pastMessages = pastMessages.slice(-200);
+									pastMessages = pastMessages.slice(-300);
 									processMessage(mutation.addedNodes[i]);
 								
 							}
@@ -205,14 +205,15 @@
 	var xxx = setInterval(function(){
 		if (document.getElementById("chatroom")){
 			clearInterval(xxx);
-			
-			var clear = document.querySelectorAll("div[data-chat-entry]");
-			for (var i = 0;i<clear.length;i++){
-				pastMessages.push(clear[i].dataset.chatEntry);
-			}
-			onElementInserted(document.getElementById("chatroom"));
+			setTimeout(function(){
+				var clear = document.querySelectorAll("div[data-chat-entry]");
+				for (var i = 0;i<clear.length;i++){
+					pastMessages.push(clear[i].dataset.chatEntry);
+				}
+				onElementInserted(document.getElementById("chatroom"));
+			},3000);
 		}
-	},2000);
+	},1000);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
 	try {
