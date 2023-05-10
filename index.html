@@ -890,6 +890,11 @@ span.zero-width-parent img.zero-width-emote {
 		}
 	}
 	
+	var colorized = false;
+	if (urlParams.has("colorednames") || urlParams.has("color")){
+		colorized = true;
+	}
+	
 	var pitch = 1;
 	if (urlParams.has("pitch")){
 		pitch = urlParams.get("pitch") || 1;
@@ -1222,9 +1227,14 @@ span.zero-width-parent img.zero-width-emote {
 				if (data.backgroundNameColor){
 					styleOverrideName = data.backgroundNameColor;
 				}
-				if (data.textNameColor){
+				
+				if (data.nameColor && colorized){
+					styleOverrideName = " color:"+data.nameColor+";";
+				} else if (data.textNameColor){
 					styleOverrideName += " " + data.textNameColor;
-				}
+				} 
+				
+				
 				if (styleOverrideName){
 					styleOverrideName = 'style="'+styleOverrideName+'"';
 				}
@@ -1239,13 +1249,6 @@ span.zero-width-parent img.zero-width-emote {
 				} else {
 					avatarImg = showType;
 				}
-				
-				
-				//var nameColor = "";
-				//if (data.nameColor && colorized){
-				//	nameColor = "style='color:"+data.nameColor+";'";
-				//}
-			
 				
 				var chatbadges = "";
 				if (data.chatbadges && showbadges){
