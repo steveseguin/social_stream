@@ -76,6 +76,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - loco.gg (no pop out; just pause the video I guess)
 - joystick.tv (+18, pop-out chat, ie: https://joystick.tv/u/USERNAMEHERE/chat)
 - buzzit.ca (community member submitted integration)
+- afreecatv.com (pop out the chat; you can't close the main window it seems tho?)
 
 
 More on request
