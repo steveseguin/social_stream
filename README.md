@@ -34,7 +34,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - instafeed.me (no pop out; alternative instagram live support)
 - tiktok live (tiktok.com/*/live)
 - webex live chat (not the pop out)
-- linkedin events and live comments. (works with linkedin.com/videos/live/****** & linkedin.com/videos/events/******)
+- linkedin events and live comments. (works with linkedin.com/videos/live/* or linkedin.com/videos/events/* or linkedin.com/events/*)
 - vdo.ninja (pop-out chat)
 - Whatsapp.com (REQUIRES the TOGGLE in menu to enable it; use @ https://web.whatsapp.com ; fyi, no avatar support)
 - discord.com (web version; requires toggle enabled via the settings as well) 
