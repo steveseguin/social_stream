@@ -18,7 +18,7 @@
 	var lastDataIndex = -1;
 	
 	function processMessage(ele){
-
+		
 	  if (ele && ele.marked){
 		  return;
 	  } else {
@@ -33,13 +33,13 @@
 	  
 	  var chatimg = "";
 	  try{
-		   chatimg = ele.querySelector("img.presence-entity__image.avatar").src;
+		   chatimg = ele.querySelector("img.presence-entity__image").src;
 		   if (chatimg.startsWith("data:image/gif;base64")){
 			   chatimg="";
 		   }
 	  } catch(e){ }
 	 
-	  var name = ele.querySelector(".comments-post-meta__name-text").innerText;
+	  var name = ele.querySelector(".comments-post-meta__name-text > span > span[aria-hidden='true']").innerText;
 	  if (name){
 		name = name.trim();
 	  }
@@ -161,12 +161,17 @@
 	console.log("social stream injected");
 	
 	var interval = setInterval(function(){
-		if (window.location.pathname.startsWith("/video/live") || window.location.pathname.startsWith("/video/event")  || window.location.pathname.startsWith("/video/golive/")){
+		if (window.location.pathname.startsWith("/video/live") || window.location.pathname.startsWith("/video/event")  || window.location.pathname.startsWith("/video/golive/") || window.location.pathname.startsWith("/events/")){
 			console.log("socialstream loaded");
 			if (document.querySelectorAll(".video-live-comments").length){
 				if (!document.querySelector(".video-live-comments").marked){
 					document.querySelector(".video-live-comments").marked=true;
 					clearInterval(interval);
+					
+					//document.querySelectorAll(".video-live-comments .video-live-comments__comment-item").forEach(ele=>{ // for debugging only.
+					//	 processMessage(ele);
+					//});
+					
 					onElementInserted(".video-live-comments", function(element){
 					   processMessage(element);
 					});
