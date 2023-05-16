@@ -476,15 +476,7 @@ There is a toggle that lets you show the source of the chat messages.
 
 - Browsers will sometimes stop browser tabs after an hour of inactivity. Disable this option in your browser under `chrome://settings/performance` or whereever this setting is found.
 
-Kind regards, Peter
-All chromium based browsers (Microsoft Edge, Google Chrome, etc.)  have an option toggled on by default to shut down tabs in the background after time X. For me it was set at 1 hour. That's why the kick and Twitch pop out stopped working after one hour. (They've been in background, because I opened YouTube pop out at last) 
-They got forced to go offline by Edge to save resources. I toggled this function off now in my browser. 
-
-You can find it in your Browser- Options under "system" there is a lot of stuff to turn on and off about saving resources...
-
-Maybe this solution could help some others too.
-
-Kind regards, Peter
+- Other options that may be active in your browser can be disabled also, to avoid tabs being throttled or paused, such as `chrome://flags/#calculate-native-win-occlusion`
 
 If the auto responder doesn't work -- you see a blue bar, but nothing happens, there's a couple things to do.
 - make sure if using Youtube/Twitch that the pop out window is open
