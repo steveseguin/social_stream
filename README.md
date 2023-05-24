@@ -478,6 +478,9 @@ There is a toggle that lets you show the source of the chat messages.
 
 - Other options that may be active in your browser can be disabled also, to avoid tabs being throttled or paused, such as `chrome://flags/#calculate-native-win-occlusion`
 
+- Another option, if using Windows, is to do Windows + Tab, and have two virtual Desktops on your PC.  Put the chat windows into one virtual desktop, and use OBS in the other. Win+Tab can let you switch between windows.
+- 
+
 If the auto responder doesn't work -- you see a blue bar, but nothing happens, there's a couple things to do.
 - make sure if using Youtube/Twitch that the pop out window is open
 - go to `chrome://apps` and remove the Youtube(s) apps that might appear.  You can remove them all really if none are required.
