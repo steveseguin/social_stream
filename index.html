@@ -605,6 +605,8 @@ span.zero-width-parent img.zero-width-emote {
 	
 	var nextComment = null;
 	var roomID = "test";
+	var applyCustomActions = false;
+
 	
 	if (urlParams.has("session")){
 		roomID = urlParams.get("session");
@@ -769,6 +771,22 @@ span.zero-width-parent img.zero-width-emote {
 		document.documentElement.style.setProperty("--comment-padding", "20px 35px 20px 35px");
 		document.documentElement.style.setProperty("--author-left", "20px");
 	}
+		
+	try {
+		if (window.location.host !== "socialstream.ninja"){ // don't check if not private hosted, since it won't exist
+			var script = document.createElement('script');
+			script.onload = function() {
+				console.log("Loaded personal actions");
+			}
+			script.onerror = function(){
+				console.log("no personal actions file found. skipping.");
+			}
+			script.src = "custom.js";
+			document.head.appendChild(script);
+		}
+	} catch(e){}
+
+	
 	
 	
 	function realign(){
@@ -1060,6 +1078,14 @@ span.zero-width-parent img.zero-width-emote {
 		  if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
 		  if ("dataReceived" in e.data){ // raw data 
 			if ("overlayNinja" in e.data.dataReceived){
+				try {
+					if (applyCustomActions){
+						applyCustomFeatureActions(e.data.dataReceived.overlayNinja); 
+					}
+				} catch(e){
+					console.error(e);
+				}
+
 				console.log(e.data.dataReceived.overlayNinja);
 				if (e.data.dataReceived.overlayNinja && ("response" in e.data.dataReceived.overlayNinja)){
 					// pass
