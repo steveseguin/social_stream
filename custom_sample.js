@@ -15,3 +15,15 @@ function applyCustomActions(data){
 		}
 	}
 }
+
+
+function applyCustomFeatureActions(data){
+	var tid = false;
+	if (data.tid){tid = data.tid;}
+	
+	if (!tid) {
+	   console.log("Featured overlay cleared." )
+	} else {
+	   console.log("Message from " + data.chatname + " was featured." )
+	}
+}
