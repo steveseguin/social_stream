@@ -756,7 +756,6 @@ chrome.runtime.onMessage.addListener(
  
 				data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
 				
-				console.log(data);
 				sendToDestinations(data);
 
 			} else if (request.cmd && request.cmd === "sidUpdated") {
@@ -1443,7 +1442,6 @@ eventer(messageEvent, async function (e) {
 
 					data.type = "youtube";
 
-					console.log(data);
 					data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
 					sendToDestinations(data);
 				} else {
