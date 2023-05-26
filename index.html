@@ -1146,6 +1146,7 @@ span.zero-width-parent img.zero-width-emote {
 			}
 			
 			nextComment = setTimeout(function(data){
+			
 				var addImage = "";
 				if (data.contentimg){
 					 addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" onload="realign();"/></div>';
@@ -1255,7 +1256,7 @@ span.zero-width-parent img.zero-width-emote {
 				}
 				
 				if (data.nameColor && colorized){
-					styleOverrideName = " color:"+data.nameColor+";";
+					styleOverrideName += " color:"+data.nameColor+";";
 				} else if (data.textNameColor){
 					styleOverrideName += " " + data.textNameColor;
 				} 

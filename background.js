@@ -436,7 +436,9 @@ function getColorFromName(str) {
   } else {
 	  colours = 167772;
   }
+  
   out = parseInt(out%colours); // get modulus
+  
   if (colours===1){
 	  return "#F00";
   } else if (colours===2){
@@ -751,8 +753,10 @@ chrome.runtime.onMessage.addListener(
 					data.hasDonation = "";
 					data.hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
 				}
-
+ 
 				data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
+				
+				console.log(data);
 				sendToDestinations(data);
 
 			} else if (request.cmd && request.cmd === "sidUpdated") {

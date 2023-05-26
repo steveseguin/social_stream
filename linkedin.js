@@ -42,6 +42,11 @@
 	  var name = ele.querySelector(".comments-post-meta__name-text > span > span[aria-hidden='true']").innerText;
 	  if (name){
 		name = name.trim();
+	  } else {
+		  name = ele.querySelector(".comments-post-meta__name-text").innerText;
+		  if (name){
+			name = name.trim();
+		  }
 	  }
 	  
 	  var msg = "";
