@@ -23,7 +23,6 @@
 	var savedavatars = {};
 
 	function processMessage(ele, ital=false){
-		//console.log(ele);
 		
 		var chatimg="";
 		try{
@@ -60,11 +59,21 @@
 			var eles = ele.childNodes[1].childNodes;
 			if (eles.length>1){
 				for (var i  = 1; i<eles.length;i++){
-					chatmessage = eles[i].innerHTML;
+					if (eles[i].nodeName === "#text"){
+						chatmessage = eles[i].textContent;
+					} else if (settings.textonlymode){
+						chatmessage = eles[i].textContent;
+					} else {
+						chatmessage = eles[i].innerHTML;
+					}
 				}
 			} else if (eles.length==1){
 				for (var i  = 1; i<eles[0].childNodes.length;i++){
-					chatmessage = eles[0].childNodes[i].innerHTML;
+					if (settings.textonlymode){
+						chatmessage = eles[0].childNodes[i].textContent;
+					} else {
+						chatmessage = eles[0].childNodes[i].innerHTML;
+					}
 				}
 			}
 			
@@ -73,7 +82,11 @@
 	  
 	    if (!chatmessage){
 			try{
-				chatmessage = ele.childNodes[1].innerHTML;
+				if (settings.textonlymode){
+					chatmessage = ele.childNodes[1].textContent;
+				} else {
+					chatmessage = ele.childNodes[1].innerHTML;
+				}
 			} catch(e){}
 		}
 		
@@ -127,7 +140,6 @@
 		data.type = "tiktok";
 		data.event = ital; // if an event or actual message
 		
-		
 		pushMessage(data);
 	}
 	
@@ -157,15 +169,20 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (!mutation.addedNodes[i].dataset.e2e){continue;}
-							if (mutation.addedNodes[i].dataset.e2e == "chat-message"){
-								setTimeout(function(ele){
-									processMessage(ele)
-								},500, mutation.addedNodes[i]);
-							} else if (settings.streamevents){
-								setTimeout(function(ele){
-									processMessage(ele, true)
-								},500, mutation.addedNodes[i]);
+							if (mutation.addedNodes[i].dataset.e2e){
+								var ele = mutation.addedNodes[i];
+							} else {
+								var ele = mutation.addedNodes[i].querySelector("[data-e2e]");
+							}
+							
+							if (!ele){return;}
+							
+							if (ele.dataset.e2e == "chat-message"){
+								setTimeout(function(ele2){
+									processMessage(ele2)
+								},500, ele);
+							} else if (settings.captureevents){
+								processMessage(ele, true)
 							}
 						} catch(e){}
 					}
@@ -183,7 +200,8 @@
 
 	var settings = {};
 	// settings.textonlymode
-	// settings.streamevents
+	// settings.captureevents
+
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}

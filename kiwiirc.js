@@ -38,7 +38,7 @@
 		}
 		var isEvent=false;
 		if (ele.querySelector(".kiwi-messagelist-message-traffic")){
-			if (!settings.streamevents){return;}
+			if (!settings.captureevents){return;}
 			isEvent=true;
 			chatmessage = "<i>"+chatmessage+"</i>";
 		}
@@ -75,7 +75,7 @@
 	
 	var settings = {};
 	// settings.textonlymode
-	// settings.streamevents
+	// settings.captureevents
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}

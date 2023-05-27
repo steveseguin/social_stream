@@ -80,7 +80,7 @@
 	
 	var settings = {};
 	// settings.textonlymode
-	// settings.streamevents
+	// settings.captureevents
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
