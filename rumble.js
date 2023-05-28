@@ -17,11 +17,12 @@
 	function processMessage(ele){
 		
 		var chatimg = "";
-		if (ele.querySelector('.chat--profile-pic')){
+		if (ele.querySelector('img.chat-history--user-avatar[src]')){
 			try {
-				//chatimg = ele.querySelector('.chat--profile-pic').style.backgroundImage.split('"')[1];
-				//chatimg = chatimg.split('"')[0];
-			} catch(e){}
+				chatimg = ele.querySelector('img.chat-history--user-avatar[src]').src;
+			} catch(e){
+				chatimg = "";
+			}
 		}
 		
 		var name="";
