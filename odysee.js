@@ -15,7 +15,7 @@
 	}
 	
 	function processMessage(ele){
-		console.log(ele);
+		
 		var name="";
 		name = ele.querySelector('[class*="comment__author"]').innerText;
 		if (name){
@@ -28,7 +28,7 @@
 		var chatimg = '';
 		
 		var msg = "";
-		ele.querySelector(".livestreamComment__text").querySelector("p").childNodes.forEach(ee=>{
+		ele.querySelector(".livestreamComment__text, .livestream-comment__text").querySelector("p").childNodes.forEach(ee=>{
 			if (ee.nodeType == Node.TEXT_NODE){
 				msg += ee.textContent;
 				msg = msg.trim();
@@ -62,7 +62,6 @@
 		data.type = "odysee";
 		
 		pushMessage(data);
-		console.log(data);
 	}
 
 	function pushMessage(data){
@@ -111,7 +110,9 @@
 						try {
 							if (mutation.addedNodes[i].skip){return;}
 							mutation.addedNodes[i].skip = true;
-							processMessage(mutation.addedNodes[i]);
+							if (mutation.addedNodes[i].classList.contains("livestream__comment")){
+								processMessage(mutation.addedNodes[i]);
+							}
 						} catch(e){}
 					}
 				}
