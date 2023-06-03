@@ -51,6 +51,8 @@
 	async function processMessage(ele){	// twitch
 	
 	  if (!ele){return;}
+	  
+	  
 		
 	  var chatsticker = false;
 	  var chatmessage = "";
@@ -182,11 +184,15 @@
 						try {
 							if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.chatEntry){
 								if (pastMessages.includes(mutation.addedNodes[i].dataset.chatEntry)){continue;}
+							
+								pastMessages.push(mutation.addedNodes[i].dataset.chatEntry)
+								pastMessages = pastMessages.slice(-300);
+								processMessage(mutation.addedNodes[i]);
 								
-									pastMessages.push(mutation.addedNodes[i].dataset.chatEntry)
-									pastMessages = pastMessages.slice(-300);
-									processMessage(mutation.addedNodes[i]);
-								
+							} else if (mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner")){
+								let ele = mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner");
+								console.log(ele.cloneNode(true));
+								processMessage(ele);
 							}
 						} catch(e){}
 					}

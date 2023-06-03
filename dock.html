@@ -2489,7 +2489,7 @@
 	} else {
 		try {
 			if (window.obsstudio){
-				if (!reversed){
+				if (!reversed && !random){
 				
 					setInterval(function(){
 						if (forceAutoscroll && !isOBSBrowserSource){
@@ -4073,8 +4073,24 @@
 
 			if (random){
 				node.classList.add("randommode");
-				node.style.top = Math.random()*document.body.clientHeight*0.95;
-				node.style.left = Math.random()*document.body.clientWidth*0.8;
+				var r1 = Math.random();
+				var r2 = Math.random();
+				if (r1>0.5){
+					r1 -= 0.5;
+					node.style.top = r1*window.innerHeight/scale;
+				} else {
+					node.style.bottom = r1*window.innerHeight/scale;
+				}
+				
+				
+				if (r2>0.5){
+					r2 -= 0.5;
+					node.style.left = r2*window.innerWidth/scale;
+				} else {
+					node.style.right = r2*window.innerWidth/scale;
+				}
+				
+				
 				if (!customNodeLimit){
 					customNodeLimit = 20;
 				}
@@ -4268,7 +4284,7 @@
 				}
 			}
 
-			removeNode();
+			removeNode(); 
 
 			applyBotActions(data); // Official actions
 
