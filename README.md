@@ -70,6 +70,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - cbox.ws (no pop out needed)
 - castr.io (https://chat.castr.io/room/XXXXXXXX)
 - tellonym.me
+- peertube (triggers on: https://*/plugins/livechat/*router/webchat/room/*)
 - IRC (via https://webchat.quakenet.org/)
 - Tradingview.com (just the normal viewer page; no pop out)
 - rooter.gg (no pop out; just pause the video I guess)
@@ -77,7 +78,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - joystick.tv (+18, pop-out chat, ie: https://joystick.tv/u/USERNAMEHERE/chat)
 - buzzit.ca (community member submitted integration)
 - afreecatv.com (pop out the chat; you can't close the main window it seems tho?)
-
+- nonolive.com (no pop out; partial support added so far only)
 
 More on request
 
