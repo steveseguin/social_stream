@@ -68,7 +68,7 @@
 			
 			//nameColor = ele.querySelector(".chat__message__username").style.color;
 		} catch(e){
-			console.log(e);
+			//console.log(e);
 		}
 		
 		if (!name){
@@ -78,7 +78,7 @@
 		try {
 			chatimg = ele.querySelector("img[class^='profile-image_profile__']").src;
 		} catch(e){
-			console.log(e);
+			//console.log(e);
 		}
 		
 
@@ -89,7 +89,7 @@
 			msg = msg.trim();
 			
 		} catch(e){
-			console.log(e);
+			//console.log(e);
 			return;
 		}
 		var hasDono = "";
@@ -105,7 +105,7 @@
 					}
 				}
 			} catch(e){
-				console.log(e);
+				//console.log(e);
 			}
 		} else {
 			try {
