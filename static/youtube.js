@@ -133,20 +133,17 @@
 			chatname = escapeHtml(chatname);
 	  }
 	  
-	 
 	  
 	  var chatimg="";
 	  try{
 		 chatimg = ele.querySelector("#author-thumbnail #img[src]").src;
 	  } catch(e){
-		   console.error(e);
 	  }
 	  
 	  var chatmessage = "";
 	  try { 
 		  chatmessage = getAllContentNodes(ele.querySelector("#content #content-text"));
 	  } catch(e){
-		   console.error(e);
 		  return;
 	  }
 	  
@@ -154,7 +151,7 @@
 	  var chatmembership = false;
 	  var chatsticker = false;
 	  
-	  this.style.backgroundColor = "#CCC!important";
+	  this.style.backgroundColor = "#CCC";
 
 	  var data = {};
 	  data.chatname = chatname;
@@ -167,7 +164,6 @@
 	  data.hasMembership = "";
 	  data.contentimg = "";
 	  data.type = "youtube";
-	  
 	  
 	  if (chatimg){
 		  toDataURL(data.chatimg, function(base64Image){ // we upscale
