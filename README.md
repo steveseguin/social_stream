@@ -149,6 +149,8 @@ You will still need to manually redo these steps to update when needed, but you 
 
 ##### Second way:
 
+(This method hasn't been updated in a while and no longer works probably; you'll need to make your own XPI file to try it)
+
 Go to the release section of this repo and find a release that includes a Firefox XPI file. 
 
 https://github.com/steveseguin/social_stream/releases
