@@ -154,7 +154,6 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						console.log(mutation.addedNodes[i]);
 						if ( mutation.addedNodes[i] && mutation.addedNodes[i].querySelector){
 							if (mutation.addedNodes[i].classList.contains("ant-comment")){
 								if (mutation.addedNodes[i].ignore){continue;}
