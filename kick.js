@@ -19,7 +19,11 @@
 			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
 				resp += node.textContent;
 			} else if (node.nodeType === 1){
-				resp += node.outerHTML;
+				if (node && node.classList && node.classList.contains("zero-width-emote")){
+					resp += "<span class='zero-width-parent'>"+node.outerHTML+"</span>";
+				} else {
+					resp += node.outerHTML;
+				}
 			}
 		});
 		return resp;
