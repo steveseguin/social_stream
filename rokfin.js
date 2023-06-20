@@ -2,6 +2,11 @@
 	
 	function getAllContentNodes(element) {
 		var resp = "";
+		
+		if (!element.childNodes.length || !element.childNodes){
+			return element.textContent || "";
+		}
+		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
@@ -21,7 +26,7 @@
 	  
 	  
 	  try {
-		var nameEle = ele.querySelector(".ant-comment-content-author-name");
+		var nameEle = ele.querySelector(".ant-comment-content-author-name, .ant-comment-content-detail>.Linkify>.ant-typography");
 		var chatname = nameEle.innerText;
 		try {
 			nameColor = nameEle.style.color;
@@ -48,26 +53,20 @@
 	  
 	  
 	  if (!settings.textonlymode){
-		  if (!chatmessage){
-			  try {
-				var eleContent = ele.querySelector('.ant-comment-content-detail');
-				chatmessage = getAllContentNodes(eleContent);
-			  } catch(e){}
-		  }
-		  
-		  if (!chatmessage){
-			  try {
-				chatmessage = ele.textContent;
-			  } catch(e){}
-		  }
+		  try {
+			 
+			var tttt = ele.querySelector('.ant-comment-content-detail>.Linkify').childNodes;
+			for (var i=2;i<tttt.length;i++){
+				chatmessage += getAllContentNodes( tttt[i]);
+			}
+		
+		  } catch(e){}
 	  } else {
 		  try{
-			var cloned = ele.querySelector('.ant-comment-content-detail').cloneNode(true);
-			//var children = cloned.querySelectorAll("[alt]");
-			//for (var i =0;i<children.length;i++){
-			//	children[i].outerHTML = children[i].alt;
-			//}
-			chatmessage = cloned.innerText;
+			var tttt = ele.querySelector('.ant-comment-content-detail>.Linkify').childNodes;
+			for (var i=2;i<tttt.length;i++){
+				chatmessage += tttt[i].textContent;
+			}
 		  } catch(e){}
 	  }
 	  
@@ -185,7 +184,7 @@
 		var clear = document.querySelectorAll(".ant-comment");
 		for (var i = 0;i<clear.length;i++){
 			clear[i].ignore = true; // don't let already loaded messages to re-load.
-			//processMessage(clear[i])
+			processMessage(clear[i])
 		}
 		onElementInserted("#root");
 	},2000);
