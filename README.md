@@ -421,7 +421,9 @@ You can get a list of support languages on your system by running `speechSynthes
 
 ![image](https://user-images.githubusercontent.com/2575698/165753730-374498e7-7885-49ef-83ba-7fe2acde26ee.png)
 
-The audio will play out the default system audio output device. This might be a problem if using OBS for capture, as you'll need to use a virtual audio cable to capture the audio output of the system output and route it back into OBS for capture.  See the related issue here: https://github.com/w3c/mediacapture-output/issues/102
+The audio will play out the default system audio output device. This might be a problem if using OBS for capture, as you'll need to use a virtual audio cable to capture the audio output of the system output and route it back into OBS for capture.  Another user mentioned they were able to capture the TTS audio in OBS by selecting `explorer.exe` in the system application recorder.  Using the Premium Google-based TTS option (mentioned below) might also be a solution to this issue.   See the related issue here: https://github.com/w3c/mediacapture-output/issues/102
+
+
 
 If loading the app in the Chrome/Edge/Firefox browser, you will need to "click" the web page first before audio will play. This isn't the case with OBS, but most browsers require the user interact with the website on some level before it will play audio.  Please keep this in mind when testing things.
 
