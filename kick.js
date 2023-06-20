@@ -4,9 +4,18 @@
 	
 	function getAllContentNodes(element) {
 		var resp = "";
+		
+		if (!element.childNodes){
+			return element.outerHTML || "";
+		}
+		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
+				if (node.classList && node.classList.contains("seventv-painted-content")){
+					resp += node.outerHTML;
+				} else {
+					resp += getAllContentNodes(node)
+				}
 			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
 				resp += node.textContent;
 			} else if (node.nodeType === 1){
@@ -72,14 +81,22 @@
 		nameColor = ele.querySelector(".chat-entry-username").style.color;
 	  } catch(e){}
 	  
+	  
+	  
 	  if (!settings.textonlymode){
 		  try {
-			var chatNodes = ele.querySelectorAll(".chat-entry-content, .chat-emote-container");
+			var chatNodes = ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
+			
+			if (!chatNodes.length){
+				chatNodes = ele.querySelectorAll(".chat-entry-content, .chat-emote-container");
+			} else {
+				chatNodes = ele.querySelectorAll("seventv-container, .chat-emote-container, .seventv-painted-content"); // 7tv support, as of june 20th
+				
+			}
 			for (var i=0;i<chatNodes.length;i++){
 				chatmessage += getAllContentNodes(chatNodes[i]);
 			}
 		  } catch(e){
-			  //console.log(chatmessage);
 		  }
 	  } else {
 		  try{
@@ -88,6 +105,7 @@
 	  }
 	  
 	  if (!chatmessage){return;}
+	  
 	  
 	  ele.querySelector(".chat-message-identity").querySelectorAll(".badge img[src], .badge svg").forEach(badge=>{
 		try {
@@ -187,11 +205,18 @@
 							
 								pastMessages.push(mutation.addedNodes[i].dataset.chatEntry)
 								pastMessages = pastMessages.slice(-300);
-								processMessage(mutation.addedNodes[i]);
+								
+								if (SevenTV){
+									setTimeout(function(ele){
+										processMessage(ele);
+									}, 300, mutation.addedNodes[i]); // give seventv time to load, before parsing the message
+								} else {
+									processMessage(mutation.addedNodes[i]);
+								}
 								
 							} else if (mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner")){
 								let ele = mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner");
-								console.log(ele.cloneNode(true));
+								
 								processMessage(ele);
 							}
 						} catch(e){}
@@ -206,12 +231,16 @@
 	}
 	
 	var pastMessages = [];
+	var SevenTV = false;
 	
 	console.log("Social stream injected");
 	var xxx = setInterval(function(){
 		if (document.getElementById("chatroom")){
 			clearInterval(xxx);
 			setTimeout(function(){
+				if (document.getElementById("seventv-extension")){
+					SevenTV = true;
+				}
 				var clear = document.querySelectorAll("div[data-chat-entry]");
 				for (var i = 0;i<clear.length;i++){
 					pastMessages.push(clear[i].dataset.chatEntry);
