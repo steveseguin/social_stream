@@ -80,6 +80,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - afreecatv.com (pop out the chat; you can't close the main window it seems tho?)
 - nonolive.com (no pop out; partial support added so far only)
 - xeenon.xyz
+- stageTEN.tv
 
 More on request
 
