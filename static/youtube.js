@@ -167,11 +167,11 @@
 	  
 	  if (chatimg){
 		  toDataURL(data.chatimg, function(base64Image){ // we upscale
-				data.backupChatimg = data.chatimg.replace("=s32-", "=s256-");  // Increases the resolution of the image
-				data.backupChatimg = data.backupChatimg.replace("=s64-", "=s256-");
+				data.chatimg = data.chatimg.replace("=s32-", "=s256-");  // Increases the resolution of the image
+				data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 				
 				if (base64Image){
-					data.chatimg = base64Image; // there's code in the index page to fallback if the larger image doens't exist
+					data.backupChatimg = base64Image; // there's code in the index page to fallback if the larger image doens't exist
 				}
 				pushMessage(data);
 			});
