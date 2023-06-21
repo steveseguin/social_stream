@@ -35,6 +35,7 @@
 			--time-arrived-padding: 1px;
 			--profile-pic-border: 0 solid black;
 			--cursor-type: pointer;
+			--pressed-color: #9C9C;
 			
 			--donation-bgcolor: #FEFFAD33;
 			--donation-bgcolor-odd: #FDFF6533;
@@ -1190,7 +1191,7 @@
 			border: 3px white solid;
 		}
 		.pressed {
-			background-color: #9C9C !important;
+			background-color: var(--pressed-color) !important;
 		}
 		.queued {
 			background-color: #99a8cc !important;
@@ -1763,6 +1764,18 @@
 		document.documentElement.style.setProperty("--donation-bgcolor-bubble", "unset");
 		
 	}
+	
+	if (urlParams.has("pressedcolor")) {  // must be a hex code value, without the #.
+		let pressedColor = urlParams.get("pressedcolor") || false;
+		if (!pressedColor){
+			document.documentElement.style.setProperty("--pressed-color", "unset", "");
+		} else {
+			document.documentElement.style.setProperty("--pressed-color", "#"+pressedColor, "");
+		}
+	} 
+	
+	
+	//window.obsstudio
 	
 	var bubble = false;
 	if (urlParams.has("bubble")) {
@@ -2557,6 +2570,11 @@
 					document.documentElement.style.setProperty("--scale-output", scale);
 					document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
 					isOBSBrowserSource = true;
+					
+					if (!urlParams.has("pressedcolor")) {  // hide the pressed color if not set otherwise, but in OBS.
+						document.documentElement.style.setProperty("--pressed-color", "unset", "");
+					}
+					
 				});
 			}
 		} catch(e){}

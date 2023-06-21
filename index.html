@@ -923,6 +923,16 @@ span.zero-width-parent img.zero-width-emote {
 		}
 	}
 	
+	var ttsSpeakChatname = true;
+	if (urlParams.has("simpletts2")){ // You don't want to hear the chatname when TTS is enabled. ＞﹏＜
+		ttsSpeakChatname = false;
+		English = false;
+	}
+	
+	if (urlParams.has("simpletts")){
+		English = false;
+	}
+	
 	var colorized = false;
 	if (urlParams.has("colorednames") || urlParams.has("color")){
 		colorized = true;
@@ -1402,7 +1412,7 @@ span.zero-width-parent img.zero-width-emote {
 					}
 					
 					var chatname = "";
-					if (data.chatname){
+					if (data.chatname && ttsSpeakChatname){
 						chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
 						chatname = chatname.replaceAll('_', ' ');
 						chatname = chatname.replaceAll('@', ' ');
