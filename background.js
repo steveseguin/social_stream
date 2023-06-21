@@ -1826,6 +1826,8 @@ function createTab(url) {
 /////////////// bad word filter
 // just to keep things PG, I encode the naughty list.
 const badWords = JSON.parse(atob('WyJmdWNrIiwic2hpdCIsImN1bnQiLCJiaXRjaCIsIm5pZ2dlciIsImZhZyIsInJldGFyZCIsInJhcGUiLCJwdXNzeSIsImNvY2siLCJhc3Nob2xlIiwid2hvcmUiLCJzbHV0IiwiZ2F5IiwibGVzYmlhbiIsInRyYW5zZ2VuZGVyIiwidHJhbnNzZXh1YWwiLCJ0cmFubnkiLCJjaGluayIsInNwaWMiLCJraWtlIiwiamFwIiwid29wIiwicmVkbmVjayIsImhpbGxiaWxseSIsIndoaXRlIHRyYXNoIiwiZG91Y2hlIiwiZGljayIsImJhc3RhcmQiLCJmdWNrZXIiLCJtb3RoZXJmdWNrZXIiLCJhc3MiLCJhbnVzIiwidmFnaW5hIiwicGVuaXMiLCJ0ZXN0aWNsZXMiLCJtYXN0dXJiYXRlIiwib3JnYXNtIiwiZWphY3VsYXRlIiwiY2xpdG9yaXMiLCJwdWJpYyIsImdlbml0YWwiLCJlcmVjdCIsImVyb3RpYyIsInBvcm4iLCJ4eHgiLCJkaWxkbyIsImJ1dHQgcGx1ZyIsImFuYWwiLCJzb2RvbXkiLCJwZWRvcGhpbGUiLCJiZXN0aWFsaXR5IiwibmVjcm9waGlsaWEiLCJpbmNlc3QiLCJzdWljaWRlIiwibXVyZGVyIiwidGVycm9yaXNtIiwiZHJ1Z3MiLCJhbGNvaG9sIiwic21va2luZyIsIndlZWQiLCJtZXRoIiwiY3JhY2siLCJoZXJvaW4iLCJjb2NhaW5lIiwib3BpYXRlIiwib3BpdW0iLCJiZW56b2RpYXplcGluZSIsInhhbmF4IiwiYWRkZXJhbGwiLCJyaXRhbGluIiwic3Rlcm9pZHMiLCJ2aWFncmEiLCJjaWFsaXMiLCJwcm9zdGl0dXRpb24iLCJlc2NvcnQiXQ=='));
+
+
 const alternativeChars = {
   'a': ['@', '4'],
   'e': ['3'],
@@ -1860,6 +1862,7 @@ function generateVariationsList(words) {
   }
   return variationsList.filter(word => !word.match(/[A-Z]/));
 }
+
 const badWordsExanded = generateVariationsList(badWords)
 function createProfanityHashTable(profanityVariationsList) {
   const hashTable = {};
@@ -1875,7 +1878,7 @@ function createProfanityHashTable(profanityVariationsList) {
   }
   return hashTable;
 }
-const profanityHashTable = createProfanityHashTable(badWordsExanded);;
+var profanityHashTable = createProfanityHashTable(badWordsExanded);;
 function isProfanity(word) {
   const wordLower = word.toLowerCase();
   const firstChar = wordLower[0];
@@ -1895,6 +1898,17 @@ function filterProfanity(sentence) {
   }
   return sentence;
 }
+
+try { 
+	 // use a custom file named badwords.txt to replace the badWords that are hard-coded. one per line.
+	fetch('./badwords.txt').then((response) => response.text()).then((text) => {
+		let customBadWords = text.split(/\r?\n|\r|\n/g);
+		profanityHashTable = createProfanityHashTable(customBadWords);
+    }).catch((error) => {
+		// no file found or error
+	});
+} catch(e){}
+
 /////// end of bad word filter
 
 async function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
