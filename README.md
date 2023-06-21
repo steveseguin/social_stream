@@ -20,6 +20,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 
 - twitch.tv - pop out chat to trigger
 - youtube live - pop out the chat to trigger (studio or guest view); or add &socialstream to the YT link
+- youtube static comments - click SS in the top right corner of Youtube, then select the message you wish to publish inside the YT comment section via the new buttons there.
 - facebook live - guest view, publisher view, or the producer's pop-up chat on the web is supported.
 - workplace.com - (same setup as Facebook)
 - zoom.us (web version)
