@@ -277,7 +277,7 @@
 				const styleEl = document.createElement("style");
 				document.head.appendChild(styleEl);
 				styleEl.sheet.insertRule("div[data-testid='Dropdown']{ height:0; opacity:0; }", 0);
-				styleEl.sheet.insertRule("article div[data-testid='caret'] svg{ height:0; opacity:0; }", 0);
+				styleEl.sheet.insertRule("article div[data-testid='caret']{ height:0; opacity:0; }", 0);
 				styleEl.sheet.insertRule("[data-testid='confirmationSheetConfirm'] div{ height:0; opacity:0; }", 0);
 				styleEl.sheet.insertRule("#layers [role='alert'], #layers [role='alertdialog']{ height:0; opacity:0; z-Index:0;}", 0);
 

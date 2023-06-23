@@ -40,7 +40,6 @@
 		if (ele.querySelector(".kiwi-messagelist-message-traffic")){
 			if (!settings.captureevents){return;}
 			isEvent=true;
-			chatmessage = "<i>"+chatmessage+"</i>";
 		}
 		
 		var chatimg = ele.querySelector('.kiwi-avatar img[src]') || "";

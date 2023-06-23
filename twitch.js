@@ -139,7 +139,7 @@
 	  } catch(e){}
 	  
 	  try {
-		var eleContent = ele.querySelector(".seventv-chat-message-body, ") || ele.querySelector(".seventv-message-context")  || ele.querySelector('*[data-test-selector="chat-line-message-body"]');
+		var eleContent = ele.querySelector(".seventv-chat-message-body") || ele.querySelector(".seventv-message-context")  || ele.querySelector('*[data-test-selector="chat-line-message-body"]');
 		chatmessage = getAllContentNodes(eleContent);
 	  } catch(e){}
 	 
@@ -389,10 +389,8 @@
 		if (document.querySelector(".chat-room__content")){ // just in case 
 			console.log("Social Stream Start");
 			clearInterval(checkReady);
-			
-			
 			setTimeout(function(){
-				var clear = document.querySelectorAll(".seventv-message, .chat-line__message, .paid-pinned-chat-message-content-wrapper");
+				var clear = document.querySelectorAll("seventv-container, .seventv-message, .chat-line__message, .paid-pinned-chat-message-content-wrapper");
 				for (var i = 0;i<clear.length;i++){
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
 				}
