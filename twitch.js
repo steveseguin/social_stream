@@ -91,13 +91,16 @@
 	
 	function processMessage(ele){	// twitch
 
+	
+
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
-
+	  var donations = 0;
+	
 	  try {
 		
-		var displayNameEle = ele.querySelector(".chat-author__display-name") || ele.querySelector(".seventv-chat-user-username");
+		var displayNameEle = ele.querySelector(".chat-author__display-name, .chatter-name") || ele.querySelector(".seventv-chat-user-username");
 		var displayName = displayNameEle.innerText;
 		var username = displayName;
 		var usernameEle = ele.querySelector(".chat-author__intl-login");
@@ -136,7 +139,7 @@
 	  } catch(e){}
 	  
 	  try {
-		var eleContent = ele.querySelector(".seventv-chat-message-body") || ele.querySelector(".seventv-message-context")  || ele.querySelector('*[data-test-selector="chat-line-message-body"]');
+		var eleContent = ele.querySelector(".seventv-chat-message-body, ") || ele.querySelector(".seventv-message-context")  || ele.querySelector('*[data-test-selector="chat-line-message-body"]');
 		chatmessage = getAllContentNodes(eleContent);
 	  } catch(e){}
 	 
@@ -164,6 +167,24 @@
 			}
 		  } catch(e){}
 	  }
+	  
+	   if (!chatmessage){
+		    try {
+				var eleContent = ele.querySelector('.paid-pinned-chat-message-content-container').childNodes;
+				
+				if (eleContent.length>1){
+					chatmessage = getAllContentNodes(eleContent[0]);
+					donations = eleContent[1].textContent;
+				} else {
+					donations = eleContent[0].textContent;
+				}
+			
+			
+			
+		  } catch(e){}
+	   }
+	  
+	  
 		  
 	 if (chatmessage){
 		 chatmessage = chatmessage.trim();
@@ -179,18 +200,22 @@
 	  }
 	  
 	  if (chatmessage && chatmessage.includes(" (Deleted by ")){
+		  //
 		  return; // I'm assuming this is a deleted message
 	  }
 	  
 	  if (chatmessage && chatmessage.includes(" Timeout by ")){
+		  //
 		  return; // I'm assuming this is a timed out message
 	  }
 	  
 	   if (chatmessage && chatmessage.includes(" (Banned by ")){
+		   //
 		  return; // I'm assuming this is a banning message
 	  }
 	  
 	  if (channelName && settings.customtwitchstate){
+		  //
 		if (settings.customtwitchaccount && settings.customtwitchaccount.textsetting && (settings.customtwitchaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
 			return;
 		} else if (!settings.customtwitchaccount){
@@ -198,19 +223,32 @@
 		}
 	  }
 	  
-	  var donations = 0;
+	  
 	  try {
-		var elements = ele.querySelectorAll('.chat-line__message--cheer-amount'); // FFZ support
-		
-		for (var i=0;i<elements.length;i++){
-			donations += parseInt(elements[i].innerText);
+		  
+		  if (!donations){
+			var elements = ele.querySelectorAll('.chat-line__message--cheer-amount'); // FFZ support
+			
+			for (var i=0;i<elements.length;i++){
+				donations += parseInt(elements[i].innerText);
+			}
+			if (donations==1){
+				donations += " bit";
+			} else if (donations>1){
+				donations += " bits";
+			}
+		  }
+ 	  } catch(e){}
+
+
+		if (!donations){
+			
+			try {
+				var elements = ele.querySelectorAll('.paid-pinned-chat-message-content-container')[1]; // FFZ support
+				donations = elements.textContent;
+			  } catch(e){}
+			
 		}
-		if (donations==1){
-			donations += " bit";
-		} else if (donations>1){
-			donations += " bits";
-		}
-	  } catch(e){}
 
 	  var hasDonation = '';
 	  if (donations) {
@@ -218,6 +256,7 @@
 	  }
 	  
 	  if (!chatmessage && !hasDonation && !username){
+		  //console.log("6");
 		return;
 	  }
 
@@ -279,6 +318,31 @@
 			settings = response.settings;
 		}
 	});
+	
+	function processEvent(ele){
+	  var data = {};
+	  data.chatname = "";
+	  data.chatbadges = "";
+	  data.nameColor = "";;
+	  data.chatmessage = getAllContentNodes(ele);
+	  data.chatimg = "";
+	  data.hasDonation = "";
+	  data.hasMembership = "";
+	  data.type = "twitch";
+	  data.event = true;
+	  
+	  if (!data.chatmessage){return;}
+	  
+	  if (brandedImageURL){
+		data.sourceImg = brandedImageURL;
+	  }
+	  
+	  try {
+		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+	  } catch(e){
+		  //
+	  }
+	}
 
 	function onElementInsertedTwitch(target, callback) {
 		var onMutationsObserved = function(mutations) {
@@ -292,7 +356,7 @@
 							mutation.addedNodes[i].ignore=true;
 							
 							
-							if (mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message"))) {
+							if (mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message") || ( mutation.addedNodes[i].querySelector && mutation.addedNodes[i].querySelector(".paid-pinned-chat-message-content-wrapper")))) {
 								mutation.addedNodes[i].ignore=true;
 								callback(mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].querySelector(".chat-line__message")){
@@ -303,7 +367,10 @@
 									ele.ignore = true;
 									callback(ele);
 								}
+							} else if (settings.captureevents && mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("user-notice-line"))){
+								processEvent(mutation.addedNodes[i]);
 							}
+		 
 						} catch(e){}
 					}
 				}
@@ -325,7 +392,7 @@
 			
 			
 			setTimeout(function(){
-				var clear = document.querySelectorAll(".seventv-message, .chat-line__message");
+				var clear = document.querySelectorAll(".seventv-message, .chat-line__message, .paid-pinned-chat-message-content-wrapper");
 				for (var i = 0;i<clear.length;i++){
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
 				}

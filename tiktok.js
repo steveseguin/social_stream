@@ -94,10 +94,6 @@
 			return;
 		}
 		
-		if (ital && chatmessage){
-			chatmessage = "<i>"+chatmessage+"</i>";
-		}
-	  
 		if (chatname && chatimg){
 			savedavatars[chatname] = chatimg;
 			if (savedavatars.length >100){

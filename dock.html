@@ -2224,6 +2224,7 @@
 	var volume = 1;
 	if (urlParams.has("volume")){
 		volume = urlParams.get("volume") || 1;
+		volume = parseFloat(volume);
 	}
 
 	var voiceName = false;
@@ -3753,8 +3754,11 @@
 			if (data.chatmessage){
 				if (stripHTML){
 					data.chatmessage = stripHtmlFunction(data.chatmessage);
+					data.chatmessage = data.chatmessage.trim();
+				} else if (data.event){
+					data.chatmessage = data.chatmessage.trim();
+					data.chatmessage = "<i>"+data.chatmessage+"</i>";
 				}
-				data.chatmessage = data.chatmessage.trim();
 			} else {
 				data.chatmessage = "";
 			}

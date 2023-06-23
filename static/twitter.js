@@ -268,6 +268,58 @@
 					
 				}
 			}
+			
+			
+			var button2  = document.createElement("button");
+			button2.onclick = function(){
+				document.getElementById("adbutton").remove();
+				
+				const styleEl = document.createElement("style");
+				document.head.appendChild(styleEl);
+				styleEl.sheet.insertRule("div[data-testid='Dropdown']{ height:0; opacity:0; }", 0);
+				styleEl.sheet.insertRule("article div[data-testid='caret'] svg{ height:0; opacity:0; }", 0);
+				styleEl.sheet.insertRule("[data-testid='confirmationSheetConfirm'] div{ height:0; opacity:0; }", 0);
+				styleEl.sheet.insertRule("#layers [role='alert'], #layers [role='alertdialog']{ height:0; opacity:0; z-Index:0;}", 0);
+
+				setInterval(function(){
+					try {
+						document.querySelector("[data-testid='confirmationSheetConfirm'] div").click();
+						console.log("Blocked an ad");
+					} catch(e){
+						try {
+							document.querySelector("[data-testid='block'] div span").click();
+						} catch(e){
+							try {
+								document.querySelectorAll("[data-testid='placementTracking'] article div[data-testid='caret'] svg")[0].parentNode.click();
+								setTimeout(function(){
+									try {
+										document.querySelector("[data-testid='block'] div span").click();
+									} catch(e){}
+								},250);
+							} catch(e){}
+						}
+					}
+				},500);
+			};
+			button2.id = "adbutton";
+			button2.innerHTML = "Block Promoted Tweets";
+			button2.style = "border: 0; width:100%; transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; background-color: #dfdfdf; cursor:pointer;";
+			
+			if (!isExtensionOn){
+				button2.style.display = "none";
+			}
+			
+			try{
+				document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label="Tweet"]')[0].parentNode.appendChild(button2);
+			} catch (e){
+				try{
+					var eles = document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label][role="link"]');
+					var ele = eles[eles.length - 1].parentNode.parentNode.appendChild(button2);
+				} catch (e){
+					
+				}
+			}
+
 		}
 	}
 
