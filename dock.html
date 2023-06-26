@@ -2590,6 +2590,18 @@
 	var syncDocks = false;
 	if (urlParams.has("sync")){
 		syncDocks = true;
+		try {
+			if (blockMessageSelecting2 || blockMessageSelecting){
+				document.querySelector('[data-action="Delete"] span').innerText = "Delete Message (locally only)";
+				document.querySelector('[data-action="Delete"]').title = "Using chat/view-only mode disables the ability to syncronize deleted messages with other docks";
+			}
+		} catch(e){
+		}
+	} else {
+		try {
+			document.querySelector('[data-action="Delete"]').title = "Enable &sync mode to have messages be deleted in other synced docks also";
+		} catch(e){
+		}
 	}
 
 	if (darkmode){
