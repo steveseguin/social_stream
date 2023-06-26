@@ -92,10 +92,20 @@
 			100% { opacity: 1; }
 		}
 		
-		img {
+		div > span {
 			max-width: calc(var(--width) * 1.5);
 			max-height: var(--width);
 			position:relative;
+			margin: auto;
+			padding: 0;
+			object-fit: contain;
+			vertical-align: top;
+			display: block;
+		}
+		
+		img {
+			max-width: calc(var(--width) * 1.5);
+			max-height: var(--width);
 			margin: auto;
 			padding: 0;
 			object-fit: contain;
@@ -124,6 +134,16 @@
 		@keyframes fadeOut {
 			0% { opacity: 1; }
 			100% { opacity: 0; }
+		}
+		
+		span.zero-width-parent {
+			display: inline-block;
+			width: 0;
+			position:absolute;
+		}
+		span.zero-width-parent img.zero-width-emote {
+			right: 0;
+			position:absolute;
 		}
 
 	</style>
@@ -457,8 +477,6 @@
 		}
 		
 		
-		console.log(data);
-		
 		if (data.chatname){
 			if (custombot && doNotShowBot && custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){ // because why not. :)
 				return;
@@ -468,8 +486,10 @@
 		let tmp = document.createElement("div");
 		tmp.innerHTML = data.chatmessage;
 		
+		
 		let svgs = tmp.querySelectorAll("svg"); // not bothering to check for dupes.
 		let images = tmp.querySelectorAll("img");
+	
 		
 		let emojis = [];
 		let text = tmp.textContent || tmp.innerText || "";
@@ -494,17 +514,29 @@
 			try{	
 				let images2 = {};
 				let images3 = [];
-			
+				
+				let prevImage = null;
+			//zero-width-parent
 				for (var i=0;i<images.length;i++){
+					
 					if (images[i].src && images2[images[i].src]){
 						continue;
 					}
+					
 					images[i].onerror = function(){
 						this.style.display='none';
 						this.remove();
 					}
+					
+					if (prevImage && images[i].classList.contains("zero-width-emote")){
+						prevImage = null;
+						images3.push(images[i]);
+						continue;
+					}
+					
 					images2[images[i].src] = true;
 					images3.push(images[i]);
+					prevImage = images[i];
 				};
 				images = images3;
 			} catch(e){
@@ -552,17 +584,30 @@
 			});
 		}
 		
+		var node2 = null;
 		images.forEach(img=>{
 			if (!img){return;}
+			if (node2 && img.classList.contains("zero-width-emote")){
+				var node = document.createElement('span');
+				node.appendChild(img);
+				node.classList.add("zero-width-parent");
+				node2.appendChild(node);
+				node2 = null;
+				return;
+			} 
 			var node = document.createElement('div');
-			node.appendChild(img);
-			
+			node2 = document.createElement('span');
+			node2.appendChild(img);
+			node2.classList.add("el");
+			node2.style.animation = "y "+(Math.random()*5+5)+"s linear infinite alternate";
+			node2.style.animationDelay = Math.random()*-35+"s";
+			node.appendChild(node2);
 			node.classList.add("emoji");
 			node.classList.add("el-wrap");
-			img.classList.add("el");
-			img.style.animation = "y "+(Math.random()*5+5)+"s linear infinite alternate";
-			img.style.animationDelay = Math.random()*-35+"s";
 			
+			if (img.classList.contains("zero-width-emote")){
+				node2 = null;
+			}
 			if (data.type){
 				node.dataset.sourceType = data.type;
 			}
