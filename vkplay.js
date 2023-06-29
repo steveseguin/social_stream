@@ -63,22 +63,10 @@
 	  
 	  
 	  var chatimg = "";
-	  try {
-			chatimg = ele.querySelector('.ant-avatar img').src;
-	  } catch(e){
-		  
-	  }
-	  
+	 
 	  
 	  var hasDonation = '';
-	  try {
-		var tip = ele.querySelector('.ant-space-item mark'); // FFZ support
-		if (tip){
-			if (tip.innerText.includes("Tipped")){
-				hasDonation = tip.innerText.replace("Tipped ","");
-			}
-		}
-	  } catch(e){}
+	  
 
 	 
 	  var data = {};
