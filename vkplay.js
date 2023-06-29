@@ -3,7 +3,7 @@
 	function getAllContentNodes(element) {
 		var resp = "";
 		
-		if (!element.childNodes.length || !element.childNodes){
+		if (!element.childNodes || !element.childNodes.length){
 			return element.textContent || "";
 		}
 		
@@ -13,7 +13,9 @@
 			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
 				resp += node.textContent;
 			} else if (node.nodeType === 1){
-				resp += node.outerHTML;
+				if (!settings.textonlymode){
+					resp += node.outerHTML;
+				}
 			}
 		});
 		return resp;
@@ -26,8 +28,8 @@
 	  
 	  
 	  try {
-		var nameEle = ele.querySelector(".ant-comment-content-author-name, .ant-comment-content-detail>.Linkify>.ant-typography");
-		var chatname = nameEle.innerText;
+		var nameEle = ele.querySelector("[class^='ChatMessage_name_']");
+		var chatname = nameEle.childNodes[0].textContent;;
 		try {
 			nameColor = nameEle.style.color;
 		} catch(e){}
@@ -35,7 +37,7 @@
 	  
 	  var chatbadges = [];
 	  
-	  ele.querySelectorAll("[class*='badge'] img[src], .LevelNumber svg").forEach(badge=>{
+	  ele.querySelectorAll("img[class^='ChatBadge_image'][src]").forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "IMG"){
 				var tmp = {};
@@ -52,23 +54,13 @@
 	  });
 	  
 	  
-	  if (!settings.textonlymode){
-		  try {
-			 
-			var tttt = ele.querySelector('.ant-comment-content-detail>.Linkify').childNodes;
-			for (var i=2;i<tttt.length;i++){
-				chatmessage += getAllContentNodes( tttt[i]);
-			}
-		
-		  } catch(e){}
-	  } else {
-		  try{
-			var tttt = ele.querySelector('.ant-comment-content-detail>.Linkify').childNodes;
-			for (var i=2;i<tttt.length;i++){
-				chatmessage += tttt[i].textContent;
-			}
-		  } catch(e){}
-	  }
+	  try {
+		 
+		var tttt = ele.querySelector('[class^="ChatMessage_text_"] > [class^="BlockRenderer"]');
+		chatmessage = getAllContentNodes(tttt);
+	
+	  } catch(e){}
+	  
 	  
 	  var chatimg = "";
 	  try {
@@ -97,7 +89,7 @@
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = "";
-	  data.type = "rokfin";
+	  data.type = "vklive";
 	  
 	  
 	  if (!chatmessage && !hasDonation){
@@ -120,7 +112,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector('#comment-form_comment').focus();
+					document.querySelector('.ce-block__content > [contenteditable="true"]').focus();
 					sendResponse(true);
 					return;
 				}
@@ -155,18 +147,13 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						if ( mutation.addedNodes[i] && mutation.addedNodes[i].querySelector){
-							if (mutation.addedNodes[i].classList.contains("ant-comment")){
-								if (mutation.addedNodes[i].ignore){continue;}
-								mutation.addedNodes[i].ignore=true;
-								processMessage(mutation.addedNodes[i]);
-							} else {
-								var ele = mutation.addedNodes[i].querySelector(".ant-comment");
-								if (ele){
-									if (ele.ignore){continue;}
-									ele.ignore=true;
-									processMessage(ele);
-								}
+							var ele = mutation.addedNodes[i].querySelector("[class^='ChatBoxBase_message']");
+							if (ele){
+								if (ele.ignore){continue;}
+								ele.ignore=true;
+								processMessage(ele);
 							}
+							
 						}
 					}
 				}
@@ -180,10 +167,11 @@
 	}
 	
 	setTimeout(function(){
-		var clear = document.querySelectorAll(".ant-comment");
+		var clear = document.querySelectorAll("div.ReactVirtualized__Grid__innerScrollContainer > div");
 		for (var i = 0;i<clear.length;i++){
 			clear[i].ignore = true; // don't let already loaded messages to re-load.
-			//processMessage(clear[i])
+			
+			processMessage(clear[i])
 		}
 		onElementInserted("#root");
 	},2000);

@@ -64,8 +64,10 @@
 						if (document.getElementById("startupbutton")){
 							if (isExtensionOn){
 								document.getElementById("startupbutton").style.display = "block";
+								document.getElementById("adbutton").style.display = "block";
 							} else {
 								document.getElementById("startupbutton").style.display = "none";
+								document.getElementById("adbutton").style.display = "none";
 							}
 						}
 					}
