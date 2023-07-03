@@ -287,37 +287,39 @@
 	  }
 	}
 
-	chrome.runtime.onMessage.addListener(
-		function (request, sender, sendResponse) {
-			try{
-				if ("focusChat" == request){
-					document.querySelector('[data-a-target="chat-input"]').focus();
-					sendResponse(true);
-					return;
-				}
-				if (typeof request === "object"){
-					if ("settings" in request){
-						settings = request.settings;
-						sendResponse(true);
-						return;
-					}
-				}
-				// twitch doesn't capture avatars already.
-			} catch(e){}
-			sendResponse(false);
-		}
-	);
-	
 	var settings = {};
 	// settings.textonlymode
 	// settings.captureevents
 	
+	if (chrome){
+		chrome.runtime.onMessage.addListener(
+			function (request, sender, sendResponse) {
+				try{
+					if ("focusChat" == request){
+						document.querySelector('[data-a-target="chat-input"]').focus();
+						sendResponse(true);
+						return;
+					}
+					if (typeof request === "object"){
+						if ("settings" in request){
+							settings = request.settings;
+							sendResponse(true);
+							return;
+						}
+					}
+					// twitch doesn't capture avatars already.
+				} catch(e){}
+				sendResponse(false);
+			}
+		);
 	
-	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if ("settings" in response){
-			settings = response.settings;
-		}
-	});
+	
+		chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+			if ("settings" in response){
+				settings = response.settings;
+			}
+		});
+	}
 	
 	function processEvent(ele){
 	  var data = {};

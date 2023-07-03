@@ -28,6 +28,8 @@ var properties = ["streamID", "password", "isExtensionOn", "settings"];
 var channel = generateStreamID();
 var password = false;
 
+var giphy = null;
+
 function loadSettings(item, resave=false){
 	if (item && item.streamID){
 		channel = item.streamID;
@@ -98,6 +100,11 @@ function loadSettings(item, resave=false){
 	}
 	toggleMidi();
 	
+	if (setting.giphyKey && !giphy){
+		giphy = require('giphy-api')(setting.giphyKey);
+	} else {
+		giphy = null;
+	}
 	
 	if (settings.sentiment){
 		if (!sentimentAnalysisLoaded){
