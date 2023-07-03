@@ -291,7 +291,7 @@
 	// settings.textonlymode
 	// settings.captureevents
 	
-	if (chrome){
+	if (chrome && chrome.runtime){
 		chrome.runtime.onMessage.addListener(
 			function (request, sender, sendResponse) {
 				try{
