@@ -28,8 +28,6 @@ var properties = ["streamID", "password", "isExtensionOn", "settings"];
 var channel = generateStreamID();
 var password = false;
 
-var giphy = null;
-
 function loadSettings(item, resave=false){
 	if (item && item.streamID){
 		channel = item.streamID;
@@ -100,19 +98,12 @@ function loadSettings(item, resave=false){
 	}
 	toggleMidi();
 	
-	if (setting.giphyKey && !giphy){
-		giphy = require('giphy-api')(setting.giphyKey);
-	} else {
-		giphy = null;
-	}
-	
 	if (settings.sentiment){
 		if (!sentimentAnalysisLoaded){
 			loadSentimentAnalysis();
 		}
 	}
 }
-
 
 chrome.storage.sync.get(properties, function(item){
 	loadSettings(item);
@@ -1940,7 +1931,20 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			}
 		}
 	}
-
+	
+	if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy && data.chatmessage && (data.chatmessage.indexOf("!giphy")!=-1) && !data.contentimg){
+		var searchGif = data.chatmessage;
+		searchGif = searchGif.replaceAll("!giphy","").trim();
+		if (searchGif){
+			var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(searchGif) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
+				return response.data[0].images.downsized_large.url ;
+			});
+			if (gurl){
+				data.contentimg = gurl;
+			}
+		}
+	}
+	
 	if (settings.joke && (data.chatmessage.toLowerCase() === "!joke")){
 		if (Date.now() - messageTimeout > 5100){
 			var score = parseInt(Math.random()* 378);
