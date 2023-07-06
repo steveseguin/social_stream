@@ -13,7 +13,7 @@
 	  xhr.send();
 	}
 	
-	function escapeHtml(unsafe){
+	function escapeHtml(unsafe){ // success is when goofs be trying to hack me
 		return unsafe
 			 .replace(/&/g, "&amp;")
 			 .replace(/</g, "&lt;")

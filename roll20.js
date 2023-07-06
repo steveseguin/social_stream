@@ -150,7 +150,6 @@
 	var lastMessageID = 0;
 	var observer = null;
 	
-
 	
 	function onElementInserted(containerSelector) {
 		var target = document.querySelector(containerSelector);
