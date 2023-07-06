@@ -99,8 +99,6 @@
 	  data.hasMembership = hasMembership;
 	  data.type = "owncast";
 	  
-	  console.log(data);
-	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 	  } catch(e){}
@@ -163,9 +161,9 @@
 		if (target && !target.set123){
 			target.set123 = true;
 			
-			document.querySelectorAll(".chat-message_user").forEach(ele=>{
-				processMessage(ele, false);
-			});
+			//document.querySelectorAll(".chat-message_user").forEach(ele=>{
+			//	processMessage(ele, false);
+			//});
 			
 			onElementInserted(target, function(element){
 			  processMessage(element, false);
