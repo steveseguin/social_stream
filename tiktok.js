@@ -18,6 +18,19 @@
 	  xhr.responseType = 'blob';
 	  xhr.send();
 	}
+	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;");
+		} catch(e){
+			return "";
+		}
+	}
 
 
 	var savedavatars = {};
@@ -60,9 +73,9 @@
 			if (eles.length>1){
 				for (var i  = 1; i<eles.length;i++){
 					if (eles[i].nodeName === "#text"){
-						chatmessage = eles[i].textContent;
+						chatmessage = escapeHtml(eles[i].textContent);
 					} else if (settings.textonlymode){
-						chatmessage = eles[i].textContent;
+						chatmessage = escapeHtml(eles[i].textContent);
 					} else {
 						chatmessage = eles[i].innerHTML;
 					}
@@ -70,7 +83,7 @@
 			} else if (eles.length==1){
 				for (var i  = 1; i<eles[0].childNodes.length;i++){
 					if (settings.textonlymode){
-						chatmessage = eles[0].childNodes[i].textContent;
+						chatmessage = escapeHtml(eles[0].childNodes[i].textContent);
 					} else {
 						chatmessage = eles[0].childNodes[i].innerHTML;
 					}
@@ -83,7 +96,7 @@
 	    if (!chatmessage){
 			try{
 				if (settings.textonlymode){
-					chatmessage = ele.childNodes[1].textContent;
+					chatmessage = escapeHtml(ele.childNodes[1].textContent);
 				} else {
 					chatmessage = ele.childNodes[1].innerHTML;
 				}

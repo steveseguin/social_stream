@@ -13,7 +13,15 @@
 			return await fetch(URL); // iOS 11.x/12.0
 		}
 	}
-
+	
+	function escapeHtml(unsafe){
+		return unsafe
+			 .replace(/&/g, "&amp;")
+			 .replace(/</g, "&lt;")
+			 .replace(/>/g, "&gt;")
+			 .replace(/"/g, "&quot;")
+			 .replace(/'/g, "&#039;");
+	}
 
 	function getTwitchAvatarImage(username){
 		fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username="+encodeURIComponent(username)).then(response => {
@@ -64,17 +72,9 @@
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
-				if (settings.textonlymode){
-					resp += node.textContent.trim()+" ";
-				} else {
-					resp += node.textContent.trim()+" ";
-				}
+				resp += escapeHtml(node.textContent.trim())+" ";
 			} else if (node.nodeType === 1){
-				if (settings.textonlymode){
-				//	if ("alt" in node){
-				//		resp += node.alt.trim()+" ";
-					//}
-				} else {
+				if (!settings.textonlymode){
 					if (node && node.classList && node.classList.contains("zero-width-emote")){
 						resp += "<span class='zero-width-parent'>"+node.outerHTML+"</span>";
 					} else {

@@ -1,5 +1,13 @@
 (function () {
 	
+	function escapeHtml(unsafe){
+		return unsafe
+			 .replace(/&/g, "&amp;")
+			 .replace(/</g, "&lt;")
+			 .replace(/>/g, "&gt;")
+			 .replace(/"/g, "&quot;")
+			 .replace(/'/g, "&#039;");
+	}
 	function getAllContentNodes(element) {
 		var resp = "";
 		
@@ -11,9 +19,11 @@
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
-				resp += node.textContent;
+				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
-				resp += node.outerHTML;
+				if (!settings.textonlymode){
+					resp += node.outerHTML;
+				}
 			}
 		});
 		return resp;
@@ -52,23 +62,15 @@
 	  });
 	  
 	  
-	  if (!settings.textonlymode){
-		  try {
-			 
-			var tttt = ele.querySelector('.ant-comment-content-detail>.Linkify').childNodes;
-			for (var i=2;i<tttt.length;i++){
-				chatmessage += getAllContentNodes( tttt[i]);
-			}
-		
-		  } catch(e){}
-	  } else {
-		  try{
-			var tttt = ele.querySelector('.ant-comment-content-detail>.Linkify').childNodes;
-			for (var i=2;i<tttt.length;i++){
-				chatmessage += tttt[i].textContent;
-			}
-		  } catch(e){}
-	  }
+	  try {
+		 
+		var tttt = ele.querySelector('.ant-comment-content-detail>.Linkify').childNodes;
+		for (var i=2;i<tttt.length;i++){
+			chatmessage += getAllContentNodes( tttt[i]);
+		}
+	
+	  } catch(e){}
+	  
 	  
 	  var chatimg = "";
 	  try {

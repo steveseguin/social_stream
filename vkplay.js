@@ -1,9 +1,17 @@
 (function () {
 	
+	function escapeHtml(unsafe){
+		return unsafe
+			 .replace(/&/g, "&amp;")
+			 .replace(/</g, "&lt;")
+			 .replace(/>/g, "&gt;")
+			 .replace(/"/g, "&quot;")
+			 .replace(/'/g, "&#039;");
+	}
 	function getAllContentNodes(element) {
 		var resp = "";
 		
-		if (!element.childNodes || !element.childNodes.length){
+		if (!element.childNodes.length || !element.childNodes){
 			return element.textContent || "";
 		}
 		
@@ -11,7 +19,7 @@
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
-				resp += node.textContent;
+				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					resp += node.outerHTML;

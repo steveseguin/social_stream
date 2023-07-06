@@ -2,6 +2,16 @@
 	
 	var cachedUserProfiles = {};
 	
+	function escapeHtml(unsafe){
+		return unsafe
+			 .replace(/&/g, "&amp;")
+			 .replace(/</g, "&lt;")
+			 .replace(/>/g, "&gt;")
+			 .replace(/"/g, "&quot;")
+			 .replace(/'/g, "&#039;");
+	}
+	
+	
 	function getAllContentNodes(element) {
 		var resp = "";
 		
@@ -17,7 +27,7 @@
 					resp += getAllContentNodes(node)
 				}
 			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
-				resp += node.textContent;
+				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (node && node.classList && node.classList.contains("zero-width-emote")){
 					resp += "<span class='zero-width-parent'>"+node.outerHTML+"</span>";
