@@ -84,6 +84,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - stageTEN.tv
 - vkplay.live (pop out chat)
 - arena.tv (no pop out chat support, so just pause the video I guess)
+- bandlab.com (no pop out, so just pause the video I guess while chat open)
 
 More on request
 
