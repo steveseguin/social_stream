@@ -157,7 +157,7 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('.interactive .chat').children.length){
+		if (!document.querySelector('.connecting') && document.querySelector('.interactive .chat').children.length){
 			if (!document.querySelector('.interactive .chat').marked){
 				document.querySelector('.interactive .chat').marked=true;
 				
@@ -166,7 +166,7 @@
 						ele.skip=true;
 					});
 					onElementInserted('.interactive .chat');
-				},3000);
+				},1000);
 			}
 		}} catch(e){}
 	},2000);
