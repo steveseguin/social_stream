@@ -160,6 +160,11 @@
 		if (document.querySelector('.interactive .chat').children.length){
 			if (!document.querySelector('.interactive .chat').marked){
 				document.querySelector('.interactive .chat').marked=true;
+				
+				document.querySelectorAll(".message").forEach(ele=>{
+					ele.skip=true;
+				});
+				
 				onElementInserted('.interactive .chat');
 			}
 		}} catch(e){}
