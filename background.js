@@ -1945,6 +1945,23 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 		}
 	}
 	
+	if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy2 && data.chatmessage && (data.chatmessage.indexOf("#")!=-1) && !data.contentimg){
+		var xx = data.chatmessage.split(" ");
+		for (var i = 0;i<xx.length;i++){
+			var word = xx[i];
+			if (!word.startsWith("#")){continue;}
+			word = word.replaceAll("#"," ").trim();
+			if (word){
+				var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(word) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
+					return response.data[0].images.downsized_large.url ;
+				});
+				if (gurl){
+					data.contentimg = gurl;
+				}
+			}
+		};
+	}
+	
 	if (settings.joke && (data.chatmessage.toLowerCase() === "!joke")){
 		if (Date.now() - messageTimeout > 5100){
 			var score = parseInt(Math.random()* 378);
