@@ -34,7 +34,6 @@
 		element.childNodes.forEach(node=>{
 			
 			
-			
 			if (node.childNodes.length){
 				if (!node.classList.contains("comment-see-more")){
 					resp += getAllContentNodes(node)
