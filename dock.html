@@ -1536,6 +1536,9 @@
 		console.error("Unhandled Error occured"); //or any message
 		return false;
 	};
+	
+	window.alert = function(){console.log("blocked");}
+	window.eval = function(){console.log("blocked");}
 
 	function getById(id) { // js helper
 		var el = document.getElementById(id);
@@ -1801,7 +1804,7 @@
 			}
 			window.history.pushState({path: newurl.toString()}, '', newurl.toString());
 		} else {
-			alert("You need to provide your extension's session ID for this page to work");
+			document.write("You need to provide your extension's session ID for this page to work");
 		}
 	} else {
 		window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
