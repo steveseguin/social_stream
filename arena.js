@@ -160,11 +160,12 @@
 		if (!document.querySelector('.connecting') && document.querySelector('.interactive .chat').children.length){
 			if (!document.querySelector('.interactive .chat').marked){
 				document.querySelector('.interactive .chat').marked=true;
-				
+				console.log("CONNECTED chat detected");
 				setTimeout(function(){
 					document.querySelectorAll(".message").forEach(ele=>{
 						ele.skip=true;
 					});
+					console.log("Loading chat capture logic");
 					onElementInserted('.interactive .chat');
 				},1000);
 			}
