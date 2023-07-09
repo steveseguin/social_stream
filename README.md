@@ -83,6 +83,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - xeenon.xyz
 - stageTEN.tv
 - vkplay.live (pop out chat)
+- arena.tv (no pop out chat support, so just pause the video I guess)
 
 More on request
 
