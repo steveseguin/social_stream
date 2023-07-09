@@ -1957,6 +1957,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 				});
 				if (gurl){
 					data.contentimg = gurl;
+					break;
 				}
 			}
 		};
