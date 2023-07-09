@@ -26,7 +26,9 @@
 		var resp = "";
 		
 		if (!element.childNodes.length || !element.childNodes){
-			return escapeHtml(element.textContent) || "";
+			if (element.nodeType===3){
+				return escapeHtml(element.textContent) || "";
+			}
 		}
 		
 		element.childNodes.forEach(node=>{
@@ -49,24 +51,40 @@
 	
 	function processMessage(ele){
 		
+		
 		var chatimg = "";
 		try{
-		   chatimg = ele.querySelector(".avatar .image img[src]").src;
+		   chatimg = "https://"+ele.querySelector(".comment-header>a>img[srcset]").srcset.split("https://").pop().split(" ")[0]
 		} catch(e){
 		}
 		
 		var name="";
 		try {
-			name = ele.querySelector(".message-content .message-username").textContent.trim();
+			name = ele.querySelector(".comment-author-name").textContent.trim();
 		} catch(e){
 		}
 		var msg="";
 		try {
-			ele.querySelectorAll(".message-text-inner > :not(.message-username)").forEach(xx=>{
-				msg+= getAllContentNodes(xx);
+			ele.querySelector(".comment-body").childNodes.forEach(xx=>{
+				if (xx.querySelector && xx.querySelector(".comment-author-name")){
+					
+				} else {
+					msg+= getAllContentNodes(xx);
+				}
 			});
+			msg = msg.trim();
 		} catch(e){
 		}
+		
+		
+		var contentimg = "";
+		
+		try{
+			contentimg = ele.querySelector(".comment-content img[src]").src;
+		} catch(e){
+		}
+		
+		if (!msg && !contentimg){return;}
 		
 		
 		var data = {};
@@ -78,8 +96,8 @@
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.hasMembership = "";;
-		data.contentimg = "";
-		data.type = "arena";
+		data.contentimg = contentimg;
+		data.type = "bandlab";
 		
 		pushMessage(data);
 	}
@@ -106,7 +124,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('.input > input[type="text"][name^="chat_"]').focus();
+					document.querySelector('textarea#commentField').focus();
 					sendResponse(true);
 					return;
 				}
@@ -157,10 +175,10 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('.interactive .chat').children.length){
-			if (!document.querySelector('.interactive .chat').marked){
-				document.querySelector('.interactive .chat').marked=true;
-				onElementInserted('.interactive .chat');
+		if (document.querySelector('.comments').children.length){
+			if (!document.querySelector('.comments').marked){
+				document.querySelector('.comments').marked=true;
+				onElementInserted('.comments');
 			}
 		}} catch(e){}
 	},2000);
