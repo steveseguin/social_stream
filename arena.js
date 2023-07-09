@@ -161,11 +161,12 @@
 			if (!document.querySelector('.interactive .chat').marked){
 				document.querySelector('.interactive .chat').marked=true;
 				
-				document.querySelectorAll(".message").forEach(ele=>{
-					ele.skip=true;
-				});
-				
-				onElementInserted('.interactive .chat');
+				setTimeout(function(){
+					document.querySelectorAll(".message").forEach(ele=>{
+						ele.skip=true;
+					});
+					onElementInserted('.interactive .chat');
+				},3000);
 			}
 		}} catch(e){}
 	},2000);
