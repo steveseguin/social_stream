@@ -953,6 +953,12 @@ span.zero-width-parent img.zero-width-emote {
 		volume = urlParams.get("volume") || 1;
 	}
 	
+	var voiceLatency = 4; // 0 slowest, but best quality; 4 is fastest, but worst quality
+	if (urlParams.has("latency")){
+		voiceLatency = urlParams.get("latency") || 0;
+		voiceLatency = parseInt(voiceLatency) || 0;
+	}
+	
 	var voiceName = false;
 	if (urlParams.has("voice")){
 		voiceName = urlParams.get("voice") || "google";
@@ -963,11 +969,18 @@ span.zero-width-parent img.zero-width-emote {
 		voiceGender = urlParams.get("gender") || "MALE";
 	}
 	var audio = false;
+	
 	var GoogleAPIKey =  false; // You can get your API key from Google Cloud ; KEEP IT PRIVATE/SECRET.  It will look like: "ahasdfuyu234hjjUASDtu1234gughasdguhaU" or somnething like that.
+	var ElevenLabsKey = false; 
 	
 	if (urlParams.has("ttskey")){
 		audio = document.createElement("audio");
 		GoogleAPIKey = urlParams.get("ttskey") || false; 
+		
+	} else if (urlParams.has("elevenlabskey")){
+	
+		audio = document.createElement("audio");
+		ElevenLabsKey = urlParams.get("elevenlabskey") || false; 
 	}
 	
 	function speak(text){
@@ -975,6 +988,9 @@ span.zero-width-parent img.zero-width-emote {
 		if (!text){return;}
 		if (GoogleAPIKey){
 			googleTTS(text);
+			return;
+		} else if (ElevenLabsKey){
+			ElevenLabsTTS(text);
 			return;
 		}
 		
@@ -1078,6 +1094,51 @@ span.zero-width-parent img.zero-width-emote {
 				audio.volume = volume;
 			}
 			audio.play();
+		}).catch(error=>{
+			console.error(error);	
+		})
+	}
+	function ElevenLabsTTS(tts){
+		const voiceid = voiceName || "VR6AewLTigWG4xSOukaG";
+		const url = 'https://api.elevenlabs.io/v1/text-to-speech/'+voiceid+"/stream?optimize_streaming_latency="+voiceLatency;
+		
+		var data = {
+		  'text':tts,
+		  "model_id": "eleven_monolingual_v1",
+		  "voice_settings": {
+			"stability": 0,
+			"similarity_boost": 0,
+			"style": 0.5,
+			"use_speaker_boost": false
+		  }
+		 };
+		 
+		 const otherparam={
+			headers:{
+			   "content-type":"application/json",
+			   "xi-api-key": ElevenLabsKey,
+			   "accept": "*/*"
+			},
+			body:JSON.stringify(data),
+			method:"POST"
+		 };
+		fetch(url,otherparam).then(data=>{
+			return data.blob();
+		}).then(res=>{
+			const newBlob = new Blob([res]);
+			const blobUrl = window.URL.createObjectURL(newBlob);
+			if (!audio){
+				audio = document.createElement("audio");
+			}
+			audio.src = blobUrl;
+			if (volume){
+				audio.volume = volume;
+			}
+			try {
+				audio.play();
+			} catch(e){
+				errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+			}
 		}).catch(error=>{
 			console.error(error);	
 		})
