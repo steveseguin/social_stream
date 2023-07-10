@@ -2185,10 +2185,41 @@
 		getById("tts").style.display = "none";
 	}
 
-	//var voiceGender = false;   // I'll need to add the Google Speech API to the dock to make this work
-	//if (urlParams.has("gender")){
-	//	voiceGender = urlParams.get("gender") || "MALE";
-	//}
+	var voiceGender = false;
+	if (urlParams.has("gender")){
+		voiceGender = urlParams.get("gender") || "MALE";
+	}
+	
+	var audio = false;
+	
+	var GoogleAPIKey =  false; // You can get your API key from Google Cloud ; KEEP IT PRIVATE/SECRET.  It will look like: "ahasdfuyu234hjjUASDtu1234gughasdguhaU" or somnething like that.
+	var ElevenLabsKey = false; 
+	
+	var premiumQueueTTS = [];
+	var premiumQueueActive = false;
+	
+	function finishedAudio(e=false){
+		console.log("finishedAudio");
+		console.log(e);
+		premiumQueueActive = false;
+		if (premiumQueueTTS.length){
+			speak(premiumQueueTTS.shift()); // play next
+		}
+	}
+	
+	
+	
+	if (urlParams.has("ttskey")){
+		audio = document.createElement("audio");
+		audio.onended = finishedAudio;
+		GoogleAPIKey = urlParams.get("ttskey") || false; 
+		
+	} else if (urlParams.has("elevenlabskey")){
+	
+		audio = document.createElement("audio");
+		audio.onended = finishedAudio;
+		ElevenLabsKey = urlParams.get("elevenlabskey") || false; 
+	}
 
 	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){ //  tts();
 		document.getElementById("tts").dataset.state = 1;
@@ -2243,6 +2274,13 @@
 		volume = urlParams.get("volume") || 1;
 		volume = parseFloat(volume);
 	}
+	
+	var voiceLatency = 4; // 0 slowest, but best quality; 4 is fastest, but worst quality
+	if (urlParams.has("latency")){
+		voiceLatency = urlParams.get("latency") || 0;
+		voiceLatency = parseInt(voiceLatency) || 0;
+	}
+	
 
 	var voiceName = false;
 	if (urlParams.has("voice")){
@@ -2252,8 +2290,28 @@
 	function speak(text, allow=false){
 		if (!speech && !allow){return;}
 		if (!text){return;}
-		if (!voices && (voices===null)){return;}
+		console.log(text);
 		if (text.startsWith("!")){return;} // do not TTS commands.
+		
+		if (GoogleAPIKey){
+			if (!premiumQueueActive){
+				googleTTS(text);
+			} else {
+				premiumQueueTTS.push(text);
+			}
+			return;
+		} else if (ElevenLabsKey){
+			if (!premiumQueueActive){
+				ElevenLabsTTS(text);
+			} else {
+				premiumQueueTTS.push(text);
+			}
+			return;
+		}
+		
+		
+		if (!voices && (voices===null)){return;}
+		
 
 		if (!voice){
 			if (!voices || !voices.length){
@@ -2944,9 +3002,19 @@
 
 	function tts() {
 		var ele = document.getElementById("tts");
-		if (window.speechSynthesis.pending || window.speechSynthesis.speaking){
+		
+		if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)){
 			speech = false;
 			window.speechSynthesis.cancel();
+		} else if (premiumQueueActive){
+			speech = false;
+			premiumQueueTTS = [];
+			try {
+				if (audio){
+					audio.pause();
+				}
+			} catch(e){}
+			premiumQueueActive = false;
 		} else {
 			speech = !speech;
 		}
@@ -4386,6 +4454,126 @@
 		});
 		ro.observe(document.scrollingElement);
 	}
+	
+	
+	function googleTTS(tts){
+		premiumQueueActive = true
+		
+		try{
+			const url = 'https://texttospeech.googleapis.com/v1beta1/text:synthesize?key='+GoogleAPIKey;
+			var data = {
+			  'input':{
+				 'text':tts
+			  },
+			  'voice':{
+				 'languageCode': speechLang.toLowerCase(),
+				 'name':'en-GB-Standard-A',
+				 'ssmlGender':'FEMALE'
+			  },
+			  'audioConfig':{
+				'audioEncoding':'MP3'
+			  }
+			 };
+			 
+			 if (voiceName){
+				data.voice.name = voiceName;
+			 }
+			 if (voiceGender){
+				data.voice.ssmlGender = voiceGender.toUpperCase();
+			 }
+			 
+			 const otherparam={
+				headers:{
+				   "content-type":"application/json; charset=UTF-8"
+				},
+				body:JSON.stringify(data),
+				method:"POST"
+			 };
+			 
+			fetch(url,otherparam).then(data=>{
+				return data.json();
+			}).then(res=>{
+				//console.log(res.audioContent);
+				if (!audio){
+					audio = document.createElement("audio");
+					audio.onended = finishedAudio;
+				}
+				audio.src = "data:audio/mp3;base64,"+res.audioContent;
+				if (volume){
+					audio.volume = volume;
+				}
+				try {
+					audio.play();
+				} catch(e){
+					finishedAudio();
+					errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+				}
+				
+			}).catch(error=>{
+				finishedAudio();
+				console.error(error);	
+			});
+			
+		} catch(e){
+			finishedAudio();
+		}
+	}
+	function ElevenLabsTTS(tts){
+		try{
+			premiumQueueActive = true
+			const voiceid = voiceName || "VR6AewLTigWG4xSOukaG";
+			const url = 'https://api.elevenlabs.io/v1/text-to-speech/'+voiceid+"/stream?optimize_streaming_latency="+voiceLatency;
+			
+			var data = {
+			  'text':tts,
+			  "model_id": "eleven_monolingual_v1",
+			  "voice_settings": {
+				"stability": 0,
+				"similarity_boost": 0,
+				"style": 0.5,
+				"use_speaker_boost": false
+			  }
+			 };
+			 
+			 const otherparam={
+				headers:{
+				   "content-type":"application/json",
+				   "xi-api-key": ElevenLabsKey,
+				   "accept": "*/*"
+				},
+				body:JSON.stringify(data),
+				method:"POST"
+			 };
+			 
+			fetch(url,otherparam).then(data=>{
+				return data.blob();
+			}).then(res=>{
+				const newBlob = new Blob([res]);
+				const blobUrl = window.URL.createObjectURL(newBlob);
+				if (!audio){
+					audio = document.createElement("audio");
+					audio.onended = finishedAudio;
+				}
+				audio.src = blobUrl;
+				if (volume){
+					audio.volume = volume;
+				}
+				try {
+					audio.play();
+				} catch(e){
+					finishedAudio();
+					errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+				}
+			}).catch(error=>{
+				finishedAudio();
+				console.error(error);	
+			});
+		} catch(e){
+			finishedAudio();
+		}
+	}
+	
+	
 
 	function speechMeta(data, allow=false){
 	
@@ -4394,6 +4582,7 @@
 				return;
 			}
 		}
+		
 		var isCommand = false;
 		var msgPlain = document.getElementById('content_'+data.id); // text only
 		if (msgPlain){
