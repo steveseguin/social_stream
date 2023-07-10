@@ -455,6 +455,8 @@ You can manaul set the pitch, volume, rate, and even voice-name with the below U
 
 #### Premium TTS voice options
 
+##### GOOGLE CLOUD TTS 
+
 I've added support for Google Cloud Text to Speech API, but you must use your own API key to use this feature, as it is expensive to use.  
 
 Go to https://cloud.google.com/text-to-speech -> Enable the service, and then get an API key.
@@ -472,6 +474,25 @@ You need at least &speech and &ttskey to enable the premium TTS, but there are c
 &ttskey=XXXXXXX
 ```
 See the Google Cloud doc for more help
+
+##### Eleven Labs TTS 
+
+If you want a different set of voices, or wish to train your own, ElevenLabs.io has a TTS service that you can try. There's a "free" version you can get started testing with, which just needs you to create an account there and get an API key from your profile settings there. You may need to provide attribution as required, for the free tier?
+
+Anyways, documentation on getting start with finding a voice you want to use and testing your API key:
+API Social Stream is using: https://api.elevenlabs.io/docs#/text-to-speech/Text_to_speech_v1_text_to_speech__voice_id__stream_post
+Available voices: https://api.elevenlabs.io/docs#/voices/Get_voices_v1_voices_get
+
+To use this with Social Stream, you'll need to be using the featured-chat index.html page, and you'll need to provide your api key there.
+
+Example URL with options `https://socialstream.ninja/index.html?session=SESSIONIDHERE&tts&elevenlabskey=YOURELEVENLABSAPIKEYHERE&latency=4&voice=VR6AewLTigWG4xSOukaG`
+
+- &tts is also required to enable TTS in general
+- &voice={VOICEIDHERE} , is the voice ID you want to use.
+- &latency={N}, where N can be 0,1,2,3, or 4.  0 is high latency, but better quality. Default is 4 (fastest)
+- &elevenlabskey={APIKEYHERE} , don't share this API key, but this is needed to use the service and to specify that you want to use elevenlabs for TTS
+
+Please NOTE: Make sure to CLICK on the index.html page after it loads, else audio may not work in the browser. Browsers require user-gesture detection before audio can auto-play.
 
 ### Branded channel support
 
