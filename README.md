@@ -431,7 +431,6 @@ You can get a list of support languages on your system by running `speechSynthes
 The audio will play out the default system audio output device. This might be a problem if using OBS for capture, as you'll need to use a virtual audio cable to capture the audio output of the system output and route it back into OBS for capture.  Another user mentioned they were able to capture the TTS audio in OBS by selecting `explorer.exe` in the system application recorder.  Using the Premium Google-based TTS option (mentioned below) might also be a solution to this issue.   See the related issue here: https://github.com/w3c/mediacapture-output/issues/102
 
 
-
 If loading the app in the Chrome/Edge/Firefox browser, you will need to "click" the web page first before audio will play. This isn't the case with OBS, but most browsers require the user interact with the website on some level before it will play audio.  Please keep this in mind when testing things.
 
 There is a toggle in the dock to turn off and on the text-to-speech; turning it off whill automatically stop any audio playout. Still, be careful when using text-to-speech with the dock, as viewers can exploit it to have your system read out unwanted things on air.
@@ -463,7 +462,7 @@ Go to https://cloud.google.com/text-to-speech -> Enable the service, and then ge
 
 ![image](https://user-images.githubusercontent.com/2575698/180443408-5cc0f7a9-c015-420d-9541-fd94a520ef25.png)
 
-This premium text-to-speech is supported on the index.html page (the featured chat overlay), and currently not yet added to the dock page.(I'll add it there eventually)
+This premium text-to-speech is supported on the index.html (the featured chat overlay) and dock.html page. If  you stop the TTS with the button in the dock's menu, it will stop playback immediately in the dock. It will also delete any queued messages to be spoken.
 
 You need at least &speech and &ttskey to enable the premium TTS, but there are customizations:
 ```
@@ -483,7 +482,7 @@ Anyways, documentation on getting start with finding a voice you want to use and
 API Social Stream is using: https://api.elevenlabs.io/docs#/text-to-speech/Text_to_speech_v1_text_to_speech__voice_id__stream_post
 Available voices: https://api.elevenlabs.io/docs#/voices/Get_voices_v1_voices_get
 
-To use this with Social Stream, you'll need to be using the featured-chat index.html page, and you'll need to provide your api key there.
+To use this with Social Stream, you'll need to be using the featured-chat index.html or dock.html page, and you'll need to provide your api key there.
 
 Example URL with options `https://socialstream.ninja/index.html?session=SESSIONIDHERE&tts&elevenlabskey=YOURELEVENLABSAPIKEYHERE&latency=4&voice=VR6AewLTigWG4xSOukaG`
 
@@ -492,7 +491,9 @@ Example URL with options `https://socialstream.ninja/index.html?session=SESSIONI
 - &latency={N}, where N can be 0,1,2,3, or 4.  0 is high latency, but better quality. Default is 4 (fastest)
 - &elevenlabskey={APIKEYHERE} , don't share this API key, but this is needed to use the service and to specify that you want to use elevenlabs for TTS
 
-Please NOTE: Make sure to CLICK on the index.html page after it loads, else audio may not work in the browser. Browsers require user-gesture detection before audio can auto-play.
+If  you stop the TTS with the button in the dock's menu, it will stop playback immediately in the dock. It will also delete any queued messages to be spoken. 
+
+Please NOTE: Make sure to CLICK on the browser page after it loads, else audio may not work in the browser. Browsers require user-gesture detection before audio can auto-play.  OBS Studio's browser source and the Electron Capture app are exceptions to this rule.
 
 ### Branded channel support
 
