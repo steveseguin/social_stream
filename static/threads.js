@@ -71,7 +71,6 @@
 
 
 	function prepMessage(e){
-		console.log(e);
 		
 		var ele = e.target.targetEle;
 		if (!ele){
@@ -111,7 +110,6 @@
 	  data.hasMembership = "";
 	  data.contentimg = contentimg;
 	  data.type = "threads";
-	  console.log(data);
 	  
 	  
 	  if (!contentimg && !chatmessage){return;}
