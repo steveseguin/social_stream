@@ -25,6 +25,8 @@
 		  ele.marked = true;
 	  }
 	  
+	  console.log(ele);
+	  
 	  if (ele.dataset && ("listIndex" in ele.dataset) && (parseInt(ele.dataset.listIndex)<=lastDataIndex)){
 		  return;
 	  } else if ("listIndex" in ele.dataset){
@@ -33,17 +35,23 @@
 	  
 	  var chatimg = "";
 	  try{
-		   chatimg = ele.querySelector("img.presence-entity__image").src;
+		   chatimg = ele.querySelector("img.presence-entity__image[src], img.avatar[src]").src;
 		   if (chatimg.startsWith("data:image/gif;base64")){
 			   chatimg="";
 		   }
 	  } catch(e){ }
 	 
-	  var name = ele.querySelector(".comments-post-meta__name-text > span > span[aria-hidden='true']").innerText;
+	  var name = "";
+	  
+	  try{
+		  name = ele.querySelector(".comments-post-meta__name-text > span > span[aria-hidden='true']").textContent;
+	  } catch(e){
+		  
+	  }
 	  if (name){
 		name = name.trim();
 	  } else {
-		  name = ele.querySelector(".comments-post-meta__name-text").innerText;
+		  name = ele.querySelector(".comments-post-meta__name-text").textContent;
 		  if (name){
 			name = name.trim();
 		  }
@@ -51,7 +59,7 @@
 	  
 	  var msg = "";
 	  try {
-		msg = ele.querySelector('.comments-comment-item__main-content').innerText;
+		msg = ele.querySelector('.comments-comment-item__main-content').textContent;
 	  } catch(e){
 		
 	  }
@@ -138,26 +146,24 @@
 	);
 
 	function onElementInserted(containerSelector, callback) {
+		
+		var target = document.querySelector(containerSelector);
+		if (!target){return;}
+		
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					var xxx = mutation.addedNodes;
-					for (var i = 0; i< xxx.length; i++) {
-						try {
-							var ele = xxx[i];
-							if (ele.NodeType==8){
-								continue;
-							}
-							if (ele && ele.className && ele.classList.contains("video-live-comments__comment-item")) {
-								callback(ele);
-							} 
-						} catch(e){}
-					}
+					target.querySelectorAll(".video-live-comments:not([data-marked]), .video-live-comments__comment-item:not([data-marked])").forEach(xx=>{
+						xx.dataset.marked="true";
+						setTimeout(function(eee){
+							callback(eee);
+						},500,xx);
+						
+					});
 				}
 			});
 		};
-		var target = document.querySelector(containerSelector);
-		if (!target){return;}
+		
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
@@ -167,19 +173,20 @@
 	
 	var interval = setInterval(function(){
 		if (window.location.pathname.startsWith("/video/live") || window.location.pathname.startsWith("/video/event")  || window.location.pathname.startsWith("/video/golive/") || window.location.pathname.startsWith("/events/")){
-			console.log("socialstream loaded");
+			
 			if (document.querySelectorAll(".video-live-comments").length){
-				if (!document.querySelector(".video-live-comments").marked){
-					document.querySelector(".video-live-comments").marked=true;
-					clearInterval(interval);
-					
-					//document.querySelectorAll(".video-live-comments .video-live-comments__comment-item").forEach(ele=>{ // for debugging only.
-					//	 processMessage(ele);
-					//});
-					
-					onElementInserted(".video-live-comments", function(element){
-					   processMessage(element);
-					});
+				if (!document.querySelector(".video-live-comments").dataset.marked){
+					console.log("socialstream loaded");
+					document.querySelector(".video-live-comments").dataset.marked="true";
+					setTimeout(function(){
+						document.querySelectorAll(".video-live-comments .video-live-comments__comment-item").forEach(ele=>{ // for debugging only.
+							 ele.dataset.marked="true";
+						});
+						
+						onElementInserted(".video-live-comments", function(element){
+						   processMessage(element);
+						});
+					},3000);
 				}
 			}
 			
