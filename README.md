@@ -130,7 +130,9 @@ Something of concern though is Google will be updating Chrome browsers on Januar
 
 To update, just download the extension, replace the old files with the new files, and then reload the extension or completely restart the browser.  If just reloading the extension, you may then need to also reload any open chat sites that you wish to use Social Stream with.
 
-DO NOT Uninstall the extension if you want to update it. This will delete all your settings.  Replace the files, and reload the extension or browser instead.  If you MUST uninstall, you can export your settings to disk and reload them after you have reinstalled.  
+You can download the newest version here: https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip
+
+Please note: DO NOT Uninstall the extension if you want to update it. This will delete all your settings.  Replace the files, and reload the extension or browser instead.  If you MUST uninstall, you can export your settings to disk and reload them after you have reinstalled.  
 
 New app integrations do not auto-update; just the overlay and dock page will auto-update. It's suggeseted you update every now and then manually, or whenever you encounter a bug.  I'll try to resolve this issue down the road, perhaps with a standalone desktop app eventually.
 
