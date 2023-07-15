@@ -86,7 +86,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - arena.tv (no pop out chat support, so just pause the video I guess)
 - bandlab.com (no pop out, so just pause the video I guess while chat open)
 - threads.net (a little funky star icon, right of the share icon, will select thread to push to dock)
-- floatplane.com (pop out chat)
+- floatplane.com (pop out chat; gotta keep the main window still open though? annoying..)
 
 More on request
 
