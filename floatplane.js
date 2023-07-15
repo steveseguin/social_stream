@@ -26,13 +26,17 @@
 		var resp = "";
 		
 		if (!element.childNodes || !element.childNodes.length){
-			return escapeHtml(element.textContent) || "";
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
 		}
 		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
@@ -49,37 +53,39 @@
 	
 	function processMessage(ele){
 		
-		var chatimg = "";
-		try{
-		   chatimg = ele.querySelector(".avatar .image img[src]").src;
-		} catch(e){
-		}
+		console.log(ele);
+		var chatimg = ""; // boo!
 		
 		var name="";
 		try {
-			name = ele.querySelector(".message-content .message-username").textContent.trim();
+			name = escapeHtml(ele.querySelector(".chat-username").textContent.trim());
 		} catch(e){
 		}
 		var msg="";
 		try {
-			ele.querySelectorAll(".message-text-inner > :not(.message-username)").forEach(xx=>{
-				msg+= getAllContentNodes(xx);
-			});
+			msg = getAllContentNodes(ele.querySelector(".chat-text"));
 		} catch(e){
 		}
 		
+		var nameColor = "";
+		try {
+			nameColor = getComputedStyle(ele.querySelector(".chat-username")).color || "";
+		} catch(e){}
 		
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
+		data.nameColor = nameColor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
-		data.hasMembership = "";;
+		data.hasMembership = "";
 		data.contentimg = "";
-		data.type = "arena";
+		data.type = "floatplane";
+		
+		console.log(data);
 		
 		pushMessage(data);
 	}
@@ -106,7 +112,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('.input > input[type="text"][name^="chat_"]').focus();
+					document.querySelector('textarea.chat-input').focus();
 					sendResponse(true);
 					return;
 				}
@@ -139,7 +145,7 @@
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
 							mutation.addedNodes[i].skip = true;
-							processMessage(mutation.addedNodes[i]);
+							// processMessage(mutation.addedNodes[i]); // just for debugging
 						} catch(e){}
 					}
 				}
@@ -157,16 +163,16 @@
 
 	setInterval(function(){
 		try {
-		if (!document.querySelector('.connecting') && document.querySelector('.interactive .chat').children.length){
-			if (!document.querySelector('.interactive .chat').marked){
-				document.querySelector('.interactive .chat').marked=true;
+		if (document.querySelector('.chat-message-list')){
+			if (!document.querySelector('.chat-message-list').marked){
+				document.querySelector('.chat-message-list').marked=true;
 				console.log("CONNECTED chat detected");
 				setTimeout(function(){
-					document.querySelectorAll(".message").forEach(ele=>{
+					document.querySelectorAll(".LiveChatMessage").forEach(ele=>{
 						ele.skip=true;
+						processMessage(ele);
 					});
-					console.log("Loading chat capture logic");
-					onElementInserted('.interactive .chat');
+					onElementInserted('.chat-message-list');
 				},1000);
 			}
 		}} catch(e){}
