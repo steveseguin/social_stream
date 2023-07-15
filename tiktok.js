@@ -48,6 +48,9 @@
 		} catch(e){}
 		
 		
+		if (ele.querySelector("[class*='DivTopGiverContainer']")){return;}
+		
+		
 		var chatbadges = "";
 		try{
 			var cb = ele.children[1].querySelectorAll("img[class*='ImgBadgeChatMessage']");
@@ -134,6 +137,8 @@
 			}
 		} else if (chatname){
 			chatimg = savedavatars[chatname];
+		} else if (chatmessage && (chatmessage==="----")){ // no chat name
+			return;
 		}
 	  
 		var data = {};
