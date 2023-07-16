@@ -28,6 +28,7 @@
 		});
 		return resp;
 	}
+	var Timenow = 0;
 	
 	function processMessage(ele){	// twitch
 	  var chatsticker = false;
@@ -91,6 +92,13 @@
 	  if (!chatmessage && !hasDonation){
 		return;
 	  }
+	  try {
+		var time = ele.querySelector('[class^="ChatMessage_publishTime"]').textContent;
+		var msgID = time+" -"+chatname +"/\!@#--"+ chatmessage;
+		if (pastMessages.includes(msgID)){return;}
+		pastMessages.push(time+" -"+chatname +"/\!@#--"+ chatmessage);
+		pastMessages = pastMessages.slice(-200);
+	  } catch(e){console.log(e);}
 	  
 	  
 	  //if (brandedImageURL){
@@ -131,19 +139,21 @@
 	// settings.captureevents
 	
 	
+	var pastMessages = [];
+	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
 		}
 	});
 
-	function onElementInserted(containerSelector, className) {
+	function onElementInserted(target, className) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						if ( mutation.addedNodes[i] && mutation.addedNodes[i].querySelector){
-							var ele = mutation.addedNodes[i].querySelector("[class^='ChatBoxBase_message']");
+							var ele = mutation.addedNodes[i].querySelector("[class^='ChatBoxBase_message'], [class^='ChatMessage_root']");
 							if (ele){
 								if (ele.ignore){continue;}
 								ele.ignore=true;
@@ -155,22 +165,26 @@
 				}
 			});
 		};
-		var target = document.querySelectorAll(containerSelector)[0];
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 	}
 	
-	setTimeout(function(){
-		var clear = document.querySelectorAll("div.ReactVirtualized__Grid__innerScrollContainer > div");
+	var xxx = setInterval(function(){
+		var clear = document.querySelectorAll("[class^='ChatBoxBase_message'], [class^='ChatMessage_root']");
 		for (var i = 0;i<clear.length;i++){
 			clear[i].ignore = true; // don't let already loaded messages to re-load.
-			
-			processMessage(clear[i])
+			//processMessage(clear[i])
 		}
-		onElementInserted("#root");
-	},2000);
+		if (document.querySelector(".ReactVirtualized__Grid__innerScrollContainer")){
+			clearInterval(xxx);
+			setTimeout(function(){
+				onElementInserted(document.querySelector(".ReactVirtualized__Grid__innerScrollContainer"));
+			},3000);
+			
+		}
+	},1000);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
 	try {
