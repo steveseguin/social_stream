@@ -30,7 +30,7 @@
 	}
 	var Timenow = 0;
 	
-	function processMessage(ele){	// twitch
+	function processMessage(ele, send=true){	// twitch
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
@@ -96,7 +96,7 @@
 		var time = ele.querySelector('[class^="ChatMessage_publishTime"]').textContent;
 		var msgID = time+" -"+chatname +"/\!@#--"+ chatmessage;
 		if (pastMessages.includes(msgID)){return;}
-		pastMessages.push(time+" -"+chatname +"/\!@#--"+ chatmessage);
+		pastMessages.push(msgID);
 		pastMessages = pastMessages.slice(-200);
 	  } catch(e){console.log(e);}
 	  
@@ -104,11 +104,12 @@
 	  //if (brandedImageURL){
 	  //  data.sourceImg = brandedImageURL;
 	  //}
-	  
-	  try {
-		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
-	  } catch(e){
-		  //
+	  if (send){
+		  try {
+			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+		  } catch(e){
+			  //
+		  }
 	  }
 	}
 
@@ -153,11 +154,11 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						if ( mutation.addedNodes[i] && mutation.addedNodes[i].querySelector){
-							var ele = mutation.addedNodes[i].querySelector("[class^='ChatBoxBase_message'], [class^='ChatMessage_root']");
-							if (ele){
-								if (ele.ignore){continue;}
-								ele.ignore=true;
-								processMessage(ele);
+							var ele = mutation.addedNodes[i].querySelectorAll("[class^='ChatBoxBase_message'], [class^='ChatMessage_root']");
+							if (ele && (ele.length===1)){
+								if (ele[0].ignore){continue;}
+								ele[0].ignore=true;
+								processMessage(ele[0]);
 							}
 							
 						}
@@ -175,12 +176,12 @@
 		var clear = document.querySelectorAll("[class^='ChatBoxBase_message'], [class^='ChatMessage_root']");
 		for (var i = 0;i<clear.length;i++){
 			clear[i].ignore = true; // don't let already loaded messages to re-load.
-			//processMessage(clear[i])
+			processMessage(clear[i], false)
 		}
-		if (document.querySelector(".ReactVirtualized__Grid__innerScrollContainer")){
+		if (document.querySelector("#root")){
 			clearInterval(xxx);
 			setTimeout(function(){
-				onElementInserted(document.querySelector(".ReactVirtualized__Grid__innerScrollContainer"));
+				onElementInserted(document.querySelector("#root"));
 			},3000);
 			
 		}
