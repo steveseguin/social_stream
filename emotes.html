@@ -221,6 +221,11 @@
 		showdupes = false;
 	}
 	
+	var maxShow = false;
+	if (urlParams.has("max") || urlParams.has("limit")) {
+		maxShow = parseInt(urlParams.has("limit")) || parseInt(urlParams.get("max")) || 0;
+	}
+	
 	
 	if (urlParams.has("hidereplies")) {
 		hidereplies = true;
@@ -504,8 +509,18 @@
 		let svgs = tmp.querySelectorAll("svg"); // not bothering to check for dupes.
 		let images = tmp.querySelectorAll("img");
 	
+		try {
+			if (svgs){
+				svgs = [...new Set(svgs)];
+			}
+		}catch(e){console.error(e);}
+		try {
+			if (images){
+				images = [...new Set(images)];
+			}
+		}catch(e){console.error(e);}
 		
-		let emojis = [];
+		
 		let text = tmp.textContent || tmp.innerText || "";
 		
 		if (hidereplies && text){
@@ -524,7 +539,7 @@
 		text = text.replace('"',"");
 		text = text.replace("'","");
 		
-		
+		let emojis = [];
 		emojis = text.replace(/([\u0145-\u0148]|[\u1F1E1-\u1F1FF]|\u2026)/ig, "");
 		
 		emojis = emojis.replace(/[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDE8-\uDDFF][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDEA-\uDDF8][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDEC-\uDDF9][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDEE-\uDDF9][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDF0-\uDDF7][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDF8-\uDDFF][\uD83C][\uDDE6-\uDDFF]/g, ""); // country codes
@@ -533,12 +548,13 @@
 							
 		emojis = emojis.match(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig);
 		
+		try {
+			if (emojis){
+				emojis = [...new Set(emojis)];
+			}
+		}catch(e){console.error(e);}
+		
 		if (!showdupes){
-			try {
-				if (emojis){
-					emojis = [...new Set(emojis)];
-				}
-			}catch(e){console.error(e);}
 			try{	
 				let images2 = {};
 				let images3 = [];
@@ -578,6 +594,41 @@
 				}
 			});
 		}
+		
+		if (maxShow){
+			let currentLeft = maxShow - document.querySelectorAll(".emoji").length;
+			if (emojis){
+				try {
+					if (emojis.length > currentLeft){
+						emojis = emojis.slice(0, currentLeft);
+						images = [];
+						svgs = [];
+					}
+					currentLeft -= emojis.length;
+				} catch(e){
+					console.error(e);
+					console.log(emojis);
+				}
+			}
+			if (images){
+				try {
+					if (images.length > currentLeft){
+						images = images.slice(0, currentLeft);
+						svgs = [];
+					}
+					currentLeft -= images.length;
+				} catch(e){
+					console.error(e);
+					console.log(images);
+				}
+			}
+			if (svgs){
+				if (svgs.length > currentLeft){
+					svgs = svgs.slice(0, currentLeft);
+				}
+				currentLeft -= svgs.length
+			}
+		}
 
 		if (emojis){
 			
@@ -599,13 +650,15 @@
 				if (data.type){
 					node.dataset.sourceType = data.type;
 				}
+				node.classList.add("hidden");
+				mainOutputWindow.appendChild(node);
 				
 				setTimeout(function(node){
-					mainOutputWindow.appendChild(node);
 					node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
 					if (timeoutDelay){
 						setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
 					}
+					node.classList.remove("hidden");
 				},Math.random()*1000,node);
 				
 				
@@ -639,12 +692,15 @@
 			if (data.type){
 				node.dataset.sourceType = data.type;
 			}
+			node.classList.add("hidden");
+			mainOutputWindow.appendChild(node);
+			
 			setTimeout(function(node){
-				mainOutputWindow.appendChild(node);
 				node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
 				if (timeoutDelay){
 					setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
 				}
+				node.classList.remove("hidden");
 			},Math.random()*1000,node);
 		});
 		
@@ -660,12 +716,14 @@
 			if (data.type){
 				node.dataset.sourceType = data.type;
 			}
+			node.classList.add("hidden");
+			mainOutputWindow.appendChild(node);
 			setTimeout(function(node){
-				mainOutputWindow.appendChild(node);  // 3s ease-in 1s 2 reverse both paused slidein
 				node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
 				if (timeoutDelay){
 					setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
 				}
+				node.classList.remove("hidden");
 			},Math.random()*1000,node);
 		});
 		
