@@ -350,6 +350,15 @@
 		document.body.style.backgroundColor = "#"+chroma;
 	}
 	
+	var speed = 1.0;
+	if (urlParams.has("speed")){
+		speed = parseFloat(urlParams.get("speed")) || 1;
+		speed = 1 / speed;
+		document.documentElement.style.setProperty("--x-speed", (13*speedxy)+"%"); // not used
+		document.documentElement.style.setProperty("--y-speed",  (7*speedxy)+"%"); // not used
+	}
+	
+	
 	try {
 		if (window.obsstudio){
 			window.obsstudio.getStatus(function(obsStatus){
@@ -482,9 +491,6 @@
 			return;
 		}
 		
-		
-		
-		
 		if (data.chatname){
 			if (custombot && doNotShowBot && custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){ // because why not. :)
 				return;
@@ -583,9 +589,9 @@
 				node.classList.add("el-wrap");
 				node2.classList.add("el");
 				
-				node2.style.animation = "y "+(Math.random()*5+5)+"s linear infinite alternate";
+				node2.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
 				
-				node2.style.animationDelay = Math.random()*-35+"s";
+				node2.style.animationDelay = Math.random()*-35*speed+"s";
 				
 				node2.innerText = img;
 				node.appendChild(node2);
@@ -596,7 +602,7 @@
 				
 				setTimeout(function(node){
 					mainOutputWindow.appendChild(node);
-					node.style.animation = (Math.random()*10+5)+"s linear "+(Math.random()*-35)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
+					node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
 					if (timeoutDelay){
 						setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
 					}
@@ -621,8 +627,8 @@
 			node2 = document.createElement('span');
 			node2.appendChild(img);
 			node2.classList.add("el");
-			node2.style.animation = "y "+(Math.random()*5+5)+"s linear infinite alternate";
-			node2.style.animationDelay = Math.random()*-35+"s";
+			node2.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
+			node2.style.animationDelay = Math.random()*-35*speed+"s";
 			node.appendChild(node2);
 			node.classList.add("emoji");
 			node.classList.add("el-wrap");
@@ -635,7 +641,7 @@
 			}
 			setTimeout(function(node){
 				mainOutputWindow.appendChild(node);
-				node.style.animation = (Math.random()*10+5)+"s linear "+(Math.random()*-35)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
+				node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
 				if (timeoutDelay){
 					setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
 				}
@@ -648,22 +654,22 @@
 			node.classList.add("emoji");
 			node.classList.add("el-wrap");
 			img.classList.add("el");
-			img.style.animation = "y "+(Math.random()*5+5)+"s linear infinite alternate";
-			img.style.animationDelay = Math.random()*-35+"s";
+			img.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
+			img.style.animationDelay = Math.random()*-35*speed+"s";
 			
 			if (data.type){
 				node.dataset.sourceType = data.type;
 			}
 			setTimeout(function(node){
 				mainOutputWindow.appendChild(node);  // 3s ease-in 1s 2 reverse both paused slidein
-				node.style.animation = (Math.random()*10+5)+"s linear "+(Math.random()*-35)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
+				node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
 				if (timeoutDelay){
 					setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
 				}
 			},Math.random()*1000,node);
 		});
 		
-		removeNode()
+		// removeNode()
 		
 	}
 
