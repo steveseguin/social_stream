@@ -904,6 +904,9 @@
 		#chatInput:focus {
 			width: 250px;
 		}
+		#chatInput.locked {
+			width: 250px!important;
+		}
 
 		#filter_messages{
 			width: 0;
@@ -1531,6 +1534,8 @@
 		<input id="chatInput" class="modalTextInput" type="text" placeholder="Send message..." />
 		<button id="chatInputButton" class="imgButton imgSmallButton" style="background-image: url(./icons/send_confirm.png);" title="💬 Send this message"></button>
 		<button id="chatClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png);" title="🧹 Clear this message"></button>
+
+		<button id="chatInputLockButton" class="imgButton imgSmallButton" title="🔐 Keep this chat cpen">🔓</button>
 		<button id="chatInputCloseButton" class="imgButton imgSmallButton" style="background-image: url(./icons/close.png);" title="❌ Close this dialog"></button>
 	</div>
 
@@ -5037,14 +5042,22 @@
 
 	document.onkeydown = function(evt) {
 		if (isEscape(evt)) {
-			getById("chatInput_parent").classList.add("hidden");
+			if (!(!getById("chatInput_parent").classList.contains("hidden") && getById("chatInput").classList.contains("locked"))){
+				getById("chatInput_parent").classList.add("hidden");
+			}
 			getById("filter_messages_parent").classList.add("hidden");
+			getById("chatInput").value = "";
+		} else if (!evt.altKey && !evt.Meta){
+			if (!getById("chatInput_parent").classList.contains("hidden") && getById("chatInput").classList.contains("locked")){
+				getById("chatInput").focus();
+			}
 		}
 	};
 
 	document.getElementById("filter_messages").addEventListener('keyup', function(e) {
 		filterMessages(document.getElementById("filter_messages").value);
 	});
+
 
 	(function userFilterInputModalBox() { // filter
 		var menu = getById("filter_messages_parent");
@@ -5116,6 +5129,7 @@
 		var chatInputButton = getById("chatInputButton");
 		var chatClearButton = getById("chatClearButton")
 		var chatInputCloseButton = getById("chatInputCloseButton");
+		var chatInputLockButton = getById("chatInputLockButton");
 
 		menu.style.top = "unset";
 		menu.style.bottom = "5px";
@@ -5161,6 +5175,7 @@
 				input.focus(); // re-refocus text input.
 				return;
 			}
+			if (input.classList.contains("locked")){return;}
 
 			event.preventDefault();
 			event.stopPropagation();
@@ -5185,6 +5200,18 @@
 			event.preventDefault();
 			event.stopPropagation();
 			menu.classList.add("hidden");
+			return false;
+		});
+
+		chatInputLockButton.addEventListener("click", function(event){
+			event.preventDefault();
+			event.stopPropagation();
+			input.classList.toggle("locked");
+			if (input.classList.contains("locked")){
+				chatInputLockButton.innerHTML = "🔒";
+			} else {
+				chatInputLockButton.innerHTML = "🔓";
+			}
 			return false;
 		});
 
