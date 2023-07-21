@@ -88,6 +88,15 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 
 More on request
 
+#### Chat graveyard 🪦🪦🪦
+
+Sites with integrations that no longer exist
+
+- 🪦 omlet.gg (RIP June 2023)
+- 🪦 glimesh (RIP July 2023)
+
+  (it's the effort that counts, guys; may your code live on in our ai lmm bots forever)
+
 ### Video walk-thru
 
 An older guide covering the basics of setting up Social Stream:
@@ -505,14 +514,6 @@ There is a toggle that lets you show the source of the chat messages.
 - &showsource can be added to the index.file, to show the main site the source is from; ie: Youtube, Facebook.
 
 ![image](https://user-images.githubusercontent.com/2575698/166864138-00cd1e1c-2149-473f-be8d-d07a8d400c07.png)
-
-
-### Chat graveyard 🪦🪦🪦
-
-Sites with integrations that no longer exist
-
-- 🪦 omlet.gg (no pop out chat needed; just https://oblet.gg/stream/xxxxx)
-- 🪦 glimesh
 
 ### Known issues or solutions
 
