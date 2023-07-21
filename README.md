@@ -45,7 +45,6 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - ![Requires toggling to enable certain integrations](https://user-images.githubusercontent.com/2575698/178857380-24b3a0fc-bf86-4645-91ec-24893df19279.png) telegram, slack, whatsapp, discord require an extra step to enable.  See this video for more help: https://www.youtube.com/watch?v=L3l0_8V1t0Q
 - restream.io chat supported (https://chat.restream.io/chat)
 - amazon.com/live
-- glimesh
 - wix.com (https://manage.wix.com/dashboard/*/live-video/*)
 - clouthub (no pop out; just the video page)
 - rumble.com (pop out chat)
@@ -58,7 +57,6 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - odysee.com (via the pop out chat I think)
 - minnit.chat support (https://minnit.chat/xxxxxxxxxxx?mobile&popout)
 - livepush.io (chat overlay link provided; no input field support?)
-- omlet.gg (no pop out chat needed; just https://oblet.gg/stream/xxxxx)
 - piczel.tv (pop out chat @ https://piczel.tv/chat/xxxxxxxxx)
 - bilibili.tv added (just regular view page /w chat; no pop out)
 - Amazon Chime (https://app.chime.aws/meetings/xxxxxxxxx)
@@ -508,6 +506,13 @@ There is a toggle that lets you show the source of the chat messages.
 
 ![image](https://user-images.githubusercontent.com/2575698/166864138-00cd1e1c-2149-473f-be8d-d07a8d400c07.png)
 
+
+### Chat graveyard 🪦🪦🪦
+
+Sites with integrations that no longer exist
+
+- 🪦 omlet.gg (no pop out chat needed; just https://oblet.gg/stream/xxxxx)
+- 🪦 glimesh
 
 ### Known issues or solutions
 
