@@ -90,7 +90,7 @@ More on request
 
 #### Chat graveyard 🪦🪦🪦
 
-Sites with integrations that no longer exist
+Past supported sites that have ceased to exist.
 
 - 🪦 omlet.gg (RIP June 2023)
 - 🪦 glimesh (RIP July 2023)
