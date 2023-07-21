@@ -14,7 +14,7 @@
 	  xhr.send();
 	}
 
-	function escapeHtml(unsafe){ // success is when goofs be trying to hack me
+	function escapeHtml(unsafe){ // when goofs be trying to hack me
 		return unsafe
 			 .replace(/&/g, "&amp;")
 			 .replace(/</g, "&lt;")
@@ -22,7 +22,7 @@
 			 .replace(/"/g, "&quot;")
 			 .replace(/'/g, "&#039;") || "";
 	}
-	function getAllContentNodes(element) {
+	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
 		if (!element.childNodes || !element.childNodes.length){

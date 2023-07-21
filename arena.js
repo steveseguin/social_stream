@@ -26,7 +26,9 @@
 		var resp = "";
 		
 		if (!element.childNodes || !element.childNodes.length){
-			return escapeHtml(element.textContent) || "";
+			if (element.nodeType===3){
+				return escapeHtml(element.textContent) || "";
+			}
 		}
 		
 		element.childNodes.forEach(node=>{

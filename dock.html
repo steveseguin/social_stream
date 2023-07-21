@@ -2414,6 +2414,11 @@
 		}
 	}
 
+	if (urlParams.has("notobs")){
+		window.obsstudio = false;
+	}
+	
+
 	if (urlParams.has("save")){
 		encode = TextEncoder.prototype.encode.bind(new TextEncoder);
 		setupSaveToDisk();

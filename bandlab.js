@@ -25,15 +25,13 @@
 	function getAllContentNodes(element) {
 		var resp = "";
 		
-		if (!element.childNodes.length || !element.childNodes){
+		if (!element.childNodes || !element.childNodes.length){
 			if (element.nodeType===3){
 				return escapeHtml(element.textContent) || "";
 			}
 		}
 		
 		element.childNodes.forEach(node=>{
-			
-			
 			if (node.childNodes.length){
 				if (!node.classList.contains("comment-see-more")){
 					resp += getAllContentNodes(node)
