@@ -95,7 +95,7 @@ Past supported sites that have ceased to exist.
 - 🪦 omlet.gg (RIP June 2023)
 - 🪦 glimesh (RIP July 2023)
 
-  (it's the effort that counts, guys; may your code live on in our ai lmm bots forever)
+  (it's the effort that counts, guys; may your code live on in our ai llm bots forever)
 
 ### Video walk-thru
 
