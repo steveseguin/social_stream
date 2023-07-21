@@ -2651,7 +2651,10 @@
 					document.body.style.overflow = "hidden";
 					mainOutputWindow.style.overflow = "hidden";
 					triggerState=false;
-					forceAutoscroll=true;
+					
+					if (!reversed){
+						forceAutoscroll=true;
+					}
 					//compactmode=true;
 					//mainOutputWindow.classList.remove("notcompactmode");
 					scale = scale*2.0
