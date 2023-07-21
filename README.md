@@ -24,7 +24,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - facebook live - guest view, publisher view, or the producer's pop-up chat on the web is supported.
 - workplace.com - (same setup as Facebook)
 - zoom.us (web version)
-- owncast demo page (watch.owncast.online)
+- owncast demo page (`watch.owncast.online`, or for a pop-out chat version, open `https://watch.owncast.online/embed/chat/readwrite/`  )
 - crowdcast.io
 - livestream.com
 - mixcloud.com (pop out chat)
