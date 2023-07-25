@@ -875,6 +875,25 @@ function _min(d0, d1, d2, bx, ay){
 //// End of levenshtein code
 ////////////////////////////
 
+var previousMessages = [];
+function checkExactDuplicate(msg){
+
+	var cleanText = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
+	cleanText = cleanText.replace(/\s\s+/g, ' ').trim();
+	if (!cleanText){return false;}
+
+	if (previousMessages.includes(cleanText)){
+		var ret = true;
+	} else {
+		var ret = false;
+	}
+	previousMessages.push(cleanText);
+	setTimeout(function(){
+		previousMessages.shift();
+	},5000);
+	return ret;
+}
+
 
 function verifyOriginal(msg){
 	try {
@@ -953,11 +972,10 @@ function sendToH2R(data){
 			}
 
 			msg.snippet = {};
-			msg.snippet.displayMessage = data.chatmessage || "";
+			msg.snippet.displayMessage = data.chatmessage.replace(/(<([^>]+)>)/gi, "") || "";
 
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
-
 
 
 			if (data.type && (data.type == "twitch") && data.chatname){
@@ -1668,7 +1686,7 @@ function generalFakePoke(tabid){ // fake a user input
 	}
 }
 
-function processResponse(data){
+function processResponse(data, reverse=false){
 
 	if (!chrome.debugger){return false;}
 	if (!isExtensionOn){return false;} // extension not active, so don't let responder happen. Probably safer this way.
@@ -1681,7 +1699,11 @@ function processResponse(data){
 		for (var i=0;i<tabs.length;i++){
 			try {
 				if (("tid" in data) && (data.tid!==false)){ // if an action-response, we want to only respond to the tab that originated it
-					if ( data.tid !== tabs[i].id){continue;}
+					if (reverse){
+						if ( data.tid === tabs[i].id){continue;}
+					} else if ( data.tid !== tabs[i].id){
+						continue;
+					}
 				}
 				if (!tabs[i].url){continue;}
 				if (tabs[i].url in published){continue;} // skip. we already published to this tab.
@@ -1983,10 +2005,39 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			if (Date.now() - messageTimeout > 60000){ // respond to "1" with a "1" automatically; at most 1 time per minute.
 				messageTimeout = Date.now();
 				var msg = {};
-				msg.id = data.tid;
+				msg.tid = data.tid;
 				msg.response = "Hi, @"+data.chatname+" !";
 				processResponse(msg);
 			}
+		}
+	}
+
+	if (settings.relaydonos && data.hasDonation && data.chatname && data.type){
+		if (Date.now() - messageTimeout > 100){ // respond to "1" with a "1" automatically; at most 1 time per 100ms.
+			messageTimeout = Date.now();
+			var msg = {};
+			msg.tid = data.tid;
+			msg.response = data.chatname.replace(/(<([^>]+)>)/gi, "")+" on "+data.type+" donated "+data.hasDonation+". Thank you";
+			processResponse(msg, true);
+		}
+	}
+	if (settings.relayall && data.chatmessage && data.chatname){
+		if (checkExactDuplicate(data.chatmessage)){ // not matching exactly
+			return null;
+		}
+		if (Date.now() - messageTimeout > 1000){ // respond to "1" with a "1" automatically; at most 1 time per second.
+			messageTimeout = Date.now();
+			var msg = {};
+			msg.tid = data.tid;
+			// this should be ideall HTML stripped
+			
+			let tmpmsg = data.chatmessage.replace(/(<([^>]+)>)/gi, "").trim();
+			if (tmpmsg){
+				msg.response = data.chatname+" said: "+tmpmsg;
+				checkExactDuplicate(msg.response);
+				processResponse(msg, true); // this should be the first and only message
+			}
+			
 		}
 	}
 	

@@ -183,17 +183,32 @@
 		}
 	);
   
-
-  setInterval(function () {
-    var xxx = document.querySelectorAll('[data-qa="virtual-list-item"]');
-    for (var j = 0; j < xxx.length; j++) {
-      if (xxx[j].marked) {
-        continue;
-      }
-      xxx[j].marked = true;
-      processMessage(xxx[j]);
-    }
-  }, 1000);
+	var giveItAtry = setInterval(function(){ // allow pre load
+	  if (document.querySelector('[data-qa="slack_kit_list"]')){
+			clearTimeout(giveItAtry);
+      } else {
+			return;
+		} 
+		setTimeout(function(){
+			var xxx = document.querySelectorAll('[data-qa="virtual-list-item"]');
+			for (var j = 0; j < xxx.length; j++) {
+			  if (xxx[j].marked) {
+				continue;
+			  }
+			  xxx[j].marked = true;
+			}
+		  setInterval(function () {
+			var xxx = document.querySelectorAll('[data-qa="virtual-list-item"]');
+			for (var j = 0; j < xxx.length; j++) {
+			  if (xxx[j].marked) {
+				continue;
+			  }
+			  xxx[j].marked = true;
+			  processMessage(xxx[j]);
+			}
+		  }, 500);
+	},3000);
+  },1000);
 
   // Does not support sending messages in Slack
 })();
