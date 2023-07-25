@@ -149,7 +149,7 @@
 	  } catch(e){}
 	  
 	  try {
-		var eleContent = ele.querySelector(".seventv-chat-message-body") || ele.querySelector(".seventv-message-context")  || ele.querySelector('*[data-test-selector="chat-line-message-body"]' || ele.querySelector('*[data-a-target="chat-line-message-body"]');
+		var eleContent = ele.querySelector(".seventv-chat-message-body") || ele.querySelector(".seventv-message-context")  || ele.querySelector('*[data-test-selector="chat-line-message-body"]') || ele.querySelector('*[data-a-target="chat-line-message-body"]');
 		chatmessage = getAllContentNodes(eleContent);
 	  } catch(e){}
 	 
