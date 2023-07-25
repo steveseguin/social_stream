@@ -65,7 +65,6 @@
 		
 
 		var name="";
-		console.log(ele);
 
 		var chatimg = ""; // boo!
 		try {
@@ -192,7 +191,7 @@
 				setTimeout(function(){
 					document.querySelectorAll(".group.w-full").forEach(ele=>{
 						ele.skip=true;
-						processMessage(ele);
+						//processMessage(ele);
 					});
 					onElementInserted('#__next');
 				},1000);

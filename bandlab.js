@@ -177,10 +177,10 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('.comments').children.length){
-			if (!document.querySelector('.comments').marked){
-				document.querySelector('.comments').marked=true;
-				onElementInserted('.comments');
+		if (document.querySelector('.comments, .live-chat-block').children.length){
+			if (!document.querySelector('.comments, .live-chat-block').marked){
+				document.querySelector('.comments, .live-chat-block').marked=true;
+				onElementInserted('.comments, .live-chat-block');
 			}
 		}} catch(e){}
 	},2000);

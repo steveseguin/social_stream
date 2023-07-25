@@ -1473,6 +1473,16 @@ function checkIfAllowed(sitename){
 			}
 		} catch(e){}
 	}
+	if (!settings.openai){
+		try {
+			if (sitename == "openai"){
+				return false;
+			}
+			if (sitename.startsWith("https://chat.openai.com/")){
+				return false;
+			}
+		} catch(e){}
+	}
 	if (!settings.chime){
 		try {
 			if (sitename == "chime"){
