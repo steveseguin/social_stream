@@ -1305,6 +1305,54 @@ async function openchat(target=null){
 		}
 		openURL(url, settings.custom3_url_newwindow);
 	}
+
+	if ((target=="custom4" || !target) && settings.custom4_url){
+		let url = settings.custom4_url.textsetting;
+		if (!url.startsWith("http")){
+			url="https://"+url;
+		}
+		openURL(url, settings.custom4_url_newwindow);
+	}
+
+	if ((target=="custom5" || !target) && settings.custom5_url){
+		let url = settings.custom5_url.textsetting;
+		if (!url.startsWith("http")){
+			url="https://"+url;
+		}
+		openURL(url, settings.custom5_url_newwindow);
+	}
+
+	if ((target=="custom6" || !target) && settings.custom6_url){
+		let url = settings.custom6_url.textsetting;
+		if (!url.startsWith("http")){
+			url="https://"+url;
+		}
+		openURL(url, settings.custom6_url_newwindow);
+	}
+
+	if ((target=="custom7" || !target) && settings.custom7_url){
+		let url = settings.custom7_url.textsetting;
+		if (!url.startsWith("http")){
+			url="https://"+url;
+		}
+		openURL(url, settings.custom7_url_newwindow);
+	}
+
+	if ((target=="custom8" || !target) && settings.custom8_url){
+		let url = settings.custom8_url.textsetting;
+		if (!url.startsWith("http")){
+			url="https://"+url;
+		}
+		openURL(url, settings.custom8_url_newwindow);
+	}
+
+	if ((target=="custom9" || !target) && settings.custom9_url){
+		let url = settings.custom9_url.textsetting;
+		if (!url.startsWith("http")){
+			url="https://"+url;
+		}
+		openURL(url, settings.custom9_url_newwindow);
+	}
 }
 
 function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Ninja API
