@@ -2017,7 +2017,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			messageTimeout = Date.now();
 			var msg = {};
 			msg.tid = data.tid;
-			msg.response = data.chatname.replace(/(<([^>]+)>)/gi, "")+" on "+data.type+" donated "+data.hasDonation+". Thank you";
+			msg.response = data.chatname.replace(/(<([^>]+)>)/gi, "")+" on "+data.type+" donated "+data.hasDonation.replace(/(<([^>]+)>)/gi, "")+". Thank you";
 			processResponse(msg, true);
 		}
 	}
