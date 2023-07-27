@@ -6,7 +6,6 @@
 		try{
 			if (typeof response === "object"){
 				if (response.streamID){ // this won't update if the stream ID changes, without a page reload at least
-					console.log(response.settings);
 					if (response.settings && response.settings.sharestreamid && response.settings.sharestreamid.value){ // okay, this is true
 						window.chatID  = response.streamID;
 						console.log("window chatID updated - auto approved");
