@@ -562,6 +562,16 @@ In the bottom right corner, hit relaunch to relaunch chrome with new settings. T
 
 - To set the Session ID to your own value, go to Extensions settings to set it. On Chrome: Settings -> Extensions -> Social Stream Ninja -> Details -> Extension options.
 
+### Adding sites yourself
+
+I have a video walk-thru on how I added one simple site to Social Stream:   [https://www.youtube.com/watch?v=5LquQ1xhmms](https://www.youtube.com/watch?v=5LquQ1xhmms)
+
+You can also refer to some of my code commits, where you can see which changes I made to add support for any specific site.
+
+ie: `https://github.com/steveseguin/social_stream/commit/942fce2697d5f9d51af6da61fc878824dee514b4`
+
+For a simple site, a developer should need just 30 minutes to an hour to get a site supported. A more complicated and tricky site may take a few hours or longer, depending on the developer's skill.
+
 ### Support
 
 You can find me on discord over at https://discord.socialstream.ninja or [https://discord.gg/7U4ERn9y](https://discord.gg/vFU8AuwNf3), offering free support in channel #chat.overlay-support 
