@@ -56,7 +56,7 @@
 	
 	function processMessage(ele){
 		
-		console.log(ele);
+		//console.log(ele);
 
 
 		var chatimg = ""
@@ -96,7 +96,7 @@
 		data.contentimg = "";
 		data.type = "livespace";
 		
-		console.log(data);
+		//console.log(data);
 		
 		pushMessage(data);
 	}
@@ -188,7 +188,7 @@
 
 					document.querySelectorAll("#messages li").forEach(ele=>{
 						ele.skip=true;
-						processMessage(ele);
+						// processMessage(ele);
 					});
 
 					onElementInserted('#messages');
