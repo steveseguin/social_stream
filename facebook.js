@@ -34,6 +34,7 @@
 		if (ele == window) {
 			return;
 		}
+		
 		var chatimg = "";
 		try {
 			var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
@@ -191,6 +192,68 @@
 		
 		pushMessage(data);
 	}
+	
+	var settings = {};
+	// settings.textonlymode
+	// settings.captureevents
+	
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if ("settings" in response){
+			settings = response.settings;
+		}
+	});
+
+	chrome.runtime.onMessage.addListener(
+		function(request, sender, sendResponse) {
+			try {
+				if ("focusChat" == request) {
+					
+					if (document.querySelectorAll('div[role="textbox"][contenteditable="true"] p').length){
+						var eles = document.querySelectorAll('div[role="textbox"][contenteditable="true"] > p');
+					} else {
+						var eles = document.querySelectorAll('div[contenteditable="true"] div[data-editor]>div[data-offset-key]');
+					}
+					if (eles.length) {
+						var i = eles.length-1;
+						while (i>=0){
+							try {
+								eles[i].focus();
+								eles[i].focus();
+								eles[i].click();
+								eles[i].focus();
+								break;
+							} catch (e) {}
+							i--;
+						}
+					} else if (document.querySelector('div.notranslate[contenteditable="true"] > p')){
+						document.querySelector('div.notranslate[contenteditable="true"] > p').focus();
+						document.querySelector('div.notranslate[contenteditable="true"] > p').focus();
+						document.querySelector('div.notranslate[contenteditable="true"] > p').click();
+						document.querySelector('div.notranslate[contenteditable="true"] > p').focus();
+					} else if (document.querySelector("div[data-editor]>[data-offset-key]")) {
+						document.querySelector("div[data-editor]>[data-offset-key]").focus();
+						document.querySelector("div[data-editor]>[data-offset-key]").focus();
+						document.querySelector("div[data-editor]>[data-offset-key]").click();
+						document.querySelector("div[data-editor]>[data-offset-key]").focus();
+					} else {
+						sendResponse(true);
+						return;
+					}
+					sendResponse(true);
+					return;
+				}
+				if (typeof request === "object"){
+					if ("settings" in request){
+						settings = request.settings;
+						sendResponse(true);
+						return;
+					}
+				}
+			} catch (e) {}
+
+			sendResponse(false);
+		}
+	);
 
 	var dupCheck = [];
 	
@@ -263,68 +326,6 @@
 			}
 		} catch (e) {console.error(e);}
 	}, 800);
-
-	var settings = {};
-	// settings.textonlymode
-	// settings.captureevents
-	
-	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if ("settings" in response){
-			settings = response.settings;
-		}
-	});
-
-	chrome.runtime.onMessage.addListener(
-		function(request, sender, sendResponse) {
-			try {
-				if ("focusChat" == request) {
-					
-					if (document.querySelectorAll('div[role="textbox"][contenteditable="true"] p').length){
-						var eles = document.querySelectorAll('div[role="textbox"][contenteditable="true"] > p');
-					} else {
-						var eles = document.querySelectorAll('div[contenteditable="true"] div[data-editor]>div[data-offset-key]');
-					}
-					if (eles.length) {
-						var i = eles.length-1;
-						while (i>=0){
-							try {
-								eles[i].focus();
-								eles[i].focus();
-								eles[i].click();
-								eles[i].focus();
-								break;
-							} catch (e) {}
-							i--;
-						}
-					} else if (document.querySelector('div.notranslate[contenteditable="true"] > p')){
-						document.querySelector('div.notranslate[contenteditable="true"] > p').focus();
-						document.querySelector('div.notranslate[contenteditable="true"] > p').focus();
-						document.querySelector('div.notranslate[contenteditable="true"] > p').click();
-						document.querySelector('div.notranslate[contenteditable="true"] > p').focus();
-					} else if (document.querySelector("div[data-editor]>[data-offset-key]")) {
-						document.querySelector("div[data-editor]>[data-offset-key]").focus();
-						document.querySelector("div[data-editor]>[data-offset-key]").focus();
-						document.querySelector("div[data-editor]>[data-offset-key]").click();
-						document.querySelector("div[data-editor]>[data-offset-key]").focus();
-					} else {
-						sendResponse(true);
-						return;
-					}
-					sendResponse(true);
-					return;
-				}
-				if (typeof request === "object"){
-					if ("settings" in request){
-						settings = request.settings;
-						sendResponse(true);
-						return;
-					}
-				}
-			} catch (e) {}
-
-			sendResponse(false);
-		}
-	);
 
 
 })();
