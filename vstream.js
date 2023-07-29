@@ -192,7 +192,7 @@
 
 					document.querySelectorAll(".w-full > .max-h-full > div").forEach(ele=>{
 						ele.skip=true;
-						processMessage(ele);
+						//processMessage(ele);
 					});
 
 					onElementInserted('.w-full > .max-h-full');
