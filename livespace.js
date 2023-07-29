@@ -22,8 +22,11 @@
 			 .replace(/"/g, "&quot;")
 			 .replace(/'/g, "&#039;") || "";
 	}
+
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
+		
+		if (!element){return resp;}
 		
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
@@ -54,36 +57,44 @@
 	function processMessage(ele){
 		
 		console.log(ele);
-		var chatimg = ""; // boo!
+
+
+		var chatimg = ""
+
+		try {
+			chatimg = ele.querySelector(".chat-userIco img").src;
+		} catch(e){
+		}
 		
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector(".chat-username").textContent.trim());
+			name = escapeHtml(ele.querySelector(".chat-wrapper a strong").textContent.trim());
 		} catch(e){
 		}
+
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".chat-text"));
+			msg = getAllContentNodes(ele.querySelector(".chat-msg-body"));
 		} catch(e){
 		}
 		
-		var nameColor = "";
-		try {
-			nameColor = getComputedStyle(ele.querySelector(".chat-username")).color || "";
-		} catch(e){}
+
+		if (!msg || !name){
+			return;
+		}
 		
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
-		data.nameColor = nameColor;
+		data.nameColor = "";
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.hasMembership = "";
 		data.contentimg = "";
-		data.type = "floatplane";
+		data.type = "livespace";
 		
 		console.log(data);
 		
@@ -112,7 +123,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('textarea.chat-input').focus();
+					document.querySelector('#type-a-message').focus();
 					sendResponse(true);
 					return;
 				}
@@ -144,8 +155,12 @@
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
+
 							mutation.addedNodes[i].skip = true;
-							processMessage(mutation.addedNodes[i]); // just for debugging
+
+							if (mutation.addedNodes[i].nodeName == "LI"){
+								processMessage(mutation.addedNodes[i]); 
+							}
 						} catch(e){}
 					}
 				}
@@ -163,17 +178,24 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('.chat-message-list')){
-			if (!document.querySelector('.chat-message-list').marked){
-				document.querySelector('.chat-message-list').marked=true;
+		if (document.querySelector('#messages')){
+			if (!document.querySelector('#messages').marked){
+				document.querySelector('#messages').marked=true;
+
 				console.log("CONNECTED chat detected");
+
 				setTimeout(function(){
-					document.querySelectorAll(".LiveChatMessage").forEach(ele=>{
+
+					document.querySelectorAll("#messages li").forEach(ele=>{
 						ele.skip=true;
-						// processMessage(ele);
+						processMessage(ele);
 					});
-					onElementInserted('.chat-message-list');
+
+					onElementInserted('#messages');
+
 				},1000);
+
+
 			}
 		}} catch(e){}
 	},2000);
