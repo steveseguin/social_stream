@@ -2251,6 +2251,16 @@
 		}
 	}
 	
+	
+	
+	var filterEvents = false;
+	if (urlParams.has("filterevents")){ // &filterevents=joined,otherkeyword
+		filterEvents = urlParams.get("filterevents") || false;
+		if (filterEvents){
+			filterEvents = filterEvents.split(",");
+		}
+	}
+	
 	if (urlParams.has("simpletts")){
 		English = false;
 	}
@@ -3838,6 +3848,12 @@
 				console.error(e);
 			}
 			
+			if (filterEvents && data.event){ 
+				if (filterEvents.some(v => data.event.includes(v))) {
+					return;
+				}
+			}
+			
 
 			var showType = "";
 			if (!data.type){
@@ -3869,7 +3885,7 @@
 				if (stripHTML){
 					data.chatmessage = stripHtmlFunction(data.chatmessage);
 					data.chatmessage = data.chatmessage.trim();
-				} else if (data.event){
+				} else if (data.event){ 
 					data.chatmessage = data.chatmessage.trim();
 					data.chatmessage = "<i>"+data.chatmessage+"</i>";
 				}

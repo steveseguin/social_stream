@@ -939,6 +939,12 @@ function sendToDestinations(message){
 	} else if (settings.randomcolorall && message && message.chatname){
 		message.nameColor = getColorFromName(message.chatname);
 	}
+	
+	if (settings.filtereventstoggle && settings.filterevents && message.event){
+		if (settings.filterevents.textsetting.split(",").some(v => message.event.includes(v))) {
+			return false;
+		}
+	}
 
 	sendDataP2P(message);
 	sendToDisk(message);
