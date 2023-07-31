@@ -941,11 +941,13 @@ span.zero-width-parent img.zero-width-emote {
 	var pitch = 1;
 	if (urlParams.has("pitch")){
 		pitch = urlParams.get("pitch") || 1;
+		pitch = parseFloat(pitch);
 	}
 	
 	var rate = 1;
 	if (urlParams.has("rate")){
 		rate = urlParams.get("rate") || 1;
+		rate = parseFloat(rate);
 	}
 	
 	var volume = 1;
