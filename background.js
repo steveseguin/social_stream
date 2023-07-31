@@ -940,8 +940,8 @@ function sendToDestinations(message){
 		message.nameColor = getColorFromName(message.chatname);
 	}
 	
-	if (settings.filtereventstoggle && settings.filterevents && message.event){
-		if (settings.filterevents.textsetting.split(",").some(v => message.event.includes(v))) {
+	if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.chatmessage && message.event){
+		if (settings.filterevents.textsetting.split(",").some(v => message.chatmessage.includes(v))) {
 			return false;
 		}
 	}

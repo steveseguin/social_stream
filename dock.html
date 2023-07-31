@@ -3848,8 +3848,8 @@
 				console.error(e);
 			}
 			
-			if (filterEvents && data.event){ 
-				if (filterEvents.some(v => data.event.includes(v))) {
+			if (filterEvents && data.event && data.chatmessage){ 
+				if (filterEvents.some(v => data.chatmessage.includes(v))) {
 					return;
 				}
 			}
