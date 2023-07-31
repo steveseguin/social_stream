@@ -2273,7 +2273,7 @@
 
 	var rate = 1;
 	if (urlParams.has("rate")){
-		rate = urlParams.get("rate") || 1;
+		rate = parseFloat(urlParams.get("rate")) || 1;
 	}
 
 	var volume = 1;
