@@ -132,25 +132,48 @@
 		} catch(e){
 		}
 		var chatmessage="";
+		var badges = [];
 		try{
 			 if (settings.textonlymode){
-				chatmessage = content.childNodes[0].childNodes[1].children[1].innerText;
+				chatmessage = content.childNodes[0].childNodes[2].children[1].innerText;
 			 } else {
-				chatmessage = content.childNodes[0].childNodes[1].children[1].innerHTML;
+				chatmessage = content.childNodes[0].childNodes[2].children[1].innerHTML;
 			 }
+			 
+			 if (content.childNodes[0].childNodes[1].querySelector("img")){
+				var badge = content.childNodes[0].childNodes[1].querySelector("img");
+				badge.src = badge.src+"";
+				badges.push(badge.src);
+			}
 		} catch(e){
-			return;}
+			chatmessage="";
+			try{
+				 if (settings.textonlymode){
+					chatmessage = content.childNodes[0].childNodes[1].children[1].innerText;
+				 } else {
+					chatmessage = content.childNodes[0].childNodes[1].children[1].innerHTML;
+				 }
+			} catch(e){
+				return;
+			}
+		}
+		
+		
+
+		
 
 		var chatimg="";
 		try{
 			chatimg = content.childNodes[0].childNodes[0].querySelectorAll("img")[0].src;
 		} catch(e){
 		}
+		
+		
 	  
 
 	  var data = {};
 	  data.chatname = chatname;
-	  data.chatbadges = "";
+	  data.chatbadges = badges || "";
 	  data.backgroundColor = "";
 	  data.textColor = "";
 	  data.chatmessage = chatmessage;
@@ -234,7 +257,7 @@
 				} catch(e){}
 			}
 			
-		},2000);
+		},500);
 		
 		
 	},1500);
