@@ -3268,7 +3268,7 @@
 					message.hasDonation = (symbol.s||"") + (data.stripe.data.object.amount_total || "") + " "+(data.stripe.data.object.currency.toUpperCase() || "");
 					message.hasDonation = message.hasDonation.trim();
 				}
-				
+				message.id = parseInt(Math.random()*100000+1000000);
 				message.chatbadges = "";
 				message.backgroundColor = "";
 				message.textColor = "";
