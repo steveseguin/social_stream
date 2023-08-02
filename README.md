@@ -432,6 +432,21 @@ A generic JSON-PUT can be made using `&putserver`, with the address provided. Th
 
 In these cases, the JSON being delivered is in the Social Stream data-structure.
 
+
+##### Stripe webhook donation support
+
+If you create a Stripe payment link (eg: https://donate.stripe.com/YYYYYYYYYYYY), you can have successful payments show up in chat as if a normal donation message event..
+
+Create a Stripe webhook, listening for the event `checkout.session.completed`, and then point it to: `https://api.overlay.ninja/XXXXXX/stripe`, where XXXXXX is your Social Stream session ID.
+
+If you wish to include a name in the message, include a custom field called "Display Name" or "Username".  You can also include a field called "Message", to allow the payer an opportunity to leave a custom message.  The donation amount and current type should be dervived from the payment automatically.
+
+Lastly, to activate in the dock, add &server to the URL; this will have the dock start listening for incoming messages.
+
+![image](https://github.com/steveseguin/social_stream/assets/2575698/29bab9b6-8fb7-482d-87d1-2b7f2bd74f9f)
+
+![image](https://github.com/steveseguin/social_stream/assets/2575698/3f31974c-6bbb-4ed0-bc7c-4d27f7c3103b)
+
 ### Text to speech
 
 Text messages can be converted to speech, assuming your system supports TTS.  On my Windows machine running Chrome/OBS, it works.  I have it set to English-US by default, but you can change the language to something else by editing the URL. ()
