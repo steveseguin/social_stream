@@ -559,7 +559,18 @@ chrome.runtime.onMessage.addListener(
 							setupSocketDock();
 						}
 					} else {
-						if (socketserverDock){
+						if (socketserverDock && !settings.server3){ // server 3 also needs to be off
+							socketserverDock.close();
+						}
+					}
+				} else if (request.setting == "server3"){
+					if (request.value){
+						if (!socketserverDock){
+							socketserverDock = new WebSocket(serverURLDock);
+							setupSocketDock();
+						}
+					} else {
+						if (socketserverDock && !settings.server2){ // server 2 also needs to be off
 							socketserverDock.close();
 						}
 					}
@@ -1054,16 +1065,16 @@ var conConDock = 0;
 
 function setupSocketDock(){
 
-	if (!settings.server2){return;}
+	if (!settings.server2 && !settings.server3){return;}
 	else if (!isExtensionOn){return;}
 	else if (!socketserverDock){
 		socketserverDock = new WebSocket(serverURLDock);
 	}
 	
 	socketserverDock.onclose = function (){
-		if (settings.server2 && isExtensionOn){
+		if ((settings.server2 || settings.server3) && isExtensionOn){
 			setTimeout(function(){
-				if (settings.server2 && isExtensionOn){
+				if ((settings.server2 || settings.server3) && isExtensionOn){
 					conConDock+=1;
 					socketserverDock = new WebSocket(serverURLDock);
 					setupSocketDock();
@@ -1081,7 +1092,14 @@ function setupSocketDock(){
 	};
 	socketserverDock.addEventListener('message', async function (event) {
 		if (event.data){
-			
+			try {
+				if (settings.server3 && isExtensionOn){
+					var data = JSON.parse(event.data);
+					processIncomingRequest(data);
+				}
+			} catch(e){
+				log(e);
+			}
 		}
 	})
 }
@@ -1449,7 +1467,7 @@ function loadIframe(channel, pass=false){  // this is pretty important if you wa
 	if (!pass){
 		pass = "false";
 	}
-	iframe.src = "https://vdo.socialstream.ninja/alpha/?ln&salt=vdo.ninja&password="+pass+"&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
+	iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+"&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
 	document.body.appendChild(iframe);
 }
 
@@ -1484,19 +1502,23 @@ function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for 
   }
 }
 
+function processIncomingRequest(request){
+	if ("response" in request){ // we receieved a response from the dock
+		processResponse(request);
+	} else if ("action" in request){
+		if (request.action === "openChat"){
+			openchat(request.value || null); 
+		}
+	}
+}
+			
 eventer(messageEvent, async function (e) {
 	if (e.source != iframe.contentWindow){return}
 	if (e.data && (typeof e.data == "object")){
 		if (("dataReceived" in e.data) && ("overlayNinja" in e.data.dataReceived)){
-			if ("response" in e.data.dataReceived.overlayNinja){ // we receieved a response from the dock
-				processResponse(e.data.dataReceived.overlayNinja);
-			} else if ("action" in e.data.dataReceived.overlayNinja){
-				if (e.data.dataReceived.overlayNinja.action === "openChat"){
-					openchat(e.data.dataReceived.overlayNinja.value || null);
-				}
-			}
+			processIncomingRequest(e.data.dataReceived.overlayNinja);
 		} else if ("action" in e.data){ // this is from vdo.ninja, not socialstream.
-			if (e.data.action === "YoutubeChat"){
+			if (e.data.action === "YoutubeChat"){ // I never got around to completing this, so ignore it
 				if (e.data.value && data.value.snippet && data.value.authorDetails){
 					var data = {};
 					data.chatname = e.data.value.authorDetails.displayName || "";

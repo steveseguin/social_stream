@@ -2146,7 +2146,9 @@
 	var conConExtension = 1;
 	var socketserverExtension = false;
 	var serverURLExtension = "wss://api.overlay.ninja/extension";
-
+	var server2 = false;
+	var server3 = false;
+	
 	function setupSocketExtension(){
 		socketserverExtension.onclose = function (){
 			setTimeout(function(){
@@ -2161,7 +2163,7 @@
 		};
 		socketserverExtension.addEventListener('message', function (event) {
 			var resp = false
-			if (event.data){
+			if (event.data && server2){
 				var data = JSON.parse(event.data);
 				processInput(data);
 			}
@@ -2169,7 +2171,16 @@
 	}
 	
 	if (urlParams.has("server2")){
+		server2 = true;
+		if (urlParams.has("server3")){
+			server3 = true;
+		}
 		serverURLExtension = urlParams.get("server2") || serverURLExtension;
+		socketserverExtension = new WebSocket(serverURLExtension);
+		setupSocketExtension();
+	} else if (urlParams.has("server3")){
+		server3 = true;
+		serverURLExtension = urlParams.get("server3") || serverURLExtension;
 		socketserverExtension = new WebSocket(serverURLExtension);
 		setupSocketExtension();
 	}
@@ -4743,7 +4754,7 @@
 			return;
 		}
 		
-		if (socketserverExtension){
+		if (socketserverExtension && server3){
 			try{
 				socketserverExtension.send(JSON.stringify(data));
 				return;
@@ -4752,7 +4763,6 @@
 			}
 		}
 		
-	
 		if (iframe){
 			if (!uid){
 				var keys = Object.keys(connectedPeers);
@@ -4863,7 +4873,13 @@
 		msg.overlayNinja = {};
 		msg.overlayNinja.tid = tid;
 		msg.overlayNinja.response = data;
-		iframe.contentWindow.postMessage({"sendData":msg, "type": "rpcs"}, '*'); // send only to 'viewers' of this stream
+		
+		send2Extension(msg.overlayNinja);
+		
+		//iframe.contentWindow.postMessage({"sendData":msg, "type": "rpcs"}, '*'); // send only to 'viewers' of this stream
+		
+		
+		// send2Extension
 	}
 
 	function setupSaveToDisk(){
