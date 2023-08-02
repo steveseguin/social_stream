@@ -435,13 +435,13 @@ In these cases, the JSON being delivered is in the Social Stream data-structure.
 
 ##### Stripe webhook donation support
 
-If you create a Stripe payment link (eg: https://donate.stripe.com/YYYYYYYYYYYY), you can have successful payments show up in chat as if a normal donation message event..
+If you create a Stripe payment link (eg: https://donate.stripe.com/YYYYYYYYYYYY), you can have successful payments show up in Social Stream. This is a great way to collect donations from viewers of your stream without needing to use middleware for payment processing.
 
-Create a Stripe webhook, listening for the event `checkout.session.completed`, and then point it to: `https://api.overlay.ninja/XXXXXX/stripe`, where XXXXXX is your Social Stream session ID.
+To get started, after creating a Stripe payment link, create a Stripe webhook that listens for the event `checkout.session.completed`. Have the webhook point to: `https://api.overlay.ninja/XXXXXX/stripe`, where XXXXXX is your Social Stream session ID. You don't need to worry about the verification signatures or API tokens in Stripe since we won't be verifying the payments. Of course, keep your session ID private as a result, else someone will be able to spoof fake donations to your end point.
 
-If you wish to include a name in the message, include a custom field called "Display Name" or "Username".  You can also include a field called "Message", to allow the payer an opportunity to leave a custom message.  The donation amount and current type should be dervived from the payment automatically.
+If you wish to ask the payer for a name, include a custom field called "Display Name" or "Username" when creating your Stripe payment link. You can also include a field called "Message", which will allow the payer an opportunity to leave a custom message. The donation amount and current type should be dervived from the payment automatically, but some rare exotic currencies may not always show up with the right decimal place -- just keep that in mind.
 
-Lastly, to activate in the dock, add &server to the URL; this will have the dock start listening for incoming messages.
+Lastly, to allow these events to show up in the Social Stream dock, add &server to the dock URL; this will have the dock start listening for incoming messages from the webhook/api server. You can always test that the workflow is working using Stripe's "Test mode"; just spam 424242.. etc for the credit card number, expiration, cvc, etc, when using the test mode, rather than a valid credit card.
 
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/29bab9b6-8fb7-482d-87d1-2b7f2bd74f9f)
 
