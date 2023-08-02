@@ -3259,9 +3259,7 @@
 				var symbol = {};
 				if (currency && (currency in Currencies)){
 					symbol = Currencies[currency];
-					console.log(symbol);
 					if (symbol.d){
-						console.log(data.stripe.data.object.amount_total, symbol.d);
 						data.stripe.data.object.amount_total = parseFloat(data.stripe.data.object.amount_total)/(Math.pow(10,parseInt(symbol.d)));
 					}
 				}
