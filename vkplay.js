@@ -35,10 +35,9 @@
 	  var chatmessage = "";
 	  var nameColor = "";
 	  
-	  
 	  try {
 		var nameEle = ele.querySelector("[class^='ChatMessage_name_']");
-		var chatname = nameEle.childNodes[0].textContent;;
+		var chatname = nameEle.childNodes[0].textContent; // remove the semi colon
 		try {
 			nameColor = nameEle.style.color;
 		} catch(e){}
@@ -65,19 +64,17 @@
 	  
 	  try {
 		 
-		var tttt = ele.querySelector('[class^="ChatMessage_text_"] > [class^="BlockRenderer"]');
+		var tttt = ele.querySelector('[class^="ChatMessage_text_"] > [class^="BlockRenderer"], [class^="ContentRendererWithTooltip_text_"] > [class^="BlockRenderer"]');
 		chatmessage = getAllContentNodes(tttt);
 	
 	  } catch(e){}
 	  
 	  
-	  var chatimg = "";
+	  var chatimg = ""; // https://images.vkplay.live/user/81334/avatar , but I can't get the userID based on the name.. not without an API.
 	 
 	  
 	  var hasDonation = '';
 	  
-
-	 
 	  var data = {};
 	  data.chatname = chatname;
 	  data.chatbadges = chatbadges;
@@ -171,6 +168,8 @@
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 	}
+	
+	console.log("social stream started");
 	
 	var xxx = setInterval(function(){
 		var clear = document.querySelectorAll("[class^='ChatBoxBase_message'], [class^='ChatMessage_root']");
