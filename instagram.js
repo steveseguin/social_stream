@@ -18,6 +18,49 @@
 	  xhr.responseType = 'blob';
 	  xhr.send();
 	}
+	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
 
 	function processMessagePosts(ele){ // not supported currently.  Instagram is just a bunch of reels at this point, so thats not chat
 		if (ele == window){return;}
@@ -71,14 +114,14 @@
 
 		var name = "";
 		try {
-			name = ele.querySelector("h3").innerText;
+			name = escapeHtml(ele.querySelector("h3").innerText);
 		} catch(e){
 			name = "";
 		}
 
 		var msg="";
 		try{
-		  msg = ele.querySelector("h3").nextElementSibling.innerText;
+		  msg = escapeHtml(ele.querySelector("h3").nextElementSibling.innerText);
 		} catch(e){
 		  //console.log(e);
 		}
@@ -129,13 +172,14 @@
 		try {
 			chatname = content.childNodes[0].childNodes[1].children[0].textContent;
 			chatname = chatname.replace(/ .*/,'');
+			chatname = escapeHtml(chatname);
 		} catch(e){
 		}
 		var chatmessage="";
 		var badges = [];
 		try{
 			 if (settings.textonlymode){
-				chatmessage = content.childNodes[0].childNodes[2].children[1].innerText;
+				chatmessage = escapeHtml(content.childNodes[0].childNodes[2].children[1].innerText);
 			 } else {
 				chatmessage = content.childNodes[0].childNodes[2].children[1].innerHTML;
 			 }
@@ -149,7 +193,7 @@
 			chatmessage="";
 			try{
 				 if (settings.textonlymode){
-					chatmessage = content.childNodes[0].childNodes[1].children[1].innerText;
+					chatmessage = escapeHtml(content.childNodes[0].childNodes[1].children[1].innerText);
 				 } else {
 					chatmessage = content.childNodes[0].childNodes[1].children[1].innerHTML;
 				 }

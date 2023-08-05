@@ -68,6 +68,49 @@
 			sendResponse(false);
 		}
 	);
+	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
 
 
 	function prepMessage(e){
@@ -85,9 +128,9 @@
 		var chatimg = ""
 		
 	  try{
-		  chatname = ele.querySelector("div>span>a[role='link']").textContent;
+		  chatname = escapeHtml(ele.querySelector("div>span>a[role='link']").textContent);
 		  chatimg = ele.querySelector("div>div>div>a[role='link']>div>img[src]").src;
-		  chatmessage = ele.querySelector("div>div>div>div>p>span").parentNode.parentNode.textContent;
+		  chatmessage = escapeHtml(ele.querySelector("div>div>div>div>p>span").parentNode.parentNode.textContent);
 		  
 	  } catch(e){}
 	  

@@ -17,6 +17,49 @@
 
 	var lastMessage = {};
 	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
+	
 	function processMessage(ele){
 		var chatimg = "";
 		var msg = "";
@@ -31,10 +74,12 @@
 					var main = ele.childNodes[0].childNodes[0].childNodes[0];
 					if (main.nextElementSibling.childNodes.length>1){
 						msg = main.nextElementSibling.childNodes[1].innerText;
+						msg = escapeHtml(msg);
 					} 
 					name = [...main.nextElementSibling.childNodes[0].childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('');
 				} else{
 					msg = ele.innerText;
+					msg = escapeHtml(msg);
 					name = JSON.parse(document.getElementById("app-data").innerHTML).user.display_name;
 					chatimg = JSON.parse(document.getElementById("app-data").innerHTML).user.avatar_url;
 				} 
@@ -44,10 +89,12 @@
 						var main = ele.childNodes[1].childNodes[0].childNodes[0];
 						if (main.nextElementSibling.childNodes.length>1){
 							msg = main.nextElementSibling.childNodes[1].innerText;
+							msg = escapeHtml(msg);
 						} 
 						name = [...main.nextElementSibling.childNodes[0].childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('');
 					} else{
 						msg = ele.childNodes[1].innerText;
+						msg = escapeHtml(msg);
 						name = JSON.parse(document.getElementById("app-data").innerHTML).user.display_name;
 						chatimg = JSON.parse(document.getElementById("app-data").innerHTML).user.avatar_url;
 					} 
@@ -60,8 +107,10 @@
 			if (!msg){
 				if (main.nextElementSibling.childNodes.length>1){
 					msg = main.nextElementSibling.childNodes[1].innerText;
+					msg = escapeHtml(msg);
 				} else {
 					msg = main.nextElementSibling.childNodes[0].lastChild.innerText;
+					msg = escapeHtml(msg);
 				}
 			}
 		

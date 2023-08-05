@@ -29,7 +29,7 @@
 		eles.forEach(ele2=>{
 			try {
 				if (ele2.nodeType == Node.TEXT_NODE){
-					chatmessage += ele2.textContent;
+					chatmessage += escapeHtml(ele2.textContent);
 				} else if (ele2 && ele2.querySelector && ele2.querySelector("img[src]")){
 					chatmessage += "<img src='"+ele2.querySelector("img[src]").src+"'/>";
 				} else {
@@ -40,6 +40,49 @@
 		return chatmessage;
 	}
 	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
+	
 	async function processMessage(content){
 		
 		
@@ -47,7 +90,7 @@
 		
 		var chatname="";
 		try{
-			chatname = buttons[1].textContent;
+			chatname = escapeHtml(buttons[1].textContent);
 		} catch(e){
 			chatname = "";
 		}
@@ -64,7 +107,7 @@
 		var chatmessage="";
 		try{
 			 if (settings.textonlymode){
-				chatmessage = buttons[1].nextSibling.textContent;
+				chatmessage = escapeHtml(buttons[1].nextSibling.textContent);
 			 } else {
 				chatmessage = digInto(buttons[1].nextSibling.childNodes)
 			 }

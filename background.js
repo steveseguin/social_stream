@@ -23,6 +23,129 @@ function generateStreamID(){
 	return text;
 };
 
+function escapeHtml(unsafe){
+	try {
+		return unsafe
+			 .replace(/&/g, "&amp;")
+			 .replace(/</g, "&lt;")
+			 .replace(/>/g, "&gt;")
+			 .replace(/"/g, "&quot;")
+			 .replace(/'/g, "&#039;") || "";
+	} catch(e){
+		return "";
+	}
+}
+
+String.prototype.replaceAllCase = function(strReplace, strWith) {
+    // See http://stackoverflow.com/a/3561711/556609
+    var esc = strReplace.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    var reg = new RegExp(esc, 'ig');
+    return this.replace(reg, strWith);
+};
+
+function filterXSS(unsafe){ // this is not foolproof, but it might catch some basic probe attacks that sneak in
+	try {
+		return unsafe
+			 .replaceAll("prompt(","**")
+			 .replaceAll("eval(","**")
+			 .replaceAll("onclick(","**")
+			 .replaceAll("alert(","**")
+			 .replaceAll("onload=","**")
+			 .replaceAll("onerror=","**")
+			 .replaceAll(" onmouse","**") // onmousedown, onmouseup, etc
+			 .replaceAll("onfocusin=","**")
+			 .replaceAll("onfocusout=","**")
+			 .replaceAll("onfocus=","**")
+			 .replaceAll("onblur=","**")
+			 .replaceAll("oninput=","**")
+			 .replaceAll("onkeydown=","**")
+			 .replaceAll("onkeyup=","**")
+			 .replaceAll("onkeypress=","**")
+			 .replaceAll("onkeyup","**")
+			 .replaceAll("=alert","**")
+			 .replaceAll("=prompt","**")
+			 .replaceAll("=confirm","**")
+			 .replaceAll("confirm(","**")
+			 .replaceAll("=eval","**")
+			 .replaceAll("ondblclick=","**")
+			 .replaceAll("javascript:","**")
+			 .replaceAll("srcdoc=","**")
+			 .replaceAll("xlink:href=","**")
+			 .replaceAll("xmlns:xlink=","**")
+			 .replaceAll("ontouchstart=","**")
+			 .replaceAll("ontouchend=","**")
+			 .replaceAll("ontouchmove=","**")
+			 .replaceAll("ontouchcancel=","**")
+			 .replaceAll("onchange=","**")
+			 .replaceAll("src=data:","*,*")
+			 .replaceAll("data:text/html","*,*")
+			 .replaceAll("onpageshow=","**")
+			 .replaceAll("href=//0","**")
+			 .replaceAll("onhashchange=","**")
+			 .replaceAll("onscroll=","**")
+			 .replaceAll("onresize=","**")
+			 .replaceAll("onhelp=","**")
+			 .replaceAll("onstart=","**")
+			 .replaceAll("onfinish=","**")
+			 .replaceAll("onloadstart=","**")
+			 .replaceAll("onend=","**")
+			 .replaceAll("onsubmit=","**")
+			 .replaceAll("onshow=","**")
+			 .replaceAll("alert`","**")
+			 .replaceAll("alert&","**")
+			 .replaceAll("(alert)(","**")
+			 .replaceAll("innerHTML","**")
+			 .replaceAll(" ondrag","**")
+			 .replaceAll("activate=","**")
+			 .replaceAll(" onbefore","**")
+			 .replaceAll("oncopy=","**")
+			 .replaceAll("oncut=","**")
+			 .replaceAll("onpaste=","**")
+			 .replaceAll("onpopstate=","**")
+			 .replaceAll("onunhandledrejection=","**")
+			 .replaceAll("onwheel=","**")
+			 .replaceAll("oncontextmenu=","**")
+			 .replaceAll("XMLHttpRequest(","**")
+			 .replaceAll("Object.defineProperty","**")
+			 .replaceAll("document.createElement(","**")
+			 .replaceAll("MouseEvent(","**")
+			 .replaceAll("unescape(","**")
+			 .replaceAll("onreadystatechange","**")
+			 .replaceAll("document.write(","**")
+			 .replaceAll("write(","**")
+			 .replaceAllCase("<textarea","**")
+			 .replaceAllCase("<embed","**")
+			 .replaceAllCase("<iframe","**")
+			 .replaceAllCase("<input","**")
+			 .replaceAllCase("<link","**")
+			 .replaceAllCase("<meta","**")
+			 .replaceAllCase("<style","**")
+			 .replaceAllCase("<table","**")
+			 .replaceAllCase("<layer","**")
+			 .replaceAllCase("<body","**")
+			 .replaceAllCase("<object","**")
+			 .replaceAllCase("<html","**")
+			 .replaceAllCase("<animation","**")
+			 .replaceAllCase("<listener","**")
+			 .replaceAllCase("<handler","**")
+			 .replaceAllCase("<form","**")
+			 .replaceAllCase("<?xml","**")
+			 .replaceAllCase("<stylesheet","**")
+			 .replaceAllCase("<eval","**")
+			 .replaceAll("=javascript","**")
+			 .replaceAll(" formaction=","**")
+			 .replaceAll("'';!--","**")
+			 .replaceAllCase("<script","**")
+			 .replaceAllCase("<audio","**")
+			 .replaceAllCase("<bgsound","**")
+			 .replaceAllCase("<blink","**")
+			 .replaceAllCase("<br><br><br>","")
+			 .replaceAllCase("<video","**");
+			 
+	} catch(e){
+		return unsafe;
+	}
+}
 
 var properties = ["streamID", "password", "isExtensionOn", "settings"];
 var channel = generateStreamID();
@@ -945,6 +1068,14 @@ function sendToDestinations(message){
 		messageCounter+=1;
 		message.id = messageCounter;
 	}
+	if (message.chatname){
+		message.chatname = escapeHtml(message.chatname);
+	}
+	
+	if (message.chatmessage){
+		message.chatmessage = filterXSS(message.chatmessage);
+	}
+	
 	if (settings.randomcolor && message && !message.nameColor && message.chatname){
 		message.nameColor = getColorFromName(message.chatname);
 	} else if (settings.randomcolorall && message && message.chatname){
@@ -956,6 +1087,8 @@ function sendToDestinations(message){
 			return false;
 		}
 	}
+	
+	
 
 	sendDataP2P(message);
 	sendToDisk(message);

@@ -25,6 +25,49 @@
 		return buf;
 	}
 	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
+	
 	function processMessage(ele){
 	  
 		//console.log(ele);
@@ -34,7 +77,7 @@
 		var chatimg = "";
 
 		try{
-			chatname = ele.children[1].children[1].children[0].children[0].textContent;
+			chatname = escapeHtml(ele.children[1].children[1].children[0].children[0].textContent);
 			if (chatname.split("] ").length>1){
 				chatname = chatname.split("] ")[1];
 			}
@@ -47,7 +90,7 @@
 		if (!chatname){
 			try{
 				
-				chatname = ele.children[1].children[1].children[0].children[1].children[0].dataset.prePlainText
+				chatname = escapeHtml(ele.children[1].children[1].children[0].children[1].children[0].dataset.prePlainText);
 				if (chatname.split("] ").length>1){
 					chatname = chatname.split("] ")[1];
 				}
@@ -60,7 +103,7 @@
 		
 		if (!chatname){
 			try{
-				chatname = ele.children[1].children[0].children[1].children[0].dataset.prePlainText
+				chatname = escapeHtml*ele.children[1].children[0].children[1].children[0].dataset.prePlainText);
 				if (chatname.split("] ").length>1){
 					chatname = chatname.split("] ")[1];
 				}
@@ -85,7 +128,7 @@
 		
 		if (!chatname){
 			if (ele.querySelector('[aria-label]')){
-				chatname = ele.querySelector('[aria-label]').ariaLabel;
+				chatname = escapeHtml(ele.querySelector('[aria-label]').ariaLabel);
 				chatname = chatname.split(":")[0];
 			} else {
 				return;
@@ -95,7 +138,7 @@
 
 		try{
 			if (!chatname){
-				chatname = ele.children[1].children[1].children[0].children[0].textContent;
+				chatname = escapeHtml(ele.children[1].children[1].children[0].children[0].textContent);
 				if (chatname.split("] ").length>1){
 					chatname = chatname.split("] ")[1];
 				}
@@ -131,7 +174,7 @@
 			}
 		} else {
 			try {
-				chatmessage = ele.querySelector(".selectable-text.copyable-text").innerText;
+				chatmessage = escapeHtml(ele.querySelector(".selectable-text.copyable-text").innerText);
 			} catch(e){
 			}
 		}
@@ -150,8 +193,6 @@
 		data.hasMembership = "";
 		data.type = "whatsapp";
 		
-		console.log(data);
-	  
 		if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
 				data.chatimg = dataUrl;

@@ -13,7 +13,48 @@
     //console.error(e);
   }
   
-  
+  function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
 
   function processMessage(ele) {
     var chatimg = "";
@@ -22,7 +63,7 @@
 
     // Get the chat message
     try {
-      chatmessage = ele.querySelector('[class="Linkify"]').innerText;
+      chatmessage = escapeHtml(ele.querySelector('[class="Linkify"]').innerText);
     } catch (e) {
       errorlog(e);
     }
@@ -33,7 +74,7 @@
     // Get the sender  name
     try {
 	  var chatele = ele.querySelector('[class="ChatMessage__sender"]') || ele.querySelector('[data-testid="chat-bubble-sender-name"]')
-      chatname = chatele.innerText;
+      chatname = escapeHtml(chatele.innerText);
     } catch (e) {
       errorlog(e);
     }
@@ -46,7 +87,7 @@
           count++;
           prev = prev.previousElementSibling;
           var chatele = prev.querySelector('[class="ChatMessage__sender"]') || prev.querySelector('[data-testid="chat-bubble-sender-name"]')
-		  chatname = chatele.innerText;
+		  chatname = escapeHtml(chatele.innerText);
         } catch (e) {
           chatname = "";
         }

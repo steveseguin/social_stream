@@ -19,12 +19,56 @@
 	  xhr.send();
 	}
 
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
+
 	function processMessage(content){
 		
 		var chatname="";
 		try {
 			chatname = content.querySelector("span.sender-name").textContent;
 			chatname = chatname.trim();
+			chatname = escapeHtml(chatname);
 		} catch(e){
 			return;
 		}
@@ -32,7 +76,7 @@
 		var chatmessage="";
 		try{
 			 if (settings.textonlymode){
-				chatmessage = content.querySelector("div[class^='msgBody__message']").innerText;
+				chatmessage = escapeHtml(content.querySelector("div[class^='msgBody__message']").innerText);
 			 } else {
 				content.querySelectorAll("div[class^='msg-body__message']").forEach(ele2=>{
 					ele2.childNodes.forEach(ele3=>{
@@ -41,9 +85,9 @@
 								chatmessage += "<img src='"+ele3.src+"'/>";
 							}
 						} else if (ele3.nodeName == "#text"){
-							chatmessage += ele3.textContent.trim();
+							chatmessage += escapeHtml(ele3.textContent.trim());
 						} else {
-							chatmessage += ele3.innerText.trim();
+							chatmessage += escapeHtml(ele3.innerText.trim());
 						}
 					});
 				});

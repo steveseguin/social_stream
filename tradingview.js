@@ -2,14 +2,28 @@
 	
 	var cachedUserProfiles = {};
 	
+	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+	
 	function getAllContentNodes(element) {
 		var resp = "";
 		if (element.classList && element.classList.contains("ch-item-quote")){return "";}
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
-				resp += node.textContent;
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (settings.textonlymode){return "";}
 				resp += node.outerHTML;
@@ -23,7 +37,6 @@
 	
 	  if (!ele){return;}
 
-	  console.log(ele);
 	  try {
 		var chatname = ele.querySelector("[data-username]").dataset.username.trim();
 	  } catch(e){

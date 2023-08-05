@@ -15,29 +15,49 @@
 	}
 
 
-	function getAllContentNodes(element) {
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
-				if (settings.textonlymode){
-					resp += node.textContent.trim()+" ";
-				} else {
-					resp += node.textContent.trim()+" ";
-				}
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent.trim())+" ";
 			} else if (node.nodeType === 1){
-				if (settings.textonlymode){
-				//	if ("alt" in node){
-				//		resp += node.alt.trim()+" ";
-					//}
-				} else {
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
 					resp += node.outerHTML;
 				}
-			} 
+			}
 		});
 		return resp;
 	}
+	
 	
 	var lastMessage = "";
 	var lastUser  = "";
@@ -51,14 +71,14 @@
 	  try {
 		  try {
 			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1)");
-			var chatname = nameEle.innerText;
+			var chatname = escapeHtml(nameEle.innerText);
 		  } catch(e){
 			 return;
 		  }
 	 } catch(e){
 		try {
 			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)");
-			var chatname = nameEle.innerText;
+			var chatname = escapeHtml(nameEle.innerText);
 		  } catch(e){
 			return;
 		  }

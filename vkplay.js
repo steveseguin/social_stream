@@ -18,7 +18,7 @@
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
@@ -90,7 +90,7 @@
 		return;
 	  }
 	  try {
-		var time = ele.querySelector('[class^="ChatMessage_publishTime"]').textContent;
+		var time = escapeHtml(ele.querySelector('[class^="ChatMessage_publishTime"]').textContent);
 		var msgID = time+" -"+chatname +"/\!@#--"+ chatmessage;
 		if (pastMessages.includes(msgID)){return;}
 		pastMessages.push(msgID);

@@ -3,20 +3,31 @@
 	var cachedUserProfiles = {};
 	
 	function escapeHtml(unsafe){
-		return unsafe
-			 .replace(/&/g, "&amp;")
-			 .replace(/</g, "&lt;")
-			 .replace(/>/g, "&gt;")
-			 .replace(/"/g, "&quot;")
-			 .replace(/'/g, "&#039;");
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
 	}
 	
 	
 	function getAllContentNodes(element) {
 		var resp = "";
 		
-		if (!element.childNodes){
-			return element.outerHTML || "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
 		}
 		
 		element.childNodes.forEach(node=>{
@@ -26,7 +37,7 @@
 				} else {
 					resp += getAllContentNodes(node)
 				}
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (node && node.classList && node.classList.contains("zero-width-emote")){
@@ -38,6 +49,7 @@
 		});
 		return resp;
 	}
+	
 	
 	async function fetchWithTimeout(URL, timeout=2000){ // ref: https://dmitripavlutin.com/timeout-fetch-request/
 		try {
@@ -86,7 +98,7 @@
 	  
 	  
 	  try {
-		chatname = ele.querySelector(".chat-entry-username").innerText;
+		chatname = escapeHtml(ele.querySelector(".chat-entry-username").innerText);
 		
 	  } catch(e){
 		  return;
@@ -114,7 +126,7 @@
 		  }
 	  } else {
 		  try{
-			chatmessage = ele.querySelector(".chat-entry-content").innerText;
+			chatmessage = escapeHtml(ele.querySelector(".chat-entry-content").innerText);
 		  } catch(e){}
 	  }
 	  

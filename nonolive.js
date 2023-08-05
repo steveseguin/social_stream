@@ -14,12 +14,56 @@
 	  xhr.send();
 	}
 	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
+	
 	function processMessage(ele){
 		var name="";
 		var xx = ele.querySelectorAll('div > span > span > span');
 		name = xx[xx.length- 1].textContent
 		if (name){
 			name = name.trim();
+			name = escapeHtml(name);
 		} else {
 			return;
 		}
@@ -31,7 +75,7 @@
 		nodes.childNodes.forEach(ee=>{
 			try {
 				if (ee.nodeType == Node.TEXT_NODE){
-					msg += ee.textContent;
+					msg += escapeHtml(ee.textContent);
 					msg = msg.trim();
 				} else if (!settings.textonlymode && (ee.nodeName  == "IMG")){
 					msg += "<img src='"+ee.src+"' />";
@@ -39,7 +83,7 @@
 				} else if (ee.childNodes){
 					ee.childNodes.forEach(eee=>{
 						if (eee.nodeType == Node.TEXT_NODE){
-							msg += eee.textContent;
+							msg += escapeHtml(eee.textContent);
 							msg = msg.trim();
 						} else if (!settings.textonlymode && (eee.nodeName  == "IMG")){
 							msg += "<img src='"+eee.src+"' />";

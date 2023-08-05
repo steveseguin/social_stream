@@ -20,7 +20,7 @@
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				if (settings.textonlymode){
 					resp += node.textContent.trim()+" ";
 				} else {

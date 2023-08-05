@@ -17,12 +17,16 @@
 	//var channelName = "";
 	
 	function escapeHtml(unsafe){
-		return unsafe
-			 .replace(/&/g, "&amp;")
-			 .replace(/</g, "&lt;")
-			 .replace(/>/g, "&gt;")
-			 .replace(/"/g, "&quot;")
-			 .replace(/'/g, "&#039;");
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
 	}
 	
 	var messageHistory = [];
@@ -32,7 +36,7 @@
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent.trim())+" ";
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
@@ -84,7 +88,7 @@
 
 		try {
 			var nameElement = ele.querySelector("#author-name");
-			chatname = nameElement.innerText;
+			chatname = escapeHtml(nameElement.innerText);
 
 			if (!settings.nosubcolor) {
 				if (nameElement.classList.contains("member")) {
@@ -133,7 +137,7 @@
 
 		var chatdonation = "";
 		try {
-			chatdonation = ele.querySelector("#purchase-amount").innerText;
+			chatdonation = escapeHtml(ele.querySelector("#purchase-amount").innerText);
 		} catch (e) {}
 
 		var chatmembership = "";
@@ -149,7 +153,7 @@
 		} catch (e) {}
 
 		if (chatsticker) {
-			chatdonation = ele.querySelector("#purchase-amount-chip").innerText;
+			chatdonation = escapeHtml(ele.querySelector("#purchase-amount-chip").innerText);
 		}
 
 		var chatbadges = [];

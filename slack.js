@@ -13,15 +13,44 @@
     //console.error(e);
   }
 
-	function getAllContentNodes(element) {
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
-				resp += node.textContent;
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
-				resp += node.outerHTML;
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
 			}
 		});
 		return resp;
@@ -50,7 +79,7 @@
 			//for (var i =0;i<childrens.length;i++){
 			//	childrens[i].outerHTML = childrens[i].alt;
 			//}
-			chatmessage = ele.querySelector('[data-qa="message-text"]').innerText;
+			chatmessage = escapeHtml(ele.querySelector('[data-qa="message-text"]').innerText);
 		  } catch(e){}
 	}
 	  
@@ -62,7 +91,7 @@
 
     // Get the sender  name
     try {
-      chatname = ele.querySelector('[data-qa="message_sender"]').innerText;
+      chatname = escapeHtml(ele.querySelector('[data-qa="message_sender"]').innerText);
     } catch (e) {
 	  chatname = "";
       errorlog(e);
@@ -76,7 +105,7 @@
         try {
           count++;
           prev = prev.previousElementSibling;
-          chatname = prev.querySelector('[data-qa="message_sender"]').innerText;
+          chatname = escapeHtml(prev.querySelector('[data-qa="message_sender"]').innerText);
         } catch (e) {
           chatname = "";
         }

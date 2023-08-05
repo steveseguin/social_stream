@@ -14,6 +14,49 @@
 	  xhr.send();
 	}
 	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
+	
 	function processMessage(ele){
 		
 		var name="";
@@ -21,6 +64,7 @@
 		if (name){
 			name = name.replace("@","");
 			name = name.trim();
+			name = escapeHtml(name);
 		} else {
 			name = "";
 		}
@@ -32,6 +76,7 @@
 			if (ee.nodeType == Node.TEXT_NODE){
 				msg += ee.textContent;
 				msg = msg.trim();
+				msg = escapeHtml(msg);
 			} else if (!settings.textonlymode && (ee.nodeName  == "IMG")){
 				msg += "<img src='"+ee.src+"' />";
 				msg = msg.trim();

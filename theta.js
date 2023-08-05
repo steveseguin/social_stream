@@ -22,6 +22,49 @@
 
 	console.log("social stream injected");
 	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
+	
 	function processMessage(ele){
 		
 		if (ele.marked){return;}
@@ -36,7 +79,7 @@
 		
         var name = "";
 		try {
-			name = ele.querySelector(".username").innerText;
+			name = escapeHtml(ele.querySelector(".username").innerText);
 		} catch(e){}
 		
 
@@ -48,7 +91,7 @@
 				msg = "";
 				for (var i = 0 ;i<nodes.length;i++){
 					if (nodes[i].nodeName === "#text") {
-						msg += nodes[i].textContent;
+						msg += escapeHtml(nodes[i].textContent);
 					} else {
 						nodes[i].querySelectorAll("img[src]").forEach(ee=>{
 							msg += "<img src='"+ee.src+"' />";

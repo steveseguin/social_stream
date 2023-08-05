@@ -36,7 +36,7 @@
 				if (!node.classList.contains("comment-see-more")){
 					resp += getAllContentNodes(node)
 				}
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){

@@ -14,6 +14,49 @@
 	  xhr.send();
 	}
 	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
+	
 	function processMessage(ele){
 		try {
 			
@@ -24,6 +67,7 @@
 			var name = msgEle.innerText;
 			if (name){
 				name = name.trim();
+				name = escapeHtml(name);
 			} else {
 				return;
 			}
@@ -31,12 +75,12 @@
 			console.log(msgEle.parentNode);
 			
 			if (msgEle.nextNode){
-				var  msg = msgEle.nextNode().textContent;
+				var msg = (msgEle.nextNode().textContent);
 			} else if (msgEle.nextSibling && msgEle.nextSibling.textContent){
-				var msg = msgEle.nextSibling.textContent;
+				var msg = escapeHtml*msgEle.nextSibling.textContent);
 			} else {
 				try{
-					var msg = msgEle.parentNode.nextSibling.textContent;
+					var msg = escapeHtml(msgEle.parentNode.nextSibling.textContent);
 				} catch(e){
 					console.log(e);
 					return;

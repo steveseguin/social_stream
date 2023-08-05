@@ -20,6 +20,49 @@
 	}
 	
 	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
+	
 	function sleep(ms = 0) {
 		return new Promise(r => setTimeout(r, ms)); // LOLz!
 	}
@@ -31,10 +74,12 @@
 		try {
 			chatname = content.querySelector("[class*='ChannelDisplayName__Name']").textContent;
 			chatname = chatname.trim();
+			chatname = escapeHtml(chatname);
 		} catch(e){
 			try {
 				chatname = first.querySelector("[class*='ChannelDisplayName__Name']").textContent;
 				chatname = chatname.trim();
+				chatname = escapeHtml(chatname);
 			} catch(e){
 				return;
 			}
@@ -43,7 +88,7 @@
 		var chatmessage="";
 		try{
 			 if (settings.textonlymode){
-				chatmessage = content.querySelector("[class*='Message__StyledSpan']").textContent;
+				chatmessage = escapeHtml(content.querySelector("[class*='Message__StyledSpan']").textContent);
 			 } else {
 				 
 				if (content.querySelector("[class*='Message__StyledSpan']").querySelector("img")){
@@ -52,11 +97,11 @@
 				 
 				content.querySelector("[class*='Message__StyledSpan']").childNodes.forEach(ele2=>{
 					if (ele2.nodeType == Node.TEXT_NODE){
-						chatmessage += ele2.textContent;
+						chatmessage += escapeHtml(ele2.textContent);
 					} else if (ele2.querySelector("img")){
 						chatmessage += "<img src='"+ele2.querySelector("img").src+"'/>";
 					} else {
-						chatmessage += ele2.textContent;
+						chatmessage += escapeHtml(ele2.textContent);
 					}
 				});
 				chatmessage = chatmessage.trim();

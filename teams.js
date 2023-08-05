@@ -22,6 +22,49 @@
 	var lastMessage = {};
 	var lastName = "";
 	var lastImage = "";
+	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
 
 	function processMessage(ele){
 		if (ele && ele.marked){
@@ -48,7 +91,7 @@
 		
         var name = "";
 		if (ele.querySelector(".ui-chat__message__author")){
-			name = ele.querySelector(".ui-chat__message__author").innerText;
+			name = escapeHtml(ele.querySelector(".ui-chat__message__author").innerText);
 		} 
 
 		if (!chatimg){
@@ -66,7 +109,7 @@
 					}
 				}
 				chatimg = prev.querySelector('[data-tid="message-avatar"]').querySelector("img").src
-				name = prev.querySelector(".ui-chat__message__author").innerText;
+				name = escapeHtml(prev.querySelector(".ui-chat__message__author").innerText);
 				
 			} catch(e){} 
 		}
@@ -77,7 +120,7 @@
 
 		var msg = "";
 		try {
-			msg = ele.querySelector('.ui-chat__message__content, .ui-chat__messagecontent').innerText;
+			msg = escapeHtml(ele.querySelector('.ui-chat__message__content, .ui-chat__messagecontent').innerText);
 		} catch(e){}
 		
 		if (msg){
@@ -124,7 +167,7 @@
 		
         var name = "";
 		try {
-			name = ele.querySelector("div[data-tid='threadBodyDisplayName']").innerText;
+			name = escapeHtml(ele.querySelector("div[data-tid='threadBodyDisplayName']").innerText);
 		} catch(e){}
 		
 
@@ -143,7 +186,7 @@
 					}
 				}
 				chatimg = prev.querySelector('profile-picture').querySelector("img").src
-				name = prev.querySelector("div[data-tid='threadBodyDisplayName']").innerText;
+				name = escapeHtml(prev.querySelector("div[data-tid='threadBodyDisplayName']").innerText);
 				
 			} catch(e){} 
 		}
@@ -155,7 +198,7 @@
 
 		var msg = "";
 		try {
-			msg = ele.querySelector("div[data-tid='messageBodyContent']").innerText;
+			msg = escapeHtml(ele.querySelector("div[data-tid='messageBodyContent']").innerText);
 		} catch(e){}
 		
 		if (msg){

@@ -14,15 +14,7 @@
 		}
 	}
 	
-	function escapeHtml(unsafe){
-		return unsafe
-			 .replace(/&/g, "&amp;")
-			 .replace(/</g, "&lt;")
-			 .replace(/>/g, "&gt;")
-			 .replace(/"/g, "&quot;")
-			 .replace(/'/g, "&#039;");
-	}
-
+	
 	function getTwitchAvatarImage(username){
 		fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username="+encodeURIComponent(username)).then(response => {
 			response.text().then(function (text) {
@@ -66,6 +58,19 @@
 		getTwitchAvatarImage(xx[0]);
 	}
 	
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
 
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
@@ -101,6 +106,8 @@
 	var lastMessage = "";
 	var lastUser  = "";
 	
+	
+	
 	function processMessage(ele){	// twitch
 
 	  var chatsticker = false;
@@ -117,6 +124,9 @@
 		if (usernameEle) {
 			username = usernameEle.innerText.slice(2, -1);
 		}
+		
+		username = escapeHtml(username);
+		displayName = escapeHtml(displayName);
 
 		try {
 			nameColor = displayNameEle.style.color || ele.querySelector(".seventv-chat-user").style.color;
@@ -184,9 +194,9 @@
 				
 				if (eleContent.length>1){
 					chatmessage = getAllContentNodes(eleContent[0]);
-					donations = eleContent[1].textContent;
+					donations = escapeHtml(eleContent[1].textContent);
 				} else {
-					donations = eleContent[0].textContent;
+					donations = escapeHtml(eleContent[0].textContent);
 				}
 			
 			
@@ -255,7 +265,7 @@
 			
 			try {
 				var elements = ele.querySelectorAll('.paid-pinned-chat-message-content-container')[1]; // FFZ support
-				donations = elements.textContent;
+				donations = escapeHtml(elements.textContent);
 			  } catch(e){}
 			
 		}

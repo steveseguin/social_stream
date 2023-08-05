@@ -1,27 +1,41 @@
 (function () {
 	
 	function escapeHtml(unsafe){
-		return unsafe
-			 .replace(/&/g, "&amp;")
-			 .replace(/</g, "&lt;")
-			 .replace(/>/g, "&gt;")
-			 .replace(/"/g, "&quot;")
-			 .replace(/'/g, "&#039;");
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
 	}
-	function getAllContentNodes(element) {
+
+	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
-		if (!element.childNodes.length || !element.childNodes){
-			return element.textContent || "";
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
 		}
 		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
 					resp += node.outerHTML;
 				}
 			}
@@ -37,7 +51,7 @@
 	  
 	  try {
 		var nameEle = ele.querySelector(".ant-comment-content-author-name, .ant-comment-content-detail>.Linkify>.ant-typography");
-		var chatname = nameEle.innerText;
+		var chatname = escapeHtml(nameEle.innerText);
 		try {
 			nameColor = nameEle.style.color;
 		} catch(e){}

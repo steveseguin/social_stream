@@ -34,7 +34,7 @@
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
@@ -60,6 +60,7 @@
 		var name="";
 		try {
 			name = ele.querySelector(".message-content .message-username").textContent.trim();
+			name = escapeHtml(name);
 		} catch(e){
 		}
 		var msg="";

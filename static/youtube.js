@@ -45,24 +45,6 @@
 		}
 	});
 	
-	function getAllContentNodes(element) {
-		var resp = "";
-		
-		if (!element.childNodes.length || !element.childNodes){
-			return element.textContent || "";
-		}
-		
-		element.childNodes.forEach(node=>{
-			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
-				resp += node.textContent;
-			} else if (node.nodeType === 1){
-				resp += node.outerHTML;
-			}
-		});
-		return resp;
-	}
 	
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
@@ -111,14 +93,37 @@
 	}
 
 	function escapeHtml(unsafe){
-		return unsafe
-			 .replace(/&/g, "&amp;")
-			 .replace(/</g, "&lt;")
-			 .replace(/>/g, "&gt;")
-			 .replace(/"/g, "&quot;")
-			 .replace(/'/g, "&#039;");
-	 }
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
 
+	function getAllContentNodes(element) {
+		var resp = "";
+		
+		if (!element.childNodes.length || !element.childNodes){
+			return element.textContent || "";
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				resp += node.outerHTML;
+			}
+		});
+		return resp;
+	}
+	
 	function prepMessage(){
 		
 	  var ele = this.targetEle;

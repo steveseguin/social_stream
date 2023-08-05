@@ -15,16 +15,29 @@
 	}
 
 
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
+
 	function getAllContentNodes(element) {
 		var resp = "";
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && (node.textContent.trim().length > 0)){
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				if (settings.textonlymode){
-					resp += node.textContent.trim()+" ";
+					resp += escapeHtml(node.textContent.trim())+" ";
 				} else {
-					resp += node.textContent.trim()+" ";
+					resp += escapeHtml(node.textContent.trim())+" ";
 				}
 			} else if (node.nodeType === 1){
 				if (settings.textonlymode){
@@ -79,7 +92,7 @@
 	  try {
 		  try {
 			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(1)");
-			var chatname = nameEle.innerText;
+			var chatname = escapeHtml((nameEle.innerText);
 		  } catch(e){
 			 return;
 		  }
