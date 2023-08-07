@@ -53,6 +53,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
+	
+	var iii = document.querySelectorAll("select");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
 
 	var iii = document.querySelectorAll("button[data-action]");
 	for (var i=0;i<iii.length;i++){
@@ -209,6 +214,20 @@ function update(response){
 							updateSettings(ele);
 						}
 					}
+					if ("optionparam1" in response.settings[key]){
+						var ele = document.querySelector("select[data-optionparam1='"+key+"']");
+						if (ele){
+							ele.value = response.settings[key].optionparam1;
+							updateSettings(ele);
+						}
+					}
+					if ("optionparam2" in response.settings[key]){
+						var ele = document.querySelector("select[data-optionparam2='"+key+"']");
+						if (ele){
+							ele.value = response.settings[key].optionparam2;
+							updateSettings(ele);
+						}
+					}
 
 				} else { // obsolete method
 					var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
@@ -320,6 +339,7 @@ function updateSettings(ele){
 	}
 	if (ele.dataset.param1){
 		if (ele.checked){
+			
 			document.getElementById("dock").rawURL = updateURL(ele.dataset.param1, document.getElementById("dock").rawURL);
 
 			if (ele.dataset.param1 == "darkmode"){
@@ -338,9 +358,15 @@ function updateSettings(ele){
 					updateSettings(ele1);
 				}
 			}
-
 		} else {
 			document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace(ele.dataset.param1, "");
+		}
+		
+		if (ele.dataset.param1 == "compact"){ // duplicate
+			var key = "compact";
+			document.querySelectorAll("input[data-param1='"+key+"']").forEach(EL=>{ // sync
+				EL.checked = ele.checked;
+			});
 		}
 
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
@@ -366,7 +392,42 @@ function updateSettings(ele){
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
-
+	} else if (ele.dataset.optionparam1){
+		
+		var tmp = document.getElementById("dock").rawURL.split("&"+ele.dataset.optionparam1);
+		if (tmp.length>1){
+			var tt = tmp[1].split("&");
+			if (tt.length){
+				tt.shift();
+			}
+			tt = tt.join("&");
+			document.getElementById("dock").rawURL = tmp[0] + tt;
+		} else {
+			document.getElementById("dock").rawURL = tmp[0];
+		}
+		document.getElementById("dock").rawURL = updateURL(ele.dataset.optionparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").rawURL);
+		
+		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
+		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
+		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1", setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
+	} else if (ele.dataset.optionparam2){
+		
+		var tmp = document.getElementById("overlay").rawURL.split("&"+ele.dataset.optionparam2);
+		if (tmp.length>1){
+			var tt = tmp[1].split("&");
+			if (tt.length){
+				tt.shift();
+			}
+			tt = tt.join("&");
+			document.getElementById("overlay").rawURL = tmp[0] + tt;
+		} else {
+			document.getElementById("overlay").rawURL = tmp[0];
+		}
+		document.getElementById("overlay").rawURL = updateURL(ele.dataset.optionparam2+"="+encodeURIComponent(ele.value), document.getElementById("overlay").rawURL);
+		
+		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
+		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
+		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2", setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
 	} else if (ele.dataset.param2){
 		if (ele.checked){
 			document.getElementById("overlay").rawURL = updateURL(ele.dataset.param2, document.getElementById("overlay").rawURL);

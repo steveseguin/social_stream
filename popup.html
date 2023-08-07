@@ -68,6 +68,69 @@
 			}
 		}
 
+		/* example of how to remotely load a font */
+		@font-face {
+		  font-family: 'opendyslexic';
+			src: url('https://vdo.ninja/examples/OpenDyslexic-Regular.otf');
+			font-style: normal;
+			font-weight: normal;
+		} 
+
+		/* latin-ext */
+		@font-face {
+			font-family: 'Sora';
+			font-style: normal;
+			font-weight: 200;
+			font-display: swap;
+			src: url(./thirdparty//xMQbuFFYT72XzQspDre2.woff2) format('woff2');
+			unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+		}
+		/* latin */
+		@font-face {
+			font-family: 'Sora';
+			font-style: normal;
+			font-weight: 200;
+			font-display: swap;
+			src: url(./thirdparty//xMQbuFFYT72XzQUpDg.woff2) format('woff2');
+			unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+		}
+		/* latin-ext */
+		@font-face {
+			font-family: 'Sora';
+			font-style: normal;
+			font-weight: 400;
+			font-display: swap;
+			src: url(./thirdparty/xMQbuFFYT72XzQspDre2.woff2) format('woff2');
+			unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+		}
+		/* latin */
+		@font-face {
+			font-family: 'Sora';
+			font-style: normal;
+			font-weight: 400;
+			font-display: swap;
+			src: url(./thirdparty//xMQbuFFYT72XzQUpDg.woff2) format('woff2');
+			unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+		}
+		/* latin-ext */
+		@font-face {
+			font-family: 'Sora';
+			font-style: normal;
+			font-weight: 700;
+			font-display: swap;
+			src: url(./thirdparty//xMQbuFFYT72XzQspDre2.woff2) format('woff2');
+			unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+		}
+		/* latin */
+		@font-face {
+			font-family: 'Sora';
+			font-style: normal;
+			font-weight: 700;
+			font-display: swap;
+			src: url(./thirdparty//xMQbuFFYT72XzQUpDg.woff2) format('woff2');
+			unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+		}
+
 		* {
 			margin: 0;
 			padding: 0;
@@ -225,7 +288,7 @@
 
 		.link {
 			margin-bottom: 1em;
-			margin: 1.5em 0;
+			margin: 2em 0 0.5em 0;
 		}
 
 		.link h2 {
@@ -262,6 +325,7 @@
 			color: var(--options-group-text-color);
 			padding: 1em;
 			border-radius: 4px;
+			word-break:break-all;
 		}
 
 		/* Alert */
@@ -645,6 +709,9 @@
 			<span class="slider round"></span>
 		</label>
 	</button>
+	
+	<button class="glowingButton" style="width: 100%; position: sticky;top: 35px; z-index: 10;margin:0;padding:0;" data-action="fakemsg"><span>Trigger a fake test message</span></button>
+	
 	<div id="newVersion"></div>
 	
 	<div class="container">
@@ -654,6 +721,7 @@
 				title="Jump to dockable streaming chat link options.">options</a></h2>
 			<div id="dock" class="streaming_chat"></div>
 		</div>
+		
 		<a href="" id="streaming-chat-options"></a>
 
 		<div class="wrapper">
@@ -700,7 +768,7 @@
 								<label class="switch">
 									<input type="checkbox" data-param1="compact">
 									<span class="slider round"></span>
-								</label>◻️ Compact mode (good for video overlaying)
+								</label>◻️ Compact mode (no space between name and message)
 							</div>
 							<div>
 								<label class="switch">
@@ -746,7 +814,6 @@
 				<div class="collapsible-text">
 					<div class="options">
 						<div class="options_group streaming_chat">
-
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-param1="showtime=20000">
@@ -980,24 +1047,11 @@
 				<div class="collapsible-text">
 					<div class="options">
 						<div class="options_group streaming_chat">
-
 							<div>
 								<label class="switch">
-									<input type="checkbox" data-param1="largeavatar">
+									<input type="checkbox" data-param1="compact">
 									<span class="slider round"></span>
-								</label><img src="unknown.png" class="icon" /> Large avatar profile pic on left side
-							</div>
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-param1="emoji">
-									<span class="slider round"></span>
-								</label>😊 Make emojis larger
-							</div>
-							<div>
-								<label class="switch" title="larger twitch post images, instagram images, giphy images (not emojis)">
-									<input type="checkbox" data-param1="largecontent">
-									<span class="slider round"></span>
-								</label>🖼️ Make content-images larger (giphy,etc)
+								</label>◻️ Compact mode (no space between name and message)
 							</div>
 							<div>
 								<label class="switch">
@@ -1022,6 +1076,24 @@
 									<input type="checkbox" data-param1="nodonohighlight">
 									<span class="slider round"></span>
 								</label>⭕💰 No background shading for donations
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="largeavatar">
+									<span class="slider round"></span>
+								</label><img src="unknown.png" class="icon" /> Large avatar profile pic on left side
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="emoji">
+									<span class="slider round"></span>
+								</label>😊 Make emojis larger
+							</div>
+							<div>
+								<label class="switch" title="larger twitch post images, instagram images, giphy images (not emojis)">
+									<input type="checkbox" data-param1="largecontent">
+									<span class="slider round"></span>
+								</label>🖼️ Make content-images larger (giphy,etc)
 							</div>
 							<div>
 								<label class="switch">
@@ -1053,7 +1125,18 @@
 									<span class="slider round"></span>
 								</label>⤵️ Messages overlap on another
 							</div>
-
+							<div>
+								Font Family
+								<select data-optionparam1="font">
+									<option value='Sora' style="font-family:'Sora'">Sora - abc123XYZ</option>
+									<option value='Roboto' style="font-family:'Roboto'">Roboto - abc123XYZ</option>
+									<option value='Arial' style="font-family:'Arial'">Arial - abc123XYZ</option>
+									<option value='Tahoma' style="font-family:'Tahoma'">Tahoma  - abc123XYZ</option>
+									<option value='Serif' style="font-family:'Serif'">serif  - abc123XYZ</option>
+									<option value='Times New Roman' style="font-family:'Times New Roman'">Times New Roman  - abc123XYZ</option>
+									<option value='opendyslexic' style="font-family:'opendyslexic'">Open Dyslexic  - abc123XYZ</option>
+								</select>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -1351,6 +1434,22 @@
 							<div class="textInputContainer" style="width: 95%">
 								<input type="text" id="name_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_background">
 								<label for="name_background">&gt; Name background color</label>
+							</div>
+							
+							<div>
+								Font Family
+								<select data-optionparam2="font">
+									<option value='Avenir Next' style="font-family:'Avenir Next'">Avenir Next - abc123XYZ</option>
+									<option value='Helvetica' style="font-family:'Helvetica'">Helvetica - abc123XYZ</option>
+									<option value='Geneva' style="font-family:'Geneva'">Geneva - abc123XYZ</option>
+									<option value='Sora' style="font-family:'Sora'">Sora - abc123XYZ</option>
+									<option value='Roboto' style="font-family:'Roboto'">Roboto - abc123XYZ</option>
+									<option value='Arial' style="font-family:'Arial'">Arial - abc123XYZ</option>
+									<option value='Tahoma' style="font-family:'Tahoma'">Tahoma  - abc123XYZ</option>
+									<option value='Serif' style="font-family:'Serif'">serif  - abc123XYZ</option>
+									<option value='Times New Roman' style="font-family:'Times New Roman'">Times New Roman  - abc123XYZ</option>
+									<option value='opendyslexic' style="font-family:'opendyslexic'">Open Dyslexic  - abc123XYZ</option>
+								</select>
 							</div>
 
 						</div>

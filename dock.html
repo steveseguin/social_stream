@@ -134,6 +134,14 @@
 			margin: 4px 1px;
 		}
 
+		/* example of how to remotely load a font */
+		@font-face {
+		  font-family: 'opendyslexic';
+			src: url('https://vdo.ninja/examples/OpenDyslexic-Regular.otf');
+			font-style: normal;
+			font-weight: normal;
+		} 
+
 		/* latin-ext */
 		@font-face {
 			font-family: 'Sora';
@@ -1865,6 +1873,10 @@
 	var splitMode = "";
 	if (urlParams.has("split")){
 		splitMode = " splitMode";
+	}
+	
+	if (urlParams.get("font")){
+		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", 'Sora', Roboto, Arial, sans-serif");
 	}
 	
 	var scrolltype = "instant";

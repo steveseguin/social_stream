@@ -716,6 +716,9 @@ span.zero-width-parent img.zero-width-emote {
 		}
 	}
 	
+	if (urlParams.get("font")){
+		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Avenir Next, Helvetica, Geneva, Verdana, Arial, sans-serif");
+	}
 	
 	var timeoutDelay = 0;
 	if (urlParams.has("showtime")){
