@@ -74,9 +74,8 @@
 		var msg = "";
 		ele.querySelector(".livestreamComment__text, .livestream-comment__text").querySelector("p").childNodes.forEach(ee=>{
 			if (ee.nodeType == Node.TEXT_NODE){
-				msg += ee.textContent;
+				msg += escapeHtml(ee.textContent);
 				msg = msg.trim();
-				msg = escapeHtml(msg);
 			} else if (!settings.textonlymode && (ee.nodeName  == "IMG")){
 				msg += "<img src='"+ee.src+"' />";
 				msg = msg.trim();
