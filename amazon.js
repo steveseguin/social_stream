@@ -105,7 +105,7 @@
 			  try {
 				if (msgs[i].checked){continue;}
 				msgs[i].checked = true;
-				msg = escapeHtml(msgs[i].innerText);
+				msg += escapeHtml(msgs[i].innerText);
 				break;
 			  } catch(e){ }
 		  }

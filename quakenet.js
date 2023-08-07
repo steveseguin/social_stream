@@ -77,7 +77,7 @@
 			if (msgEle.nextNode){
 				var msg = (msgEle.nextNode().textContent);
 			} else if (msgEle.nextSibling && msgEle.nextSibling.textContent){
-				var msg = escapeHtml*msgEle.nextSibling.textContent);
+				var msg = escapeHtml(msgEle.nextSibling.textContent);
 			} else {
 				try{
 					var msg = escapeHtml(msgEle.parentNode.nextSibling.textContent);
