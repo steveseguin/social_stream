@@ -872,14 +872,14 @@ chrome.runtime.onMessage.addListener(
 					data.nameColor = "#107516";
 					data.chatimg = "sampleavatar.png";
 					data.hasMembership =  '<div class="donation membership">SPONSORSHIP</div>';
-					data.chatname = "Steve";
+					data.chatname = "Steve1234567890123";
 					data.type = "facebook";
 					data.chatmessage  = "The only way to do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
 				} else if (Math.random()>0.2){
 					data.hasDonation = "";
 					data.hasMembership = "";
 					data.question = true;
-					data.chatmessage = "Is this a test question?  🤓";
+					data.chatmessage = "Is this a test question?  🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓";
 					data.chatname = "Nich Lass";
 					data.chatimg = 'https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj';
 					data.type = "zoom";
