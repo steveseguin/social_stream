@@ -4154,6 +4154,11 @@
 
 			var chatname = "";
 
+			var afterName = ":";
+			if (twoLines){
+				afterName = "";
+			}
+
 			if (largeavatar){
 				chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' + (data.chatname||"") + '<span class="hl-badges">'+chatbadges +"</span></div>";
 			} else if (data.chatname){
@@ -4161,9 +4166,9 @@
 					if (specialMessage){
 						chatname = '<div class="hl-name'+splitMode+'"></div>';
 					} else if (chatbadges){
-						chatname = '<span class="hl-badges">'+chatbadges+'</span><div '+nameColor+' class="hl-name'+splitMode+'">'+ data.chatname+":</div>";
-					} else {
-						chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' + data.chatname+":</div>";
+						chatname = '<span class="hl-badges">'+chatbadges+'</span><div '+nameColor+' class="hl-name'+splitMode+'">'+ data.chatname+afterName+"</div>";
+					} else { 
+						chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' + data.chatname+afterName+"</div>";
 					}
 				} else {
 					chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' +chatbadges+ data.chatname+"</div>";
