@@ -589,7 +589,7 @@ There is no guarentee that a site that gets added will continue to be supported 
 
 ### Adding sites yourself
 
-I have a video walk-thru on how I added one simple site to Social Stream:   [https://www.youtube.com/watch?v=5LquQ1xhmms](https://www.youtube.com/watch?v=5LquQ1xhmms)
+I have a video walk-thru on how I added a simple social site to Social Stream:   [https://www.youtube.com/watch?v=5LquQ1xhmms](https://www.youtube.com/watch?v=5LquQ1xhmms)
 
 You can also refer to some of my code commits, where you can see which changes I made to add support for any specific site.
 
