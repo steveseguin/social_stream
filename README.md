@@ -89,7 +89,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - live.space (no pop out; just open the basic watch page)
 - vstream.com (pop out chat)
 
-More on request
+[More on request](#requesting-a-site)
 
 #### Chat graveyard 🪦🪦🪦
 
@@ -577,6 +577,15 @@ In the bottom right corner, hit relaunch to relaunch chrome with new settings. T
 - For discord, slack, and telegram, for security reasons, you need to enable the TOGGLE switch in the settings to enable.
 
 - To set the Session ID to your own value, go to Extensions settings to set it. On Chrome: Settings -> Extensions -> Social Stream Ninja -> Details -> Extension options.
+
+
+### Requesting a site
+
+You can make a request here on Github as an issue ticket, or join the Discord server at https://discord.socialstream.ninja and request there.
+
+Not all requested sites can or will be supported. Steve generally will add support for publicly accessible social chat sites that have a significantly-large community; its ultimately up to the decretion of Steve though on what he wants to add or has time to add. Code contributions from others that add new site integration or features are normally welcomed, but sites/features that may violate Canadian laws, fail to meet quality standards, or for any other reason, may possibly not be merged or accepted. In these cases you may need to self-host or fork the repo, maintaining your own copy with said changes instead.
+
+There is no guarentee that a site that gets added will continue to be supported over time. Steve also doesn't accept payment for adding an integration or for support.
 
 ### Adding sites yourself
 
