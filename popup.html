@@ -34,6 +34,7 @@
 			--streaming-chat-color: #00a6ff;
 			--single-message-color: #ff7f00;
 			--emotes-wall-color: #ffd400;
+			--download-link: blue;
 		}
 
 		@media (prefers-color-scheme: dark) {
@@ -65,8 +66,11 @@
 				--streaming-chat-color: #00a6ffdd;
 				--single-message-color: #ff7f00dd;
 				--emotes-wall-color: #ffd400dd;
+				--download-link: lightblue;
 			}
 		}
+		
+		
 
 		/* example of how to remotely load a font */
 		@font-face {
@@ -211,6 +215,11 @@
 
 		p a {
 			color: var(--link-color);
+		}
+		
+		.downloadLink {
+			text-decoration: underline; 
+			color: var(--download-link);
 		}
 
 		#newVersion {

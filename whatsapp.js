@@ -103,7 +103,7 @@
 		
 		if (!chatname){
 			try{
-				chatname = escapeHtml*ele.children[1].children[0].children[1].children[0].dataset.prePlainText);
+				chatname = escapeHtml(ele.children[1].children[0].children[1].children[0].dataset.prePlainText);
 				if (chatname.split("] ").length>1){
 					chatname = chatname.split("] ")[1];
 				}
