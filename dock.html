@@ -3968,6 +3968,10 @@
 					data.chatname = stripHtmlFunction(data.chatname);
 				}
 				data.chatname = data.chatname.trim();
+				
+				if (largeavatar){
+					data.chatimg = upscaleImages(data); // increase the resolution of avatars if possible
+				}
 			} else {
 				data.chatname = "";
 			}
