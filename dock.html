@@ -1214,8 +1214,14 @@
 		.last-message{
 			border: 3px white solid;
 		}
+		.last-message2{
+			background-color: var(--pressed-color) !important;
+		}
 		.pressed {
 			background-color: var(--pressed-color) !important;
+		}
+		.pressed2 {
+			
 		}
 		.queued {
 			background-color: #99a8cc !important;
@@ -1794,6 +1800,7 @@
 		
 	}
 	
+	
 	if (urlParams.has("pressedcolor")) {  // must be a hex code value, without the #.
 		let pressedColor = urlParams.get("pressedcolor") || false;
 		if (!pressedColor){
@@ -1801,7 +1808,15 @@
 		} else {
 			document.documentElement.style.setProperty("--pressed-color", "#"+pressedColor, "");
 		}
-	} 
+	}
+	
+	var pressedClass = "pressed";
+	var lastMessageClass = "last-message";
+	
+	if (urlParams.has("unhighlight")) {
+		pressedClass = "pressed2";
+		lastMessageClass = "last-message2";
+	}
 	
 	
 	//window.obsstudio
@@ -2255,7 +2270,7 @@
 	if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")){ //  tts();
 		document.getElementById("tts").dataset.state = 1;
 		document.getElementById("tts").classList.remove("hidden");
-		//document.getElementById("tts").classList.add('pressed');
+		
 		getById("tts").style['background-image']='url(./icons/tts_incoming_messages_on.png)';
 		getById("tts").title = 'Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech';
 		speech = true;
@@ -2859,7 +2874,7 @@
 			}
 		
 			var post = autoShowQueue.shift();
-			if (post.classList.contains("pressed")){
+			if (post.classList.contains(pressedClass)){
 				if (autoShowQueue.length){
 					checkAutoShow();
 				}
@@ -3104,11 +3119,11 @@
 				}
 
 				try {
-					document.querySelector("[data-mid='"+data.mid+"']").classList.add("pressed");
+					document.querySelector("[data-mid='"+data.mid+"']").classList.add(pressedClass);
 				} catch(e){
 					setTimeout(function(mid){
 						try{
-							document.querySelector("[data-mid='"+mid+"']").classList.add("pressed");
+							document.querySelector("[data-mid='"+mid+"']").classList.add(pressedClass);
 						} catch(e){}
 					},500, data.mid); // if delayed, we will try again.
 				}
@@ -3738,8 +3753,8 @@
 			return;
 		}
 
-		if (event && element.classList.contains("last-message")) { // Message is already featured!
-			element.classList.remove("last-message"); // remove classes
+		if (event && element.classList.contains(lastMessageClass)) { // Message is already featured!
+			element.classList.remove(lastMessageClass); // remove classes
 			sendDataP2P(false);	// clear message 
 			return;
 		}
@@ -3755,10 +3770,10 @@
 			}
 		}
 
-		document.querySelectorAll(".last-message").forEach(ele=>{ // last message sent was to clear the overlay
-			ele.classList.remove("last-message"); // no overlay is now active.
+		document.querySelectorAll("."+lastMessageClass).forEach(ele=>{ // last message sent was to clear the overlay
+			ele.classList.remove(lastMessageClass); // no overlay is now active.
 		});
-		element.classList.add("pressed", "last-message"); // add last-message class
+		element.classList.add(pressedClass, lastMessageClass); // add last-message class
 		
 		try {
 			activeWordLength = element.contentLength;
@@ -4879,8 +4894,8 @@
 		}
 	
 		if (!data){
-			document.querySelectorAll(".last-message").forEach(ele=>{ // last message sent was to clear the overlay
-				ele.classList.remove("last-message"); // no overlay is now active.
+			document.querySelectorAll("."+lastMessageClass).forEach(ele=>{ // last message sent was to clear the overlay
+				ele.classList.remove(lastMessageClass); // no overlay is now active.
 			});
 		}
 		try {
