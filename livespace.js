@@ -40,7 +40,7 @@
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent);
+				resp += escapeHtml(node.textContent)+" ";
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
@@ -74,7 +74,7 @@
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".chat-msg-body"));
+			msg = getAllContentNodes(ele.querySelector(".chat-msg-body")).trim();
 		} catch(e){
 		}
 		
