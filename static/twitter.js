@@ -307,6 +307,12 @@
 
 	function preStartup(){
 		if (!document.getElementById("startupbutton")){
+			
+			
+			var eles = document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label][role="link"]');
+			eles[eles.length - 1].querySelector("a > div > span > div > div > span > span").innerText = "Tweet";
+					
+					
 			var button  = document.createElement("button");
 			button.onclick = function(){
 				document.getElementById("startupbutton").remove();
@@ -315,7 +321,7 @@
 			};
 			button.id = "startupbutton";
 			button.innerHTML = "Enable Overlay Service";
-			button.style = "border: 0; width:100%; transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; margin-top: 10px; background-color: lightgreen; cursor:pointer;";
+			button.style = "border: 0; width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; margin-top: 10px; background-color: lightgreen; cursor:pointer;";
 			
 			if (!isExtensionOn){
 				button.style.display = "none";
@@ -384,7 +390,7 @@
 			};
 			button2.id = "adbutton";
 			button2.innerHTML = "Block Promoted Tweets";
-			button2.style = "border: 0; margin-top: 10px;width:100%; transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; background-color: #dfdfdf; cursor:pointer;";
+			button2.style = "border: 0; margin-top: 10px;width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; background-color: #dfdfdf; cursor:pointer;";
 			
 			if (!isExtensionOn){
 				button2.style.display = "none";

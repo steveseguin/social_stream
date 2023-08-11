@@ -5103,7 +5103,9 @@
 			}
 
 			function positionMenu(e) {
+				console.log(e);
 				var clickCoords = getPosition(e);
+				console.log(clickCoords);
 				clickCoordsX = clickCoords.x;
 				clickCoordsY = clickCoords.y;
 
@@ -5119,11 +5121,11 @@
 					menu.style.left = clickCoordsX + "px";
 				}
 				menu.style.top = "unset";
-				var offset = ((document.body.scrollHeight-clickCoordsY)-menuHeight);
+				var offset = ((document.body.scrollTop+document.body.clientHeight -clickCoordsY)-menuHeight);
 				if (offset<-10){
 					offset = -10;
 				}
-				menu.style.bottom =offset + "px";
+				menu.style.bottom = offset + "px";
 			}
 
 			async function menuItemListener(link) {
