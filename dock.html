@@ -3979,9 +3979,6 @@
 				}
 				data.chatname = data.chatname.trim();
 				
-				if (largeavatar){
-					data.chatimg = upscaleImages(data); // increase the resolution of avatars if possible
-				}
 			} else {
 				data.chatname = "";
 			}
@@ -4065,7 +4062,9 @@
 			}
 			
 
-			if (data.type && (data.type == "twitch") && avatars && !data.chatimg && data.chatname){ // this is a temp fix until everyone updates.
+			if (largeavatar && data.chatname && data.type && avatars){
+				data.chatimg = upscaleImages(data); // increase the resolution of avatars if possible
+			} else if (data.type && (data.type == "twitch") && avatars && !data.chatimg && data.chatname){ // this is a temp fix until everyone updates.
 				data.chatimg = "https://api.socialstream.ninja/twitch/?username="+encodeURIComponent(data.chatname); // this is CORS restricted to socialstream, but this is to ensure reliability for all
 			}
 
