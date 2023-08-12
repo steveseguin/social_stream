@@ -1923,11 +1923,13 @@
 
 	async function playtone(tonename="testtone") {
 		if (timeoutTone){return;}
-
+		timeoutTone = true;
+		
 		setTimeout(function(){
 			timeoutTone = false;
 		},500);
-
+		
+		
 		if (audioContext.state == "suspended"){
 			await audioContext.resume();
 		}
@@ -1937,10 +1939,12 @@
 		var toneEle = document.getElementById(tonename);
 		if (toneEle){
 			toneEle.volume = 1.0;
-			toneEle.play().then(()=>{console.log("BEEP");}).catch((e)=>{
+			toneEle.play().then(()=>{
+				console.log("BEEP");
+			}).catch((e)=>{
 				console.error(e);
 			})
-			timeoutTone = true;
+			
 		}
 	}
 
