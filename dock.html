@@ -2733,7 +2733,7 @@
 	}
 
 	var syncDocks = false;
-	if (urlParams.has("sync")){
+	if (urlParams.has("sync") || urlParams.has("synced")){
 		syncDocks = true;
 		try {
 			if (blockMessageSelecting2 || blockMessageSelecting){
@@ -2823,6 +2823,12 @@
 		document.getElementById("show_only_queue").classList.add("pressed");
 	}
 
+	var hideNotPinned = false;
+
+	if (urlParams.has("pinnedonly")){
+		hideNotPinned = true;
+	}
+	
 	var ttsSpeakChatname = true;
 	if (urlParams.has("simpletts2")){ // You don't want to hear the chatname when TTS is enabled. ＞﹏＜
 		ttsSpeakChatname = false;
@@ -2970,10 +2976,10 @@
 	function applyHiddenState(node){
 		if (hideNotDonos && node.classList.contains("noDono")){
 			node.classList.add("hidden");
-
-		} else if (hideNotQueued && !node.classList.contains("queued") && !node.classList.contains("pinned")){
+		} else if (hideNotQueued && !node.classList.contains("queued")){
 			node.classList.add("hidden");
-
+		} else if (hideNotPinned && !node.classList.contains("pinned")){
+			node.classList.add("hidden");
 		} else if (hideEmojiOnly && node.classList.contains("noText")){
 			node.classList.add("hidden");
 
@@ -4383,6 +4389,8 @@
 			if (hideNotDonos && node.classList.contains("noDono")){
 				node.classList.add("hidden");
 			} else if (hideNotQueued && !node.classList.contains("queued")){
+				node.classList.add("hidden");
+			} else if (hideNotPinned && !node.classList.contains("pinned")){
 				node.classList.add("hidden");
 			} else if (hideEmojiOnly && node.classList.contains("noText")){
 				node.classList.add("hidden");
