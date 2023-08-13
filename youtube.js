@@ -57,7 +57,9 @@
 			return;
 		}
 		try {
-			if (ele.id && messageHistory.includes(ele.id)) {
+			if (ele.skip){
+				return;
+			} else if (ele.id && messageHistory.includes(ele.id)) {
 				//console.log("Message already exists");
 				return;
 			} else if (ele.id) {
@@ -69,6 +71,9 @@
 				return;
 			}
 		} catch (e) {}
+		
+		ele.skip = true;
+		
 		//if (channelName && settings.customyoutubestate){
 		//if (settings.customyoutubeaccount && settings.customyoutubeaccount.textsetting && (settings.customyoutubeaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
 		//	return;
@@ -322,20 +327,61 @@
 
     console.log("Social stream inserted");
 	
-    var ele = document.querySelector("yt-live-chat-app");
-	if (ele){
-		onElementInserted(ele, function(ele2){
-		    setTimeout(function(ele2){processMessage(ele2, false)}, 200, ele2);
-		});
-	}
+	// document.body.querySelector("#chat-messages").querySelectorAll("yt-live-chat-text-message-renderer")
 	
+	var checkTimer = setInterval(function(){
+		var ele = document.querySelector("yt-live-chat-app");
+		if (ele){
+			clearInterval(checkTimer);
+			var cleared = false;
+			document.querySelectorAll("yt-live-chat-text-message-renderer").forEach(ele4=>{
+				cleared = true;
+				ele4.skip = true;
+				if (ele4.id){
+					messageHistory.push(ele4.id);
+				}
+			});
+			
+			if (cleared){
+				onElementInserted(ele, function(ele2){
+					setTimeout(function(ele2){processMessage(ele2, false)}, 200, ele2);
+				});
+			} else {
+				setTimeout(function(){
+					onElementInserted(document.querySelector("yt-live-chat-app"), function(ele2){
+						setTimeout(function(ele2){processMessage(ele2, false)}, 200, ele2);
+					});
+				},1000);
+			}
+		}
+	}, 1000);
+
 	if (window.location.href.includes("youtube.com/watch")){
-		setTimeout(function(){
+		var checkTimer2 = setInterval(function(){
 			var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages");
 			if (ele){
-				onElementInserted(ele, function(ele2){
-				     setTimeout(function(ele2){processMessage(ele2, false)}, 200, ele2);
-				});
+				clearInterval(checkTimer2);
+				var cleared = false;
+				try {
+					ele.querySelectorAll("yt-live-chat-text-message-renderer").forEach(ele4=>{
+						ele4.skip = true;
+						cleared = true;
+						if (ele4.id){
+							messageHistory.push(ele4.id);
+						}
+					});
+				} catch(e){}
+				if (cleared){
+					onElementInserted(ele, function(ele2){
+						 setTimeout(function(ele2){processMessage(ele2, false)}, 200, ele2);
+					});
+				} else {
+					setTimeout(function(){
+						onElementInserted(document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages"), function(ele2){
+							 setTimeout(function(ele2){processMessage(ele2, false)}, 200, ele2);
+						});
+					},1000);
+				}
 			}
 		},3000);
 	}
