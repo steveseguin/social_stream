@@ -1287,7 +1287,6 @@ function setupSocket(){
 				if (data.target){
 					msg.destination = data.target;
 				}
-				console.log(msg);
 				resp = processResponse(msg);
 			} else if (data.action && (data.action === "sendEncodedChat") && data.value){
 				var msg = {};
@@ -1295,7 +1294,6 @@ function setupSocket(){
 				if (data.target){
 					msg.destination = decodeURIComponent(data.target);
 				}
-				console.log(msg);
 				resp = processResponse(msg);
 			} else if (!data.action && data.extContent){ // Not flattened
 				try {
@@ -1618,7 +1616,6 @@ function processHype2(){
 			if (user.length){
 				hype[sites[i]] = 0;
 				for (var j = 0; j<user.length;j++){
-					console.log(users[sites[i]][user[j]], now);
 					if (users[sites[i]][user[j]]<now){
 						delete users[sites[i]][user[j]];
 					} else {
