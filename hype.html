@@ -17,6 +17,7 @@
 			--x-speed: 13s;
 			--y-speed: 7s;
 			--padding: 15px;
+			--outline: 1px;
 		}
 
 		body {
@@ -63,7 +64,7 @@
 			margin: 0 0;
 			background-color: var(--background-color);
 			-webkit-text-fill-color: white;
-			-webkit-text-stroke: 1px;
+			-webkit-text-stroke: var(--outline);
 			overflow-x: hidden;
 			scrollbar-color:#666 #201c29;
 			font-weight: 700;
@@ -429,6 +430,10 @@
 
 	if (urlParams.has("transparent")){
 		document.documentElement.style.setProperty("--background-color", "#0000", "important");
+	}
+	
+	if (urlParams.has("nooutline")){
+		document.documentElement.style.setProperty("--outline", "0px");
 	}
 
 	function processInput(data){
