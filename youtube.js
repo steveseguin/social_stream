@@ -64,7 +64,9 @@
 				return;
 			} else if (ele.id) {
 				messageHistory.push(ele.id);
-				messageHistory = messageHistory.slice(-300);
+				messageHistory = messageHistory.slice(-400);
+			} else {
+				return; // no id.
 			}
 			if (ele.querySelector("[in-banner]")) {
 				//console.log("Message in-banner");
