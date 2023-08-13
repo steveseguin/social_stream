@@ -96,8 +96,6 @@
 		data.contentimg = "";
 		data.type = "livespace";
 		
-		//console.log(data);
-		
 		pushMessage(data);
 	}
 
@@ -143,15 +141,10 @@
 	var observer = null;
 	
 	
-	function onElementInserted(containerSelector) {
-		var target = document.querySelector(containerSelector);
-		if (!target){return;}
-		
-		
+	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
@@ -161,6 +154,7 @@
 							if (mutation.addedNodes[i].nodeName == "LI"){
 								processMessage(mutation.addedNodes[i]); 
 							}
+							
 						} catch(e){}
 					}
 				}
@@ -178,26 +172,24 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('#messages')){
-			if (!document.querySelector('#messages').marked){
-				document.querySelector('#messages').marked=true;
+			document.querySelectorAll('#messages').forEach(container=>{ // more than one #message .. tsk ;)
+				if (!container.marked){
+					container.marked=true;
 
-				console.log("CONNECTED chat detected");
+					console.log("CONNECTED chat detected");
 
-				setTimeout(function(){
+					setTimeout(function(){
 
-					document.querySelectorAll("#messages li").forEach(ele=>{
-						ele.skip=true;
-						// processMessage(ele);
-					});
+						container.querySelectorAll("li").forEach(ele=>{
+							ele.skip=true;
+							//processMessage(ele);
+						});
+						onElementInserted(container);
 
-					onElementInserted('#messages');
-
-				},1000);
-
-
-			}
-		}} catch(e){}
+					},1000);
+				}
+			});
+		} catch(e){}
 	},2000);
 
 })();
