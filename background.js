@@ -735,6 +735,13 @@ chrome.runtime.onMessage.addListener(
 						}
 					}
 				}
+				
+				if (request.setting == "hypemode"){
+					if (!request.value){
+						processHype2(); // stop hype and clear old hype
+					}
+				}
+				
 			} else if ("inject" in request){
 				if (request.inject == "mobcrush"){
 					chrome.webNavigation.getAllFrames({tabId: sender.tab.id}, (frames) => {
@@ -1548,7 +1555,111 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 	try {
 		iframe.contentWindow.postMessage({"sendData":msg, "type": "pcs"}, '*'); // send only to 'viewers' of this stream
 	} catch(e){}
+	
+	if (iframe){
+		if (!uid){
+			var keys = Object.keys(connectedPeers);
+			for (var i = 0; i<keys.length;i++){
+				try {
+					var UUID = keys[i];
+					var label = connectedPeers[UUID] || false;
+					if (!label || (label === "dock")){
+						iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*');
+					}
+				} catch(e){}
+			}
+		} else {
+			var label = connectedPeers[uid] || false;
+			if (!label || (label === "dock")){
+				iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":uid}, '*');
+			}
+		}
+	}
 }
+
+
+var users = {};
+var hype = {};
+var hypeInterval = null;
+function processHype(data){
+	if (!settings.hypemode){
+		return;
+	}
+	if (!hypeInterval){
+		hypeInterval = setInterval(processHype2,10000);
+	}
+	if (users[data.type]){
+		if (!users[data.type][data.chatname]){
+			if (hype[data.type]){
+				hype[data.type] +=1;
+			} else {
+				hype[data.type] = 1;
+			}
+		}
+		users[data.type][data.chatname] = Date.now()+60000*5;
+	} else {
+		var site = {};
+		site[data.chatname] = Date.now()+60000*5;
+		users[data.type] = site;
+		hype[data.type] = 1;
+	}
+	sendHypeP2P(hype);
+}
+function processHype2(){
+	hype = {};
+	if (!settings.hypemode){
+		clearInterval(hypeInterval);
+		// users = {};
+	} else {
+		var now = Date.now();
+		var sites = Object.keys(users);
+		for (var i = 0; i<sites.length;i++){
+			var user = Object.keys(users[sites[i]]);
+			if (user.length){
+				hype[sites[i]] = 0;
+				for (var j = 0; j<user.length;j++){
+					console.log(users[sites[i]][user[j]], now);
+					if (users[sites[i]][user[j]]<now){
+						delete users[sites[i]][user[j]];
+					} else {
+						hype[sites[i]] += 1;
+					}
+				}
+			}
+		}
+	}
+	sendHypeP2P(hype);
+}
+
+
+function sendHypeP2P(data, uid=null){ // function to send data to the DOCk via the VDO.Ninja API
+	console.log(data);
+	var msg = {};
+	msg.overlayNinja = data;
+	
+	if (iframe){
+		if (!uid){
+			var keys = Object.keys(connectedPeers);
+			for (var i = 0; i<keys.length;i++){
+				try {
+					var UUID = keys[i];
+					var label = connectedPeers[UUID];
+					if (label === "hype"){
+						iframe.contentWindow.postMessage({"sendData":{overlayNinja:{hype:data}}, "type":"pcs", "UUID":UUID}, '*');
+					}
+				} catch(e){}
+			}
+		} else {
+			var label = connectedPeers[uid];
+			if (label === "hype"){
+				iframe.contentWindow.postMessage({"sendData":{overlayNinja:{hype:data}}, "type":"pcs", "UUID":uid}, '*');
+			}
+		}
+	}
+}
+
+
+
 
 function sendToDisk(data){
 	if (newFileHandle){
@@ -1644,7 +1755,8 @@ function processIncomingRequest(request){
 		}
 	}
 }
-			
+
+var connectedPeers = {};	
 eventer(messageEvent, async function (e) {
 	if (e.source != iframe.contentWindow){return}
 	if (e.data && (typeof e.data == "object")){
@@ -1671,10 +1783,32 @@ eventer(messageEvent, async function (e) {
 
 					data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
 					sendToDestinations(data);
-				} else {
-					console.log(e.data);
+				}
+			} else if (e.data.UUID && e.data.value && (e.data.action == "push-connection-info")){ // flip this
+				if ("label" in e.data.value){
+					connectedPeers[e.data.UUID] = e.data.value.label;
+					if (connectedPeers[e.data.UUID] == "hype"){
+						processHype2();
+					}
+				}
+			} else if (e.data.UUID && e.data.value && (e.data.action == "view-connection-info")){ // flip this
+				if ("label" in e.data.value){
+					connectedPeers[e.data.UUID] = e.data.value.label;
+					if (connectedPeers[e.data.UUID] == "hype"){
+						processHype2();
+					}
+				}
+			} else if (e.data.UUID && ("value" in e.data) && !e.data.value && (e.data.action == "push-connection")){ // flip this
+				if (e.data.UUID in connectedPeers){
+					delete connectedPeers[e.data.UUID];
+				}
+				//console.log(connectedPeers);
+			} else if (e.data.UUID && ("value" in e.data) && !e.data.value && (e.data.action == "view-connection")){ // flip this
+				if (e.data.UUID in connectedPeers){
+					delete connectedPeers[e.data.UUID];
 				}
 			}
+			
 		}
 	}
 });
@@ -2303,6 +2437,11 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 		   }
 		}
 	}
+	
+	if (settings.hypemode){
+		processHype(data);
+	}
+	
 	return data;
 }
 var store = [];

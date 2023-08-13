@@ -139,6 +139,9 @@ function update(response){
 
 			document.getElementById("emoteswall").innerHTML = "<a target='_blank' id='emoteswalllink' href='https://socialstream.ninja/emotes.html?session="+response.streamID+password+"'>https://socialstream.ninja/emotes.html?session="+response.streamID+password+"</a>";
 			document.getElementById("emoteswall").rawURL = "https://socialstream.ninja/emotes.html?session="+response.streamID+password;
+			
+			document.getElementById("hypemeter").innerHTML = "<a target='_blank' id='hypemeterlink' href='https://socialstream.ninja/hype.html?session="+response.streamID+password+"'>https://socialstream.ninja/hype.html?session="+response.streamID+password+"</a>";
+			document.getElementById("hypemeter").rawURL = "https://socialstream.ninja/hype.html?session="+response.streamID+password;
 
 			document.getElementById("remote_control_url").href='https://socialstream.ninja/sampleapi.html?session='+response.streamID;
 		}
@@ -175,6 +178,13 @@ function update(response){
 						var ele = document.querySelector("input[data-param3='"+key+"']");
 						if (ele){
 							ele.checked = response.settings[key].param3;
+							updateSettings(ele);
+						}
+					}
+					if ("param4" in response.settings[key]){
+						var ele = document.querySelector("input[data-param4='"+key+"']");
+						if (ele){
+							ele.checked = response.settings[key].param4;
 							updateSettings(ele);
 						}
 					}
@@ -447,7 +457,15 @@ function updateSettings(ele){
 		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("&&", "&");
 		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param3", setting: ele.dataset.param3, "value": ele.checked}, function (response) {});
-
+	} else if (ele.dataset.param4){
+		if (ele.checked){
+			document.getElementById("hypemeter").rawURL = updateURL(ele.dataset.param4, document.getElementById("hypemeter").rawURL);
+		} else {
+			document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace(ele.dataset.param4, "");
+		}
+		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("&&", "&");
+		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("?&", "?");
+		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param4", setting: ele.dataset.param4, "value": ele.checked}, function (response) {});
 	} else if (ele.dataset.both){
 		if (ele.checked){
 			document.getElementById("overlay").rawURL = updateURL(ele.dataset.both, document.getElementById("overlay").rawURL);
@@ -483,6 +501,9 @@ function updateSettings(ele){
 
 	document.getElementById("emoteswalllink").innerText = document.getElementById("emoteswall").rawURL;
 	document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").rawURL;
+	
+	document.getElementById("hypemeterlink").innerText = document.getElementById("hypemeter").rawURL;
+	document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").rawURL;
 }
 
 

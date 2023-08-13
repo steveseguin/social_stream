@@ -34,6 +34,7 @@
 			--streaming-chat-color: #00a6ff;
 			--single-message-color: #ff7f00;
 			--emotes-wall-color: #ffd400;
+			--hype-meter-color: #00ff5e;
 			--download-link: blue;
 		}
 
@@ -66,6 +67,7 @@
 				--streaming-chat-color: #00a6ffdd;
 				--single-message-color: #ff7f00dd;
 				--emotes-wall-color: #ffd400dd;
+				--hype-meter-color: #00ff5edd;
 				--download-link: lightblue;
 			}
 		}
@@ -400,6 +402,12 @@
 		h2.emotes_wall_title {
 			color: var(--emotes-wall-color)
 		}
+		
+		h2.hype_mode_title {
+			color: var(--hype-meter-color)
+		}
+		
+		
 
 		.link div a {
 			color: var(--link-color);
@@ -1553,6 +1561,71 @@
 							</div>
 
 
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="link" title="This link shows a score for recent chat activity per chat source">
+			<h2 class="hype_mode_title">Hype Meter <a class="options-link rounded_area" href="#hype-meter"
+				title="Jump to the hype meter link options.">options</a></h2>
+			<div id="hypemeter" class="hype_meter"></div>
+		</div>
+		<a href="" id="hype-meter"></a>
+
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-hype-general-options">
+				<label class="collapsible-label" for="wrapper-hype-general-options">📊 General</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group emotes_wall">
+
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="hypemode">
+									<span class="slider round"></span>
+								</label>🚦 Enable the hype meter's processing
+							</div>
+							
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param4="alignright">
+									<span class="slider round"></span>
+								</label>➡️ Align overly to the right-side
+							</div>
+							
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param4="scale=2">
+									<span class="slider round"></span>
+								</label>🔍➕ Magnify the view (larger font/images)
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param4="scale=0.77">
+									<span class="slider round"></span>
+								</label>🔎➖ Make the font, icons, and menu smaller
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param4="transparent">
+									<span class="slider round"></span>
+								</label>⭕ Force transparent background
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param4="opacity=0.3">
+									<span class="slider round"></span>
+								</label>👻 Make entire page partially transparent
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param4="hidetitle">
+									<span class="slider round"></span>
+								</label>🧹 Do not show the sub-title
+							</div>
 						</div>
 					</div>
 				</div>
