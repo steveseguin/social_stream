@@ -1633,7 +1633,6 @@ function processHype2(){
 
 
 function sendHypeP2P(data, uid=null){ // function to send data to the DOCk via the VDO.Ninja API
-	console.log(data);
 	var msg = {};
 	msg.overlayNinja = data;
 	
