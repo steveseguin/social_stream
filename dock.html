@@ -256,14 +256,22 @@
 			line-height: 100%;
 			padding-bottom: 3px;
 		}
-
-		.hl-firstline .hl-name {
-			line-height: 100%;
-			font-size: 130%;
-			vertical-align: bottom;
-			bottom:1px;
+		.twoLines .hl-firstline {
+			align-items: center;
+			display: flex;
+			margin-top:8px;
 		}
 
+		.hl-firstline .hl-name {
+			top: 2px;
+			bottom: unset;
+		}
+
+		.twoLines .hl-firstline .hl-name{
+			align-items: center;
+			display: flex;
+		}
+	
 		.hl-firstline .hl-name .hl-badge {
 			vertical-align: inherit;
 			margin: 1px 0px;
@@ -1233,7 +1241,10 @@
 			margin: 4px 2px auto 1px;
 			border-radius: 50%;
 		}
-
+		.twoLines .icon {
+			margin: 2px 2px auto 1px;	
+		}
+		
 		.invert {
 			filter: invert(1);
 		}
@@ -1884,6 +1895,7 @@
 		twoLines = true;
 		document.documentElement.style.setProperty("--list-or-horizontal", "block");
 		document.documentElement.style.setProperty("--time-arrived-padding", "8px");
+		document.body.classList.add("twoLines");
 	}
 
 	var splitMode = "";
