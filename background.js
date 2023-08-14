@@ -456,26 +456,55 @@ async function importSettings(item){
 var Url2ChannelImg = {};
 var vid2ChannelImg = {};
 
+function getYoutubeAvatarImageFallback(videoid, url){ // getting it from scraping youtube as fallback
+	console.log("getYoutubeAvatarImageFallback triggered");
+	fetch("https://www.youtube.com/watch?v="+videoid).then((response) => response.text()).then((data) => {
+		try{
+			let avatarURL = data.split('thumbnails":[{"url":"')[1].split('"')[0];
+			if (avatarURL.startsWith("https://")){
+				Url2ChannelImg[url] = avatarURL;
+				vid2ChannelImg[videoid] = avatarURL;
+				console.log("getYoutubeAvatarImageFallback: "+avatarURL);
+			} 
+		} catch(e){
+		}
+	}).catch(error => {
+	});
+}
+
+function getYoutubeAvatarImageMain(videoid, url){ // steves api server
+	const xhttp = new XMLHttpRequest();
+	xhttp.onload = function() {
+		if (this.responseText.startsWith("https://")){
+			Url2ChannelImg[url] = this.responseText;
+			vid2ChannelImg[videoid] = this.responseText;
+			console.log("getYoutubeAvatarImageMain: "+this.responseText);
+		} else {
+			getYoutubeAvatarImageFallback(videoid, url)
+		}
+	}
+	xhttp.onerror = function() {
+		getYoutubeAvatarImageFallback(videoid, url)
+	};
+	xhttp.open("GET", "https://api.socialstream.ninja/youtube/channel?video="+encodeURIComponent(videoid), true);
+	xhttp.send();
+}
+
 function getYoutubeAvatarImage(url, skip=false){
 	try {
 		if (url in Url2ChannelImg){return Url2ChannelImg[url];}
 		Url2ChannelImg[url] = ""; // prevent spamming of the API
-		//Url2ChannelImg = Url2ChannelImg.slice(-100); // caching limits
+		
 		var videoid = YouTubeGetID(url);
+		console.log("videoid: "+videoid);
 		if (videoid){
 			if (videoid in vid2ChannelImg){return vid2ChannelImg[videoid];}
 			vid2ChannelImg[videoid] = "";
-			//vid2ChannelImg = vid2ChannelImg.slice(-100); // caching limits
-			const xhttp = new XMLHttpRequest();
-			xhttp.onload = function() {
-				if (this.responseText.startsWith("https://")){
-					Url2ChannelImg[url] = this.responseText;
-					vid2ChannelImg[videoid] = this.responseText;
-				}
-			}
-			xhttp.open("GET", "https://api.socialstream.ninja/youtube/channel?video="+encodeURIComponent(videoid), true);
-			xhttp.send();
+			
+			getYoutubeAvatarImageMain(videoid, url);
+			
 			if (skip){return;}
+			
 			sleep(200);
 			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];} // a hacky/lazy way to wait for the response to complete
 			sleep(200);
@@ -497,9 +526,10 @@ function getYoutubeAvatarImage(url, skip=false){
 			sleep(200);
 			if (vid2ChannelImg[videoid]){return vid2ChannelImg[videoid];}
 		}
-	} catch(e){}
+	} catch(e){console.error(e);}
 	return false;
 }
+
 function YouTubeGetID(url){
   var ID = '';
   url = url.replace(/(>|<)/gi,'').split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/);
