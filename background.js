@@ -1106,7 +1106,7 @@ function sendToDestinations(message){
 		message.id = messageCounter;
 	}
 	if (message.chatname){
-		message.chatname = escapeHtml(message.chatname);
+		message.chatname = filterXSS(message.chatname); // I do escapeHtml at the point of capture instead
 	}
 	
 	if (message.chatmessage){
