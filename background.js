@@ -186,13 +186,13 @@ function loadSettings(item, resave=false){
 		settings = item.settings;
 
 		if (resave){
-			chrome.storage.sync.set({
+			chrome.storage.local.set({
 				settings: settings
 			});
 			chrome.runtime.lastError;
 		}
 	} else {
-		chrome.storage.sync.set({
+		chrome.storage.local.set({
 			settings: settings
 		});
 		chrome.runtime.lastError;
@@ -240,6 +240,9 @@ function checkIntervalState(i){
 	if (intervalMessages[i]){
 		clearInterval(intervalMessages[i]);
 	}
+	
+	if (!isExtensionOn){return;}
+	
 	var offset = 0;
 	if (settings['timemessageoffset'+i]){
 		offset = settings['timemessageoffset'+i].value;
@@ -247,20 +250,18 @@ function checkIntervalState(i){
 	
 	intervalMessages[i] = setTimeout(function(i){
 		if ('timemessageinterval'+i in settings){
-			if (!settings['timemessageinterval'+i].value){
-				intervalMessages[i] = setTimeout(function(i){
-					if (!isExtensionOn){return;}
-					if (!settings['timemessagecommand'+i].textsetting){return};  // failsafe
-					if (!settings['timemessageevent'+i]){return}; // failsafe
-					messageTimeout = Date.now();
-					var msg = {};
-					msg.response = settings['timemessagecommand'+i].textsetting;
-					processResponse(msg);
-				}, settings['timemessageinterval'+i].value*60000, i);
-			} else {
+			if (settings['timemessageinterval'+i].value==0){
+				if (!isExtensionOn){return;}
+				if (!settings['timemessagecommand'+i] || !settings['timemessagecommand'+i].textsetting){return};  // failsafe
+				if (!settings['timemessageevent'+i]){return}; // failsafe
+				messageTimeout = Date.now();
+				var msg = {};
+				msg.response = settings['timemessagecommand'+i].textsetting;
+				processResponse(msg);
+			} else if (settings['timemessageinterval'+i].value){
 				intervalMessages[i] = setInterval(function(i){
 					if (!isExtensionOn){return;}
-					if (!settings['timemessagecommand'+i].textsetting){return};  // failsafe
+					if (!settings['timemessagecommand'+i] || !settings['timemessagecommand'+i].textsetting){return};  // failsafe
 					if (!settings['timemessageevent'+i]){return}; // failsafe
 					messageTimeout = Date.now();
 					var msg = {};
@@ -271,7 +272,7 @@ function checkIntervalState(i){
 		} else {
 			intervalMessages[i] = setInterval(function(i){
 				if (!isExtensionOn){return;}
-				if (!settings['timemessagecommand'+i].textsetting){return};  // failsafe
+				if (!settings['timemessagecommand'+i] || !settings['timemessagecommand'+i].textsetting){return};  // failsafe
 				if (!settings['timemessageevent'+i]){return};  // failsafe
 				messageTimeout = Date.now();
 				var msg = {};
@@ -281,7 +282,19 @@ function checkIntervalState(i){
 		}
 	}, offset*60000 || 0, i);
 }
+
+chrome.storage.local.get(["settings"], function(item){
+	loadSettings(item);
+});
 chrome.storage.sync.get(properties, function(item){
+	if (item && item.settings){
+		chrome.storage.sync.remove(["settings"], function(Items) {
+			console.log("upgrading from sync to local storage");
+		});
+		chrome.storage.local.set({
+			settings: item.settings
+		});
+	}
 	loadSettings(item);
 });
 
@@ -320,7 +333,7 @@ async function loadmidi(){
 		console.log(e);
 		alert("File does not contain a valid JSON structure");
 	}
-	chrome.storage.sync.set({
+	chrome.storage.local.set({
 		settings: settings
 	});
 	chrome.runtime.lastError;
@@ -470,7 +483,8 @@ async function overwriteFileExcel(data=false) {
 
 async function exportSettings(){
 	chrome.storage.sync.get(properties, async function(item){
-		 const opts = {
+		item.settings = settings;
+		const opts = {
 			types: [{
 			  description: 'Data file',
 			  accept: {'application/data': ['.data']},
@@ -704,11 +718,19 @@ chrome.runtime.onMessage.addListener(
 					if (socketserverDock){
 						socketserverDock.close();
 					}
+					
+					if (intervalMessages){
+						for (i in intervalMessages){
+							clearInterval(intervalMessages[i]);
+						}
+					}
+	
 				}
 				chrome.storage.sync.set({
 					isExtensionOn: isExtensionOn
 				});
 				chrome.runtime.lastError;
+				
 				toggleMidi();
 				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
 				
@@ -736,12 +758,12 @@ chrome.runtime.onMessage.addListener(
 					settings[request.setting] = request.value;
 				}
 
-				chrome.storage.sync.set({
+				chrome.storage.local.set({
 					settings: settings
 				});
 				chrome.runtime.lastError;
+				
 				sendResponse({"state":isExtensionOn});
-
 
 				if (request.setting == "midi"){
 					toggleMidi();
