@@ -229,39 +229,45 @@ function loadSettings(item, resave=false){
 	
 	// timemessageevent, timemessagecommand, timemessageinterval, timemessageoffset
 	for (var i = 1;i<=10;i++){
-		if ((settings['timemessageevent'+i])){
+		if (settings['timemessageevent'+i]){
 			if (settings['timemessagecommand'+i]){
-				if (intervalMessages[i]){
-					clearInterval(intervalMessages[i]);
-				}
-				var offset = 0;
-				if (settings['timemessageoffset'+i]){
-					offset = settings['timemessageoffset'+i].value;
-				}
-				
-				intervalMessages[i] = setTimeout(function(i){
-					if (settings['timemessageinterval'+i]){
-						intervalMessages[i] = setInterval(function(i){
-							messageTimeout = Date.now();
-							var msg = {};
-							msg.response = settings['timemessagecommand'+i].textsetting;
-							processResponse(msg);
-						}, settings['timemessageinterval'+i].value*60000, i);
-					} else {
-						intervalMessages[i] = setInterval(function(i){
-							messageTimeout = Date.now();
-							var msg = {};
-							msg.response = settings['timemessagecommand'+i].textsetting;
-							processResponse(msg);
-						}, 15*60000, i);
-					}
-				}, offset*60000 || 0, i);
-				
+				checkIntervalState(i)
 			}
 		}
 	}
 }
 
+function checkIntervalState(i){
+	if (intervalMessages[i]){
+		clearInterval(intervalMessages[i]);
+	}
+	var offset = 0;
+	if (settings['timemessageoffset'+i]){
+		offset = settings['timemessageoffset'+i].value;
+	}
+	
+	intervalMessages[i] = setTimeout(function(i){
+		if (settings['timemessageinterval'+i]){
+			intervalMessages[i] = setInterval(function(i){
+				if (!isExtensionOn){return;}
+				if (!settings['timemessagecommand'+i].textsetting){return};
+				messageTimeout = Date.now();
+				var msg = {};
+				msg.response = settings['timemessagecommand'+i].textsetting;
+				processResponse(msg);
+			}, settings['timemessageinterval'+i].value*60000, i);
+		} else {
+			intervalMessages[i] = setInterval(function(i){
+				if (!isExtensionOn){return;}
+				if (!settings['timemessagecommand'+i].textsetting){return};
+				messageTimeout = Date.now();
+				var msg = {};
+				msg.response = settings['timemessagecommand'+i].textsetting;
+				processResponse(msg);
+			}, 15*60000, i);
+		}
+	}, offset*60000 || 0, i);
+}
 chrome.storage.sync.get(properties, function(item){
 	loadSettings(item);
 });
@@ -808,40 +814,28 @@ chrome.runtime.onMessage.addListener(
 					}
 				}
 				
-				// timemessageevent, timemessagecommand, offsetmessageinterval, offsetmessageoffset
-				for (var i = 1;i<=10;i++){
-					if ((request.setting == "timemessageevent"+i) || (request.setting == "timemessagecommand"+i) || (request.setting == "timemessageinterval"+i) || (request.setting == "timemessageoffset"+i)){
-						if (!request.value){
+				if (request.setting.startsWith("timemessage")){
+					if (request.setting.startsWith("timemessageevent")){
+						var i = parseInt(request.setting.split("timemessageevent")[1]);
+						if (!request.value){ // turn off
 							if (intervalMessages[i]){
 								clearInterval(intervalMessages[i]);
 								delete intervalMessages[i];
 							}
 						} else {
-							if (intervalMessages[i]){
-								clearInterval(intervalMessages[i]);
-							}
-							var offset = 0;
-							if (settings['timemessageoffset'+i]){
-								offset = settings['timemessageoffset'+i].value;
-							}
-							
-							intervalMessages[i] = setTimeout(function(i){
-								if (settings['timemessageinterval'+i]){
-									intervalMessages[i] = setInterval(function(i){
-										messageTimeout = Date.now();
-										var msg = {};
-										msg.response = settings['timemessagecommand'+i].textsetting;
-										processResponse(msg);
-									}, settings['timemessageinterval'+i].value*60000, i);
-								} else {
-									intervalMessages[i] = setInterval(function(i){
-										messageTimeout = Date.now();
-										var msg = {};
-										msg.response = settings['timemessagecommand'+i].textsetting;
-										processResponse(msg);
-									}, 15*60000, i);
-								}
-							}, offset*60000 || 0, i);	
+							checkIntervalState(i);
+						}
+					} else {
+						var i = 0;
+						if (request.setting.startsWith("timemessageoffset")){
+							i = parseInt(request.setting.split("timemessageoffset")[1]);
+						} else if (request.setting.startsWith("timemessagecommand")){
+							i = parseInt(request.setting.split("timemessagecommand")[1]);
+						}  else if (request.setting.startsWith("timemessageinterval")){
+							i = parseInt(request.setting.split("timemessageinterval")[1]);
+						} 
+						if (i){
+							checkIntervalState(i);
 						}
 					}
 				}
