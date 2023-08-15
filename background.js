@@ -247,20 +247,32 @@ function checkIntervalState(i){
 	
 	intervalMessages[i] = setTimeout(function(i){
 		if ('timemessageinterval'+i in settings){
-			intervalMessages[i] = setInterval(function(i){
-				if (!isExtensionOn){return;}
-				if (!settings['timemessagecommand'+i].textsetting){return};
-				if (!settings['timemessageevent'+i]){return};
-				messageTimeout = Date.now();
-				var msg = {};
-				msg.response = settings['timemessagecommand'+i].textsetting;
-				processResponse(msg);
-			}, settings['timemessageinterval'+i].value*60000, i);
+			if (!settings['timemessageinterval'+i].value){
+				intervalMessages[i] = setTimeout(function(i){
+					if (!isExtensionOn){return;}
+					if (!settings['timemessagecommand'+i].textsetting){return};  // failsafe
+					if (!settings['timemessageevent'+i]){return}; // failsafe
+					messageTimeout = Date.now();
+					var msg = {};
+					msg.response = settings['timemessagecommand'+i].textsetting;
+					processResponse(msg);
+				}, settings['timemessageinterval'+i].value*60000, i);
+			} else {
+				intervalMessages[i] = setInterval(function(i){
+					if (!isExtensionOn){return;}
+					if (!settings['timemessagecommand'+i].textsetting){return};  // failsafe
+					if (!settings['timemessageevent'+i]){return}; // failsafe
+					messageTimeout = Date.now();
+					var msg = {};
+					msg.response = settings['timemessagecommand'+i].textsetting;
+					processResponse(msg);
+				}, settings['timemessageinterval'+i].value*60000, i);
+			}
 		} else {
 			intervalMessages[i] = setInterval(function(i){
 				if (!isExtensionOn){return;}
-				if (!settings['timemessagecommand'+i].textsetting){return};
-				if (!settings['timemessageevent'+i]){return};
+				if (!settings['timemessagecommand'+i].textsetting){return};  // failsafe
+				if (!settings['timemessageevent'+i]){return};  // failsafe
 				messageTimeout = Date.now();
 				var msg = {};
 				msg.response = settings['timemessagecommand'+i].textsetting;
