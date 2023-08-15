@@ -227,7 +227,6 @@ function loadSettings(item, resave=false){
 		}
 	}
 	
-	// timemessageevent, timemessagecommand, timemessageinterval, timemessageoffset
 	for (var i = 1;i<=10;i++){
 		if (settings['timemessageevent'+i]){
 			if (settings['timemessagecommand'+i]){
@@ -247,7 +246,7 @@ function checkIntervalState(i){
 	}
 	
 	intervalMessages[i] = setTimeout(function(i){
-		if (settings['timemessageinterval'+i]){
+		if ('timemessageinterval'+i in settings){
 			intervalMessages[i] = setInterval(function(i){
 				if (!isExtensionOn){return;}
 				if (!settings['timemessagecommand'+i].textsetting){return};
