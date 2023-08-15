@@ -283,9 +283,7 @@ function checkIntervalState(i){
 	}, offset*60000 || 0, i);
 }
 
-chrome.storage.local.get(["settings"], function(item){
-	loadSettings(item);
-});
+
 chrome.storage.sync.get(properties, function(item){
 	if (item && item.settings){
 		chrome.storage.sync.remove(["settings"], function(Items) {
@@ -294,8 +292,20 @@ chrome.storage.sync.get(properties, function(item){
 		chrome.storage.local.set({
 			settings: item.settings
 		});
+		loadSettings(item);
+	} else {
+		chrome.storage.local.get(["settings"], function(item2){
+			if (item2 && item2.settings){
+				if (item){
+					item.settings = item2.settings;
+				} else {
+					item = item2;
+				}
+			} 
+			loadSettings(item);
+		});
 	}
-	loadSettings(item);
+	
 });
 
 chrome.browserAction.setIcon({path: "/icons/off.png"});
