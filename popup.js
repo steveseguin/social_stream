@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	});
 	
 	
-		
 	for (var i=1;i<=20;i++){
 		var chat = document.createElement("div");
 		chat.innerHTML = '<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">\
@@ -36,6 +35,29 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				</div>\
 			</div>';
 		document.getElementById("chatCommands").appendChild(chat);
+	}
+	
+	for (var i=1;i<=10;i++){
+		var chat = document.createElement("div");
+		chat.innerHTML = '<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">\
+				<input type="checkbox" data-setting="timemessageevent'+ i +'">\
+				<span class="slider round"></span>\
+			</label>\
+			<div style="display:inline-block">\
+				<div class="textInputContainer" style="width: 235px">\
+					<input type="text" id="timemessagecommand'+ i +'" class="textInput" autocomplete="off" placeholder="Message to send to chat at an interval" data-textsetting="timemessagecommand'+ i +'">\
+					<label for="timemessagecommand'+ i +'">&gt; Message to broadcast</label>\
+				</div>\
+				<div class="textInputContainer" style="width: 235px">\
+					<input type="number" id="timemessageinterval'+ i +'" class="textInput" value="15" min="0"  autocomplete="off" title="Interval offset in minutes; 0 to issue just once." data-numbersetting="timemessageinterval'+ i +'">\
+					<label for="timemessageinterval'+ i +'">&gt; Interval between broadcasts in minutes</label>\
+				</div>\
+				<div class="textInputContainer" style="width: 235px">\
+					<input type="number" id="timemessageoffset'+ i +'" value="0" min="0" class="textInput" autocomplete="off" title="Starting offset in minutes" data-numbersetting="timemessageoffset'+ i +'">\
+					<label for="timemessageoffset'+ i +'">&gt; Starting time offset</label>\
+				</div>\
+			</div>';
+		document.getElementById("timedMessages").appendChild(chat);
 	}
 	
 
