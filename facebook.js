@@ -34,6 +34,11 @@
 		}
 	}
 
+
+	// <div aria-label="Link preview" aria-modal="true" role="dialog" 
+	
+	
+
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
@@ -46,6 +51,10 @@
 				return "";
 			}
 		}
+		
+		if (element.ariaLabel){return "";} // this implies we're on the wrong path.
+		
+		if (element.skip){return "";}
 		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
@@ -64,14 +73,7 @@
 		return resp;
 	}
 	
-	function walkTheDOM(node, func) {
-	  func(node);
-	  node = node.firstChild;
-	  while (node) {
-		  walkTheDOM(node, func);
-		  node = node.nextSibling;
-	  }
-	}
+
 
 	async function processMessage(ele) {
 		if (ele == window) {
@@ -81,23 +83,28 @@
 		var chatimg = "";
 		try {
 			var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+			imgele.skip = true;
 			chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
 		} catch(e){
 			//console.log(e);
 		}
+		
+		
 		var badges = [];
 		var name = "";
 		try {
-			var nameElement = ele.childNodes[1].childNodes[0].querySelector('span[dir="auto"]');
+			var nameElement = ele.childNodes[1].childNodes[0].querySelectorAll('span[dir="auto"]')[0];
+			nameElement.skip = true;
 			name = escapeHtml(nameElement.innerText);
+			
 			try {
 				nameElement.parentNode.parentNode.childNodes[1].querySelectorAll('img[src]').forEach(img=>{
 					if (!img.src.startsWith("data:image/svg+xml,")){
 						badges.push(img.src);
+						img.skip = true;
 					}
 				});
 			} catch (e) {
-				
 			}
 		} catch (e) {
 			try {
@@ -108,15 +115,6 @@
 		}
 
 		
-		/* if (name && !badges.length) {
-			name = name.trim();
-			ele.childNodes[1].childNodes[0].querySelectorAll('img[src]').forEach(img=>{
-				if (!img.src.startsWith("data:image/svg+xml,")){
-					badges.push(img.src);
-				}
-			});
-		} */
-		
 		var test = ele.querySelectorAll("div[dir='auto'] > div[role='button'][tabindex='0']")
 		if (test.length ===1){
 			test[0].click();
@@ -124,87 +122,23 @@
 		}
 
 		var msg = "";
+		
+		var msgElement = "";
+		
+		try {
+			msgElement = ele.childNodes[1].childNodes[0].querySelectorAll('span[dir="auto"]')[1];
+			msg = getAllContentNodes(msgElement);
+		} catch(e){}
 
-		if (settings.textonlymode) {
+		if (!msg){
 			try {
-				walkTheDOM(ele.childNodes[1].querySelector('a[role="link"]').parentNode.parentNode.parentNode.querySelector('span[lang]'), function(node) {
-				  if (node.nodeName === "#text") {
-					var text = node.data.trim();
-					if (text.length) {
-						msg += escapeHtml(text);
-					}
-				  }
-				});
-			} catch (e) {
-				try {
-					walkTheDOM(ele.childNodes[1].querySelector('a[role="link"]').parentNode.parentNode.parentNode, function(node) {
-						if (node.nodeName === "#text") {
-							var text = node.data.trim();
-							if (text.length) {
-								msg += escapeHtml(text);
-							}
-						}
-					});
-				} catch (e) {}
-			}
-		} else {
-			try {
-				walkTheDOM(ele.childNodes[1].querySelector('a[role="link"]').parentNode.parentNode.parentNode.querySelector('span[lang]'), function(node) {
-					if (node.nodeName === "#text") {
-						var text = node.data.trim();
-						if (text.length) {
-							msg += escapeHtml(text);
-						}
-					} else if (node.nodeName == "IMG") {
-						msg += node.outerHTML;
-					}
-				});
-			} catch (e) {
-				try {
-					var sister = ele.childNodes[1].querySelectorAll('a[role="link"]');
-					if (sister.length){
-						try {
-							walkTheDOM(sister[sister.length-1].parentNode.parentNode.previousSibling.querySelector('span[lang]'), function(node) {
-								if (node.nodeName === "#text") {
-									var text = node.data.trim();
-									if (text.length) {
-										msg += escapeHtml(text);
-									}
-								} else if (node.nodeName == "IMG") {
-									msg += node.outerHTML;
-								}
-							});
-						} catch(e){
-							var test = sister[sister.length-1].parentNode.parentNode.previousSibling.querySelectorAll('[dir="auto"]');
-							if (test.length>2){
-								walkTheDOM(test[1], function(node) {
-									if (node.nodeName === "#text") {
-										var text = node.data.trim();
-										if (text.length) {
-											msg += escapeHtml(text);
-										}
-									} else if (node.nodeName == "IMG") {
-										msg += node.outerHTML;
-									}
-								});
-							} else {
-								walkTheDOM(sister[sister.length-1].parentNode.parentNode.previousSibling, function(node) {
-									if (node.nodeName === "#text") {
-										var text = node.data.trim();
-										if (text.length) {
-											msg += escapeHtml(text);
-										}
-									} else if (node.nodeName == "IMG") {
-										msg += node.outerHTML;
-									}
-								});
-							}
-						}
-					}
-				} catch(e){}
-			}
+				msgElement = ele.querySelector("ul > li").parentNode.parentNode;
+				msgElement.skip = true;
+				if (msgElement.nextSibling){msgElement.nextSibling.skip = true;}
+				msg = getAllContentNodes(msgElement.parentNode);
+			}catch(e){}
 		}
-
+		
 		if (msg) {
 			msg = msg.trim();
 			if (name) {
