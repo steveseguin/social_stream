@@ -89,6 +89,9 @@
 		.hl-profile-pic {
 			border: var(--profile-pic-border);
 			min-width: 24px;
+			width: 24px;
+			height: 24px;
+			object-fit: cover;
 		}
 		.hl-badge{
 			padding: 0px 2px 0px 0px;
@@ -2808,7 +2811,7 @@
 		document.documentElement.style.setProperty("--background-color", "#0000", "important");
 		document.documentElement.style.setProperty("--menu-background-color", "#0000", "important");
 		document.documentElement.style.setProperty("--menu-border-color", "0 0 0 #0000", "important");
-		document.getElementById("main").style.overflow = "hidden";
+		document.getElementById("main").style.overflow = "hidden"; // transparent auto hides the scroll bar; i guess that makes sense, since likely used in studio software then.
 		try {
 			mainOutputWindow.style.overflow = "hidden";
 		} catch(e){}

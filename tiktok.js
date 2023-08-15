@@ -22,11 +22,11 @@
 	function escapeHtml(unsafe){
 		try {
 			return unsafe
-				 .replace(/&/g, "&amp;")
-				 .replace(/</g, "&lt;")
-				 .replace(/>/g, "&gt;")
-				 .replace(/"/g, "&quot;")
-				 .replace(/'/g, "&#039;") || "";
+			 .replace(/&/g, "&amp;")
+			 .replace(/</g, "&lt;")
+			 .replace(/>/g, "&gt;")
+			 .replace(/"/g, "&quot;")
+			 .replace(/'/g, "&#039;") || "";
 		} catch(e){
 			return "";
 		}
@@ -34,9 +34,7 @@
 
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
-		
 		if (!element){return resp;}
-		
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
 				return escapeHtml(element.textContent) || "";
@@ -44,18 +42,19 @@
 				return "";
 			}
 		}
-		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+			} else if ((node.nodeType === 3) && node.textContent){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
+						resp += "<img src='"+node.src+"' />";
+					} else {
+						resp += node.outerHTML;
 					}
-					resp += node.outerHTML;
 				}
 			}
 		});
@@ -83,7 +82,7 @@
 		
 		var chatbadges = "";
 		try{
-			var cb = ele.children[1].querySelectorAll("img[class*='ImgBadgeChatMessage']");
+			var cb = ele.children[1].querySelectorAll("img[class*='ImgBadgeChatMessage'], img[class*='ImgCombineBadgeIcon']");
 			if (cb.length){
 				chatbadges = [];
 				cb.forEach(cbimg =>{
@@ -95,46 +94,54 @@
 		} catch(e){}
 		
 		var chatname = "";
-		var chatmessage = "";
+		
+		
+		try {
+			chatname = ele.querySelector("span[data-e2e='message-owner-name']").textContent;
+			chatname = escapeHtml(chatname);
+		} catch(e){}
+		
 		try{
-			if (ele.childNodes[1].childNodes[0].children.length){
-				chatname = escapeHtml(ele.childNodes[1].childNodes[0].childNodes[0].innerText);
-			} else {
-				chatname = escapeHtml(ele.childNodes[1].childNodes[0].innerText);
-			}
-			var eles = ele.childNodes[1].childNodes;
-			if (eles.length>1){
-				for (var i  = 1; i<eles.length;i++){
-					if (eles[i].nodeName === "#text"){
-						chatmessage = escapeHtml(eles[i].textContent);
-					} else if (settings.textonlymode){
-						chatmessage = escapeHtml(eles[i].textContent);
-					} else {
-						chatmessage = eles[i].innerHTML;
-					}
-				}
-			} else if (eles.length==1){
-				for (var i  = 1; i<eles[0].childNodes.length;i++){
-					if (settings.textonlymode){
-						chatmessage = escapeHtml(eles[0].childNodes[i].textContent);
-					} else {
-						chatmessage = eles[0].childNodes[i].innerHTML;
-					}
+			if (!chatname){
+				if (ele.childNodes[1].childNodes[0].children.length){
+					chatname = escapeHtml(ele.childNodes[1].childNodes[0].childNodes[0].innerText);
+				} else {
+					chatname = escapeHtml(ele.childNodes[1].childNodes[0].innerText);
 				}
 			}
 			
 		} catch(e){}
-	  
-	  
-	    if (!chatmessage){
-			try{
-				if (settings.textonlymode){
-					chatmessage = escapeHtml(ele.childNodes[1].textContent);
-				} else {
-					chatmessage = ele.childNodes[1].innerHTML;
+		
+		var chatmessage = "";
+		try {
+			chatmessage = getAllContentNodes(ele.querySelector("div[class*='-DivUserInfo'], span[data-e2e='message-owner-name']").nextSibling);
+		} catch(e){}	
+		
+		
+		try {
+			if (!chatmessage){
+				var eles = ele.childNodes[1].childNodes;
+				if (eles.length>1){
+					for (var i  = 1; i<eles.length;i++){
+						if (eles[i].nodeName === "#text"){
+							chatmessage = escapeHtml(eles[i].textContent);
+						} else if (settings.textonlymode){
+							chatmessage = escapeHtml(eles[i].textContent);
+						} else {
+							chatmessage = eles[i].innerHTML;
+						}
+					}
+				} else if (eles.length==1){
+					for (var i  = 1; i<eles[0].childNodes.length;i++){
+						if (settings.textonlymode){
+							chatmessage = escapeHtml(eles[0].childNodes[i].textContent);
+						} else {
+							chatmessage = eles[0].childNodes[i].innerHTML;
+						}
+					}
 				}
-			} catch(e){}
-		}
+			}
+		} catch(e){}
 		
 		if (!chatmessage && !chatbadges){
 			return;
@@ -190,7 +197,7 @@
 	
 	function start() {
 		
-		var target = document.querySelector('[class*="DivChatRoomContainer"]');
+		var target = document.querySelector('[class*="DivChatMessageList"]');
 		if (!target){
 			return;
 		}
@@ -213,20 +220,19 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].dataset.e2e){
-								var ele = mutation.addedNodes[i];
-							} else {
-								var ele = mutation.addedNodes[i].querySelector("[data-e2e]");
-							}
 							
-							if (!ele){return;}
-							
-							if (ele.dataset.e2e == "chat-message"){
+							if (mutation.addedNodes[i].dataset && (mutation.addedNodes[i].dataset.e2e == "chat-message")){
 								setTimeout(function(ele2){
 									processMessage(ele2)
-								},500, ele);
+								},500, mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].dataset.e2e){
+								setTimeout(function(ele2){
+									processMessage(ele2, true); // event
+								},500, mutation.addedNodes[i]);
 							} else if (settings.captureevents){
-								processMessage(ele, true)
+								setTimeout(function(ele2){
+									processMessage(ele2); // donation?
+								},500, mutation.addedNodes[i]);
 							}
 						} catch(e){}
 					}
@@ -234,7 +240,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);

@@ -91,8 +91,6 @@
 			//console.log(e);
 		}
 		
-		
-		
 		var name = "";
 		try {
 			var nameElement = ele.childNodes[1].childNodes[0].querySelectorAll('span[dir="auto"]')[0];
@@ -125,8 +123,6 @@
 		} catch(e){}
 
 
-		
-			
 		if (!msg){
 			if (!settings.textonlymode){
 				try {
