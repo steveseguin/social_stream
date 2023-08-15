@@ -98,7 +98,7 @@
 			name = escapeHtml(nameElement.innerText);
 			
 			try {
-				nameElement.parentNode.parentNode.childNodes[1].querySelectorAll('img[src]').forEach(img=>{
+				ele.childNodes[1].childNodes[0].querySelectorAll('div[aria-label] img[src][alt]').forEach(img=>{
 					if (!img.src.startsWith("data:image/svg+xml,")){
 						badges.push(img.src);
 						img.skip = true;
