@@ -250,6 +250,7 @@ function checkIntervalState(i){
 			intervalMessages[i] = setInterval(function(i){
 				if (!isExtensionOn){return;}
 				if (!settings['timemessagecommand'+i].textsetting){return};
+				if (!settings['timemessageevent'+i]){return};
 				messageTimeout = Date.now();
 				var msg = {};
 				msg.response = settings['timemessagecommand'+i].textsetting;
@@ -259,6 +260,7 @@ function checkIntervalState(i){
 			intervalMessages[i] = setInterval(function(i){
 				if (!isExtensionOn){return;}
 				if (!settings['timemessagecommand'+i].textsetting){return};
+				if (!settings['timemessageevent'+i]){return};
 				messageTimeout = Date.now();
 				var msg = {};
 				msg.response = settings['timemessagecommand'+i].textsetting;
