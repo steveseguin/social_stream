@@ -56,12 +56,14 @@
 		
 		if (element.skip){return "";}
 		
+		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
+				node.skip = true; // facebook specific need
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
@@ -90,22 +92,13 @@
 		}
 		
 		
-		var badges = [];
+		
 		var name = "";
 		try {
 			var nameElement = ele.childNodes[1].childNodes[0].querySelectorAll('span[dir="auto"]')[0];
 			nameElement.skip = true;
 			name = escapeHtml(nameElement.innerText);
 			
-			try {
-				ele.childNodes[1].childNodes[0].querySelectorAll('div[aria-label] img[src][alt]').forEach(img=>{
-					if (!img.src.startsWith("data:image/svg+xml,")){
-						badges.push(img.src);
-						img.skip = true;
-					}
-				});
-			} catch (e) {
-			}
 		} catch (e) {
 			try {
 				name = escapeHtml(ele.childNodes[1].childNodes[0].querySelector('a[role="link"]').innerText);
@@ -131,13 +124,18 @@
 			msg = getAllContentNodes(msgElement);
 		} catch(e){}
 
+
+		
+			
 		if (!msg){
-			try {
-				msgElement = ele.querySelector("ul > li").parentNode.parentNode;
-				msgElement.skip = true;
-				if (msgElement.nextSibling){msgElement.nextSibling.skip = true;}
-				msg = getAllContentNodes(msgElement.parentNode);
-			}catch(e){}
+			if (!settings.textonlymode){
+				try {
+					msgElement = ele.querySelector("ul > li").parentNode.parentNode;
+					msgElement.skip = true;
+					if (msgElement.nextSibling){msgElement.nextSibling.skip = true;}
+					msg = getAllContentNodes(msgElement.parentNode);
+				}catch(e){}
+			}
 		}
 		
 		if (msg) {
@@ -148,6 +146,19 @@
 					msg = msg.trim();
 				}
 			}
+		}
+
+		var badges = [];	// we do badges last, as we have already marked images as used in the msg step, so less likely of confusing baddges with images
+		try {
+			ele.childNodes[1].childNodes[0].querySelectorAll('div[aria-label] img[src][alt]').forEach(img=>{
+				if (img.skip){return;}
+				if (msgElement.contains(img)){return;} // just in case skip fails
+				if (!img.src.startsWith("data:image/svg+xml,")){
+					badges.push(img.src);
+					img.skip = true;
+				}
+			});
+		} catch (e) {
 		}
 
 		var data = {};
