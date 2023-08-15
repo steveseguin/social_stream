@@ -126,7 +126,8 @@
 		var msgElement = "";
 		
 		try {
-			msgElement = ele.childNodes[1].childNodes[0].querySelectorAll('span[dir="auto"]')[1];
+			msgElement = ele.childNodes[1].childNodes[0].querySelectorAll('span[dir="auto"]');
+			msgElement = msgElement[msgElement.length -1];
 			msg = getAllContentNodes(msgElement);
 		} catch(e){}
 
