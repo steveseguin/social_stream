@@ -176,6 +176,10 @@
 			chatimg = savedavatars[chatname];
 		} else if (chatmessage && (chatmessage==="----")){ // no chat name
 			return;
+		} 
+		
+		if (ital && chatmessage && (chatmessage==="joined")){ // no chat name
+			return;
 		}
 	  
 		var data = {};
@@ -215,6 +219,10 @@
 		}
 		// class="tiktok-1dvdrb1-DivChatRoomMessage-StyledLikeMessageItem e12fsz0m0"
 		console.log("STARTED SOCIAL STREAM");
+		
+		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		
+		
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
@@ -239,11 +247,32 @@
 				}
 			});
 		};
-		
 		var config = { childList: true, subtree: false };
-		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
+		
+		///////
+		
+		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer');
+		var onMutationsObserved2= function(mutations) {
+			mutations.forEach(function(mutation) {
+				if (mutation.addedNodes.length) {
+					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+						try {
+							setTimeout(function(ele2){
+								processMessage(ele2, true); // event
+							},500, mutation.addedNodes[i], true);
+						} catch(e){}
+					}
+				}
+			});
+		};
+		
+		var config2 = { childList: true, subtree: true };
+		var observer2 = new MutationObserver(onMutationsObserved2);
+		observer2.observe(target2, config2);
+		
 	}
 	
 	setInterval(start,2000);
