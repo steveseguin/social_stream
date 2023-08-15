@@ -2488,6 +2488,11 @@
 		window.obsstudio = false;
 	}
 	
+	var clock24hr = false
+	if (urlParams.has("24hr")){
+		clock24hr = true;
+	}
+	
 
 	if (urlParams.has("save")){
 		encode = TextEncoder.prototype.encode.bind(new TextEncoder);
@@ -4121,7 +4126,7 @@
 			var timeArrived = "";
 			if (datestamp){
 				var date = new Date();
-				timeArrived = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+				timeArrived = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: !clock24hr })
 				if (compactmode){
 					timeArrived = timeArrived.split(" ")[0];
 				}
