@@ -2455,7 +2455,7 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			processResponse(msg, true);
 		}
 	}
-	if (settings.relayall && data.chatmessage && data.chatname){
+	if (settings.relayall && data.chatmessage && data.chatname && !data.event){ // don't relay events
 		if (checkExactDuplicate(data.chatmessage)){ // not matching exactly
 			return null;
 		}
