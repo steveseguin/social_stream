@@ -858,6 +858,11 @@ chrome.runtime.onMessage.addListener(
 						processHype2(); // stop hype and clear old hype
 					}
 				}
+				if (request.setting == "waitlistmode"){
+					//if (!request.value){
+					processWaitlist2(); // stop hype and clear old hype
+					//}
+				}
 				
 				if (request.setting.startsWith("timemessage")){
 					if (request.setting.startsWith("timemessageevent")){
@@ -1766,11 +1771,7 @@ function processHype2(){
 	}
 	sendHypeP2P(hype);
 }
-
-
 function sendHypeP2P(data, uid=null){ // function to send data to the DOCk via the VDO.Ninja API
-	var msg = {};
-	msg.overlayNinja = data;
 	
 	if (iframe){
 		if (!uid){
@@ -1794,6 +1795,64 @@ function sendHypeP2P(data, uid=null){ // function to send data to the DOCk via t
 }
 
 
+////
+
+var waitListUsers = {};
+var waitlist = [];
+function processWaitlist(data){
+	if (!settings.waitlistmode){
+		return;
+	}
+	if (data.chatmessage && (data.chatmessage.startsWith("!queue"))){return;}
+	
+	if (waitListUsers[data.type]){
+		if (!waitListUsers[data.type][data.chatname]){
+			waitlist.push(data);
+		}
+		waitListUsers[data.type][data.chatname] = Date.now();
+	} else {
+		var site = {};
+		site[data.chatname] = Date.now();
+		waitListUsers[data.type] = site;
+		waitlist.push(data);
+	}
+	sendWaitlistP2P(waitlist);
+}
+function processWaitlist2(){
+	console.error("processWaitlist2");
+	if (!settings.waitlistmode){
+		waitlist = [];
+		waitListUsers = {};
+		
+		sendWaitlistP2P(false);
+		return;
+	}
+	sendWaitlistP2P(waitlist);
+}
+function sendWaitlistP2P(data, uid=null){ // function to send data to the DOCk via the VDO.Ninja API
+	
+	if (iframe){
+		if (!uid){
+			var keys = Object.keys(connectedPeers);
+			for (var i = 0; i<keys.length;i++){
+				try {
+					var UUID = keys[i];
+					var label = connectedPeers[UUID];
+					if (label === "waitlist"){
+						iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlist:data}}, "type":"pcs", "UUID":UUID}, '*');
+					}
+				} catch(e){}
+			}
+		} else {
+			var label = connectedPeers[uid];
+			if (label === "waitlist"){
+				iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlist:data}}, "type":"pcs", "UUID":uid}, '*');
+			}
+		}
+	}
+}
+
+///
 
 
 function sendToDisk(data){
@@ -1924,6 +1983,8 @@ eventer(messageEvent, async function (e) {
 					connectedPeers[e.data.UUID] = e.data.value.label;
 					if (connectedPeers[e.data.UUID] == "hype"){
 						processHype2();
+					} else if (connectedPeers[e.data.UUID] == "waitlist"){
+						processWaitlist2();
 					}
 				}
 			} else if (e.data.UUID && e.data.value && (e.data.action == "view-connection-info")){ // flip this
@@ -1931,6 +1992,8 @@ eventer(messageEvent, async function (e) {
 					connectedPeers[e.data.UUID] = e.data.value.label;
 					if (connectedPeers[e.data.UUID] == "hype"){
 						processHype2();
+					} else if (connectedPeers[e.data.UUID] == "waitlist"){
+						processWaitlist2();
 					}
 				}
 			} else if (e.data.UUID && ("value" in e.data) && !e.data.value && (e.data.action == "push-connection")){ // flip this
@@ -2575,6 +2638,9 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 	
 	if (settings.hypemode){
 		processHype(data);
+	}
+	if (settings.waitlistmode){
+		processWaitlist(data);
 	}
 	
 	return data;

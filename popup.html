@@ -35,6 +35,7 @@
 			--single-message-color: #ff7f00;
 			--emotes-wall-color: #ffd400;
 			--hype-meter-color: #00ff5e;
+			--waitlist-color: #ff00d2;
 			--download-link: blue;
 		}
 
@@ -68,6 +69,7 @@
 				--single-message-color: #ff7f00dd;
 				--emotes-wall-color: #ffd400dd;
 				--hype-meter-color: #00ff5edd;
+				--waitlist-color: #ff00d2dd;
 				--download-link: lightblue;
 			}
 		}
@@ -414,7 +416,9 @@
 			color: var(--hype-meter-color)
 		}
 		
-		
+		h2.waitlist_mode_title {
+			color: var(--waitlist-color)
+		}
 
 		.link div a {
 			color: var(--link-color);
@@ -1583,6 +1587,7 @@
 		<div class="link" title="This link shows a score for recent chat activity per chat source">
 			<h2 class="hype_mode_title">Hype Meter <a class="options-link rounded_area" href="#hype-meter"
 				title="Jump to the hype meter link options.">options</a></h2>
+			<h3>When enabled, a tally score of unique names per chat source is tracked. Stop/start to reset the tally.</h3>
 			<div id="hypemeter" class="hype_meter"></div>
 		</div>
 		<a href="" id="hype-meter"></a>
@@ -1593,7 +1598,7 @@
 				<label class="collapsible-label" for="wrapper-hype-general-options">📊 General</label>
 				<div class="collapsible-text">
 					<div class="options">
-						<div class="options_group emotes_wall">
+						<div class="options_group hyper_meter">
 
 							<div>
 								<label class="switch">
@@ -1645,6 +1650,75 @@
 									<input type="checkbox" data-param4="hidetitle">
 									<span class="slider round"></span>
 								</label>🧹 Do not show the sub-title
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="link" title="This link shows a list of names representing users in a waiting list">
+			<h2 class="waitlist_mode_title">Wait List <a class="options-link rounded_area" href="#waitlist"
+				title="Jump to the waitlist link options.">options</a></h2>
+			<h3>When enabled, guests can type <i><b>!queue</b></i> in chat to be added to an ordered list of users. Stop/start to reset the queue.</h3>
+			<div id="waitlist" class="waitlist"></div>
+		</div>
+		<a href="" id="waitlist"></a> 
+		
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-waitlist-general-options">
+				<label class="collapsible-label" for="wrapper-waitlist-general-options">📊 General</label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group waitlist">
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-setting="waitlistmode">
+									<span class="slider round"></span>
+								</label>🚦 Enable the wait list page
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param5="alignright">
+									<span class="slider round"></span>
+								</label>➡️ Align overly to the right-side
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param5="nooutline">
+									<span class="slider round"></span>
+								</label>🔳 Disable text outlining
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param5="scale=2">
+									<span class="slider round"></span>
+								</label>🔍➕ Magnify the view (larger font/images)
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param5="scale=0.77">
+									<span class="slider round"></span>
+								</label>🔎➖ Make the font, icons, and menu smaller
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param5="transparent">
+									<span class="slider round"></span>
+								</label>⭕ Force transparent background
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param5="opacity=0.3">
+									<span class="slider round"></span>
+								</label>👻 Make entire page partially transparent
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param4="hidetitle">
+									<span class="slider round"></span>
+								</label>🧹 Do not show the !queue instructions
 							</div>
 						</div>
 					</div>

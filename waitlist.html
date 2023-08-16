@@ -3,8 +3,8 @@
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
 	<meta content="utf-8" http-equiv="encoding" />
-	<title>Social Stream - waitlist Meter</title>
-	<meta name="title" content="Social Stream - waitlist Meter" />
+	<title>Social Stream - Wait List</title>
+	<meta name="title" content="Social Stream - Wait List" />
 	<link rel="icon" href="./icons/favicon.ico" />
 	<style>
 		:root {
@@ -122,13 +122,14 @@
 		}
 		
 		img {
-			max-width: calc(var(--width) * 1.5);
+			max-width: calc(var(--width));
 			max-height: var(--width);
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
 			margin: auto;
 			padding: 3px;
-			object-fit: contain;
 			vertical-align: top;
-			
 		}
 
 
@@ -166,18 +167,18 @@
 		}
 
 		.guestListHolder {
-			display:inline-flex;
+			display:block;
 			align-items: center;
 			margin-right:10px;
-			background-color:#47B5;
-			border-radius: calc(var(--width) / 2 + var(--padding) + 3px);
+			
 			padding: var(--padding);
 		}
 		
 		#waitlist {
-			display:inline-flex;
+			display:block;
 			font-size:var(--font-size);
-			
+			background-color:#47B5;
+			border-radius: calc(var(--width) / 2 + var(--padding) + 3px);
 		}
 		#waitlisttitle{
 			padding: 10px;
@@ -192,7 +193,17 @@
 			
 		}
 		
-		
+		.spacer{
+			max-width: var(--width);
+			max-height: var(--width);
+			width: 100%;
+			height: 100%;
+			margin: auto;
+			padding: 3px;
+			vertical-align: top;
+			display:inline-block;
+			opacity:0;
+		}
 		#parentHolder {
 			display:inline-block;
 			animation: fadeInAnimation ease 2s;
@@ -203,8 +214,8 @@
 </head>
 <body class='electronDraggable' id="output">
 	<div id="parentHolder" class='hidden'>
+		<div id="waitlisttitle">Type !queue to join this wait list</div>
 		<div id="waitlist"></div>
-		<div id="waitlisttitle">Active chatters in the last 5-minutes</div>
 	</div>
 	<script>
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
@@ -435,21 +446,38 @@
 	if (urlParams.has("nooutline")){
 		document.documentElement.style.setProperty("--outline", "0px");
 	}
+	
+	function hideImage(e){
+		if (this.srcBackup){
+			this.src = this.srcBackup;
+			this.srcBackup = null;
+			delete this.srcBackup;
+		} else if (this.alt.length!==2){
+			this.classList.add("spacer");
+		} else {
+			this.outerHTML = this.alt;
+		}
+	}
 
 	function processInput(data){
 		if ("waitlist" in data){
-			document.getElementById("waitlist").innerHTML = "";
-			if (!data.waitlist.length){
+			if (data.waitlist === false){
 				document.getElementById("parentHolder").classList.add("hidden");
-			} else {
+			} else if (!data.waitlist.length){
+				document.getElementById("waitlist").innerHTML = "";
 				document.getElementById("parentHolder").classList.remove("hidden");
+			} else {
 				for (var i = 0; i<data.waitlist.length;i++){
 					if (data.waitlist[i]){
-						document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><img src='"+data.waitlist[i].chatimg+".png'>"+data.waitlist[keys[i]].chatname+"</div>"
+						if (data.waitlist[i].chatimg){
+							document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>"
+						} else {
+							document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><div class='spacer'></div>"+data.waitlist[i].chatname+"</div>"
+						}
 					}
 				}
+				document.getElementById("parentHolder").classList.remove("hidden");
 			}
-			
 			
 		}
 	}
@@ -472,6 +500,7 @@
 		if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
 		if ("dataReceived" in e.data){ // raw data
 			if ("overlayNinja" in e.data.dataReceived){
+				console.log(e.data.dataReceived.overlayNinja);
 				processInput(e.data.dataReceived.overlayNinja);
 			}
 		}

@@ -164,6 +164,9 @@ function update(response){
 			
 			document.getElementById("hypemeter").innerHTML = "<a target='_blank' id='hypemeterlink' href='https://socialstream.ninja/hype.html?session="+response.streamID+password+"'>https://socialstream.ninja/hype.html?session="+response.streamID+password+"</a>";
 			document.getElementById("hypemeter").rawURL = "https://socialstream.ninja/hype.html?session="+response.streamID+password;
+			
+			document.getElementById("waitlist").innerHTML = "<a target='_blank' id='waitlistlink' href='https://socialstream.ninja/waitlist.html?session="+response.streamID+password+"'>https://socialstream.ninja/waitlist.html?session="+response.streamID+password+"</a>";
+			document.getElementById("waitlist").rawURL = "https://socialstream.ninja/waitlist.html?session="+response.streamID+password;
 
 			document.getElementById("remote_control_url").href='https://socialstream.ninja/sampleapi.html?session='+response.streamID;
 		}
@@ -488,6 +491,15 @@ function updateSettings(ele){
 		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("&&", "&");
 		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param4", setting: ele.dataset.param4, "value": ele.checked}, function (response) {});
+	} else if (ele.dataset.param5){
+		if (ele.checked){
+			document.getElementById("waitlist").rawURL = updateURL(ele.dataset.param5, document.getElementById("waitlist").rawURL);
+		} else {
+			document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace(ele.dataset.param5, "");
+		}
+		document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace("&&", "&");
+		document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace("?&", "?");
+		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5", setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
 	} else if (ele.dataset.both){
 		if (ele.checked){
 			document.getElementById("overlay").rawURL = updateURL(ele.dataset.both, document.getElementById("overlay").rawURL);
@@ -526,6 +538,9 @@ function updateSettings(ele){
 	
 	document.getElementById("hypemeterlink").innerText = document.getElementById("hypemeter").rawURL;
 	document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").rawURL;
+	
+	document.getElementById("waitlistlink").innerText = document.getElementById("waitlist").rawURL;
+	document.getElementById("waitlistlink").href = document.getElementById("waitlist").rawURL;
 }
 
 
