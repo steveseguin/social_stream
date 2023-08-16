@@ -500,7 +500,6 @@
 		if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
 		if ("dataReceived" in e.data){ // raw data
 			if ("overlayNinja" in e.data.dataReceived){
-				console.log(e.data.dataReceived.overlayNinja);
 				processInput(e.data.dataReceived.overlayNinja);
 			}
 		}

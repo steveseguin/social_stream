@@ -1819,7 +1819,6 @@ function processWaitlist(data){
 	sendWaitlistP2P(waitlist);
 }
 function processWaitlist2(){
-	console.error("processWaitlist2");
 	if (!settings.waitlistmode){
 		waitlist = [];
 		waitListUsers = {};
