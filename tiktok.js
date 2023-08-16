@@ -145,6 +145,8 @@
 		
 		if (!chatmessage && !chatbadges){
 			return;
+		} else if (chatmessage){
+			chatmessage = chatmessage.trim();
 		}
 		
 		if (chatname && chatimg){
