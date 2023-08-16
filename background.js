@@ -1239,8 +1239,10 @@ function sendToDestinations(message){
 	}
 	
 	
-
-	sendDataP2P(message);
+	try {
+		sendDataP2P(message);
+	} catch(e){console.error(e);}
+	
 	sendToDisk(message);
 	sendToH2R(message);
 	sendToPost(message);
@@ -1693,12 +1695,9 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 	var msg = {};
 	msg.overlayNinja = data;
 	
-	try {
-		iframe.contentWindow.postMessage({"sendData":msg, "type": "pcs"}, '*'); // send only to 'viewers' of this stream
-	} catch(e){}
 	
 	if (iframe){
-		if (!uid){
+		if (connectedPeers){
 			var keys = Object.keys(connectedPeers);
 			for (var i = 0; i<keys.length;i++){
 				try {
@@ -1710,10 +1709,7 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 				} catch(e){}
 			}
 		} else {
-			var label = connectedPeers[uid] || false;
-			if (!label || (label === "dock")){
-				iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":uid}, '*');
-			}
+			iframe.contentWindow.postMessage({"sendData":msg, "type": "pcs"}, '*'); // send only to 'viewers' of this stream
 		}
 	}
 }
