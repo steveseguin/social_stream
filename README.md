@@ -88,6 +88,8 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - OpenAI chatGPT chat - (via https://chat.openai.com/chat). You must opt-in via the toggle for this though
 - live.space (Just open the basic watch page, OR, open the pop up chat @ https://live.space/popout-chat/XXXXXXXXX)
 - vstream.com (pop out chat)
+- estrim - live video chat supported
+- livestorm.io (open the 'external sidebar', which might be a plugin, and it should capture that)
 
 [More on request](#requesting-a-site)
 
