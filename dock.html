@@ -531,29 +531,29 @@
 			width: auto;
 		}
 
-		.notcompactmode>.highlight-chat>img.icon {
+		.notcompactmode .highlight-chat>img.icon {
 			top: 0px;
 			margin: 1.6px 2px auto 1px;
 		}
 
 
-		.notcompactmode>.time-arrived {
+		.notcompactmode .time-arrived {
 			margin: 8px 2px auto 1px;
 		}
 
-		.notcompactmode:not(.expand)>.time-arrived {
+		.notcompactmode div:not(.expand)>.time-arrived {
 			margin: 9.5px 2px auto 1px;
 		}
 
-		.larger-emojis.notcompactmode>.time-arrived{
+		.notcompactmode .larger-emojis>.time-arrived{
 			margin: 12px 2px auto 1px;
 		}
 
-		.larger-emojis.notcompactmode>img.icon {
+		.notcompactmode .larger-emojis>img.icon {
 			margin: 5px 2px auto 1px;
 		}
 
-		.larger-emojis.notcompactmode>.hl-name {
+		.notcompactmode .larger-emojis>.hl-name {
 			margin: 2px 5px 0 5px;
 		}
 
@@ -600,7 +600,7 @@
 		}
 
 
-		.notcompactmode>.hl-name{
+		.notcompactmode .hl-name{
 			margin: 3.14px 5px 0 5px;
 			min-width: max(135px,12vw);
 			max-width: max(220px, 25vw);
@@ -609,10 +609,34 @@
 			line-height: max(var(--author-font-size) , var(--message-line-height));
 		}
 
+		.notcompactmode .highlight-chat{
+			width:100%;
+			padding: 2px 1px;
+			margin: 0;
+			min-height:27px;
+		}
+		
 		@media only screen and (max-width: 310px){
-			.notcompactmode>.highlight-chat {
-				display: inline-block;
+			.vanilla.notcompactmode .highlight-chat {
+				display: flex;
+				flex-wrap: wrap;
+				padding: 10px 1px 8px 1px;
 			}
+			.vanilla.notcompactmode .hl-message:not(.bubble) {
+				padding: 5px 2px 0;
+			}
+			.vanilla.notcompactmode .bubble {
+				margin-top: 2px;
+			}
+			.vanilla.notcompactmode .donationAmount{
+				margin-left: auto; 
+				margin-right: 3px;
+			}
+			
+			.vanilla.notcompactmode .hl-name {
+				min-width: unset;
+			}
+			
 		}
 		@media only screen and (max-width: 180px){
 			.time-arrived {
@@ -642,13 +666,7 @@
 			height: 30px;
 			line-height: 29px;
 		}
-		.notcompactmode>.highlight-chat{
-			width:100%;
-			padding: 2px 1px;
-			margin: 0;
-			min-height:27px;
-		}
-
+		
 		.odd:not(.expand){ 
 			background-color: var(--highlight-base2);
 		}
@@ -1483,9 +1501,9 @@
 }
 	</style>
 </head>
-<body id="main" class='electronDraggable'>
-	<div id="pinned" class="output notcompactmode"></div>
-	<div id="output" class="output notcompactmode"></div>
+<body id="main" class='electronDraggable vanilla notcompactmode'>
+	<div id="pinned" class="output"></div>
+	<div id="output" class="output"></div>
 	<div id="menu" class="electronDraggable">
 		<!-- Main buttons -->
 
@@ -1650,7 +1668,8 @@
 		}
 		return item.value;
 	}
-
+	var tainted= false;
+	
 	var urlParams = new URLSearchParams(window.location.search);
 	var channel = null;
 	var iframe = null;
@@ -1895,6 +1914,7 @@
 	if (urlParams.has("largeavatar")){
 		largeavatar = true;
 	} else if (urlParams.has("twolines")){
+		tainted = true;
 		twoLines = true;
 		document.documentElement.style.setProperty("--list-or-horizontal", "block");
 		document.documentElement.style.setProperty("--time-arrived-padding", "8px");
@@ -2051,6 +2071,7 @@
 	var flexOrNotToFlex = "flex";
 
 	if (urlParams.has("horizontal")){
+		tainted = true;
 		horizontal = true;
 		flexOrNotToFlex = "inline-block";
 		document.documentElement.style.setProperty("--list-or-horizontal", flexOrNotToFlex);
@@ -2073,7 +2094,7 @@
 		document.getElementById("output").style.position = "absolute";
 		document.getElementById("output").style.textAlign = "right";
 		document.getElementById("output").style.whiteSpace = "nowrap";
-		document.getElementById("output").classList.remove("notcompactmode");
+		document.body.classList.remove("notcompactmode");
 		compactmode = true;
 		customNodeLimit = 15;
 	}
@@ -2097,7 +2118,6 @@
 	
 	if (urlParams.has("largecontent")){
 		document.getElementById("output").classList.add("largeContent");
-		
 	}
 	
 	custombot = false;
@@ -2469,7 +2489,7 @@
 
 	if (urlParams.has("compact") || urlParams.has("overlaymode")){
 		compactmode = true;
-		document.getElementById("output").classList.remove("notcompactmode");
+		document.body.classList.remove("notcompactmode");
 		//document.getElementById("menu").style.display = "none";
 	}
 
@@ -2510,7 +2530,7 @@
 		random = true;
 		// enable compact mode also
 		compactmode = true;
-		document.getElementById("output").classList.remove("notcompactmode");
+		document.body.classList.remove("notcompactmode");
 		document.getElementById("menu").style.display = "none";
 		// hide shadows
 		// <!-- position: absolute; -->
@@ -2853,6 +2873,10 @@
 	if (urlParams.has("simpletts2")){ // You don't want to hear the chatname when TTS is enabled. ＞﹏＜
 		ttsSpeakChatname = false;
 		English = false;
+	}
+	
+	if (tainted){
+		document.body.classList.remove("vanilla");
 	}
 
 	function emoji(){
@@ -4349,8 +4373,6 @@
 
 			if (compactmode && darkmode){
 				node.classList.add("compactmode");
-			} else if (!compactmode){
-				node.classList.add("notcompactmode");
 			}
 
 			if (random){
