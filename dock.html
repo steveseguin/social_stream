@@ -53,7 +53,6 @@
 			--special-bgcolor-odd: #273de433;;
 			--special-bgcolor-bubble: #0d2240d1;
 			--special-bgcolor-bubble-odd: #08244cd1;
-			
 			--bgcolor-bubble: #000D;
 			--bgcolor-bubble-odd: #111D;
 		}
@@ -616,7 +615,7 @@
 			min-height:27px;
 		}
 		
-		@media only screen and (max-width: 310px){
+		@media only screen and (max-width: 330px){
 			.vanilla.notcompactmode .highlight-chat {
 				display: flex;
 				flex-wrap: wrap;
@@ -643,6 +642,36 @@
 				display: none!important;
 			}
 		}
+		
+		@media only screen and (max-width: 660px){
+			.OBS.vanilla.notcompactmode .highlight-chat {
+				display: flex;
+				flex-wrap: wrap;
+				padding: 10px 1px 8px 1px;
+			}
+			.OBS.vanilla.notcompactmode .hl-message:not(.bubble) {
+				padding: 5px 2px 0;
+			}
+			.OBS.vanilla.notcompactmode .bubble {
+				margin-top: 2px;
+			}
+			.OBS.vanilla.notcompactmode .donationAmount{
+				margin-left: auto; 
+				margin-right: 3px;
+			}
+			
+			.OBS.vanilla.notcompactmode .hl-name {
+				min-width: unset;
+			}
+			
+		}
+		@media only screen and (max-width: 360px){
+			.OBS .time-arrived {
+				display: none!important;
+			}
+		}
+		
+		
 
 		.splitMode.hl-name{
 			text-align: right;
@@ -2753,6 +2782,8 @@
 					//compactmode=true;
 					//mainOutputWindow.classList.remove("notcompactmode");
 					scale = scale*2.0
+					
+					document.body.classList.add("OBS");
 					document.documentElement.style.setProperty("--scale-output", scale);
 					document.documentElement.style.setProperty("--scale-output-moz", "scale("+scale+")");
 					isOBSBrowserSource = true;
