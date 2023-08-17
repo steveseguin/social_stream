@@ -522,7 +522,6 @@ function updateSettings(ele){
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
 		return;
 	} else if (ele.dataset.numbersetting){
-		console.log("saving: "+ele.dataset.numbersetting);
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting", setting: ele.dataset.numbersetting, "value": ele.value}, function (response) {});
 		return;
 	}

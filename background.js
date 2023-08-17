@@ -1044,8 +1044,9 @@ chrome.runtime.onMessage.addListener(
 				}
  
 				data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
-				
-				sendToDestinations(data);
+				if (data){
+					sendToDestinations(data);
+				}
 
 			} else if (request.cmd && request.cmd === "sidUpdated") {
 				if (request.streamID){
@@ -1853,7 +1854,6 @@ function sendWaitlistP2P(data, uid=null){ // function to send data to the DOCk v
 
 ///
 
-
 function sendToDisk(data){
 	if (newFileHandle){
 		try {
@@ -2485,6 +2485,22 @@ try {
 
 async function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
+
+	if (settings.blacklistuserstoggle && data.chatname){
+		if (settings.blacklistusers && settings.blacklistusers.textsetting){
+			let block = false;
+			settings.blacklistusers.textsetting.split(",").forEach(user=>{
+				user = user.trim().toLowerCase();
+				if (user == data.chatname.toLowerCase()){
+					block=true;
+				}
+			})
+			if (block){
+				return null;
+			}
+			
+		}
+	}
 
 	if (settings.blacklist && data.chatmessage){
 		try {
