@@ -1804,7 +1804,7 @@ function processWaitlist(data){
 	if (!settings.waitlistmode){
 		return;
 	}
-	if (data.chatmessage && (data.chatmessage.startsWith("!queue"))){return;}
+	if (!data.chatmessage || (!data.chatmessage.startsWith("!queue"))){return;}
 	
 	if (waitListUsers[data.type]){
 		if (!waitListUsers[data.type][data.chatname]){
