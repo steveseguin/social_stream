@@ -236,7 +236,6 @@ function update(response){
 					}
 					if ("numbersetting" in response.settings[key]){
 						var ele = document.querySelector("input[data-numbersetting='"+key+"']");
-						console.log(ele);
 						if (ele){
 							ele.value = response.settings[key].numbersetting;
 							updateSettings(ele);
@@ -260,6 +259,27 @@ function update(response){
 						var ele = document.querySelector("select[data-optionparam2='"+key+"']");
 						if (ele){
 							ele.value = response.settings[key].optionparam2;
+							updateSettings(ele);
+						}
+					}
+					if ("optionparam3" in response.settings[key]){
+						var ele = document.querySelector("select[data-optionparam3='"+key+"']");
+						if (ele){
+							ele.value = response.settings[key].optionparam3;
+							updateSettings(ele);
+						}
+					}
+					if ("optionparam4" in response.settings[key]){
+						var ele = document.querySelector("select[data-optionparam4='"+key+"']");
+						if (ele){
+							ele.value = response.settings[key].optionparam4;
+							updateSettings(ele);
+						}
+					}
+					if ("optionparam5" in response.settings[key]){
+						var ele = document.querySelector("select[data-optionparam5='"+key+"']");
+						if (ele){
+							ele.value = response.settings[key].optionparam5;
 							updateSettings(ele);
 						}
 					}
@@ -463,6 +483,62 @@ function updateSettings(ele){
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2", setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
+	///
+	} else if (ele.dataset.optionparam3){
+		
+		var tmp = document.getElementById("emoteswall").rawURL.split("&"+ele.dataset.optionparam3);
+		if (tmp.length>1){
+			var tt = tmp[1].split("&");
+			if (tt.length){
+				tt.shift();
+			}
+			tt = tt.join("&");
+			document.getElementById("emoteswall").rawURL = tmp[0] + tt;
+		} else {
+			document.getElementById("emoteswall").rawURL = tmp[0];
+		}
+		document.getElementById("emoteswall").rawURL = updateURL(ele.dataset.optionparam3+"="+encodeURIComponent(ele.value), document.getElementById("emoteswall").rawURL);
+		
+		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("&&", "&");
+		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("?&", "?");
+		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam3", setting: ele.dataset.optionparam3, "value": ele.value}, function (response) {});
+	} else if (ele.dataset.optionparam4){
+		
+		var tmp = document.getElementById("hypemeter").rawURL.split("&"+ele.dataset.optionparam4);
+		if (tmp.length>1){
+			var tt = tmp[1].split("&");
+			if (tt.length){
+				tt.shift();
+			}
+			tt = tt.join("&");
+			document.getElementById("hypemeter").rawURL = tmp[0] + tt;
+		} else {
+			document.getElementById("hypemeter").rawURL = tmp[0];
+		}
+		document.getElementById("hypemeter").rawURL = updateURL(ele.dataset.optionparam4+"="+encodeURIComponent(ele.value), document.getElementById("hypemeter").rawURL);
+		
+		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("&&", "&");
+		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("?&", "?");
+		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
+	} else if (ele.dataset.optionparam5){
+		
+		var tmp = document.getElementById("waitlist").rawURL.split("&"+ele.dataset.optionparam5);
+		if (tmp.length>1){
+			var tt = tmp[1].split("&");
+			if (tt.length){
+				tt.shift();
+			}
+			tt = tt.join("&");
+			document.getElementById("waitlist").rawURL = tmp[0] + tt;
+		} else {
+			document.getElementById("waitlist").rawURL = tmp[0];
+		}
+		document.getElementById("waitlist").rawURL = updateURL(ele.dataset.optionparam5+"="+encodeURIComponent(ele.value), document.getElementById("waitlist").rawURL);
+		
+		document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace("&&", "&");
+		document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace("?&", "?");
+		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam5", setting: ele.dataset.optionparam5, "value": ele.value}, function (response) {});
+	//
 	} else if (ele.dataset.param2){
 		if (ele.checked){
 			document.getElementById("overlay").rawURL = updateURL(ele.dataset.param2, document.getElementById("overlay").rawURL);

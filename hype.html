@@ -10,6 +10,7 @@
 		:root {
 			--font-color: #000;
 			--font-color-name: #DDD;
+			--font-family: 'Sora', Roboto, Arial, sans-serif;
 			--background-color: #0000;
 			--font-size: 300%;
 			--electron-drag-fix: drag;
@@ -19,8 +20,74 @@
 			--padding: 15px;
 			--outline: 1px;
 		}
+		
+		
+
+		/* example of how to remotely load a font */
+		@font-face {
+		  font-family: 'opendyslexic';
+			src: url('https://vdo.ninja/examples/OpenDyslexic-Regular.otf');
+			font-style: normal;
+			font-weight: normal;
+		} 
+
+		/* latin-ext */
+		@font-face {
+			font-family: 'Sora';
+			font-style: normal;
+			font-weight: 200;
+			font-display: swap;
+			src: url(./thirdparty//xMQbuFFYT72XzQspDre2.woff2) format('woff2');
+			unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+		}
+		/* latin */
+		@font-face {
+			font-family: 'Sora';
+			font-style: normal;
+			font-weight: 200;
+			font-display: swap;
+			src: url(./thirdparty//xMQbuFFYT72XzQUpDg.woff2) format('woff2');
+			unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+		}
+		/* latin-ext */
+		@font-face {
+			font-family: 'Sora';
+			font-style: normal;
+			font-weight: 400;
+			font-display: swap;
+			src: url(./thirdparty/xMQbuFFYT72XzQspDre2.woff2) format('woff2');
+			unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+		}
+		/* latin */
+		@font-face {
+			font-family: 'Sora';
+			font-style: normal;
+			font-weight: 400;
+			font-display: swap;
+			src: url(./thirdparty//xMQbuFFYT72XzQUpDg.woff2) format('woff2');
+			unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+		}
+		/* latin-ext */
+		@font-face {
+			font-family: 'Sora';
+			font-style: normal;
+			font-weight: 700;
+			font-display: swap;
+			src: url(./thirdparty//xMQbuFFYT72XzQspDre2.woff2) format('woff2');
+			unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+		}
+		/* latin */
+		@font-face {
+			font-family: 'Sora';
+			font-style: normal;
+			font-weight: 700;
+			font-display: swap;
+			src: url(./thirdparty//xMQbuFFYT72XzQUpDg.woff2) format('woff2');
+			unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+		}
 
 		body {
+			font-family: var(--font-family);
 			-moz-transform-origin: 0 0;
 			width:100%;
 			height:100%;
@@ -33,6 +100,12 @@
 			animation: fadeInAnimation ease 1s;
 			animation-iteration-count: 1;
 			animation-fill-mode: forwards;
+			color: var(--font-color);
+			font-weight: 700;
+			background-color: var(--background-color);
+			-webkit-text-fill-color: white;
+			-webkit-text-stroke: var(--outline);
+			scrollbar-color:#666 #201c29;
 		}
 
 		.el { 
@@ -56,18 +129,6 @@
 		  100% {
 			transform: translateY(calc(100vh - var(--width)));
 		  }
-		}
-
-		body {
-			font-family: Roboto, Arial, Roboto, sans-serif;
-			color: var(--font-color);
-			margin: 0 0;
-			background-color: var(--background-color);
-			-webkit-text-fill-color: white;
-			-webkit-text-stroke: var(--outline);
-			overflow-x: hidden;
-			scrollbar-color:#666 #201c29;
-			font-weight: 700;
 		}
 
 		::-webkit-scrollbar {
@@ -304,6 +365,10 @@
 	var password = "false";
 	if (urlParams.has("password")){
 		password = urlParams.get("password") || "false";
+	}
+	
+	if (urlParams.get("font")){
+		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", 'Sora', Roboto, Arial, sans-serif");
 	}
 
 	if (urlParams.has('css')){
