@@ -8,8 +8,8 @@
 	<link rel="icon" href="./icons/favicon.ico" />
 	<style>
 		:root {
-			--font-color: #000;
-			--font-color-name: #DDD;
+			--font-color: #FFF;
+			--font-color-title: #FFF;
 			--font-family: 'Sora', Roboto, Arial, sans-serif;
 			--background-color: #0000;
 			--font-size: 300%;
@@ -18,10 +18,8 @@
 			--x-speed: 13s;
 			--y-speed: 7s;
 			--padding: 15px;
-			--outline: 1px;
+			--outline: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 		}
-		
-		
 
 		/* example of how to remotely load a font */
 		@font-face {
@@ -103,8 +101,7 @@
 			color: var(--font-color);
 			font-weight: 700;
 			background-color: var(--background-color);
-			-webkit-text-fill-color: white;
-			-webkit-text-stroke: var(--outline);
+			text-shadow: var(--outline);
 			scrollbar-color:#666 #201c29;
 		}
 
@@ -241,6 +238,7 @@
 			
 		}
 		#hypetitle{
+			color: var(--font-color-title);
 			padding: 10px;
 			font-size: calc(var(--font-size) / 2);
 			display: flex;
@@ -483,14 +481,16 @@
 	}
 
 	if (darkmode){
-	    //document.documentElement.style.setProperty("--background-color", "#000");
+	
 	} else if (darkmode === null){ // defaultmode
 		darkmode = true;
 	} else {
 		document.body.classList.add("lightmode");
-		document.documentElement.style.setProperty("--font-color-name", "#000");
-		//document.documentElement.style.setProperty("--background-color", "#FFF0");
+		document.documentElement.style.setProperty("--font-color-title", "#000");
 		document.documentElement.style.setProperty("--font-color", "#000");
+		if (!urlParams.has("nooutline")){
+			document.documentElement.style.setProperty("--outline", "-1px -1px 0 #FFF, 1px -1px 0 #FFF, -1px 1px 0 #FFF, 1px 1px 0 #FFF;");
+		}
 	}
 
 	if (urlParams.has("transparent")){
