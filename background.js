@@ -1029,7 +1029,7 @@ chrome.runtime.onMessage.addListener(
 					data.hasMembership =  '<div class="donation membership">SPONSORSHIP</div>';
 					data.chatname = "Steve1234567890123";
 					data.type = "facebook";
-					data.chatmessage  = "The only way to do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
+					data.chatmessage  = "!queue The only way to do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
 				} else if (Math.random()>0.2){
 					data.hasDonation = "";
 					data.hasMembership = "";
