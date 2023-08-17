@@ -462,10 +462,10 @@
 
 	function processInput(data){
 		if ("waitlist" in data){
+			document.getElementById("waitlist").innerHTML = "";
 			if (data.waitlist === false){
 				document.getElementById("parentHolder").classList.add("hidden");
 			} else if (!data.waitlist.length){
-				document.getElementById("waitlist").innerHTML = "";
 				document.getElementById("parentHolder").classList.remove("hidden");
 			} else {
 				for (var i = 0; i<data.waitlist.length;i++){
