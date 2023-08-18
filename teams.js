@@ -119,7 +119,7 @@
 
 		var msg = "";
 		try {
-			msg = escapeHtml(ele.querySelector('.ui-chat__message__content, .ui-chat__messagecontent').innerText);
+			msg = getAllContentNodes(ele.querySelector('.ui-chat__message__content, .ui-chat__messagecontent'));
 		} catch(e){}
 		
 		if (msg){
@@ -254,7 +254,7 @@
 						} catch(e){}
 						
 						try {
-							ele = document.body.querySelector(".cke_textarea_inline[contenteditable='true'], div[role='textbox']>p[data-placeholder]");
+							ele = document.body.querySelector(".cke_textarea_inline[contenteditable='true']>p, div[role='textbox']>p[data-placeholder]");
 							if (ele){
 								ele.focus();
 								sendResponse(false);
@@ -335,7 +335,8 @@
 			}
 		});
 		try{
-			if (document.querySelector('context-message-pane, [data-tid="message-pane-body"]')){
+			if (document.querySelector('context-message-pane, [data-tid="message-pane-body"]')){ // enterprise friendly
+
 				if (!document.querySelector('context-message-pane, [data-tid="message-pane-body"]').marked){
 					console.log("!!!!!!!!!!!!!!!!!! ACTIVATED?");
 					lastName = "";
