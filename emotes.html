@@ -540,6 +540,9 @@
 		text = text.replace("'","");
 		
 		let emojis = [];
+		
+		// 🏻
+		
 		emojis = text.replace(/([\u0145-\u0148]|[\u1F1E1-\u1F1FF]|\u2026)/ig, "");
 		
 		emojis = emojis.replace(/[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDE8-\uDDFF][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDEA-\uDDF8][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDEC-\uDDF9][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDEE-\uDDF9][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDF0-\uDDF7][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDF8-\uDDFF][\uD83C][\uDDE6-\uDDFF]/g, ""); // country codes
@@ -643,6 +646,8 @@
 				node2.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
 				
 				node2.style.animationDelay = Math.random()*-35*speed+"s";
+				
+				if (["🏻","🏼","🏾","🏾","🏾"].includes(img)){return;} // we will not process skin tones only, as likely a glitch.
 				
 				node2.innerText = img;
 				node.appendChild(node2);
