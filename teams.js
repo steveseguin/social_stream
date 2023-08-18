@@ -319,16 +319,16 @@
 	setInterval(function(){
 		
 		document.querySelectorAll('iframe').forEach( item =>{
-			if (item && item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"], [data-tid="message-pane-body"]')){
-				if (!item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"], [data-tid="message-pane-body"]').marked){
+			if (item && item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]')){
+				if (!item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]').marked){
 					console.log("!!!!!!!!!!!!!!!!!! ACTIVATED? in iframe");
 					lastName = "";
 					lastImage = "";
-					item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"], [data-tid="message-pane-body"]').marked=true;
+					item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]').marked=true;
 					
 					setTimeout(function(ele){
 						onElementInserted(ele, processMessage);
-					},1000, item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"], [data-tid="message-pane-body"]'));
+					},1000, item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]'));
 					
 					startListener();
 				}
