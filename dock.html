@@ -3418,7 +3418,7 @@
 				}
 			}
 			return;
-		} else if ("deleteMessage" in data){
+		} else if ("deleteMessage" in data){ // delete by message ID
 			//if (syncDocks){
 				try{
 					var ele = document.querySelector("[data-mid='"+data.deleteMessage+"']");
@@ -3428,6 +3428,31 @@
 					return true
 				} catch(e){}
 			//}
+			return;
+		} else if ("delete" in data){ // we will trigger a deleteMessage I guess after, if sync mode is needed.
+			try{
+				
+				if (data.delete.chatname && data.delete.type){
+					document.querySelectorAll("[data-chatname='"+data.delete.chatname+"'][data-source-type='"+data.delete.type+"']").forEach(ele=>{
+						if (ele && ele.dataset.mid){
+							deleteMessage(ele);
+						}
+					});
+				} else if (data.delete.type){
+					document.querySelectorAll("[data-source-type='"+data.delete.type+"']").forEach(ele=>{
+						if (ele && ele.dataset.mid){
+							deleteMessage(ele);
+						}
+					});
+				} else if (data.delete.chatname){
+					document.querySelectorAll("[data-chatname='"+data.delete.chatname+"']").forEach(ele=>{
+						if (ele && ele.dataset.mid){
+							deleteMessage(ele);
+						}
+					});
+				}
+				return true
+			} catch(e){console.error(e);}
 			return;
 		} else if ("stripe" in data){
 			try{
@@ -4131,8 +4156,10 @@
 			} else {
 				data.hasDonation = "";
 			}
-
+			var rawName = false;
+			
 			if (data.chatname){
+				rawName = data.chatname;
 				if (stripHTML){
 					data.chatname = stripHtmlFunction(data.chatname);
 				}
@@ -4518,6 +4545,9 @@
 					customNodeLimit = 20;
 				}
 
+			}
+			if (rawName){
+				node.dataset.chatname = rawName; // before its been parsed; this allows for clean deletion.
 			}
 			// this part is used to filter out emojis, but also calculate the character-length of a message, to know how long to show it for
 			// emojis and images are counted with char-length zero-value

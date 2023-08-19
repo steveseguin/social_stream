@@ -636,6 +636,8 @@
 		if (emojis){
 			
 			emojis.forEach(img=>{
+				if (["🏻","🏼","🏾","🏾","🏾"].includes(img)){return;} // we will not process skin tones only, as likely a glitch.
+				
 				var node = document.createElement('div');
 				var node2 = document.createElement('div');
 				
@@ -647,7 +649,7 @@
 				
 				node2.style.animationDelay = Math.random()*-35*speed+"s";
 				
-				if (["🏻","🏼","🏾","🏾","🏾"].includes(img)){return;} // we will not process skin tones only, as likely a glitch.
+				
 				
 				node2.innerText = img;
 				node.appendChild(node2);

@@ -106,7 +106,7 @@
 	var lastMessage = "";
 	var lastUser  = "";
 	
-	
+	//var midList = [];
 	
 	function processMessage(ele){	// twitch
 
@@ -198,8 +198,6 @@
 				} else {
 					donations = escapeHtml(eleContent[0].textContent);
 				}
-			
-			
 			
 		  } catch(e){}
 	   }
@@ -301,7 +299,12 @@
 		data.sourceImg = brandedImageURL;
 	  }
 	  try {
-		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){
+			if ("mid" in e){
+				ele.dataset.mid = e.mid;
+				//midList.push(e.mid);
+			}
+		});
 	  } catch(e){
 		  //
 	  }
@@ -360,10 +363,28 @@
 	  }
 	  
 	  try {
-		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){
+		});
 	  } catch(e){
 		  //
 	  }
+	}
+	
+	function deleteThis(ele){
+		try {
+			var chatname = ele.querySelector(".chat-author__display-name, .chatter-name, .seventv-chat-user-username");
+			if (chatname){
+				var data = {};
+				data.chatname = escapeHtml(chatname.innerText);
+				data.type = "twitch";
+				try {
+					chrome.runtime.sendMessage(chrome.runtime.id, { "delete": data }, function(e){
+					});
+				} catch(e){
+				  //
+				}
+			}
+		} catch(e){}
 	}
 
 	function onElementInsertedTwitch(target, callback) {
@@ -374,9 +395,16 @@
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							
+							if (mutation.addedNodes[i].dataset.aTarget=="chat-deleted-message-placeholder"){
+								deleteThis(mutation.addedNodes[i]);
+								continue;
+							} else if (mutation.addedNodes[i].querySelector('[data-a-target="chat-deleted-message-placeholder"]')){
+								deleteThis(mutation.addedNodes[i]);
+								continue;
+							}
+							
 							if (mutation.addedNodes[i].ignore){continue;}
 							mutation.addedNodes[i].ignore=true;
-							
 							
 							if (mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message") || ( mutation.addedNodes[i].querySelector && mutation.addedNodes[i].querySelector(".paid-pinned-chat-message-content-wrapper")))) {
 								mutation.addedNodes[i].ignore=true;

@@ -903,15 +903,41 @@ chrome.runtime.onMessage.addListener(
 						});
 					});
 				}
+			} else if ("delete" in request) {
+				sendResponse({"state":isExtensionOn});
+				if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)){
+					sendToDestinations({"delete": request.delete});
+				}
 			} else if ("message" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
-				sendResponse({"state":isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
-
+				
 				if (isExtensionOn && request.message.type){
+					
 					if (!checkIfAllowed(request.message.type)){ // toggled is not enabled for this site
+						sendResponse({"state":isExtensionOn});
+						return;
+					}
+					
+					if (settings.filtercommands && request.message.chatmessage && request.message.chatmessage.startsWith("!")){
+						sendResponse({"state":isExtensionOn});
 						return;
 					}
 
+					if (settings.firstsourceonly){
+						if (!verifyOriginal(request.message)){
+							sendResponse({"state":isExtensionOn});
+							return;
+						}
+					}
+					
+					if (!request.message.id){
+						messageCounter+=1;
+						request.message.id = messageCounter;
+						sendResponse({"state":isExtensionOn, "mid":request.message.id}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
+					} else {
+						sendResponse({"state":isExtensionOn});
+					}
+					
 					if (request.message.type == "youtube"){
 						if (sender.tab.url){
 							var brandURL = getYoutubeAvatarImage(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
@@ -926,18 +952,9 @@ chrome.runtime.onMessage.addListener(
 						if (request.message===null){return;}
 					} catch(e){console.log(e);}
 
-
-					if (settings.filtercommands && request.message.chatmessage && request.message.chatmessage.startsWith("!")){
-						return;
-					}
-
-					if (settings.firstsourceonly){
-						if (!verifyOriginal(request.message)){
-							return;
-						}
-					}
-
 					sendToDestinations(request.message); // send the data to the dock
+				} else {
+					sendResponse({"state":isExtensionOn});
 				}
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				sendResponse({"settings":settings, isExtensionOn:isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
@@ -1221,26 +1238,29 @@ var messageCounter = 0;
 function sendToDestinations(message){
 
 	if (typeof message == "object"){
-		messageCounter+=1;
-		message.id = messageCounter;
-	}
-	if (message.chatname){
-		message.chatname = filterXSS(message.chatname); // I do escapeHtml at the point of capture instead
-	}
-	
-	if (message.chatmessage){
-		message.chatmessage = filterXSS(message.chatmessage);
-	}
-	
-	if (settings.randomcolor && message && !message.nameColor && message.chatname){
-		message.nameColor = getColorFromName(message.chatname);
-	} else if (settings.randomcolorall && message && message.chatname){
-		message.nameColor = getColorFromName(message.chatname);
-	}
-	
-	if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.chatmessage && message.event){
-		if (settings.filterevents.textsetting.split(",").some(v => message.chatmessage.includes(v))) {
-			return false;
+		if (!message.id){
+			messageCounter+=1;
+			message.id = messageCounter;
+		}
+		
+		if (message.chatname){
+			message.chatname = filterXSS(message.chatname); // I do escapeHtml at the point of capture instead
+		}
+		
+		if (message.chatmessage){
+			message.chatmessage = filterXSS(message.chatmessage);
+		}
+		
+		if (settings.randomcolor && message && !message.nameColor && message.chatname){
+			message.nameColor = getColorFromName(message.chatname);
+		} else if (settings.randomcolorall && message && message.chatname){
+			message.nameColor = getColorFromName(message.chatname);
+		}
+		
+		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.chatmessage && message.event){
+			if (settings.filterevents.textsetting.split(",").some(v => message.chatmessage.includes(v))) {
+				return false;
+			}
 		}
 	}
 	
