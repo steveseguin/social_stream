@@ -153,8 +153,6 @@ var password = false;
 
 function loadSettings(item, resave=false){
 	
-	console.log(item);
-	
 	if (item && item.streamID){
 		channel = item.streamID;
 		if (resave){
@@ -889,6 +887,17 @@ chrome.runtime.onMessage.addListener(
 						} 
 						if (i){
 							checkIntervalState(i);
+						}
+					}
+				}
+				
+				if (isExtensionOn){
+					if ((request.setting == "blacklistuserstoggle") || (request.setting == "blacklistusers")){
+						if (settings.blacklistusers && settings.blacklistuserstoggle){
+							settings.blacklistusers.textsetting.split(",").forEach(user=>{
+								user = user.trim();
+								sendToDestinations({"delete": {chatname:user}});
+							});
 						}
 					}
 				}
@@ -1972,12 +1981,50 @@ function processIncomingRequest(request){
 	} else if ("action" in request){
 		if (request.action === "openChat"){
 			openchat(request.value || null); 
+		} else if (request.action === "blockUser"){ // {chatname:chatName, type:type
+			if (settings.blacklistusers && settings.blacklistusers.textsetting && request.value && request.value.chatname){
+				var matched = false;
+				settings.blacklistusers.textsetting.split(",").forEach(user=>{
+					user = user.trim();
+					if (user && (request.value.chatname === user)){
+						matched = false;
+					}
+				});
+				if (!matched){
+					settings.blacklistusers.textsetting += ","+request.value.chatname;
+					
+					chrome.storage.local.set({
+						settings: settings
+					});
+					chrome.runtime.lastError;
+				
+					if (settings.blacklistuserstoggle && isExtensionOn){ 
+						sendToDestinations({"delete": {chatname:request.value.chatname, type:request.value.type||false}});
+					}
+				}
+				
+			} else if (request.value && request.value.chatname){
+				settings.blacklistusers = {};
+				settings.blacklistusers.textsetting = request.value.chatname;
+				settings.blacklistusers.value = request.value.chatname;
+				
+				chrome.storage.local.set({
+					settings: settings
+				});
+				chrome.runtime.lastError;
+		
+				if (settings.blacklistuserstoggle && isExtensionOn){
+					sendToDestinations({"delete": {chatname:request.value.chatname, type:request.value.type||false}});
+				}
+			}
+			
 		}
 	}
 }
 
 var connectedPeers = {};	
 eventer(messageEvent, async function (e) {
+	// iframe wno't be enabled if isExtensionOn is off, so allow this.
 	if (e.source != iframe.contentWindow){return}
 	if (e.data && (typeof e.data == "object")){
 		if (("dataReceived" in e.data) && ("overlayNinja" in e.data.dataReceived)){

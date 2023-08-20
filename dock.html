@@ -1664,6 +1664,12 @@
 					<span>Delete Message</span>
 				</a>
 			</li>
+			<li class="context-menu__item"  data-action="Block">
+				<a href="#" class="context-menu__link" data-action="Block">
+					<i class="las la-external-link"></i>
+					<span>Block User</span>
+				</a>
+			</li>
 			<li class="context-menu__item" data-action="Queue">
 				<a href="#" class="context-menu__link" data-action="Queue">
 					<i class="las la-paperclip"></i>
@@ -2891,9 +2897,12 @@
 	if (urlParams.has("sync") || urlParams.has("synced")){
 		syncDocks = true;
 		try {
-			if (blockMessageSelecting2 || blockMessageSelecting){
+			if (blockMessageSelecting2 || blockMessageSelecting){ 
 				document.querySelector('[data-action="Delete"] span').innerText = "Delete Message (locally only)";
 				document.querySelector('[data-action="Delete"]').title = "Using chat/view-only mode disables the ability to syncronize deleted messages with other docks";
+			}
+			if (blockMessageSelecting2 || blockMessageSelecting){ 
+				document.querySelector('[data-action="Block"]').classList.add("hidden");
 			}
 		} catch(e){
 		}
@@ -3844,6 +3853,17 @@
 	function deleteMessage(element){
 		syncDataP2P({deleteMessage: element.dataset.mid}, false, true);
 		element.remove();
+	}
+	
+	function blockUser(element){
+		var chatName = element.dataset.chatname;
+		var type = element.dataset.sourceType;
+		if (chatName && type){
+			document.querySelectorAll("[data-chatname='"+chatName+"'][data-source-type='"+type+"']").forEach(ele=>{
+				deleteMessage(ele);
+			});
+			send2Extension({action:"blockUser", value:{chatname:chatName, type:type}});
+		}
 	}
 
 	function filterQueued(){ // #show_only_queue
@@ -5332,6 +5352,8 @@
 			async function menuItemListener(link) {
 				if (link.getAttribute("data-action") === "Delete") {
 					deleteMessage(taskItemInContext);
+				} else if (link.getAttribute("data-action") === "Block") {
+					blockUser(taskItemInContext);
 				} else if (link.getAttribute("data-action") === "Pin") {
 					if (taskItemInContext.classList.contains("pinned")){
 						unpinIt(taskItemInContext);
