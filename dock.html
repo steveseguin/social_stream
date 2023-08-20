@@ -1664,7 +1664,7 @@
 					<span>Delete Message</span>
 				</a>
 			</li>
-			<li class="context-menu__item"  data-action="Block">
+			<li class="context-menu__item" data-action="Block" title="All messages from user will be deleted; user will also get added to the hide-user list">
 				<a href="#" class="context-menu__link" data-action="Block">
 					<i class="las la-external-link"></i>
 					<span>Block User</span>
@@ -3439,9 +3439,17 @@
 			//}
 			return;
 		} else if ("delete" in data){ // we will trigger a deleteMessage I guess after, if sync mode is needed.
-			try{
-				
+			try {
 				if (data.delete.chatname && data.delete.type){
+					if (localBlockUserList[data.delete.chatname]){
+						if (!(localBlockUserList[data.delete.chatname].includes(data.delete.type))){
+							localBlockUserList[data.delete.chatname].push(data.delete.type);
+						}
+					} else {
+						localBlockUserList[data.delete.chatname] = []
+						localBlockUserList[data.delete.chatname].push(data.delete.type);
+					}
+				
 					document.querySelectorAll("[data-chatname='"+data.delete.chatname+"'][data-source-type='"+data.delete.type+"']").forEach(ele=>{
 						if (ele && ele.dataset.mid){
 							deleteMessage(ele);
@@ -3855,10 +3863,22 @@
 		element.remove();
 	}
 	
+	var localBlockUserList = false;
 	function blockUser(element){
 		var chatName = element.dataset.chatname;
 		var type = element.dataset.sourceType;
+		if (!localBlockUserList){
+			localBlockUserList = {};
+		}
 		if (chatName && type){
+			if (localBlockUserList[chatName]){
+				if (!(type in localBlockUserList[chatName])){
+					localBlockUserList[chatName].push(type);
+				}
+			} else {
+				localBlockUserList[chatName] = []
+				localBlockUserList[chatName].push(type);
+			}
 			document.querySelectorAll("[data-chatname='"+chatName+"'][data-source-type='"+type+"']").forEach(ele=>{
 				deleteMessage(ele);
 			});
@@ -4180,6 +4200,16 @@
 					data.chatname = stripHtmlFunction(data.chatname);
 				}
 				data.chatname = data.chatname.trim();
+				
+				if (localBlockUserList){
+					if (localBlockUserList[rawName]){
+						if (localBlockUserList[rawName].includes(data.type)){
+							return; // blocked locally
+						} else if (localBlockUserList[rawName].includes("*")){
+							return; // blocked locally
+						}
+					} 
+				}
 				
 			} else {
 				data.chatname = "";

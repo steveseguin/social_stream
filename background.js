@@ -1987,7 +1987,7 @@ function processIncomingRequest(request){
 				settings.blacklistusers.textsetting.split(",").forEach(user=>{
 					user = user.trim();
 					if (user && (request.value.chatname === user)){
-						matched = false;
+						matched = true;
 					}
 				});
 				if (!matched){
