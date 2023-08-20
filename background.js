@@ -1982,7 +1982,7 @@ function processIncomingRequest(request){
 		if (request.action === "openChat"){
 			openchat(request.value || null); 
 		} else if (request.action === "blockUser"){ // {chatname:chatName, type:type
-			if (settings.blacklistusers && settings.blacklistusers.textsetting && request.value && request.value.chatname){
+			if (settings.blacklistusers && settings.blacklistusers.textsetting && request.value && request.value.chatname && request.value.type){
 				var matched = false;
 				settings.blacklistusers.textsetting.split(",").forEach(user=>{
 					user = user.trim();
@@ -1997,13 +1997,11 @@ function processIncomingRequest(request){
 						settings: settings
 					});
 					chrome.runtime.lastError;
-				
-					if (settings.blacklistuserstoggle && isExtensionOn){ 
-						sendToDestinations({"delete": {chatname:request.value.chatname, type:request.value.type||false}});
-					}
 				}
-				
-			} else if (request.value && request.value.chatname){
+				if (isExtensionOn){ 
+					sendToDestinations({"blockUser": {chatname: request.value.chatname, type: request.value.type}});
+				}
+			} else if (request.value && request.value.chatname && request.value.type){
 				settings.blacklistusers = {};
 				settings.blacklistusers.textsetting = request.value.chatname;
 				settings.blacklistusers.value = request.value.chatname;
@@ -2013,8 +2011,8 @@ function processIncomingRequest(request){
 				});
 				chrome.runtime.lastError;
 		
-				if (settings.blacklistuserstoggle && isExtensionOn){
-					sendToDestinations({"delete": {chatname:request.value.chatname, type:request.value.type||false}});
+				if (isExtensionOn){
+					sendToDestinations({"blockUser": {chatname:  request.value.chatname, type: request.value.type}});
 				}
 			}
 			

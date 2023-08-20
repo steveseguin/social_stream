@@ -3427,7 +3427,7 @@
 				}
 			}
 			return;
-		} else if ("deleteMessage" in data){ // delete by message ID
+		} else if ("deleteMessage" in data){ // delete by message ID; likely another dock is syncing their delete with me
 			//if (syncDocks){
 				try{
 					var ele = document.querySelector("[data-mid='"+data.deleteMessage+"']");
@@ -3438,34 +3438,62 @@
 				} catch(e){}
 			//}
 			return;
+		} else if ("blockUser" in data){ //delete messages, but also block user. remote, so we won't sync,
+			try {
+				if (data.blockUser.chatname && data.blockUser.type){
+				
+					if (!localBlockUserList){
+						localBlockUserList = {};
+					}
+					
+					if (localBlockUserList[data.blockUser.chatname]){
+						if (!(localBlockUserList[data.blockUser.chatname].includes(data.blockUser.type))){
+							localBlockUserList[data.blockUser.chatname].push(data.blockUser.type);
+						}
+					} else {
+						localBlockUserList[data.blockUser.chatname] = [data.blockUser.type];
+					}
+				
+					document.querySelectorAll("[data-chatname='"+data.blockUser.chatname+"'][data-source-type='"+data.blockUser.type+"']").forEach(ele=>{
+						ele.remove();
+					});
+					
+					 
+				} else if (data.blockUser.chatname){
+				
+					if (!localBlockUserList){
+						localBlockUserList = {};
+					}
+					
+					if (localBlockUserList[data.blockUser.chatname]){
+						if (!(localBlockUserList[data.blockUser.chatname].includes("*"))){
+							localBlockUserList[data.blockUser.chatname].push("*");
+						}
+					} else {
+						localBlockUserList[data.blockUser.chatname] = ["*"];
+					}
+				
+					document.querySelectorAll("[data-chatname='"+data.blockUser.chatname+"']").forEach(ele=>{
+						ele.remove();
+					});
+				}
+				return true
+			} catch(e){console.error(e);}
+			return;
 		} else if ("delete" in data){ // we will trigger a deleteMessage I guess after, if sync mode is needed.
 			try {
 				if (data.delete.chatname && data.delete.type){
-					if (localBlockUserList[data.delete.chatname]){
-						if (!(localBlockUserList[data.delete.chatname].includes(data.delete.type))){
-							localBlockUserList[data.delete.chatname].push(data.delete.type);
-						}
-					} else {
-						localBlockUserList[data.delete.chatname] = []
-						localBlockUserList[data.delete.chatname].push(data.delete.type);
-					}
-				
+					
 					document.querySelectorAll("[data-chatname='"+data.delete.chatname+"'][data-source-type='"+data.delete.type+"']").forEach(ele=>{
-						if (ele && ele.dataset.mid){
-							deleteMessage(ele);
-						}
+						ele.remove();
 					});
 				} else if (data.delete.type){
 					document.querySelectorAll("[data-source-type='"+data.delete.type+"']").forEach(ele=>{
-						if (ele && ele.dataset.mid){
-							deleteMessage(ele);
-						}
+						ele.remove();
 					});
 				} else if (data.delete.chatname){
 					document.querySelectorAll("[data-chatname='"+data.delete.chatname+"']").forEach(ele=>{
-						if (ele && ele.dataset.mid){
-							deleteMessage(ele);
-						}
+						ele.remove();
 					});
 				}
 				return true
@@ -3876,11 +3904,10 @@
 					localBlockUserList[chatName].push(type);
 				}
 			} else {
-				localBlockUserList[chatName] = []
-				localBlockUserList[chatName].push(type);
+				localBlockUserList[chatName] = [type]
 			}
 			document.querySelectorAll("[data-chatname='"+chatName+"'][data-source-type='"+type+"']").forEach(ele=>{
-				deleteMessage(ele);
+				ele.remove();
 			});
 			send2Extension({action:"blockUser", value:{chatname:chatName, type:type}});
 		}
