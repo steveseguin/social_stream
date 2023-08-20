@@ -152,6 +152,9 @@ var channel = generateStreamID();
 var password = false;
 
 function loadSettings(item, resave=false){
+	
+	console.log(item);
+	
 	if (item && item.streamID){
 		channel = item.streamID;
 		if (resave){
@@ -523,7 +526,7 @@ async function importSettings(item){
 	try {
 		var importFile = await importFileHandler[0].getFile();
 		importFile = await importFile.text();
-		loadSettings(JSON.parse(importFile));
+		loadSettings(JSON.parse(importFile), true);
 	} catch(e){
 		alert("File does not contain a valid JSON structure");
 	}
@@ -1821,33 +1824,37 @@ function sendHypeP2P(data, uid=null){ // function to send data to the DOCk via t
 var waitListUsers = {};
 var waitlist = [];
 function processWaitlist(data){
-	if (!settings.waitlistmode){
-		return;
-	}
-	if (!data.chatmessage || (!data.chatmessage.startsWith("!queue"))){return;}
-	
-	if (waitListUsers[data.type]){
-		if (!waitListUsers[data.type][data.chatname]){
+	try {
+		if (!settings.waitlistmode){
+			return;
+		}
+		if (!data.chatmessage || (!data.chatmessage.startsWith("!queue"))){return;}
+		
+		if (waitListUsers[data.type]){
+			if (!waitListUsers[data.type][data.chatname]){
+				waitlist.push(data);
+			}
+			waitListUsers[data.type][data.chatname] = Date.now();
+		} else {
+			var site = {};
+			site[data.chatname] = Date.now();
+			waitListUsers[data.type] = site;
 			waitlist.push(data);
 		}
-		waitListUsers[data.type][data.chatname] = Date.now();
-	} else {
-		var site = {};
-		site[data.chatname] = Date.now();
-		waitListUsers[data.type] = site;
-		waitlist.push(data);
-	}
-	sendWaitlistP2P(waitlist);
+		sendWaitlistP2P(waitlist);
+	} catch(e){}
 }
 function processWaitlist2(){
-	if (!settings.waitlistmode){
-		waitlist = [];
-		waitListUsers = {};
-		
-		sendWaitlistP2P(false);
-		return;
-	}
-	sendWaitlistP2P(waitlist);
+	try {
+		if (!settings.waitlistmode){
+			waitlist = [];
+			waitListUsers = {};
+			
+			sendWaitlistP2P(false);
+			return;
+		}
+		sendWaitlistP2P(waitlist);
+	} catch(e){}
 }
 function sendWaitlistP2P(data, uid=null){ // function to send data to the DOCk via the VDO.Ninja API
 	
@@ -2505,118 +2512,122 @@ try {
 
 async function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
-
-	if (settings.blacklistuserstoggle && data.chatname){
-		if (settings.blacklistusers && settings.blacklistusers.textsetting){
-			let block = false;
-			settings.blacklistusers.textsetting.split(",").forEach(user=>{
-				user = user.trim().toLowerCase();
-				if (user == data.chatname.toLowerCase()){
-					block=true;
-				}
-			})
-			if (block){
-				return null;
-			}
-			
-		}
-	}
-
-	if (settings.blacklist && data.chatmessage){
-		try {
-			data.chatmessage = filterProfanity(data.chatmessage);
-		} catch(e){console.error(e);}
-	}
 	
-	if (settings.autohi){
-		if (data.chatmessage.toLowerCase() === "hi"){
-			if (Date.now() - messageTimeout > 60000){ // respond to "1" with a "1" automatically; at most 1 time per minute.
+	try {
+		if (settings.blacklistuserstoggle && data.chatname){
+			if (settings.blacklistusers && settings.blacklistusers.textsetting){
+				let block = false;
+				settings.blacklistusers.textsetting.split(",").forEach(user=>{
+					user = user.trim().toLowerCase();
+					if (user && (user == data.chatname.toLowerCase())){
+						block=true;
+					}
+				})
+				if (block){
+					return null;
+				}
+				
+			}
+		}
+
+		if (settings.blacklist && data.chatmessage){
+			try {
+				data.chatmessage = filterProfanity(data.chatmessage);
+			} catch(e){console.error(e);}
+		}
+		
+		if (settings.autohi){
+			if (data.chatmessage.toLowerCase() === "hi"){
+				if (Date.now() - messageTimeout > 60000){ // respond to "1" with a "1" automatically; at most 1 time per minute.
+					messageTimeout = Date.now();
+					var msg = {};
+					msg.tid = data.tid;
+					msg.response = "Hi, @"+data.chatname+" !";
+					processResponse(msg);
+				}
+			}
+		}
+
+		if (settings.relaydonos && data.hasDonation && data.chatname && data.type){
+			if (Date.now() - messageTimeout > 100){ // respond to "1" with a "1" automatically; at most 1 time per 100ms.
 				messageTimeout = Date.now();
 				var msg = {};
 				msg.tid = data.tid;
-				msg.response = "Hi, @"+data.chatname+" !";
-				processResponse(msg);
+				msg.response = data.chatname.replace(/(<([^>]+)>)/gi, "")+" on "+data.type+" donated "+data.hasDonation.replace(/(<([^>]+)>)/gi, "")+". Thank you";
+				processResponse(msg, true);
 			}
 		}
-	}
-
-	if (settings.relaydonos && data.hasDonation && data.chatname && data.type){
-		if (Date.now() - messageTimeout > 100){ // respond to "1" with a "1" automatically; at most 1 time per 100ms.
-			messageTimeout = Date.now();
-			var msg = {};
-			msg.tid = data.tid;
-			msg.response = data.chatname.replace(/(<([^>]+)>)/gi, "")+" on "+data.type+" donated "+data.hasDonation.replace(/(<([^>]+)>)/gi, "")+". Thank you";
-			processResponse(msg, true);
-		}
-	}
-	if (settings.relayall && data.chatmessage && data.chatname && !data.event){ // don't relay events
-		if (checkExactDuplicate(data.chatmessage)){ // not matching exactly
-			return null;
-		}
-		if (Date.now() - messageTimeout > 1000){ // respond to "1" with a "1" automatically; at most 1 time per second.
-			messageTimeout = Date.now();
-			var msg = {};
-			msg.tid = data.tid;
-			// this should be ideall HTML stripped
-			
-			let tmpmsg = data.chatmessage.replace(/(<([^>]+)>)/gi, "").trim();
-			if (tmpmsg){
-				msg.response = data.chatname+" said: "+tmpmsg;
-				checkExactDuplicate(msg.response);
-				processResponse(msg, true); // this should be the first and only message
+		if (settings.relayall && data.chatmessage && data.chatname && !data.event){ // don't relay events
+			if (checkExactDuplicate(data.chatmessage)){ // not matching exactly
+				return null;
 			}
-			
-		}
-	}
-	
-	if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy && data.chatmessage && (data.chatmessage.indexOf("!giphy")!=-1) && !data.contentimg){
-		var searchGif = data.chatmessage;
-		searchGif = searchGif.replaceAll("!giphy","").trim();
-		if (searchGif){
-			var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(searchGif) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
-				return response.data[0].images.downsized_large.url ;
-			});
-			if (gurl){
-				data.contentimg = gurl;
+			if (Date.now() - messageTimeout > 1000){ // respond to "1" with a "1" automatically; at most 1 time per second.
+				messageTimeout = Date.now();
+				var msg = {};
+				msg.tid = data.tid;
+				// this should be ideall HTML stripped
+				
+				let tmpmsg = data.chatmessage.replace(/(<([^>]+)>)/gi, "").trim();
+				if (tmpmsg){
+					msg.response = data.chatname+" said: "+tmpmsg;
+					checkExactDuplicate(msg.response);
+					processResponse(msg, true); // this should be the first and only message
+				}
+				
 			}
 		}
-	}
-	
-	if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy2 && data.chatmessage && (data.chatmessage.indexOf("#")!=-1) && !data.contentimg){
-		var xx = data.chatmessage.split(" ");
-		for (var i = 0;i<xx.length;i++){
-			var word = xx[i];
-			if (!word.startsWith("#")){continue;}
-			word = word.replaceAll("#"," ").trim();
-			if (word){
-				var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(word) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
+		
+		if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy && data.chatmessage && (data.chatmessage.indexOf("!giphy")!=-1) && !data.contentimg){
+			var searchGif = data.chatmessage;
+			searchGif = searchGif.replaceAll("!giphy","").trim();
+			if (searchGif){
+				var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(searchGif) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
 					return response.data[0].images.downsized_large.url ;
 				});
 				if (gurl){
 					data.contentimg = gurl;
-					break;
 				}
 			}
-		};
+		}
+		
+		if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy2 && data.chatmessage && (data.chatmessage.indexOf("#")!=-1) && !data.contentimg){
+			var xx = data.chatmessage.split(" ");
+			for (var i = 0;i<xx.length;i++){
+				var word = xx[i];
+				if (!word.startsWith("#")){continue;}
+				word = word.replaceAll("#"," ").trim();
+				if (word){
+					var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(word) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
+						return response.data[0].images.downsized_large.url ;
+					});
+					if (gurl){
+						data.contentimg = gurl;
+						break;
+					}
+				}
+			};
+		}
+		
+		if (settings.joke && (data.chatmessage.toLowerCase() === "!joke")){
+			if (Date.now() - messageTimeout > 5100){
+				var score = parseInt(Math.random()* 378);
+				var joke = jokes[score];
+
+				messageTimeout = Date.now();
+				var msg = {};
+				msg.response = "@"+data.chatname+", "+joke["setup"];
+				processResponse(msg);
+				setTimeout(function(msg, punch){
+					msg.response = punch;
+					processResponse(msg);
+
+				},5000, data, "@"+data.chatname+".. "+joke["punchline"]);
+			}
+		}
+	} catch(e){
+		console.error(e);
 	}
 	
-	if (settings.joke && (data.chatmessage.toLowerCase() === "!joke")){
-		if (Date.now() - messageTimeout > 5100){
-			var score = parseInt(Math.random()* 378);
-			var joke = jokes[score];
-
-			messageTimeout = Date.now();
-			var msg = {};
-			msg.response = "@"+data.chatname+", "+joke["setup"];
-			processResponse(msg);
-			setTimeout(function(msg, punch){
-				msg.response = punch;
-				processResponse(msg);
-
-			},5000, data, "@"+data.chatname+".. "+joke["punchline"]);
-		}
-	}
-
 	if (settings.sentiment){
 		try {
 			if (!sentimentAnalysisLoaded){
@@ -2649,35 +2660,46 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 		}
 	}
 
-	// webhook for configured custom chat commands
-	for (var i = 1;i<=20;i++){
-		if (data.chatmessage && settings["chatevent"+i] && settings["chatcommand"+i] && settings["chatwebhook"+i]){
-			if (data.chatmessage === settings["chatcommand"+i].textsetting){
-				if (Date.now() - messageTimeout > 1000){
-					messageTimeout = Date.now();
-					let URL = settings["chatwebhook"+i].textsetting;
-					if (!URL.startsWith("http")){
-						if (!URL.includes("://")){
-							URL = "https://"+URL;
-							fetch(URL).catch(console.error);
+	try {
+		// webhook for configured custom chat commands
+		for (var i = 1;i<=20;i++){
+			if (data.chatmessage && settings["chatevent"+i] && settings["chatcommand"+i] && settings["chatwebhook"+i]){
+				if (data.chatmessage === settings["chatcommand"+i].textsetting){
+					if (Date.now() - messageTimeout > 1000){
+						messageTimeout = Date.now();
+						let URL = settings["chatwebhook"+i].textsetting;
+						if (!URL.startsWith("http")){
+							if (!URL.includes("://")){
+								URL = "https://"+URL;
+								fetch(URL).catch(console.error);
+							} else {
+								window.open(URL, '_blank');
+							}
 						} else {
-							window.open(URL, '_blank');
+							fetch(URL).catch(console.error);
 						}
-					} else {
-						fetch(URL).catch(console.error);
 					}
-				}
-		   }
+			   }
+			}
 		}
+	} catch(e){
+		console.error(e);
 	}
+	try {
 	
-	if (settings.hypemode){
-		processHype(data);
+		if (settings.hypemode){
+			processHype(data);
+		}
+	} catch(e){
+		console.error(e);
 	}
-	if (settings.waitlistmode){
-		processWaitlist(data);
+	try {
+		if (settings.waitlistmode){
+			processWaitlist(data); 
+		}
+	} catch(e){
+		console.error(e);
 	}
-	
 	return data;
 }
 var store = [];
