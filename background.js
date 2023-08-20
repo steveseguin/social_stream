@@ -1733,7 +1733,7 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 					var UUID = keys[i];
 					var label = connectedPeers[UUID] || false;
 					if (!label || (label === "dock")){
-						iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*');
+						iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*'); // the docks and emotes page are VIEWERS, since backend is PUSH-only
 					}
 				} catch(e){}
 			}
@@ -1931,7 +1931,7 @@ function loadIframe(channel, pass=false){  // this is pretty important if you wa
 	if (!pass){
 		pass = "false";
 	}
-	iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+"&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
+	iframe.src = "https://vdo.socialstream.ninja/?salt=vdo.ninja&password="+pass+"&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
 	document.body.appendChild(iframe);
 }
 
