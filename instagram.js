@@ -258,7 +258,7 @@
 	
 		setInterval(function(){
 			try {
-				if (window.location.pathname.includes("/live/")){
+				if (window.location.pathname.includes("/live")){
 					try {
 						var main = document.querySelectorAll("div>div>section>div");
 						for (var j =0;j<main.length;j++){
@@ -273,7 +273,7 @@
 				}
 			} catch(e){}
 			
-			if (!window.location.pathname.includes("/live/")){ // not live video
+			if (!window.location.pathname.includes("/live")){ // not live video
 				try {
 					var main = document.querySelectorAll("article");
 					if (main){
