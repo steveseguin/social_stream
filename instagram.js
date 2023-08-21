@@ -183,7 +183,7 @@
 		var chatmessage="";
 		var badges = [];
 		try{
-			chatmessage = getAllContentNodes(Array.from(content.childNodes[2].querySelectorAll("span")).slice(-1)[0]);
+			chatmessage = getAllContentNodes(Array.from(content.childNodes[2].querySelectorAll(":scope > span")).slice(-1)[0]);
 			
 			try{
 				if (content.childNodes[1].querySelector("img")){
@@ -196,11 +196,15 @@
 		} catch(e){
 			chatmessage="";
 			try{
-				var msgs = Array.from(content.childNodes[1].querySelectorAll("span"));
-				chatmessage = getAllContentNodes(msgs.slice(-1)[0]);
+				var msgs = Array.from(content.childNodes[1].querySelectorAll(":scope > span"));
+				
 				if (msgs.length==1){
+					chatmessage = getAllContentNodes(msgs[0]);
 					streamEvent = true;
-				} 
+				} else {
+					chatmessage = getAllContentNodes(msgs.slice(-1)[0]);
+				}
+				
 				try{
 					if (content.childNodes[1].childNodes[1].querySelector("img")){
 						var badge = content.childNodes[1].childNodes[1].querySelector("img");
@@ -260,7 +264,7 @@
 					try{
 						if (!main[j].dataset.set123){
 							main[j].dataset.set123 = "true";
-							processMessageIGLive(main[j]);
+							// processMessageIGLive(main[j]);
 						} 
 					} catch(e){}
 				}
