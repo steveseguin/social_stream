@@ -137,7 +137,7 @@
 
 		try {
 			chatimg = ele.querySelector("#img").src;
-			if (chatimg.startsWith("data:image/gif;base64") || (ele.getAttribute("author-type") == "owner")) {
+			if (chatimg.startsWith("data:image/gif;base64")) { // document.querySelector("#panel-pages").querySelector("#img").src
 				chatimg = document.querySelector("#panel-pages").querySelector("#img").src; // this is the owner
 			}
 		} catch (e) {}
