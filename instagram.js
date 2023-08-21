@@ -167,54 +167,63 @@
 	}
 	
 	function processMessageIGLive(ele){
-		var content = ele.childNodes[0].childNodes[0];
+		var content = ele.childNodes[0].childNodes[0].childNodes[0];
 		var chatname="";
+		var streamEvent = false;
 		try {
-			chatname = content.childNodes[0].childNodes[1].children[0].textContent;
+			chatname = content.childNodes[1].children[0].textContent;
 			chatname = chatname.replace(/ .*/,'');
 			chatname = escapeHtml(chatname);
+			if (chatname && (chatname.slice(-1) == ",")){
+				chatname = chatname.slice(0, -1);
+				streamEvent = true;
+			}
 		} catch(e){
 		}
 		var chatmessage="";
 		var badges = [];
 		try{
-			 if (settings.textonlymode){
-				chatmessage = escapeHtml(content.childNodes[0].childNodes[2].children[1].innerText);
-			 } else {
-				chatmessage = content.childNodes[0].childNodes[2].children[1].innerHTML;
-			 }
-			 
-			 if (content.childNodes[0].childNodes[1].querySelector("img")){
-				var badge = content.childNodes[0].childNodes[1].querySelector("img");
-				badge.src = badge.src+"";
-				badges.push(badge.src);
+			chatmessage = getAllContentNodes(Array.from(content.childNodes[2].querySelectorAll("span")).slice(-1)[0]);
+			
+			try{
+				if (content.childNodes[1].querySelector("img")){
+					var badge = content.childNodes[1].querySelector("img");
+					badge.src = badge.src+"";
+					badges.push(badge.src);
+				}
+			} catch(e){
 			}
 		} catch(e){
 			chatmessage="";
 			try{
-				 if (settings.textonlymode){
-					chatmessage = escapeHtml(content.childNodes[0].childNodes[1].children[1].innerText);
-				 } else {
-					chatmessage = content.childNodes[0].childNodes[1].children[1].innerHTML;
-				 }
+				var msgs = Array.from(content.childNodes[1].querySelectorAll("span"));
+				chatmessage = getAllContentNodes(msgs.slice(-1)[0]);
+				if (msgs.length==1){
+					streamEvent = true;
+				} 
+				try{
+					if (content.childNodes[1].childNodes[1].querySelector("img")){
+						var badge = content.childNodes[1].childNodes[1].querySelector("img");
+						badge.src = badge.src+"";
+						badges.push(badge.src);
+					}
+				} catch(e){
+				}
+				
 			} catch(e){
 				return;
 			}
 		}
 		
-		
-
-		
-
 		var chatimg="";
 		try{
-			chatimg = content.childNodes[0].childNodes[0].querySelectorAll("img")[0].src;
+			chatimg = content.childNodes[0].querySelectorAll("img")[0].src;
 		} catch(e){
 		}
 		
-		
 	  
-
+	  if (!chatmessage){return;}
+	  
 	  var data = {};
 	  data.chatname = chatname;
 	  data.chatbadges = badges || "";
@@ -225,6 +234,7 @@
 	  data.hasDonation = "";
 	  data.hasMembership = "";;
 	  data.contentimg = "";
+	  data.event = streamEvent;
 	  data.type = "instagramlive";
 	  
 		if (data.chatimg){
@@ -250,6 +260,7 @@
 					try{
 						if (!main[j].dataset.set123){
 							main[j].dataset.set123 = "true";
+							processMessageIGLive(main[j]);
 						} 
 					} catch(e){}
 				}
