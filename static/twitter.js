@@ -310,7 +310,9 @@
 			
 			
 			var eles = document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label][role="link"]');
-			eles[eles.length - 1].querySelector("a > div > span > div > div > span > span").innerText = "Tweet";
+			try {
+				eles[eles.length - 1].querySelector("a > div > span > div > div > span > span").innerText = "Tweet";
+			} catch(e){}
 					
 					
 			var button  = document.createElement("button");
