@@ -1,12 +1,36 @@
 var isExtensionOn = false;
+
+if (typeof(chrome.runtime)=='undefined'){
+	
+	var ipcRenderer = require('electron').ipcRenderer;
+	
+	chrome = {};
+	chrome.browserAction = {};
+	chrome.browserAction.setIcon = function(icon){console.log("set icon")}
+	chrome.runtime = {}
+	
+	chrome.runtime.sendMessage = async function(data, callback){
+		let response = await ipcRenderer.sendSync('fromPopup',data);
+		if (typeof(callback) == "function"){
+			callback(response);
+			console.log(response);
+		}
+	};
+	chrome.runtime.getManifest = function(){
+		return false; // I'll need to add version info eventually
+	}	
+}
+
 document.addEventListener("DOMContentLoaded", async function(event) {
 
 	var disableButton = document.getElementById("disableButton");
-	disableButton.onclick = function(){
+	disableButton.onclick = function(event){
+		event.stopPropagation()
 		chrome.runtime.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}});
 		chrome.runtime.sendMessage({cmd: "getOnOffState"}, function (response) {
 			update(response);
 		});
+		return false;
 	};
 
 	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
@@ -342,7 +366,7 @@ function checkVersion(){
 		fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/manifest.json').then(response => response.json()).then(data => {
 			var manifestData = chrome.runtime.getManifest();
 			if ("version" in data){
-				if (compareVersions(manifestData.version, data.version)==-1){
+				if (manifestData && (compareVersions(manifestData.version, data.version)==-1)){
 					document.getElementById("newVersion").classList.add('show')
 					document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' class='downloadLink' title="Download the latest version as a zip" href='https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip'>new version available 💾</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span><a title="See the list of recent code changes" href="https://github.com/steveseguin/social_stream/commits/main" target='_blank' style='text-decoration: underline;'>[change log]</a>`;
 					

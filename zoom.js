@@ -46,6 +46,11 @@
 		}
 		
 		element.childNodes.forEach(node=>{
+			
+			if (node.nodeName == "BUTTON"){
+				return;
+			}
+			
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
@@ -56,6 +61,9 @@
 						node.src = node.src+"";
 					}
 					resp += node.outerHTML;
+					if (node.nodeName == "IMG"){
+						resp += " ";
+					}
 				}
 			}
 		});
@@ -148,7 +156,7 @@
 
 		var msg = "";
 		try {
-			msg = getAllContentNodes(ele.querySelector('.chat-message__text-content, .new-chat-message__content'));
+			msg = getAllContentNodes(ele.querySelector('.chat-rtf-box__display, .new-chat-message__text-box, .new-chat-message__text-content, .chat-message__text-content, .new-chat-message__content'));
 		} catch(e){
 
 		}
