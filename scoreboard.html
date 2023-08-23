@@ -3,8 +3,8 @@
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
 	<meta content="utf-8" http-equiv="encoding" />
-	<title>Social Stream - Wait List</title>
-	<meta name="title" content="Social Stream - Wait List" />
+	<title>Social Stream - Scoreboard</title>
+	<meta name="title" content="Social Stream - Scoreboard" />
 	<link rel="icon" href="./icons/favicon.ico" />
 	<style>
 		:root {
@@ -521,22 +521,51 @@
 		}
 	}
 
+
+	var totalscore = false;
+	
 	function processInput(data){
 		if ("waitlist" in data){
+			console.log(data);
 			document.getElementById("waitlist").innerHTML = "";
+			var counter = 0;
 			if (data.waitlist === false){
 				document.getElementById("parentHolder").classList.add("hidden");
+				totalscore = false;
 			} else if (!data.waitlist.length){
 				document.getElementById("parentHolder").classList.remove("hidden");
 			} else {
+				totalscore = false;
 				for (var i = 0; i<data.waitlist.length;i++){
 					if (data.waitlist[i]){
-						if (data.waitlist[i].chatimg){
-							document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>"
-						} else {
-							document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><div class='spacer'></div>"+data.waitlist[i].chatname+"</div>"
+						var regex = /[+-]?\d+(\.\d+)?/g;
+						var match = data.waitlist[i].chatmessage.match(regex);
+						console.log(match);
+						if (match){
+							var scores = match.map(function(v) { return parseFloat(v); });
+							console.log(scores);
+							if (scores.length){
+								counter +=1
+								scores[0] = Math.max(Math.min(scores[0],10),0);
+								if (totalscore===false){
+									totalscore = scores[0];
+								} else {
+									totalscore += scores[0];
+								}
+								if (data.waitlist[i].chatimg){
+									document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+" gave a "+Math.round(scores[0] * 10)/10+"</div>"
+								} else {
+									document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><div class='spacer'></div>"+data.waitlist[i].chatname+" gave a "+Math.round(scores[0] * 10)/10+"</div>"
+								}
+							}
 						}
 					}
+				}
+				if (counter){
+					document.getElementById("waitlist").innerHTML = "<h2>total score: "+Math.round(totalscore*10/counter)/10+"</h2>"+document.getElementById("waitlist").innerHTML;
+					document.title = "Scoreboard: "+Math.round(totalscore*10/counter)/10;
+				} else {
+					document.title = "Scoreboard pending";
 				}
 				document.getElementById("parentHolder").classList.remove("hidden");
 			}
