@@ -522,6 +522,9 @@
 	}
 
 	function processInput(data){
+		if ("waitlistmessage" in data){
+			document.getElementById("waitlisttitle").innerHTML = data.waitlistmessage || "";
+		}
 		if ("waitlist" in data){
 			document.getElementById("waitlist").innerHTML = "";
 			if (data.waitlist === false){

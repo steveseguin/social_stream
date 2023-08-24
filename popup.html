@@ -1604,18 +1604,18 @@
 		<div class="wrapper">
 			<div class="collapsible">
 				<input type="checkbox" class="collapsible-input" id="wrapper-hype-general-options">
-				<label class="collapsible-label" for="wrapper-hype-general-options">📊 General</label>
+				<label class="collapsible-label" for="wrapper-hype-general-options">📊 Enable and customize</label>
 				<div class="collapsible-text">
 					<div class="options">
 						<div class="options_group hyper_meter">
-
+							<h3>Must enable the trigger to use</h3>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-setting="hypemode">
 									<span class="slider round"></span>
 								</label>🚦 Enable the hype meter's processing
 							</div>
-							
+							<h3>Other customization options</h3>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-param4="alignright">
@@ -1695,16 +1695,25 @@
 		<div class="wrapper">
 			<div class="collapsible">
 				<input type="checkbox" class="collapsible-input" id="wrapper-waitlist-general-options">
-				<label class="collapsible-label" for="wrapper-waitlist-general-options">📊 General</label>
+				<label class="collapsible-label" for="wrapper-waitlist-general-options">📊 Enable and customize</label>
 				<div class="collapsible-text">
 					<div class="options">
 						<div class="options_group waitlist">
+							<h3>Must enable the trigger to use</h3>
+							<p>Enable the waitlist page and customize the !trigger</p>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-setting="waitlistmode">
 									<span class="slider round"></span>
-								</label>🚦 Enable the wait list page
+									
+								</label>
+								🚦
+								<div class="textInputContainer" style="display: inline-block; width: 215px">
+									<input type="text" id="customwaitlistcommand" class="textInput" autocomplete="off" placeholder="Set a different !trigger command here" data-textsetting="customwaitlistcommand">
+									<label for="customwaitlistcommand">&gt Enables the wait list feature</label>
+								</div>
 							</div>
+							<h3>Other customization options</h3>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-param5="alignright">
@@ -1753,6 +1762,16 @@
 									<span class="slider round"></span>
 								</label>⚪ Light mode — Black text, white outline
 							</div>
+							<label class="switch">
+								<input type="checkbox" data-setting="customwaitlistmessagetoggle">
+								<span class="slider round"></span>
+							</label>
+							🪧
+							<div class="textInputContainer" style="display: inline-block; width: 215px">
+								<input type="text" id="customwaitlistmessage" class="textInput" autocomplete="off" placeholder="Set custom message / title here" data-textsetting="customwaitlistmessage">
+								<label for="customwaitlistmessage">&gt Use a custom message / title</label>
+							</div>
+							
 							<div>
 								Font Family
 								<select data-optionparam5="font">
@@ -1765,6 +1784,7 @@
 									<option value='opendyslexic' style="font-family:'opendyslexic'">Open Dyslexic  - abc123XYZ</option>
 								</select>
 							</div>
+							
 						</div>
 					</div>
 				</div>
@@ -2024,15 +2044,12 @@
 								</div>
 							</div>
 							
-
-							<h3>Fake a comment for testing</h3>
-
-							Issue a random test message that will appear in the dock
-							<button class="glowingButton" data-action="fakemsg"><span>Trigger now</span></button>
-							
+							<br />
+							<h3>Trigger webhook URL by a !command</h3>
+							Have custom chat commands poke a custom API endpoint
 							<div id="chatCommands">
 							</div>
-							
+							<br />
 							<h3>Send fixed messages at intervals</h3>
 
 							Specify frequency and starting offset of fixed messages

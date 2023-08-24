@@ -865,6 +865,10 @@ chrome.runtime.onMessage.addListener(
 					//}
 				}
 				
+				if ((request.setting == "customwaitlistmessagetoggle") || (request.setting == "customwaitlistmessage") ||  (request.setting == "customwaitlistcommand")){
+					sendWaitlistP2P(null, true); // stop hype and clear old hype
+				}
+				
 				if (request.setting.startsWith("timemessage")){
 					if (request.setting.startsWith("timemessageevent")){
 						var i = parseInt(request.setting.split("timemessageevent")[1]);
@@ -1058,7 +1062,7 @@ chrome.runtime.onMessage.addListener(
 					data.hasMembership =  '<div class="donation membership">SPONSORSHIP</div>';
 					data.chatname = "Steve1234567890123";
 					data.type = "facebook";
-					data.chatmessage  = "!queue The only way to do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
+					data.chatmessage  = "!queue The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
 				} else if (Math.random()>0.2){
 					data.hasDonation = "";
 					data.hasMembership = "";
@@ -1837,7 +1841,15 @@ function processWaitlist(data){
 		if (!settings.waitlistmode){
 			return;
 		}
-		if (!data.chatmessage || (!data.chatmessage.startsWith("!queue"))){return;}
+		var trigger = "!queue"; 
+		if (settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim()){
+			trigger = settings.customwaitlistcommand.textsetting.trim();
+			if (!trigger.startsWith("!")){
+				trigger = "!"+trigger;
+			}
+		}
+		console.log(trigger);
+		if (!data.chatmessage || (!data.chatmessage.trim().startsWith(trigger))){return;}
 		
 		if (waitListUsers[data.type]){
 			if (!waitListUsers[data.type][data.chatname]){
@@ -1850,7 +1862,7 @@ function processWaitlist(data){
 			waitListUsers[data.type] = site;
 			waitlist.push(data);
 		}
-		sendWaitlistP2P(waitlist);
+		sendWaitlistP2P(waitlist, false);
 	} catch(e){}
 }
 function processWaitlist2(){
@@ -1859,32 +1871,48 @@ function processWaitlist2(){
 			waitlist = [];
 			waitListUsers = {};
 			
-			sendWaitlistP2P(false);
+			sendWaitlistP2P(false, true);
 			return;
 		}
-		sendWaitlistP2P(waitlist);
+		sendWaitlistP2P(waitlist, true);
 	} catch(e){}
 }
-function sendWaitlistP2P(data, uid=null){ // function to send data to the DOCk via the VDO.Ninja API
+function sendWaitlistP2P(data=null, sendMessage=true){ // function to send data to the DOCk via the VDO.Ninja API
 	
 	if (iframe){
-		if (!uid){
-			var keys = Object.keys(connectedPeers);
-			for (var i = 0; i<keys.length;i++){
-				try {
-					var UUID = keys[i];
-					var label = connectedPeers[UUID];
-					if (label === "waitlist"){
-						iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlist:data}}, "type":"pcs", "UUID":UUID}, '*');
-					}
-				} catch(e){}
-			}
-		} else {
-			var label = connectedPeers[uid];
-			if (label === "waitlist"){
-				iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlist:data}}, "type":"pcs", "UUID":uid}, '*');
+		
+		if (sendMessage){
+			var message = "Type !queue to join this wait list";
+			if (settings.customwaitlistmessagetoggle){
+				if (settings.customwaitlistmessage){
+					message = settings.customwaitlistmessage.textsetting.trim();
+				} else {
+					message = "";
+				}
+			} else if (settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim()){
+				message = "Type "+settings.customwaitlistcommand.textsetting.trim()+" to join this wait list";
 			}
 		}
+		
+		var keys = Object.keys(connectedPeers);
+		for (var i = 0; i<keys.length;i++){
+			try {
+				var UUID = keys[i];
+				var label = connectedPeers[UUID];
+				if (label === "waitlist"){
+					if (sendMessage){
+						if (data===null){
+							iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlistmessage:message}}, "type":"pcs", "UUID":UUID}, '*');
+						} else {
+							iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlist:data, waitlistmessage:message}}, "type":"pcs", "UUID":UUID}, '*');
+						}
+					} else if (data!==null){
+						iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlist:data}}, "type":"pcs", "UUID":UUID}, '*');
+					}
+				}
+			} catch(e){}
+		}
+		
 	}
 }
 
