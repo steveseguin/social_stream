@@ -732,7 +732,7 @@
 <body>
 
 	<button id="disableButton">
-		<span id="disableButtonText">
+		<span id="disableButtonText" data-translate="toggle-on-off">
 			Toggle On/Off
 		</span>
 		<label class="switch">
@@ -741,7 +741,7 @@
 		</label>
 	</button>
 	
-	<button class="glowingButton" style="width: 100%; position: sticky;top: 35px; z-index: 10;margin:0;padding:0;" data-action="fakemsg"><span>Trigger a fake test message</span></button>
+	<button class="glowingButton" style="width: 100%; position: sticky;top: 35px; z-index: 10;margin:0;padding:0;" data-action="fakemsg"><span data-translate="trigger-fake-message">Trigger a fake test message</span></button>
 	
 	<div id="newVersion"></div>
 	
@@ -1972,7 +1972,15 @@
 									<label for="postserver">&gt; Send all to POST server</label>
 								</div>
 							</div>
-
+							<div>
+								Select a different translation
+								<select data-textsetting="translationlanguage">
+									<option value=''>Default</option>
+									<option value='en-us'>English - US</option>
+									<option value='test'>Test Translations</option>
+								</select><br />
+								<small><i>*Re-open menu to apply any langugage changes to it</i></small>
+							</div>
 						</div>
 					</div>
 				</div>

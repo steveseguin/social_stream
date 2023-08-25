@@ -235,8 +235,62 @@ function loadSettings(item, resave=false){
 			}
 		}
 	}
+	
+	if (settings.translationlanguage){
+		changeLg(settings.translationlanguage.value)
+	}
 }
+////////////
 
+var miscTranslations = { // we won't use after the first load
+	"start": "START"
+}
+async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlutin.com/timeout-fetch-request/
+	try {
+		const controller = new AbortController();
+		const timeout_id = setTimeout(() => controller.abort(), timeout);
+		const response = await fetch(URL, {...{timeout:timeout}, signal: controller.signal});
+		clearTimeout(timeout_id);
+		return response;
+	} catch(e){
+		errorlog(e);
+		return await fetch(URL);
+	}
+}
+async function changeLg(lang) {
+	console.log("changeLg: "+lang);
+	if (!lang){
+		console.log("DISABLING TRANSLATIONS");
+		settings.translation = false;
+		pushSettingChange();
+		return;
+	}
+	return await fetchWithTimeout("./translations/" + lang + '.json',2000).then(async function(response) {
+		try{
+			if (response.status !== 200) {
+				return;
+			}
+			await response.json().then(function(data) {
+				if (data.miscellaneous){
+					Object.keys(data.miscellaneous).forEach(key => {
+						miscTranslations[key] = data.miscellaneous[key];
+					});
+				}
+				data.miscellaneous = miscTranslations;
+				settings.translation = data;
+				pushSettingChange();
+			}).catch(function(e){
+				console.log(e);
+			});
+		} catch(e){
+			console.log(e);
+		}
+	}).catch(function(err) {
+		console.log(err);
+	});
+	
+}
+//////
 function checkIntervalState(i){
 	if (intervalMessages[i]){
 		clearInterval(intervalMessages[i]);
@@ -751,11 +805,11 @@ chrome.runtime.onMessage.addListener(
 				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
 			} else if (request.cmd && request.cmd === "saveSetting") {
 				if (typeof settings[request.setting] == "object"){
-					if (!request.value){
+					if (!request.value){ // pretty risky if something shares the same name.
 						delete settings[request.setting];
 					} else {
 						settings[request.setting][request.type] = request.value;
-						settings[request.setting].value = request.value;
+						//settings[request.setting].value = request.value; // not sure this is a good idea
 					}
 				} else if ("type" in request){
 					if (!request.value){
@@ -763,7 +817,7 @@ chrome.runtime.onMessage.addListener(
 					} else {
 						settings[request.setting] = {};
 						settings[request.setting][request.type] = request.value;
-						settings[request.setting].value = request.value;
+						//settings[request.setting].value = request.value; // I'll use request.value instead
 					}
 				} else {
 					settings[request.setting] = request.value;
@@ -775,7 +829,7 @@ chrome.runtime.onMessage.addListener(
 				chrome.runtime.lastError;
 				
 				sendResponse({"state":isExtensionOn});
-
+				
 				if (request.setting == "midi"){
 					toggleMidi();
 				}
@@ -868,6 +922,10 @@ chrome.runtime.onMessage.addListener(
 				if ((request.setting == "customwaitlistmessagetoggle") || (request.setting == "customwaitlistmessage") ||  (request.setting == "customwaitlistcommand")){
 					sendWaitlistP2P(null, true); // stop hype and clear old hype
 				}
+				
+				if (request.setting == "translationlanguage"){
+					changeLg(request.value);
+				} 
 				
 				if (request.setting.startsWith("timemessage")){
 					if (request.setting.startsWith("timemessageevent")){
@@ -1848,7 +1906,6 @@ function processWaitlist(data){
 				trigger = "!"+trigger;
 			}
 		}
-		console.log(trigger);
 		if (!data.chatmessage || (!data.chatmessage.trim().startsWith(trigger))){return;}
 		
 		if (waitListUsers[data.type]){
@@ -1968,7 +2025,7 @@ function loadIframe(channel, pass=false){  // this is pretty important if you wa
 	if (!pass){
 		pass = "false";
 	}
-	iframe.src = "https://vdo.socialstream.ninja/?salt=vdo.ninja&password="+pass+"&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
+	iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+"&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
 	document.body.appendChild(iframe);
 }
 

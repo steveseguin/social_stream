@@ -20,6 +20,107 @@ if (typeof(chrome.runtime)=='undefined'){
 		return false; // I'll need to add version info eventually
 	}	
 }
+var translation = {};
+
+function getTranslation(key, value=false){ 
+	if (translation.innerHTML && (key in translation.innerHTML)){ // these are the proper translations
+		return translation.innerHTML[key];
+	} else if (translation.miscellaneous && (key in translation.miscellaneous)){ 
+		return translation.miscellaneous[key];
+	} else if (value!==false){
+		return value;
+	} else {
+		return key.replaceAll("-", " "); //
+	}
+}
+function miniTranslate(ele, ident = false, direct=false) {
+	
+	if (ident){
+		if (translation.innerHTML && (ident in translation.innerHTML)){
+			if (ele.querySelector('[data-translate]')){
+				ele.querySelector('[data-translate]').innerHTML = translation.innerHTML[ident];
+				ele.querySelector('[data-translate]').dataset.translate = ident;
+			} else {
+				ele.innerHTML = translation.innerHTML[ident];
+				ele.dataset.translate = ident;
+			}
+			return;
+		} else if (direct){
+			if (ele.querySelector('[data-translate]')){
+				ele.querySelector('[data-translate]').innerHTML = direct;
+				ele.querySelector('[data-translate]').dataset.translate = ident;
+			} else {
+				ele.dataset.translate = ident;
+				ele.innerHTML = direct;
+			}
+			return;
+		} else {
+			console.log(ident + ": not found in translation file");
+			
+			if (!translation.miscellaneous || !(ident in translation.miscellaneous)){ 
+				var value = ident.replaceAll("-", " "); // lets use the key as the translation
+			} else {
+				var value = translation.miscellaneous[ident]; // lets use a miscellaneous translation as backup?
+			}
+			
+			if (ele.querySelector('[data-translate]')){
+				ele.querySelector('[data-translate]').innerHTML = value;
+				ele.querySelector('[data-translate]').dataset.translate = ident;
+			} else {
+				ele.innerHTML = value;
+				ele.dataset.translate = ident;
+			}
+			return;
+		}
+	}
+	
+	var allItems = ele.querySelectorAll('[data-translate]');
+	allItems.forEach(function(ele2) {
+		if (translation.innerHTML  && (ele2.dataset.translate in translation.innerHTML)){
+			ele2.innerHTML = translation.innerHTML[ele2.dataset.translate];
+		} else if (translation.miscellaneous && (ele2.dataset.translate in translation.miscellaneous)){
+			ele2.innerHTML = translation.miscellaneous[ele2.dataset.translate];
+		}
+	});
+	if (ele.dataset){
+		if (translation.innerHTML && (ele.dataset.translate in translation.innerHTML)){
+			ele.innerHTML = translation.innerHTML[ele.dataset.translate];
+		} else if (translation.miscellaneous && (ele.dataset.translate in translation.miscellaneous)){
+			ele.innerHTML = translation.miscellaneous[ele.dataset.translate];
+		}
+	}
+	if (translation.titles){
+		var allTitles = ele.querySelectorAll('[title]');
+		allTitles.forEach(function(ele2) {
+			var key = ele2.title.replace(/[\W]+/g, "-").toLowerCase();
+			if (key in translation.titles) {
+				ele2.title = translation.titles[key];
+			}
+		});
+		if (ele.title){
+			var key = ele.title.replace(/[\W]+/g, "-").toLowerCase();
+			if (key in translation.titles) {
+				ele.title = translation.titles[key];
+			}
+		}
+	}
+	if (translation.placeholders){
+		var allPlaceholders = ele.querySelectorAll('[placeholder]');
+		allPlaceholders.forEach(function(ele2) {
+			var key = ele2.placeholder.replace(/[\W]+/g, "-").toLowerCase();
+			if (key in translation.placeholders) {
+				ele2.placeholder = translation.placeholders[key];
+			}
+		});
+		
+		if (ele.placeholder){
+			var key = ele.placeholder.replace(/[\W]+/g, "-").toLowerCase();
+			if (key in translation.placeholders) {
+				ele.placeholder = translation.placeholders[key];
+			}
+		}
+	}
+}
 
 document.addEventListener("DOMContentLoaded", async function(event) {
 
@@ -258,6 +359,13 @@ function update(response){
 							updateSettings(ele);
 						}
 					}
+					if ("optionsetting" in response.settings[key]){
+						var ele = document.querySelector("select[data-optionsetting='"+key+"']");
+						if (ele){
+							ele.value = response.settings[key].optionsetting;
+							updateSettings(ele);
+						}
+					}
 					if ("numbersetting" in response.settings[key]){
 						var ele = document.querySelector("input[data-numbersetting='"+key+"']");
 						if (ele){
@@ -320,6 +428,10 @@ function update(response){
 						updateSettings(ele);
 					}
 				}
+			}
+			if ("translation" in response.settings){
+				translation = response.settings["translation"];
+				miniTranslate(document.body);
 			}
 		}
 	}
@@ -471,8 +583,9 @@ function updateSettings(ele){
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
+	
 	} else if (ele.dataset.optionparam1){
-		
+		 // don't use value
 		var tmp = document.getElementById("dock").rawURL.split("&"+ele.dataset.optionparam1);
 		if (tmp.length>1){
 			var tt = tmp[1].split("&");
@@ -490,7 +603,7 @@ function updateSettings(ele){
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1", setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
 	} else if (ele.dataset.optionparam2){
-		
+		 // don't use value
 		var tmp = document.getElementById("overlay").rawURL.split("&"+ele.dataset.optionparam2);
 		if (tmp.length>1){
 			var tt = tmp[1].split("&");
@@ -509,7 +622,7 @@ function updateSettings(ele){
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2", setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
 	///
 	} else if (ele.dataset.optionparam3){
-		
+		 // don't use value
 		var tmp = document.getElementById("emoteswall").rawURL.split("&"+ele.dataset.optionparam3);
 		if (tmp.length>1){
 			var tt = tmp[1].split("&");
@@ -527,7 +640,7 @@ function updateSettings(ele){
 		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam3", setting: ele.dataset.optionparam3, "value": ele.value}, function (response) {});
 	} else if (ele.dataset.optionparam4){
-		
+		 // don't use value
 		var tmp = document.getElementById("hypemeter").rawURL.split("&"+ele.dataset.optionparam4);
 		if (tmp.length>1){
 			var tt = tmp[1].split("&");
@@ -545,7 +658,7 @@ function updateSettings(ele){
 		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("?&", "?");
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
 	} else if (ele.dataset.optionparam5){
-		
+		 // don't use value
 		var tmp = document.getElementById("waitlist").rawURL.split("&"+ele.dataset.optionparam5);
 		if (tmp.length>1){
 			var tt = tmp[1].split("&");
@@ -617,7 +730,9 @@ function updateSettings(ele){
 	} else if (ele.dataset.setting){
 		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
 		return;
-
+	} else if (ele.dataset.optionsetting){
+		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "optionsetting", setting: ele.dataset.optionsetting, "value": ele.value}, function (response) {});
+		return;
 	} else if (ele.dataset.textsetting){
 		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
 		return;

@@ -16,6 +16,18 @@
 	
 	//var channelName = "";
 	
+	function getTranslation(key, value=false){
+		if (settings.translation && settings.translation.innerHTML && (key in settings.translation.innerHTML)){ // these are the proper translations
+			return settings.translation.innerHTML[key];
+		} else if (settings.translation.miscellaneous && settings.translation.miscellaneous && (key in settings.translation.miscellaneous)){ 
+			return settings.translation.miscellaneous[key];
+		} else if (value!==false){
+			return value;
+		} else {
+			return key.replaceAll("-", " "); //
+		}
+	}
+	
 	function escapeHtml(unsafe){
 		try {
 			return unsafe
@@ -193,17 +205,17 @@
 
 		if (chatmembership) {
 			if (chatmessage) {
-				hasMembership = '<div class="donation membership">MEMBER CHAT</div>';
+				hasMembership = '<div data-translate="member-chat" class="donation membership">'+getTranslation("member-chat", "MEMBERSHIP")+'</div>';
 			} else if (giftedmemembership) {
-				hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
+				hasMembership = '<div data-translate="sponsorship" class="donation membership">'+getTranslation("sponsorship", "SPONSORSHIP")+'</div>';
 				chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
 			} else {
-				hasMembership = '<div class="donation membership">NEW MEMBER!</div>';
+				hasMembership = '<div data-translate="new-member" class="donation membership">'+getTranslation("new-member", "NEW MEMBER!")+'</div>';
 				chatmessage = "<i>" + chatmembership + "</i>";
 			}
 		} else if (!chatmessage && giftedmemembership) {
 			chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
-			hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
+			hasMembership = '<div data-translate="sponsorship" class="donation membership">'+getTranslation("sponsorship", "SPONSORSHIP")+'</div>';
 			// } else if (memeber){
 			//	  hasMembership = '<div class="membership">MEMEBER</div>'; // Just looks too green, and doesn't highlight those using special member options.
 			// } else if (mod){

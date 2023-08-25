@@ -14,6 +14,17 @@
 		}
 	}
 	
+	function getTranslation(key, value=false){
+		if (settings.translation && settings.translation.innerHTML && (key in settings.translation.innerHTML)){ // these are the proper translations
+			return settings.translation.innerHTML[key];
+		} else if (settings.translation.miscellaneous && settings.translation.miscellaneous && (key in settings.translation.miscellaneous)){ 
+			return settings.translation.miscellaneous[key];
+		} else if (value!==false){
+			return value;
+		} else {
+			return key.replaceAll("-", " "); //
+		}
+	}
 	
 	function getTwitchAvatarImage(username){
 		fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username="+encodeURIComponent(username)).then(response => {
@@ -251,9 +262,9 @@
 				donations += parseInt(elements[i].innerText);
 			}
 			if (donations==1){
-				donations += " bit";
+				donations += " "+getTranslation("bit");
 			} else if (donations>1){
-				donations += " bits";
+				donations += " "+getTranslation("bits");
 			}
 		  }
  	  } catch(e){}
