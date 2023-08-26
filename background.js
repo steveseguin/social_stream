@@ -1375,6 +1375,8 @@ function sendToH2R(data){
 
 			msg.snippet = {};
 			msg.snippet.displayMessage = data.chatmessage.replace(/(<([^>]+)>)/gi, "") || "";
+			
+			if (!msg.snippet.displayMessage){return;}
 
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
