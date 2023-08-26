@@ -2757,6 +2757,8 @@
 			if (!stripHTML){ // lets try to strip HTML just in case, for h2r since it can't use HTML, but only if the alternative way isn't used.
 				msg.snippet.displayMessage = data.chatmessage.replace(/(<([^>]+)>)/gi, "") || ""; // strip HTML for H2R; just in case any got in earlier.
 				// msg.snippet.displayMessage = stripHtmlFunction(data.chatmessage); // this is a more effective way of doing it, but potentially less secure. it's the method that's used when &striphtml is used
+			} else {
+				msg.snippet.displayMessage = data.chatmessage;
 			}
 			
 			if (!msg.snippet.displayMessage){return;} // we won't send a featured message if no message body?
