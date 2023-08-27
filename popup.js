@@ -2,7 +2,7 @@ var isExtensionOn = false;
 
 if (typeof(chrome.runtime)=='undefined'){
 	
-	var ipcRenderer = require('electron').ipcRenderer;
+	var { ipcRenderer, contextBridge } = require('electron');
 	
 	chrome = {};
 	chrome.browserAction = {};

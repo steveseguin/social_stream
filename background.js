@@ -8,6 +8,8 @@ var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
 var sentimentAnalysisLoaded = false;
 
+var connectedPeers = {};	
+
 function generateStreamID(){
 	var text = "";
 	var possible = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
@@ -23,6 +25,65 @@ function generateStreamID(){
 	return text;
 };
 
+
+
+if (typeof(chrome.runtime)=='undefined'){
+	
+	var { ipcRenderer, contextBridge } = require('electron');
+	
+	chrome = {};
+	chrome.browserAction = {};
+	chrome.browserAction.setIcon = function(icon){console.log("set icon")}
+	chrome.runtime = {}
+	chrome.runtime.lastError = function(){
+		console.log("last error");
+	}
+	chrome.runtime.sendMessage = async function(data, callback){
+		let response = await ipcRenderer.sendSync('fromBackground',data);
+		if (typeof(callback) == "function"){
+			callback(response);
+			console.log(response);
+		}
+	};
+	chrome.runtime.getManifest = function(){
+		return false; // I'll need to add version info eventually
+	}
+	chrome.storage = {};
+	chrome.storage.sync = {};
+	chrome.storage.sync.set = function(){
+		console.log("SYNC SET");
+	};
+	chrome.storage.sync.get = function(arg, callback){
+		callback({});
+	};
+	chrome.storage.local = {};
+	chrome.storage.local.get = function(arg, callback){
+		callback({});
+	};
+	chrome.storage.local.set = function(){
+		console.log("SYNC SET");
+	};
+	chrome.runtime.onMessage = {};
+	var onMessageCallback = function(a,b,c){};
+	chrome.runtime.onMessage.addListener = function(callback){onMessageCallback = callback};
+	
+	chrome.debugger = {};
+	chrome.debugger.onDetach = {};
+	chrome.debugger.onDetach.addListener = function(){
+		console.log("add listener detach");
+	}
+	
+	ipcRenderer.on('fromMain', (event, ...args) => {
+		onMessageCallback(args[0], null, function(response){
+			//sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
+			console.log(response);
+			ipcRenderer.send('fromBackgroundResponse',response);
+		});
+	})
+	
+	//chrome.runtime.onMessage.addListener(
+    //async function (request, sender, sendResponse) {
+}
 
 String.prototype.replaceAllCase = function(strReplace, strWith) {
     // See http://stackoverflow.com/a/3561711/556609
@@ -326,32 +387,6 @@ function checkIntervalState(i){
 	}, offset*60000 || 0, i);
 }
 
-
-chrome.storage.sync.get(properties, function(item){
-	if (item && item.settings){
-		chrome.storage.sync.remove(["settings"], function(Items) {
-			console.log("upgrading from sync to local storage");
-		});
-		chrome.storage.local.set({
-			settings: item.settings
-		});
-		loadSettings(item);
-	} else {
-		chrome.storage.local.get(["settings"], function(item2){
-			if (item2 && item2.settings){
-				if (item){
-					item.settings = item2.settings;
-				} else {
-					item = item2;
-				}
-			} 
-			loadSettings(item);
-		});
-	}
-	
-});
-
-chrome.browserAction.setIcon({path: "/icons/off.png"});
 
 function pushSettingChange(){
 	chrome.tabs.query({}, function(tabs) {
@@ -749,6 +784,8 @@ var intervalMessages = {};
 chrome.runtime.onMessage.addListener(
     async function (request, sender, sendResponse) {
 		try{
+			console.warn(request);
+			console.log("isExtensionOn: "+isExtensionOn);
 			if (request.cmd && request.cmd === "setOnOffState") { // toggle the IFRAME (stream to the remote dock) on or off
 				isExtensionOn = request.data.value;
 				if (isExtensionOn){
@@ -1787,7 +1824,6 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 	var msg = {};
 	msg.overlayNinja = data;
 	
-	
 	if (iframe){
 		if (connectedPeers){
 			var keys = Object.keys(connectedPeers);
@@ -1796,9 +1832,10 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 					var UUID = keys[i];
 					var label = connectedPeers[UUID] || false;
 					if (!label || (label === "dock")){
+						console.log("SENDING DATA");
 						iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*'); // the docks and emotes page are VIEWERS, since backend is PUSH-only
 					}
-				} catch(e){}
+				} catch(e){console.error(e);}
 			}
 		} else {
 			iframe.contentWindow.postMessage({"sendData":msg, "type": "pcs"}, '*'); // send only to 'viewers' of this stream
@@ -2097,7 +2134,7 @@ function processIncomingRequest(request){
 	}
 }
 
-var connectedPeers = {};	
+
 eventer(messageEvent, async function (e) {
 	// iframe wno't be enabled if isExtensionOn is off, so allow this.
 	if (e.source != iframe.contentWindow){return}
@@ -2925,6 +2962,33 @@ function respondToAll(msg){
 	data.response = msg
 	processResponse(data);
 }
+
+
+chrome.storage.sync.get(properties, function(item){ // we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
+	if (item && item.settings){
+		chrome.storage.sync.remove(["settings"], function(Items) {
+			console.log("upgrading from sync to local storage");
+		});
+		chrome.storage.local.set({
+			settings: item.settings
+		});
+		loadSettings(item);
+	} else {
+		chrome.storage.local.get(["settings"], function(item2){
+			if (item2 && item2.settings){
+				if (item){
+					item.settings = item2.settings;
+				} else {
+					item = item2;
+				}
+			} 
+			loadSettings(item);
+		});
+	}
+	
+});
+
+chrome.browserAction.setIcon({path: "/icons/off.png"});
 
 
 var jokes = [ // jokes from reddit; sourced from github.
@@ -5197,6 +5261,3 @@ var jokes = [ // jokes from reddit; sourced from github.
 	"punchline": "I had to draw my own conclusions."
   }
 ];
-
-
-
