@@ -784,8 +784,6 @@ var intervalMessages = {};
 chrome.runtime.onMessage.addListener(
     async function (request, sender, sendResponse) {
 		try{
-			console.warn(request);
-			console.log("isExtensionOn: "+isExtensionOn);
 			if (request.cmd && request.cmd === "setOnOffState") { // toggle the IFRAME (stream to the remote dock) on or off
 				isExtensionOn = request.data.value;
 				if (isExtensionOn){
