@@ -103,6 +103,7 @@
 		data.hasDonation = "";
 		data.hasMembership = "";
 		data.contentimg = "";
+		data.textonly = settings.textonlymode || false;
 		data.type = "openai";
 		
 		pushMessage(data);

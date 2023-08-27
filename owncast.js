@@ -98,6 +98,7 @@
 	  data.chatimg = ""; // Doesn't seem to be an avatar image for owncast
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = hasMembership;
+	  data.textonly = settings.textonlymode || false;
 	  data.type = "owncast";
 	  
 	  try {

@@ -23,18 +23,6 @@ function generateStreamID(){
 	return text;
 };
 
-function escapeHtml(unsafe){
-	try {
-		return unsafe
-			 .replace(/&/g, "&amp;")
-			 .replace(/</g, "&lt;")
-			 .replace(/>/g, "&gt;")
-			 .replace(/"/g, "&quot;")
-			 .replace(/'/g, "&#039;") || "";
-	} catch(e){
-		return "";
-	}
-}
 
 String.prototype.replaceAllCase = function(strReplace, strWith) {
     // See http://stackoverflow.com/a/3561711/556609
@@ -1307,7 +1295,7 @@ function ajax(object2send, url, ajaxType="PUT"){
 	xhttp.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
 	xhttp.send(JSON.stringify(object2send));
 }
-
+	
 var messageCounter = 0;
 function sendToDestinations(message){
 
@@ -1322,7 +1310,9 @@ function sendToDestinations(message){
 		}
 		
 		if (message.chatmessage){
-			message.chatmessage = filterXSS(message.chatmessage);
+			if (!message.textonly){
+				message.chatmessage = filterXSS(message.chatmessage);
+			}
 		}
 		
 		if (settings.randomcolor && message && !message.nameColor && message.chatname){
@@ -2120,17 +2110,13 @@ eventer(messageEvent, async function (e) {
 					var data = {};
 					data.chatname = e.data.value.authorDetails.displayName || "";
 					data.chatimg = e.data.value.authorDetails.profileImageUrl || "";
-
 					data.nameColor = "";
 					data.chatbadges = "";
 					data.backgroundColor = "";
 					data.textColor = "";
-
 					data.chatmessage = data.value.snippet.displayMessage || "";
-
 					data.hasDonation = "";
 					data.hasMembership = "";
-
 					data.type = "youtube";
 
 					data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out

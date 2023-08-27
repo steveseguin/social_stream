@@ -2751,14 +2751,15 @@
 			} else {
 				msg.timestamp = Date.now();
 			}
-
+ 
 			msg.snippet = {};
-			
-			if (!stripHTML){ // lets try to strip HTML just in case, for h2r since it can't use HTML, but only if the alternative way isn't used.
-				msg.snippet.displayMessage = data.chatmessage.replace(/(<([^>]+)>)/gi, "") || ""; // strip HTML for H2R; just in case any got in earlier.
-				// msg.snippet.displayMessage = stripHtmlFunction(data.chatmessage); // this is a more effective way of doing it, but potentially less secure. it's the method that's used when &striphtml is used
-			} else {
+			//
+			if (data.textonly){
 				msg.snippet.displayMessage = data.chatmessage;
+			} else if (!stripHTML){ // lets try to strip HTML just in case, for h2r since it can't use HTML, but only if the alternative way isn't used.
+				msg.snippet.displayMessage = stripHtmlFunction(data.chatmessage); // strip HTML for H2R, if we haven't striped it so far
+			} else {
+				msg.snippet.displayMessage = data.chatmessage; // stripHTML already should have processed this, so lets not reprocess it.
 			}
 			
 			if (!msg.snippet.displayMessage){return;} // we won't send a featured message if no message body?
@@ -4177,6 +4178,18 @@
 		return tmp.textContent || tmp.innerText || "";
 	}
 
+	function escapeHtml(unsafe){
+		try {
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
 
 	function processData(data, reloaded=false){
 		//console.log(data);
@@ -4310,24 +4323,25 @@
 				data.chatmessage = data.chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig, "");
 			} 
 
-			var chatmessage = "";  
-			if (data.chatmessage){
+			var chatmessage = data.chatmessage || "";  
+			
+			if (chatmessage){
 				if (stylizeEmoji && !reloaded){
-					chatmessage = data.chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig, "<span class='emoji'>$1</span>");
-				} else {
-					chatmessage = data.chatmessage;
-				}
+					chatmessage = chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig, "<span class='emoji'>$1</span>");
+				} 
 				if (!stripHTML){ // we want to reuse this, but only if HTML is allowed
 					data.chatmessage = chatmessage;
+					data.textonly = false; // we know that it contains html now
 				}
-			} else {
-				data.chatmessage = "";
-			}
+			} 
 			
 			if (!chatmessage && !data.contentimg && !data.hasDonation){
 				return;
 			}
 			
+			if (data.textonly){ // should be legacy compatible, since textonly is new.
+				chatmessage = escapeHtml(chatmessage);  // lets escape any < > ' " or other special characeters, since it would be dangerous as HTML.
+			}
 
 			if (largeavatar && data.chatname && data.type && avatars){
 				data.chatimg = upscaleImages(data); // increase the resolution of avatars if possible

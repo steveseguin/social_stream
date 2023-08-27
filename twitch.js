@@ -71,8 +71,11 @@
 	
 	function escapeHtml(unsafe){
 		try {
+			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+				return unsafe;
+			}
 			return unsafe
-				 .replace(/&/g, "&amp;")
+				 .replace(/&/g, "&amp;") // i guess this counts as html
 				 .replace(/</g, "&lt;")
 				 .replace(/>/g, "&gt;")
 				 .replace(/"/g, "&quot;")
@@ -302,6 +305,7 @@
 	  }
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = "";
+	  data.textonly = settings.textonlymode || false;
 	  data.type = "twitch";
 	  
 	//  console.log(data);
@@ -365,6 +369,7 @@
 	  data.hasDonation = "";
 	  data.hasMembership = "";
 	  data.type = "twitch";
+	  data.textonly = settings.textonlymode || false;
 	  data.event = true;
 	  
 	  if (!data.chatmessage){return;}

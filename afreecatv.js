@@ -113,6 +113,7 @@
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
 	  data.hasMembership = "";
+	  data.textonly = settings.textonlymode || false;
 	  data.type = "afreecatv";
 	  
 	//  console.log(data);

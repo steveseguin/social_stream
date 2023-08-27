@@ -83,6 +83,7 @@
 		data.hasDonation = "";
 		data.hasMembership = "";
 		data.contentimg = "";
+		data.textonly = settings.textonlymode || false;
 		data.type = "floatplane";
 		
 		console.log(data);

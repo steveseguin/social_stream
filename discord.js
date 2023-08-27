@@ -97,6 +97,7 @@
 		data.hasDonation = "";
 		data.hasMembership = "";;
 		data.contentimg = contentimg;
+		data.textonly = settings.textonlymode || false;
 		data.type = "discord";
 		
 	//	console.log(data);

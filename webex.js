@@ -16,6 +16,9 @@
 	
 	function escapeHtml(unsafe){
 		try {
+			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+				return unsafe;
+			}
 			return unsafe
 				 .replace(/&/g, "&amp;")
 				 .replace(/</g, "&lt;")
@@ -101,6 +104,7 @@
 	  data.hasDonation = "";
 	  data.hasMembership = "";;
 	  data.contentimg = "";
+	  data.textonly = settings.textonlymode || false;
 	  data.type = "webex";
 	  
 	   if (data.contentimg){
