@@ -905,7 +905,12 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "textonlymode"){
 					pushSettingChange();
 				}
-				
+				if (request.setting == "collecttwitchpoints"){
+					pushSettingChange();
+				}
+				if (request.setting == "detweet"){
+					pushSettingChange();
+				}
 				if (request.setting == "customtwitchstate"){
 					pushSettingChange();
 				}
