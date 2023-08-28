@@ -9,16 +9,16 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.browserAction.setIcon = function(icon){console.log("set icon")}
 	chrome.runtime = {}
 	
-	chrome.runtime.sendMessage = async function(data, callback){
+	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
 		let response = await ipcRenderer.sendSync('fromPopup',data);
 		if (typeof(callback) == "function"){
 			callback(response);
-			console.log(response);
 		}
 	};
 	chrome.runtime.getManifest = function(){
 		return false; // I'll need to add version info eventually
-	}	
+	}
+	
 }
 var translation = {};
 
@@ -297,7 +297,6 @@ function update(response){
 		}
 
 		if ('settings' in response){
-			console.log(response.settings);
 			for (var key in response.settings){
 
 				if (key === "midiConfig"){

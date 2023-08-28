@@ -349,12 +349,12 @@ function checkIntervalState(i){
 	
 	var offset = 0;
 	if (settings['timemessageoffset'+i]){
-		offset = settings['timemessageoffset'+i].value;
+		offset = settings['timemessageoffset'+i].numbersetting;
 	}
 	
 	intervalMessages[i] = setTimeout(function(i){
 		if ('timemessageinterval'+i in settings){
-			if (settings['timemessageinterval'+i].value==0){
+			if (settings['timemessageinterval'+i].numbersetting==0){
 				if (!isExtensionOn){return;}
 				if (!settings['timemessagecommand'+i] || !settings['timemessagecommand'+i].textsetting){return};  // failsafe
 				if (!settings['timemessageevent'+i]){return}; // failsafe
@@ -362,7 +362,7 @@ function checkIntervalState(i){
 				var msg = {};
 				msg.response = settings['timemessagecommand'+i].textsetting;
 				processResponse(msg);
-			} else if (settings['timemessageinterval'+i].value){
+			} else if (settings['timemessageinterval'+i].numbersetting){
 				intervalMessages[i] = setInterval(function(i){
 					if (!isExtensionOn){return;}
 					if (!settings['timemessagecommand'+i] || !settings['timemessagecommand'+i].textsetting){return};  // failsafe
@@ -371,7 +371,7 @@ function checkIntervalState(i){
 					var msg = {};
 					msg.response = settings['timemessagecommand'+i].textsetting;
 					processResponse(msg);
-				}, settings['timemessageinterval'+i].value*60000, i);
+				}, settings['timemessageinterval'+i].numbersetting*60000, i);
 			}
 		} else {
 			intervalMessages[i] = setInterval(function(i){
@@ -1830,7 +1830,6 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 					var UUID = keys[i];
 					var label = connectedPeers[UUID] || false;
 					if (!label || (label === "dock")){
-						console.log("SENDING DATA");
 						iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*'); // the docks and emotes page are VIEWERS, since backend is PUSH-only
 					}
 				} catch(e){console.error(e);}
@@ -1840,7 +1839,6 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 		}
 	}
 }
-
 
 var users = {};
 var hype = {};
@@ -2794,22 +2792,22 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 
 	if (settings.comment_background){
 		if (!data.backgroundColor){
-			data.backgroundColor = "background-color:"+settings.comment_background.value+";";
+			data.backgroundColor = "background-color:"+settings.comment_background.textsetting+";";
 		}
 	}
 	if (settings.comment_color){
 		if (!data.textColor){
-			data.textColor = "color:"+settings.comment_color.value+";";
+			data.textColor = "color:"+settings.comment_color.textsetting+";";
 		}
 	}
 	if (settings.name_background){
 		if (!data.backgroundNameColor){
-			data.backgroundNameColor =  "background-color:"+settings.name_background.value+";";
+			data.backgroundNameColor =  "background-color:"+settings.name_background.textsetting+";";
 		}
 	}
 	if (settings.name_color){
 		if (!data.textNameColor){
-			data.textNameColor =  "color:"+settings.name_color.value+";";
+			data.textNameColor =  "color:"+settings.name_color.textsetting+";";
 		}
 	}
 
