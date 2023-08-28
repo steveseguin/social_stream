@@ -112,7 +112,7 @@ allItems.forEach((ele) => {
 const defaultTransTitles = {};
 const allTitles = document.querySelectorAll('[title]');
 allTitles.forEach((ele) => {
-	const key = ele.title.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').trim().replaceAll(" ","-");
+	const key = ele.title.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");
 	ele.dataset.key = key;
     defaultTransTitles[key] = ele.title;
 });
@@ -120,7 +120,7 @@ allTitles.forEach((ele) => {
 const defaultTransPlaceholders = {};
 const allPlaceholders = document.querySelectorAll('[placeholder]');
 allPlaceholders.forEach((ele) => {
-	const key = ele.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').trim().replaceAll(" ","-");
+	const key = ele.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");
 	ele.dataset.key = key;
     defaultTransPlaceholders[key] = ele.placeholder;
 });
