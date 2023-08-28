@@ -92,13 +92,13 @@ function miniTranslate(ele, ident = false, direct=false) {
 	if (translation.titles){
 		var allTitles = ele.querySelectorAll('[title]');
 		allTitles.forEach(function(ele2) {
-			var key = ele2.title.replace(/[\W]+/g, "-").toLowerCase();
+			var key = ele2.title.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').trim().replaceAll(" ","-");;
 			if (key in translation.titles) {
 				ele2.title = translation.titles[key];
 			}
 		});
 		if (ele.title){
-			var key = ele.title.replace(/[\W]+/g, "-").toLowerCase();
+			var key = ele.title.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').trim().replaceAll(" ","-");;
 			if (key in translation.titles) {
 				ele.title = translation.titles[key];
 			}
@@ -107,14 +107,14 @@ function miniTranslate(ele, ident = false, direct=false) {
 	if (translation.placeholders){
 		var allPlaceholders = ele.querySelectorAll('[placeholder]');
 		allPlaceholders.forEach(function(ele2) {
-			var key = ele2.placeholder.replace(/[\W]+/g, "-").toLowerCase();
+			var key = ele2.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').trim().replaceAll(" ","-");;
 			if (key in translation.placeholders) {
 				ele2.placeholder = translation.placeholders[key];
 			}
 		});
 		
 		if (ele.placeholder){
-			var key = ele.placeholder.replace(/[\W]+/g, "-").toLowerCase();
+			var key = ele.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').trim().replaceAll(" ","-");;
 			if (key in translation.placeholders) {
 				ele.placeholder = translation.placeholders[key];
 			}

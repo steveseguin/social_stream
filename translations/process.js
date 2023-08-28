@@ -55,30 +55,25 @@ function updateTranslation(filename) { // updates the website with a specific tr
 	}
 
     const oldTransItems = data.innerHTML;
-   // const allItems1 = document.querySelectorAll('[data-translate]');
 
     allItems.forEach((ele) => {
-		const key = ele.dataset.translate;//.replace(/[\W]+/g, "-").toLowerCase();
+		const key = ele.dataset.translate;
         if (key in oldTransItems) {
             ele.innerHTML = oldTransItems[key];
         }
     });
 
     const oldTransTitles = data.titles;
-    //const allTitles1 = document.querySelectorAll('[title]');
     allTitles.forEach((ele) => {
 		const key = ele.dataset.key;
-        //const key = ele.title.replace(/[\W]+/g, "-").toLowerCase();
         if (key in oldTransTitles) {
             ele.title = oldTransTitles[key];
         }
     });
 
     const oldTransPlaceholders = data.placeholders;
-    //const allPlaceholders1 = document.querySelectorAll('[placeholder]');
     allPlaceholders.forEach((ele) => {
 		const key = ele.dataset.key;
-        //const key = ele.placeholder.replace(/[\W]+/g, "-").toLowerCase();
         if (key in oldTransPlaceholders) {
             ele.placeholder = oldTransPlaceholders[key];
         }
@@ -110,14 +105,14 @@ const updateList = [
 const allItems = document.querySelectorAll('[data-translate]');
 const defaultTrans = {};
 allItems.forEach((ele) => {
-    const key = ele.dataset.translate;//.replace(/[\W]+/g, "-").toLowerCase();
+    const key = ele.dataset.translate;
     defaultTrans[key] = ele.innerHTML.replace(/[\n\t\r]/g, '');
 });
 
 const defaultTransTitles = {};
 const allTitles = document.querySelectorAll('[title]');
 allTitles.forEach((ele) => {
-	const key = ele.title.replace(/[\W]+/g, "-").toLowerCase();
+	const key = ele.title.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').trim().replaceAll(" ","-");
 	ele.dataset.key = key;
     defaultTransTitles[key] = ele.title;
 });
@@ -125,7 +120,7 @@ allTitles.forEach((ele) => {
 const defaultTransPlaceholders = {};
 const allPlaceholders = document.querySelectorAll('[placeholder]');
 allPlaceholders.forEach((ele) => {
-	const key = ele.placeholder.replace(/[\W]+/g, "-").toLowerCase();
+	const key = ele.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').trim().replaceAll(" ","-");
 	ele.dataset.key = key;
     defaultTransPlaceholders[key] = ele.placeholder;
 });
@@ -147,7 +142,7 @@ for (const i in updateList) {
             const newTrans = success[1].innerHTML;
             //const allItems = document.querySelectorAll('[data-translate]');
             allItems.forEach((ele) => {
-                const key = ele.dataset.translate;//.replace(/[\W]+/g, "-").toLowerCase();
+                const key = ele.dataset.translate;
                 newTrans[key] = ele.innerHTML.replace(/[\n\t\r]/g, '');
             });
 			if (lang == "blank" || lang == "en"){
@@ -250,7 +245,7 @@ for (const i in updateList) {
         }
         // //////// RESET THING BACK
         allItems.forEach((ele) => {
-			const key = ele.dataset.translate;//.replace(/[\W]+/g, "-").toLowerCase();
+			const key = ele.dataset.translate;
             if (key in defaultTrans) {
                 ele.innerHTML = defaultTrans[key];
             }
