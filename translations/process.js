@@ -111,7 +111,7 @@ const allItems = document.querySelectorAll('[data-translate]');
 const defaultTrans = {};
 allItems.forEach((ele) => {
     const key = ele.dataset.translate;//.replace(/[\W]+/g, "-").toLowerCase();
-    defaultTrans[key] = ele.innerHTML;
+    defaultTrans[key] = ele.innerHTML.replace(/[\n\t\r]/g, '');
 });
 
 const defaultTransTitles = {};
@@ -148,7 +148,7 @@ for (const i in updateList) {
             //const allItems = document.querySelectorAll('[data-translate]');
             allItems.forEach((ele) => {
                 const key = ele.dataset.translate;//.replace(/[\W]+/g, "-").toLowerCase();
-                newTrans[key] = ele.innerHTML;
+                newTrans[key] = ele.innerHTML.replace(/[\n\t\r]/g, '');
             });
 			if (lang == "blank" || lang == "en"){
 				console.log(newTrans);
