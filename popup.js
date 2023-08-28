@@ -297,6 +297,7 @@ function update(response){
 		}
 
 		if ('settings' in response){
+			console.log(response.settings);
 			for (var key in response.settings){
 
 				if (key === "midiConfig"){

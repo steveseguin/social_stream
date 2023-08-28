@@ -286,7 +286,7 @@ function loadSettings(item, resave=false){
 	}
 	
 	if (settings.translationlanguage){
-		changeLg(settings.translationlanguage.value)
+		changeLg(settings.translationlanguage.optionsetting)
 	}
 }
 ////////////
