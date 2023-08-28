@@ -311,6 +311,10 @@ async function changeLg(lang) {
 	if (!lang){
 		console.log("DISABLING TRANSLATIONS");
 		settings.translation = false;
+		chrome.storage.local.set({
+			settings: settings
+		});
+		chrome.runtime.lastError;
 		pushSettingChange();
 		return;
 	}
@@ -327,6 +331,10 @@ async function changeLg(lang) {
 				}
 				data.miscellaneous = miscTranslations;
 				settings.translation = data;
+				chrome.storage.local.set({
+					settings: settings
+				});
+				chrome.runtime.lastError;
 				pushSettingChange();
 			}).catch(function(e){
 				console.log(e);
