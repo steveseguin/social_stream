@@ -1331,17 +1331,18 @@ function verifyOriginal(msg){
 }
 
 function ajax(object2send, url, ajaxType="PUT"){
-	var xhttp = new XMLHttpRequest();
-	xhttp.onreadystatechange = function() {
-	if (this.readyState == 4 && this.status == 200) {
-		// success
-	} else {
-		console.error("there was an error sending to the API");
-	}
-	};
-	xhttp.open(ajaxType, url, true); // async = true
-	xhttp.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-	xhttp.send(JSON.stringify(object2send));
+	try {
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				// success
+			} else {
+		}
+		};
+		xhttp.open(ajaxType, url, true); // async = true
+		xhttp.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+		xhttp.send(JSON.stringify(object2send));
+	}catch(e){}
 }
 	
 var messageCounter = 0;
@@ -1426,6 +1427,8 @@ function sendToH2R(data){
 			msg.snippet.displayMessage = data.chatmessage.replace(/(<([^>]+)>)/gi, "") || "";
 			
 			if (!msg.snippet.displayMessage){return;}
+			
+			console.log(msg.snippet.displayMessage );
 
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
