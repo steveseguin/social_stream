@@ -262,7 +262,7 @@
 							ele = document.body.querySelector(".cke_textarea_inline[contenteditable='true']>p, div[role='textbox']>p[data-placeholder]");
 							if (ele){
 								ele.focus();
-								sendResponse(false);
+								sendResponse(true);
 								return;
 							}
 						} catch(e){}

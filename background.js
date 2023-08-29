@@ -1428,8 +1428,6 @@ function sendToH2R(data){
 			
 			if (!msg.snippet.displayMessage){return;}
 			
-			console.log(msg.snippet.displayMessage );
-
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
 

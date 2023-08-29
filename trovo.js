@@ -139,7 +139,7 @@
 			try{
 				if ("focusChat" == request){
 					try{
-						var target = document.querySelector(".input-box>.editor");
+						var target = document.querySelector("[class='editor'][contenteditable='true']");
 						if (target){
 							target.innerHTML = "";
 							target.focus();
@@ -153,7 +153,7 @@
 					}
 					sendResponse(true);
 					setTimeout(function(){
-						var target = document.querySelector(".input-box>.editor");
+						var target = document.querySelector("[class='editor'][contenteditable='true']");
 						if (target){
 							target.innerHTML = "";
 						}
