@@ -44,6 +44,9 @@
 		}
 	}
 	
+	// escapeHtml
+	// settings.textonlymode
+	
 	var messageHistory = [];
 	
 	function getAllContentNodes(element) {
@@ -211,13 +214,21 @@
 				hasMembership = '<div data-translate="member-chat" class="donation membership">'+getTranslation("member-chat", "MEMBERSHIP")+'</div>';
 			} else if (giftedmemembership) {
 				hasMembership = '<div data-translate="sponsorship" class="donation membership">'+getTranslation("sponsorship", "SPONSORSHIP")+'</div>';
-				chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
+				if (!settings.textonlymode) {
+					chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
+				} else {
+					chatmessage = giftedmemembership.textContent;
+				}
 			} else {
 				hasMembership = '<div data-translate="new-member" class="donation membership">'+getTranslation("new-member", "NEW MEMBER!")+'</div>';
 				chatmessage = "<i>" + chatmembership + "</i>";
 			}
 		} else if (!chatmessage && giftedmemembership) {
-			chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
+			if (!settings.textonlymode) {
+				chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
+			} else {
+				chatmessage = giftedmemembership.textContent;
+			}
 			hasMembership = '<div data-translate="sponsorship" class="donation membership">'+getTranslation("sponsorship", "SPONSORSHIP")+'</div>';
 			// } else if (memeber){
 			//	  hasMembership = '<div class="membership">MEMEBER</div>'; // Just looks too green, and doesn't highlight those using special member options.
@@ -226,7 +237,9 @@
 		}
 
 		if (chatsticker) {
-			chatmessage = '<img class="supersticker" src="' + chatsticker + '">';
+			if (!settings.textonlymode) {
+				chatmessage = '<img class="supersticker" src="' + chatsticker + '">';
+			}
 		}
 
 		var backgroundColor = "";

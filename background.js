@@ -1386,7 +1386,14 @@ function sendToDestinations(message){
 	sendToPost(message);
 	return true;
 }
-
+function unescapeHtml(safe) {
+	return safe
+		.replace(/&amp;/g, "&")
+		.replace(/&lt;/g, "<")
+		.replace(/&gt;/g, ">")
+		.replace(/&quot;/g, "\"")
+		.replace(/&#039;/g, "'");
+}
 function sendToH2R(data){
 
 	if (settings.h2r && settings.h2rserver && settings.h2rserver.textsetting){
@@ -1409,6 +1416,10 @@ function sendToH2R(data){
 
 			if (data.timestamp){
 				msg.timestamp = data.timestamp;
+			}
+
+			if (!data.textonly){
+				data.chatmessage = unescapeHtml(data.chatmessage);
 			}
 
 			msg.snippet = {};

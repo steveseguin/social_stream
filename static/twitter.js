@@ -250,9 +250,9 @@
 	  data.textonly = settings.textonlymode || false;
 	  
 	  if (settings.detweet){
-		data.type = "twitter";
+			data.type = "twitter";
 	  } else {
-		  data.type = "x";
+			data.type = "x";
 	  }
 	  
 	  pushMessage(data);
