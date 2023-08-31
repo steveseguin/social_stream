@@ -118,8 +118,11 @@
 		var chatmessage = "";
 		try {
 			chatmessage = getAllContentNodes(ele.querySelector("div[class*='-DivUserInfo'], span[data-e2e='message-owner-name']").nextSibling);
-		} catch(e){}	
+		} catch(e){}
 		
+		if (chatmessage == "Moderator"){
+			chatmessage = "";
+		}
 		
 		try {
 			if (!chatmessage){
@@ -150,6 +153,11 @@
 			return;
 		} else if (chatmessage){
 			chatmessage = chatmessage.trim();
+		}
+		
+		if (chatmessage == "Moderator"){
+			return;
+			//alert("!!");
 		}
 		
 		if (chatname && chatimg){

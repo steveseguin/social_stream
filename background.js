@@ -74,9 +74,10 @@ if (typeof(chrome.runtime)=='undefined'){
 	}
 	
 	ipcRenderer.on('fromMain', (event, ...args) => {
-		onMessageCallback(args[0], null, function(response){
-			//sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
-			console.log(response);
+		var sender = {};
+		sender.tab = {};
+		sender.tab.id = null;
+		onMessageCallback(args[0], sender, function(response){
 			ipcRenderer.send('fromBackgroundResponse',response);
 		});
 	})
