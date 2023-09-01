@@ -122,6 +122,7 @@
 		
 		if (chatmessage == "Moderator"){
 			chatmessage = "";
+			//console.log(ele);
 		}
 		
 		try {
@@ -156,6 +157,7 @@
 		}
 		
 		if (chatmessage == "Moderator"){
+			//console.log(ele);
 			return;
 			//alert("!!");
 		}

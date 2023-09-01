@@ -124,6 +124,8 @@
 	
 	function processMessage(ele){	// twitch
 
+		console.log(ele);
+
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
@@ -143,13 +145,13 @@
 		displayName = escapeHtml(displayName);
 
 		try {
-			nameColor = displayNameEle.style.color || ele.querySelector(".seventv-chat-user").style.color;
+			nameColor = displayNameEle.style.color || ele.querySelector(".seventv-chat-user, .chat-line__username").style.color;
 		} catch(e){}
 	  } catch(e){}
 	  
 	  var chatbadges = [];
 	  try {
-		  ele.querySelectorAll("img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset]").forEach(badge=>{
+		  ele.querySelectorAll("img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge").forEach(badge=>{
 			  if (badge.srcset){
 				 let bb = badge.srcset.split("https://").pop();
 				 if (bb){
@@ -158,8 +160,18 @@
 						chatbadges.push(bb);
 					 }
 				 }
-			 } else if (!chatbadges.includes(badge.src)){
+			 } else if (badge.src && !chatbadges.includes(badge.src)){
 				chatbadges.push(badge.src);
+			 } else if (badge.classList && badge.classList.contains("ffz-badge")){
+				  try {
+					 var computed = getComputedStyle(badge);
+					 if (computed.backgroundImage){
+						computed = computed.backgroundImage.split('"')[1].split('"')[0];
+						if (computed){
+							chatbadges.push(computed);
+						}
+					}
+				 } catch(e){}
 			 }
 		  });
 		  
@@ -230,6 +242,8 @@
 		lastMessage = chatmessage;
 		lastUser = username;
 	  }
+	  
+	  
 	  
 	  if (chatmessage && chatmessage.includes(" (Deleted by ")){
 		  //
@@ -313,6 +327,9 @@
 	  if (brandedImageURL){
 		data.sourceImg = brandedImageURL;
 	  }
+	  
+	  console.log(data);
+	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){
 			if ("mid" in e){
