@@ -194,7 +194,9 @@
 		} 
 		
 		if (ital && chatmessage && (chatmessage==="joined")){ // no chat name
-			return;
+			if (!settings.capturejoinedevent){
+				return;
+			}
 		}
 	  
 		var data = {};

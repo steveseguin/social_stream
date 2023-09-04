@@ -936,7 +936,10 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "captureevents"){
 					pushSettingChange();
 				}
-
+				if (request.setting == "capturejoinedevent"){
+					pushSettingChange();
+				}
+				
 				if (request.setting == "sentiment"){
 					if (request.value){
 						if (!sentimentAnalysisLoaded){
