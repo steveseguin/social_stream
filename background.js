@@ -1023,7 +1023,9 @@ chrome.runtime.onMessage.addListener(
 					sendToDestinations({"delete": request.delete});
 				}
 			} else if ("message" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-				request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
+				try {
+					request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
+				} catch(e){}
 				
 				if (isExtensionOn && request.message.type){
 					
@@ -1062,7 +1064,7 @@ chrome.runtime.onMessage.addListener(
 					}
 
 					try{
-						request.message = await applyBotActions(request.message); // perform any immediate actions
+						request.message = await applyBotActions(request.message, sender.tab); // perform any immediate actions
 						if (request.message===null){return;}
 					} catch(e){console.log(e);}
 
@@ -1297,8 +1299,8 @@ function _min(d0, d1, d2, bx, ay){
 ////////////////////////////
 
 var previousMessages = [];
-function checkExactDuplicate(msg){
-
+function checkExactDuplicate(msg){ // just in case the " said: " filter doesn't work, maybe due to a missing space or HTML
+	
 	var cleanText = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
 	cleanText = cleanText.replace(/\s\s+/g, ' ').trim();
 	if (!cleanText){return false;}
@@ -1311,7 +1313,7 @@ function checkExactDuplicate(msg){
 	previousMessages.push(cleanText);
 	setTimeout(function(){
 		previousMessages.shift();
-	},5000);
+	},60000);
 	return ret;
 }
 
@@ -2395,11 +2397,16 @@ function processResponse(data, reverse=false){
 			console.warn(chrome.runtime.lastError.message);
 		}
 		var published = {};
+		
 		for (var i=0;i<tabs.length;i++){
 			try {
 				if (("tid" in data) && (data.tid!==false)){ // if an action-response, we want to only respond to the tab that originated it
 					if (reverse){
-						if ( data.tid === tabs[i].id){continue;}
+						if ( data.tid === tabs[i].id){
+							continue;
+						} else if (data.url && tabs[i].url && (data.url === tabs[i].url)){ // don't send to the exact same URL; not just the same tab, incase the tab is open twice accidentally.
+							continue;
+						}
 					} else if ( data.tid !== tabs[i].id){
 						continue;
 					}
@@ -2409,7 +2416,7 @@ function processResponse(data, reverse=false){
 				if (tabs[i].url.startsWith("https://socialstream.ninja/")){continue;}
 				if (tabs[i].url.startsWith("chrome-extension")){continue;}
 				if (!checkIfAllowed((tabs[i].url))){continue;}
-				
+				 
 				if (data.destination && !tabs[i].url.includes(data.destination)){continue;}
 
 				published[tabs[i].url] = true;
@@ -2690,7 +2697,7 @@ try {
 
 /////// end of bad word filter
 
-async function applyBotActions(data){ // this can be customized to create bot-like auto-responses/actions.
+async function applyBotActions(data, tab=false){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
 	
 	try {
@@ -2730,9 +2737,15 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 
 		if (settings.relaydonos && data.hasDonation && data.chatname && data.type){
 			if (Date.now() - messageTimeout > 100){ // respond to "1" with a "1" automatically; at most 1 time per 100ms.
+			
+				if (data.chatmessage.includes(". Thank you") && data.chatmessage.includes(" donated ")){return null;} // probably a reply
+				
 				messageTimeout = Date.now();
 				var msg = {};
 				msg.tid = data.tid;
+				if (tab){
+					msg.url = tab.url;
+				}
 				msg.response = data.chatname.replace(/(<([^>]+)>)/gi, "")+" on "+data.type+" donated "+data.hasDonation.replace(/(<([^>]+)>)/gi, "")+". Thank you";
 				processResponse(msg, true);
 			}
@@ -2741,11 +2754,17 @@ async function applyBotActions(data){ // this can be customized to create bot-li
 			if (checkExactDuplicate(data.chatmessage)){ // not matching exactly
 				return null;
 			}
-			if (Date.now() - messageTimeout > 1000){ // respond to "1" with a "1" automatically; at most 1 time per second.
+			
+			if (data.chatmessage.includes(" said: ")){return null;} // probably a reply
+			
+			if (Date.now() - messageTimeout > 1000){ 
 				messageTimeout = Date.now();
 				var msg = {};
-				msg.tid = data.tid;
+				msg.tid = data.tid; 
 				// this should be ideall HTML stripped
+				if (tab){
+					msg.url = tab.url;
+				}
 				
 				let tmpmsg = data.chatmessage.replace(/(<([^>]+)>)/gi, "").trim();
 				if (tmpmsg){
