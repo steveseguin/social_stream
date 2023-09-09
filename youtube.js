@@ -55,7 +55,7 @@
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent.trim())+"";
+				resp += escapeHtml(node.textContent)+"";
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					resp += node.outerHTML;
@@ -152,6 +152,8 @@
 				chatmessage = getAllContentNodes(cloned);
 			} catch (e) {}
 		}
+
+		chatmessage = chatmessage.trim();
 
 		try {
 			chatimg = ele.querySelector("#img").src;
