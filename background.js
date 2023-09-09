@@ -2723,7 +2723,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			} catch(e){console.error(e);}
 		}
 		
-		if (settings.autohi){
+		if (settings.autohi && data.chatname){
 			if (data.chatmessage.toLowerCase() === "hi"){
 				if (Date.now() - messageTimeout > 60000){ // respond to "1" with a "1" automatically; at most 1 time per minute.
 					messageTimeout = Date.now();
@@ -2756,6 +2756,12 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			}
 			
 			if (data.chatmessage.includes(" said: ")){return null;} // probably a reply
+			
+			if (settings.myname){
+				let custombot = settings.myname.textparam1.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
+				custombot = custombot.split(",");
+				if (custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){return null;} // a bot or host, so we don't want to relay that
+			}
 			
 			if (Date.now() - messageTimeout > 1000){ 
 				messageTimeout = Date.now();
