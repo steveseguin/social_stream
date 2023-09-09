@@ -53,8 +53,45 @@
 		return resp;
 	}
 	
+	async function fetchWithTimeout(URL, timeout=2000){ // ref: https://dmitripavlutin.com/timeout-fetch-request/
+		try {
+			const controller = new AbortController();
+			const timeout_id = setTimeout(() => controller.abort(), timeout);
+			const response = await fetch(URL, {...{timeout:timeout}, signal: controller.signal});
+			clearTimeout(timeout_id);
+			return response;
+		} catch(e){
+			console.log(e);
+			return await fetch(URL);
+		}
+	}
 	
-	function processMessage(ele){
+	var cachedUserProfiles = {};
+	
+	async function getAvatarImage(username){
+		
+		if (username in cachedUserProfiles){
+			return cachedUserProfiles[username];
+		} 
+		cachedUserProfiles[username] = "";
+		
+		return await fetchWithTimeout("https://vstream.com/c/@"+encodeURIComponent(username)+"?tab=about").then(async response => {
+			return await response.text().then(function (data) {
+				try {
+					var strip = data.split("https://user-images.vstream-cdn.com")[1].split('"')[0];
+					strip = "https://user-images.vstream-cdn.com" + strip;
+					cachedUserProfiles[username] = strip;
+					return strip;
+				} catch(e){console.error(e);}
+			});
+		}).catch(error => {
+			console.error(error);
+			//console.log("Couldn't get avatar image URL. API service down?");
+		});
+	}
+	
+	async function processMessage(ele, skip=false){
+		
 		
 		try {
 			ele = ele.childNodes[0];
@@ -62,19 +99,28 @@
 			return;
 		}
 
-		var chatimg = ""
-
+		var namecolor = "";
 		
 		var name="";
 		try {
 			name = escapeHtml(ele.childNodes[0].childNodes[0].querySelector("button").textContent.trim());
+			try {
+				namecolor = ele.childNodes[0].childNodes[0].querySelector("button").parentNode.style.color;
+			} catch(e){
+			}
 		} catch(e){
 			return;
 		}
 
+		var chatimg = "";
+		chatimg = await getAvatarImage(name);
+		
+		if (skip){return;}
+
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.childNodes[0].childNodes[2]);
+			msg = ele.querySelectorAll("[class*='text-body']");
+			msg = getAllContentNodes(msg[msg.length-1]);
 		} catch(e){
 			return;
 		}
@@ -95,7 +141,7 @@
 		data.chatbadges = chatbadges;
 		data.backgroundColor = "";
 		data.textColor = "";
-		data.nameColor = "";
+		data.nameColor = namecolor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
@@ -193,7 +239,7 @@
 
 					document.querySelectorAll(".w-full > .max-h-full > div").forEach(ele=>{
 						ele.skip=true;
-						//processMessage(ele);
+						processMessage(ele, true);
 					});
 
 					onElementInserted('.w-full > .max-h-full');
