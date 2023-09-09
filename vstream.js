@@ -120,7 +120,7 @@
 		var msg="";
 		try {
 			msg = ele.querySelectorAll("[class*='text-body']");
-			msg = getAllContentNodes(msg[msg.length-1]);
+			msg = getAllContentNodes(msg[1]);
 		} catch(e){
 			return;
 		}
