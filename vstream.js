@@ -101,9 +101,11 @@
 
 		var namecolor = "";
 		
-		var name="";
+		var namett="";
 		try {
-			name = escapeHtml(ele.childNodes[0].childNodes[0].querySelector("button").textContent.trim());
+			var namett = ele.childNodes[0].childNodes[0].querySelectorAll("button");
+			namett = namett[namett.length-1];
+			namett = escapeHtml(namett.textContent.trim());
 			try {
 				namecolor = ele.childNodes[0].childNodes[0].querySelector("button").parentNode.style.color;
 			} catch(e){
@@ -113,7 +115,7 @@
 		}
 
 		var chatimg = "";
-		chatimg = await getAvatarImage(name);
+		chatimg = await getAvatarImage(namett);
 		
 		if (skip){return;}
 
@@ -132,12 +134,12 @@
 		});
 		
 
-		if (!msg || !name){
+		if (!msg || !namett){
 			return;
 		}
 		
 		var data = {};
-		data.chatname = name;
+		data.chatname = namett;
 		data.chatbadges = chatbadges;
 		data.backgroundColor = "";
 		data.textColor = "";
