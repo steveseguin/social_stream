@@ -2264,6 +2264,7 @@
 
 	var autoshow = false;
 	var autoshowdonos = false;
+	var autoshowmembers = false;
 
 	if (urlParams.has("autoshow")){
 		autoShow();
@@ -2273,6 +2274,10 @@
 
 	if (urlParams.has("autoshowdonos")){
 		autoshowdonos = true;
+	}
+	
+	if (urlParams.has("autoshowmembers")){
+		autoshowmembers = true;
 	}
 	
 	var openChatAutomatically = false;
@@ -4835,7 +4840,7 @@
 			node.rawContents = data;
 
 			if (autoshow && !bot){
-				if (!autoshowdonos || (autoshowdonos && data.hasDonation)){ // dono or not to dono.
+				if (!(autoshowdonos || autoshowmembers) || (autoshowdonos && data.hasDonation) || (autoshowmembers && data.hasMembership)){ // dono or not to dono.
 					if (autoTimeoutEnabled){
 						autoShowQueue.push(node);
 						checkAutoShow();
