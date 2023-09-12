@@ -549,7 +549,13 @@ async function overwriteFileExcel(data=false) {
 		var column = [];
 		table.forEach(key=>{
 			if (key in data){
-				column.push(data[key]);
+				if (data[key] === undefined){
+					column.push("");
+				} else if (typeof data[key] === "object"){
+					column.push(JSON.stringify(data[key]));
+				} else {
+					column.push(data[key]);
+				}
 			} else {
 				column.push("");
 			}
