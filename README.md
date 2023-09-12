@@ -90,6 +90,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - vstream.com (pop out chat)
 - estrim - live video chat supported
 - livestorm.io (open the 'external sidebar', which might be a plugin, and it should capture that)
+- boltplus.tv (pop out chat)
 
 [More on request](#requesting-a-site)
 
