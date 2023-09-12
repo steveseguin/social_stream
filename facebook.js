@@ -146,6 +146,18 @@
 				}
 			}
 		}
+		
+		var contentimg = "";
+		if (!msg){
+			try {
+				contentimg = ele.querySelector('div>div>div>div>div>div>div>img[draggable="false"][width][height][class][src]').src;
+				//msg = "<img src='"+msg+"' />";
+			} catch(e){
+				return;
+			}
+		}
+		
+		if (!msg && !contentimg){return;}
 
 		var badges = [];	// we do badges last, as we have already marked images as used in the msg step, so less likely of confusing baddges with images
 		try {
@@ -169,7 +181,7 @@
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.hasMembership = "";;
-		data.contentimg = "";
+		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
 		
 		if (window.location.href.includes("workplace.com")){
@@ -178,6 +190,7 @@
 			data.type = "facebook";
 		}
 		
+		console.log(data);
 		
 		pushMessage(data);
 	}

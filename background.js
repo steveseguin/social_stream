@@ -555,7 +555,6 @@ async function overwriteFileExcel(data=false) {
 			}
 		});
 
-
 		XLSX.utils.sheet_add_aoa(worksheet, [table], {origin: 0}); // replace header
 		XLSX.utils.sheet_add_aoa(worksheet, [column], {origin: -1}); // append new line
 
