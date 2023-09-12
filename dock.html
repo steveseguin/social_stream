@@ -1626,7 +1626,8 @@
 
 		<button class="imgButton" id="filter" data-state="0" style="background-image: url(./icons/filter_msg.png);" title="Filter — 🔽 Filter messages based on what you have entered"></button>
 		<button class="imgButton imgSmallButton" id="hide_emoji" data-state="0" onclick="emoji();" style="background-image: url(./icons/filter_hideemojionly_on.png);" title="Filter — 😀🚫 Hide messages that contains emojis only"></button>
-		<button class="imgButton imgSmallButton" id="only_donos" data-state="0" onclick="donos();" style="background-image: url(./icons/filter_showpaidonly_off.png);" title="Filter — 💲 Show only messages that have donations/cheer"></button>
+		<button class="imgButton imgSmallButton" id="only_donos" data-state="0" onclick="donos();" style="background-image: url(./icons/filter_showpaidonly_off.png);" title="Filter — 💲 Filter for messages that have donations/cheer"></button>
+		<button class="imgButton imgSmallButton" id="only_members" data-state="0" onclick="members();" style="background-image: url(./icons/filter_showmembers_off.png);" title="Filter — 👑 Filter for messages that are from members"></button>
 
 		<div class="horizontalSeparator"></div>
 
@@ -2985,7 +2986,8 @@
 	if (urlParams.has("hidenames")){
 		hideNames = true;
 	}
-
+	
+	var hideNotMembers = false;
 	var hideNotDonos = false;
 	var hideEmojiOnly = false;
 	var hideNotQueued = false;
@@ -3121,13 +3123,31 @@
 			//document.documentElement.style.setProperty("--show-donos-only", "none");
 			hideNotDonos = true;
 			ele.style['background-image']='url(./icons/filter_showpaidonly_on.png)';
-			ele.title = 'Filter — 📄 Show all messages, including the ones that have donations/cheer';
+			ele.title = 'Filter — 📄 Stop filtering for messages that have donations/cheer';
 		} else {
 			ele.dataset.state = "0";
 			//document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
 			hideNotDonos = false;
 			ele.style['background-image']='url(./icons/filter_showpaidonly_off.png)';
-			ele.title = 'Filter — 💲 Show only messages that have donations/cheer';
+			ele.title = 'Filter — 💲 Filter for messages that have donations/cheer';
+		}
+		redoOdd();
+	}
+	
+	function members(){
+		var ele = document.getElementById("only_members");
+		if (ele.dataset.state=="0"){
+			ele.dataset.state = "1";
+			//document.documentElement.style.setProperty("--show-donos-only", "none");
+			hideNotMembers = true;
+			ele.style['background-image']='url(./icons/filter_showmembers_on.png)';
+			ele.title = 'Filter — 📄 Stop filtering for messages that are from members';
+		} else {
+			ele.dataset.state = "0";
+			//document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
+			hideNotMembers = false;
+			ele.style['background-image']='url(./icons/filter_showmembers_off.png)';
+			ele.title = 'Filter — 👑 Filter for messages that are from members';
 		}
 		redoOdd();
 	}
@@ -3152,7 +3172,17 @@
 
 	function applyHiddenState(node){
 		if (hideNotDonos && node.classList.contains("noDono")){
-			node.classList.add("hidden");
+			if (hideNotMembers && node.classList.contains("member")){
+				node.classList.remove("hidden");
+			} else {
+				node.classList.add("hidden");
+			}
+		} else if (hideNotMembers && !node.classList.contains("member")){
+			if (hideNotDonos && !node.classList.contains("noDono")){
+				node.classList.remove("hidden");
+			} else {
+				node.classList.add("hidden");
+			}
 		} else if (hideNotQueued && !node.classList.contains("queued")){
 			node.classList.add("hidden");
 		} else if (hideNotPinned && !node.classList.contains("pinned")){
@@ -4673,7 +4703,17 @@
 			});
 			
 			if (hideNotDonos && node.classList.contains("noDono")){
-				node.classList.add("hidden");
+				if (hideNotMembers && node.classList.contains("member")){
+					node.classList.remove("hidden");
+				} else {
+					node.classList.add("hidden");
+				}
+			} else if (hideNotMembers && !node.classList.contains("member")){
+				if (hideNotDonos && !node.classList.contains("noDono")){
+					node.classList.remove("hidden");
+				} else {
+					node.classList.add("hidden");
+				}
 			} else if (hideNotQueued && !node.classList.contains("queued")){
 				node.classList.add("hidden");
 			} else if (hideNotPinned && !node.classList.contains("pinned")){

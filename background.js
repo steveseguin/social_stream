@@ -1605,7 +1605,7 @@ function setupSocket(){
 				resp = processResponse(msg);
 			} else if (!data.action && data.extContent){ // Not flattened
 				try {
-					var msg = await applyBotActions(data.extContent); // perform any immediate (custom) actions, including modifying the message before sending it out
+					var msg = await applyBotActions(data.extContent); // perform any immediate actions, including modifying the message before sending it out
 					if (msg){
 						resp = sendToDestinations(msg);
 					}
@@ -1615,7 +1615,7 @@ function setupSocket(){
 			} else if (data.action && (data.action === "extContent") && data.value){ // flattened
 				try {
 					let msg = JSON.parse(data.value);
-					msg = await applyBotActions(msg); // perform any immediate (custom) actions, including modifying the message before sending it out
+					msg = await applyBotActions(msg); // perform any immediate actions, including modifying the message before sending it out
 					if (msg){
 						resp = sendToDestinations(msg);
 					}
@@ -1767,8 +1767,6 @@ async function openchat(target=null){
 		let url = "https://dlive.tv/c/"+settings.dlive_username.textsetting+"/"+settings.dlive_username.textsetting;
 		openURL(url, true);
 	}
-	
-	// Custom
 
 	if ((target=="custom1" || !target) && settings.custom1_url){
 		let url = settings.custom1_url.textsetting;
