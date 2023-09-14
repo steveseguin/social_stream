@@ -342,6 +342,11 @@
 	if (urlParams.has("showtime")){
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 0; // 0 disables.
 	}
+	
+	var randomize = false;
+	if (urlParams.has("randomize") || urlParams.has("random")){
+		randomize = true;
+	}
 
 	if (urlParams.has("session")){
 		roomID = urlParams.get("session");
@@ -521,6 +526,10 @@
 		}
 	}
 
+	function randomNumber(min, max) {
+		return Math.floor(Math.random() * (max - min) + min);
+	}
+
 	function processInput(data){
 		if ("waitlistmessage" in data){
 			document.getElementById("waitlisttitle").innerHTML = data.waitlistmessage || "";
@@ -534,10 +543,20 @@
 			} else {
 				for (var i = 0; i<data.waitlist.length;i++){
 					if (data.waitlist[i]){
-						if (data.waitlist[i].chatimg){
-							document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>"
+						if (randomize){
+							var nodes = document.getElementById("waitlist").childNodes;
+							var choice = randomNumber(0,nodes.length+1);
+							if (choice == 0){
+								document.getElementById("waitlist").innerHTML = "<div class='guestListHolder'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>" + document.getElementById("waitlist").innerHTML;
+							} else {
+								nodes[choice-1].outerHTML = nodes[choice-1].outerHTML+"<div class='guestListHolder'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
+							}
 						} else {
-							document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><div class='spacer'></div>"+data.waitlist[i].chatname+"</div>"
+							if (data.waitlist[i].chatimg){
+								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
+							} else {
+								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><div class='spacer'></div>"+data.waitlist[i].chatname+"</div>";
+							}
 						}
 					}
 				}

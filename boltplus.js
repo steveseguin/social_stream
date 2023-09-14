@@ -122,8 +122,6 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "boltplus";
 		
-		//console.log(data);
-		
 		pushMessage(data);
 	}
 
@@ -148,8 +146,9 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+				if ("focusChat" == request){
 					document.querySelector('.public-DraftEditor-content[ contenteditable="true"]').focus();
+					
 					sendResponse(true);
 					return;
 				}
@@ -176,16 +175,7 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							if (mutation.addedNodes[i].skip){continue;}
-
-							mutation.addedNodes[i].skip = true;
-
-							processMessage(mutation.addedNodes[i]); 
-						} catch(e){}
-					}
+					processMessage(document.querySelector(".chatbox-scrollbar > .MuiBox-root").cloneNode(true));
 				}
 			});
 		};
@@ -201,18 +191,13 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('#root')){
-			if (!document.querySelector('#root').marked){
-				document.querySelector('#root').marked=true;
+		if (document.querySelector(".chatbox-scrollbar")){
+			if (!document.querySelector(".chatbox-scrollbar").marked){
+				document.querySelector(".chatbox-scrollbar").marked=true;
 
 				console.log("CONNECTED chat detected");
 
 				setTimeout(function(){
-
-					document.querySelectorAll(".chatbox-scrollbar > .MuiBox-root").forEach(ele=>{
-						ele.skip=true;
-						//processMessage(ele);
-					});
 
 					onElementInserted('.chatbox-scrollbar ');
 
