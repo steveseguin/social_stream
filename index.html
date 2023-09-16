@@ -290,12 +290,14 @@ yt-live-chat-text-message-renderer.shown-comment {
 }
 
 .hl-message:empty {
-	background-color:#0000;
+	background-color:#0000!important;
 	width:200px;
 	min-height:37px;
+	margin-left: auto;
+    margin-right: 0;
 }
 .hl-name:empty {
-    background-color:#0000;
+    background-color:#0000!important;
     z-index:1;
 	display:none;
 }
@@ -565,6 +567,9 @@ span.zero-width-parent img.zero-width-emote {
 .alignright .highlight-chat {
 	right: var(--highlight-chat-left);
 	left: unset;
+	margin-left: auto;
+    margin-right: 0;
+    text-align: right;
 }
 
 .alignright .hl-name {
@@ -575,6 +580,10 @@ span.zero-width-parent img.zero-width-emote {
 .alignright .hl-img {
 	right: calc(-0.5 * var(--author-avatar-border-size));
 	left: unset;
+}
+
+.alignright .hl-message {
+	display: inline-flex;
 }
 
 .alignright .donation {
