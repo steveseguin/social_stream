@@ -37,6 +37,8 @@
 			--cursor-type: pointer;
 			--pressed-color: #9C9C;
 			
+			--flex-direction: row;
+			
 			--font-family: 'Sora', Roboto, Arial, sans-serif;
 			
 			--donation-bgcolor: #FEFFAD33;
@@ -509,6 +511,7 @@
 			background-color: var(--highlight-base);
 			min-height: 24px;
 			max-width:100%;
+			flex-direction: var(--flex-direction);
 		}
 
 		.highlight-chat.expand{
@@ -673,7 +676,8 @@
 			left: 0;
 			width: fit-content;
 			color: var(--font-color-name);
-			display:inline-block;
+			display:flex;
+			flex-direction: var(--flex-direction);
 			font-size: var(--author-font-size);
 		}
 
@@ -2636,6 +2640,11 @@
 	var clock24hr = false
 	if (urlParams.has("24hr")){
 		clock24hr = true;
+	}
+	
+	if (urlParams.has("alignright")){
+		// document.documentElement.style.setProperty("--list-or-horizontal", "flex");
+		document.documentElement.style.setProperty("--flex-direction", "row-reverse");
 	}
 	
 
