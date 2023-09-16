@@ -97,17 +97,7 @@ body {
     padding: 0 5px 1px 5px;
 }
 
-.dono{
-	min-height: 160px;
-}
 
-#output.dono{
-	bottom: 65px;
-}
-
-#message {
-    position: relative;
-}
 
 .fade {
 	animation: fade 0.5s;
@@ -163,7 +153,7 @@ tp-yt-paper-tooltip {
 	cursor: pointer;
 }
 
-div#message > div {
+div.hl-message > div {
     display: inline-block;
 }
 
@@ -212,10 +202,10 @@ div#message > div {
 .highlighted-comment {
     background-color: var(--highlighted-comment-bg-color) !important;
 }
-html[dark] .highlighted-comment #message.yt-live-chat-text-message-renderer {
+html[dark] .highlighted-comment .hl-message.yt-live-chat-text-message-renderer {
     color: black;
 }
-html[dark] .highlighted-comment:hover #message.yt-live-chat-text-message-renderer {
+html[dark] .highlighted-comment:hover .hl-message.yt-live-chat-text-message-renderer {
     color: white;
 }
 html[dark] .highlighted-comment #author-name.yt-live-chat-author-chip {
@@ -274,7 +264,7 @@ yt-live-chat-text-message-renderer.shown-comment {
 	border-radius: var(--rounded-border-radius);
 }
 .hl-message {
-    position: absolute;
+	position: relative;
     width: var(--comment-width);
     font-weight: var(--comment-font-weight);
     padding: var(--comment-padding);
@@ -555,7 +545,42 @@ span.zero-width-parent img.zero-width-emote {
 	position: absolute;
 	right: 0;
 }
-		
+
+.stacked {
+	margin-top: 30px;
+}
+
+.dono{
+	margin-bottom: 15px;
+	min-height: 160px;
+}
+
+
+.alignright.output {
+	left: unset;
+	right: 0;
+	margin: 0 15px 0 0!important;
+}
+
+.alignright .highlight-chat {
+	right: var(--highlight-chat-left);
+	left: unset;
+}
+
+.alignright .hl-name {
+	right: var(--author-left);
+	left: unset;
+}
+
+.alignright .hl-img {
+	right: calc(-0.5 * var(--author-avatar-border-size));
+	left: unset;
+}
+
+.alignright .donation {
+	right: -70px;
+	left: unset;
+}
 </style>
 </head>
 <body>
@@ -769,6 +794,26 @@ span.zero-width-parent img.zero-width-emote {
 		transitionType = "fade";
 	} else if (urlParams.has("swipe")){
 		transitionType = "swipe";
+	}
+	
+	var stacking = false
+	if (urlParams.has("stacking") || urlParams.has("stacked") || urlParams.has("stack")){
+		stacking = true;
+	}
+	
+	var textDirection = "auto";
+	if (urlParams.has("rtl")){
+		textDirection = "rtl"; // dir="rtl"
+	}
+	
+	var alignright = false;
+	if (urlParams.has("alignright")){
+		// document.documentElement.style.setProperty("--list-or-horizontal", "flex");
+		alignright = true;
+		document.getElementById("output").classList.add("alignright");
+		document.documentElement.style.setProperty("--flex-direction", "row-reverse");
+		document.documentElement.style.setProperty("--comment-padding", "20px 145px 20px 35px");
+		//textDirection = "rtl";
 	}
 	
 	var avatar = true;
@@ -1220,7 +1265,9 @@ span.zero-width-parent img.zero-width-emote {
 		
 		if (data && data.contents){
 			clearTimeout(timeoutTimer);
-			document.getElementById("output").classList.add(transitionType);
+			if (!stacking){
+				document.getElementById("output").classList.add(transitionType);
+			} 
 			clearInterval(nextComment);
 			
 			try {
@@ -1390,20 +1437,48 @@ span.zero-width-parent img.zero-width-emote {
 					chatbadges = '<div class="hl-badges" >' + chatbadges + '</div>';
 				}
 				
-				document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" data-source-type="'+data.type+'">'
-					 + '<div class="hl-name" '+styleOverrideName+' id="nameDIV">' + data.chatname
-					 + chatbadges
-					 + '</div>'
-					 + '<div id="message" '+styleOverride+' class="hl-message" >' + data.chatmessage + '</div>'
-					 + avatarImg
-					 + addImage
-					 + donationHTML + data.hasMembership +'</div>';
-				
-				if (data.hasDonation || data.hasMembership){
-					document.getElementById("output").classList.add("dono");
+				if (stacking){
+					try {
+						document.getElementById("message").id = "";
+						document.getElementById("nameDIV").id = "";
+						document.getElementById("newmessage").id = "";
+					} catch(e){}
+					
+					
+					document.getElementById("output").innerHTML += '<div class="hl-c-cont highlight-chat stacked" id="newmessage" data-source-type="'+data.type+'">'
+						 + '<div class="hl-name" '+styleOverrideName+' id="nameDIV">' + data.chatname
+						 + chatbadges
+						 + '</div>'
+						 + '<div id="message" '+styleOverride+' class="hl-message" dir="'+textDirection+'" >' + data.chatmessage + '</div>'
+						 + avatarImg
+						 + addImage
+						 + donationHTML + data.hasMembership +'</div>';
+						 
+					
+					
+					if (data.hasDonation || data.hasMembership){
+						document.getElementById("newmessage").classList.add("dono");
+					} else {
+						document.getElementById("newmessage").classList.remove("dono");
+					}
 				} else {
-					document.getElementById("output").classList.remove("dono");
+					document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="'+data.type+'">'
+						 + '<div class="hl-name" '+styleOverrideName+' id="nameDIV">' + data.chatname
+						 + chatbadges
+						 + '</div>'
+						 + '<div id="message" '+styleOverride+' class="hl-message" dir="'+textDirection+'" >' + data.chatmessage + '</div>'
+						 + avatarImg
+						 + addImage
+						 + donationHTML + data.hasMembership +'</div>';
+						 
+					if (data.hasDonation || data.hasMembership){
+						document.getElementById("newmessage").classList.add("dono");
+					} else {
+						document.getElementById("newmessage").classList.remove("dono");
+					}
 				}
+				
+				
 				
 				if (!data.chatname && !data.chatbadges){
 					document.getElementById("nameDIV").style.display = "none";
@@ -1411,6 +1486,7 @@ span.zero-width-parent img.zero-width-emote {
 
 				var fontsize = "";
 				var limitchar = parseInt(window.innerWidth/6.5);
+				
 				
 				if (document.getElementById("message").innerText.length>limitchar){
 					fontsize = (parseInt((limitchar*100)/document.getElementById("message").innerText.length));

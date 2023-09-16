@@ -677,10 +677,8 @@
 			width: fit-content;
 			color: var(--font-color-name);
 			display:inline-block;
-			flex-direction: var(--flex-direction);
 			font-size: var(--author-font-size);
 		}
-
 
 		.notcompactmode .hl-name{
 			margin: 3.14px 5px 0 5px;
@@ -2642,10 +2640,17 @@
 		clock24hr = true;
 	}
 	
+	var textDirection = "auto";
+	if (urlParams.has("rtl")){
+		textDirection = "rtl"; // dir="rtl"
+	}
+	
 	if (urlParams.has("alignright")){
 		// document.documentElement.style.setProperty("--list-or-horizontal", "flex");
 		document.documentElement.style.setProperty("--flex-direction", "row-reverse");
+		//textDirection = "rtl";
 	}
+	
 	
 
 	if (urlParams.has("save")){
@@ -4514,23 +4519,23 @@
 			}
 
 			if (largeavatar){
-				chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' + (data.chatname||"") + '<span class="hl-badges">'+chatbadges +"</span></div>";
+				chatname = '<div dir="'+textDirection+'" '+nameColor+' class="hl-name'+splitMode+'">' + (data.chatname||"") + '<span class="hl-badges">'+chatbadges +"</span></div>";
 			} else if (data.chatname){
 				if (compactmode){
 					if (specialMessage){
-						chatname = '<div class="hl-name'+splitMode+'"></div>';
+						chatname = '<div dir="'+textDirection+'" class="hl-name'+splitMode+'"></div>';
 					} else if (chatbadges){
-						chatname = '<span class="hl-badges">'+chatbadges+'</span><div '+nameColor+' class="hl-name'+splitMode+'">'+ data.chatname+afterName+"</div>";
+						chatname = '<span class="hl-badges">'+chatbadges+'</span><div '+nameColor+' dir="'+textDirection+'" class="hl-name'+splitMode+'">'+ data.chatname+afterName+"</div>";
 					} else { 
-						chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' + data.chatname+afterName+"</div>";
+						chatname = '<div dir="'+textDirection+'" '+nameColor+' class="hl-name'+splitMode+'">' + data.chatname+afterName+"</div>";
 					}
 				} else {
-					chatname = '<div '+nameColor+' class="hl-name'+splitMode+'">' +chatbadges+ data.chatname+"</div>";
+					chatname = '<div dir="'+textDirection+'" '+nameColor+' class="hl-name'+splitMode+'">' +chatbadges+ data.chatname+"</div>";
 				}
 			} else if (specialMessage && compactmode){
-				chatname = '<div class="hl-name'+splitMode+'"></div>';
+				chatname = '<div dir="'+textDirection+'" class="hl-name'+splitMode+'"></div>';
 			} else {
-				chatname = '<div class="hl-name'+splitMode+'">'+chatbadges+'</div>';
+				chatname = '<div dir="'+textDirection+'" class="hl-name'+splitMode+'">'+chatbadges+'</div>';
 			}
 
 			var larger = "";
@@ -4574,7 +4579,7 @@
 							+ "<div class='queueid'></div>"
 						+ '</div>'
 						+ '<div class="hl-message">'
-							+ '<span class="hl-content" id="content_'+data.id+'">' + chatmessage + '</span>'
+							+ '<span class="hl-content" dir="'+textDirection+'" id="content_'+data.id+'">' + chatmessage + '</span>'
 							+ addImage
 							+ donationHTML 
 						+ '</div>'
@@ -4588,7 +4593,7 @@
 						+ chatname
 					+ '</div><div class="hl-message">'
 						+ timeArrived
-						+ '<span class="hl-content" id="content_'+data.id+'">' + chatmessage + '</span>'
+						+ '<span class="hl-content" dir="'+textDirection+'" id="content_'+data.id+'">' + chatmessage + '</span>'
 						+ '</div>'
 					+ addImage
 					+ donationHTML + '</div>');
@@ -4600,7 +4605,7 @@
 					 + showType
 					 + chatImg
 					 + "</div>"
-					 + '<div class="hl-message hl-content" id="content_'+data.id+'">' + chatmessage + '</div>'
+					 + '<div class="hl-message hl-content" dir="'+textDirection+'" id="content_'+data.id+'">' + chatmessage + '</div>'
 					 + addImage
 					 + donationHTML + '</div>');
 			} else if (compactmode){
@@ -4611,7 +4616,7 @@
 						+ chatImg
 						+ timeArrived
 						+ chatname
-						+ '<span class="hl-content" id="content_'+data.id+'">' + chatmessage + '</span>'
+						+ '<span class="hl-content" dir="'+textDirection+'" id="content_'+data.id+'">' + chatmessage + '</span>'
 					 + '</div>'
 					 + addImage
 					 + donationHTML + '</div>');
@@ -4622,7 +4627,7 @@
 					 + chatImg
 					 + timeArrived
 					 + chatname
-					 + '<div class="hl-message hl-content" id="content_'+data.id+'">' + chatmessage + '</div>'
+					 + '<div class="hl-message hl-content" dir="'+textDirection+'" id="content_'+data.id+'">' + chatmessage + '</div>'
 					 + addImage
 					 + donationHTML + '</div>');
 			}
