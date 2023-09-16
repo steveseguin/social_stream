@@ -1608,6 +1608,16 @@
 		    position: absolute;
 			right: 0;
 		}
+		
+		.alignright .compactmode {
+			margin-left: auto; 
+			margin-right: 0;
+		}
+		
+		.alignright .compactmode .hl-message {
+			flex-direction: var(--flex-direction);
+			display: flex;
+		}
 }
 	</style>
 </head>
@@ -2640,16 +2650,7 @@
 		clock24hr = true;
 	}
 	
-	var textDirection = "auto";
-	if (urlParams.has("rtl")){
-		textDirection = "rtl"; // dir="rtl"
-	}
 	
-	if (urlParams.has("alignright")){
-		// document.documentElement.style.setProperty("--list-or-horizontal", "flex");
-		document.documentElement.style.setProperty("--flex-direction", "row-reverse");
-		//textDirection = "rtl";
-	}
 	
 	
 
@@ -2676,6 +2677,18 @@
 		// <!-- left: 400px; -->
 		// <!-- top: 0px; -->
 		// <!-- max-width: 300px; -->
+	}
+	
+	var textDirection = "auto";
+	if (urlParams.has("rtl")){
+		textDirection = "rtl"; // dir="rtl"
+	}
+	
+	if (urlParams.has("alignright")){
+		// document.documentElement.style.setProperty("--list-or-horizontal", "flex");
+		document.documentElement.style.setProperty("--flex-direction", "row-reverse");
+		//textDirection = "rtl";
+		document.getElementById("main").classList.add("alignright");
 	}
 
 	var postServer = "http://127.0.0.1";
