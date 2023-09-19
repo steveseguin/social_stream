@@ -66,11 +66,12 @@
 	}
 
 	function processMessage(ele){
-		var content = ele.childNodes[0].childNodes[0];
+		
+		console.log(ele);
 		
 		var chatname="";
 		try {
-			chatname = content.querySelector(".dlive-name__text").textContent;
+			chatname = ele.querySelector(".dlive-name__text").textContent;
 			chatname = chatname.replace(":","");
 			chatname = chatname.trim();
 			chatname = escapeHtml(chatname);
@@ -81,10 +82,10 @@
 		var chatmessage="";
 		try{
 			 if (settings.textonlymode){
-				chatmessage = escapeHtml(content.querySelector(".chatrow-inner").querySelector("span.linkify").innerText);
+				chatmessage = escapeHtml(ele.querySelector(".chatrow-inner").querySelector("span.linkify").innerText);
 			 } else {
 				chatmessage = ""
-				content.querySelectorAll("span.linkify>span").forEach(ele2=>{
+				ele.querySelectorAll("span.linkify>span").forEach(ele2=>{
 					if (ele2.querySelector("img")){
 						chatmessage += "<img src='"+ele2.querySelector("img").src+"'/>";
 					} else {
@@ -92,13 +93,14 @@
 					}
 				});
 			 }
+			 chatmessage = chatmessage.trim();
 		} catch(e){
 			return;
 		}
 
 		var chatimg="";
 		try{
-			chatimg = content.querySelector("img.sender-avatar,img.avatar-img").src;
+			chatimg = ele.querySelector("img.sender-avatar,img.avatar-img").src;
 			chatimg = chatimg.replace("25x25","200x200");
 		} catch(e){
 			chatimg = "";
@@ -127,7 +129,7 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						if (mutation.addedNodes[i] && mutation.addedNodes[i].className && mutation.addedNodes[i].classList.contains("chat-row-wrap")) {
+						if (mutation.addedNodes[i]) {
 							if (!mutation.addedNodes[i].dataset.set123){
 								mutation.addedNodes[i].dataset.set123 = "true";
 								callback(mutation.addedNodes[i]);
@@ -139,7 +141,7 @@
 		};
 		var target = document.querySelector(containerSelector);
 		if (!target){return;}
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -150,7 +152,7 @@
 	setTimeout(function(){ // clear existing messages; just too much for a stream.
 		console.log("LOADED SocialStream EXTENSION");
 		try {
-			var main = document.querySelectorAll(".chat-row-wrap");
+			var main = document.querySelector("#chat-body > .chatbody").childNodes;
 			for (var j =0;j<main.length;j++){
 				try{
 					if (!main[j].dataset.set123){
@@ -165,11 +167,11 @@
 	
 	setInterval(function(){ // lets just see if the chat has been updated or something
 	
-		if (document.getElementById("chat-body")){
-			if (!document.getElementById("chat-body").dataset.set123){
+		if (document.querySelector("#chat-body > .chatbody")){
+			if (!document.querySelector("#chat-body > .chatbody").dataset.set123){
 				console.log("SocialStream Active");
-				document.getElementById("chat-body").dataset.set123 = "true";
-				onElementInserted("#chat-body", function(element){
+				document.querySelector("#chat-body > .chatbody").dataset.set123 = "true";
+				onElementInserted("#chat-body > .chatbody", function(element){
 				  processMessage(element, false);
 				});
 			}
