@@ -12,7 +12,7 @@
   function errorlog(e) {
     //console.error(e);
   }
-  
+
   function escapeHtml(unsafe){
 		try {
 			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
@@ -31,9 +31,9 @@
 
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
-		
+
 		if (!element){return resp;}
-		
+
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
 				return escapeHtml(element.textContent) || "";
@@ -41,7 +41,7 @@
 				return "";
 			}
 		}
-		
+
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
@@ -58,7 +58,7 @@
 		});
 		return resp;
 	}
-  
+
   function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
@@ -89,7 +89,7 @@
     }
 
 	chatname = ele.parentNode.parentNode.dataset.senderName;
-	
+
 	if (chatname === "You"){
 		chatname = Hostname;
 		chatimg = Hostimg;
@@ -110,37 +110,66 @@
 
 
 	console.log(data);
-	
+
     pushMessage(data);
     return;
   }
 
+
+  function getParticipantImage(name) {
+    if (name === 'You') {
+      var owner = document.querySelector('[data-layout=no-crop]');
+      if (owner) {
+        var img = owner.querySelector('img');
+        return (img && img.src) || '';
+      }
+    }
+    var allSenders = document.querySelectorAll('[data-participant-id]');
+    for(var i=0; i<allSenders.length; i++) {
+      var nameEl = allSenders[i].querySelector('[data-self-name]');
+      if (nameEl && nameEl.querySelector('[jsslot]') && nameEl.querySelector('[jsslot]').firstChild.innerText === name) {
+        var img = allSenders[i].querySelector('img');
+        return (img && img.src) || '';
+      }
+    }
+    return '';
+  }
+
+  function processSender(sender) {
+    var chatname = sender.dataset.senderName;
+    var messages = Array.prototype.slice.call(sender.querySelectorAll('[data-is-tv]'));
+    messages.forEach(function(message) {
+      if(message.marked) return;
+      message.marked = true;
+      var data = {};
+      var chatmessage = escapeHtml(message.innerText);
+      var chatimg = getParticipantImage(chatname);
+      data.chatname = chatname;
+      data.chatbadges = "";
+      data.backgroundColor = "";
+      data.textColor = "";
+      data.chatmessage = chatmessage;
+      data.chatimg = chatimg;
+      data.hasDonation = "";
+      data.hasMembership = "";
+      data.contentimg = "";
+      data.textonly = settings.textonlymode || false;
+      data.type = "meet";
+      pushMessage(data);
+    });
+  }
+
   console.log("Social Stream injected");
 
-
-  var Hostname = false;
-  var Hostimg = false;
-  
-  if (document.querySelectorAll("div[title]").length){
-		Hostname = document.querySelectorAll("div[title]")[0].title;
-		if (document.querySelectorAll("div[title]")[0].parentNode.previousSibling){
-			Hostimg = document.querySelectorAll("div[title]")[0].parentNode.previousSibling.src || false;
-			toDataURL(Hostimg, function(dataUrl) {
-				Hostimg = dataUrl;
-			});
-		}
-  }
-  
-  
   var settings = {};
-  
+
   chrome.runtime.onMessage.addListener(
 	function (request, sender, sendResponse) {
 		try{
 			if ("focusChat" == request){
 				document.querySelector('.DraftEditor-editorContainer .public-DraftStyleDefault-block[data-offset-key]').click();
 				document.querySelector('.DraftEditor-editorContainer .public-DraftStyleDefault-block[data-offset-key]').focus();
-				
+
 				sendResponse(true);
 				return;
 			}
@@ -156,27 +185,13 @@
 		sendResponse(false);
 	}
   );
-  
+
+  // -------------------------------------------------------------------
+  // Poll for Meets Messages -------------------------------------------
+  // -------------------------------------------------------------------
   setInterval(function () {
-	  
-	if (!Hostname && document.querySelectorAll("div[title]").length){
-		Hostname = document.querySelectorAll("div[title]")[0].title;
-		if (document.querySelectorAll("div[title]")[0].parentNode.previousSibling){
-			Hostimg = document.querySelectorAll("div[title]")[0].parentNode.previousSibling.src || false;
-			toDataURL(Hostimg, function(dataUrl) {
-				Hostimg = dataUrl;
-			});
-		}
-	}
-	  
-	var xxx = document.querySelectorAll('[data-message-text]');
-	for (var j = 0; j < xxx.length; j++) {
-	  if (xxx[j].marked) {
-		continue;
-	  }
-	  xxx[j].marked = true;
-	  processMessage(xxx[j]);
-	}
+    var senders = Array.prototype.slice.call(document.querySelectorAll('[data-sender-name]'));
+    senders.forEach(processSender);
   }, 1000);
 
   // Does not support sending messages in Chime
