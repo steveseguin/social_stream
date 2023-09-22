@@ -3794,11 +3794,14 @@
 	}
 	
 	function filterMessage(node) {
-	
 		if (filterAddNameAndTime) {
 			if (!filterNamesNotMessages && node.textContent.toLowerCase().includes(filtering)) {
 			
-			} else if (filterNamesNotMessages && eles[i].querySelector(".hl-name") && eles[i].querySelector(".hl-name").textContent.toLowerCase().includes(filtering)){
+			} else if (filterNamesNotMessages && 
+						node.querySelector(".hl-name") && 
+						filtering.split(",").map(element => {
+							return element.toLowerCase().trim();
+						}).includes(node.querySelector(".hl-name").textContent.toLowerCase().trim())){
 					
 			} else if (node.dataset.sourceType && (("source:"+node.dataset.sourceType) == filtering)){ // youtube, twitch, etc.
 			
@@ -3844,8 +3847,15 @@
 				// Filter is typed - Found; then show them
 				} else if (!filterNamesNotMessages && eles[i].textContent.toLowerCase().includes(keyword)) {
 					eles[i].classList.remove("hide");
-				} else if (filterNamesNotMessages && eles[i].querySelector(".hl-name") && eles[i].querySelector(".hl-name").textContent.toLowerCase().includes(keyword)){
+				} else if (filterNamesNotMessages && 
+						eles[i].querySelector(".hl-name") && 
+						filtering.split(",").map(element => {
+							return element.toLowerCase().trim();
+						}).includes(eles[i].querySelector(".hl-name").textContent.toLowerCase().trim())){
+						
+						console.log("MATCHED");
 					eles[i].classList.remove("hide");
+					
 				} else if (eles[i].dataset.sourceType && (("source:"+eles[i].dataset.sourceType) == keyword)){ // youtube, twitch, etc.
 					eles[i].classList.remove("hide");
 				} else {
