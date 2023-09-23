@@ -117,7 +117,7 @@
 
 
   function getParticipantImage(name) {
-    if (name === 'You') {
+     if (name === 'You') {
       var owner = document.querySelector('[data-layout=no-crop]');
       if (owner) {
         var img = owner.querySelector('img');
@@ -137,6 +137,11 @@
 
   function processSender(sender) {
     var chatname = sender.dataset.senderName;
+	if (chatname == "You"){
+	  try {
+        chatname = document.querySelector('[data-self-name="You"] [role="tooltip"]').textContent;
+      } catch(e){}
+	}
     var messages = Array.prototype.slice.call(sender.querySelectorAll('[data-is-tv]'));
     messages.forEach(function(message) {
       if(message.marked) return;
@@ -144,7 +149,7 @@
       var data = {};
       var chatmessage = escapeHtml(message.innerText);
       var chatimg = getParticipantImage(chatname);
-      data.chatname = chatname;
+      data.chatname = escapeHtml(chatname);
       data.chatbadges = "";
       data.backgroundColor = "";
       data.textColor = "";
@@ -180,7 +185,7 @@
 					return;
 				}
 			}
-			// twitch doesn't capture avatars already.
+			
 		} catch(e){}
 		sendResponse(false);
 	}
