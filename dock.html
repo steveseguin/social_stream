@@ -2429,8 +2429,6 @@
 		}
 	}
 	
-	
-	
 	if (urlParams.has("ttskey")){
 		audio = document.createElement("audio");
 		audio.onended = finishedAudio;
@@ -2489,6 +2487,11 @@
 	var skipTTSMessages = false;
 	if (urlParams.has("skipmessages")){
 		skipTTSMessages = parseInt(urlParams.get("skipmessages")) || 3;
+	}
+	
+	var doNotReadEvents = true;
+	if (urlParams.has("readevents")){
+		doNotReadEvents = false;
 	}
 
 	var pitch = 1;
@@ -5094,6 +5097,10 @@
 			if (parseInt(data.id) % skipTTSMessages !== 0){
 				return;
 			}
+		}
+		 
+		if (doNotReadEvents && data.event){
+			return;
 		}
 		
 		var isCommand = false;
