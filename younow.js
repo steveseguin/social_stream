@@ -56,25 +56,24 @@
 	
 	function processMessage(ele){
 		
-		console.log(ele);
-
+		//console.log(ele);
 
 		var chatimg = ""
 
 		try {
-			chatimg = ele.querySelector("img.rounded-full").src;
+			chatimg = ele.querySelector("img[src].avatar").src;
 		} catch(e){
 		}
 		
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector(".message-body-inner").childNodes[0].textContent.trim());
+			name = escapeHtml(ele.querySelector("button>span[title]").textContent.trim());
 		} catch(e){
 		}
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".message-body-inner").childNodes[1]).trim();
+			msg = getAllContentNodes(ele.querySelector(".user-card__body")).trim();
 		} catch(e){
 		}
 		
@@ -94,7 +93,7 @@
 		data.hasDonation = "";
 		data.hasMembership = "";
 		data.contentimg = "";
-		data.type = "cozy";
+		data.type = "younow";
 		
 		pushMessage(data);
 	}
@@ -170,23 +169,23 @@
 
 	setInterval(function(){
 		try {
-			document.querySelectorAll('.flex.scrollbar-pretty.text-base').forEach(container=>{ // more than one #message .. tsk ;)
-				if (!container.marked){
-					container.marked=true;
+			if (document.querySelector('app-chat-list .chat-list')){
+				if (!document.querySelector('app-chat-list .chat-list').marked){
+					document.querySelector('app-chat-list .chat-list').marked=true;
 
 					console.log("CONNECTED chat detected");
 
 					setTimeout(function(){
 
-						[...container.childNodes].forEach(ele=>{
+						[...document.querySelector('app-chat-list .chat-list').childNodes].forEach(ele=>{
 							ele.skip=true;
 							//processMessage(ele);
 						});
-						onElementInserted(container);
+						onElementInserted(document.querySelector('app-chat-list .chat-list'));
 
 					},1000);
 				}
-			});
+			};
 		} catch(e){}
 	},2000);
 
