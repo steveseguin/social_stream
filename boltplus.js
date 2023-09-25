@@ -91,12 +91,22 @@
 			
 		}
 		
+		var contentImg = "";
+		/* try{
+			contentImg = ele.querySelector(".giphy-gif-img[src]").src; // too annoying to support
+		} catch(e){
+		}
+		 */
 		
 
 		var msg="";
 		try {
 			msg = ele.querySelectorAll("[data-text='true']");
-			msg = getAllContentNodes(msg[msg.length-1]).trim();
+			if (msg.length>1){
+				msg = getAllContentNodes(msg[msg.length-1]).trim();
+			} else {
+				msg = "";
+			}
 		} catch(e){
 			return;
 		}
@@ -104,7 +114,7 @@
 		var chatbadges = [];
 		
 
-		if (!msg || !namett){
+		if (!namett || (!contentImg && !msg)){
 			return;
 		}
 		
@@ -118,7 +128,7 @@
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.hasMembership = "";
-		data.contentimg = "";
+		data.contentimg = contentImg;
 		data.textonly = settings.textonlymode || false;
 		data.type = "boltplus";
 		
@@ -180,7 +190,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: false }; // sub tree turned off; only children, no grand children
+		var config = { childList: true, subtree: true }; // sub tree turned off; only children, no grand children
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
