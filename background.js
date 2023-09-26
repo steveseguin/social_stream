@@ -2243,6 +2243,16 @@ function checkIfAllowed(sitename){
 			}
 		} catch(e){}
 	}
+	if (!settings.teams){
+		try {
+			if (sitename == "teams"){
+				return false;
+			}
+			if (sitename.startsWith("https://teams.microsoft.com/")){
+				return false;
+			}
+		} catch(e){}
+	}
 	if (!settings.openai){
 		try {
 			if (sitename == "openai"){
