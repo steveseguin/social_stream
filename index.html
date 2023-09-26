@@ -957,6 +957,10 @@ span.zero-width-parent img.zero-width-emote {
 		setupSocket(2);
 	}
 	
+	var onlyshowdonos = false
+	if (urlParams.has("donosonly")){
+		onlyshowdonos = true;
+	}
 	
 	var speechLang = "en-US";
 	var speech = false;
@@ -1271,8 +1275,14 @@ span.zero-width-parent img.zero-width-emote {
 	var iframeTimeout = null;
 	
 	function processData(data){
+	
 		
 		if (data && data.contents){
+		
+			if (onlyshowdonos && !data.contents.hasDonation){
+				return;
+			}
+		
 			clearTimeout(timeoutTimer);
 			if (!stacking){
 				document.getElementById("output").classList.add(transitionType);
