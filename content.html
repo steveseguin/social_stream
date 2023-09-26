@@ -1,0 +1,556 @@
+<html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+	<meta content="utf-8" http-equiv="encoding" />
+	<title>Social Stream - Emotes Wall</title>
+	<meta name="title" content="Social Stream - Emotes Wall" />
+	<link rel="icon" href="./icons/favicon.ico" />
+	<style>
+		:root {
+			--font-color: #FFF;
+			--font-color-name: #DDD;
+			--background-color: #0000;
+			--font-size: 240%;
+			--electron-drag-fix: drag;
+			--width: 48px;
+			--x-speed: 13s;
+			--y-speed: 7s;
+		}
+
+		body {
+			-moz-transform-origin: 0 0;
+			width:100%;
+			height:100%;
+			max-width:100vw;
+			max-height:100vh;
+			margin:0;
+			padding:0;
+			overflow:hidden;
+			user-select: none;
+		}
+
+		.el { 
+		  width: var(--width);
+		  height: var(--width);
+		}
+
+		.x {
+		  animation: x var(--x-speed) linear infinite alternate;
+		}
+		.y {
+		  animation: y var(--y-speed) linear infinite alternate;
+		}
+
+		@keyframes x {
+		  100% {
+			transform: translateX(calc(100vw - var(--width)));
+		  }
+		}
+		@keyframes y {
+		  100% {
+			transform: translateY(calc(100vh - var(--width)));
+		  }
+		}
+
+		body {
+			font-family: Roboto, Arial, Roboto, sans-serif;
+			color: var(--font-color);
+			margin: 0 0;
+			background-color: var(--background-color);
+			text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
+			overflow-x: hidden;
+			scrollbar-color:#666 #201c29;
+		}
+
+		::-webkit-scrollbar {
+			width: 15px;
+		}
+
+		::-webkit-scrollbar-track {
+			-webkit-box-shadow: inset 0 0 13px rgb(0 0 0 / 90%);
+			border-radius: 4px;
+		}
+
+		::-webkit-scrollbar-thumb {
+			border-radius: 4px;
+			-webkit-box-shadow: inset 0 0 16px rgb(150 150 150 / 100%);
+			border: solid 3px transparent;
+		}
+
+		body > div {
+			-webkit-app-region: no-drag;
+		}
+
+		body.lightmode {
+			font-weight: 500;
+			text-shadow: -2px -2px #FFF, -2px -1px #FFF, -2px 0px #FFF, -2px 1px #FFF, -2px 2px #FFF, -1px -2px #FFF, -1px -1px #FFF, -1px 0px #FFF, -1px 1px #FFF, -1px 2px #FFF, 0px -2px #FFF, 0px -1px #FFF, 0px 0px #FFF, 0px 1px #FFF, 0px 2px #FFF, 1px -2px #FFF, 1px -1px #FFF, 1px 0px #FFF, 1px 1px #FFF, 1px 2px #FFF, 2px -2px #FFF, 2px -1px #FFF, 2px 0px #FFF, 2px 1px #FFF, 2px 2px #FFF;
+		}
+
+		@keyframes fadeIn {
+			0% { opacity: 0; }
+			100% { opacity: 1; }
+		}
+		
+		div > span {
+			max-width: calc(var(--width) * 1.5);
+			max-height: var(--width);
+			position:relative;
+			margin: auto;
+			padding: 0;
+			object-fit: contain;
+			vertical-align: top;
+			display: block;
+		}
+		
+		img {
+			margin: auto;
+			padding: 0;
+			object-fit: contain;
+			vertical-align: top;
+			display: block;
+			width: 100%;
+			height: 100%;
+		}
+
+
+		.hidden {
+			display:none!important;
+		}
+
+		.emoji{
+			font-size: var(--font-size);
+			vertical-align: sub;
+			text-shadow: 0 0 #0000;
+			width: var(--width);
+			height: var(--width);
+			position:absolute;
+			object-fit:contain;
+		}
+		
+		.electronDraggable {
+			-webkit-app-region: var(--electron-drag-fix);
+		}
+
+		@keyframes fadeOut {
+			0% { opacity: 1; }
+			100% { opacity: 0; }
+		}
+		
+		span.zero-width-parent {
+			display: inline-block;
+			width: 0;
+			position:absolute;
+		}
+		span.zero-width-parent img.zero-width-emote {
+			right: 0;
+			position:absolute;
+		}
+
+	</style>
+</head>
+<body class='electronDraggable' id="output">
+	<script>
+	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
+		console.error(errorMsg);
+		console.error(lineNumber);
+		console.error("Unhandled Error occured");
+		return false;
+	};
+
+	function getById(id) {
+		var el = document.getElementById(id);
+		if (!el) {
+			el = document.createElement("span");
+		}
+		return el;
+	}
+
+	(function (w) {
+		w.URLSearchParams = w.URLSearchParams || function (searchString) {
+			var self = this;
+			self.searchString = searchString;
+			self.get = function (name) {
+				var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+				if (results == null) {
+					return null;
+				} else {
+					return decodeURI(results[1]) || 0;
+				}
+			};
+		};
+
+	})(window);
+
+	var urlParams = new URLSearchParams(window.location.search);
+	var iframe = null;
+	var roomID = "test";
+	var darkmode = null;
+	var scale = 1;
+	var isOBSBrowserSource = false;
+	var customNodeLimit = false;
+	var body = document.body;
+	var html = document.documentElement;
+	var mainOutputWindow = document.getElementById("output");
+	var showdupes = true;
+	var hidereplies = false;
+
+	try {
+		if (electronApi){ // fix for electron dragging.
+			document.body.style.width = "95%";
+			setTimeout(function(){
+				document.body.style.width = "100%";
+			},1000);
+
+			setTimeout(function(){
+				document.body.style.width = "98%";
+			},2000);
+
+			setTimeout(function(){
+				document.body.style.width = "100%";
+			},5000);
+		}
+	} catch(e){
+	}
+
+	var timeoutDelay = 5000;
+	if (urlParams.has("showtime")){
+		timeoutDelay = parseInt(urlParams.get("showtime")) || 0; // 0 disables.
+	}
+
+	if (urlParams.has("hidedupes")) {
+		showdupes = false;
+	}
+	
+	var maxShow = false;
+	if (urlParams.has("max") || urlParams.has("limit")) {
+		maxShow = parseInt(urlParams.has("limit")) || parseInt(urlParams.get("max")) || 0;
+	}
+	
+	
+	if (urlParams.has("hidereplies")) {
+		hidereplies = true;
+	}
+
+	if (urlParams.has("session")){
+		roomID = urlParams.get("session");
+	} else if (urlParams.has("s")){
+		roomID = urlParams.get("s");
+	} else if (urlParams.has("id")){
+		roomID = urlParams.get("id");
+	} else if (window.location.protocol=="file:"){
+		roomID = prompt("Enter your session ID here, or add it to the URL.");
+		if (roomID){
+			var href = window.location.href;
+			var arr = href.split('?');
+			var newurl;
+			if (arr.length > 1 && arr[1] !== '') {
+				newurl = href + '&session=' + roomID;
+			} else {
+				newurl = href + '?session=' + roomID;
+			}
+			window.history.pushState({path: newurl.toString()}, '', newurl.toString());
+		} else {
+			alert("You need to provide your extension's session ID for this page to work");
+		}
+	} else {
+		window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
+	}
+
+	var password = "false";
+	if (urlParams.has("password")){
+		password = urlParams.get("password") || "false";
+	}
+
+	if (urlParams.has('css')){
+		var cssURL = urlParams.get('css');
+		cssURL = decodeURI(cssURL);
+
+		var cssStylesheet = document.createElement('link');
+		cssStylesheet.rel = 'stylesheet';
+		cssStylesheet.type = 'text/css';
+		cssStylesheet.media = 'screen';
+		cssStylesheet.href = cssURL;
+		document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
+	}
+
+	if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
+		try {
+			var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
+			var css = decodeURIComponent(atob(base64Css)); // window.btoa(encodeURIComponent("#mainmenu{background-color: pink; ❤" ));
+			var cssStyleSheet = document.createElement("style");
+			cssStyleSheet.innerText = css;
+			document.querySelector("head").appendChild(cssStyleSheet);
+		} catch(e){console.error(e);}
+	};
+
+
+	if (urlParams.has("limit")){
+		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
+	}
+
+	var custombot = false;
+	if (urlParams.has("myname") || urlParams.has("botlist")){
+		custombot = urlParams.get("myname") || urlParams.get("botlist") || false;
+		if (custombot){
+			custombot = decodeURIComponent(custombot);
+			custombot = custombot.toLowerCase().replace(/[^a-z0-9,_]+/gi, "");
+			custombot = custombot.split(",");
+		}
+	}
+
+	var doNotShowBot = false;
+	if (urlParams.has("hidebots")){
+		doNotShowBot = true;
+	}
+
+	if (urlParams.has("scale")){
+		scale = urlParams.get("scale") || 1.0;
+		scale = parseFloat(scale);
+		let width = parseInt(48 * scale);
+		document.documentElement.style.setProperty("--width", width+"px");
+		let fontsize = parseInt(240 * scale);
+		document.documentElement.style.setProperty("--font-size", fontsize+"%");
+	}
+
+	var conCon = 1;
+	var socketserver = false;
+	var serverURL = "wss://api.overlay.ninja";
+
+	function setupSocket(){
+		socketserver.onclose = function (){
+			setTimeout(function(){
+				conCon+=1;
+				socketserver = new WebSocket(serverURL);
+				setupSocket();
+			},100*conCon);
+		};
+		socketserver.onopen = function (){
+			conCon = 1;
+			socketserver.send(JSON.stringify({"join":roomID, "out":2, "in":1}));
+		};
+		socketserver.addEventListener('message', function (event) {
+			var resp = false
+			if (event.data){
+				var data = JSON.parse(event.data);
+				processInput(data);
+				if (data.get){
+					var ret = {};
+					ret.callback = {};
+					ret.callback.get = data.get
+					ret.callback.result = true;
+					socketserver.send(JSON.stringify(ret));
+				}
+			}
+		});
+	}
+	
+	if (urlParams.has("server")){
+		serverURL = urlParams.get("server") || serverURL;
+		socketserver = new WebSocket(serverURL);
+		setupSocket();
+	}
+
+	if (urlParams.has("chroma")){
+		var chroma = urlParams.get("chroma") || "0F0";
+		document.body.style.backgroundColor = "#"+chroma;
+	}
+	
+	var speed = 1.0;
+	if (urlParams.has("speed")){
+		speed = parseFloat(urlParams.get("speed")) || 1;
+		speed = 1 / speed;
+		document.documentElement.style.setProperty("--x-speed", (13*speedxy)+"%"); // not used
+		document.documentElement.style.setProperty("--y-speed",  (7*speedxy)+"%"); // not used
+	}
+	
+	
+	try {
+		if (window.obsstudio){
+			window.obsstudio.getStatus(function(obsStatus){
+				isOBSBrowserSource = true;
+			});
+		}
+	} catch(e){}
+	
+
+	if (urlParams.has("darkmode")){
+		darkmode=true;
+	} else if (urlParams.has("lightmode")){
+		darkmode=false;
+	}
+
+	if (darkmode){
+	    //document.documentElement.style.setProperty("--background-color", "#000");
+	} else if (darkmode === null){ // defaultmode
+		darkmode = true;
+	} else {
+		document.body.classList.add("lightmode");
+		document.documentElement.style.setProperty("--font-color-name", "#000");
+		//document.documentElement.style.setProperty("--background-color", "#FFF0");
+		document.documentElement.style.setProperty("--font-color", "#000");
+	}
+
+	if (urlParams.has("transparent")){
+		document.documentElement.style.setProperty("--background-color", "#0000", "important");
+	}
+
+	function processInput(data){
+		if ("mid" in data){
+			return;
+		} else if ("pin" in data){
+			return;
+		} else if ("unpin" in data){
+			return;
+		} else if ("queueInit" in data){
+			return;
+		} else if ("queue" in data){
+			return;
+		} else if ("deleteMessage" in data){
+			return;
+		}
+
+		if (data.action){
+		} else if ("forward" in data){
+		} else if ("html" in data){
+		} else if (data.content){
+			processData(data.content);
+		} else {
+			processData(data );
+		}
+	}
+
+	iframe = document.createElement("iframe"); // we can leave it called "dock", as it will get all the same messages the dock gets. This could be optimized of course..
+	iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&solo&view="+roomID+"&novideo&noaudio&label=dock&cleanoutput&room="+roomID; // view only connection (data two way of course)
+	iframe.style.width = "0px";
+	iframe.style.height = "0px";
+	iframe.style.position = "fixed";
+	iframe.style.left = "-100px";
+	iframe.style.top = "-100px";
+	iframe.id = "frame1"
+	document.body.appendChild(iframe);
+
+	var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+	var eventer = window[eventMethod];
+	var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+	eventer(messageEvent, function (e) {
+		if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
+		if ("dataReceived" in e.data){ // raw data
+			if ("overlayNinja" in e.data.dataReceived){
+				processInput(e.data.dataReceived.overlayNinja);
+			}
+		}
+	});
+	
+	function fadeOutNode(node){
+		if (node.timer){return;}
+		node.style.animation += ", fadeOut 1s normal forwards ease";
+		node.timer = setTimeout(function(node){
+			node.remove();
+		},1000,node);
+		
+	}
+
+	function removeNode(){
+		var nodes = document.querySelectorAll("#output>div");
+		var total2Remove = 0;
+		if (isOBSBrowserSource){ // This is an OBS browser source, so lets go light on it.
+			if (customNodeLimit){
+				total2Remove =  nodes.length - customNodeLimit;
+			} else if (window.innerHeight>1600){
+				total2Remove =  nodes.length - 39;
+			} else if (window.innerHeight>1200){
+				total2Remove =  nodes.length - 30;
+			} else if (window.innerHeight>800){
+				total2Remove =  nodes.length - 22;
+			} else if (window.innerHeight>400){
+				total2Remove =  nodes.length - 14;
+			} else {
+				total2Remove =  nodes.length - 10;
+			}
+		} else if (customNodeLimit){
+			total2Remove =  nodes.length - customNodeLimit;
+		} else if (window.innerHeight>900){
+			total2Remove =  nodes.length - 80;
+		} else if (window.innerHeight>600){
+			total2Remove =  nodes.length - 70;
+		} else {
+			total2Remove =  nodes.length - 60;
+		}
+		if (total2Remove>0){
+			for (var i = total2Remove-1;i>=0;i--){
+				fadeOutNode(nodes[i]);
+			}
+		}
+	}
+
+	function processData(data){
+
+		if (!data.contentimg){
+			return;
+		}
+		
+		var invisible = false;
+
+		if (!("id" in data)){
+			data.id = parseInt(Math.random*100000000);
+		}
+		
+		if (data.chatname){
+			if (custombot && doNotShowBot && custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){ // because why not. :)
+				return;
+			}
+		}
+		
+		if (hidereplies && data.chatmessage){
+			let timetodie=false;
+			data.chatmessage.split(" ").forEach(word=>{
+				if (word.startsWith("@")){
+					timetodie=true;
+				}
+			});
+			if (timetodie){ // message contains a reply; via @name detected
+				return;
+			}
+		}
+		
+		
+		var node = document.createElement('img');
+		node.src = data.contentimg;
+		
+		node.classList.add("hidden");
+		mainOutputWindow.appendChild(node);
+		
+		setTimeout(function(node){
+			node.style.animation = "fadeIn 2s normal forwards ease";
+			if (timeoutDelay){
+				setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
+			}
+			node.classList.remove("hidden");
+		},Math.random()*1000,node);
+			
+		
+	}
+
+	if (urlParams.has('js')){  // ie: &js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js
+		console.warn("Third-party Javascript has been injected into the code. Security cannot be ensured.");
+		var jsURL = urlParams.get('js');
+		jsURL = decodeURI(jsURL);
+		console.log(jsURL);
+		var externalJavaascript = document.createElement('script');
+		externalJavaascript.type = 'text/javascript';
+		externalJavaascript.crossorigin = 'anonymous';
+		externalJavaascript.src = jsURL;
+		externalJavaascript.onerror = function() {
+			console.warn("Third-party Javascript failed to load");
+		};
+		externalJavaascript.onload = function() {
+			console.log("Third-party Javascript loaded");
+		};
+		document.head.appendChild(externalJavaascript);
+	}
+
+	</script>
+	</body>
+</html>
