@@ -115,8 +115,10 @@
 		data.contentimg = "";
 		data.type = "whatnot";
 		
-		if (msg == "joined👋"){
+		if (msg == "joined 👋"){
 			data.event = true;
+		} else {
+			data.event = false;
 		}
 		
 		
