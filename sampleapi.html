@@ -650,13 +650,15 @@ function loadSelfCommands(){
 	title.innerText = "Wait List options";
 	target_self.appendChild(title);
 	
+	
+	
 	var button = document.createElement("button");
 	button.innerHTML = "Clear First User in Wait List";
 	button.onclick = function(){
 
 		var data = {};
 		data.action = "removefromwaitlist";
-		data.value  = 0;
+		data.value  = 1;
 		sendMessage(JSON.stringify(data)); 
 	};
 	target_self.appendChild(button);
@@ -667,7 +669,7 @@ function loadSelfCommands(){
 
 		var data = {};
 		data.action = "removefromwaitlist";
-		data.value  = 1;
+		data.value  = 2;
 		sendMessage(JSON.stringify(data)); 
 	};
 	target_self.appendChild(button);
@@ -678,7 +680,7 @@ function loadSelfCommands(){
 
 		var data = {};
 		data.action = "highlightwaitlist";
-		data.value  = 0;
+		data.value  = 1;
 		sendMessage(JSON.stringify(data)); 
 	};
 	target_self.appendChild(button);
@@ -689,7 +691,18 @@ function loadSelfCommands(){
 
 		var data = {};
 		data.action = "highlightwaitlist";
-		data.value  = 1;
+		data.value  = 2;
+		sendMessage(JSON.stringify(data)); 
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Select Next Unselected User in Wait List";
+	button.onclick = function(){
+
+		var data = {};
+		data.action = "highlightwaitlist";
+		data.value  = 0;
 		sendMessage(JSON.stringify(data)); 
 	};
 	target_self.appendChild(button);

@@ -1999,10 +1999,14 @@ function processWaitlist2(){
 }
 function removeWaitlist(n=0){
 	try {
-		var cc = 0;
+		var cc = 1;
 		for (var i=0; i<waitlist.length;i++){
 			if (waitlist[i].waitStatus!==1){
-				if (cc===n){
+				if (n==0){
+					waitlist[i].waitStatus = 1;
+					sendWaitlistP2P(waitlist, true);
+					break;
+				} else if (cc==n){
 					waitlist[i].waitStatus = 1;
 					sendWaitlistP2P(waitlist, true);
 					break;
@@ -2016,10 +2020,16 @@ function removeWaitlist(n=0){
 }
 function highlightWaitlist(n=0){
 	try {
-		var cc = 0;
+		var cc = 1;
 		for (var i=0; i<waitlist.length;i++){
 			if (waitlist[i].waitStatus!==1){
-				if (cc===n){
+				if (n==0){
+					if (waitlist[i].waitStatus!==2){
+						waitlist[i].waitStatus = 2;
+						sendWaitlistP2P(waitlist, true);
+						break;
+					}
+				} else if (cc==n){
 					waitlist[i].waitStatus = 2;
 					sendWaitlistP2P(waitlist, true);
 					break;
