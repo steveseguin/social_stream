@@ -93,6 +93,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - boltplus.tv (pop out chat)
 - cozy.tv (no pop out; just open the view page)
 - steamcommunity.com (https://steamcommunity.com/broadcast/chatonly/XXXXXXXX)
+- whatnot.com (no pop out, so just open the view page)
 
 [More on request](#requesting-a-site)
 
