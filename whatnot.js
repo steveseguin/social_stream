@@ -70,8 +70,7 @@
 	
 	async function processMessage(ele){
 		
-		
-		console.log(ele);
+		//console.log(ele);
 		
 		var chatimg = ""
 
@@ -180,8 +179,6 @@
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
 							
-							
-
 							mutation.addedNodes[i].skip = true;
 
 							processMessage(mutation.addedNodes[i]); 
