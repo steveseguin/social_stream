@@ -273,8 +273,6 @@ function post(data) {
 
 function loadSelfCommands(){
 	
-	
-	
 	var target_self = document.getElementById("target_self");
 	
 	var title = document.createElement("h2");
@@ -648,7 +646,53 @@ function loadSelfCommands(){
 	};
 	target_self.appendChild(button);
 	
+	var title = document.createElement("h3");
+	title.innerText = "Wait List options";
+	target_self.appendChild(title);
 	
+	var button = document.createElement("button");
+	button.innerHTML = "Clear First User in Wait List";
+	button.onclick = function(){
+
+		var data = {};
+		data.action = "removefromwaitlist";
+		data.value  = 0;
+		sendMessage(JSON.stringify(data)); 
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Clear Second User in Wait List";
+	button.onclick = function(){
+
+		var data = {};
+		data.action = "removefromwaitlist";
+		data.value  = 1;
+		sendMessage(JSON.stringify(data)); 
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Select First User in Wait List";
+	button.onclick = function(){
+
+		var data = {};
+		data.action = "highlightwaitlist";
+		data.value  = 0;
+		sendMessage(JSON.stringify(data)); 
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Select Second User in Wait List";
+	button.onclick = function(){
+
+		var data = {};
+		data.action = "highlightwaitlist";
+		data.value  = 1;
+		sendMessage(JSON.stringify(data)); 
+	};
+	target_self.appendChild(button);
 	
 }
 

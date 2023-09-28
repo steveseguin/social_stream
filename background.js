@@ -1622,7 +1622,11 @@ function setupSocket(){
 				} catch(e){
 					console.error(e);
 				}
-			}
+			} else if (data.action && (data.action === "removefromwaitlist")){
+				removeWaitlist(parseInt(data.value) || 0);
+			} else if (data.action && (data.action === "highlightwaitlist")){
+				highlightWaitlist(parseInt(data.value) || 0);
+			} 
 
 			var ret = {};
 			if (typeof resp == "object"){
@@ -2014,7 +2018,7 @@ function highlightWaitlist(n=0){
 	try {
 		var cc = 0;
 		for (var i=0; i<waitlist.length;i++){
-			if (!waitlist[i].waitStatus){
+			if (waitlist[i].waitStatus!==1){
 				if (cc===n){
 					waitlist[i].waitStatus = 2;
 					sendWaitlistP2P(waitlist, true);
@@ -2023,7 +2027,6 @@ function highlightWaitlist(n=0){
 					cc+=1;
 				}
 			}
-			
 		}
 	} catch(e){}
 }
@@ -2154,6 +2157,7 @@ function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for 
 }
 
 function processIncomingRequest(request){
+	
 	if ("response" in request){ // we receieved a response from the dock
 		processResponse(request);
 	} else if ("action" in request){
@@ -2193,7 +2197,6 @@ function processIncomingRequest(request){
 					sendToDestinations({"blockUser": {chatname:  request.value.chatname, type: request.value.type}});
 				}
 			}
-			
 		}
 	}
 }
