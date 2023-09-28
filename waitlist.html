@@ -188,6 +188,9 @@
 			border-radius: 100%;
 		}
 
+		.selected {
+			background-color: #0080ff;
+		}
 
 		.hidden {
 			display:none!important;
@@ -225,8 +228,6 @@
 		.guestListHolder {
 			display:block;
 			align-items: center;
-			margin-right:10px;
-			
 			padding: var(--padding);
 		}
 		
@@ -234,7 +235,6 @@
 			display:block;
 			font-size:var(--font-size);
 			background-color:#47B5;
-			border-radius: calc(var(--width) / 2 + var(--padding) + 3px);
 		}
 		#waitlisttitle{
 			padding: 10px;
@@ -534,7 +534,11 @@
 		if ("waitlistmessage" in data){
 			document.getElementById("waitlisttitle").innerHTML = data.waitlistmessage || "";
 		}
+		if ("remove" in data){
+			document.getElementById("waitlisttitle").innerHTML = data.waitlistmessage || "";
+		}
 		if ("waitlist" in data){
+			console.log(data);
 			document.getElementById("waitlist").innerHTML = "";
 			if (data.waitlist === false){
 				document.getElementById("parentHolder").classList.add("hidden");
@@ -543,19 +547,25 @@
 			} else {
 				for (var i = 0; i<data.waitlist.length;i++){
 					if (data.waitlist[i]){
+						var classAdd = "";
+						if (data.waitlist[i].waitStatus == 1){
+							continue;
+						} else if (data.waitlist[i].waitStatus == 2){
+							classAdd = "selected";
+						}
 						if (randomize){
 							var nodes = document.getElementById("waitlist").childNodes;
 							var choice = randomNumber(0,nodes.length+1);
 							if (choice == 0){
-								document.getElementById("waitlist").innerHTML = "<div class='guestListHolder'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>" + document.getElementById("waitlist").innerHTML;
+								document.getElementById("waitlist").innerHTML = "<div class='guestListHolder "+classAdd+"'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>" + document.getElementById("waitlist").innerHTML;
 							} else {
-								nodes[choice-1].outerHTML = nodes[choice-1].outerHTML+"<div class='guestListHolder'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
+								nodes[choice-1].outerHTML = nodes[choice-1].outerHTML+"<div class='guestListHolder "+classAdd+"'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
 							}
 						} else {
 							if (data.waitlist[i].chatimg){
-								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
+								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
 							} else {
-								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder'><div class='spacer'></div>"+data.waitlist[i].chatname+"</div>";
+								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'><div class='spacer'></div>"+data.waitlist[i].chatname+"</div>";
 							}
 						}
 					}

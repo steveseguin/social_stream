@@ -1993,6 +1993,40 @@ function processWaitlist2(){
 		sendWaitlistP2P(waitlist, true);
 	} catch(e){}
 }
+function removeWaitlist(n=0){
+	try {
+		var cc = 0;
+		for (var i=0; i<waitlist.length;i++){
+			if (waitlist[i].waitStatus!==1){
+				if (cc===n){
+					waitlist[i].waitStatus = 1;
+					sendWaitlistP2P(waitlist, true);
+					break;
+				} else {
+					cc+=1;
+				}
+			}
+			
+		}
+	} catch(e){}
+}
+function highlightWaitlist(n=0){
+	try {
+		var cc = 0;
+		for (var i=0; i<waitlist.length;i++){
+			if (!waitlist[i].waitStatus){
+				if (cc===n){
+					waitlist[i].waitStatus = 2;
+					sendWaitlistP2P(waitlist, true);
+					break;
+				} else {
+					cc+=1;
+				}
+			}
+			
+		}
+	} catch(e){}
+}
 function sendWaitlistP2P(data=null, sendMessage=true){ // function to send data to the DOCk via the VDO.Ninja API
 	
 	if (iframe){
