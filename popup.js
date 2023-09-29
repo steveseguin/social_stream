@@ -15,6 +15,7 @@ if (typeof(chrome.runtime)=='undefined'){
 		let response = await ipcRenderer.sendSync('fromPopup',data);
 		console.log("data response from FromPopUp");
 		console.log(response);
+		console.log(response.settings);
 		if (typeof(callback) == "function"){
 			callback(response);
 		}

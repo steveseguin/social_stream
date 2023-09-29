@@ -56,15 +56,25 @@ if (typeof(chrome.runtime)=='undefined'){
 		ipcRenderer.sendSync('storageSave',data);
 		console.log("ipcRenderer.sendSync('storageSave',data);");
 	};
-	chrome.storage.sync.get = function(arg, callback){
+	chrome.storage.sync.get = async function(arg, callback){
+		var response = await ipcRenderer.sendSync('storageGet',arg);
+		callback(response);
+	};
+	chrome.storage.sync.remove = async function(arg, callback){
+		// only used for upgrading; not important atm.
 		callback({});
 	};
+	
 	chrome.storage.local = {};
-	chrome.storage.local.get = function(arg, callback){
-		callback({});
+	chrome.storage.local.get = async function(arg, callback){ 
+		var response = await ipcRenderer.sendSync('storageGet',arg);
+		callback(response);
 	};
-	chrome.storage.local.set = function(){
-		console.log("SYNC SET");
+	chrome.storage.local.set = function(data){
+		console.log("LOCAL SYNC SET");
+		console.log(data);
+		ipcRenderer.sendSync('storageSave',data);
+		console.log("ipcRenderer.sendSync('storageSave',data);");
 	};
 	chrome.runtime.onMessage = {};
 	var onMessageCallback = function(a,b,c){};
@@ -93,7 +103,7 @@ if (typeof(chrome.runtime)=='undefined'){
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
-		onMessageCallback(args[0], sender, function(response){
+		onMessageCallback(args[0], sender, function(response){ 
 			ipcRenderer.send('fromBackgroundResponse',response);
 		});
 	})
@@ -1096,7 +1106,7 @@ chrome.runtime.onMessage.addListener(
 					sendResponse({"state":isExtensionOn});
 				}
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-				sendResponse({"settings":settings, isExtensionOn:isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
+				sendResponse({"settings":settings, isExtensionOn:isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation. 
 			} else if ("keepAlive" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				var action = {};
 				action.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
