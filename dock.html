@@ -2667,6 +2667,12 @@
 		document.getElementById("select_save_file").classList.remove('hidden');
 		//overwriteFile(); // setup , but this needs a gesture, so bleh
 	}
+	
+	if (urlParams.has("savefeatured")){
+		singlefeaturedwriter = true;
+		document.getElementById("select_save_file").classList.remove('hidden');
+		//overwriteFile(); // setup , but this needs a gesture, so bleh
+	}
 
 	var random = false;
 	if (urlParams.has("random")){
@@ -4368,8 +4374,8 @@
 				data.timestamp = new Date().getTime();
 				overwriteFile(JSON.stringify(data));
 			}
-
-
+			
+			
 			if ("sentiment" in data){
 				if (data.sentiment<.10){ // 1.0 is good; 0.0 is bad, so 0.1 is likely bad.
 					return;
@@ -5287,6 +5293,16 @@
 		if (blockMessageSelecting || blockMessageSelecting2 || blockMessageSelecting3){
 			return;
 		}
+		
+		
+		if (singlefeaturedwriter){
+			data.timestamp = new Date().getTime();
+			if (data){
+				overwriteFile(JSON.stringify(data));
+			} else {
+				overwriteFile(false);
+			}
+		}
 	
 		if (!data){
 			document.querySelectorAll("."+lastMessageClass).forEach(ele=>{ // last message sent was to clear the overlay
@@ -5391,6 +5407,9 @@
 			} catch(e){}
 
 			await writableStream.write(data);
+			await writableStream.close();
+		} else if (!data){
+			const writableStream = await newFileHandle.createWritable();
 			await writableStream.close();
 		}
 	}
