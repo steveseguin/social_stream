@@ -620,6 +620,58 @@ span.zero-width-parent img.zero-width-emote {
 		errorlog("Unhandeled Error occured"); //or any message
 		return false;
 	};
+	
+	var newFileHandle = false;
+	
+	async function overwriteFile(data=false) {
+	  if (data=="setup"){
+		  
+		   const opts = {
+			types: [
+			  {
+				description: "JSON data",
+				accept: { "text/plain": [".txt"], "application/json": [".json"] },
+			  },
+			],
+		  };
+		  
+		  newFileHandle = await window.showSaveFilePicker(opts);
+		  if (newFileHandle){
+			document.body.onclick = null;
+		  }
+	  } else if (newFileHandle && data){
+		  const writableStream = await newFileHandle.createWritable();
+		  await writableStream.write(data);
+		  await writableStream.close();
+	  }
+	}
+
+	async function sendToDisk(data){
+		if (newFileHandle){ // if a file is selected
+			try {
+				if (typeof data == "object"){
+					data.timestamp = new Date().getTime();
+
+					if (data.type && data.chatimg && (data.type == "youtube")){
+						data.chatimg = data.chatimg.replace("=s32-", "=s512-");  // high, but meh.
+						data.chatimg = data.chatimg.replace("=s64-", "=s512-");
+					}
+
+					if (data.type && (data.type == "twitch") && data.chatname){
+						data.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
+					}
+
+					overwriteFile(JSON.stringify(data));
+				} else {
+					if (newFileHandle){
+					  const writableStream = await newFileHandle.createWritable(); // clear File
+					  await writableStream.close();
+					}
+				}
+			} catch(e){}
+		}
+	}
+
 
 	
 	(function (w) {
@@ -660,6 +712,10 @@ span.zero-width-parent img.zero-width-emote {
 	var password = "false";
 	if (urlParams.has("password")){
 		password = urlParams.get("password") || "false";
+	}
+	
+	if (urlParams.has("savetodisk")){
+		document.body.onclick = function(){overwriteFile("setup");}
 	}
 	
 	var centering = false;
@@ -1639,6 +1695,9 @@ span.zero-width-parent img.zero-width-emote {
 				}
 				
 			},500, data.contents);
+			
+			sendToDisk(data.contents);
+			
 		} else if (data){
 			if ("contents" in data){
 				clearTimeout(timeoutTimer);
@@ -1649,6 +1708,8 @@ span.zero-width-parent img.zero-width-emote {
 					clearTimeout(iframeTimeout);
 					iframeTimeout = setTimeout(function(){parent.postMessage({resizeWindow:{height:"0px"}}, "*");},300);
 				}
+				
+				sendToDisk(data.contents);
 			} 
 		}
 	

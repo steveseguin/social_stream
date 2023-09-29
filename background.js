@@ -50,8 +50,11 @@ if (typeof(chrome.runtime)=='undefined'){
 	}
 	chrome.storage = {};
 	chrome.storage.sync = {};
-	chrome.storage.sync.set = function(){
+	chrome.storage.sync.set = function(data){
 		console.log("SYNC SET");
+		console.log(data);
+		ipcRenderer.sendSync('storageSave',data);
+		console.log("ipcRenderer.sendSync('storageSave',data);");
 	};
 	chrome.storage.sync.get = function(arg, callback){
 		callback({});
@@ -74,6 +77,19 @@ if (typeof(chrome.runtime)=='undefined'){
 	}
 	
 	ipcRenderer.on('fromMain', (event, ...args) => {
+		console.log("FROM MAIN");
+		console.log(args[0]);
+		var sender = {};
+		sender.tab = {};
+		sender.tab.id = null;
+		onMessageCallback(args[0], sender, function(response){
+			ipcRenderer.send('fromBackgroundResponse',response);
+		});
+	})
+	
+	ipcRenderer.on('fromPopup', (event, ...args) => {
+		console.log("FROM POP UP (redirected)");
+		console.log(args[0]);
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
@@ -202,6 +218,8 @@ var channel = generateStreamID();
 var password = false;
 
 function loadSettings(item, resave=false){
+	
+	console.log("loadSettings (or saving new settings)");
 	
 	if (item && item.streamID){
 		channel = item.streamID;
@@ -2214,6 +2232,9 @@ function processIncomingRequest(request){
 
 eventer(messageEvent, async function (e) {
 	// iframe wno't be enabled if isExtensionOn is off, so allow this.
+	if (!iframe){
+		console.log(e);
+		return;}
 	if (e.source != iframe.contentWindow){return}
 	if (e.data && (typeof e.data == "object")){
 		if (("dataReceived" in e.data) && ("overlayNinja" in e.data.dataReceived)){

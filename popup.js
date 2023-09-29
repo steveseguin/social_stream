@@ -4,6 +4,8 @@ if (typeof(chrome.runtime)=='undefined'){
 	
 	var { ipcRenderer, contextBridge } = require('electron');
 	
+	console.log("pop up started");
+	
 	chrome = {};
 	chrome.browserAction = {};
 	chrome.browserAction.setIcon = function(icon){console.log("set icon")}
@@ -11,6 +13,8 @@ if (typeof(chrome.runtime)=='undefined'){
 	
 	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
 		let response = await ipcRenderer.sendSync('fromPopup',data);
+		console.log("data response from FromPopUp");
+		console.log(response);
 		if (typeof(callback) == "function"){
 			callback(response);
 		}
