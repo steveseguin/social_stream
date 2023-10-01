@@ -543,10 +543,9 @@ There is a toggle that lets you show the source of the chat messages.
 
 - Browsers will sometimes stop browser tabs after an hour of inactivity. Disable this option in your browser under `chrome://settings/performance` or whereever this setting is found.
 
-- Other options that may be active in your browser can be disabled also, to avoid tabs being throttled or paused, such as `chrome://flags/#calculate-native-win-occlusion`
+- Other options that may be active in your browser can be disabled also, to avoid tabs being throttled or paused, such as `chrome://flags/#calculate-native-win-occlusion`.  This is helpful if having to keep the chat window visible is a problem.
 
 - Another option, if using Windows, is to do Windows + Tab, and have two virtual Desktops on your PC.  Put the chat windows into one virtual desktop, and use OBS in the other. Win+Tab can let you switch between windows.
-- 
 
 If the auto responder doesn't work -- you see a blue bar, but nothing happens, there's a couple things to do.
 - make sure if using Youtube/Twitch that the pop out window is open
@@ -602,6 +601,10 @@ You can also refer to some of my code commits, where you can see which changes I
 ie: `https://github.com/steveseguin/social_stream/commit/942fce2697d5f9d51af6da61fc878824dee514b4`
 
 For a simple site, a developer should need just 30 minutes to an hour to get a site supported. A more complicated and tricky site may take a few hours or longer, depending on the developer's skill.
+
+### Standalone desktop version
+
+It's coming.  Having to sign into all your sites again is a bit of a pain with it, and the UI is a bit ugly, so I'm holding off releasing it until its required or until I'm happy with it.
 
 ### Support
 
