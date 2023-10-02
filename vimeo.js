@@ -172,6 +172,13 @@
 						try{
 							if (mutation.addedNodes[i].tagName == "LI"){
 								processMessage(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].classList && mutation.addedNodes[i].classList.contains("interaction-sidebar-item-content-item")){
+								processMessage(mutation.addedNodes[i]);
+							} else {
+								mutation.addedNodes[i].querySelectorAll(".interaction-sidebar-item-content-item").forEach(ele=>{
+									processMessage(ele);
+								});
+								
 							}
 						} catch(e){}
 					}
@@ -187,17 +194,18 @@
 	}
 	console.log("social stream injected");
 
-	setInterval(function(){
-		if (document.querySelector("#live-chat-app, #interaction-chat-history, #interaction-widget-auto-sidebar-item-content-qna-questions-list-columns")){
-			if (!document.querySelector("#live-chat-app, #interaction-chat-history, #interaction-widget-auto-sidebar-item-content-qna-questions-list-columns").marked){
-				document.querySelector("#live-chat-app, #interaction-chat-history, #interaction-widget-auto-sidebar-item-content-qna-questions-list-columns").marked=true;
-				var eles = document.querySelectorAll("#live-chat-app li, #interaction-chat-history li, #interaction-widget-auto-sidebar-item-content-qna-questions-list-columns .interaction-sidebar-item-content-item")
+	var initialsetup = setInterval(function(){
+		if (document.querySelector("#interaction-widget-auto-sidebar-content")){
+			if (!document.querySelector("#interaction-widget-auto-sidebar-content").marked){
+				document.querySelector("#interaction-widget-auto-sidebar-content").marked=true;
+				var eles = document.querySelectorAll("#live-chat-app li, #interaction-chat-history li, #interaction-widget-auto-sidebar-item-content-qna-questions-list-columns .interaction-sidebar-item-content-item");
 				for (var i=0; i < eles.length; i++) {
 					try{
 						processMessage(eles[i], true);
 					} catch(e){}
 				}
-				onElementInserted(document.querySelector("#live-chat-app, #interaction-chat-history, #interaction-widget-auto-sidebar-item-content-qna-questions-list-columns"));
+				onElementInserted(document.querySelector("#interaction-widget-auto-sidebar-content"));
+				clearInterval(initialsetup);
 			}
 		}
 	},1000);
