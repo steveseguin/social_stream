@@ -25,8 +25,6 @@ function generateStreamID(){
 	return text;
 };
 
-
-
 if (typeof(chrome.runtime)=='undefined'){
 	
 	var { ipcRenderer, contextBridge } = require('electron');
@@ -35,9 +33,9 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.browserAction = {};
 	chrome.browserAction.setIcon = function(icon){console.log("set icon")}
 	chrome.runtime = {}
-	chrome.runtime.lastError = function(){
-		console.log("last error");
-	}
+	chrome.runtime.lastError = false;
+	//chrome.runtime.lastError.message = "";
+	
 	chrome.runtime.sendMessage = async function(data, callback){
 		let response = await ipcRenderer.sendSync('fromBackground',data);
 		if (typeof(callback) == "function"){
@@ -80,10 +78,35 @@ if (typeof(chrome.runtime)=='undefined'){
 	var onMessageCallback = function(a,b,c){};
 	chrome.runtime.onMessage.addListener = function(callback){onMessageCallback = callback};
 	
+	chrome.tabs = {};
+	chrome.tabs.query = function(a,callback){
+		console.log("chrome.tabs.query");
+		var tabs = [{url:"urlhere",id:1}];
+		
+		// 
+		if (callback){
+			callback(tabs);
+		}
+	}
+	chrome.tabs.sendMessage = async function(tab=null,message=null,callback=null){
+		var response = await ipcRenderer.sendSync('sendToTab',{message:message, tab:tab});
+		if (callback){
+			callback(response);
+		}
+	};
+	
 	chrome.debugger = {};
+	chrome.debugger.detach = function(a=null,b=null,c=null){};
 	chrome.debugger.onDetach = {};
 	chrome.debugger.onDetach.addListener = function(){
 		console.log("add listener detach");
+	}
+	chrome.debugger.attach = function(a,b,c){
+		console.log("chrome.debugger.attach");
+		console.log(c);
+		c();
+		 // { tabId: tabs[i].id },  "1.3", onAttach.bind(null, 
+		 // onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false
 	}
 	
 	ipcRenderer.on('fromMain', (event, ...args) => {
@@ -2178,7 +2201,12 @@ try{
 	console.log("'chrome.debugger' not supported by this browser");
 }
 function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for faking user input
-  if (chrome.runtime.lastError) {
+  console.log("ON ATTACH");
+  console.log(debuggeeId);
+  console.log(callback);
+  console.log(message);
+
+  if (chrome.runtime.lastError) { 
     console.log(chrome.runtime.lastError.message);
     return;
   }
@@ -2195,6 +2223,8 @@ function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for 
 }
 
 function processIncomingRequest(request){
+	
+	console.log("processIncomingRequest");
 	
 	if ("response" in request){ // we receieved a response from the dock
 		processResponse(request);
@@ -2242,6 +2272,9 @@ function processIncomingRequest(request){
 
 eventer(messageEvent, async function (e) {
 	// iframe wno't be enabled if isExtensionOn is off, so allow this.
+	console.log("eventer");
+	console.log(e);
+	
 	if (!iframe){
 		console.log(e);
 		return;}
@@ -2479,6 +2512,7 @@ function generalFakePoke(tabid){ // fake a user input
 }
 
 function processResponse(data, reverse=false){
+	console.log("processResponse");
 
 	if (!chrome.debugger){return false;}
 	if (!isExtensionOn){return false;} // extension not active, so don't let responder happen. Probably safer this way.
@@ -2568,7 +2602,8 @@ function processResponse(data, reverse=false){
 
 
 function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=false, delayedPress=false){ // fake a user input
-	try{
+	console.log("general fake chat");
+	try{ 
 		chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {
 			chrome.runtime.lastError;
 			if (!response){
@@ -2742,6 +2777,7 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 		});
 
 	} catch(e){
+		console.log(e);
 		if (debuggerEnabled[tabid]){
 			chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
 		}
@@ -3166,31 +3202,34 @@ function respondToAll(msg){
 }
 
 
-chrome.storage.sync.get(properties, function(item){ // we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
-	if (item && item.settings){
-		chrome.storage.sync.remove(["settings"], function(Items) {
-			console.log("upgrading from sync to local storage");
-		});
-		chrome.storage.local.set({
-			settings: item.settings
-		});
-		loadSettings(item);
-	} else {
-		chrome.storage.local.get(["settings"], function(item2){
-			if (item2 && item2.settings){
-				if (item){
-					item.settings = item2.settings;
-				} else {
-					item = item2;
-				}
-			} 
-			loadSettings(item);
-		});
-	}
-	
-});
 
 chrome.browserAction.setIcon({path: "/icons/off.png"});
+
+window.onload = function() {
+	chrome.storage.sync.get(properties, function(item){ // we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
+		if (item && item.settings){
+			chrome.storage.sync.remove(["settings"], function(Items) {
+				console.log("upgrading from sync to local storage");
+			});
+			chrome.storage.local.set({
+				settings: item.settings
+			});
+			loadSettings(item);
+		} else {
+			chrome.storage.local.get(["settings"], function(item2){
+				if (item2 && item2.settings){
+					if (item){
+						item.settings = item2.settings;
+					} else {
+						item = item2;
+					}
+				} 
+				loadSettings(item);
+			});
+		}
+		
+	});
+}
 
 
 var jokes = [ // jokes from reddit; sourced from github.

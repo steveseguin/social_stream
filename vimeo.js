@@ -68,65 +68,22 @@
 		var msg = "";
 		var name = "";
 		
-		try{
-		   var main = ele.querySelector("img");
-		   chatimg = main.src;
-		} catch(e){
-			try{
-				if (ele.childNodes[0].childNodes[0].childNodes[0].nodeName.toLowerCase() == "svg"){
-					var main = ele.childNodes[0].childNodes[0].childNodes[0];
-					if (main.nextElementSibling.childNodes.length>1){
-						msg = main.nextElementSibling.childNodes[1].innerText;
-						msg = escapeHtml(msg);
-					} 
-					name = [...main.nextElementSibling.childNodes[0].childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('');
-				} else{
-					msg = ele.innerText;
-					msg = escapeHtml(msg);
-					name = JSON.parse(document.getElementById("app-data").innerHTML).user.display_name;
-					chatimg = JSON.parse(document.getElementById("app-data").innerHTML).user.avatar_url;
-				} 
-			} catch(e){
-				try {
-					if (ele.childNodes[1].childNodes[0].childNodes[0].nodeName.toLowerCase() == "svg"){
-						var main = ele.childNodes[1].childNodes[0].childNodes[0];
-						if (main.nextElementSibling.childNodes.length>1){
-							msg = main.nextElementSibling.childNodes[1].innerText;
-							msg = escapeHtml(msg);
-						} 
-						name = [...main.nextElementSibling.childNodes[0].childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('');
-					} else{
-						msg = ele.childNodes[1].innerText;
-						msg = escapeHtml(msg);
-						name = JSON.parse(document.getElementById("app-data").innerHTML).user.display_name;
-						chatimg = JSON.parse(document.getElementById("app-data").innerHTML).user.avatar_url;
-					} 
-				} catch(e){
-				}
-			}
-		}
 		
-		try{
-			if (!msg){
-				if (main.nextElementSibling.childNodes.length>1){
-					msg = main.nextElementSibling.childNodes[1].innerText;
-					msg = escapeHtml(msg);
-				} else {
-					msg = main.nextElementSibling.childNodes[0].lastChild.innerText;
-					msg = escapeHtml(msg);
-				}
-			}
-		
-			if (!name){
-				name = [...main.nextElementSibling.childNodes[0].childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('');
-			}
-		} catch(e){
-			
-		}
+		name = escapeHtml(ele.querySelector(".interaction-chat-message-author > h6").textContent);
 		
 		if (name){
+			
+			name = name.split("(me)")[0];
 			name = name.trim();
 		} 
+		
+		msg = getAllContentNodes(ele.querySelector(".interaction-chat-message-content"));
+		
+		if (msg){
+			msg = msg.trim();
+		} 
+		
+		
 		
 		if (!msg){return;}
 		
@@ -214,10 +171,10 @@
 	console.log("social stream injected");
 
 	setInterval(function(){
-		if (document.querySelector("#live-chat-app")){
-			if (!document.querySelector("#live-chat-app").marked){
-				document.querySelector("#live-chat-app").marked=true;
-				var eles = document.querySelector("#live-chat-app").querySelectorAll("li");
+		if (document.querySelector("#live-chat-app, #interaction-chat-history")){
+			if (!document.querySelector("#live-chat-app, #interaction-chat-history").marked){
+				document.querySelector("#live-chat-app, #interaction-chat-history").marked=true;
+				var eles = document.querySelector("#live-chat-app, #interaction-chat-history").querySelectorAll("li");
 				for (var i=0; i < eles.length; i++) {
 					try{
 						if (eles[i].tagName == "LI"){
@@ -225,7 +182,7 @@
 						}
 					} catch(e){}
 				}
-				onElementInserted(document.querySelector("#live-chat-app"));
+				onElementInserted(document.querySelector("#live-chat-app, #interaction-chat-history"));
 			}
 		}
 	},1000);
