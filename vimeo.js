@@ -63,15 +63,16 @@
 		return resp;
 	}
 	
-	function processMessage(ele){
+	function processMessage(ele, initial=false){
 		var chatimg = "";
 		var msg = "";
 		var name = "";
 		
-		if (ele.marked){return;}
-		ele.marked = true;
+		if (ele.marked){
+			return;
+		}
 		
-		name = escapeHtml(ele.querySelector(".interaction-chat-message-author > h6").textContent);
+		name = escapeHtml(ele.querySelector(".interaction-chat-message-author > h6, .interaction-qna-item-preview-author-name").textContent);
 		
 		if (name){
 			
@@ -79,13 +80,18 @@
 			name = name.trim();
 		} 
 		
-		msg = getAllContentNodes(ele.querySelector(".interaction-chat-message-content"));
+		msg = getAllContentNodes(ele.querySelector(".interaction-chat-message-content, .interaction-qna-item-preview-text"));
 		
 		if (msg){
 			msg = msg.trim();
 		} 
 		
-		
+		chatimg = ele.querySelector("img[class*='author-avatar'][src]");
+		if (chatimg) {
+			chatimg = chatimg.src;
+		} else {
+			chatimg = "";
+		}
 		
 		if (!msg){return;}
 		
@@ -97,10 +103,19 @@
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
-		data.hasMembership = "";;
+		data.hasMembership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "vimeo";
+		
+		if (ele.querySelector(".interaction-qna-item-preview")){
+			ele.marked = true;
+			data.question = true;
+		} else if (initial || ele.marked){
+			ele.marked = true;
+			return;
+		}
+		
 		
 		if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
@@ -173,19 +188,16 @@
 	console.log("social stream injected");
 
 	setInterval(function(){
-		if (document.querySelector("#live-chat-app, #interaction-chat-history")){
-			if (!document.querySelector("#live-chat-app, #interaction-chat-history").marked){
-				document.querySelector("#live-chat-app, #interaction-chat-history").marked=true;
-				var eles = document.querySelector("#live-chat-app, #interaction-chat-history").querySelectorAll("li");
+		if (document.querySelector("#live-chat-app, #interaction-chat-history, #interaction-widget-auto-sidebar-item-content-qna-questions-list-columns")){
+			if (!document.querySelector("#live-chat-app, #interaction-chat-history, #interaction-widget-auto-sidebar-item-content-qna-questions-list-columns").marked){
+				document.querySelector("#live-chat-app, #interaction-chat-history, #interaction-widget-auto-sidebar-item-content-qna-questions-list-columns").marked=true;
+				var eles = document.querySelectorAll("#live-chat-app li, #interaction-chat-history li, #interaction-widget-auto-sidebar-item-content-qna-questions-list-columns .interaction-sidebar-item-content-item")
 				for (var i=0; i < eles.length; i++) {
 					try{
-						if (eles[i].tagName == "LI"){
-							eles[i].marked = true;
-							//processMessage(eles[i]);
-						}
+						processMessage(eles[i], true);
 					} catch(e){}
 				}
-				onElementInserted(document.querySelector("#live-chat-app, #interaction-chat-history"));
+				onElementInserted(document.querySelector("#live-chat-app, #interaction-chat-history, #interaction-widget-auto-sidebar-item-content-qna-questions-list-columns"));
 			}
 		}
 	},1000);
