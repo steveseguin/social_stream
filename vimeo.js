@@ -68,6 +68,8 @@
 		var msg = "";
 		var name = "";
 		
+		if (ele.marked){return;}
+		ele.marked = true;
 		
 		name = escapeHtml(ele.querySelector(".interaction-chat-message-author > h6").textContent);
 		
@@ -178,7 +180,8 @@
 				for (var i=0; i < eles.length; i++) {
 					try{
 						if (eles[i].tagName == "LI"){
-							processMessage(eles[i]);
+							eles[i].marked = true;
+							//processMessage(eles[i]);
 						}
 					} catch(e){}
 				}
