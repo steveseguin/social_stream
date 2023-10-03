@@ -68,7 +68,8 @@
 		var msg = "";
 		var name = "";
 		
-		if (ele.marked){
+		if (ele.marked || initial){
+			ele.marked = true;
 			return;
 		}
 		
@@ -105,14 +106,6 @@
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "sessions";
-		
-		if (ele.querySelector(".interaction-qna-item-preview")){
-			ele.marked = true;
-			data.question = true;
-		} else if (initial || ele.marked){
-			ele.marked = true;
-			return;
-		}
 		
 		
 		if (data.chatimg){
