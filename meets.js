@@ -90,10 +90,13 @@
 
 	chatname = ele.parentNode.parentNode.dataset.senderName;
 
-	if (chatname === "You"){
-		chatname = Hostname;
-		chatimg = Hostimg;
-	}
+	try {
+		if (chatname === "You"){
+			if (settings && settings.myname && settings.myname.textparam1){
+				chatname = settings.myname.textparam1.split(",")[0];
+			}
+		}
+	} catch(e){}
 
     var data = {};
     data.chatname = chatname;

@@ -88,12 +88,6 @@ if (typeof(chrome.runtime)=='undefined'){
 			callback(tabs);
 		}
 	}
-	chrome.tabs.sendMessage = async function(tab=null,message=null,callback=null){
-		var response = await ipcRenderer.sendSync('sendToTab',{message:message, tab:tab});
-		if (callback){
-			callback(response);
-		}
-	};
 	
 	chrome.debugger = {};
 	chrome.debugger.detach = function(a=null,b=null,c=null){};
@@ -107,6 +101,28 @@ if (typeof(chrome.runtime)=='undefined'){
 		c();
 		 // { tabId: tabs[i].id },  "1.3", onAttach.bind(null, 
 		 // onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false
+	}
+	
+	chrome.tabs.sendMessage = async function(tab=null,message=null,callback=null){
+		var response = await ipcRenderer.sendSync('sendToTab',{message:message, tab:tab});
+		if (callback){
+			callback(response);
+		}
+	};
+	
+	chrome.debugger.sendCommand = async function(a=null,b=null,c=null,callback=null){
+		console.log("SEND KEY INPUT COMMAND");
+		console.log(c);
+		if (c){
+			c.tab = 1;
+			var response = await ipcRenderer.sendSync('sendInputToTab',c); // sendInputToTab
+			console.log(response);
+			if (callback){
+				callback(response);
+			}
+		} else {
+			console.log("C isn't set");
+		}
 	}
 	
 	ipcRenderer.on('fromMain', (event, ...args) => {
@@ -980,15 +996,12 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "customyoutubeaccount"){
 					pushSettingChange();
 				}
-
 				if (request.setting == "myname"){
 					pushSettingChange();
 				}
-
 				if (request.setting == "nosubcolor"){
 					pushSettingChange();
 				}
-
 				if (request.setting == "captureevents"){
 					pushSettingChange();
 				}
@@ -2612,6 +2625,9 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 				}
 				return;
 			}; // make sure the response is valid, else don't inject text
+
+			console.log("send message");
+			console.log(message);
 
 			lastSentMessage = message.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
 			lastSentMessage = lastSentMessage.replace(/\s\s+/g, ' ');
