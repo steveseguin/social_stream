@@ -1965,7 +1965,6 @@
 		
 	}
 	
-	
 	if (urlParams.has("pressedcolor")) {  // must be a hex code value, without the #.
 		let pressedColor = urlParams.get("pressedcolor") || false;
 		if (!pressedColor){
@@ -3031,6 +3030,11 @@
 	
 	var hideNotMembers = false;
 	var hideNotDonos = false;
+	
+	if (urlParams.has("showonlydonos")){
+		donos();
+	}
+	
 	var hideEmojiOnly = false;
 	var hideNotQueued = false;
 
