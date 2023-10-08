@@ -1205,7 +1205,7 @@ chrome.runtime.onMessage.addListener(
 				data.type = "youtube";
 				if (Math.random()>0.90){
 					data.hasDonation = "100 gold";
-					data.hasMembership = "";
+					data.membership = "";
 					data.chatname = "Bob";
 					data.chatbadges = [];
 					var html = {};
@@ -1215,19 +1215,19 @@ chrome.runtime.onMessage.addListener(
 
 				} else if (Math.random()>0.83){
 					data.hasDonation = "3 hearts";
-					data.hasMembership = "";
+					data.membership = "";
 					data.chatmessage = "";
 					data.chatname = "Lucy";
 				} else if (Math.random()>0.7){
 					data.hasDonation = "";
-					data.hasMembership = "";
+					data.membership = "";
 					data.chatname = "vdoninja";
 					data.type = "twitch";
 					var score = parseInt(Math.random()* 378);
 					data.chatmessage  =  jokes[score]["setup"] + "..  " + jokes[score]["punchline"]  + " 😊";
 				} else if (Math.random()>0.6){
 					data.hasDonation = "";
-					data.hasMembership =  '';
+					data.membership =  '';
 					data.chatname = "Steve";
 					var score = parseInt(Math.random()* 378);
 					data.chatmessage  =  '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁';
@@ -1235,13 +1235,13 @@ chrome.runtime.onMessage.addListener(
 					data.hasDonation = "";
 					data.nameColor = "#107516";
 					data.chatimg = "sampleavatar.png";
-					data.hasMembership =  '<div class="donation membership">SPONSORSHIP</div>';
+					data.membership =  "SPONSORSHIP";
 					data.chatname = "Steve_"+Math.round(Math.random()*100000000000000);
 					data.type = "facebook";
 					data.chatmessage  = "!queue The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
 				} else if (Math.random()>0.2){
 					data.hasDonation = "";
-					data.hasMembership = "";
+					data.membership = "";
 					data.question = true;
 					data.chatmessage = "Is this a test question?  🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓";
 					data.chatname = "Nich Lass";
@@ -1249,7 +1249,7 @@ chrome.runtime.onMessage.addListener(
 					data.type = "zoom";
 				} else {
 					data.hasDonation = "";
-					data.hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
+					data.membership = "SPONSORSHIP";
 				}
  
 				data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
@@ -2367,7 +2367,7 @@ eventer(messageEvent, async function (e) {
 					data.textColor = "";
 					data.chatmessage = data.value.snippet.displayMessage || "";
 					data.hasDonation = "";
-					data.hasMembership = "";
+					data.membership = "";
 					data.type = "youtube";
 
 					data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out

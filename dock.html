@@ -3629,7 +3629,7 @@
 				message.backgroundColor = "";
 				message.textColor = "";
 				message.chatimg = "";
-				message.hasMembership = "";;
+				message.membership = "";;
 				message.contentimg = "";
 				message.type = "stripe";
 				
@@ -4689,8 +4689,21 @@
 			} else {
 				node.classList.add("noDono");
 			}
+			
+			var memebershipHTML = "";
+				
+			if (data.hasMembership){
+				data.membership = data.hasMembership.toString();
+				memebershipHTML = data.membership;
+			} else if (data.membership){
+				data.membership = data.membership.toString();
+				memebershipHTML = '<div class="donation membership">'+data.membership+'</div>';
+			} else {
+				data.membership = "";
+			}
+			
 
-			if (!bubble && highlightMembers && data.hasMembership){
+			if (!bubble && highlightMembers && data.membership){
 				node.classList.add("member");
 			}
 			
@@ -4803,7 +4816,7 @@
 					node.querySelector(".hl-rightside").classList.add("dono-highlight");
 				}
 
-				if (highlightMembers && data.hasMembership){
+				if (highlightMembers && data.membership){
 					node.querySelector(".hl-rightside").classList.add("member");
 				}
 				
@@ -4818,7 +4831,7 @@
 					node.querySelector(".hl-message").classList.add("dono-highlight");
 				}
 
-				if (highlightMembers && data.hasMembership){
+				if (highlightMembers && data.membership){
 					node.querySelector(".hl-message").classList.add("member");
 				}
 				
@@ -4895,7 +4908,7 @@
 			node.rawContents = data;
 
 			if (autoshow && !bot){
-				if (!(autoshowdonos || autoshowmembers) || (autoshowdonos && data.hasDonation) || (autoshowmembers && data.hasMembership)){ // dono or not to dono.
+				if (!(autoshowdonos || autoshowmembers) || (autoshowdonos && data.hasDonation) || (autoshowmembers && data.membership)){ // dono or not to dono.
 					if (autoTimeoutEnabled){
 						autoShowQueue.push(node);
 						checkAutoShow();

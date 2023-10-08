@@ -1430,10 +1430,17 @@ span.zero-width-parent img.zero-width-emote {
 					data.chatname = data.chatname.toString();
 				}
 				
-				if (!data.hasMembership){
-					data.hasMembership = "";
+				
+				var memebershipHTML = "";
+				
+				if (data.hasMembership){
+					data.membership = data.hasMembership.toString();
+					memebershipHTML = data.membership;
+				} else if (data.membership){
+					data.membership = data.membership.toString();
+					memebershipHTML = '<div class="donation membership">'+data.membership+'</div>';
 				} else {
-					data.hasMembership = data.hasMembership.toString();
+					data.membership = "";
 				}
 				
 				if (!data.chatmessage){
@@ -1512,6 +1519,8 @@ span.zero-width-parent img.zero-width-emote {
 					chatbadges = '<div class="hl-badges" >' + chatbadges + '</div>';
 				}
 				
+				
+				
 				if (stacking){
 					try {
 						document.getElementById("message").id = "";
@@ -1527,11 +1536,11 @@ span.zero-width-parent img.zero-width-emote {
 						 + '<div id="message" '+styleOverride+' class="hl-message" dir="'+textDirection+'" >' + data.chatmessage + '</div>'
 						 + avatarImg
 						 + addImage
-						 + donationHTML + data.hasMembership +'</div>';
+						 + donationHTML + memebershipHTML +'</div>';
 						 
 					
 					
-					if (data.hasDonation || data.hasMembership){
+					if (data.hasDonation || memebershipHTML){
 						document.getElementById("newmessage").classList.add("dono");
 					} else {
 						document.getElementById("newmessage").classList.remove("dono");
@@ -1544,16 +1553,14 @@ span.zero-width-parent img.zero-width-emote {
 						 + '<div id="message" '+styleOverride+' class="hl-message" dir="'+textDirection+'" >' + data.chatmessage + '</div>'
 						 + avatarImg
 						 + addImage
-						 + donationHTML + data.hasMembership +'</div>';
+						 + donationHTML + memebershipHTML +'</div>';
 						 
-					if (data.hasDonation || data.hasMembership){
+					if (data.hasDonation || memebershipHTML){
 						document.getElementById("newmessage").classList.add("dono");
 					} else {
 						document.getElementById("newmessage").classList.remove("dono");
 					}
 				}
-				
-				
 				
 				if (!data.chatname && !data.chatbadges){
 					document.getElementById("nameDIV").style.display = "none";
@@ -1708,7 +1715,7 @@ span.zero-width-parent img.zero-width-emote {
 					clearTimeout(iframeTimeout);
 					iframeTimeout = setTimeout(function(){parent.postMessage({resizeWindow:{height:"0px"}}, "*");},300);
 				}
-				
+				 
 				sendToDisk(data.contents);
 			} 
 		}

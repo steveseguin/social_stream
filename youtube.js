@@ -226,17 +226,21 @@
 
 		if (chatmembership) {
 			if (chatmessage) {
-				hasMembership = '<div data-translate="member-chat" class="donation membership">'+getTranslation("member-chat", "MEMBERSHIP")+'</div>';
+				hasMembership = getTranslation("member-chat", "MEMBERSHIP");
 			} else if (giftedmemembership) {
-				hasMembership = '<div data-translate="sponsorship" class="donation membership">'+getTranslation("sponsorship", "SPONSORSHIP")+'</div>';
+				hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 				if (!settings.textonlymode) {
 					chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
 				} else {
 					chatmessage = giftedmemembership.textContent;
 				}
 			} else {
-				hasMembership = '<div data-translate="new-member" class="donation membership">'+getTranslation("new-member", "NEW MEMBER!")+'</div>';
-				chatmessage = "<i>" + chatmembership + "</i>";
+				hasMembership =  getTranslation("new-member", "NEW MEMBER!");
+				if (!settings.textonlymode) {
+					chatmessage = "<i>" + chatmembership + "</i>";
+				} else {
+					chatmessage = chatmembership;
+				}
 			}
 		} else if (!chatmessage && giftedmemembership) {
 			if (!settings.textonlymode) {
@@ -244,11 +248,7 @@
 			} else {
 				chatmessage = giftedmemembership.textContent;
 			}
-			hasMembership = '<div data-translate="sponsorship" class="donation membership">'+getTranslation("sponsorship", "SPONSORSHIP")+'</div>';
-			// } else if (memeber){
-			//	  hasMembership = '<div class="membership">MEMEBER</div>'; // Just looks too green, and doesn't highlight those using special member options.
-			// } else if (mod){
-			//	  hasMembership = '<div class="membership">MODERATOR</div>';
+			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 		}
 
 		if (chatsticker) {
@@ -297,7 +297,7 @@
 		data.chatmessage = chatmessage;
 		data.chatimg = chatimg;
 		data.hasDonation = hasDonation;
-		data.hasMembership = hasMembership;
+		data.membership = hasMembership;
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube";
 		try {
