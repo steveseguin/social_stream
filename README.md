@@ -49,7 +49,6 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - clouthub (no pop out; just the video page)
 - rumble.com (pop out chat)
 - trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/CHANNEL_NAME_HERE)
-- theta.tv (pop-out chat; https://www.theta.tv/chat/xxxxxxxxxxxxxxx)
 - Dlive.tv  (pop-out chat)
 - Picarto.tv (pop-out chat; ie: https://picarto.tv/chatpopout/CHANNELNAMEHERE/public)
 - Mobcrush (this page: https://studio.mobcrush.com/chatpopup.html)
@@ -78,7 +77,6 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - buzzit.ca (community member submitted integration)
 - afreecatv.com (pop out the chat; you can't close the main window it seems tho?)
 - nonolive.com (no pop out; partial support added so far only)
-- xeenon.xyz
 - stageTEN.tv
 - vkplay.live (pop out chat)
 - arena.tv (no pop out chat support, so just pause the video I guess)
@@ -104,6 +102,8 @@ Past supported sites that have ceased to exist.
 
 - 🪦 omlet.gg (RIP June 2023)
 - 🪦 glimesh (RIP July 2023)
+- 🪦 theta.tv (RIP Sept 2023)
+- 🪦 xeenon.xyz (RIP Sept 2023)
 
   (it's the effort that counts, guys; may your code live on in our ai llm bots forever)
 
