@@ -978,6 +978,9 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "textonlymode"){
 					pushSettingChange();
 				}
+				if (request.setting == "drawmode"){
+					sendWaitlistP2P(waitlist, true);
+				}
 				if (request.setting == "collecttwitchpoints"){
 					pushSettingChange();
 				}
@@ -2128,11 +2131,9 @@ function selectRandomWaitlist(n=1){
 		var cc = 1;
 		var selectable = []
 		for (var i=0; i<waitlist.length;i++){
-			if (waitlist[i].waitStatus!==1){ // removed
-				if (waitlist[i].randomStatus!==1){  // already selected
-					if (!("randomStatus" in waitlist[i])){
-						waitlist[i].randomStatus = 0; // not yet a winner
-					}
+			if (waitlist[i].waitStatus!==1){ // removed form wait list already
+				if (!waitlist[i].randomStatus){
+					waitlist[i].randomStatus = 0; // not yet a winner
 					selectable.push(i);
 				} else if (waitlist[i].randomStatus===1){  // already selected
 					waitlist[i].randomStatus = 2;
@@ -2140,8 +2141,8 @@ function selectRandomWaitlist(n=1){
 			}
 		}
 		shuffle(selectable);
-		for (let i = 0; i < n; i++) {
-			if (selectable[i] && waitlist[selectable[i]]){
+		for (var i = 0; i < n; i++) {
+			if (waitlist[selectable[i]]){
 				waitlist[selectable[i]].randomStatus = 1;
 			}
 		}

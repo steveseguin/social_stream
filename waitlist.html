@@ -197,7 +197,7 @@
 		}
 		
 		.winner {
-		  animation: blinker 0.1s linear 10;
+		  
 		}
 
 		@keyframes blinker {
@@ -564,7 +564,8 @@
 		}
 		if ("waitlist" in data){
 			console.log(data);
-			var winnerStatus = false;
+			var winnerStatus = 0;
+			var entries = 0;
 			document.getElementById("waitlist").innerHTML = "";
 			if (data.waitlist === false){
 				document.getElementById("parentHolder").classList.add("hidden");
@@ -580,11 +581,17 @@
 							classAdd = "selected";
 						}
 						if (drawmode || ("randomStatus" in data.waitlist[i])){
+							
 							if (data.waitlist[i].randomStatus === 1){
 								classAdd = "winner";
-								winnerStatus = true;
+								winnerStatus += 1;
+								entries +=1;
+							} else if (data.waitlist[i].randomStatus === 2){
+								classAdd = "loser";
+								// previous winner
 							}  else {
 								classAdd = "loser";
+								entries +=1;
 							}
 						}
 						if (randomize){
@@ -605,6 +612,15 @@
 					}
 				}
 				document.getElementById("parentHolder").classList.remove("hidden");
+				if (drawmode && winnerStatus){
+					if (winnerStatus>1){
+						document.getElementById("waitlisttitle").innerHTML = "Winners selected";
+					} else {
+						document.getElementById("waitlisttitle").innerHTML = "Winner selected";
+					}
+				} else if (drawmode){
+					document.getElementById("waitlist").innerHTML = entries + " entries in the draw!";
+				}
 			}
 			
 		} else {
