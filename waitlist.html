@@ -195,7 +195,20 @@
 		.hidden {
 			display:none!important;
 		}
+		
+		.winner {
+		  animation: blinker 0.1s linear 10;
+		}
 
+		@keyframes blinker {
+		  50% {
+			opacity: 0;
+		  }
+		}
+		.loser {
+			display:none!important;
+		}
+		
 		.emoji{
 			font-size: var(--font-size);
 			vertical-align: sub;
@@ -270,7 +283,7 @@
 </head>
 <body class='electronDraggable' id="output">
 	<div id="parentHolder" class='hidden'>
-		<div id="waitlisttitle">Type !queue to join this wait list</div>
+		<div id="waitlisttitle"></div>
 		<div id="waitlist"></div>
 	</div>
 	<script>
@@ -377,6 +390,12 @@
 	if (urlParams.has("password")){
 		password = urlParams.get("password") || "false";
 	}
+	
+	var drawmode = false
+	if (urlParams.has("drawmode")){
+		drawmode = true
+	}
+	
 
 	if (urlParams.has('css')){
 		var cssURL = urlParams.get('css');
@@ -525,7 +544,9 @@
 			this.outerHTML = this.alt;
 		}
 	}
-
+	
+	var drawMode = false;
+	
 	function randomNumber(min, max) {
 		return Math.floor(Math.random() * (max - min) + min);
 	}
@@ -537,8 +558,13 @@
 		if ("remove" in data){
 			document.getElementById("waitlisttitle").innerHTML = data.waitlistmessage || "";
 		}
+		
+		if ("drawmode" in data){
+			drawmode = data.drawmode || false;
+		}
 		if ("waitlist" in data){
 			console.log(data);
+			var winnerStatus = false;
 			document.getElementById("waitlist").innerHTML = "";
 			if (data.waitlist === false){
 				document.getElementById("parentHolder").classList.add("hidden");
@@ -552,6 +578,14 @@
 							continue;
 						} else if (data.waitlist[i].waitStatus == 2){
 							classAdd = "selected";
+						}
+						if (drawmode || ("randomStatus" in data.waitlist[i])){
+							if (data.waitlist[i].randomStatus === 1){
+								classAdd = "winner";
+								winnerStatus = true;
+							}  else {
+								classAdd = "loser";
+							}
 						}
 						if (randomize){
 							var nodes = document.getElementById("waitlist").childNodes;

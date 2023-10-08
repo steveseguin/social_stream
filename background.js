@@ -1185,6 +1185,10 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "singlesaveStop") {
 				sendResponse({"state":isExtensionOn});	
 				newSavedNamesFileHandle = false;
+			} else if (request.cmd && request.cmd === "selectwinner") {
+				selectwinner();
+			} else if (request.cmd && request.cmd === "resetwaitlist") {
+				resetWaitlist();
 			} else if (request.cmd && request.cmd === "fakemsg") {
 				sendResponse({"state":isExtensionOn});
 				var data = {};
@@ -1690,6 +1694,14 @@ function setupSocket(){
 				removeWaitlist(parseInt(data.value) || 0);
 			} else if (data.action && (data.action === "highlightwaitlist")){
 				highlightWaitlist(parseInt(data.value) || 0);
+			} else if (data.action && (data.action === "resetwaitlist")){
+				resetWaitlist();
+			} else if (data.action && (data.action === "selectwinner")){
+				if (value in data){
+					selectwinner(parseInt(data.value) || 0);
+				} else {
+					selectwinner();
+				}
 			} 
 
 			var ret = {};
@@ -2029,9 +2041,6 @@ function processWaitlist(data){
 		var trigger = "!queue"; 
 		if (settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim()){
 			trigger = settings.customwaitlistcommand.textsetting.trim();
-			if (!trigger.startsWith("!")){
-				trigger = "!"+trigger;
-			}
 		}
 		if (!data.chatmessage || (!data.chatmessage.trim().startsWith(trigger))){return;}
 		
@@ -2088,7 +2097,7 @@ function highlightWaitlist(n=0){
 		for (var i=0; i<waitlist.length;i++){
 			if (waitlist[i].waitStatus!==1){
 				if (n==0){
-					if (waitlist[i].waitStatus!==2){
+					if (waitlist[i].waitStatus!==2){ // selected
 						waitlist[i].waitStatus = 2;
 						sendWaitlistP2P(waitlist, true);
 						break;
@@ -2104,20 +2113,70 @@ function highlightWaitlist(n=0){
 		}
 	} catch(e){}
 }
+function shuffle(array) { // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+	var currentIndex = array.length,  randomIndex;
+	while (currentIndex > 0) {
+	randomIndex = Math.floor(Math.random() * currentIndex);
+	currentIndex--;
+	[array[currentIndex], array[randomIndex]] = [
+		array[randomIndex], array[currentIndex]];
+	}
+	return array;
+}
+function selectRandomWaitlist(n=1){
+	try {
+		var cc = 1;
+		var selectable = []
+		for (var i=0; i<waitlist.length;i++){
+			if (waitlist[i].waitStatus!==1){ // removed
+				if (waitlist[i].randomStatus!==1){  // already selected
+					if (!("randomStatus" in waitlist[i])){
+						waitlist[i].randomStatus = 0; // not yet a winner
+					}
+					selectable.push(i);
+				} else if (waitlist[i].randomStatus===1){  // already selected
+					waitlist[i].randomStatus = 2;
+				}
+			}
+		}
+		shuffle(selectable);
+		for (let i = 0; i < n; i++) {
+			if (selectable[i] && waitlist[selectable[i]]){
+				waitlist[selectable[i]].randomStatus = 1;
+			}
+		}
+		sendWaitlistP2P(waitlist, true);
+	} catch(e){}
+}
+
+function selectwinner(){
+	selectRandomWaitlist();
+}
+function resetWaitlist(){
+	waitListUsers = {};
+	waitlist = []
+	sendWaitlistP2P(waitlist, true);
+}
+
 function sendWaitlistP2P(data=null, sendMessage=true){ // function to send data to the DOCk via the VDO.Ninja API
 	
 	if (iframe){
 		
 		if (sendMessage){
-			var message = "Type !queue to join this wait list";
+			var trigger = "!join"; 
+			if (settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim()){
+				trigger = settings.customwaitlistcommand.textsetting.trim();
+			}
+			var message = "Type "+trigger+" to join this wait list";
+			if (settings.drawmode){
+				 message = "Type "+trigger+" to join the random draw";
+			}
 			if (settings.customwaitlistmessagetoggle){
 				if (settings.customwaitlistmessage){
 					message = settings.customwaitlistmessage.textsetting.trim();
 				} else {
 					message = "";
 				}
-			} else if (settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim()){
-				message = "Type "+settings.customwaitlistcommand.textsetting.trim()+" to join this wait list";
 			}
 		}
 		
@@ -2129,12 +2188,12 @@ function sendWaitlistP2P(data=null, sendMessage=true){ // function to send data 
 				if (label === "waitlist"){
 					if (sendMessage){
 						if (data===null){
-							iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlistmessage:message}}, "type":"pcs", "UUID":UUID}, '*');
+							iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlistmessage:message, drawmode: settings.drawmode || false}}, "type":"pcs", "UUID":UUID}, '*');
 						} else {
-							iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlist:data, waitlistmessage:message}}, "type":"pcs", "UUID":UUID}, '*');
+							iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlist:data, waitlistmessage:message, drawmode: settings.drawmode || false}}, "type":"pcs", "UUID":UUID}, '*');
 						}
 					} else if (data!==null){
-						iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlist:data}}, "type":"pcs", "UUID":UUID}, '*');
+						iframe.contentWindow.postMessage({"sendData":{overlayNinja:{waitlist:data, drawmode: settings.drawmode || false}}, "type":"pcs", "UUID":UUID}, '*');
 					}
 				}
 			} catch(e){}
