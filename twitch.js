@@ -17,7 +17,7 @@
 	function getTranslation(key, value=false){
 		if (settings.translation && settings.translation.innerHTML && (key in settings.translation.innerHTML)){ // these are the proper translations
 			return settings.translation.innerHTML[key];
-		} else if (settings.translation.miscellaneous && settings.translation.miscellaneous && (key in settings.translation.miscellaneous)){ 
+		} else if (settings.translation && settings.translation.miscellaneous && settings.translation.miscellaneous && (key in settings.translation.miscellaneous)){ 
 			return settings.translation.miscellaneous[key];
 		} else if (value!==false){
 			return value;
