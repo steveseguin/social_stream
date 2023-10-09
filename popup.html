@@ -340,13 +340,16 @@
 			padding: 0;
 		}
 
-		.link div,
-		.options_group {
+		.link div, .options_group {
 			background-color: var(--options-group-background-color);
 			color: var(--options-group-text-color);
 			padding: 1em;
 			border-radius: 4px;
 			word-break:break-all;
+		}
+		
+		.options_group {
+			word-break:break-word;
 		}
 
 		/* Alert */
@@ -2036,6 +2039,12 @@ The first name listed may be used as the host's name in stream when their name i
 								<span data-translate="capture-joined-events"> Don't block "joined" stream events (TikTok)
 								</span>
 							</div>
+							<div title="Mark a message as a memberchat, just because they are a member, rather than just highlighted membership messages">
+								<label class="switch">
+									<input type="checkbox" data-setting="allmemberchat">
+									<span class="slider round"></span>
+								</label><span data-translate="all-youtube-member-chat-included"> Any message from a YouTube member is treated as membership chat
+							</span></div>
 							<div title="See documentation on socialstream.ninja for details.">
 								<label class="switch">
 									<input type="checkbox" data-setting="socketserver">

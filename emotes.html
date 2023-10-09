@@ -52,6 +52,12 @@
 			transform: translateY(calc(100vh - var(--width)));
 		  }
 		}
+		@keyframes y1 {
+		  100% {
+			transform: translateY(calc(110vh - var(--width)));
+		  }
+		}
+		
 
 		body {
 			font-family: Roboto, Arial, Roboto, sans-serif;
@@ -286,6 +292,11 @@
 
 	if (urlParams.has("limit")){
 		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
+	}
+	
+	var floatup = false;
+	if (urlParams.has("floatup")){
+		floatup = true;
 	}
 
 	var custombot = false;
@@ -644,11 +655,15 @@
 				node.classList.add("emoji");
 				node.classList.add("el-wrap");
 				node2.classList.add("el");
-				
-				node2.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
-				
-				node2.style.animationDelay = Math.random()*-35*speed+"s";
-				
+				if (floatup){
+					node2.style.animation = "y1 "+(Math.random()*10*speed+5*speed)+"s reverse linear 1";
+					node2.style.translateY = "-96px";
+					node2.style.top = "-48px";
+					node2.style.position = "relative";
+				} else {
+					node2.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
+					node2.style.animationDelay = Math.random()*-35*speed+"s";
+				}
 				
 				
 				node2.innerText = img;
@@ -660,15 +675,20 @@
 				node.classList.add("hidden");
 				mainOutputWindow.appendChild(node);
 				
-				setTimeout(function(node){
-					node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
-					if (timeoutDelay){
-						setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
-					}
+				
+				if (floatup){
 					node.classList.remove("hidden");
-				},Math.random()*1000,node);
-				
-				
+					node.style.translate = "calc("+Math.random()*100+"vw - 24px)";
+					
+				} else {
+					setTimeout(function(node){
+						node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
+						if (timeoutDelay){
+							setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
+						}
+						node.classList.remove("hidden");
+					},Math.random()*1000,node);
+				}
 			});
 		}
 		
@@ -687,8 +707,16 @@
 			node2 = document.createElement('span');
 			node2.appendChild(img);
 			node2.classList.add("el");
-			node2.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
-			node2.style.animationDelay = Math.random()*-35*speed+"s";
+			if (floatup){
+				node2.style.animation = "y1 "+(Math.random()*10*speed+5*speed)+"s reverse linear 1";
+				node2.style.translateY = "-96px";
+				node2.style.top = "-48px";
+				node2.style.position = "relative";
+			} else {
+				node2.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
+				node2.style.animationDelay = Math.random()*-35*speed+"s";
+			}
+			
 			node.appendChild(node2);
 			node.classList.add("emoji");
 			node.classList.add("el-wrap");
@@ -701,14 +729,18 @@
 			}
 			node.classList.add("hidden");
 			mainOutputWindow.appendChild(node);
-			
-			setTimeout(function(node){
-				node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
-				if (timeoutDelay){
-					setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
-				}
+			if (floatup){
+				node.style.translate = "calc("+Math.random()*100+"vw - 24px)";
 				node.classList.remove("hidden");
-			},Math.random()*1000,node);
+			} else {
+				setTimeout(function(node){
+					node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
+					if (timeoutDelay){
+						setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
+					}
+					node.classList.remove("hidden");
+				},Math.random()*1000,node);
+			}
 		});
 		
 		svgs.forEach(img=>{
@@ -717,21 +749,35 @@
 			node.classList.add("emoji");
 			node.classList.add("el-wrap");
 			img.classList.add("el");
-			img.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
-			img.style.animationDelay = Math.random()*-35*speed+"s";
+			if (floatup){
+				img.style.animation = "y1 "+(Math.random()*10*speed+5*speed)+"s linear reverse 1";
+				img.style.translateY = "-96px";
+				img.style.top = "-48px";
+				img.style.position = "relative";
+			} else {
+				img.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
+				img.style.animationDelay = Math.random()*-35*speed+"s";
+			}
+			
 			
 			if (data.type){
 				node.dataset.sourceType = data.type;
 			}
 			node.classList.add("hidden");
-			mainOutputWindow.appendChild(node);
-			setTimeout(function(node){
-				node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
-				if (timeoutDelay){
-					setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
-				}
+			mainOutputWindow.appendChild(node)
+			
+			if (floatup){
+				node.style.translate = "calc("+Math.random()*100+"vw - 24px)";
 				node.classList.remove("hidden");
-			},Math.random()*1000,node);
+			} else {
+				setTimeout(function(node){
+					node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
+					if (timeoutDelay){
+						setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
+					}
+					node.classList.remove("hidden");
+				},Math.random()*1000,node);
+			}
 		});
 		
 		// removeNode()

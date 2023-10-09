@@ -175,7 +175,7 @@
 			chatmembership = ele.querySelector(".yt-live-chat-membership-item-renderer #header-subtext").innerHTML;
 		} catch (e) {}
 
-		if (!chatmembership){
+		if (!chatmembership && settings.allmemberchat){
 			if (ele.hasAttribute("author-type")){
 				if (ele.getAttribute("author-type") === "member"){
 					chatmembership = chatmessage;

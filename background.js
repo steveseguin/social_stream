@@ -978,6 +978,9 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "textonlymode"){
 					pushSettingChange();
 				}
+				if (request.setting == "allmemberchat"){
+					pushSettingChange();
+				}
 				if (request.setting == "drawmode"){
 					sendWaitlistP2P(waitlist, true);
 				}
@@ -2875,6 +2878,7 @@ function createTab(url) {
 
 /////////////// bad word filter
 // just to keep things PG, I encode the naughty list.
+// I welcome updates/additions. The raw list can be found here: https://gist.github.com/steveseguin/da09a700e4fccd7ff82e68f32e384c9d
 const badWords = JSON.parse(atob('WyJmdWNrIiwic2hpdCIsImN1bnQiLCJiaXRjaCIsIm5pZ2dlciIsImZhZyIsInJldGFyZCIsInJhcGUiLCJwdXNzeSIsImNvY2siLCJhc3Nob2xlIiwid2hvcmUiLCJzbHV0IiwiZ2F5IiwibGVzYmlhbiIsInRyYW5zZ2VuZGVyIiwidHJhbnNzZXh1YWwiLCJ0cmFubnkiLCJjaGluayIsInNwaWMiLCJraWtlIiwiamFwIiwid29wIiwicmVkbmVjayIsImhpbGxiaWxseSIsIndoaXRlIHRyYXNoIiwiZG91Y2hlIiwiZGljayIsImJhc3RhcmQiLCJmdWNrZXIiLCJtb3RoZXJmdWNrZXIiLCJhc3MiLCJhbnVzIiwidmFnaW5hIiwicGVuaXMiLCJ0ZXN0aWNsZXMiLCJtYXN0dXJiYXRlIiwib3JnYXNtIiwiZWphY3VsYXRlIiwiY2xpdG9yaXMiLCJwdWJpYyIsImdlbml0YWwiLCJlcmVjdCIsImVyb3RpYyIsInBvcm4iLCJ4eHgiLCJkaWxkbyIsImJ1dHQgcGx1ZyIsImFuYWwiLCJzb2RvbXkiLCJwZWRvcGhpbGUiLCJiZXN0aWFsaXR5IiwibmVjcm9waGlsaWEiLCJpbmNlc3QiLCJzdWljaWRlIiwibXVyZGVyIiwidGVycm9yaXNtIiwiZHJ1Z3MiLCJhbGNvaG9sIiwic21va2luZyIsIndlZWQiLCJtZXRoIiwiY3JhY2siLCJoZXJvaW4iLCJjb2NhaW5lIiwib3BpYXRlIiwib3BpdW0iLCJiZW56b2RpYXplcGluZSIsInhhbmF4IiwiYWRkZXJhbGwiLCJyaXRhbGluIiwic3Rlcm9pZHMiLCJ2aWFncmEiLCJjaWFsaXMiLCJwcm9zdGl0dXRpb24iLCJlc2NvcnQiXQ=='));
 
 
