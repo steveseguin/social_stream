@@ -47,6 +47,11 @@
 			transform: translateX(calc(100vw - var(--width)));
 		  }
 		}
+		@keyframes x1 {
+		  100% {
+			transform: translateX(2vw);
+		  }
+		}
 		@keyframes y {
 		  100% {
 			transform: translateY(calc(100vh - var(--width)));
@@ -656,7 +661,7 @@
 				node.classList.add("el-wrap");
 				node2.classList.add("el");
 				if (floatup){
-					node2.style.animation = "y1 "+(Math.random()*10*speed+5*speed)+"s reverse linear 1";
+					node2.style.animation = "y1 "+(Math.random()*1*speed+2*speed)+"s reverse linear 1";
 					node2.style.translateY = "-96px";
 					node2.style.top = "-48px";
 					node2.style.position = "relative";
@@ -679,6 +684,12 @@
 				if (floatup){
 					node.classList.remove("hidden");
 					node.style.translate = "calc("+Math.random()*100+"vw - 24px)";
+					node.style.animation = "x1 2s  ease-in-out infinite alternate";
+					node.style.animationDelay = Math.random()*2+"s";
+					//node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
+					if (timeoutDelay){
+						setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
+					}
 					
 				} else {
 					setTimeout(function(node){
@@ -708,7 +719,7 @@
 			node2.appendChild(img);
 			node2.classList.add("el");
 			if (floatup){
-				node2.style.animation = "y1 "+(Math.random()*10*speed+5*speed)+"s reverse linear 1";
+				node2.style.animation = "y1 "+(Math.random()*1*speed+2*speed)+"s reverse linear 1";
 				node2.style.translateY = "-96px";
 				node2.style.top = "-48px";
 				node2.style.position = "relative";
@@ -732,6 +743,11 @@
 			if (floatup){
 				node.style.translate = "calc("+Math.random()*100+"vw - 24px)";
 				node.classList.remove("hidden");
+				node.style.animation = "x1 2s  ease-in-out infinite alternate";
+				node.style.animationDelay = Math.random()*2+"s";
+				if (timeoutDelay){
+					setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
+				}
 			} else {
 				setTimeout(function(node){
 					node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
@@ -750,7 +766,7 @@
 			node.classList.add("el-wrap");
 			img.classList.add("el");
 			if (floatup){
-				img.style.animation = "y1 "+(Math.random()*10*speed+5*speed)+"s linear reverse 1";
+				img.style.animation = "y1 "+(Math.random()*1*speed+2*speed)+"s linear reverse 1";
 				img.style.translateY = "-96px";
 				img.style.top = "-48px";
 				img.style.position = "relative";
@@ -769,6 +785,11 @@
 			if (floatup){
 				node.style.translate = "calc("+Math.random()*100+"vw - 24px)";
 				node.classList.remove("hidden");
+				node.style.animation = "x1 2s ease-in-out infinite alternate";
+				node.style.animationDelay = Math.random()*2+"s";
+				if (timeoutDelay){
+					setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
+				}
 			} else {
 				setTimeout(function(node){
 					node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
