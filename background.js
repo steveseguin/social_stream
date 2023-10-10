@@ -978,6 +978,9 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "textonlymode"){
 					pushSettingChange();
 				}
+				if (request.setting == "fancystageten"){
+					pushSettingChange();
+				}
 				if (request.setting == "allmemberchat"){
 					pushSettingChange();
 				}
@@ -2277,11 +2280,6 @@ try{
 	console.log("'chrome.debugger' not supported by this browser");
 }
 function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for faking user input
-  console.log("ON ATTACH");
-  console.log(debuggeeId);
-  console.log(callback);
-  console.log(message);
-
   if (chrome.runtime.lastError) { 
     console.log(chrome.runtime.lastError.message);
     return;
@@ -2299,8 +2297,6 @@ function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for 
 }
 
 function processIncomingRequest(request){
-	
-	console.log("processIncomingRequest");
 	
 	if ("response" in request){ // we receieved a response from the dock
 		processResponse(request);
@@ -2348,11 +2344,7 @@ function processIncomingRequest(request){
 
 eventer(messageEvent, async function (e) {
 	// iframe wno't be enabled if isExtensionOn is off, so allow this.
-	console.log("eventer");
-	console.log(e);
-	
 	if (!iframe){
-		console.log(e);
 		return;}
 	if (e.source != iframe.contentWindow){return}
 	if (e.data && (typeof e.data == "object")){
@@ -2588,8 +2580,6 @@ function generalFakePoke(tabid){ // fake a user input
 }
 
 function processResponse(data, reverse=false){
-	console.log("processResponse");
-
 	if (!chrome.debugger){return false;}
 	if (!isExtensionOn){return false;} // extension not active, so don't let responder happen. Probably safer this way.
 
@@ -2653,6 +2643,7 @@ function processResponse(data, reverse=false){
 					} else {
 						generalFakeChat(tabs[i].id, data.response, false, false, false); // middle=true, keypress=true, backspace=false
 					}
+				
 				} else {  // all other destinations. ; generic
 
 					if (tabs[i].url.includes("youtube.com/live_chat")){
@@ -2678,7 +2669,6 @@ function processResponse(data, reverse=false){
 
 
 function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=false, delayedPress=false){ // fake a user input
-	console.log("general fake chat");
 	try{ 
 		chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {
 			chrome.runtime.lastError;
@@ -2688,9 +2678,6 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 				}
 				return;
 			}; // make sure the response is valid, else don't inject text
-
-			console.log("send message");
-			console.log(message);
 
 			lastSentMessage = message.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
 			lastSentMessage = lastSentMessage.replace(/\s\s+/g, ' ');

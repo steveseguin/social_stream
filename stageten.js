@@ -180,6 +180,10 @@
 		}
 	});
 	
+	function injectFancyChat(data){
+		console.log(data);
+	}
+	
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
@@ -192,12 +196,26 @@
 					sendResponse(true);
 					return;
 				}
+				
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
 						return;
 					}
+					if ("destination" in request){
+						if (!document.querySelector("form>div>input")){
+							sendResponse(false);
+							return;
+						}
+						document.querySelector("form>div>input").focus();
+						
+						injectFancyChat(request)
+						
+						sendResponse(true);
+						return;
+					}
+					
 				}
 			} catch(e){	}
 			
