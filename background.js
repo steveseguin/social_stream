@@ -1227,6 +1227,7 @@ chrome.runtime.onMessage.addListener(
 				} else if (Math.random()>0.7){
 					data.hasDonation = "";
 					data.membership = "";
+					data.chatimg = "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
 					data.chatname = "vdoninja";
 					data.type = "twitch";
 					var score = parseInt(Math.random()* 378);
@@ -1234,13 +1235,13 @@ chrome.runtime.onMessage.addListener(
 				} else if (Math.random()>0.6){
 					data.hasDonation = "";
 					data.membership =  '';
+					data.chatimg = "https://socialstream.ninja/sampleavatar.png";
 					data.chatname = "Steve";
 					var score = parseInt(Math.random()* 378);
 					data.chatmessage  =  '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁';
 				} else if (Math.random()>0.5){
 					data.hasDonation = "";
 					data.nameColor = "#107516";
-					data.chatimg = "sampleavatar.png";
 					data.membership =  "SPONSORSHIP";
 					data.chatname = "Steve_"+Math.round(Math.random()*100000000000000);
 					data.type = "facebook";
@@ -2579,7 +2580,7 @@ function generalFakePoke(tabid){ // fake a user input
 	}
 }
 
-function processResponse(data, reverse=false){
+function processResponse(data, reverse=false, metadata=null){
 	if (!chrome.debugger){return false;}
 	if (!isExtensionOn){return false;} // extension not active, so don't let responder happen. Probably safer this way.
 
@@ -2612,7 +2613,7 @@ function processResponse(data, reverse=false){
 
 				published[tabs[i].url] = true;
 				//messageTimeout = Date.now();
-
+				
 				if (tabs[i].url.startsWith("https://www.twitch.tv/popout/")){  // twitch, but there's also cases for youtube/facebook
 
 					if (!debuggerEnabled[tabs[i].id]){
@@ -2643,7 +2644,17 @@ function processResponse(data, reverse=false){
 					} else {
 						generalFakeChat(tabs[i].id, data.response, false, false, false); // middle=true, keypress=true, backspace=false
 					}
-				
+				} else if (metadata && settings.fancystageten && tabs[i].url.includes(".stageten.tv/channel")){  // twitch, but there's also cases for youtube/facebook
+					
+					try {
+						console.log("SENDING ORIGINAL RAW DATA TO S10");
+						chrome.tabs.sendMessage(tabs[i].id, {metadata:metadata}, function(response=false) {
+							chrome.runtime.lastError;
+						});
+					} catch(e){
+						console.error(e);
+					}
+
 				} else {  // all other destinations. ; generic
 
 					if (tabs[i].url.includes("youtube.com/live_chat")){
@@ -3031,7 +3042,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				if (tmpmsg){
 					msg.response = data.chatname+" said: "+tmpmsg;
 					checkExactDuplicate(msg.response);
-					processResponse(msg, true); // this should be the first and only message
+					processResponse(msg, true, data); // this should be the first and only message
 				}
 				
 			}
@@ -3248,6 +3259,13 @@ function midiHotkeysCommand(number, value){ // MIDI control change commands
 	}
 }
 
+function respondToAll(msg){
+	messageTimeout = Date.now();
+	var data = {};
+	data.response = msg
+	processResponse(data);
+}
+
 function midiHotkeysNote(note, velocity){
 	// In case you want to use NOTES instead of Control Change commands; like if you have a MIDI piano
 }
@@ -3260,14 +3278,6 @@ function tellAJoke(){
 	data.response = joke["setup"] + "..  " + joke["punchline"] + " LUL";
 	processResponse(data);
 }
-
-function respondToAll(msg){
-	messageTimeout = Date.now();
-	var data = {};
-	data.response = msg
-	processResponse(data);
-}
-
 
 
 chrome.browserAction.setIcon({path: "/icons/off.png"});

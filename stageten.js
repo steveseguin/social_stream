@@ -180,8 +180,100 @@
 		}
 	});
 	
+	function getCurrentTime() {
+	  var now = new Date();
+	  var hours = now.getHours();
+	  var minutes = now.getMinutes();
+	  var amOrPm = hours >= 12 ? 'PM' : 'AM';
+	  var formattedHours = hours % 12 || 12;
+	  var formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+	  return `${formattedHours}:${formattedMinutes} ${amOrPm}`;
+	}
+	
+	var cssStylesheet = document.createElement('style');
+	cssStylesheet.innerHTML = "\
+		.ss{\
+			position: relative;\
+			overflow: visible;\
+			display: inline-block;\
+			margin: 0px 6px 0 0;\
+		}\
+		.ss img {\
+			min-width: 15px;\
+			min-height: 15px;\
+			width: 24px;\
+			height: 24px;\
+			border-radius: 100%;\
+		}\
+		.s1 {\
+			width: inherit;\
+			padding: 10px;\
+			line-height: 1.2;\
+			background: rgb(220, 220, 220);\
+			color: rgb(51, 51, 51);\
+			border-radius: 15px;\
+			list-style-type: none;\
+			font-size: 0.92rem;\
+			display: flex;\
+			flex-direction: row;\
+			flex-wrap: nowrap;\
+			align-content: stretch;\
+			justify-content: space-evenly;\
+			align-items: flex-end;\
+		}\
+		.s3 {\
+			display: flex;\
+			border-radius: 100%;\
+			flex-direction: row;\
+			flex-wrap: nowrap;\
+			align-content: stretch;\
+			justify-content: flex-start;\
+		}\
+		.message-text {\
+			margin: 6px 0 0 0;\
+		}\
+		.timestamp  {\
+			font-size: 90%;\
+			margin-left: 10px;\
+		}\
+		.message-data {\
+			display: flex;\
+			flex-direction: row;\
+			flex-wrap: wrap;\
+			align-content: stretch;\
+			justify-content: flex-start;\
+			align-items: center;\
+			margin: 6px;\
+		}\
+	";
+	document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
+
 	function injectFancyChat(data){
+		
 		console.log(data);
+		try {
+			var ele = document.createElement("span");
+				ele.innerHTML = '<li data-align-right="true" class="sc-bPyhqo evxXzp" data-set123="true"><div class="sc-fWIMVQ cejOrE"><div data-view="default" data-pull-right="true" class="sc-gITdmR s1"><div class="s3"><div class="message-data"><div class="ss"><img class="chatimg" src="https://socialstream.ninja/unknown.png" onerror="this.style.display = \'none\';"></div><span class="ss"><img onerror="this.style.display = \'none\';" class="sourcetype"></span><span class=""><span class="display-name"></span></span><span class="timestamp"></span><p class="message-text"></p></div></div></div></div></li>';
+			if (data.chatname){
+				ele.querySelector(".message-text").innerText = data.chatmessage;
+			}
+			if (data.chatname){
+				ele.querySelector(".display-name").innerText = data.chatname;
+			}
+			if (data.timestamp){
+				ele.querySelector(".display-name").innerText = getCurrentTime();
+			}
+			if (data.chatimg){
+				ele.querySelector(".chatimg").src = data.chatimg;
+			}
+			if (data.type){
+				ele.querySelector(".sourcetype").src = "https://socialstream.ninja/"+data.type+".png";
+			}
+			
+			document.querySelector("main ol").appendChild(ele.childNodes[0]);
+		} catch(e){
+			console.error(e);
+		}
 	}
 	
 	chrome.runtime.onMessage.addListener(
@@ -196,21 +288,19 @@
 					sendResponse(true);
 					return;
 				}
-				
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
 						return;
 					}
-					if ("destination" in request){
+					if ("metadata" in request){
 						if (!document.querySelector("form>div>input")){
 							sendResponse(false);
 							return;
 						}
-						document.querySelector("form>div>input").focus();
 						
-						injectFancyChat(request)
+						injectFancyChat(request.metadata)
 						
 						sendResponse(true);
 						return;

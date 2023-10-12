@@ -59,7 +59,7 @@
 		}
 		@keyframes y1 {
 		  100% {
-			transform: translateY(calc(110vh - var(--width)));
+			transform: translateY(calc(100vh + var(--width)));
 		  }
 		}
 		
@@ -222,10 +222,17 @@
 		}
 	} catch(e){
 	}
-
+	
 	var timeoutDelay = 5000;
+	var floatup = false;
+	
 	if (urlParams.has("showtime")){
 		timeoutDelay = parseInt(urlParams.get("showtime")) || 0; // 0 disables.
+	}
+	
+	if (urlParams.has("floatup")){
+		floatup = true;
+		timeoutDelay = timeoutDelay || 2000;
 	}
 
 	if (urlParams.has("hidedupes")) {
@@ -299,10 +306,7 @@
 		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
 	}
 	
-	var floatup = false;
-	if (urlParams.has("floatup")){
-		floatup = true;
-	}
+	
 
 	var custombot = false;
 	if (urlParams.has("myname") || urlParams.has("botlist")){
@@ -318,11 +322,13 @@
 	if (urlParams.has("hidebots")){
 		doNotShowBot = true;
 	}
-
+	
+	let width = 48;
+	
 	if (urlParams.has("scale")){
 		scale = urlParams.get("scale") || 1.0;
 		scale = parseFloat(scale);
-		let width = parseInt(48 * scale);
+		width = parseInt(48 * scale);
 		document.documentElement.style.setProperty("--width", width+"px");
 		let fontsize = parseInt(240 * scale);
 		document.documentElement.style.setProperty("--font-size", fontsize+"%");
@@ -375,8 +381,8 @@
 	if (urlParams.has("speed")){
 		speed = parseFloat(urlParams.get("speed")) || 1;
 		speed = 1 / speed;
-		document.documentElement.style.setProperty("--x-speed", (13*speedxy)+"%"); // not used
-		document.documentElement.style.setProperty("--y-speed",  (7*speedxy)+"%"); // not used
+		document.documentElement.style.setProperty("--x-speed", (13*speed)+"%"); // not used
+		document.documentElement.style.setProperty("--y-speed",  (7*speed)+"%"); // not used
 	}
 	
 	
@@ -660,10 +666,12 @@
 				node.classList.add("emoji");
 				node.classList.add("el-wrap");
 				node2.classList.add("el");
+				
 				if (floatup){
-					node2.style.animation = "y1 "+(Math.random()*1*speed+2*speed)+"s reverse linear 1";
-					node2.style.translateY = "-96px";
-					node2.style.top = "-48px";
+					var speedup = Math.pow(Math.random(),0.05)*timeoutDelay;
+					node2.style.animation = "y1 "+speedup+"ms reverse linear 1";
+					node2.style.transform = "translateY(-"+width+"px)";
+					node2.style.top = -1*width+"px";
 					node2.style.position = "relative";
 				} else {
 					node2.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
@@ -683,12 +691,10 @@
 				
 				if (floatup){
 					node.classList.remove("hidden");
-					node.style.translate = "calc("+Math.random()*window.innerWidth+"px - 24px)";
-					node.style.animation = "x1 2s  ease-in-out infinite alternate";
-					node.style.animationDelay = Math.random()*2+"s";
-					//node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
+					node.style.left =(parseInt(Math.random()*parseInt(window.innerWidth)) + "px");
+					node.style.animation = "x1 "+speedup+"s ease-in-out infinite alternate";
 					if (timeoutDelay){
-						setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
+						setTimeout(function(node){fadeOutNode(node)},timeoutDelay+500, node);
 					}
 					
 				} else {
@@ -718,10 +724,12 @@
 			node2 = document.createElement('span');
 			node2.appendChild(img);
 			node2.classList.add("el");
+			
 			if (floatup){
-				node2.style.animation = "y1 "+(Math.random()*1*speed+2*speed)+"s reverse linear 1";
-				node2.style.translateY = "-96px";
-				node2.style.top = "-48px";
+				var speedup = Math.pow(Math.random(),0.05)*timeoutDelay;
+				node2.style.animation = "y1 "+speedup+"ms reverse linear 1";
+				node2.style.transform = "translateY(-"+width+"px)";
+				node2.style.top = -1*width+"px";
 				node2.style.position = "relative";
 			} else {
 				node2.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
@@ -741,10 +749,9 @@
 			node.classList.add("hidden");
 			mainOutputWindow.appendChild(node);
 			if (floatup){
-				node.style.translate = "calc("+Math.random()*window.innerWidth+"px - 24px)";
 				node.classList.remove("hidden");
-				node.style.animation = "x1 2s  ease-in-out infinite alternate";
-				node.style.animationDelay = Math.random()*2+"s";
+				node.style.left =(parseInt(Math.random()*parseInt(window.innerWidth)) + "px");
+				node.style.animation = "x1 "+speedup+"s ease-in-out infinite alternate";
 				if (timeoutDelay){
 					setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
 				}
@@ -752,7 +759,7 @@
 				setTimeout(function(node){
 					node.style.animation = (Math.random()*10*speed+5*speed)+"s linear "+(Math.random()*-35*speed)+"s infinite alternate forwards running x, fadeIn 2s normal forwards ease";
 					if (timeoutDelay){
-						setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
+						setTimeout(function(node){fadeOutNode(node)},timeoutDelay+500, node);
 					}
 					node.classList.remove("hidden");
 				},Math.random()*1000,node);
@@ -765,10 +772,12 @@
 			node.classList.add("emoji");
 			node.classList.add("el-wrap");
 			img.classList.add("el");
+			
 			if (floatup){
-				img.style.animation = "y1 "+(Math.random()*1*speed+2*speed)+"s linear reverse 1";
-				img.style.translateY = "-96px";
-				img.style.top = "-48px";
+				var speedup = Math.pow(Math.random(),0.05)*timeoutDelay;
+				img.style.animation = "y1 "+speedup+"ms reverse linear 1";
+				img.style.transform = "translateY(-"+width+"px)";
+				img.style.top = -1*width+"px";
 				img.style.position = "relative";
 			} else {
 				img.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
@@ -783,12 +792,11 @@
 			mainOutputWindow.appendChild(node)
 			
 			if (floatup){
-				node.style.translate = "calc("+Math.random()*window.innerWidth+"px - 24px)";
 				node.classList.remove("hidden");
-				node.style.animation = "x1 2s ease-in-out infinite alternate";
-				node.style.animationDelay = Math.random()*2+"s";
+				node.style.left = (parseInt(Math.random()*parseInt(window.innerWidth)) + "px");
+				node.style.animation = "x1 "+speedup+"s  ease-in-out infinite alternate";
 				if (timeoutDelay){
-					setTimeout(function(node){fadeOutNode(node)},timeoutDelay, node);
+					setTimeout(function(node){fadeOutNode(node)},timeoutDelay+500, node);
 				}
 			} else {
 				setTimeout(function(node){

@@ -2116,22 +2116,38 @@
 
 	if (urlParams.has('css')){
 		var cssURL = urlParams.get('css');
-		cssURL = decodeURI(cssURL);
-
-		var cssStylesheet = document.createElement('link');
-		cssStylesheet.rel = 'stylesheet';
-		cssStylesheet.type = 'text/css';
-		cssStylesheet.media = 'screen';
-		cssStylesheet.href = cssURL;
-		document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
+		try {
+			cssURL = decodeURI(cssURL);
+		} catch(e){
+		}
+		if (cssURL.startsWith("http")){
+			var cssStylesheet = document.createElement('link');
+			cssStylesheet.rel = 'stylesheet';
+			cssStylesheet.type = 'text/css';
+			cssStylesheet.media = 'screen';
+			cssStylesheet.href = cssURL;
+			document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
+		} else {
+			var cssStylesheet = document.createElement('style');
+			cssStylesheet.innerHTML = cssURL;
+			document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
+		}
+		
 	}
-
+	
 	if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
 		try {
 			var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
-			var css = decodeURIComponent(atob(base64Css)); // window.btoa(encodeURIComponent("#mainmenu{background-color: pink; ❤" ));
+			try {
+				base64Css = atob(base64Css); // window.btoa(encodeURIComponent("#mainmenu{background-color: pink;}" ));
+			} catch(e){
+			}
+			try {
+				base64Css = decodeURIComponent(base64Css); // window.btoa(encodeURIComponent("#mainmenu{background-color: pink; ❤" ));
+			} catch(e){
+			}
 			var cssStyleSheet = document.createElement("style");
-			cssStyleSheet.innerText = css;
+			cssStyleSheet.innerText = base64Css;
 			document.querySelector("head").appendChild(cssStyleSheet);
 		} catch(e){console.error(e);}
 	};

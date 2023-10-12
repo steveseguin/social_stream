@@ -749,16 +749,6 @@ span.zero-width-parent img.zero-width-emote {
 		
 	}
 	
-	var firstNamesOnly = false
-	if (urlParams.has("firstnamesonly") || urlParams.has("firstname") || urlParams.has("firstnames")){
-		firstNamesOnly = true;
-	}
-
-	var hideNames = false
-	if (urlParams.has("hidenames")){
-		hideNames = true;
-	}
-	
 	if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
 		try {
 			var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
@@ -775,6 +765,18 @@ span.zero-width-parent img.zero-width-emote {
 			document.querySelector("head").appendChild(cssStyleSheet);
 		} catch(e){console.error(e);}
 	};
+	
+	var firstNamesOnly = false
+	if (urlParams.has("firstnamesonly") || urlParams.has("firstname") || urlParams.has("firstnames")){
+		firstNamesOnly = true;
+	}
+
+	var hideNames = false
+	if (urlParams.has("hidenames")){
+		hideNames = true;
+	}
+	
+	
 	
 	var scale = false;
 	if (urlParams.has("scale")){
