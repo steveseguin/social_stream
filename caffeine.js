@@ -165,10 +165,8 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].skip){continue;}
 							
-							mutation.addedNodes[i].skip = true;
-
+							console.log(mutation.addedNodes[i]);
 							processMessage(mutation.addedNodes[i]); 
 							
 						} catch(e){}
@@ -177,7 +175,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -192,11 +190,8 @@
 				if (!document.querySelector("[class^='reactions__reactions___']").marked){
 					document.querySelector("[class^='reactions__reactions___']").marked=true;
 
-					console.log("CONNECTED chat detected");
-
-					setTimeout(function(){
-						onElementInserted(document.querySelector("[class^='reactions__reactions___']"));
-					},3000);
+					console.log("CONNECTED chat detected"); //root
+					onElementInserted(document.querySelector("[class^='reactions__reactions___']"));
 				}
 			};
 		} catch(e){}
