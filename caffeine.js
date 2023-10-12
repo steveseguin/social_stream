@@ -166,7 +166,6 @@
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							
-							console.log(mutation.addedNodes[i]);
 							processMessage(mutation.addedNodes[i]); 
 							
 						} catch(e){}

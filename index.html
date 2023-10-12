@@ -728,6 +728,11 @@ span.zero-width-parent img.zero-width-emote {
 		customSource = true;
 	}
 	
+	var fontfit = false;
+	if (urlParams.has("fontfit")){
+		fontfit = true;
+	}
+	
 	if (urlParams.has('css')){
 		var cssURL = urlParams.get('css');
 		try {
@@ -1586,11 +1591,12 @@ span.zero-width-parent img.zero-width-emote {
 				var fontsize = "";
 				var limitchar = parseInt(window.innerWidth/6.5);
 				
-				
-				if (document.getElementById("message").innerText.length>limitchar){
-					fontsize = (parseInt((limitchar*100)/document.getElementById("message").innerText.length));
-					if (fontsize<43){fontsize=43;}
-					document.getElementById("message").style = data.backgroundColor +' '+ data.textColor+'; font-size: '+fontsize+'%;';
+				if (fontfit){
+					if (document.getElementById("message").innerText.length>limitchar){
+						fontsize = (parseInt((limitchar*100)/document.getElementById("message").innerText.length));
+						if (fontsize<43){fontsize=43;}
+						document.getElementById("message").style = data.backgroundColor +' '+ data.textColor+'; font-size: '+fontsize+'%;';
+					}
 				}
 				
 				var username = data.username || data.chatname;
