@@ -128,10 +128,19 @@
 		  }
 		}
 
-		
+		.scrolllll::-webkit-scrollbar {
+		  display: none;
+		}
+
+		/* Hide scrollbar for IE, Edge and Firefox */
+		.scrolllll {
+		  -ms-overflow-style: none;  /* IE and Edge */
+		  scrollbar-width: none;  /* Firefox */
+		  overflow: auto;
+		}
 
 		::-webkit-scrollbar {
-			width: 15px;
+			width: 0;
 		}
 
 		::-webkit-scrollbar-track {
@@ -281,10 +290,10 @@
 		}
 	</style>
 </head>
-<body class='electronDraggable' id="output">
-	<div id="parentHolder" class='hidden'>
+<body class='electronDraggable scrolllll' id="output">
+	<div id="parentHolder" class='hidden '>
 		<div id="waitlisttitle"></div>
-		<div id="waitlist"></div>
+		<div id="waitlist" ></div>
 	</div>
 	<script>
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
