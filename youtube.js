@@ -52,7 +52,7 @@
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent){  // ah, so I'm skipping the spaces. that's breaking arabic. well, w/e
+			} else if ((node.nodeType === 3) && node.textContent){  // ah, so I was skipping the spaces before. that's breaking arabic. well, w/e
 				resp += escapeHtml(node.textContent)+"";
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){

@@ -585,11 +585,22 @@
 				let images3 = [];
 				
 				let prevImage = null;
-			//zero-width-parent
+				let prevImageCancelled = false;
+			
 				for (var i=0;i<images.length;i++){
 					
+					let zeroOverlay = false;
+					
 					if (images[i].src && images2[images[i].src]){
+						prevImage = null;
+						prevImageCancelled = true;
 						continue;
+					} else if (images[i].srcset && images2[images[i].srcset]){
+						if (!images[i].classList.contains("zero-width-emote") || !prevImage){
+							prevImage = null;
+							prevImageCancelled = true;
+							continue;
+						}
 					}
 					
 					images[i].onerror = function(){
@@ -599,13 +610,23 @@
 					
 					if (prevImage && images[i].classList.contains("zero-width-emote")){
 						prevImage = null;
+						prevImageCancelled = false;
 						images3.push(images[i]);
 						continue;
+					} else if (!images[i].classList.contains("zero-width-emote")){
+						prevImage = images[i];
+						prevImageCancelled = false;
+						images2[images[i].src || images[i].srcset] = true;
+					} else if (prevImageCancelled){
+						prevImage = null;
+						prevImageCancelled = false;
+						continue;
+					} else {
+						prevImage = null;
+						prevImageCancelled = false;
 					}
 					
-					images2[images[i].src] = true;
 					images3.push(images[i]);
-					prevImage = images[i];
 				};
 				images = images3;
 			} catch(e){
