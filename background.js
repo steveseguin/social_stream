@@ -2308,13 +2308,22 @@ function processIncomingRequest(request){
 			if (settings.blacklistusers && settings.blacklistusers.textsetting && request.value && request.value.chatname && request.value.type){
 				var matched = false;
 				settings.blacklistusers.textsetting.split(",").forEach(user=>{
-					user = user.trim();
-					if (user && (request.value.chatname === user)){
-						matched = true;
+					var type = "*";
+					if (user.split(":").length>1){
+						type = user.split(":")[1].trim();
+						user = user.split(":")[0].trim();
+						if (user && (request.value.chatname === user) && ((request.value.type === type) || ("*" === type))){
+							matched = true;
+						}
+					} else {
+						user = user.trim();
+						if (user && (request.value.chatname === user)){
+							matched = true;
+						}
 					}
 				});
 				if (!matched){
-					settings.blacklistusers.textsetting += ","+request.value.chatname;
+					settings.blacklistusers.textsetting += ","+request.value.chatname+":"+request.value.type;
 					
 					chrome.storage.local.set({
 						settings: settings
@@ -2326,7 +2335,7 @@ function processIncomingRequest(request){
 				}
 			} else if (request.value && request.value.chatname && request.value.type){
 				settings.blacklistusers = {};
-				settings.blacklistusers.textsetting = request.value.chatname;
+				settings.blacklistusers.textsetting = request.value.chatname+":"+request.value.type;;
 				settings.blacklistusers.value = request.value.chatname;
 				
 				chrome.storage.local.set({
