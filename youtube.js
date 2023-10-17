@@ -49,15 +49,11 @@
 	
 	function getAllContentNodes(element) {
 		var resp = "";
-		var firstTextNode = false;
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				if (!firstTextNode){
-					firstTextNode = true; // this allows us to use a built in function to avoid concatting words together ourself, which can cause spacing problems with languages like Arabic.
-					resp += escapeHtml(node.wholeText)+"";
-				}
+			} else if ((node.nodeType === 3) && node.textContent){  // ah, so I'm skipping the spaces. that's breaking arabic. well, w/e
+				resp += escapeHtml(node.textContent)+"";
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					resp += node.outerHTML;
