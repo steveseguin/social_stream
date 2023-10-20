@@ -2979,18 +2979,30 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 		if (settings.blacklistuserstoggle && data.chatname){
 			if (settings.blacklistusers && settings.blacklistusers.textsetting){
 				let block = false;
-				settings.blacklistusers.textsetting.split(",").forEach(user=>{
-					user = user.trim().toLowerCase();
-					if (user && (user == data.chatname.toLowerCase())){
-						block=true;
+				
+				settings.blacklistusers.textsetting.split(",").forEach(storeUser=>{
+					var storedType = "*";
+					storeUser = storeUser.toLowerCase();
+					if (storeUser.split(":").length>1){
+						storedType = storeUser.split(":")[1].trim();
+						storeUser = storeUser.split(":")[0].trim();
+						if (storeUser && (request.value.chatname === storeUser) && ((request.value.type === type) || ("*" === storedType))){
+							block = true;
+						}
+					} else {
+						storeUser = storeUser.trim();
+						if (storeUser && (request.value.chatname === storeUser)){
+							block = true;
+						}
 					}
-				})
+				});
+				
 				if (block){
 					return null;
 				}
-				
 			}
 		}
+		
 
 		if (settings.blacklist && data.chatmessage){
 			try {
@@ -3009,6 +3021,8 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				}
 			}
 		}
+		
+		// applyBotActions // applyCustomActions
 
 		if (settings.relaydonos && data.hasDonation && data.chatname && data.type){
 			if (Date.now() - messageTimeout > 100){ // respond to "1" with a "1" automatically; at most 1 time per 100ms.
@@ -3291,30 +3305,46 @@ function tellAJoke(){
 
 chrome.browserAction.setIcon({path: "/icons/off.png"});
 
-window.onload = function() {
-	chrome.storage.sync.get(properties, function(item){ // we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
-		if (item && item.settings){
-			chrome.storage.sync.remove(["settings"], function(Items) {
-				console.log("upgrading from sync to local storage");
-			});
-			chrome.storage.local.set({
-				settings: item.settings
-			});
-			loadSettings(item);
-		} else {
-			chrome.storage.local.get(["settings"], function(item2){
-				if (item2 && item2.settings){
-					if (item){
-						item.settings = item2.settings;
-					} else {
-						item = item2;
-					}
-				} 
+async function fetchData(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+		return false;
+    }
+    return await response.json();
+  } catch (error) {
+	return false;
+  }
+}
+
+window.onload = async function() {
+	let programmedSettings = await fetchData("settings.json"); // allows you to load the settings from a file.
+	if (programmedSettings && (typeof programmedSettings === "object")){
+		loadSettings(programmedSettings);
+	} else {
+		chrome.storage.sync.get(properties, function(item){ // we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
+			if (item && item.settings){
+				chrome.storage.sync.remove(["settings"], function(Items) {
+					console.log("upgrading from sync to local storage");
+				});
+				chrome.storage.local.set({
+					settings: item.settings
+				});
 				loadSettings(item);
-			});
-		}
-		
-	});
+			} else {
+				chrome.storage.local.get(["settings"], function(item2){
+					if (item2 && item2.settings){
+						if (item){
+							item.settings = item2.settings;
+						} else {
+							item = item2;
+						}
+					} 
+					loadSettings(item);
+				});
+			}
+		});
+	}
 }
 
 

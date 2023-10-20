@@ -335,7 +335,9 @@ You can create your own custom auto-responding triggers or other actions by incl
 
 Included in the code is the `custom_sample.js` file, which you can rename to custom.js to get started. Included in it is the `&auto1` trigger, which  auto responds "1" to any message that is also "1".  You need to add `&auto1` to the dock's URL to activate it.
 
-It's fairly easy to modify the `auto1` trigger to do whatever you want. You can also customize or removee the URL-parameter trigger needed to activate it.
+It's fairly easy to modify the `auto1` trigger to do whatever you want. You can also customize or remove the URL-parameter trigger needed to activate it.
+
+Please note that currently the custom.js file needs the dock.html to be opened locally, if you wish to have it load there.
 
 ### Queuing messages
 
