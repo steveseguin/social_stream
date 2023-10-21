@@ -623,6 +623,9 @@ I condemn Russia's brutal invasion of Ukraine. 💙💛 Please consider supporti
 
 I do not claim rights of all the icons distributed. While I made some of the icons, trademarks and logos of third party companies/services are the rights of those respectivitive entities. Use them according to the terms that those entities may offer them under.
 
+Some icons used are licensced as attribution-required:
+<a href="https://www.flaticon.com/free-icons/communication" title="communication icons">Communication icons created by Freepik - Flaticon</a>
+
 ### Credit
 
 This project contains inspiration by my other project, chat.overlay.ninja, which was a derivation of another Youtube-specific chat widget, which was inspired by the stylings of other featured-chat code sample, of which that was also inspired by existing chat overlay designs. May the many new innovations of this project inspire the future foundation of other awesome projects as well.
