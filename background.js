@@ -3320,7 +3320,7 @@ async function fetchData(url) {
 window.onload = async function() {
 	let programmedSettings = await fetchData("settings.json"); // allows you to load the settings from a file.
 	if (programmedSettings && (typeof programmedSettings === "object")){
-		loadSettings(programmedSettings);
+		loadSettings(programmedSettings, true);
 	} else {
 		chrome.storage.sync.get(properties, function(item){ // we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
 			if (item && item.settings){
