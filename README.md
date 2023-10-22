@@ -156,39 +156,29 @@ New app integrations do not auto-update; just the overlay and dock page will aut
 
 #### Firefox support
 
-You have two ways to install the add-on for Firefox. 
+I no longer offer official Firefox support, but you can still try to get it going with the steps below:
 
-Please note, neither Firefox option supports two-way message responding, but the dock and featured chat overlay should work.  If you want to use the bot commands with auto-responding, please consider using a Chromium-based browser instead.
+ - Download+extract or clone the SocialStream code somewhere.
 
-##### First way:
+ - Go to `about:debugging#/runtime/this-firefox` in Firefox and select Load Temporary Add-on. 
 
-Download+extract or clone the SocialStream code somewhere.
+ - Select any file inside the SocialStream folder.
 
-Go to `about:debugging#/runtime/this-firefox` in Firefox and select Load Temporary Add-on. 
-
-Select any file inside the SocialStream folder.
-
-You're done.  This is a temporary install and none of the settings made will be persist, including your session ID.
+ - You're done.  This is a temporary install and none of the settings made will be persist, including your session ID.
 
 You will still need to manually redo these steps to update when needed, but you can use the newest version of the code.
 
-##### Second way:
+### Standalone version of the app
 
-(This method hasn't been updated in a while and no longer works probably; you'll need to make your own XPI file to try it)
+There is an upcoming standalone version of Social Stream, which installs as an app, rather than as a browser extension.
 
-Go to the release section of this repo and find a release that includes a Firefox XPI file. 
+To try out the preview test version of the app, you can download it here:
 
-https://github.com/steveseguin/social_stream/releases
+[https://github.com/steveseguin/social_stream/releases/](https://github.com/steveseguin/social_stream/releases)
 
-Download the XPI file and drag it into an Open Firefox window.
+(As of Oct 22nd 2023, it's available for Windows x64 only, but Mac will be supported eventually. Maybe Linux at some point, too.)
 
-Accept any install pop ups. Storage functions should work with this approach.
-
-You are good to go, but you will need to manually update when needed by recompleting these steps.
-
-Please note: XPI files are currently provided on request or with major updates; XPI file creation hasn't yet been automated. (TODO)
-
-### To use
+### To use the extension
 
 Open Twitch or Youtube "Pop out" chat; or just go to your Facebook Live chat while connected to Ethernet or WiFi. You must not minimize or close these windows, but they can be left in the background or moved to the side.
 
