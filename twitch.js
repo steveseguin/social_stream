@@ -124,8 +124,6 @@
 	
 	function processMessage(ele){	// twitch
 
-		console.log(ele);
-
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
@@ -322,13 +320,9 @@
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "twitch";
 	  
-	//  console.log(data);
-	  
 	  if (brandedImageURL){
 		data.sourceImg = brandedImageURL;
 	  }
-	  
-	  console.log(data);
 	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){

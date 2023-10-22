@@ -369,7 +369,12 @@
 	if (urlParams.has("randomize") || urlParams.has("random")){
 		randomize = true;
 	}
-
+	
+	var showsource = false;
+	if (urlParams.has("showsource")){
+		showsource = true;
+	}
+	
 	if (urlParams.has("session")){
 		roomID = urlParams.get("session");
 	} else if (urlParams.has("s")){
@@ -603,19 +608,23 @@
 								entries +=1;
 							}
 						}
+						let extraData = "";
+						if (showsource){
+							extraData = "<img onerror='hideImage' src='"+data.waitlist[i].type+".png'>";
+						}
 						if (randomize){
 							var nodes = document.getElementById("waitlist").childNodes;
 							var choice = randomNumber(0,nodes.length+1);
 							if (choice == 0){
-								document.getElementById("waitlist").innerHTML = "<div class='guestListHolder "+classAdd+"'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>" + document.getElementById("waitlist").innerHTML;
+								document.getElementById("waitlist").innerHTML = "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>" + document.getElementById("waitlist").innerHTML;
 							} else {
-								nodes[choice-1].outerHTML = nodes[choice-1].outerHTML+"<div class='guestListHolder "+classAdd+"'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
+								nodes[choice-1].outerHTML = nodes[choice-1].outerHTML+"<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
 							}
 						} else {
 							if (data.waitlist[i].chatimg){
-								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'><img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
+								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
 							} else {
-								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'><div class='spacer'></div>"+data.waitlist[i].chatname+"</div>";
+								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<div class='spacer'></div>"+data.waitlist[i].chatname+"</div>";
 							}
 						}
 					}
@@ -628,7 +637,11 @@
 						document.getElementById("waitlisttitle").innerHTML = "Winner selected";
 					}
 				} else if (drawmode){
-					document.getElementById("waitlist").innerHTML = entries + " entries in the draw!";
+					if (entries==1){
+						document.getElementById("waitlist").innerHTML = entries + " entry in the draw!";
+					} else {
+						document.getElementById("waitlist").innerHTML = entries + " entries in the draw!";
+					}
 				}
 			}
 			

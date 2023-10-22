@@ -1223,6 +1223,7 @@ chrome.runtime.onMessage.addListener(
 					data.hasDonation = "3 hearts";
 					data.membership = "";
 					data.chatmessage = "";
+					data.chatimg = parseInt(Math.random()*2) ? "" : "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
 					data.chatname = "Lucy";
 				} else if (Math.random()>0.7){
 					data.hasDonation = "";
@@ -1243,8 +1244,9 @@ chrome.runtime.onMessage.addListener(
 					data.hasDonation = "";
 					data.nameColor = "#107516";
 					data.membership =  "SPONSORSHIP";
-					data.chatname = "Steve_"+Math.round(Math.random()*100000000000000);
-					data.type = "facebook";
+					data.chatimg = parseInt(Math.random()*2) ? "" : "https://socialstream.ninja/sampleavatar.png";
+					data.chatname = "Steve_"+Math.round(Math.random()*Math.pow(10,parseInt(Math.random()*20)));
+					data.type = parseInt(Math.random()*2) ? "slack" : "facebook";
 					data.chatmessage  = "!queue The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
 				} else if (Math.random()>0.2){
 					data.hasDonation = "";
@@ -1511,7 +1513,8 @@ function sendToH2R(data){
 			if (!data.textonly){
 				data.chatmessage = unescapeHtml(data.chatmessage);
 			}
-
+			
+			
 			msg.snippet = {};
 			msg.snippet.displayMessage = data.chatmessage.replace(/(<([^>]+)>)/gi, "") || "";
 			
@@ -1532,8 +1535,15 @@ function sendToH2R(data){
 				msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
 			}
 
-
-			if (data.type){
+			if (data.type && data.sourceImg && (data.type == "restream")){
+				msg.platform = {};
+				msg.platform.name = data.type || "";
+				if (data.sourceImg === "restream.png"){
+					msg.platform.logoUrl = "https://socialstream.ninja/"+data.sourceImg;
+				} else {
+					msg.platform.logoUrl = data.sourceImg;
+				}
+			} else if (data.type){
 				msg.platform = {};
 				msg.platform.name = data.type || "";
 				msg.platform.logoUrl = "https://socialstream.ninja/"+data.type+".png";
