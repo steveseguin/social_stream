@@ -2160,8 +2160,17 @@ The first name listed may be used as the host's name in stream when their name i
 								<label class="switch">
 									<input type="checkbox" id="relayall" data-setting="relayall">
 									<span class="slider round"></span>
-								</label><span data-translate="relay-all-messages-not-recommended">🔀 Relay all messages (!NOT RECOMMENDED!)
-							</span></div>
+								</label>
+								<span data-translate="relay-all-messages-not-recommended">🔀 Relay all messages (!NOT RECOMMENDED!)</span>
+							</div>
+							<div class="textInputContainer" style="width: 95%">
+								<label class="switch">
+									<input type="checkbox"  id="limitcharactersstate" data-setting="limitcharactersstate">
+									<span class="slider round"></span>
+								</label>
+								<input type="number" style='max-width:6ch;' id="limitcharacters" max="999" min="1" value="200" size="3" placeholder="Trim down the max length of dock/relayed chat sent to chat source locations (ie:youtube)" data-numbersetting="limitcharacters">
+								<label for="limitcharacters"><span data-translate="limit-chat-characeters">🔢 Max length of dock/relayed chat</span></label>
+							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" id="midi" data-setting="midi">

@@ -53,6 +53,8 @@
 		return resp;
 	}
 	
+	var messageHistory = [];
+	
 	
 	function processMessage(ele){
 		
@@ -81,6 +83,16 @@
 
 		if (!msg || !name){
 			return;
+		}
+		
+		if (messageHistory.includes(name+"_"+msg)) {
+			//console.log("Message already exists");
+			return;
+		} else {
+			messageHistory.push(name+"_"+msg);
+			setTimeout(function(){
+				messageHistory = messageHistory.slice(1);
+			},5000);
 		}
 		
 		var data = {};

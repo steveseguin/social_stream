@@ -5749,9 +5749,29 @@
 		input.addEventListener("keyup", function(event) {
 			if (event.keyCode === 13) { // Enter
 				sendMessage(event);
+			} else if (input.value.length>100){
+				if (limitStringWarning(input.value,200)){
+					menu.style.border = "red 1px solid";
+				} else {
+					menu.style.border = "";
+				}
+			} else {
+				menu.style.border = "";
 			}
 		})
-
+		
+		input.addEventListener("paste", function(event) {
+			if (input.value.length>100){
+				if (limitStringWarning(input.value,200)){
+					menu.style.border = "red 1px solid";
+				} else {
+					menu.style.border = "";
+				}
+			} else {
+				menu.style.border = "";
+			}
+		})
+		
 		input.addEventListener("blur", function(event){
 			if (menu.matches(':focus-within:not(:focus)') || menu.matches(':focus-within')){ // if a sibling has focus, don't close and retake focus
 				input.focus(); // re-refocus text input.
@@ -5848,6 +5868,37 @@
 			});
 		} catch(e){}
 	}
+
+function limitStringWarning(string, maxLength) {
+	let count = 0;
+	let result = '';
+
+	for (let i = 0; i < string.length; ) {
+		let char = string[i];
+		let charCode = string.charCodeAt(i);
+
+		if (charCode >= 0xd800 && charCode <= 0xdbff) {
+			i++;
+			char += string[i];
+		}
+
+		let charLength = char.length;
+
+		if (count + charLength <= maxLength) {
+			result += char;
+			count += charLength;
+			i++;
+		} else {
+			break;
+		}
+	}
+	
+	if (result.length < string.length) {
+		return true
+	}
+	return false;
+}
+
 
 	</script>
 	</body>

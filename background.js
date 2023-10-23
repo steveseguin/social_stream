@@ -2697,6 +2697,31 @@ function processResponse(data, reverse=false, metadata=null){
 	return true;
 }
 
+function limitString(string, maxLength) {
+	let count = 0;
+	let result = '';
+
+	for (let i = 0; i < string.length; ) {
+		let char = string[i];
+		let charCode = string.charCodeAt(i);
+
+		if (charCode >= 0xd800 && charCode <= 0xdbff) {
+			i++;
+			char += string[i];
+		}
+
+		let charLength = char.length;
+
+		if (count + charLength <= maxLength) {
+			result += char;
+			count += charLength;
+			i++;
+		} else {
+			break;
+		}
+	}
+	return result;
+}
 
 function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=false, delayedPress=false){ // fake a user input
 	try{ 
@@ -2713,6 +2738,14 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 			lastSentMessage = lastSentMessage.replace(/\s\s+/g, ' ');
 			lastSentTimestamp = Date.now();
 			lastMessageCounter = 0;
+			
+			if (settings.limitcharactersstate){
+				if (settings.limitcharacters){
+					message = limitString(message, settings.limitcharacters.numbersetting); // limit lenght of characeters to output
+				} else {
+					message = limitString(message, 200); // default
+				}
+			}
 			
 			if (backspace){
 				chrome.debugger.sendCommand({ tabId:tabid }, "Input.dispatchKeyEvent", {

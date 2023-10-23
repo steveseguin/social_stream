@@ -81,7 +81,7 @@
 		}
 		
 		
-		 if (messageHistory.includes(name+"_"+msg)) {
+		if (messageHistory.includes(name+"_"+msg)) {
 			//console.log("Message already exists");
 			return;
 		} else {
