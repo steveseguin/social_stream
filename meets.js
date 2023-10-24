@@ -78,17 +78,21 @@
     var chatname = "";
     var chatmessage = "";
 
+	chatname = escapeHtml(ele.childNodes[0].childNodes[0].textContent);
     // Get the chat message
     try {
-      chatmessage = escapeHtml(ele.innerText);
+	  var ele = ele.lastChild.lastChild;
+	  if (ele.skip){
+		  return;
+	  }
+	  ele.skip = true;
+      chatmessage = getAllContentNodes(ele);
     } catch (e) {
       errorlog(e);
     }
     if (!chatmessage) {
       return;
     }
-
-	chatname = ele.parentNode.parentNode.dataset.senderName;
 
 	try {
 		if (chatname === "You"){
@@ -111,8 +115,6 @@
     data.textonly = settings.textonlymode || false;
 	data.type = "meet";
 
-
-	console.log(data);
 
     pushMessage(data);
     return;
@@ -193,14 +195,49 @@
 		sendResponse(false);
 	}
   );
+  
 
-  // -------------------------------------------------------------------
-  // Poll for Meets Messages -------------------------------------------
-  // -------------------------------------------------------------------
-  setInterval(function () {
-    var senders = Array.prototype.slice.call(document.querySelectorAll('[data-sender-name]'));
-    senders.forEach(processSender);
-  }, 1000);
+	function onElementInserted(target) {
+		var onMutationsObserved = function(mutations) {
+			
+			mutations.forEach(function(mutation) {
+				if (mutation.addedNodes.length) {
+					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+						try {
+							if (mutation.addedNodes[i].ignore){continue;}
+							mutation.addedNodes[i].ignore=true;
+							let ele = mutation.addedNodes[i];
+							for (var j = 0;j<6;j++){
+								if (ele.parentNode == document.querySelector("[data-panel-container-id='sidePanel2subPanel0'] [aria-live]")){
+									processMessage(ele);
+									break;
+								} else if (ele.parentNode){
+									ele = ele.parentNode;
+								} else {
+									break;
+								}
+							}
+								
+						} catch(e){}
+					}
+				}
+			});
+		};
+		
+		var config = { childList: true, subtree: true };
+		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		var observer = new MutationObserver(onMutationsObserved);
+		observer.observe(target, config);
+	}
+	
+	setInterval(function(){
+		var ready = document.querySelector("[data-panel-container-id='sidePanel2subPanel0'] [aria-live]");
+		if (ready && !ready.ready){
+			console.log("Social Stream ready to go");
+			ready.ready = true;
+			onElementInserted( document.querySelector("[data-panel-container-id='sidePanel2subPanel0'] [aria-live]"));
+		}
+	},1000);
 
   // Does not support sending messages in Chime
 })();
