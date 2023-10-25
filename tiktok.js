@@ -164,28 +164,11 @@
 		
 		if (chatname && chatimg){
 			savedavatars[chatname] = chatimg;
-			if (savedavatars.length >100){
+			if (savedavatars.length >300){
 				var keys = Object.keys(savedavatars);
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
-				delete savedavatars[keys[0]];
+				for (var i=0;i<50;i++){ // delete 50 keys at a time, so I dont have to do this all the time.
+					delete savedavatars[keys[0]];
+				}
 			}
 		} else if (chatname){
 			chatimg = savedavatars[chatname];
@@ -271,20 +254,65 @@
 		observer.observe(target, config);
 		
 		///////
+	}	
+	function start2() {
+		
+		
+		if (!settings.captureevents){
+			return;
+		}
 		
 		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer');
+		
+		if (!target2){
+			return;
+		}
+		
+		if (window.location.href.includes("livecenter")){
+			//
+		} else if ((!(window.location.pathname.includes("@") && window.location.pathname.includes("live")))){
+			return;
+		}
+		
+		if (target2.set123){
+			return;
+		} else {
+			target2.set123 = true;
+		}
+		// class="tiktok-1dvdrb1-DivChatRoomMessage-StyledLikeMessageItem e12fsz0m0"
+		console.log("STARTED SOCIAL STREAM - events");
+		
+		
 		var onMutationsObserved2= function(mutations) {
-			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							setTimeout(function(ele2){
-								processMessage(ele2, true); // event
-							},500, mutation.addedNodes[i], true);
-						} catch(e){}
+			if (settings.captureevents){
+				mutations.forEach(function(mutation) {
+					if (mutation.addedNodes.length) {
+						for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+							
+							try {
+								if ( mutation.addedNodes[i].nodeName == "DIV"){
+									setTimeout(function(ele2){
+										
+										var typeOfEvent = ele2.querySelector("[data-e2e]");
+										if (typeOfEvent){
+											if (!settings.capturejoinedevent){
+												if (typeOfEvent.dataset.e2e == "enter-message"){ // xxx joined the room
+													return;
+												}
+											}
+											//console.warn(ele2);
+											processMessage(ele2, typeOfEvent.dataset.e2e || true); // event
+										} else {
+											//console.warn(ele2);
+											processMessage(ele2, true); // event
+										}
+									},500, mutation.addedNodes[i].cloneNode(true));
+								} 
+							} catch(e){}
+						}
 					}
-				}
-			});
+				});
+			}
 		};
 		
 		var config2 = { childList: true, subtree: true };
@@ -294,6 +322,8 @@
 	}
 	
 	setInterval(start,2000);
+	setInterval(start2,2000);
+	
 
 	var settings = {};
 	// settings.textonlymode
