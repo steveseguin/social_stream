@@ -80,6 +80,18 @@
 			background-color: #7a7a7a;
 		}
 		
+		#TipRightClick{
+			text-shadow: 0 0 black;
+			cursor: help;
+			color: grey;
+			margin: auto;
+			text-align: center;
+			margin: 0;
+			padding: 0;
+			top: 7px;
+			position: relative;
+		}
+		
 		@keyframes float {
 			0% {
 				box-shadow: 0 5px 5px 0px rgba(0,0,0,0.6);
@@ -1700,6 +1712,12 @@
 					<i class="las la-pen"></i>
 					<span>Text to Speech</span>
 				</a>
+			</li>
+			<li class="hidden" id="TipRightClick">
+				<hr />
+				<span href="#">
+					<small><i data-translate="hold-ctrl">tip:  <b>CTRL</b>(⌘) + <b>Click</b> for alt-menu</i></small>
+				</span>
 			</li>
 		</ul>
 	</nav>
@@ -5508,8 +5526,10 @@
 				document.addEventListener("contextmenu", function(e) {
 
 					if (navigator.userAgent.toLowerCase().indexOf(' electron/') > -1){
-						 if (e && (!e.ctrlKey && !e.metaKey)){
+						if (e && (e.ctrlKey || e.metaKey)){
 							return;
+						} else {
+							document.getElementById("TipRightClick").classList.remove("hidden")
 						}
 					} else if (e && (e.ctrlKey || e.metaKey)){return;} // allow for development ease
 			
