@@ -341,6 +341,12 @@ These are some generic auto-reply commands that can be toggled on/off via the ex
 - !joke  (tells a random geeky dad joke)
 - hi  (Welcomes anyone who says "hi" into chat)
 
+### View chat while gaming; always-on-top
+
+The Standalone desktop version of Social Stream can pin windows on top of other applications, and can have the background be transparent. The Standalone app is still early in its development, so instead you might want to consider the Electron Capture app instead.  It offers the ability to keep any browser window on top of your apps, such as while gaming, and there is a hotkey function to toggle user input when needing to interact with it.
+
+check it out here: https://github.com/steveseguin/electroncapture
+
 ### Hotkey (MIDI / Streamlabs) support
 
 There's a toggle to enable MIDI hotkey support. This allows a user to issue commands to the extension when active, such as issue predefined chat messages to all social destinations.
