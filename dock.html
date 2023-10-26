@@ -1621,7 +1621,7 @@
 }
 	</style>
 </head>
-<body id="main" class='electronDraggable vanilla notcompactmode'>
+<body id="main" class='vanilla notcompactmode'>
 	<div id="pinned" class="output"></div>
 	<div id="output" class="output"></div>
 	<div id="menu" class="electronDraggable">
@@ -2654,6 +2654,7 @@
 
 
 	if (urlParams.has("hidemenu") || urlParams.has("nomenu")){
+		document.body.classList.add("electronDraggable");
 		if ((urlParams.get("hidemenu")=="2") || (urlParams.get("nomenu")=="2")){
 			document.getElementById("menu").classList.add("hideMenuKeepScrollLock");
 			document.getElementById("output").style.marginBottom = "0";
@@ -2701,6 +2702,7 @@
 		compactmode = true;
 		document.body.classList.remove("notcompactmode");
 		document.getElementById("menu").style.display = "none";
+		document.body.classList.add("electronDraggable");
 		// hide shadows
 		// <!-- position: absolute; -->
 		// <!-- left: 400px; -->
