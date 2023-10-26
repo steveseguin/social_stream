@@ -109,14 +109,11 @@ Past supported sites that have ceased to exist.
 
 ### Video walk-thru
 
-An older guide covering the basics of setting up Social Stream:
+Install guide for the extension: https://www.youtube.com/watch?v=Zql6Q5H2Eqw
 
-https://www.youtube.com/watch?v=X_11Np2JHNU
+A bit about Social Stream (old now): https://www.youtube.com/watch?v=X_11Np2JHNU
 
-
-For a more recent guide focusing on setup for discord, slack, whatsapp, and telegram, see:
-
-https://www.youtube.com/watch?v=L3l0_8V1t0Q
+How to setup for discord, slack, whatsapp, meet, and telegram, see: https://www.youtube.com/watch?v=L3l0_8V1t0Q
 
 ### To install
 
