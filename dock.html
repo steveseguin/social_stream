@@ -5501,13 +5501,21 @@
 				}
 				return false;
 			}
+			
+			
 
 			function contextListener() {
 				document.addEventListener("contextmenu", function(e) {
 
 					if (navigator.userAgent.toLowerCase().indexOf(' electron/') > -1){
-						return;
+						 if (e && (!e.ctrlKey && !e.metaKey)){
+							return;
+						}
 					} else if (e && (e.ctrlKey || e.metaKey)){return;} // allow for development ease
+			
+					//if (navigator.userAgent.toLowerCase().indexOf(' electron/') > -1){
+					//	return;
+					//} else if (e && (e.ctrlKey || e.metaKey)){return;} // allow for development ease
 
 					taskItemInContext = clickInsideElement(e, "menu");
 
