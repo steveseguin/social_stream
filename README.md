@@ -347,6 +347,9 @@ The Standalone desktop version of Social Stream can pin windows on top of other 
 
 check it out here: https://github.com/steveseguin/electroncapture
 
+![image](https://github.com/steveseguin/social_stream/assets/2575698/9c9c9da7-5656-45f8-ab86-5be56099d970)
+
+
 ### Hotkey (MIDI / Streamlabs) support
 
 There's a toggle to enable MIDI hotkey support. This allows a user to issue commands to the extension when active, such as issue predefined chat messages to all social destinations.
