@@ -1421,7 +1421,7 @@ function verifyOriginal(msg){
 	return true;
 }
 
-function ajax(object2send, url, ajaxType="PUT"){
+function ajax(object2send, url, ajaxType="PUT", type="application/json; charset=utf-8"){
 	try {
 		var xhttp = new XMLHttpRequest();
 		xhttp.onreadystatechange = function() {
@@ -1431,7 +1431,7 @@ function ajax(object2send, url, ajaxType="PUT"){
 		}
 		};
 		xhttp.open(ajaxType, url, true); // async = true
-		xhttp.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+		xhttp.setRequestHeader('Content-Type', type);
 		xhttp.send(JSON.stringify(object2send));
 	}catch(e){}
 }
@@ -1476,6 +1476,7 @@ function sendToDestinations(message){
 	sendToDisk(message);
 	sendToH2R(message);
 	sendToPost(message);
+	sendToS10(message);
 	return true;
 }
 function unescapeHtml(safe) {
@@ -1553,6 +1554,71 @@ function sendToH2R(data){
 			h2r.messages = [];
 			h2r.messages.push(msg);
 			ajax(h2r, postServer, "POST");
+		} catch(e){
+			console.warn(e);
+		}
+	}
+}
+function sendToS10(data){
+
+	if (settings.s10 && settings.s10server && settings.s10server.textsetting){
+		try {
+			
+
+			// channelId - The Stage TEN channel to send the message on
+			// displayName - The display name associated with the message
+			// messageBody - The text body of the message
+			// displayPictureUrl - (optional) The URL of a display picture (this will be included in the message's metadata)
+			// userId - (optional) Will associate the message with a specific user ID. If not provided, the user ID will default to "plugin-service"
+			
+			var msg = {};
+			
+			msg.channelId = settings.s10server.textsetting;
+			
+			if (data.chatmessage){
+				if (!data.textonly){
+					msg.messageBody  = unescapeHtml(data.chatmessage);
+				} else {
+					msg.messageBody  = data.chatmessage;
+				}
+				msg.messageBody = msg.messageBody.replace(/(<([^>]+)>)/gi, "") || "";
+			}
+			
+			if (!msg.messageBody){return;}
+			
+			if (!data.chatname){return}
+			
+			msg.displayName = data.chatname 
+			
+			if (data.type && (data.type == "twitch") && data.chatname){
+				msg.displayPictureUrl = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
+			} else if (data.type && (data.type == "youtube") && data.chatimg){
+				let chatimg = data.chatimg.replace("=s32-", "=s256-");
+				msg.displayPictureUrl = chatimg.replace("=s64-", "=s256-");
+			} else if (data.chatimg){
+				msg.displayPictureUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+			} else if (data.type){
+				msg.displayPictureUrl = "https://socialstream.ninja/"+ data.type +".png";
+			} else {
+				msg.displayPictureUrl = "https://socialstream.ninja/unknown.png";
+			}
+			
+			if (data.type){
+				msg.displayName = msg.displayName + " via "+data.type; // "twitch", "youtube", "kick", etc.
+			}
+			
+			//const data = '{"displayName":"Tyler", "messageBody":"Hey!", "channelId":"a075c262-f409-4915-8aaa-3c83d06fd324"}';
+
+			let xhr = new XMLHttpRequest();
+			xhr.withCredentials = true;
+			xhr.open('POST', 'https://bee1-plugin-service.stageten.tv/chat/webhooks/message/send');
+			xhr.setRequestHeader('content-type', 'application/json');
+
+			xhr.onload = function() {
+			  console.log(xhr.response);
+			};
+
+			xhr.send(JSON.stringify(msg));
 		} catch(e){
 			console.warn(e);
 		}
