@@ -452,6 +452,26 @@ Lastly, to allow these events to show up in the Social Stream dock, add &server 
 
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/3f31974c-6bbb-4ed0-bc7c-4d27f7c3103b)
 
+##### Ko-Fi webhook donation support
+
+This is very simliar to the Stripe support method, as seen above.
+
+To setup, sign into your Ko-Fi account, go to https://ko-fi.com/manage/webhooks
+
+Add `https://api.overlay.ninja/XXXXXXXX/kofi` to the Webhook URL text field, where you replace XXXXXXXX with your Social Stream session ID.
+
+![image](https://github.com/steveseguin/social_stream/assets/2575698/9119d86a-d452-4658-b1c5-383f5b16fc9d)
+
+On your `dock.html` page, append &server to the URL (at the end is fine).  This has the dock connecting to the Social Stream API service, which is where our Ko-Fi notifications will come from.
+
+![image](https://github.com/steveseguin/social_stream/assets/2575698/d4669e90-1019-4b6d-a809-ed1483f0b770)
+
+You can then press the Send Single Donation Test button.
+
+![image](https://github.com/steveseguin/social_stream/assets/2575698/73ba4b80-c599-45f6-85df-6ff629a3e6a5)
+
+Please note, do not share your Social Stream session ID with others as they will be able to create fake donations to Social Streams via posting to the API.
+
 ### Text to speech
 
 Text messages can be converted to speech, assuming your system supports TTS.  On my Windows machine running Chrome/OBS, it works.  I have it set to English-US by default, but you can change the language to something else by editing the URL. ()
