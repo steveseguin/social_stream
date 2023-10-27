@@ -314,7 +314,7 @@
 			};
 			button.id = "startupbutton";
 			button.innerHTML = "Enable Overlay Service";
-			button.style = "border: 0; width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; margin-top: 10px; background-color: lightgreen; cursor:pointer;";
+			button.style = "border: 0; width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; margin-top: 10px; background-color: #54af54; cursor:pointer;";
 			
 			if (!isExtensionOn){
 				button.style.display = "none";
@@ -367,7 +367,7 @@
 			};
 			button2.id = "adbutton";
 			button2.innerHTML = "Block Promoted Tweets";
-			button2.style = "border: 0; margin-top: 10px;width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; background-color: #dfdfdf; cursor:pointer;";
+			button2.style = "border: 0; margin-top: 10px;width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; background-color: rgb(151 151 151); cursor:pointer;";
 			
 			if (!isExtensionOn){
 				button2.style.display = "none";

@@ -1116,6 +1116,13 @@ chrome.runtime.onMessage.addListener(
 						sendResponse({"state":isExtensionOn});
 						return;
 					}
+					
+					if (settings.filtercommandscustomtoggle && request.message.chatmessage && settings.filtercommandscustomwords && settings.filtercommandscustomwords.textsetting){
+						if (settings.filtercommandscustomwords.textsetting.split(",").some(v => v.trim() && request.message.chatmessage.startsWith(v.trim()))) {
+							sendResponse({"state":isExtensionOn});
+							return;
+						}
+					}
 
 					if (settings.firstsourceonly){
 						if (!verifyOriginal(request.message)){
