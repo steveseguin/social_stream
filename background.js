@@ -1615,7 +1615,7 @@ function sendToS10(data){
 			xhr.setRequestHeader('content-type', 'application/json');
 
 			xhr.onload = function() {
-			  console.log(xhr.response);
+			    // console.log(xhr.response);
 			};
 
 			xhr.send(JSON.stringify(msg));

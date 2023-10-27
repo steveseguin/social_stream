@@ -3678,6 +3678,52 @@
 			} catch(e){
 				return;
 			}
+		} else if ("kofi" in data){
+			try{
+				if (!data.kofi.data){return false;}
+				try{
+					var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, ' '));
+				} catch(e){
+					console.error(e);
+					return;
+				}
+				
+				if (kofi.type!=="Donation"){return false;}
+				else if (!kofi.is_public){return false;}
+				
+				var message = {};
+				message.chatname = decodeURIComponent(kofi.from_name) || "Anonymous";
+				message.chatmessage = decodeURIComponent(kofi.message);
+				
+				var currency = ""
+				
+				try{
+					currency = kofi.currency.toLowerCase() || "";
+				} catch(e){}
+				
+				var symbol = {};
+				if (currency && (currency in Currencies)){
+					symbol = Currencies[currency];
+				}
+				
+				if (kofi.amount){
+					message.hasDonation = (symbol.s||"") + (kofi.amount || "") + " "+(kofi.currency.toUpperCase() || "");
+					message.hasDonation = message.hasDonation.trim();
+				}
+				message.id = parseInt(Math.random()*100000+1000000);
+				message.chatbadges = "";
+				message.backgroundColor = "";
+				message.textColor = "";
+				message.chatimg = "";
+				message.membership = "";;
+				message.contentimg = "";
+				message.type = "kofi";
+				
+				data = message; // replace inbound stripe message with new message
+				
+			} catch(e){
+				return;
+			}
 		}
 
 		if (data.action){
