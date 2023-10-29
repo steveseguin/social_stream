@@ -68,11 +68,10 @@
 		  font-family: NotoColorEmojiLimited;
 		  unicode-range: U+1F1E6-1F1FF;
 		  src: url(./thirdparty/NotoColorEmoji.ttf);
-		  font-display: swap;
 		}
 
 		body {
-			font-family: 'NotoColorEmojiLimited', Roboto, Arial, Roboto, sans-serif;
+			font-family: 'NotoColorEmojiLimited', Roboto, Arial, sans-serif;
 			color: var(--font-color);
 			margin: 0 0;
 			background-color: var(--background-color);
@@ -573,14 +572,18 @@
 		// 🏻
 		
 		
-		emojis = text.replace(/([\u0145-\u0148]|[\u1F1E1-\u1F1E5]|\u2026)/ig, ""); // flags: // U+1F1E6-1F1FF;
-		// emojis = text.replace(/([\u0145-\u0148]|[\u1F1E1-\u1F1FF]|\u2026)/ig, ""); // no flags
+		//emojis = text.replace(/([\u0145-\u0148]|[\u1F1E1-\u1F1E5]|\u2026)/ig, ""); // flags: // U+1F1E6-1F1FF;
+		emojis = text.replace(/([\u0145-\u0148]|[\u1F1E1-\u1F1FF]|\u2026)/ig, ""); // no flags
+		//emojis = text.replace(/([\u0145-\u0148]|[\u1F1E1-\u1F1FF]|\u2026)(?![\u1F1E6-\u1F1FF])/ig, ""); // Excludes U+1F1E6-1F1FF
+		//emojis = text.replace(/([\u0145-\u0148]|(?![\u1F1E6-\u1F1FF])[\u1F1E1-\u1F1FF]|\u2026)/ig, ""); // Excludes U+1F1E6-1F1FF
 		
 		emojis = emojis.replace(/[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDE8-\uDDFF][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDEA-\uDDF8][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDEC-\uDDF9][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDEE-\uDDF9][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDF0-\uDDF7][\uD83C][\uDDE6-\uDDFF]|[\uD83C][\uDDF8-\uDDFF][\uD83C][\uDDE6-\uDDFF]/g, ""); // country codes
 							
 		emojis = emojis.replace(/[^\p{Emoji}\s]/ug, ''); // filters out puncuation and text characters
 							
 		emojis = emojis.match(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig);
+		
+		
 		
 		try {
 			if (emojis){
