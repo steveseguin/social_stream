@@ -1254,7 +1254,7 @@ chrome.runtime.onMessage.addListener(
 					data.chatimg = parseInt(Math.random()*2) ? "" : "https://socialstream.ninja/sampleavatar.png";
 					data.chatname = "Steve_"+Math.round(Math.random()*Math.pow(10,parseInt(Math.random()*20)));
 					data.type = parseInt(Math.random()*2) ? "slack" : "facebook";
-					data.chatmessage  = "!queue The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
+					data.chatmessage  = "!join The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
 				} else if (Math.random()>0.2){
 					data.hasDonation = "";
 					data.membership = "";
@@ -2131,7 +2131,7 @@ function processWaitlist(data){
 		if (!settings.waitlistmode){
 			return;
 		}
-		var trigger = "!queue"; 
+		var trigger = "!join"; 
 		if (settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim()){
 			trigger = settings.customwaitlistcommand.textsetting.trim();
 		}

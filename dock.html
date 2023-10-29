@@ -92,6 +92,7 @@
 			position: relative;
 		}
 		
+		
 		@keyframes float {
 			0% {
 				box-shadow: 0 5px 5px 0px rgba(0,0,0,0.6);
@@ -236,6 +237,12 @@
 			font-style: normal;
 			font-weight: normal;
 		} 
+		
+		@font-face {
+		  font-family: NotoColorEmojiLimited;
+		  unicode-range: U+1F1E6-1F1FF;
+		  src: url(./thirdparty/NotoColorEmoji.ttf);
+		}
 
 		/* latin-ext */
 		@font-face {
@@ -293,7 +300,7 @@
 		}
 
 		body {
-			font-family: var(--font-family);
+			font-family: 'NotoColorEmojiLimited', var(--font-family);
 			color: var(--font-color);
 			margin: 0 0;
 			background-color: var(--background-color);
