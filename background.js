@@ -1246,7 +1246,7 @@ chrome.runtime.onMessage.addListener(
 					data.chatimg = "https://socialstream.ninja/sampleavatar.png";
 					data.chatname = "Steve";
 					var score = parseInt(Math.random()* 378);
-					data.chatmessage  =  '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁';
+					data.chatmessage  =  '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁 🇨🇦';
 				} else if (Math.random()>0.5){
 					data.hasDonation = "";
 					data.nameColor = "#107516";
