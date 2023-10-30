@@ -3088,6 +3088,36 @@ try {
 
 /////// end of bad word filter
 
+var goodWordsHashTable = false;
+function isGoodWord(word) {
+  const wordLower = word.toLowerCase();
+  const firstChar = wordLower[0];
+  const words = goodWordsHashTable[firstChar];
+  if (!words) {
+    return false;
+  }
+  return Boolean(words[wordLower]);
+}
+function passGoodWords(sentence) {
+  let words = sentence.toLowerCase().split(/[\s\.\-_!?,]+/);
+  const uniqueWords = new Set(words);
+  for (let word of uniqueWords) {
+	if (!isGoodWord(word)){
+		sentence = sentence.replace(new RegExp('\\b' + word + '\\b', 'gi'), '*'.repeat(word.length));
+	}
+  }
+  return sentence;
+}
+try {
+	 // use a custom file named goodwords.txt to replace the badWords that are hard-coded. one per line.
+	fetch('./goodwords.txt').then((response) => response.text()).then((text) => {
+		let customGoodWords = text.split(/\r?\n|\r|\n/g);
+		goodWordsHashTable = createProfanityHashTable(customGoodWords);
+    }).catch((error) => {
+		// no file found or error
+	});
+} catch(e){}
+
 async function applyBotActions(data, tab=false){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
 	
@@ -3123,6 +3153,12 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 		if (settings.blacklist && data.chatmessage){
 			try {
 				data.chatmessage = filterProfanity(data.chatmessage);
+			} catch(e){console.error(e);}
+		}
+		
+		if (goodWordsHashTable){
+			try {
+				data.chatmessage = passGoodWords(data.chatmessage);
 			} catch(e){console.error(e);}
 		}
 		
