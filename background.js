@@ -3089,6 +3089,7 @@ try {
 /////// end of bad word filter
 
 var goodWordsHashTable = false;
+/* 
 function isGoodWord(word) {
   const wordLower = word.toLowerCase();
   const firstChar = wordLower[0];
@@ -3116,7 +3117,7 @@ try {
     }).catch((error) => {
 		// no file found or error
 	});
-} catch(e){}
+} catch(e){} */
 
 async function applyBotActions(data, tab=false){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
@@ -3156,11 +3157,11 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			} catch(e){console.error(e);}
 		}
 		
-		if (goodWordsHashTable){
+		/* if (goodWordsHashTable){
 			try {
 				data.chatmessage = passGoodWords(data.chatmessage);
 			} catch(e){console.error(e);}
-		}
+		} */
 		
 		if (settings.autohi && data.chatname){
 			if (data.chatmessage.toLowerCase() === "hi"){
