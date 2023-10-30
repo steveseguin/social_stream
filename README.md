@@ -621,10 +621,6 @@ ie: `https://github.com/steveseguin/social_stream/commit/942fce2697d5f9d51af6da6
 
 For a simple site, a developer should need just 30 minutes to an hour to get a site supported. A more complicated and tricky site may take a few hours or longer, depending on the developer's skill.
 
-### Standalone desktop version
-
-It's coming.  Having to sign into all your sites again is a bit of a pain with it, and the UI is a bit ugly, so I'm holding off releasing it until its required or until I'm happy with it.
-
 ### Support
 
 You can find me on discord over at https://discord.socialstream.ninja or [https://discord.gg/7U4ERn9y](https://discord.gg/vFU8AuwNf3), offering free support in channel #chat.overlay-support 
