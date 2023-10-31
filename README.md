@@ -169,11 +169,12 @@ You will still need to manually redo these steps to update when needed, but you 
 
 There is an upcoming standalone version of Social Stream, which installs as an app, rather than as a browser extension.
 
-To try out the preview test version of the app, you can download it here:
+To try out the preview test version of the app, you can download it below, but keep in mind that the bugs are still being worked out:
 
 [https://github.com/steveseguin/social_stream/releases/](https://github.com/steveseguin/social_stream/releases)
+Mac and PC are supported currently, with Linux support coming later on.
 
-(As of Oct 22nd 2023, it's available for Windows x64 only, but Mac will be supported eventually. Maybe Linux at some point, too.)
+Please note:  If using the same session ID in both the browser extension and the standalone version, you will only be able to use one at a time. 
 
 ### To use the extension
 
