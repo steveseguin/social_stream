@@ -32,8 +32,8 @@
 			settings = response.settings;
 			deTweet();
 		}
-		if ("isExtensionOn" in response){
-			isExtensionOn = response.isExtensionOn;
+		if ("state" in response){
+			isExtensionOn = response.state;
 			if (document.getElementById("startupbutton")){
 				if (isExtensionOn){
 					document.getElementById("startupbutton").style.display = "block";
@@ -57,8 +57,8 @@
 						settings = request.settings;
 						deTweet();
 					}
-					if ("isExtensionOn" in request){
-						isExtensionOn = request.isExtensionOn;
+					if ("state" in request){
+						isExtensionOn = request.state;
 						
 						if (document.getElementById("startupbutton")){
 							if (isExtensionOn){
@@ -130,7 +130,6 @@
 	  
 	  if (this.targetEle){
 		  ele = this.targetEle.parentNode;;
-		  console.log(ele);
 	  } else if (this){
 		  ele = this.parentNode;
 	  }
@@ -138,14 +137,12 @@
 	  var base = ele.querySelector("[data-testid='tweet']");
 	  
 	  if (!base){
-		  console.log("NO BASE");
 		  return;
 	  }
 	  
 	  try{
 		  var chatname = base.querySelectorAll("a[role='link']")[1].childNodes[0].childNodes[0].innerText.trim();
-		  console.log(base.querySelectorAll("a")[1]);
-		  console.log(chatname);
+		  
 		  if (!chatname.length){
 			  chatname = base.querySelectorAll("a[role='link']")[1].querySelector("[id]").childNodes[0].innerText.trim();
 		  }

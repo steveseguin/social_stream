@@ -766,7 +766,7 @@ span.zero-width-parent img.zero-width-emote {
 	
 	var nextComment = null;
 	var roomID = "test";
-	var applyCustomActions = false;
+	var applyCustomFeatureActions = false;
 
 	
 	if (urlParams.has("session")){
@@ -1381,7 +1381,7 @@ span.zero-width-parent img.zero-width-emote {
 		  if ("dataReceived" in e.data){ // raw data 
 			if ("overlayNinja" in e.data.dataReceived){
 				try {
-					if (applyCustomActions){
+					if (applyCustomFeatureActions){
 						applyCustomFeatureActions(e.data.dataReceived.overlayNinja); 
 					}
 				} catch(e){

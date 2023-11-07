@@ -31,26 +31,26 @@ if (typeof(chrome.runtime)=='undefined'){
 	
 	chrome = {};
 	chrome.browserAction = {};
-	chrome.browserAction.setIcon = function(icon){console.log("set icon")}
+	chrome.browserAction.setIcon = function(icon){} // there is no icon in the ssapp
 	chrome.runtime = {}
 	chrome.runtime.lastError = false;
 	//chrome.runtime.lastError.message = "";
 	
-	chrome.runtime.sendMessage = async function(data, callback){
+	/* chrome.runtime.sendMessage = async function(data, callback){ // uncomment if I need to use it.
 		let response = await ipcRenderer.sendSync('fromBackground',data);
 		if (typeof(callback) == "function"){
 			callback(response);
 			console.log(response);
 		}
-	};
+	}; */
+	
 	chrome.runtime.getManifest = function(){
 		return false; // I'll need to add version info eventually
 	}
 	chrome.storage = {};
 	chrome.storage.sync = {};
 	chrome.storage.sync.set = function(data){
-		console.log("SYNC SET");
-		console.log(data);
+		console.log("SYNC SET",data);
 		ipcRenderer.sendSync('storageSave',data);
 		console.log("ipcRenderer.sendSync('storageSave',data);");
 	};
@@ -69,14 +69,11 @@ if (typeof(chrome.runtime)=='undefined'){
 		callback(response);
 	};
 	chrome.storage.local.set = function(data){
-		console.log("LOCAL SYNC SET");
-		console.log(data);
+		console.log("LOCAL SYNC SET",data);
 		ipcRenderer.sendSync('storageSave',data);
 		console.log("ipcRenderer.sendSync('storageSave',data);");
 	};
-	chrome.runtime.onMessage = {};
-	var onMessageCallback = function(a,b,c){};
-	chrome.runtime.onMessage.addListener = function(callback){onMessageCallback = callback};
+	
 	
 	chrome.tabs = {};
 	chrome.tabs.query = function(a,callback){
@@ -92,12 +89,9 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.debugger = {};
 	chrome.debugger.detach = function(a=null,b=null,c=null){};
 	chrome.debugger.onDetach = {};
-	chrome.debugger.onDetach.addListener = function(){
-		console.log("add listener detach");
-	}
+	chrome.debugger.onDetach.addListener = function(){	};
 	chrome.debugger.attach = function(a,b,c){
-		console.log("chrome.debugger.attach");
-		console.log(c);
+		console.log("chrome.debugger.attach",c);
 		c();
 		 // { tabId: tabs[i].id },  "1.3", onAttach.bind(null, 
 		 // onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false
@@ -111,8 +105,7 @@ if (typeof(chrome.runtime)=='undefined'){
 	};
 	
 	chrome.debugger.sendCommand = async function(a=null,b=null,c=null,callback=null){
-		console.log("SEND KEY INPUT COMMAND");
-		console.log(c);
+		console.log("SEND KEY INPUT COMMAND",c);
 		if (c){
 			c.tab = 1;
 			var response = await ipcRenderer.sendSync('sendInputToTab',c); // sendInputToTab
@@ -125,9 +118,16 @@ if (typeof(chrome.runtime)=='undefined'){
 		}
 	}
 	
+	chrome.runtime.onMessage = {};
+	
+	var onMessageCallback = function(a,b,c){};
+	
+	chrome.runtime.onMessage.addListener = function(callback){
+		onMessageCallback = callback
+	};
+	
 	ipcRenderer.on('fromMain', (event, ...args) => {
-		console.log("FROM MAIN");
-		console.log(args[0]);
+		console.log("FROM MAIN",args[0]);
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
@@ -137,18 +137,26 @@ if (typeof(chrome.runtime)=='undefined'){
 	})
 	
 	ipcRenderer.on('fromPopup', (event, ...args) => {
-		console.log("FROM POP UP (redirected)");
-		console.log(args[0]);
+		console.log("FROM POP UP (redirected)", args[0]);
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
-		onMessageCallback(args[0], sender, function(response){ 
+		onMessageCallback(args[0], sender, function(response){  // (request, sender, sendResponse)  
 			ipcRenderer.send('fromBackgroundResponse',response);
 		});
 	})
 	
+	window.showOpenFilePicker = async function(a=null,c=null){
+		var importFile = await ipcRenderer.sendSync('showOpenDialog', "");
+		return importFile;
+	};
+	
 	//chrome.runtime.onMessage.addListener(
     //async function (request, sender, sendResponse) {
+} else {
+	window.alert = alert = function(msg){
+		console.warn(new Date().toUTCString()+" : "+msg);
+	}
 }
 
 String.prototype.replaceAllCase = function(strReplace, strWith) {
@@ -262,81 +270,36 @@ function filterXSS(unsafe){ // this is not foolproof, but it might catch some ba
 	}
 }
 
-var properties = ["streamID", "password", "isExtensionOn", "settings"];
+var properties = ["streamID", "password", "state", "settings"];
 var channel = generateStreamID();
 var password = false;
 
 function loadSettings(item, resave=false){
 	
-	console.log("loadSettings (or saving new settings)");
+	console.log("loadSettings (or saving new settings)", item);
 	
 	if (item && item.streamID){
 		channel = item.streamID;
-		if (resave){
-			chrome.storage.sync.set({
-				streamID: channel
-			});
-			chrome.runtime.lastError;
-		}
-	} else {
-		chrome.storage.sync.set({
-			streamID: channel
-		});
-		chrome.runtime.lastError;
-	}
+	} 
+	
 	if (item && ("password" in item)){
 		password = item.password;
-
-		if (resave){
-			chrome.storage.sync.set({
-				password: password
-			});
-			chrome.runtime.lastError;
-		}
-
-	} else {
-		chrome.storage.sync.set({
-			password: password
-		});
-		chrome.runtime.lastError;
-	}
+	} 
+	
 	if (item && item.settings){
 		settings = item.settings;
-
-		if (resave){
-			chrome.storage.local.set({
-				settings: settings
-			});
-			chrome.runtime.lastError;
-		}
-	} else {
-		chrome.storage.local.set({
-			settings: settings
-		});
+	} 
+	
+	if (item && ("state" in item)){
+		isExtensionOn = item.state;
+		updateExtensionState(false); // we're saving below instead
+	}
+	
+	if (resave){
+		chrome.storage.sync.set(item);
 		chrome.runtime.lastError;
 	}
 	
-	if (item && item.isExtensionOn){
-		isExtensionOn = item.isExtensionOn;
-		chrome.browserAction.setIcon({path: "/icons/on.png"});
-		if (iframe==null){
-			loadIframe(channel, password);
-		}
-
-		setupSocket();
-
-		if (resave){
-			chrome.storage.sync.set({
-				isExtensionOn: isExtensionOn
-			});
-			chrome.runtime.lastError;
-		}
-	}  else {
-		chrome.storage.sync.set({
-			isExtensionOn: isExtensionOn
-		});
-		chrome.runtime.lastError;
-	}
 	toggleMidi();
 	
 	if (settings.sentiment){
@@ -469,7 +432,7 @@ function pushSettingChange(){
 		chrome.runtime.lastError;
 		for (var i=0;i<tabs.length;i++){
 			if (!tabs[i].url){continue;}
-			chrome.tabs.sendMessage(tabs[i].id, {settings:settings, isExtensionOn:isExtensionOn}, function(response=false) {
+			chrome.tabs.sendMessage(tabs[i].id, {settings:settings, state:isExtensionOn}, function(response=false) {
 				chrome.runtime.lastError;
 			});
 		}
@@ -486,11 +449,14 @@ async function loadmidi(){
 		  accept: {'text/plain': ['.json', '.txt', '.data', '.midi']},
 		}],
 	  };
-	var midiFileHandler = await window.showOpenFilePicker();
+	var midiConfigFile = await window.showOpenFilePicker();
 
 	try {
-		var midiConfigFile = await midiFileHandler[0].getFile();
+		midiConfigFile = await midiConfigFile[0].getFile();
 		midiConfigFile = await midiConfigFile.text();
+	} catch(e){}
+		
+	try {
 		settings.midiConfig = JSON.parse(midiConfigFile);
 	} catch(e){
 		settings.midiConfig = false;
@@ -672,20 +638,27 @@ async function exportSettings(){
 }
 
 async function importSettings(item){
-	const opts = {
+	/* const opts = {
 		types: [{
 		  description: 'JSON file',
 		  accept: {'text/plain': ['.data']},
 		}],
-	  };
-	var importFileHandler = await window.showOpenFilePicker();
+	}; */
+	console.warn(" !!!!!!!!importSettings");
+	 
+	var importFile = await window.showOpenFilePicker();
+	console.log(importFile);
 	try {
-		var importFile = await importFileHandler[0].getFile();
-		importFile = await importFile.text();
+		importFile = await importFile[0].getFile();
+		importFile = await importFile.text(); // fail if IPC
+	} catch(e){}
+	
+	try {
 		loadSettings(JSON.parse(importFile), true);
 	} catch(e){
 		alert("File does not contain a valid JSON structure");
 	}
+	
 }
 
 
@@ -862,52 +835,63 @@ function getColorFromName(str) {
 
 var intervalMessages = {};
 
+function updateExtensionState(sync=true){
+	console.log("updateExtensionState", isExtensionOn);
+	if (isExtensionOn){
+		if (iframe==null){
+			loadIframe(channel, password);
+		}
+		setupSocket();
+		setupSocketDock();
+	} else {
+		if (iframe){
+			iframe.src = null;
+			iframe.remove();
+			iframe = null;
+		}
+		
+		if (socketserver){
+			socketserver.close();
+		}
+		
+		if (socketserverDock){
+			socketserverDock.close();
+		}
+		
+		if (intervalMessages){
+			for (i in intervalMessages){
+				clearInterval(intervalMessages[i]);
+			}
+		}
+	}
+	if (sync){
+		chrome.storage.sync.set({
+			state: isExtensionOn
+		});
+		chrome.runtime.lastError;
+	}
+	
+	toggleMidi();
+	pushSettingChange(); 
+	
+	
+}
+
 chrome.runtime.onMessage.addListener(
     async function (request, sender, sendResponse) {
 		try{
 			if (request.cmd && request.cmd === "setOnOffState") { // toggle the IFRAME (stream to the remote dock) on or off
 				isExtensionOn = request.data.value;
-				if (isExtensionOn){
-					if (iframe==null){
-						loadIframe(channel, password);
-					}
-					setupSocket();
-					setupSocketDock();
-				} else {
-					if (iframe.src){
-						iframe.src = null;
-					}
-					iframe.remove();
-					iframe = null;
-					
-					if (socketserver){
-						socketserver.close();
-					}
-					
-					if (socketserverDock){
-						socketserverDock.close();
-					}
-					
-					if (intervalMessages){
-						for (i in intervalMessages){
-							clearInterval(intervalMessages[i]);
-						}
-					}
-	
-				}
-				chrome.storage.sync.set({
-					isExtensionOn: isExtensionOn
-				});
-				chrome.runtime.lastError;
 				
-				toggleMidi();
+				updateExtensionState();
 				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
 				
-				pushSettingChange();
-				
-			} else if (request.cmd && request.cmd === "getOnOffState") {
+			} else if (request.cmd && (request.cmd === "getOnOffState")) {
 				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
-			} else if (request.cmd && request.cmd === "saveSetting") {
+			} else if (request.cmd && (request.cmd === "getSettings")) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
+			} else if (request.cmd && (request.cmd === "saveSetting")) {
+				
 				if (typeof settings[request.setting] == "object"){
 					if (!request.value){ // pretty risky if something shares the same name.
 						delete settings[request.setting];
@@ -1158,7 +1142,7 @@ chrome.runtime.onMessage.addListener(
 					sendResponse({"state":isExtensionOn});
 				}
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-				sendResponse({"settings":settings, isExtensionOn:isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation. 
+				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation. 
 			} else if ("keepAlive" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				var action = {};
 				action.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
@@ -2488,9 +2472,17 @@ eventer(messageEvent, async function (e) {
 				if (e.data.UUID in connectedPeers){
 					delete connectedPeers[e.data.UUID];
 				}
+			} else if (e.data.action === "alert"){
+				if (e.data.value && (e.data.value == "Stream ID is already in use.")){
+					
+					isExtensionOn = false; 
+					updateExtensionState();
+					
+					alert("Session ID already in use.\n\nDisable Social Stream elsewhere if already in use first");
+				}
 			}
 			
-		}
+		} 
 	}
 });
 
@@ -3002,8 +2994,7 @@ function createTab(url) {
 /////////////// bad word filter
 // just to keep things PG, I encode the naughty list.
 // I welcome updates/additions. The raw list can be found here: https://gist.github.com/steveseguin/da09a700e4fccd7ff82e68f32e384c9d
-const badWords = JSON.parse(atob('WyJmdWNrIiwic2hpdCIsImN1bnQiLCJiaXRjaCIsIm5pZ2dlciIsImZhZyIsInJldGFyZCIsInJhcGUiLCJwdXNzeSIsImNvY2siLCJhc3Nob2xlIiwid2hvcmUiLCJzbHV0IiwiZ2F5IiwibGVzYmlhbiIsInRyYW5zZ2VuZGVyIiwidHJhbnNzZXh1YWwiLCJ0cmFubnkiLCJjaGluayIsInNwaWMiLCJraWtlIiwiamFwIiwid29wIiwicmVkbmVjayIsImhpbGxiaWxseSIsIndoaXRlIHRyYXNoIiwiZG91Y2hlIiwiZGljayIsImJhc3RhcmQiLCJmdWNrZXIiLCJtb3RoZXJmdWNrZXIiLCJhc3MiLCJhbnVzIiwidmFnaW5hIiwicGVuaXMiLCJ0ZXN0aWNsZXMiLCJtYXN0dXJiYXRlIiwib3JnYXNtIiwiZWphY3VsYXRlIiwiY2xpdG9yaXMiLCJwdWJpYyIsImdlbml0YWwiLCJlcmVjdCIsImVyb3RpYyIsInBvcm4iLCJ4eHgiLCJkaWxkbyIsImJ1dHQgcGx1ZyIsImFuYWwiLCJzb2RvbXkiLCJwZWRvcGhpbGUiLCJiZXN0aWFsaXR5IiwibmVjcm9waGlsaWEiLCJpbmNlc3QiLCJzdWljaWRlIiwibXVyZGVyIiwidGVycm9yaXNtIiwiZHJ1Z3MiLCJhbGNvaG9sIiwic21va2luZyIsIndlZWQiLCJtZXRoIiwiY3JhY2siLCJoZXJvaW4iLCJjb2NhaW5lIiwib3BpYXRlIiwib3BpdW0iLCJiZW56b2RpYXplcGluZSIsInhhbmF4IiwiYWRkZXJhbGwiLCJyaXRhbGluIiwic3Rlcm9pZHMiLCJ2aWFncmEiLCJjaWFsaXMiLCJwcm9zdGl0dXRpb24iLCJlc2NvcnQiXQ=='));
-
+var badWords = JSON.parse(atob('WyJmdWNrIiwic2hpdCIsImN1bnQiLCJiaXRjaCIsIm5pZ2dlciIsImZhZyIsInJldGFyZCIsInJhcGUiLCJwdXNzeSIsImNvY2siLCJhc3Nob2xlIiwid2hvcmUiLCJzbHV0IiwiZ2F5IiwibGVzYmlhbiIsInRyYW5zZ2VuZGVyIiwidHJhbnNzZXh1YWwiLCJ0cmFubnkiLCJjaGluayIsInNwaWMiLCJraWtlIiwiamFwIiwid29wIiwicmVkbmVjayIsImhpbGxiaWxseSIsIndoaXRlIHRyYXNoIiwiZG91Y2hlIiwiZGljayIsImJhc3RhcmQiLCJmdWNrZXIiLCJtb3RoZXJmdWNrZXIiLCJhc3MiLCJhbnVzIiwidmFnaW5hIiwicGVuaXMiLCJ0ZXN0aWNsZXMiLCJtYXN0dXJiYXRlIiwib3JnYXNtIiwiZWphY3VsYXRlIiwiY2xpdG9yaXMiLCJwdWJpYyIsImdlbml0YWwiLCJlcmVjdCIsImVyb3RpYyIsInBvcm4iLCJ4eHgiLCJkaWxkbyIsImJ1dHQgcGx1ZyIsImFuYWwiLCJzb2RvbXkiLCJwZWRvcGhpbGUiLCJiZXN0aWFsaXR5IiwibmVjcm9waGlsaWEiLCJpbmNlc3QiLCJzdWljaWRlIiwibXVyZGVyIiwidGVycm9yaXNtIiwiZHJ1Z3MiLCJhbGNvaG9sIiwic21va2luZyIsIndlZWQiLCJtZXRoIiwiY3JhY2siLCJoZXJvaW4iLCJjb2NhaW5lIiwib3BpYXRlIiwib3BpdW0iLCJiZW56b2RpYXplcGluZSIsInhhbmF4IiwiYWRkZXJhbGwiLCJyaXRhbGluIiwic3Rlcm9pZHMiLCJ2aWFncmEiLCJjaWFsaXMiLCJwcm9zdGl0dXRpb24iLCJlc2NvcnQiXQ=='));
 
 const alternativeChars = {
   'a': ['@', '4'],
@@ -3032,6 +3023,7 @@ function generateVariations(word) {
   }
   return variations;
 }
+
 function generateVariationsList(words) {
   const variationsList = [];
   for (const word of words) {
@@ -3040,7 +3032,8 @@ function generateVariationsList(words) {
   return variationsList.filter(word => !word.match(/[A-Z]/));
 }
 
-const badWordsExanded = generateVariationsList(badWords)
+
+
 function createProfanityHashTable(profanityVariationsList) {
   const hashTable = {};
   for (let i = 0; i < profanityVariationsList.length; i++) {
@@ -3055,15 +3048,21 @@ function createProfanityHashTable(profanityVariationsList) {
   }
   return hashTable;
 }
-var profanityHashTable = createProfanityHashTable(badWordsExanded);;
+
+
+
 function isProfanity(word) {
-  const wordLower = word.toLowerCase();
-  const firstChar = wordLower[0];
-  const words = profanityHashTable[firstChar];
-  if (!words) {
-    return false;
-  }
-  return Boolean(words[wordLower]);
+	if (!profanityHashTable){
+		return false;
+	}
+	const wordLower = word.toLowerCase();
+	const firstChar = wordLower[0];
+	const words = profanityHashTable[firstChar];
+	if (!words) {
+		return false;
+	}
+	return Boolean(words[wordLower]);
+	
 }
 function filterProfanity(sentence) {
   let words = sentence.toLowerCase().split(/[\s\.\-_!?,]+/);
@@ -3075,21 +3074,27 @@ function filterProfanity(sentence) {
   }
   return sentence;
 }
-
+var profanityHashTable = false;
 try { 
 	 // use a custom file named badwords.txt to replace the badWords that are hard-coded. one per line.
 	fetch('./badwords.txt').then((response) => response.text()).then((text) => {
 		let customBadWords = text.split(/\r?\n|\r|\n/g);
+		customBadWords = generateVariationsList(customBadWords);
 		profanityHashTable = createProfanityHashTable(customBadWords);
     }).catch((error) => {
-		// no file found or error
+		badWords = generateVariationsList(badWords);
+		profanityHashTable = createProfanityHashTable(badWords);
 	});
-} catch(e){}
+} catch(e){
+	badWords = generateVariationsList(badWords);
+	profanityHashTable = createProfanityHashTable(badWords);
+}
+
+
 
 /////// end of bad word filter
 
 var goodWordsHashTable = false;
-/* 
 function isGoodWord(word) {
   const wordLower = word.toLowerCase();
   const firstChar = wordLower[0];
@@ -3117,7 +3122,7 @@ try {
     }).catch((error) => {
 		// no file found or error
 	});
-} catch(e){} */
+} catch(e){}
 
 async function applyBotActions(data, tab=false){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
@@ -3157,11 +3162,13 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			} catch(e){console.error(e);}
 		}
 		
-		/* if (goodWordsHashTable){
-			try {
-				data.chatmessage = passGoodWords(data.chatmessage);
-			} catch(e){console.error(e);}
-		} */
+		if (settings.goodwordslist){
+			if (goodWordsHashTable){
+				try {
+					data.chatmessage = passGoodWords(data.chatmessage);
+				} catch(e){console.error(e);}
+			}
+		}
 		
 		if (settings.autohi && data.chatname){
 			if (data.chatmessage.toLowerCase() === "hi"){
@@ -3175,7 +3182,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			}
 		}
 		
-		// applyBotActions // applyCustomActions
+		// applyBotActions nor applyCustomActions ; I'm going to allow for copy/paste here I think instead.
 
 		if (settings.relaydonos && data.hasDonation && data.chatname && data.type){
 			if (Date.now() - messageTimeout > 100){ // respond to "1" with a "1" automatically; at most 1 time per 100ms.
@@ -3455,7 +3462,6 @@ function tellAJoke(){
 	processResponse(data);
 }
 
-
 chrome.browserAction.setIcon({path: "/icons/off.png"});
 
 async function fetchData(url) {
@@ -3473,17 +3479,19 @@ async function fetchData(url) {
 window.onload = async function() {
 	let programmedSettings = await fetchData("settings.json"); // allows you to load the settings from a file.
 	if (programmedSettings && (typeof programmedSettings === "object")){
+		console.log("Loading override settings via settongs.json");
 		loadSettings(programmedSettings, true);
 	} else {
+		console.log("Loading settings from the main file into the background.js");
 		chrome.storage.sync.get(properties, function(item){ // we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
-			if (item && item.settings){
-				chrome.storage.sync.remove(["settings"], function(Items) {
+			if (item && item.settings){ // ssapp
+				chrome.storage.sync.remove(["settings"], function(Items) { // ignored
 					console.log("upgrading from sync to local storage");
 				});
-				chrome.storage.local.set({
+				chrome.storage.local.set({ // oh well; harmless
 					settings: item.settings
 				});
-				loadSettings(item);
+				loadSettings(item, false);
 			} else {
 				chrome.storage.local.get(["settings"], function(item2){
 					if (item2 && item2.settings){
@@ -3493,7 +3501,7 @@ window.onload = async function() {
 							item = item2;
 						}
 					} 
-					loadSettings(item);
+					loadSettings(item, false);
 				});
 			}
 		});
