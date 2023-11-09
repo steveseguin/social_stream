@@ -221,18 +221,22 @@
 	  return null;
 	}
 
+
+	const pattern = new RegExp('^https://(www\\.)?twitter\\.com/i/broadcasts/.*$', 'i');
 	setInterval(function(){
 		try {
-			var container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);
-			if (!container.marked){
-				container.marked=true;
+			if (pattern.test(window.location.href)){
+				var container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);
+				if (!container.marked){
+					container.marked=true;
 
-				setTimeout(function(container){
-					if (container){
-						onElementInserted(container);
-					}
+					setTimeout(function(container){
+						if (container){
+							onElementInserted(container);
+						}
 
-				},1000, container);
+					},1000, container);
+				}
 			}
 		} catch(e){}
 	},2000);
