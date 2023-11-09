@@ -56,9 +56,6 @@
 
 	
 	function processMessage(ele){
-		
-		console.log(ele);
-		
 		var chatname="";
 		var msg="";
 		
@@ -132,7 +129,6 @@
 		} else {
 			data.type = "x";
 		}
-		console.log(data);
 		pushMessage(data);
 	}
 
@@ -190,7 +186,7 @@
 								processMessage(mutation.addedNodes[i]);
 							}
 						}
-					} catch(e){console.error(e);}
+					} catch(e){}
 				}
 			});
 		};
