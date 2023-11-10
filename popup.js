@@ -13,7 +13,6 @@ if (typeof(chrome.runtime)=='undefined'){
 	
 	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
 		let response = await ipcRenderer.sendSync('fromPopup',data);
-		console.log("data response for FromPopUp from Main:", response);
 		if (typeof(callback) == "function"){
 			callback(response);
 		}
@@ -23,12 +22,10 @@ if (typeof(chrome.runtime)=='undefined'){
 	}
 	
 	ipcRenderer.on('fromMain', (event, ...args) => {
-		console.log("FROM MAIN",args[0]);
 		
 		try {
 			update(args[0], false); // do not re-sync with ourself
 		} catch(e){
-			console.error("Coulnd't updaet",e);
 		}
 	})
 	
@@ -44,6 +41,8 @@ if (typeof(chrome.runtime)=='undefined'){
 	}); */
 	
 }
+
+	
 var translation = {};
 
 function getTranslation(key, value=false){ 
@@ -147,16 +146,20 @@ function miniTranslate(ele, ident = false, direct=false) {
 }
 
 document.addEventListener("DOMContentLoaded", async function(event) {
-
-	var disableButton = document.getElementById("disableButton");
+	document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
+	document.body.className = "extension-disabled";
+	document.getElementById("disableButton").style.display = "";
+	chrome.browserAction.setIcon({path: "/icons/off.png"});
+	document.getElementById("extensionState").checked = null;
 	
-	disableButton.onclick = function(event){
+	document.getElementById("disableButton").onclick = function(event){
 		event.stopPropagation()
 		chrome.runtime.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}}, function (response) {
 			update(response);
 		});
 		return false;
 	};
+	
 	console.log("pop up asking main for settings");
 	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
 		console.log("getSettings response",response);
@@ -275,53 +278,41 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	checkVersion();
 });
-
+var streamID = false;
 function update(response, sync=true){
 	console.log("update-> response: ",response);
 	if (response !== undefined){
 		
-		if ("state" in response){
-			isExtensionOn = response.state;
-			if (isExtensionOn){
-				document.body.className = "extension-enabled";
-				document.getElementById("disableButtonText").innerHTML = "⚡ Extension active";
-				disableButton.style.display = "";
-				document.getElementById("extensionState").checked = true;
-				chrome.browserAction.setIcon({path: "/icons/on.png"});
-			} else {
-				document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
-				document.body.className = "extension-disabled";
-				disableButton.style.display = "";
-				chrome.browserAction.setIcon({path: "/icons/off.png"});
-				document.getElementById("extensionState").checked = null;
-			}
-		}
-
 		
-		if ('streamID' in response){
-			
+		if (response.streamID){
+			streamID = true;
 			var password = "";
 			if ('password' in response && response.password){
 				password = "&password="+response.password;
 			}
 			
+			var baseURL = "https://socialstream.ninja/";
+			if (devmode){
+				baseURL = "file:///C:/Users/steve/Code/social_stream/";
+			}
+			
 			//document.getElementById("version").innerHTML = "Stream ID is : "+response.streamID;
-			document.getElementById("dock").rawURL = "https://socialstream.ninja/dock.html?session="+response.streamID+password;
-			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='https://socialstream.ninja/dock.html?session="+response.streamID+password+"'>https://socialstream.ninja/dock.html?session="+response.streamID+password+"</a>";
+			document.getElementById("dock").rawURL = baseURL+"dock.html?session="+response.streamID+password;
+			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='"+baseURL+"dock.html?session="+response.streamID+password+"'>"+baseURL+"dock.html?session="+response.streamID+password+"</a>";
 
-			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='https://socialstream.ninja/index.html?session="+response.streamID+password+"'>https://socialstream.ninja/index.html?session="+response.streamID+password+"</a>";
-			document.getElementById("overlay").rawURL = "https://socialstream.ninja/index.html?session="+response.streamID+password;
+			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='"+baseURL+"index.html?session="+response.streamID+password+"'>"+baseURL+"index.html?session="+response.streamID+password+"</a>";
+			document.getElementById("overlay").rawURL = baseURL+"index.html?session="+response.streamID+password;
 
-			document.getElementById("emoteswall").innerHTML = "<a target='_blank' id='emoteswalllink' href='https://socialstream.ninja/emotes.html?session="+response.streamID+password+"'>https://socialstream.ninja/emotes.html?session="+response.streamID+password+"</a>";
-			document.getElementById("emoteswall").rawURL = "https://socialstream.ninja/emotes.html?session="+response.streamID+password;
+			document.getElementById("emoteswall").innerHTML = "<a target='_blank' id='emoteswalllink' href='"+baseURL+"emotes.html?session="+response.streamID+password+"'>"+baseURL+"emotes.html?session="+response.streamID+password+"</a>";
+			document.getElementById("emoteswall").rawURL = baseURL+"emotes.html?session="+response.streamID+password;
 			
-			document.getElementById("hypemeter").innerHTML = "<a target='_blank' id='hypemeterlink' href='https://socialstream.ninja/hype.html?session="+response.streamID+password+"'>https://socialstream.ninja/hype.html?session="+response.streamID+password+"</a>";
-			document.getElementById("hypemeter").rawURL = "https://socialstream.ninja/hype.html?session="+response.streamID+password;
+			document.getElementById("hypemeter").innerHTML = "<a target='_blank' id='hypemeterlink' href='"+baseURL+"hype.html?session="+response.streamID+password+"'>"+baseURL+"hype.html?session="+response.streamID+password+"</a>";
+			document.getElementById("hypemeter").rawURL = baseURL+"hype.html?session="+response.streamID+password;
 			
-			document.getElementById("waitlist").innerHTML = "<a target='_blank' id='waitlistlink' href='https://socialstream.ninja/waitlist.html?session="+response.streamID+password+"'>https://socialstream.ninja/waitlist.html?session="+response.streamID+password+"</a>";
-			document.getElementById("waitlist").rawURL = "https://socialstream.ninja/waitlist.html?session="+response.streamID+password;
+			document.getElementById("waitlist").innerHTML = "<a target='_blank' id='waitlistlink' href='"+baseURL+"waitlist.html?session="+response.streamID+password+"'>"+baseURL+"waitlist.html?session="+response.streamID+password+"</a>";
+			document.getElementById("waitlist").rawURL = baseURL+"waitlist.html?session="+response.streamID+password;
 
-			document.getElementById("remote_control_url").href='https://socialstream.ninja/sampleapi.html?session='+response.streamID;
+			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
 		
 
 			if ('settings' in response){
@@ -457,13 +448,30 @@ function update(response, sync=true){
 						}
 					}
 				}
-			}
-			
-			if ("translation" in response.settings){
-				translation = response.settings["translation"];
-				miniTranslate(document.body);
+				if ("translation" in response.settings){
+					translation = response.settings["translation"];
+					miniTranslate(document.body);
+				}
 			}
 		}
+		
+		if (("state" in response) && streamID){
+			isExtensionOn = response.state;
+			if (isExtensionOn){
+				document.body.className = "extension-enabled";
+				document.getElementById("disableButtonText").innerHTML = "⚡ Extension active";
+				document.getElementById("disableButton").style.display = "";
+				document.getElementById("extensionState").checked = true;
+				chrome.browserAction.setIcon({path: "/icons/on.png"});
+			} else {
+				document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
+				document.body.className = "extension-disabled";
+				document.getElementById("disableButton").style.display = "";
+				chrome.browserAction.setIcon({path: "/icons/off.png"});
+				document.getElementById("extensionState").checked = null;
+			}
+		}
+		
 	}
 }
 
@@ -539,6 +547,8 @@ function checkVersion(){
 })(window);
 var urlParams = new URLSearchParams(window.location.search);
 
+const devmode = urlParams.has("devmode");
+	
 function updateURL(param, href) {
 
 	href = href.replace("??", "?");
@@ -573,6 +583,23 @@ function updateSettings(ele, sync=true){
 
 			} else if (ele.dataset.param1 == "lightmode"){
 				var key = "darkmode";
+				var ele1 = document.querySelector("input[data-param1='"+key+"']");
+				if (ele1 && ele1.checked){
+					ele1.checked = false;
+					updateSettings(ele1, sync);
+				}
+			}
+			
+			if (ele.dataset.param1 == "onlytwitch"){
+				var key = "hidetwitch";
+				var ele1 = document.querySelector("input[data-param1='"+key+"']");
+				if (ele1 && ele1.checked){
+					ele1.checked = false;
+					updateSettings(ele1, sync);
+				}
+
+			} else if (ele.dataset.param1 == "hidetwitch"){
+				var key = "onlytwitch";
 				var ele1 = document.querySelector("input[data-param1='"+key+"']");
 				if (ele1 && ele1.checked){
 					ele1.checked = false;
@@ -739,6 +766,13 @@ function updateSettings(ele, sync=true){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param2", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
 		}
+		
+		document.querySelectorAll("input[data-param2^='"+ele.dataset.param2.split("=")[0]+"']:not([data-param2='"+ele.dataset.param2+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
 
 	} else if (ele.dataset.param3){
 		if (ele.checked){
@@ -751,6 +785,14 @@ function updateSettings(ele, sync=true){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param3", setting: ele.dataset.param3, "value": ele.checked}, function (response) {});
 		}
+		
+		document.querySelectorAll("input[data-param3^='"+ele.dataset.param3.split("=")[0]+"']:not([data-param3='"+ele.dataset.param3+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
+		
 	} else if (ele.dataset.param4){
 		if (ele.checked){
 			document.getElementById("hypemeter").rawURL = updateURL(ele.dataset.param4, document.getElementById("hypemeter").rawURL);
@@ -762,6 +804,14 @@ function updateSettings(ele, sync=true){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param4", setting: ele.dataset.param4, "value": ele.checked}, function (response) {});
 		}
+		
+		document.querySelectorAll("input[data-param4^='"+ele.dataset.param4.split("=")[0]+"']:not([data-param4='"+ele.dataset.param4+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
+		
 	} else if (ele.dataset.param5){
 		if (ele.checked){
 			document.getElementById("waitlist").rawURL = updateURL(ele.dataset.param5, document.getElementById("waitlist").rawURL);
@@ -773,6 +823,15 @@ function updateSettings(ele, sync=true){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5", setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
 		}
+		
+		document.querySelectorAll("input[data-param5^='"+ele.dataset.param5.split("=")[0]+"']:not([data-param5='"+ele.dataset.param5+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
+		
+		
 	} else if (ele.dataset.both){
 		if (ele.checked){
 			document.getElementById("overlay").rawURL = updateURL(ele.dataset.both, document.getElementById("overlay").rawURL);

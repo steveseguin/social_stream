@@ -87,7 +87,6 @@
 		  var chatimg = "";
 		  var chatbadges = "";
 		  var hasDonation = '';
-		  var hasMembership = '';
 		  var backgroundColor = "";
 		  var textColor = "";
 		  var source = "";
@@ -115,7 +114,7 @@
 		  data.chatmessage = chatmessage;
 		  data.chatimg = chatimg;
 		  data.hasDonation = hasDonation;
-		  data.hasMembership = hasMembership;
+		  data.membership = '';
 		  data.type = source;
 		  
 		  pushMessage(data);

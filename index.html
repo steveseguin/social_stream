@@ -1556,15 +1556,26 @@ span.zero-width-parent img.zero-width-emote {
 					data.hasDonation = "";
 				}
 				
-				var styleOverride = "";
+				var backgroundColor = "";
 				if (data.backgroundColor){
-					styleOverride = data.backgroundColor;
+					if (data.backgroundColor.startsWith("background-color:")){
+						backgroundColor = data.backgroundColor;
+					} else {
+						backgroundColor = "background-color:"+data.backgroundColor+";";
+					}
 				}
+				
+				var styleOverride = backgroundColor;
+				
 				if (data.textColor){
-					styleOverride += " " + data.textColor;
+					if (data.textColor.startsWith("color")){
+						styleOverride += " " + data.textColor;
+					} else {
+						styleOverride += "color:" + data.textColor+";";
+					}
 				}
 				if (styleOverride){
-					styleOverride = 'style="'+styleOverride+'"';
+					styleOverride = ' style="'+styleOverride+'"';
 				}
 				
 				var styleOverrideName = "";
@@ -1667,7 +1678,12 @@ span.zero-width-parent img.zero-width-emote {
 					if (document.getElementById("message").innerText.length>limitchar){
 						fontsize = (parseInt((limitchar*100)/document.getElementById("message").innerText.length));
 						if (fontsize<43){fontsize=43;}
-						document.getElementById("message").style = data.backgroundColor +' '+ data.textColor+'; font-size: '+fontsize+'%;';
+						
+						if (data.textColor && !data.textColor.startsWith("color")){
+							document.getElementById("message").style = data.backgroundColor +'; color:'+ data.textColor+'; font-size: '+fontsize+'%;';
+						} else {
+							document.getElementById("message").style = data.backgroundColor +' '+ data.textColor+'; font-size: '+fontsize+'%;';
+						}
 					}
 				}
 				

@@ -42,7 +42,7 @@
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent)+" ";
 			} else if (node.nodeType === 1){
-				if (!settings.textonlymode){
+				if (!settings.textonlymode){ 
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
 					}
@@ -53,61 +53,86 @@
 		return resp;
 	}
 	
-	var messageHistory = [];
-	
+
 	
 	function processMessage(ele){
-		
-		console.log(ele);
-
-
-		var chatimg = ""
-
-		try {
-			chatimg = ele.querySelector("img.rounded-full").src;
-		} catch(e){
-		}
-		
-		var name="";
-		try {
-			name = escapeHtml(ele.querySelector(".message-body-inner").childNodes[0].textContent.trim());
-		} catch(e){
-		}
-
+		var chatname="";
 		var msg="";
-		try {
-			msg = getAllContentNodes(ele.querySelector(".message-body-inner").childNodes[1]).trim();
-		} catch(e){
-		}
 		
+		try {
+			var nameElement = ele.querySelector('span');
+			chatname = escapeHtml(nameElement.textContent.trim());
+			chatname = chatname.split(":")[0];
+			
+			
+			let node = nameElement.nextElementSibling;
+			var msg = "";
+			while (node) {
+				if (node.childNodes.length){
+					msg += getAllContentNodes(node)
+				} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+					msg += escapeHtml(node.textContent)+" ";
+				} else if (node.nodeType === 1){
+					if (!settings.textonlymode){ 
+						if ((node.nodeName == "IMG") && node.src){
+							node.src = node.src+"";
+						}
+						msg += node.outerHTML;
+					}
+				}
+				node = node.nextElementSibling;
+			}
+			
+			msg = msg.trim();
+			
 
-		if (!msg || !name){
+		} catch(e){
 			return;
 		}
 		
-		if (messageHistory.includes(name+"_"+msg)) {
+		var nameColor = "";
+		try {
+			if (nameElement.children && nameElement.children.length){
+				nameElement = nameElement.children[0];
+			}
+			if (nameElement.children && nameElement.children.length){
+				nameElement = nameElement.children[0];
+			}
+			nameColor = getComputedStyle(nameElement).color;
+		} catch(e){
+			
+		}
+
+		if (!msg || !chatname){
+			return;
+		}
+		
+		var chatimg = ""
+		if (messageHistory.includes(chatname+"_"+msg)) {
 			//console.log("Message already exists");
 			return;
 		} else {
-			messageHistory.push(name+"_"+msg);
-			setTimeout(function(){
-				messageHistory = messageHistory.slice(1);
-			},5000);
+			messageHistory.push(chatname+"_"+msg);
+			messageHistory = messageHistory.slice(-10);
 		}
 		
 		var data = {};
-		data.chatname = name;
+		data.chatname = chatname;
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
-		data.nameColor = "";
+		data.nameColor = nameColor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";
 		data.contentimg = "";
-		data.type = "cozy";
-		
+		data.textonly = settings.textonlymode || false;
+		if (settings.detweet){
+			data.type = "twitter";
+		} else {
+			data.type = "x";
+		}
 		pushMessage(data);
 	}
 
@@ -133,7 +158,8 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('textarea').focus();
+					document.querySelector('input').focus();
+					document.querySelector('input').click();
 					sendResponse(true);
 					return;
 				}
@@ -151,27 +177,25 @@
 
 	var lastURL =  "";
 	var observer = null;
-	
+	var messageHistory = [];
 	
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							if (mutation.addedNodes[i].skip){continue;}
-
-							mutation.addedNodes[i].skip = true;
-
-							processMessage(mutation.addedNodes[i]); 
-							
-						} catch(e){}
-					}
+					try {
+						
+						for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+							if (mutation.addedNodes[i].tagName && (mutation.addedNodes[i].tagName == "DIV") && mutation.addedNodes[i].childNodes && mutation.addedNodes[i].parentNode && (mutation.addedNodes[i].parentNode.tagName == "DIV")){
+								processMessage(mutation.addedNodes[i]);
+							}
+						}
+					} catch(e){}
 				}
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -180,25 +204,40 @@
 	
 	console.log("social stream injected");
 
+	function findElementByAttributeAndChildren(parentQuery, childAttrs) {
+	  const potentialParents = document.querySelectorAll(parentQuery);
+	  for (let parent of potentialParents) {
+		let allChildrenMatch = true;
+		for (let attr of childAttrs) {
+		  if (!parent.querySelector(attr)) {
+			allChildrenMatch = false;
+			break;
+		  }
+		}
+		if (allChildrenMatch) {
+		  return parent;
+		}
+	  }
+	  return null;
+	}
+
+
+	const pattern = new RegExp('^https://(www\\.)?twitter\\.com/i/broadcasts/.*$', 'i');
 	setInterval(function(){
 		try {
-			document.querySelectorAll('.flex.scrollbar-pretty.text-base').forEach(container=>{ // more than one #message .. tsk ;)
+			if (pattern.test(window.location.href)){
+				var container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);
 				if (!container.marked){
 					container.marked=true;
 
-					console.log("CONNECTED chat detected");
+					setTimeout(function(container){
+						if (container){
+							onElementInserted(container);
+						}
 
-					setTimeout(function(){
-
-						[...container.childNodes].forEach(ele=>{
-							ele.skip=true;
-							//processMessage(ele);
-						});
-						onElementInserted(container);
-
-					},1000);
+					},1000, container);
 				}
-			});
+			}
 		} catch(e){}
 	},2000);
 

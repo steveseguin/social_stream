@@ -174,7 +174,7 @@
 	  data.chatmessage = chatmessage;
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
-	  data.hasMembership = "";
+	  data.membership = "";
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "kick";
 	  

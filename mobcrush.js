@@ -87,7 +87,6 @@
 		  var chatimg = ele.parentNode.querySelector(".profile-logo > img").src;
 		  var chatbadges = "";
 		  var hasDonation = '';
-		  var hasMembership = '';
 		  var backgroundColor = "";
 		  var textColor = "";
 
@@ -99,7 +98,7 @@
 		  data.chatmessage = chatmessage;
 		  data.chatimg = chatimg;
 		  data.hasDonation = hasDonation;
-		  data.hasMembership = hasMembership;
+		  data.membership = '';
 		  data.textonly = settings.textonlymode || false;
 		  data.type = "mobcrush";
 		  

@@ -142,7 +142,7 @@
 			data.chatmessage = msg;
 			data.chatimg = img;
 			data.hasDonation = "";
-			data.hasMembership = "";
+			data.membership = "";
 			data.contentimg = "";
 			data.textonly = settings.textonlymode || false;
 			data.type = "buzzit";

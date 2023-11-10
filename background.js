@@ -9,6 +9,7 @@ var lastMessageCounter = 0;
 var sentimentAnalysisLoaded = false;
 
 var connectedPeers = {};	
+var isSSAPP = false;
 
 function generateStreamID(){
 	var text = "";
@@ -28,7 +29,7 @@ function generateStreamID(){
 if (typeof(chrome.runtime)=='undefined'){
 	
 	var { ipcRenderer, contextBridge } = require('electron');
-	
+	isSSAPP = true;
 	chrome = {};
 	chrome.browserAction = {};
 	chrome.browserAction.setIcon = function(icon){} // there is no icon in the ssapp
@@ -142,7 +143,8 @@ if (typeof(chrome.runtime)=='undefined'){
 		sender.tab = {};
 		sender.tab.id = null;
 		onMessageCallback(args[0], sender, function(response){  // (request, sender, sendResponse)  
-			ipcRenderer.send('fromBackgroundResponse',response);
+			console.log("sending response to pop up:",response);
+			ipcRenderer.send('fromBackgroundPopupResponse',response);
 		});
 	})
 	
@@ -150,6 +152,8 @@ if (typeof(chrome.runtime)=='undefined'){
 		var importFile = await ipcRenderer.sendSync('showOpenDialog', "");
 		return importFile;
 	};
+	
+	//ipcRenderer.send('backgroundLoaded');
 	
 	//chrome.runtime.onMessage.addListener(
     //async function (request, sender, sendResponse) {
@@ -271,19 +275,31 @@ function filterXSS(unsafe){ // this is not foolproof, but it might catch some ba
 }
 
 var properties = ["streamID", "password", "state", "settings"];
-var channel = generateStreamID();
+var streamID = false;
 var password = false;
 
 function loadSettings(item, resave=false){
 	
 	console.log("loadSettings (or saving new settings)", item);
 	
+	let reloadNeeded = false;
+	
+	
 	if (item && item.streamID){
-		channel = item.streamID;
-	} 
+		if (streamID != item.streamID){
+			streamID = item.streamID;
+			reloadNeeded = true;
+		}
+	} else if (!streamID){
+		reloadNeeded = true;
+		streamID = generateStreamID(); // not stream ID, so lets generate one.
+	}
 	
 	if (item && ("password" in item)){
-		password = item.password;
+		if (password != item.password){
+			password = item.password;
+			reloadNeeded = true;
+		}
 	} 
 	
 	if (item && item.settings){
@@ -291,13 +307,28 @@ function loadSettings(item, resave=false){
 	} 
 	
 	if (item && ("state" in item)){
-		isExtensionOn = item.state;
-		updateExtensionState(false); // we're saving below instead
+		if (isExtensionOn != item.state){
+			isExtensionOn = item.state;
+			reloadNeeded = true;
+			 // we're saving below instead
+		}
+	}
+	if (reloadNeeded){ 
+		updateExtensionState(false); 
 	}
 	
 	if (resave){
 		chrome.storage.sync.set(item);
 		chrome.runtime.lastError;
+	}
+	
+	try {
+		if (isSSAPP && ipcRenderer){
+			ipcRenderer.sendSync('fromBackground',{streamID, password, settings, state: isExtensionOn} );
+			//ipcRenderer.send('backgroundLoaded');
+		}
+	} catch(e){
+		console.error(e);
 	}
 	
 	toggleMidi();
@@ -552,8 +583,8 @@ async function overwriteFileExcel(data=false) {
 		data = [];
 
 		worksheet = XLSX.utils.aoa_to_sheet(data);
-		workbook.SheetNames.push("SocialStream-"+channel);
-		workbook.Sheets["SocialStream-"+channel] = worksheet;
+		workbook.SheetNames.push("SocialStream-"+streamID);
+		workbook.Sheets["SocialStream-"+streamID] = worksheet;
 
 		var xlsbin = XLSX.write(workbook, {
 			bookType: "xlsx",
@@ -837,12 +868,15 @@ var intervalMessages = {};
 
 function updateExtensionState(sync=true){
 	console.log("updateExtensionState", isExtensionOn);
+	
 	if (isExtensionOn){
-		if (iframe==null){
-			loadIframe(channel, password);
+		chrome.browserAction.setIcon({path: "/icons/on.png"});
+		if (streamID){
+			loadIframe(streamID, password);
 		}
 		setupSocket();
 		setupSocketDock();
+		
 	} else {
 		if (iframe){
 			iframe.src = null;
@@ -863,7 +897,9 @@ function updateExtensionState(sync=true){
 				clearInterval(intervalMessages[i]);
 			}
 		}
+		chrome.browserAction.setIcon({path: "/icons/off.png"});
 	}
+	
 	if (sync){
 		chrome.storage.sync.set({
 			state: isExtensionOn
@@ -884,12 +920,14 @@ chrome.runtime.onMessage.addListener(
 				isExtensionOn = request.data.value;
 				
 				updateExtensionState();
-				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
+				sendResponse({"state":isExtensionOn,"streamID":streamID, "password":password, "settings":settings});
 				
 			} else if (request.cmd && (request.cmd === "getOnOffState")) {
-				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
+				sendResponse({"state":isExtensionOn,"streamID":streamID, "password":password, "settings":settings});
+				
 			} else if (request.cmd && (request.cmd === "getSettings")) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings});
+				sendResponse({"state":isExtensionOn,"streamID":streamID, "password":password, "settings":settings});
+
 			} else if (request.cmd && (request.cmd === "saveSetting")) {
 				
 				if (typeof settings[request.setting] == "object"){
@@ -1142,7 +1180,7 @@ chrome.runtime.onMessage.addListener(
 					sendResponse({"state":isExtensionOn});
 				}
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-				sendResponse({"state":isExtensionOn,"streamID":channel, "password":password, "settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation. 
+				sendResponse({"state":isExtensionOn,"streamID":streamID, "password":password, "settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation. 
 			} else if ("keepAlive" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				var action = {};
 				action.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
@@ -1259,10 +1297,14 @@ chrome.runtime.onMessage.addListener(
 
 			} else if (request.cmd && request.cmd === "sidUpdated") {
 				if (request.streamID){
-					channel = request.streamID;
+					streamID = request.streamID;
 				}
 				if ("password" in request){
 					password = request.password;
+				}
+				
+				if ("state" in request){
+					isExtensionOn = request.state;
 				}
 				if (iframe){
 					if (iframe.src){
@@ -1273,7 +1315,7 @@ chrome.runtime.onMessage.addListener(
 					iframe = null;
 				}
 				if (isExtensionOn){
-					loadIframe(channel, password);
+					loadIframe(streamID, password);
 				}
 
 				sendResponse({"state":isExtensionOn});
@@ -1681,7 +1723,7 @@ function setupSocketDock(){
 	};
 	socketserverDock.onopen = function (){
 		conConDock = 0;
-		socketserverDock.send(JSON.stringify({"join":channel,"out":4,"in":3}));
+		socketserverDock.send(JSON.stringify({"join":streamID,"out":4,"in":3}));
 	};
 	socketserverDock.addEventListener('message', async function (event) {
 		if (event.data){
@@ -1727,7 +1769,7 @@ function setupSocket(){
 	};
 	socketserver.onopen = function (){
 		conCon = 0;
-		socketserver.send(JSON.stringify({"join":channel,"out":2,"in":1}));
+		socketserver.send(JSON.stringify({"join":streamID,"out":2,"in":1}));
 	};
 	socketserver.addEventListener('message', async function (event) {
 		if (event.data){
@@ -1895,10 +1937,32 @@ async function openchat(target=null){
 				let url = "https://www.youtube.com/live_chat?is_popout=1&v="+videoID;
 				openURL(url, true);
 			} catch(e){
-				// not live?
+				fetch("https://www.youtube.com/"+settings.youtube_username.textsetting+"/live").then((response) => response.text()).then((data) => {
+					try{
+						let videoID = data.split('{"videoId":"')[1].split('"')[0];
+						console.log(videoID);
+						let url = "https://www.youtube.com/live_chat?is_popout=1&v="+videoID;
+						openURL(url, true);
+					} catch(e){
+						// not live?
+					}
+				}).catch(error => {
+					// not live?
+				});
 			}
 		}).catch(error => {
-			// not live?
+			fetch("https://www.youtube.com/"+settings.youtube_username.textsetting+"/live").then((response) => response.text()).then((data) => {
+				try{
+					let videoID = data.split('{"videoId":"')[1].split('"')[0];
+					console.log(videoID);
+					let url = "https://www.youtube.com/live_chat?is_popout=1&v="+videoID;
+					openURL(url, true);
+				} catch(e){
+					// not live?
+				}
+			}).catch(error => {
+				// not live?
+			});
 		});
 	}
 
@@ -2324,13 +2388,20 @@ function sendToDisk(data){
 
 
 
-function loadIframe(channel, pass=false){  // this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
-	iframe = document.createElement("iframe");
-	if (!pass){
-		pass = "false";
+function loadIframe(streamID, pass=false){  // this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
+	if (iframe){
+		if (!pass){
+			pass = "false";
+		}
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+"&room="+streamID+"&push="+streamID+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
+	} else {
+		iframe = document.createElement("iframe");
+		if (!pass){
+			pass = "false";
+		}
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+"&room="+streamID+"&push="+streamID+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
+		document.body.appendChild(iframe);
 	}
-	iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+"&room="+channel+"&push="+channel+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
-	document.body.appendChild(iframe);
 }
 
 var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent"; // lets us listen to the VDO.Ninja IFRAME API; ie: lets us talk to the dock
@@ -3295,12 +3366,12 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 
 	if (settings.comment_background){
 		if (!data.backgroundColor){
-			data.backgroundColor = "background-color:"+settings.comment_background.textsetting+";";
+			data.backgroundColor = settings.comment_background.textsetting;
 		}
 	}
 	if (settings.comment_color){
 		if (!data.textColor){
-			data.textColor = "color:"+settings.comment_color.textsetting+";";
+			data.textColor = settings.comment_color.textsetting;
 		}
 	}
 	if (settings.name_background){
@@ -3484,6 +3555,7 @@ window.onload = async function() {
 	} else {
 		console.log("Loading settings from the main file into the background.js");
 		chrome.storage.sync.get(properties, function(item){ // we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
+			console.log("properties",item);
 			if (item && item.settings){ // ssapp
 				chrome.storage.sync.remove(["settings"], function(Items) { // ignored
 					console.log("upgrading from sync to local storage");
@@ -3494,6 +3566,7 @@ window.onload = async function() {
 				loadSettings(item, false);
 			} else {
 				chrome.storage.local.get(["settings"], function(item2){
+					console.log("item2",item2);
 					if (item2 && item2.settings){
 						if (item){
 							item.settings = item2.settings;

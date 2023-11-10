@@ -86,7 +86,7 @@
 		data.chatmessage = msg;
 		data.chatimg = img;
 		data.hasDonation = "";
-		data.hasMembership = "";;
+		data.membership = "";;
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
 		data.type = "instagram";
@@ -144,7 +144,7 @@
 		data.chatmessage = msg;
 		data.chatimg = img;
 		data.hasDonation = "";
-		data.hasMembership = "";;
+		data.membership = "";;
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "instagram";
@@ -241,7 +241,7 @@
 	  data.chatmessage = chatmessage;
 	  data.chatimg = chatimg;
 	  data.hasDonation = "";
-	  data.hasMembership = "";;
+	  data.membership = "";;
 	  data.contentimg = "";
 	  data.event = streamEvent;
 	  data.textonly = settings.textonlymode || false;

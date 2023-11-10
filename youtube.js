@@ -259,13 +259,13 @@
 
 		var textColor = "";
 		if (ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color')) {
-			backgroundColor = "background-color: " + ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color') + ";";
-			textColor = "color: #111;";
+			backgroundColor = ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color');
+			textColor = "#111;";
 		}
 
 		if (ele.style.getPropertyValue('--yt-live-chat-sponsor-color')) {
-			backgroundColor = "background-color: " + ele.style.getPropertyValue('--yt-live-chat-sponsor-color') + ";";
-			textColor = "color: #111;";
+			backgroundColor = ele.style.getPropertyValue('--yt-live-chat-sponsor-color');
+			textColor = "#111;";
 		}
 
 		srcImg = document.querySelector("#input-panel");
