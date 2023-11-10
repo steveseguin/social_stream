@@ -113,13 +113,12 @@ body {
   100% {opacity:0;}
 }
 
+
 .dropout {
-	transform: translateY(340px) !important;
-	webkit-transition: opacity 0.5s ease-in-out;
-    -moz-transition: opacity 0.5 ease-in-out;
-    -ms-transition: opacity 0.5 ease-in-out;
-    -o-transition: opacity 0.5 ease-in-out;
-    opacity: 0;
+	transform: translateY(340px)!important;
+	opacity: 0;
+	transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+	will-change: transform, opacity;
 }
 
 .swipe {
@@ -1434,6 +1433,7 @@ span.zero-width-parent img.zero-width-emote {
 			}
 		
 			clearTimeout(timeoutTimer);
+			
 			if (!stacking){
 				document.getElementById("output").classList.add(transitionType);
 			} 
