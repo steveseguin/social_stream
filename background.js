@@ -675,7 +675,6 @@ async function importSettings(item){
 		  accept: {'text/plain': ['.data']},
 		}],
 	}; */
-	console.warn(" !!!!!!!!importSettings");
 	 
 	var importFile = await window.showOpenFilePicker();
 	console.log(importFile);
