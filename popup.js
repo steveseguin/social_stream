@@ -12,6 +12,7 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.runtime = {}
 	
 	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
+		console.log("Sending message from popup to main",data);
 		let response = await ipcRenderer.sendSync('fromPopup',data);
 		if (typeof(callback) == "function"){
 			callback(response);

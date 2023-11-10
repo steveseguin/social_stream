@@ -916,6 +916,7 @@ function updateExtensionState(sync=true){
 
 chrome.runtime.onMessage.addListener(
     async function (request, sender, sendResponse) {
+		console.log("processing messge:",request);
 		try{
 			if (request.cmd && request.cmd === "setOnOffState") { // toggle the IFRAME (stream to the remote dock) on or off
 				isExtensionOn = request.data.value;
