@@ -106,7 +106,7 @@ if (typeof(chrome.runtime)=='undefined'){
 	};
 	
 	chrome.debugger.sendCommand = async function(a=null,b=null,c=null,callback=null){
-		console.log("SEND KEY INPUT COMMAND",c);
+		//console.log("SEND KEY INPUT COMMAND",c);
 		if (c){
 			c.tab = 1;
 			var response = await ipcRenderer.sendSync('sendInputToTab',c); // sendInputToTab
@@ -128,7 +128,7 @@ if (typeof(chrome.runtime)=='undefined'){
 	};
 	
 	ipcRenderer.on('fromMain', (event, ...args) => {
-		console.log("FROM MAIN",args[0]);
+		//console.log("FROM MAIN",args[0]);
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
@@ -138,12 +138,12 @@ if (typeof(chrome.runtime)=='undefined'){
 	})
 	
 	ipcRenderer.on('fromPopup', (event, ...args) => {
-		console.log("FROM POP UP (redirected)", args[0]);
+		//console.log("FROM POP UP (redirected)", args[0]);
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
 		onMessageCallback(args[0], sender, function(response){  // (request, sender, sendResponse)  
-			console.log("sending response to pop up:",response);
+			//console.log("sending response to pop up:",response);
 			ipcRenderer.send('fromBackgroundPopupResponse',response);
 		});
 	})
@@ -2391,13 +2391,16 @@ function sendToDisk(data){
 
 
 function loadIframe(streamID, pass=false){  // this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
+	console.log("LOAD IFRAME VDON BG");
 	if (iframe){
 		if (!pass){
 			pass = "false";
 		}
+		iframe.allow = "document-domain;encrypted-media;sync-xhr;usb;web-share;cross-origin-isolated;accelerometer;midi;geolocation;autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
 		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+"&room="+streamID+"&push="+streamID+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
 	} else {
 		iframe = document.createElement("iframe");
+		iframe.allow =  "document-domain;encrypted-media;sync-xhr;usb;web-share;cross-origin-isolated;accelerometer;midi;geolocation;autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
 		if (!pass){
 			pass = "false";
 		}
@@ -2422,7 +2425,7 @@ try{
 }
 function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for faking user input
   if (chrome.runtime.lastError) { 
-    console.log(chrome.runtime.lastError.message);
+    //console.log(chrome.runtime.lastError.message);
     return;
   }
   debuggerEnabled[debuggeeId.tabId] = true;
@@ -2660,7 +2663,7 @@ function pokeSite(url){
 
 	chrome.tabs.query({}, function(tabs) {
 		if (chrome.runtime.lastError) {
-			console.warn(chrome.runtime.lastError.message);
+			//console.warn(chrome.runtime.lastError.message);
 		}
 		var published = {};
 		for (var i=0;i<tabs.length;i++){
@@ -2743,7 +2746,7 @@ function processResponse(data, reverse=false, metadata=null){
 
 	chrome.tabs.query({}, function(tabs) {
 		if (chrome.runtime.lastError) {
-			console.warn(chrome.runtime.lastError.message);
+			//console.warn(chrome.runtime.lastError.message);
 		}
 		var published = {};
 		
@@ -2828,7 +2831,7 @@ function processResponse(data, reverse=false, metadata=null){
 				}
 			} catch(e){
 				chrome.runtime.lastError;
-				console.log(e);
+				//console.log(e);
 			}
 		}
 	});

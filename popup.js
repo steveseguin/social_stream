@@ -12,7 +12,6 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.runtime = {}
 	
 	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
-		console.log("Sending message from popup to main",data);
 		let response = await ipcRenderer.sendSync('fromPopup',data);
 		if (typeof(callback) == "function"){
 			callback(response);
@@ -281,7 +280,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 });
 var streamID = false;
 function update(response, sync=true){
-	console.log("update-> response: ",response);
+	//console.log("update-> response: ",response);
 	if (response !== undefined){
 		
 		
