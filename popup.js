@@ -8,14 +8,11 @@ if (typeof(chrome.runtime)=='undefined'){
 	
 	chrome = {};
 	chrome.browserAction = {};
-	chrome.browserAction.setIcon = function(icon){console.log("set icon")}
+	chrome.browserAction.setIcon = function(icon){}
 	chrome.runtime = {}
 	
 	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
 		let response = await ipcRenderer.sendSync('fromPopup',data);
-		console.log("data response from FromPopUp");
-		console.log(response);
-		console.log(response.settings);
 		if (typeof(callback) == "function"){
 			callback(response);
 		}
@@ -24,7 +21,28 @@ if (typeof(chrome.runtime)=='undefined'){
 		return false; // I'll need to add version info eventually
 	}
 	
+	ipcRenderer.on('fromMain', (event, ...args) => {
+		
+		try {
+			update(args[0], false); // do not re-sync with ourself
+		} catch(e){
+		}
+	})
+	
+	/* ipcRenderer.on('fromBackground', (event, ...args) => {
+		console.log("FROM BACKGROUND");
+		console.log(args[0]);
+	}) */
+	
+	/* window.addEventListener("message", function(event) {
+		console.log(event.origin);
+		var messageData = event.data;
+		console.log("Received a message from the parent window:", messageData);
+	}); */
+	
 }
+
+	
 var translation = {};
 
 function getTranslation(key, value=false){ 
@@ -128,25 +146,29 @@ function miniTranslate(ele, ident = false, direct=false) {
 }
 
 document.addEventListener("DOMContentLoaded", async function(event) {
-
-	var disableButton = document.getElementById("disableButton");
-	disableButton.onclick = function(event){
+	document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
+	document.body.className = "extension-disabled";
+	document.getElementById("disableButton").style.display = "";
+	chrome.browserAction.setIcon({path: "/icons/off.png"});
+	document.getElementById("extensionState").checked = null;
+	
+	document.getElementById("disableButton").onclick = function(event){
 		event.stopPropagation()
-		chrome.runtime.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}});
-		chrome.runtime.sendMessage({cmd: "getOnOffState"}, function (response) {
+		chrome.runtime.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}}, function (response) {
 			update(response);
 		});
 		return false;
 	};
-
-	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
-		update(response);
-	});
-
-	chrome.runtime.sendMessage({cmd: "getOnOffState"}, function (response) {
-		update(response);
-	});
 	
+	console.log("pop up asking main for settings");
+	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
+		console.log("getSettings response",response);
+		update(response);
+	});
+
+	//chrome.runtime.sendMessage({cmd: "getOnOffState"}, function (response) { //  getSettings will include the state and everything
+	//	update(response);
+	//});
 	
 	for (var i=1;i<=20;i++){
 		var chat = document.createElement("div");
@@ -256,189 +278,200 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	checkVersion();
 });
-
-function update(response){
+var streamID = false;
+function update(response, sync=true){
+	console.log("update-> response: ",response);
 	if (response !== undefined){
-		if ("state" in response){
+		
+		
+		if (response.streamID){
+			streamID = true;
+			var password = "";
+			if ('password' in response && response.password){
+				password = "&password="+response.password;
+			}
+			
+			var baseURL = "https://socialstream.ninja/";
+			if (devmode){
+				baseURL = "file:///C:/Users/steve/Code/social_stream/";
+			}
+			
+			//document.getElementById("version").innerHTML = "Stream ID is : "+response.streamID;
+			document.getElementById("dock").rawURL = baseURL+"dock.html?session="+response.streamID+password;
+			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='"+baseURL+"dock.html?session="+response.streamID+password+"'>"+baseURL+"dock.html?session="+response.streamID+password+"</a>";
+
+			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='"+baseURL+"index.html?session="+response.streamID+password+"'>"+baseURL+"index.html?session="+response.streamID+password+"</a>";
+			document.getElementById("overlay").rawURL = baseURL+"index.html?session="+response.streamID+password;
+
+			document.getElementById("emoteswall").innerHTML = "<a target='_blank' id='emoteswalllink' href='"+baseURL+"emotes.html?session="+response.streamID+password+"'>"+baseURL+"emotes.html?session="+response.streamID+password+"</a>";
+			document.getElementById("emoteswall").rawURL = baseURL+"emotes.html?session="+response.streamID+password;
+			
+			document.getElementById("hypemeter").innerHTML = "<a target='_blank' id='hypemeterlink' href='"+baseURL+"hype.html?session="+response.streamID+password+"'>"+baseURL+"hype.html?session="+response.streamID+password+"</a>";
+			document.getElementById("hypemeter").rawURL = baseURL+"hype.html?session="+response.streamID+password;
+			
+			document.getElementById("waitlist").innerHTML = "<a target='_blank' id='waitlistlink' href='"+baseURL+"waitlist.html?session="+response.streamID+password+"'>"+baseURL+"waitlist.html?session="+response.streamID+password+"</a>";
+			document.getElementById("waitlist").rawURL = baseURL+"waitlist.html?session="+response.streamID+password;
+
+			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
+		
+
+			if ('settings' in response){
+				for (var key in response.settings){
+
+					if (key === "midiConfig"){
+						if (response.settings[key]){
+							document.getElementById("midiConfig").classList.add("pressed");
+							document.getElementById("midiConfig").innerText = " Config Loaded";
+						} else {
+							document.getElementById("midiConfig").classList.remove("pressed");
+							document.getElementById("midiConfig").innerText = " Load Config";
+						}
+					}
+
+					if (typeof response.settings[key] == "object"){ // newer method
+						if ("param1" in response.settings[key]){
+							var ele = document.querySelector("input[data-param1='"+key+"']");
+							if (ele){
+								ele.checked = response.settings[key].param1;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("param2" in response.settings[key]){
+							var ele = document.querySelector("input[data-param2='"+key+"']");
+							if (ele){
+								ele.checked = response.settings[key].param2;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("param3" in response.settings[key]){
+							var ele = document.querySelector("input[data-param3='"+key+"']");
+							if (ele){
+								ele.checked = response.settings[key].param3;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("param4" in response.settings[key]){
+							var ele = document.querySelector("input[data-param4='"+key+"']");
+							if (ele){
+								ele.checked = response.settings[key].param4;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("both" in response.settings[key]){
+							var ele = document.querySelector("input[data-both='"+key+"']");
+							if (ele){
+								ele.checked = response.settings[key].both;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("setting" in response.settings[key]){
+							var ele = document.querySelector("input[data-setting='"+key+"']");
+							if (ele){
+								ele.checked = response.settings[key].setting;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("textsetting" in response.settings[key]){
+							var ele = document.querySelector("input[data-textsetting='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].textsetting;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("optionsetting" in response.settings[key]){
+							var ele = document.querySelector("select[data-optionsetting='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].optionsetting;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("numbersetting" in response.settings[key]){
+							var ele = document.querySelector("input[data-numbersetting='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].numbersetting;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("textparam1" in response.settings[key]){
+							var ele = document.querySelector("input[data-textparam1='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].textparam1;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("optionparam1" in response.settings[key]){
+							var ele = document.querySelector("select[data-optionparam1='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].optionparam1;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("optionparam2" in response.settings[key]){
+							var ele = document.querySelector("select[data-optionparam2='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].optionparam2;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("optionparam3" in response.settings[key]){
+							var ele = document.querySelector("select[data-optionparam3='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].optionparam3;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("optionparam4" in response.settings[key]){
+							var ele = document.querySelector("select[data-optionparam4='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].optionparam4;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("optionparam5" in response.settings[key]){
+							var ele = document.querySelector("select[data-optionparam5='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].optionparam5;
+								updateSettings(ele, sync);
+							}
+						}
+
+					} else { // obsolete method
+						var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
+						if (ele){
+							ele.checked = response.settings[key];
+							updateSettings(ele, sync);
+						}
+						var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"']");
+						if (ele){
+							ele.value = response.settings[key];
+							updateSettings(ele, sync);
+						}
+					}
+				}
+				if ("translation" in response.settings){
+					translation = response.settings["translation"];
+					miniTranslate(document.body);
+				}
+			}
+		}
+		
+		if (("state" in response) && streamID){
 			isExtensionOn = response.state;
 			if (isExtensionOn){
 				document.body.className = "extension-enabled";
 				document.getElementById("disableButtonText").innerHTML = "⚡ Extension active";
-				disableButton.style.display = "";
+				document.getElementById("disableButton").style.display = "";
 				document.getElementById("extensionState").checked = true;
 				chrome.browserAction.setIcon({path: "/icons/on.png"});
 			} else {
 				document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
 				document.body.className = "extension-disabled";
-				disableButton.style.display = "";
+				document.getElementById("disableButton").style.display = "";
 				chrome.browserAction.setIcon({path: "/icons/off.png"});
 				document.getElementById("extensionState").checked = null;
 			}
 		}
-
-		var password = "";
-		if ('password' in response && response.password){
-			password = "&password="+response.password;
-		}
-
-		if ('streamID' in response){
-			//document.getElementById("version").innerHTML = "Stream ID is : "+response.streamID;
-			document.getElementById("dock").rawURL = "https://socialstream.ninja/dock.html?session="+response.streamID+password;
-			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='https://socialstream.ninja/dock.html?session="+response.streamID+password+"'>https://socialstream.ninja/dock.html?session="+response.streamID+password+"</a>";
-
-			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='https://socialstream.ninja/index.html?session="+response.streamID+password+"'>https://socialstream.ninja/index.html?session="+response.streamID+password+"</a>";
-			document.getElementById("overlay").rawURL = "https://socialstream.ninja/index.html?session="+response.streamID+password;
-
-			document.getElementById("emoteswall").innerHTML = "<a target='_blank' id='emoteswalllink' href='https://socialstream.ninja/emotes.html?session="+response.streamID+password+"'>https://socialstream.ninja/emotes.html?session="+response.streamID+password+"</a>";
-			document.getElementById("emoteswall").rawURL = "https://socialstream.ninja/emotes.html?session="+response.streamID+password;
-			
-			document.getElementById("hypemeter").innerHTML = "<a target='_blank' id='hypemeterlink' href='https://socialstream.ninja/hype.html?session="+response.streamID+password+"'>https://socialstream.ninja/hype.html?session="+response.streamID+password+"</a>";
-			document.getElementById("hypemeter").rawURL = "https://socialstream.ninja/hype.html?session="+response.streamID+password;
-			
-			document.getElementById("waitlist").innerHTML = "<a target='_blank' id='waitlistlink' href='https://socialstream.ninja/waitlist.html?session="+response.streamID+password+"'>https://socialstream.ninja/waitlist.html?session="+response.streamID+password+"</a>";
-			document.getElementById("waitlist").rawURL = "https://socialstream.ninja/waitlist.html?session="+response.streamID+password;
-
-			document.getElementById("remote_control_url").href='https://socialstream.ninja/sampleapi.html?session='+response.streamID;
-		}
-
-		if ('settings' in response){
-			for (var key in response.settings){
-
-				if (key === "midiConfig"){
-					if (response.settings[key]){
-						document.getElementById("midiConfig").classList.add("pressed");
-						document.getElementById("midiConfig").innerText = " Config Loaded";
-					} else {
-						document.getElementById("midiConfig").classList.remove("pressed");
-						document.getElementById("midiConfig").innerText = " Load Config";
-					}
-				}
-
-				if (typeof response.settings[key] == "object"){ // newer method
-					if ("param1" in response.settings[key]){
-						var ele = document.querySelector("input[data-param1='"+key+"']");
-						if (ele){
-							ele.checked = response.settings[key].param1;
-							updateSettings(ele);
-						}
-					}
-					if ("param2" in response.settings[key]){
-						var ele = document.querySelector("input[data-param2='"+key+"']");
-						if (ele){
-							ele.checked = response.settings[key].param2;
-							updateSettings(ele);
-						}
-					}
-					if ("param3" in response.settings[key]){
-						var ele = document.querySelector("input[data-param3='"+key+"']");
-						if (ele){
-							ele.checked = response.settings[key].param3;
-							updateSettings(ele);
-						}
-					}
-					if ("param4" in response.settings[key]){
-						var ele = document.querySelector("input[data-param4='"+key+"']");
-						if (ele){
-							ele.checked = response.settings[key].param4;
-							updateSettings(ele);
-						}
-					}
-					if ("both" in response.settings[key]){
-						var ele = document.querySelector("input[data-both='"+key+"']");
-						if (ele){
-							ele.checked = response.settings[key].both;
-							updateSettings(ele);
-						}
-					}
-					if ("setting" in response.settings[key]){
-						var ele = document.querySelector("input[data-setting='"+key+"']");
-						if (ele){
-							ele.checked = response.settings[key].setting;
-							updateSettings(ele);
-						}
-					}
-					if ("textsetting" in response.settings[key]){
-						var ele = document.querySelector("input[data-textsetting='"+key+"']");
-						if (ele){
-							ele.value = response.settings[key].textsetting;
-							updateSettings(ele);
-						}
-					}
-					if ("optionsetting" in response.settings[key]){
-						var ele = document.querySelector("select[data-optionsetting='"+key+"']");
-						if (ele){
-							ele.value = response.settings[key].optionsetting;
-							updateSettings(ele);
-						}
-					}
-					if ("numbersetting" in response.settings[key]){
-						var ele = document.querySelector("input[data-numbersetting='"+key+"']");
-						if (ele){
-							ele.value = response.settings[key].numbersetting;
-							updateSettings(ele);
-						}
-					}
-					if ("textparam1" in response.settings[key]){
-						var ele = document.querySelector("input[data-textparam1='"+key+"']");
-						if (ele){
-							ele.value = response.settings[key].textparam1;
-							updateSettings(ele);
-						}
-					}
-					if ("optionparam1" in response.settings[key]){
-						var ele = document.querySelector("select[data-optionparam1='"+key+"']");
-						if (ele){
-							ele.value = response.settings[key].optionparam1;
-							updateSettings(ele);
-						}
-					}
-					if ("optionparam2" in response.settings[key]){
-						var ele = document.querySelector("select[data-optionparam2='"+key+"']");
-						if (ele){
-							ele.value = response.settings[key].optionparam2;
-							updateSettings(ele);
-						}
-					}
-					if ("optionparam3" in response.settings[key]){
-						var ele = document.querySelector("select[data-optionparam3='"+key+"']");
-						if (ele){
-							ele.value = response.settings[key].optionparam3;
-							updateSettings(ele);
-						}
-					}
-					if ("optionparam4" in response.settings[key]){
-						var ele = document.querySelector("select[data-optionparam4='"+key+"']");
-						if (ele){
-							ele.value = response.settings[key].optionparam4;
-							updateSettings(ele);
-						}
-					}
-					if ("optionparam5" in response.settings[key]){
-						var ele = document.querySelector("select[data-optionparam5='"+key+"']");
-						if (ele){
-							ele.value = response.settings[key].optionparam5;
-							updateSettings(ele);
-						}
-					}
-
-				} else { // obsolete method
-					var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
-					if (ele){
-						ele.checked = response.settings[key];
-						updateSettings(ele);
-					}
-					var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"']");
-					if (ele){
-						ele.value = response.settings[key];
-						updateSettings(ele);
-					}
-				}
-			}
-			if ("translation" in response.settings){
-				translation = response.settings["translation"];
-				miniTranslate(document.body);
-			}
-		}
+		
 	}
 }
 
@@ -514,6 +547,8 @@ function checkVersion(){
 })(window);
 var urlParams = new URLSearchParams(window.location.search);
 
+const devmode = urlParams.has("devmode");
+	
 function updateURL(param, href) {
 
 	href = href.replace("??", "?");
@@ -529,7 +564,7 @@ function updateURL(param, href) {
 
 }
 
-function updateSettings(ele){
+function updateSettings(ele, sync=true){
 	if (ele.target){
 		ele = this;
 	}
@@ -543,7 +578,7 @@ function updateSettings(ele){
 				var ele1 = document.querySelector("input[data-param1='"+key+"']");
 				if (ele1 && ele1.checked){
 					ele1.checked = false;
-					updateSettings(ele1);
+					updateSettings(ele1, sync);
 				}
 
 			} else if (ele.dataset.param1 == "lightmode"){
@@ -551,9 +586,34 @@ function updateSettings(ele){
 				var ele1 = document.querySelector("input[data-param1='"+key+"']");
 				if (ele1 && ele1.checked){
 					ele1.checked = false;
-					updateSettings(ele1);
+					updateSettings(ele1, sync);
 				}
 			}
+			
+			if (ele.dataset.param1 == "onlytwitch"){
+				var key = "hidetwitch";
+				var ele1 = document.querySelector("input[data-param1='"+key+"']");
+				if (ele1 && ele1.checked){
+					ele1.checked = false;
+					updateSettings(ele1, sync);
+				}
+
+			} else if (ele.dataset.param1 == "hidetwitch"){
+				var key = "onlytwitch";
+				var ele1 = document.querySelector("input[data-param1='"+key+"']");
+				if (ele1 && ele1.checked){
+					ele1.checked = false;
+					updateSettings(ele1, sync);
+				}
+			}
+			
+			document.querySelectorAll("input[data-param1^='"+ele.dataset.param1.split("=")[0]+"']:not([data-param1='"+ele.dataset.param1+"'])").forEach(ele1=>{
+				if (ele1 && ele1.checked){
+					ele1.checked = false;
+					updateSettings(ele1, sync);
+				}
+			});
+				
 		} else {
 			document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace(ele.dataset.param1, "");
 		}
@@ -567,7 +627,10 @@ function updateSettings(ele){
 
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "param1", setting: ele.dataset.param1, "value": ele.checked}, function (response) {});
+		
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "param1", setting: ele.dataset.param1, "value": ele.checked}, function (response) {});
+		}
 
 	} else if (ele.dataset.textparam1){
 		if (ele.value){
@@ -587,8 +650,9 @@ function updateSettings(ele){
 		}
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
-	
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
+		}
 	} else if (ele.dataset.optionparam1){
 		 // don't use value
 		var tmp = document.getElementById("dock").rawURL.split("&"+ele.dataset.optionparam1);
@@ -606,7 +670,9 @@ function updateSettings(ele){
 		
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1", setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1", setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
+		}
 	} else if (ele.dataset.optionparam2){
 		 // don't use value
 		var tmp = document.getElementById("overlay").rawURL.split("&"+ele.dataset.optionparam2);
@@ -624,7 +690,9 @@ function updateSettings(ele){
 		
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2", setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2", setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
+		}
 	///
 	} else if (ele.dataset.optionparam3){
 		 // don't use value
@@ -643,7 +711,9 @@ function updateSettings(ele){
 		
 		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("&&", "&");
 		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam3", setting: ele.dataset.optionparam3, "value": ele.value}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam3", setting: ele.dataset.optionparam3, "value": ele.value}, function (response) {});
+		}
 	} else if (ele.dataset.optionparam4){
 		 // don't use value
 		var tmp = document.getElementById("hypemeter").rawURL.split("&"+ele.dataset.optionparam4);
@@ -661,7 +731,9 @@ function updateSettings(ele){
 		
 		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("&&", "&");
 		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
+		}
 	} else if (ele.dataset.optionparam5){
 		 // don't use value
 		var tmp = document.getElementById("waitlist").rawURL.split("&"+ele.dataset.optionparam5);
@@ -679,7 +751,9 @@ function updateSettings(ele){
 		
 		document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace("&&", "&");
 		document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam5", setting: ele.dataset.optionparam5, "value": ele.value}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam5", setting: ele.dataset.optionparam5, "value": ele.value}, function (response) {});
+		}
 	//
 	} else if (ele.dataset.param2){
 		if (ele.checked){
@@ -689,7 +763,16 @@ function updateSettings(ele){
 		}
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param2", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param2", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
+		}
+		
+		document.querySelectorAll("input[data-param2^='"+ele.dataset.param2.split("=")[0]+"']:not([data-param2='"+ele.dataset.param2+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
 
 	} else if (ele.dataset.param3){
 		if (ele.checked){
@@ -699,7 +782,17 @@ function updateSettings(ele){
 		}
 		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("&&", "&");
 		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param3", setting: ele.dataset.param3, "value": ele.checked}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param3", setting: ele.dataset.param3, "value": ele.checked}, function (response) {});
+		}
+		
+		document.querySelectorAll("input[data-param3^='"+ele.dataset.param3.split("=")[0]+"']:not([data-param3='"+ele.dataset.param3+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
+		
 	} else if (ele.dataset.param4){
 		if (ele.checked){
 			document.getElementById("hypemeter").rawURL = updateURL(ele.dataset.param4, document.getElementById("hypemeter").rawURL);
@@ -708,7 +801,17 @@ function updateSettings(ele){
 		}
 		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("&&", "&");
 		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param4", setting: ele.dataset.param4, "value": ele.checked}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param4", setting: ele.dataset.param4, "value": ele.checked}, function (response) {});
+		}
+		
+		document.querySelectorAll("input[data-param4^='"+ele.dataset.param4.split("=")[0]+"']:not([data-param4='"+ele.dataset.param4+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
+		
 	} else if (ele.dataset.param5){
 		if (ele.checked){
 			document.getElementById("waitlist").rawURL = updateURL(ele.dataset.param5, document.getElementById("waitlist").rawURL);
@@ -717,7 +820,18 @@ function updateSettings(ele){
 		}
 		document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace("&&", "&");
 		document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5", setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5", setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
+		}
+		
+		document.querySelectorAll("input[data-param5^='"+ele.dataset.param5.split("=")[0]+"']:not([data-param5='"+ele.dataset.param5+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
+		
+		
 	} else if (ele.dataset.both){
 		if (ele.checked){
 			document.getElementById("overlay").rawURL = updateURL(ele.dataset.both, document.getElementById("overlay").rawURL);
@@ -730,21 +844,32 @@ function updateSettings(ele){
 		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
 		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
-		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "both", setting: ele.dataset.both, "value": ele.checked}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "both", setting: ele.dataset.both, "value": ele.checked}, function (response) {});
+		}
 
 	} else if (ele.dataset.setting){
-		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
+		}
 		return;
 	} else if (ele.dataset.optionsetting){
-		chrome.runtime.sendMessage({cmd: "saveSetting",  type: "optionsetting", setting: ele.dataset.optionsetting, "value": ele.value}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "optionsetting", setting: ele.dataset.optionsetting, "value": ele.value}, function (response) {});
+		}
 		return;
 	} else if (ele.dataset.textsetting){
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
+		}
 		return;
 	} else if (ele.dataset.numbersetting){
-		chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting", setting: ele.dataset.numbersetting, "value": ele.value}, function (response) {});
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting", setting: ele.dataset.numbersetting, "value": ele.value}, function (response) {});
+		}
 		return;
 	}
+	
 
 	document.getElementById("docklink").innerText = document.getElementById("dock").rawURL;
 	document.getElementById("docklink").href = document.getElementById("dock").rawURL;

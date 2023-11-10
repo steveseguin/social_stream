@@ -137,7 +137,7 @@
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
-		data.hasMembership = "";;
+		data.membership = "";;
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "teams";
@@ -220,7 +220,7 @@
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
-		data.hasMembership = "";;
+		data.membership = "";;
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "teams";

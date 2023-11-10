@@ -116,7 +116,7 @@
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
-		data.hasMembership = "";;
+		data.membership = "";;
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
 		data.type = "wix";

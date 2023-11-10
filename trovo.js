@@ -100,7 +100,6 @@
 	  var chatsticker = "";
 	  var chatbadges = "";
 	  var hasDonation = '';
-	  var hasMembership = '';
 	  var backgroundColor = "";
 	  var textColor = "";
 	
@@ -114,7 +113,7 @@
 	  data.nameColor = nameColor;
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
-	  data.hasMembership = hasMembership;
+	  data.membership = '';
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "trovo";
 	  

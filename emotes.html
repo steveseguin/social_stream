@@ -250,6 +250,10 @@
 		maxShow = parseInt(urlParams.has("limit")) || parseInt(urlParams.get("max")) || 0;
 	}
 	
+	var membersonly = false;
+	if (urlParams.has("membersonly")) {
+		membersonly = true;
+	}
 	
 	if (urlParams.has("hidereplies")) {
 		hidereplies = true;
@@ -522,6 +526,12 @@
 
 		if (!data.chatmessage){
 			return;
+		}
+		
+		if (membersonly){
+			if (!data.membership && !data.hasMembership){
+				return;
+			}
 		}
 		
 		if (data.chatname){

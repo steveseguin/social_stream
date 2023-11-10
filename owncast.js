@@ -69,7 +69,6 @@
 	  var chatmembership = "";
 	  var chatsticker = "";
 	  var hasDonation = '';
-	  var hasMembership = '';
 	  
 	  if (!chatmessage && !hasDonation){return;}
 	  
@@ -97,7 +96,7 @@
 	  data.chatmessage = chatmessage;
 	  data.chatimg = ""; // Doesn't seem to be an avatar image for owncast
 	  data.hasDonation = hasDonation;
-	  data.hasMembership = hasMembership;
+	  data.membership = '';
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "owncast";
 	  

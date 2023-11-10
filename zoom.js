@@ -194,7 +194,7 @@
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
-		data.hasMembership = "";;
+		data.membership = "";;
 		data.contentimg = ""; // ctt;
 		data.textonly = settings.textonlymode || false;
 		data.type = "zoom";
@@ -300,7 +300,7 @@
 		data.chatmessage = question;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
-		data.hasMembership = "";;
+		data.membership = "";;
 		data.contentimg = "";
 		data.question = true;
 		data.type = "zoom";

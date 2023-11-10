@@ -2,7 +2,7 @@
 <html><head>
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
 	<meta content="utf-8" http-equiv="encoding">
-	<script src="popup.js"></script>
+	<script src="popup.js?v=1"></script>
 	<style>
 		:root {
 			--body-background-enabled: #fff;
@@ -153,12 +153,13 @@
 		}
 
 		body {
-			width: 370px;
+			width: 380px;
 			padding: 0;
 			margin: 0;
 			scrollbar-color:#666 #201c29;
 			font-family: var(--font-family);
 			background-color: var(--body-background-disabled);
+			font-size: 12px;
 		}
 
 		::-webkit-scrollbar {
@@ -1011,6 +1012,18 @@
 							</div>
 							<div>
 								<label class="switch">
+									<input type="checkbox" data-param1="hidetwitch">
+									<span class="slider round"></span>
+								</label><span data-translate="hide-source-icon-eg">🚫<img src="twitch.png" class="icon"> Hide Twitch messages (other sources allowed)
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="onlytwitch">
+									<span class="slider round"></span>
+								</label><span data-translate="hide-source-icon-eg">✅<img src="twitch.png" class="icon"> Only show Twitch messages (no other sources)
+							</div>
+							<div>
+								<label class="switch">
 									<input type="checkbox" data-param1="branded">
 									<span class="slider round"></span>
 								</label><span data-translate="show-channel-icon">📺 Show channel icon
@@ -1661,6 +1674,18 @@ The first name listed may be used as the host's name in stream when their name i
 							</span></div>
 							<div>
 								<label class="switch">
+									<input type="checkbox" data-param3="scale=2">
+									<span class="slider round"></span>
+								</label><span data-translate="make-all-emojis-twice-the-size">🐘 Make all emojis twice the size
+							</span></div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param3="membersonly">
+									<span class="slider round"></span>
+								</label><span data-translate="only-show-memeber-emotes">👑 Only show emojis from members (paid subs)
+							</span></div>
+							<div>
+								<label class="switch">
 									<input type="checkbox" data-param3="hidereplies">
 									<span class="slider round"></span>
 								</label><span data-translate="exclude-message-replies-emojies">🗣🚫️ Exclude message @replies emojies
@@ -2258,6 +2283,12 @@ The first name listed may be used as the host's name in stream when their name i
 									<span class="slider round"></span>
 								</label><span data-translate="replace-common-swear-words-with-asterixis">🤬🚫 Replace common swear words with asterixis
 							</span></div>
+							<div title="Allow only words in the goodwords.txt file, otherwise they will be turned into asterixis.">
+								<label class="switch">
+									<input type="checkbox" data-setting="goodwordslist">
+									<span class="slider round"></span>
+								</label><span data-translate="allow-only-good-words-else-asterixis">👼✅ Allow only approved words
+							</span></div>
 							<div title="Filter out messages that might be chat commands.">
 								<label class="switch">
 									<input type="checkbox" data-setting="filtercommands">
@@ -2616,7 +2647,7 @@ The first name listed may be used as the host's name in stream when their name i
 			</div>
 		</div>
 		<a href="https://www.buymeacoffee.com/steveseguin" target="_blank"><img src="./icons/buymeacoffee.png" alt="Buy Me A Coffee" style="float: right; padding-left: 10px; padding-bottom: 10px;height: 33px !important;width: 119.35px !important;" ></a>
-		<p style="text-align: right;"><span data-translate="visit-us-at">
+		<p style="text-align: right;padding-bottom: 11px;"><span data-translate="visit-us-at">
 			Visit us at </span><a href="https://discord.socialstream.ninja" target="_blank"><span data-translate="discord">Discord</span><img class="icon" src="discord.png"></a><br>
 			<i><span data-translate="made-with">Made with</span></i> 💖 <i><span data-translate="for-the-community">for the community</span></i>.
 		</p>

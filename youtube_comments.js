@@ -203,17 +203,17 @@
 
 		if (chatmembership) {
 			if (chatmessage) {
-				hasMembership = '<div class="donation membership">MEMBER CHAT</div>';
+				hasMembership = 'MEMBER CHAT';
 			} else if (giftedmemembership) {
-				hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
+				hasMembership = '>SPONSORSHIP';
 				chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
 			} else {
-				hasMembership = '<div class="donation membership">NEW MEMBER!</div>';
+				hasMembership = 'NEW MEMBER!';
 				chatmessage = "<i>" + chatmembership + "</i>";
 			}
 		} else if (!chatmessage && giftedmemembership) {
 			chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
-			hasMembership = '<div class="donation membership">SPONSORSHIP</div>';
+			hasMembership = 'SPONSORSHIP';
 			// } else if (memeber){
 			//	  hasMembership = '<div class="membership">MEMEBER</div>'; // Just looks too green, and doesn't highlight those using special member options.
 			// } else if (mod){
@@ -228,13 +228,13 @@
 
 		var textColor = "";
 		if (ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color')) {
-			backgroundColor = "background-color: " + ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color') + ";";
-			textColor = "color: #111;";
+			backgroundColor = ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color');
+			textColor = "#111;";
 		}
 
 		if (ele.style.getPropertyValue('--yt-live-chat-sponsor-color')) {
-			backgroundColor = "background-color: " + ele.style.getPropertyValue('--yt-live-chat-sponsor-color') + ";";
-			textColor = "color: #111;";
+			backgroundColor =  ele.style.getPropertyValue('--yt-live-chat-sponsor-color');
+			textColor = "#111;";
 		}
 
 		srcImg = document.querySelector("#input-panel");
@@ -264,7 +264,7 @@
 		data.chatmessage = chatmessage;
 		data.chatimg = chatimg;
 		data.hasDonation = hasDonation;
-		data.hasMembership = hasMembership;
+		data.membership = hasMembership;
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube";
 		try {

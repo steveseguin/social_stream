@@ -62,6 +62,7 @@
 		try {
 			var nameElement = ele.querySelector('span');
 			chatname = escapeHtml(nameElement.textContent.trim());
+			chatname = chatname.split(":")[0];
 			let node = nameElement.nextElementSibling;
 			var msg = "";
 			while (node) {
@@ -121,7 +122,7 @@
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
-		data.hasMembership = "";
+		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		if (settings.detweet){

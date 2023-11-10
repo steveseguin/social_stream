@@ -110,7 +110,7 @@
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
-		data.hasMembership = "";
+		data.membership = "";
 		data.contentimg = "";
 		data.type = "whatnot";
 		

@@ -5,6 +5,18 @@
 		} catch(e){}
 	}
 
+	function getTranslation(key, value=false){
+		if (settings.translation && settings.translation.innerHTML && (key in settings.translation.innerHTML)){ // these are the proper translations
+			return settings.translation.innerHTML[key];
+		} else if (settings.translation && settings.translation.miscellaneous && settings.translation.miscellaneous && (key in settings.translation.miscellaneous)){ 
+			return settings.translation.miscellaneous[key];
+		} else if (value!==false){
+			return value;
+		} else {
+			return key.replaceAll("-", " "); //
+		}
+	}
+
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
@@ -63,7 +75,46 @@
 		});
 		return resp;
 	}
+	
+	function rankToColor(rank, maxRank = 40) {
+	  // Start and end colors in RGB
+	  const startColor = { r: 197, g: 204, b: 218 }; // #4F6692
+	  const midColor = { r: 100, g: 115, b: 225 };    // #2026B0
+	  const endColor = { r: 81, g: 85, b: 255 };      // #0000FF
 
+	  // Determine color stops based on rank
+	  const midRank = parseInt(maxRank/2);
+	  let colorStop;
+	  
+
+	  if (rank <= midRank) {
+		// Calculate how far the rank is between 1 and midRank
+		const ratio = (rank - 1) / (midRank - 1);
+		colorStop = {
+		  r: startColor.r + ratio * (midColor.r - startColor.r),
+		  g: startColor.g + ratio * (midColor.g - startColor.g),
+		  b: startColor.b + ratio * (midColor.b - startColor.b),
+		};
+	  } else {
+		// Calculate how far the rank is between midRank and maxRank
+		const ratio = (rank - midRank) / (maxRank - midRank);
+		colorStop = {
+		  r: midColor.r + ratio * (endColor.r - midColor.r),
+		  g: midColor.g + ratio * (endColor.g - midColor.g),
+		  b: midColor.b + ratio * (endColor.b - midColor.b),
+		};
+	  }
+
+	  // Convert the RGB color stop to a hex color code
+	  const hexColor = `#${Math.round(colorStop.r).toString(16).padStart(2, '0')}` +
+					   `${Math.round(colorStop.g).toString(16).padStart(2, '0')}` +
+					   `${Math.round(colorStop.b).toString(16).padStart(2, '0')}`;
+	  return hexColor;
+	}
+	var lut = [];
+	for (var i =1;i<=40;i++){
+		lut.push(rankToColor(i,40));
+	}
 
 	var savedavatars = {};
 
@@ -82,16 +133,50 @@
 		
 		if (ele.querySelector("[class*='DivTopGiverContainer']")){return;}
 		
-		
+		var membership = "";
 		var chatbadges = "";
+		var rank = 0;
+		
+		var nameColor = "";
+		
 		try{
 			var cb = ele.children[1].querySelectorAll("img[class*='ImgBadgeChatMessage'], img[class*='ImgCombineBadgeIcon']");
 			if (cb.length){
 				chatbadges = [];
 				cb.forEach(cbimg =>{
-					if (cbimg.src){
-						chatbadges.push(cbimg.src);
-					}
+					try {
+						if (cbimg.src){
+							chatbadges.push(cbimg.src);
+							if (cbimg.src.includes("/moderator_")){
+								if (!settings.nosubcolor) {
+									nameColor = "#F5D5D1";
+								}
+							} else if (cbimg.src.includes("/moderater_")){
+								if (!settings.nosubcolor) {
+									nameColor = "#F5D5D1";
+								}
+							} else if (cbimg.src.includes("/sub_")){
+								membership = getTranslation("subscriber", "SUBSCRIBER");
+								if (!settings.nosubcolor) {
+									nameColor = "#139F1D";
+								}
+							} else if (cbimg.src.includes("/subs_")){
+								membership = getTranslation("subscriber", "SUBSCRIBER");
+								if (!settings.nosubcolor) {
+									nameColor = "#139F1D";
+								}
+							} else if (!rank && !nameColor && cbimg.src.includes("/grade_")){
+								try {
+									rank = parseInt(cbimg.nextElementSibling.innerText) || 1;
+									if (!settings.nosubcolor) {
+										if (rank>40){rank=40;}
+										nameColor = lut[rank];
+									}
+								} catch(e){
+								}
+							}
+						}
+					} catch(e){}
 				});
 			}
 		} catch(e){}
@@ -122,7 +207,6 @@
 		
 		if (chatmessage == "Moderator"){
 			chatmessage = "";
-			//console.log(ele);
 		}
 		
 		try {
@@ -181,17 +265,20 @@
 				return;
 			}
 		}
+		
 	  
 		var data = {};
 		data.chatname = chatname;
 		data.chatbadges = chatbadges;
 		data.backgroundColor = "";
+		data.nameColor = nameColor;
 		data.textColor = "";
 		data.chatmessage = chatmessage;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
-		data.hasMembership = "";;
+		data.membership = membership;
 		data.contentimg = "";
+		// data.metaClass = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "tiktok";
 		data.event = ital; // if an event or actual message

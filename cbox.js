@@ -112,7 +112,7 @@
 		data.chatmessage = msg;
 		data.chatimg = "";
 		data.hasDonation = "";
-		data.hasMembership = "";
+		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "cbox";

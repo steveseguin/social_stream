@@ -31,8 +31,8 @@
 		if ("settings" in response){
 			settings = response.settings;
 		}
-		if ("isExtensionOn" in response){
-			isExtensionOn = response.isExtensionOn;
+		if ("state" in response){
+			isExtensionOn = response.state;
 			
 			
 			if (document.getElementById("startupbutton")){
@@ -59,8 +59,8 @@
 						settings = request.settings;
 						
 					}
-					if ("isExtensionOn" in request){
-						isExtensionOn = request.isExtensionOn;
+					if ("state" in request){
+						isExtensionOn = request.state;
 						
 						if (document.getElementById("startupbutton")){
 							if (isExtensionOn){

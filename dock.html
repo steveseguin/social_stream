@@ -398,7 +398,6 @@
 			max-width: 24px;
 			max-height: 24px;
 		}
-
 		.hl-message svg {
 			position:relative;
 			margin: auto 1px;
@@ -407,12 +406,24 @@
 			height: 24px;
 			max-width: 24px;
 			max-height: 24px;
-		} 
-		.notcompactmode .hl-message img{
-			height: 17px;
-			max-height: 17px;
 		}
-
+		
+		.hl-message .hl-content img {
+			max-width: 36px;
+		}
+		.hl-message .hl-content svg {
+			max-width: 36px;
+		}
+		
+		.notcompactmode .hl-message img{
+			height: 19px;
+			max-height: 19px;
+		}
+		.notcompactmode .hl-content img{
+			max-width: 28.5px;
+			width: 28.5px;
+		}
+		
 		.hl-message .hl-badge svg {
 			max-height: 16px;
 			margin-top: 1px;
@@ -1892,6 +1903,16 @@
 
 	if (urlParams.has("disabletimeout")) {
 		autoTimeoutEnabled = false;
+	}
+	
+	var onlyTwitch= false;
+	var hideTwitch = false;
+	
+	if (urlParams.has("onlytwitch")) {
+		onlyTwitch = true;
+	} 
+	if (urlParams.has("hidetwitch")) {
+		hideTwitch = true;
 	}
 	
 	var filterNamesNotMessages = false;
@@ -3677,6 +3698,7 @@
 				message.chatbadges = "";
 				message.backgroundColor = "";
 				message.textColor = "";
+				message.nameColor = "";
 				message.chatimg = "";
 				message.membership = "";;
 				message.contentimg = "";
@@ -3723,6 +3745,7 @@
 				message.chatbadges = "";
 				message.backgroundColor = "";
 				message.textColor = "";
+				message.nameColor = "";
 				message.chatimg = "";
 				message.membership = "";;
 				message.contentimg = "";
@@ -3910,13 +3933,14 @@
 		if (filterAddNameAndTime) {
 			if (!filterNamesNotMessages && node.textContent.toLowerCase().includes(filtering)) {
 			
-			} else if (filterNamesNotMessages && 
-						node.querySelector(".hl-name") && 
-						filtering.split(",").map(element => {
-							return element.toLowerCase().trim();
-						}).includes(node.querySelector(".hl-name").textContent.toLowerCase().trim())){
+			} else if (filterNamesNotMessages && node.querySelector(".hl-name") && filtering.split(",").map(element => {return element.toLowerCase().trim();}).includes(node.querySelector(".hl-name").textContent.toLowerCase().trim())){
 					
 			} else if (node.dataset.sourceType && (("source:"+node.dataset.sourceType) == filtering)){ // youtube, twitch, etc.
+			
+			} else if (node.dataset.sourceType && (("source:!"+node.dataset.sourceType) == filtering)){ // youtube, twitch, etc.
+				node.classList.add("hide");
+				
+			} else if (eles[i].dataset.sourceType && filtering.startsWith("source:!")){ // youtube, twitch, etc.
 			
 			} else {
 				node.classList.add("hide"); // Filter is typed - Not found; them hide them
@@ -3927,11 +3951,17 @@
 		} else {
 		    var nodeValue = node.querySelector(".hl-message");
 			
-			
 			if (!nodeValue){
 				nodeValue.classList.add("hide");
 				return;
-			} else if (nodeValue.innerText.toLowerCase().includes(filtering)) {
+			} else if (nodeValue.textContent.toLowerCase().includes(filtering)) {
+			
+			} else if (node.dataset.sourceType && (("source:"+node.dataset.sourceType) == filtering)){ // youtube, twitch, etc.
+			
+			} else if (node.dataset.sourceType && (("source:!"+node.dataset.sourceType) == filtering)){ // youtube, twitch, etc.
+				node.classList.add("hide");
+				
+			} else if (eles[i].dataset.sourceType && filtering.startsWith("source:!")){ // youtube, twitch, etc.
 			
 			} else {
 				node.classList.add("hide");
@@ -3940,37 +3970,41 @@
 		}
 	}
 
-	function filterMessages(keyword="") {
+	function filterMessages(filtering="") {
 		var eles = document.querySelectorAll("#output > div");
 		var elesValue = document.querySelectorAll("#output .hl-message");
 		if (eles.length !== elesValue.length)
 			return;
 
-		keyword = keyword.trim().toLowerCase();
-		filtering = keyword;
+		filtering = filtering.trim().toLowerCase();
 
 		// With user name and message time
 		if (filterAddNameAndTime) {
 			for (var i = 0; i < eles.length; i++) {
 				// No filter is typed; then show all
-				console.log(("source:"+eles[i].dataset.sourceType) + " " +keyword);
-				if (!keyword) {
+				if (!filtering) {
 					eles[i].classList.remove("hide");
 					
 				// Filter is typed - Found; then show them
-				} else if (!filterNamesNotMessages && eles[i].textContent.toLowerCase().includes(keyword)) {
+				} else if (!filterNamesNotMessages && eles[i].textContent.toLowerCase().includes(filtering)) {
 					eles[i].classList.remove("hide");
+					
 				} else if (filterNamesNotMessages && 
 						eles[i].querySelector(".hl-name") && 
 						filtering.split(",").map(element => {
 							return element.toLowerCase().trim();
 						}).includes(eles[i].querySelector(".hl-name").textContent.toLowerCase().trim())){
-						
-						console.log("MATCHED");
 					eles[i].classList.remove("hide");
 					
-				} else if (eles[i].dataset.sourceType && (("source:"+eles[i].dataset.sourceType) == keyword)){ // youtube, twitch, etc.
+				} else if (eles[i].dataset.sourceType && (("source:"+eles[i].dataset.sourceType) == filtering)){ // youtube, twitch, etc.
 					eles[i].classList.remove("hide");
+					
+				} else if (eles[i].dataset.sourceType && (("source:!"+eles[i].dataset.sourceType) == filtering)){ // youtube, twitch, etc.
+					eles[i].classList.add("hide");
+					
+				} else if (eles[i].dataset.sourceType && filtering.startsWith("source:!")){ // youtube, twitch, etc.
+					eles[i].classList.remove("hide");
+					
 				} else {
 					eles[i].classList.add("hide"); // Filter is typed - Not found; them hide them
 				}
@@ -3980,14 +4014,22 @@
 		} else {
 			for (var i = 0; i < eles.length; i++) {
 				// No filter is typed; then show all
-				if (!keyword) {
+				if (!filtering) {
 					eles[i].classList.remove("hide");
 
 				// Filter is typed - Found; then show them
-				} else if (elesValue[i].innerText.toLowerCase().includes(keyword)) {
+				} else if (elesValue[i].innerText.toLowerCase().includes(filtering)) {
 					eles[i].classList.remove("hide");
-
-				// Filter is typed - Not found; them hide them
+					
+				} else if (eles[i].dataset.sourceType && (("source:"+eles[i].dataset.sourceType) == filtering)){ // youtube, twitch, etc.
+					eles[i].classList.remove("hide");
+					
+				} else if (eles[i].dataset.sourceType && (("source:!"+eles[i].dataset.sourceType) == filtering)){ // youtube, twitch, etc.
+					eles[i].classList.add("hide");
+					
+				} else if (eles[i].dataset.sourceType && filtering.startsWith("source:!")){ // youtube, twitch, etc.
+					eles[i].classList.remove("hide");
+					
 				} else {
 					eles[i].classList.add("hide");
 				}
@@ -4383,6 +4425,15 @@
 
 			var invisible = false;
 
+			if  (hideTwitch && (data.type==="twitch")){
+				// this is a twitch message, and we're hiding them.
+				return;
+			}
+			if (onlyTwitch && (data.type!=="twitch")){
+				// this is not a twitch message, so we're hiding them
+				console.log("onlyTwitch");
+				return;
+			}
 
 			if (!("id" in data)){
 				data.id = Date.now() + parseInt(Math.random()*1000000);

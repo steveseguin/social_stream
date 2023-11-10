@@ -316,7 +316,7 @@
 		data.chatimg = "";
 	  }
 	  data.hasDonation = hasDonation;
-	  data.hasMembership = "";
+	  data.membership = "";
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "twitch";
 	  
@@ -378,7 +378,7 @@
 	  data.chatmessage = getAllContentNodes(ele);
 	  data.chatimg = "";
 	  data.hasDonation = "";
-	  data.hasMembership = "";
+	  data.membership = "";
 	  data.type = "twitch";
 	  data.textonly = settings.textonlymode || false;
 	  data.event = true;
@@ -475,8 +475,24 @@
 				onElementInsertedTwitch(document.querySelector(".chat-room__content"), function(element){
 				  setTimeout(function(element){processMessage(element);},20, element); // 20ms to give it time to load the message, rather than just the container
 				});
+				
+				if (document.querySelector('[data-a-target="consent-banner-accept"]')){
+					document.querySelector('[data-a-target="consent-banner-accept"]').click();
+					if (document.querySelector('.consent-banner')){
+						document.querySelector('.consent-banner').remove();
+					}
+				}
 			},4500);
-		} 
+		}
+		
+		if (document.querySelector('[data-a-target="consent-banner-accept"]')){
+			document.querySelector('[data-a-target="consent-banner-accept"]').click();
+			if (document.querySelector('.consent-banner')){
+				document.querySelector('.consent-banner').remove();
+			}
+		}
+		
+		
 	},500);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
