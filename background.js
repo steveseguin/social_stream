@@ -163,6 +163,8 @@ if (typeof(chrome.runtime)=='undefined'){
 	}
 }
 
+console.log("isSSAPP: "+isSSAPP);
+
 String.prototype.replaceAllCase = function(strReplace, strWith) {
     // See http://stackoverflow.com/a/3561711/556609
     var esc = strReplace.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -3555,7 +3557,9 @@ window.onload = async function() {
 		console.log("Loading settings from the main file into the background.js");
 		chrome.storage.sync.get(properties, function(item){ // we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
 			console.log("properties",item);
-			if (item && item.settings){ // ssapp
+			if (isSSAPP && item){
+				loadSettings(item, false);
+			} else if (item && item.settings){ // ssapp
 				chrome.storage.sync.remove(["settings"], function(Items) { // ignored
 					console.log("upgrading from sync to local storage");
 				});
@@ -3566,14 +3570,18 @@ window.onload = async function() {
 			} else {
 				chrome.storage.local.get(["settings"], function(item2){
 					console.log("item2",item2);
-					if (item2 && item2.settings){
-						if (item){
-							item.settings = item2.settings;
-						} else {
-							item = item2;
+					if (item){
+						if (item2 && item2.settings){
+							if (item){
+								item.settings = item2.settings;
+							} else {
+								item = item2;
+							}
 						}
-					} 
-					loadSettings(item, false);
+						loadSettings(item, false);
+					} else if (item2){
+						loadSettings(item2, false);
+					}
 				});
 			}
 		});
