@@ -63,8 +63,6 @@
 			var nameElement = ele.querySelector('span');
 			chatname = escapeHtml(nameElement.textContent.trim());
 			chatname = chatname.split(":")[0];
-			
-			
 			let node = nameElement.nextElementSibling;
 			var msg = "";
 			while (node) {
@@ -84,7 +82,6 @@
 			}
 			
 			msg = msg.trim();
-			
 
 		} catch(e){
 			return;
