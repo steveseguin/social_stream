@@ -271,10 +271,12 @@ body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
 } 
 
 .hl-name{
-	padding: 2px 10px
+	padding: 2px 10px !important;
 }
 ```
 Sample CSS of which you can use to customize some of the basic styles. There's not much that you can't do via CSS in this way, but you can edit things further at a code-level if needed. Mac/Linux users may face issues with OBS not liking self-hosted versions of the index/dock file, but it's not an issue for the PC version.
+
+It's important in some cases to add `!important` at the end of some CSS values, to force them into use.
 
 #### Removing text-outlines
 Try:
@@ -283,6 +285,19 @@ body {
 	text-shadow: 0 0 black;
 }
 ```
+
+#### Changing the background alternative line colors in the dock
+In OBS browser source, for the CSS style, add the following to customize the alternative colors
+```
+:root {
+    --highlight-base: #333!important;
+    --highlight-base2: #888!important;
+    --highlight-compact: #333!important;
+    --highlight-compact2: #888!important;
+}
+```
+Note that `--highlight-compact` and `--highlight-compact2` are needed if using &compact mode, while the other two are the default background alternative colors.  Using `!important` is needed to force override the style.
+
 ### Changing CSS without OBS
 
 You can also pass custom CSS to the dock and index page via URL parameters using either &css or &b64css.
