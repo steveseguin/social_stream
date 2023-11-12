@@ -1623,7 +1623,9 @@ function sendToS10(data){
 			
 			if (!data.chatname){return}
 			
-			msg.displayName = data.chatname 
+			if (data.type && (data.type === 'stageten')){return;}
+			
+			msg.displayName = data.chatname;
 			
 			if (data.type && (data.type == "twitch") && data.chatname){
 				msg.displayPictureUrl = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.chatname); // 150x150
@@ -3345,6 +3347,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 
 				messageTimeout = Date.now();
 				var msg = {};
+				msg.tid = data.tid;
 				msg.response = "@"+data.chatname+", "+joke["setup"];
 				processResponse(msg);
 				setTimeout(function(msg, punch){

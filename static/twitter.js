@@ -255,6 +255,62 @@
 	  pushMessage(data);
 	};
 	
+	document.addEventListener('keydown', function(event) {
+		if (event.ctrlKey && event.altKey && event.shiftKey && event.key === 'V') {
+			console.log('Ctrl + Alt + Shift + V pressed!');
+			downloadCurrentVideo();
+		}
+	});
+	function downloadCurrentVideo(){
+		let videoElement = document.querySelector('video');
+		let recorder;
+		let data = [];
+		function createRecorder() {
+			let stream = videoElement.captureStream();
+			recorder = new MediaRecorder(stream);
+			recorder.ondataavailable = event => data.push(event.data);
+			recorder.onstop = downloadVideo;
+		}
+		function isVideoPlaying(video) {
+			return !!(video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2);
+		}
+		function downloadVideo() {
+			console.log("finished saving video");
+			
+			let blob = new Blob(data, { type: 'video/mp4' });
+			let url = URL.createObjectURL(blob);
+			let a = document.createElement("a");
+			a.href = url;
+			let segments = location.href.split('/');
+			let filename = segments[segments.length - 1];
+			a.download = filename+'.mp4';
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			window.URL.revokeObjectURL(url);
+			recorder = null;
+			data = [];
+			videoElement.pause();
+		}
+		
+		['pause', 'ended', 'error'].forEach(event => {
+			videoElement.addEventListener(event, () => {
+				if (recorder && recorder.state === 'recording') {
+					recorder.stop();
+				}
+			});
+		});
+		
+		data = [];
+		createRecorder();
+		videoElement.currentTime = 0;
+		recorder.start();
+		console.log("started saving video");
+		if (!isVideoPlaying(videoElement)){
+			videoElement.play();
+		}
+	}
+	
 	function checkButtons(){
 		
 		if (!isExtensionOn){return;}
@@ -301,7 +357,6 @@
 			try {
 				eles[eles.length - 1].querySelector("a > div > span > div > div > span > span").innerText = "Tweet";
 			} catch(e){}
-					
 					
 			var button  = document.createElement("button");
 			button.onclick = function(){

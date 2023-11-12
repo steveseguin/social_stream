@@ -852,7 +852,15 @@ span.zero-width-parent img.zero-width-emote {
 		hideNames = true;
 	}
 	
+	var onlyTwitch= false;
+	var hideTwitch = false;
 	
+	if (urlParams.has("onlytwitch")) {
+		onlyTwitch = true;
+	} 
+	if (urlParams.has("hidetwitch")) {
+		hideTwitch = true;
+	}
 	
 	var scale = false;
 	if (urlParams.has("scale")){
@@ -1429,6 +1437,15 @@ span.zero-width-parent img.zero-width-emote {
 		if (data && data.contents){
 		
 			if (onlyshowdonos && !data.contents.hasDonation){
+				return;
+			}
+			
+			if  (hideTwitch && (data.contents.type==="twitch")){
+				// this is a twitch message, and we're hiding them.
+				return;
+			}
+			if (onlyTwitch && (data.contents.type!=="twitch")){
+				// this is not a twitch message, so we're hiding them
 				return;
 			}
 		

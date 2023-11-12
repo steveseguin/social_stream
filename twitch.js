@@ -444,6 +444,8 @@
 									ele.ignore = true;
 									callback(ele);
 								}
+							} else if (settings.captureevents && mutation.addedNodes[i].dataset && (mutation.addedNodes[i].dataset.testSelector=="user-notice-line")){
+								processEvent(mutation.addedNodes[i]);
 							} else if (settings.captureevents && mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("user-notice-line"))){
 								processEvent(mutation.addedNodes[i]);
 							}
