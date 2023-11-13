@@ -304,11 +304,15 @@
 		data = [];
 		createRecorder();
 		videoElement.currentTime = 0;
-		recorder.start();
 		console.log("started saving video");
 		if (!isVideoPlaying(videoElement)){
-			videoElement.play();
+			videoElement.play().then(() => {
+				recorder.start();
+			});
+		} else {
+			recorder.start();
 		}
+		
 	}
 	
 	function checkButtons(){
