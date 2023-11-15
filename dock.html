@@ -4534,7 +4534,6 @@
 			if (data.chatmessage){
 				if (stripHTML){
 					data.chatmessage = stripHtmlFunction(data.chatmessage);
-					data.chatmessage = data.chatmessage.trim();
 				} else if (data.event){ 
 					data.chatmessage = data.chatmessage.trim();
 					data.chatmessage = "<i>"+data.chatmessage+"</i>";
@@ -4590,7 +4589,11 @@
 			if (data.chatmessage && stripEmojis){
 				data.chatmessage = data.chatmessage.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "").replace(/[\u200D\uFE0F]/g, ""); // Remove zero-width joiner and variation selector
 				data.chatmessage = data.chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig, ""); // fail safe?
-			} 
+			}
+			
+			if (data.chatmessage){
+				data.chatmessage = data.chatmessage.replace(/[\r\n]+/g, '').replace(/\s+/g, ' ').trim();
+			}
 
 			var chatmessage = data.chatmessage || "";  
 			
