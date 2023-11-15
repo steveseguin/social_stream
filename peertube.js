@@ -121,23 +121,38 @@
 	var settings = {};
 	// settings.textonlymode
 	// settings.captureevents
+	//var counter = 0;
 	
-	
+	var counter = 3;
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
+			if (response.state){
+				if (!localStorage.getItem("access_token") && !document.querySelector(".chat-content__messages")){
+					if (location.href.includes("/router/webchat/room/")){
+						var conf = confirm("You might need to sign into this peer-tube site first to view chat.\n\nWould you like to try that now?");
+						if (conf){
+							location.href = "https://"+location.hostname+"/login";
+						}
+						
+					}
+				}
+			}
+			
 		}
 	});
-
+	
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				
 				if ("focusChat" == request){
 					document.querySelector('textarea').focus();
 					sendResponse(true);
 					return;
 				}
 				if (typeof request === "object"){
+					
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
@@ -170,8 +185,10 @@
 		observer.observe(target, config);
 	}
 	console.log("social stream injected");
-
+	
+	
 	var integrateInterval = setInterval(function(){
+		
 		if (document.querySelector(".chat-content__messages")){
 			if (!document.querySelector(".chat-content__messages").marked){
 				clearInterval(integrateInterval);

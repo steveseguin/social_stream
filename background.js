@@ -11,6 +11,15 @@ var sentimentAnalysisLoaded = false;
 var connectedPeers = {};	
 var isSSAPP = false;
 
+var urlParams = new URLSearchParams(window.location.search);
+var devmode = urlParams.has("devmode") || false;
+
+function log(msg){
+	if (devmode){
+		console.log(msg);
+	}
+}
+
 function generateStreamID(){
 	var text = "";
 	var possible = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
@@ -41,7 +50,7 @@ if (typeof(chrome.runtime)=='undefined'){
 		let response = await ipcRenderer.sendSync('fromBackground',data);
 		if (typeof(callback) == "function"){
 			callback(response);
-			console.log(response);
+			log(response);
 		}
 	}; */
 	
@@ -51,9 +60,9 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.storage = {};
 	chrome.storage.sync = {};
 	chrome.storage.sync.set = function(data){
-		console.log("SYNC SET",data);
+		log("SYNC SET",data);
 		ipcRenderer.sendSync('storageSave',data);
-		console.log("ipcRenderer.sendSync('storageSave',data);");
+		log("ipcRenderer.sendSync('storageSave',data);");
 	};
 	chrome.storage.sync.get = async function(arg, callback){
 		var response = await ipcRenderer.sendSync('storageGet',arg);
@@ -70,20 +79,21 @@ if (typeof(chrome.runtime)=='undefined'){
 		callback(response);
 	};
 	chrome.storage.local.set = function(data){
-		console.log("LOCAL SYNC SET",data);
+		log("LOCAL SYNC SET",data);
 		ipcRenderer.sendSync('storageSave',data);
-		console.log("ipcRenderer.sendSync('storageSave',data);");
+		log("ipcRenderer.sendSync('storageSave',data);");
 	};
 	
 	
 	chrome.tabs = {};
-	chrome.tabs.query = function(a,callback){
-		console.log("chrome.tabs.query");
-		var tabs = [{url:"urlhere",id:1}];
+	chrome.tabs.query = async function(a,callback){
+		var response = await ipcRenderer.sendSync('getTabs',{});
 		
-		// 
+		
+		log("chrome.tabs.query");
+		log(response);
 		if (callback){
-			callback(tabs);
+			callback(response);
 		}
 	}
 	
@@ -92,7 +102,7 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.debugger.onDetach = {};
 	chrome.debugger.onDetach.addListener = function(){	};
 	chrome.debugger.attach = function(a,b,c){
-		console.log("chrome.debugger.attach",c);
+		log("chrome.debugger.attach",c);
 		c();
 		 // { tabId: tabs[i].id },  "1.3", onAttach.bind(null, 
 		 // onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false
@@ -105,17 +115,17 @@ if (typeof(chrome.runtime)=='undefined'){
 		}
 	};
 	
-	chrome.debugger.sendCommand = async function(a=null,b=null,c=null,callback=null){
-		//console.log("SEND KEY INPUT COMMAND",c);
-		if (c){
-			c.tab = 1;
+	chrome.debugger.sendCommand = async function(a=null,b=null,c=null,callback=null){ // tabId:tabid
+		//log("SEND KEY INPUT COMMAND",c);
+		if (c ){
+			c.tab = a.tabId;
 			var response = await ipcRenderer.sendSync('sendInputToTab',c); // sendInputToTab
-			console.log(response);
+			log(response);
 			if (callback){
 				callback(response);
 			}
 		} else {
-			console.log("C isn't set");
+			log("C isn't set");
 		}
 	}
 	
@@ -128,22 +138,26 @@ if (typeof(chrome.runtime)=='undefined'){
 	};
 	
 	ipcRenderer.on('fromMain', (event, ...args) => {
-		//console.log("FROM MAIN",args[0]);
+		//log("FROM MAIN",args[0]);
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
 		onMessageCallback(args[0], sender, function(response){
+			if (event.returnValue){
+				event.returnValue = response;
+			}
 			ipcRenderer.send('fromBackgroundResponse',response);
 		});
+		
 	})
 	
 	ipcRenderer.on('fromPopup', (event, ...args) => {
-		//console.log("FROM POP UP (redirected)", args[0]);
+		//log("FROM POP UP (redirected)", args[0]);
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
 		onMessageCallback(args[0], sender, function(response){  // (request, sender, sendResponse)  
-			//console.log("sending response to pop up:",response);
+			//log("sending response to pop up:",response);
 			ipcRenderer.send('fromBackgroundPopupResponse',response);
 		});
 	})
@@ -163,7 +177,7 @@ if (typeof(chrome.runtime)=='undefined'){
 	}
 }
 
-console.log("isSSAPP: "+isSSAPP);
+log("isSSAPP: "+isSSAPP);
 
 String.prototype.replaceAllCase = function(strReplace, strWith) {
     // See http://stackoverflow.com/a/3561711/556609
@@ -282,7 +296,7 @@ var password = false;
 
 function loadSettings(item, resave=false){
 	
-	console.log("loadSettings (or saving new settings)", item);
+	log("loadSettings (or saving new settings)", item);
 	
 	let reloadNeeded = false;
 	
@@ -371,9 +385,9 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 	}
 }
 async function changeLg(lang) {
-	console.log("changeLg: "+lang);
+	log("changeLg: "+lang);
 	if (!lang){
-		console.log("DISABLING TRANSLATIONS");
+		log("DISABLING TRANSLATIONS");
 		settings.translation = false;
 		chrome.storage.local.set({
 			settings: settings
@@ -401,13 +415,13 @@ async function changeLg(lang) {
 				chrome.runtime.lastError;
 				pushSettingChange();
 			}).catch(function(e){
-				console.log(e);
+				log(e);
 			});
 		} catch(e){
-			console.log(e);
+			log(e);
 		}
 	}).catch(function(err) {
-		console.log(err);
+		log(err);
 	});
 	
 }
@@ -493,7 +507,7 @@ async function loadmidi(){
 		settings.midiConfig = JSON.parse(midiConfigFile);
 	} catch(e){
 		settings.midiConfig = false;
-		console.log(e);
+		log(e);
 		alert("File does not contain a valid JSON structure");
 	}
 	chrome.storage.local.set({
@@ -679,7 +693,7 @@ async function importSettings(item){
 	}; */
 	 
 	var importFile = await window.showOpenFilePicker();
-	console.log(importFile);
+	log(importFile);
 	try {
 		importFile = await importFile[0].getFile();
 		importFile = await importFile.text(); // fail if IPC
@@ -698,14 +712,14 @@ var Url2ChannelImg = {};
 var vid2ChannelImg = {};
 
 function getYoutubeAvatarImageFallback(videoid, url){ // getting it from scraping youtube as fallback
-	console.log("getYoutubeAvatarImageFallback triggered");
+	log("getYoutubeAvatarImageFallback triggered");
 	fetch("https://www.youtube.com/watch?v="+videoid).then((response) => response.text()).then((data) => {
 		try{
 			let avatarURL = data.split('thumbnails":[{"url":"')[1].split('"')[0];
 			if (avatarURL.startsWith("https://")){
 				Url2ChannelImg[url] = avatarURL;
 				vid2ChannelImg[videoid] = avatarURL;
-				console.log("getYoutubeAvatarImageFallback: "+avatarURL);
+				log("getYoutubeAvatarImageFallback: "+avatarURL);
 			} 
 		} catch(e){
 		}
@@ -719,7 +733,7 @@ function getYoutubeAvatarImageMain(videoid, url){ // steves api server
 		if (this.responseText.startsWith("https://")){
 			Url2ChannelImg[url] = this.responseText;
 			vid2ChannelImg[videoid] = this.responseText;
-			console.log("getYoutubeAvatarImageMain: "+this.responseText);
+			log("getYoutubeAvatarImageMain: "+this.responseText);
 		} else {
 			getYoutubeAvatarImageFallback(videoid, url)
 		}
@@ -737,7 +751,7 @@ function getYoutubeAvatarImage(url, skip=false){
 		Url2ChannelImg[url] = ""; // prevent spamming of the API
 		
 		var videoid = YouTubeGetID(url);
-		console.log("videoid: "+videoid);
+		log("videoid: "+videoid);
 		if (videoid){
 			if (videoid in vid2ChannelImg){return vid2ChannelImg[videoid];}
 			vid2ChannelImg[videoid] = "";
@@ -868,7 +882,7 @@ function getColorFromName(str) {
 var intervalMessages = {};
 
 function updateExtensionState(sync=true){
-	console.log("updateExtensionState", isExtensionOn);
+	log("updateExtensionState", isExtensionOn);
 	
 	if (isExtensionOn){
 		chrome.browserAction.setIcon({path: "/icons/on.png"});
@@ -916,7 +930,7 @@ function updateExtensionState(sync=true){
 
 chrome.runtime.onMessage.addListener(
     async function (request, sender, sendResponse) {
-		console.log("processing messge:",request);
+		log("processing messge:",request);
 		try{
 			if (request.cmd && request.cmd === "setOnOffState") { // toggle the IFRAME (stream to the remote dock) on or off
 				isExtensionOn = request.data.value;
@@ -1175,7 +1189,7 @@ chrome.runtime.onMessage.addListener(
 					try{
 						request.message = await applyBotActions(request.message, sender.tab); // perform any immediate actions
 						if (request.message===null){return;}
-					} catch(e){console.log(e);}
+					} catch(e){log(e);}
 
 					sendToDestinations(request.message); // send the data to the dock
 				} else {
@@ -1652,7 +1666,7 @@ function sendToS10(data){
 			xhr.setRequestHeader('content-type', 'application/json');
 
 			xhr.onload = function() {
-			    // console.log(xhr.response);
+			    // log(xhr.response);
 			};
 
 			xhr.send(JSON.stringify(msg));
@@ -1872,7 +1886,7 @@ async function openchat(target=null){
 	});
 
 	var activeurls = await promise;
-	console.log(activeurls);
+	log(activeurls);
 
 	function openURL(input, newWindow=false, poke=false){
 		var matched = false;
@@ -1937,14 +1951,14 @@ async function openchat(target=null){
 		fetch("https://www.youtube.com/c/"+settings.youtube_username.textsetting+"/live").then((response) => response.text()).then((data) => {
 			try{
 				let videoID = data.split('{"videoId":"')[1].split('"')[0];
-				console.log(videoID);
+				log(videoID);
 				let url = "https://www.youtube.com/live_chat?is_popout=1&v="+videoID;
 				openURL(url, true);
 			} catch(e){
 				fetch("https://www.youtube.com/"+settings.youtube_username.textsetting+"/live").then((response) => response.text()).then((data) => {
 					try{
 						let videoID = data.split('{"videoId":"')[1].split('"')[0];
-						console.log(videoID);
+						log(videoID);
 						let url = "https://www.youtube.com/live_chat?is_popout=1&v="+videoID;
 						openURL(url, true);
 					} catch(e){
@@ -1958,7 +1972,7 @@ async function openchat(target=null){
 			fetch("https://www.youtube.com/"+settings.youtube_username.textsetting+"/live").then((response) => response.text()).then((data) => {
 				try{
 					let videoID = data.split('{"videoId":"')[1].split('"')[0];
-					console.log(videoID);
+					log(videoID);
 					let url = "https://www.youtube.com/live_chat?is_popout=1&v="+videoID;
 					openURL(url, true);
 				} catch(e){
@@ -2393,7 +2407,7 @@ function sendToDisk(data){
 
 
 function loadIframe(streamID, pass=false){  // this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
-	console.log("LOAD IFRAME VDON BG");
+	log("LOAD IFRAME VDON BG");
 	if (iframe){
 		if (!pass){
 			pass = "false";
@@ -2423,11 +2437,11 @@ function onDetach(debuggeeId) {  // for faking user input
 try{
 	chrome.debugger.onDetach.addListener(onDetach);
 } catch(e){
-	console.log("'chrome.debugger' not supported by this browser");
+	log("'chrome.debugger' not supported by this browser");
 }
 function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for faking user input
   if (chrome.runtime.lastError) { 
-    //console.log(chrome.runtime.lastError.message);
+    //log(chrome.runtime.lastError.message);
     return;
   }
   debuggerEnabled[debuggeeId.tabId] = true;
@@ -2545,7 +2559,7 @@ eventer(messageEvent, async function (e) {
 				if (e.data.UUID in connectedPeers){
 					delete connectedPeers[e.data.UUID];
 				}
-				//console.log(connectedPeers);
+				//log(connectedPeers);
 			} else if (e.data.UUID && ("value" in e.data) && !e.data.value && (e.data.action == "view-connection")){ // flip this
 				if (e.data.UUID in connectedPeers){
 					delete connectedPeers[e.data.UUID];
@@ -2679,7 +2693,7 @@ function pokeSite(url){
 
 				published[tabs[i].url] = true;
 				//messageTimeout = Date.now();
-				// console.log(tabs[i].url);
+				// log(tabs[i].url);
 				if (tabs[i].url.startsWith(url)){
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
@@ -2809,7 +2823,7 @@ function processResponse(data, reverse=false, metadata=null){
 				} else if (metadata && settings.fancystageten && tabs[i].url.includes(".stageten.tv/channel")){  // twitch, but there's also cases for youtube/facebook
 					
 					try {
-						console.log("SENDING ORIGINAL RAW DATA TO S10");
+						log("SENDING ORIGINAL RAW DATA TO S10");
 						chrome.tabs.sendMessage(tabs[i].id, {metadata:metadata}, function(response=false) {
 							chrome.runtime.lastError;
 						});
@@ -2833,7 +2847,7 @@ function processResponse(data, reverse=false, metadata=null){
 				}
 			} catch(e){
 				chrome.runtime.lastError;
-				//console.log(e);
+				//log(e);
 			}
 		}
 	});
@@ -3049,7 +3063,7 @@ function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=f
 		});
 
 	} catch(e){
-		console.log(e);
+		log(e);
 		if (debuggerEnabled[tabid]){
 			chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
 		}
@@ -3499,7 +3513,7 @@ try {
 		}
 	}
 
-} catch(e){console.log(e);}
+} catch(e){log(e);}
 
 
 function midiHotkeysCommand(number, value){ // MIDI control change commands
@@ -3558,17 +3572,17 @@ async function fetchData(url) {
 window.onload = async function() {
 	let programmedSettings = await fetchData("settings.json"); // allows you to load the settings from a file.
 	if (programmedSettings && (typeof programmedSettings === "object")){
-		console.log("Loading override settings via settongs.json");
+		log("Loading override settings via settongs.json");
 		loadSettings(programmedSettings, true);
 	} else {
-		console.log("Loading settings from the main file into the background.js");
+		log("Loading settings from the main file into the background.js");
 		chrome.storage.sync.get(properties, function(item){ // we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
-			console.log("properties",item);
+			log("properties",item);
 			if (isSSAPP && item){
 				loadSettings(item, false);
 			} else if (item && item.settings){ // ssapp
 				chrome.storage.sync.remove(["settings"], function(Items) { // ignored
-					console.log("upgrading from sync to local storage");
+					log("upgrading from sync to local storage");
 				});
 				chrome.storage.local.set({ // oh well; harmless
 					settings: item.settings
@@ -3576,7 +3590,7 @@ window.onload = async function() {
 				loadSettings(item, false);
 			} else {
 				chrome.storage.local.get(["settings"], function(item2){
-					console.log("item2",item2);
+					log("item2",item2);
 					if (item){
 						if (item2 && item2.settings){
 							if (item){

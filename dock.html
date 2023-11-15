@@ -3108,6 +3108,10 @@
 	if (urlParams.has("showonlymembers")){
 		members();
 	}
+	var eventsOnly = false;
+	if (urlParams.has("showonlyevents")){
+		eventsOnly = urlParams.get("showonlyevents") || true;
+	}
 	
 	var hideEmojiOnly = false;
 	var hideNotQueued = false;
@@ -4433,6 +4437,17 @@
 				// this is not a twitch message, so we're hiding them
 				return;
 			}
+			
+			if (eventsOnly){
+				if (!data.event){
+					return;
+				} else if (eventsOnly !== true){
+					if (eventsOnly !== data.event){
+						return;
+					}
+				}
+			}
+			
 
 			if (!("id" in data)){
 				data.id = Date.now() + parseInt(Math.random()*1000000);
