@@ -33,6 +33,8 @@ function applyCustomActions(data){
 			}
 		}
 	}
+	
+	return data; // return the data, if you want to modify it. If you return "false", it will stop the processing.
 }
 
 ///////

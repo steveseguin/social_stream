@@ -4471,7 +4471,12 @@
 			
 			try {
 				if (applyCustomActions){
-					applyCustomActions(data); // Any custom actions (not synced with github)
+					let response = applyCustomActions(data); // Any custom actions (not synced with github)
+					if (response === false){ // cancel
+						return;
+					} else if (response){ // replace with modified message 
+						data = response;
+					} // else if 'undefined', just ignore the response.
 				}
 			} catch(e){
 				console.error(e); 
