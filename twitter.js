@@ -59,12 +59,16 @@
 		var chatname="";
 		var msg="";
 		
+		console.log(ele);
+		
 		try {
 			var nameElement = ele.querySelector('span');
 			chatname = escapeHtml(nameElement.textContent.trim());
 			chatname = chatname.split(":")[0];
-			let node = nameElement.nextElementSibling;
-			var msg = "";
+			var node = nameElement.nextElementSibling;
+			if (!node){
+				node = nameElement.parentNode.nextElementSibling;
+			}
 			while (node) {
 				if (node.childNodes.length){
 					msg += getAllContentNodes(node)
@@ -125,6 +129,9 @@
 		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
+		
+		console.log(data);
+		
 		if (settings.detweet){
 			data.type = "twitter";
 		} else {
@@ -180,6 +187,7 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
+					
 					try {
 						
 						for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {

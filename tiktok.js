@@ -320,15 +320,15 @@
 							if (mutation.addedNodes[i].dataset && (mutation.addedNodes[i].dataset.e2e == "chat-message")){
 								setTimeout(function(ele2){
 									processMessage(ele2)
-								},500, mutation.addedNodes[i]);
+								},300, mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].dataset.e2e){
 								setTimeout(function(ele2){
 									processMessage(ele2, true); // event
-								},500, mutation.addedNodes[i]);
+								},300, mutation.addedNodes[i]);
 							} else if (settings.captureevents){
 								setTimeout(function(ele2){
 									processMessage(ele2); // donation?
-								},500, mutation.addedNodes[i]);
+								},300, mutation.addedNodes[i]);
 							}
 						} catch(e){}
 					}
@@ -393,7 +393,7 @@
 											//console.warn(ele2);
 											processMessage(ele2, true); // event
 										}
-									},500, mutation.addedNodes[i].cloneNode(true));
+									},600, mutation.addedNodes[i].cloneNode(true));
 								} 
 							} catch(e){}
 						}
