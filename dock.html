@@ -3110,7 +3110,13 @@
 	}
 	var eventsOnly = false;
 	if (urlParams.has("showonlyevents")){
-		eventsOnly = urlParams.get("showonlyevents") || true;
+		eventsOnly = urlParams.get("showonlyevents");
+		if (eventsOnly){
+			eventsOnly = eventsOnly.split(",");
+		} else {
+			eventsOnly = true;
+		}
+		
 	}
 	
 	var hideEmojiOnly = false;
@@ -4442,7 +4448,11 @@
 				if (!data.event){
 					return;
 				} else if (eventsOnly !== true){
-					if (eventsOnly !== data.event){
+					if (data.chatmessage){ 
+						if (eventsOnly.some(v => !data.chatmessage.includes(v))) {
+							return;
+						}
+					} else {
 						return;
 					}
 				}
@@ -4464,7 +4474,7 @@
 					applyCustomActions(data); // Any custom actions (not synced with github)
 				}
 			} catch(e){
-				console.error(e);
+				console.error(e); 
 			}
 			
 			if (filterEvents && data.event && data.chatmessage){ 
