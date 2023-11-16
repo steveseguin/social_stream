@@ -379,7 +379,6 @@
 							try {
 								if ( mutation.addedNodes[i].nodeName == "DIV"){
 									setTimeout(function(ele2){
-										
 										var typeOfEvent = ele2.querySelector("[data-e2e]");
 										if (typeOfEvent){
 											if (!settings.capturejoinedevent){
@@ -388,12 +387,12 @@
 												}
 											}
 											//console.warn(ele2);
-											processMessage(ele2, typeOfEvent.dataset.e2e || true); // event
+											processMessage(ele2.cloneNode(true), typeOfEvent.dataset.e2e || true); // event
 										} else {
 											//console.warn(ele2);
-											processMessage(ele2, true); // event
+											processMessage(ele2.cloneNode(true), true); // event
 										}
-									},600, mutation.addedNodes[i].cloneNode(true));
+									},200, mutation.addedNodes[i]);
 								} 
 							} catch(e){}
 						}

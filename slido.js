@@ -194,7 +194,9 @@
 			} catch(e){}
 			onElementInserted(document.querySelector(".question-list__container"));
 		},1000);
-		document.querySelectorAll(".content-nav-tabs > button")[1].click()
+		try {
+			document.querySelectorAll(".content-nav-tabs > button")[1].click()
+		} catch(e){}
 	},1000);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
