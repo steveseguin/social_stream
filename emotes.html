@@ -592,7 +592,9 @@
 		//emojis = emojis.replace(/[^\p{Emoji}\s]/ug, ''); // filters out puncuation and text characters
 							
 		//emojis = emojis.match(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig);
-		emojis = emojis.match(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu) || [];
+		//emojis = emojis.match(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu) || [];
+		emojis = emojis.match(/\p{Emoji_Presentation}(\uFE0F|\p{Emoji_Modifier}|\u200D\p{Emoji})*/gu) || [];
+
 		
 		
 		try {
