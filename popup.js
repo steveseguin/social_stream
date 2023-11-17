@@ -297,20 +297,20 @@ function update(response, sync=true){
 			}
 			
 			//document.getElementById("version").innerHTML = "Stream ID is : "+response.streamID;
-			document.getElementById("dock").rawURL = baseURL+"dock.html?session="+response.streamID+password;
+			document.getElementById("dock").raw = baseURL+"dock.html?session="+response.streamID+password;
 			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='"+baseURL+"dock.html?session="+response.streamID+password+"'>"+baseURL+"dock.html?session="+response.streamID+password+"</a>";
 
 			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='"+baseURL+"index.html?session="+response.streamID+password+"'>"+baseURL+"index.html?session="+response.streamID+password+"</a>";
-			document.getElementById("overlay").rawURL = baseURL+"index.html?session="+response.streamID+password;
+			document.getElementById("overlay").raw = baseURL+"index.html?session="+response.streamID+password;
 
 			document.getElementById("emoteswall").innerHTML = "<a target='_blank' id='emoteswalllink' href='"+baseURL+"emotes.html?session="+response.streamID+password+"'>"+baseURL+"emotes.html?session="+response.streamID+password+"</a>";
-			document.getElementById("emoteswall").rawURL = baseURL+"emotes.html?session="+response.streamID+password;
+			document.getElementById("emoteswall").raw = baseURL+"emotes.html?session="+response.streamID+password;
 			
 			document.getElementById("hypemeter").innerHTML = "<a target='_blank' id='hypemeterlink' href='"+baseURL+"hype.html?session="+response.streamID+password+"'>"+baseURL+"hype.html?session="+response.streamID+password+"</a>";
-			document.getElementById("hypemeter").rawURL = baseURL+"hype.html?session="+response.streamID+password;
+			document.getElementById("hypemeter").raw = baseURL+"hype.html?session="+response.streamID+password;
 			
 			document.getElementById("waitlist").innerHTML = "<a target='_blank' id='waitlistlink' href='"+baseURL+"waitlist.html?session="+response.streamID+password+"'>"+baseURL+"waitlist.html?session="+response.streamID+password+"</a>";
-			document.getElementById("waitlist").rawURL = baseURL+"waitlist.html?session="+response.streamID+password;
+			document.getElementById("waitlist").raw = baseURL+"waitlist.html?session="+response.streamID+password;
 
 			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
 		
@@ -571,7 +571,7 @@ function updateSettings(ele, sync=true){
 	if (ele.dataset.param1){
 		if (ele.checked){
 			
-			document.getElementById("dock").rawURL = updateURL(ele.dataset.param1, document.getElementById("dock").rawURL);
+			document.getElementById("dock").raw = updateURL(ele.dataset.param1, document.getElementById("dock").raw);
 
 			if (ele.dataset.param1 == "darkmode"){
 				var key = "lightmode";
@@ -615,7 +615,7 @@ function updateSettings(ele, sync=true){
 			});
 				
 		} else {
-			document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace(ele.dataset.param1, "");
+			document.getElementById("dock").raw = document.getElementById("dock").raw.replace(ele.dataset.param1, "");
 		}
 		
 		if (ele.dataset.param1 == "compact"){ // duplicate
@@ -625,8 +625,8 @@ function updateSettings(ele, sync=true){
 			});
 		}
 
-		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
-		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
+		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
+		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "param1", setting: ele.dataset.param1, "value": ele.checked}, function (response) {});
@@ -634,135 +634,135 @@ function updateSettings(ele, sync=true){
 
 	} else if (ele.dataset.textparam1){
 		if (ele.value){
-			document.getElementById("dock").rawURL = updateURL(ele.dataset.textparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").rawURL);
+			document.getElementById("dock").raw = updateURL(ele.dataset.textparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").raw);
 		} else {
-			var tmp = document.getElementById("dock").rawURL.split("&"+ele.dataset.textparam1);
+			var tmp = document.getElementById("dock").raw.split("&"+ele.dataset.textparam1);
 			if (tmp.length>1){
 				var tt = tmp[1].split("&");
 				if (tt.length){
 					tt.shift();
 				}
 				tt = tt.join("&");
-				document.getElementById("dock").rawURL = tmp[0] + tt;
+				document.getElementById("dock").raw = tmp[0] + tt;
 			} else {
-				document.getElementById("dock").rawURL = tmp[0];
+				document.getElementById("dock").raw = tmp[0];
 			}
 		}
-		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
-		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
+		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
+		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam1){
 		 // don't use value
-		var tmp = document.getElementById("dock").rawURL.split("&"+ele.dataset.optionparam1);
+		var tmp = document.getElementById("dock").raw.split("&"+ele.dataset.optionparam1);
 		if (tmp.length>1){
 			var tt = tmp[1].split("&");
 			if (tt.length){
 				tt.shift();
 			}
 			tt = tt.join("&");
-			document.getElementById("dock").rawURL = tmp[0] + tt;
+			document.getElementById("dock").raw = tmp[0] + tt;
 		} else {
-			document.getElementById("dock").rawURL = tmp[0];
+			document.getElementById("dock").raw = tmp[0];
 		}
-		document.getElementById("dock").rawURL = updateURL(ele.dataset.optionparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").rawURL);
+		document.getElementById("dock").raw = updateURL(ele.dataset.optionparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").raw);
 		
-		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
-		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
+		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
+		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1", setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam2){
 		 // don't use value
-		var tmp = document.getElementById("overlay").rawURL.split("&"+ele.dataset.optionparam2);
+		var tmp = document.getElementById("overlay").raw.split("&"+ele.dataset.optionparam2);
 		if (tmp.length>1){
 			var tt = tmp[1].split("&");
 			if (tt.length){
 				tt.shift();
 			}
 			tt = tt.join("&");
-			document.getElementById("overlay").rawURL = tmp[0] + tt;
+			document.getElementById("overlay").raw = tmp[0] + tt;
 		} else {
-			document.getElementById("overlay").rawURL = tmp[0];
+			document.getElementById("overlay").raw = tmp[0];
 		}
-		document.getElementById("overlay").rawURL = updateURL(ele.dataset.optionparam2+"="+encodeURIComponent(ele.value), document.getElementById("overlay").rawURL);
+		document.getElementById("overlay").raw = updateURL(ele.dataset.optionparam2+"="+encodeURIComponent(ele.value), document.getElementById("overlay").raw);
 		
-		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
-		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
+		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
+		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2", setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
 		}
 	///
 	} else if (ele.dataset.optionparam3){
 		 // don't use value
-		var tmp = document.getElementById("emoteswall").rawURL.split("&"+ele.dataset.optionparam3);
+		var tmp = document.getElementById("emoteswall").raw.split("&"+ele.dataset.optionparam3);
 		if (tmp.length>1){
 			var tt = tmp[1].split("&");
 			if (tt.length){
 				tt.shift();
 			}
 			tt = tt.join("&");
-			document.getElementById("emoteswall").rawURL = tmp[0] + tt;
+			document.getElementById("emoteswall").raw = tmp[0] + tt;
 		} else {
-			document.getElementById("emoteswall").rawURL = tmp[0];
+			document.getElementById("emoteswall").raw = tmp[0];
 		}
-		document.getElementById("emoteswall").rawURL = updateURL(ele.dataset.optionparam3+"="+encodeURIComponent(ele.value), document.getElementById("emoteswall").rawURL);
+		document.getElementById("emoteswall").raw = updateURL(ele.dataset.optionparam3+"="+encodeURIComponent(ele.value), document.getElementById("emoteswall").raw);
 		
-		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("&&", "&");
-		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("?&", "?");
+		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
+		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam3", setting: ele.dataset.optionparam3, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam4){
 		 // don't use value
-		var tmp = document.getElementById("hypemeter").rawURL.split("&"+ele.dataset.optionparam4);
+		var tmp = document.getElementById("hypemeter").raw.split("&"+ele.dataset.optionparam4);
 		if (tmp.length>1){
 			var tt = tmp[1].split("&");
 			if (tt.length){
 				tt.shift();
 			}
 			tt = tt.join("&");
-			document.getElementById("hypemeter").rawURL = tmp[0] + tt;
+			document.getElementById("hypemeter").raw = tmp[0] + tt;
 		} else {
-			document.getElementById("hypemeter").rawURL = tmp[0];
+			document.getElementById("hypemeter").raw = tmp[0];
 		}
-		document.getElementById("hypemeter").rawURL = updateURL(ele.dataset.optionparam4+"="+encodeURIComponent(ele.value), document.getElementById("hypemeter").rawURL);
+		document.getElementById("hypemeter").raw = updateURL(ele.dataset.optionparam4+"="+encodeURIComponent(ele.value), document.getElementById("hypemeter").raw);
 		
-		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("&&", "&");
-		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("?&", "?");
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam5){
 		 // don't use value
-		var tmp = document.getElementById("waitlist").rawURL.split("&"+ele.dataset.optionparam5);
+		var tmp = document.getElementById("waitlist").raw.split("&"+ele.dataset.optionparam5);
 		if (tmp.length>1){
 			var tt = tmp[1].split("&");
 			if (tt.length){
 				tt.shift();
 			}
 			tt = tt.join("&");
-			document.getElementById("waitlist").rawURL = tmp[0] + tt;
+			document.getElementById("waitlist").raw = tmp[0] + tt;
 		} else {
-			document.getElementById("waitlist").rawURL = tmp[0];
+			document.getElementById("waitlist").raw = tmp[0];
 		}
-		document.getElementById("waitlist").rawURL = updateURL(ele.dataset.optionparam5+"="+encodeURIComponent(ele.value), document.getElementById("waitlist").rawURL);
+		document.getElementById("waitlist").raw = updateURL(ele.dataset.optionparam5+"="+encodeURIComponent(ele.value), document.getElementById("waitlist").raw);
 		
-		document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace("&&", "&");
-		document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace("?&", "?");
+		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
+		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam5", setting: ele.dataset.optionparam5, "value": ele.value}, function (response) {});
 		}
 	//
 	} else if (ele.dataset.param2){
 		if (ele.checked){
-			document.getElementById("overlay").rawURL = updateURL(ele.dataset.param2, document.getElementById("overlay").rawURL);
+			document.getElementById("overlay").raw = updateURL(ele.dataset.param2, document.getElementById("overlay").raw);
 		} else {
-			document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace(ele.dataset.param2, "");
+			document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace(ele.dataset.param2, "");
 		}
-		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
-		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
+		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
+		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param2", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
 		}
@@ -776,12 +776,12 @@ function updateSettings(ele, sync=true){
 
 	} else if (ele.dataset.param3){
 		if (ele.checked){
-			document.getElementById("emoteswall").rawURL = updateURL(ele.dataset.param3, document.getElementById("emoteswall").rawURL);
+			document.getElementById("emoteswall").raw = updateURL(ele.dataset.param3, document.getElementById("emoteswall").raw);
 		} else {
-			document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace(ele.dataset.param3, "");
+			document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace(ele.dataset.param3, "");
 		}
-		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("&&", "&");
-		document.getElementById("emoteswall").rawURL = document.getElementById("emoteswall").rawURL.replace("?&", "?");
+		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
+		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param3", setting: ele.dataset.param3, "value": ele.checked}, function (response) {});
 		}
@@ -795,12 +795,12 @@ function updateSettings(ele, sync=true){
 		
 	} else if (ele.dataset.param4){
 		if (ele.checked){
-			document.getElementById("hypemeter").rawURL = updateURL(ele.dataset.param4, document.getElementById("hypemeter").rawURL);
+			document.getElementById("hypemeter").raw = updateURL(ele.dataset.param4, document.getElementById("hypemeter").raw);
 		} else {
-			document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace(ele.dataset.param4, "");
+			document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace(ele.dataset.param4, "");
 		}
-		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("&&", "&");
-		document.getElementById("hypemeter").rawURL = document.getElementById("hypemeter").rawURL.replace("?&", "?");
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param4", setting: ele.dataset.param4, "value": ele.checked}, function (response) {});
 		}
@@ -814,12 +814,12 @@ function updateSettings(ele, sync=true){
 		
 	} else if (ele.dataset.param5){
 		if (ele.checked){
-			document.getElementById("waitlist").rawURL = updateURL(ele.dataset.param5, document.getElementById("waitlist").rawURL);
+			document.getElementById("waitlist").raw = updateURL(ele.dataset.param5, document.getElementById("waitlist").raw);
 		} else {
-			document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace(ele.dataset.param5, "");
+			document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace(ele.dataset.param5, "");
 		}
-		document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace("&&", "&");
-		document.getElementById("waitlist").rawURL = document.getElementById("waitlist").rawURL.replace("?&", "?");
+		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
+		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5", setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
 		}
@@ -834,16 +834,16 @@ function updateSettings(ele, sync=true){
 		
 	} else if (ele.dataset.both){
 		if (ele.checked){
-			document.getElementById("overlay").rawURL = updateURL(ele.dataset.both, document.getElementById("overlay").rawURL);
-			document.getElementById("dock").rawURL = updateURL(ele.dataset.both, document.getElementById("dock").rawURL);
+			document.getElementById("overlay").raw = updateURL(ele.dataset.both, document.getElementById("overlay").raw);
+			document.getElementById("dock").raw = updateURL(ele.dataset.both, document.getElementById("dock").raw);
 		} else {
-			document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace(ele.dataset.both, "");
-			document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace(ele.dataset.both, "");
+			document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace(ele.dataset.both, "");
+			document.getElementById("dock").raw = document.getElementById("dock").raw.replace(ele.dataset.both, "");
 		}
-		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("&&", "&");
-		document.getElementById("overlay").rawURL = document.getElementById("overlay").rawURL.replace("?&", "?");
-		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("&&", "&");
-		document.getElementById("dock").rawURL = document.getElementById("dock").rawURL.replace("?&", "?");
+		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
+		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
+		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
+		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "both", setting: ele.dataset.both, "value": ele.checked}, function (response) {});
 		}
@@ -871,20 +871,20 @@ function updateSettings(ele, sync=true){
 	}
 	
 
-	document.getElementById("docklink").innerText = document.getElementById("dock").rawURL;
-	document.getElementById("docklink").href = document.getElementById("dock").rawURL;
+	document.getElementById("docklink").innerText = document.getElementById("dock").raw;
+	document.getElementById("docklink").href = document.getElementById("dock").raw;
 
-	document.getElementById("overlaylink").innerText = document.getElementById("overlay").rawURL;
-	document.getElementById("overlaylink").href = document.getElementById("overlay").rawURL;
+	document.getElementById("overlaylink").innerText = document.getElementById("overlay").raw;
+	document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
 
-	document.getElementById("emoteswalllink").innerText = document.getElementById("emoteswall").rawURL;
-	document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").rawURL;
+	document.getElementById("emoteswalllink").innerText = document.getElementById("emoteswall").raw;
+	document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
 	
-	document.getElementById("hypemeterlink").innerText = document.getElementById("hypemeter").rawURL;
-	document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").rawURL;
+	document.getElementById("hypemeterlink").innerText = document.getElementById("hypemeter").raw;
+	document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
 	
-	document.getElementById("waitlistlink").innerText = document.getElementById("waitlist").rawURL;
-	document.getElementById("waitlistlink").href = document.getElementById("waitlist").rawURL;
+	document.getElementById("waitlistlink").innerText = document.getElementById("waitlist").raw;
+	document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
 }
 
 

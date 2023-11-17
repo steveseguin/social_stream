@@ -14,9 +14,13 @@ var isSSAPP = false;
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
 
-function log(msg){
+function log(msg,msg2=null){
 	if (devmode){
-		console.log(msg);
+		if (msg2!==null){
+			console.log(msg,msg2);
+		} else {
+			console.log(msg);
+		}
 	}
 }
 
@@ -929,20 +933,26 @@ function updateExtensionState(sync=true){
 }
 
 chrome.runtime.onMessage.addListener(
-    async function (request, sender, sendResponse) {
+    async function (request, sender, sendResponseReal) {
+		var response = null;
+		function sendResponse(msg){
+			sendResponseReal(msg);
+			response = msg;
+		}
 		log("processing messge:",request);
 		try{
 			if (request.cmd && request.cmd === "setOnOffState") { // toggle the IFRAME (stream to the remote dock) on or off
 				isExtensionOn = request.data.value;
 				
 				updateExtensionState();
-				sendResponse({"state":isExtensionOn,"streamID":streamID, "password":password, "settings":settings});
+				sendResponse({"state": isExtensionOn || false ,"streamID":streamID||false, "password":password||false, "settings":settings||{}});
 				
 			} else if (request.cmd && (request.cmd === "getOnOffState")) {
-				sendResponse({"state":isExtensionOn,"streamID":streamID, "password":password, "settings":settings});
+				
+				sendResponse({"state": isExtensionOn || false ,"streamID":streamID||false, "password":password||false, "settings":settings||{}});
 				
 			} else if (request.cmd && (request.cmd === "getSettings")) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-				sendResponse({"state":isExtensionOn,"streamID":streamID, "password":password, "settings":settings});
+				sendResponse({"state": isExtensionOn || false ,"streamID":streamID||false, "password":password||false, "settings":settings||{}});
 
 			} else if (request.cmd && (request.cmd === "saveSetting")) {
 				
@@ -1338,7 +1348,10 @@ chrome.runtime.onMessage.addListener(
 			} else {
 				sendResponse({"state":isExtensionOn});
 			}
-		} catch(e){}
+		} catch(e){
+			console.warn(e);
+		}
+		return response;
     }
 );
 

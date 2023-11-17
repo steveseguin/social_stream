@@ -24,14 +24,24 @@ function restoreOptions() {
   var properties = ["streamID", "password"];
   chrome.storage.sync.get(properties, function(result){
 	try{
-		document.querySelector("#streamID").value = result.streamID || generateStreamID();
+		if (result && result.streamID){
+			document.querySelector("#streamID").value = result.streamID;
+		} else{
+			document.querySelector("#streamID").value = generateStreamID();
+			chrome.storage.sync.set({
+				streamID: document.querySelector("#streamID").value
+			});
+		}
 	} catch(e){console.error(e);}
 	
 	try{
-		if (result.password){
+		if (result && result.password){
 			document.querySelector("#password").value = result.password;
 		} else {
 			document.querySelector("#password").value = "";
+			chrome.storage.sync.set({
+				streamID: document.querySelector("#password").value
+			});
 		}
 	} catch(e){console.error(e);}
   });
