@@ -345,7 +345,7 @@
 	function start2() {
 		
 		
-		if (document.querySelector("[class*='DivUnreadTipsContent']")){
+		if (settings.state && document.querySelector("[class*='DivUnreadTipsContent']")){
 			document.querySelector("[class*='DivUnreadTipsContent']").click();
 		}
 		
