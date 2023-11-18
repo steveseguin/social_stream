@@ -345,15 +345,15 @@
 	function start2() {
 		
 		
-		if (settings.state && document.querySelector("[class*='DivUnreadTipsContent']")){
-			document.querySelector("[class*='DivUnreadTipsContent']").click();
+		if (isExtensionOn && document.querySelector("[class*='DivUnreadTipsContent']")){
+			document.querySelector("[class*='DivScrollingListIndicatorWrap']").parentNode.scrollTop = document.querySelector("[class*='DivScrollingListIndicatorWrap']").parentNode.scrollHeight;
 		}
 		
 		if (!settings.captureevents){
 			return;
 		}
 		
-		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer');
+		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer'); 
 		
 		if (!target2){
 			return;
@@ -416,6 +416,7 @@
 	
 
 	var settings = {};
+	var isExtensionOn = false;
 	// settings.textonlymode
 	// settings.captureevents
 
@@ -424,6 +425,9 @@
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
+		}
+		if ("state" in response){
+			isExtensionOn = response.state;
 		}
 	});
 
