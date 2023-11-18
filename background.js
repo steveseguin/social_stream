@@ -142,16 +142,18 @@ if (typeof(chrome.runtime)=='undefined'){
 	};
 	
 	ipcRenderer.on('fromMain', (event, ...args) => {
-		//log("FROM MAIN",args[0]);
+		console.log("FROM MAIN",args[0]);
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
-		onMessageCallback(args[0], sender, function(response){
-			if (event.returnValue){
-				event.returnValue = response;
-			}
-			ipcRenderer.send('fromBackgroundResponse',response);
-		});
+		if (args[0]){
+			onMessageCallback(args[0], sender, function(response){
+				if (event.returnValue){
+					event.returnValue = response;
+				}
+				ipcRenderer.send('fromBackgroundResponse',response);
+			});
+		}
 		
 	})
 	

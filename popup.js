@@ -563,6 +563,21 @@ function updateURL(param, href) {
 	return newurl;
 
 }
+function removeQueryParamWithValue(url, paramWithValue) {
+    let [baseUrl, queryString] = url.split('?');
+    if (!queryString) {
+        return url;
+    }
+    let [param, value] = paramWithValue.includes('=') ? paramWithValue.split('=') : [paramWithValue, null];
+    let queryParams = queryString.split('&');
+    queryParams = queryParams.filter(qp => {
+        let [key, val] = qp.split('=');
+        return !(key === param && (value === null || val === value));
+    });
+    let modifiedQueryString = queryParams.join('&');
+    let modifiedUrl = baseUrl + (modifiedQueryString ? '?' + modifiedQueryString : '');
+    return modifiedUrl;
+}
 
 function updateSettings(ele, sync=true){
 	if (ele.target){
@@ -615,7 +630,8 @@ function updateSettings(ele, sync=true){
 			});
 				
 		} else {
-			document.getElementById("dock").raw = document.getElementById("dock").raw.replace(ele.dataset.param1, "");
+			//document.getElementById("dock").raw = document.getElementById("dock").raw.replace(ele.dataset.param1, "");
+			document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
 		}
 		
 		if (ele.dataset.param1 == "compact"){ // duplicate
@@ -759,7 +775,8 @@ function updateSettings(ele, sync=true){
 		if (ele.checked){
 			document.getElementById("overlay").raw = updateURL(ele.dataset.param2, document.getElementById("overlay").raw);
 		} else {
-			document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace(ele.dataset.param2, "");
+			//document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace(ele.dataset.param2, "");
+			document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.param2);
 		}
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
@@ -778,7 +795,8 @@ function updateSettings(ele, sync=true){
 		if (ele.checked){
 			document.getElementById("emoteswall").raw = updateURL(ele.dataset.param3, document.getElementById("emoteswall").raw);
 		} else {
-			document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace(ele.dataset.param3, "");
+			//document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace(ele.dataset.param3, "");
+			document.getElementById("emoteswall").raw = removeQueryParamWithValue(document.getElementById("emoteswall").raw, ele.dataset.param3);
 		}
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
@@ -797,7 +815,8 @@ function updateSettings(ele, sync=true){
 		if (ele.checked){
 			document.getElementById("hypemeter").raw = updateURL(ele.dataset.param4, document.getElementById("hypemeter").raw);
 		} else {
-			document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace(ele.dataset.param4, "");
+			//document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace(ele.dataset.param4, "");
+			document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.param4);
 		}
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
@@ -816,7 +835,8 @@ function updateSettings(ele, sync=true){
 		if (ele.checked){
 			document.getElementById("waitlist").raw = updateURL(ele.dataset.param5, document.getElementById("waitlist").raw);
 		} else {
-			document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace(ele.dataset.param5, "");
+			//document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace(ele.dataset.param5, "");
+			document.getElementById("waitlist").raw = removeQueryParamWithValue(document.getElementById("waitlist").raw, ele.dataset.param5);
 		}
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
@@ -837,9 +857,10 @@ function updateSettings(ele, sync=true){
 			document.getElementById("overlay").raw = updateURL(ele.dataset.both, document.getElementById("overlay").raw);
 			document.getElementById("dock").raw = updateURL(ele.dataset.both, document.getElementById("dock").raw);
 		} else {
-			document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace(ele.dataset.both, "");
-			document.getElementById("dock").raw = document.getElementById("dock").raw.replace(ele.dataset.both, "");
+			document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.both);
+			document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.both);
 		}
+		
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
