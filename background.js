@@ -945,14 +945,14 @@ chrome.runtime.onMessage.addListener(
 				isExtensionOn = request.data.value;
 				
 				updateExtensionState();
-				sendResponse({"state": isExtensionOn || false ,"streamID":streamID||false, "password":password||false, "settings":settings||{}});
+				sendResponse({"state": isExtensionOn  ,"streamID":streamID, "password":password, "settings":settings});
 				
 			} else if (request.cmd && (request.cmd === "getOnOffState")) {
 				
-				sendResponse({"state": isExtensionOn || false ,"streamID":streamID||false, "password":password||false, "settings":settings||{}});
+				sendResponse({"state": isExtensionOn  ,"streamID":streamID, "password":password, "settings":settings});
 				
 			} else if (request.cmd && (request.cmd === "getSettings")) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-				sendResponse({"state": isExtensionOn || false ,"streamID":streamID||false, "password":password||false, "settings":settings||{}});
+				sendResponse({"state": isExtensionOn , "streamID":streamID, "password":password, "settings":settings});
 
 			} else if (request.cmd && (request.cmd === "saveSetting")) {
 				

@@ -444,6 +444,9 @@
 					return;
 				}
 				if (typeof request === "object"){
+					if ("state" in request){
+						isExtensionOn = request.state;
+					}
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
