@@ -345,6 +345,10 @@
 	function start2() {
 		
 		
+		if (document.querySelector("[class*='DivUnreadTipsContent']")){
+			document.querySelector("[class*='DivUnreadTipsContent']").click();
+		}
+		
 		if (!settings.captureevents){
 			return;
 		}
