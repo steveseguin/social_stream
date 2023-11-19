@@ -936,9 +936,15 @@ function updateExtensionState(sync=true){
 
 chrome.runtime.onMessage.addListener(
     async function (request, sender, sendResponseReal) {
-		var response = null;
+		var response = {};
+		var alreadySet=false;
 		function sendResponse(msg){
-			sendResponseReal(msg);
+			if (alreadySet){
+				console.error("Shouldn't run sendReponse twice");
+			} else if (sendResponseReal){
+				alreadySet = true;
+				sendResponseReal(msg);
+			}
 			response = msg;
 		}
 		log("processing messge:",request);
@@ -1145,6 +1151,7 @@ chrome.runtime.onMessage.addListener(
 						});
 					});
 				}
+				sendResponse({"state":isExtensionOn});
 			} else if ("delete" in request) {
 				sendResponse({"state":isExtensionOn});
 				if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)){
@@ -1159,25 +1166,25 @@ chrome.runtime.onMessage.addListener(
 					
 					if (!checkIfAllowed(request.message.type)){ // toggled is not enabled for this site
 						sendResponse({"state":isExtensionOn});
-						return;
+						return response;
 					}
 					
 					if (settings.filtercommands && request.message.chatmessage && request.message.chatmessage.startsWith("!")){
 						sendResponse({"state":isExtensionOn});
-						return;
+						return response;
 					}
 					
 					if (settings.filtercommandscustomtoggle && request.message.chatmessage && settings.filtercommandscustomwords && settings.filtercommandscustomwords.textsetting){
 						if (settings.filtercommandscustomwords.textsetting.split(",").some(v => v.trim() && request.message.chatmessage.startsWith(v.trim()))) {
 							sendResponse({"state":isExtensionOn});
-							return;
+							return response;
 						}
 					}
 
 					if (settings.firstsourceonly){
 						if (!verifyOriginal(request.message)){
 							sendResponse({"state":isExtensionOn});
-							return;
+							return response;
 						}
 					}
 					
@@ -1200,10 +1207,11 @@ chrome.runtime.onMessage.addListener(
 
 					try{
 						request.message = await applyBotActions(request.message, sender.tab); // perform any immediate actions
-						if (request.message===null){return;}
+						if (!request.message){
+							return response; // don't forward if action blocks it
+						}
+						sendToDestinations(request.message); // send the data to the dock
 					} catch(e){log(e);}
-
-					sendToDestinations(request.message); // send the data to the dock
 				} else {
 					sendResponse({"state":isExtensionOn});
 				}
@@ -1234,8 +1242,8 @@ chrome.runtime.onMessage.addListener(
 				sendResponse({"state":isExtensionOn});
 				overwriteSavedNames("setup");
 			} else if (request.cmd && request.cmd === "loadmidi") {
-				await loadmidi(sendResponse);
-				sendResponse({"settings":settings});
+				await loadmidi(); 
+				sendResponse({"settings":settings, "state":isExtensionOn});
 			} else if (request.cmd && request.cmd === "export") {
 				sendResponse({"state":isExtensionOn});
 				await exportSettings();
@@ -1253,8 +1261,10 @@ chrome.runtime.onMessage.addListener(
 				newSavedNamesFileHandle = false;
 			} else if (request.cmd && request.cmd === "selectwinner") {
 				selectwinner();
+				sendResponse({"state":isExtensionOn});	
 			} else if (request.cmd && request.cmd === "resetwaitlist") {
 				resetWaitlist();
+				sendResponse({"state":isExtensionOn});	
 			} else if (request.cmd && request.cmd === "fakemsg") {
 				sendResponse({"state":isExtensionOn});
 				var data = {};
@@ -1319,10 +1329,11 @@ chrome.runtime.onMessage.addListener(
 				}
  
 				data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
-				if (data){
-					sendToDestinations(data);
+				if (!data){
+					return response;
 				}
-
+				sendToDestinations(data);
+				
 			} else if (request.cmd && request.cmd === "sidUpdated") {
 				if (request.streamID){
 					streamID = request.streamID;
@@ -1826,7 +1837,7 @@ function setupSocket(){
 			} else if (!data.action && data.extContent){ // Not flattened
 				try {
 					var msg = await applyBotActions(data.extContent); // perform any immediate actions, including modifying the message before sending it out
-					if (msg){
+					if (msg){ // we won't return, since we need to do a response later to the socket
 						resp = sendToDestinations(msg);
 					}
 				} catch(e){
@@ -1864,7 +1875,7 @@ function setupSocket(){
 				var ret = {};
 				ret.callback = {};
 				ret.callback.get = data.get
-				ret.callback.result = true;
+				ret.callback.result = resp;
 				socketserver.send(JSON.stringify(ret));
 			}
 		}
@@ -2550,7 +2561,9 @@ eventer(messageEvent, async function (e) {
 					data.type = "youtube";
 
 					data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
-					sendToDestinations(data);
+					if (data){
+						sendToDestinations(data);
+					}
 				}
 			} else if (e.data.UUID && e.data.value && (e.data.action == "push-connection-info")){ // flip this
 				if ("label" in e.data.value){
@@ -3231,6 +3244,7 @@ try {
 	});
 } catch(e){}
 
+// expects an object; not False/Null/undefined
 async function applyBotActions(data, tab=false){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
 	
@@ -3343,7 +3357,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			searchGif = searchGif.replaceAll("!giphy","").trim();
 			if (searchGif){
 				var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(searchGif) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
-					return response.data[0].images.downsized_large.url ;
+					return response.data[0].images.downsized_large.url;
 				});
 				if (gurl){
 					data.contentimg = gurl;
@@ -3359,7 +3373,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				word = word.replaceAll("#"," ").trim();
 				if (word){
 					var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(word) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
-						return response.data[0].images.downsized_large.url ;
+						return response.data[0].images.downsized_large.url;
 					});
 					if (gurl){
 						data.contentimg = gurl;

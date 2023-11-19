@@ -911,7 +911,7 @@
 
 		.donationAmount{
 			text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #FFe60073, 0 0 40px #FFe60073, 0 0 50px #FFe60073, 0 0 60px #FFe60073, 0 0 70px #FFe60073;
-			padding:5px;
+			padding-left: 5px;
 			margin: auto;
 			white-space: nowrap;
 			white-space: nowrap;
@@ -1900,6 +1900,18 @@
 	if (urlParams.has("chartime")){
 		timePerCharacter = parseInt(urlParams.get("chartime")) || 60;
 	}
+	
+	var badkarma = -1; // no filtering
+	if (urlParams.has("badkarma")){
+		badkarma = urlParams.get("badkarma");
+		if (badkarma==null){
+			badkarma = 0.1; // filter only really bad
+		} else {
+			badkarma = parseFloat(badkarma);
+		}
+	}
+	
+	
 
 	if (urlParams.has("disabletimeout")) {
 		autoTimeoutEnabled = false;
@@ -4477,6 +4489,8 @@
 					let response = applyCustomActions(data); // Any custom actions (not synced with github)
 					if (response === false){ // cancel
 						return;
+					} else if (response === null){ // cancel <== official way of cancelling.
+						return;
 					} else if (response){ // replace with modified message 
 						data = response;
 					} // else if 'undefined', just ignore the response.
@@ -4548,6 +4562,8 @@
 				var date = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true });
 				if ("sentiment" in data){
 					text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "")  + "\t" + (data.sentiment || "") + "\n");
+				} else if ("karma" in data){
+					text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "")  + "\t" + (data.karma || "") + "\n");
 				} else {
 					text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + "\n");
 				}
@@ -4562,8 +4578,12 @@
 			}
 			
 			
-			if ("sentiment" in data){
-				if (data.sentiment<.10){ // 1.0 is good; 0.0 is bad, so 0.1 is likely bad.
+			if ("sentiment" in data){ // deprecating sentiment
+				if (data.sentiment<0.1){ // 1.0 is good; 0.0 is bad, so 0.1 is likely bad.
+					return;
+				}
+			} else if ("karma" in data){ // replacing it with karma
+				if (data.karma < badkarma){ // 1.0 is good; 0.0 is bad, so 0.1 is likely bad.
 					return;
 				}
 			}

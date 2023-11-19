@@ -327,7 +327,6 @@ function update(response, sync=true){
 							document.getElementById("midiConfig").innerText = " Load Config";
 						}
 					}
-
 					if (typeof response.settings[key] == "object"){ // newer method
 						if ("param1" in response.settings[key]){
 							var ele = document.querySelector("input[data-param1='"+key+"']");
@@ -369,6 +368,17 @@ function update(response, sync=true){
 							if (ele){
 								ele.checked = response.settings[key].setting;
 								updateSettings(ele, sync);
+							}
+							
+							if (key == "sentiment"){ // i'm deprecating sentiment
+								try{
+									var ele1 = document.querySelector("input[data-param1='badkarma']");
+									if (ele1 && !ele1.checked){
+										ele1.checked = true;
+										updateSettings(ele1, true);
+									}
+									chrome.runtime.sendMessage({cmd: "saveSetting", type: "setting", setting: "sentiment", "value": false}, function (response) {}); // delete sentiment
+								} catch(e){console.error(e);}
 							}
 						}
 						if ("textsetting" in response.settings[key]){
@@ -580,6 +590,7 @@ function removeQueryParamWithValue(url, paramWithValue) {
 }
 
 function updateSettings(ele, sync=true){
+	
 	if (ele.target){
 		ele = this;
 	}
@@ -601,6 +612,14 @@ function updateSettings(ele, sync=true){
 				var ele1 = document.querySelector("input[data-param1='"+key+"']");
 				if (ele1 && ele1.checked){
 					ele1.checked = false;
+					updateSettings(ele1, sync);
+				}
+			}
+			
+			if (ele.dataset.param1 == "badkarma"){
+				var ele1 = document.querySelector("input[data-setting='addkarma']");
+				if (ele1 && !ele1.checked){
+					ele1.checked = true;
 					updateSettings(ele1, sync);
 				}
 			}
@@ -870,6 +889,16 @@ function updateSettings(ele, sync=true){
 		}
 
 	} else if (ele.dataset.setting){
+		if (ele.dataset.setting == "addkarma"){
+			if (!ele.checked){ // if unchecked
+				var ele1 = document.querySelector("input[data-param1='badkarma']"); // then also uncheck the karma filter
+				if (ele1 && ele1.checked){
+					ele1.checked = false;
+					updateSettings(ele1, sync);
+				}
+			}
+		}
+		
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
 		}

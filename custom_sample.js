@@ -34,7 +34,7 @@ function applyCustomActions(data){
 		}
 	}
 	
-	return data; // return the data, if you want to modify it. If you return "false", it will stop the processing.
+	return data; // return the data, if you want to modify it. If you return "null", it will stop the processing. (also false works, but I'll deprecate that I think)
 }
 
 ///////
