@@ -1207,11 +1207,11 @@ chrome.runtime.onMessage.addListener(
 
 					try{
 						request.message = await applyBotActions(request.message, sender.tab); // perform any immediate actions
-						if (!request.message){
-							return response; // don't forward if action blocks it
-						}
-						sendToDestinations(request.message); // send the data to the dock
 					} catch(e){log(e);}
+					if (!request.message){
+						return response; // don't forward if action blocks it
+					}
+					sendToDestinations(request.message); // send the data to the dock
 				} else {
 					sendResponse({"state":isExtensionOn});
 				}
