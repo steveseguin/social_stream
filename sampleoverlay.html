@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Overlay</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
+    <style>
+	
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap');
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(10, 22, 40, 0.8); /* Dark, semi-transparent background */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#chat-container {
+    padding: 25px;
+    max-width: 350px;
+    margin: auto;
+}
+
+.message {
+    background: linear-gradient(145deg, #1a2a48, #162238);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 15px;
+    border: 1px solid #2e3b55;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    color: #e4e6eb;
+    transition: transform 0.2s ease-in-out;
+}
+
+.name {
+    font-weight: 600;
+    color: #4ab8f9;
+    font-size: 1.1em;
+    margin-bottom: 10px;
+}
+
+.text {
+    font-size: 0.95em;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.donation {
+    color: #4cd137;
+    font-weight: 600;
+}
+
+
+/* Clear float */
+.message:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* Stylish separator line */
+.separator {
+    height: 2px;
+    background: linear-gradient(to right, #4ab8f9, #4cd137);
+    margin: 20px 0;
+}
+
+
+
+body, html {
+    /* ... existing styles ... */
+    font-family: 'Roboto', sans-serif;
+}
+
+.message {
+    /* ... existing styles ... */
+    position: relative;
+    overflow: hidden;
+}
+
+.name-bg {
+    background-color: #4a6fa5;
+    padding: 5px 10px;
+    border-radius: 5px;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+.name {
+    color: white;
+    font-size: 1.2em;
+    font-weight: 700;
+}
+
+.membership-status {
+    color: #ffd700;
+    font-weight: 700;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+}
+
+.source-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+}
+
+.large-image {
+    max-width: 100%;
+    height: auto;
+    margin-top: 10px;
+    border-radius: 10px;
+}
+.avatar-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 15px;
+    position: relative;
+    overflow: hidden;
+	background: linear-gradient(45deg, #4ab8f9, #4cd137);
+	padding: 3px;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: url('https://somdomain.com/avatar.png') no-repeat center center;
+    background-size: cover;
+    position: relative;
+	
+}
+
+.avatar-wrapper::after {
+    content: '';
+    position: absolute;
+    top: -5px; right: -5px; bottom: -5px; left: -5px;
+    background: linear-gradient(45deg, #4ab8f9, #4cd137);
+    border-radius: 50%;
+    z-index: -1;
+}
+
+.source-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    position: relative;
+    top: -2px;
+}
+
+.badge {
+    display: inline-block;
+    height: 1em;
+    margin-left: 5px;
+}
+
+
+	</style>
+</head>
+<body>
+     <div id="chat-container">
+        <div class="message">
+			<div class="avatar-wrapper">
+				<div class="avatar" style="background-image: url('https://socialstream.ninja/unknown.png');"></div>
+			</div>
+            <div class="name-bg">
+                <div class="name">John Smith</div>
+            </div>
+            <div class="membership-status">Gold Member</div>
+            <img src="https://socialstream.ninja/twitch.png" alt="Channel Source" class="source-icon">
+			<img src="https://socialstream.ninja/vdoninja.png" alt="Badge 1" class="badge">
+			<img src="https://socialstream.ninja/vdoninja.png" alt="Badge 2" class="badge">
+			<div class="text">
+				A user message here
+			</div>
+            <div class="donation">$100USD</div>
+            <img src="https://socialstream.ninja/unknown.png" alt="Large Content" class="large-image">
+        </div>
+        <!-- Additional messages here -->
+    </div>
+    <script>
+		document.addEventListener('DOMContentLoaded', () => {
+		// Example data structure
+		const messageData = {
+			chatmessage: "A user message here",
+			chatname: "John Smith",
+			sourceicon: "https://socialstream.ninja/twitch.png",
+			donationamount: "$100USD",
+			chatimage: "https://socialstream.ninja/unknown.png"
+		};
+
+		// Function to add a message to the overlay
+		function addMessageToOverlay(data) {
+			const chatContainer = document.getElementById('chat-container');
+			const messageDiv = document.createElement('div');
+			messageDiv.classList.add('message');
+
+			// Construct the message HTML
+			messageDiv.innerHTML = `
+				<img src="${data.chatimage}" alt="User Avatar" class="avatar">
+				<div class="name">${data.chatname}</div>
+				<div class="text">${data.chatmessage}</div>
+				<div class="donation">${data.donationamount}</div>
+			`;
+
+			// Append the new message
+			chatContainer.appendChild(messageDiv);
+		}
+
+		// Example of adding a message
+		addMessageToOverlay(messageData);
+		
+		// Here, you would have a way to receive and add new messages dynamically
+	});
+	</script>
+</body>
+</html>
