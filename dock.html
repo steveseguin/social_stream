@@ -4444,7 +4444,7 @@
 	}
 
 	function processData(data, reloaded=false){
-		//console.log(data);
+		// console.log(data);
 		if (data.contents){
 			data = data.contents;
 
@@ -4881,6 +4881,10 @@
 
 			if (bot && !horizontal){
 				node.classList.add("bot");
+			}
+			
+			if ("karma" in data){
+				node.dataset.karma = data.karma;
 			}
 			
 			if (data.hasDonation){

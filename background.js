@@ -355,7 +355,7 @@ function loadSettings(item, resave=false){
 	
 	toggleMidi();
 	
-	if (settings.sentiment){
+	if (settings.addkarma){
 		if (!sentimentAnalysisLoaded){
 			loadSentimentAnalysis();
 		}
@@ -1074,7 +1074,7 @@ chrome.runtime.onMessage.addListener(
 					pushSettingChange();
 				}
 				
-				if (request.setting == "sentiment"){
+				if (request.setting == "addkarma"){
 					if (request.value){
 						if (!sentimentAnalysisLoaded){
 							loadSentimentAnalysis();
@@ -3404,13 +3404,13 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 		console.error(e);
 	}
 	
-	if (settings.sentiment){
+	if (settings.addkarma){
 		try {
 			if (!sentimentAnalysisLoaded){
 				loadSentimentAnalysis();
-				data.sentiment = inferSentiment(data.chatmessage);
+				data.karma = inferSentiment(data.chatmessage);
 			} else {
-				data.sentiment = inferSentiment(data.chatmessage);
+				data.karma = inferSentiment(data.chatmessage);
 			}
 		}catch(e){}
 	}
