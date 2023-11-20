@@ -334,6 +334,7 @@ Check it out here: https://socialstream.ninja/sampleoverlay?session=XXXXX
 - There are no functions like TTS or style customization via URL parameters; it's just a simple fixed overlay with minimal code
 - It can be used as a featured overlay or as a dock-alternative, with all messages. In the code, toggle `featuredMode` on or off, depending on whether you want it work with featured messages only, or all incoming messages.
 - You can edit and load it via your browser locally, without needing to host it. Keep it perhaps in a different folder than Social Stream though to avoid having it deleted after an update.
+  
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/26f26421-ac44-47f7-bcfc-04627deb85f9)
 
 #### Custom Javascript
