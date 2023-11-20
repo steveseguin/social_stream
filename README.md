@@ -325,6 +325,19 @@ An example of one is available here: https://socialstream.ninja/themes/pretty.ht
 
 For anyone who wants to create a custom theme/style/template for their chat stream, you can share them via adding them to this repository as a Pull Request.
 
+#### Custom Overlays from scratch
+
+For those so inclined to make their own overlays for Social Stream from scratch, I've created a basic and bare HTML template for reference.
+
+Check it out here: https://socialstream.ninja/sampleoverlay?session=XXXXX
+
+- There are no functions like TTS or style customization via URL parameters; it's just a simple fixed overlay with minimal code
+- It can be used as a featured overlay or as a dock-alternative, with all messages. In the code, toggle `featuredMode` on or off, depending on whether you want it work with featured messages only, or all incoming messages.
+- You can edit and load it via your browser locally, without needing to host it. Keep it perhaps in a different folder than Social Stream though to avoid having it deleted after an update.
+
+![image](https://github.com/steveseguin/social_stream/assets/2575698/aa08480b-a9a4-4cb2-bc19-4437cb309d27)
+
+
 #### Custom Javascript
 
 You can inject a bit of javascript into the dock or index pages using `&js={URL ENCODED JAVASCRIPT}`
