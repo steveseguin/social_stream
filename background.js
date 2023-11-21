@@ -147,7 +147,7 @@ if (typeof(chrome.runtime)=='undefined'){
 	};
 	
 	ipcRenderer.on('fromMain', (event, ...args) => {
-		console.log("FROM MAIN",args[0]);
+		log("FROM MAIN",args[0]);
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
