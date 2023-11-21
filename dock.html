@@ -73,7 +73,7 @@
 			border: 2px solid black;
 			cursor: pointer;
 		}
-		
+
 		.closeBtn:hover {
 			background-color: #9a9a9a;
 		}
@@ -2146,7 +2146,6 @@
 		scrolltype = "smooth";
 		autoScrollCatch = autoScrollCatch*2;
 	}
-
 	
 	var alignbottom = false;
 	if (urlParams.has("alignbottom")){
@@ -2275,6 +2274,28 @@
 		document.getElementById("output").style.flexDirection = "column-reverse";
 		document.getElementById("output").style.display = "flex";
 		transitionType.push("swipeup");
+	}
+	
+	var animatein = false;
+	if (urlParams.get("animatein")){
+		const link = document.createElement('link');
+		link.href = "./thirdparty/animate.css";
+		link.rel = 'stylesheet';
+		document.head.appendChild(link);
+		animatein = "animate__"+urlParams.get("animatein");
+		transitionType.push("animate__animated");
+		transitionType.push("animate__"+urlParams.get("animatein"));
+	}
+	var animateout = false;
+	if (urlParams.get("animateout")){
+		if (!animatein){
+			const link = document.createElement('link');
+			link.href = "./thirdparty/animate.css";
+			link.rel = 'stylesheet';
+			document.head.appendChild(link);
+			transitionType.push("animate__animated");
+		}
+		animateout = "animate__"+urlParams.get("animateout");
 	}
 	
 	var beep = false;
@@ -4342,63 +4363,8 @@
 	};
 	
 	
-	function nodeRemove(node=null){
-		if (node){
-			node.remove();
-		}
-		if (reversed && !forceAutoscroll){
-		
-		} else {
-			if (alignbottom) {
-				if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){
-					if (scrolltype=="instant"){
-						getById("output").scrollTop = getById("output").scrollHeight;
-					} else {
-						getById("output").scrollTo({
-							top: getById("output").scrollHeight,
-							left: 0,
-							behavior:scrolltype
-						});
-					}
-				}
-			} else if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){
-				if (scrolltype=="instant"){
-					document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-				} else {
-					document.scrollingElement.scrollTo({
-						top: document.scrollingElement.scrollHeight,
-						left: 0,
-						behavior:scrolltype
-					});
-				}
-			}
-		}
-	}
-
-	function fadeOutNode(node){
-		if (fadeout && horizontal){
-			node.classList.add("fadeout");
-			setTimeout(function(node){
-				nodeRemove(node);
-			},500,node);
-		} else if (horizontal){
-			nodeRemove(node);
-		} else if (fadeout){
-			node.classList.add("fadeout");
-			setTimeout(function(node){
-				nodeRemove(node);
-			},500,node);
-		} else if (scrolltype === "smooth"){
-			node.style.transition =  "all linear 0.5s";
-			node.style.height =  "0"; 
-			setTimeout(function(node){
-				nodeRemove(node);
-			},500,node);
-		} else {
-			nodeRemove(node);
-		}
-	}
-
+	
+	
 	function slideIn(node){
 		if (horizontal){
 			nodeRemove(node);
@@ -4411,7 +4377,7 @@
 		}
 	}
 
-	function removeNode(){
+	function cleanUpOldNodes(){
 		var nodes = document.querySelectorAll("#output>div:not(.queued)");
 		var total2Remove = 0;
 		if (isOBSBrowserSource){ // This is an OBS browser source, so lets go light on it.
@@ -4439,7 +4405,85 @@
 		}
 		if (total2Remove>0){
 			for (var i = total2Remove-1;i>=0;i--){
-				fadeOutNode(nodes[i]);
+				transitionOutNode(nodes[i]);
+			}
+		}
+	}
+	
+	function animateCSS(node, animation){  // animate then delete
+		new Promise((resolve, reject) => {
+		
+			//node.classList.remove("animate__animated");
+			//node.classList.add("animate__animated");
+			
+			var cleanup = setTimeout(function(node, resolve){
+				resolve('Animation ended');
+				node.remove();
+			}, 5000, node, resolve);
+			node.classList.add(animation);
+			function handleAnimationEnd(event) {
+				clearTimeout(cleanup);
+				resolve('Animation ended');
+				node.remove();
+			}
+			
+			node.addEventListener('animationend', handleAnimationEnd, {once: true});
+		});
+	}
+	
+	function transitionOutNode(node){
+		if (animateout){
+			animateCSS(node, animateout);  // animate then delete
+		} else if (fadeout && horizontal){
+			node.classList.add("fadeout");
+			setTimeout(function(node){
+				nodeRemove(node);
+			},500,node);
+		} else if (horizontal){
+			nodeRemove(node);
+		} else if (fadeout){
+			node.classList.add("fadeout");
+			setTimeout(function(node){
+				nodeRemove(node);
+			},500,node);
+		} else if (scrolltype === "smooth"){
+			node.style.transition =  "all linear 0.5s";
+			node.style.height =  "0"; 
+			setTimeout(function(node){
+				nodeRemove(node);
+			},500,node);
+		} else {
+			nodeRemove(node);
+		}
+	}
+	
+	function nodeRemove(node=null){
+		if (node){
+			node.remove();
+		}
+		if (!(reversed && !forceAutoscroll)){
+			if (alignbottom) {
+				if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){
+					if (scrolltype=="instant"){
+						getById("output").scrollTop = getById("output").scrollHeight;
+					} else {
+						getById("output").scrollTo({
+							top: getById("output").scrollHeight,
+							left: 0,
+							behavior:scrolltype
+						});
+					}
+				}
+			} else if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){
+				if (scrolltype=="instant"){
+					document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
+				} else {
+					document.scrollingElement.scrollTo({
+						top: document.scrollingElement.scrollHeight,
+						left: 0,
+						behavior:scrolltype
+					});
+				}
 			}
 		}
 	}
@@ -5101,11 +5145,8 @@
 			}
 
 			if (timeoutDelay){
-				setTimeout(function(node){ 
-					node.classList.add("fadeout"); 
-					setTimeout(function(node){
-						nodeRemove(node);
-					},499,node);
+				setTimeout(function(node){
+					transitionOutNode(node);
 				},timeoutDelay, node);
 			}
 
@@ -5186,7 +5227,7 @@
 				}
 			}
 
-			removeNode(); 
+			cleanUpOldNodes(); 
 
 			applyBotActions(data); // Official actions
 

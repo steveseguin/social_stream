@@ -728,40 +728,22 @@ function updateSettings(ele, sync=true){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam2", setting: ele.dataset.textparam2, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam1){
-		 // don't use value
-		var tmp = document.getElementById("dock").raw.split("&"+ele.dataset.optionparam1);
-		if (tmp.length>1){
-			var tt = tmp[1].split("&");
-			if (tt.length){
-				tt.shift();
-			}
-			tt = tt.join("&");
-			document.getElementById("dock").raw = tmp[0] + tt;
-		} else {
-			document.getElementById("dock").raw = tmp[0];
-		}
-		document.getElementById("dock").raw = updateURL(ele.dataset.optionparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").raw);
+		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.optionparam1);
 		
+		if (ele.value){
+			document.getElementById("dock").raw = updateURL(ele.dataset.optionparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").raw);
+		}
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1", setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam2){
-		 // don't use value
-		var tmp = document.getElementById("overlay").raw.split("&"+ele.dataset.optionparam2);
-		if (tmp.length>1){
-			var tt = tmp[1].split("&");
-			if (tt.length){
-				tt.shift();
-			}
-			tt = tt.join("&");
-			document.getElementById("overlay").raw = tmp[0] + tt;
-		} else {
-			document.getElementById("overlay").raw = tmp[0];
-		}
-		document.getElementById("overlay").raw = updateURL(ele.dataset.optionparam2+"="+encodeURIComponent(ele.value), document.getElementById("overlay").raw);
+		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.optionparam2);
 		
+		if (ele.value){
+			document.getElementById("overlay").raw = updateURL(ele.dataset.optionparam2+"="+encodeURIComponent(ele.value), document.getElementById("overlay").raw);
+		}
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
