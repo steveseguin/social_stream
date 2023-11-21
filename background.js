@@ -322,12 +322,14 @@ function loadSettings(item, resave=false){
 	} else if (!streamID){
 		reloadNeeded = true;
 		streamID = generateStreamID(); // not stream ID, so lets generate one; then lets save it.
-		resave = true;
-		if (item){
-			item.streamID = streamID;
-		} else {
-			item = {};
-			item.streamID = streamID;
+		if (!isSSAPP){
+			resave = true;
+			if (item){
+				item.streamID = streamID;
+			} else {
+				item = {};
+				item.streamID = streamID;
+			}
 		}
 	}
 	
