@@ -18,10 +18,6 @@ var devmode = urlParams.has("devmode") || false;
 var properties = ["streamID", "password", "state", "settings"];
 var streamID = false;
 var password = false;
-chrome.storage.sync
-chrome.storage.sync.get(properties, async function(item){
-	console.log(item);
-});
 
 function log(msg,msg2=null){
 	if (devmode){
