@@ -14,6 +14,15 @@ var isSSAPP = false;
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
 
+
+var properties = ["streamID", "password", "state", "settings"];
+var streamID = false;
+var password = false;
+chrome.storage.sync
+chrome.storage.sync.get(properties, async function(item){
+	console.log(item);
+});
+
 function log(msg,msg2=null){
 	if (devmode){
 		if (msg2!==null){
@@ -296,9 +305,7 @@ function filterXSS(unsafe){ // this is not foolproof, but it might catch some ba
 	}
 }
 
-var properties = ["streamID", "password", "state", "settings"];
-var streamID = false;
-var password = false;
+
 
 function loadSettings(item, resave=false){
 	
@@ -314,7 +321,14 @@ function loadSettings(item, resave=false){
 		}
 	} else if (!streamID){
 		reloadNeeded = true;
-		streamID = generateStreamID(); // not stream ID, so lets generate one.
+		streamID = generateStreamID(); // not stream ID, so lets generate one; then lets save it.
+		resave = true;
+		if (item){
+			item.streamID = streamID;
+		} else {
+			item = {};
+			item.streamID = streamID;
+		}
 	}
 	
 	if (item && ("password" in item)){

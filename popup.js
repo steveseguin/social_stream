@@ -145,6 +145,34 @@ function miniTranslate(ele, ident = false, direct=false) {
 	}
 }
 
+function isFontAvailable(fontName) {
+    let canvas = document.createElement("canvas");
+    let context = canvas.getContext("2d");
+
+    context.font = "72px monospace"; // Use a large font size for better accuracy
+    const widthMonospace = context.measureText("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789").width;
+
+    context.font = `72px '${fontName}', monospace`;
+    const widthTest = context.measureText("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789").width;
+
+    return widthMonospace !== widthTest;
+}
+
+function populateFontDropdown() {
+    const fonts = ["Roboto", "Tahoma",  "Arial", "Verdana", "Helvetica", "Serif", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New", "Brush Script MT"];
+    let select = document.querySelector("[data-optionparam1='font']");
+
+    fonts.forEach(font => {
+        if (isFontAvailable(font)) {
+            let option = document.createElement("option");
+            option.value = font;
+			option.style="font-family:'"+font+"'";
+            option.innerText = font + " abc123XYZ";
+            select.appendChild(option);
+        }
+    });
+}
+
 document.addEventListener("DOMContentLoaded", async function(event) {
 	document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
 	document.body.className = "extension-disabled";
@@ -159,6 +187,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 		return false;
 	};
+	
+	populateFontDropdown();
 	
 	console.log("pop up asking main for settings");
 	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
@@ -406,6 +436,13 @@ function update(response, sync=true){
 							var ele = document.querySelector("input[data-textparam1='"+key+"']");
 							if (ele){
 								ele.value = response.settings[key].textparam1;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("textparam2" in response.settings[key]){
+							var ele = document.querySelector("input[data-textparam2='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].textparam2;
 								updateSettings(ele, sync);
 							}
 						}
@@ -687,6 +724,27 @@ function updateSettings(ele, sync=true){
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
+		}
+	} else if (ele.dataset.textparam2){
+		if (ele.value){
+			document.getElementById("overlay").raw = updateURL(ele.dataset.textparam2+"="+encodeURIComponent(ele.value), document.getElementById("overlay").raw);
+		} else {
+			var tmp = document.getElementById("overlay").raw.split("&"+ele.dataset.textparam2);
+			if (tmp.length>1){
+				var tt = tmp[1].split("&");
+				if (tt.length){
+					tt.shift();
+				}
+				tt = tt.join("&");
+				document.getElementById("overlay").raw = tmp[0] + tt;
+			} else {
+				document.getElementById("overlay").raw = tmp[0];
+			}
+		}
+		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
+		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam2", setting: ele.dataset.textparam2, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam1){
 		 // don't use value

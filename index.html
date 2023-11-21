@@ -16,7 +16,7 @@
     --comment-font-size: 40px;
     --author-color: #222;
     --author-bg-color: #ffa500;
-    --author-avatar-border-color: #ffa500;
+    --author-avatar-border-color: linear-gradient(35deg, #f8a700, #ffa500);
     --author-border-radius: 0px;
     --author-avatar-border-size: 3px;
     --author-avatar-size: 128px;
@@ -392,7 +392,7 @@ yt-live-chat-text-message-renderer.shown-comment {
     left: calc(-0.5 * var( --author-avatar-border-size));
     width: var(--author-avatar-size);
     height: var(--author-avatar-size);
-    background-color: var(--author-avatar-border-color);
+    background: var(--author-avatar-border-color);
     border-radius: 50%;
     border: 0;
     padding: var(--author-avatar-border-size);
@@ -910,8 +910,25 @@ span.zero-width-parent img.zero-width-emote {
 		}
 	}
 	
+	
+	function loadGoogleFont(fontName) {
+		const formattedFontName = fontName.replace(/\s/g, '+');
+
+		const link = document.createElement('link');
+		link.href = `https://fonts.googleapis.com/css2?family=${formattedFontName}&display=swap`;
+		link.rel = 'stylesheet';
+
+		document.head.appendChild(link);
+		var currentFont = getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim();
+		document.documentElement.style.setProperty("--font-family", "'"+fontName+"', "+currentFont);
+	}
+	
 	if (urlParams.get("font")){
-		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Avenir Next, Helvetica, Geneva, Verdana, Arial, sans-serif");
+		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif");
+	}
+	
+	if (urlParams.get("googlefont")) {
+		loadGoogleFont(urlParams.get("googlefont"));
 	}
 	
 	var timeoutDelay = 0;

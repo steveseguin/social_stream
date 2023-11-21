@@ -40,7 +40,7 @@
 			
 			--flex-direction: row;
 			
-			--font-family: 'Sora', Roboto, Arial, sans-serif;
+			--font-family: Sora, Avenir Next, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif;
 			
 			--donation-bgcolor: #FEFFAD33;
 			--donation-bgcolor-odd: #FDFF6533;
@@ -58,6 +58,7 @@
 			--special-bgcolor-bubble-odd: #08244cd1;
 			--bgcolor-bubble: #000D;
 			--bgcolor-bubble-odd: #111D;
+			--padding-rows: 3px;
 		}
 		.closeBtn {
 			position: absolute;
@@ -534,8 +535,6 @@
 			margin-left:4px;
 		}
 		
-		
-
 		.highlight-chat {
 			display:var(--list-or-horizontal);
 			cursor: var(--cursor-type);
@@ -544,6 +543,8 @@
 			min-height: 24px;
 			max-width:100%;
 			flex-direction: var(--flex-direction);
+			padding-top: var(--padding-rows)!important;
+			padding-bottom: var(--padding-rows)!important;
 		}
 
 		.highlight-chat.expand{
@@ -2022,7 +2023,6 @@
 		document.documentElement.style.setProperty("--donation-bgcolor", "unset");
 		document.documentElement.style.setProperty("--donation-bgcolor-bubble-odd", "unset");
 		document.documentElement.style.setProperty("--donation-bgcolor-bubble", "unset");
-		
 	}
 	
 	if (urlParams.has("pressedcolor")) {  // must be a hex code value, without the #.
@@ -2121,8 +2121,24 @@
 		splitMode = " splitMode";
 	}
 	
+	function loadGoogleFont(fontName) {
+		const formattedFontName = fontName.replace(/\s/g, '+');
+
+		const link = document.createElement('link');
+		link.href = `https://fonts.googleapis.com/css2?family=${formattedFontName}&display=swap`;
+		link.rel = 'stylesheet';
+
+		document.head.appendChild(link);
+		var currentFont = getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim();
+		document.documentElement.style.setProperty("--font-family", "'"+fontName+"', "+currentFont);
+	}
+	
 	if (urlParams.get("font")){
-		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", 'Sora', Roboto, Arial, sans-serif");
+		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif");
+	}
+	
+	if (urlParams.get("googlefont")) {
+		loadGoogleFont(urlParams.get("googlefont"));
 	}
 	
 	var scrolltype = "instant";
@@ -2709,7 +2725,11 @@
 	if (urlParams.has("compact") || urlParams.has("overlaymode")){
 		compactmode = true;
 		document.body.classList.remove("notcompactmode");
-		//document.getElementById("menu").style.display = "none";
+		document.documentElement.style.setProperty("--padding-rows", "2px");
+	}
+	
+	if (urlParams.has("padding")){
+		document.documentElement.style.setProperty("--padding-rows", (parseInt(urlParams.has("padding"))||5)+"px");
 	}
 
 
