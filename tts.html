@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Synthesis Languages</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        #languageSelect, table {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        table {
+            border-collapse: collapse;
+            max-width: 100%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Available Languages</h1>
+        <select id="languageSelect"></select>
+        <table id="voicesTable">
+            <tr>
+                <th>Name</th>
+                <th>Language</th>
+                <th>Local Service</th>
+                <th>Default</th>
+            </tr>
+            <!-- Rows will be populated here -->
+        </table>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const select = document.getElementById('languageSelect');
+            const table = document.getElementById('voicesTable');
+
+            function populateVoices() {
+                const voices = speechSynthesis.getVoices();
+                voices.forEach(voice => {
+                    const option = document.createElement('option');
+                    option.textContent = `${voice.name} (${voice.lang})`;
+                    select.appendChild(option);
+
+                    const row = table.insertRow();
+                    row.insertCell().textContent = voice.name;
+                    row.insertCell().textContent = voice.lang;
+                    row.insertCell().textContent = voice.localService ? 'Yes' : 'No';
+                    row.insertCell().textContent = voice.default ? 'Yes' : 'No';
+                });
+            }
+
+            speechSynthesis.onvoiceschanged = populateVoices;
+        });
+    </script>
+</body>
+</html>
