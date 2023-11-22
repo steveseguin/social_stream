@@ -502,16 +502,21 @@ Please note, do not share your Social Stream session ID with others as they will
 
 ### Text to speech
 
-Text messages can be converted to speech, assuming your system supports TTS.  On my Windows machine running Chrome/OBS, it works.  I have it set to English-US by default, but you can change the language to something else by editing the URL. ()
+Text messages can be converted to speech for free, assuming your system supports TTS.  On my Windows machine running Chrome/Edge/OBS, it works just fine.  I have it set to English-US by default, but you can change the language to something else by editing the URL and adjusting the language code.
 
 ie: `index.html?session=XXXXXX&speech=en-US` or `socialstream.ninja/?session=xxx&&speech=en-US`
 
-You can get a list of support languages on your system by running `speechSynthesis.getVoices()` from the Chrome browser console on your system.  You can install additional ones fairly easily, if on Windows. See: https://support.microsoft.com/en-us/windows/download-language-pack-for-speech-24d06ef3-ca09-ddcc-70a0-63606fd16394
+Please visit https://socialstream.ninja/tts for a list of available speech options for your specific browser + system. Google Chrome and MS Edge will offer both local and cloud-hosted language options, while "free" open-source browsers, like Chromium or Firefox may only have access to local system languages or none at all. Local options should work within the OBS browser source, such as the ones shown in the image below, but non-local free options will need to be used via Chrome or Edge.
+
+![image](https://github.com/steveseguin/social_stream/assets/2575698/228ff1ca-ad7b-4d73-b3a6-2ff2e01c6cca)
+
+You can sometimes install additional local languages if on Windows. See: https://support.microsoft.com/en-us/windows/download-language-pack-for-speech-24d06ef3-ca09-ddcc-70a0-63606fd16394
 
 ![image](https://user-images.githubusercontent.com/2575698/165753730-374498e7-7885-49ef-83ba-7fe2acde26ee.png)
 
-The audio will play out the default system audio output device. This might be a problem if using OBS for capture, as you'll need to use a virtual audio cable to capture the audio output of the system output and route it back into OBS for capture.  Another user mentioned they were able to capture the TTS audio in OBS by selecting `explorer.exe` in the system application recorder.  Using the Premium Google-based TTS option (mentioned below) might also be a solution to this issue.   See the related issue here: https://github.com/w3c/mediacapture-output/issues/102
+Please note that when using this free TTS approach, the audio will play out the default system audio output device. This might be a problem if using OBS for capture, as you'll need to use a virtual audio cable to capture the audio output of the system output and route it back into OBS for capture.  Another user mentioned they were able to capture the TTS audio in OBS by selecting `explorer.exe` in the system application recorder.
 
+If it's too complicated to use the built-in free TTS, using the premium Google Cloud / ElevenLabs TTS option (mentioned below) would be a great non-free solution to this issue. The paid options play out as browser tab audio, not system audio. See the related issue here: https://github.com/w3c/mediacapture-output/issues/102
 
 If loading the app in the Chrome/Edge/Firefox browser, you will need to "click" the web page first before audio will play. This isn't the case with OBS, but most browsers require the user interact with the website on some level before it will play audio.  Please keep this in mind when testing things.
 
