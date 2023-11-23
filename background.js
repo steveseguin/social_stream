@@ -971,7 +971,7 @@ chrome.runtime.onMessage.addListener(
 				
 				sendResponse({"state": isExtensionOn  ,"streamID":streamID, "password":password, "settings":settings});
 				
-			} else if (request.cmd && (request.cmd === "getSettings")) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+			} else if (request.cmd && (request.cmd === "getSettings")) {
 				sendResponse({"state": isExtensionOn , "streamID":streamID, "password":password, "settings":settings});
 
 			} else if (request.cmd && (request.cmd === "saveSetting")) {
@@ -2501,48 +2501,34 @@ function processIncomingRequest(request){
 	} else if ("action" in request){
 		if (request.action === "openChat"){
 			openchat(request.value || null); 
-		} else if (request.action === "blockUser"){ // {chatname:chatName, type:type
-			if (settings.blacklistusers && settings.blacklistusers.textsetting && request.value && request.value.chatname && request.value.type){
-				var matched = false;
-				settings.blacklistusers.textsetting.split(",").forEach(user=>{
-					var type = "*";
-					if (user.split(":").length>1){
-						type = user.split(":")[1].trim();
-						user = user.split(":")[0].trim();
-						if (user && (request.value.chatname === user) && ((request.value.type === type) || ("*" === type))){
-							matched = true;
-						}
-					} else {
-						user = user.trim();
-						if (user && (request.value.chatname === user)){
-							matched = true;
-						}
-					}
-				});
-				if (!matched){
-					settings.blacklistusers.textsetting += ","+request.value.chatname+":"+request.value.type;
-					
-					chrome.storage.local.set({
-						settings: settings
-					});
-					chrome.runtime.lastError;
+		} else if (request.action === "blockUser" && request.value && request.value.chatname && request.value.type){
+			// Initialize blacklist settings if not present
+			if (!settings.blacklistusers) {
+				settings.blacklistusers = { textsetting: "" };
+			}
+
+			const blacklist = settings.blacklistusers.textsetting.split(",").map(user => {
+				const parts = user.split(":").map(part => part.trim());
+				return { username: parts[0], type: parts[1] || "*" };
+			});
+
+			const userToBlock = { username: request.value.chatname, type: request.value.type };
+			const isAlreadyBlocked = blacklist.some(({ username, type }) => 
+				userToBlock.username === username && (userToBlock.type === type || type === "*")
+			);
+
+			if (!isAlreadyBlocked){
+				// Update blacklist settings
+				settings.blacklistusers.textsetting += (settings.blacklistusers.textsetting ? "," : "") + userToBlock.username + ":" + userToBlock.type;
+				chrome.storage.local.set({ settings: settings });
+				// Check for errors in chrome storage operations
+				if (chrome.runtime.lastError) {
+					console.error("Error updating settings:", chrome.runtime.lastError.message);
 				}
-				if (isExtensionOn){ 
-					sendToDestinations({"blockUser": {chatname: request.value.chatname, type: request.value.type}});
-				}
-			} else if (request.value && request.value.chatname && request.value.type){
-				settings.blacklistusers = {};
-				settings.blacklistusers.textsetting = request.value.chatname+":"+request.value.type;;
-				settings.blacklistusers.value = request.value.chatname;
-				
-				chrome.storage.local.set({
-					settings: settings
-				});
-				chrome.runtime.lastError;
-		
-				if (isExtensionOn){
-					sendToDestinations({"blockUser": {chatname:  request.value.chatname, type: request.value.type}});
-				}
+			}
+
+			if (isExtensionOn){ 
+				sendToDestinations({"blockUser": userToBlock});
 			}
 		}
 	}
@@ -3262,29 +3248,18 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 	
 	try {
 		if (settings.blacklistuserstoggle && data.chatname){
-			if (settings.blacklistusers && settings.blacklistusers.textsetting){
-				let block = false;
-				
-				settings.blacklistusers.textsetting.split(",").forEach(storeUser=>{
-					var storedType = "*";
-					storeUser = storeUser.toLowerCase();
-					if (storeUser.split(":").length>1){
-						storedType = storeUser.split(":")[1].trim();
-						storeUser = storeUser.split(":")[0].trim();
-						if (storeUser && (request.value.chatname === storeUser) && ((request.value.type === type) || ("*" === storedType))){
-							block = true;
-						}
-					} else {
-						storeUser = storeUser.trim();
-						if (storeUser && (request.value.chatname === storeUser)){
-							block = true;
-						}
-					}
-				});
-				
-				if (block){
-					return null;
-				}
+			const blacklist = settings.blacklistusers.textsetting.split(",").map(user => {
+				const parts = user.toLowerCase().split(":").map(part => part.trim());
+				return { username: parts[0], type: parts[1] || "*" };
+			});
+
+			const isBlocked = blacklist.some(({ username, type }) => 
+				data.chatname.toLowerCase() === username && 
+				(data.type === type || type === "*")
+			);
+
+			if (isBlocked){
+				return null;
 			}
 		}
 		
