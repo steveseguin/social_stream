@@ -93,6 +93,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - steamcommunity.com (https://steamcommunity.com/broadcast/chatonly/XXXXXXXX)
 - whatnot.com (no pop out, so just open the view page)
 - sessions.us - the meeting video chat; not popped out.(You can specify your own name, rather than "You", via the host/bot section in the extension menu)
+- jaco.live (https://jaco.live/golive)
 
 [More on request](#requesting-a-site)
 
