@@ -3344,7 +3344,11 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			searchGif = searchGif.replaceAll("!giphy","").trim();
 			if (searchGif){
 				var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(searchGif) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
-					return response.data[0].images.downsized_large.url;
+					try {
+						return response.data[0].images.downsized_large.url;
+					} catch(e){
+						return false;
+					}
 				});
 				if (gurl){
 					data.contentimg = gurl;
@@ -3360,7 +3364,11 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				word = word.replaceAll("#"," ").trim();
 				if (word){
 					var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(word) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
-						return response.data[0].images.downsized_large.url;
+						try {
+							return response.data[0].images.downsized_large.url;
+						} catch(e){
+							return false;
+						}
 					});
 					if (gurl){
 						data.contentimg = gurl;

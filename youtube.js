@@ -63,6 +63,18 @@
 		return resp;
 	}
 	
+	function findSingleInteger(input) {
+		// Ensure the input is a string
+		const str = String(input);
+		
+		const matches = str.match(/\d+/g);
+		if (matches && matches.length === 1) {
+			return parseInt(matches[0], 10);
+		} else {
+			return false;
+		}
+	}
+
 	function processMessage(ele, wss=true){
 		if (ele.hasAttribute("is-deleted")) {
 			//console.log("Message is deleted already");
@@ -173,12 +185,16 @@
 			chatmembership = ele.querySelector(".yt-live-chat-membership-item-renderer #header-subtext").innerHTML;
 		} catch (e) {}
 
+		var treatAsMemberChat = false;
 		if (!chatmembership && settings.allmemberchat){
 			if (ele.hasAttribute("author-type")){
 				if (ele.getAttribute("author-type") === "member"){
-					chatmembership = chatmessage;
+					//chatmembership = chatmessage;
+					treatAsMemberChat = true;
 				}
 			}
+		} else if (chatmembership){
+			treatAsMemberChat = true;
 		}
 
 
@@ -218,13 +234,25 @@
 
 		var hasMembership = '';
 		
-		
+		var subtitle = "";
 		
 		var giftedmemembership = ele.querySelector("#primary-text.ytd-sponsorships-live-chat-header-renderer");
 
-		if (chatmembership) {
+		if (treatAsMemberChat) {
 			if (chatmessage) {
-				hasMembership = getTranslation("member-chat", "MEMBERSHIP");
+				hasMembership = chatmembership || getTranslation("member-chat", "MEMBERSHIP");
+				var membershipLength = ele.querySelector("#header-subtext.yt-live-chat-membership-item-renderer, #header-primary-text.yt-live-chat-membership-item-renderer") || false;
+				if (membershipLength){
+					membershipLength = getAllContentNodes(membershipLength);
+					membershipLength = findSingleInteger(membershipLength);
+				}
+				if (membershipLength){
+					if (membershipLength==1){
+						subtitle = membershipLength + " " + getTranslation("month", "month")
+					} else {
+						subtitle = membershipLength + " " + getTranslation("months", "months");
+					}
+				}
 			} else if (giftedmemembership) {
 				hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 				if (!settings.textonlymode) {
@@ -235,9 +263,9 @@
 			} else {
 				hasMembership =  getTranslation("new-member", "NEW MEMBER!");
 				if (!settings.textonlymode) {
-					chatmessage = "<i>" + chatmembership + "</i>";
+					chatmessage = "<i>" + (chatmessage||chatmembership) + "</i>";
 				} else {
-					chatmessage = chatmembership;
+					chatmessage = (chatmessage||chatmembership);
 				}
 			}
 		} else if (!chatmessage && giftedmemembership) {
@@ -296,8 +324,10 @@
 		data.chatimg = chatimg;
 		data.hasDonation = hasDonation;
 		data.membership = hasMembership;
+		data.subtitle = subtitle;
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube";
+		
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, {
 				"message": data

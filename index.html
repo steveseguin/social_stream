@@ -624,8 +624,7 @@ span.zero-width-parent img.zero-width-emote {
 }
 
 .dono{
-	margin-bottom: 15px;
-	min-height: 160px;
+	min-height: 195px;
 }
 
 
@@ -1561,12 +1560,19 @@ span.zero-width-parent img.zero-width-emote {
 				
 				var memebershipHTML = "";
 				
-				if (data.hasMembership){
+				if (data.hasMembership){ // doesn't have subtitles; shouldn't at least.
 					data.membership = data.hasMembership.toString();
 					memebershipHTML = data.membership;
 				} else if (data.membership){
 					data.membership = data.membership.toString();
-					memebershipHTML = '<div class="donation membership">'+data.membership+'</div>';
+					if (data.subtitle){
+						memebershipHTML = '<div class="donation membership">'+data.membership+'<br><small>'+data.subtitle+'</small></div>';
+					} else {
+						memebershipHTML = '<div class="donation membership">'+data.membership+'</div>';
+					}
+					
+				} else if (data.subtitle){
+					memebershipHTML = '<div class="donation membership"><small>'+data.subtitle+'</small></div>';
 				} else {
 					data.membership = "";
 				}
