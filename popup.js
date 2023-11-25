@@ -160,8 +160,52 @@ function isFontAvailable(fontName) {
 
 function populateFontDropdown() {
     const fonts = ["Roboto", "Tahoma",  "Arial", "Verdana", "Helvetica", "Serif", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New", "Brush Script MT"];
-    let select = document.querySelector("[data-optionparam1='font']");
-
+	
+    var select = document.querySelector("[data-optionparam1='font']");
+    fonts.forEach(font => {
+        if (isFontAvailable(font)) {
+            let option = document.createElement("option");
+            option.value = font;
+			option.style="font-family:'"+font+"'";
+            option.innerText = font + " abc123XYZ";
+            select.appendChild(option);
+        }
+    });
+	
+	select = document.querySelector("[data-optionparam2='font']");
+    fonts.forEach(font => {
+        if (isFontAvailable(font)) {
+            let option = document.createElement("option");
+            option.value = font;
+			option.style="font-family:'"+font+"'";
+            option.innerText = font + " abc123XYZ";
+            select.appendChild(option);
+        }
+    });
+	
+	select = document.querySelector("[data-optionparam4='font']");
+    fonts.forEach(font => {
+        if (isFontAvailable(font)) {
+            let option = document.createElement("option");
+            option.value = font;
+			option.style="font-family:'"+font+"'";
+            option.innerText = font + " abc123XYZ";
+            select.appendChild(option);
+        }
+    });
+	
+	select = document.querySelector("[data-optionparam5='font']");
+    fonts.forEach(font => {
+        if (isFontAvailable(font)) {
+            let option = document.createElement("option");
+            option.value = font;
+			option.style="font-family:'"+font+"'";
+            option.innerText = font + " abc123XYZ";
+            select.appendChild(option);
+        }
+    });
+	
+	select = document.querySelector("[data-optionparam1='font']");
     fonts.forEach(font => {
         if (isFontAvailable(font)) {
             let option = document.createElement("option");
@@ -446,6 +490,27 @@ function update(response, sync=true){
 								updateSettings(ele, sync);
 							}
 						}
+						if ("textparam3" in response.settings[key]){
+							var ele = document.querySelector("input[data-textparam3='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].textparam3;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("textparam4" in response.settings[key]){
+							var ele = document.querySelector("input[data-textparam4='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].textparam4;
+								updateSettings(ele, sync);
+							}
+						}
+						if ("textparam5" in response.settings[key]){
+							var ele = document.querySelector("input[data-textparam5='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key].textparam5;
+								updateSettings(ele, sync);
+							}
+						}
 						if ("optionparam1" in response.settings[key]){
 							var ele = document.querySelector("select[data-optionparam1='"+key+"']");
 							if (ele){
@@ -717,7 +782,7 @@ function updateSettings(ele, sync=true){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.textparam2){
-		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.textparam2);
+		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.textparam2);
 		
 		if (ele.value){
 			document.getElementById("overlay").raw = updateURL(ele.dataset.textparam2+"="+encodeURIComponent(ele.value), document.getElementById("overlay").raw);
@@ -726,6 +791,39 @@ function updateSettings(ele, sync=true){
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam2", setting: ele.dataset.textparam2, "value": ele.value}, function (response) {});
+		}
+	} else if (ele.dataset.textparam3){
+		document.getElementById("emoteswall").raw = removeQueryParamWithValue(document.getElementById("emoteswall").raw, ele.dataset.textparam3);
+		
+		if (ele.value){
+			document.getElementById("emoteswall").raw = updateURL(ele.dataset.textparam3+"="+encodeURIComponent(ele.value), document.getElementById("emoteswall").raw);
+		}
+		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
+		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam3", setting: ele.dataset.textparam3, "value": ele.value}, function (response) {});
+		}
+	} else if (ele.dataset.textparam4){
+		document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.textparam4);
+		
+		if (ele.value){
+			document.getElementById("hypemeter").raw = updateURL(ele.dataset.textparam4+"="+encodeURIComponent(ele.value), document.getElementById("hypemeter").raw);
+		}
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam4", setting: ele.dataset.textparam4, "value": ele.value}, function (response) {});
+		}
+	} else if (ele.dataset.textparam5){
+		document.getElementById("waitlist").raw = removeQueryParamWithValue(document.getElementById("waitlist").raw, ele.dataset.textparam5);
+		
+		if (ele.value){
+			document.getElementById("waitlist").raw = updateURL(ele.dataset.textparam5+"="+encodeURIComponent(ele.value), document.getElementById("waitlist").raw);
+		}
+		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
+		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam5", setting: ele.dataset.textparam5, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam1){
 		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.optionparam1);
@@ -751,39 +849,22 @@ function updateSettings(ele, sync=true){
 		}
 	///
 	} else if (ele.dataset.optionparam3){
-		 // don't use value
-		var tmp = document.getElementById("emoteswall").raw.split("&"+ele.dataset.optionparam3);
-		if (tmp.length>1){
-			var tt = tmp[1].split("&");
-			if (tt.length){
-				tt.shift();
-			}
-			tt = tt.join("&");
-			document.getElementById("emoteswall").raw = tmp[0] + tt;
-		} else {
-			document.getElementById("emoteswall").raw = tmp[0];
-		}
-		document.getElementById("emoteswall").raw = updateURL(ele.dataset.optionparam3+"="+encodeURIComponent(ele.value), document.getElementById("emoteswall").raw);
+		document.getElementById("emoteswall").raw = removeQueryParamWithValue(document.getElementById("emoteswall").raw, ele.dataset.optionparam3);
 		
+		if (ele.value){
+			document.getElementById("emoteswall").raw = updateURL(ele.dataset.optionparam3+"="+encodeURIComponent(ele.value), document.getElementById("emoteswall").raw);
+		}
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam3", setting: ele.dataset.optionparam3, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam4){
-		 // don't use value
-		var tmp = document.getElementById("hypemeter").raw.split("&"+ele.dataset.optionparam4);
-		if (tmp.length>1){
-			var tt = tmp[1].split("&");
-			if (tt.length){
-				tt.shift();
-			}
-			tt = tt.join("&");
-			document.getElementById("hypemeter").raw = tmp[0] + tt;
-		} else {
-			document.getElementById("hypemeter").raw = tmp[0];
+		document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.optionparam4);
+		
+		if (ele.value){
+			document.getElementById("hypemeter").raw = updateURL(ele.dataset.optionparam4+"="+encodeURIComponent(ele.value), document.getElementById("hypemeter").raw);
 		}
-		document.getElementById("hypemeter").raw = updateURL(ele.dataset.optionparam4+"="+encodeURIComponent(ele.value), document.getElementById("hypemeter").raw);
 		
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
@@ -791,19 +872,11 @@ function updateSettings(ele, sync=true){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam5){
-		 // don't use value
-		var tmp = document.getElementById("waitlist").raw.split("&"+ele.dataset.optionparam5);
-		if (tmp.length>1){
-			var tt = tmp[1].split("&");
-			if (tt.length){
-				tt.shift();
-			}
-			tt = tt.join("&");
-			document.getElementById("waitlist").raw = tmp[0] + tt;
-		} else {
-			document.getElementById("waitlist").raw = tmp[0];
+		document.getElementById("waitlist").raw = removeQueryParamWithValue(document.getElementById("waitlist").raw, ele.dataset.optionparam5);
+		
+		if (ele.value){
+			document.getElementById("waitlist").raw = updateURL(ele.dataset.optionparam5+"="+encodeURIComponent(ele.value), document.getElementById("waitlist").raw);
 		}
-		document.getElementById("waitlist").raw = updateURL(ele.dataset.optionparam5+"="+encodeURIComponent(ele.value), document.getElementById("waitlist").raw);
 		
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");

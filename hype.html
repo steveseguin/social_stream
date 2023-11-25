@@ -360,8 +360,24 @@
 		password = urlParams.get("password") || "false";
 	}
 	
+	function loadGoogleFont(fontName) {
+		const formattedFontName = fontName.replace(/\s/g, '+');
+
+		const link = document.createElement('link');
+		link.href = `https://fonts.googleapis.com/css2?family=${formattedFontName}&display=swap`;
+		link.rel = 'stylesheet';
+
+		document.head.appendChild(link);
+		var currentFont = getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim();
+		document.documentElement.style.setProperty("--font-family", "'"+fontName+"', "+currentFont);
+	}
+	
 	if (urlParams.get("font")){
-		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", 'Sora', Roboto, Arial, sans-serif");
+		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Sora, Roboto, Avenir Next, Helvetica, Geneva, Verdana, Arial, sans-serif");
+	}
+	
+	if (urlParams.get("googlefont")) {
+		loadGoogleFont(urlParams.get("googlefont"));
 	}
 
 	if (urlParams.has('css')){
