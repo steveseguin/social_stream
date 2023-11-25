@@ -3120,10 +3120,10 @@
 		document.documentElement.style.setProperty("--highlight-base2", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact", "#0000", "important");
 		document.documentElement.style.setProperty("--highlight-compact2", "#0000", "important");
-		document.documentElement.style.setProperty("--donation-bgcolor-bubble-odd", document.documentElement.style.getPropertyValue("--donation-bgcolor-bubble"));
-		document.documentElement.style.setProperty("--member-bgcolor-bubble-odd", document.documentElement.style.getPropertyValue("--member-bgcolor-bubble"));
-		document.documentElement.style.setProperty("--special-bgcolor-bubble-odd", document.documentElement.style.getPropertyValue("--special-bgcolor-bubble"));
-		document.documentElement.style.setProperty("--bgcolor-bubble-odd", document.documentElement.style.getPropertyValue("--bgcolor-bubble"));
+		document.documentElement.style.setProperty("--donation-bgcolor-bubble-odd", getComputedStyle(document.documentElement).getPropertyValue("--donation-bgcolor-bubble"));
+		document.documentElement.style.setProperty("--member-bgcolor-bubble-odd", getComputedStyle(document.documentElement).getPropertyValue("--member-bgcolor-bubble"));
+		document.documentElement.style.setProperty("--special-bgcolor-bubble-odd", getComputedStyle(document.documentElement).getPropertyValue("--special-bgcolor-bubble"));
+		document.documentElement.style.setProperty("--bgcolor-bubble-odd", getComputedStyle(document.documentElement).getPropertyValue("--bgcolor-bubble"));
 	}
 
 	if (urlParams.has("nooutline")){
