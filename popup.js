@@ -296,6 +296,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
+	var iii = document.querySelectorAll("input[type='text'][class*='instant']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].oninput = updateSettings;
+	}
 	
 	var iii = document.querySelectorAll("input[type='number']");
 	for (var i=0;i<iii.length;i++){
