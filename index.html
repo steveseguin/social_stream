@@ -1248,7 +1248,7 @@ span.zero-width-parent img.zero-width-emote {
 					}
 				} else if (vce.name && vce.name.includes("Siri")){ // SIRI sucks and breaks a lot, so lets skip if possible.
 					return; 
-				} else if (!voice && vce.lang && (vce.lang == speechLang)){
+				} else if (vce.lang && (vce.lang.toLowerCase() == speechLang.toLowerCase())){
 					voice = vce;
 				} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
 					voice = vce;
