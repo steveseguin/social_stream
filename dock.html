@@ -58,6 +58,7 @@
 			--special-bgcolor-bubble-odd: #08244cd1;
 			--bgcolor-bubble: #000D;
 			--bgcolor-bubble-odd: #111D;
+			
 			--padding-rows: 3px;
 		}
 		.closeBtn {
@@ -2681,7 +2682,7 @@
 					}
 				} else if (vce.name && vce.name.includes("Siri")){ // SIRI sucks and breaks a lot, so lets skip if possible.
 					return;
-				} else if (!voice && vce.lang && (vce.lang == speechLang)){
+				} else if (!voice && vce.lang && (vce.lang.toLowerCase() == speechLang.toLowerCase())){
 					voice = vce;
 				} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
 					voice = vce;
