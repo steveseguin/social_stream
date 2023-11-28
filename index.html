@@ -1050,15 +1050,35 @@ span.zero-width-parent img.zero-width-emote {
 	var conCon = 1;
 	var socketserver = false;
 	var serverURL = "wss://api.overlay.ninja";
+	var reconnectionTimeout = null;
 	
 	function setupSocket(allin=false){
+	
+		if (reconnectionTimeout) {
+			clearTimeout(reconnectionTimeout);
+			reconnectionTimeout = null;
+		}
+		
+		if (socketserver) {
+			socketserver.onclose = null;
+            socketserver.close();
+			socketserver = null;
+        }
+		
+		socketserver = new WebSocket(serverURL);
+	
 		socketserver.onclose = function (){
-			setTimeout(function(){
+			reconnectionTimeout = setTimeout(function(){
 				conCon+=1;
-				socketserver = new WebSocket(serverURL); // version 1.x.x of the app.
 				setupSocket(allin);
 			},100*conCon);
 		};
+		
+		socketserver.onerror = function (error) {
+			console.error('WebSocket error:', error);
+			socketserver.close();
+		};
+		
 		socketserver.onopen = function (){
 			conCon = 1;
 			if (allin==1){
@@ -1118,15 +1138,12 @@ span.zero-width-parent img.zero-width-emote {
 	}
 	if (urlParams.has("server")){
 		serverURL = urlParams.get("server") || serverURL;
-		socketserver = new WebSocket(serverURL); 
 		setupSocket();
 	} else if (urlParams.has("server2")){
 		serverURL = urlParams.get("server2") || serverURL;
-		socketserver = new WebSocket(serverURL); 
 		setupSocket(1);
 	}  else if (urlParams.has("server3")){
 		serverURL = urlParams.get("server3") || serverURL;
-		socketserver = new WebSocket(serverURL); 
 		setupSocket(2);
 	}
 	

@@ -2426,12 +2426,25 @@
 	var conCon = 1;
 	var socketserver = false;
 	var serverURL = "wss://api.overlay.ninja/api";
-
+	var reconnectionTimeout = null;
 	function setupSocket(){
+	
+		// Clear any existing reconnection timeout
+		if (reconnectionTimeout) {
+			clearTimeout(reconnectionTimeout);
+			reconnectionTimeout = null;
+		}
+	
+		if (socketserver) {
+			socketserver.onclose = null;
+            socketserver.close();
+			socketserver = null;
+        }
+		socketserver = new WebSocket(serverURL);
+		
 		socketserver.onclose = function (){
-			setTimeout(function(){
+			reconnectionTimeout = setTimeout(function(){
 				conCon+=1;
-				socketserver = new WebSocket(serverURL);
 				setupSocket();
 			},100*conCon);
 		};
@@ -2439,10 +2452,18 @@
 			conCon = 1;
 			socketserver.send(JSON.stringify({"join":roomID, "out":2, "in":1}));
 		};
+		
+		socketserver.onerror = function (error) {
+			console.error('WebSocket error:', error);
+			socketserver.close();
+		};
+	
 		socketserver.addEventListener('message', function (event) {
 			var resp = false
 			if (event.data){
-				var data = JSON.parse(event.data);
+				try {
+					var data = JSON.parse(event.data);
+				} catch(e){return;}
 				processInput(data);
 				if (data.get){
 					var ret = {};
@@ -2457,7 +2478,6 @@
 	
 	if (urlParams.has("server")){
 		serverURL = urlParams.get("server") || serverURL;
-		socketserver = new WebSocket(serverURL);
 		setupSocket();
 	}
 	
@@ -2469,24 +2489,46 @@
 	var serverURLExtension = "wss://api.overlay.ninja/extension";
 	var server2 = false;
 	var server3 = false;
+	var reconnectionTimeoutExtension = null;
 	
 	function setupSocketExtension(){
+	
+		if (reconnectionTimeoutExtension) {
+			clearTimeout(reconnectionTimeoutExtension);
+			reconnectionTimeoutExtension = null;
+		}
+	
+		if (socketserverExtension) {
+			socketserverExtension.onclose = null;
+            socketserverExtension.close();
+			socketserverExtension = null;
+        }
+		
+		socketserverExtension = new WebSocket(serverURLExtension);
+		
 		socketserverExtension.onclose = function (){
-			setTimeout(function(){
+			reconnectionTimeoutExtension = setTimeout(function(){
 				conConExtension+=1;
-				socketserverExtension = new WebSocket(serverURLExtension);
 				setupSocketExtension();
-			},100*conCon);
+			},100*conConExtension);
 		};
 		socketserverExtension.onopen = function (){
 			conConExtension = 1;
 			socketserverExtension.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
 		};
+		
+		socketserverExtension.onerror = function (error) {
+			console.error('WebSocket error:', error);
+			socketserverExtension.close();
+		};
+	
 		socketserverExtension.addEventListener('message', function (event) {
 			var resp = false
 			if (event.data && server2){
+				try{
 				var data = JSON.parse(event.data);
 				processInput(data);
+				} catch(e){console.error(e);}
 			}
 		});
 	}
@@ -2497,12 +2539,10 @@
 			server3 = true;
 		}
 		serverURLExtension = urlParams.get("server2") || serverURLExtension;
-		socketserverExtension = new WebSocket(serverURLExtension);
 		setupSocketExtension();
 	} else if (urlParams.has("server3")){
 		server3 = true;
 		serverURLExtension = urlParams.get("server3") || serverURLExtension;
-		socketserverExtension = new WebSocket(serverURLExtension);
 		setupSocketExtension();
 	}
 	

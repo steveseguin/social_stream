@@ -1009,7 +1009,6 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "socketserver"){
 					if (request.value){
 						if (!socketserver){
-							socketserver = new WebSocket(serverURL);
 							setupSocket();
 						}
 					} else {
@@ -1022,7 +1021,6 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "server2"){
 					if (request.value){
 						if (!socketserverDock){
-							//socketserverDock = new WebSocket(serverURLDock);
 							setupSocketDock();
 						}
 					} else {
@@ -1033,7 +1031,6 @@ chrome.runtime.onMessage.addListener(
 				} else if (request.setting == "server3"){
 					if (request.value){
 						if (!socketserverDock){
-							//socketserverDock = new WebSocket(serverURLDock);
 							setupSocketDock();
 						}
 					} else {
@@ -1753,18 +1750,34 @@ function sendToPost(data){
 var socketserverDock = false;
 var serverURLDock = "wss://api.overlay.ninja/dock";
 var conConDock = 0;
+var reconnectionTimeoutDock = null;
 
 function setupSocketDock(){
 
 	if (!settings.server2 && !settings.server3){return;}
 	else if (!isExtensionOn){return;}
-	else if (!socketserverDock){
-		socketserverDock = new WebSocket(serverURLDock);
+	
+	if (reconnectionTimeoutDock) {
+		clearTimeout(reconnectionTimeoutDock);
+		reconnectionTimeoutDock = null;
 	}
+	
+	if (socketserverDock) {
+		socketserverDock.onclose = null;
+		socketserverDock.close();
+		socketserverDock = null;
+	}
+	
+	socketserverDock = new WebSocket(serverURLDock);
+	
+	socketserverDock.onerror = function (error) {
+		console.error('WebSocket error:', error);
+		socketserverDock.close();
+	};
 	
 	socketserverDock.onclose = function (){
 		if ((settings.server2 || settings.server3) && isExtensionOn){
-			setTimeout(function(){
+			reconnectionTimeoutDock = setTimeout(function(){
 				if ((settings.server2 || settings.server3) && isExtensionOn){
 					conConDock+=1;
 					socketserverDock = new WebSocket(serverURLDock);
@@ -1785,8 +1798,10 @@ function setupSocketDock(){
 		if (event.data){
 			try {
 				if (settings.server3 && isExtensionOn){
-					var data = JSON.parse(event.data);
-					processIncomingRequest(data);
+					try {
+						var data = JSON.parse(event.data);
+						processIncomingRequest(data);
+					} catch(e){console.error(e);}
 				}
 			} catch(e){
 				log(e);
@@ -1799,21 +1814,36 @@ function setupSocketDock(){
 var socketserver = false;
 var serverURL = "wss://api.overlay.ninja/api";
 var conCon = 0;
+var reconnectionTimeout = null;
 
 function setupSocket(){
 
 	if (!settings.socketserver){return;}
 	else if (!isExtensionOn){return;}
-	else if (!socketserver){
-		socketserver = new WebSocket(serverURL);
+	
+	if (reconnectionTimeout) {
+		clearTimeout(reconnectionTimeout);
+		reconnectionTimeout = null;
 	}
+	
+	if (socketserver) {
+		socketserver.onclose = null;
+		socketserver.close();
+		socketserver = null;
+	}
+	
+	socketserver = new WebSocket(serverURL);
+	
+	socketserver.onerror = function (error) {
+		console.error('WebSocket error:', error);
+		socketserver.close();
+	};
 	
 	socketserver.onclose = function (){
 		if (settings.socketserver && isExtensionOn){
-			setTimeout(function(){
+			reconnectionTimeout = setTimeout(function(){
 				if (settings.socketserver && isExtensionOn){
 					conCon+=1;
-					socketserver = new WebSocket(serverURL);
 					setupSocket();
 				} else {
 					socketserver = false;
@@ -1829,9 +1859,15 @@ function setupSocket(){
 	};
 	socketserver.addEventListener('message', async function (event) {
 		if (event.data){
-
-			var data = JSON.parse(event.data);
 			var resp = false;
+			
+			try {
+				var data = JSON.parse(event.data);
+			} catch(e){
+				console.error(e);
+				return;
+			}
+			
 			if (data.action && (data.action === "sendChat") && data.value){
 				var msg = {};
 				msg.response = data.value;
@@ -1879,7 +1915,6 @@ function setupSocket(){
 				}
 			} 
 
-			var ret = {};
 			if (typeof resp == "object"){
 				resp = true;
 			}
