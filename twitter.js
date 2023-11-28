@@ -59,32 +59,43 @@
 		var chatname="";
 		var msg="";
 		
-		console.log(ele);
+	//	console.log(ele);
 		
 		try {
 			var nameElement = ele.querySelector('span');
 			chatname = escapeHtml(nameElement.textContent.trim());
 			chatname = chatname.split(":")[0];
-			var node = nameElement.nextElementSibling;
+			var node = nameElement.nextElementSibling; // if no link on name
 			if (!node){
-				node = nameElement.parentNode.nextElementSibling;
+				node = nameElement.parentNode.nextElementSibling; // if link on name
 			}
-			while (node) {
-				if (node.childNodes.length){
-					msg += getAllContentNodes(node)
-				} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-					msg += escapeHtml(node.textContent)+" ";
-				} else if (node.nodeType === 1){
-					if (!settings.textonlymode){ 
-						if ((node.nodeName == "IMG") && node.src){
-							node.src = node.src+"";
+			try {
+				if (!node){
+					node = nameElement.parentNode.parentNode.nextElementSibling;  // if link on name and container on that
+				}
+				if (!node){
+					msg = getAllContentNodes(ele); // just grab all the text and delete just the name as a fallback
+					msg = msg.split(":")[1]; // deleting name.
+				} else {
+					while (node) {
+						if (node.childNodes.length){
+							msg += getAllContentNodes(node)
+						} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+							msg += escapeHtml(node.textContent)+" ";
+						} else if (node.nodeType === 1){
+							if (!settings.textonlymode){ 
+								if ((node.nodeName == "IMG") && node.src){
+									node.src = node.src+"";
+								}
+								msg += node.outerHTML;
+							}
 						}
-						msg += node.outerHTML;
+						node = node.nextElementSibling;
 					}
 				}
-				node = node.nextElementSibling;
+			} catch(e){
+				//console.error(e);return;
 			}
-			
 			msg = msg.trim();
 
 		} catch(e){
