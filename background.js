@@ -1022,7 +1022,7 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "server2"){
 					if (request.value){
 						if (!socketserverDock){
-							socketserverDock = new WebSocket(serverURLDock);
+							//socketserverDock = new WebSocket(serverURLDock);
 							setupSocketDock();
 						}
 					} else {
@@ -1033,7 +1033,7 @@ chrome.runtime.onMessage.addListener(
 				} else if (request.setting == "server3"){
 					if (request.value){
 						if (!socketserverDock){
-							socketserverDock = new WebSocket(serverURLDock);
+							//socketserverDock = new WebSocket(serverURLDock);
 							setupSocketDock();
 						}
 					} else {
