@@ -85,6 +85,8 @@
 			name = escapeHtml(name);
 		  }
 		}
+		
+		var nameColor = ele.querySelector('.chat-history--username > a[style]').style.color || "";
 
 		var msg = "";
 		
@@ -131,11 +133,18 @@
 			}
 		}
 
+		var badges = [];
+		ele.querySelectorAll(".chat-history--user-badge[src]").forEach(badge=>{
+			badges.push(badge.src);
+		});
+		
+
 		var data = {};
 		data.chatname = name;
-		data.chatbadges = "";
+		data.chatbadges = badges;
 		data.backgroundColor = "";
 		data.textColor = "";
+		data.nameColor = nameColor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = dono;
