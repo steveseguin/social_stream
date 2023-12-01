@@ -4942,9 +4942,8 @@
 					+ '</div><div class="hl-message">'
 						+ timeArrived
 						+ '<span class="hl-content" dir="'+textDirection+'" id="content_'+data.id+'">' + chatmessage + '</span>'
-						+ '</div>'
-					+ addImage
-					+ donationHTML + '</div>');
+						+ addImage
+					+ donationHTML + '</div></div>');
 			} else if (splitMode){
 				var node = createElementFromHTML('<div id="msg_'+data.id+'" '+mid+' data-menu="context-menu" class="highlight-chat'+larger+expand+'" data-source-type="'+data.type+'">'
 					 + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>"
@@ -5120,7 +5119,7 @@
 				}
 			}
 			
-			if (bubble && largeavatar && node.contentLength){
+			if (bubble && largeavatar){
 				node.querySelector(".hl-rightside").classList.add("bubble"); 
 				
 				if (highlightDonos && data.hasDonation){
@@ -5134,7 +5133,7 @@
 				if (highlightSpecial && data.question){
 					node.querySelector(".hl-rightside").classList.add("special");
 				}
-			} else if (bubble  && node.contentLength){
+			} else if (bubble && node.contentLength){
 				node.querySelector(".hl-message").classList.add("bubble");
 				
 				
