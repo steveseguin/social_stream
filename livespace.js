@@ -53,10 +53,29 @@
 		return resp;
 	}
 	
+	var settings = {};
+	// settings.textonlymode
+	// settings.captureevents
+	
+	var channelName = "";
+	
+	try {
+		channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
+	} catch(e){
+	}
+	
 	
 	function processMessage(ele){
 		
-		//console.log(ele);
+		
+	  if (channelName && settings.customlivespacestate){
+		  //
+		if (settings.customlivespaceaccount && settings.customlivespaceaccount.textsetting && (settings.customlivespaceaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
+			return;
+		} else if (!settings.customlivespaceaccount){
+			return;
+		}
+	  }
 
 
 		var chatimg = ""
@@ -97,6 +116,7 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "livespace";
 		
+		
 		pushMessage(data);
 	}
 
@@ -107,9 +127,7 @@
 		}
 	}
 	
-	var settings = {};
-	// settings.textonlymode
-	// settings.captureevents
+	
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
@@ -122,6 +140,18 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+				
+					if (channelName && settings.customlivespacestate){
+					  //
+					if (settings.customlivespaceaccount && settings.customlivespaceaccount.textsetting && (settings.customlivespaceaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
+						sendResponse(false);
+						return;
+					} else if (!settings.customlivespaceaccount){
+						sendResponse(false);
+						return;
+					}
+				  }
+				
 					document.querySelector('#type-a-message').focus();
 					sendResponse(true);
 					return;
@@ -154,6 +184,8 @@
 
 							if (mutation.addedNodes[i].nodeName == "LI"){
 								processMessage(mutation.addedNodes[i]); 
+							} else if (mutation.addedNodes[i].nodeName == "UL"){
+								processMessage(mutation.addedNodes[i]); 
 							}
 							
 						} catch(e){}
@@ -171,7 +203,13 @@
 	
 	console.log("social stream injected");
 
+
+
 	setInterval(function(){
+		try {
+			channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
+		} catch(e){
+		}
 		try {
 			document.querySelectorAll('#messages').forEach(container=>{ // more than one #message .. tsk ;)
 				if (!container.marked){
