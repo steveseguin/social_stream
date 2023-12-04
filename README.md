@@ -97,6 +97,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - Twitter Live video chat (X.com) (open the live broadcast; ie: https://twitter.com/i/broadcasts/XXXXXXXXXX) 
 - Twitter static feed posts -- you will need to click "Enable Overlay" in the lower right of X  to have X posts be supported. Manually click then to select which post.
 - younow.com - ( just open the video as normal with chat on the side; there's no pop out chat, so the link is just https://www.younow.com/USERNAME )
+- shareplay.tv (pop out chat, ie: https://www.shareplay.tv/chat/usernamehere/9fd3a9ee-a915-4f8b-b23d-xxxxxxxxxxx)
 
 [More on request](#requesting-a-site)
 
