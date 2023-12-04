@@ -1258,14 +1258,14 @@ span.zero-width-parent img.zero-width-emote {
 			console.log(voices);
 			voices.forEach(vce=>{
 				if (vce.name && voiceName && (vce.name.toLowerCase().includes(voiceName.toLowerCase()))){
-					if (vce.lang && (vce.lang == speechLang)){
+					if (vce.lang && (vce.lang.toLowerCase() == speechLang.toLowerCase())){
 						voice = vce;
 					} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
 						voice = vce;
 					}
 				} else if (vce.name && vce.name.includes("Siri")){ // SIRI sucks and breaks a lot, so lets skip if possible.
-					return; 
-				} else if (vce.lang && (vce.lang.toLowerCase() == speechLang.toLowerCase())){
+					return;
+				} else if (!voice && vce.lang && (vce.lang.toLowerCase() == speechLang.toLowerCase())){
 					voice = vce;
 				} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
 					voice = vce;
@@ -1797,14 +1797,18 @@ span.zero-width-parent img.zero-width-emote {
 				if (speech){
 					var msgPlain = document.getElementById("message"); // text only
 					//var msgPlain = document.getElementById('content_'+data.counter); // text only
-					if (msgPlain){
-						msgPlain = msgPlain.innerText.trim();
-						msgPlain = msgPlain.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
-						msgPlain = msgPlain.replaceAll('_', ' ');
-						msgPlain = msgPlain.replaceAll('@', ' ');
-						msgPlain = msgPlain.replaceAll('!', ' ');
-						msgPlain = msgPlain.replace(/catJAM/ig,"");
+					if (msgPlain) {
+					  msgPlain = (msgPlain.textContent || msgPlain.innerText || "")
+						.replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, '')
+						.replace(/_/g, ' ')
+						.replace(/@/g, ' ')
+						.replace(/^!/, ''); // Remove emojis, underscores, and @ symbols, and check if it starts with '!'
+					  
+					  msgPlain = msgPlain.replace(/!+/g, ' '); // Replace multiple '!' with a single space
+					  msgPlain = msgPlain.replace(/catJAM/ig, ""); // Remove 'catJAM' case-insensitively
+					  msgPlain = msgPlain.trim();
 					}
+					
 					
 					var chatname = "";
 					if (data.chatname && ttsSpeakChatname){
