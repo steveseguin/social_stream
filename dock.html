@@ -2684,7 +2684,7 @@
 	function speak(text, allow=false){
 		if (!speech && !allow){return;}
 		if (!text){return;}
-		console.log(text);
+		
 		if (text.startsWith("!")){return;} // do not TTS commands.
 		
 		if (GoogleAPIKey){
@@ -2711,18 +2711,16 @@
 			if (!voices || !voices.length){
 				voices = window.speechSynthesis.getVoices();
 			}
-			console.log("You can do &voice=VOICENAME to try to force select a voice based on a partial string match of its name.");
-			console.log(voices);
 			voices.forEach(vce=>{
 				if (vce.name && voiceName && (vce.name.toLowerCase().includes(voiceName.toLowerCase()))){
-					if (vce.lang && (vce.lang == speechLang)){
+					if (vce.lang && (vce.lang.toLowerCase() == speechLang.toLowerCase())){
 						voice = vce;
 					} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
 						voice = vce;
 					}
 				} else if (vce.name && vce.name.includes("Siri")){ // SIRI sucks and breaks a lot, so lets skip if possible.
 					return;
-				} else if (vce.lang && (vce.lang.toLowerCase() == speechLang.toLowerCase())){
+				} else if (!voice && vce.lang && (vce.lang.toLowerCase() == speechLang.toLowerCase())){
 					voice = vce;
 				} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
 					voice = vce;
@@ -2743,7 +2741,6 @@
 		}
 
 		var speechInput = new SpeechSynthesisUtterance();
-
 		if (!voice){
 			speechInput.lang = speechLang;
 		} else {
@@ -2754,7 +2751,6 @@
 		speechInput.rate = rate;
 		speechInput.pitch = pitch;
 		speechInput.text = text;
-
 
 		getById("tts").style['background-image']='url(./icons/tts_stop.png)';
 		getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
@@ -5454,19 +5450,18 @@
 		}
 		
 		var isCommand = false;
-		var msgPlain = document.getElementById('content_'+data.id); // text only
-		if (msgPlain){
-			msgPlain = msgPlain.textContent || msgPlain.innerText || "";
-			msgPlain = msgPlain.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
-			msgPlain = msgPlain.replaceAll('_', ' ');
-			msgPlain = msgPlain.replaceAll('@', ' ');
-			
-			if (msgPlain.startsWith("!")){
-				return; // do not say anything if a command
-			}
-			
-			msgPlain = msgPlain.replaceAll('!', ' ');
-			msgPlain = msgPlain.replace(/catJAM/ig,"");
+		var msgPlain = document.getElementById('content_' + data.id);
+
+		if (msgPlain) {
+		  msgPlain = (msgPlain.textContent || msgPlain.innerText || "")
+			.replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, '')
+			.replace(/_/g, ' ')
+			.replace(/@/g, ' ')
+			.replace(/^!/, ''); // Remove emojis, underscores, and @ symbols, and check if it starts with '!'
+		  
+		  msgPlain = msgPlain.replace(/!+/g, ' '); // Replace multiple '!' with a single space
+		  msgPlain = msgPlain.replace(/catJAM/ig, ""); // Remove 'catJAM' case-insensitively
+		  msgPlain = msgPlain.trim();
 		}
 
 		var chatname = "";
