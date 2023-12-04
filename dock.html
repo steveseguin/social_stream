@@ -3687,72 +3687,103 @@
 			}
 			return;
 		} else if ("deleteMessage" in data){ // delete by message ID; likely another dock is syncing their delete with me
-			//if (syncDocks){
+			//if (syncDocks){ // we allow deleting when syncing? why not.. probably safer than requiring sync.
 				try{
 					var ele = document.querySelector("[data-mid='"+data.deleteMessage+"']");
 					if (ele){
 						ele.remove();
 					}
+					
+					if (socketserver){ // send a copy to the remote API; it might already be sent, but oh well.
+						socketserver.send(JSON.stringify({deleteMessage: element.dataset.mid}));
+					}
+					
 					return true
 				} catch(e){}
 			//}
 			return;
 		} else if ("blockUser" in data){ //delete messages, but also block user. remote, so we won't sync,
-			try {
-				if (data.blockUser.chatname && data.blockUser.type){
-				
-					if (!localBlockUserList){
-						localBlockUserList = {};
-					}
+			//if (syncDocks){ // like, we're probably using the same extension, so blocked users are going to sync anyways
+				try {
+					if (data.blockUser.chatname && data.blockUser.type){
 					
-					if (localBlockUserList[data.blockUser.chatname]){
-						if (!(localBlockUserList[data.blockUser.chatname].includes(data.blockUser.type))){
-							localBlockUserList[data.blockUser.chatname].push(data.blockUser.type);
+						if (!localBlockUserList){
+							localBlockUserList = {};
 						}
-					} else {
-						localBlockUserList[data.blockUser.chatname] = [data.blockUser.type];
-					}
-				
-					document.querySelectorAll("[data-chatname='"+data.blockUser.chatname+"'][data-source-type='"+data.blockUser.type+"']").forEach(ele=>{
-						ele.remove();
-					});
-					
-					 
-				} else if (data.blockUser.chatname){
-				
-					if (!localBlockUserList){
-						localBlockUserList = {};
-					}
-					
-					if (localBlockUserList[data.blockUser.chatname]){
-						if (!(localBlockUserList[data.blockUser.chatname].includes("*"))){
-							localBlockUserList[data.blockUser.chatname].push("*");
+						
+						if (localBlockUserList[data.blockUser.chatname]){
+							if (!(localBlockUserList[data.blockUser.chatname].includes(data.blockUser.type))){
+								localBlockUserList[data.blockUser.chatname].push(data.blockUser.type);
+							}
+						} else {
+							localBlockUserList[data.blockUser.chatname] = [data.blockUser.type];
 						}
-					} else {
-						localBlockUserList[data.blockUser.chatname] = ["*"];
+					
+						document.querySelectorAll("[data-chatname='"+data.blockUser.chatname+"'][data-source-type='"+data.blockUser.type+"']").forEach(ele=>{
+							ele.remove();
+							if (socketserver){ // send a copy to the remote API; it might already be sent, but oh well.
+								if (ele.dataset.mid){
+									socketserver.send(JSON.stringify({deleteMessage: ele.dataset.mid}));
+								}
+							}
+						});
+						
+						 
+					} else if (data.blockUser.chatname){
+					
+						if (!localBlockUserList){
+							localBlockUserList = {};
+						}
+						
+						if (localBlockUserList[data.blockUser.chatname]){
+							if (!(localBlockUserList[data.blockUser.chatname].includes("*"))){
+								localBlockUserList[data.blockUser.chatname].push("*");
+							}
+						} else {
+							localBlockUserList[data.blockUser.chatname] = ["*"];
+						}
+					
+						document.querySelectorAll("[data-chatname='"+data.blockUser.chatname+"']").forEach(ele=>{
+							ele.remove();
+							if (socketserver){ // send a copy to the remote API; it might already be sent, but oh well.
+								if (ele.dataset.mid){
+									socketserver.send(JSON.stringify({deleteMessage: ele.dataset.mid}));
+								}
+							}
+						});
 					}
-				
-					document.querySelectorAll("[data-chatname='"+data.blockUser.chatname+"']").forEach(ele=>{
-						ele.remove();
-					});
-				}
-				return true
-			} catch(e){console.error(e);}
+					return true
+				} catch(e){console.error(e);}
+			//}
 			return;
-		} else if ("delete" in data){ // we will trigger a deleteMessage I guess after, if sync mode is needed.
+		} else if ("delete" in data){ // we will trigger a deleteMessage I guess after, if sync mode is needed.  SInce its from twitch, we can assume all endpoints got it, except the API
 			try {
 				if (data.delete.chatname && data.delete.type){
-					
 					document.querySelectorAll("[data-chatname='"+data.delete.chatname+"'][data-source-type='"+data.delete.type+"']").forEach(ele=>{
 						ele.remove();
+						if (socketserver){ // send a copy to the remote API; it might already be sent, but oh well.
+							if (ele.dataset.mid){
+								socketserver.send(JSON.stringify({deleteMessage: ele.dataset.mid}));
+							}
+						}
 					});
 				} else if (data.delete.type){
 					document.querySelectorAll("[data-source-type='"+data.delete.type+"']").forEach(ele=>{
 						ele.remove();
+						if (socketserver){ // send a copy to the remote API; it might already be sent, but oh well.
+							if (ele.dataset.mid){
+								socketserver.send(JSON.stringify({deleteMessage: ele.dataset.mid}));
+							}
+						}
 					});
 				} else if (data.delete.chatname){
 					document.querySelectorAll("[data-chatname='"+data.delete.chatname+"']").forEach(ele=>{
 						ele.remove();
+						if (socketserver){ // send a copy to the remote API; it might already be sent, but oh well.
+							if (ele.dataset.mid){
+								socketserver.send(JSON.stringify({deleteMessage: ele.dataset.mid}));
+							}
+						}
 					});
 				}
 				return true
@@ -4228,6 +4259,10 @@
 	function deleteMessage(element){
 		syncDataP2P({deleteMessage: element.dataset.mid}, false, true);
 		element.remove();
+		
+		if (socketserver){ // send a copy to the remote API
+			socketserver.send(JSON.stringify({deleteMessage: element.dataset.mid}));
+		}
 	}
 	
 	var localBlockUserList = false;
