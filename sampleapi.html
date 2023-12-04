@@ -395,7 +395,7 @@ function loadSelfCommands(){
 	target_self.appendChild(input);
 	input.innerText = "Name of sender";
 	var input = document.createElement("input");
-	input.placeholder = "Name of sender)";
+	input.placeholder = "Name of sender";
 	input.style = "width:300px;max-width:50%";
 	input.id = "namesenderfake";
 	input.value = "Bob";
@@ -407,10 +407,20 @@ function loadSelfCommands(){
 	target_self.appendChild(input);
 	input.innerText = "Message";
 	var input = document.createElement("input");
-	input.placeholder = "Message )";
+	input.placeholder = "Message ";
 	input.style = "width:900px;max-width:80%";
 	input.id = "msgfake";
 	input.value = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 "; 
+	target_self.appendChild(input);
+	var br = document.createElement("br");
+	target_self.appendChild(br);
+	
+	var input = document.createElement("label");
+	target_self.appendChild(input);
+	input.innerText = "Donation";
+	var input = document.createElement("input");
+	input.placeholder = "Donation";
+	input.id = "donationfake";
 	target_self.appendChild(input);
 	
 	
@@ -438,7 +448,7 @@ function loadSelfCommands(){
 	//	data.textColor = "";
 		data.chatmessage =  document.getElementById("msgfake").value;
 	//	data.chatimg = "";
-	//	data.hasDonation = ""; // example:  "100 gold";
+		data.hasDonation = document.getElementById("donationfake").value;
 //		data.membership = "";
 		data.type = "twitch"; // twitch.png gets used as an icon, as a result
 		data.id = Date.now() + parseInt(Math.random()*1000000); // not required, but useful for keeping track of order or assigning message uniquiness
@@ -466,7 +476,7 @@ function loadSelfCommands(){
 	//	data.textColor = "";
 		data.chatmessage =  document.getElementById("msgfake").value;
 	//	data.chatimg = "";
-	//	data.hasDonation = ""; // example:  "100 gold";
+		data.hasDonation = document.getElementById("donationfake").value;
 //		data.membership = "";
 		data.type = "twitch"; // twitch.png gets used as an icon, as a result
 		data.id = Date.now() + parseInt(Math.random()*1000000);  // not required, but useful for keeping track of order or assigning message uniquiness
@@ -500,7 +510,7 @@ function loadSelfCommands(){
 	//	data.textColor = "";
 		data.chatmessage =  document.getElementById("msgfake").value;
 	//	data.chatimg = "";
-	//	data.hasDonation = ""; // example:  "100 gold";
+		data.hasDonation = document.getElementById("donationfake").value;
 //		data.membership = "";
 		data.type = "twitch"; // twitch.png gets used as an icon, as a result
 		data.id = Date.now() + parseInt(Math.random()*1000000);  // not required, but useful for keeping track of order or assigning message uniquiness
@@ -531,7 +541,7 @@ function loadSelfCommands(){
 	//	data.textColor = "";
 		data.chatmessage =  document.getElementById("msgfake").value;
 	//	data.chatimg = "";
-	//	data.hasDonation = ""; // example:  "100 gold";
+		data.hasDonation = document.getElementById("donationfake").value;
 //		data.membership = "";
 		data.type = "twitch"; // twitch.png gets used as an icon, as a result
 		data.id = Date.now() + parseInt(Math.random()*1000000);  // not required, but useful for keeping track of order or assigning message uniquiness
@@ -569,7 +579,7 @@ function loadSelfCommands(){
 	//	data.textColor = "";
 		data.chatmessage =  document.getElementById("msgfake").value;
 	//	data.chatimg = "";
-	//	data.hasDonation = ""; // example:  "100 gold";
+		data.hasDonation = document.getElementById("donationfake").value;
 //		data.membership = "";
 		data.type = "twitch"; // twitch.png gets used as an icon, as a result
 		data.id = Date.now() + parseInt(Math.random()*1000000);  // not required, but useful for keeping track of order or assigning message uniquiness
@@ -600,7 +610,7 @@ function loadSelfCommands(){
 	//	data.textColor = "";
 		data.chatmessage =  document.getElementById("msgfake").value;
 	//	data.chatimg = "";
-	//	data.hasDonation = ""; // example:  "100 gold";
+		data.hasDonation = document.getElementById("donationfake").value;
 //		data.membership = "";
 		data.type = "twitch"; // twitch.png gets used as an icon, as a result
 		data.id = Date.now() + parseInt(Math.random()*1000000);
@@ -631,7 +641,7 @@ function loadSelfCommands(){
 	//	data.textColor = "";
 		data.chatmessage =  document.getElementById("msgfake").value;
 	//	data.chatimg = "";
-	//	data.hasDonation = ""; // example:  "100 gold";
+		data.hasDonation = document.getElementById("donationfake").value;
 //		data.membership = "";
 		data.type = "twitch"; // twitch.png gets used as an icon, as a result
 		data.id = Date.now() + parseInt(Math.random()*1000000);  // not required, but useful for keeping track of order or assigning message uniquiness
