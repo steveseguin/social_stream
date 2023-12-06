@@ -4348,13 +4348,17 @@
 		if (blockMessageSelecting3){
 			return;
 		}
-
+ 
 		if (event && element.classList.contains(lastMessageClass)) { // Message is already featured!
 			element.classList.remove(lastMessageClass); // remove classes
 			sendDataP2P(false);	// clear message 
 			return;
 		}
-
+		
+		if (element.classList.contains("queued")){
+			removeQueue(element);
+			syncQueueP2P(false, element);
+		}
 
 		if (autoTimeoutEnabled){
 			lastPushed = Date.now();
