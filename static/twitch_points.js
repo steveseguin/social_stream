@@ -2,6 +2,7 @@
 	
 	var settings = {};
 	var checkReady = null;
+	let videoEventListeners = new Map();
 	
 	if (chrome && chrome.runtime){
 		chrome.runtime.onMessage.addListener(
@@ -32,7 +33,76 @@
 		});
 	}
 	
+	
+	
 	console.log("Social Stream (TWITCH POINTS COLLECTION) injected");
+	document.addEventListener('DOMContentLoaded', (ee) => {
+		document.body.addEventListener("play", (event)=>{ // fix for adblock
+			addVideoEventListeners();
+		},true);
+		
+		
+		function addVideoEventListeners() {
+			const videoEvents = [
+				'abort','play'
+			];
+			//'timeupdate', 'volumechange',  'progress', 'canplay', 'canplaythrough', 'durationchange', 'emptied', 
+			//	'ended', 'error', 'loadeddata', 'loadedmetadata', 'loadstart', 
+			//	'pause', 'playing', 'ratechange', 'seeked', 
+			//	'seeking', 'stalled', 'suspend', 'waiting'
+
+			const videos = document.querySelectorAll('video');
+
+			videos.forEach(video => {
+				if (videoEventListeners.has(video)) {
+					let listeners = videoEventListeners.get(video);
+					for (let eventType in listeners) {
+						video.removeEventListener(eventType, listeners[eventType]);
+					}
+				}
+				
+				if (!settings.twichadmute){return;} // this way I can disable old triggers and stop future triggers if needed.
+
+				let listeners = {};
+
+				videoEvents.forEach(eventType => {
+					const listener = event => {
+						if (eventType == "play"){
+							if (!settings.twichadmute){return;}
+							if (document.querySelector("video[id]")){
+								document.querySelector("video[id]").volume = event.target.volume;
+								if (document.querySelector("video[id]").paused){
+									event.target.muted = false;
+								} else {
+									if (document.querySelector("video:not([id])")){
+										document.querySelector("video:not([id])").muted = true;
+									}
+									document.querySelector("video[id]").muted = false;
+								}
+								
+							}
+						} else if (['abort'].includes(eventType)){
+							if (!settings.twichadmute){return;}
+							if (document.querySelector("video[id]")){
+								if (document.querySelector("video:not([id])")){
+									document.querySelector("video:not([id])").muted = false;
+									document.querySelector("video[id]").muted = true;
+								}
+								
+							}
+						}
+						
+					};
+
+					video.addEventListener(eventType, listener);
+					listeners[eventType] = listener;
+				});
+				videoEventListeners.set(video, listeners);
+			});
+		}
+		addVideoEventListeners();
+	});
+	
 	
 	function startCheck(){
 		if (!checkReady){
