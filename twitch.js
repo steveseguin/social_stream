@@ -1,5 +1,5 @@
 (function () {
-	
+	var isExtensionOn = true;
 	
 	async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlutin.com/timeout-fetch-request/
 		try {
@@ -123,7 +123,6 @@
 	//var midList = [];
 	
 	function processMessage(ele){	// twitch
-
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
@@ -286,12 +285,10 @@
 
 
 		if (!donations){
-			
 			try {
 				var elements = ele.querySelectorAll('.paid-pinned-chat-message-content-container')[1]; // FFZ support
 				donations = escapeHtml(elements.textContent);
-			  } catch(e){}
-			
+			} catch(e){}
 		}
 
 	  var hasDonation = '';
@@ -303,6 +300,25 @@
 		  //console.log("6");
 		return;
 	  }
+	  var highlightColor = "";
+	  
+	  try {
+		  var computed = getComputedStyle(ele);
+		  highlightColor = computed.backgroundColor;
+		  if (highlightColor == "rgba(0, 0, 0, 0)"){
+			  highlightColor = "";  
+		  } 
+		  if (!highlightColor){
+			  if (computed.borderWidth!="0px"){
+				  highlightColor = computed.borderColor;
+				  if (highlightColor == "rgba(0, 0, 0, 0)"){
+					  highlightColor = "";  
+				  } 
+			  }
+		  }
+	  } catch(e){
+	  }
+
 
 	  var data = {};
 	  data.chatname = displayName;
@@ -310,6 +326,7 @@
 	  data.chatbadges = chatbadges;
 	  data.nameColor = nameColor;
 	  data.chatmessage = chatmessage;
+	  data.highlightColor = highlightColor;
 	  try {
 		data.chatimg = "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(username); // this is CORS restricted to socialstream, but this is to ensure reliability for all
 	  } catch(e){
@@ -344,12 +361,21 @@
 		chrome.runtime.onMessage.addListener(
 			function (request, sender, sendResponse) {
 				try{
+					
 					if ("focusChat" == request){
+						
+						if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
+						  return;
+						}
+		
 						document.querySelector('[data-a-target="chat-input"]').focus();
 						sendResponse(true);
 						return;
 					}
 					if (typeof request === "object"){
+						if ("state" in request){
+							isExtensionOn = request.state;
+						}
 						if ("settings" in request){
 							settings = request.settings;
 							sendResponse(true);
@@ -366,6 +392,9 @@
 		chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 			if ("settings" in response){
 				settings = response.settings;
+			}
+			if ("state" in response){
+				isExtensionOn = response.state;
 			}
 		});
 	}
@@ -386,8 +415,9 @@
 	  if (!data.chatmessage){return;}
 	  
 	  if (brandedImageURL){
-		data.sourceImg = brandedImageURL;
+			data.sourceImg = brandedImageURL;
 	  }
+	  
 	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){
@@ -416,7 +446,9 @@
 
 	function onElementInsertedTwitch(target, callback) {
 		var onMutationsObserved = function(mutations) {
-			
+			if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
+			  return;
+			}
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {

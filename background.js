@@ -1330,6 +1330,13 @@ chrome.runtime.onMessage.addListener(
 					data.chatname = "Steve_"+Math.round(Math.random()*Math.pow(10,parseInt(Math.random()*20)));
 					data.type = parseInt(Math.random()*2) ? "slack" : "facebook";
 					data.chatmessage  = "!join The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
+				} else if (Math.random()>0.45){
+					data.hasDonation = "";
+					data.highlightColor = "pink";
+					data.nameColor = "lightblue";
+					data.chatname = "NewGuest";
+					data.type = "twitch";
+					data.chatmessage  = "hi";
 				} else if (Math.random()>0.2){
 					data.hasDonation = "";
 					data.membership = "";

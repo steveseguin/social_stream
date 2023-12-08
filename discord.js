@@ -36,7 +36,7 @@
 	
 		var chatimg = "";
 		try{
-		   chatimg = ele.querySelector("img[class*='avatar-']").src;
+		   chatimg = ele.querySelector("img[class*='avatar-'],img[class*='avatar_']").src;
 		} catch(e){
 		}
 		
@@ -78,7 +78,7 @@
 				}
 				try {
 					if (!chatimg){
-						chatimg = ele.querySelector("img[class*='avatar-']").src;
+						chatimg = ele.querySelector("img[class*='avatar-'],img[class*='avatar_']").src;
 					}
 				} catch(e){
 				}

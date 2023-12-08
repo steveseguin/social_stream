@@ -2644,6 +2644,12 @@
 	}
 	
 	
+	var trivialevents = false;
+	if (urlParams.has("trivialevents")){
+		trivialevents = true;
+	}
+	
+	
 	var skipTTSMessages = false;
 	if (urlParams.has("skipmessages")){
 		skipTTSMessages = parseInt(urlParams.get("skipmessages")) || 3;
@@ -4992,6 +4998,13 @@
 			
 			if ("karma" in data){
 				node.dataset.karma = data.karma;
+			}
+			
+			if (data.highlightColor && trivialevents){
+				node.classList.add("special-highlight");
+				if (!bubble){
+					node.style.backgroundColor = data.highlightColor;
+				}
 			}
 			
 			if (data.hasDonation){
