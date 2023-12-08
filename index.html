@@ -16,7 +16,7 @@
     --comment-font-size: 40px;
     --author-color: #222;
     --author-bg-color: #ffa500;
-    --author-avatar-border-color: linear-gradient(35deg, #f8a700, #ffa500);
+	--author-avatar-border-color: var( --author-bg-color);
     --author-border-radius: 0px;
     --author-avatar-border-size: 3px;
     --author-avatar-size: 128px;
@@ -392,7 +392,7 @@ yt-live-chat-text-message-renderer.shown-comment {
     left: calc(-0.5 * var( --author-avatar-border-size));
     width: var(--author-avatar-size);
     height: var(--author-avatar-size);
-    background: var(--author-bg-color);
+    background: var(--author-avatar-border-color);
     border-radius: 50%;
     border: 0;
     padding: var(--author-avatar-border-size);
@@ -407,7 +407,7 @@ yt-live-chat-text-message-renderer.shown-comment {
     overflow: hidden;
     border-radius: 50%;
     z-index: 1;
-	margin: auto;
+	margin: auto auto;
 }
 .hl-imgContent {
     max-height: 300px;
