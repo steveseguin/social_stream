@@ -70,11 +70,11 @@
 						if (eventType == "play"){
 							if (!settings.twichadmute){return;}
 							if (document.querySelector("video[id]")){
-								document.querySelector("video[id]").volume = event.target.volume;
 								if (document.querySelector("video[id]").paused){
 									event.target.muted = false;
 								} else {
 									if (document.querySelector("video:not([id])")){
+										document.querySelector("video[id]").volume = document.querySelector("video:not([id])").volume;
 										document.querySelector("video:not([id])").muted = true;
 									}
 									document.querySelector("video[id]").muted = false;
