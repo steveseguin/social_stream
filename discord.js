@@ -13,6 +13,57 @@
 	  xhr.responseType = 'blob';
 	  xhr.send();
 	}
+	
+	function escapeHtml(unsafe) {
+		try {
+			if (settings.textonlymode) { // we can escape things later, as needed instead I guess.
+				return unsafe;
+			}
+			return unsafe
+				.replace(/&/g, "&amp;") // i guess this counts as html
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;")
+				.replace(/'/g, "&#039;") || "";
+		} catch (e) {
+			return "";
+		}
+	}
+
+
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+
+		if (!element) {
+			return resp;
+		}
+
+		if (!element.childNodes || !element.childNodes.length) {
+			if (element.textContent) {
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+
+		element.childNodes.forEach(node => {
+			if (node.childNodes.length) {
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
+				resp += escapeHtml(node.textContent.trim()) + " ";
+			} else if (node.nodeType === 1) {
+				if (!settings.textonlymode) {
+					if (node && node.classList && node.classList.contains("zero-width-emote")) {
+						resp += "<span class='zero-width-parent'>" + node.outerHTML + "</span>";
+					} else {
+						resp += node.outerHTML;
+					}
+				}
+			}
+		});
+		return resp;
+	}
+
 
 
 	var lastMessage = "";
@@ -42,20 +93,15 @@
 		
 		var name="";
 		try {
-			name = ele.querySelector("#message-username-"+mid).innerText.trim();
+			name = getAllContentNodes(ele.querySelector("#message-username-"+mid));
 		} catch(e){
 		}
 		
 		var msg = "";
-		if (settings.textonlymode){
-			try {
-				msg = ele.querySelector("#message-content-"+mid).innerText.trim();
-			} catch(e){}
-		} else {
-			try {
-				msg = ele.querySelector("#message-content-"+mid).innerHTML.trim();
-			} catch(e){}
-		}
+		
+		try {
+			msg = getAllContentNodes(ele.querySelector("#message-content-"+mid));
+		} catch(e){}
 		
 		var contentimg = "";
 		try {
@@ -72,7 +118,7 @@
 				}
 				try {
 					if (!name){
-						name = ele.querySelector("[id^='message-username-']").innerText.trim();
+						name = getAllContentNodes(ele.querySelector("[id^='message-username-']"));
 					}
 				} catch(e){
 				}
