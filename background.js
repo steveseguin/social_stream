@@ -3295,14 +3295,15 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 	// data.tid,, => processResponse({tid:N, response:xx})
 	
 	try {
-		if (settings.blacklistuserstoggle && data.chatname){
+		
+		if (settings.blacklistuserstoggle && data.chatname && settings.blacklistusers){
 			const blacklist = settings.blacklistusers.textsetting.split(",").map(user => {
 				const parts = user.toLowerCase().split(":").map(part => part.trim());
 				return { username: parts[0], type: parts[1] || "*" };
 			});
 
 			const isBlocked = blacklist.some(({ username, type }) => 
-				data.chatname.toLowerCase() === username && 
+				data.chatname.toLowerCase().trim() === username && 
 				(data.type === type || type === "*")
 			);
 

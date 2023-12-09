@@ -93,14 +93,14 @@
 		
 		var name="";
 		try {
-			name = getAllContentNodes(ele.querySelector("#message-username-"+mid));
+			name = getAllContentNodes(ele.querySelector("#message-username-"+mid)).trim();
 		} catch(e){
 		}
 		
 		var msg = "";
 		
 		try {
-			msg = getAllContentNodes(ele.querySelector("#message-content-"+mid));
+			msg = getAllContentNodes(ele.querySelector("#message-content-"+mid)).trim();
 		} catch(e){}
 		
 		var contentimg = "";
@@ -118,7 +118,7 @@
 				}
 				try {
 					if (!name){
-						name = getAllContentNodes(ele.querySelector("[id^='message-username-']"));
+						name = getAllContentNodes(ele.querySelector("[id^='message-username-']")).trim();
 					}
 				} catch(e){
 				}
