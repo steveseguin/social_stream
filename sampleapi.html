@@ -176,7 +176,9 @@ function connect(){
 		if (event.data){
 			var data = JSON.parse(event.data);
 			console.log(data);
-			if ("callback" in data){
+			if (!data){
+				console.log("False? so Clear overlay");
+			} else if ("callback" in data){
 				if (data.callback.value == callbackID){
 					alert("Received response. See developer console for the message.");
 				}
@@ -348,6 +350,15 @@ function loadSelfCommands(){
 	button.input = input;
 	button.onclick = function(){
 		sendMessage(JSON.stringify({"action":"clearOverlay", "apiid":WID})); 
+		
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Stop and clear all messages (except Pinned)";
+	button.input = input;
+	button.onclick = function(){
+		sendMessage(JSON.stringify({"action":"clearAll", "apiid":WID})); 
 		
 	};
 	target_self.appendChild(button);

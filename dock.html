@@ -3896,7 +3896,7 @@
 				return; // does not match, so we assume this isn't for us.
 			}
 		
-			if (data.action == "clear"){ // clears all except pinned messages
+			if ((data.action == "clear") || (data.action == "clearAll")){ // clears all except pinned messages
 				document.getElementById("output").innerHTML = "";
 				autoShowQueue = [];
 				selectedQueue = [];
@@ -3904,11 +3904,11 @@
 				updateQueueButton();
 				clearTTS();
 				return true
-			} else if (data.action == "nextInQueue"){
-				nextInQueue();
-				return true
 			} else if (data.action == "clearOverlay"){ // or just send data=false
 				sendDataP2P(false);
+				return true
+			} else if (data.action == "nextInQueue"){
+				nextInQueue();
 				return true
 			} else if (data.action == "getQueueSize"){ // or just send data=false
 				updateQueueButton();
