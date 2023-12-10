@@ -107,12 +107,16 @@
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "trovo";
 	  
+	  
+	  data.chatimg = data.chatimg.replaceAll("/webp|", "/jpg|").replace("/w/64/", "/w/200").replace("/h/64/", "/h/200");
+	  
+	  
 	  chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 	  
 	  return;;
 	  
 	  // the code below is obsoloete now.
-		data.chatimg = data.chatimg.replaceAll("/webp|", "/jpg|").replace("/w/64/", "/w/200").replace("/h/64/", "/h/200");
+		
 	  
 		if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
