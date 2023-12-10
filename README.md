@@ -598,14 +598,27 @@ There is a toggle that lets you show the source of the chat messages.
 
 ### Known issues or solutions
 
-- Browsers will sometimes stop browser tabs after an hour of inactivity. Disable this option in your browser under `chrome://settings/performance` or whereever this setting is found.
+#### Chat stops when put in the background or minimized
 
-- Other options that may be active in your browser can be disabled also, to avoid tabs being throttled or paused, such as `chrome://flags/#calculate-native-win-occlusion`.  This is helpful if having to keep the chat window visible is a problem.
+- Browser may pause non-visible windows, such as the chat streams Social Stream grabs from, and so you may need to disable this behaviour in your browser. To do so, "Disable" the option located at `chrome://flags/#enable-throttle-display-none-and-visibility-hidden-cross-origin-iframes`.  Also "Disable" the flag `chrome://flags/#calculate-native-win-occlusion`. Restart the browser after saving the changes.
 
-- Another option, if using Windows, is to do Windows + Tab, and have two virtual Desktops on your PC.  Put the chat windows into one virtual desktop, and use OBS in the other. Win+Tab can let you switch between windows.
+- Avoid minimizing any windows. Things work best if windows are kept visible and open, but if you need to put them in the background, don't minimize them at least. 
+
+- Browsers may also sometimes stop tabs/windows after an hour of inactivity. Disable any option in your browser under `chrome://settings/performance` related to performance throttling or background tabs, such as "Throttle Javascript timers in background".
+
+- Try to keep the chat window and dock page active and if possible, even partially visible on screen. If the windows are hidden or minimized, they may stop working. This is also true if the scroll bar for the chat window is not at the bottom; sometimes messages won't load unless you are seeing the newest messages. 
+
+- Another option, if chat messages stop once put in them in background, if using Windows, is to do Win + Tab, and have two virtual Desktops on your PC.  Put the chat windows into one virtual desktop, and use OBS in the other. Win+Tab can let you switch between windows.
+
+- You can also try the Social Stream Standalone desktop app, as that has more controls and will avoid common throttling / visibility issues found while using Chrome
+
+- You can also download an application that can "pin" the chat windows, so they remain on top and visible. The windows can be made very small in those cases, and just push to the side.
+
+#### Blue bar appears or chat responder not working
 
 If the auto responder doesn't work -- you see a blue bar, but nothing happens, there's a couple things to do.
 - make sure if using Youtube/Twitch that the pop out window is open
+- Avoid Firefox, as it will only work with Chromium-based apps (or the standalone app)
 - go to `chrome://apps` and remove the Youtube(s) apps that might appear.  You can remove them all really if none are required.
 - Make sure you have permission to post into the chat first -- sometimes you need to be a subscriber for example to send chat messages.
 
@@ -615,30 +628,23 @@ If the auto responder doesn't work -- you see a blue bar, but nothing happens, t
 
 ![image](https://user-images.githubusercontent.com/2575698/196629133-6c06fedb-9f22-40aa-8031-d7f4c681ad95.png)
 
+#### Can't export settings or save files
+
 - If you can't save to disk, like export the settings to disk, ensure your browser allows the `File System Access API`
 
 In Brave, this can be enabled via `brave://flags/#file-system-access-api` ; open that link and enable the setting (then restart)
 
-- If the chat capture stops when you minimize or hide a browser window, disable background throttling within your browser. Instructions as follows:
-```
-Go to chrome://flags/ (That's a real URL in Chrome, Edge, Brave, and others)
-
-In the search, type "throttle"
-
-You're going to get 3 options, the two labeled "Throttle Javascript timers in background" and "Calculate window occlusion on Windows", probably set as "default" right now, turn them to "disabled"
-
-In the bottom right corner, hit relaunch to relaunch chrome with new settings. Throttling should pause browser tabs or windows when occluded or minimized.
-```
-
-- Try refreshing the chat page; sometimes refreshing the page will retrigger the code and bypass any errors. This is particularly try if you install or refresh the extension after the chat page has already been loaded.
-
-- Try to keep the chat window and dock page active and if possible, even partially visible on screen. If the windows are hidden or minimized, they may stop working. This is also true if the scroll bar for the chat window is not at the bottom; sometimes messages won't load unless you are seeing the newest messages.
+#### Other issues
 
 - If using OBS Studio on macOS or Linux, for some reason this extension will not work if hosted locally on your drive, so custom CSS needs to happen via the browser source style section. It works great on PC locally, and when hosted on socialstream.ninja, but locally on mac, it does not seem supported. This is an issue you'll need to take up with the OBS developers.
 
-- For discord, slack, and telegram, for security reasons, you need to enable the TOGGLE switch in the settings to enable.
+- For discord, slack, and telegram not working, for security reasons, you need to enable the TOGGLE switch in the settings to enable.
 
-- To set the Session ID to your own value, go to Extensions settings to set it. On Chrome: Settings -> Extensions -> Social Stream Ninja -> Details -> Extension options.
+- Make sure your session ID matches the dock.html page and the value inside the extension; if they don't match, things work work
+
+- To set the Session ID to your own value, go to Extensions settings to set it. On Chrome: Settings -> Extensions -> Social Stream Ninja -> Details -> Extension options.  
+
+- Try refreshing the chat page if things stop working; sometimes refreshing the page will retrigger the code and bypass any errors. This is particularly try if you install or refresh the extension after the chat page has already been loaded.
 
 
 ### Requesting a site
