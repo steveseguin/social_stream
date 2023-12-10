@@ -4368,6 +4368,12 @@
 			removeQueue(element);
 			syncQueueP2P(false, element);
 		}
+		if (element.classList.contains("pinned")){
+			unpinIt(element);
+			if (element.dataset.mid){
+				syncDataP2P({unpin:[element.dataset.mid]});
+			}
+		}
 
 		if (autoTimeoutEnabled){
 			lastPushed = Date.now();
