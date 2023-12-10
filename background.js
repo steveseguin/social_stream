@@ -1283,7 +1283,7 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "cleardock") {
 				sendResponse({"state":isExtensionOn});
 				var data = {};
-				data.action = "clear";
+				data.action = "clearAll";
 				try {
 					sendDataP2P(data);
 				} catch(e){console.error(e);}
