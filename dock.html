@@ -2363,6 +2363,11 @@
 	if (urlParams.has("hidebadges") || urlParams.has("nobadges")){
 		showbadges = false;
 	}
+	
+	var doNotAutoshowFiltered = false;
+	if (urlParams.has("excludefiltered")){
+		doNotAutoshowFiltered = true;
+	}
 
 	if (urlParams.has("colorednames") || urlParams.has("color")){
 		colorized = true;
@@ -3292,7 +3297,13 @@
 			}
 		
 			var post = autoShowQueue.shift();
-			if (post.classList.contains(pressedClass)){
+			
+			if (doNotAutoshowFiltered && post.classList.contains("hide")){ // do not show messages that are hidden; toggle option
+				if (autoShowQueue.length){
+					checkAutoShow();
+				}
+				return;
+			} else if (post.classList.contains(pressedClass)){
 				if (autoShowQueue.length){
 					checkAutoShow();
 				}
@@ -4995,7 +5006,7 @@
 			}
 
 			if (filtering){
-				filterMessage(node)
+				filterMessage(node);
 			}
 
 			if (bot && !horizontal){
@@ -5252,7 +5263,9 @@
 			node.rawContents = data;
 
 			if (autoshow && !bot){
-				if (!(autoshowdonos || autoshowmembers) || (autoshowdonos && data.hasDonation) || (autoshowmembers && data.membership)){ // dono or not to dono.
+				if (doNotAutoshowFiltered && node.classList.contains("hide")){
+					// pass auto show, since filtered out
+				} else if (!(autoshowdonos || autoshowmembers) || (autoshowdonos && data.hasDonation) || (autoshowmembers && data.membership)){ // dono or not to dono.
 					if (autoTimeoutEnabled){
 						autoShowQueue.push(node);
 						checkAutoShow();
