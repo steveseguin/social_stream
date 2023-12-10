@@ -3523,11 +3523,23 @@
 		}
 	}
 
-	function tts() {
+	function clearTTS(){ // clear but don't stop tss
+		if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)){
+			window.speechSynthesis.cancel();
+		} else if (premiumQueueActive){
+			premiumQueueTTS = [];
+			try {
+				if (audio){
+					audio.pause();
+				}
+			} catch(e){}
+		}
+	}
+	function tts() { 
 		var ele = document.getElementById("tts");
 		
-		if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)){
-			speech = false;
+		if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)){ // clear and stop tts
+			speech = false; 
 			window.speechSynthesis.cancel();
 		} else if (premiumQueueActive){
 			speech = false;
@@ -3884,7 +3896,15 @@
 				return; // does not match, so we assume this isn't for us.
 			}
 		
-			if (data.action == "nextInQueue"){
+			if (data.action == "clear"){ // clears all except pinned messages
+				document.getElementById("output").innerHTML = "";
+				autoShowQueue = [];
+				selectedQueue = [];
+				sendDataP2P(false);
+				updateQueueButton();
+				clearTTS();
+				return true
+			} else if (data.action == "nextInQueue"){
 				nextInQueue();
 				return true
 			} else if (data.action == "clearOverlay"){ // or just send data=false

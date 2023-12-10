@@ -1280,6 +1280,13 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "resetwaitlist") {
 				resetWaitlist();
 				sendResponse({"state":isExtensionOn});	
+			} else if (request.cmd && request.cmd === "cleardock") {
+				sendResponse({"state":isExtensionOn});
+				var data = {};
+				data.action = "clear";
+				try {
+					sendDataP2P(data);
+				} catch(e){console.error(e);}
 			} else if (request.cmd && request.cmd === "fakemsg") {
 				sendResponse({"state":isExtensionOn});
 				var data = {};
