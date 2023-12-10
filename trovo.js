@@ -61,7 +61,7 @@
 	}
 
 	function processMessage(ele){
-	  
+		
 	  var chatmessage = "";
 	  var chatname = "";
 	  var chatimg = "";
@@ -79,20 +79,10 @@
 		  }catch(e){}
 	  }
 		
-	  if (!settings.textonlymode){
-		  try{
-			chatmessage = ele.querySelector(".content").innerHTML;
-		  } catch(e){return;}
-	  } else {
-		  try{
-			chatmessage = escapeHtml(ele.querySelector(".content").innerText);
-		  } catch(e){
-			  return;
-		  }
-	  }
-	  
+	  chatmessage = getAllContentNodes(ele.querySelector(".content"))
+	 
 	  try{
-		chatimg = ele.querySelector('div.avatar').querySelector('img.img-face[src]').src;
+			chatimg = ele.querySelector('div.avatar').querySelector('img.img-face[src]').src;
 	  } catch(e){}
 	  
 	  var chatdonation = "";
@@ -116,6 +106,8 @@
 	  data.membership = '';
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "trovo";
+	  
+	  data.chatimg = data.chatimg.replaceAll("/webp|", "/jpg|").replace("/w/64/", "/w/200").replace("/h/64/", "/h/200");
 	  
 		if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
@@ -212,12 +204,19 @@
 		ele.set123 = true;
 	});
 	
-	setTimeout(function(){
+	var checker = setTimeout(function(){
 		if (!started){
+			document.querySelectorAll(".message-comp").forEach(ele=>{
+				ele.set123 = true;
+				//processMessage(ele);
+			});
 			var ele = document.querySelector(".chat-list"); 
 			if (ele){
 				onElementInserted(ele);
 			}
+			
+		} else {
+			clearTimeout(checker);
 		}
 	},4000);
 	
