@@ -107,11 +107,19 @@
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "trovo";
 	  
-	  data.chatimg = data.chatimg.replaceAll("/webp|", "/jpg|").replace("/w/64/", "/w/200").replace("/h/64/", "/h/200");
+	  chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
+	  
+	  return;;
+	  
+	  // the code below is obsoloete now.
+		data.chatimg = data.chatimg.replaceAll("/webp|", "/jpg|").replace("/w/64/", "/w/200").replace("/h/64/", "/h/200");
 	  
 		if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
-				data.chatimg = dataUrl;
+				console.log(dataUrl.length);
+				if (dataUrl.length < 50000){
+					data.chatimg = dataUrl;
+				}
 				try {
 					chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 				} catch(e){}
@@ -208,7 +216,7 @@
 		if (!started){
 			document.querySelectorAll(".message-comp").forEach(ele=>{
 				ele.set123 = true;
-				//processMessage(ele);
+				// processMessage(ele);
 			});
 			var ele = document.querySelector(".chat-list"); 
 			if (ele){
