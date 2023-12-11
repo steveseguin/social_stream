@@ -94,6 +94,7 @@
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 
+		
 		if (!element) {
 			return resp;
 		}
@@ -113,7 +114,8 @@
 				resp += escapeHtml(node.textContent.trim()) + " ";
 			} else if (node.nodeType === 1) {
 				if (!settings.textonlymode) {
-					if (node && node.classList && node.classList.contains("zero-width-emote")) {
+					if (node.nodeName == "SVG"){
+					} else if (node && node.classList && node.classList.contains("zero-width-emote")) {
 						resp += "<span class='zero-width-parent'>" + node.outerHTML + "</span>";
 					} else {
 						resp += node.outerHTML;
@@ -130,6 +132,7 @@
 	//var midList = [];
 
 	function processMessage(ele) { // twitch
+	
 		var chatsticker = false;
 		var chatmessage = "";
 		var nameColor = "";
@@ -232,8 +235,6 @@
 			} catch (e) {}
 		}
 
-
-
 		if (chatmessage) {
 			chatmessage = chatmessage.trim();
 		}
@@ -246,8 +247,6 @@
 			lastMessage = chatmessage;
 			lastUser = username;
 		}
-
-
 
 		if (chatmessage && chatmessage.includes(" (Deleted by ")) {
 			return; // I'm assuming this is a deleted message
@@ -298,8 +297,27 @@
 		if (donations) {
 			hasDonation = donations;
 		}
-
-		if (!chatmessage && !hasDonation && !username) {
+		
+		/* var eventtype = ele.querySelector("[data-highlight-label]");
+		if (eventtype){
+			try {
+				eventtype = escapeHtml(eventtype.dataset.highlightLabel) || "";
+			} catch(e){
+				eventtype = "";
+			}
+		} */
+		var eventtype = "";
+		if (!chatmessage){
+			try {
+				chatmessage = getAllContentNodes(ele.querySelector("seventv-reward-message-container")).trim();
+				eventtype = "reward";
+			} catch(e){}
+		}
+		
+		
+		if (eventtype && chatmessage){
+			// pass
+		} else if (!chatmessage && !hasDonation && !username) {
 			return;
 		}
 		var highlightColor = "";
@@ -318,9 +336,27 @@
 					}
 				}
 			}
+			if (!highlightColor){
+				let hlele =  ele.querySelector(".has-highlight");
+				if (hlele){
+					computed = getComputedStyle(hlele);
+					highlightColor = computed.backgroundColor;
+					if (highlightColor == "rgba(0, 0, 0, 0)") {
+						highlightColor = "";
+					}
+					if (!highlightColor) {
+						if (computed.borderWidth != "0px") {
+							highlightColor = computed.borderColor;
+							if (highlightColor == "rgba(0, 0, 0, 0)") {
+								highlightColor = "";
+							}
+						}
+					}
+				}
+			}
 		} catch (e) {}
-
-
+		
+		
 		var data = {};
 		data.chatname = displayName;
 		data.username = username;
@@ -328,6 +364,7 @@
 		data.nameColor = nameColor;
 		data.chatmessage = chatmessage;
 		data.highlightColor = highlightColor;
+		data.event = eventtype;
 		try {
 			data.chatimg = "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(username); // this is CORS restricted to socialstream, but this is to ensure reliability for all
 		} catch (e) {
