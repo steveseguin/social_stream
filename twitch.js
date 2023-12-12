@@ -113,8 +113,11 @@
 					return;
 				} else if (node.nodeName == "svg"){
 					return;
+				} else if (node.classList.contains("seventv-chat-user-username")){
+					resp += escapeHtml(node.textContent.trim()) + " ";
+				} else {
+					resp += getAllContentNodes(node)
 				}
-				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
 				resp += escapeHtml(node.textContent.trim()) + " ";
 			} else if (node.nodeType === 1) {
