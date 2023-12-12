@@ -109,12 +109,20 @@
 
 		element.childNodes.forEach(node => {
 			if (node.childNodes.length) {
+				if (node.nodeName == "SVG"){
+					return;
+				} else if (node.nodeName == "svg"){
+					return;
+				}
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
 				resp += escapeHtml(node.textContent.trim()) + " ";
 			} else if (node.nodeType === 1) {
 				if (!settings.textonlymode) {
 					if (node.nodeName == "SVG"){
+						return;
+					} else if (node.nodeName == "svg"){
+						return;
 					} else if (node && node.classList && node.classList.contains("zero-width-emote")) {
 						resp += "<span class='zero-width-parent'>" + node.outerHTML + "</span>";
 					} else {
@@ -582,43 +590,94 @@
 
 	}, 500);
 
-	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
+	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
 	try {
-		var receiveChannelCallback = function(e) {
+		var receiveChannelCallback = function(e){
 			remoteConnection.datachannel = event.channel;
-			remoteConnection.datachannel.onmessage = function(e) {};;
-			remoteConnection.datachannel.onopen = function(e) {};;
-			remoteConnection.datachannel.onclose = function(e) {};;
-			setInterval(function() {
-				if (document.hidden) { // only poke ourselves if tab is hidden, to reduce cpu a tiny bit.
-					remoteConnection.datachannel.send("KEEPALIVE")
-				}
-			}, 800);
+			remoteConnection.datachannel.onmessage = function(e){};;
+			remoteConnection.datachannel.onopen = function(e){};;
+			remoteConnection.datachannel.onclose = function(e){};;
+			setInterval(function(){
+				remoteConnection.datachannel.send("KEEPALIVE")
+			}, 1000);
 		}
-		var errorHandle = function(e) {}
+		var errorHandle = function(e){}
 		var localConnection = new RTCPeerConnection();
 		var remoteConnection = new RTCPeerConnection();
-		localConnection.onicecandidate = (e) => !e.candidate || remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		localConnection.onicecandidate = (e) => !e.candidate ||	remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
 		remoteConnection.onicecandidate = (e) => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
 		remoteConnection.ondatachannel = receiveChannelCallback;
 		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
-		localConnection.sendChannel.onopen = function(e) {
-			localConnection.sendChannel.send("CONNECTED");
-		};
-		localConnection.sendChannel.onclose = function(e) {};
-		localConnection.sendChannel.onmessage = function(e) {};
+		localConnection.sendChannel.onopen = function(e){localConnection.sendChannel.send("CONNECTED");};
+		localConnection.sendChannel.onclose =  function(e){};
+		localConnection.sendChannel.onmessage = function(e){};
 		localConnection.createOffer()
 			.then((offer) => localConnection.setLocalDescription(offer))
 			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
 			.then(() => remoteConnection.createAnswer())
 			.then((answer) => remoteConnection.setLocalDescription(answer))
-			.then(() => {
+			.then(() =>	{
 				localConnection.setRemoteDescription(remoteConnection.localDescription);
 				console.log("KEEP ALIVE TRICk ENABLED");
 			})
 			.catch(errorHandle);
-	} catch (e) {
+	} catch(e){
 		console.log(e);
 	}
+	
+	
+	
+	try {
+		window.onblur = null;
+		window.blurred = false;
+		document.hidden = false;
+		document.visibilityState = "visible";
+		document.mozHidden = false;
+		document.webkitHidden = false;
+	} catch(e){	}
+
+	try {
+		document.hasFocus = function () {return true;};
+		window.onFocus = function () {return true;};
+		
+		Object.defineProperty(document, "mozHidden", { value : false});
+		Object.defineProperty(document, "msHidden", { value : false});
+		Object.defineProperty(document, "webkitHidden", { value : false});
+		Object.defineProperty(document, 'visibilityState', { get: function () { return "visible"; }, value: 'visible', writable: true});
+		Object.defineProperty(document, 'hidden', {value: false, writable: true});
+		
+		setInterval(function(){
+			console.log("set visibility");
+			window.onblur = null;
+			window.blurred = false;
+			document.hidden = false;
+			document.visibilityState = "visible";
+			document.mozHidden = false;
+			document.webkitHidden = false;
+			document.dispatchEvent(new Event("visibilitychange"));
+		},200);
+	} catch(e){	}
+
+	try {
+		document.onvisibilitychange = function(){
+			window.onFocus = function () {return true;};
+			
+		};
+	} catch(e){	}
+
+	try {
+		for (event_name of ["visibilitychange",
+			"webkitvisibilitychange",
+			"blur", // may cause issues on some websites
+			"mozvisibilitychange",
+			"msvisibilitychange"]) {
+				try{
+					window.addEventListener(event_name, function(event) {
+						event.stopImmediatePropagation();
+						event.preventDefault();
+					}, true);
+				} catch(e){}
+		}
+	} catch(e){	}
 
 })();
