@@ -309,7 +309,7 @@
 		var eventtype = "";
 		if (!chatmessage){
 			try {
-				chatmessage = getAllContentNodes(ele.querySelector("seventv-reward-message-container")).trim();
+				chatmessage = getAllContentNodes(ele.querySelector(".seventv-reward-message-container")).trim();
 				eventtype = "reward";
 			} catch(e){}
 		}
