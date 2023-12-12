@@ -121,7 +121,7 @@
 				if (!settings.textonlymode) {
 					if (node.nodeName == "SVG"){
 						return;
-					} else if (node.nodeName == "svg"){
+					} else if ((node.nodeName == "SPAN") && !node.textContent.length){
 						return;
 					} else if (node && node.classList && node.classList.contains("zero-width-emote")) {
 						resp += "<span class='zero-width-parent'>" + node.outerHTML + "</span>";
