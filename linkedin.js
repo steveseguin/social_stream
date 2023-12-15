@@ -173,14 +173,17 @@
 			settings = response.settings;
 		}
 	});
-
+	
+	
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector("div.editor-content.ql-container>div.ql-editor>p").focus();
-					sendResponse(true);
-					return;
+					if (document.querySelector("div.editor-content.ql-container>div.ql-editor")){
+						document.querySelector("div.editor-content.ql-container>div.ql-editor").focus();
+						sendResponse(true);
+						return;
+					}
 				}
 				if (typeof request === "object"){
 					if ("settings" in request){
