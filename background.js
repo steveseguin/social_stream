@@ -2551,6 +2551,8 @@ function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for 
 
 function processIncomingRequest(request){
 	
+	if (settings.disablehost){return;}
+	
 	if ("response" in request){ // we receieved a response from the dock
 		processResponse(request);
 	} else if ("action" in request){
@@ -2840,7 +2842,8 @@ function generalFakePoke(tabid){ // fake a user input
 function processResponse(data, reverse=false, metadata=null){
 	if (!chrome.debugger){return false;}
 	if (!isExtensionOn){return false;} // extension not active, so don't let responder happen. Probably safer this way.
-
+	if (settings.disablehost){return;}
+	
 	chrome.tabs.query({}, function(tabs) {
 		if (chrome.runtime.lastError) {
 			//console.warn(chrome.runtime.lastError.message);
