@@ -118,24 +118,24 @@
 
 	function prepMessage(e){
 		
-		var ele = e.target.targetEle;
-		if (!ele){
-			if (!e.target.parentNode.targetEle){
-				return
-			} else {
-				ele = e.target.parentNode.targetEle;
-			}
-		}
+		var ele = e.currentTarget.parentNode.parentNode.parentNode.parentNode.parentNode;
+		console.log(ele);
+		
 		var chatmessage = "";
 		var chatname =""
 		var chatimg = ""
 		
 	  try{
-		  chatname = escapeHtml(ele.querySelector("div>span>a[role='link']").textContent);
-		  chatimg = ele.querySelector("div>div>div>a[role='link']>div>img[src]").src;
-		  chatmessage = escapeHtml(ele.querySelector("div>div>div>div>p>span").parentNode.parentNode.textContent);
+		  chatname = escapeHtml(ele.querySelector("div>span a[role='link']").textContent);
+		  try {
+			chatimg = ele.childNodes[0].querySelector("div>div>div img[src]").src;
+		  } catch(e){}
+		  chatmessage = getAllContentNodes( e.currentTarget.parentNode.parentNode.parentNode.parentNode.querySelector("div>span[class]"));
 		  
-	  } catch(e){}
+	  } catch(e){
+		  console.log(e);
+		  
+	  }
 	  
 	  var chatdonation = false;
 	  var chatmembership = false;
@@ -189,20 +189,86 @@
 		document.querySelectorAll('[data-pressable-container="true"]').forEach(ele=>{
 			if (ele.skip){return;}
 			ele.skip = true;
-			var lastButton = ele.querySelectorAll("div>div>div>div>div>div[role='button']>svg");
-			if (lastButton.length){
-				lastButton = lastButton[lastButton.length - 1].parentNode.parentNode;
-				var cloned = lastButton.cloneNode(true);
-				cloned.onclick = prepMessage;
-				cloned.querySelector("svg").innerHTML = '<title>Send to SocalStream</title><line fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="2" x1="22" x2="9.218" y1="3" y2="10.083"></line><polygon fill="none" points="11.35,1.13 4.5,22.5 21.6,8.9 1.137,8.86 18.1,1.0" stroke="currentColor" stroke-linejoin="round" stroke-width="2"></polygon>';
-				cloned.querySelector("svg").targetEle = ele;
-				cloned.querySelector("svg").onclick = prepMessage;
-				cloned.title = "Send Thread to Social Stream";
-				cloned.targetEle = ele;
-				lastButton.parentNode.appendChild(cloned);
-				lastButton.title = "Send Thread to Social Stream";
+			try {
+				var lastButton = ele.querySelector("[points='11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334']").parentNode.parentNode.parentNode.parentNode;
+			} catch(e){
+				return;
+			}
+			if (lastButton){
+				lastButton.parentNode.style['grid-template-columns'] = "36px 36px 36px 36px 36px 36px";
 				
-				lastButton.parentNode.style['grid-template-columns'] = "36px 36px 36px 36px 36px";
+				
+				var cloned = lastButton.cloneNode(true);
+				cloned.onmouseover = function(){
+					this.style.backgroundColor = "#FFF1";
+					this.style.borderRadius = "100%";
+				};
+				cloned.onmouseout = function(){
+					this.style.backgroundColor = "#FFF0";
+				};
+				
+				cloned.onclick = prepMessage;
+				cloned.querySelector("svg").innerHTML = '<title>Send to SocalStream</title><polygon fill="currentColor" points="12 0.5, 14.8 8.6, 22 9.3, 16 14.2, 18 21.5, 12 17, 6 21.5, 8 14.2, 2 9.3, 9.2 8.6" />';
+				cloned.title = "Send Thread to Social Stream";
+				lastButton.parentNode.appendChild(cloned);
+				
+				var cloned = lastButton.cloneNode(true);
+				cloned.onmouseover = function(){
+					this.style.backgroundColor = "#FFF1";
+					this.style.color = "red";
+					this.style.borderRadius = "100%";
+				};
+				cloned.onmouseout = function(){
+					this.style.backgroundColor = "#FFF0";
+					this.style.color = "white";
+				};
+				
+				cloned.onclick = function(e){
+					var ele = e.currentTarget.parentNode.parentNode.parentNode.parentNode.parentNode;
+					ele.querySelectorAll("svg circle[cx='12']")[0].parentNode.parentNode.click();
+					var opacity = 1; // Initial opacity
+					var interval = 10; // Interval in milliseconds to decrease opacity
+					var step = interval / 500; // Amount to decrease opacity at each step
+
+					var fading = setInterval(function(ele) {
+						opacity -= step;
+						ele.style.opacity = opacity;
+
+						if (opacity <= 0) {
+							clearInterval(fading);
+							ele.style.display = 'none'; // Optional: hides the element completely after fade-out
+						}
+					}, interval,ele);
+					setTimeout(function(){
+						var buttons = Array.from(document.querySelectorAll('div[role="button"]>div>span'));
+						
+						for (var i=0;i<buttons.length;i++){
+							var style = getComputedStyle(buttons[i]);
+							console.log(style.color);
+							if (buttons[i].textContent.length && style.color ==  'rgb(255, 48, 64)') {
+								buttons[i].click();
+								setTimeout(function(){
+									var buttons = Array.from(document.querySelectorAll('div[role="button"]>div>span'));
+
+									for (var i=0;i<buttons.length;i++){
+										var style = getComputedStyle(buttons[i]);
+										if (buttons[i].textContent.length && style.color ==  'rgb(255, 48, 64)') {
+											buttons[i].click();
+											ele.remove();
+											break;
+										}
+									};
+								},250);
+								break;
+							}
+						};
+						
+					},250);
+				};
+				cloned.querySelector("svg").outerHTML = '<svg aria-label="Block this user" class="x1lliihq x1n2onr6 x1yxark7" fill="none" stroke="currentColor" height="20" role="img" viewBox="0 0 24 24" width="20"> <title>Block this user</title><circle cx="12" cy="5" r="4" stroke="currentColor" stroke-width="2.5"></circle><path d="M6.26678 23.75H19.744C21.603 23.75 22.5 23.2186 22.5 22.0673C22.5 19.3712 18.8038 15.75 13 15.75C7.19625 15.75 3.5 19.3712 3.5 22.0673C3.5 23.2186 4.39704 23.75 6.26678 23.75Z" stroke="currentColor" stroke-width="2.5"></path><line x1="0" y1="24" x2="24" y2="0" stroke-width="4" stroke="red"></line></svg>';
+				cloned.title = "Block this user";
+				lastButton.parentNode.appendChild(cloned);
+				
 			}
 		});
 		
