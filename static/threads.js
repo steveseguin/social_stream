@@ -186,6 +186,15 @@
 		
 		if (!isExtensionOn){return;}
 		
+		document.querySelectorAll('a').forEach(link => { // For all the Canadians
+			let newLink = link.cloneNode(true);
+			link.parentNode.replaceChild(newLink, link);
+			if (newLink.href.startsWith("https://l.threads.net/?u=")){
+				newLink.href = decodeURIComponent(newLink.href.split("?u=")[1].split("&")[0]);
+			}
+		});
+		
+		
 		document.querySelectorAll('[data-pressable-container="true"]').forEach(ele=>{
 			if (ele.skip){return;}
 			ele.skip = true;
