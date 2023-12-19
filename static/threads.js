@@ -186,10 +186,11 @@
 		
 		if (!isExtensionOn){return;}
 		
-		document.querySelectorAll('a').forEach(link => { // For all the Canadians
+		document.querySelectorAll('a:not([data-fixed])').forEach(link => { // For all the Canadians
 			let newLink = link.cloneNode(true);
 			link.parentNode.replaceChild(newLink, link);
 			if (newLink.href.startsWith("https://l.threads.net/?u=")){
+				newLink.dataset.fixed = true;
 				newLink.href = decodeURIComponent(newLink.href.split("?u=")[1].split("&")[0]);
 			}
 		});
