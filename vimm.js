@@ -60,61 +60,33 @@
 		return resp;
 	}
 	
-	function processMessage(ele){
+	function processMessage(input){
 		
-		var name="";
-		name = ele.querySelector('b').innerText;
-		if (name){
-			name = name.trim();
-			name = escapeHtml(name);
-		} else {
-			name = "";
-		}
+		//console.log(input);
 		
-		var chatimg = "https://www.vimm.tv/"+name+"/avatar";
+		if (!(input.chatter && input.message)){return;}
 		
-		var msg = "";
-		var start = true;
-		ele.querySelector(".chatmessagerow").childNodes.forEach(ee=>{
-			if (ee.nodeType == Node.TEXT_NODE){
-				if (start){
-					var t = ee.textContent.split(":");
-					if (t.length>1){
-						start = false;
-					}
-					t.shift();
-					msg += escapeHtml(t.join(":"));
-				} else {
-					msg += escapeHtml(ee.textContent);
-				}
-				msg = msg.trim();
-			} else if (!settings.textonlymode && (ee.nodeName  == "IMG")){
-				msg += "<img src='"+ee.src+"' />";
-				start = false;
-				msg = msg.trim();
-			} 
-		});
+		var chatimg = "https://www.vimm.tv/"+input.chatter+"/avatar";
+		var msg = input.message;
+		msg = escapeHtml(msg);
 		
 		if (!msg.length){return;}
 		
-		var dono = "";
-		
-		
 		var data = {};
-		data.chatname = name;
+		data.chatname = escapeHtml(input.chatter);
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
-		data.hasDonation = dono;
+		data.hasDonation = "";
 		data.membership = "";;
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "vimm";
 		
 		pushMessage(data);
-		console.log(data);
+		//console.log(data);
 	}
 
 	function pushMessage(data){
@@ -134,12 +106,45 @@
 			settings = response.settings;
 		}
 	});
+	
+	function connectWebSocket(url) {
+		let socket = new WebSocket(url);
+
+		socket.onopen = function(event) {
+			console.log("WebSocket is open now.");
+			socket.interval = setInterval(socket.send(JSON.stringify({channel:channel, chatter:channel, message:"", mtype:"signal"})),60000);
+		};
+
+		socket.onmessage = function(event) {
+			//console.log("Message from server: ", event.data);
+			processMessage(JSON.parse(event.data));
+		};
+
+		socket.onerror = function(event) {
+			console.error("WebSocket error observed:", event);
+			clearInterval(socket.interval);
+			// Try to reconnect in 5 seconds
+			setTimeout(function() { connectWebSocket(url); }, 5000);
+		};
+
+		socket.onclose = function(event) {
+			console.log("WebSocket is closed now.");
+			clearInterval(socket.interval);
+			// Reconnect immediately if the close was not intentional
+			if (!event.wasClean) {
+				setTimeout(function() { connectWebSocket(url); }, 5000);
+			}
+		};
+	}
+	var channel = window.location.href.split("/").pop();
+	
+	connectWebSocket("wss://chat.vimm.tv:9001/ws/chat/"+window.location.href.split("/").pop()+"/");
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('#chat-message-input').focus();
+					//document.querySelector('#chat-message-input').focus();
 					sendResponse(true);
 					return;
 				}
@@ -154,6 +159,9 @@
 			sendResponse(false);
 		}
 	);
+	
+	
+	/*
 
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
@@ -185,6 +193,6 @@
 				onElementInserted(document.querySelector('#chat-log'));
 			}
 		}
-	},1000);
+	},1000); */
 
 })();

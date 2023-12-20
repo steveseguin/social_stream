@@ -186,7 +186,7 @@
 		
 		if (!isExtensionOn){return;}
 		
-		document.querySelectorAll('a:not([data-fixed])[href^="https://"]').forEach(link => { // For all the Canadians
+		document.querySelectorAll('a:not([data-fixed="true"])[href^="https://"]').forEach(link => { // For all the Canadians
 			let newLink = link.cloneNode(true);
 			link.parentNode.replaceChild(newLink, link);
 			if (newLink.href.startsWith("https://l.threads.net/?u=")){
