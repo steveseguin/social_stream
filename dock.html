@@ -368,6 +368,12 @@
 			margin-top:8px;
 		}
 
+		.twoLines.alignright .hl-firstline {
+			display: flex;
+			flex-direction: row-reverse;
+			margin: 3px 0 5px 0;
+		}
+		
 		.hl-firstline .hl-name {
 			top: 2px;
 			bottom: unset;
@@ -376,6 +382,14 @@
 		.twoLines .hl-firstline .hl-name{
 			align-items: center;
 			display: flex;
+		}
+		
+		.twoLines.alignright .hl-firstline .hl-name {
+			display: flex;
+			flex-direction: row-reverse;
+			margin: 0 5px;
+			top:1px;
+			position:relative;
 		}
 	
 		.hl-firstline .hl-name .hl-badge {
@@ -451,6 +465,18 @@
 		.hl-message  img:first-child:not(:last-child){
 			margin: auto 1px auto 1px;
 		}
+		
+		.twoLines.alignright .hl-message {
+			display: flex;
+			flex-direction: row-reverse;
+			margin: 0 0 4px 0;
+		}
+		
+		.twoLines.alignright .hl-message .time-arrived{
+			margin: 6px 2px auto 8px
+		}
+		
+		
 
 		.highlight {
 			background-color:yellow!important;
@@ -2872,6 +2898,7 @@
 		document.documentElement.style.setProperty("--flex-direction", "row-reverse");
 		//textDirection = "rtl";
 		document.getElementById("main").classList.add("alignright");
+			
 	}
 
 	var postServer = "http://127.0.0.1";
