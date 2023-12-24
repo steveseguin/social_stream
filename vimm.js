@@ -143,7 +143,7 @@
 		channel = url.pop();
 	}
 	
-	connectWebSocket("wss://chat.vimm.tv:9001/ws/chat/"+window.location.href.split("/").pop()+"/");
+	connectWebSocket("wss://chat.vimm.tv:9001/ws/chat/"+channel+"/");
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
