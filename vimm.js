@@ -136,7 +136,12 @@
 			}
 		};
 	}
-	var channel = window.location.href.split("/").pop();
+	
+	var url = window.location.href.split("/");
+	var channel = url.pop();
+	if (!channel){
+		channel = url.pop();
+	}
 	
 	connectWebSocket("wss://chat.vimm.tv:9001/ws/chat/"+window.location.href.split("/").pop()+"/");
 
