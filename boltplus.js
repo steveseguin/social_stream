@@ -132,6 +132,12 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "boltplus";
 		
+		if (lastMessages[namett] && (lastMessages[namett] == msg)){
+			return;
+		}
+		
+		lastMessages[namett] = msg;
+		
 		pushMessage(data);
 	}
 
@@ -176,6 +182,9 @@
 
 	var observer = null;
 	
+	var lastMessages = {};
+	
+	
 	
 	function onElementInserted(containerSelector) {
 		var target = document.querySelector(containerSelector);
@@ -183,14 +192,11 @@
 		
 		
 		var onMutationsObserved = function(mutations) {
-			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					processMessage(document.querySelector(".chatbox-scrollbar > .MuiBox-root").cloneNode(true));
-				}
-			});
+			var ele = document.querySelectorAll(".chatbox-scrollbar > .MuiBox-root")[0];
+			processMessage(ele.cloneNode(true));
 		};
 		
-		var config = { childList: true, subtree: true }; // sub tree turned off; only children, no grand children
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -208,14 +214,16 @@
 				console.log("CONNECTED chat detected");
 
 				setTimeout(function(){
-
-					onElementInserted('.chatbox-scrollbar ');
+					
+					onElementInserted('.chatbox-scrollbar');
 
 				},1000);
 
 
 			}
-		}} catch(e){}
+		}} catch(e){
+			console.error(e);
+		}
 	},2000);
 
 })();
