@@ -88,6 +88,14 @@
 			//console.log(e);
 		}
 		
+		var chatimg = "";
+		
+		try {
+			chatimg = ele.querySelector("img.pic[src]").src;
+		} catch(e){
+			//console.log(e);
+		}
+		
 		if (!name){
 			return;
 		}
@@ -110,7 +118,7 @@
 		data.textColor = "";
 		data.nameColor = "";
 		data.chatmessage = msg;
-		data.chatimg = "";
+		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";
 		data.contentimg = "";
