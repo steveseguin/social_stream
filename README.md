@@ -46,6 +46,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - [Server API support](#server-api-support)
   - [Social Stream's server API (ingest and clear messages via remote request)](#social-streams-server-api-ingest-and-clear-messages-via-remote-request)
   - [Remote server API support (publish messages to third parties)](#remote-server-api-support-publish-messages-to-third-parties)
+  - [Inbound third-party donation support](#inbound-third-party-donation-support)
 - [Text to speech](#text-to-speech)
   - [Installing different language-speech packs](#installing-different-language-speech-packs)
   - [Premium TTS voice options](#premium-tts-voice-options)
