@@ -502,14 +502,22 @@ For some images provided in the outgoing data-structure, the assumed host locati
 More destinations available on request.
 
 ##### Singular Live
-`&singular=XXXXXXX` will send selected messages to singular live for featured message overlay.  The target address will be: `https://app.singular.live/apiv1/datanodes/XXXXXXX/data`
+
+`&singular=XXXXXXX` will send selected messages (via the dock page) to singular live for featured message overlay.  The target address will be: `https://app.singular.live/apiv1/datanodes/XXXXXXX/data`
+
+This parameter is added to the dock page to use.
 
 ##### H2R
-`&h2r=XXXXXXX` will send selected messages to local H2R server using its POST data structure. The target address will be: `"http://127.0.0.1:4001/data/XXXXXXX`
+
+`&h2r=XXXXXXX` will send selected messages (via the dock page) to a local H2R server using its POST data structure. The target address will be: `"http://127.0.0.1:4001/data/XXXXXXX`
 
 You can manually set a custom H2R URL though with `&h2rurl` though, which will override the default one.
 
+These parameters are added to the dock page to use.
+
 ##### Generic POST / PUT
+
+These options will send selected featured messages (via the Dock page) to a remote web server; the default URL is  "http://127.0.0.1"
 
 A generic JSON-POST can be made using `&postserver`, with the address provided
 `&postserver=https://domain.com/input-source`
@@ -517,8 +525,11 @@ A generic JSON-POST can be made using `&postserver`, with the address provided
 A generic JSON-PUT can be made using `&putserver`, with the address provided. There isn't much difference between POST and PUT, but some sites are picky.
 `&putserver=https://domain.com/input-source`
 
-In these cases, the JSON being delivered is in the Social Stream data-structure.
+In these cases, the JSON being delivered is in the Social Stream data-structure. Example usage is as follows:
 
+`https://socialstream.ninja/dock?session=XXXXXX&postserver=https://127.0.0.1/messageingest/?socialstream`
+
+#### Inbound third-party donation support
 
 ##### Stripe webhook donation support
 
