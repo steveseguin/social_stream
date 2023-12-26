@@ -519,7 +519,6 @@
 	}
 
 	function processData(data){
-
 		var invisible = false;
 
 		if (!("id" in data)){
@@ -630,10 +629,17 @@
 							continue;
 						}
 					}
-					
 					images[i].onerror = function(){
-						this.style.display='none';
-						this.remove();
+						if (this.srcBackup){
+							this.src = this.srcBackup;
+							this.srcBackup = null;
+							delete this.srcBackup;
+						} else if (this.alt.length!==2){
+							this.style.display='none';
+							this.remove();
+						} else {
+							this.outerHTML = this.alt;
+						}
 					}
 					
 					if (prevImage && images[i].classList.contains("zero-width-emote")){
@@ -663,8 +669,16 @@
 		} else {
 			images.forEach(ele=>{
 				ele.onerror = function(){
-					this.style.display='none';
-					this.remove();
+					if (this.srcBackup){
+						this.src = this.srcBackup;
+						this.srcBackup = null;
+						delete this.srcBackup;
+					} else if (this.alt.length!==2){
+						this.style.display='none';
+						this.remove();
+					} else {
+						this.outerHTML = this.alt;
+					}
 				}
 			});
 		}

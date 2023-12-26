@@ -55,6 +55,9 @@
 				if (!settings.textonlymode) {
 					if (node && node.classList && node.classList.contains("zero-width-emote")) {
 						resp += "<span class='zero-width-parent'>" + node.outerHTML + "</span>";
+					} else if (node && node.tagName && (node.tagName == "IMG") && node.src) {
+						node.src = node.src + "";
+						resp += node.outerHTML;
 					} else {
 						resp += node.outerHTML;
 					}
@@ -87,7 +90,7 @@
 	
 		var chatimg = "";
 		try{
-		   chatimg = ele.querySelector("img[class*='avatar-'],img[class*='avatar_']").src;
+		   chatimg = ele.querySelector("img[class*='avatar-'],img[class*='avatar_']").src+"";
 		} catch(e){
 		}
 		
@@ -105,7 +108,7 @@
 		
 		var contentimg = "";
 		try {
-			contentimg = ele.querySelector("div[class^='imageContent-'] img[src]").src;
+			contentimg = ele.querySelector("div[class^='imageContent-'] img[src]").src+"";
 		} catch(e){}
 		
 		
@@ -124,7 +127,7 @@
 				}
 				try {
 					if (!chatimg){
-						chatimg = ele.querySelector("img[class*='avatar-'],img[class*='avatar_']").src;
+						chatimg = ele.querySelector("img[class*='avatar-'],img[class*='avatar_']").src +"";
 					}
 				} catch(e){
 				}
