@@ -634,7 +634,7 @@
 							this.src = this.srcBackup;
 							this.srcBackup = null;
 							delete this.srcBackup;
-						} else if (this.alt.length!==2){
+						} else if (!this.alt || (this.alt.length!==2)){
 							this.style.display='none';
 							this.remove();
 						} else {

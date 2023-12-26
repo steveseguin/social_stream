@@ -571,15 +571,16 @@
 		document.documentElement.style.setProperty("--outline", "0px");
 	}
 	
-	function hideImage(e){
-		if (this.srcBackup){
-			this.src = this.srcBackup;
-			this.srcBackup = null;
-			delete this.srcBackup;
-		} else if (this.alt.length!==2){
-			this.classList.add("spacer");
+	function hideImage(ele){
+		if (ele.srcBackup){
+			ele.src = ele.srcBackup;
+			ele.srcBackup = null;
+			delete ele.srcBackup;
+		} else if (!ele.alt || (ele.alt.length!==2)){
+			ele.style.display='none';
+			ele.remove();
 		} else {
-			this.outerHTML = this.alt;
+			ele.outerHTML = ele.alt;
 		}
 	}
 	
@@ -634,19 +635,19 @@
 						}
 						let extraData = "";
 						if (showsource){
-							extraData = "<img onerror='hideImage' src='"+data.waitlist[i].type+".png'>";
+							extraData = "<img onerror='hideImage(this)' src='"+data.waitlist[i].type+".png'>";
 						}
 						if (randomize){
 							var nodes = document.getElementById("waitlist").childNodes;
 							var choice = randomNumber(0,nodes.length+1);
 							if (choice == 0){
-								document.getElementById("waitlist").innerHTML = "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>" + document.getElementById("waitlist").innerHTML;
+								document.getElementById("waitlist").innerHTML = "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage(this)' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>" + document.getElementById("waitlist").innerHTML;
 							} else {
-								nodes[choice-1].outerHTML = nodes[choice-1].outerHTML+"<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
+								nodes[choice-1].outerHTML = nodes[choice-1].outerHTML+"<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage(this)' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
 							}
 						} else {
 							if (data.waitlist[i].chatimg){
-								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
+								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage(this)' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
 							} else {
 								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<div class='spacer'></div>"+data.waitlist[i].chatname+"</div>";
 							}

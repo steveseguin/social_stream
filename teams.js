@@ -1,23 +1,48 @@
 (function () {
-	function toDataURL(blobUrl, callback) {
+	function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 		var xhr = new XMLHttpRequest;
 		xhr.responseType = 'blob';
 
 		xhr.onload = function() {
-		   var recoveredBlob = xhr.response;
+			var recoveredBlob = xhr.response;
 
-		   var reader = new FileReader;
+			if (recoveredBlob.size / 1024 > maxSizeKB) { // Check if image size is greater than maxSizeKB
+				var img = new Image();
 
-		   reader.onload = function() {
-			 callback(reader.result);
-		   };
+				img.onload = function() {
+					var canvas = document.createElement('canvas');
+					var ctx = canvas.getContext('2d');
+					
+					// Resize logic (example: 250x250)
+					var maxSideSize = 250;
+					var ratio = Math.min(maxSideSize / img.width, maxSideSize / img.height);
+					canvas.width = img.width * ratio;
+					canvas.height = img.height * ratio;
 
-		   reader.readAsDataURL(recoveredBlob);
+					ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+					// Convert to base64, can choose format and quality
+					var newDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+					callback(newDataUrl);
+				};
+
+				var urlCreator = window.URL || window.webkitURL;
+				img.src = urlCreator.createObjectURL(recoveredBlob);
+			} else {
+				// If image is not too large, use original
+				var reader = new FileReader();
+
+				reader.onload = function() {
+					callback(reader.result);
+				};
+
+				reader.readAsDataURL(recoveredBlob);
+			}
 		};
 
 		xhr.open('GET', blobUrl);
 		xhr.send();
-	};
+	}
 
 	var lastMessage = {};
 	var lastName = "";
