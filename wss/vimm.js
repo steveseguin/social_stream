@@ -61,8 +61,6 @@ function getAllContentNodes(element) { // takes an element.
 
 function processMessage(input){
 	
-	//console.log(input);
-	
 	if (!(input.chatter && input.message)){return;}
 	
 	var chatimg = "https://www.vimm.tv/"+input.chatter+"/avatar";
@@ -84,6 +82,9 @@ function processMessage(input){
 	data.textonly = settings.textonlymode || false;
 	data.type = "vimm";
 	
+	console.log(data);
+	document.write(data.chatname+": "+data.chatmessage);
+	
 	pushMessage(data);
 	//console.log(data);
 }
@@ -95,6 +96,7 @@ function pushMessage(data){
 	}
 }
 
+console.log("LOADED");
 var settings = {};
 // settings.textonlymode
 // settings.captureevents
@@ -160,6 +162,7 @@ var channel = urlParams.get("username");
 if (channel){
 	channel = channel.split("%")[0];
 	if (channel){
+		document.write("Opening: wss://chat.vimm.tv:9001/ws/chat/"+channel+"/");
 		connectWebSocket("wss://chat.vimm.tv:9001/ws/chat/"+channel+"/");
 	}
 }
