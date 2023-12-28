@@ -184,8 +184,6 @@
 		  mainEle.marked = true;
 		}
 		
-		
-		
 		var chatimg = "";
 		try{
 			chatimg = mainEle.querySelector('profile-picture, div[data-tid="message-avatar"]').querySelector("img").src;

@@ -59,23 +59,23 @@
 	
 	var channelName = "";
 	
-	try {
-		channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
-	} catch(e){
-	}
-	
-	
 	function processMessage(ele){
 		
-		
-	  if (channelName && settings.customlivespacestate){
+		try {
+			if (settings.customlivespacestate){
+				channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
+			}
+		} catch(e){
+		}
+	
+		if (channelName && settings.customlivespacestate){
 		  //
 		if (settings.customlivespaceaccount && settings.customlivespaceaccount.textsetting && (settings.customlivespaceaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
 			return;
 		} else if (!settings.customlivespaceaccount){
 			return;
 		}
-	  }
+		}
 
 
 		var chatimg = ""
@@ -141,6 +141,13 @@
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 				
+					try {
+						if (settings.customlivespacestate){
+							channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
+						}
+					} catch(e){
+					}
+		
 					if (channelName && settings.customlivespacestate){
 					  //
 					if (settings.customlivespaceaccount && settings.customlivespaceaccount.textsetting && (settings.customlivespaceaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
@@ -210,6 +217,7 @@
 			channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
 		} catch(e){
 		}
+		
 		try {
 			document.querySelectorAll('#messages').forEach(container=>{ // more than one #message .. tsk ;)
 				if (!container.marked){

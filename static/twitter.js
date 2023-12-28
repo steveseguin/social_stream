@@ -327,7 +327,7 @@
 					var button  = document.createElement("button");
 					button.onclick = prepMessage;
 					button.innerHTML = "Grab Tweet";
-					button.style = " transition: all 0.2s linear; border:1px solid #0007; width: 56px; height: 56px; border-radius: 50px; padding: 4px; margin: 10px; background-color: #c7f6c7; cursor:pointer;"
+					button.style = " transition: all 0.2s linear; border:1px solid #0007; width: 56px; height: 56px; border-radius: 50px; padding: 4px; margin: 10px; background-color: rgb(117 153 117); cursor:pointer;"
 					button.className = "btn-push-twitter";
 					button.targetEle = bases[i]
 					//bases[i].appendChild(button);
