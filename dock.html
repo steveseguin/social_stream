@@ -3250,6 +3250,12 @@
 		
 	}
 	
+	var hideAllEvents = false;
+	if (urlParams.has("hideallevents")){
+		hideallevents = true;
+	}
+	
+	
 	var hideEmojiOnly = false;
 	var hideNotQueued = false;
 
@@ -4650,6 +4656,9 @@
 				}
 			}
 			
+			if (hideAllEvents && data.event){
+				return;
+			}
 
 			if (!("id" in data)){
 				data.id = Date.now() + parseInt(Math.random()*1000000);
