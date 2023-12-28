@@ -135,7 +135,7 @@ function connectWebSocket(url) {
 	};
 
 	socket.onmessage = function(event) {
-		//console.log("Message from server: ", event.data);
+		console.log("Message from server: ", event.data);
 		processMessage(JSON.parse(event.data));
 	};
 
