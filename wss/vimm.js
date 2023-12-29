@@ -13,18 +13,25 @@ function toDataURL(url, callback) {
   xhr.send();
 }
 
-function escapeHtml(unsafe){
+function escapeHtml(unsafe) {
 	try {
-		if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
-			return unsafe;
+		// Unescape the text
+		var tempDiv = document.createElement('div');
+		tempDiv.innerHTML = unsafe;
+		var unescapedText = tempDiv.textContent || tempDiv.innerText || "";
+		
+		if (settings.textonlymode) {
+			return unescapedText;
 		}
-		return unsafe
-			 .replace(/&/g, "&amp;")
-			 .replace(/</g, "&lt;")
-			 .replace(/>/g, "&gt;")
-			 .replace(/"/g, "&quot;")
-			 .replace(/'/g, "&#039;") || "";
-	} catch(e){
+
+		// Re-escape the text
+		return unescapedText
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&#039;") || "";
+	} catch (e) {
 		return "";
 	}
 }
