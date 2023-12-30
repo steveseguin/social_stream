@@ -102,7 +102,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - Dlive.tv  (pop-out chat)
 - Picarto.tv (pop-out chat; ie: https://picarto.tv/chatpopout/CHANNELNAMEHERE/public)
 - Mobcrush (this page: https://studio.mobcrush.com/chatpopup.html)
-- vimm.tv (https://www.vimm.tv/chat/xxxxxxxxx/)
+- vimm.tv (https://www.vimm.tv/c/xxxxxxxx)
 - odysee.com (via the pop out chat I think)
 - minnit.chat support (https://minnit.chat/xxxxxxxxxxx?mobile&popout)
 - livepush.io (chat overlay link provided; no input field support?)
