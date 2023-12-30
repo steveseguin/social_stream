@@ -134,7 +134,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - threads.net (a little funky star icon, right of the share icon, will select thread to push to dock)
 - floatplane.com (pop out chat; gotta keep the main window still open though? annoying..)
 - OpenAI chatGPT chat - (via https://chat.openai.com/chat). You must opt-in via the toggle for this though
-- live.space (Just open the basic watch page, as their chat pop out doesn't seem to be working)
+- live.space (Just open the basic watch page, or if their the pop out chat works for you, https://live.space/popout-chat/XXXXX)
 - vstream.com (pop out chat)
 - estrim - live video chat supported
 - livestorm.io (open the 'external sidebar', which might be a plugin, and it should capture that)
