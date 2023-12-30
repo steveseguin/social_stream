@@ -66,7 +66,9 @@
 				channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
 			}
 		} catch(e){
+			channelName = window.location.href.split("/").pop();
 		}
+		
 	
 		if (channelName && settings.customlivespacestate){
 		  //
@@ -146,6 +148,7 @@
 							channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
 						}
 					} catch(e){
+						channelName = window.location.href.split("/").pop();
 					}
 		
 					if (channelName && settings.customlivespacestate){
@@ -216,6 +219,7 @@
 		try {
 			channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
 		} catch(e){
+			channelName = window.location.href.split("/").pop();
 		}
 		
 		try {
