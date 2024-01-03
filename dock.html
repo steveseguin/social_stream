@@ -1957,6 +1957,10 @@
 	if (urlParams.has("hidetwitch")) {
 		hideTwitch = true;
 	}
+	var onlyFrom = false;
+	if (urlParams.get("onlyfrom")){
+		onlyFrom = urlParams.get("onlyfrom").toLowerCase().trim();
+	}
 	
 	var filterNamesNotMessages = false;
 	if (urlParams.has("namefilter")) {
@@ -4638,6 +4642,9 @@
 			}
 			if (onlyTwitch && (data.type!=="twitch")){
 				// this is not a twitch message, so we're hiding them
+				return;
+			}
+			if (onlyFrom &&  (data.type!==onlyFrom)){
 				return;
 			}
 			
