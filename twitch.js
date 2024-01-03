@@ -500,7 +500,7 @@
 			}
 		} catch (e) {}
 	}
-
+	
 	function onElementInsertedTwitch(target, callback) {
 		var onMutationsObserved = function(mutations) {
 			if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {

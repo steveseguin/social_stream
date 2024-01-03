@@ -91,13 +91,13 @@
 			
 		}
 		
+		console.log(ele);
+		
 		var contentImg = "";
-		/* try{
-			contentImg = ele.querySelector(".giphy-gif-img[src]").src; // too annoying to support
+		try{
+			contentImg = ele.querySelector("img.giphy-img-loaded[src]").src; // too annoying to support
 		} catch(e){
 		}
-		 */
-		
 
 		var msg="";
 		try {
