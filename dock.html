@@ -1960,7 +1960,9 @@
 	var onlyFrom = false;
 	if (urlParams.get("onlyfrom")){
 		onlyFrom = urlParams.get("onlyfrom").toLowerCase().trim();
-	}
+	} else if (urlParams.get("fromonly")){
+		onlyFrom = urlParams.get("fromonly").toLowerCase().trim(); // for the dylslexic users
+	} 
 	
 	var filterNamesNotMessages = false;
 	if (urlParams.has("namefilter")) {

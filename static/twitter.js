@@ -128,15 +128,20 @@
 	function prepMessage(ele){
 	  if (ele == window){return;}
 	  
+	  
+	  
 	  if (this.targetEle){
 		  ele = this.targetEle.parentNode;;
 	  } else if (this){
 		  ele = this.parentNode;
 	  }
 	  
+	  console.log(ele);
+	  
 	  var base = ele.querySelector("[data-testid='tweet']");
 	  
 	  if (!base){
+		   console.log("no base");
 		  return;
 	  }
 	  
@@ -159,7 +164,7 @@
 	  var chatmessage = "";
 	  try { 
 	  
-		  chatmessage = base.parentNode.childNodes[1].childNodes[1].querySelector("[lang]");
+		  chatmessage = base.querySelector("[lang]");
 		  if (chatmessage){
 			  var links = chatmessage.querySelectorAll("a");
 			  for (var i =0;i<links.length;i++){
@@ -171,19 +176,21 @@
 		  }
 		  
 		  if (!chatmessage.length){
-			  chatmessage =  escapeHtml(base.parentNode.childNodes[1].childNodes[1].childNodes[1].innerText);
+			  chatmessage =  escapeHtml(base.childNodes[1].childNodes[1].childNodes[1].innerText);
 		  }
 		  try{
-			contentimg = base.parentNode.querySelector("video").getAttribute("poster");
+			contentimg = base.querySelector("video").getAttribute("poster");
 		  } catch(e){
+			  
 			  try{
-				contentimg = base.parentNode.childNodes[1].childNodes[1].querySelector("[lang]").parentNode.nextElementSibling.querySelector("img").src;
+					contentimg = base.querySelector("[lang]").parentNode.nextElementSibling.querySelector("img").src;
 			  } catch(e){
-					contentimg = base.parentNode.childNodes[1].childNodes[1].querySelector("[lang]").parentNode.nextElementSibling.querySelector("img").src;
+					contentimg = "";
 			  }
 		  }
 		  
 	  } catch(e){
+		  console.log(e);
 		   
 		  if (!chatmessage){
 			  try{
@@ -251,6 +258,8 @@
 	  } else {
 			data.type = "x";
 	  }
+	  
+	  console.log(data);
 	  
 	  pushMessage(data);
 	};
