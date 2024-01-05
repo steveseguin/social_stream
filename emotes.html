@@ -595,10 +595,11 @@
 		//emojis = emojis.match(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig);
 		//emojis = emojis.match(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu) || [];
 		console.log(text);
-		emojis = text.match(/(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\p{Emoji_Modifier}|\u200D\p{Emoji})*|\p{Emoji_Component}\uFE0F/gu) || [];
+		
+		emojis = text.match(/(\p{Regional_Indicator}\p{Regional_Indicator}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\p{Emoji_Modifier}|\u200D\p{Emoji})*|\p{Emoji_Component}\uFE0F/gu) || [];
+		
 		console.log(emojis);
 
-		
 		
 		try {
 			if (emojis){
