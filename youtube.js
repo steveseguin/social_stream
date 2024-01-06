@@ -191,7 +191,13 @@
 				if (ele.getAttribute("author-type") === "member"){
 					//chatmembership = chatmessage;
 					treatAsMemberChat = true;
+					memeber = true;
+				} else if (ele.getAttribute("author-type") === "moderator"){
+					//chatmembership = chatmessage;
+					treatAsMemberChat = true;
+					mod = true;
 				}
+					
 			}
 		} else if (chatmembership){
 			treatAsMemberChat = true;
@@ -268,6 +274,15 @@
 					chatmessage = (chatmessage||chatmembership);
 				}
 			}
+			
+			if (!hasMembership){
+				if (member){
+					hasMembership = getTranslation("member-chat", "MEMBERSHIP");
+				} else if (mod){
+					hasMembership = getTranslation("moderator-chat", "MODERATOR");
+				}
+			}
+		
 		} else if (!chatmessage && giftedmemembership) {
 			if (!settings.textonlymode) {
 				chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
@@ -276,6 +291,8 @@
 			}
 			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 		}
+		
+		
 
 		if (chatsticker) {
 			if (!settings.textonlymode) {
