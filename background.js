@@ -1061,6 +1061,9 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "customtwitchstate"){
 					pushSettingChange();
 				}
+				if (request.setting == "replyingto"){
+					pushSettingChange();
+				}
 				if (request.setting == "customtwitchaccount"){
 					pushSettingChange();
 				}

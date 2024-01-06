@@ -278,8 +278,8 @@
 				return;
 			}
 		}
-
-
+		
+		
 		try {
 
 			if (!donations) {
@@ -331,6 +331,39 @@
 		} else if (!chatmessage && !hasDonation && !username) {
 			return;
 		}
+		
+		try {
+			if (settings.replyingto && chatmessage){
+				try {
+					var replyMessage = getAllContentNodes(ele.querySelector(".chat-line__message-container [title], .seventv-reply-message-part"));
+					replyMessage = replyMessage.split(":")[0].trim();
+					if (!replyMessage){
+						replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
+						replyMessage = replyMessage.split(":")[0].trim();
+					}
+				} catch(e){
+					console.log(e);
+					try {
+						var replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
+						replyMessage = replyMessage.split(":")[0].trim();
+					} catch(ee){
+						console.log(ee);
+					}
+				}
+				
+				if (replyMessage){
+					if (settings.textonlymode) {
+						chatmessage = replyMessage + ": "+chatmessage;
+					} else {
+						chatmessage = "<i><small>"+replyMessage + ":&nbsp;</small></i> "+chatmessage;
+					}
+				}
+			}
+		} catch(e){
+			
+		}
+		
+		
 		var highlightColor = "";
 
 		try {
@@ -522,7 +555,10 @@
 							if (mutation.addedNodes[i].ignore) {
 								continue;
 							}
+							
 							mutation.addedNodes[i].ignore = true;
+							
+							
 
 							if (mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message") || (mutation.addedNodes[i].querySelector && mutation.addedNodes[i].querySelector(".paid-pinned-chat-message-content-wrapper")))) {
 								mutation.addedNodes[i].ignore = true;
@@ -547,10 +583,7 @@
 			});
 		};
 
-		var config = {
-			childList: true,
-			subtree: true
-		};
+		var config = {childList: true, subtree: true};
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -568,7 +601,7 @@
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
 				}
 				console.log("Social Stream ready to go");
-				onElementInsertedTwitch(document.querySelector(".chat-room__content"), function(element) {
+				onElementInsertedTwitch(document.querySelector(".chat-list--default"), function(element) {
 					setTimeout(function(element) {
 						processMessage(element);
 					}, 20, element); // 20ms to give it time to load the message, rather than just the container
