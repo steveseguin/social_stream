@@ -342,10 +342,12 @@
 						replyMessage = replyMessage.split(":")[0].trim();
 					}
 				} catch(e){
+					//console.log(e);
 					try {
 						var replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
 						replyMessage = replyMessage.split(":")[0].trim();
 					} catch(ee){
+						//console.log(ee);
 					}
 				}
 				
@@ -556,7 +558,6 @@
 							
 							mutation.addedNodes[i].ignore = true;
 							
-							
 
 							if (mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message") || (mutation.addedNodes[i].querySelector && mutation.addedNodes[i].querySelector(".paid-pinned-chat-message-content-wrapper")))) {
 								mutation.addedNodes[i].ignore = true;
@@ -589,8 +590,17 @@
 
 	console.log("Social Stream injected");
 
+	var counter = 0;
+	var checkElement = ".chat-list--default";
+	
 	var checkReady = setInterval(function() {
-		if (document.querySelector(".chat-room__content")) { // just in case 
+		counter+=1;
+		
+		if (counter>3){
+			checkElement = ".chat-room__content";
+			console.log("checkElement wasn't found; trying alternative");
+		}
+		if (document.querySelector(checkElement)) { // just in case 
 			console.log("Social Stream Start");
 			clearInterval(checkReady);
 			setTimeout(function() {
@@ -599,7 +609,7 @@
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
 				}
 				console.log("Social Stream ready to go");
-				onElementInsertedTwitch(document.querySelector(".chat-list--default"), function(element) {
+				onElementInsertedTwitch(document.querySelector(checkElement), function(element) {
 					setTimeout(function(element) {
 						processMessage(element);
 					}, 20, element); // 20ms to give it time to load the message, rather than just the container
