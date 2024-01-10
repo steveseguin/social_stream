@@ -342,12 +342,10 @@
 						replyMessage = replyMessage.split(":")[0].trim();
 					}
 				} catch(e){
-					console.log(e);
 					try {
 						var replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
 						replyMessage = replyMessage.split(":")[0].trim();
 					} catch(ee){
-						console.log(ee);
 					}
 				}
 				
