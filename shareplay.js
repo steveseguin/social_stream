@@ -71,7 +71,11 @@
 		}
 		
 		if (!name){
-			name = escapeHtml(document.querySelector(".chat--content--heading").innerText);
+			try {
+				name = escapeHtml(ele.querySelector(".chat--content--heading").innerText);
+			}catch(e){
+			//	console.log(e);
+			}
 		}
 		
 		var msg = "";
@@ -92,8 +96,6 @@
 			chatimg = "";
 		}
 		
-		
-		
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = "";
@@ -108,6 +110,7 @@
 		data.type = "shareplay";
 		
 		
+		//console.log(data);
 		
 		if (!name && !msg){return;}
 		

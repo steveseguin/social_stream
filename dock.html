@@ -2277,6 +2277,12 @@
 	if (urlParams.has("fadeout")){
 		fadeout = true;
 	}
+	
+	
+	var hideNumbers = false;
+	if (urlParams.has("hidenumbers")){
+		hideNumbers = true;
+	}
 
 	if (urlParams.has("swiperight")){
 		transitionType.push("swiperight");
@@ -4822,6 +4828,10 @@
 			} 
 			
 			if (!chatmessage && !data.contentimg && !data.hasDonation){
+				return;
+			}
+			
+			if (hideNumbers && data.chatmessage && !data.contentimg && !data.hasDonation && (data.chatmessage === parseFloat(data.chatmessage))){
 				return;
 			}
 			
