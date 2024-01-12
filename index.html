@@ -862,6 +862,11 @@ span.zero-width-parent img.zero-width-emote {
 		hideTwitch = true;
 	}
 	
+	var pseudodock = false;
+	if (urlParams.has("autoshow")) {
+		pseudodock = true;
+	}
+	
 	var scale = false;
 	if (urlParams.has("scale")){
 		scale = urlParams.get("scale") || 0.5; // 1.0 = 100% size
@@ -1403,7 +1408,13 @@ span.zero-width-parent img.zero-width-emote {
 	
 	function RecvDataWindow(){
 		var iframe = document.createElement("iframe");
-		iframe.src = "https://vdo.socialstream.ninja/?ln&password="+password+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
+		
+		if (pseudodock){
+			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; // push and view, as we will connect with other docks also.
+			// iframe.src = "https://vdo.socialstream.ninja/?ln&password="+password+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
+		} else {
+			iframe.src = "https://vdo.socialstream.ninja/?ln&password="+password+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
+		}
 		
 		iframe.style.width = "0px";
 		iframe.style.height = "0px";
@@ -1467,7 +1478,14 @@ span.zero-width-parent img.zero-width-emote {
 	
 	function processData(data){
 	
-		
+		if (pseudodock){
+			if (data && !data.contents){
+				var tmp = {};
+				tmp.contents = data;
+				data = tmp;
+				tmp = "";
+			}
+		}
 		if (data && data.contents){
 		
 			if (onlyshowdonos && !data.contents.hasDonation){
