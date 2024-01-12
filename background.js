@@ -173,6 +173,13 @@ if (typeof(chrome.runtime)=='undefined'){
 		});
 	})
 	
+	/* fetch = async function(URL,headers={}){
+		var data = await ipcRenderer.sendSync('nodefetch', {
+			url: URL,
+			headers: headers
+		});
+	} */
+	
 	window.showOpenFilePicker = async function(a=null,c=null){
 		var importFile = await ipcRenderer.sendSync('showOpenDialog', "");
 		return importFile;

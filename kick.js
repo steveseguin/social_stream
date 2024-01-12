@@ -136,7 +136,7 @@
 	  if (!chatmessage){return;}
 	  
 	  
-	  ele.querySelector(".chat-message-identity").querySelectorAll(".badge img[src], .badge svg").forEach(badge=>{
+	  ele.querySelector(".chat-message-identity").querySelectorAll(".badge-tooltip img[src], .badge-tooltip svg, .base-badge img[src], .base-badge svg, .badge img[src], .badge svg").forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "IMG"){
 				var tmp = {};
