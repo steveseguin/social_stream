@@ -73,9 +73,11 @@ function processMessage(input){
 	var chatimg = "https://www.vimm.tv/"+input.chatter+"/avatar";
 	var msg = input.message;
 	msg = escapeHtml(msg);
-	
 	if (!msg.length){return;}
 	
+	if (!settings.textonlymode){
+		msg = msg.replace(/:([a-zA-Z0-9]+):/g, '<img src="https://www.vimm.tv/media/emotes/$1.png">');
+	}
 	var data = {};
 	data.chatname = escapeHtml(input.chatter);
 	data.chatbadges = "";
