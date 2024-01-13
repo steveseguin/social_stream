@@ -42,7 +42,6 @@ if (typeof(chrome.runtime)=='undefined'){
 	
 }
 
-	
 var translation = {};
 
 function getTranslation(key, value=false){ 
@@ -233,6 +232,55 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	};
 	
 	populateFontDropdown();
+	
+	// populate language drop down
+	if (speechSynthesis){
+		function populateVoices() {
+			const voices = speechSynthesis.getVoices();
+			
+			voices.sort((a, b) => {
+				if (a.default) {
+					return -1; // a is the default, move a to the front
+				} else if (b.default) {
+					return 1; // b is the default, move b to the front
+				} else {
+					return 0; // neither a nor b is the default, keep original order
+				}
+			});
+			
+			var voicesDropdown = document.getElementById('languageSelect1');
+			var existingOptions = Array.from(voicesDropdown.options).map(option => option.textContent);
+
+			voices.forEach(voice => {
+				const voiceText = voice.name + ' (' + voice.lang + ')';
+
+				if (!existingOptions.includes(voiceText)) {
+					const option = document.createElement('option');
+					option.textContent = voiceText;option.value = voice.lang;
+					option.setAttribute('data-lang', voice.lang);
+					option.setAttribute('data-name', voice.name);
+					voicesDropdown.appendChild(option);
+				}
+			});
+			
+			var voicesDropdown = document.getElementById('languageSelect2');
+			var existingOptions = Array.from(voicesDropdown.options).map(option => option.textContent);
+
+			voices.forEach(voice => {
+				const voiceText = voice.name + ' (' + voice.lang + ')';
+
+				if (!existingOptions.includes(voiceText)) {
+					const option = document.createElement('option');
+					option.textContent = voiceText;
+					option.value = voice.lang;
+					option.setAttribute('data-lang', voice.lang);
+					option.setAttribute('data-name', voice.name);
+					voicesDropdown.appendChild(option);
+				}
+			});
+		}
+		speechSynthesis.onvoiceschanged = populateVoices;
+	}
 	
 	console.log("pop up asking main for settings");
 	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {

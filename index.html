@@ -1182,6 +1182,14 @@ span.zero-width-parent img.zero-width-emote {
 			English = false;
 		}
 	}
+	if (urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln")){
+		speechLang = urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln");;
+		if (speechLang.split("-")[0].toLowerCase() == "en"){
+			English = true;
+		} else {
+			English = false;
+		}
+	}
 	
 	var ttsSpeakChatname = true;
 	if (urlParams.has("simpletts2")){ // You don't want to hear the chatname when TTS is enabled. ＞﹏＜
