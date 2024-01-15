@@ -3331,6 +3331,25 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				return null;
 			}
 		}
+		if (data.chatmessage){
+			for (var i = 1;i<=10;i++){
+				if (settings['botReplyMessageEvent'+i] && settings['botReplyMessageCommand'+i] && settings['botReplyMessageCommand'+i].textsetting && settings['botReplyMessageValue'+i] && settings['botReplyMessageValue'+i].textsetting && (data.chatmessage.indexOf(settings['botReplyMessageCommand'+i].textsetting)!=-1)){
+					var timeoutBot = 0;
+					if (settings['botReplyMessageTimeout'+i]){
+						timeoutBot = settings['botReplyMessageTimeout'+i].numbersetting || 0;
+					} 
+					if (Date.now() - messageTimeout > timeoutBot){ // respond to "1" with a "1" automatically; at most 1 time per minute.
+						messageTimeout = Date.now();
+						var msg = {};
+						msg.tid = data.tid;
+						msg.response = settings['botReplyMessageValue'+i].textsetting;
+						processResponse(msg);
+					}
+					break;
+				}
+			}
+		}
+	
 		
 
 		if (settings.blacklist && data.chatmessage){
@@ -3344,6 +3363,18 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				try {
 					data.chatmessage = passGoodWords(data.chatmessage);
 				} catch(e){console.error(e);}
+			}
+		}
+		
+		if (settings.autohi && data.chatname){
+			if (data.chatmessage.toLowerCase() === "hi"){
+				if (Date.now() - messageTimeout > 60000){ // respond to "1" with a "1" automatically; at most 1 time per minute.
+					messageTimeout = Date.now();
+					var msg = {};
+					msg.tid = data.tid;
+					msg.response = "Hi, @"+data.chatname+" !";
+					processResponse(msg);
+				}
 			}
 		}
 		

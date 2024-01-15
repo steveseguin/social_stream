@@ -334,7 +334,29 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		document.getElementById("timedMessages").appendChild(chat);
 	}
 	
-
+	for (var i=1;i<=10;i++){
+		var chat = document.createElement("div");
+		chat.innerHTML = '<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">\
+				<input type="checkbox" data-setting="botReplyMessageEvent'+ i +'">\
+				<span class="slider round"></span>\
+			</label>\
+			<div style="display:inline-block">\
+				<div class="textInputContainer" style="width: 235px">\
+					<input type="text" id="botReplyMessageCommand'+ i +'" class="textInput" autocomplete="off" placeholder="Message to send to chat" data-textsetting="botReplyMessageCommand'+ i +'">\
+					<label for="botReplyMessageCommand'+ i +'">&gt; Triggering command. eg: !discord</label>\
+				</div>\
+				<div class="textInputContainer" style="width: 235px">\
+					<input type="text" id="botReplyMessageValue'+ i +'" class="textInput" autocomplete="off" placeholder="Message to respond with" data-textsetting="botReplyMessageValue'+ i +'">\
+					<label for="botReplyMessageValue'+ i +'">&gt; Message to respond with.</label>\
+				</div>\
+				<div class="textInputContainer" style="width: 235px">\
+					<input type="number" id="botReplyMessageTimeout'+ i +'" class="textInput" min="0" autocomplete="off" placeholder="Timeout needed between responses" data-numbersetting="botReplyMessageTimeout'+ i +'">\
+					<label for="botReplyMessageTimeout'+ i +'">&gt; Trigger timeout (ms)</label>\
+				</div>\
+			</div>';
+		document.getElementById("botReplyMessages").appendChild(chat);
+	}
+	
 	var iii = document.querySelectorAll("input[type='checkbox']");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
