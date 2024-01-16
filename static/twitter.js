@@ -379,7 +379,7 @@
 	
 	function checkButtons(){
 		
-		if (!isExtensionOn && enabledSSN){return;}
+		if (!isExtensionOn || !enabledSSN){return;}
 		
 		var bases = document.querySelector('main[role="main"]').querySelectorAll('article[role="article"]');
 		bases = [...bases].reverse();
@@ -448,6 +448,10 @@
 				} else {
 					document.getElementById("startupbutton").innerHTML = "Enable Overlay Service";
 					document.getElementById("startupbutton").style.backgroundColor = "#54af54";
+					
+					document.querySelectorAll(".btn-push-twitter").forEach(ele=>{
+						ele.style.display = "none";
+					});
 					
 				}
 			};
