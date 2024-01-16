@@ -46,9 +46,7 @@
 		}
 	});
 	
-	var grabbedTweets = [];
-	
-	
+	var grabbedTweets = localStorage.getItem('grabbedTweets') || [];
 	
 	var enabledSSN = localStorage.getItem('enabledSSN') === 'true';
 	console.log("enabledSSN :"+enabledSSN);
@@ -288,6 +286,8 @@
 			}
 		}
 		grabbedTweets.push(msglink);
+		grabbedTweets = grabbedTweets.slice(-250);
+		localStorage.setItem('grabbedTweets', grabbedTweets.toString());
 	  } catch(e){
 		  if (autoGrabTweets){
 			  return;
