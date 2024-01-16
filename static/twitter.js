@@ -15,6 +15,8 @@
 	  xhr.send();
 	}
 	
+	
+	
 	var isExtensionOn = false;
 	
 	function pushMessage(data){
@@ -44,6 +46,26 @@
 		}
 	});
 	
+	var grabbedTweets = [];
+	
+	
+	
+	var enabledSSN = localStorage.getItem('enabledSSN') === 'true';
+	console.log("enabledSSN :"+enabledSSN);
+	
+	if (enabledSSN){
+		var autoGrabTweets = localStorage.getItem('autoGrabTweets') === 'true';
+		console.log("autoGrabTweets :"+autoGrabTweets);
+	} else {
+		var autoGrabTweets = false;
+		localStorage.setItem('autoGrabTweets', "false");
+	}
+	
+	var blockingAds = localStorage.getItem('blockingAds') === 'true';
+	
+	localStorage.setItem('blockingAds', blockingAds.toString());
+	
+	
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try {
@@ -68,7 +90,12 @@
 								document.getElementById("startupbutton").style.display = "none";
 								document.getElementById("adbutton").style.display = "none";
 							}
+							if (enabledSSN){
+								document.getElementById("startupbutton").innerHTML = "Disable Overlay Service"
+								document.getElementById("startupbutton").style.backgroundColor = "#af5454";
+							}
 						}
+						
 					}
 					sendResponse(true);
 					return;
@@ -128,21 +155,19 @@
 	function prepMessage(ele){
 	  if (ele == window){return;}
 	  
-	  
-	  
 	  if (this.targetEle){
 		  ele = this.targetEle.parentNode;;
-	  } else if (this){
+		  var base = ele.querySelector("[data-testid='tweet']");
+	  } else if (this && this.parentNode){
 		  ele = this.parentNode;
+		  var base = ele.querySelector("[data-testid='tweet']");
+	  } else {
+		  base = ele;
 	  }
-	  
-	  console.log(ele);
-	  
-	  var base = ele.querySelector("[data-testid='tweet']");
 	  
 	  if (!base){
 		   console.log("no base");
-		  return;
+		   return;
 	  }
 	  
 	  try{
@@ -153,6 +178,21 @@
 		  }
 	  } catch(e){
 		 var chatname="";
+	  }
+	  
+	  
+	  if (!chatname){
+		  try {
+			   if (base.querySelectorAll("a[role='link']")[0].id){
+				  chatname = base.querySelectorAll("a[role='link']")[2].childNodes[0].childNodes[0].innerText.trim();
+		  
+				  if (!chatname.length){
+					  chatname = base.querySelectorAll("a[role='link']")[2].querySelector("[id]").childNodes[0].innerText.trim();
+				  }
+			   }
+		  } catch(e){
+			  chatname="";
+		  }
 	  }
 	  
 	  var chatimg=false;
@@ -239,6 +279,20 @@
 	 
 	  var backgroundColor = "";
 	  var textColor = "";
+	  
+	  try {
+		var msglink = ele.querySelector("a[href] > time").parentNode.href;
+		if (autoGrabTweets){
+			if (grabbedTweets.includes(msglink)){
+				return;
+			}
+		}
+		grabbedTweets.push(msglink);
+	  } catch(e){
+		  if (autoGrabTweets){
+			  return;
+		  }
+	  }
 	 
 
 	  var data = {};
@@ -259,7 +313,6 @@
 			data.type = "x";
 	  }
 	  
-	  console.log(data);
 	  
 	  pushMessage(data);
 	};
@@ -326,30 +379,37 @@
 	
 	function checkButtons(){
 		
-		if (!isExtensionOn){return;}
+		if (!isExtensionOn && enabledSSN){return;}
 		
 		var bases = document.querySelector('main[role="main"]').querySelectorAll('article[role="article"]');
+		bases = [...bases].reverse();
 		for (var i=0;i<bases.length;i++) {
+			
 			try {
-				if (!bases[i].dataset.set){
-					bases[i].dataset.set=true;
-					var button  = document.createElement("button");
-					button.onclick = prepMessage;
-					button.innerHTML = "Grab Tweet";
-					button.style = " transition: all 0.2s linear; border:1px solid #0007; width: 56px; height: 56px; border-radius: 50px; padding: 4px; margin: 10px; background-color: rgb(117 153 117); cursor:pointer;"
-					button.className = "btn-push-twitter";
-					button.targetEle = bases[i]
-					//bases[i].appendChild(button);
-					
-					try{
-						bases[i].querySelector('[data-testid="Tweet-User-Avatar"]').parentNode.appendChild(button);
-					} catch(e){
+				if (autoGrabTweets){
+					prepMessage(bases[i]);
+				} else {
+					if (!bases[i].dataset.set){
+						bases[i].dataset.set=true;
+						var button  = document.createElement("button");
+						button.onclick = prepMessage;
+						button.innerHTML = "Grab Tweet";
+						button.style = " transition: all 0.2s linear; border:1px solid #0007; width: 56px; height: 56px; border-radius: 50px; padding: 4px; margin: 10px; background-color: rgb(117 153 117); cursor:pointer;"
+						button.className = "btn-push-twitter";
+						button.targetEle = bases[i];
+						//bases[i].appendChild(button);
+						
 						try{
-							bases[i].querySelector('[data-testid="tweet"]').childNodes[0].appendChild(button);
-						}catch(e){
-							bases[i].appendChild(button);
+							bases[i].querySelector('[data-testid="Tweet-User-Avatar"]').parentNode.appendChild(button);
+						} catch(e){
+							try{
+								bases[i].querySelector('[data-testid="tweet"]').childNodes[0].appendChild(button);
+							}catch(e){
+								bases[i].appendChild(button);
+							}
 						}
 					}
+				
 				}
 			} catch(e){}
 		}
@@ -365,6 +425,8 @@
 	function preStartup(){
 		if (!document.getElementById("startupbutton")){
 			
+			clearTimeout(preStartupInteval);
+			startup();
 			
 			var eles = document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label][role="link"]');
 			try {
@@ -373,9 +435,21 @@
 					
 			var button  = document.createElement("button");
 			button.onclick = function(){
-				document.getElementById("startupbutton").remove();
-				clearTimeout(preStartupInteval);
-				startup();
+				//document.getElementById("startupbutton").remove();
+				
+				enabledSSN = !enabledSSN;
+				localStorage.setItem('enabledSSN', enabledSSN.toString());
+				
+				if (enabledSSN){
+					document.getElementById("startupbutton").innerHTML = "Disable Overlay Service"
+					document.getElementById("startupbutton").style.backgroundColor = "#af5454";
+					document.getElementById("grabmodebutton").style.display = "block";
+					
+				} else {
+					document.getElementById("startupbutton").innerHTML = "Enable Overlay Service";
+					document.getElementById("startupbutton").style.backgroundColor = "#54af54";
+					
+				}
 			};
 			button.id = "startupbutton";
 			button.innerHTML = "Enable Overlay Service";
@@ -383,6 +457,11 @@
 			
 			if (!isExtensionOn){
 				button.style.display = "none";
+			}
+			
+			if (enabledSSN){
+				button.innerHTML = "Disable Overlay Service"
+				button.style.backgroundColor = "#af5454";
 			}
 			
 			try{
@@ -396,10 +475,60 @@
 				}
 			}
 			
+			var button  = document.createElement("button");
+			button.onclick = function(){
+				autoGrabTweets = !autoGrabTweets;
+				console.log("switch to auto mode: " +autoGrabTweets.toString());
+				
+				localStorage.setItem('autoGrabTweets', autoGrabTweets.toString());
+				if (!autoGrabTweets){
+					this.innerHTML = "Auto-grab Mode";
+					
+					document.querySelectorAll(".btn-push-twitter").forEach(ele=>{
+						ele.style.display = "inline-block";
+					});
+					
+					
+				} else {
+					this.innerHTML = "Manual Mode";
+					
+					document.querySelectorAll(".btn-push-twitter").forEach(ele=>{
+						ele.click();
+						ele.style.display = "none";
+					});
+					
+				}
+			};
+			
+			button.id = "grabmodebutton";
+			if (!autoGrabTweets){
+				button.innerHTML = "Auto-grab Mode";
+			} else {
+				button.innerHTML = "Manual Mode";
+			}
+			button.style = "border: 0; width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; margin-top: 10px; background-color: #6254af; cursor:pointer;";
+			
+			if (!isExtensionOn || !enabledSSN){
+				button.style.display = "none";
+			}
+			
+			try{
+				document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label="Tweet"]')[0].parentNode.appendChild(button);
+			} catch (e){
+				try{
+					var eles = document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label][role="link"]');
+					var ele = eles[eles.length - 1].parentNode.parentNode.appendChild(button);
+				} catch (e){
+				}
+			}
+			
 			
 			var button2  = document.createElement("button");
 			button2.onclick = function(){
 				document.getElementById("adbutton").remove();
+				
+				blockingAds = !blockingAds;
+				localStorage.setItem('blockingAds', blockingAds.toString());
 				
 				const styleEl = document.createElement("style");
 				document.head.appendChild(styleEl);
@@ -431,6 +560,7 @@
 				},500);
 			};
 			button2.id = "adbutton";
+			
 			button2.innerHTML = "Block Promoted Tweets";
 			button2.style = "border: 0; margin-top: 10px;width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; background-color: rgb(151 151 151); cursor:pointer;";
 			
@@ -471,6 +601,8 @@
 	}
 
 	var checkTwitter = null;
+	
+	
 	
 	function deTweet(){
 		if (!settings.detweet){
