@@ -197,7 +197,7 @@
 					chatContainers.forEach(ele=>{
 						if (ele && ele.nodeName && ele.nodeName == "DIV"){
 							ele.skip = true;
-							processMessage(ele);
+							//processMessage(ele);
 						}
 					});
 					onElementInserted(chatContainer);
