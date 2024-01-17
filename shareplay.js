@@ -163,12 +163,15 @@
 				var nodes = mutations[0].addedNodes;
 				for (var i=0;i<nodes.length;i++){
 					try {
-						var ele = nodes[i];
-						if (ele && ele.nodeName && ele.nodeName == "DIV"){
-							if (!ele.skip){
-								ele.skip = true;
-								processMessage(ele);
-							}
+						if (nodes[i] && nodes[i].nodeName && nodes[i].nodeName == "DIV"){
+							var chatContainers = nodes[i].querySelectorAll('.chat--replies--wrapper');
+							chatContainers = [...chatContainers];
+							chatContainers.forEach(ele2=>{
+								if (ele2 && ele2.nodeName && ele2.nodeName == "DIV"){
+									ele2.skip = true;
+									processMessage(ele2);
+								}
+							});
 						}
 					}catch(e){console.error(e)}
 				}
@@ -189,10 +192,12 @@
 			if (!chatContainer.marked){
 				chatContainer.marked=true;
 				setTimeout(function(){
-					var chatContainer = document.querySelector('div.user--chat--wrap');
-					chatContainer.childNodes.forEach(ele=>{
+					var chatContainers = document.querySelectorAll('div.user--chat--wrap .chat--replies--wrapper');
+					chatContainers = [...chatContainers];
+					chatContainers.forEach(ele=>{
 						if (ele && ele.nodeName && ele.nodeName == "DIV"){
 							ele.skip = true;
+							processMessage(ele);
 						}
 					});
 					onElementInserted(chatContainer);
