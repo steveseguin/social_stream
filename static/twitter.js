@@ -46,7 +46,16 @@
 		}
 	});
 	
-	var grabbedTweets = localStorage.getItem('grabbedTweets') || [];
+	var grabbedTweets = localStorage.getItem('grabbedTweets') || false;
+	if (grabbedTweets){
+		try{
+			grabbedTweets = JSON.parse(grabbedTweets);
+		} catch(e){
+			grabbedTweets = [];
+		}
+	} else {
+		grabbedTweets = [];
+	}
 	
 	var enabledSSN = localStorage.getItem('enabledSSN') === 'true';
 	console.log("enabledSSN :"+enabledSSN);
@@ -228,8 +237,6 @@
 		  }
 		  
 	  } catch(e){
-		  console.log(e);
-		   
 		  if (!chatmessage){
 			  try{
 				  if (ele.parentNode.querySelectorAll("[lang]").length){
@@ -287,7 +294,7 @@
 		}
 		grabbedTweets.push(msglink);
 		grabbedTweets = grabbedTweets.slice(-250);
-		localStorage.setItem('grabbedTweets', grabbedTweets.toString());
+		localStorage.setItem('grabbedTweets', JSON.stringify(grabbedTweets));
 	  } catch(e){
 		  if (autoGrabTweets){
 			  return;
@@ -383,6 +390,7 @@
 		
 		var bases = document.querySelector('main[role="main"]').querySelectorAll('article[role="article"]');
 		bases = [...bases].reverse();
+		
 		for (var i=0;i<bases.length;i++) {
 			
 			try {
@@ -414,11 +422,11 @@
 			} catch(e){}
 		}
 	}
+	
 	function startup() {
 		checkButtons();
 		setInterval(function(){
 			checkButtons();
-			
 		}, 2000);
 	}
 
