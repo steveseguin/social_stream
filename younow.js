@@ -93,7 +93,20 @@
 		lut.push(rankToColor(i,400));
 	}
 	
+	var eventTypes = [
+		"is watching",
+		"I became a fan!",
+		"invited \\d+ fans to this broadcast."
+	];
 	
+	function matchesEventType(msg) {
+		return eventTypes.some(eventType => {
+			// Create a RegExp object from the string, treating it as a regular expression
+			const pattern = new RegExp("^" + eventType + "$");
+			return pattern.test(msg);
+		});
+	}
+
 	function processMessage(ele){
 		
 		//console.log(ele);
@@ -156,6 +169,10 @@
 		data.membership = "";
 		data.contentimg = "";
 		data.type = "younow";
+		
+		if (msg && matchesEventType(msg)){
+			data.event = true;
+		}
 		
 		pushMessage(data);
 	}
