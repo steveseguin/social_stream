@@ -2415,7 +2415,7 @@
 		document.getElementById("output").classList.add("largeContent");
 	}
 	
-	custombot = false;
+	var custombot = false;
 	if (urlParams.has("myname") || urlParams.has("botlist")){
 		custombot = urlParams.get("myname") || urlParams.get("botlist") || false;
 		if (custombot){
@@ -3048,6 +3048,13 @@
 			chatimg = data.chatimg || "https://socialstream.ninja/unknown.png";
 		}
 		return chatimg;
+	}
+
+
+	function unescapeHtml(html) {
+		var textArea = document.createElement("textarea");
+		textArea.innerHTML = html;
+		return textArea.value;
 	}
 
 	function ajax(object2send, url, ajaxType="PUT"){
@@ -4925,12 +4932,21 @@
 				//} else if (data.chatname.toLowerCase() == "nightbot"){
 				//	bot = true;
 					//specialMessage = true;
+					
+				
+				
 				if (data.chatname.toLowerCase() == "vdoninja"){ // because why not. :)
 					data.chatname = "VDO.Ninja";
-				} else if (custombot && custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){ // because why not. :)
-					bot = true;
+				} else if (custombot){
+					var textname = data.chatname;
+					if (!data.textonly && custombot){
+						textname = unescapeHtml(data.chatname);
+					}
+					if (custombot.includes(textname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){ // because why not. :)
+						bot = true;
+					}
 				}
-
+				
 				if (bot && doNotShowBot){
 					return;
 				}

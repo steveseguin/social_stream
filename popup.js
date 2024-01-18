@@ -339,7 +339,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		var searchInput = document.getElementById('searchInput');
 		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
 			searchInput.style.display = 'block';
-			searchInput.style.width = 'calc(100% - 27px)'; // Match this with your CSS width
+			searchInput.style.width = 'calc(100% - 29px)'; // Match this with your CSS width
 			searchInput.focus(); // Optional: Focus on the input field when it's shown
 		} else {
 			searchInput.style.display = 'none';
