@@ -73,7 +73,33 @@
 			}
 		}
 		
+		#searchInput {
+			appearance: none;
+			position: fixed;
+			top: 50px;
+			right: 21px;
+			border: none;
+			display: none;
+			width: 0;
+			padding: 1px;
+			font-weight: bold;
+			cursor: text;
+			z-index: 100;
+			transition: width 0.5s ease;
+		}
+
+		#searchInput.show {
+			display: block;
+			width: calc(100% - 27px); /* Adjust width as needed */
+		}
 		
+		#searchIcon {
+			position: fixed;
+			top: 50px;
+			right: 0px;
+			z-index: 100;
+			cursor: pointer;
+		}
 
 		/* example of how to remotely load a font */
 		@font-face {
@@ -754,6 +780,7 @@
 		<button class="glowingButton" style="margin:0 1px 0 1px;width: unset; flex-grow: 1;  flex-shrink: 1;  flex-basis: auto;box-sizing: border-box; position: sticky;top: 35px; z-index: 10;padding:0;max-width:100px;" data-action="cleardock" title="Clears messages in the dock, excluding pinned messages"><span data-translate="clear-all-messages">Clear All</span></button>
 	</div>
 	<div id="newVersion"></div>
+	<input type="text" id="searchInput" placeholder="Search options by keyword..."><div id="searchIcon" title="Search options">🔍</div>
 	
 	<div class="container">
 

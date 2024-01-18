@@ -42,6 +42,7 @@ if (typeof(chrome.runtime)=='undefined'){
 	
 }
 
+
 var translation = {};
 
 function getTranslation(key, value=false){ 
@@ -280,7 +281,71 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			});
 		}
 		speechSynthesis.onvoiceschanged = populateVoices;
+		
+		document.getElementById('searchInput').addEventListener('keyup', function() {
+			var searchQuery = this.value.toLowerCase();
+			
+			if (searchQuery){
+				document.querySelectorAll('input.collapsible-input').forEach(ele=>{
+					ele.checked = true
+				});
+				document.querySelectorAll('.wrapper').forEach(w=>{
+					var menuItems = w.querySelectorAll('.options_group > div');
+					var matches = 0;
+					menuItems.forEach(function(item) {
+						var text = item.textContent.toLowerCase();
+						if (item.querySelector("[title]")){
+							text += " " + item.querySelector("[title]").title.toLowerCase();
+						}
+						if (item.querySelector("[title]")){
+							text += " " + item.querySelector("[title]").title.toLowerCase();
+						}
+						if (item.querySelector("input")){
+							[...item.querySelector("input").attributes].forEach(att=>{
+								if (att.name.startsWith("data-")){
+									text += " " + att.value.toLowerCase();
+								}
+							});
+						}
+						if (text.includes(searchQuery)) {
+							item.style.display = '';
+							matches += 1;
+						} else {
+							item.style.display = 'none';
+						}
+					});
+					if (!matches){
+						w.style.display = "none";
+					} else {
+						w.style.display = "";
+					}
+				});
+			} else {
+				document.querySelectorAll('input.collapsible-input').forEach(ele=>{
+					ele.checked = null
+				});
+				document.querySelectorAll('.wrapper').forEach(ele=>{
+					ele.style.display = "";
+				});
+				document.querySelectorAll('.options_group > div').forEach(ele=>{
+					ele.style.display = "";
+				});
+			}
+		});
+
 	}
+	
+	document.getElementById('searchIcon').addEventListener('click', function() {
+		var searchInput = document.getElementById('searchInput');
+		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
+			searchInput.style.display = 'block';
+			searchInput.style.width = 'calc(100% - 27px)'; // Match this with your CSS width
+			searchInput.focus(); // Optional: Focus on the input field when it's shown
+		} else {
+			searchInput.style.display = 'none';
+			searchInput.style.width = '0';
+		}
+	});
 	
 	console.log("pop up asking main for settings");
 	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
