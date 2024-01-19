@@ -1964,6 +1964,15 @@
 		onlyFrom = urlParams.get("fromonly").toLowerCase().trim(); // for the dylslexic users
 	} 
 	
+	var hideFrom = false;
+	if (urlParams.get("hidefrom") || urlParams.get("exclude")){
+		hideFrom = [];
+		(urlParams.get("hidefrom") || urlParams.get("exclude")).split(",").forEach(x=>{
+			hideFrom.push(x.trim().toLowerCase());
+		});
+	} 
+	
+	
 	var filterNamesNotMessages = false;
 	if (urlParams.has("namefilter")) {
 		filterNamesNotMessages = true;
@@ -4656,6 +4665,10 @@
 				// this is a twitch message, and we're hiding them.
 				return;
 			}
+			if (hideFrom && hideFrom.includes(data.type)){
+				// this is an exclude source
+				return;
+			}
 			if (onlyTwitch && (data.type!=="twitch")){
 				// this is not a twitch message, so we're hiding them
 				return;
@@ -4663,6 +4676,7 @@
 			if (onlyFrom &&  (data.type!==onlyFrom)){
 				return;
 			}
+			
 			
 			if (eventsOnly){
 				if (!data.event){
