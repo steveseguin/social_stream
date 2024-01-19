@@ -5741,7 +5741,6 @@
 						var UUID = keys[i];
 						var label = iframe.connectedPeers[UUID];
 						if (label === "SocialStream"){
-						console.log("SENDING2");
 							iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"rpcs", "UUID":UUID}, '*');
 						}
 					} catch(e){}
@@ -5749,7 +5748,6 @@
 			} else {
 				var label = iframe.connectedPeers[uid];
 				if (label === "SocialStream"){
-					console.log("SENDING");
 					iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"rpcs", "UUID":uid}, '*');
 				}
 			}
