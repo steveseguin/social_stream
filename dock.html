@@ -1868,7 +1868,7 @@
 	
 	var urlParams = new URLSearchParams(window.location.search);
 	var channel = null;
-	var iframe = null;
+	var iframes = [];
 	var queue = [];
 	var selectedQueue = [];
 	var datestamp = true;
@@ -1942,8 +1942,6 @@
 		}
 	}
 	
-	
-
 	if (urlParams.has("disabletimeout")) {
 		autoTimeoutEnabled = false;
 	}
@@ -2505,7 +2503,7 @@
 		};
 		socketserver.onopen = function (){
 			conCon = 1;
-			socketserver.send(JSON.stringify({"join":roomID, "out":2, "in":1}));
+			socketserver.send(JSON.stringify({"join":roomID.split(",")[0], "out":2, "in":1}));
 		};
 		
 		socketserver.onerror = function (error) {
@@ -2569,7 +2567,7 @@
 		};
 		socketserverExtension.onopen = function (){
 			conConExtension = 1;
-			socketserverExtension.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+			socketserverExtension.send(JSON.stringify({"join":roomID.split(",")[0], "out":3, "in":4}));
 		};
 		
 		socketserverExtension.onerror = function (error) {
@@ -4028,18 +4026,24 @@
 		return false;
 	}
 
-	var connectedPeers = {};
-	function RecvDataWindow(){
-		iframe = document.createElement("iframe");
-
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; // push and view, as we will connect with other docks also. I suppose I can have it only do this if &sync is enabled?
+	function RecvDataWindow(room){
+		var iframe = document.createElement("iframe");
+		iframe.connectedPeers = {};
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+room; // push and view, as we will connect with other docks also. I suppose I can have it only do this if &sync is enabled?
 		iframe.style.width = "0px";
 		iframe.style.height = "0px";
 		iframe.style.position = "fixed";
 		iframe.style.left = "-100px";
 		iframe.style.top = "-100px";
-		iframe.id = "frame1"
+		iframe.id = "frame_"+room;
+		
+		if (!iframes){
+			iframes = [iframe];
+		} else {
+			iframes.push(iframe);
+		}
 		document.body.appendChild(iframe);
+		
 
 		var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
 		var eventer = window[eventMethod];
@@ -4050,14 +4054,14 @@
 
 			if (("action" in e.data) && e.data.UUID && e.data.value && (e.data.action == "push-connection-info")){ // flip this
 				if ("label" in e.data.value){
-					connectedPeers[e.data.UUID] = e.data.value.label;
-					if (connectedPeers[e.data.UUID] === "dock"){ // this is a dock that wants to be synced with
+					iframe.connectedPeers[e.data.UUID] = e.data.value.label;
+					if (iframe.connectedPeers[e.data.UUID] === "dock"){ // this is a dock that wants to be synced with
 						syncDockAll(e.data.UUID);
 					}
 				}
 			} else if (("action" in e.data) && e.data.UUID && e.data.value && (e.data.action == "view-connection-info")){ // flip this
 				if ("label" in e.data.value){
-					connectedPeers[e.data.UUID] = e.data.value.label;
+					iframe.connectedPeers[e.data.UUID] = e.data.value.label;
 					if (openChatAutomatically){
 						send2Extension({action:"openChat", value:null}, e.data.UUID);
 					}
@@ -4065,13 +4069,13 @@
 			}
 			
 			if (("action" in e.data) && e.data.UUID && ("value" in e.data) && !e.data.value && (e.data.action == "push-connection")){ // flip this
-				if (e.data.UUID in connectedPeers){
-					delete connectedPeers[e.data.UUID];
+				if (e.data.UUID in iframe.connectedPeers){
+					delete iframe.connectedPeers[e.data.UUID];
 				}
-				//console.log(connectedPeers);
+				//console.log(iframe.connectedPeers);
 			} else if (("action" in e.data) && e.data.UUID && ("value" in e.data) && !e.data.value && (e.data.action == "view-connection")){ // flip this
-				if (e.data.UUID in connectedPeers){
-					delete connectedPeers[e.data.UUID];
+				if (e.data.UUID in iframe.connectedPeers){
+					delete iframe.connectedPeers[e.data.UUID];
 				}
 			}
 			
@@ -4083,7 +4087,9 @@
 		});
 	}
 
-	RecvDataWindow();
+	roomID.split(",").forEach(roomz=>{
+		RecvDataWindow(roomz.trim());
+	})
 
 	function createElementFromHTML(htmlString) {
 		var div = document.createElement('div');
@@ -5727,48 +5733,51 @@
 			}
 		}
 		
-		if (iframe){
+		iframes.forEach(iframe=>{
 			if (!uid){
-				var keys = Object.keys(connectedPeers);
+				var keys = Object.keys(iframe.connectedPeers);
 				for (var i = 0; i<keys.length;i++){
 					try {
 						var UUID = keys[i];
-						var label = connectedPeers[UUID];
+						var label = iframe.connectedPeers[UUID];
 						if (label === "SocialStream"){
+						console.log("SENDING2");
 							iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"rpcs", "UUID":UUID}, '*');
 						}
 					} catch(e){}
 				}
 			} else {
-				var label = connectedPeers[uid];
+				var label = iframe.connectedPeers[uid];
 				if (label === "SocialStream"){
+					console.log("SENDING");
 					iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"rpcs", "UUID":uid}, '*');
 				}
 			}
-		}
+		});
 	}
 
 	function syncDataP2P(data, UUID=false, force=false){
 		if (blockMessageSelecting || blockMessageSelecting2){
 			return;
 		}
-	
-		if (iframe && (syncDocks||force)){
-			if (UUID){
-				iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*');
-			} else {
-				var keys = Object.keys(connectedPeers);
-				for (var i = 0; i<keys.length;i++){
-					try {
-						var UUID = keys[i];
-						var label = connectedPeers[keys[i]];
-						if (label === "dock"){
-							iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*');
-						}
-					} catch(e){}
+		iframes.forEach(iframe=>{
+			if (syncDocks||force){
+				if (UUID){
+					iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*');
+				} else {
+					var keys = Object.keys(iframe.connectedPeers);
+					for (var i = 0; i<keys.length;i++){
+						try {
+							var UUID = keys[i];
+							var label = iframe.connectedPeers[keys[i]];
+							if (label === "dock"){
+								iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*');
+							}
+						} catch(e){}
+					}
 				}
 			}
-		}
+		});
 	}
 
 	function sendDataP2P(data){
@@ -5795,15 +5804,15 @@
 			if (socketserver){ // send a copy to the remote API
 				socketserver.send(JSON.stringify(data));
 			}
-			if (iframe){
+			iframes.forEach(iframe=>{
 				var msg = {};
 				msg.overlayNinja = {};
 				msg.overlayNinja = data;
 				if (syncDocks){
-					var keys = Object.keys(connectedPeers);
+					var keys = Object.keys(iframe.connectedPeers);
 					for (var i = 0; i<keys.length;i++){
 						var UUID = keys[i];
-						var label = connectedPeers[keys[i]];
+						var label = iframe.connectedPeers[keys[i]];
 						if (label === "dock"){
 							if (data && data.id){
 								iframe.contentWindow.postMessage({"sendData":{overlayNinja:{mid:data.id}}, "type":"pcs", "UUID":UUID}, '*');
@@ -5817,22 +5826,20 @@
 						}
 					}
 				} else {
-					var keys = Object.keys(connectedPeers);
+					var keys = Object.keys(iframe.connectedPeers);
 					for (var i = 0; i<keys.length;i++){
 						var UUID = keys[i];
-						var label = connectedPeers[keys[i]];
+						var label = iframe.connectedPeers[keys[i]];
 						if (label !== "dock"){
 							iframe.contentWindow.postMessage({"sendData":msg, "type":"pcs", "UUID":UUID}, '*'); // send only to viewers of this stream; not back to the chrome extension.. legacy?
 						}
 					}
 				}
-			}
+			});
 		} catch(e){
 			console.error(e);
 		}
 	}
-
-
 
 
 
@@ -5854,7 +5861,6 @@
 		
 		send2Extension(msg.overlayNinja);
 		
-		//iframe.contentWindow.postMessage({"sendData":msg, "type": "rpcs"}, '*'); // send only to 'viewers' of this stream
 	}
 
 	function setupSaveToDisk(){
