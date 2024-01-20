@@ -51,6 +51,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
   - [Installing different language-speech packs](#installing-different-language-speech-packs)
   - [Premium TTS voice options](#premium-tts-voice-options)
 - [Branded channel support](#branded-channel-support)
+- [Random other commands not documented elsewhere](#random-other-commands-not-documented-elsewhere)
 - [Known issues or solutions](#known-issues-or-solutions)
   - [Chat stops when put in the background or minimized](#chat-stops-when-put-in-the-background-or-minimized)
   - [Blue bar appears or chat responder not working](#blue-bar-appears-or-chat-responder-not-working)
