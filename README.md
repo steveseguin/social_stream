@@ -657,6 +657,19 @@ There is a toggle that lets you show the source of the chat messages.
 
 ![image](https://user-images.githubusercontent.com/2575698/166864138-00cd1e1c-2149-473f-be8d-d07a8d400c07.png)
 
+### Random other commands not documented elsewhere
+
+- You can exclude certain sources from appearing in the dock with the &exclude option
+ - ie: dock.html?session=xxx&exclude=youtube,twitch,facebook
+
+- You can combine multiple docks into one, if for example you have multiple extensions capturing chat, and want to view it all one a single computer
+ - ie: dock.html?session=aaaaa,bbbbb
+
+- You can filter out certain messages marked as "events" in the dock using &filterevents
+ - ie: dock.html?session=xxx&filterevents=joined
+
+- the Filter option in the dock supports `!` to denote opposite, such as `source:!youtube`, so only filter for sources that are not youtube.
+
 ### Known issues or solutions
 
 #### Chat stops when put in the background or minimized
