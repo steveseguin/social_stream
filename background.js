@@ -3334,18 +3334,33 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 		if (data.chatmessage){
 			for (var i = 1;i<=10;i++){
 				if (settings['botReplyMessageEvent'+i] && settings['botReplyMessageCommand'+i] && settings['botReplyMessageCommand'+i].textsetting && settings['botReplyMessageValue'+i] && settings['botReplyMessageValue'+i].textsetting && (data.chatmessage.indexOf(settings['botReplyMessageCommand'+i].textsetting)!=-1)){
-					var timeoutBot = 0;
-					if (settings['botReplyMessageTimeout'+i]){
-						timeoutBot = settings['botReplyMessageTimeout'+i].numbersetting || 0;
-					} 
-					if (Date.now() - messageTimeout > timeoutBot){ // respond to "1" with a "1" automatically; at most 1 time per minute.
-						messageTimeout = Date.now();
-						var msg = {};
-						msg.tid = data.tid;
-						msg.response = settings['botReplyMessageValue'+i].textsetting;
-						processResponse(msg);
+					var matched = true;
+					console.log(settings['botReplyMessageSource'+i]);
+					if (settings['botReplyMessageSource'+i] && settings['botReplyMessageSource'+i].textsetting.trim()){
+						matched = false;
+						
+						settings['botReplyMessageSource'+i].textsetting.split(",").forEach(xx=>{
+							console.log(xx,data.type);
+							if (xx.trim().toLowerCase() == data.type.trim().toLowerCase()){
+								matched=true;
+							}
+						});
+						
 					}
-					break;
+					if (matched){
+						var timeoutBot = 0;
+						if (settings['botReplyMessageTimeout'+i]){
+							timeoutBot = settings['botReplyMessageTimeout'+i].numbersetting || 0;
+						} 
+						if (Date.now() - messageTimeout > timeoutBot){ // respond to "1" with a "1" automatically; at most 1 time per minute.
+							messageTimeout = Date.now();
+							var msg = {};
+							msg.tid = data.tid;
+							msg.response = settings['botReplyMessageValue'+i].textsetting;
+							processResponse(msg);
+						}
+						break;
+					}
 				}
 			}
 		}

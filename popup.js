@@ -418,6 +418,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					<input type="number" id="botReplyMessageTimeout'+ i +'" class="textInput" min="0" autocomplete="off" placeholder="Timeout needed between responses" data-numbersetting="botReplyMessageTimeout'+ i +'">\
 					<label for="botReplyMessageTimeout'+ i +'">&gt; Trigger timeout (ms)</label>\
 				</div>\
+				<div class="textInputContainer" style="width: 235px" title="If a source is provided, limit the response to this source. Comma-separated" >\
+					<input type="text" id="botReplyMessageSource'+ i +'" class="textInput" min="0" autocomplete="off" placeholder="ie: youtube,twitch (comma separated)" data-textsetting="botReplyMessageSource'+ i +'">\
+					<label for="botReplyMessageSource'+ i +'">&gt; Limit to specific sites</label>\
+				</div>\
 			</div>';
 		document.getElementById("botReplyMessages").appendChild(chat);
 	}
