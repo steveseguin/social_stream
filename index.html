@@ -963,7 +963,12 @@ span.zero-width-parent img.zero-width-emote {
 	
 	if (urlParams.has("showsource")){
 		showsource = true;
-	} 
+	}
+	
+	var lanonly = "";
+	if (urlParams.has("lanonly")){
+		lanonly = "&lanonly";
+	}
 	
 	var isIFrame = false;
 	if ( parent && (window.location !== window.parent.location )) {
@@ -1418,10 +1423,10 @@ span.zero-width-parent img.zero-width-emote {
 		var iframe = document.createElement("iframe");
 		
 		if (pseudodock){
-			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; // push and view, as we will connect with other docks also.
+			iframe.src = "https://vdo.socialstream.ninja/alpha/?ln&salt=vdo.ninja&password="+password+lanonly+"&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; // push and view, as we will connect with other docks also.
 			// iframe.src = "https://vdo.socialstream.ninja/?ln&password="+password+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
 		} else {
-			iframe.src = "https://vdo.socialstream.ninja/?ln&password="+password+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
+			iframe.src = "https://vdo.socialstream.ninja/alpha/?ln&password="+password+lanonly+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
 		}
 		
 		iframe.style.width = "0px";

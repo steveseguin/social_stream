@@ -1025,6 +1025,34 @@ chrome.runtime.onMessage.addListener(
 					}
 				}
 				
+				if (request.setting == "lanonly"){
+					if (request.value){
+						if (iframe){
+							if (iframe.src){
+								iframe.src = null;
+							}
+
+							iframe.remove();
+							iframe = null;
+						}
+						if (isExtensionOn){
+							loadIframe(streamID, password);
+						}
+					} else {
+						if (iframe){
+							if (iframe.src){
+								iframe.src = null;
+							}
+
+							iframe.remove();
+							iframe = null;
+						}
+						if (isExtensionOn){
+							loadIframe(streamID, password);
+						}
+					}
+				}
+				
 				if (request.setting == "server2"){
 					if (request.value){
 						if (!socketserverDock){
@@ -2504,26 +2532,29 @@ function sendToDisk(data){
 	if (newSavedNamesFileHandle && data.chatname){
 		overwriteSavedNames(data.chatname);
 	}
-	
 }
-
-
 
 function loadIframe(streamID, pass=false){  // this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
 	log("LOAD IFRAME VDON BG");
+	
+	var lanonly = "";
+	if (settings['lanonly']){
+		lanonly = "&lanonly";
+	}
+	
 	if (iframe){
 		if (!pass){
 			pass = "false";
 		}
 		//iframe.allow = "document-domain;encrypted-media;sync-xhr;usb;web-share;cross-origin-isolated;accelerometer;midi;geolocation;autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+"&room="+streamID+"&push="+streamID+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
+		iframe.src = "https://vdo.socialstream.ninja/alpha/?ln&salt=vdo.ninja&password="+pass+lanonly+"&room="+streamID+"&push="+streamID+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
 	} else {
 		iframe = document.createElement("iframe");
 		//iframe.allow =  "document-domain;encrypted-media;sync-xhr;usb;web-share;cross-origin-isolated;accelerometer;midi;geolocation;autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
 		if (!pass){
 			pass = "false";
 		}
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+"&room="+streamID+"&push="+streamID+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
+		iframe.src = "https://vdo.socialstream.ninja/alpha/?ln&salt=vdo.ninja&password="+pass+lanonly+"&room="+streamID+"&push="+streamID+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
 		document.body.appendChild(iframe);
 	}
 }
