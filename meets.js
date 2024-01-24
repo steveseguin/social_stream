@@ -208,7 +208,7 @@
 							mutation.addedNodes[i].ignore=true;
 							let ele = mutation.addedNodes[i];
 							for (var j = 0;j<6;j++){
-								if (ele.parentNode == document.querySelector("[data-panel-container-id='sidePanel2subPanel0'] [aria-live]")){
+								if (ele.parentNode == document.querySelector("[data-panel-container-id='sidePanel2subPanel0'] [aria-live], [data-panel-container-id='sidePanel2'] [aria-live]")){
 									processMessage(ele);
 									break;
 								} else if (ele.parentNode){
@@ -231,11 +231,11 @@
 	}
 	
 	setInterval(function(){
-		var ready = document.querySelector("[data-panel-container-id='sidePanel2subPanel0'] [aria-live]");
+		var ready = document.querySelector("[data-panel-container-id='sidePanel2subPanel0'] [aria-live], [data-panel-container-id='sidePanel2'] [aria-live]");
 		if (ready && !ready.ready){
 			console.log("Social Stream ready to go");
 			ready.ready = true;
-			onElementInserted( document.querySelector("[data-panel-container-id='sidePanel2subPanel0'] [aria-live]"));
+			onElementInserted(document.querySelector("[data-panel-container-id='sidePanel2subPanel0'] [aria-live], [data-panel-container-id='sidePanel2'] [aria-live]"));
 		}
 	},1000);
 
