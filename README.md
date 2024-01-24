@@ -207,6 +207,10 @@ Please note: DO NOT Uninstall the extension if you want to update it. This will 
 
 New app integrations do not auto-update; just the overlay and dock page will auto-update. It's suggeseted you update every now and then manually, or whenever you encounter a bug.  I'll try to resolve this issue down the road, perhaps with a standalone desktop app eventually.
 
+And for a video that covers two ways to update the extension: https://youtu.be/Zql6Q5H2Eqw?t=612
+
+(If using the Standalone app version of SocialStream, and not the extension, it will auto update when you reload/reopen)
+
 #### Firefox support
 
 I no longer offer official Firefox support, but you can still try to get it going with the steps below:
