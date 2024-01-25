@@ -153,7 +153,7 @@
 		data.hasDonation = "";
 		data.membership = "";
 		data.contentimg = "";
-		data.type = "younow";
+		data.type = "mixlr";
 		
 		if (msg && matchesEventType(msg)){
 			data.event = true;
