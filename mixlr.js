@@ -109,7 +109,7 @@
 
 	function processMessage(ele){
 		
-		console.log(ele);
+		//console.log(ele);
 
 		var chatimg = ""
 
