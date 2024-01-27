@@ -1209,7 +1209,7 @@ chrome.runtime.onMessage.addListener(
 				sendResponse({"state":isExtensionOn});
 				if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)){
 					sendToDestinations({"delete": request.delete});
-				}
+				} 
 			} else if ("message" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				try {
 					request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
@@ -3433,6 +3433,15 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 					msg.response = "Hi, @"+data.chatname+" !";
 					processResponse(msg);
 				}
+			}
+		}
+		
+		if (settings.queuecommand && data.chatmessage && data.chatmessage.startsWith("!queue ")){
+			try {
+				data.chatmessage = data.chatmessage.split("!queue ")[1].trim();
+				data.queueme = true;
+			} catch(e){
+				errorlog(e);
 			}
 		}
 		

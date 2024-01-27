@@ -36,6 +36,8 @@
 			}
 		}
 		
+		
+		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
@@ -130,17 +132,17 @@
 		} catch(e){
 		}
 		
+		
 
 		if (!msg || !name){
 			return;
 		}
 		
+		msg = msg.replace(/(delete|Delete)$/, '');
+		msg = msg.trim();
+		
 		var chatbadges = "";
-		
-		
 		var nameColor = "";
-		
-		
 		
 		var data = {};
 		data.chatname = name;
