@@ -47,13 +47,57 @@
 	
 	var messageHistory = [];
 	
+	
+	function replaceEmotesWithImages(text) {
+		if (!BTTV){return text;}
+		if (!settings.bttv){return text;}
+		try {
+			if (BTTV.globalEmotes){
+				BTTV.globalEmotes.forEach(emote => {
+					const emoteCode = emote.code;
+					const emoteId = emote.id;
+					const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
+					const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
+
+					text = text.split(emoteCode).join(imageTag);
+				});
+			}
+			if (BTTV.channelEmotes){
+				BTTV.channelEmotes.forEach(emote => {
+					const emoteCode = emote.code;
+					const emoteId = emote.id;
+					const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
+					const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
+
+					text = text.split(emoteCode).join(imageTag);
+				});
+			}
+			if (BTTV.sharedEmotes){
+				BTTV.sharedEmotes.forEach(emote => {
+					const emoteCode = emote.code;
+					const emoteId = emote.id;
+					const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
+					const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
+
+					text = text.split(emoteCode).join(imageTag);
+				});
+			}
+		} catch(e){
+		}
+		return text;
+	}
+	
 	function getAllContentNodes(element) {
 		var resp = "";
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent){  // ah, so I was skipping the spaces before. that's breaking arabic. well, w/e
-				resp += escapeHtml(node.textContent)+"";
+				if (settings.textonlymode){
+					resp += escapeHtml(node.textContent)+"";
+				} else {
+					resp += replaceEmotesWithImages(escapeHtml(node.textContent))+"";
+				}
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					resp += node.outerHTML;
@@ -74,6 +118,7 @@
 			return false;
 		}
 	}
+
 
 	function processMessage(ele, wss=true){
 		if (ele.hasAttribute("is-deleted")) {
@@ -147,7 +192,9 @@
 		if (!settings.textonlymode) {
 			try {
 				chatmessage = getAllContentNodes(ele.querySelector("#message, .seventv-yt-message-content"));
-			} catch (e) {}
+			} catch (e) {
+				console.error(e);
+			}
 		} else {
 			try {
 				var cloned = ele.querySelector("#message, .seventv-yt-message-content").cloneNode(true);
@@ -160,11 +207,12 @@
 					children[i].outerHTML = "";
 				}
 				chatmessage = getAllContentNodes(cloned);
-			} catch (e) {}
+			} catch (e) {
+				console.error(e);
+			}
 		}
 
 		chatmessage = chatmessage.trim();
-
 		try {
 			chatimg = ele.querySelector("#img").src;
 			if (chatimg.startsWith("data:image/gif;base64")) { // document.querySelector("#panel-pages").querySelector("#img").src
@@ -344,7 +392,6 @@
 		data.subtitle = subtitle;
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube";
-		
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, {
 				"message": data
@@ -353,6 +400,8 @@
 		}
 		
 	}
+	var settings = {};
+	var BTTV = false;
 	
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
@@ -366,22 +415,35 @@
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
+						if (settings.bttv && !BTTV){
+							chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
+						}
+						return;
+					} 
+					if ("BTTV" in request){
+						BTTV = request.BTTV;
+						console.log(BTTV);
+						sendResponse(true);
 						return;
 					}
 				}
+				
 				
 			} catch(e){}
 			sendResponse(false);
 		}
 	);
 	
-	var settings = {};
-	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
+			
+			if (settings.bttv && !BTTV){
+				chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
+			}
 		}
 	});
+	
 
 	function onElementInserted(target, callback) {
 		var onMutationsObserved = function(mutations) {
@@ -449,7 +511,15 @@
 
 	if (window.location.href.includes("youtube.com/watch")){
 		var checkTimer2 = setInterval(function(){
-			var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages");
+			try {
+				if (document.querySelector('iframe[src]') && !document.querySelector('iframe[src]').includes("truffle.vip")){
+					var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages");
+				} else {
+					var ele = false;
+				}
+			} catch(e){
+				
+			}
 			if (ele){
 				clearInterval(checkTimer2);
 				var cleared = false;

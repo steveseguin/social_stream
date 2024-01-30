@@ -89,6 +89,10 @@
 			return "";
 		}
 	}
+	
+	function getBTTVEmotes(userid){
+		return fetch("https://api.betterttv.net/3/cached/users/twitch/"+userid).then(result=>{return result.json()}).then(result=>{return result;})
+	}
 
 
 	function getAllContentNodes(element) { // takes an element.

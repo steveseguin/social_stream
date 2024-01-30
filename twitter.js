@@ -173,8 +173,10 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('input').focus();
-					document.querySelector('input').click();
+					document.querySelector('textarea').focus();
+					console.log("FOCUSING");
+					console.log(document.querySelector('textarea'))
+					document.querySelector('textarea').click();
 					sendResponse(true);
 					return;
 				}
@@ -236,6 +238,59 @@
 	  }
 	  return null;
 	}
+	
+	try {
+		window.onblur = null;
+		window.blurred = false;
+		document.hidden = false;
+		document.visibilityState = "visible";
+		document.mozHidden = false;
+		document.webkitHidden = false;
+	} catch(e){	}
+
+	try {
+		document.hasFocus = function () {return true;};
+		window.onFocus = function () {return true;};
+		
+		Object.defineProperty(document, "mozHidden", { value : false});
+		Object.defineProperty(document, "msHidden", { value : false});
+		Object.defineProperty(document, "webkitHidden", { value : false});
+		Object.defineProperty(document, 'visibilityState', { get: function () { return "visible"; }, value: 'visible', writable: true});
+		Object.defineProperty(document, 'hidden', {value: false, writable: true});
+		
+		setInterval(function(){
+			console.log("set visibility");
+			window.onblur = null;
+			window.blurred = false;
+			document.hidden = false;
+			document.visibilityState = "visible";
+			document.mozHidden = false;
+			document.webkitHidden = false;
+			document.dispatchEvent(new Event("visibilitychange"));
+		},200);
+	} catch(e){	}
+
+	try {
+		document.onvisibilitychange = function(){
+			window.onFocus = function () {return true;};
+			
+		};
+	} catch(e){	}
+
+	try {
+		for (event_name of ["visibilitychange",
+			"webkitvisibilitychange",
+			"blur", // may cause issues on some websites
+			"mozvisibilitychange",
+			"msvisibilitychange"]) {
+				try{
+					window.addEventListener(event_name, function(event) {
+						event.stopImmediatePropagation();
+						event.preventDefault();
+					}, true);
+				} catch(e){}
+		}
+	} catch(e){	}
 
 
 	const pattern = new RegExp('^https://(www\\.)?twitter\\.com/i/broadcasts/.*$', 'i');

@@ -816,8 +816,6 @@ function YouTubeGetID(url){
   if(url[2] !== undefined) {
 	ID = url[2].split(/[^0-9a-z_\-]/i);
 	ID = ID[0];
-  } else {
-	ID = url;
   }
   return ID;
 }
@@ -951,6 +949,98 @@ function updateExtensionState(sync=true){
 	pushSettingChange(); 
 	
 	
+}
+
+function setItemWithExpiry(key, value, expiryInMinutes=1440) {
+    const now = new Date();
+    const item = {
+        value: value,
+        expiry: now.getTime() + expiryInMinutes * 60000,
+    };
+    localStorage.setItem(key, JSON.stringify(item));
+}
+
+function getItemWithExpiry(key) {
+    const itemStr = localStorage.getItem(key);
+
+    if (!itemStr) {
+        return null;
+    }
+
+    const item = JSON.parse(itemStr);
+    const now = new Date();
+
+    if (now.getTime() > item.expiry) {
+        localStorage.removeItem(key);
+        return null;
+    }
+
+    return item.value;
+}
+
+async function getBTTVEmotes(url=false){
+	// assumes Youtube only for now.
+	var vid = false;
+	
+	if (url){
+		vid = YouTubeGetID(url);
+	}
+	
+	if (vid){
+		var userID = localStorage.getItem("vid2uid:"+vid);
+		if (!userID){
+			userID = await fetch("https://api.socialstream.ninja/youtube/user?video="+vid).then(result=>{return result.text();}).then(result=>{return result;}).catch(err=>{
+				console.log(err);
+			});
+			if (userID){
+				 localStorage.setItem("vid2uid:"+vid, userID);
+			} else {
+				return false;
+			}
+			
+		}
+		if (userID){
+			var bttv = getItemWithExpiry("uid2bttv:"+userID);
+			
+			if (!bttv){
+				bttv = await fetch("https://api.betterttv.net/3/cached/users/youtube/"+userID).then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
+					console.log(err);
+				});
+				if (bttv){
+					 setItemWithExpiry("uid2bttv:"+userID, bttv);
+				} else {
+					 bttv = {};
+				}
+			} else {
+				log("bttv recovererd from storage");
+			}
+		} else {
+			var bttv = {};
+		}
+	} else {
+		var bttv = {};
+	}
+	
+	//console.log(bttv);
+	
+	var globalbttv = getItemWithExpiry("globalbttv");
+	
+	if (!globalbttv){
+		globalbttv = await fetch("https://api.betterttv.net/3/cached/emotes/global").then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
+			console.log(err);
+		});
+		if (globalbttv){
+			setItemWithExpiry("globalbttv", globalbttv);
+		} else {
+			globalbttv = {};
+		}
+	} else {
+		log("globalbttv recovererd from storage");
+	}
+	bttv.globalEmotes = globalbttv;
+	//console.log(globalbttv);
+	
+	return bttv;
 }
 
 chrome.runtime.onMessage.addListener(
@@ -1126,6 +1216,9 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "capturejoinedevent"){
 					pushSettingChange();
 				}
+				if (request.setting == "bttv"){
+					pushSettingChange();
+				}
 				
 				if (request.setting == "addkarma"){
 					if (request.value){
@@ -1256,7 +1349,9 @@ chrome.runtime.onMessage.addListener(
 								request.message.sourceImg = brandURL;
 							}
 						}
-					}
+					} // else {
+					//	getBTTVEmotes();
+					//}
 
 					try{
 						request.message = await applyBotActions(request.message, sender.tab); // perform any immediate actions
@@ -1268,6 +1363,16 @@ chrome.runtime.onMessage.addListener(
 				} else {
 					sendResponse({"state":isExtensionOn});
 				}
+			} else if ("getBTTV" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+				sendResponse({"state":isExtensionOn});
+				if (sender.tab.url){
+					var BTTV = await getBTTVEmotes(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
+					if (BTTV){
+						chrome.tabs.sendMessage(sender.tab.id, {BTTV:BTTV}, function(response=false) {
+							chrome.runtime.lastError;
+						});
+					}
+				} 
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				sendResponse({"state":isExtensionOn,"streamID":streamID, "password":password, "settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation. 
 			} else if ("keepAlive" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
@@ -3366,12 +3471,12 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			for (var i = 1;i<=10;i++){
 				if (settings['botReplyMessageEvent'+i] && settings['botReplyMessageCommand'+i] && settings['botReplyMessageCommand'+i].textsetting && settings['botReplyMessageValue'+i] && settings['botReplyMessageValue'+i].textsetting && (data.chatmessage.indexOf(settings['botReplyMessageCommand'+i].textsetting)!=-1)){
 					var matched = true;
-					console.log(settings['botReplyMessageSource'+i]);
+					//console.log(settings['botReplyMessageSource'+i]);
 					if (settings['botReplyMessageSource'+i] && settings['botReplyMessageSource'+i].textsetting.trim()){
 						matched = false;
 						
 						settings['botReplyMessageSource'+i].textsetting.split(",").forEach(xx=>{
-							console.log(xx,data.type);
+							//console.log(xx,data.type);
 							if (xx.trim().toLowerCase() == data.type.trim().toLowerCase()){
 								matched=true;
 							}
