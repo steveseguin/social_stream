@@ -217,6 +217,45 @@ function populateFontDropdown() {
     });
 }
 
+function createUniqueVoiceIdentifiers(voices) {
+    let uniqueIdentifiersByLang = {};
+
+    // Group voices by language
+    voices.forEach(voiceObj => {
+        if (!uniqueIdentifiersByLang[voiceObj.lang]) {
+            uniqueIdentifiersByLang[voiceObj.lang] = [];
+        }
+        uniqueIdentifiersByLang[voiceObj.lang].push(voiceObj);
+    });
+
+    // Find unique identifiers within each language group
+    for (let lang in uniqueIdentifiersByLang) {
+        let voicesInLang = uniqueIdentifiersByLang[lang];
+
+        voicesInLang.forEach(voiceObj => {
+            const words = voiceObj.name.split(' ');
+            for (let i = 0; i < words.length; i++) {
+                let potentialIdentifier = words[i];
+                if (voicesInLang.filter(v => v.name.includes(potentialIdentifier)).length === 1) {
+                    voiceObj.code = `${lang}&voice=${potentialIdentifier}`;
+                    return;
+                }
+            }
+            // Fallback if no unique word is found
+            voiceObj.code = lang+"&voice="+`${voiceObj.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+        });
+    }
+
+
+	var voicesOutput = [];
+	for (var voice in uniqueIdentifiersByLang){
+		uniqueIdentifiersByLang[voice].forEach(v=>{
+			voicesOutput.push(v);
+		});
+	}
+    return voicesOutput;
+}
+
 document.addEventListener("DOMContentLoaded", async function(event) {
 	document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
 	document.body.className = "extension-disabled";
@@ -237,7 +276,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// populate language drop down
 	if (speechSynthesis){
 		function populateVoices() {
-			const voices = speechSynthesis.getVoices();
+			const voices = createUniqueVoiceIdentifiers(speechSynthesis.getVoices());
 			
 			voices.sort((a, b) => {
 				if (a.default) {
@@ -257,7 +296,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 				if (!existingOptions.includes(voiceText)) {
 					const option = document.createElement('option');
-					option.textContent = voiceText;option.value = voice.lang;
+					option.textContent = voiceText;
+					option.value = voice.code;
 					option.setAttribute('data-lang', voice.lang);
 					option.setAttribute('data-name', voice.name);
 					voicesDropdown.appendChild(option);
@@ -273,7 +313,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				if (!existingOptions.includes(voiceText)) {
 					const option = document.createElement('option');
 					option.textContent = voiceText;
-					option.value = voice.lang;
+					option.value = voice.code;
 					option.setAttribute('data-lang', voice.lang);
 					option.setAttribute('data-name', voice.name);
 					voicesDropdown.appendChild(option);
@@ -972,7 +1012,12 @@ function updateSettings(ele, sync=true){
 		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.optionparam1);
 		
 		if (ele.value){
-			document.getElementById("dock").raw = updateURL(ele.dataset.optionparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").raw);
+			if (ele.value.includes("&voice=")){
+				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, "voice");
+				document.getElementById("dock").raw = updateURL(ele.dataset.optionparam1+"="+ele.value, document.getElementById("dock").raw);
+			} else {
+				document.getElementById("dock").raw = updateURL(ele.dataset.optionparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").raw);
+			}
 		}
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
@@ -983,7 +1028,12 @@ function updateSettings(ele, sync=true){
 		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.optionparam2);
 		
 		if (ele.value){
-			document.getElementById("overlay").raw = updateURL(ele.dataset.optionparam2+"="+encodeURIComponent(ele.value), document.getElementById("overlay").raw);
+			if (ele.value.includes("&voice=")){
+				document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, "voice");
+				document.getElementById("overlay").raw = updateURL(ele.dataset.optionparam2+"="+ele.value, document.getElementById("overlay").raw);
+			} else {
+				document.getElementById("overlay").raw = updateURL(ele.dataset.optionparam2+"="+encodeURIComponent(ele.value), document.getElementById("overlay").raw);
+			}
 		}
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
