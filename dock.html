@@ -2877,7 +2877,10 @@
 	}
 	
 	
-	
+	var selfQueue = false
+	if (urlParams.has("selfqueue")){
+		selfQueue = urlParams.get("selfqueue") || "!queue";
+	}
 	
 
 	if (urlParams.has("save")){
@@ -5422,6 +5425,11 @@
 			applyBotActions(data); // Official actions
 			
 			if (data.queueme){
+				selectedQueue.push(node);
+				node.children[0].dataset.qid = selectedQueue.length;
+				node.classList.add("queued");
+				updateQueueButton();
+			} else if (selfQueue && data.chatmessage && (data.chatmessage.split(" ")[0] == selfQueue)){
 				selectedQueue.push(node);
 				node.children[0].dataset.qid = selectedQueue.length;
 				node.classList.add("queued");

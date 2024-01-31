@@ -153,10 +153,6 @@
 		data.contentimg = "";
 		data.type = "megaphonetv";
 		
-		if (msg && matchesEventType(msg)){
-			data.event = true;
-		}
-		
 		pushMessage(data);
 	}
 
