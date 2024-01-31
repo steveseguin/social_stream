@@ -150,6 +150,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - younow.com - ( just open the video as normal with chat on the side; there's no pop out chat, so the link is just https://www.younow.com/USERNAME )
 - shareplay.tv (pop out chat, ie: https://www.shareplay.tv/chat/usernamehere/9fd3a9ee-a915-4f8b-b23d-xxxxxxxxxxx)
 - truffle.vip (https://chat.truffle.vip/chat/*)
+- megaphonetv.com (UGC content list)
 [More on request](#requesting-a-site)
 
 #### Chat graveyard 🪦🪦🪦
