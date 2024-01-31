@@ -2894,7 +2894,7 @@ function checkIfAllowed(sitename){
 			if (sitename == "instagram"){ // "instagram live" is allowed still, just not comments
 				return false;
 			}
-			if (sitename.startsWith("https://www.instagram.com/")){
+			if (sitename.startsWith("https://www.instagram.com/") && !sitename.includes("/live/")){
 				return false;
 			}
 		} catch(e){}
@@ -3112,6 +3112,7 @@ function limitString(string, maxLength) {
 
 function generalFakeChat(tabid, message, middle=true, keypress=true, backspace=false, delayedPress=false){ // fake a user input
 	try{ 
+		
 		chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {
 			chrome.runtime.lastError;
 			if (!response){
