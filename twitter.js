@@ -174,9 +174,6 @@
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 					document.querySelector('textarea').focus();
-					console.log("FOCUSING");
-					console.log(document.querySelector('textarea'))
-					document.querySelector('textarea').click();
 					sendResponse(true);
 					return;
 				}

@@ -49,11 +49,6 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try {
-				// if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					// document.querySelector('textarea.comment-sender_input').focus();
-					// sendResponse(true);
-					// return;
-				// }
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
@@ -71,6 +66,9 @@
 						}
 					}
 					sendResponse(true);
+					return;
+				}
+				if ("focusChat" == request){ 
 					return;
 				}
 			} catch(e){}

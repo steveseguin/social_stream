@@ -18,6 +18,9 @@
 							return;
 						}
 					}
+					if ("focusChat" == request){ 
+						return;
+					}
 					// twitch doesn't capture avatars already.
 				} catch(e){}
 				sendResponse(false);
