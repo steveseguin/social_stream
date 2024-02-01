@@ -90,7 +90,9 @@
 	
 	  if (!ele){return;}
 	  
-	  
+	  if (settings.customkickstate) {
+		return;
+	  }
 		
 	  var chatsticker = false;
 	  var chatmessage = "";

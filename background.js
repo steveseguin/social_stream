@@ -1195,6 +1195,9 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "customyoutubestate"){
 					pushSettingChange();
 				}
+				if (request.setting == "customkickstate"){
+					pushSettingChange();
+				}
 				if (request.setting == "customlivespacestate"){
 					pushSettingChange();
 				}
