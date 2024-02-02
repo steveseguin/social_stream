@@ -133,7 +133,7 @@
 		}
 		
 
-		if (!msg || !name){
+		if (!msg && !chatimg){
 			return;
 		}
 		
@@ -205,7 +205,13 @@
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
-							if (!mutation.addedNodes[i].classList.contains("message")){continue;}
+							if (!mutation.addedNodes[i].classList.contains("message")){
+								var ele = mutation.addedNodes[i].querySelector('.message');
+								if (ele.skip){continue;}
+								ele.skip = true;
+								processMessage(ele);
+								continue;
+							}
 							mutation.addedNodes[i].skip = true;
 
 							processMessage(mutation.addedNodes[i]); 
@@ -216,7 +222,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -232,9 +238,13 @@
 					document.querySelector('.message-list-container').marked=true;
 
 					console.log("CONNECTED chat detected");
-					document.querySelectorAll('.message-list-container .message').forEach(ele=>{
+					try {
+					[...document.querySelectorAll('.message-list-container .message')].reverse().forEach(ele=>{
 						processMessage(ele);
 					});
+					} catch(e){
+						//
+					}
 					onElementInserted(document.querySelector('.message-list-container'));
 				}
 			};
