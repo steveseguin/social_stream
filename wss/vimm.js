@@ -80,6 +80,10 @@ function processMessage(input){
 	}
 	var data = {};
 	data.chatname = escapeHtml(input.chatter);
+	
+	if (data.chatname.toLowerCase() == "vimm"){
+		return; // ignore this message
+	}
 	data.chatbadges = "";
 	data.backgroundColor = "";
 	data.textColor = "";
