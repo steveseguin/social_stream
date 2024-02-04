@@ -411,7 +411,7 @@ yt-live-chat-text-message-renderer.shown-comment {
 }
 
 .hl-imgContent {
-    max-height: 300px;
+    max-height: 100vh;
     max-width: 40%;
     display: inline-block;
     position: absolute;
@@ -419,18 +419,17 @@ yt-live-chat-text-message-renderer.shown-comment {
     padding: 0;
     right: 0;
     z-index: 0;
-	bottom: -20px;
+	bottom: 0px;
+	height: max(100%, 200px);
 }
 
 .hl-imgContent > img {
-    object-fit: scale-down;;
+    object-fit: contain;
     display: block;
     margin: 0;
-    height: calc(100vh - 12px);
-	max-width:100vw;
-	max-height: 300px;
+    height: 100%;
 	min-height: calc(var(--author-avatar-size) + 30px);
-    
+	max-width:100%;
 }
 /* overlay a very faint white layer to bump the blacks above the luma key cutoff */
 .hl-img:after {
@@ -1044,17 +1043,62 @@ span.zero-width-parent img.zero-width-emote {
 		try {
 			var img = document.getElementById("img");
 			if (!img){return;}
-			var width = img.clientWidth + 214;
+			
+			if (img.complete && img.naturalWidth > 0) {
+				
+			} else {
+				return false;
+			}
+			
+			var ar =  img.naturalWidth / img.naturalHeight;
+			
+			if (ar<1){
+				ar = 1/ar;
+			}
+			var ar1 = 300 / img.naturalWidth;
+			
+			if (ar1>ar){
+				ar = ar1;
+			}
 			var message = document.getElementById("message"); 
+			var width = 300*ar;// window.innerWidth*ar
+			//img.style.width = width+"px";
+			
+			
+			if (img.naturalWidth < img.naturalHeight){
+				if (message.innerText.length){
+					if (ar>1.333){
+						ar = 1.333
+					}
+				} else {
+					if (ar>1.5){
+						ar = 1.333
+					} 
+				}
+			} else if (ar>1.9){
+				ar = 1.9;
+			}
+			
+			width+=123;
+			if (window.innerWidth<width*2.5){
+				width = window.innerWidth/2.5;
+			}
+			document.getElementById("imgContent").style.width = width+"px";
+			//img.style.transform = "scale("+ar+")";
+			
 			if (message.innerText.length){
-				message.style.width = "calc(100vw - "+width+"px)";
+				message.style.width = "calc(100vw - "+(width+35)+"px)";
+				message.style.maxWidth = "fit-content";
 				document.getElementById("imgContent").style.right = "unset";
 				document.getElementById("imgContent").style.left = (document.getElementById("message").clientWidth + 19) + "px";
 			} else {
 				message.style.maxWidth = "300px";
+				img.style.transformOrigin = "bottom";
 				document.getElementById("imgContent").style.right = 0;
 				document.getElementById("imgContent").style.left = (300) + "px";
-			}	
+			}
+			
+			
 		} catch(e){errorlog(e);}
 	}
 	
