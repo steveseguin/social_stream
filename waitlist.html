@@ -497,7 +497,7 @@
 		};
 		socketserver.onopen = function (){
 			conCon = 1;
-			socketserver.send(JSON.stringify({"join":roomID, "out":2, "in":5}));
+			socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
 		};
 		socketserver.addEventListener('message', function (event) {
 			var resp = false
@@ -515,8 +515,8 @@
 		});
 	}
 	
-	if (urlParams.has("server")){
-		serverURL = urlParams.get("server") || serverURL;
+	if (urlParams.has("server") || urlParams.has("server2")){
+		serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
 		socketserver = new WebSocket(serverURL);
 		setupSocket();
 	}

@@ -1162,15 +1162,27 @@ function updateSettings(ele, sync=true){
 		if (ele.checked){
 			document.getElementById("overlay").raw = updateURL(ele.dataset.both, document.getElementById("overlay").raw);
 			document.getElementById("dock").raw = updateURL(ele.dataset.both, document.getElementById("dock").raw);
+			document.getElementById("emoteswall").raw = updateURL(ele.dataset.both, document.getElementById("emoteswall").raw);
+			document.getElementById("waitlist").raw = updateURL(ele.dataset.both, document.getElementById("waitlist").raw);
+			document.getElementById("hypemeter").raw = updateURL(ele.dataset.both, document.getElementById("hypemeter").raw);
 		} else {
 			document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.both);
 			document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.both);
+			document.getElementById("emoteswall").raw = removeQueryParamWithValue(document.getElementById("emoteswall").raw, ele.dataset.both);
+			document.getElementById("waitlist").raw = removeQueryParamWithValue(document.getElementById("waitlist").raw, ele.dataset.both);
+			document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.both);
 		}
 		
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
+		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
+		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
+		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
+		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "both", setting: ele.dataset.both, "value": ele.checked}, function (response) {});
 		}
