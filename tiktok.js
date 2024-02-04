@@ -435,12 +435,15 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					if (!document.querySelector('.public-DraftEditorPlaceholder-inner')){
+					if (document.querySelector('.public-DraftEditorPlaceholder-inner')){
+						document.querySelector(".public-DraftEditorPlaceholder-inner").focus();
+						sendResponse(true);
+					} else if (document.querySelector("[contenteditable='true'][placeholder]")){
+						document.querySelector("[contenteditable='true'][placeholder]").focus();
+						sendResponse(true);
+					} else {
 						sendResponse(false);
-						return;
 					}
-					document.querySelector(".public-DraftEditorPlaceholder-inner").focus();
-					sendResponse(true);
 					return;
 				}
 				if (typeof request === "object"){
