@@ -2173,7 +2173,7 @@
 
 		document.head.appendChild(link);
 		var currentFont = getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim();
-		document.documentElement.style.setProperty("--font-family", "'"+fontName+"', "+currentFont);
+		document.documentElement.style.setProperty("--font-family", "'"+fontName.replaceAll("+"," ")+"', "+currentFont);
 	}
 	
 	if (urlParams.get("font")){
