@@ -120,9 +120,31 @@
 	}
 
 
+	function deleteThis(ele) {
+		if (ele.deleted){
+			return;
+		}
+		ele.deleted = true;
+		try {
+			var chatname = ele.querySelector("#author-name");
+			if (chatname) {
+				var data = {};
+				data.chatname = escapeHtml(chatname.innerText);
+				data.type = "youtube";
+				try {
+					chrome.runtime.sendMessage(chrome.runtime.id, {
+						"delete": data
+					}, function(e) {});
+				} catch (e) {
+					//
+				}
+			}
+		} catch (e) {}
+	}
+
 	function processMessage(ele, wss=true){
 		if (ele.hasAttribute("is-deleted")) {
-			//console.log("Message is deleted already");
+			deleteThis(ele)
 			return;
 		}
 
@@ -448,7 +470,10 @@
 	function onElementInserted(target, callback) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
+				if (mutation.type === 'attributes' && mutation.attributeName === 'is-deleted') {
+					console.warn(`Attribute ${mutation.attributeName} modified on`, mutation.target);
+					deleteThis(mutation.target);
+				} else if (mutation.type === 'childList' && mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try{
 							if (mutation.addedNodes[i] && mutation.addedNodes[i].classList && mutation.addedNodes[i].classList.contains("yt-live-chat-banner-renderer")) {
@@ -472,7 +497,13 @@
 			});
 		};
 		if (!target){return;}
-		var config = { childList: true, subtree: true };
+		var config = {
+			childList: true, // Observe the addition of new child nodes
+			subtree: true, // Observe the target node and its descendants
+			attributes: true, // Observe attributes changes
+			attributeOldValue: true, // Optionally capture the old value of the attribute
+			attributeFilter: ['is-deleted'] // Only observe changes to 'is-deleted' attribute
+		};
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -483,7 +514,7 @@
 	// document.body.querySelector("#chat-messages").querySelectorAll("yt-live-chat-text-message-renderer")
 	
 	var checkTimer = setInterval(function(){
-		var ele = document.querySelector("yt-live-chat-app");
+		var ele = document.querySelector("yt-live-chat-app #chat-messages #chat #items");
 		if (ele){
 			clearInterval(checkTimer);
 			var cleared = false;
@@ -501,7 +532,7 @@
 				});
 			} else {
 				setTimeout(function(){
-					onElementInserted(document.querySelector("yt-live-chat-app"), function(ele2){
+					onElementInserted(document.querySelector("yt-live-chat-app #chat-messages #chat #items"), function(ele2){
 						setTimeout(function(ele2){processMessage(ele2, false)}, 200, ele2);
 					});
 				},1000);

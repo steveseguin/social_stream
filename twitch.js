@@ -522,6 +522,11 @@
 
 	function deleteThis(ele) {
 		try {
+			
+			ele.ignore = true;
+			if (ele.deleted){return;}
+			ele.deleted = true;
+			
 			var chatname = ele.querySelector(".chat-author__display-name, .chatter-name, .seventv-chat-user-username");
 			if (chatname) {
 				var data = {};
@@ -544,25 +549,32 @@
 				return;
 			}
 			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
+				if (mutation.target === target) {
+					return;
+				} else if (mutation.type === 'attributes'){
+					if ((mutation.attributeName == "class") && mutation.target.classList.contains("deleted")){
+						deleteThis(mutation.target);
+					} else if ((mutation.attributeName == "data-a-target") && (mutation.target.data.aTarget == "chat-deleted-message-placeholder")){
+						deleteThis(mutation.target);
+					}
+					
+				} else if (mutation.type === 'childList' && mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-
 							if (mutation.addedNodes[i].dataset.aTarget == "chat-deleted-message-placeholder") {
 								deleteThis(mutation.addedNodes[i]);
 								continue;
 							} else if (mutation.addedNodes[i].querySelector('[data-a-target="chat-deleted-message-placeholder"]')) {
 								deleteThis(mutation.addedNodes[i]);
 								continue;
-							}
-
+							} 
+							
 							if (mutation.addedNodes[i].ignore) {
 								continue;
 							}
 							
 							mutation.addedNodes[i].ignore = true;
 							
-
 							if (mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message") || (mutation.addedNodes[i].querySelector && mutation.addedNodes[i].querySelector(".paid-pinned-chat-message-content-wrapper")))) {
 								mutation.addedNodes[i].ignore = true;
 								callback(mutation.addedNodes[i]);
@@ -586,7 +598,24 @@
 			});
 		};
 
-		var config = {childList: true, subtree: true};
+		if (document.querySelector("seventv-container")){
+			var config = {
+				childList: true, // Observe the addition of new child nodes
+				subtree: true, // Observe the target node and its descendants
+				attributes: true, // Observe attributes changes
+				attributeOldValue: true, // Optionally capture the old value of the attribute
+				attributeFilter: ['data-a-target', 'class'] // Only observe changes to 'is-deleted' attribute
+			};
+
+		} else {
+			var config = {
+				childList: true, // Observe the addition of new child nodes
+				subtree: true, // Observe the target node and its descendants
+				attributes: true, // Observe attributes changes
+				attributeOldValue: true, // Optionally capture the old value of the attribute
+				attributeFilter: ['data-a-target'] // Only observe changes to 'is-deleted' attribute
+			};
+		}
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -695,7 +724,6 @@
 		Object.defineProperty(document, 'hidden', {value: false, writable: true});
 		
 		setInterval(function(){
-			console.log("set visibility");
 			window.onblur = null;
 			window.blurred = false;
 			document.hidden = false;
