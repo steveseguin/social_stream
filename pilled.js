@@ -46,7 +46,11 @@
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
 					}
-					resp += node.outerHTML;
+					if (node.src && node.src.includes("/sticker/")){
+						// skip
+					} else {
+						resp += node.outerHTML;
+					}
 				}
 			}
 		});
