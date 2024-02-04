@@ -3694,6 +3694,12 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			data.textNameColor =  "color:"+settings.name_color.textsetting+";";
 		}
 	}
+	
+	if (settings.defaultavatar){
+		if (settings.defaultavatar.textsetting && !data.chatimg){
+			data.chatimg = settings.defaultavatar.textsetting;
+		}
+    }
 
 	try {
 		// webhook for configured custom chat commands
