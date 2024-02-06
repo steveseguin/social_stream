@@ -119,6 +119,49 @@
 	  }
 	}
 	
+	function processMessage2(ele){	// twitch
+	  var chatsticker = false;
+	  var chatmessage = "";
+	  var nameColor = "";
+	  var chatname = "";
+	  
+	  chatname = escapeHtml(ele.querySelector(".author__name").innerText);
+	  
+	  
+	  
+	  try {
+		chatmessage = getAllContentNodes(ele.querySelector('.card__body'));
+	  } catch(e){}
+	  
+	  
+	  if (!chatname && !chatmessage){return;}
+	  
+	  var chatimg = "";
+	  try {
+			chatimg = ele.querySelector('.avatar img[src]').src;
+	  } catch(e){
+		  
+	  }
+	  var data = {};
+	  data.chatname = chatname;
+	  data.chatbadges = "";
+	  data.nameColor = nameColor;
+	  data.chatmessage = chatmessage;
+	  data.chatimg = chatimg;
+	  data.hasDonation = "";
+	  data.membership = "";
+	  data.question = true;
+	  data.textonly = settings.textonlymode || false;
+	  data.type = "slido";
+	  
+	  
+	  try {
+		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+	  } catch(e){
+		  //
+	  }
+	}
+	
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
@@ -164,6 +207,8 @@
 							mutation.addedNodes[i].ignore=true;
 							if (mutation.addedNodes[i].classList.contains("question-list__item")){
 								processMessage(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].classList.contains("card--question")){
+								processMessage2(mutation.addedNodes[i]); 
 							}
 						}
 					}
@@ -179,7 +224,7 @@
 	console.log("SOCIAL STREAM INSERTED");
 	
 	var checknig = setInterval(function(){
-		if (document.querySelector(".question-list__container")){
+		if (document.querySelector(".question-list__container, .simplebar-content")){
 			clearInterval(checknig);
 		} else {
 			return;
@@ -187,12 +232,13 @@
 		setTimeout(function(){
 			try{
 				
-				var clear = document.querySelectorAll(".question-list__item");
+				var clear = document.querySelectorAll(".question-list__item, .card--question");
 				for (var i = 0;i<clear.length;i++){
+					processMessage2(clear[i]); 
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
 				}
 			} catch(e){}
-			onElementInserted(document.querySelector(".question-list__container"));
+			onElementInserted(document.querySelector(".question-list__container, .simplebar-content"));
 		},1000);
 		try {
 			document.querySelectorAll(".content-nav-tabs > button")[1].click()

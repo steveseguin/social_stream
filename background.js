@@ -14,6 +14,9 @@ var isSSAPP = false;
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
 
+var fetchNode = false;
+var postNode = false;
+var putNode = false;
 
 var properties = ["streamID", "password", "state", "settings"];
 var streamID = false;
@@ -173,12 +176,44 @@ if (typeof(chrome.runtime)=='undefined'){
 		});
 	})
 	
-	/* fetch = async function(URL,headers={}){
-		var data = await ipcRenderer.sendSync('nodefetch', {
+	fetchNode = async function(URL,headers={}){
+		return await ipcRenderer.sendSync('nodepost', {
 			url: URL,
 			headers: headers
 		});
-	} */
+	}
+	
+/* 	ipcMain.on('nodepost', function(eventRet, args2) {
+		log("NODE POSTING!");
+		fetch(args2.url, {
+			method: 'POST',
+			headers: args2.headers,
+			body: JSON.stringify(args2.body) 
+		})
+		.then(response => response.text())
+		.then(data => {
+			eventRet.returnValue = data;
+		})
+		.catch(error => {
+			eventRet.returnValue = null;
+		});
+	}); */
+	
+	postNode = async function(URL,body,headers={}){
+		return await ipcRenderer.sendSync('nodepost', {
+			url: URL,
+			body: body,
+			headers: headers
+		});
+	}
+	
+	putNode = async function(URL,body,headers={}){
+		return await ipcRenderer.sendSync('nodepost', {
+			url: URL,
+			body: body,
+			headers: headers
+		});
+	}
 	
 	window.showOpenFilePicker = async function(a=null,c=null){
 		var importFile = await ipcRenderer.sendSync('showOpenDialog', "");
@@ -1115,6 +1150,20 @@ chrome.runtime.onMessage.addListener(
 					}
 				}
 				
+				
+				/* if (request.setting == "mynameext"){
+					if (settings.mynameext && settings.mynameext.textsettings){
+						settings.mynameext.list = [];
+						settings.mynameext.textsettings.split(",").forEach(name=>{
+							name = name.trim();
+							if (name){
+								settings.mynameext.list.push(name);
+							}
+						});
+					}
+				} */
+				
+				
 				if (request.setting == "lanonly"){
 					if (request.value){
 						if (iframe){
@@ -1354,7 +1403,7 @@ chrome.runtime.onMessage.addListener(
 						}
 					} // else {
 					//	getBTTVEmotes();
-					//}
+					//} 
 
 					try{
 						request.message = await applyBotActions(request.message, sender.tab); // perform any immediate actions
@@ -1672,18 +1721,24 @@ function verifyOriginal(msg){
 }
 
 function ajax(object2send, url, ajaxType="PUT", type="application/json; charset=utf-8"){
-	try {
-		var xhttp = new XMLHttpRequest();
-		xhttp.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-				// success
-			} else {
+	try { 
+		if ((ajaxType=="PUT") && putNode){
+			putNode(url, object2send, headers={'Content-Type':type})
+		} else if ((ajaxType=="POST") && postNode){
+			postNode(url, object2send, headers={'Content-Type':type})
+		} else {
+			var xhttp = new XMLHttpRequest();
+			xhttp.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					// success
+				} else {
+			}
+			};
+			xhttp.open(ajaxType, url, true); // async = true
+			xhttp.setRequestHeader('Content-Type', type);
+			xhttp.send(JSON.stringify(object2send));
 		}
-		};
-		xhttp.open(ajaxType, url, true); // async = true
-		xhttp.setRequestHeader('Content-Type', type);
-		xhttp.send(JSON.stringify(object2send));
-	}catch(e){}
+	} catch(e){}
 }
 	
 var messageCounter = 0;
@@ -3641,6 +3696,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				}
 			};
 		}
+		
 		
 		if (settings.joke && (data.chatmessage.toLowerCase() === "!joke")){
 			if (Date.now() - messageTimeout > 5100){

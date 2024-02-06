@@ -496,9 +496,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			var msg = {};
 			msg.cmd = this.dataset.action;
 			msg.value = this.dataset.value || null;
-			chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
-				update(response);
-			});
+			if (msg.cmd == "fakemsg"){
+				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
+				});
+			} else {
+				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
+					update(response); 
+				});
+			}
 		};
 	}
 
