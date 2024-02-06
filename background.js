@@ -1247,6 +1247,9 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "customkickstate"){
 					pushSettingChange();
 				}
+				if (request.setting == "customriversidestate"){
+					pushSettingChange();
+				}
 				if (request.setting == "customlivespacestate"){
 					pushSettingChange();
 				}
