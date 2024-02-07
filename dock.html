@@ -6,7 +6,7 @@
 	<title>Social Stream - Dashboard</title>
 	<meta name="title" content="Social Stream - Dashboard" />
 	<link rel="icon" href="./icons/favicon.ico" />
-	<link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+	<link href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 
 	<style>
 		:root {
@@ -5451,7 +5451,11 @@
 			if (reversed && !forceAutoscroll){
 			
 			} else {
-				if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch)) || forceAutoscroll){
+				var delta = 0;
+				if (document.getElementById("output").lastChild){
+					delta = parseInt(document.getElementById("output").lastChild.clientHeight);
+				}
+				if ((getById("output").scrollHeight<(getById("output").scrollTop + getById("output").clientHeight+autoScrollCatch+delta)) || forceAutoscroll){
 					if (scrolltype=="instant"){
 						getById("output").scrollTop = getById("output").scrollHeight;
 					} else {
@@ -5470,7 +5474,12 @@
 			if (reversed && !forceAutoscroll){
 			
 			} else {
-				if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch)) || forceAutoscroll){
+				var delta = 0;
+				if (document.getElementById("output").lastChild){
+					delta = parseInt(document.getElementById("output").lastChild.clientHeight);
+				}
+				if ((document.body.scrollHeight<(document.body.scrollTop + document.body.clientHeight+autoScrollCatch+delta)) || forceAutoscroll){
+					
 					if (scrolltype=="instant"){
 						document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
 					} else {
