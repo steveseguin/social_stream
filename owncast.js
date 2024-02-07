@@ -12,14 +12,20 @@
 	  xhr.responseType = 'blob';
 	  xhr.send();
 	}
-	
-	function escapeHtml(unsafe){ // success is when goofs be trying to hack me
-		return unsafe
-			 .replace(/&/g, "&amp;")
-			 .replace(/</g, "&lt;")
-			 .replace(/>/g, "&gt;")
-			 .replace(/"/g, "&quot;")
-			 .replace(/'/g, "&#039;");
+	function escapeHtml(unsafe) {
+		try {
+			if (settings.textonlymode) { // we can escape things later, as needed instead I guess.
+				return unsafe;
+			}
+			return unsafe
+				.replace(/&/g, "&amp;") // i guess this counts as html
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;")
+				.replace(/'/g, "&#039;") || "";
+		} catch (e) {
+			return "";
+		}
 	}
 	function getAllContentNodes(element) {
 		var resp = "";
@@ -45,13 +51,18 @@
 		return resp;
 	}
 	
-	
 
 	function processMessage(ele, wss=true){
 
 	  if(ele.hasAttribute("is-deleted")) {
 		return;
 	  }
+	  
+	  if (ele.alreadyRead){
+		  return;
+	  }
+	  
+	  ele.alreadyRead = true;
 	  
 	  var chatname = "";
 	  try{
@@ -91,7 +102,7 @@
 	  });
 
 	  var data = {};
-	  data.chatname = encodeURI(chatname);
+	  data.chatname = chatname;
 	  data.chatbadges = chatbadges;
 	  data.chatmessage = chatmessage;
 	  data.chatimg = ""; // Doesn't seem to be an avatar image for owncast
@@ -136,11 +147,23 @@
 		}
 	});
 
+
+	var dataIndex = -1;
 	function onElementInserted(target, callback) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+						if (!mutation.addedNodes[i]){continue;}
+						
+						if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
+							if ( parseInt(mutation.addedNodes[i].dataset.index) > dataIndex){
+								dataIndex = parseInt(mutation.addedNodes[i].dataset.index);
+							} else {
+								continue;
+							}
+						}
+						
 						if (mutation.addedNodes[i] && mutation.addedNodes[i].querySelector && mutation.addedNodes[i].querySelectorAll(".chat-message_user").length==1) {
 							callback(mutation.addedNodes[i].querySelector(".chat-message_user"));
 						}
@@ -162,9 +185,17 @@
 		if (target && !target.set123){
 			target.set123 = true;
 			
-			//document.querySelectorAll(".chat-message_user").forEach(ele=>{
-			//	processMessage(ele, false);
-			//});
+			document.querySelectorAll(".chat-message_user").forEach(ele=>{
+				if (ele.parentNode.dataset && (ele.parentNode.dataset.index > dataIndex)){
+					dataIndex = parseInt(ele.parentNode.dataset.index);
+				} else if (ele.parentNode.parentNode.dataset && (ele.parentNode.parentNode.dataset.index > dataIndex)){
+					dataIndex = parseInt(ele.parentNode.parentNode.dataset.index);
+				} else if (ele.parentNode.parentNode.dataset && (ele.dataset.index > dataIndex)){
+					dataIndex = parseInt(ele.dataset.index);
+				}
+				//console.log(dataIndex);
+				//processMessage(ele, false);
+			});
 			
 			onElementInserted(target, function(element){
 			  processMessage(element, false);
