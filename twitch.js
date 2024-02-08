@@ -188,9 +188,15 @@
 					try {
 						var computed = getComputedStyle(badge);
 						if (computed.backgroundImage) {
-							computed = computed.backgroundImage.split('"')[1].split('"')[0];
+							
+							var bage = {};
+							bage.src = computed.backgroundImage.split('"')[1].split('"')[0];
+							bage.type = "img";
+							if (computed.backgroundColor){
+								bage.bgcolor = computed.backgroundColor;
+							}
 							if (computed) {
-								chatbadges.push(computed);
+								chatbadges.push(bage);
 							}
 						}
 					} catch (e) {}
