@@ -48,7 +48,7 @@
 		try{
 			if (typeof response === "object"){
 				if (response.streamID){ // this won't update if the stream ID changes, without a page reload at least
-					if (response.settings && response.settings.sharestreamid && response.settings.sharestreamid.value){ // okay, this is true
+					if (response.settings && response.settings.sharestreamid){ // okay, this is true
 						//setStorage("roomID", response.streamID);
 						document.getElementById("roomId").value = response.streamID;
 						
