@@ -309,7 +309,7 @@
 	}
 	
 
-	function onElementInserted(containerSelector) {
+	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
@@ -327,7 +327,6 @@
 				}
 			});
 		};
-		var target = document.querySelector(containerSelector);
 		if (!target){return;}
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -339,13 +338,27 @@
 
 	setInterval(function(){
 		messageHistory = messageHistory.slice(-500);
+		
 		if (document.getElementById("chat-list-content")){
 			if (!document.getElementById("chat-list-content").marked){
+				console.log("NOT Makred!");
 				lastName = "";
 				lastImage = "";
 				document.getElementById("chat-list-content").marked=true;
 				onElementInserted("#chat-list-content");
 			}
+		} else if (document.querySelectorAll('iframe').length){
+			document.querySelectorAll('iframe').forEach( item =>{
+				if (item && item.contentWindow && item.contentWindow.document.body.querySelector('#chat-list-content')){
+					if (!item.contentWindow.document.body.querySelector('#chat-list-content').marked){
+						console.log("FOUND UNMARKED IFRAME ");
+						lastName = "";
+						lastImage = "";
+						item.contentWindow.document.body.querySelector('#chat-list-content').marked=true;
+						onElementInserted(item.contentWindow.document.body.querySelector('#chat-list-content'));
+					}
+				}
+			});
 		}
 		if (document.getElementById("poll__body")){
 			streamPollRAW(document.getElementById("poll__body"));
