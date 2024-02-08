@@ -85,6 +85,7 @@ body {
     position: absolute;
     bottom: 30px;
 	min-height: calc(var(--author-avatar-size) + 15px + calc(2 * var( --author-avatar-border-size)));
+	width:100%;
 }
 
 .supersticker{
@@ -1032,7 +1033,9 @@ span.zero-width-parent img.zero-width-emote {
 	
 	
 	
-	function realign(){
+	function realign(eventtype=false){
+	
+		console.log(eventtype);
 		if (centering){
 			try{
 				var offsetLeft =  (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth+20))/2;
@@ -1585,7 +1588,7 @@ span.zero-width-parent img.zero-width-emote {
 			
 				var addImage = "";
 				if (data.contentimg){
-					 addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" onload="realign();"/></div>';
+					 addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></div>';
 				} else {
 					data.contentimg = "";
 				}
