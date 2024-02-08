@@ -331,7 +331,7 @@
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
+		observer.observe(document.querySelector(target), config);
 
 	}
 	console.log("social stream injected");
