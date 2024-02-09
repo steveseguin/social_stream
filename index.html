@@ -85,7 +85,6 @@ body {
     position: absolute;
     bottom: 30px;
 	min-height: calc(var(--author-avatar-size) + 15px + calc(2 * var( --author-avatar-border-size)));
-	width:100%;
 }
 
 .supersticker{
@@ -1089,15 +1088,36 @@ span.zero-width-parent img.zero-width-emote {
 			//img.style.transform = "scale("+ar+")";
 			
 			if (message.innerText.length){
-				message.style.width = "calc(100vw - "+(width+35)+"px)";
-				message.style.maxWidth = "fit-content";
+				message.style.maxWidth = "calc(100vw - "+(width+35)+"px)";
+				message.style.width = "fit-content";
 				document.getElementById("imgContent").style.right = "unset";
-				document.getElementById("imgContent").style.left = (document.getElementById("message").clientWidth + 19) + "px";
+				
+				var offset = 0;
+				if (document.getElementById("nameDIV")){
+					offset = document.getElementById("nameDIV").clientWidth+110;
+				}
+				if (offset<300){
+					offset = 300;
+				}
+				if (offset<document.getElementById("message").clientWidth + 19){
+					offset = document.getElementById("message").clientWidth + 19;
+				}
+				
+				document.getElementById("imgContent").style.left = offset + "px";
 			} else {
 				message.style.maxWidth = "300px";
 				img.style.transformOrigin = "bottom";
 				document.getElementById("imgContent").style.right = 0;
-				document.getElementById("imgContent").style.left = (300) + "px";
+				var offset = 0;
+				if (document.getElementById("nameDIV")){
+					offset = document.getElementById("nameDIV").clientWidth+110;
+				}
+				if (offset<300){
+					offset = 300;
+				} else if (offset>500){
+					offset = 500;
+				}
+				document.getElementById("imgContent").style.left = offset + "px";
 			}
 			
 			
