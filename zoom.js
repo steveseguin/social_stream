@@ -345,7 +345,7 @@
 				lastName = "";
 				lastImage = "";
 				document.getElementById("chat-list-content").marked=true;
-				onElementInserted("#chat-list-content");
+				onElementInserted(document.querySelector("#chat-list-content"));
 			}
 		} else if (document.querySelectorAll('iframe').length){
 			document.querySelectorAll('iframe').forEach( item =>{
