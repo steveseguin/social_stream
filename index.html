@@ -1114,8 +1114,13 @@ span.zero-width-parent img.zero-width-emote {
 				}
 				if (offset<300){
 					offset = 300;
-				} else if (offset>500){
-					offset = 500;
+				} else if (offset<=500){
+					//
+				} else if (offset>(window.innerWidth-500)){
+					offset = window.innerWidth-500;
+					if (offset<500){
+						offset = 500;
+					}
 				}
 				document.getElementById("imgContent").style.left = offset + "px";
 			}
