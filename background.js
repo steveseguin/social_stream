@@ -3680,7 +3680,6 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			var searchGif = data.chatmessage;
 			searchGif = searchGif.replaceAll("!giphy","").trim();
 			if (searchGif){
-				console.log("searching giphy");
 				var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(searchGif) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
 					try {
 						return response.data[0].images.downsized_large.url;
