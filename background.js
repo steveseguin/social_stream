@@ -1150,20 +1150,6 @@ chrome.runtime.onMessage.addListener(
 					}
 				}
 				
-				
-				/* if (request.setting == "mynameext"){
-					if (settings.mynameext && settings.mynameext.textsettings){
-						settings.mynameext.list = [];
-						settings.mynameext.textsettings.split(",").forEach(name=>{
-							name = name.trim();
-							if (name){
-								settings.mynameext.list.push(name);
-							}
-						});
-					}
-				} */
-				
-				
 				if (request.setting == "lanonly"){
 					if (request.value){
 						if (iframe){
@@ -3529,6 +3515,21 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				return null;
 			}
 		}
+		
+		if (settings.mynameext && data.chatname){
+			let custombot = settings.mynameext.textsetting.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
+			custombot = custombot.split(",");
+			if (custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){
+				data.bot = true;
+			}
+		}
+		if (data.bot && settings.hidebotsext){
+			return false;
+		}
+		if (data.bot && data.chatname && settings.hidebotnamesext){
+			data.chatname = "";
+		}
+		
 		if (data.chatmessage){
 			for (var i = 1;i<=10;i++){
 				if (settings['botReplyMessageEvent'+i] && settings['botReplyMessageCommand'+i] && settings['botReplyMessageCommand'+i].textsetting && settings['botReplyMessageValue'+i] && settings['botReplyMessageValue'+i].textsetting && (data.chatmessage.indexOf(settings['botReplyMessageCommand'+i].textsetting)!=-1)){

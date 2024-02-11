@@ -4933,7 +4933,9 @@
 
 
 			var bot = false;
-
+			if (data.bot){
+				bot = true;
+			}
 
 			var nameColor = "";
 			if (data.nameColor && colorized){
@@ -4985,15 +4987,6 @@
 					}
 				}
 				
-				if (bot && doNotShowBot){
-					return;
-				}
-
-				if (bot && doNotShowBotNames){
-					specialMessage = true;
-					data.chatname = "";
-				}
-
 				if (hideNames){
 					data.chatname = "";
 				} else if (firstNamesOnly){
@@ -5010,6 +5003,19 @@
 						}
 					}
 				}
+			}
+			
+			if (bot && doNotShowBot){
+				return;
+			}
+
+			if (bot && doNotShowBotNames){
+				specialMessage = true;
+				data.chatname = "";
+			}
+			
+			if (bot){
+				data.bot = true;
 			}
 
 			var chatname = "";

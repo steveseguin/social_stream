@@ -202,8 +202,8 @@
 				xxx[j].marked = true;
 				if (!newChannel){
 					var posibleName = chatname;
-					if (settings.myname && settings.myname.value){
-						posibleName = settings.myname.value.split(",")[0];
+					if (settings.myname && settings.myname.textparam1){
+						posibleName = settings.myname.textparam1.split(",")[0];
 					}
 					processMessage(xxx[j],chatimg, posibleName);
 					await sleep(10);
