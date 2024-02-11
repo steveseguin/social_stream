@@ -484,6 +484,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
+	var iii = document.querySelectorAll("input[type='password']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
 	
 	var iii = document.querySelectorAll("select");
 	for (var i=0;i<iii.length;i++){
@@ -499,6 +503,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			if (msg.cmd == "fakemsg"){
 				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
 				});
+			} else if (msg.cmd == "bigwipe"){
+				var confirmit = confirm("Are you sure you want to reset all your settings?");
+				if (confirmit){
+					chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
+						setTimeout(function(){
+							window.location.reload();
+						},100);
+					});
+				}
 			} else {
 				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
 					update(response); 

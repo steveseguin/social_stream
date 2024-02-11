@@ -744,7 +744,20 @@ async function exportSettings(){
 	})
 }
 
-async function importSettings(item){
+
+async function resetSettings(item=false){
+	console.log("reset settings");
+	chrome.storage.sync.get(properties, async function(item){
+		if (!item){
+			item = {};
+		}
+		item.settings = {};
+		loadSettings(item, true);
+		// window.location.reload()
+	})
+}
+
+async function importSettings(item=false){
 	/* const opts = {
 		types: [{
 		  description: 'JSON file',
@@ -764,7 +777,6 @@ async function importSettings(item){
 	} catch(e){
 		alert("File does not contain a valid JSON structure");
 	}
-	
 }
 
 
@@ -1449,6 +1461,9 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "import") {
 				sendResponse({"state":isExtensionOn});
 				await importSettings();
+			} else if (request.cmd && request.cmd === "bigwipe") {
+				sendResponse({"state":isExtensionOn});
+				await resetSettings();
 			} else if (request.cmd && request.cmd === "excelsaveStop") {
 				sendResponse({"state":isExtensionOn});
 				newFileHandleExcel = false;
@@ -3661,15 +3676,16 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				
 			}
 		}
-		
 		if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy && data.chatmessage && (data.chatmessage.indexOf("!giphy")!=-1) && !data.contentimg){
 			var searchGif = data.chatmessage;
 			searchGif = searchGif.replaceAll("!giphy","").trim();
 			if (searchGif){
+				console.log("searching giphy");
 				var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(searchGif) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
 					try {
 						return response.data[0].images.downsized_large.url;
 					} catch(e){
+						console.error(e);
 						return false;
 					}
 				});
@@ -3677,9 +3693,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 					data.contentimg = gurl;
 				}
 			}
-		}
-		
-		if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy2 && data.chatmessage && (data.chatmessage.indexOf("#")!=-1) && !data.contentimg){
+		} else if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy2 && data.chatmessage && (data.chatmessage.indexOf("#")!=-1) && !data.contentimg){
 			var xx = data.chatmessage.split(" ");
 			for (var i = 0;i<xx.length;i++){
 				var word = xx[i];
