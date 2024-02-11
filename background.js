@@ -3680,7 +3680,11 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			var searchGif = data.chatmessage;
 			searchGif = searchGif.replaceAll("!giphy","").trim();
 			if (searchGif){
-				var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(searchGif) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
+				var order = 0;
+				if (settings.randomgif){
+					order = parseInt(Math.random()*10);
+				}
+				var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(searchGif) + '&api_key='+settings.giphyKey.textsetting+'&limit=1&offset='+order).then((response) => response.json()).then((response)=>{
 					try {
 						return response.data[0].images.downsized_large.url;
 					} catch(e){
@@ -3690,6 +3694,11 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				});
 				if (gurl){
 					data.contentimg = gurl;
+					if (settings.hidegiphytrigger){
+						data.chatmessage = "";
+					}
+				} else if (!data.hasDonation && !data.contentimg){
+					return false;
 				}
 			}
 		} else if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy2 && data.chatmessage && (data.chatmessage.indexOf("#")!=-1) && !data.contentimg){
@@ -3699,16 +3708,39 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				if (!word.startsWith("#")){continue;}
 				word = word.replaceAll("#"," ").trim();
 				if (word){
-					var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(word) + '&api_key='+settings.giphyKey.textsetting+'&limit=1').then((response) => response.json()).then((response)=>{
+					var order = 0;
+					if (i+1<xx.length){
+						order = parseInt(xx[i+1]) || 0;
+					}
+					if (settings.randomgif){
+						order = parseInt(Math.random()*10);
+					}
+					var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(word) + '&api_key='+settings.giphyKey.textsetting+'&limit=1&offset='+order).then((response) => response.json()).then((response)=>{
 						try {
 							return response.data[0].images.downsized_large.url;
 						} catch(e){
 							return false;
 						}
 					});
+					
+					if (settings.hidegiphytrigger){
+						if (data.chatmessage.includes("#"+word+ " "+order)){
+							data.chatmessage = data.chatmessage.replace("#"+word+ " "+order, "");
+						} else if (data.chatmessage.includes("#"+word+" ")){
+							data.chatmessage = data.chatmessage.replace("#"+word+ " ", "");
+						} else {
+							data.chatmessage = data.chatmessage.replace("#"+word, "");
+						}
+						data.chatmessage = data.chatmessage.trim();
+					}
+					
 					if (gurl){
 						data.contentimg = gurl;
 						break;
+					}
+					
+					if (!data.contentimg && !data.chatmessage && !data.hasDonation){
+						return false;
 					}
 				}
 			};

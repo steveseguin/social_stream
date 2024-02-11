@@ -560,7 +560,7 @@
 				} else if (mutation.type === 'attributes'){
 					if ((mutation.attributeName == "class") && mutation.target.classList.contains("deleted")){
 						deleteThis(mutation.target);
-					} else if ((mutation.attributeName == "data-a-target") && (mutation.target.data.aTarget == "chat-deleted-message-placeholder")){
+					} else if ((mutation.attributeName == "data-a-target") && mutation && mutation.target && mutation.target.data && mutation.target.data.aTarget  && (mutation.target.data.aTarget == "chat-deleted-message-placeholder")){
 						deleteThis(mutation.target);
 					}
 					
