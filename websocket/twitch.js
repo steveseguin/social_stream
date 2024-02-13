@@ -4,12 +4,37 @@ var scope = 'chat%3Aread+chat%3Aedit';
 var ws;
 var token = "";
 
+(function (w) {
+	w.URLSearchParams = w.URLSearchParams || function (searchString) {
+		var self = this;
+		self.searchString = searchString;
+		self.get = function (name) {
+			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+			if (results == null) {
+				return null;
+			} else {
+				return decodeURI(results[1]) || 0;
+			}
+		};
+	};
+
+})(window);
+
+var urlParams = new URLSearchParams(window.location.search);
+
+const username = "SocialStreamNinja"; // Not supported at the moment
+var channel = urlParams.get("channel") || urlParams.get("username") || '';
+
 function parseFragment(hash) {
 	var hashMatch = function(expr) {
 	  var match = hash.match(expr);
 	  return match ? match[1] : null;
 	};
 	var state = hashMatch(/state=(\w+)/);
+	if (state && state.includes("!")){
+		channel = state.split("!")[1];
+		state = state.split("!")[0];
+	}
 	token = hashMatch(/access_token=(\w+)/);
 	if (sessionStorage.twitchOAuthState == state)
 		sessionStorage.twitchOAuthToken = hashMatch(/access_token=(\w+)/);
@@ -22,7 +47,7 @@ function authUrl() {
 		'?response_type=token' +
 		'&client_id=' + clientId + 
 		'&redirect_uri=' + redirectURI +
-		'&state=' + sessionStorage.twitchOAuthState +
+		'&state=' + sessionStorage.twitchOAuthState + "!"+(channel||"")
 		'&scope=' + scope;
 	return url
 }
@@ -163,26 +188,7 @@ function sendMessage(message) {
 }
 
 
-(function (w) {
-	w.URLSearchParams = w.URLSearchParams || function (searchString) {
-		var self = this;
-		self.searchString = searchString;
-		self.get = function (name) {
-			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
-			if (results == null) {
-				return null;
-			} else {
-				return decodeURI(results[1]) || 0;
-			}
-		};
-	};
 
-})(window);
-
-var urlParams = new URLSearchParams(window.location.search);
-
-const username = "SocialStreamNinja"; // Not supported at the moment
-var channel = urlParams.get("channel") || urlParams.get("username") || '';
 
 if (!channel){
 	var urlParams = new URLSearchParams(window.location.hash);
@@ -194,12 +200,16 @@ if (document.location.hash.match(/access_token=(\w+)/)){
 }
 if (sessionStorage.twitchOAuthToken || token) {
 	
-	if (!channel){ // twitch.html#
+	if (!channel && prompt){ // twitch.html#
 		channel = prompt("What is the channel you wish to join?");
 		if (!channel){
 			channel = 'vdoninja';
 		}
-		document.location.href += "&username="+channel;
+		try {
+			document.location.href += "&username="+channel;
+		} catch(e){
+			console.log("ERROR setting document.location.href");
+		}
 	}
 
 	console.log("Channel: "+channel);
