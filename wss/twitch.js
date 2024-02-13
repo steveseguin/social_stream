@@ -51,7 +51,15 @@ function connect() {
 	
 	websocket.send(`PASS oauth:${sessionStorage.twitchOAuthToken || token}`);
 	websocket.send(`NICK ${username}`); // 
-	websocket.send(`JOIN #${channel}`);
+	websocket.send(`JOIN #${channel}`); 
+	
+	
+	var span = document.createElement("div");
+	span.innerText += "Joined the channel: "+channel;
+	document.querySelector("#textarea").appendChild(span);
+	if (document.querySelector("#textarea").childNodes.length>10){
+		document.querySelector("#textarea").childNodes[0].remove();
+	}
   };
 
   websocket.onmessage = (event) => {
@@ -82,6 +90,38 @@ function connect() {
 	setTimeout(connect, 10000); // Reconnect after 10 seconds
   };
 }
+
+var BTTV = false;
+	
+chrome.runtime.onMessage.addListener(
+	function (request, sender, sendResponse) {
+		try{
+			if ("focusChat" == request){
+				sendResponse(true);
+				return;
+			} 
+			if (typeof request === "object"){
+				if ("settings" in request){
+					settings = request.settings;
+					sendResponse(true);
+					if (settings.bttv && !BTTV){
+						chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
+					}
+					return;
+				} 
+				if ("BTTV" in request){
+					BTTV = request.BTTV;
+					console.log(BTTV);
+					sendResponse(true);
+					return;
+				}
+			}
+			
+			
+		} catch(e){}
+		sendResponse(false);
+	}
+);
 
 function parseMessage(rawMessage) {
   const parsedMessage = {
@@ -144,15 +184,17 @@ var urlParams = new URLSearchParams(window.location.search);
 const username = "SocialStreamNinja"; // Not supported at the moment
 var channel = urlParams.get("channel") || urlParams.get("username") || '';
 
-
-
+if (!channel){
+	var urlParams = new URLSearchParams(window.location.hash);
+	channel = urlParams.get("channel") || urlParams.get("username") || '';
+}
 
 if (document.location.hash.match(/access_token=(\w+)/)){
 	parseFragment(document.location.hash);
 }
 if (sessionStorage.twitchOAuthToken || token) {
 	
-	if (!channel){
+	if (!channel){ // twitch.html#
 		channel = prompt("What is the channel you wish to join?");
 		if (!channel){
 			channel = 'vdoninja';
@@ -160,8 +202,7 @@ if (sessionStorage.twitchOAuthToken || token) {
 		document.location.href += "&channel="+channel;
 	}
 
-	console.log("channel: "+channel);
-	getTwitchAvatarImage(channel);
+	console.log("Channel: "+channel);
 
 	connect();
 	document.querySelector('.socket').classList.remove("hidden");
@@ -183,7 +224,44 @@ document.querySelector('button').onclick = function(){
 }
 	
 
-	////////
+function replaceEmotesWithImages(text) {
+	if (!BTTV){return text;}
+	if (!settings.bttv){return text;}
+	try {
+		if (BTTV.globalEmotes){
+			BTTV.globalEmotes.forEach(emote => {
+				const emoteCode = emote.code;
+				const emoteId = emote.id;
+				const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
+				const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
+
+				text = text.split(emoteCode).join(imageTag);
+			});
+		}
+		if (BTTV.channelEmotes){
+			BTTV.channelEmotes.forEach(emote => {
+				const emoteCode = emote.code;
+				const emoteId = emote.id;
+				const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
+				const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
+
+				text = text.split(emoteCode).join(imageTag);
+			});
+		}
+		if (BTTV.sharedEmotes){
+			BTTV.sharedEmotes.forEach(emote => {
+				const emoteCode = emote.code;
+				const emoteId = emote.id;
+				const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
+				const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
+
+				text = text.split(emoteCode).join(imageTag);
+			});
+		}
+	} catch(e){
+	}
+	return text;
+}
 	
 function escapeHtml(unsafe) {
 	try {
@@ -227,12 +305,13 @@ async function fetchWithTimeout(URL, timeout = 8000) { // ref: https://dmitripav
 	}
 }
 
-var brandedImageURL = "";
+var channels = {};
 function getTwitchAvatarImage(username) {
+	if (!username || channels[username]){return;}
 	fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username=" + encodeURIComponent(username)).then(response => {
 		response.text().then(function(text) {
 			if (text.startsWith("https://")) {
-				brandedImageURL = text;
+				channels[username] = text;
 			}
 		});
 	}).catch(error => {
@@ -245,7 +324,9 @@ function getTwitchAvatarImage(username) {
 function processMessage(parsedMessage){
 	console.log(parsedMessage);
 	var chan = parsedMessage.params[0];
-	//
+	
+	getTwitchAvatarImage(chan);
+	
 	console.log("channel: "+chan);
 	const message = parsedMessage.trailing;
 	const user = parsedMessage.prefix.split('!')[0];
@@ -263,7 +344,8 @@ function processMessage(parsedMessage){
 	data.chatbadges = "";
 	data.backgroundColor = "";
 	data.textColor = "";
-	data.chatmessage = message;
+	data.chatmessage = replaceEmotesWithImages(message);
+	
 	try {
 		data.chatimg = "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(user);
 	} catch (e) {
@@ -271,7 +353,9 @@ function processMessage(parsedMessage){
 	}
 	data.hasDonation = "";
 	data.membership = "";;
-	data.sourceImg = brandedImageURL;
+	if (chan && channels[chan]){
+		data.sourceImg = channels[chan];
+	}
 	data.textonly = settings.textonlymode || false;
 	data.type = "twitch";
 	
@@ -293,25 +377,10 @@ chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(
 	if ("settings" in response){
 		settings = response.settings;
 	}
+	if (settings && settings.bttv && !BTTV){
+		chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
+	}
 });
 
-chrome.runtime.onMessage.addListener(
-	function (request, sender, sendResponse) {
-		try{
-			if ("focusChat" == request){
-				sendResponse(true);
-				return;
-			}
-			if (typeof request === "object"){
-				if ("settings" in request){
-					settings = request.settings;
-					sendResponse(true);
-					return;
-				}
-			}
-		} catch(e){}
-		sendResponse(false);
-	}
-);
 
 console.log("INJECTED");
