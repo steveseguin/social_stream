@@ -99,24 +99,9 @@ function processMessage(input){
 	//console.log(data);
 }
 
-function pushMessage(data){
-	try{
-		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
-	} catch(e){
-	}
-}
 
 console.log("LOADED");
 var settings = {};
-// settings.textonlymode
-// settings.captureevents
-
-
-chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-	if ("settings" in response){
-		settings = response.settings;
-	}
-});
 
 (function (w) {
 	w.URLSearchParams = w.URLSearchParams || function (searchString) {
@@ -175,11 +160,23 @@ if (channel){
 	}
 }
 
+function pushMessage(data){
+	try{
+		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+	} catch(e){
+	}
+}
+
+chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+	if ("settings" in response){
+		settings = response.settings;
+	}
+});
+
 chrome.runtime.onMessage.addListener(
 	function (request, sender, sendResponse) {
 		try{
-			if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-				//document.querySelector('#chat-message-input').focus();
+			if ("focusChat" == request){
 				sendResponse(true);
 				return;
 			}

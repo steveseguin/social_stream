@@ -3676,6 +3676,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				
 			}
 		}
+
 		if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy && data.chatmessage && (data.chatmessage.indexOf("!giphy")!=-1) && !data.contentimg){
 			var searchGif = data.chatmessage;
 			searchGif = searchGif.replaceAll("!giphy","").trim();
@@ -3712,16 +3713,6 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 					if (i+1<xx.length){
 						order = parseInt(xx[i+1]) || 0;
 					}
-					if (settings.randomgif){
-						order = parseInt(Math.random()*10);
-					}
-					var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(word) + '&api_key='+settings.giphyKey.textsetting+'&limit=1&offset='+order).then((response) => response.json()).then((response)=>{
-						try {
-							return response.data[0].images.downsized_large.url;
-						} catch(e){
-							return false;
-						}
-					});
 					
 					if (settings.hidegiphytrigger){
 						if (data.chatmessage.includes("#"+word+ " "+order)){
@@ -3733,6 +3724,103 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 						}
 						data.chatmessage = data.chatmessage.trim();
 					}
+					
+					if (settings.randomgif){
+						order = parseInt(Math.random()*10);
+					}
+					var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(word) + '&api_key='+settings.giphyKey.textsetting+'&limit=1&offset='+order).then((response) => response.json()).then((response)=>{
+						try {
+							return response.data[0].images.downsized_large.url;
+						} catch(e){
+							return false;
+						}
+					});
+					
+					if (gurl){
+						data.contentimg = gurl;
+						break;
+					}
+					
+					if (!data.contentimg && !data.chatmessage && !data.hasDonation){
+						return false;
+					}
+				}
+			};
+		// curl "https://tenor.googleapis.com/v2/search?q=excited&key=&client_key=my_test_app&limit=8"
+		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.tenor && data.chatmessage && (data.chatmessage.indexOf("!tenor")!=-1) && !data.contentimg){
+			var searchGif = data.chatmessage;
+			searchGif = searchGif.replaceAll("!tenor","").trim();
+			if (searchGif){
+				var order = 0;
+				if (settings.randomgif){
+					order = parseInt(Math.random()*10);
+				}
+				var gurl = await fetch('https://tenor.googleapis.com/v2/search?q=' + encodeURIComponent(searchGif) + '&key='+settings.tenorKey.textsetting+'&limit=1&offset='+order).then((response) => response.json()).then((response)=>{
+					try {
+						if (response.results[0].media_formats.tinywebp_transparent){
+							return response.results[0].media_formats.tinywebp_transparent.url
+							
+						} else if (response.results[0].media_formats.tinygif){
+							return response.results[0].media_formats.tinygif.url
+						}  else {
+							return false;
+						}
+					} catch(e){
+						console.error(e);
+						return false;
+					}
+				});
+				if (gurl){
+					data.contentimg = gurl;
+					if (settings.hidegiphytrigger){
+						data.chatmessage = "";
+					}
+				} else if (!data.hasDonation && !data.contentimg){
+					return false;
+				}
+			}
+		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.giphy2 && data.chatmessage && (data.chatmessage.indexOf("#")!=-1) && !data.contentimg){
+			var xx = data.chatmessage.split(" ");
+			for (var i = 0;i<xx.length;i++){
+				var word = xx[i];
+				if (!word.startsWith("#")){continue;}
+				word = word.replaceAll("#"," ").trim();
+				if (word){
+					var order = 0;
+					if (i+1<xx.length){
+						order = parseInt(xx[i+1]) || 0;
+					}
+					
+					if (settings.hidegiphytrigger){
+						if (data.chatmessage.includes("#"+word+ " "+order)){
+							data.chatmessage = data.chatmessage.replace("#"+word+ " "+order, "");
+						} else if (data.chatmessage.includes("#"+word+" ")){
+							data.chatmessage = data.chatmessage.replace("#"+word+ " ", "");
+						} else {
+							data.chatmessage = data.chatmessage.replace("#"+word, "");
+						}
+						data.chatmessage = data.chatmessage.trim();
+					}
+					
+					if (settings.randomgif){
+						order = parseInt(Math.random()*10);
+					}
+					var gurl = await fetch('https://tenor.googleapis.com/v2/search?q=' + encodeURIComponent(word) + '&key='+settings.tenorKey.textsetting+'&limit=1&offset='+order).then((response) => response.json()).then((response)=>{
+						try {
+							if (response.results[0].media_formats.tinywebp_transparent){
+								return response.results[0].media_formats.tinywebp_transparent.url
+								
+							} else if (response.results[0].media_formats.tinygif){
+								return response.results[0].media_formats.tinygif.url
+							} else {
+								return false;
+							}
+						} catch(e){
+							return false;
+						}
+					});
+					
+					
 					
 					if (gurl){
 						data.contentimg = gurl;

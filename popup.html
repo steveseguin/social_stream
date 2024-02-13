@@ -2535,12 +2535,18 @@ The first name listed may be used as the host's name in stream when their name i
 								<button class="glowingButton" data-action="tellajoke" style="width: 120px"><span><span data-translate="tell-a-joke-now">Tell a joke now</span></span></button>
 							</div>
 							
-							<h3><span data-translate="giphy-support">Giphy support</span></h3>
+							<h3><span data-translate="giphy-support">Giphy/Tenor support</span></h3>
 							<div>
 								<label class="switch">
 									<input type="checkbox" id="giphy" data-setting="giphy">
 									<span class="slider round"></span>
-								</label><span data-translate="include-a-gif-when"> Include a GIF when </span><b><span data-translate="giphy">!giphy</span></b><span data-translate="is-used"> is used
+								</label><span data-translate="include-a-gif-when"> Include a Giphy GIF when </span><b><span data-translate="giphy">!giphy</span></b><span data-translate="is-used"> is used
+							</span></div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" id="tenor" data-setting="tenor">
+									<span class="slider round"></span>
+								</label><span data-translate="include-a-gif-when"> Include a Tenor GIF when </span><b><span data-translate="tenor">!tenor</span></b><span data-translate="is-used"> is used
 							</span></div>
 							<div>
 								<label class="switch">
@@ -2552,7 +2558,7 @@ The first name listed may be used as the host's name in stream when their name i
 								<label class="switch">
 									<input type="checkbox" data-setting="hidegiphytrigger">
 									<span class="slider round"></span>
-								</label><span data-translate="hide-giphy-trigger"> Hide the Giphy trigger word or sentence</span>
+								</label><span data-translate="hide-giphy-trigger"> Hide the Giphy/Tenor trigger word or sentence</span>
 							</div>
 							<div>
 								<label class="switch">
@@ -2566,6 +2572,14 @@ The first name listed may be used as the host's name in stream when their name i
 									<label for="giphyKey"><span data-translate="giphy-api-key-here-if-wanting-giphy-support">&gt; Giphy API key here if wanting Giphy support</span></label>
 								</div>
 							</div>
+							<a href="https://support.giphy.com/hc/en-us/articles/360020283431-Request-A-GIPHY-API-Key" target="_blank">Get a Giphy API key here<a>
+							<div>
+								<div class="textInputContainer" style="width: 95%">
+									<input type="password" id="tenorKey" class="textInput" autocomplete="off" placeholder="Tenor API Key" data-textsetting="tenorKey">
+									<label for="tenorKey"><span data-translate="tenor-api-key-here-if-wanting-tenor-support">&gt; Tenor API key here if wanting Tenor support</span></label>
+								</div>
+							</div>
+							<a href="https://developers.google.com/tenor/guides/quickstart#curl" target="_blank">Get a Tenor API key here<a>
 							
 							<br>
 							<h3><span data-translate="trigger-webhook-url-by-a-command">Trigger webhook URL by a !command</span></h3>
