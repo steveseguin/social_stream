@@ -1,5 +1,5 @@
 var clientId = 'sjjsgy1sgzxmy346tdkghbyz4gtx0k'; 
-var redirectURI = 'https://socialstream.ninja/wss/twitch.html';
+var redirectURI = 'https://socialstream.ninja/websocket/twitch.html';
 var scope = 'chat%3Aread+chat%3Aedit';
 var ws;
 var token = "";
