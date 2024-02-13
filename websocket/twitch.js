@@ -33,6 +33,8 @@ function parseFragment(hash) {
 	var state = hashMatch(/state=(\w+)/);
 	if (hashMatch(/@(\w+)/)){
 		channel = hashMatch(/@(\w+)/);
+	} else if (hashMatch(/%40(\w+)/)){
+		channel = hashMatch(/%40(\w+)/);
 	}
 	token = hashMatch(/access_token=(\w+)/);
 	if (sessionStorage.twitchOAuthState == state)
@@ -199,8 +201,8 @@ if (document.location.hash.match(/access_token=(\w+)/)){
 }
 if (sessionStorage.twitchOAuthToken || token) {
 	
-	if (!channel && prompt){ // twitch.html#
-		channel = prompt("What is the channel you wish to join?");
+	if (!channel && !electronApi){ // twitch.html#
+		//channel = prompt("What is the channel you wish to join?");
 		if (!channel){
 			channel = 'vdoninja';
 		}
