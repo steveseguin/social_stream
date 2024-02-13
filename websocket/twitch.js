@@ -31,9 +31,8 @@ function parseFragment(hash) {
 	  return match ? match[1] : null;
 	};
 	var state = hashMatch(/state=(\w+)/);
-	if (state && state.includes("!")){
-		channel = state.split("!")[1];
-		state = state.split("!")[0];
+	if (hashMatch(/@(\w+)/)){
+		channel = hashMatch(/@(\w+)/);
 	}
 	token = hashMatch(/access_token=(\w+)/);
 	if (sessionStorage.twitchOAuthState == state)
@@ -47,7 +46,7 @@ function authUrl() {
 		'?response_type=token' +
 		'&client_id=' + clientId + 
 		'&redirect_uri=' + redirectURI +
-		'&state=' + sessionStorage.twitchOAuthState + "!"+(channel||"")
+		'&state=' + sessionStorage.twitchOAuthState + "@"+(channel||"")
 		'&scope=' + scope;
 	return url
 }
