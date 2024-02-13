@@ -199,7 +199,7 @@ if (sessionStorage.twitchOAuthToken || token) {
 		if (!channel){
 			channel = 'vdoninja';
 		}
-		document.location.href += "&channel="+channel;
+		document.location.href += "&username="+channel;
 	}
 
 	console.log("Channel: "+channel);
