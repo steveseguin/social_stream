@@ -48,8 +48,9 @@ function authUrl() {
 		'?response_type=token' +
 		'&client_id=' + clientId + 
 		'&redirect_uri=' + redirectURI +
-		'&state=' + sessionStorage.twitchOAuthState + "@"+(channel||"")
-		'&scope=' + scope;
+		'&scope=' + scope +
+		'&state=' + sessionStorage.twitchOAuthState + "@"+(channel||"");
+		
 	return url
 }
 
