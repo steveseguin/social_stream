@@ -207,11 +207,11 @@ if (sessionStorage.twitchOAuthToken || token) {
 			channel = 'vdoninja';
 		}
 		try {
-			if (document.location.href.includes("?")){
-				document.location.href += "&username="+channel;
-			} else {
-				document.location.href += "?username="+channel;
-			}
+			//if (document.location.href.includes("?")){
+			//	document.location.href += "&username="+channel;
+			//} else {
+			//	document.location.href += "?username="+channel;
+			//}
 		} catch(e){
 			console.log("ERROR setting document.location.href");
 		}
