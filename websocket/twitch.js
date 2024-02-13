@@ -202,7 +202,7 @@ if (document.location.hash.match(/access_token=(\w+)/)){
 }
 if (sessionStorage.twitchOAuthToken || token) {
 	
-	if (!channel && !electronApi){ // twitch.html#
+	if (!channel && (typeof electronApi !== "undefined")){ // twitch.html#
 		//channel = prompt("What is the channel you wish to join?");
 		if (!channel){
 			channel = 'vdoninja';
