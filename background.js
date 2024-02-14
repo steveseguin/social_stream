@@ -3816,7 +3816,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 					if (order > 40){
 						order = 40;
 					}
-					var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(searchGif) + '&key='+settings.tenorKey.textsetting+'&limit='+(order+1)).then((response) => response.json()).then((response)=>{
+					var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(word) + '&key='+settings.tenorKey.textsetting+'&limit='+(order+1)).then((response) => response.json()).then((response)=>{
 						try {
 							if (response.results.length-1<order){
 								order = response.results.length-1;
