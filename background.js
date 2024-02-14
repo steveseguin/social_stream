@@ -3804,8 +3804,13 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 						}
 						data.chatmessage = data.chatmessage.trim();
 					}
-					
-					if (settings.randomgif){
+					var skip = false
+					if (i+1<xx.length){
+							if (xx[i+1] == order){
+								skip = true;
+							}
+					} 
+					if (!skip && settings.randomgif){
 						order = parseInt(Math.random()*10);
 					}
 					var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(searchGif) + '&key='+settings.tenorKey.textsetting+'&limit=10').then((response) => response.json()).then((response)=>{
