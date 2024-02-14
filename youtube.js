@@ -471,7 +471,6 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.type === 'attributes' && mutation.attributeName === 'is-deleted') {
-					console.warn(`Attribute ${mutation.attributeName} modified on`, mutation.target);
 					deleteThis(mutation.target);
 				} else if (mutation.type === 'childList' && mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {

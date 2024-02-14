@@ -3755,13 +3755,16 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				if (settings.randomgif){
 					order = parseInt(Math.random()*10);
 				}
-				var gurl = await fetch('https://tenor.googleapis.com/v2/search?q=' + encodeURIComponent(searchGif) + '&key='+settings.tenorKey.textsetting+'&limit=1&offset='+order).then((response) => response.json()).then((response)=>{
+				var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(searchGif) + '&key='+settings.tenorKey.textsetting+'&limit=10').then((response) => response.json()).then((response)=>{
 					try {
-						if (response.results[0].media_formats.tinywebp_transparent){
-							return response.results[0].media_formats.tinywebp_transparent.url
+						if (response.results.length-1<order){
+							order = response.results.length-1;
+						}
+						if (response.results[order].media_formats.tinywebp_transparent){
+							return response.results[order].media_formats.tinywebp_transparent.url
 							
-						} else if (response.results[0].media_formats.tinygif){
-							return response.results[0].media_formats.tinygif.url
+						} else if (response.results[order].media_formats.tinygif){
+							return response.results[order].media_formats.tinygif.url
 						}  else {
 							return false;
 						}
@@ -3805,13 +3808,16 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 					if (settings.randomgif){
 						order = parseInt(Math.random()*10);
 					}
-					var gurl = await fetch('https://tenor.googleapis.com/v2/search?q=' + encodeURIComponent(word) + '&key='+settings.tenorKey.textsetting+'&limit=1&offset='+order).then((response) => response.json()).then((response)=>{
+					var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(searchGif) + '&key='+settings.tenorKey.textsetting+'&limit=10').then((response) => response.json()).then((response)=>{
 						try {
-							if (response.results[0].media_formats.tinywebp_transparent){
-								return response.results[0].media_formats.tinywebp_transparent.url
+							if (response.results.length-1<order){
+								order = response.results.length-1;
+							}
+							if (response.results[order].media_formats.tinywebp_transparent){
+								return response.results[order].media_formats.tinywebp_transparent.url
 								
-							} else if (response.results[0].media_formats.tinygif){
-								return response.results[0].media_formats.tinygif.url
+							} else if (response.results[order].media_formats.tinygif){
+								return response.results[order].media_formats.tinygif.url
 							} else {
 								return false;
 							}

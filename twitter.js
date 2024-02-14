@@ -114,6 +114,10 @@
 		} catch(e){
 			
 		}
+		
+		if (chatname.startsWith("This broadcast has ended")){
+			return;
+		}
 
 		if (!msg || !chatname){
 			return;
