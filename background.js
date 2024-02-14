@@ -3755,7 +3755,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				if (settings.randomgif){
 					order = parseInt(Math.random()*10);
 				}
-				var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(searchGif) + '&key='+settings.tenorKey.textsetting+'&limit=10').then((response) => response.json()).then((response)=>{
+				var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(searchGif) + '&key='+settings.tenorKey.textsetting+'&limit='+(order+1)).then((response) => response.json()).then((response)=>{
 					try {
 						if (response.results.length-1<order){
 							order = response.results.length-1;
@@ -3813,7 +3813,10 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 					if (!skip && settings.randomgif){
 						order = parseInt(Math.random()*10);
 					}
-					var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(searchGif) + '&key='+settings.tenorKey.textsetting+'&limit=10').then((response) => response.json()).then((response)=>{
+					if (order > 40){
+						order = 40;
+					}
+					var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(searchGif) + '&key='+settings.tenorKey.textsetting+'&limit='+(order+1)).then((response) => response.json()).then((response)=>{
 						try {
 							if (response.results.length-1<order){
 								order = response.results.length-1;
