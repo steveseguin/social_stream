@@ -511,8 +511,9 @@
 
 	if (window.location.href.includes("youtube.com/watch")){
 		var checkTimer2 = setInterval(function(){
+			
 			try {
-				if (document.querySelector('iframe[src]') && !document.querySelector('iframe[src]').includes("truffle.vip")){
+				if (document.querySelector('iframe[src]') && !document.querySelector('iframe[src]').src.includes("truffle.vip")){
 					var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages");
 				} else {
 					var ele = false;
