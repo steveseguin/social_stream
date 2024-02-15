@@ -3748,14 +3748,14 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			};
 		// curl "https://tenor.googleapis.com/v2/search?q=excited&key=&client_key=my_test_app&limit=8"
 		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.tenor && data.chatmessage && (data.chatmessage.indexOf("!tenor")!=-1) && !data.contentimg){
-			var searchGif = data.chatmessage;
-			searchGif = searchGif.replaceAll("!tenor","").trim();
-			if (searchGif){
+			var word = data.chatmessage;
+			word = word.replaceAll("!tenor","").trim();
+			if (word){
 				var order = 0;
 				if (settings.randomgif){
 					order = parseInt(Math.random()*10);
 				}
-				var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(searchGif) + '&key='+settings.tenorKey.textsetting+'&limit='+(order+1)).then((response) => response.json()).then((response)=>{
+				var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(word) + '&key='+settings.tenorKey.textsetting+'&limit='+(order+1)).then((response) => response.json()).then((response)=>{
 					try {
 						if (response.results.length-1<order){
 							order = response.results.length-1;
