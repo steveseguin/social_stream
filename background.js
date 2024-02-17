@@ -1428,6 +1428,9 @@ chrome.runtime.onMessage.addListener(
 				} 
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				sendResponse({"state":isExtensionOn,"streamID":streamID, "password":password, "settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation. 
+			} else if ("pokeMe" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+				sendResponse({"state":isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation. 
+				pokeSite(sender.tab.url,sender.tab.id);
 			} else if ("keepAlive" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				var action = {};
 				action.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
@@ -2964,7 +2967,7 @@ function checkIfAllowed(sitename){
 	return true;
 }
 
-function pokeSite(url){
+function pokeSite(url=false,tabid=false){
 	if (!chrome.debugger){return false;}
 	if (!isExtensionOn){return false;} // extension not active, so don't let responder happen. Probably safer this way.
 
@@ -2985,12 +2988,21 @@ function pokeSite(url){
 				published[tabs[i].url] = true;
 				//messageTimeout = Date.now();
 				// log(tabs[i].url);
-				if (tabs[i].url.startsWith(url)){
+				if (tabid && (tabid == tabs[i].id)){
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
 						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakePoke));  // enable the debugger to let us fake a user
 					} else {
 						generalFakePoke(tabs[i].id);
+					}
+				} else if (url){
+					if (tabs[i].url.startsWith(url)){
+						if (!debuggerEnabled[tabs[i].id]){
+							debuggerEnabled[tabs[i].id]=false;
+							chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakePoke));  // enable the debugger to let us fake a user
+						} else {
+							generalFakePoke(tabs[i].id);
+						}
 					}
 				}
 			} catch(e){

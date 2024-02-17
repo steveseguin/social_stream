@@ -3,7 +3,18 @@
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
+		  
+		var blob = xhr.response;
+    
+		if (blob.size > (50 * 1024)) {
+		  console.error('Image size is larger than 50kb.');
+		  callback(url); // or callback('Image size is larger than 50kb.');
+		  return;
+		}
+
 		var reader = new FileReader();
+		
+		
 		reader.onloadend = function() {
 		  callback(reader.result);
 		}
@@ -26,6 +37,7 @@
 				 .replace(/"/g, "&quot;")
 				 .replace(/'/g, "&#039;") || "";
 		} catch(e){
+			console.error(e);
 			return "";
 		}
 	}
@@ -61,7 +73,6 @@
 	}
 	
 	function processMessage(ele){
-		
 		var chatimg = "";
 		if (ele.querySelector('img.chat-history--user-avatar[src]')){
 			try {
@@ -85,8 +96,12 @@
 			name = escapeHtml(name);
 		  }
 		}
-		
-		var nameColor = ele.querySelector('.chat-history--username > a[style]').style.color || "";
+		var nameColor = "";
+		try {
+			nameColor = ele.querySelector('.chat-history--username > a[style]').style.color || "";
+		}catch(e){
+			
+		}
 
 		var msg = "";
 		
@@ -113,31 +128,38 @@
 		}
 		
 		var dono = "";
-		if (ele.querySelector('.chat-history--rant-price')){
-			dono = escapeHtml(ele.querySelector('.chat-history--rant-price').innerText);
+		try {
+			if (ele.querySelector('.chat-history--rant-price')){
+				dono = escapeHtml(ele.querySelector('.chat-history--rant-price').innerText);
+			}
+		} catch(e){
 		}
 		
 		if (msg){
 			msg = msg.trim();
 		}
 		
-		var brandedImg = document.querySelector(".media-by-wrap .user-image");
-		if (brandedImg){
-			try {
-				brandedImg = getComputedStyle(document.querySelector(".media-by-wrap .user-image")).backgroundImage
-				brandedImg = "https://"+brandedImg.split("https://")[1];
-				brandedImg = brandedImg.split('")')[0];
-			} catch(e){
-				console.error(e);
-				brandedImg = "";
+		var brandedImg = document.querySelector(".media-by-wrap .user-image") || "";
+		try {
+			if (brandedImg){
+				try {
+					brandedImg = getComputedStyle(document.querySelector(".media-by-wrap .user-image")).backgroundImage
+					brandedImg = "https://"+brandedImg.split("https://")[1];
+					brandedImg = brandedImg.split('")')[0];
+				} catch(e){
+					console.error(e);
+					brandedImg = "";
+				}
 			}
+		} catch(e){
 		}
-
-		var badges = [];
-		ele.querySelectorAll(".chat-history--user-badge[src]").forEach(badge=>{
-			badges.push(badge.src);
-		});
-		
+		try {
+			var badges = [];
+			ele.querySelectorAll(".chat-history--user-badge[src]").forEach(badge=>{
+				badges.push(badge.src);
+			});
+		} catch(e){
+		}
 
 		var data = {};
 		data.chatname = name;
@@ -155,23 +177,31 @@
 		
 		if (brandedImg){
 			data.sourceImg = brandedImg;
-			toDataURL(data.sourceImg, function(dataUrl) {
-				data.sourceImg = dataUrl;
-				if (data.chatimg){
+			try {
+				toDataURL(data.sourceImg, function(dataUrl) {
+					data.sourceImg = dataUrl;
+					if (data.chatimg){
+						toDataURL(data.chatimg, function(dataUrl) {
+							pushMessage(data);
+						});
+					} else {
+						pushMessage(data);
+					}
+				});
+			} catch(e){
+				pushMessage(data);
+			}
+		} else {
+			if (data.chatimg){
+				try {
 					toDataURL(data.chatimg, function(dataUrl) {
 						data.chatimg = dataUrl;
 						pushMessage(data);
 					});
-				} else {
+				} catch(e){
 					pushMessage(data);
 				}
-			});
-		} else {
-			if (data.chatimg){
-				toDataURL(data.chatimg, function(dataUrl) {
-					data.chatimg = dataUrl;
-					pushMessage(data);
-				});
+				
 			} else {
 				pushMessage(data);
 			}
@@ -239,12 +269,18 @@
 	}
 	
 	console.log("social stream injected");
+	
+	
 
 	setInterval(function(){
 		if (document.querySelector('.chat--height')){
 			if (!document.querySelector('.chat--height').marked){
 				document.querySelector('.chat--height').marked=true;
 				onElementInserted(document.querySelector('.chat--height'));
+				
+				//document.querySelectorAll(".chat-history--row").forEach(ele=>{
+				//	processMessage(ele);
+				//});
 			}
 		}
 	},1000);

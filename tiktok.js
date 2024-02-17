@@ -431,6 +431,13 @@
 		}
 	});
 
+
+	var pokeMe = setInterval(function(){
+		chrome.runtime.sendMessage(chrome.runtime.id, { "pokeMe": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+			console.log("POKED");
+		});
+	},1000*60*59);
+	
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
@@ -438,9 +445,21 @@
 					if (document.querySelector('.public-DraftEditorPlaceholder-inner')){
 						document.querySelector(".public-DraftEditorPlaceholder-inner").focus();
 						sendResponse(true);
+						clearInterval(pokeMe);
+						pokeMe = setInterval(function(){
+							chrome.runtime.sendMessage(chrome.runtime.id, { "pokeMe": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+								
+							});
+						},1000*60*60);
 					} else if (document.querySelector("[contenteditable='true'][placeholder]")){
 						document.querySelector("[contenteditable='true'][placeholder]").focus();
 						sendResponse(true);
+						clearInterval(pokeMe);
+						pokeMe = setInterval(function(){
+							chrome.runtime.sendMessage(chrome.runtime.id, { "pokeMe": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+								
+							});
+						},1000*60*60);
 					} else {
 						sendResponse(false);
 					}
