@@ -6,9 +6,8 @@
 		  
 		var blob = xhr.response;
     
-		if (blob.size > (50 * 1024)) {
-		  console.error('Image size is larger than 50kb.');
-		  callback(url); // or callback('Image size is larger than 50kb.');
+		if (blob.size > (25 * 1024)) {
+		  callback(url); // Image size is larger than 25kb.
 		  return;
 		}
 
