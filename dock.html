@@ -2868,11 +2868,14 @@
 	}
 	if (urlParams.has("chatonly")){
 		//document.body.classList.add("electronDraggable");
-		document.getElementById("menu").innerHTML = document.getElementById("chatInput_parent").innerHTML;
-		document.getElementById("chatInput").style.height =  "27px";
-		document.getElementById("chatInput").style.paddingLeft =  "5px";
-		document.getElementById("chatInputLockButton").classList.add("hidden");
-		document.getElementById("chatInputCloseButton").classList.add("hidden");
+		getById("menu").innerHTML = "";
+		getById("menu").appendChild(getById("chatInput_parent"));
+		getById("chatInput_parent").outerHTML = getById("chatInput_parent").innerHTML;
+		getById("chatInput").style.height =  "27px";
+		getById("chatInput").style.paddingLeft =  "5px";
+		getById("chatInputLockButton").classList.add("hidden");
+		getById("chatInputCloseButton").classList.add("hidden");
+		getById("chatInput").classList.add("locked")
 	}
 
 	if (urlParams.has("notobs")){
