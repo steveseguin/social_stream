@@ -250,7 +250,7 @@
 					console.log("CONNECTED chat detected");
 					try {
 					[...document.querySelectorAll('[appnewcommentcreated]')].forEach(ele=>{
-						//processMessage(ele);
+						processMessage(ele);
 					});
 					} catch(e){
 						//
