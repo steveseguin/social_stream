@@ -2288,6 +2288,11 @@
 		fadeout = true;
 	}
 	
+	var replaceURLInLink = true;
+	if (urlParams.has("readouturls")){
+		replaceURLInLink = false;
+	}
+	
 	
 	var hideNumbers = false;
 	if (urlParams.has("hidenumbers")){
@@ -2755,6 +2760,10 @@
 		
 		if (text.startsWith("!")){return;} // do not TTS commands.
 		
+		if (replaceURLInLink){
+			text = text.replace(/https?:\/\/[^\s]+/g, 'Link');
+		}
+		
 		if (GoogleAPIKey){
 			if (!premiumQueueActive){
 				googleTTS(text);
@@ -2771,9 +2780,7 @@
 			return;
 		}
 		
-		
 		if (!voices && (voices===null)){return;}
-		
 
 		if (!voice){
 			if (!voices || !voices.length){
