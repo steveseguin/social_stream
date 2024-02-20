@@ -3695,7 +3695,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			if (searchGif){
 				var order = 0;
 				if (settings.randomgif){
-					order = parseInt(Math.random()*10);
+					order = parseInt(Math.random()*15);
 				}
 				var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(searchGif) + '&api_key='+settings.giphyKey.textsetting+'&limit=1&offset='+order).then((response) => response.json()).then((response)=>{
 					try {
@@ -3738,7 +3738,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 					}
 					
 					if (settings.randomgif){
-						order = parseInt(Math.random()*10);
+						order = parseInt(Math.random()*15);
 					}
 					var gurl = await fetch('https://api.giphy.com/v1/gifs/search?q=' + encodeURIComponent(word) + '&api_key='+settings.giphyKey.textsetting+'&limit=1&offset='+order).then((response) => response.json()).then((response)=>{
 						try {
@@ -3765,7 +3765,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			if (word){
 				var order = 0;
 				if (settings.randomgif){
-					order = parseInt(Math.random()*10);
+					order = parseInt(Math.random()*15);
 				}
 				var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(word) + '&key='+settings.tenorKey.textsetting+'&limit='+(order+1)).then((response) => response.json()).then((response)=>{
 					try {
@@ -3823,7 +3823,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 							}
 					} 
 					if (!skip && settings.randomgif){
-						order = parseInt(Math.random()*10);
+						order = parseInt(Math.random()*15);
 					}
 					if (order > 40){
 						order = 40;
