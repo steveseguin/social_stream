@@ -119,7 +119,11 @@
 		var contentimg = "";
 		try {
 			contentimg = ele.querySelector("div[class^='imageContent-'] img[src]").src+"";
-		} catch(e){}
+		} catch(e){
+			try {
+				contentimg = ele.querySelector("img[data-type='sticker']").src+"";
+			} catch(e){}
+		}
 		
 		
 		if (!name && !chatimg){
