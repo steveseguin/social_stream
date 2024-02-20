@@ -1482,6 +1482,9 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "resetwaitlist") {
 				resetWaitlist();
 				sendResponse({"state":isExtensionOn});	
+			} else if (request.cmd && request.cmd === "downloadwaitlist") {
+				downloadWaitlist();
+				sendResponse({"state":isExtensionOn});	
 			} else if (request.cmd && request.cmd === "cleardock") {
 				sendResponse({"state":isExtensionOn});
 				var data = {};
@@ -2135,6 +2138,8 @@ function setupSocket(){
 				highlightWaitlist(parseInt(data.value) || 0);
 			} else if (data.action && (data.action === "resetwaitlist")){
 				resetWaitlist();
+			} else if (data.action && (data.action === "downloadwaitlist")){
+				downloadWaitlist();
 			} else if (data.action && (data.action === "selectwinner")){
 				if (value in data){
 					selectwinner(parseInt(data.value) || 0);
@@ -2614,6 +2619,38 @@ function resetWaitlist(){
 	waitListUsers = {};
 	waitlist = []
 	sendWaitlistP2P(waitlist, true);
+}
+function objectArrayToCSV(data, delimiter = ',') {
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return '';
+  }
+  const header = Object.keys(data[0]).join(delimiter);
+
+  const rows = data.map(obj =>
+    Object.values(obj).map(value =>
+      typeof value === 'string' && value.includes(delimiter) ? `"${value}"` : value
+    ).join(delimiter)
+  );
+
+  return [header, ...rows].join('\n');
+}
+
+async function downloadWaitlist(){
+	const opts = {
+		types: [{
+		  description: 'Data file',
+		  accept: {'application/data': ['.tsv']},
+		}],
+	  };
+	if (!window.showSaveFilePicker){
+		console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
+	}
+	fileExportHandler = await window.showSaveFilePicker(opts);
+	var filesContent = objectArrayToCSV(waitlist,"\t");
+	const writableStream = await fileExportHandler.createWritable();
+	await writableStream.write(filesContent);
+	await writableStream.close();
+
 }
 
 function sendWaitlistP2P(data=null, sendMessage=true){ // function to send data to the DOCk via the VDO.Ninja API
