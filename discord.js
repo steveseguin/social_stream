@@ -151,6 +151,7 @@
 		
 
 		var data = {};
+		data.id = mid;
 		data.chatname = name;
 		data.chatbadges = "";
 		data.backgroundColor = "";
