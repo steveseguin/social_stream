@@ -6,7 +6,7 @@
 		  
 		var blob = xhr.response;
     
-		if (blob.size > (55 * 1024)) {
+		if (blob.size > (25 * 1024)) {
 		  callback(url); // Image size is larger than 25kb.
 		  return;
 		}
@@ -119,7 +119,11 @@
 		var contentimg = "";
 		try {
 			contentimg = ele.querySelector("div[class^='imageContent-'] img[src]").src+"";
-		} catch(e){}
+		} catch(e){
+			try {
+				contentimg = ele.querySelector("img[data-type='sticker']").src+"";
+			} catch(e){}
+		}
 		
 		
 		if (!name && !chatimg){
@@ -147,6 +151,7 @@
 		
 
 		var data = {};
+		data.id = mid;
 		data.chatname = name;
 		data.chatbadges = "";
 		data.backgroundColor = "";
