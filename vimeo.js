@@ -82,7 +82,7 @@
 			return;
 		}
 		
-		name = escapeHtml(ele.querySelector(".interaction-chat-message-author > h6, .interaction-qna-item-preview-author-name").textContent);
+		name = escapeHtml(ele.querySelector("h6, .interaction-qna-item-preview-author-name").textContent);
 		
 		if (name){
 			
@@ -158,7 +158,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector('input').focus();
+					document.querySelector('#interaction-chat-input-field').focus();
 					sendResponse(true);
 					return;
 				}
