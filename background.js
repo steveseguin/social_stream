@@ -3797,24 +3797,24 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			};
 		// curl "https://tenor.googleapis.com/v2/search?q=excited&key=&client_key=my_test_app&limit=8"
 		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.tenor && data.chatmessage && (data.chatmessage.indexOf("!tenor")!=-1) && !data.contentimg){
-			var word = data.chatmessage;
-			word = word.replaceAll("!tenor","").trim();
-			if (word){
-				var order = 0;
+			var searchGif = data.chatmessage;
+			searchGif = searchGif.replaceAll("!tenor","").trim();
+			if (searchGif){
+				var order = 1;
 				if (settings.randomgif){
-					order = parseInt(Math.random()*15);
+					order = parseInt(Math.random()*15) + 1;
 				}
-				var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(word) + '&key='+settings.tenorKey.textsetting+'&limit='+(order+1)).then((response) => response.json()).then((response)=>{
+				var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(searchGif) + '&key='+settings.tenorKey.textsetting+'&limit='+order).then((response) => response.json()).then((response)=>{
 					try {
-						if (response.results.length-1<order){
-							order = response.results.length-1;
+						if (response.results.length<(order-1)){ 
+							order = response.results.length;
 						}
-						if (response.results[order].media_formats.tinywebp_transparent){
-							return response.results[order].media_formats.tinywebp_transparent.url
+						if (response.results[order-1].media_formats.tinywebp_transparent){ 
+							return response.results[order-1].media_formats.tinywebp_transparent.url
 							
-						} else if (response.results[order].media_formats.tinygif){
-							return response.results[order].media_formats.tinygif.url
-						}  else {
+						} else if (response.results[order-1].media_formats.tinygif){
+							return response.results[order-1].media_formats.tinygif.url
+						} else {
 							return false;
 						}
 					} catch(e){
@@ -3831,26 +3831,29 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 					return false;
 				}
 			}
-		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.giphy2 && data.chatmessage && (data.chatmessage.indexOf("#")!=-1) && !data.contentimg){
+			
+		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.giphy2 && data.chatmessage && (data.chatmessage.indexOf("##")!=-1) && !data.contentimg){
 			var xx = data.chatmessage.split(" ");
 			for (var i = 0;i<xx.length;i++){
 				var word = xx[i];
-				if (!word.startsWith("#")){continue;}
-				word = word.replaceAll("#"," ").trim();
+				if (!word.startsWith("##")){continue;}
+				word = word.trim();
+				search_word = word.replace(/[-_]/g, " ");
+				search_word = search_word.replace(/[^\w\s]/g, "");
+
 				if (word){
-					var order = 0;
+					var order = 1; // Start from 1
 					if (i+1<xx.length){
-						order = parseInt(xx[i+1]) || 0;
+						order = parseInt(xx[i+1]) || 1;
 					}
 					
 					if (settings.hidegiphytrigger){
-						if (data.chatmessage.includes("#"+word+ " "+order)){
-							data.chatmessage = data.chatmessage.replace("#"+word+ " "+order, "");
-						} else if (data.chatmessage.includes("#"+word+" ")){
-							data.chatmessage = data.chatmessage.replace("#"+word+ " ", "");
-						} else {
-							data.chatmessage = data.chatmessage.replace("#"+word, "");
-						}
+						var re = new RegExp(word+ " "+order,"g");
+						data.chatmessage = data.chatmessage.replace(re, "");
+						re = new RegExp(word+ " ","g");
+						data.chatmessage = data.chatmessage.replace(re, "");
+						re = new RegExp(word,"g");
+						data.chatmessage = data.chatmessage.replace(re, "");
 						data.chatmessage = data.chatmessage.trim();
 					}
 					var skip = false
@@ -3860,25 +3863,94 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 							}
 					} 
 					if (!skip && settings.randomgif){
-						order = parseInt(Math.random()*15);
+						order = parseInt(Math.random()*8) + 1; // Adjust for 1-based indexing and 8 stickers randomization, because less actual amount
 					}
 					if (order > 40){
 						order = 40;
 					}
-					var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(word) + '&key='+settings.tenorKey.textsetting+'&limit='+(order+1)).then((response) => response.json()).then((response)=>{
+					var gurl = await fetch('https://tenor.googleapis.com/v2/search?&searchfilter=sticker&media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(search_word) + '&key='+settings.tenorKey.textsetting+'&limit='+order).then((response) => response.json()).then((response)=>{
 						try {
-							if (response.results.length-1<order){
-								order = response.results.length-1;
+							if (response.results.length<(order-1)){ 
+								order = response.results.length;
 							}
-							if (response.results[order].media_formats.tinywebp_transparent){
-								return response.results[order].media_formats.tinywebp_transparent.url
+							if (response.results[order-1].media_formats.tinywebp_transparent){ 
+								return response.results[order-1].media_formats.tinywebp_transparent.url
 								
-							} else if (response.results[order].media_formats.tinygif){
-								return response.results[order].media_formats.tinygif.url
+							} else if (response.results[order-1].media_formats.tinygif){
+								return response.results[order-1].media_formats.tinygif.url
 							} else {
 								return false;
 							}
 						} catch(e){
+							console.error(e);
+							return false;
+						}
+					});
+					
+					
+					
+					if (gurl){
+						data.contentimg = gurl;
+						break;
+					}
+					
+					if (!data.contentimg && !data.chatmessage && !data.hasDonation){
+						return false;
+					}
+				}
+			}
+		
+		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.giphy2 && data.chatmessage && (data.chatmessage.indexOf("#")!=-1) && !data.contentimg){
+			var xx = data.chatmessage.split(" ");
+			for (var i = 0;i<xx.length;i++){
+				var word = xx[i];
+				if (!word.startsWith("#")){continue;}
+				word = word.trim();
+				search_word = word.replace(/[-_]/g, " ");
+				search_word = search_word.replace(/[^\w\s]/g, "");
+
+				if (word){
+					var order = 1; // Start from 1
+					if (i+1<xx.length){
+						order = parseInt(xx[i+1]) || 1;
+					}
+					
+					if (settings.hidegiphytrigger){
+						var re = new RegExp(word+ " "+order,"g");
+						data.chatmessage = data.chatmessage.replace(re, "");
+						re = new RegExp(word+ " ","g");
+						data.chatmessage = data.chatmessage.replace(re, "");
+						re = new RegExp(word,"g");
+						data.chatmessage = data.chatmessage.replace(re, "");
+						data.chatmessage = data.chatmessage.trim();
+					}
+					var skip = false
+					if (i+1<xx.length){
+							if (xx[i+1] == order){
+								skip = true;
+							}
+					} 
+					if (!skip && settings.randomgif){
+						order = parseInt(Math.random()*15) + 1; // Adjust for 1-based indexing
+					}
+					if (order > 40){
+						order = 40;
+					}
+					var gurl = await fetch('https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=' + encodeURIComponent(search_word) + '&key='+settings.tenorKey.textsetting+'&limit='+order).then((response) => response.json()).then((response)=>{
+						try {
+							if (response.results.length<(order-1)){ 
+								order = response.results.length;
+							}
+							if (response.results[order-1].media_formats.tinywebp_transparent){ 
+								return response.results[order-1].media_formats.tinywebp_transparent.url
+								
+							} else if (response.results[order-1].media_formats.tinygif){
+								return response.results[order-1].media_formats.tinygif.url
+							} else {
+								return false;
+							}
+						} catch(e){
+							console.error(e);
 							return false;
 						}
 					});
