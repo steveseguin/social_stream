@@ -126,6 +126,27 @@
 				resp += escapeHtml(node.textContent.trim()) + " ";
 			} else if (node.nodeType === 1) {
 				if (!settings.textonlymode) {
+					if (node.nodeName === "IMG") {
+						var srcset = node.getAttribute('srcset');
+						if (srcset) {
+							var sources = srcset.split(',');
+							var image2xSource = sources.find(function(source) {
+								return source.trim().endsWith(' 2x');
+							});
+							if (image2xSource) {
+								var imageUrl = image2xSource.split(' ')[0];
+								if (imageUrl) {
+									if (node.classList.contains("zero-width-emote")) {
+										resp += `<span class='zero-width-parent'><img src='${imageUrl}' /></span>`;
+									} else {
+										resp += `<img src='${imageUrl}' />`;
+									}
+									return; 
+								}
+							}
+						}
+					} 
+					
 					if (node.nodeName == "SVG"){
 						return;
 					} else if ((node.nodeName == "SPAN") && !node.textContent.length){
