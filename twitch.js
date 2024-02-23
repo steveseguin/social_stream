@@ -134,7 +134,7 @@
 								return source.trim().endsWith(' 2x');
 							});
 							if (image2xSource) {
-								var imageUrl = image2xSource.split(' ')[0];
+								var imageUrl = image2xSource.trim().split(' ')[0];
 								if (imageUrl) {
 									if (node.classList.contains("zero-width-emote")) {
 										resp += `<span class='zero-width-parent'><img src='${imageUrl}' /></span>`;
