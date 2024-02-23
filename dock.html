@@ -3908,7 +3908,9 @@
 						message.chatname = xx.text.value;
 					} else if (!message.chatmessage && xx.label && (xx.label.toLowerCase() == "message")){
 						message.chatmessage = xx.text.value;
-					} 
+					} else if (!message.chatname && xx.label && (xx.label.toLowerCase() == "pseudo")){
+						message.chatname = xx.text.value;
+					}
 				});
 				
 				var currency = ""
