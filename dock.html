@@ -3896,11 +3896,19 @@
 						message.chatname = xx.text.value;
 					} else if (xx.key.toLowerCase() == "pseudo"){
 						message.chatname = xx.text.value;
+					} else if (xx.key == "tonpseudo"){
+						message.chatname = xx.text.value;
 					} else if (xx.key == "username"){
 						message.chatname = xx.text.value;
 					} else if (xx.key == "message"){
 						message.chatmessage = xx.text.value;
-					}
+					} else if (xx.key == "messagetchat"){
+						message.chatmessage = xx.text.value;
+					} else if (!message.chatname && xx.label && (xx.label.toLowerCase() == "display name")){
+						message.chatname = xx.text.value;
+					} else if (!message.chatmessage && xx.label && (xx.label.toLowerCase() == "message")){
+						message.chatmessage = xx.text.value;
+					} 
 				});
 				
 				var currency = ""
