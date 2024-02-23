@@ -3894,6 +3894,8 @@
 				data.stripe.data.object.custom_fields.forEach(xx=>{
 					if (xx.key == "displayname"){
 						message.chatname = xx.text.value;
+					} else if (xx.key.toLowerCase() == "pseudo"){
+						message.chatname = xx.text.value;
 					} else if (xx.key == "username"){
 						message.chatname = xx.text.value;
 					} else if (xx.key == "message"){
