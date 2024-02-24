@@ -3906,6 +3906,8 @@
 						message.chatmessage = xx.text.value;
 					} else if (!message.chatname && xx.label && (xx.label.toLowerCase() == "display name")){
 						message.chatname = xx.text.value;
+					} else if (!message.chatname && xx.label && (xx.label.toLowerCase() == "name")){
+						message.chatname = xx.text.value;
 					} else if (!message.chatmessage && xx.label && (xx.label.toLowerCase() == "message")){
 						message.chatmessage = xx.text.value;
 					} else if (!message.chatname && xx.label && (xx.label.toLowerCase() == "pseudo")){
@@ -5962,15 +5964,18 @@
 			newFileHandle = await window.showSaveFilePicker();
 		} else if (newFileHandle && data){
 			const writableStream = await newFileHandle.createWritable();
-
+			
 			try {
 				if (typeof data == "object"){
 					data.chatimg = upscaleImages(data);
-					overwriteFile(JSON.stringify(data));
+					await writableStream.write(JSON.stringify(data));
+				} else if (typeof data == "string"){
+					await writableStream.write(data);
+				} else {
+					await writableStream.write("");
 				}
 			} catch(e){}
-
-			await writableStream.write(data);
+			
 			await writableStream.close();
 		} else if (!data){
 			const writableStream = await newFileHandle.createWritable();
