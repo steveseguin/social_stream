@@ -5974,7 +5974,9 @@
 				} else {
 					await writableStream.write("");
 				}
-			} catch(e){}
+			} catch(e){
+				console.error("Error writing to file:", e);
+			}
 			
 			await writableStream.close();
 		} else if (!data){
