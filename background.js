@@ -14,6 +14,9 @@ var isSSAPP = false;
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
 
+var FacebookDupes = "";
+var FacebookDupesTime = null;
+
 var fetchNode = false;
 var postNode = false;
 var putNode = false;
@@ -1405,6 +1408,22 @@ chrome.runtime.onMessage.addListener(
 					} // else {
 					//	getBTTVEmotes();
 					//} 
+					
+					if (request.message.type == "facebook"){ // since Facebook dupes are a common issue
+						if (sender.tab.url){
+							if (request.message.chatname && request.message.chatmessage){
+								clearInterval(FacebookDupesTime);
+								if (FacebookDupes == request.message.chatname+":"+request.message.chatmessage){
+									return response;
+								} else {
+									FacebookDupes = request.message.chatname+":"+request.message.chatmessage;
+									FacebookDupesTime = setTimeout(function(){
+										FacebookDupes = "";
+									},15000);
+								}
+							}
+						}
+					}
 
 					try{
 						request.message = await applyBotActions(request.message, sender.tab); // perform any immediate actions
