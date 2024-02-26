@@ -715,6 +715,63 @@ span.zero-width-parent img.zero-width-emote {
 		  await writableStream.close();
 	  }
 	}
+	
+	var newImageHandle = false;
+	
+	async function overwriteImage(data = false) {
+	  if (data == "setup") {
+		const opts = {
+		  types: [
+			{
+			  description: "Image file",
+			  accept: { "image/jpeg": [".jpg"], "image/png": [".png"] },
+			},
+		  ],
+		};
+
+		try {
+		  newImageHandle = await window.showSaveFilePicker(opts);
+		} catch (error) {
+		  console.error('File save cancelled or failed:', error);
+		  return;
+		}
+	  } else if (newImageHandle && data) {
+		const writableStream = await newImageHandle.createWritable();
+		try {
+		  let blob;
+
+		  // Check if data is a Data URL
+		  if (typeof data === 'string' && data.startsWith('data:')) {
+			  // Convert Data URL to Blob
+			  const fetchResponse = await fetch(data);
+			  blob = await fetchResponse.blob();
+		  } else if (typeof data === 'string') { // If data is a URL
+			  const response = await fetch(data);
+			  if (!response.ok) throw new Error('Network response was not ok');
+			  blob = await response.blob();
+		  } else {
+			  blob = data; // Assuming data is already a Blob
+		  }
+
+		  // Convert blob to a specific format based on newImageHandle.kind (e.g., 'image/jpeg')
+		  const bitmap = await createImageBitmap(blob);
+		  const canvas = document.createElement('canvas');
+		  canvas.width = bitmap.width;
+		  canvas.height = bitmap.height;
+		  const ctx = canvas.getContext('2d');
+		  ctx.drawImage(bitmap, 0, 0);
+		  const mimeType = newImageHandle.type || 'image/png'; // Default to PNG if type is not available
+		  const newBlob = await new Promise(resolve => canvas.toBlob(resolve, mimeType));
+
+		  // Write the converted blob to disk
+		  await writableStream.write(newBlob);
+		} catch (error) {
+		  console.error('Error processing the image:', error);
+		} finally {
+		  await writableStream.close();
+		}
+	  }
+	}
 
 	async function sendToDisk(data){
 		if (newFileHandle){ // if a file is selected
@@ -792,6 +849,10 @@ span.zero-width-parent img.zero-width-emote {
 	if (urlParams.has("center")){
 		centering = true;
 	}
+	if (urlParams.has("saveimage")){
+		document.body.onclick = function(){overwriteImage("setup");}
+	}
+	
 	
 	var customSource = false;
 	if (urlParams.has("branded")){
@@ -1990,6 +2051,17 @@ span.zero-width-parent img.zero-width-emote {
 			
 			sendToDisk(data.contents);
 			
+			
+			if (newImageHandle && data.contents && data.contents.chatimg){
+				if (data.contents.type && data.contents.chatimg && (data.contents.type == "youtube")){
+					data.contents.chatimg = data.contents.chatimg.replace("=s32-", "=s512-");  // high, but meh.
+					data.contents.chatimg = data.contents.chatimg.replace("=s64-", "=s512-");
+				}
+				if (data.contents.type && (data.contents.type == "twitch") && data.contents.chatname){
+					data.contents.chatimg = "https://api.socialstream.ninja/twitch/large?username="+encodeURIComponent(data.contents.chatname); // 150x150
+				}
+				overwriteImage(data.contents.chatimg);
+			}
 		} else if (data){
 			if ("contents" in data){
 				clearTimeout(timeoutTimer);
