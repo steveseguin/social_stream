@@ -40,7 +40,7 @@ function restoreOptions() {
 		} else {
 			document.querySelector("#password").value = "";
 			chrome.storage.sync.set({
-				streamID: document.querySelector("#password").value
+				password: document.querySelector("#password").value
 			});
 		}
 	} catch(e){console.error(e);}
