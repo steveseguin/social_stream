@@ -2920,7 +2920,17 @@ eventer(messageEvent, async function (e) {
 					isExtensionOn = false; 
 					updateExtensionState();
 					
-					alert("Session ID already in use.\n\nDisable Social Stream elsewhere if already in use first");
+					try {
+						chrome.notifications.create({
+							type: 'basic',
+							iconUrl: './icons/icon-128.png',
+							title: 'Cannot enable Social Stream',
+							message: "Your specified Session ID is already in use.\n\nDisable Social Stream elsewhere if already in use first, or change your session ID to something unique."
+						});
+					} catch(e){
+						errorlog(e);
+					}
+					
 				}
 			}
 			
