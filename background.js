@@ -146,6 +146,12 @@ if (typeof(chrome.runtime)=='undefined'){
 	
 	chrome.runtime.onMessage = {};
 	
+	
+	chrome.notifications = {};
+	chrome.notifications.create = function(data){
+		alert(data.message);
+	};
+	
 	var onMessageCallback = function(a,b,c){};
 	
 	chrome.runtime.onMessage.addListener = function(callback){
@@ -2526,7 +2532,7 @@ function processWaitlist(data){
 		if (settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim()){
 			trigger = settings.customwaitlistcommand.textsetting.trim();
 		}
-		if (!data.chatmessage || (!data.chatmessage.trim().startsWith(trigger))){return;}
+		if (!data.chatmessage || (!data.chatmessage.trim().toLowerCase().startsWith(trigger.toLowerCase()))){return;}
 		
 		if (waitListUsers[data.type]){
 			if (!waitListUsers[data.type][data.chatname]){
@@ -2928,7 +2934,7 @@ eventer(messageEvent, async function (e) {
 							message: "Your specified Session ID is already in use.\n\nDisable Social Stream elsewhere if already in use first, or change your session ID to something unique."
 						});
 					} catch(e){
-						errorlog(e);
+						console.error(e);
 					}
 					
 				}
