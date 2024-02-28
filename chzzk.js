@@ -60,14 +60,12 @@
 	
 	
 	function processMessage(ele){
-		console.log(ele);
 		var badges = [];
 		try{
 			 ele.querySelectorAll("[class^='badge_container'] img[src]").forEach(b=>{
 				badges.push(b.src);	
 			});
 		} catch(e){
-			console.error(e);
 		}
 		
 		var name="";
@@ -84,8 +82,6 @@
 			name = escapeHtml(name);
 		} catch(e){
 			
-			console.log(ele);
-			console.error(e);
 		}
 		var msg="";
 		try {
@@ -93,7 +89,6 @@
 				msg+= getAllContentNodes(xx);
 			});
 		} catch(e){
-			console.error(e);
 		}
 		
 		
@@ -156,8 +151,7 @@
 	var observer = null;
 	
 	
-	function onElementInserted(containerSelector) {
-		var target = document.querySelector(containerSelector);
+	function onElementInserted(target) {
 		if (!target){return;}
 		
 		
