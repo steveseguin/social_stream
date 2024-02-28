@@ -153,6 +153,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - megaphonetv.com (In [Studio](https://studio.megaphonetv.com/), select UGC, then open Recent messages)
 - pilled.net (pop out the chat; https://pilled.net/comment/XXXXX)
 - riverside.fm (just open the chat bar. Note: you can opt-out of capture via the extension menu)
+- chzzk.naver.com (pop out the chat)
   
 [More on request](#requesting-a-site)
 
