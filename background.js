@@ -3629,6 +3629,14 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			data.chatname = "";
 		}
 		
+		if (settings.removeContentImage){
+			data.contentimg = "";
+			if (!data.chatmessage && !data.hasDonation){ // there's no content worth sending I'm assuming
+				return false;
+			}
+			
+		}
+		
 		if (data.chatmessage){
 			for (var i = 1;i<=10;i++){
 				if (settings['botReplyMessageEvent'+i] && settings['botReplyMessageCommand'+i] && settings['botReplyMessageCommand'+i].textsetting && settings['botReplyMessageValue'+i] && settings['botReplyMessageValue'+i].textsetting && (data.chatmessage.indexOf(settings['botReplyMessageCommand'+i].textsetting)!=-1)){
