@@ -67,7 +67,7 @@
 	}
 	
 	var cachedUserProfiles = {};
-
+	var lastImage = "";
 	
 	async function processMessage(ele){
 	
@@ -91,13 +91,21 @@
 			
 		}
 		
-		console.log(ele);
+		// console.log(ele);
+		
 		
 		var contentImg = "";
 		try{
 			contentImg = ele.querySelector("img.giphy-img-loaded[src]").src; // too annoying to support
 		} catch(e){
 		}
+		
+		if (lastImage && (lastImage == contentImg)){
+			lastImage = "";
+			return;
+			
+		}
+		lastImage = contentImg;
 
 		var msg="";
 		try {
@@ -115,6 +123,9 @@
 		
 
 		if (!namett || (!contentImg && !msg)){
+			if (namett){
+				return true;
+			}
 			return;
 		}
 		
@@ -132,11 +143,18 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "boltplus";
 		
-		if (lastMessages[namett] && (lastMessages[namett] == msg)){
+	
+		if (lastMessages[namett] && msg && (lastMessages[namett] == namett+":"+msg)){
+			return;
+		} else if (lastMessages[namett] && contentImg && (lastMessages[namett] == namett+":"+contentImg)){
 			return;
 		}
 		
-		lastMessages[namett] = msg;
+		if (msg){
+			lastMessages[namett] = namett+":"+msg;
+		} else {
+			lastMessages[namett] = namett+":"+contentImg;
+		}
 		
 		pushMessage(data);
 	}
@@ -193,7 +211,13 @@
 		
 		var onMutationsObserved = function(mutations) {
 			var ele = document.querySelectorAll(".chatbox-scrollbar > .MuiBox-root")[0];
-			processMessage(ele.cloneNode(true));
+			
+			if (processMessage(ele.cloneNode(true))){
+				setTimeout(function(ee){
+					processMessage(ee)
+			}, 600, document.querySelectorAll(".chatbox-scrollbar > .MuiBox-root")[0]);
+			}
+			
 		};
 		
 		var config = { childList: true, subtree: true };
