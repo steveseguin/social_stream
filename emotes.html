@@ -547,17 +547,18 @@
 		
 		let svgs = tmp.querySelectorAll("svg"); // not bothering to check for dupes.
 		let images = tmp.querySelectorAll("img");
+		//console.log(data.chatmessage);
 	
 		try {
 			if (svgs){
 				svgs = [...new Set(svgs)];
 			}
 		}catch(e){console.error(e);}
-		try {
-			if (images){
-				images = [...new Set(images)];
-			}
-		}catch(e){console.error(e);}
+		//try {
+		//	if (images){
+		//		images = [...images];
+		//	}
+		//}catch(e){console.error(e);}
 		
 		
 		let text = tmp.textContent || tmp.innerText || "";
@@ -594,11 +595,11 @@
 							
 		//emojis = emojis.match(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/ig);
 		//emojis = emojis.match(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu) || [];
-		console.log(text);
+		//console.log(text);
 		
 		emojis = text.match(/(\p{Regional_Indicator}\p{Regional_Indicator}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\p{Emoji_Modifier}|\u200D\p{Emoji})*|\p{Emoji_Component}\uFE0F/gu) || [];
 		
-		console.log(emojis);
+		//console.log(emojis);
 
 		
 		try {
@@ -616,6 +617,10 @@
 				let prevImageCancelled = false;
 			
 				for (var i=0;i<images.length;i++){
+					
+					if (images[i].parentNode && images[i].parentNode.classList.contains("zero-width-parent")){
+						images[i].className = "zero-width-emote";
+					}
 					
 					if (images[i].src && images2[images[i].src]){
 						if (!images[i].classList.contains("zero-width-emote") || !prevImage){
@@ -644,6 +649,8 @@
 					}
 					
 					if (prevImage && images[i].classList.contains("zero-width-emote")){
+						prevImage.zeroImage = images[i];
+						images[i].zeroParent = prevImage;
 						prevImage = null;
 						prevImageCancelled = false;
 						images3.push(images[i]);
@@ -669,6 +676,10 @@
 			}
 		} else {
 			images.forEach(ele=>{
+				if (ele.parentNode && ele.parentNode.classList.contains("zero-width-parent")){
+					ele.className = "zero-width-emote";
+				}
+			
 				ele.onerror = function(){
 					if (this.srcBackup){
 						this.src = this.srcBackup;
