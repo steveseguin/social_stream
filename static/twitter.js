@@ -543,6 +543,10 @@
 				const styleEl = document.createElement("style");
 				document.head.appendChild(styleEl);
 				styleEl.sheet.insertRule("div[data-testid='Dropdown']{ height:0; opacity:0; }", 0);
+				styleEl.sheet.insertRule("[data-testid='sheetDialog'] { animation: fadeIn 3s ease-out forwards;}", 0);
+				styleEl.sheet.insertRule("[data-testid='mask'] { opacity: 0;}", 0);
+				styleEl.sheet.insertRule(".fade-in { animation: fadeIn 1s ease-out forwards;}", 0);
+				styleEl.sheet.insertRule("@keyframes fadeIn {    from {        opacity: 0;    }    to {        opacity: .5;    }}", 0);
 				styleEl.sheet.insertRule("article div[data-testid='caret']{ height:0; opacity:0; }", 0);
 				styleEl.sheet.insertRule("[data-testid='confirmationSheetConfirm'] div{ height:0; opacity:0; }", 0);
 				styleEl.sheet.insertRule("#layers [role='alert'], #layers [role='alertdialog']{ height:0; opacity:0; z-Index:0;}", 0);
@@ -562,11 +566,29 @@
 								setTimeout(function(){
 									try {
 										document.querySelector("[data-testid='block'] div span").click();
+										try {
+											document.querySelector('[href="/i/premium_sign_up"]').nextElementSibling.click();
+										} catch(e){
+											
+											setTimeout(function(){
+												try {
+													document.querySelector('[href="/i/premium_sign_up"]').nextElementSibling.click();
+												} catch(e){}
+											},100);
+										}
+										
+										
+										
 									} catch(e){}
 								},250);
 							} catch(e){}
 						}
 					}
+					try {
+						document.querySelector('[href="/i/premium_sign_up"]').nextElementSibling.click();
+					} catch(e){}
+					
+					
 				},500);
 			};
 			button2.id = "adbutton";
@@ -609,6 +631,9 @@
 			{ subtree: true, characterData: true, childList: true }
 		);
 	}
+	
+	
+	
 
 	var checkTwitter = null;
 	

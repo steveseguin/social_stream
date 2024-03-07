@@ -334,6 +334,17 @@
 				} catch(e){}
 			}
 			
+			document.querySelectorAll("video").forEach(v=>{
+				if (videosMuted){
+					v.muted = true;
+					v.pause();
+					v.controls = false;
+				} else {
+					v.controls = true;
+				}
+				
+			});
+			
 		},500);
 		
 		
@@ -349,6 +360,8 @@
 			settings = response.settings;
 		}
 	});
+	
+	var videosMuted = false;
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
@@ -362,18 +375,41 @@
 					sendResponse(true);
 					return;
 				}
+				
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
 						return;
 					}
+					
+					if ("muteWindow" in request){
+						if (request.muteWindow){
+							videosMuted = true;
+							document.querySelectorAll("video").forEach(v=>{
+								v.muted = true;
+								v.pause();
+							});
+							sendResponse(true);
+							return;
+						} else {
+							if (videosMuted){
+								videosMuted = false;
+								document.querySelectorAll("video").forEach(v=>{
+									v.muted = false;
+									v.play();
+								});
+							}
+							sendResponse(true);
+							return;
+						}
+					}
+					
 				}
 			} catch(e){	}
 			
 			sendResponse(false);
 		}
 	);
-
 	
 })();
