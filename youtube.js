@@ -412,6 +412,7 @@
 	}
 	var settings = {};
 	var BTTV = false;
+	var videosMuted = false;
 	
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
@@ -432,9 +433,38 @@
 					} 
 					if ("BTTV" in request){
 						BTTV = request.BTTV;
-						console.log(BTTV);
 						sendResponse(true);
 						return;
+					}
+					if ("muteWindow" in request){
+						if (request.muteWindow){
+							clearInterval(videosMuted);
+							videosMuted = setInterval(function(){
+								document.querySelectorAll("video").forEach(v=>{
+									v.muted = true;
+									v.pause();
+								});
+							},1000);
+							document.querySelectorAll("video").forEach(v=>{
+								v.muted = true;
+								v.pause();
+							});
+							sendResponse(true);
+							return;
+						} else {
+							if (videosMuted){
+								clearInterval(videosMuted);
+								document.querySelectorAll("video").forEach(v=>{
+									v.muted = false;
+									v.play();
+								});
+							} else {
+								clearInterval(videosMuted);
+							}
+							videosMuted = false;
+							sendResponse(true);
+							return;
+						}
 					}
 				}
 				
@@ -447,7 +477,6 @@
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
-			
 			if (settings.bttv && !BTTV){
 				chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
 			}

@@ -38,6 +38,9 @@
 			--cursor-type: pointer;
 			--pressed-color: #9C9C;
 			
+			--pinned-queued-bg: #9d99cc;
+			--pinned-bg: #712a65;
+			
 			--flex-direction: row;
 			
 			--font-family: Sora, Avenir Next, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif;
@@ -1429,7 +1432,7 @@
 			background-color: #99a8cc !important;
 		}
 		#pinned .queued {
-			background-color: #9d99cc !important;
+			background-color: var(--pinned-queued-bg) !important; 
 		}
 		.icon {
 			margin: 4px 2px auto 1px;
@@ -1459,7 +1462,7 @@
 		#pinned{
 			position: sticky;
 			top: 0!important;
-			background-color: #712a65!important;
+			background-color: var(--pinned-bg) !important;
 			left: 0;
 			width: 100%;
 			border-bottom: solid 2px #fff;
@@ -3381,6 +3384,8 @@
 
 	if (urlParams.has("pinnedonly")){
 		hideNotPinned = true;
+		document.documentElement.style.setProperty("--pinned-queued-bg", "unset");
+		document.documentElement.style.setProperty("--pinned-bg", "unset");
 	}
 	
 	var ttsSpeakChatname = true;

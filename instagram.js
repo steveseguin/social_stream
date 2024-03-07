@@ -385,7 +385,13 @@
 					
 					if ("muteWindow" in request){
 						if (request.muteWindow){
-							videosMuted = true;
+							clearInterval(videosMuted);
+							videosMuted =  setInterval(function(){
+								document.querySelectorAll("video").forEach(v=>{
+									v.muted = true;
+									v.pause();
+								});
+							},1000);
 							document.querySelectorAll("video").forEach(v=>{
 								v.muted = true;
 								v.pause();
@@ -394,12 +400,15 @@
 							return;
 						} else {
 							if (videosMuted){
-								videosMuted = false;
+								clearInterval(videosMuted);
 								document.querySelectorAll("video").forEach(v=>{
 									v.muted = false;
 									v.play();
 								});
+							} else {
+								clearInterval(videosMuted);
 							}
+							videosMuted = false;
 							sendResponse(true);
 							return;
 						}
