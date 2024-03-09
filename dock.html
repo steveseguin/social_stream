@@ -2040,6 +2040,15 @@
 		thisLabel = urlParams.get("label") || false;
 	}
 	
+	var limitbadges = false;
+	if (urlParams.has("limitbadges")) {
+		limitbadges = 2;
+		if (urlParams.get("limitbadges")){
+			limitbadges = urlParams.get("limitbadges");
+		}
+		limitbadges = parseInt(limitbadges);
+	}
+	
 	var blockMessageSelecting = false;
 	if (urlParams.has("viewonly")) {
 		blockMessageSelecting = true;
@@ -5036,6 +5045,15 @@
 			}
 
 			var chatbadges = "";
+			
+			if (data.chatbadges && (limitbadges!==false)){
+				try {
+					data.chatbadges = data.chatbadges.slice(0, limitbadges);
+				} catch(e){
+				}
+			}
+				
+				
 			if (data.chatbadges && showbadges){
 				data.chatbadges.forEach(badge=>{
 					if (typeof badge == "object"){
