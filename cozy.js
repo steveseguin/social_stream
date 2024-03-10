@@ -77,10 +77,13 @@
 			chatimg = ele.querySelector("img.rounded-full").src;
 		} catch(e){
 		}
-		
+		var nameColor = "";
 		var name="";
 		try {
 			name = escapeHtml(ele.querySelector(".message-body-inner").childNodes[0].textContent.trim());
+			try {
+				nameColor = getComputedStyle(ele.querySelector(".message-body-inner").childNodes[0].querySelector("span")).color || "";
+			} catch(e){}
 		} catch(e){
 		}
 
@@ -90,16 +93,48 @@
 		} catch(e){
 		}
 		
+		var contentimg = "";
+		try {
+			contentimg = ele.querySelector(".chat_sticker").style.backgroundImage.split('"')[1].trim();
+		} catch(e){
+		}
+		
+		var chatbadges = [];
+		try {
+			ele.querySelector(".message-body-inner").childNodes[0].querySelectorAll("img[src], svg").forEach(badge=>{
+				try {
+					if (badge && badge.nodeName == "IMG"){
+						var tmp = {};
+						tmp.src = badge.src;
+						tmp.type = "img";
+						chatbadges.push(tmp);
+					} else if (badge && badge.nodeName.toLowerCase() == "svg"){
+						var tmp = {};
+						try {
+							badge.style.width = "18px";
+							badge.style.height = "18px";
+							badge.style.padding = "0";
+							badge.style.margin = "0";
+							badge.style.backgroundColor = getComputedStyle(badge).backgroundColor || "";
+							badge.style.color = getComputedStyle(badge).color || "";
+						} catch(e){console.log(e);}
+						tmp.html = badge.outerHTML;
+						tmp.type = "svg";
+						chatbadges.push(tmp);
+					}
+				} catch(e){  }
+			});
+		} catch(e){  }
 
-		if (!msg || !name){
+		if ((!msg && !contentimg) || !name ){
 			return;
 		}
 		
-		if (messageHistory.includes(name+"_"+msg)) {
+		if (messageHistory.includes(name+"_"+msg+contentimg)) {
 			//console.log("Message already exists");
 			return;
 		} else {
-			messageHistory.push(name+"_"+msg);
+			messageHistory.push(name+"_"+msg+contentimg);
 			setTimeout(function(){
 				messageHistory = messageHistory.slice(1);
 			},5000);
@@ -107,15 +142,15 @@
 		
 		var data = {};
 		data.chatname = name;
-		data.chatbadges = "";
+		data.chatbadges = chatbadges;
 		data.backgroundColor = "";
 		data.textColor = "";
-		data.nameColor = "";
+		data.nameColor = nameColor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";
-		data.contentimg = "";
+		data.contentimg = contentimg;
 		data.type = "cozy";
 		
 		pushMessage(data);
@@ -202,7 +237,7 @@
 
 						[...container.childNodes].forEach(ele=>{
 							ele.skip=true;
-							//processMessage(ele);
+							processMessage(ele);
 						});
 						onElementInserted(container);
 
