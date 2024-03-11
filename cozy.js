@@ -68,9 +68,6 @@
 	
 	function processMessage(ele){
 		
-		console.log(ele);
-
-
 		var chatimg = ""
 
 		try {
@@ -237,7 +234,7 @@
 
 						[...container.childNodes].forEach(ele=>{
 							ele.skip=true;
-							processMessage(ele);
+							//processMessage(ele);
 						});
 						onElementInserted(container);
 
