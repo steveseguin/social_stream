@@ -1817,6 +1817,7 @@ function sendToDestinations(message){
 	sendToH2R(message);
 	sendToPost(message);
 	sendToS10(message);
+	addMessageDB(message);
 	return true;
 }
 function unescapeHtml(safe) {
@@ -2411,7 +2412,7 @@ async function openchat(target=null){
 	}
 }
 
-function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Ninja API
+function sendDataP2P(data, UUID=false){ // function to send data to the DOCk via the VDO.Ninja API
 	
 	if (settings.server2 && socketserverDock){
 		try{
@@ -2427,11 +2428,18 @@ function sendDataP2P(data){ // function to send data to the DOCk via the VDO.Nin
 	msg.overlayNinja = data;
 	
 	if (iframe){
-		if (connectedPeers){
+		if (UUID && connectedPeers){
+			try {
+				var label = connectedPeers[UUID] || false;
+				if (!label || (label === "dock")){
+					iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*'); // the docks and emotes page are VIEWERS, since backend is PUSH-only
+				}
+			} catch(e){console.error(e);}
+		} else if (connectedPeers){
 			var keys = Object.keys(connectedPeers);
 			for (var i = 0; i<keys.length;i++){
 				try {
-					var UUID = keys[i];
+					UUID = keys[i];
 					var label = connectedPeers[UUID] || false;
 					if (!label || (label === "dock")){
 						iframe.contentWindow.postMessage({"sendData":{overlayNinja:data}, "type":"pcs", "UUID":UUID}, '*'); // the docks and emotes page are VIEWERS, since backend is PUSH-only
@@ -2822,8 +2830,7 @@ function onAttach(debuggeeId, callback, message, a=null,b=null,c=null) { // for 
   }
 }
 
-function processIncomingRequest(request){
-	
+function processIncomingRequest(request, UUID=false){
 	if (settings.disablehost){return;}
 	
 	if ("response" in request){ // we receieved a response from the dock
@@ -2831,6 +2838,14 @@ function processIncomingRequest(request){
 	} else if ("action" in request){
 		if (request.action === "openChat"){
 			openchat(request.value || null); 
+		} else if (request.action === "getUserHistory" && request.value && request.value.chatname && request.value.type){
+			if (isExtensionOn){ 
+				getMessagesDB(request.value.chatname, request.value.type, page = 0, pageSize = 10, function(response){
+					if (isExtensionOn){ 
+						sendDataP2P({"userHistory": response}); 
+					}
+				});
+			}
 		} else if (request.action === "blockUser" && request.value && request.value.chatname && request.value.type){
 			// Initialize blacklist settings if not present
 			if (!settings.blacklistusers) {
@@ -2872,7 +2887,7 @@ eventer(messageEvent, async function (e) {
 	if (e.source != iframe.contentWindow){return}
 	if (e.data && (typeof e.data == "object")){
 		if (("dataReceived" in e.data) && ("overlayNinja" in e.data.dataReceived)){
-			processIncomingRequest(e.data.dataReceived.overlayNinja);
+			processIncomingRequest(e.data.dataReceived.overlayNinja, e.data.UUID);
 		} else if ("action" in e.data){ // this is from vdo.ninja, not socialstream.
 			if (e.data.action === "YoutubeChat"){ // I never got around to completing this, so ignore it
 				if (e.data.value && data.value.snippet && data.value.authorDetails){
@@ -6545,3 +6560,72 @@ var jokes = [ // jokes from reddit; sourced from github.
 	"punchline": "I had to draw my own conclusions."
   }
 ];
+
+// Define the database variables
+let db;
+const dbName = 'chatMessagesDB';
+const storeName = 'messages';
+
+// Initialize the database
+function initDatabase() {
+  const request = indexedDB.open(dbName, 1);
+
+  request.onupgradeneeded = event => {
+    db = event.target.result;
+    if (!db.objectStoreNames.contains(storeName)) {
+      const objStore = db.createObjectStore(storeName, { autoIncrement: true });
+      objStore.createIndex('unique_user', ['chatname', 'type'], { unique: false });
+      objStore.createIndex('timestamp', 'timestamp', { unique: false });
+    }
+  };
+
+  request.onsuccess = event => {
+    db = event.target.result;
+  };
+
+  request.onerror = event => {
+    console.error('Database error: ', event.target.errorCode);
+  };
+}
+
+function addMessageDB(message) {
+  const transaction = db.transaction([storeName], 'readwrite');
+  const store = transaction.objectStore(storeName);
+  const request = store.add({ ...message, timestamp: new Date() });
+
+ // request.onsuccess = () => console.log('Message added to the database.');
+ // request.onerror = e => console.error('Error adding message to the database: ', e.target.error);
+}
+
+function getMessagesDB(chatname, type, page = 0, pageSize = 10, callback) {
+  const transaction = db.transaction([storeName], 'readonly');
+  const store = transaction.objectStore(storeName);
+  const index = store.index('unique_user');
+
+  const range = IDBKeyRange.only([chatname, type]);
+  const request = index.openCursor(range);
+  const results = [];
+
+  let count = 0;
+  const skip = page * pageSize;
+
+  request.onsuccess = event => {
+    const cursor = event.target.result;
+    if (cursor) {
+      if (count >= skip && count < skip + pageSize) {
+        results.push(cursor.value);
+      }
+      count++;
+      cursor.continue();
+    } else if (callback){
+      callback(results); // Execute callback function with the results
+    }
+  };
+
+  request.onerror = e => {
+    console.error('Error fetching messages: ', e.target.error);
+  };
+}
+
+// Initialize the database
+initDatabase();

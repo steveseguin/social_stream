@@ -168,6 +168,39 @@
 			}
 			
 		}
+		.modal {
+		  display: none; /* Hidden by default */
+		  position: fixed; /* Stay in place */
+		  z-index: 1000; /* Sit on top */
+		  left: 0;
+		  top: 0;
+		  width: 100%; /* Full width */
+		  height: 100%; /* Full height */
+		  overflow: auto; /* Enable scroll if needed */
+		  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+		}
+
+		.modal-content {
+		  background-color: #888;
+		  margin: 0% auto; /* 15% from the top and centered */
+		  padding: 20px;
+		  border: 1px solid #fff;
+		  width: 80%; /* Could be more or less, depending on screen size */
+		}
+
+		.close-btn {
+		  color: #aaa;
+		  float: right;
+		  font-size: 28px;
+		  font-weight: bold;
+		}
+
+		.close-btn:hover,
+		.close-btn:focus {
+		  color: black;
+		  text-decoration: none;
+		  cursor: pointer;
+		}
 
 		.dissolve {
 			position:fixed;
@@ -1750,6 +1783,12 @@
 				<a href="#" class="context-menu__link" data-action="Block">
 					<i class="las la-external-link"></i>
 					<span>Block User</span>
+				</a>
+			</li>
+			<li class="context-menu__item" data-action="History" title="All messages from user will be deleted; user will also get added to the hide-user list">
+				<a href="#" class="context-menu__link" data-action="History">
+					<i class="las la-external-link"></i>
+					<span>See User History</span>
 				</a>
 			</li>
 			<li class="context-menu__item" data-action="Queue">
@@ -3888,7 +3927,54 @@
 				} catch(e){}
 			//}
 			return;
-		} else if ("blockUser" in data){ //delete messages, but also block user. remote, so we won't sync,
+		} else if ("userHistory" in data){ //delete messages, but also block user. remote, so we won't sync,
+			console.log(data.userHistory);
+			
+			let modal = document.getElementById("messageModal");
+			if (!modal){
+				modal = document.createElement("div");
+				modal.id = "messageModal";
+				modal.classList.add("modal");
+				modal.innerHTML = '<div class="modal-content">\
+					<span class="close-btn">&times;</span>\
+					<h2 id="messagesFor">Messages</h2>\
+					<div id="messagesList"></div>\
+				  </div>\
+				';
+				document.body.appendChild(modal);
+			}
+
+			  const span = document.getElementsByClassName("close-btn")[0];
+			  const messagesList = document.getElementById('messagesList');
+			  const messagesFor = document.getElementById('messagesFor');
+			  messagesList.innerHTML = ''; 
+			  
+			  if (data.userHistory.length){
+				messagesFor.innerText = "Message history for "+data.userHistory[0].chatname;
+			  } else {
+				messagesFor.innerText = "Message history";
+			  }
+
+			  data.userHistory.forEach(msg => {
+				const para = document.createElement("p");
+				para.textContent = `${msg.chatmessage} (Sent: ${msg.timestamp})`;
+				messagesList.appendChild(para);
+			  });
+			  modal.style.display = "block";
+			  span.onclick = function() {
+				modal.style.display = "none";
+				messagesList.innerHTML = "";
+			  };
+			  window.onclick = function(event) {
+				if (event.target == modal) {
+				  modal.style.display = "none";
+				  messagesList.innerHTML = "";
+				}
+			  };
+			
+
+			
+		} else if ("blockUser" in data){
 			try {
 				if (data.blockUser.chatname && data.blockUser.type){
 				
@@ -4470,6 +4556,15 @@
 				ele.remove();
 			});
 			send2Extension({action:"blockUser", value:{chatname:chatName, type:type}});
+		}
+	}
+	
+	function getUserHistory(element){
+		var chatName = element.dataset.chatname;
+		var type = element.dataset.sourceType;
+		
+		if (chatName && type){
+			send2Extension({action:"getUserHistory", value:{chatname:chatName, type:type}});
 		}
 	}
 
@@ -6197,6 +6292,8 @@
 					deleteMessage(taskItemInContext);
 				} else if (link.getAttribute("data-action") === "Block") {
 					blockUser(taskItemInContext);
+				} else if (link.getAttribute("data-action") === "History") {
+					getUserHistory(taskItemInContext);
 				} else if (link.getAttribute("data-action") === "Pin") {
 					if (taskItemInContext.classList.contains("pinned")){
 						unpinIt(taskItemInContext);
