@@ -3761,6 +3761,21 @@
 		}
 	}
 
+
+	function timeSince(timestamp) {
+		const secondsPast = Math.round((Date.now() - new Date(timestamp)) / 1000);
+
+		if (secondsPast < 60) {
+			return `${secondsPast} seconds ago`;
+		} else if (secondsPast < 3600) {
+			return `${Math.round(secondsPast / 60)} minutes ago`;
+		} else if (secondsPast < 86400) {
+			return `${Math.round(secondsPast / 3600)} hours ago`;
+		} else {
+			return `${Math.round(secondsPast / 86400)} days ago`;
+		}
+	}
+
 	try {
 		if (window.location.host !== "socialstream.ninja"){ // don't check if not private hosted, since it won't exist
 			var script = document.createElement('script');
@@ -3954,10 +3969,12 @@
 			  } else {
 				messagesFor.innerText = "Message history";
 			  }
-
+	
 			  data.userHistory.forEach(msg => {
-				const para = document.createElement("p");
-				para.textContent = `${msg.chatmessage} (Sent: ${msg.timestamp})`;
+				const para = document.createElement("p"); 
+				console.log(timeSince(msg.timestamp));
+				console.log(msg.timestamp);
+				para.innerHTML = msg.chatmessage+" - <small><i>Sent: "+timeSince(msg.timestamp)+"</i></small>";
 				messagesList.appendChild(para);
 			  });
 			  modal.style.display = "block";
@@ -6580,35 +6597,35 @@
 		} catch(e){}
 	}
 
-function limitStringWarning(string, maxLength) {
-	let count = 0;
-	let result = '';
+	function limitStringWarning(string, maxLength) {
+		let count = 0;
+		let result = '';
 
-	for (let i = 0; i < string.length; ) {
-		let char = string[i];
-		let charCode = string.charCodeAt(i);
+		for (let i = 0; i < string.length; ) {
+			let char = string[i];
+			let charCode = string.charCodeAt(i);
 
-		if (charCode >= 0xd800 && charCode <= 0xdbff) {
-			i++;
-			char += string[i];
+			if (charCode >= 0xd800 && charCode <= 0xdbff) {
+				i++;
+				char += string[i];
+			}
+
+			let charLength = char.length;
+
+			if (count + charLength <= maxLength) {
+				result += char;
+				count += charLength;
+				i++;
+			} else {
+				break;
+			}
 		}
-
-		let charLength = char.length;
-
-		if (count + charLength <= maxLength) {
-			result += char;
-			count += charLength;
-			i++;
-		} else {
-			break;
+		
+		if (result.length < string.length) {
+			return true
 		}
+		return false;
 	}
-	
-	if (result.length < string.length) {
-		return true
-	}
-	return false;
-}
 
 
 	</script>

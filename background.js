@@ -6589,42 +6589,48 @@ function initDatabase() {
 }
 
 function addMessageDB(message) {
-  const transaction = db.transaction([storeName], 'readwrite');
-  const store = transaction.objectStore(storeName);
-  const request = store.add({ ...message, timestamp: new Date() });
-
+	if (settings.disableDB){
+		return;
+	}
+	const transaction = db.transaction([storeName], 'readwrite');
+	const store = transaction.objectStore(storeName);
+	const request = store.add({ ...message, timestamp: new Date() });
  // request.onsuccess = () => console.log('Message added to the database.');
  // request.onerror = e => console.error('Error adding message to the database: ', e.target.error);
 }
 
 function getMessagesDB(chatname, type, page = 0, pageSize = 10, callback) {
-  const transaction = db.transaction([storeName], 'readonly');
-  const store = transaction.objectStore(storeName);
-  const index = store.index('unique_user');
+	if (settings.disableDB){
+		return;
+	}
 
-  const range = IDBKeyRange.only([chatname, type]);
-  const request = index.openCursor(range);
-  const results = [];
+	const transaction = db.transaction([storeName], 'readonly');
+	const store = transaction.objectStore(storeName);
+	const index = store.index('unique_user');
 
-  let count = 0;
-  const skip = page * pageSize;
+	const range = IDBKeyRange.only([chatname, type]);
+	const request = index.openCursor(range);
+	const results = [];
 
-  request.onsuccess = event => {
-    const cursor = event.target.result;
-    if (cursor) {
-      if (count >= skip && count < skip + pageSize) {
-        results.push(cursor.value);
-      }
-      count++;
-      cursor.continue();
-    } else if (callback){
-      callback(results); // Execute callback function with the results
-    }
-  };
+	let count = 0;
+	const skip = page * pageSize;
 
-  request.onerror = e => {
-    console.error('Error fetching messages: ', e.target.error);
-  };
+	request.onsuccess = event => {
+		const cursor = event.target.result;
+		if (cursor) {
+		  if (count >= skip && count < skip + pageSize) {
+			results.push(cursor.value);
+		  }
+		  count++;
+		  cursor.continue();
+		} else if (callback){
+		  callback(results); // Execute callback function with the results
+		}
+	};
+
+	request.onerror = e => {
+		console.error('Error fetching messages: ', e.target.error);
+	};
 }
 
 // Initialize the database
