@@ -2842,7 +2842,7 @@ function processIncomingRequest(request, UUID=false){
 			if (isExtensionOn){ 
 				getMessagesDB(request.value.chatname, request.value.type, page = 0, pageSize = 10, function(response){
 					if (isExtensionOn){ 
-						sendDataP2P({"userHistory": response}); 
+						sendDataP2P({"userHistory": response}, UUID); 
 					}
 				});
 			}

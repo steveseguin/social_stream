@@ -3944,7 +3944,9 @@
 			return;
 		} else if ("userHistory" in data){ //delete messages, but also block user. remote, so we won't sync,
 			console.log(data.userHistory);
-			
+			if (isOBSBrowserSource){
+				return;
+			}
 			let modal = document.getElementById("messageModal");
 			if (!modal){
 				modal = document.createElement("div");

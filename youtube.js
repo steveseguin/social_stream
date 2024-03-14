@@ -203,7 +203,8 @@
 			try {
 				chatmessage = getAllContentNodes(ele.querySelector("#message, .seventv-yt-message-content"));
 			} catch (e) {
-				console.error(e);
+				//console.warn(ele);
+				//console.error(e);
 			}
 		} else {
 			try {
@@ -218,7 +219,7 @@
 				}
 				chatmessage = getAllContentNodes(cloned);
 			} catch (e) {
-				console.error(e);
+				//console.error(e);
 			}
 		}
 
@@ -237,11 +238,10 @@
 
 		var chatmembership = "";
 		
-		
-		
 		try {
 			chatmembership = ele.querySelector(".yt-live-chat-membership-item-renderer #header-subtext").innerHTML;
-		} catch (e) {}
+		} catch (e) {
+		}
 
 		var treatAsMemberChat = false;
 		if (!chatmembership && settings.allmemberchat){
@@ -268,7 +268,9 @@
 		} catch (e) {}
 
 		if (chatsticker) {
-			chatdonation = escapeHtml(ele.querySelector("#purchase-amount-chip").innerText);
+			try {
+				chatdonation = escapeHtml(ele.querySelector("#purchase-amount-chip").innerText);
+			} catch (e) {	}
 		}
 
 		var chatbadges = [];
@@ -351,6 +353,19 @@
 		}
 		
 		
+		if (giftedmemembership && !hasDonation){
+			try {
+				const match = giftedmemembership.innerText.match(/\b\d+\b/);
+				hasDonation = match ? parseInt(match[0], 10) : null;
+				if (hasDonation){
+					hasDonation += " "+ getTranslation("gifted-memberships", "Gifted");
+				}
+			} catch(e){
+				hasDonation = "";
+			}
+		}
+		
+		
 
 		if (chatsticker) {
 			if (!settings.textonlymode) {
@@ -402,6 +417,8 @@
 		data.subtitle = subtitle;
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube";
+		
+		
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, {
 				"message": data
