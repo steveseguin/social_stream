@@ -327,7 +327,7 @@
 					chatmessage = giftedmemembership.textContent;
 				}
 			} else {
-				hasMembership =  getTranslation("new-member", "NEW MEMBER!");
+				hasMembership =  getTranslation("new-member", "NEW MEMBER");
 				if (!settings.textonlymode) {
 					chatmessage = "<i>" + (chatmessage||chatmembership) + "</i>";
 				} else {

@@ -32,6 +32,7 @@
     --donation-label-color: #fff;
     --donation-label-text: 'Donation';
 	--youtubedonation-label-text: 'SUPERCHAT';
+	--youtubemember-label-text: 'MEMBERSHIP';
     --donation-shadow-color: #fff;
 	
 	--cheer-color: #5a4211;
@@ -553,11 +554,19 @@ span.hl-badge{
     content: var(--youtubedonation-label-text);
 }
 
+
 .membership {
     padding: 10px 10px 5px 10px;
-	font-size: 20px !important;
+	font-size: 18px !important;
 }
 
+.donation.membership::before {
+    content: var(--youtubemember-label-text);
+	
+}
+.donation.membership{
+	padding: 28px 10px 5px 10px;
+}
 .membership::before {
     content: '';
 }
@@ -1779,7 +1788,11 @@ span.zero-width-parent img.zero-width-emote {
 					if (data.type === "twitch"){
 						donationHTML = '<div class="cheer">' + data.hasDonation + '</div>';
 					} else if (data.type === "youtube"){
-						donationHTML = '<div class="donation youtubedonation">' + data.hasDonation + '</div>';
+						if (memebershipHTML){
+							donationHTML = '<div class="donation membership">' + data.hasDonation + '</div>';
+						} else {
+							donationHTML = '<div class="donation youtubedonation">' + data.hasDonation + '</div>';
+						}
 					} else {
 						donationHTML = '<div class="donation">' + data.hasDonation + '</div>';
 					}
@@ -1872,7 +1885,7 @@ span.zero-width-parent img.zero-width-emote {
 						 + '<div id="message" '+styleOverride+' class="hl-message" dir="'+textDirection+'" >' + data.chatmessage + '</div>'
 						 + avatarImg
 						 + addImage
-						 + donationHTML + memebershipHTML +'</div>';
+						 + (donationHTML || memebershipHTML) +'</div>';
 						 
 					
 					
@@ -1889,7 +1902,7 @@ span.zero-width-parent img.zero-width-emote {
 						 + '<div id="message" '+styleOverride+' class="hl-message" dir="'+textDirection+'" >' + data.chatmessage + '</div>'
 						 + avatarImg
 						 + addImage
-						 + donationHTML + memebershipHTML +'</div>';
+						 + (donationHTML || memebershipHTML) +'</div>';
 						 
 					if (data.hasDonation || memebershipHTML){
 						document.getElementById("newmessage").classList.add("dono");
