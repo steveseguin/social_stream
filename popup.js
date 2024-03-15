@@ -496,9 +496,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	var iii = document.querySelectorAll("button[data-action]");
 	for (var i=0;i<iii.length;i++){
-		iii[i].onclick = function(){
+		iii[i].onclick = function(e){
 			var msg = {};
 			msg.cmd = this.dataset.action;
+			msg.ctrl = e.ctrlKey || false;
+			
 			msg.value = this.dataset.value || null;
 			if (msg.cmd == "fakemsg"){
 				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe

@@ -1514,6 +1514,9 @@ chrome.runtime.onMessage.addListener(
 				sendResponse({"state":isExtensionOn});
 				var data = {};
 				data.action = "clearAll";
+				if (request.ctrl){
+					data.ctrl = true;
+				}
 				try {
 					sendDataP2P(data);
 				} catch(e){console.error(e);}

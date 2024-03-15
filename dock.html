@@ -4178,6 +4178,9 @@
 				document.getElementById("output").innerHTML = "";
 				autoShowQueue = [];
 				selectedQueue = [];
+				if (data.ctrl){
+					document.getElementById("pinned").innerHTML = "";
+				}
 				sendDataP2P(false);
 				updateQueueButton();
 				clearTTS();
