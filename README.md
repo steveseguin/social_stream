@@ -472,15 +472,15 @@ Lastly, please note that you will need to enable the MIDI option in the menu opt
 
 ### Server API support
 
-You can send messages to Social Stream via the hosted server ingest API, and you can also send messages from Social Stream to remote third-parties. 
+You can send messages to Social Stream via the hosted server ingest API, and you can also send messages from Social Stream to remote third-parties. Many options are supported; perhaps more than what is listed below.
 
-So if you can a donation webhook, you can push those notifications to Social Stream. You can also use a third-party service to overlay messages captured by Social Stream. More below.
+A simple use case is to ingest a donation from a third party via webhook. You can push those dono notifications to Social Stream and show as an overlay. You can also use a third-party service to overlay messages captured by Social Stream. More below.
 
 #### Social Stream's server API (ingest and clear messages via remote request)
 
 If using the MIDI API isn't something you can use, you can also check out the hosted API service to send messages to SocialStream, which will be redirected to your social live chat sites.  This API works with a Stream Deck or custom applications.
 
-This API end point supports WSS, HTTPS GET, and HTTP POST (JSON).  Support for this API must be toggled on in the menu settings (or by adding `&server` to the dock.html page).
+This API end point supports WSS, HTTPS GET, and HTTP POST (JSON).  Support for this API must be toggled on in the menu settings; there's several different toggles you may want to enable, depending on which HTTP/WSS API you want to use
 
 ##### A couple common examples
  
@@ -506,11 +506,11 @@ More functionality can be added on request.
 
 #### Remote server API support (publish messages to third parties)
 
-Remote API support is available via dock page, configured by URL parameters. In the future, some support can be added to the extension itself directly, so no dock page needs to be open.  You can currently auto-publish messages via the dock with the &autoshow parameter, but otherwise messages will be issues to the remote API only when a message is selected manually.
+Remote API support is available via dock page or extensions.  You can currently auto-publish messages via the dock with the &autoshow parameter, but there's also an option to publish to the featured chat via the dock directly. To capture these messages, you can use the websocket API server, which requires enabling a toggle in the General mechanics section. You can also publish messages via POST/PUT to an HTTP webserver, rather than connecting with websockets; there's a few options for singular / h2r specifically.
 
 For some images provided in the outgoing data-structure, the assumed host location for certain files/images, if none provided, should be `https://socialstream.ninja/`.
 
-More destinations available on request.
+If wanting to connect to the websocket server, to publish or listen to messages, you can refer to the code for actual examples.  However, a simple way to listen for messages broadcasted by the extension is with `wss://api.overlay.ninja/join/SESSIONIDHERE/4`, which implies joining the room with our session ID as the name, and then subscribing to channel 4 for messages.  `wss://api.overlay.ninja/join/SESSIONIDHERE/1/2` on the other hand would listen on channel 1, and publish to channel 2.
 
 ##### Singular Live
 
