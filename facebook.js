@@ -47,11 +47,6 @@
 		}
 	}
 
-
-	// <div aria-label="Link preview" aria-modal="true" role="dialog" 
-	
-	
-
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
@@ -88,7 +83,7 @@
 		return resp;
 	}
 	
-
+	var dupCheck2 = [];
 
 	async function processMessage(ele) {
 		if (ele == window) {
@@ -200,8 +195,27 @@
 			data.type = "facebook";
 		}
 		
-		console.log(data);
 		
+		var entry = data.chatname + "+" + data.hasDonation + "+" + data.chatmessage;
+		var entryString = JSON.stringify(entry);
+
+		if (!dupCheck2.includes(entryString)) {
+			dupCheck2.push(entryString);
+			
+			setTimeout(() => {
+				const index = dupCheck2.indexOf(entryString);
+				if (index > -1) {
+					dupCheck2.splice(index, 1);
+				}
+			}, 15000);
+
+			//console.log(data);
+		} else {
+			return;
+		}
+	//	console.log([...dupCheck2]);
+		
+		//console.warn(data);
 		pushMessage(data);
 	}
 	
@@ -268,6 +282,7 @@
 	);
 
 	var dupCheck = [];
+	
 	
 	var lastURL = "";
 	var processed = 0;
