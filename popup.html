@@ -847,13 +847,26 @@
 									<span class="slider round"></span>
 								</label><span data-translate="force-transparent-background">⭕ Force transparent background (and hide scrollbar)
 							</span></div>
-							<div>
+							<div title="This won't work in Chrome">
 								<label class="switch">
 									<input type="checkbox" data-param1="opacity=0.3">
 									<span class="slider round"></span>
 								</label><span data-translate="make-entire-page-partially-transparent">👻 Make entire page partially transparent
 							</span></div>
+							<div title="This won't work in Chrome">
+								<label class="switch">
+									<input type="checkbox" data-param1="chroma=0006">
+									<span class="slider round"></span>
+								</label><span data-translate="translucent-page-background">⚪ Translucent page background
+							</span></div>
 							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="chroma">
+									<span class="slider round"></span>
+								</label><span data-translate="green-page-background">🟢 Green page background
+							</span></div>
+							
+							<div title="This won't work in Chrome">
 								<label class="switch">
 									<input type="checkbox" data-param1="lightmode">
 									<span class="slider round"></span>
@@ -865,13 +878,7 @@
 									<span class="slider round"></span>
 								</label><span data-translate="dark-mode--black-page-background">⚫ Dark mode — Black page background
 							</span></div>
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-param1="chroma">
-									<span class="slider round"></span>
-								</label><span data-translate="green-page-background">🟢 Green page background
-							</span></div>
-
+							
 						</div>
 					</div>
 				</div>
@@ -3052,8 +3059,6 @@ The first name listed may be used as the host's name in stream when their name i
 			</div>
 		</div>
 
-		
-
 		<div class="wrapper">
 			<div class="collapsible">
 				<input type="checkbox" class="collapsible-input" id="wrapper-export-options">
@@ -3102,6 +3107,27 @@ The first name listed may be used as the host's name in stream when their name i
 				</div>
 			</div>
 		</div>
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-session-options">
+				<label class="collapsible-label" for="wrapper-session-options"><span data-translate="session-options">🔑 Session Options</span></label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group">
+							<div class="textInputContainer" style="width: 95%" title="Change your session ID value. MUST BE UNIQUE">
+								<input type="text" id="sessionid" class="textInput" autocomplete="off" placeholder="Session ID goes here" data-special="session">
+								<label for="sessionid"><span data-translate="custombeep">&gt; Your unique session ID goes here.</span></label>
+							</div>
+							<div class="textInputContainer" style="width: 95%" title="Set or change your session password">
+								<input type="password" id="sessionpassword" class="textInput" autocomplete="off" placeholder="Session password goes here" data-special="password">
+								<label for="sessionpassword"><span data-translate="custombeep">&gt; Set or change your session password</span></label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+						
 		<a href="https://www.buymeacoffee.com/steveseguin" target="_blank"><img src="./icons/buymeacoffee.png" alt="Buy Me A Coffee" style="float: right; padding-left: 10px; padding-bottom: 10px;height: 33px !important;width: 119.35px !important;" ></a>
 		<p style="text-align: right;padding-bottom: 11px;"><span data-translate="visit-us-at">
 			Visit us at </span><a href="https://discord.socialstream.ninja" target="_blank"><span data-translate="discord">Discord</span><img class="icon" src="discord.png"></a><br>

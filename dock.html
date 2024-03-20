@@ -1016,7 +1016,7 @@
 			padding-bottom: 0px;
 			display: flex;
 			justify-content: center;
-			background-color: var(--menu-background-color);
+			background: var(--menu-background-color);
 			box-shadow: var(--menu-border-color);
 			z-index: 2;
 		}
@@ -3374,8 +3374,8 @@
 
 	if (urlParams.has("transparent") || urlParams.has("transparency")){
 		document.documentElement.style.setProperty("--background-color", "#0000", "important");
-		document.documentElement.style.setProperty("--menu-background-color", "#0000", "important");
-		document.documentElement.style.setProperty("--menu-border-color", "0 0 0 #0000", "important");
+		document.documentElement.style.setProperty("--menu-background-color", "linear-gradient(to right, #0000, #0008, #0000)", "important");
+		//document.documentElement.style.setProperty("--menu-border-color", "0 0 0 #0000", "important");
 		document.getElementById("main").style.overflow = "hidden"; // transparent auto hides the scroll bar; i guess that makes sense, since likely used in studio software then.
 		try {
 			mainOutputWindow.style.overflow = "hidden";

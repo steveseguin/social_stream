@@ -1599,14 +1599,28 @@ chrome.runtime.onMessage.addListener(
 			} else if (request.cmd && request.cmd === "sidUpdated") {
 				if (request.streamID){
 					streamID = request.streamID;
+					if (isSSAPP){
+						if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
+							chrome.storage.sync.set({
+								streamID: streamID || ""
+							});
+						}
+					}
 				}
 				if ("password" in request){
 					password = request.password;
+					if (isSSAPP){
+						if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
+							chrome.storage.sync.set({
+								password: password || ""
+							});
+						}
+					}
 				}
 				
 				if ("state" in request){
 					isExtensionOn = request.state;
-				}
+				} 
 				if (iframe){
 					if (iframe.src){
 						iframe.src = null;
@@ -1618,7 +1632,8 @@ chrome.runtime.onMessage.addListener(
 				if (isExtensionOn){
 					loadIframe(streamID, password);
 				}
-
+				// isSSAPP
+				
 				sendResponse({"state":isExtensionOn});
 			} else {
 				sendResponse({"state":isExtensionOn});

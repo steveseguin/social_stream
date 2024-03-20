@@ -557,7 +557,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 });
 var streamID = false;
 function update(response, sync=true){
-	//console.log("update-> response: ",response);
+	console.log("update-> response: ",response);
 	if (response !== undefined){
 		
 		
@@ -572,6 +572,9 @@ function update(response, sync=true){
 			if (devmode){
 				baseURL = "file:///C:/Users/steve/Code/social_stream/";
 			}
+			
+			document.getElementById("sessionid").value = response.streamID;
+			document.getElementById("sessionpassword").value = response.password || "";
 			
 			//document.getElementById("version").innerHTML = "Stream ID is : "+response.streamID;
 			document.getElementById("dock").raw = baseURL+"dock.html?session="+response.streamID+password;
@@ -1237,6 +1240,24 @@ function updateSettings(ele, sync=true){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting", setting: ele.dataset.numbersetting, "value": ele.value}, function (response) {});
 		}
 		return;
+	} else if (ele.dataset.special){
+		
+		if (ele.dataset.special==="session"){
+			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
+				chrome.storage.sync.set({
+					streamID: ele.value
+				});
+			}
+			chrome.runtime.sendMessage({cmd: "sidUpdated", streamID: ele.value}, function (response) {console.log("streamID updated");});
+			
+		} else if (ele.dataset.special==="password"){
+			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
+				chrome.storage.sync.set({
+					password: ele.value
+				});
+			}
+			chrome.runtime.sendMessage({cmd: "sidUpdated", password: ele.value || ""}, function (response) {console.log("Password updated");});
+		}
 	}
 	
 
