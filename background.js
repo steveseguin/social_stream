@@ -152,6 +152,13 @@ if (typeof(chrome.runtime)=='undefined'){
 		alert(data.message);
 	};
 	
+	window.showSaveFilePicker = async function(opts){
+		ipcRenderer.invoke('show-save-dialog', opts).then((filePath) => {
+			console.log(filePath);
+			return filePath;
+		});
+	}
+	
 	var onMessageCallback = function(a,b,c){};
 	
 	chrome.runtime.onMessage.addListener = function(callback){
