@@ -152,12 +152,11 @@ if (typeof(chrome.runtime)=='undefined'){
 		alert(data.message);
 	};
 	
-	window.showSaveFilePicker = async function(opts){
-		ipcRenderer.invoke('show-save-dialog', opts).then((filePath) => {
-			console.log(filePath);
-			return filePath;
-		});
-	}
+	window.showSaveFilePicker = async function(opts) {
+		const filePath = await ipcRenderer.invoke('show-save-dialog', opts);
+		console.log(filePath);
+		return filePath;
+	};
 	
 	var onMessageCallback = function(a,b,c){};
 	
@@ -607,9 +606,13 @@ async function overwriteFile(data=false) {
 	  
 	  newFileHandle = await window.showSaveFilePicker(opts);
   } else if (newFileHandle && data){
-	  const writableStream = await newFileHandle.createWritable();
-	  await writableStream.write(data);
-	  await writableStream.close();
+	  if (typeof newFileHandle == "string"){
+		  ipcRenderer.send('write-to-file', { filePath: newFileHandle, data: data });
+	  } else {
+		  const writableStream = await newFileHandle.createWritable();
+		  await writableStream.write(data);
+		  await writableStream.close();
+	  }
   }
 }
 
@@ -632,9 +635,13 @@ async function overwriteSavedNames(data=false) {
   } else if (newSavedNamesFileHandle && data){
 	  if (uniqueNameSet.includes(data)){return;}
 	  uniqueNameSet.push(data);
-	  const writableStream = await newSavedNamesFileHandle.createWritable();
-	  await writableStream.write(uniqueNameSet.join("\r\n"));
-	  await writableStream.close();
+	  if (typeof newSavedNamesFileHandle == "string"){
+		  ipcRenderer.send('write-to-file', { filePath: newSavedNamesFileHandle, data: uniqueNameSet.join("\r\n") });
+	  } else {
+		  const writableStream = await newSavedNamesFileHandle.createWritable();
+		  await writableStream.write(uniqueNameSet.join("\r\n"));
+		  await writableStream.close();
+	  }
   }
 }
 
@@ -690,10 +697,14 @@ async function overwriteFileExcel(data=false) {
 		}
 		var xlsblob = new Blob([buffer], {type:"application/octet-stream"});
 		delete array; delete buffer; delete xlsbin;
-
-		const writableStream = await newFileHandleExcel.createWritable();
-		await writableStream.write(xlsblob);
-		await writableStream.close();
+ 
+		if (typeof newFileHandleExcel == "string"){
+			ipcRenderer.send('write-to-file', { filePath: newFileHandleExcel, data: xlsblob });
+		} else {
+			const writableStream = await newFileHandleExcel.createWritable();
+			await writableStream.write(xlsblob);
+			await writableStream.close();
+		}
 
 	} else if (newFileHandleExcel && data){
 
@@ -753,10 +764,13 @@ async function exportSettings(){
 		}
 		fileExportHandler = await window.showSaveFilePicker(opts);
 
-		const writableStream = await fileExportHandler.createWritable();
-		await writableStream.write(JSON.stringify(item));
-		await writableStream.close();
-
+		if (typeof fileExportHandler == "string"){
+			ipcRenderer.send('write-to-file', { filePath: fileExportHandler, data: JSON.stringify(item) });
+		} else {
+			const writableStream = await fileExportHandler.createWritable();
+			await writableStream.write(JSON.stringify(item));
+			await writableStream.close();
+		}
 	})
 }
 
@@ -2705,9 +2719,14 @@ async function downloadWaitlist(){
 	}
 	fileExportHandler = await window.showSaveFilePicker(opts);
 	var filesContent = objectArrayToCSV(waitlist,"\t");
-	const writableStream = await fileExportHandler.createWritable();
-	await writableStream.write(filesContent);
-	await writableStream.close();
+	
+	if (typeof fileExportHandler == "string"){
+		ipcRenderer.send('write-to-file', { filePath: fileExportHandler, data: filesContent });
+	} else {
+		const writableStream = await fileExportHandler.createWritable();
+		await writableStream.write(filesContent);
+		await writableStream.close();
+	}
 
 }
 
