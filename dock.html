@@ -2291,7 +2291,6 @@
 		}
 		var toneEle = document.getElementById(tonename);
 		if (toneEle){
-			toneEle.volume = 1.0;
 			toneEle.play().then(()=>{
 			 // beep
 			}).catch((e)=>{
@@ -2472,6 +2471,14 @@
 		updateAudioSource(urlParams.get("custombeep"));
 	}
 	
+	if (urlParams.has("beepvolume")){
+		try {
+			document.getElementById('testtone').volume = parseInt(urlParams.get("beepvolume"))/100 || 0;
+		} catch(e){
+			console.error(e);
+		}
+	}
+	
 	var beep = false;
 	if (urlParams.has("beep")){ // removes HTML from messages, donations, and names.
 		beep = true;
@@ -2481,6 +2488,8 @@
 		ele.title = 'Main — 🔕 Stop beeping when there is a new message';
 		playtone();
 	}
+	
+	
 
 	var stylizeEmoji = false;
 	if (urlParams.has("emoji") || urlParams.has("emojis")){

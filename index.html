@@ -1108,7 +1108,6 @@ span.zero-width-parent img.zero-width-emote {
 		}
 		var toneEle = document.getElementById(tonename);
 		if (toneEle){
-			toneEle.volume = 1.0;
 			toneEle.play().then(()=>{
 			 // beep
 			}).catch((e)=>{
@@ -1120,14 +1119,20 @@ span.zero-width-parent img.zero-width-emote {
 	if (urlParams.get("custombeep")){
 		updateAudioSource(urlParams.get("custombeep"));
 	}
+	
+	if (urlParams.has("beepvolume")){
+		try {
+			document.getElementById('testtone').volume = parseInt(urlParams.get("beepvolume"))/100 || 0;
+		} catch(e){
+			console.error(e);
+		}
+	}
 		
 	var beep = false;
 	if (urlParams.has("beep")){ // removes HTML from messages, donations, and names.
 		beep = true;
 		playtone();
 	}
-	
-	
 	
 	try {
 		if (window.location.host !== "socialstream.ninja"){ // don't check if not private hosted, since it won't exist
