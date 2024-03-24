@@ -1713,6 +1713,16 @@ The first name listed may be used as the host's name in stream when their name i
 									<span class="slider round"></span>
 								</label><span data-translate="read-out-urls">🗣️ Read out URLs rather than saying "link".
 							</span></div>
+							<div title="Note: You must first interact with the dock-page for any audio to be audible.">
+								<label class="switch">
+									<input type="checkbox" data-param2="beep">
+									<span class="slider round"></span>
+								</label><span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message
+							</span></div>
+							<div class="textInputContainer" style="width: 95%" title="Specify a URL for a custom beep audio file">
+								<input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-textparam2="custombeep">
+								<label for="custombeep"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
+							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-param2="alignright">
@@ -3114,14 +3124,21 @@ The first name listed may be used as the host's name in stream when their name i
 				<div class="collapsible-text">
 					<div class="options">
 						<div class="options_group">
-							<div class="textInputContainer" style="width: 95%" title="Change your session ID value. MUST BE UNIQUE">
+							<center>💀☠️ <span style='color:red'>PLEASE DO NOT CHANGE YOU SESSION ID</span> 💀☠️<br />...unless you know exactly what you are doing.</center>
+							<br />
+							<div class="textInputContainer" style="width: 95%" title="Edit to change your session ID value. MUST BE UNIQUE">
 								<input type="text" id="sessionid" class="textInput" autocomplete="off" placeholder="Session ID goes here" data-special="session">
-								<label for="sessionid"><span data-translate="custombeep">&gt; Your unique session ID goes here.</span></label>
+								<label for="sessionid"><span data-translate="unique-session-id">&gt; Your unique session ID is below.</span></label>
 							</div>
+							<i>Changing you session ID may break things</i><br />
+							<br />
+							<h3><span data-translate="set-a-password">Set a password</span></h3><span>
+							
 							<div class="textInputContainer" style="width: 95%" title="Set or change your session password">
 								<input type="password" id="sessionpassword" class="textInput" autocomplete="off" placeholder="Session password goes here" data-special="password">
-								<label for="sessionpassword"><span data-translate="custombeep">&gt; Set or change your session password</span></label>
+								<label for="sessionpassword"><span data-translate="unique-session-password">&gt; Set or change your session password</span></label>
 							</div>
+							<i>It's okay to set a custom password.</i>
 						</div>
 					</div>
 				</div>

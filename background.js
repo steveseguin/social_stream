@@ -1365,6 +1365,14 @@ chrome.runtime.onMessage.addListener(
 							});
 						}
 					}
+					// if ((request.setting == "viplistuserstoggle") || (request.setting == "viplistusers")){
+						// if (settings.viplistusers && settings.viplistuserstoggle){
+							// settings.viplistusers.textsetting.split(",").forEach(user=>{
+								// user = user.trim();
+								// sendToDestinations({"vipUser": {chatname:user}});
+							// });
+						// }
+					// }
 				}
 				
 			} else if ("inject" in request){
@@ -2890,6 +2898,57 @@ function processIncomingRequest(request, UUID=false){
 					}
 				});
 			}
+		} else if (request.action === "toggleVIPUser" && request.value && request.value.chatname && request.value.type){
+			// Initialize viplist settings if not present
+			if (!settings.viplistusers) {
+				settings.viplistusers = { textsetting: "" };
+			}
+
+			const viplist = settings.viplistusers.textsetting.split(",").map(user => {
+				const parts = user.split(":").map(part => part.trim());
+				return { username: parts[0], type: parts[1] || "*" };
+			});
+
+			const userToVIP = { username: request.value.chatname, type: request.value.type };
+			const isAlreadyVIP = viplist.some(({ username, type }) => 
+				userToVIP.username === username && (userToVIP.type === type || type === "*")
+			);
+
+			if (!isAlreadyVIP){
+				// Update viplist settings
+				settings.viplistusers.textsetting += (settings.viplistusers.textsetting ? "," : "") + userToVIP.username + ":" + userToVIP.type;
+				chrome.storage.local.set({ settings: settings });
+				// Check for errors in chrome storage operations
+				if (chrome.runtime.lastError) {
+					console.error("Error updating settings:", chrome.runtime.lastError.message);
+				}
+			}
+
+			if (isExtensionOn){ 
+				sendToDestinations({"vipUser": userToVIP});
+			}
+		} else if (request.action === "getChatSources"){
+			if (isExtensionOn && chrome.debugger){ 
+				chrome.tabs.query({}, function(tabs) {
+					chrome.runtime.lastError;
+					var tabsList = [];
+					for (var i=0;i<tabs.length;i++){
+						try {
+							if (!tabs[i].url){continue;}
+							if (tabs[i].url.startsWith("https://socialstream.ninja/")){continue;}
+							if (tabs[i].url.startsWith("https://www.youtube.com/watch") && !tabs[i].url.includes("&socialstream")){continue;}
+							if (tabs[i].url.startsWith("https://twitch.tv") && !tabs[i].url.startsWith("https://twitch.tv/popout/")){continue;}
+							if (tabs[i].url.startsWith("https://www.twitch.tv") && !tabs[i].url.startsWith("https://www.twitch.tv/popout/")){continue;}
+							if (tabs[i].url.startsWith("file://") && tabs[i].url.includes("dock.html?")){continue;}
+							if (tabs[i].url.startsWith("file://") && tabs[i].url.includes("index.html?")){continue;}
+							if (tabs[i].url.startsWith("chrome-extension")){continue;}
+							tabsList.push(tabs[i]);
+						} catch(e){
+						}
+					}
+					sendDataP2P({"tabsList": tabsList}, UUID); 
+				});
+			}
 		} else if (request.action === "blockUser" && request.value && request.value.chatname && request.value.type){
 			// Initialize blacklist settings if not present
 			if (!settings.blacklistusers) {
@@ -3204,14 +3263,27 @@ function processResponse(data, reverse=false, metadata=null){
 		for (var i=0;i<tabs.length;i++){
 			try {
 				if (("tid" in data) && (data.tid!==false)){ // if an action-response, we want to only respond to the tab that originated it
-					if (reverse){
-						if ( data.tid === tabs[i].id){
-							continue;
-						} else if (data.url && tabs[i].url && (data.url === tabs[i].url)){ // don't send to the exact same URL; not just the same tab, incase the tab is open twice accidentally.
+				
+					if (typeof data.tid == "object"){
+						
+						if (reverse){
+							if (data.tid.includes(tabs[i].id.toString())){
+								continue;
+							}
+						} else if (!data.tid.includes(tabs[i].id.toString())){
 							continue;
 						}
-					} else if ( data.tid !== tabs[i].id){
-						continue;
+						
+					} else {
+						if (reverse){
+							if ( data.tid === tabs[i].id){
+								continue;
+							} else if (data.url && tabs[i].url && (data.url === tabs[i].url)){ // don't send to the exact same URL; not just the same tab, incase the tab is open twice accidentally.
+								continue;
+							}
+						} else if ( data.tid !== tabs[i].id){
+							continue;
+						}
 					}
 				}
 				if (!tabs[i].url){continue;}
@@ -3671,6 +3743,22 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 
 			if (isBlocked){
 				return null;
+			}
+		}
+		
+		if (settings.viplistuserstoggle && data.chatname && settings.viplistusers){
+			const viplist = settings.viplistusers.textsetting.split(",").map(user => {
+				const parts = user.toLowerCase().split(":").map(part => part.trim());
+				return { username: parts[0], type: parts[1] || "*" };
+			});
+
+			const isVIP = viplist.some(({ username, type }) => 
+				data.chatname.toLowerCase().trim() === username && 
+				(data.type === type || type === "*")
+			);
+
+			if (isVIP){
+				data.vip = true;
 			}
 		}
 		
@@ -6636,9 +6724,13 @@ function addMessageDB(message) {
 	if (settings.disableDB){
 		return;
 	}
-	const transaction = db.transaction([storeName], 'readwrite');
-	const store = transaction.objectStore(storeName);
-	const request = store.add({ ...message, timestamp: new Date() });
+	try {
+		const transaction = db.transaction([storeName], 'readwrite');
+		const store = transaction.objectStore(storeName);
+		const request = store.add({ ...message, timestamp: new Date() });
+	} catch(e){
+		
+	}
  // request.onsuccess = () => console.log('Message added to the database.');
  // request.onerror = e => console.error('Error adding message to the database: ', e.target.error);
 }
