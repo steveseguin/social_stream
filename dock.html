@@ -1146,7 +1146,15 @@
 			-o-transition: all 0.3s ease 0s;
 			transition: all 0.3s ease 0s;
 		}
-
+		span.zero-width-parent {
+			display: inline-block;
+			width: 0;
+			position:absolute;
+		}
+		span.zero-width-parent img.zero-width-emote {
+			right: 0;
+			position:absolute;
+		}
 		#chatInput{
 			width: 0;
 			top: 2px;
@@ -5778,7 +5786,9 @@
 
 			var imageElements = node.getElementsByTagName("img");
 			for (i = 0; i < imageElements.length; i++) {
-				
+				if (imageElements[i].parentNode && imageElements[i].parentNode.classList.contains("zero-width-parent")){
+					imageElements[i].className = "zero-width-emote";
+				}
 				if (imageElements[i].onerror){continue;}
 				if (!imageElements[i].title && imageElements[i].alt){
 					imageElements[i].title = imageElements[i].alt;
@@ -5787,6 +5797,7 @@
 					imageElements[i].srcBackup = imageElements[i].src;
 					imageElements[i].src = imageElements[i].src.replaceAll("/light/","/dark/");
 				}
+				
 				imageElements[i].onerror = function(){
 					if (this.srcBackup){
 						this.src = this.srcBackup;
