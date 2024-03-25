@@ -121,7 +121,7 @@
 		});
 	}
 
-	function processMessage(ele){
+	function processMessage(ele, retry=false){
 		
 		//console.log(ele);
 
@@ -152,6 +152,11 @@
 		
 
 		if (!msg && !name && !contentimg){
+			if (!retry){
+				setTimeout(function(ele2){
+					processMessage(ele2, true); 
+				},2000, ele);
+			}
 			return;
 		}
 		
@@ -218,6 +223,7 @@
 	
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
+			if (!window.location.href.startsWith("https://pilled.net/comment/")){return;}
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
@@ -232,7 +238,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -243,6 +249,7 @@
 
 	setInterval(function(){
 		try {
+			if (!window.location.href.startsWith("https://pilled.net/comment/")){return;}
 			if (document.querySelector('app-comment-tree-foxhole')){
 				if (!document.querySelector('app-comment-tree-foxhole').marked){
 					document.querySelector('app-comment-tree-foxhole').marked=true;
@@ -250,7 +257,7 @@
 					console.log("CONNECTED chat detected");
 					try {
 					[...document.querySelectorAll('[appnewcommentcreated]')].forEach(ele=>{
-						processMessage(ele);
+						// processMessage(ele);
 					});
 					} catch(e){
 						//
