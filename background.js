@@ -1122,6 +1122,9 @@ async function getBTTVEmotes(url=false){
 
 chrome.runtime.onMessage.addListener(
     async function (request, sender, sendResponseReal) {
+		
+		
+		
 		var response = {};
 		var alreadySet=false;
 		function sendResponse(msg){
@@ -1135,6 +1138,13 @@ chrome.runtime.onMessage.addListener(
 		}
 		log("processing messge:",request);
 		try{
+			
+			if (typeof request !== "object"){
+				console.warn("Request type is not an object");
+				sendResponse({"state": isExtensionOn});
+				return;
+			}
+			
 			if (request.cmd && request.cmd === "setOnOffState") { // toggle the IFRAME (stream to the remote dock) on or off
 				isExtensionOn = request.data.value;
 				
@@ -1374,7 +1384,6 @@ chrome.runtime.onMessage.addListener(
 						// }
 					// }
 				}
-				
 			} else if ("inject" in request){
 				if (request.inject == "mobcrush"){
 					chrome.webNavigation.getAllFrames({tabId: sender.tab.id}, (frames) => {
