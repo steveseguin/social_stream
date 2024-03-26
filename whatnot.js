@@ -70,8 +70,6 @@
 	
 	async function processMessage(ele){
 		
-		//console.log(ele);
-		
 		var chatimg = ""
 
 		try {
@@ -92,14 +90,17 @@
 		try {
 			msg = getAllContentNodes(ele.childNodes[1].childNodes[0].childNodes[1]).trim();
 		} catch(e){
-			//console.error(e);
 		}
 		
 		var chatbadges = [];
 		
-		ele.childNodes[1].childNodes[0].childNodes[0].querySelectorAll("img[alt][src]").forEach(img=>{
-			chatbadges.push(img.src);
-		});
+		try {
+			ele.childNodes[1].childNodes[0].childNodes[0].querySelectorAll("img[alt][src]").forEach(img=>{
+				chatbadges.push(img.src);
+			});
+		} catch(e){
+			
+		}
 		
 		var data = {};
 		data.chatname = name;
@@ -119,13 +120,9 @@
 		} else {
 			data.event = false;
 		}
-		
-		
 		if (!msg || !name){
 			return;
 		}
-		
-		
 		pushMessage(data);
 	}
 
@@ -181,7 +178,11 @@
 							
 							mutation.addedNodes[i].skip = true;
 
-							processMessage(mutation.addedNodes[i]); 
+							if (mutation.addedNodes[i].children.length){
+								setTimeout(function(xx){
+									processMessage(xx);
+								},100,mutation.addedNodes[i]);
+							}							
 							
 						} catch(e){}
 					}

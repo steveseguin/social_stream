@@ -351,6 +351,13 @@
 			overflow-x: hidden;
 			scrollbar-color:#666 #201c29;
 		}
+		
+		input[type='checkbox']{
+			padding: 0;
+			margin: 0 5px 0 0;
+			width: 15px;
+			height: 15px;
+		}
 
 		::-webkit-scrollbar {
 			width: 15px;
@@ -444,16 +451,7 @@
 			font-size: var(--comment-font-size);
 		}
 		
-		.hl-message img {
-			position:relative;
-			margin: auto 1px;
-			padding: 0;
-			display:inline-block;
-			height: 24px;
-			max-width: 24px;
-			max-height: 24px;
-		}
-		.hl-message svg {
+		.hl-message img, .hl-message svg {
 			position:relative;
 			margin: auto 1px;
 			padding: 0;
@@ -463,18 +461,16 @@
 			max-height: 24px;
 		}
 		
-		.hl-message .hl-content img {
-			max-width: 36px;
-		}
-		.hl-message .hl-content svg {
+		.hl-message .hl-content img, .hl-message .hl-content svg {
 			max-width: 36px;
 		}
 		
-		.notcompactmode .hl-message img{
+		.notcompactmode .hl-message img, .notcompactmode .hl-message svg {
 			height: 19px;
 			max-height: 19px;
 		}
-		.notcompactmode .hl-content img{
+		
+		.notcompactmode .hl-content img, .notcompactmode .hl-content svg{
 			max-width: 28.5px;
 			width: 28.5px;
 		}
@@ -521,7 +517,7 @@
 			background-color:yellow!important;
 		}
 
-		img {
+		img, svg {
 			display:inline-block;
 			max-width: 48px;
 			max-height: 24px;
@@ -1016,7 +1012,7 @@
 			padding-bottom: 0px;
 			display: flex;
 			justify-content: center;
-			background-color: var(--menu-background-color);
+			background: var(--menu-background-color);
 			box-shadow: var(--menu-border-color);
 			z-index: 2;
 		}
@@ -1139,7 +1135,15 @@
 			-o-transition: all 0.3s ease 0s;
 			transition: all 0.3s ease 0s;
 		}
-
+		span.zero-width-parent {
+			display: inline-block;
+			width: 0;
+			position:absolute;
+		}
+		span.zero-width-parent img.zero-width-emote {
+			right: 0;
+			position:absolute;
+		}
 		#chatInput{
 			width: 0;
 			top: 2px;
@@ -1823,8 +1827,11 @@
 		<button id="chatInputButton" class="imgButton imgSmallButton" style="background-image: url(./icons/send_confirm.png);" title="💬 Send this message"></button>
 		<button id="chatClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png);" title="🧹 Clear this message"></button>
 
+		<button id="getChatSources" class="imgButton imgSmallButton" title="Change destination to send messages to. Default is all.">🌐</button>
+		
 		<button id="chatInputLockButton" class="imgButton imgSmallButton" title="🔐 Keep this chat cpen">🔓</button>
 		<button id="chatInputCloseButton" class="imgButton imgSmallButton" style="background-image: url(./icons/close.png);" title="❌ Close this dialog"></button>
+
 	</div>
 
 	<div id="filter_messages_parent" class="popInModal hidden">
@@ -1976,57 +1983,6 @@
 	if (urlParams.has("chartime")){
 		timePerCharacter = parseInt(urlParams.get("chartime")) || 60;
 	}
-	
-	function updateAudioSource(newUrl) {
-		var audioElement = document.getElementById('testtone');
-		var sources = audioElement.getElementsByTagName('source');
-		var extension = newUrl.split('.').pop().toLowerCase();
-		var mimeType;
-
-		switch (extension) {
-			case 'mp3':
-				mimeType = 'audio/mpeg';
-				break;
-			case 'wav':
-				mimeType = 'audio/wav';
-				break;
-			case 'ogg':
-				mimeType = 'audio/ogg';
-				break;
-			case 'aac':
-			case 'm4a':
-				mimeType = 'audio/aac';
-				break;
-			case 'opus':
-				mimeType = 'audio/opus';
-				break;
-			case 'flac':
-				mimeType = 'audio/flac';
-				break;
-			case 'webm':
-				mimeType = 'audio/webm';
-				break;
-			default:
-				console.error('Unsupported file type:', extension);
-				return;
-		}
-		if (sources.length === 1) {
-			sources[0].src = newUrl;
-			sources[0].type = mimeType;
-		} else {
-			audioElement.innerHTML = '';
-			var newSource = document.createElement('source');
-			newSource.src = newUrl;
-			newSource.type = mimeType;
-			audioElement.appendChild(newSource);
-		}
-		audioElement.load();
-	}
-
-	if (urlParams.get("custombeep")){
-		updateAudioSource(urlParams.get("custombeep"));
-	}
-	
 	
 	
 	var badkarma = -1; // no filtering
@@ -2332,7 +2288,6 @@
 		}
 		var toneEle = document.getElementById(tonename);
 		if (toneEle){
-			toneEle.volume = 1.0;
 			toneEle.play().then(()=>{
 			 // beep
 			}).catch((e)=>{
@@ -2463,6 +2418,64 @@
 		animateout = "animate__"+urlParams.get("animateout");
 	}
 	
+	function updateAudioSource(newUrl) {
+		var audioElement = document.getElementById('testtone');
+		var sources = audioElement.getElementsByTagName('source');
+		var extension = newUrl.split('.').pop().toLowerCase();
+		var mimeType;
+
+		switch (extension) {
+			case 'mp3':
+				mimeType = 'audio/mpeg';
+				break;
+			case 'wav':
+				mimeType = 'audio/wav';
+				break;
+			case 'ogg':
+				mimeType = 'audio/ogg';
+				break;
+			case 'aac':
+			case 'm4a':
+				mimeType = 'audio/aac';
+				break;
+			case 'opus':
+				mimeType = 'audio/opus';
+				break;
+			case 'flac':
+				mimeType = 'audio/flac';
+				break;
+			case 'webm':
+				mimeType = 'audio/webm';
+				break;
+			default:
+				console.error('Unsupported file type:', extension);
+				return;
+		}
+		if (sources.length === 1) {
+			sources[0].src = newUrl;
+			sources[0].type = mimeType;
+		} else {
+			audioElement.innerHTML = '';
+			var newSource = document.createElement('source');
+			newSource.src = newUrl;
+			newSource.type = mimeType;
+			audioElement.appendChild(newSource);
+		}
+		audioElement.load();
+	}
+
+	if (urlParams.get("custombeep")){
+		updateAudioSource(urlParams.get("custombeep"));
+	}
+	
+	if (urlParams.has("beepvolume")){
+		try {
+			document.getElementById('testtone').volume = parseInt(urlParams.get("beepvolume"))/100 || 0;
+		} catch(e){
+			console.error(e);
+		}
+	}
+	
 	var beep = false;
 	if (urlParams.has("beep")){ // removes HTML from messages, donations, and names.
 		beep = true;
@@ -2472,6 +2485,8 @@
 		ele.title = 'Main — 🔕 Stop beeping when there is a new message';
 		playtone();
 	}
+	
+	
 
 	var stylizeEmoji = false;
 	if (urlParams.has("emoji") || urlParams.has("emojis")){
@@ -3374,8 +3389,8 @@
 
 	if (urlParams.has("transparent") || urlParams.has("transparency")){
 		document.documentElement.style.setProperty("--background-color", "#0000", "important");
-		document.documentElement.style.setProperty("--menu-background-color", "#0000", "important");
-		document.documentElement.style.setProperty("--menu-border-color", "0 0 0 #0000", "important");
+		document.documentElement.style.setProperty("--menu-background-color", "linear-gradient(to right, #0000, #0008, #0000)", "important");
+		//document.documentElement.style.setProperty("--menu-border-color", "0 0 0 #0000", "important");
 		document.getElementById("main").style.overflow = "hidden"; // transparent auto hides the scroll bar; i guess that makes sense, since likely used in studio software then.
 		try {
 			mainOutputWindow.style.overflow = "hidden";
@@ -3790,6 +3805,8 @@
 		}
 	} catch(e){}
 	
+	var activeChatDestinations = new Set();
+	
 	var Currencies = {"usd":{"d":2,"s":"$"},"cad":{"d":2,"s":"$"},"eur":{"d":2,"s":"€"},"aed":{"d":2,"s":"د.إ.‏"},"afn":{"d":0,"s":"؋"},"all":{"d":0,"s":"Lek"},"amd":{"d":0,"s":"դր."},"ars":{"d":2,"s":"$"},"aud":{"d":2,"s":"$"},"azn":{"d":2,"s":"ман."},"bam":{"d":2,"s":"KM"},"bdt":{"d":2,"s":"৳"},"bgn":{"d":2,"s":"лв."},"bhd":{"d":3,"s":"د.ب.‏"},"bif":{"d":0,"s":"FBu"},"bnd":{"d":2,"s":"$"},"bob":{"d":2,"s":"Bs"},"brl":{"d":2,"s":"R$"},"bwp":{"d":2,"s":"P"},"byn":{"d":2,"s":"руб."},"bzd":{"d":2,"s":"$"},"cdf":{"d":2,"s":"FrCD"},"chf":{"d":2,"s":"CHF"},"clp":{"d":0,"s":"$"},"cny":{"d":2,"s":"CN¥"},"cop":{"d":0,"s":"$"},"crc":{"d":0,"s":"₡"},"cve":{"d":2,"s":"CV$"},"czk":{"d":2,"s":"Kč"},"djf":{"d":0,"s":"Fdj"},"dkk":{"d":2,"s":"kr"},"dop":{"d":2,"s":"RD$"},"dzd":{"d":2,"s":"د.ج.‏"},"eek":{"d":2,"s":"kr"},"egp":{"d":2,"s":"ج.م.‏"},"ern":{"d":2,"s":"Nfk"},"etb":{"d":2,"s":"Br"},"gbp":{"d":2,"s":"£"},"gel":{"d":2,"s":"GEL"},"ghs":{"d":2,"s":"GH₵"},"gnf":{"d":0,"s":"FG"},"gtq":{"d":2,"s":"Q"},"hkd":{"d":2,"s":"$"},"hnl":{"d":2,"s":"L"},"hrk":{"d":2,"s":"kn"},"huf":{"d":0,"s":"Ft"},"idr":{"d":0,"s":"Rp"},"ils":{"d":2,"s":"₪"},"inr":{"d":2,"s":"টকা"},"iqd":{"d":0,"s":"د.ع.‏"},"irr":{"d":0,"s":"﷼"},"isk":{"d":0,"s":"kr"},"jmd":{"d":2,"s":"$"},"jod":{"d":3,"s":"د.أ.‏"},"jpy":{"d":0,"s":"￥"},"kes":{"d":2,"s":"Ksh"},"khr":{"d":2,"s":"៛"},"kmf":{"d":0,"s":"FC"},"krw":{"d":0,"s":"₩"},"kwd":{"d":3,"s":"د.ك.‏"},"kzt":{"d":2,"s":"тңг."},"lbp":{"d":0,"s":"ل.ل.‏"},"lkr":{"d":2,"s":"SL Re"},"ltl":{"d":2,"s":"Lt"},"lvl":{"d":2,"s":"Ls"},"lyd":{"d":3,"s":"د.ل.‏"},"mad":{"d":2,"s":"د.م.‏"},"mdl":{"d":2,"s":"MDL"},"mga":{"d":0,"s":"MGA"},"mkd":{"d":2,"s":"MKD"},"mmk":{"d":0,"s":"K"},"mop":{"d":2,"s":"MOP$"},"mur":{"d":0,"s":"MURs"},"mxn":{"d":2,"s":"$"},"myr":{"d":2,"s":"RM"},"mzn":{"d":2,"s":"MTn"},"nad":{"d":2,"s":"N$"},"ngn":{"d":2,"s":"₦"},"nio":{"d":2,"s":"C$"},"nok":{"d":2,"s":"kr"},"npr":{"d":2,"s":"नेरू"},"nzd":{"d":2,"s":"$"},"omr":{"d":3,"s":"ر.ع.‏"},"pab":{"d":2,"s":"B/."},"pen":{"d":2,"s":"S/."},"php":{"d":2,"s":"₱"},"pkr":{"d":0,"s":"₨"},"pln":{"d":2,"s":"zł"},"pyg":{"d":0,"s":"₲"},"qar":{"d":2,"s":"ر.ق.‏"},"ron":{"d":2,"s":"RON"},"rsd":{"d":0,"s":"дин."},"rub":{"d":2,"s":"₽."},"rwf":{"d":0,"s":"FR"},"sar":{"d":2,"s":"ر.س.‏"},"sdg":{"d":2,"s":"SDG"},"sek":{"d":2,"s":"kr"},"sgd":{"d":2,"s":"$"},"sos":{"d":0,"s":"Ssh"},"syp":{"d":0,"s":"ل.س.‏"},"thb":{"d":2,"s":"฿"},"tnd":{"d":3,"s":"د.ت.‏"},"top":{"d":2,"s":"T$"},"try":{"d":2,"s":"TL"},"ttd":{"d":2,"s":"$"},"twd":{"d":2,"s":"NT$"},"tzs":{"d":0,"s":"TSh"},"uah":{"d":2,"s":"₴"},"ugx":{"d":0,"s":"USh"},"uyu":{"d":2,"s":"$"},"uzs":{"d":0,"s":"UZS"},"vef":{"d":2,"s":"Bs.F."},"vnd":{"d":0,"s":"₫"},"xaf":{"d":0,"s":"FCFA"},"xof":{"d":0,"s":"CFA"},"yer":{"d":0,"s":"ر.ي.‏"},"zar":{"d":2,"s":"R"},"zmk":{"d":0,"s":"ZK"},"zwl":{"d":0,"s":"ZWL$"}};
 
 	function processInput(data){
@@ -3942,6 +3959,111 @@
 				} catch(e){}
 			//}
 			return;
+			
+		} else if ("tabsList" in data){ //delete messages, but also block user. remote, so we won't sync,
+			console.log(data.tabsList);
+			if (isOBSBrowserSource){
+				return;
+			}
+			if (document.getElementById("getChatSourcesButton")){
+				clearTimeout(getById("getChatSourcesButton").setTimeout);
+			}
+			let modal = document.getElementById("chatDestinations");
+			if (!modal){
+				modal = document.createElement("div");
+				modal.id = "chatDestinations";
+				modal.classList.add("modal");
+				modal.style.display = "block";
+				modal.innerHTML = '<div class="modal-content">\
+					<span class="close-btn">&times;</span>\
+					<h2 id="chatDestinationsFor">Checking what chat destinations are available...</h2>\
+					<div id="chatDestinationsList"></div>\
+				  </div>\
+				';
+				document.body.appendChild(modal);
+			}
+
+			const span = document.getElementsByClassName("close-btn")[0];
+			const chatDestinationsList = document.getElementById('chatDestinationsList');
+			const messagesFor = document.getElementById('chatDestinationsFor');
+			chatDestinationsList.innerHTML = ''; 
+
+			messagesFor.innerText = "Custom Message Destinations. (if none set, it goes to all)";
+
+			data.tabsList.forEach(tab => {
+				const para = document.createElement("p");
+				const checkbox = document.createElement("input");
+				para.append(checkbox);
+				chatDestinationsList.appendChild(para);
+				
+				checkbox.type = "checkbox";
+				checkbox.dataset.tab = tab.id;
+				checkbox.checked = activeChatDestinations.has(checkbox.dataset.tab.toString());
+				checkbox.value = activeChatDestinations.has(checkbox.dataset.tab.toString());
+				
+				const titleText = document.createTextNode(tab.title + " - ");
+				const smallText = document.createElement("small");
+				const italicsText = document.createElement("i");
+				italicsText.textContent = `(${tab.url})`;
+
+				smallText.appendChild(italicsText);
+
+				if (tab.favIconUrl) {
+					const img = document.createElement("img");
+					img.src = tab.favIconUrl;
+					img.style.marginRight = "5px";
+					img.style.maxHeight = "18px";
+					para.appendChild(img);
+				} else {
+					const pageIcon = document.createTextNode("📄 ");
+					para.appendChild(pageIcon);
+				}
+
+				para.appendChild(titleText);
+				para.appendChild(smallText);
+				
+				checkbox.onclick = function(event){
+					if (this.checked){
+						activeChatDestinations.add(this.dataset.tab.toString());
+					} else {
+						activeChatDestinations.delete(this.dataset.tab.toString());
+					}
+					if (activeChatDestinations.size){
+						getById("getChatSources").innerHTML = "🎯";
+						getById("getChatSources").title = "Sending to selected end points only";
+					} else {
+						getById("getChatSources").innerHTML = "🌐";
+						getById("getChatSources").title = "Sending to all end points";
+					}
+				};
+			});
+			modal.classList.remove('hidden');
+			span.onclick = function() {
+				modal.classList.add('hidden');
+				chatDestinationsList.innerHTML = "";
+			};
+			window.onclick = function(event) {
+				
+				if (event.target == modal) {
+					modal.classList.add('hidden');
+					chatDestinationsList.innerHTML = "";
+				} else if (event.target && event.target.dataset && event.target.dataset.tab) {
+					
+					if (event.target.checked){
+						activeChatDestinations.add(event.target.dataset.tab);
+					} else {
+						activeChatDestinations.delete(event.target.dataset.tab);
+					}
+					
+					if (activeChatDestinations.size){
+						getById("getChatSources").innerHTML = "🎯";
+						getById("getChatSources").title = "Sending to selected end points only";
+					} else {
+						getById("getChatSources").innerHTML = "🌐";
+						getById("getChatSources").title = "Sending to all end points";
+					}
+				}
+			  };
 		} else if ("userHistory" in data){ //delete messages, but also block user. remote, so we won't sync,
 			console.log(data.userHistory);
 			if (isOBSBrowserSource){
@@ -3990,9 +4112,6 @@
 				  messagesList.innerHTML = "";
 				}
 			  };
-			
-
-			
 		} else if ("blockUser" in data){
 			try {
 				if (data.blockUser.chatname && data.blockUser.type){
@@ -4578,6 +4697,22 @@
 				ele.remove();
 			});
 			send2Extension({action:"blockUser", value:{chatname:chatName, type:type}});
+		}
+	}
+	
+	function replyToUser(element){
+		var chatName = element.dataset.chatname;
+		var type = element.dataset.sourceType;
+		// need to get the tab ID.
+		// configure chat for this specific user; it's tab?
+	}
+	
+	function toggleVIPUser(element){
+		var chatName = element.dataset.chatname;
+		var type = element.dataset.sourceType;
+		
+		if (chatName && type){
+			send2Extension({action:"toggleVIPUser", value:{chatname:chatName, type:type}});
 		}
 	}
 	
@@ -5527,7 +5662,7 @@
 				if (highlightSpecial && data.question){
 					node.querySelector(".hl-rightside").classList.add("special");
 				}
-			} else if (bubble && node.contentLength){
+			} else if (bubble && (node.contentLength || node.querySelectorAll(".hl-message svg, .hl-message img").length || (node.querySelector(".hl-message").innerText &&  node.querySelector(".hl-message").innerText.length))){
 				node.querySelector(".hl-message").classList.add("bubble");
 				
 				
@@ -5542,22 +5677,7 @@
 				if (highlightSpecial && data.question){
 					node.querySelector(".hl-message").classList.add("special");
 				}
-			} else if (bubble && node.querySelector(".hl-message").innerText &&  node.querySelector(".hl-message").innerText.length){
-				node.querySelector(".hl-message").classList.add("bubble");
-				
-				
-				if (highlightDonos &&  data.hasDonation){
-					node.querySelector(".hl-message").classList.add("dono-highlight");
-				}
-
-				if (highlightMembers && data.membership){
-					node.querySelector(".hl-message").classList.add("member");
-				}
-				
-				if (highlightSpecial && data.question){
-					node.querySelector(".hl-message").classList.add("special");
-				}
-			}
+			} 
 
 			if (data.type && (data.type == "twitch") && avatars && data.chatimg){
 				var twitchImage = new Image();
@@ -5641,7 +5761,9 @@
 
 			var imageElements = node.getElementsByTagName("img");
 			for (i = 0; i < imageElements.length; i++) {
-				
+				if (imageElements[i].parentNode && imageElements[i].parentNode.classList.contains("zero-width-parent")){
+					imageElements[i].className = "zero-width-emote";
+				}
 				if (imageElements[i].onerror){continue;}
 				if (!imageElements[i].title && imageElements[i].alt){
 					imageElements[i].title = imageElements[i].alt;
@@ -5650,6 +5772,7 @@
 					imageElements[i].srcBackup = imageElements[i].src;
 					imageElements[i].src = imageElements[i].src.replaceAll("/light/","/dark/");
 				}
+				
 				imageElements[i].onerror = function(){
 					if (this.srcBackup){
 						this.src = this.srcBackup;
@@ -6126,7 +6249,7 @@
 		if (!data){return;}
 		var msg = {};
 		msg.overlayNinja = {};
-		msg.overlayNinja.tid = tid;
+		msg.overlayNinja.tid = tid; // specific or array
 		msg.overlayNinja.response = data;
 		
 		send2Extension(msg.overlayNinja);
@@ -6316,6 +6439,10 @@
 					blockUser(taskItemInContext);
 				} else if (link.getAttribute("data-action") === "History") {
 					getUserHistory(taskItemInContext);
+				} else if (link.getAttribute("data-action") === "Reply") {
+					replyToUser(taskItemInContext);
+				} else if (link.getAttribute("data-action") === "VIP") {
+					toggleVIPUser(taskItemInContext);
 				} else if (link.getAttribute("data-action") === "Pin") {
 					if (taskItemInContext.classList.contains("pinned")){
 						unpinIt(taskItemInContext);
@@ -6435,14 +6562,12 @@
 
 	})();
 
-
-
-
 	(function userChatInputModalBox() { // chat input
 		var menu = getById("chatInput_parent");
 		var input = getById("chatInput");
 		var chatInputButton = getById("chatInputButton");
-		var chatClearButton = getById("chatClearButton")
+		var chatClearButton = getById("chatClearButton");
+		var getChatSourcesButton = getById("getChatSources");
 		var chatInputCloseButton = getById("chatInputCloseButton");
 		var chatInputLockButton = getById("chatInputLockButton");
 
@@ -6474,7 +6599,11 @@
 		function sendMessage(event) {
 			event.preventDefault();
 			if (input.value){
-				respondP2P(input.value);
+				if (activeChatDestinations && activeChatDestinations.size){
+					respondP2P(input.value, [...activeChatDestinations]);
+				} else {
+					respondP2P(input.value);
+				}
 			}
 			input.value = "";
 		}
@@ -6526,6 +6655,16 @@
 		chatInputButton.addEventListener("click", function(event) {
 			sendMessage(event);
 		})
+		
+		getChatSourcesButton.onclick = function(event){
+			send2Extension({action:"getChatSources"});
+			getChatSourcesButton.setTimeout = setTimeout(function(){
+				if (getById("getChatSources").classList.contains("hidden")){
+					send2Extension({action:"getChatSources"}); // trying some more.
+					console.log("Trying again..");
+				}
+			},2000);
+		};
 
 		chatClearButton.addEventListener("click", function(event) {
 			input.value = "";

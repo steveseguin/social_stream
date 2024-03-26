@@ -847,13 +847,26 @@
 									<span class="slider round"></span>
 								</label><span data-translate="force-transparent-background">⭕ Force transparent background (and hide scrollbar)
 							</span></div>
-							<div>
+							<div title="This won't work in Chrome">
 								<label class="switch">
 									<input type="checkbox" data-param1="opacity=0.3">
 									<span class="slider round"></span>
 								</label><span data-translate="make-entire-page-partially-transparent">👻 Make entire page partially transparent
 							</span></div>
+							<div title="This won't work in Chrome">
+								<label class="switch">
+									<input type="checkbox" data-param1="chroma=0006">
+									<span class="slider round"></span>
+								</label><span data-translate="translucent-page-background">⚪ Translucent page background
+							</span></div>
 							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="chroma">
+									<span class="slider round"></span>
+								</label><span data-translate="green-page-background">🟢 Green page background
+							</span></div>
+							
+							<div title="This won't work in Chrome">
 								<label class="switch">
 									<input type="checkbox" data-param1="lightmode">
 									<span class="slider round"></span>
@@ -865,13 +878,7 @@
 									<span class="slider round"></span>
 								</label><span data-translate="dark-mode--black-page-background">⚫ Dark mode — Black page background
 							</span></div>
-							<div>
-								<label class="switch">
-									<input type="checkbox" data-param1="chroma">
-									<span class="slider round"></span>
-								</label><span data-translate="green-page-background">🟢 Green page background
-							</span></div>
-
+							
 						</div>
 					</div>
 				</div>
@@ -932,6 +939,12 @@
 									<input type="checkbox" data-param1="beep">
 									<span class="slider round"></span>
 								</label><span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message
+							</span></div>
+							<div title="Lower the beep's volume by 50%">
+								<label class="switch">
+									<input type="checkbox" data-param="beepvolume=30">
+									<span class="slider round"></span>
+								</label><span data-translate="reduce-the-beeps-volume">🔔🔉 Reduce the beep's volume to 30%
 							</span></div>
 							<div class="textInputContainer" style="width: 95%" title="Specify a URL for a custom beep audio file">
 								<input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-textparam1="custombeep">
@@ -1706,6 +1719,22 @@ The first name listed may be used as the host's name in stream when their name i
 									<span class="slider round"></span>
 								</label><span data-translate="read-out-urls">🗣️ Read out URLs rather than saying "link".
 							</span></div>
+							<div title="Note: You must first interact with the dock-page for any audio to be audible.">
+								<label class="switch">
+									<input type="checkbox" data-param2="beep">
+									<span class="slider round"></span>
+								</label><span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message
+							</span></div>
+							<div title="Lower the beep's volume by 50%">
+								<label class="switch">
+									<input type="checkbox" data-param2="beepvolume=30">
+									<span class="slider round"></span>
+								</label><span data-translate="reduce-the-beeps-volume">🔔🔉 Reduce the beep's volume to 30%
+							</span></div>
+							<div class="textInputContainer" style="width: 95%" title="Specify a URL for a custom beep audio file">
+								<input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-textparam2="custombeep">
+								<label for="custombeep"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
+							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-param2="alignright">
@@ -3052,8 +3081,6 @@ The first name listed may be used as the host's name in stream when their name i
 			</div>
 		</div>
 
-		
-
 		<div class="wrapper">
 			<div class="collapsible">
 				<input type="checkbox" class="collapsible-input" id="wrapper-export-options">
@@ -3102,6 +3129,34 @@ The first name listed may be used as the host's name in stream when their name i
 				</div>
 			</div>
 		</div>
+		<div class="wrapper">
+			<div class="collapsible">
+				<input type="checkbox" class="collapsible-input" id="wrapper-session-options">
+				<label class="collapsible-label" for="wrapper-session-options"><span data-translate="session-options">🔑 Session Options</span></label>
+				<div class="collapsible-text">
+					<div class="options">
+						<div class="options_group">
+							<center>💀☠️ <span style='color:red'>PLEASE DO NOT CHANGE YOU SESSION ID</span> 💀☠️<br />...unless you know exactly what you are doing.</center>
+							<br />
+							<div class="textInputContainer" style="width: 95%" title="Edit to change your session ID value. MUST BE UNIQUE">
+								<input type="text" id="sessionid" class="textInput" autocomplete="off" placeholder="Session ID goes here" data-special="session">
+								<label for="sessionid"><span data-translate="unique-session-id">&gt; Your unique session ID is below.</span></label>
+							</div>
+							<i>Changing you session ID may break things</i><br />
+							<br />
+							<h3><span data-translate="set-a-password">Set a password</span></h3><span>
+							
+							<div class="textInputContainer" style="width: 95%" title="Set or change your session password">
+								<input type="password" id="sessionpassword" class="textInput" autocomplete="off" placeholder="Session password goes here" data-special="password">
+								<label for="sessionpassword"><span data-translate="unique-session-password">&gt; Set or change your session password</span></label>
+							</div>
+							<i>It's okay to set a custom password.</i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+						
 		<a href="https://www.buymeacoffee.com/steveseguin" target="_blank"><img src="./icons/buymeacoffee.png" alt="Buy Me A Coffee" style="float: right; padding-left: 10px; padding-bottom: 10px;height: 33px !important;width: 119.35px !important;" ></a>
 		<p style="text-align: right;padding-bottom: 11px;"><span data-translate="visit-us-at">
 			Visit us at </span><a href="https://discord.socialstream.ninja" target="_blank"><span data-translate="discord">Discord</span><img class="icon" src="discord.png"></a><br>

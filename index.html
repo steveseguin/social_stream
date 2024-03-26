@@ -374,7 +374,7 @@ yt-live-chat-text-message-renderer.shown-comment {
 	display:none;
 }
 
-.hl-message img {
+.hl-message img, .hl-message svg {
 	max-width: 50px;
     height: 45px;
     vertical-align: sub;
@@ -672,8 +672,11 @@ span.zero-width-parent img.zero-width-emote {
 </style>
 </head>
 <body>
-
 	<div id="output" class="output"></div>
+	<audio id="testtone" style="display:none;" preload="metadata">
+		<source src="./audio/tone.mp3" type="audio/mpeg">
+		<source src="./audio/tone.ogg" type="audio/ogg">
+	</audio>
 	<script>
 	
 	function log(msg){
@@ -1084,7 +1087,53 @@ span.zero-width-parent img.zero-width-emote {
 		document.documentElement.style.setProperty("--comment-padding", "20px 35px 20px 35px");
 		document.documentElement.style.setProperty("--author-left", "20px");
 	}
+	
+	var audioContext = new AudioContext();
+	var timeoutTone = null;
+
+	async function playtone(tonename="testtone") {
+		if (timeoutTone){return;}
+		timeoutTone = true;
 		
+		setTimeout(function(){
+			timeoutTone = false;
+		},500);
+		
+		
+		if (audioContext.state == "suspended"){
+			await audioContext.resume();
+		}
+		if (audioContext.state == "suspended"){
+			return
+		}
+		var toneEle = document.getElementById(tonename);
+		if (toneEle){
+			toneEle.play().then(()=>{
+			 // beep
+			}).catch((e)=>{
+				console.error(e);
+			})
+			
+		}
+	}
+	if (urlParams.get("custombeep")){
+		updateAudioSource(urlParams.get("custombeep"));
+	}
+	
+	if (urlParams.has("beepvolume")){
+		try {
+			document.getElementById('testtone').volume = parseInt(urlParams.get("beepvolume"))/100 || 0;
+		} catch(e){
+			console.error(e);
+		}
+	}
+		
+	var beep = false;
+	if (urlParams.has("beep")){ // removes HTML from messages, donations, and names.
+		beep = true;
+		playtone();
+	}
+	
 	try {
 		if (window.location.host !== "socialstream.ninja"){ // don't check if not private hosted, since it won't exist
 			var script = document.createElement('script');
@@ -2064,6 +2113,9 @@ span.zero-width-parent img.zero-width-emote {
 			
 			sendToDisk(data.contents);
 			
+			if (beep){
+				playtone();
+			}
 			
 			if (newImageHandle && data.contents && data.contents.chatimg){
 				if (data.contents.type && data.contents.chatimg && (data.contents.type == "youtube")){

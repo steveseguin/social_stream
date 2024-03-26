@@ -557,7 +557,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 });
 var streamID = false;
 function update(response, sync=true){
-	//console.log("update-> response: ",response);
+	console.log("update-> response: ",response);
 	if (response !== undefined){
 		
 		
@@ -572,6 +572,9 @@ function update(response, sync=true){
 			if (devmode){
 				baseURL = "file:///C:/Users/steve/Code/social_stream/";
 			}
+			
+			document.getElementById("sessionid").value = response.streamID;
+			document.getElementById("sessionpassword").value = response.password || "";
 			
 			//document.getElementById("version").innerHTML = "Stream ID is : "+response.streamID;
 			document.getElementById("dock").raw = baseURL+"dock.html?session="+response.streamID+password;
@@ -594,173 +597,183 @@ function update(response, sync=true){
 
 			if ('settings' in response){
 				for (var key in response.settings){
+					try {
+						if (key === "midiConfig"){
+							if (response.settings[key]){
+								document.getElementById("midiConfig").classList.add("pressed");
+								document.getElementById("midiConfig").innerText = " Config Loaded";
+							} else {
+								document.getElementById("midiConfig").classList.remove("pressed");
+								document.getElementById("midiConfig").innerText = " Load Config";
+							}
+						}
+						if (typeof response.settings[key] == "object"){ // newer method
+							if ("param1" in response.settings[key]){
+								var ele = document.querySelector("input[data-param1='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param1;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("param2" in response.settings[key]){
+								var ele = document.querySelector("input[data-param2='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param2;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("param3" in response.settings[key]){
+								var ele = document.querySelector("input[data-param3='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param3;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("param4" in response.settings[key]){
+								var ele = document.querySelector("input[data-param4='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param4;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("param5" in response.settings[key]){
+								var ele = document.querySelector("input[data-param5='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param5;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("both" in response.settings[key]){
+								var ele = document.querySelector("input[data-both='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].both;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("setting" in response.settings[key]){
+								var ele = document.querySelector("input[data-setting='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].setting;
+									updateSettings(ele, sync);
+								}
+								
+								if (key == "sentiment"){ // i'm deprecating sentiment
+									try{
+										var ele1 = document.querySelector("input[data-param1='badkarma']");
+										if (ele1 && !ele1.checked){
+											ele1.checked = true;
+											updateSettings(ele1, true);
+										}
+										chrome.runtime.sendMessage({cmd: "saveSetting", type: "setting", setting: "sentiment", "value": false}, function (response) {}); // delete sentiment
+									} catch(e){console.error(e);}
+								}
+							}
+							if ("textsetting" in response.settings[key]){
+								var ele = document.querySelector("input[data-textsetting='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textsetting;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("optionsetting" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionsetting='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionsetting;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("numbersetting" in response.settings[key]){
+								var ele = document.querySelector("input[data-numbersetting='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].numbersetting;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("textparam1" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam1='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam1;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("textparam2" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam2='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam2;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("textparam3" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam3='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam3;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("textparam4" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam4='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam4;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("textparam5" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam5='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam5;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("optionparam1" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam1='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam1;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("optionparam2" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam2='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam2;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("optionparam3" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam3='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam3;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("optionparam4" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam4='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam4;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("optionparam5" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam5='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam5;
+									updateSettings(ele, sync);
+								}
+							}
 
-					if (key === "midiConfig"){
-						if (response.settings[key]){
-							document.getElementById("midiConfig").classList.add("pressed");
-							document.getElementById("midiConfig").innerText = " Config Loaded";
-						} else {
-							document.getElementById("midiConfig").classList.remove("pressed");
-							document.getElementById("midiConfig").innerText = " Load Config";
-						}
-					}
-					if (typeof response.settings[key] == "object"){ // newer method
-						if ("param1" in response.settings[key]){
-							var ele = document.querySelector("input[data-param1='"+key+"']");
+						} else { // obsolete method
+							var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
 							if (ele){
-								ele.checked = response.settings[key].param1;
+								ele.checked = response.settings[key];
+								updateSettings(ele, sync);
+							}
+							var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"']");
+							if (ele){
+								ele.value = response.settings[key];
 								updateSettings(ele, sync);
 							}
 						}
-						if ("param2" in response.settings[key]){
-							var ele = document.querySelector("input[data-param2='"+key+"']");
-							if (ele){
-								ele.checked = response.settings[key].param2;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("param3" in response.settings[key]){
-							var ele = document.querySelector("input[data-param3='"+key+"']");
-							if (ele){
-								ele.checked = response.settings[key].param3;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("param4" in response.settings[key]){
-							var ele = document.querySelector("input[data-param4='"+key+"']");
-							if (ele){
-								ele.checked = response.settings[key].param4;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("both" in response.settings[key]){
-							var ele = document.querySelector("input[data-both='"+key+"']");
-							if (ele){
-								ele.checked = response.settings[key].both;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("setting" in response.settings[key]){
-							var ele = document.querySelector("input[data-setting='"+key+"']");
-							if (ele){
-								ele.checked = response.settings[key].setting;
-								updateSettings(ele, sync);
-							}
-							
-							if (key == "sentiment"){ // i'm deprecating sentiment
-								try{
-									var ele1 = document.querySelector("input[data-param1='badkarma']");
-									if (ele1 && !ele1.checked){
-										ele1.checked = true;
-										updateSettings(ele1, true);
-									}
-									chrome.runtime.sendMessage({cmd: "saveSetting", type: "setting", setting: "sentiment", "value": false}, function (response) {}); // delete sentiment
-								} catch(e){console.error(e);}
-							}
-						}
-						if ("textsetting" in response.settings[key]){
-							var ele = document.querySelector("input[data-textsetting='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].textsetting;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("optionsetting" in response.settings[key]){
-							var ele = document.querySelector("select[data-optionsetting='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].optionsetting;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("numbersetting" in response.settings[key]){
-							var ele = document.querySelector("input[data-numbersetting='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].numbersetting;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("textparam1" in response.settings[key]){
-							var ele = document.querySelector("input[data-textparam1='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].textparam1;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("textparam2" in response.settings[key]){
-							var ele = document.querySelector("input[data-textparam2='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].textparam2;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("textparam3" in response.settings[key]){
-							var ele = document.querySelector("input[data-textparam3='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].textparam3;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("textparam4" in response.settings[key]){
-							var ele = document.querySelector("input[data-textparam4='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].textparam4;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("textparam5" in response.settings[key]){
-							var ele = document.querySelector("input[data-textparam5='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].textparam5;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("optionparam1" in response.settings[key]){
-							var ele = document.querySelector("select[data-optionparam1='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].optionparam1;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("optionparam2" in response.settings[key]){
-							var ele = document.querySelector("select[data-optionparam2='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].optionparam2;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("optionparam3" in response.settings[key]){
-							var ele = document.querySelector("select[data-optionparam3='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].optionparam3;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("optionparam4" in response.settings[key]){
-							var ele = document.querySelector("select[data-optionparam4='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].optionparam4;
-								updateSettings(ele, sync);
-							}
-						}
-						if ("optionparam5" in response.settings[key]){
-							var ele = document.querySelector("select[data-optionparam5='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key].optionparam5;
-								updateSettings(ele, sync);
-							}
-						}
-
-					} else { // obsolete method
-						var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
-						if (ele){
-							ele.checked = response.settings[key];
-							updateSettings(ele, sync);
-						}
-						var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"']");
-						if (ele){
-							ele.value = response.settings[key];
-							updateSettings(ele, sync);
-						}
+					} catch(e){
+						console.error(e);
 					}
 				}
 				if ("translation" in response.settings){
@@ -1237,6 +1250,24 @@ function updateSettings(ele, sync=true){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting", setting: ele.dataset.numbersetting, "value": ele.value}, function (response) {});
 		}
 		return;
+	} else if (ele.dataset.special){
+		
+		if (ele.dataset.special==="session"){
+			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
+				chrome.storage.sync.set({
+					streamID: ele.value
+				});
+			}
+			chrome.runtime.sendMessage({cmd: "sidUpdated", streamID: ele.value}, function (response) {console.log("streamID updated");});
+			
+		} else if (ele.dataset.special==="password"){
+			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
+				chrome.storage.sync.set({
+					password: ele.value
+				});
+			}
+			chrome.runtime.sendMessage({cmd: "sidUpdated", password: ele.value || ""}, function (response) {console.log("Password updated");});
+		}
 	}
 	
 
