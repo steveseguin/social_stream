@@ -129,7 +129,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - afreecatv.com (pop out the chat; you can't close the main window it seems tho?)
 - nonolive.com (no pop out; partial support added so far only)
 - stageTEN.tv
-- vkplay.live (pop out chat)
+- live.vkplay.ru (was vkplay.live) - pop out the chat
 - arena.tv (no pop out chat support, so just pause the video I guess)
 - bandlab.com (no pop out, so just pause the video I guess while chat open)
 - threads.net (a little funky star icon, right of the share icon, will select thread to push to dock)
