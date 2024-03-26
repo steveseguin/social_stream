@@ -5673,7 +5673,7 @@
 				if (highlightSpecial && data.question){
 					node.querySelector(".hl-rightside").classList.add("special");
 				}
-			} else if (bubble && node.contentLength){
+			} else if (bubble && (node.contentLength || node.querySelectorAll(".hl-message svg, .hl-message img").length || (node.querySelector(".hl-message").innerText &&  node.querySelector(".hl-message").innerText.length))){
 				node.querySelector(".hl-message").classList.add("bubble");
 				
 				
@@ -5688,22 +5688,7 @@
 				if (highlightSpecial && data.question){
 					node.querySelector(".hl-message").classList.add("special");
 				}
-			} else if (bubble && node.querySelector(".hl-message").innerText &&  node.querySelector(".hl-message").innerText.length){
-				node.querySelector(".hl-message").classList.add("bubble");
-				
-				
-				if (highlightDonos &&  data.hasDonation){
-					node.querySelector(".hl-message").classList.add("dono-highlight");
-				}
-
-				if (highlightMembers && data.membership){
-					node.querySelector(".hl-message").classList.add("member");
-				}
-				
-				if (highlightSpecial && data.question){
-					node.querySelector(".hl-message").classList.add("special");
-				}
-			}
+			} 
 
 			if (data.type && (data.type == "twitch") && avatars && data.chatimg){
 				var twitchImage = new Image();
