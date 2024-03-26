@@ -4001,10 +4001,10 @@
 				checkbox.checked = activeChatDestinations.has(checkbox.dataset.tab.toString());
 				checkbox.value = activeChatDestinations.has(checkbox.dataset.tab.toString());
 				
-				const titleText = document.createTextNode(tab.title + " - ");
+				const titleText = document.createTextNode(tab.title.slice(0, 100) + " - ");
 				const smallText = document.createElement("small");
 				const italicsText = document.createElement("i");
-				italicsText.textContent = `(${tab.url})`;
+				italicsText.textContent = `(${tab.url.slice(0, 100)})`;
 
 				smallText.appendChild(italicsText);
 

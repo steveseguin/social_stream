@@ -35,6 +35,8 @@ function log(msg,msg2=null){
 	}
 }
 
+var priorityTabs = new Set();
+
 function generateStreamID(){
 	var text = "";
 	var possible = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
@@ -103,7 +105,6 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.tabs = {};
 	chrome.tabs.query = async function(a,callback){
 		var response = await ipcRenderer.sendSync('getTabs',{});
-		
 		
 		log("chrome.tabs.query");
 		log(response);
@@ -1155,7 +1156,7 @@ chrome.runtime.onMessage.addListener(
 				
 			} else if (request.cmd && (request.cmd === "getSettings")) {
 				sendResponse({"state": isExtensionOn , "streamID":streamID, "password":password, "settings":settings});
-
+				
 			} else if (request.cmd && (request.cmd === "saveSetting")) {
 				
 				if (typeof settings[request.setting] == "object"){
@@ -1488,7 +1489,12 @@ chrome.runtime.onMessage.addListener(
 					}
 				} 
 			} else if ("getSettings" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-				sendResponse({"state":isExtensionOn,"streamID":streamID, "password":password, "settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation. 
+				sendResponse({"state":isExtensionOn,"streamID":streamID, "password":password, "settings":settings}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
+				try {
+					priorityTabs.add(sender.tab.id);
+				} catch (e){
+					console.error(e);
+				}
 			} else if ("pokeMe" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				sendResponse({"state":isExtensionOn}); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation. 
 				pokeSite(sender.tab.url,sender.tab.id);
@@ -2257,7 +2263,6 @@ async function openchat(target=null){
 		res = resolve;
 	});
 
-
 	chrome.tabs.query({}, function(tabs) { // tabs[i].url
 		if (chrome.runtime.lastError) {
 			console.warn(chrome.runtime.lastError.message);
@@ -2936,7 +2941,7 @@ function processIncomingRequest(request, UUID=false){
 			}
 		} else if (request.action === "getChatSources"){
 			if (isExtensionOn && chrome.debugger){ 
-				chrome.tabs.query({}, function(tabs) {
+				chrome.tabs.query({}, function(tabs) { 
 					chrome.runtime.lastError;
 					var tabsList = [];
 					for (var i=0;i<tabs.length;i++){
@@ -2949,10 +2954,15 @@ function processIncomingRequest(request, UUID=false){
 							if (tabs[i].url.startsWith("file://") && tabs[i].url.includes("dock.html?")){continue;}
 							if (tabs[i].url.startsWith("file://") && tabs[i].url.includes("index.html?")){continue;}
 							if (tabs[i].url.startsWith("chrome-extension")){continue;}
-							tabsList.push(tabs[i]);
+							if (tabs[i].id && priorityTabs.has(tabs[i].id)){
+								tabsList.unshift(tabs[i]);
+							} else {
+								tabsList.push(tabs[i]);
+							}
 						} catch(e){
 						}
 					}
+					
 					sendDataP2P({"tabsList": tabsList}, UUID); 
 				});
 			}
