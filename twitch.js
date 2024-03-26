@@ -474,9 +474,6 @@
 		data.membership = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
-
-
-		console.log(data);
 		
 		if (brandedImageURL) {
 			data.sourceImg = brandedImageURL;
