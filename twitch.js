@@ -135,6 +135,7 @@
 				if (node.nodeName.toLowerCase() == "svg"){
 					if (node.classList.contains("seventv-chat-emote")){
 						const resolvedSvg = cloneSvgWithResolvedUse(node);
+						resolvedSvg.style = "";
 						resp += resolvedSvg.outerHTML;
 					}
 					return;
@@ -171,6 +172,7 @@
 					if (node.nodeName.toLowerCase() == "svg"){
 						if (node.classList.contains("seventv-chat-emote")){
 							const resolvedSvg = cloneSvgWithResolvedUse(node);
+							resolvedSvg.style = "";
 							resp += resolvedSvg.outerHTML;
 						}
 						return;
