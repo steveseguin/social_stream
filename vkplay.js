@@ -93,7 +93,7 @@
 	  try {
 		var time = escapeHtml(ele.querySelector('[class^="ChatMessage_publishTime"]').textContent);
 		var msgID = time+" -"+chatname +"/\!@#--"+ chatmessage;
-		if (pastMessages.includes(msgID)){return;}
+		// if (pastMessages.includes(msgID)){return;}
 		pastMessages.push(msgID);
 		pastMessages = pastMessages.slice(-200);
 	  } catch(e){console.log(e);}
