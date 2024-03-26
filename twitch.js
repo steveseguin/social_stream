@@ -93,6 +93,25 @@
 	function getBTTVEmotes(userid){
 		return fetch("https://api.betterttv.net/3/cached/users/twitch/"+userid).then(result=>{return result.json()}).then(result=>{return result;})
 	}
+	
+	function cloneSvgWithResolvedUse(svgElement) {
+		const clonedSvg = svgElement.cloneNode(true);
+
+		const useElements = clonedSvg.querySelectorAll('use');
+		useElements.forEach((use) => {
+			const refId = use.getAttribute('href') || use.getAttribute('xlink:href');
+			if (refId) {
+				const id = refId.startsWith('#') ? refId.slice(1) : refId;
+				const referencedElement = document.getElementById(id);
+				if (referencedElement) {
+					const clonedReferencedElement = referencedElement.cloneNode(true);
+					use.parentNode.replaceChild(clonedReferencedElement, use);
+				}
+			}
+		});
+
+		return clonedSvg;
+	}
 
 
 	function getAllContentNodes(element) { // takes an element.
@@ -113,9 +132,11 @@
 
 		element.childNodes.forEach(node => {
 			if (node.childNodes.length) {
-				if (node.nodeName == "SVG"){
-					return;
-				} else if (node.nodeName == "svg"){
+				if (node.nodeName.toLowerCase() == "svg"){
+					if (node.classList.contains("seventv-chat-emote")){
+						const resolvedSvg = cloneSvgWithResolvedUse(node);
+						resp += resolvedSvg.outerHTML;
+					}
 					return;
 				} else if (node.classList.contains("seventv-chat-user-username")){
 					resp += escapeHtml(node.textContent.trim()) + " ";
@@ -145,9 +166,13 @@
 								}
 							}
 						}
-					} 
+					}
 					
-					if (node.nodeName == "SVG"){
+					if (node.nodeName.toLowerCase() == "svg"){
+						if (node.classList.contains("seventv-chat-emote")){
+							const resolvedSvg = cloneSvgWithResolvedUse(node);
+							resp += resolvedSvg.outerHTML;
+						}
 						return;
 					} else if ((node.nodeName == "SPAN") && !node.textContent.length){
 						return;
@@ -450,6 +475,9 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
 
+
+		console.log(data);
+		
 		if (brandedImageURL) {
 			data.sourceImg = brandedImageURL;
 		}
