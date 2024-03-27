@@ -308,14 +308,14 @@
 			chatmessage = chatmessage.trim();
 		}
 
-		if ((lastMessage === chatmessage) && (lastUser === username)) {
+		/* if ((lastMessage === chatmessage) && (lastUser === username)) {
 			lastMessage = "";
 			username = "";
 			return;
 		} else {
 			lastMessage = chatmessage;
 			lastUser = username;
-		}
+		} */
 
 		if (chatmessage && chatmessage.includes(" (Deleted by ")) {
 			return; // I'm assuming this is a deleted message

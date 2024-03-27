@@ -68,72 +68,58 @@
 	function processMessage(ele){
 		var chatname="";
 		var msg="";
-		
-	//	console.log(ele);
+		var chatimg = "";
+		//console.log(ele);
 		
 		try {
-			var nameElement = ele.querySelector('span');
+			var nameElement = ele.childNodes[0].childNodes[1].childNodes[0];
 			chatname = escapeHtml(nameElement.textContent.trim());
 			chatname = chatname.split(":")[0];
-			var node = nameElement.nextElementSibling; // if no link on name
-			if (!node){
-				node = nameElement.parentNode.nextElementSibling; // if link on name
-			}
+			
 			try {
-				if (!node){
-					node = nameElement.parentNode.parentNode.nextElementSibling;  // if link on name and container on that
-				}
-				if (!node){
-					msg = getAllContentNodes(ele); // just grab all the text and delete just the name as a fallback
-					msg = msg.split(":")[1]; // deleting name.
-				} else {
-					while (node) {
-						if (node.childNodes.length){
-							msg += getAllContentNodes(node)
-						} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-							msg += escapeHtml(node.textContent)+" ";
-						} else if (node.nodeType === 1){
-							if (!settings.textonlymode){ 
-								if ((node.nodeName == "IMG") && node.src){
-									node.src = node.src+"";
-								}
-								msg += node.outerHTML;
-							}
-						}
-						node = node.nextElementSibling;
-					}
-				}
+				chatimg = ele.childNodes[0].childNodes[0].querySelector("img[src]").src;
+			} catch(e){
+			}
+			
+		} catch(e){	
+			try {
+				var nameElement = ele.childNodes[0].childNodes[0].childNodes[0];
+				chatname = escapeHtml(nameElement.textContent.trim());
+				chatname = chatname.split(":")[0];
+			} catch(e){	
+				return;
+			}
+		}
+		try {
+			try {
+				var node = ele.childNodes[0].childNodes[1].childNodes[1];
+				msg = getAllContentNodes(node);
 			} catch(e){
 				//console.error(e);return;
 			}
 			msg = msg.trim();
 
 		} catch(e){
+			////console.log(e);
 			return;
 		}
 		
 		var nameColor = "";
 		try {
-			if (nameElement.children && nameElement.children.length){
-				nameElement = nameElement.children[0];
-			}
-			if (nameElement.children && nameElement.children.length){
-				nameElement = nameElement.children[0];
-			}
-			nameColor = getComputedStyle(nameElement).color;
+			nameColor = getComputedStyle(nameElement.querySelector("div>span>span>span").parentNode.parentNode).color;
 		} catch(e){
-			
+			//console.log(e);
 		}
-		
 		if (chatname.startsWith("This broadcast has ended")){
 			return;
 		}
 
+		//console.log(msg);
+		//console.log(chatname);
 		if (!msg || !chatname){
 			return;
 		}
 		
-		var chatimg = ""
 		if (messageHistory.includes(chatname+"_"+msg)) {
 			//console.log("Message already exists");
 			return;
@@ -155,7 +141,7 @@
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		
-		console.log(data);
+		//console.log(data);
 		
 		if (settings.detweet){
 			data.type = "twitter";
@@ -211,12 +197,12 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					
 					try {
-						
 						for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 							if (mutation.addedNodes[i].tagName && (mutation.addedNodes[i].tagName == "DIV") && mutation.addedNodes[i].childNodes && mutation.addedNodes[i].parentNode && (mutation.addedNodes[i].parentNode.tagName == "DIV")){
-								processMessage(mutation.addedNodes[i]);
+								setTimeout(function(ele){
+									processMessage(ele);
+								},500,mutation.addedNodes[i]);
 							}
 						}
 					} catch(e){}
