@@ -4003,9 +4003,9 @@
 				
 				
 				
-				var titleText = "";
+				var titleText = false;
 				if (tab.title){
-					document.createTextNode(tab.title.slice(0, 100) + " - ");
+					titleText = document.createTextNode(tab.title.slice(0, 100) + " - ");
 				}
 				const smallText = document.createElement("small");
 				const italicsText = document.createElement("i");
@@ -4023,8 +4023,10 @@
 					const pageIcon = document.createTextNode("📄 ");
 					para.appendChild(pageIcon);
 				}
-
-				para.appendChild(titleText);
+				if (titleText){
+					para.appendChild(titleText);
+				}
+				
 				para.appendChild(smallText);
 				
 				checkbox.onclick = function(event){
