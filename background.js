@@ -1141,7 +1141,7 @@ chrome.runtime.onMessage.addListener(
 			if (typeof request !== "object"){
 				console.warn("Request type is not an object");
 				sendResponse({"state": isExtensionOn});
-				return;
+				return response;
 			}
 			
 			if (request.cmd && request.cmd === "setOnOffState") { // toggle the IFRAME (stream to the remote dock) on or off
