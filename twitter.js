@@ -63,7 +63,19 @@
 		return resp;
 	}
 	
+	function isColorVeryDark(color) {
+		const rgb = color.match(/\d+/g).map(Number);
 
+		const R = rgb[0] / 255;
+		const G = rgb[1] / 255;
+		const B = rgb[2] / 255;
+
+		const luminance = 0.2126 * R + 0.7152 * G + 0.0722 * B;
+
+		const darkThreshold = 0.2; 
+
+		return luminance < darkThreshold;
+	}
 	
 	function processMessage(ele){
 		var chatname="";
@@ -107,6 +119,11 @@
 		var nameColor = "";
 		try {
 			nameColor = getComputedStyle(nameElement.querySelector("div>span>span>span").parentNode.parentNode).color;
+			if (nameColor){
+				 if (isColorVeryDark(nameColor)){ // we want to exclude very dark names.
+					 nameColor = "";
+				 }
+			}
 		} catch(e){
 			//console.log(e);
 		}
