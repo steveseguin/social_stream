@@ -2928,7 +2928,7 @@ function processIncomingRequest(request, UUID=false){
 			openchat(request.value || null); 
 		} else if (request.action === "getUserHistory" && request.value && request.value.chatname && request.value.type){
 			if (isExtensionOn){ 
-				getMessagesDB(request.value.chatname, request.value.type, page = 0, pageSize = 10, function(response){
+				getMessagesDB(request.value.chatname, request.value.type, page = 0, pageSize = 100, function(response){
 					if (isExtensionOn){ 
 						sendDataP2P({"userHistory": response}, UUID); 
 					}
@@ -6772,7 +6772,7 @@ function addMessageDB(message) {
  // request.onerror = e => console.error('Error adding message to the database: ', e.target.error);
 }
 
-function getMessagesDB(chatname, type, page = 0, pageSize = 10, callback) {
+function getMessagesDB(chatname, type, page = 0, pageSize = 100, callback) {
 	if (settings.disableDB){
 		return;
 	}
@@ -6797,7 +6797,7 @@ function getMessagesDB(chatname, type, page = 0, pageSize = 10, callback) {
 		  count++;
 		  cursor.continue();
 		} else if (callback){
-		  callback(results); // Execute callback function with the results
+		  callback(results.reverse()); // Execute callback function with the results
 		}
 	};
 
