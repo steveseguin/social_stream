@@ -31,6 +31,8 @@
 		}
 	}
 
+	const hideContentInParentheses = (str) => str.replace(/\(.*?\)/g, '');
+
 	function getTwitchAvatarImage(username) {
 		fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username=" + encodeURIComponent(username)).then(response => {
 			response.text().then(function(text) {
@@ -213,6 +215,8 @@
 
 			username = escapeHtml(username);
 			displayName = escapeHtml(displayName);
+
+			displayName = hideContentInParentheses(displayName);
 
 			try {
 				nameColor = displayNameEle.style.color || ele.querySelector(".seventv-chat-user, .chat-line__username").style.color;
