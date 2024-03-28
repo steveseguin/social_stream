@@ -166,10 +166,12 @@ if (typeof(chrome.runtime)=='undefined'){
 	};
 	
 	ipcRenderer.on('fromMain', (event, ...args) => {
-		log("FROM MAIN",args[0]);
+		log("FROM MAIN",args);
+		
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
+		
 		if (args[0]){
 			onMessageCallback(args[0], sender, function(response){
 				if (event.returnValue){
@@ -179,7 +181,27 @@ if (typeof(chrome.runtime)=='undefined'){
 			});
 		}
 		
-	})
+	});
+	ipcRenderer.on('fromMainSender', (event, args) => {
+		log("FROM MAINS SENDER",args);
+		
+		if (args.length){
+			if (args[1]){
+				var sender = args[1]
+			} else {
+				var sender = {};
+				sender.tab = {};
+				sender.tab.id = null;
+			}
+			onMessageCallback(args[0], sender, function(response){
+				if (event.returnValue){
+					event.returnValue = response;
+				}
+				ipcRenderer.send('fromBackgroundResponse',response);
+			});
+		}
+		
+	});
 	
 	ipcRenderer.on('fromPopup', (event, ...args) => {
 		//log("FROM POP UP (redirected)", args[0]);
@@ -1124,6 +1146,8 @@ async function getBTTVEmotes(url=false){
 chrome.runtime.onMessage.addListener(
     async function (request, sender, sendResponseReal) {
 		
+		console.warn(sender);
+		
 		var response = {};
 		var alreadySet=false;
 		function sendResponse(msg){
@@ -1139,8 +1163,7 @@ chrome.runtime.onMessage.addListener(
 		try{
 			
 			if (typeof request !== "object"){
-				console.warn("Request type is not an object");
-				sendResponse({"state": isExtensionOn});
+				//sendResponse({"state": isExtensionOn});
 				return response;
 			}
 			
@@ -1403,6 +1426,7 @@ chrome.runtime.onMessage.addListener(
 					sendToDestinations({"delete": request.delete});
 				} 
 			} else if ("message" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+			
 				try {
 					request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
 				} catch(e){}
@@ -3270,18 +3294,16 @@ function processResponse(data, reverse=false, metadata=null){
 	if (!chrome.debugger){return false;}
 	if (!isExtensionOn){return false;} // extension not active, so don't let responder happen. Probably safer this way.
 	if (settings.disablehost){return;}
-	
 	chrome.tabs.query({}, function(tabs) {
 		if (chrome.runtime.lastError) {
 			//console.warn(chrome.runtime.lastError.message);
 		}
 		var published = {};
-		
 		for (var i=0;i<tabs.length;i++){
 			try {
-				if (("tid" in data) && (data.tid!==false)){ // if an action-response, we want to only respond to the tab that originated it
-				
-					if (typeof data.tid == "object"){
+				if (("tid" in data) && (data.tid!==false) && (data.tid!==null)){ // if an action-response, we want to only respond to the tab that originated it
+					
+					if (typeof data.tid == "object"){ // if a list of tabs
 						
 						if (reverse){
 							if (data.tid.includes(tabs[i].id.toString())){
@@ -3313,9 +3335,7 @@ function processResponse(data, reverse=false, metadata=null){
 
 				published[tabs[i].url] = true;
 				//messageTimeout = Date.now();
-				
 				if (tabs[i].url.startsWith("https://www.twitch.tv/popout/")){  // twitch, but there's also cases for youtube/facebook
-
 					if (!debuggerEnabled[tabs[i].id]){
 						debuggerEnabled[tabs[i].id]=false;
 						chrome.debugger.attach( { tabId: tabs[i].id },  "1.3", onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false));  // enable the debugger to let us fake a user
