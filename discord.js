@@ -26,6 +26,9 @@
 	
 	function escapeHtml(unsafe) {
 		try {
+			unsafe = unsafe.replace("\n", " ");
+			unsafe = unsafe.replace("\t", " ");
+			unsafe = unsafe.replace("\r", " ");
 			if (settings.textonlymode) { // we can escape things later, as needed instead I guess.
 				return unsafe;
 			}
@@ -60,7 +63,7 @@
 			if (node.childNodes.length) {
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
-				resp += escapeHtml(node.textContent.trim()) + " ";
+				resp += escapeHtml(node.textContent) + "";
 			} else if (node.nodeType === 1) {
 				if (!settings.textonlymode) {
 					if (node && node.classList && node.classList.contains("zero-width-emote")) {
@@ -83,6 +86,7 @@
 	
 	
 	function processMessage(ele){
+		console.log(ele);
 		
 		var mid = ele.id.split("chat-messages-");
 		if (mid.length==2){
@@ -103,18 +107,29 @@
 		   chatimg = ele.querySelector("img[class*='avatar-'],img[class*='avatar_']").src+"";
 		} catch(e){
 		}
-		
+		var bot = false;
 		var name="";
 		try {
-			name = getAllContentNodes(ele.querySelector("#message-username-"+mid)).trim();
+			name = getAllContentNodes(ele.querySelector("#message-username-"+mid+" [class^='username']")).trim();
+			
+			if (ele.querySelector("#message-username-"+mid+" [class^='botTag_']")){
+				bot = true;
+			}
 		} catch(e){
 		}
+		
 		
 		var msg = "";
 		
 		try {
 			msg = getAllContentNodes(ele.querySelector("#message-content-"+mid)).trim();
 		} catch(e){}
+		
+		if (!msg){
+			try {
+				msg = getAllContentNodes(ele.querySelector("#message-accessories-"+mid+" [class^='embedDescription']")).trim();
+			} catch(e){}
+		}
 		
 		var contentimg = "";
 		try {
@@ -156,6 +171,9 @@
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
+		if (bot){
+			data.bot = true;
+		}
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
@@ -164,7 +182,7 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "discord";
 		
-	//	console.log(data);
+		console.log(data);
 		
 		if (lastMessage === JSON.stringify(data)){ // prevent duplicates, as zoom is prone to it.
 			return;
