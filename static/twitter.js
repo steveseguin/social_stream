@@ -88,7 +88,7 @@
 						isExtensionOn = request.state;
 						
 						if (document.getElementById("startupbutton")){
-							if (isExtensionOn){
+							if (isExtensionOn && settings.xcapture){
 								document.getElementById("startupbutton").style.display = "block";
 								document.getElementById("adbutton").style.display = "block";
 							} else {
@@ -384,7 +384,7 @@
 	
 	function checkButtons(){
 		
-		if (!isExtensionOn || !enabledSSN){return;}
+		if (!isExtensionOn || !enabledSSN || !settings.xcapture){return;}
 		
 		var bases = document.querySelector('main[role="main"]').querySelectorAll('article[role="article"]');
 		bases = [...bases].reverse();
@@ -465,7 +465,7 @@
 			button.innerHTML = "Enable Overlay Service";
 			button.style = "border: 0; width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; margin-top: 10px; background-color: #54af54; cursor:pointer;";
 			
-			if (!isExtensionOn){
+			if (!isExtensionOn || !settings.xcapture){
 				button.style.display = "none";
 			}
 			
@@ -518,7 +518,7 @@
 			}
 			button.style = "border: 0; width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; margin-top: 10px; background-color: #6254af; cursor:pointer;";
 			
-			if (!isExtensionOn || !enabledSSN){
+			if (!isExtensionOn || !enabledSSN || !settings.xcapture){
 				button.style.display = "none";
 			}
 			
@@ -591,12 +591,12 @@
 					
 				},500);
 			};
-			button2.id = "adbutton";
 			
+			button2.id = "adbutton";
 			button2.innerHTML = "Block Promoted Tweets";
 			button2.style = "border: 0; margin-top: 10px;width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; background-color: rgb(151 151 151); cursor:pointer;";
 			
-			if (!isExtensionOn){
+			if (!isExtensionOn || !settings.xcapture){
 				button2.style.display = "none";
 			}
 			
@@ -632,12 +632,7 @@
 		);
 	}
 	
-	
-	
-
 	var checkTwitter = null;
-	
-	
 	
 	function deTweet(){
 		if (!settings.detweet){

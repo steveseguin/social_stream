@@ -1292,6 +1292,9 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "detweet"){
 					pushSettingChange();
 				}
+				if (request.setting == "xcapture"){
+					pushSettingChange();
+				}
 				if (request.setting == "customtwitchstate"){
 					pushSettingChange();
 				}
