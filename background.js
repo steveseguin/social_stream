@@ -1146,8 +1146,6 @@ async function getBTTVEmotes(url=false){
 chrome.runtime.onMessage.addListener(
     async function (request, sender, sendResponseReal) {
 		
-		console.warn(sender);
-		
 		var response = {};
 		var alreadySet=false;
 		function sendResponse(msg){

@@ -485,6 +485,8 @@
 			data.sourceImg = brandedImageURL;
 		}
 
+		console.log(data);
+		
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, {
 				"message": data
