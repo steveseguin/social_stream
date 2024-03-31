@@ -119,14 +119,15 @@
 			var chatNodes = ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
 			
 			if (!chatNodes.length){
-				chatNodes = ele.querySelectorAll(".chat-entry-content, .chat-emote-container");
+				chatNodes = ele.querySelectorAll(".chat-entry-content, .chat-emote-container, .break-all");
 			} else {
 				chatNodes = ele.querySelectorAll("seventv-container, .chat-emote-container, .seventv-painted-content"); // 7tv support, as of june 20th
 				
 			}
 			for (var i=0;i<chatNodes.length;i++){
-				chatmessage += getAllContentNodes(chatNodes[i]);
+				chatmessage += getAllContentNodes(chatNodes[i])+" ";
 			}
+			chatmessage = chatmessage.trim();
 		  } catch(e){
 		  }
 	  } else {

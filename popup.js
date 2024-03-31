@@ -594,7 +594,7 @@ function update(response, sync=true){
 
 			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
 		
-
+			
 			if ('settings' in response){
 				for (var key in response.settings){
 					try {
@@ -612,7 +612,32 @@ function update(response, sync=true){
 								var ele = document.querySelector("input[data-param1='"+key+"']");
 								if (ele){
 									ele.checked = response.settings[key].param1;
-									updateSettings(ele, sync);
+									if (!key.includes("=")){
+										if ("numbersetting" in response.settings[key]){
+											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting));
+										} else if (document.querySelector("input[data-numbersetting='"+key+"']")){
+											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting='"+key+"']").value));
+										} else {
+											updateSettings(ele, sync); 
+										}
+									} else {
+										updateSettings(ele, sync);
+									}
+								} else if (key.includes("=")){
+									var keys = key.split('=');
+									ele = document.querySelector("input[data-param1='"+keys[0]+"']");
+									if (ele){
+										ele.checked = response.settings[keys[0]].param1;
+										if (keys[1]){
+											var ele2 = document.querySelector("input[data-numbersetting='"+keys[0]+"']");
+											if (ele2){
+												ele2.value = parseFloat(keys[1], keys[1]);
+											}
+											updateSettings(ele, sync, parseFloat(keys[1]));
+										} else{
+											updateSettings(ele, sync);
+										}
+									}
 								}
 							}
 							if ("param2" in response.settings[key]){
@@ -687,6 +712,11 @@ function update(response, sync=true){
 								if (ele){
 									ele.value = response.settings[key].numbersetting;
 									updateSettings(ele, sync);
+									
+									var ele = document.querySelector("input[data-param1='"+key+"']");
+									if (ele && ele.checked){
+										updateSettings(ele, false, parseFloat(response.settings[key].numbersetting));
+									}
 								}
 							}
 							if ("textparam1" in response.settings[key]){
@@ -907,15 +937,26 @@ function removeQueryParamWithValue(url, paramWithValue) {
     return modifiedUrl;
 }
 
-function updateSettings(ele, sync=true){
+function updateSettings(ele, sync=true, value=null){
 	
 	if (ele.target){
 		ele = this;
 	}
+	console.log(ele, value);
 	if (ele.dataset.param1){
 		if (ele.checked){
 			
-			document.getElementById("dock").raw = updateURL(ele.dataset.param1, document.getElementById("dock").raw);
+			if (value!==null){
+				document.getElementById("dock").raw = updateURL(ele.dataset.param1+"="+value, document.getElementById("dock").raw);
+			} else if (document.querySelector("input[data-numbersetting='"+ele.dataset.param1+"']")){
+				
+				value = document.querySelector("input[data-numbersetting='"+ele.dataset.param1+"']").value;
+				
+				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
+				document.getElementById("dock").raw = updateURL(ele.dataset.param1+"="+value, document.getElementById("dock").raw);
+			} else {
+				document.getElementById("dock").raw = updateURL(ele.dataset.param1, document.getElementById("dock").raw);
+			}
 
 			if (ele.dataset.param1 == "darkmode"){
 				var key = "lightmode";
@@ -965,7 +1006,7 @@ function updateSettings(ele, sync=true){
 					updateSettings(ele1, sync);
 				}
 			});
-				
+			
 		} else {
 			//document.getElementById("dock").raw = document.getElementById("dock").raw.replace(ele.dataset.param1, "");
 			document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
@@ -1245,11 +1286,19 @@ function updateSettings(ele, sync=true){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
 		}
 		return;
-	} else if (ele.dataset.numbersetting){
+	} else if (ele.dataset.numbersetting){ 
+		
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting", setting: ele.dataset.numbersetting, "value": ele.value}, function (response) {});
 		}
-		return;
+		
+		if (document.querySelector("input[data-param1='"+ele.dataset.numbersetting+"']") && document.querySelector("input[data-param1='"+ele.dataset.numbersetting+"']").checked){
+			document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw,ele.dataset.numbersetting);
+			document.getElementById("dock").raw = updateURL(ele.dataset.numbersetting+"="+ ele.value, document.getElementById("dock").raw);
+		} else {
+			return;
+		}
+		
 	} else if (ele.dataset.special){
 		
 		if (ele.dataset.special==="session"){
