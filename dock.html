@@ -2381,6 +2381,13 @@
 		lanonly = "&lanonly";
 	}
 	
+	var filtercommands = false;
+	if (urlParams.has("hidecommands")){
+		filtercommands = true;
+	}
+	
+	
+	
 	if (urlParams.has("reverse")){
 		reversed = true;
 		forceAutoscroll=false;
@@ -5054,6 +5061,10 @@
 				return;
 			}
 			if (onlyFrom &&  (data.type!==onlyFrom)){
+				return;
+			}
+			
+			if (filtercommands && data.chatmessage && data.chatmessage.startsWith("!")){
 				return;
 			}
 			
