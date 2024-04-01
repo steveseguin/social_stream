@@ -551,7 +551,11 @@
 	
 		try {
 			if (svgs){
-				svgs = [...new Set(svgs)];
+				if (showdupes){
+					svgs = [...svgs];
+				} else {
+					svgs = [...new Set(svgs)];
+				}
 			}
 		}catch(e){console.error(e);}
 		//try {
@@ -604,7 +608,11 @@
 		
 		try {
 			if (emojis){
-				emojis = [...new Set(emojis)];
+				if (showdupes){
+					emojis = [...emojis];
+				} else {
+					emojis = [...new Set(emojis)];
+				}
 			}
 		}catch(e){console.error(e);}
 		

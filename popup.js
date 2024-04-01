@@ -942,7 +942,6 @@ function updateSettings(ele, sync=true, value=null){
 	if (ele.target){
 		ele = this;
 	}
-	console.log(ele, value);
 	if (ele.dataset.param1){
 		if (ele.checked){
 			

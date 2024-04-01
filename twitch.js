@@ -193,7 +193,7 @@
 
 	var lastMessage = "";
 	var lastUser = "";
-
+	var lastEle = null;
 	//var midList = [];
 
 	function processMessage(ele) { // twitch
@@ -312,14 +312,15 @@
 			chatmessage = chatmessage.trim();
 		}
 
-		/* if ((lastMessage === chatmessage) && (lastUser === username)) {
+		if ((lastMessage === chatmessage) && (lastUser === username) && (!lastEle || !lastEle.isConnected)) {
 			lastMessage = "";
 			username = "";
 			return;
 		} else {
 			lastMessage = chatmessage;
 			lastUser = username;
-		} */
+			lastEle = ele;
+		}
 
 		if (chatmessage && chatmessage.includes(" (Deleted by ")) {
 			return; // I'm assuming this is a deleted message
@@ -484,8 +485,6 @@
 		if (brandedImageURL) {
 			data.sourceImg = brandedImageURL;
 		}
-
-		console.log(data);
 		
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, {
@@ -704,7 +703,9 @@
 				console.log("Social Stream ready to go");
 				onElementInsertedTwitch(document.querySelector(checkElement), function(element) {
 					setTimeout(function(element) {
-						processMessage(element);
+						if (element && element.isConnected){
+							processMessage(element);
+						}
 					}, 20, element); // 20ms to give it time to load the message, rather than just the container
 				});
 
