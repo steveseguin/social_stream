@@ -4265,15 +4265,25 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 					if (Date.now() - messageTimeout > 1000){
 						messageTimeout = Date.now();
 						let URL = settings["chatwebhook"+i].textsetting;
-						if (!URL.startsWith("http")){
-							if (!URL.includes("://")){
-								URL = "https://"+URL;
-								fetch(URL).catch(console.error);
-							} else {
-								window.open(URL, '_blank');
+						if (settings.chatwebhookpost){
+							if (!URL.startsWith("http")){
+								if (!URL.includes("://")){
+									URL = "https://"+URL;
+								}
 							}
+							ajax(data, URL, "POST");
 						} else {
-							fetch(URL).catch(console.error);
+						
+							if (!URL.startsWith("http")){
+								if (!URL.includes("://")){
+									URL = "https://"+URL;
+									fetch(URL).catch(console.error);
+								} else {
+									window.open(URL, '_blank');
+								}
+							} else {
+								fetch(URL).catch(console.error);
+							}
 						}
 					}
 			   }
