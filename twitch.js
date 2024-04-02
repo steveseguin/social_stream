@@ -202,6 +202,7 @@
 		var chatmessage = "";
 		var nameColor = "";
 		var donations = 0;
+		var highlightColor = "";
 
 		try {
 
@@ -266,6 +267,9 @@
 
 		try {
 			var eleContent = ele.querySelector(".seventv-chat-message-body") || ele.querySelector(".seventv-message-context") || ele.querySelector('*[data-test-selector="chat-line-message-body"]') || ele.querySelector('*[data-a-target="chat-line-message-body"]');
+			if (eleContent.querySelector(".chat-message-mention, [data-a-target='chat-message-mention']")){
+				highlightColor = "rgba(225, 20, 20, 0.2)";
+			}
 			chatmessage = getAllContentNodes(eleContent);
 		} catch (e) {}
 
@@ -427,35 +431,37 @@
 		}
 		
 		
-		var highlightColor = "";
+		
 
 		try {
-			var computed = getComputedStyle(ele);
-			highlightColor = computed.backgroundColor;
-			if (highlightColor == "rgba(0, 0, 0, 0)") {
-				highlightColor = "";
-			}
-			if (!highlightColor) {
-				if (computed.borderWidth != "0px") {
-					highlightColor = computed.borderColor;
-					if (highlightColor == "rgba(0, 0, 0, 0)") {
-						highlightColor = "";
+			if (!highlightColor){
+				var computed = getComputedStyle(ele);
+				highlightColor = computed.backgroundColor;
+				if (highlightColor == "rgba(0, 0, 0, 0)") {
+					highlightColor = "";
+				}
+				if (!highlightColor) {
+					if (computed.borderWidth != "0px") {
+						highlightColor = computed.borderColor;
+						if (highlightColor == "rgba(0, 0, 0, 0)") {
+							highlightColor = "";
+						}
 					}
 				}
-			}
-			if (!highlightColor){
-				let hlele =  ele.querySelector(".has-highlight");
-				if (hlele){
-					computed = getComputedStyle(hlele);
-					highlightColor = computed.backgroundColor;
-					if (highlightColor == "rgba(0, 0, 0, 0)") {
-						highlightColor = "";
-					}
-					if (!highlightColor) {
-						if (computed.borderWidth != "0px") {
-							highlightColor = computed.borderColor;
-							if (highlightColor == "rgba(0, 0, 0, 0)") {
-								highlightColor = "";
+				if (!highlightColor){
+					let hlele =  ele.querySelector(".has-highlight");
+					if (hlele){
+						computed = getComputedStyle(hlele);
+						highlightColor = computed.backgroundColor;
+						if (highlightColor == "rgba(0, 0, 0, 0)") {
+							highlightColor = "";
+						}
+						if (!highlightColor) {
+							if (computed.borderWidth != "0px") {
+								highlightColor = computed.borderColor;
+								if (highlightColor == "rgba(0, 0, 0, 0)") {
+									highlightColor = "";
+								}
 							}
 						}
 					}
@@ -481,6 +487,8 @@
 		data.membership = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
+		
+		console.log(data);
 		
 		if (brandedImageURL) {
 			data.sourceImg = brandedImageURL;
