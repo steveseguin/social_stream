@@ -2072,6 +2072,11 @@
 		hidequestions = true
 	}
 	
+	var stripLinks = false;
+	if (urlParams.has("striplinks")) {
+		stripLinks = true;
+	}
+	
 	var stripEmojis = false;
 	if (urlParams.has("stripemoji")) {
 		stripEmojis = true;
@@ -5038,6 +5043,11 @@
 			return "";
 		}
 	}
+	
+	function replaceURLsWithSubstring(text, replacement = '[Link]') {
+		const urlPattern = /(\b(https?:\/\/)?\bwww\.|[a-zA-Z0-9-]+(\.[a-zA-Z]{2,}))(\.[a-zA-Z0-9]{2,})?([^\s]*[^\s\.,])/g;
+		return text.replace(urlPattern, replacement);
+	}
 
 	function processData(data, reloaded=false){
 		if (data.contents){
@@ -5162,6 +5172,11 @@
 				} else if (data.event){ 
 					data.chatmessage = data.chatmessage.trim();
 					data.chatmessage = "<i>"+data.chatmessage+"</i>";
+				}
+				if (stripLinks){
+					data.chatmessage = replaceURLsWithSubstring( data.chatmessage);
+
+					//data.chatmessage = data.chatmessage.replace(/https?:\/\/[^\s]+/g, '[Link]');
 				}
 			} else {
 				data.chatmessage = "";
