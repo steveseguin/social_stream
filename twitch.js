@@ -496,7 +496,7 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
 		
-		console.log(data);
+		// console.log(data);
 		
 		if (brandedImageURL) {
 			data.sourceImg = brandedImageURL;
