@@ -267,16 +267,22 @@
 
 		try {
 			var eleContent = ele.querySelector(".seventv-chat-message-body") || ele.querySelector(".seventv-message-context") || ele.querySelector('*[data-test-selector="chat-line-message-body"]') || ele.querySelector('*[data-a-target="chat-line-message-body"]');
-			if (eleContent.querySelector(".chat-message-mention, .mention-fragment--recipient[data-a-target='chat-message-mention']")){
+			
+			chatmessage = getAllContentNodes(eleContent);
+			
+			if (!highlightColor && chatmessage && eleContent.querySelector(".chat-message-mention, .mention-fragment--recipient[data-a-target='chat-message-mention']")){
 				highlightColor = "rgba(225, 20, 20, 0.3)";
 			}
-			chatmessage = getAllContentNodes(eleContent);
+			
 		} catch (e) {}
 
 		if (!chatmessage) {
 			try {
 				var eleContent = ele.querySelector('span.message');
 				chatmessage = getAllContentNodes(eleContent);
+				if (!highlightColor && chatmessage && eleContent.querySelector(".chat-message-mention, .mention-fragment--recipient[data-a-target='chat-message-mention']")){
+					highlightColor = "rgba(225, 20, 20, 0.3)";
+				}
 			} catch (e) {}
 		}
 
@@ -284,7 +290,6 @@
 			try {
 				var eleContent = ele.querySelector(".chat-line__message-container .chat-line__username-container").nextElementSibling.nextElementSibling;
 				chatmessage = getAllContentNodes(eleContent);
-
 				eleContent = eleContent.nextElementSibling;
 				var count = 0;
 				while (eleContent) {
@@ -294,6 +299,9 @@
 					if (count > 20) {
 						break
 					}
+				}
+				if (!highlightColor && chatmessage && eleContent.querySelector(".chat-message-mention, .mention-fragment--recipient[data-a-target='chat-message-mention']")){
+					highlightColor = "rgba(225, 20, 20, 0.3)";
 				}
 			} catch (e) {}
 		}
