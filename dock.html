@@ -2889,7 +2889,8 @@
 		if (text.startsWith("!")){return;} // do not TTS commands.
 		
 		if (replaceURLInLink){
-			text = text.replace(/https?:\/\/[^\s]+/g, 'Link');
+			text = replaceURLsWithSubstring(text, "Link");
+			//text = text.replace(/https?:\/\/[^\s]+/g, 'Link');
 		}
 		
 		if (GoogleAPIKey){
@@ -5175,8 +5176,6 @@
 				}
 				if (stripLinks){
 					data.chatmessage = replaceURLsWithSubstring( data.chatmessage);
-
-					//data.chatmessage = data.chatmessage.replace(/https?:\/\/[^\s]+/g, '[Link]');
 				}
 			} else {
 				data.chatmessage = "";
