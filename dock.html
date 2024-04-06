@@ -5045,9 +5045,29 @@
 		}
 	}
 	
+	function replaceURLs(node) {
+		try {
+			if (node.nodeType === 3) { // Text node
+				node.nodeValue = replaceURLsWithSubstring(node.nodeValue);
+			} else if (node.nodeType === 1) { 
+				node.childNodes.forEach(replaceURLs);
+			}
+		} catch(e){
+			console.error(e);
+		}
+	}
+	
 	function replaceURLsWithSubstring(text, replacement = '[Link]') {
-		const urlPattern = /(\b(https?:\/\/)?\bwww\.|[a-zA-Z0-9-]+(\.[a-zA-Z]{2,}))(\.[a-zA-Z0-9]{2,})?([^\s]*[^\s\.,])/g;
-		return text.replace(urlPattern, replacement);
+		if (typeof text !== 'string') {
+			return text;
+		}
+		try {
+			const urlPattern = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g;
+			return text.replace(urlPattern, replacement);
+		} catch(e){
+			console.error(e);
+			return text;
+		}
 	}
 
 	function processData(data, reloaded=false){
@@ -5173,9 +5193,6 @@
 				} else if (data.event){ 
 					data.chatmessage = data.chatmessage.trim();
 					data.chatmessage = "<i>"+data.chatmessage+"</i>";
-				}
-				if (stripLinks){
-					data.chatmessage = replaceURLsWithSubstring( data.chatmessage);
 				}
 			} else {
 				data.chatmessage = "";
@@ -5634,6 +5651,8 @@
 
 			mainOutputWindow.appendChild(node);
 			
+			let hlMessage = node.querySelector(".hl-message");
+			
 			var svgs = node.querySelectorAll("svg");
 			svgs.forEach(svg=>{
 				svg.setAttribute("width","100%");
@@ -5669,7 +5688,7 @@
 						if (bubble && largeavatar){
 							node.querySelector(".hl-rightside").classList.add("odd"); 
 						} else if (bubble){
-							node.querySelector(".hl-message").classList.add("odd"); 
+							hlMessage.classList.add("odd"); 
 						} else {
 							node.classList.add("odd"); 
 						}
@@ -5692,22 +5711,26 @@
 				if (highlightSpecial && data.question){
 					node.querySelector(".hl-rightside").classList.add("special");
 				}
-			} else if (bubble && (node.contentLength || node.querySelectorAll(".hl-message svg, .hl-message img").length || (node.querySelector(".hl-message").innerText &&  node.querySelector(".hl-message").innerText.length))){
-				node.querySelector(".hl-message").classList.add("bubble");
+			} else if (bubble && (node.contentLength || node.querySelectorAll(".hl-message svg, .hl-message img").length || (hlMessage.innerText &&  hlMessage.innerText.length))){
+				hlMessage.classList.add("bubble");
 				
 				
 				if (highlightDonos &&  data.hasDonation){
-					node.querySelector(".hl-message").classList.add("dono-highlight");
+					hlMessage.classList.add("dono-highlight");
 				}
 
 				if (highlightMembers && data.membership){
-					node.querySelector(".hl-message").classList.add("member");
+					hlMessage.classList.add("member");
 				}
 				
 				if (highlightSpecial && data.question){
-					node.querySelector(".hl-message").classList.add("special");
+					hlMessage.classList.add("special");
 				}
-			} 
+			}
+
+			if (stripLinks && chatmessage && hlMessage){
+				replaceURLs(hlMessage);
+			}
 
 			if (data.type && (data.type == "twitch") && avatars && data.chatimg){
 				var twitchImage = new Image();
@@ -5739,10 +5762,9 @@
 			} else if (compactmode){
 				var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they are longer than the message's height
 				if (nameEle){
-					var msgNode = node.querySelector(".hl-message");
-					if (msgNode && msgNode.innerText){
+					if (hlMessage && hlMessage.innerText){
 						var ccc =0;
-						while (msgNode.clientHeight < nameEle.clientHeight || nameEle.clientHeight < nameEle.scrollHeight || nameEle.clientWidth < nameEle.scrollWidth){
+						while (hlMessage.clientHeight < nameEle.clientHeight || nameEle.clientHeight < nameEle.scrollHeight || nameEle.clientWidth < nameEle.scrollWidth){
 							var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
 							nameEle.style.fontSize = (fontsize-1)+"px";
 							ccc+=1;
@@ -5750,7 +5772,7 @@
 						}
 					} else {
 						var ccc =0;
-						while (msgNode.clientHeight < nameEle.clientHeight || nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight){
+						while (hlMessage.clientHeight < nameEle.clientHeight || nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight){
 							var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
 							nameEle.style.fontSize = (fontsize-1)+"px";
 							ccc+=1;

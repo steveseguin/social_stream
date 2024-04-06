@@ -1078,68 +1078,128 @@ function getItemWithExpiry(key) {
     return item.value;
 }
 
+var Globalbttv = false;
+
 async function getBTTVEmotes(url=false){
-	// assumes Youtube only for now.
-	var vid = false;
 	
-	if (url){
-		vid = YouTubeGetID(url);
-	}
+	var type = "";
+	var bttv = {};
+	var userID = false;
 	
-	if (vid){
-		var userID = localStorage.getItem("vid2uid:"+vid);
-		if (!userID){
-			userID = await fetch("https://api.socialstream.ninja/youtube/user?video="+vid).then(result=>{return result.text();}).then(result=>{return result;}).catch(err=>{
-				console.log(err);
-			});
-			if (userID){
-				 localStorage.setItem("vid2uid:"+vid, userID);
-			} else {
-				return false;
+	try {
+		if (url && url.includes("youtube.com/")){
+			type = "youtube";
+		} else if (url && url.includes("twitch.tv/")){
+			type = "twitch";
+		}
+		
+		if (type=="youtube"){
+			var vid = false;
+			if (url){
+				vid = YouTubeGetID(url);
 			}
 			
-		}
-		if (userID){
-			var bttv = getItemWithExpiry("uid2bttv:"+userID);
+			if (vid){
+				userID = localStorage.getItem("vid2uid:"+vid);
+				if (!userID){
+					userID = await fetch("https://api.socialstream.ninja/youtube/user?video="+vid).then(result=>{return result.text();}).then(result=>{return result;}).catch(err=>{
+					//	console.log(err);
+					});
+					if (userID){
+						 localStorage.setItem("vid2uid:"+vid, userID);
+					} else {
+						return false;
+					}
+					
+				}
+				if (userID){
+					bttv = getItemWithExpiry("uid2bttv:"+userID);
+					
+					if (!bttv){
+						bttv = await fetch("https://api.betterttv.net/3/cached/users/youtube/"+userID).then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
+						//	console.log(err);
+						});
+						if (bttv){
+							 setItemWithExpiry("uid2bttv:"+userID, bttv);
+						} else {
+							 bttv = {};
+						}
+					} else {
+						log("bttv recovererd from storage");
+					}
+				}
+			}
+		} else if (type=="twitch"){
+			var username = url.split("popout/");
+			if (username.length>1){
+				username = username[1].split("/")[0];
+				
+				if (username){
+					bttv = getItemWithExpiry("uid2bttv:twitch:"+username);
+					
+					if (!bttv){
+						
+						userID = localStorage.getItem("twitch2uid:"+username);
+						if (!userID){
+							const response = await fetch("https://api.socialstream.ninja/twitch/user?username=" + username);
 			
-			if (!bttv){
-				bttv = await fetch("https://api.betterttv.net/3/cached/users/youtube/"+userID).then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
-					console.log(err);
+							if (!response.ok) {
+								return {};
+							}
+							const data = await response.json();
+							
+							//console.log(data);
+							if (data && data.data && data.data[0] && data.data[0].id){
+								userID = data.data[0].id;
+							}
+							
+							if (userID){
+								 localStorage.setItem("twitch2uid:"+username, userID);
+							} 
+						}
+						if (userID){
+							bttv = await fetch("https://api.betterttv.net/3/cached/users/twitch/"+userID).then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
+								//console.log(err);
+							});
+							if (bttv){
+								 setItemWithExpiry("uid2bttv:twitch:"+username, bttv);
+							} else {
+								 bttv = {};
+							}
+						}
+					} else {
+						log("bttv recovererd from storage");
+					}
+				}
+				
+			};
+		}
+		
+		//console.log(bttv);
+		if (!Globalbttv){
+			Globalbttv = getItemWithExpiry("globalbttv");
+			
+			if (!Globalbttv){
+				Globalbttv = await fetch("https://api.betterttv.net/3/cached/emotes/global").then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
+					//console.log(err);
 				});
-				if (bttv){
-					 setItemWithExpiry("uid2bttv:"+userID, bttv);
+				if (Globalbttv){
+					setItemWithExpiry("globalbttv", Globalbttv);
 				} else {
-					 bttv = {};
+					Globalbttv = [];
 				}
 			} else {
-				log("bttv recovererd from storage");
+				log("Globalbttv recovererd from storage");
 			}
-		} else {
-			var bttv = {};
+			// bttv.globalEmotes = Globalbttv;
 		}
-	} else {
-		var bttv = {};
-	}
-	
-	//console.log(bttv);
-	
-	var globalbttv = getItemWithExpiry("globalbttv");
-	
-	if (!globalbttv){
-		globalbttv = await fetch("https://api.betterttv.net/3/cached/emotes/global").then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
-			console.log(err);
-		});
-		if (globalbttv){
-			setItemWithExpiry("globalbttv", globalbttv);
-		} else {
-			globalbttv = {};
+		bttv.url = url;
+		bttv.type = type;
+		bttv.user = userID;
+		//console.log(Globalbttv);
+		} catch(e){
+			
 		}
-	} else {
-		log("globalbttv recovererd from storage");
-	}
-	bttv.globalEmotes = globalbttv;
-	//console.log(globalbttv);
-	
 	return bttv;
 }
 
@@ -1333,6 +1393,9 @@ chrome.runtime.onMessage.addListener(
 					pushSettingChange();
 				}
 				if (request.setting == "bttv"){
+					if (settings.bttv){
+						await getBTTVEmotes();
+					}
 					pushSettingChange();
 				}
 				
@@ -1506,9 +1569,9 @@ chrome.runtime.onMessage.addListener(
 			} else if ("getBTTV" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 				sendResponse({"state":isExtensionOn});
 				if (sender.tab.url){
-					var BTTV = await getBTTVEmotes(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
-					if (BTTV){
-						chrome.tabs.sendMessage(sender.tab.id, {BTTV:BTTV}, function(response=false) {
+					var BTTV2 = await getBTTVEmotes(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
+					if (BTTV2){
+						chrome.tabs.sendMessage(sender.tab.id, {BTTV:BTTV2}, function(response=false) {
 							chrome.runtime.lastError;
 						});
 					}
@@ -1862,7 +1925,7 @@ function ajax(object2send, url, ajaxType="PUT", type="application/json; charset=
 }
 	
 var messageCounter = 0;
-function sendToDestinations(message){
+async function sendToDestinations(message){
 
 	if (typeof message == "object"){
 		if (!message.id){
@@ -1876,6 +1939,21 @@ function sendToDestinations(message){
 		
 		if (message.chatmessage){
 			if (!message.textonly){
+				if (settings.bttv){
+					if (!Globalbttv){
+						await getBTTVEmotes();
+					}
+					if (Globalbttv){
+						Globalbttv.forEach(emote => {
+							const emoteCode = emote.code;
+							const emoteId = emote.id;
+							const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
+							const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
+
+							message.chatmessage = message.chatmessage.split(emoteCode).join(imageTag);
+						});
+					}
+				}
 				message.chatmessage = filterXSS(message.chatmessage);
 			}
 		}
@@ -2228,7 +2306,7 @@ function setupSocket(){
 				try {
 					var msg = await applyBotActions(data.extContent); // perform any immediate actions, including modifying the message before sending it out
 					if (msg){ // we won't return, since we need to do a response later to the socket
-						resp = sendToDestinations(msg);
+						resp = await sendToDestinations(msg);
 					}
 				} catch(e){
 					console.error(e);
@@ -2238,7 +2316,7 @@ function setupSocket(){
 					let msg = JSON.parse(data.value);
 					msg = await applyBotActions(msg); // perform any immediate actions, including modifying the message before sending it out
 					if (msg){
-						resp = sendToDestinations(msg);
+						resp = await sendToDestinations(msg);
 					}
 				} catch(e){
 					console.error(e);

@@ -1453,6 +1453,13 @@ span.zero-width-parent img.zero-width-emote {
 		ElevenLabsKey = urlParams.get("elevenlabskey") || false; 
 	}
 	
+	function replaceURLs(node) {
+		if (node.nodeType === 3) {
+			node.nodeValue = replaceURLsWithSubstring(node.nodeValue);
+		} else if (node.nodeType === 1) {
+			node.childNodes.forEach(replaceURLs);
+		}
+	}
 	
 	function replaceURLsWithSubstring(text, replacement = '[Link]') {
 		const urlPattern = /(\b(https?:\/\/)?\bwww\.|[a-zA-Z0-9-]+(\.[a-zA-Z]{2,}))(\.[a-zA-Z0-9]{2,})?([^\s]*[^\s\.,])/g;

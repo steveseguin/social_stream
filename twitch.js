@@ -92,9 +92,6 @@
 		}
 	}
 	
-	function getBTTVEmotes(userid){
-		return fetch("https://api.betterttv.net/3/cached/users/twitch/"+userid).then(result=>{return result.json()}).then(result=>{return result;})
-	}
 	
 	function cloneSvgWithResolvedUse(svgElement) {
 		const clonedSvg = svgElement.cloneNode(true);
@@ -118,8 +115,6 @@
 
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
-
-		
 		if (!element) {
 			return resp;
 		}
@@ -147,7 +142,13 @@
 					resp += getAllContentNodes(node)
 				}
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
-				resp += escapeHtml(node.textContent.trim()) + " ";
+				
+				if (settings.textonlymode){
+					resp += escapeHtml(node.textContent.trim()) + " ";
+				} else {
+					resp += replaceEmotesWithImages(escapeHtml(node.textContent).trim()) + " ";
+				}
+				
 			} else if (node.nodeType === 1) {
 				if (!settings.textonlymode) {
 					if (node.nodeName === "IMG") {
@@ -515,8 +516,48 @@
 			//
 		}
 	}
+	
+	function replaceEmotesWithImages(text) {
+		if (!BTTV){return text;}
+		if (!settings.bttv){return text;}
+		try {
+			/* if (BTTV.globalEmotes){ // we'll handle globals in the extension.
+				BTTV.globalEmotes.forEach(emote => {
+					const emoteCode = emote.code;
+					const emoteId = emote.id;
+					const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
+					const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
+
+					text = text.split(emoteCode).join(imageTag);
+				});
+			} */
+			if (BTTV.channelEmotes){
+				BTTV.channelEmotes.forEach(emote => {
+					const emoteCode = emote.code;
+					const emoteId = emote.id;
+					const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
+					const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
+
+					text = text.split(emoteCode).join(imageTag);
+				});
+			}
+			if (BTTV.sharedEmotes){
+				BTTV.sharedEmotes.forEach(emote => {
+					const emoteCode = emote.code;
+					const emoteId = emote.id;
+					const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
+					const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
+
+					text = text.split(emoteCode).join(imageTag);
+				});
+			}
+		} catch(e){
+		}
+		return text;
+	}
 
 	var settings = {};
+	var BTTV = false;
 	// settings.textonlymode
 	// settings.captureevents
 
@@ -539,12 +580,22 @@
 						if ("state" in request) {
 							isExtensionOn = request.state;
 						}
-						if ("settings" in request) {
+						if ("settings" in request){
 							settings = request.settings;
+							sendResponse(true);
+							if (settings.bttv && !BTTV){
+								chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
+							}
+							return;
+						} 
+						if ("BTTV" in request){
+							BTTV = request.BTTV;
+							//console.log(BTTV);
 							sendResponse(true);
 							return;
 						}
 					}
+						
 					// twitch doesn't capture avatars already.
 				} catch (e) {}
 				sendResponse(false);
@@ -557,6 +608,9 @@
 		}, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 			if ("settings" in response) {
 				settings = response.settings;
+				if (settings.bttv && !BTTV){
+					chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
+				}
 			}
 			if ("state" in response) {
 				isExtensionOn = response.state;
