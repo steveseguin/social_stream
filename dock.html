@@ -2943,37 +2943,42 @@
 
 		if (!voice){
 			if (!voices || !voices.length){
-				voices = window.speechSynthesis.getVoices();
+				if (window.speechSynthesis){
+					voices = window.speechSynthesis.getVoices();
+				}
 			}
-			voices.forEach(vce=>{
-				if (vce.name && voiceName && (vce.name.toLowerCase().includes(voiceName.toLowerCase()))){
-					if (vce.lang && (vce.lang.toLowerCase() == speechLang.toLowerCase())){
+			if (voices){
+				voices.forEach(vce=>{
+					if (vce.name && voiceName && (vce.name.toLowerCase().includes(voiceName.toLowerCase()))){
+						if (vce.lang && (vce.lang.toLowerCase() == speechLang.toLowerCase())){
+							voice = vce;
+						} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
+							voice = vce;
+						}
+					} else if (vce.name && vce.name.includes("Siri")){ // SIRI sucks and breaks a lot, so lets skip if possible.
+						return;
+					} else if (!voice && vce.lang && (vce.lang.toLowerCase() == speechLang.toLowerCase())){
 						voice = vce;
 					} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
 						voice = vce;
 					}
-				} else if (vce.name && vce.name.includes("Siri")){ // SIRI sucks and breaks a lot, so lets skip if possible.
-					return;
-				} else if (!voice && vce.lang && (vce.lang.toLowerCase() == speechLang.toLowerCase())){
-					voice = vce;
-				} else if (!voice && vce.lang && (vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase())){
-					voice = vce;
-				}
-			});
+				});
+			}
 			if (!voice && voices.length){
 				voice = voices.shift(); // take the first/default voice
 			}
 			if (voice){
-				console.log("Voice being used:");
-				console.log(voice);
+				//console.log("Voice being used:");
+				//console.log(voice);
 				if (voice.lang && (voice.lang.split("-")[0].toLowerCase() != "en")){
 					English = false;
 				}
 			} else {
-				console.log("No voice found; using lang: "+speechLang);
+				//console.log("No voice found; using lang: "+speechLang);
 			}
 		}
-
+		if (!SpeechSynthesisUtterance){return;}
+		
 		var speechInput = new SpeechSynthesisUtterance();
 		if (!voice){
 			speechInput.lang = speechLang;
@@ -2989,7 +2994,9 @@
 		getById("tts").style['background-image']='url(./icons/tts_stop.png)';
 		getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
 
-		window.speechSynthesis.speak(speechInput);
+		if (window.speechSynthesis){
+			window.speechSynthesis.speak(speechInput);
+		}
 
 		try{
 			speechInput.addEventListener('end',function(e){
