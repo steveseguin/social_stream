@@ -799,7 +799,7 @@ async function exportSettings(){
 
 
 async function resetSettings(item=false){
-	console.log("reset settings");
+	log("reset settings");
 	chrome.storage.sync.get(properties, async function(item){
 		if (!item){
 			item = {};
@@ -1103,7 +1103,7 @@ async function getBTTVEmotes(url=false){
 				userID = localStorage.getItem("vid2uid:"+vid);
 				if (!userID){
 					userID = await fetch("https://api.socialstream.ninja/youtube/user?video="+vid).then(result=>{return result.text();}).then(result=>{return result;}).catch(err=>{
-					//	console.log(err);
+					//	log(err);
 					});
 					if (userID){
 						 localStorage.setItem("vid2uid:"+vid, userID);
@@ -1117,7 +1117,7 @@ async function getBTTVEmotes(url=false){
 					
 					if (!bttv){
 						bttv = await fetch("https://api.betterttv.net/3/cached/users/youtube/"+userID).then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
-						//	console.log(err);
+						//	log(err);
 						});
 						if (bttv){
 							 setItemWithExpiry("uid2bttv:"+userID, bttv);
@@ -1131,15 +1131,16 @@ async function getBTTVEmotes(url=false){
 			}
 		} else if (type=="twitch"){
 			var username = url.split("popout/");
+			
 			if (username.length>1){
 				username = username[1].split("/")[0];
-				
+				log("username: "+username);
 				if (username){
-					bttv = getItemWithExpiry("uid2bttv.twitch:"+username);
-					
+					bttv = getItemWithExpiry("uid2bttv.twitch:"+username.toLowerCase());
+					log("BTTV2",bttv);
 					if (!bttv || bttv.message){
 						
-						userID = localStorage.getItem("twitch2uid."+username);
+						userID = localStorage.getItem("twitch2uid."+username.toLowerCase());
 						if (!userID){
 							const response = await fetch("https://api.socialstream.ninja/twitch/user?username=" + username);
 			
@@ -1148,12 +1149,12 @@ async function getBTTVEmotes(url=false){
 							}
 							const data = await response.json();
 							
-							//console.log(data);
+							//log(data);
 							if (data && data.data && data.data[0] && data.data[0].id){
 								userID = data.data[0].id;
 								
 								if (userID){
-									localStorage.setItem("twitch2uid."+username, userID);
+									localStorage.setItem("twitch2uid."+username.toLowerCase(), userID);
 								} 
 							} else {
 								userID = false;
@@ -1163,13 +1164,14 @@ async function getBTTVEmotes(url=false){
 						}
 						if (userID){
 							bttv = await fetch("https://api.betterttv.net/3/cached/users/twitch/"+userID).then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
-								//console.log(err);
+								console.error(err);
 							});
 							if (bttv){
-								 setItemWithExpiry("uid2bttv.twitch:"+username, bttv);
+								 setItemWithExpiry("uid2bttv.twitch:"+username.toLowerCase(), bttv);
 							} else {
 								 bttv = {};
 							}
+							log("BTTV",bttv);
 						}
 					} else {
 						log("bttv recovererd from storage");
@@ -1179,13 +1181,13 @@ async function getBTTVEmotes(url=false){
 			};
 		}
 		
-		//console.log(bttv);
+		//log(bttv);
 		if (!Globalbttv){
 			Globalbttv = getItemWithExpiry("globalbttv");
 			
 			if (!Globalbttv){
 				Globalbttv = await fetch("https://api.betterttv.net/3/cached/emotes/global").then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
-					//console.log(err);
+					//log(err);
 				});
 				if (Globalbttv){
 					setItemWithExpiry("globalbttv", Globalbttv);
@@ -1200,7 +1202,7 @@ async function getBTTVEmotes(url=false){
 		bttv.url = url;
 		bttv.type = type;
 		bttv.user = userID;
-		//console.log(Globalbttv);
+		//log(Globalbttv);
 		} catch(e){
 			
 		}
@@ -3921,12 +3923,12 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			for (var i = 1;i<=10;i++){
 				if (settings['botReplyMessageEvent'+i] && settings['botReplyMessageCommand'+i] && settings['botReplyMessageCommand'+i].textsetting && settings['botReplyMessageValue'+i] && settings['botReplyMessageValue'+i].textsetting && (data.chatmessage.indexOf(settings['botReplyMessageCommand'+i].textsetting)!=-1)){
 					var matched = true;
-					//console.log(settings['botReplyMessageSource'+i]);
+					//log(settings['botReplyMessageSource'+i]);
 					if (settings['botReplyMessageSource'+i] && settings['botReplyMessageSource'+i].textsetting.trim()){
 						matched = false;
 						
 						settings['botReplyMessageSource'+i].textsetting.split(",").forEach(xx=>{
-							//console.log(xx,data.type);
+							//log(xx,data.type);
 							if (xx.trim().toLowerCase() == data.type.trim().toLowerCase()){
 								matched=true;
 							}
@@ -6876,7 +6878,7 @@ function addMessageDB(message) {
 	} catch(e){
 		
 	}
- // request.onsuccess = () => console.log('Message added to the database.');
+ // request.onsuccess = () => log('Message added to the database.');
  // request.onerror = e => console.error('Error adding message to the database: ', e.target.error);
 }
 

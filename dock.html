@@ -2786,8 +2786,8 @@
 	var premiumQueueActive = false;
 	
 	function finishedAudio(e=false){
-		console.log("finishedAudio");
-		console.log(e);
+		//console.log("finishedAudio");
+		//console.log(e);
 		premiumQueueActive = false;
 		if (premiumQueueTTS.length){
 			speak(premiumQueueTTS.shift()); // play next
@@ -3994,7 +3994,7 @@
 			return;
 			
 		} else if ("tabsList" in data){ //delete messages, but also block user. remote, so we won't sync,
-			console.log(data.tabsList);
+			//console.log(data.tabsList);
 			if (isOBSBrowserSource){
 				return;
 			}
@@ -4105,7 +4105,7 @@
 				}
 			  };
 		} else if ("userHistory" in data){ //delete messages, but also block user. remote, so we won't sync,
-			console.log(data.userHistory);
+			//console.log(data.userHistory);
 			if (isOBSBrowserSource){
 				return;
 			}
@@ -4136,8 +4136,8 @@
 	
 			  data.userHistory.forEach(msg => {
 				const para = document.createElement("p"); 
-				console.log(timeSince(msg.timestamp));
-				console.log(msg.timestamp);
+				//console.log(timeSince(msg.timestamp));
+				//console.log(msg.timestamp);
 				para.innerHTML = msg.chatmessage+" - <small><i>Sent: "+timeSince(msg.timestamp)+"</i></small>";
 				messagesList.appendChild(para);
 			  });
@@ -6735,7 +6735,7 @@
 			getChatSourcesButton.setTimeout = setTimeout(function(){
 				if (getById("getChatSources").classList.contains("hidden")){
 					send2Extension({action:"getChatSources"}); // trying some more.
-					console.log("Trying again..");
+					//console.log("Trying again..");
 				}
 			},2000);
 		};

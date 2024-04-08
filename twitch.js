@@ -565,7 +565,8 @@
 		chrome.runtime.onMessage.addListener(
 			function(request, sender, sendResponse) {
 				try {
-
+					//console.log("REQUEST");
+					//console.log(request);
 					if ("focusChat" == request) {
 
 						if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
@@ -583,6 +584,7 @@
 						if ("settings" in request){
 							settings = request.settings;
 							sendResponse(true);
+							//console.log(settings);
 							if (settings.bttv && !BTTV){
 								chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
 							}
@@ -606,10 +608,13 @@
 		chrome.runtime.sendMessage(chrome.runtime.id, {
 			"getSettings": true
 		}, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+			//console.log(response);
 			if ("settings" in response) {
 				settings = response.settings;
 				if (settings.bttv && !BTTV){
-					chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
+					chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){
+					//	console.log(response);
+					});
 				}
 			}
 			if ("state" in response) {
