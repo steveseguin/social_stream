@@ -2752,21 +2752,29 @@
 	var English = true;
 	var voice = false;
 	var voices = null;
+	
+	function onUserGesture(){
+		if (!voices || !voices.length){
+			try {
+				voices = window.speechSynthesis.getVoices();
+			} catch(e){
+				console.error(e);
+			}				
+		}
+	}
 	try {
 		voices = window.speechSynthesis.getVoices();
 		if (isSafari() && (!voices || !voices.length)){
-			alert("Press OK to load text to speech.");
-			voices = window.speechSynthesis.getVoices();
+			document.addEventListener("click", onUserGesture, { once: true });
+			document.addEventListener("touchend", onUserGesture, { once: true });
+			document.addEventListener("keydown", onUserGesture, { once: true });
 		}
 		
 	} catch(e){
-		if (isSafari() && (!voices || !voices.length)){
-			alert("Couldn't load speech files.\n\nPress OK to try again.");
-			if (window.speechSynthesis && window.speechSynthesis.getVoices()){
-				voices = window.speechSynthesis.getVoices();
-			} else {
-				getById("tts").style.display = "none";
-			}
+		if (isSafari()){
+			document.addEventListener("click", onUserGesture, { once: true });
+			document.addEventListener("touchend", onUserGesture, { once: true });
+			document.addEventListener("keydown", onUserGesture, { once: true });
 		} else {
 			getById("tts").style.display = "none";
 		}
