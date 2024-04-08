@@ -1137,9 +1137,9 @@ async function getBTTVEmotes(url=false){
 				if (username){
 					bttv = getItemWithExpiry("uid2bttv.twitch:"+username);
 					
-					if (!bttv || (bttv.message && (bttv.message == "user not found"))){
+					if (!bttv || bttv.message){
 						
-						userID = localStorage.getItem("twitch2uid:"+username);
+						userID = localStorage.getItem("twitch2uid."+username);
 						if (!userID){
 							const response = await fetch("https://api.socialstream.ninja/twitch/user?username=" + username);
 			
@@ -1153,7 +1153,7 @@ async function getBTTVEmotes(url=false){
 								userID = data.data[0].id;
 								
 								if (userID){
-									localStorage.setItem("twitch2uid:"+username, userID);
+									localStorage.setItem("twitch2uid."+username, userID);
 								} 
 							} else {
 								userID = false;
