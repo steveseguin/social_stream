@@ -1137,7 +1137,7 @@ async function getBTTVEmotes(url=false){
 				if (username){
 					bttv = getItemWithExpiry("uid2bttv:twitch:"+username);
 					
-					if (!bttv){
+					if (!bttv || (bttv.message && (bttv.message == "user not found"))){
 						
 						userID = localStorage.getItem("twitch2uid:"+username);
 						if (!userID){
@@ -1151,11 +1151,15 @@ async function getBTTVEmotes(url=false){
 							//console.log(data);
 							if (data && data.data && data.data[0] && data.data[0].id){
 								userID = data.data[0].id;
+								
+								if (userID){
+									localStorage.setItem("twitch2uid:"+username, userID);
+								} 
+							} else {
+								userID = false;
 							}
 							
-							if (userID){
-								 localStorage.setItem("twitch2uid:"+username, userID);
-							} 
+							
 						}
 						if (userID){
 							bttv = await fetch("https://api.betterttv.net/3/cached/users/twitch/"+userID).then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
@@ -3840,6 +3844,15 @@ try {
 	});
 } catch(e){}
 
+
+function sanitizeRelay(text){
+	text = text.replace(/(<([^>]+)>)/gi, "");
+	text = text.replace(/[!#@]/g, '');
+	text = text.replace(/cheer\d+/gi, ' ');
+	text.replace(/\.(?=\S(?!$))/g, ' ');
+	return text
+}
+
 // expects an object; not False/Null/undefined
 async function applyBotActions(data, tab=false){ // this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
@@ -3996,7 +4009,9 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				if (tab){
 					msg.url = tab.url;
 				}
-				msg.response = data.chatname.replace(/(<([^>]+)>)/gi, "")+" on "+data.type+" donated "+data.hasDonation.replace(/(<([^>]+)>)/gi, "")+". Thank you";
+				
+				
+				msg.response = sanitizeRelay(data.chatname)+" on "+data.type+" donated "+sanitizeRelay(data.hasDonation)+". Thank you";
 				processResponse(msg, true);
 			}
 		}
@@ -4022,9 +4037,9 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 					msg.url = tab.url;
 				}
 				
-				let tmpmsg = data.chatmessage.replace(/(<([^>]+)>)/gi, "").trim();
+				let tmpmsg = sanitizeRelay(data.chatmessage).trim();
 				if (tmpmsg){
-					msg.response = data.chatname+" said: "+tmpmsg;
+					msg.response = sanitizeRelay(data.chatname)+" said: "+tmpmsg;
 					checkExactDuplicate(msg.response);
 					processResponse(msg, true, data); // this should be the first and only message
 				}

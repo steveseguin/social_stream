@@ -59,29 +59,36 @@
             </tr>
             <!-- Rows will be populated here -->
         </table>
+		<button id="asdf" onclick="populateVoices();">load list</button>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const select = document.getElementById('languageSelect');
             const table = document.getElementById('voicesTable');
 
-            function populateVoices() {
-                const voices = speechSynthesis.getVoices();
-                voices.forEach(voice => {
-                    const option = document.createElement('option');
-                    option.textContent = `${voice.name} (${voice.lang})`;
-                    select.appendChild(option);
-
-                    const row = table.insertRow();
-                    row.insertCell().textContent = voice.name;
-                    row.insertCell().textContent = voice.lang;
-                    row.insertCell().textContent = voice.localService ? 'Yes' : 'No';
-                    row.insertCell().textContent = voice.default ? 'Yes' : 'No';
-                });
-            }
-
             speechSynthesis.onvoiceschanged = populateVoices;
         });
+		
+		function populateVoices() {
+		
+			const select = document.getElementById('languageSelect');
+			select.innerHTML = "";
+			const table = document.getElementById('voicesTable');
+			table.innerHTML = "<tr><th>Name</th><th>Language</th><th>Local Service</th><th>Default</th></tr>";
+			const voices = speechSynthesis.getVoices();
+			voices.forEach(voice => {
+				if (document.getElementById("asdf")){document.getElementById("asdf").remove();};
+				const option = document.createElement('option');
+				option.textContent = `${voice.name} (${voice.lang})`;
+				select.appendChild(option);
+
+				const row = table.insertRow();
+				row.insertCell().textContent = voice.name;
+				row.insertCell().textContent = voice.lang;
+				row.insertCell().textContent = voice.localService ? 'Yes' : 'No';
+				row.insertCell().textContent = voice.default ? 'Yes' : 'No';
+			});
+		}
     </script>
 </body>
 </html>

@@ -2751,11 +2751,25 @@
 	var speech = false;
 	var English = true;
 	var voice = false;
+	var voices = null;
 	try {
-		var voices = window.speechSynthesis.getVoices();
+		voices = window.speechSynthesis.getVoices();
+		if (isSafari() && (!voices || !voices.length)){
+			alert("Press OK to load text to speech.");
+			voices = window.speechSynthesis.getVoices();
+		}
+		
 	} catch(e){
-		var voices = null;
-		getById("tts").style.display = "none";
+		if (isSafari() && (!voices || !voices.length)){
+			alert("Couldn't load speech files.\n\nPress OK to try again.");
+			if (window.speechSynthesis && window.speechSynthesis.getVoices()){
+				voices = window.speechSynthesis.getVoices();
+			} else {
+				getById("tts").style.display = "none";
+			}
+		} else {
+			getById("tts").style.display = "none";
+		}
 	}
 
 	var voiceGender = false;
@@ -2816,7 +2830,15 @@
 		}
 	}
 	
-	
+	function isSafari() {
+		const userAgent = navigator.userAgent;
+		const isChrome = userAgent.indexOf('Chrome') > -1;
+		const isSafari = userAgent.indexOf('Safari') > -1;
+		const vendor = navigator.vendor;
+
+		return isSafari && !isChrome && vendor.indexOf('Apple') > -1;
+	}
+
 	
 	var filterEvents = false;
 	if (urlParams.has("filterevents")){ // &filterevents=joined,otherkeyword
