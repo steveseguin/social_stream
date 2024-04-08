@@ -2753,31 +2753,16 @@
 	var voice = false;
 	var voices = null;
 	
-	function onUserGesture(){
-		if (!voices || !voices.length){
-			try {
-				voices = window.speechSynthesis.getVoices();
-			} catch(e){
-				console.error(e);
-			}				
-		}
-	}
+	
 	try {
 		voices = window.speechSynthesis.getVoices();
-		if (isSafari() && (!voices || !voices.length)){
-			document.addEventListener("click", onUserGesture, { once: true });
-			document.addEventListener("touchend", onUserGesture, { once: true });
-			document.addEventListener("keydown", onUserGesture, { once: true });
+		if (!voices.length){
+			if (isSafari()){
+				console.warn("Safari doesn't really support automatic TTS");
+			}
 		}
-		
 	} catch(e){
-		if (isSafari()){
-			document.addEventListener("click", onUserGesture, { once: true });
-			document.addEventListener("touchend", onUserGesture, { once: true });
-			document.addEventListener("keydown", onUserGesture, { once: true });
-		} else {
-			getById("tts").style.display = "none";
-		}
+		getById("tts").style.display = "none";
 	}
 
 	var voiceGender = false;
@@ -2991,11 +2976,10 @@
 		speechInput.pitch = pitch;
 		speechInput.text = text;
 
-		getById("tts").style['background-image']='url(./icons/tts_stop.png)';
-		getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
-
 		if (window.speechSynthesis){
 			window.speechSynthesis.speak(speechInput);
+			getById("tts").style['background-image']='url(./icons/tts_stop.png)';
+			getById("tts").title = 'Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech';
 		}
 
 		try{
