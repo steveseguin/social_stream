@@ -1135,7 +1135,7 @@ async function getBTTVEmotes(url=false){
 				username = username[1].split("/")[0];
 				
 				if (username){
-					bttv = getItemWithExpiry("uid2bttv:twitch:"+username);
+					bttv = getItemWithExpiry("uid2bttv.twitch:"+username);
 					
 					if (!bttv || (bttv.message && (bttv.message == "user not found"))){
 						
@@ -1166,7 +1166,7 @@ async function getBTTVEmotes(url=false){
 								//console.log(err);
 							});
 							if (bttv){
-								 setItemWithExpiry("uid2bttv:twitch:"+username, bttv);
+								 setItemWithExpiry("uid2bttv.twitch:"+username, bttv);
 							} else {
 								 bttv = {};
 							}
@@ -3845,12 +3845,16 @@ try {
 } catch(e){}
 
 
-function sanitizeRelay(text){
+function sanitizeRelay(text, alt=false){
+	if (!text.trim()){return text;}
 	text = text.replace(/(<([^>]+)>)/gi, "");
 	text = text.replace(/[!#@]/g, '');
 	text = text.replace(/cheer\d+/gi, ' ');
-	text.replace(/\.(?=\S(?!$))/g, ' ');
-	return text
+	text = text.replace(/\.(?=\S(?!$))/g, ' ');
+	if (!text.trim() && alt){
+		return alt;
+	}
+	return text;
 }
 
 // expects an object; not False/Null/undefined
@@ -4011,7 +4015,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				}
 				
 				
-				msg.response = sanitizeRelay(data.chatname)+" on "+data.type+" donated "+sanitizeRelay(data.hasDonation)+". Thank you";
+				msg.response = sanitizeRelay(data.chatname, "Someone")+" on "+data.type+" donated "+sanitizeRelay(data.hasDonation)+". Thank you";
 				processResponse(msg, true);
 			}
 		}
@@ -4039,7 +4043,7 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 				
 				let tmpmsg = sanitizeRelay(data.chatmessage).trim();
 				if (tmpmsg){
-					msg.response = sanitizeRelay(data.chatname)+" said: "+tmpmsg;
+					msg.response = sanitizeRelay(data.chatname, "Someone")+" said: "+tmpmsg;
 					checkExactDuplicate(msg.response);
 					processResponse(msg, true, data); // this should be the first and only message
 				}
