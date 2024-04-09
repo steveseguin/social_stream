@@ -4416,6 +4416,8 @@
 		iframe.style.left = "-100px";
 		iframe.style.top = "-100px";
 		iframe.id = "frame_"+room;
+		iframe.allow = "midi;geolocation;microphone;"; // microphone is needed for Safari webRTC P2P connections
+			
 		
 		if (!iframes){
 			iframes = [iframe];

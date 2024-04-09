@@ -1496,7 +1496,7 @@ chrome.runtime.onMessage.addListener(
 					sendToDestinations({"delete": request.delete});
 				} 
 			} else if ("message" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-			
+				console.log(request);
 				try {
 					request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
 				} catch(e){}
@@ -1573,10 +1573,13 @@ chrome.runtime.onMessage.addListener(
 					sendResponse({"state":isExtensionOn});
 				}
 			} else if ("getBTTV" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+				console.log("GETBTTV");
 				sendResponse({"state":isExtensionOn});
 				if (sender.tab.url){
 					var BTTV2 = await getBTTVEmotes(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
 					if (BTTV2){
+						console.log(sender);
+						console.log(BTTV2);
 						chrome.tabs.sendMessage(sender.tab.id, {BTTV:BTTV2}, function(response=false) {
 							chrome.runtime.lastError;
 						});
@@ -2397,9 +2400,9 @@ async function openchat(target=null){
 		});
 		if (!matched){
 			if (newWindow) {
-				var popup = window.open(input, '_blank', 'toolbar=0,location=0,menubar=0,fullscreen=1'); // fullscreen param is for IE 11
+				var popup = window.open(input, '_blank', 'toolbar=0,location=0,menubar=0,fullscreen=0'); // fullscreen param is for IE 11
 				popup.moveTo(0, 0); // Reset position
-				popup.resizeTo(screen.availWidth, screen.availHeight); // Almost fullscreen window
+				popup.resizeTo(100, 100);
 			} else {
 				window.open(input, '_blank');
 			}

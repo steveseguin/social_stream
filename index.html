@@ -1649,6 +1649,7 @@ span.zero-width-parent img.zero-width-emote {
 		iframe.style.left = "-100px";
 		iframe.style.top = "-100px";
 		iframe.id = "frame1";
+		iframe.allow = "midi;geolocation;microphone;";  // microphone is needed for Safari webRTC P2P connections
 		document.body.appendChild(iframe);
 		
 		var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
