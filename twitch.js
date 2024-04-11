@@ -516,40 +516,23 @@
 			//
 		}
 	}
+	function replaceEmotesWithImages2(message, emotesMap) {
+		const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join('\\b|\\b')}\\b)(?!\\w|\\d|[!?.])`, 'g');
+		return message.replace(emotePattern, (match) => {
+			const imageUrl = emotesMap[match];
+			return `<img src="${imageUrl}" alt="${match}" />`;
+		});
+	}
 	
 	function replaceEmotesWithImages(text) {
 		if (!BTTV){return text;}
 		if (!settings.bttv){return text;}
 		try {
-			/* if (BTTV.globalEmotes){ // we'll handle globals in the extension.
-				BTTV.globalEmotes.forEach(emote => {
-					const emoteCode = emote.code;
-					const emoteId = emote.id;
-					const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
-					const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
-
-					text = text.split(emoteCode).join(imageTag);
-				});
-			} */
 			if (BTTV.channelEmotes){
-				BTTV.channelEmotes.forEach(emote => {
-					const emoteCode = emote.code;
-					const emoteId = emote.id;
-					const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
-					const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
-
-					text = text.split(emoteCode).join(imageTag);
-				});
+				text = replaceEmotesWithImages2(text, BTTV.channelEmotes);
 			}
 			if (BTTV.sharedEmotes){
-				BTTV.sharedEmotes.forEach(emote => {
-					const emoteCode = emote.code;
-					const emoteId = emote.id;
-					const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
-					const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
-
-					text = text.split(emoteCode).join(imageTag);
-				});
+				text = replaceEmotesWithImages2(text, BTTV.sharedEmotes);
 			}
 		} catch(e){
 		}

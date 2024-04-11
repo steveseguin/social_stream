@@ -191,6 +191,7 @@
 		
 		if (!isExtensionOn){return;}
 		
+		
 		var bases = document.querySelectorAll('#contents ytd-comment-thread-renderer');
 		for (var i=0;i<bases.length;i++) {
 			try {
@@ -219,6 +220,25 @@
 	}
 
 	function preStartup(){
+		
+		if (!isExtensionOn){return;}
+		
+		if (!window.location.href.startsWith("https://www.youtube.com/watch")){
+			return;
+		}
+		
+		if (settings.flipYoutube){
+			if (!document.getElementById("secondary-inner").pass){
+				document.getElementById("secondary-inner").pass = true;
+				document.getElementById("below").appendChild(document.getElementById("secondary-inner"));
+				document.getElementById("secondary").appendChild(document.getElementById("bottom-grid"));
+				
+				document.querySelectorAll("#dismissible").forEach(ele=>{
+					ele.style.display = "none";
+				});
+			}
+		}
+		
 		if (!document.getElementById("startupbutton")){
 			var button  = document.createElement("button");
 			button.onclick = function(){
@@ -230,7 +250,7 @@
 			button.innerHTML = "SS";
 			button.title = "Enable Social Stream static comment capture support. Turn off the Social stream extension to hide this button";
 	
-			button.style = "margin-right: 10px; transition: all 0.2s linear 0s; border-radius: 100px; cursor: pointer; display: inline-block; background-color: white;";
+			button.style = "margin-right: 10px; transition: all 0.2s linear 0s; border-radius: 100px; cursor: pointer; display: inline-block; background-color: #FFFA;";
 			
 			if (!isExtensionOn){
 				button.style.display = "none";

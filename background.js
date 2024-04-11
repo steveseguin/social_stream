@@ -1113,16 +1113,30 @@ async function getBTTVEmotes(url=false){
 					
 				}
 				if (userID){
-					bttv = getItemWithExpiry("uid2bttv:"+userID);
+					bttv = getItemWithExpiry("uid2bttv2:"+userID);
 					
 					if (!bttv){
 						bttv = await fetch("https://api.betterttv.net/3/cached/users/youtube/"+userID).then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
 						//	log(err);
 						});
 						if (bttv){
-							 setItemWithExpiry("uid2bttv:"+userID, bttv);
+							if (bttv.channelEmotes){
+								bttv.channelEmotes = bttv.channelEmotes.reduce((acc, emote) => {
+									const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/1x`;
+									acc[emote.code] = imageUrl;
+									return acc;
+								}, {});
+							}
+							if (bttv.sharedEmotes){
+								bttv.sharedEmotes = bttv.sharedEmotes.reduce((acc, emote) => {
+									const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/1x`;
+									acc[emote.code] = imageUrl;
+									return acc;
+								}, {});
+							}
+							setItemWithExpiry("uid2bttv2:"+userID, bttv);
 						} else {
-							 bttv = {};
+							bttv = {};
 						}
 					} else {
 						log("bttv recovererd from storage");
@@ -1136,7 +1150,7 @@ async function getBTTVEmotes(url=false){
 				username = username[1].split("/")[0];
 				log("username: "+username);
 				if (username){
-					bttv = getItemWithExpiry("uid2bttv.twitch:"+username.toLowerCase());
+					bttv = getItemWithExpiry("uid2bttv2.twitch:"+username.toLowerCase());
 					log("BTTV2",bttv);
 					if (!bttv || bttv.message){
 						
@@ -1159,17 +1173,29 @@ async function getBTTVEmotes(url=false){
 							} else {
 								userID = false;
 							}
-							
-							
 						}
 						if (userID){
 							bttv = await fetch("https://api.betterttv.net/3/cached/users/twitch/"+userID).then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
 								console.error(err);
 							});
 							if (bttv){
-								 setItemWithExpiry("uid2bttv.twitch:"+username.toLowerCase(), bttv);
+								if (bttv.channelEmotes){
+									bttv.channelEmotes = bttv.channelEmotes.reduce((acc, emote) => {
+										const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/1x`;
+										acc[emote.code] = imageUrl;
+										return acc;
+									}, {});
+								}
+								if (bttv.sharedEmotes){
+									bttv.sharedEmotes = bttv.sharedEmotes.reduce((acc, emote) => {
+										const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/1x`;
+										acc[emote.code] = imageUrl;
+										return acc;
+									}, {});
+								}
+								setItemWithExpiry("uid2bttv2.twitch:"+username.toLowerCase(), bttv);
 							} else {
-								 bttv = {};
+								bttv = {};
 							}
 							log("BTTV",bttv);
 						}
@@ -1181,16 +1207,20 @@ async function getBTTVEmotes(url=false){
 			};
 		}
 		
-		//log(bttv);
 		if (!Globalbttv){
-			Globalbttv = getItemWithExpiry("globalbttv");
+			Globalbttv = getItemWithExpiry("globalbttv2");
 			
 			if (!Globalbttv){
 				Globalbttv = await fetch("https://api.betterttv.net/3/cached/emotes/global").then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
 					//log(err);
 				});
 				if (Globalbttv){
-					setItemWithExpiry("globalbttv", Globalbttv);
+					Globalbttv = Globalbttv.reduce((acc, emote) => {
+						const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/1x`;
+						acc[emote.code] = imageUrl;
+						return acc;
+					}, {});
+					setItemWithExpiry("globalbttv2", Globalbttv);
 				} else {
 					Globalbttv = [];
 				}
@@ -1198,15 +1228,23 @@ async function getBTTVEmotes(url=false){
 				log("Globalbttv recovererd from storage");
 			}
 			// bttv.globalEmotes = Globalbttv;
+			
 		}
 		bttv.url = url;
 		bttv.type = type;
 		bttv.user = userID;
 		//log(Globalbttv);
-		} catch(e){
-			
-		}
+	} catch(e){
+		
+	}
 	return bttv;
+}
+function replaceEmotesWithImages(message, emotesMap) {
+    const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join('\\b|\\b')}\\b)(?!\\w|\\d|[!?.])`, 'g');
+    return message.replace(emotePattern, (match) => {
+        const imageUrl = emotesMap[match];
+        return `<img src="${imageUrl}" alt="${match}" />`;
+    });
 }
 
 chrome.runtime.onMessage.addListener(
@@ -1339,6 +1377,9 @@ chrome.runtime.onMessage.addListener(
 				}
 
 				if (request.setting == "textonlymode"){
+					pushSettingChange();
+				}
+				if (request.setting == "flipYoutube"){
 					pushSettingChange();
 				}
 				if (request.setting == "fancystageten"){
@@ -1496,7 +1537,6 @@ chrome.runtime.onMessage.addListener(
 					sendToDestinations({"delete": request.delete});
 				} 
 			} else if ("message" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-				console.log(request);
 				try {
 					request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
 				} catch(e){}
@@ -1953,14 +1993,7 @@ async function sendToDestinations(message){
 						await getBTTVEmotes();
 					}
 					if (Globalbttv){
-						Globalbttv.forEach(emote => {
-							const emoteCode = emote.code;
-							const emoteId = emote.id;
-							const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
-							const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
-
-							message.chatmessage = message.chatmessage.split(emoteCode).join(imageTag);
-						});
+						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalbttv);
 					}
 				}
 				message.chatmessage = filterXSS(message.chatmessage);
