@@ -151,7 +151,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - shareplay.tv (pop out chat, ie: https://www.shareplay.tv/chat/usernamehere/9fd3a9ee-a915-4f8b-b23d-xxxxxxxxxxx)
 - truffle.vip (https://chat.truffle.vip/chat/*)
 - megaphonetv.com (In [Studio](https://studio.megaphonetv.com/), select UGC, then open Recent messages)
-- pilled.net (pop out the chat; https://pilled.net/comment/XXXXX)
+- pilled (pop out the chat)
 - riverside.fm (just open the chat bar. Note: you can opt-out of capture via the extension menu)
 - chzzk.naver.com (pop out the chat)
 - demo.openstreamingplatform.com (pop out chat)
