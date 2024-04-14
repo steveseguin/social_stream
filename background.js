@@ -3917,6 +3917,25 @@ async function applyBotActions(data, tab=false){ // this can be customized to cr
 			}
 		}
 		
+		if (settings.whitelistuserstoggle && settings.whitelistusers){
+			if (!data.chatname){
+				return null; // no name, so won't allow
+			}
+			const whitelist = settings.whitelistusers.textsetting.split(",").map(user => {
+				const parts = user.toLowerCase().split(":").map(part => part.trim());
+				return { username: parts[0], type: parts[1] || "*" };
+			});
+
+			const isWhitelisted = whitelist.some(({ username, type }) => 
+				data.chatname.toLowerCase().trim() === username && 
+				(data.type === type || type === "*")
+			);
+
+			if (!isWhitelisted){ // not whitelisted.
+				return null;
+			}
+		}
+		
 		if (settings.viplistuserstoggle && data.chatname && settings.viplistusers){
 			const viplist = settings.viplistusers.textsetting.split(",").map(user => {
 				const parts = user.toLowerCase().split(":").map(part => part.trim());
