@@ -147,6 +147,7 @@
 					resp += escapeHtml(node.textContent.trim()) + " ";
 				} else {
 					resp += replaceEmotesWithImages(escapeHtml(node.textContent).trim()) + " ";
+					
 				}
 				
 			} else if (node.nodeType === 1) {
@@ -516,31 +517,49 @@
 			//
 		}
 	}
-	function replaceEmotesWithImages2(message, emotesMap) {
+	
+	function replaceEmotesWithImages2(message, emotesMap, zw=false) {
 		const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join('\\b|\\b')}\\b)(?!\\w|\\d|[!?.])`, 'g');
 		return message.replace(emotePattern, (match) => {
-			const imageUrl = emotesMap[match];
-			return `<img src="${imageUrl}" alt="${match}" />`;
+			const emote = emotesMap[match];
+			if (!zw || (typeof emote==="string")){
+				return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
+			} else if (emote.url){
+				return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" />`;
+			}
 		});
 	}
 	
 	function replaceEmotesWithImages(text) {
-		if (!BTTV){return text;}
-		if (!settings.bttv){return text;}
-		try {
-			if (BTTV.channelEmotes){
-				text = replaceEmotesWithImages2(text, BTTV.channelEmotes);
+		if (BTTV){
+			if (settings.bttv){
+				try {
+					if (BTTV.channelEmotes){
+						text = replaceEmotesWithImages2(text, BTTV.channelEmotes, false);
+					}
+					if (BTTV.sharedEmotes){
+						text = replaceEmotesWithImages2(text, BTTV.sharedEmotes, false);
+					}
+				} catch(e){
+				}
 			}
-			if (BTTV.sharedEmotes){
-				text = replaceEmotesWithImages2(text, BTTV.sharedEmotes);
+		}
+		if (SEVENTV){
+			if (settings.seventv){
+				try {
+					if (SEVENTV.channelEmotes){
+						text = replaceEmotesWithImages2(text, SEVENTV.channelEmotes, true);
+					}
+				} catch(e){
+				}
 			}
-		} catch(e){
 		}
 		return text;
 	}
-
+	
 	var settings = {};
 	var BTTV = false;
+	var SEVENTV = false;
 	// settings.textonlymode
 	// settings.captureevents
 
@@ -571,11 +590,14 @@
 							if (settings.bttv && !BTTV){
 								chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
 							}
+							if (settings.seventv && !SEVENTV){
+								chrome.runtime.sendMessage(chrome.runtime.id, { "getSEVENTV": true }, function(response){});
+							}
 							return;
 						} 
-						if ("BTTV" in request){
-							BTTV = request.BTTV;
-							//console.log(BTTV);
+						if ("SEVENTV" in request){
+							SEVENTV = request.SEVENTV;
+							//console.log(SEVENTV);
 							sendResponse(true);
 							return;
 						}
@@ -596,6 +618,11 @@
 				settings = response.settings;
 				if (settings.bttv && !BTTV){
 					chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){
+					//	console.log(response);
+					});
+				}
+				if (settings.seventv && !SEVENTV){
+					chrome.runtime.sendMessage(chrome.runtime.id, { "getSEVENTV": true }, function(response){
 					//	console.log(response);
 					});
 				}

@@ -155,7 +155,7 @@ if (typeof(chrome.runtime)=='undefined'){
 	
 	window.showSaveFilePicker = async function(opts) {
 		const filePath = await ipcRenderer.invoke('show-save-dialog', opts);
-		console.log(filePath);
+		//console.log(filePath);
 		return filePath;
 	};
 	
@@ -1079,6 +1079,7 @@ function getItemWithExpiry(key) {
 }
 
 var Globalbttv = false;
+var Globalseventv = false;
 
 async function getBTTVEmotes(url=false){
 	
@@ -1181,14 +1182,14 @@ async function getBTTVEmotes(url=false){
 							if (bttv){
 								if (bttv.channelEmotes){
 									bttv.channelEmotes = bttv.channelEmotes.reduce((acc, emote) => {
-										const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/1x`;
+										const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
 										acc[emote.code] = imageUrl;
 										return acc;
 									}, {});
 								}
 								if (bttv.sharedEmotes){
 									bttv.sharedEmotes = bttv.sharedEmotes.reduce((acc, emote) => {
-										const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/1x`;
+										const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
 										acc[emote.code] = imageUrl;
 										return acc;
 									}, {});
@@ -1216,7 +1217,7 @@ async function getBTTVEmotes(url=false){
 				});
 				if (Globalbttv){
 					Globalbttv = Globalbttv.reduce((acc, emote) => {
-						const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/1x`;
+						const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
 						acc[emote.code] = imageUrl;
 						return acc;
 					}, {});
@@ -1235,15 +1236,176 @@ async function getBTTVEmotes(url=false){
 		bttv.user = userID;
 		//log(Globalbttv);
 	} catch(e){
-		
+		console.error(err);
 	}
 	return bttv;
 }
-function replaceEmotesWithImages(message, emotesMap) {
+
+async function getSEVENTVEmotes(url=false){
+	
+	var type = "";
+	var seventv = {};
+	var userID = false;
+	
+	try {
+		if (url && url.includes("youtube.com/")){
+			type = "youtube";
+		} else if (url && url.includes("twitch.tv/")){
+			type = "twitch";
+		}
+		
+		if (type=="youtube"){
+			var vid = false;
+			if (url){
+				vid = YouTubeGetID(url);
+			}
+			
+			if (vid){
+				userID = localStorage.getItem("vid2uid:"+vid);
+				
+				if (!userID){
+					userID = await fetch("https://api.socialstream.ninja/youtube/user?video="+vid).then(result=>{return result.text();}).then(result=>{return result;}).catch(err=>{
+						console.error(err);
+					});
+					if (userID){
+						 localStorage.setItem("vid2uid:"+vid, userID);
+					} else {
+						return false;
+					}
+					
+				}
+				if (userID){
+					seventv = getItemWithExpiry("uid2seventv.youtube:"+userID);
+					if (!seventv){
+						seventv = await fetch("https://7tv.io/v3/users/youtube/"+userID).then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
+							console.error(err);
+						});
+						
+						if (seventv){
+							if (seventv.emote_set && seventv.emote_set.emotes){
+								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
+									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
+									if (emote.flags){
+										acc[emote.name] = {url: imageUrl, zw:true}
+									} else {
+										acc[emote.name] = imageUrl;
+									}
+									return acc;
+								}, {});
+							}
+							
+							setItemWithExpiry("uid2seventv.youtube:"+userID, seventv);
+						}
+					}
+				}
+			}
+		} else if (type=="twitch"){
+			var username = url.split("popout/");
+			
+			if (username.length>1){
+				username = username[1].split("/")[0];
+				log("username: "+username);
+				if (username){
+					seventv = getItemWithExpiry("uid2seventv.twitch:"+username.toLowerCase());
+					log("SEVENTV2",seventv);
+					if (!seventv || seventv.message){
+						
+						userID = localStorage.getItem("twitch2uid."+username.toLowerCase());
+						if (!userID){
+							const response = await fetch("https://api.socialstream.ninja/twitch/user?username=" + username);
+			
+							if (!response.ok) {
+								return {};
+							}
+							const data = await response.json();
+							
+							//log(data);
+							if (data && data.data && data.data[0] && data.data[0].id){
+								userID = data.data[0].id;
+								
+								if (userID){
+									localStorage.setItem("twitch2uid."+username.toLowerCase(), userID);
+								} 
+							} else {
+								userID = false;
+							}
+						}
+						if (userID){
+							seventv = await fetch("https://7tv.io/v3/users/twitch/"+userID).then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
+								console.error(err);
+							});
+							if (seventv){
+								if (seventv.emote_set && seventv.emote_set.emotes){
+									seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
+										const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
+										if (emote.flags){
+											acc[emote.name] = {url: imageUrl, zw:true}
+										} else {
+											acc[emote.name] = imageUrl;
+										}
+										return acc;
+									}, {});
+								}
+								
+								setItemWithExpiry("uid2seventv.twitch:"+username.toLowerCase(), seventv);
+							} else {
+								seventv = {};
+							}
+							log("SEVENTV",seventv);
+						}
+					} else {
+						log("seventv recovererd from storage");
+					}
+				}
+				
+			};
+		}
+		
+		if (!Globalseventv){
+			Globalseventv = getItemWithExpiry("globalseventv");
+			
+			if (!Globalseventv){
+				Globalseventv = await fetch("https://7tv.io/v3/emote-sets/global").then(result=>{return result.json()}).then(result=>{return result;}).catch(err=>{
+					console.error(err);
+				});
+				if (Globalseventv && Globalseventv.emotes){
+					Globalseventv = Globalseventv.emotes.reduce((acc, emote) => {
+						const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
+						if (emote.flags){
+							acc[emote.name] = {url: imageUrl, zw:true}
+						} else {
+							acc[emote.name] = imageUrl;
+						}
+						return acc;
+					}, {});
+					setItemWithExpiry("globalseventv", Globalseventv);
+				} else {
+					Globalseventv = [];
+				}
+			} else {
+				log("Globalseventv recovererd from storage");
+			}
+			// seventv.globalEmotes = Globalseventv;
+			
+		}
+		seventv.url = url;
+		seventv.type = type;
+		seventv.user = userID;
+		//log(Globalseventv);
+	} catch(e){
+		console.error(e);
+	}
+	return seventv;
+}
+function replaceEmotesWithImages(message, emotesMap, zw=false) {
     const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join('\\b|\\b')}\\b)(?!\\w|\\d|[!?.])`, 'g');
     return message.replace(emotePattern, (match) => {
-        const imageUrl = emotesMap[match];
-        return `<img src="${imageUrl}" alt="${match}" />`;
+        const emote = emotesMap[match];
+		if (!zw || (typeof emote==="string")){
+			return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
+		} else if (emote.url){
+			return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" /></span>`;
+		}
     });
 }
 
@@ -1445,6 +1607,12 @@ chrome.runtime.onMessage.addListener(
 					}
 					pushSettingChange();
 				}
+				if (request.setting == "seventv"){
+					if (settings.bttv){
+						await getSEVENTVEmotes();
+					}
+					pushSettingChange();
+				}
 				
 				if (request.setting == "addkarma"){
 					if (request.value){
@@ -1613,14 +1781,27 @@ chrome.runtime.onMessage.addListener(
 					sendResponse({"state":isExtensionOn});
 				}
 			} else if ("getBTTV" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-				console.log("GETBTTV");
+				//console.log("GETBTTV");
 				sendResponse({"state":isExtensionOn});
 				if (sender.tab.url){
 					var BTTV2 = await getBTTVEmotes(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
 					if (BTTV2){
-						console.log(sender);
-						console.log(BTTV2);
+						//console.log(sender);
+						//console.log(BTTV2);
 						chrome.tabs.sendMessage(sender.tab.id, {BTTV:BTTV2}, function(response=false) {
+							chrome.runtime.lastError;
+						});
+					}
+				}
+			} else if ("getSEVENTV" in request) { // forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+				//console.log("getSEVENTV");
+				sendResponse({"state":isExtensionOn});
+				if (sender.tab.url){
+					var SEVENTV2 = await getSEVENTVEmotes(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
+					if (SEVENTV2){
+					//	console.log(sender);
+					//	console.log(SEVENTV2);
+						chrome.tabs.sendMessage(sender.tab.id, {SEVENTV:SEVENTV2}, function(response=false) {
 							chrome.runtime.lastError;
 						});
 					}
@@ -1994,6 +2175,14 @@ async function sendToDestinations(message){
 					}
 					if (Globalbttv){
 						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalbttv);
+					}
+				}
+				if (settings.seventv){
+					if (!Globalseventv){
+						await getSEVENTVEmotes();
+					}
+					if (Globalseventv){
+						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalseventv, true);
 					}
 				}
 				message.chatmessage = filterXSS(message.chatmessage);
