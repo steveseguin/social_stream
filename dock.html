@@ -2088,6 +2088,11 @@
 		stripLinks = true;
 	}
 	
+	var activeLinks = false;
+	if (urlParams.has("activelinks")) {
+		activeLinks = true;
+	}
+	
 	var stripEmojis = false;
 	if (urlParams.has("stripemoji")) {
 		stripEmojis = true;
@@ -5091,6 +5096,57 @@
 		}
 	}
 	
+	function activateURLs(element) {
+		if (!element) return; // Exit if the element is null or undefined
+
+		if (element.nodeType === 1) { // Element node
+			Array.from(element.childNodes).forEach(child => {
+				activateURLs(child); // Recurse into each child node
+			});
+		} else if (element.nodeType === 3) { // Text node
+			const text = element.textContent;
+			const urlRegex = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g;
+			let match;
+			let lastIndex = 0;
+
+			const fragment = document.createDocumentFragment();
+
+			while ((match = urlRegex.exec(text)) !== null) {
+			
+				if (match.index > lastIndex) {
+					fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+				}
+
+				const anchor = document.createElement('a');
+				anchor.href = match[0];
+				
+				if (stripLinks){
+					anchor.textContent = "[Link]";
+				} else {
+					anchor.textContent = match[0];
+				}
+				anchor.title = "Click to open: "+match[0];
+				anchor.target = "_blank";
+				anchor.style.pointerEvents = "auto";
+				fragment.appendChild(anchor);
+				
+				anchor.addEventListener('click', function(event) {
+					event.stopPropagation();
+				});
+
+				lastIndex = match.index + match[0].length;
+			}
+
+			if (lastIndex < text.length) {
+				fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+			}
+
+			if (lastIndex > 0) {
+				element.parentNode.replaceChild(fragment, element);
+			}
+		}
+	}
+	
 	function replaceURLsWithSubstring(text, replacement = '[Link]') {
 		if (typeof text !== 'string') {
 			return text;
@@ -5763,7 +5819,13 @@
 			}
 
 			if (stripLinks && chatmessage && hlMessage){
-				replaceURLs(hlMessage);
+				if (activeLinks){
+					activateURLs(hlMessage);
+				} else {
+					replaceURLs(hlMessage);
+				}
+			} else if (activeLinks && chatmessage && hlMessage){
+				activateURLs(hlMessage);
 			}
 
 			if (data.type && (data.type == "twitch") && avatars && data.chatimg){
