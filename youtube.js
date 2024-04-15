@@ -223,11 +223,18 @@
 		}
 
 		chatmessage = chatmessage.trim();
+		
+		chatmessage = chatmessage.replaceAll("=w16-h16-","=w64-h64-");
+		chatmessage = chatmessage.replaceAll("=w24-h24-","=w64-h64-");
+		chatmessage = chatmessage.replaceAll("=s16-","=s64-");
+		chatmessage = chatmessage.replaceAll("=s24-","=s64-");
+		
 		try {
 			chatimg = ele.querySelector("#img").src;
 			if (chatimg.startsWith("data:image/gif;base64")) { // document.querySelector("#panel-pages").querySelector("#img").src
 				chatimg = document.querySelector("#panel-pages").querySelector("#img").src; // this is the owner
 			}
+			chatimg = chatimg.replace("=s32-", "=s64-"); // double the resolution of avatars
 		} catch (e) {}
 
 		var chatdonation = "";
