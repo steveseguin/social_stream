@@ -228,14 +228,52 @@
 		}
 		
 		if (settings.flipYoutube){
-			if (!document.getElementById("secondary-inner").pass){
-				document.getElementById("secondary-inner").pass = true;
-				document.getElementById("below").appendChild(document.getElementById("secondary-inner"));
-				document.getElementById("secondary").appendChild(document.getElementById("bottom-grid"));
+			if (document.getElementById("secondary")){
+				document.getElementById("below").prepend(document.getElementById("secondary-inner"));
+				document.getElementById("secondary-inner").style.position = "unset";
+				//document.getElementById("below").appendChild(document.getElementById("bottom-grid"));
+				document.getElementById("secondary").style.display = "none";
 				
-				document.querySelectorAll("#dismissible").forEach(ele=>{
-					ele.style.display = "none";
-				});
+				var style = document.createElement("style");
+				style.innerHTML = `
+				  ytd-ad-slot-renderer{
+					  display:none!important;
+				  }
+				  #content{ 
+					overflow:hidden;
+				  }
+				  #below {
+					display: flex;
+					justify-content: space-evenly;
+					align-items: flex-start;
+					flex-direction: row;
+					flex-wrap: nowrap;
+				  }
+				  .ytd-watch-grid {
+					  margin: 0 auto!important;
+				  }
+				  #below > div {
+					  width: 48%;  
+					  padding: 0 0 0 2px; 
+					  border: 0;
+				  }
+				  ytd-merch-shelf-renderer{
+					  display:none;
+				  }
+				  #secondary-inner {
+					  max-width: 48%;
+				  }
+				  .html5-video-container{
+					  width:100%!important;
+					  height:100%!important;
+				  }
+				  .html5-video-container video {
+					   width:100%!important;
+					   height:100%!important;
+				   }
+				`;
+				document.head.appendChild(style);
+				
 			}
 		}
 		

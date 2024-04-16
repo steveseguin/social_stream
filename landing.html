@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css">
 	<script async defer src="https://buttons.github.io/buttons.js"></script>
 	<link rel="icon" type="image/x-icon" href="https://socialstream.ninja/icons/favicon.ico">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/lib/marked.umd.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/marked-gfm-heading-id/3.1.3/index.umd.min.js"></script>
 	<style>
 		
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
@@ -16,8 +18,9 @@ body, html {
     padding: 0;
     font-family: 'Poppins', sans-serif;
     color: #333;
-    background-color: #f4f4f4;
+    background-color: #e5e5e5;
 	padding-bottom: 40px;
+	line-height: 1.6;
 }
 
 header {
@@ -30,6 +33,10 @@ header {
 h1 {
     margin: 0;
     font-size: 2.4em;
+}
+
+#markdown h1 {
+	display:none;
 }
 
 p {
@@ -59,6 +66,7 @@ p {
 
 .download-btn:hover {
     background-color: #0056b3; /* Darker blue on hover */
+	color: white;
 }
 
 #video {
@@ -138,6 +146,30 @@ a:hover {
 .logo{
 	max-height: 1.2em;
 }
+
+#content {
+    background-color: #f8f8f8;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+#content h1, #content h2, #content h3 {
+    color: #333;
+}
+
+#content pre, #content code {
+    background-color: #eee;
+    border-radius: 5px;
+    padding: 5px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#content a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
 	</style>
 </head>
 <body>
@@ -160,7 +192,7 @@ a:hover {
 
     <section id="downloads">
         <h2>Download Social Stream</h2>
-		<a href="https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip" class="download-btn">Chrome Extension</a>
+		<a href="https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip"  onclick="setTimeout(function(){smoothScroll('to-install');},100);" class="download-btn">Chrome Extension</a>
 		<a href="https://github.com/steveseguin/social_stream/releases" class="download-btn">Windows (beta)</a>
         <a href="https://github.com/steveseguin/social_stream/releases" class="download-btn">MacOS (beta)</a>
 		
@@ -168,35 +200,37 @@ a:hover {
 
     <section id="video">
         <h2>Demo Video</h2>
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/yourvideoid" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-    </section>
-	
-	<section class="section">
-        <h2>Frequently Asked Questions</h2>
-        <div class="faq-item">
-            <h3>How do I install Social Stream?</h3>
-            <p>You can install it by clicking on the download buttons above and following the provided instructions.</p>
-        </div>
-		<div class="faq-item">
-            <h3>How do I update the extension version?</h3>
-            <p>You can install it by clicking on the download buttons above and following the provided instructions.</p>
-        </div>
-    </section>
-	
-	<section class="section">
-        <h2>Supported sites</h2>
-        <div class="faq-item">
-            <h3>Supported sites</h3>
-            <p>You can install it by clicking on the download buttons above and following the provided instructions.</p>
-        </div>
-        <div class="faq-item">
-            <h3>Requesting another site</h3>
-            <p>Social Stream supports MacOS, Windows, but is typically used as a browser extension.</p>
-        </div>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/hZVTXqjFm9M" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
     </section>
 
+	<section id="markdown" class="section">
+		<script>
+		function smoothScroll(target) {
+			  const element = document.getElementById(target);
+			  if (element) {
+				window.scrollTo({
+				  top: element.offsetTop,
+				  behavior: 'smooth'
+				});
+			  }
+			}
+		
+		document.addEventListener("DOMContentLoaded", function() {
+		
+			marked.use(markedGfmHeadingId.gfmHeadingId({})); // fml
+	  
+			fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/README.md')
+				.then(response => response.text())
+				.then(text => {
+					const html = marked.parse(text);
+					document.getElementById('markdown').innerHTML = html;
+				})
+				.catch(error => console.error('Error loading the README:', error));
+		});
+		</script>
+	 </section>
     <footer>
-        <p>Join our community for free support on <a href="https://discord.socialstream.ninja">Discord</a>.</p>
+        <p>Join our community for free support on <a href="https://discord.socialstream.ninja" target="_blank">Discord</a>.</p>
     </footer>
 </body>
 </html>
