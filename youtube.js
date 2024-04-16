@@ -224,10 +224,10 @@
 
 		chatmessage = chatmessage.trim();
 		
-		chatmessage = chatmessage.replaceAll("=w16-h16-","=w64-h64-");
+		chatmessage = chatmessage.replaceAll("=w16-h16-","=w48-h48-"); // increases the resolution of emojis
 		chatmessage = chatmessage.replaceAll("=w24-h24-","=w64-h64-");
-		chatmessage = chatmessage.replaceAll("=s16-","=s64-");
-		chatmessage = chatmessage.replaceAll("=s24-","=s64-");
+		chatmessage = chatmessage.replaceAll("=s16-","=s48-");
+		chatmessage = chatmessage.replaceAll("=s24-","=s48-");
 		
 		try {
 			chatimg = ele.querySelector("#img").src;
