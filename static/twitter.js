@@ -567,12 +567,12 @@
 									try {
 										document.querySelector("[data-testid='block'] div span").click();
 										try {
-											document.querySelector('[href="/i/premium_sign_up"]').nextElementSibling.click();
+											document.querySelector('div > [href="/i/premium_sign_up"]').nextElementSibling.click();
 										} catch(e){
 											
 											setTimeout(function(){
 												try {
-													document.querySelector('[href="/i/premium_sign_up"]').nextElementSibling.click();
+													document.querySelector('div > [href="/i/premium_sign_up"]').nextElementSibling.click();
 												} catch(e){}
 											},100);
 										}
@@ -585,7 +585,7 @@
 						}
 					}
 					try {
-						document.querySelector('[href="/i/premium_sign_up"]').nextElementSibling.click();
+						document.querySelector('div > [href="/i/premium_sign_up"]').nextElementSibling.click();
 					} catch(e){}
 					
 					
