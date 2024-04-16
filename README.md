@@ -1,7 +1,7 @@
-# Social Stream
-Consolidate your live social messaging streams
+# about: Social Stream
+Consolidates your live social messaging streams and more
 
- [Jump to Download and Install instructions](https://github.com/steveseguin/social_stream/blob/main/README.md#to-install)
+ [Jump to Download and Install instructions](#to-install)
 
 - Supports live automated two-way chat messaging with Facebook, Youtube, Twitch, Zoom, and dozens more
 - Includes a "featured chat" overlay, with messages selectable via the dockable dashboard; auto or manual selection.
