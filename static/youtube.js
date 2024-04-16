@@ -228,7 +228,9 @@
 		}
 		
 		if (settings.flipYoutube){
-			if (document.getElementById("secondary")){
+			if (document.getElementById("secondary") && !document.getElementById("secondary").done){
+				document.getElementById("secondary").done = true;
+				
 				document.getElementById("below").prepend(document.getElementById("secondary-inner"));
 				document.getElementById("secondary-inner").style.position = "unset";
 				//document.getElementById("below").appendChild(document.getElementById("bottom-grid"));
