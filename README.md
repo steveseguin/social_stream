@@ -1,4 +1,4 @@
-# about: Social Stream
+# Social Stream
 Consolidates your live social messaging streams and more
 
  [Jump to Download and Install instructions](#to-install)
