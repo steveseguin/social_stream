@@ -1211,6 +1211,8 @@ function updateSettings(ele, sync=true, value=null){
 		});
 		
 	} else if (ele.dataset.param5){
+		
+		
 		if (ele.checked){
 			document.getElementById("waitlist").raw = updateURL(ele.dataset.param5, document.getElementById("waitlist").raw);
 		} else {
@@ -1221,6 +1223,24 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5", setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
+		}
+		
+		
+		if (ele.dataset.param5 == "alignright"){
+			var key = "aligncenter";
+			var ele1 = document.querySelector("input[data-param5='"+key+"']");
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+
+		} else if (ele.dataset.param5 == "aligncenter"){
+			var key = "alignright";
+			var ele1 = document.querySelector("input[data-param5='"+key+"']");
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
 		}
 		
 		document.querySelectorAll("input[data-param5^='"+ele.dataset.param5.split("=")[0]+"']:not([data-param5='"+ele.dataset.param5+"'])").forEach(ele1=>{

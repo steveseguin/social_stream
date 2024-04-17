@@ -473,6 +473,11 @@
 		document.getElementById("parentHolder").style.right="0";
 	}
 	
+	if (urlParams.has("aligncenter")){
+		document.body.style.display="flex";
+		document.getElementById("parentHolder").style.margin="auto";
+	}
+	
 	if (urlParams.has("hidetitle")){
 		document.getElementById("waitlisttitle").classList.add("hidden");
 	}
@@ -754,7 +759,7 @@
 	
 	const confettiWrapper = document.getElementById('confetti-wrapper');
 
-	function createConfetti(num) {
+	function createConfetti(num=250) {
 		if (!confettiFall){return;}
 		for (let i = 0; i < num; i++) {
 			const confetti = document.createElement('div');
