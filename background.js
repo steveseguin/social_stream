@@ -1397,15 +1397,29 @@ async function getSEVENTVEmotes(url=false){
 	}
 	return seventv;
 }
+
 function replaceEmotesWithImages(message, emotesMap, zw=false) {
-    const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join('\\b|\\b')}\\b)(?!\\w|\\d|[!?.])`, 'g');
+    const emotePattern = new RegExp(`(?<!<[^>]*)\\b(${Object.keys(emotesMap).join('|')})\\b(?!\\w|\\d|[!?.,]|[^<]*>)`, 'g');
     return message.replace(emotePattern, (match) => {
         const emote = emotesMap[match];
-		if (!zw || (typeof emote==="string")){
-			return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
-		} else if (emote.url){
-			return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" /></span>`;
-		}
+        if (!zw || (typeof emote === "string")) {
+            return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
+        } else if (emote.url) {
+            return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" /></span>`;
+        }
+    });
+}
+
+function replaceEmotesWithImagesText(message, emotesMap, zw=false) {
+    // Simplified regex that matches emote codes anywhere, including within HTML tags.
+    const emotePattern = new RegExp(`\\b(${Object.keys(emotesMap).join('|')})\\b`, 'g');
+    return message.replace(emotePattern, (match) => {
+        const emote = emotesMap[match];
+        if (!zw || (typeof emote === "string")) {
+            return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
+        } else if (emote.url) {
+            return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" /></span>`;
+        }
     });
 }
 
@@ -2186,7 +2200,9 @@ async function sendToDestinations(message){
 					}
 				}
 				message.chatmessage = filterXSS(message.chatmessage);
-			}
+			} //else {
+				// replaceEmotesWithImagesText( ...  ); // maybe someday
+			//}
 		}
 		
 		if (settings.randomcolor && message && !message.nameColor && message.chatname){
