@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confetti Celebration</title>
+    <style>
+		body, html {
+			margin: 0;
+			padding: 0;
+			height: 100%;
+			overflow: hidden;
+			background-color:#0000;
+		}
+
+		#confetti-wrapper {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 9999;
+		}
+		
+		.confetti {
+			position: absolute;
+			width: 10px;
+			height: 10px;
+			opacity: 1; /* Make sure they're fully visible */
+			z-index: 10000;
+		}
+	</style>
+</head>
+<body>
+    <div id="confetti-wrapper"></div>
+
+    <script>
+	
+		window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
+			console.error(errorMsg);
+			console.error(lineNumber);
+			console.error("Unhandled Error occured");
+			return false;
+		};
+		
+		try {
+			if (electronApi){ // fix for electron dragging.
+				document.body.style.width = "95%";
+				setTimeout(function(){
+					document.body.style.width = "100%";
+				},1000);
+
+				setTimeout(function(){
+					document.body.style.width = "98%";
+				},2000);
+
+				setTimeout(function(){
+					document.body.style.width = "100%";
+				},5000);
+			}
+		} catch(e){
+		}
+
+		function getById(id) {
+			var el = document.getElementById(id);
+			if (!el) {
+				el = document.createElement("span");
+			}
+			return el;
+		}
+
+		(function (w) {
+			w.URLSearchParams = w.URLSearchParams || function (searchString) {
+				var self = this;
+				self.searchString = searchString;
+				self.get = function (name) {
+					var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+					if (results == null) {
+						return null;
+					} else {
+						return decodeURI(results[1]) || 0;
+					}
+				};
+			};
+
+		})(window);
+
+		var urlParams = new URLSearchParams(window.location.search);
+		var iframe = null;
+		var roomID = "test";
+		var scale = 1;
+		var drawmode = false;
+		
+		if (urlParams.has("session")){
+			roomID = urlParams.get("session");
+		} else if (urlParams.has("s")){
+			roomID = urlParams.get("s");
+		} else if (urlParams.has("id")){
+			roomID = urlParams.get("id");
+		} else if (window.location.protocol=="file:"){
+			roomID = prompt("Enter your session ID here, or add it to the URL.");
+			if (roomID){
+				var href = window.location.href;
+				var arr = href.split('?');
+				var newurl;
+				if (arr.length > 1 && arr[1] !== '') {
+					newurl = href + '&session=' + roomID;
+				} else {
+					newurl = href + '?session=' + roomID;
+				}
+				window.history.pushState({path: newurl.toString()}, '', newurl.toString());
+			} else {
+				alert("You need to provide your extension's session ID for this page to work");
+			}
+		}
+		
+		var password = "false";
+		if (urlParams.has("password")){
+			password = urlParams.get("password") || "false";
+		}
+		
+		if (urlParams.has("scale")){
+			scale = urlParams.get("scale") || 1.0;
+			scale = parseFloat(scale);
+			document.documentElement.style.setProperty("--width", parseInt(computedStyle.getPropertyValue("--width")) * scale+"px");
+			document.documentElement.style.setProperty("--font-size", parseInt(computedStyle.getPropertyValue("--font-size")) * scale+"%");
+			document.documentElement.style.setProperty("--padding", parseInt(computedStyle.getPropertyValue("--padding")) * scale+"px");
+			
+		}
+		
+		var conCon = 1;
+		var socketserver = false;
+		var serverURL = "wss://api.overlay.ninja";
+
+		function setupSocket(){
+			socketserver.onclose = function (){
+				setTimeout(function(){
+					conCon+=1;
+					socketserver = new WebSocket(serverURL);
+					setupSocket();
+				},100*conCon);
+			};
+			socketserver.onopen = function (){
+				conCon = 1;
+				socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+			};
+			socketserver.addEventListener('message', function (event) {
+				var resp = false
+				if (event.data){
+					var data = JSON.parse(event.data);
+					processInput(data);
+					if (data.get){
+						var ret = {};
+						ret.callback = {};
+						ret.callback.get = data.get
+						ret.callback.result = true;
+						socketserver.send(JSON.stringify(ret));
+					}
+				}
+			});
+		}
+		
+		if (urlParams.has("server") || urlParams.has("server2")){
+			serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+			socketserver = new WebSocket(serverURL);
+			setupSocket();
+		}
+
+		if (urlParams.has("chroma")){
+			var chroma = urlParams.get("chroma") || "0F0";
+			document.body.style.backgroundColor = "#"+chroma;
+		}
+		
+		if (urlParams.has("transparent")){
+			document.documentElement.style.setProperty("--background-color", "#0000", "important");
+		}
+		
+		function processInput(data){
+			if ("drawmode" in data){
+				drawmode = data.drawmode || false;
+			}
+			if ("waitlist" in data){
+				var winnerStatus = 0;
+				if (data.waitlist === false){
+					//document.getElementById("parentHolder").classList.add("hidden");
+				} else if (!data.waitlist.length){
+					//document.getElementById("parentHolder").classList.remove("hidden");
+				} else {
+					for (var i = 0; i<data.waitlist.length;i++){
+						if (data.waitlist[i]){
+							if (data.waitlist[i].waitStatus == 1){
+								continue;
+							}
+							if (drawmode || ("randomStatus" in data.waitlist[i])){
+								if (data.waitlist[i].randomStatus === 1){
+									// "winner";
+									winnerStatus += 1;
+								} else if (data.waitlist[i].randomStatus === 2){
+									// previous winner
+								}
+							}
+						}
+					}
+					if (drawmode && winnerStatus){
+						createConfetti(150);
+					}
+				}
+				
+			} 
+		}
+
+		iframe = document.createElement("iframe");
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&notmobile&solo&view="+roomID+"&novideo&noaudio&label=waitlist&cleanoutput&room="+roomID; // view only connection (data two way of course)
+		iframe.style.width = "0px";
+		iframe.style.height = "0px";
+		iframe.style.position = "fixed";
+		iframe.style.left = "-100px";
+		iframe.style.top = "-100px";
+		iframe.id = "frame1"
+		document.body.appendChild(iframe);
+
+		var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+		var eventer = window[eventMethod];
+		var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+		eventer(messageEvent, function (e) {
+			
+			if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
+			if ("dataReceived" in e.data){ // raw data
+				if ("overlayNinja" in e.data.dataReceived){
+					processInput(e.data.dataReceived.overlayNinja);
+				}
+			}
+		});
+	
+		const confettiWrapper = document.getElementById('confetti-wrapper');
+
+		function createConfetti(num) {
+			for (let i = 0; i < num; i++) {
+				const confetti = document.createElement('div');
+				confetti.className = 'confetti';
+				confetti.style.position = 'absolute';
+				confetti.style.top = '-10px'; // Start above the viewport
+				confetti.style.left = `${Math.random() * confettiWrapper.offsetWidth}px`; // Random start horizontally
+				confetti.style.backgroundColor = getRandomColor();
+				confetti.style.transform = `scale(${Math.random() + 0.5})`;
+				confetti.style.opacity = `${Math.random()}`;
+				confetti.style.width = '10px';
+				confetti.style.height = '10px';
+				confettiWrapper.appendChild(confetti);
+				//console.log('Initial left:', confetti.style.left); // Log to check the value
+				animateConfetti(confetti);
+			}
+		}
+
+		function getRandomColor() {
+			const colors = ['#FFC300', '#FF5733', '#C70039', '#900C3F', '#581845'];
+			return colors[Math.floor(Math.random() * colors.length)];
+		}
+
+		function animateConfetti(confetti) {
+			const xStart = parseInt(confetti.style.left, 10); // Ensure this is a number
+			const yStart = -10; // initial top position
+			const xEnd = xStart + (Math.random() * 500 - 250); // Random end position allowing left and right movement
+			const yEnd = window.innerHeight + 20;
+			const spin = (Math.random() * 2000 - 1000) + 'deg'; // random spin
+			const duration = Math.random() * 3000 + 3000;
+			//console.log(confetti.style.left);
+			confetti.animate([
+				{ transform: `translate(0px, 0px) rotate(0deg)` }, // Start at current position
+				{ transform: `translate(${xEnd - xStart}px, ${yEnd - yStart}px) rotate(${spin})` } // End at a random position off-screen
+			], {
+				duration: duration,
+				easing: 'ease-out'
+			}).onfinish = () => {
+				confetti.remove();
+			};
+		}
+		
+
+	</script>
+</body>
+</html>
