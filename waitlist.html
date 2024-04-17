@@ -113,6 +113,23 @@
 			scrollbar-color:#666 #201c29;
 		}
 		
+		#confetti-wrapper {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 9999;
+		}
+		
+		.confetti {
+			position: absolute;
+			width: 10px;
+			height: 10px;
+			opacity: 1; /* Make sure they're fully visible */
+			z-index: 10000;
+		}
+		
 		.el { 
 		  width: var(--width);
 		  height: var(--width);
@@ -303,6 +320,7 @@
 		<div id="waitlisttitle"></div>
 		<div id="waitlist" ></div>
 	</div>
+	<div id="confetti-wrapper"></div>
 	<script>
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
 		console.error(errorMsg);
@@ -567,6 +585,12 @@
 		document.documentElement.style.setProperty("--background-color", "#0000", "important");
 	}
 	
+	var confettiFall = false;
+	if (urlParams.has("confetti")){
+		confettiFall = urlParams.get("confetti") || 150;
+		confettiFall = parseInt(confettiFall) || 150;
+	}
+	
 	if (urlParams.has("nooutline")){
 		document.documentElement.style.setProperty("--outline", "0px");
 	}
@@ -657,8 +681,10 @@
 				document.getElementById("parentHolder").classList.remove("hidden");
 				if (drawmode && winnerStatus){
 					if (winnerStatus>1){
+						createConfetti(confettiFall);
 						document.getElementById("waitlisttitle").innerHTML = "Winners selected";
 					} else {
+						createConfetti(confettiFall);
 						document.getElementById("waitlisttitle").innerHTML = "Winner selected";
 					}
 				} else if (drawmode){
@@ -724,6 +750,51 @@
 			console.log("Third-party Javascript loaded");
 		};
 		document.head.appendChild(externalJavaascript);
+	}
+	
+	const confettiWrapper = document.getElementById('confetti-wrapper');
+
+	function createConfetti(num) {
+		if (!confettiFall){return;}
+		for (let i = 0; i < num; i++) {
+			const confetti = document.createElement('div');
+			confetti.className = 'confetti';
+			confetti.style.position = 'absolute';
+			confetti.style.top = '-10px'; // Start above the viewport
+			confetti.style.left = `${Math.random() * confettiWrapper.offsetWidth}px`; // Random start horizontally
+			confetti.style.backgroundColor = getRandomColor();
+			confetti.style.transform = `scale(${Math.random() + 0.5})`;
+			confetti.style.opacity = `${Math.random()}`;
+			confetti.style.width = '10px';
+			confetti.style.height = '10px';
+			confettiWrapper.appendChild(confetti);
+			//console.log('Initial left:', confetti.style.left); // Log to check the value
+			animateConfetti(confetti);
+		}
+	}
+
+	function getRandomColor() {
+		const colors = ['#FFC300', '#FF5733', '#C70039', '#900C3F', '#581845'];
+		return colors[Math.floor(Math.random() * colors.length)];
+	}
+
+	function animateConfetti(confetti) {
+		const xStart = parseInt(confetti.style.left, 10); // Ensure this is a number
+		const yStart = -10; // initial top position
+		const xEnd = xStart + (Math.random() * 500 - 250); // Random end position allowing left and right movement
+		const yEnd = window.innerHeight + 20;
+		const spin = (Math.random() * 2000 - 1000) + 'deg'; // random spin
+		const duration = Math.random() * 3000 + 3000;
+		//console.log(confetti.style.left);
+		confetti.animate([
+			{ transform: `translate(0px, 0px) rotate(0deg)` }, // Start at current position
+			{ transform: `translate(${xEnd - xStart}px, ${yEnd - yStart}px) rotate(${spin})` } // End at a random position off-screen
+		], {
+			duration: duration,
+			easing: 'ease-out'
+		}).onfinish = () => {
+			confetti.remove();
+		};
 	}
 
 	</script>
