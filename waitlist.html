@@ -629,10 +629,12 @@
 		if ("drawmode" in data){
 			drawmode = data.drawmode || false;
 		}
+		// createConfetti(confettiFall);
 		if ("waitlist" in data){
 			console.log(data);
 			var winnerStatus = 0;
 			var entries = 0;
+			var selected = 0;
 			document.getElementById("waitlist").innerHTML = "";
 			if (data.waitlist === false){
 				document.getElementById("parentHolder").classList.add("hidden");
@@ -646,6 +648,7 @@
 							continue;
 						} else if (data.waitlist[i].waitStatus == 2){
 							classAdd = "selected";
+							selected +=1;
 						}
 						if (drawmode || ("randomStatus" in data.waitlist[i])){
 							
@@ -697,6 +700,8 @@
 					} else {
 						document.getElementById("waitlist").innerHTML = entries + " entries in the draw!";
 					}
+				} else if (winnerStatus){
+					createConfetti(confettiFall);
 				}
 			}
 			
@@ -760,6 +765,19 @@
 
 	function createConfetti(num=250) {
 		if (!confettiFall){return;}
+		createConfettiWave(num);
+		setTimeout(function(){createConfettiWave(parseInt(num/4));},100);
+		setTimeout(function(){createConfettiWave(parseInt(num/4));},200);
+		setTimeout(function(){createConfettiWave(parseInt(num/4));},300);
+		setTimeout(function(){createConfettiWave(parseInt(num/4));},400);
+		setTimeout(function(){createConfettiWave(parseInt(num/6));},600);
+		setTimeout(function(){createConfettiWave(parseInt(num/10));},900);
+		setTimeout(function(){createConfettiWave(parseInt(num/20));},1100);
+		setTimeout(function(){createConfettiWave(parseInt(num/50));},1400);
+		setTimeout(function(){createConfettiWave(parseInt(num/100));},1800);
+	}
+	
+	function createConfettiWave(num=250) {
 		for (let i = 0; i < num; i++) {
 			const confetti = document.createElement('div');
 			confetti.className = 'confetti';
