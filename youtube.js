@@ -170,7 +170,7 @@
 		var chatname = "";
 		var chatimg = "";
 		var nameColor = "";
-		var memeber = false;
+		var member = false;
 		var mod = false;
 
 		var srcImg = ""; // what shows up as the source image; blank is default (dock decides).
@@ -182,7 +182,7 @@
 			if (!settings.nosubcolor) {
 				if (nameElement.classList.contains("member")) {
 					nameColor = "#107516";
-					memeber = true;
+					member = true;
 				} else if (nameElement.classList.contains("moderator")) {
 					nameColor = "#5f84f1";
 					mod = true;
@@ -255,7 +255,7 @@
 				if (ele.getAttribute("author-type") === "member"){
 					//chatmembership = chatmessage;
 					treatAsMemberChat = true;
-					memeber = true;
+					member = true;
 				} else if (ele.getAttribute("author-type") === "moderator"){
 					//chatmembership = chatmessage;
 					treatAsMemberChat = true;
@@ -312,7 +312,11 @@
 
 		if (treatAsMemberChat) {
 			if (chatmessage) {
-				hasMembership = chatmembership || getTranslation("member-chat", "MEMBERSHIP");
+				if (mod){
+					hasMembership = chatmembership || getTranslation("moderator-chat", "MODERATOR");
+				} else {
+					hasMembership = chatmembership || getTranslation("member-chat", "MEMBERSHIP");
+				}
 				var membershipLength = ele.querySelector("#header-subtext.yt-live-chat-membership-item-renderer, #header-primary-text.yt-live-chat-membership-item-renderer") || false;
 				if (membershipLength){
 					membershipLength = getAllContentNodes(membershipLength);
