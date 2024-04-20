@@ -320,6 +320,10 @@
 		<div id="waitlist" ></div>
 	</div>
 	<div id="confetti-wrapper"></div>
+	<audio id="sound" style="display:none;" preload="metadata">
+		<source src="./audio/tone.mp3" type="audio/mpeg">
+		<source src="./audio/tone.ogg" type="audio/ogg">
+	</audio>
 	<script>
 	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
 		console.error(errorMsg);
@@ -556,6 +560,51 @@
 		document.documentElement.style.setProperty("--y-speed",  (7*speedxy)+"%"); // not used
 	}
 	
+	var audioContext = new AudioContext();
+	var timeoutTone = null;
+	async function playtone(tonename="sound") {
+		if (timeoutTone){return;}
+		timeoutTone = true;
+		
+		setTimeout(function(){
+			timeoutTone = false;
+		},500);
+		
+		
+		if (audioContext.state == "suspended"){
+			await audioContext.resume();
+		}
+		if (audioContext.state == "suspended"){
+			return
+		}
+		var toneEle = document.getElementById(tonename);
+		if (toneEle){
+			toneEle.play().then(()=>{
+			 // beep
+			}).catch((e)=>{
+				console.error(e);
+			})
+			
+		}
+	}
+	if (urlParams.get("customsound")){
+		updateAudioSource(urlParams.get("customsound"));
+	}
+	
+	if (urlParams.has("soundvolume")){
+		try {
+			document.getElementById('sound').volume = parseInt(urlParams.get("soundvolume"))/100 || 0;
+		} catch(e){
+			console.error(e);
+		}
+	}
+	
+	var beep = false;
+	if (urlParams.has("sound")){ // removes HTML from messages, donations, and names.
+		beep = true;
+		playtone();
+	}
+	
 	
 	try {
 		if (window.obsstudio){
@@ -764,6 +813,9 @@
 	const confettiWrapper = document.getElementById('confetti-wrapper');
 
 	function createConfetti(num=250) {
+		if (beep){
+			playtone();
+		}
 		if (!confettiFall){return;}
 		createConfettiWave(num);
 		setTimeout(function(){createConfettiWave(parseInt(num/4));},100);

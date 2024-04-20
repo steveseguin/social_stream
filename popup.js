@@ -257,10 +257,10 @@ function createUniqueVoiceIdentifiers(voices) {
 }
 
 document.addEventListener("DOMContentLoaded", async function(event) {
-	document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
-	document.body.className = "extension-disabled";
+	document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
+	//document.body.className = "extension-disabled";
 	document.getElementById("disableButton").style.display = "";
-	chrome.browserAction.setIcon({path: "/icons/off.png"});
+	//chrome.browserAction.setIcon({path: "/icons/off.png"});
 	document.getElementById("extensionState").checked = null;
 	
 	document.getElementById("disableButton").onclick = function(event){
@@ -390,7 +390,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	console.log("pop up asking main for settings");
 	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
 		console.log("getSettings response",response);
-		update(response);
+		update(response, false); // we dont want to sync things
 	});
 
 	//chrome.runtime.sendMessage({cmd: "getOnOffState"}, function (response) { //  getSettings will include the state and everything
