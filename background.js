@@ -2421,7 +2421,7 @@ function sendToPost(data){
 	}
 }
 var socketserverDock = false;
-var serverURLDock = "wss://api.overlay.ninja/dock";
+var serverURLDock = "wss://api.vdo.ninja/dock";
 var conConDock = 0;
 var reconnectionTimeoutDock = null;
 
@@ -2485,7 +2485,7 @@ function setupSocketDock(){
 //
 
 var socketserver = false;
-var serverURL = "wss://api.overlay.ninja/api";
+var serverURL = "wss://api.vdo.ninja/api";
 var conCon = 0;
 var reconnectionTimeout = null;
 
@@ -3207,14 +3207,14 @@ function loadIframe(streamID, pass=false){  // this is pretty important if you w
 			pass = "false";
 		}
 		//iframe.allow = "document-domain;encrypted-media;sync-xhr;usb;web-share;cross-origin-isolated;accelerometer;midi;geolocation;autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
-		iframe.src = "https://vdo.socialstream.ninja/alpha/?ln&salt=vdo.ninja&password="+pass+lanonly+"&room="+streamID+"&push="+streamID+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+lanonly+"&room="+streamID+"&push="+streamID+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
 	} else {
 		iframe = document.createElement("iframe");
 		//iframe.allow =  "document-domain;encrypted-media;sync-xhr;usb;web-share;cross-origin-isolated;accelerometer;midi;geolocation;autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
 		if (!pass){
 			pass = "false";
 		}
-		iframe.src = "https://vdo.socialstream.ninja/alpha/?ln&salt=vdo.ninja&password="+pass+lanonly+"&room="+streamID+"&push="+streamID+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+pass+lanonly+"&room="+streamID+"&push="+streamID+"&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
 		document.body.appendChild(iframe);
 	}
 }
