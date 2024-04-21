@@ -64,7 +64,13 @@
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
 					}
-					resp += node.outerHTML;
+					if (node.src.startsWith("data:")){
+						resp += escapeHtml(node.alt || node.dataset.plainText || "");
+					} else if (node.src.startsWith("http")){
+						resp += node.outerHTML;
+					}
+				} else if (node.alt || node.dataset.plainText){
+					resp += node.alt || node.dataset.plainText || "";
 				}
 			}
 		});
@@ -152,35 +158,20 @@
 			chatname = "";
 		}
 		
-		if (!settings.textonlymode){
-			try {
-				chatmessage = ele.querySelector(".selectable-text.copyable-text");
-				//if (chatmessage && chatmessage.tagName && (chatmessage.tagName == "IMG")){
-				//	if (chatmessage.alt){
-				//		chatmessage = chatmessage.alt;
-				//	}
-				//} else if (chatmessage && chatmessage.querySelector("img")){
-				//	chatmessage.querySelectorAll("img[alt]").forEach(ele=>{
-				//		ele.outerHTML = ele.alt;
-				//	});
-				//} 
-				chatmessage = chatmessage.innerHTML;
-			} catch(e){
-				chatmessage = "";
-			}
-			
-			if (!chatmessage){
-				
-				//	console.error(e);
-					return;
-				
-			}
-		} else {
-			try {
-				chatmessage = escapeHtml(ele.querySelector(".selectable-text.copyable-text").innerText);
-			} catch(e){
-			}
+		try {
+			chatmessage = ele.querySelector(".selectable-text.copyable-text");
+			chatmessage = getAllContentNodes(chatmessage);
+		} catch(e){
+			chatmessage = "";
 		}
+		
+		if (!chatmessage){
+			
+			//	console.error(e);
+				return;
+			
+		}
+	
 		
 		if (!chatmessage){return;}
 
