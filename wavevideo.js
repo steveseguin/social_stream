@@ -12,6 +12,25 @@
 
   let lastMessage = {};
 
+  // Función para obtener el tipo de stream basado en el atributo alt del icono
+  function getTypeFromAlt(altText) {
+    if (altText.includes("YOUTUBE")) {
+      return "youtube";
+    } else if (altText.includes("TWITCH")) {
+      return "twitch";
+    } else if (altText.includes("FACEBOOK")) {
+      return "facebook";
+    } else if (altText.includes("INSTAGRAM")) {
+      return "instagram";
+    } else if (altText.includes("LINKEDIN")) {
+      return "linkedin";
+    } else if (altText.includes("AMAZON")) {
+      return "amazon";
+    } else {
+      return "discord"; // Devuelve 'discord' si no se reconoce el tipo... no se me ocurrió mas
+    }
+  }
+
   // Procesar mensajes individuales
   function processMessage(newMessage) {
     try {
@@ -24,16 +43,20 @@
       const profileImageUrl =
         newMessage.querySelector(".sc-1f9oe74-3.cJigXz img")?.src ||
         "URL de imagen no disponible";
+      const socialIconElement = newMessage.querySelector(
+        ".sc-1f9oe74-2.gYhLbq img"
+      );
       const socialIconUrl =
-        newMessage.querySelector(".sc-1f9oe74-2.gYhLbq img")?.src ||
-        "URL de ícono no disponible";
+        socialIconElement?.src || "URL de ícono no disponible";
+      const socialIconAlt = socialIconElement?.alt || "";
 
       const data = {
         chatname: escapeHtml(username),
         chatimg: profileImageUrl,
         chatmessage: escapeHtml(messageText),
         chatIconUrl: socialIconUrl,
-        type: "wavevideo",
+        //type: "wavevideo",
+        type: getTypeFromAlt(socialIconAlt), // Determina el tipo de stream desde el alt
       };
 
       if (lastMessage === JSON.stringify(data)) {
