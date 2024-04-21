@@ -10,49 +10,65 @@
 
   const chatContainerSelector = ".ydm0hk-1.fdPmo";
 
-  let messageCount = 0;
+  let lastMessage = {};
 
-  // Procesar mutaciones en el DOM
-  const processMutations = function (mutationsList, observer) {
-    mutationsList.forEach((mutation) => {
-      if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-        Array.from(mutation.addedNodes).forEach((newMessage) => {
-          if (newMessage.nodeType === Node.ELEMENT_NODE) {
-            // Asegura que es un elemento DOM
-            try {
-              const messageText =
-                newMessage.querySelector(".jclrku-5.gsJWBK span")
-                  ?.textContent || "Mensaje no encontrado";
-              const username =
-                newMessage.querySelector(".jclrku-2.dpJNMF")?.textContent ||
-                "Usuario no identificado";
-              const profileImageUrl =
-                newMessage.querySelector(".sc-1f9oe74-3.cJigXz img")?.src ||
-                "URL de imagen no disponible";
-              const socialIconUrl =
-                newMessage.querySelector(".sc-1f9oe74-2.gYhLbq img")?.src ||
-                "URL de ícono no disponible";
+  // Procesar mensajes individuales
+  function processMessage(newMessage) {
+    try {
+      const messageText =
+        newMessage.querySelector(".jclrku-5.gsJWBK span")?.textContent ||
+        "Mensaje no encontrado";
+      const username =
+        newMessage.querySelector(".jclrku-2.dpJNMF")?.textContent ||
+        "Usuario no identificado";
+      const profileImageUrl =
+        newMessage.querySelector(".sc-1f9oe74-3.cJigXz img")?.src ||
+        "URL de imagen no disponible";
+      const socialIconUrl =
+        newMessage.querySelector(".sc-1f9oe74-2.gYhLbq img")?.src ||
+        "URL de ícono no disponible";
 
-              messageCount++;
-              a;
-              console.log(`Se ha añadido un nuevo mensaje: ${messageCount}`);
-              console.log(`Usuario: ${escapeHtml(username)}`);
-              console.log(`URL de la imagen de perfil: ${profileImageUrl}`);
-              console.log(`URL del ícono de la red social: ${socialIconUrl}`);
-              console.log(`Mensaje: ${escapeHtml(messageText)}`);
-            } catch (e) {
-              console.error("Error procesando el mensaje:", e);
-            }
-          }
-        });
+      const data = {
+        chatname: escapeHtml(username),
+        chatimg: profileImageUrl,
+        chatmessage: escapeHtml(messageText),
+        chatIconUrl: socialIconUrl,
+        type: "wavevideo",
+      };
+
+      if (lastMessage === JSON.stringify(data)) {
+        return; // Evita duplicados
+      }
+      lastMessage = JSON.stringify(data);
+      pushMessage(data);
+    } catch (e) {
+      console.error("Error procesando el mensaje:", e);
+    }
+  }
+
+  function pushMessage(data) {
+    try {
+      chrome.runtime.sendMessage(
+        chrome.runtime.id,
+        { message: data },
+        function () {}
+      );
+    } catch (e) {
+      console.error("Error al enviar el mensaje:", e);
+    }
+  }
+
+  const observer = new MutationObserver(function (mutations) {
+    mutations.forEach(function (mutation) {
+      if (mutation.addedNodes.length) {
+        Array.from(mutation.addedNodes).forEach(processMessage);
       }
     });
-  };
+  });
 
-  const observer = new MutationObserver(processMutations);
+  const config = { childList: true, subtree: true };
 
-  const config = { attributes: false, childList: true, subtree: true };
-
+  // Iniciar observación
   const startObserving = () => {
     const chatContainer = document.querySelector(chatContainerSelector);
     if (chatContainer) {
@@ -68,5 +84,6 @@
 
   startObserving();
 
+  // Función para detener la observación
   window.stopMessageObserver = () => observer.disconnect();
 })();
