@@ -1585,6 +1585,12 @@ chrome.runtime.onMessage.addListener(
 				if (request.setting == "customtwitchaccount"){
 					pushSettingChange();
 				}
+				if (request.setting == "customtiktokstate"){
+					pushSettingChange();
+				}
+				if (request.setting == "customtiktokaccount"){
+					pushSettingChange();
+				}
 				if (request.setting == "customyoutubestate"){
 					pushSettingChange();
 				}
