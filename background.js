@@ -2421,7 +2421,7 @@ function sendToPost(data){
 	}
 }
 var socketserverDock = false;
-var serverURLDock = "wss://api.vdo.ninja/dock";
+var serverURLDock = "wss://io.socialstream.ninja/dock";
 var conConDock = 0;
 var reconnectionTimeoutDock = null;
 
@@ -2485,7 +2485,7 @@ function setupSocketDock(){
 //
 
 var socketserver = false;
-var serverURL = "wss://api.vdo.ninja/api";
+var serverURL = "wss://io.socialstream.ninja/api";
 var conCon = 0;
 var reconnectionTimeout = null;
 

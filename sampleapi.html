@@ -129,7 +129,7 @@ if (urlParams.has("api")){
 	window.history.pushState({path: newurl.toString()}, '', newurl.toString());
 	
 }
-var serverURL = "wss://api.overlay.ninja:443";
+var serverURL = "wss://io.socialstream.ninja:443";
 if (urlParams.has("server")){
 	serverURL = urlParams.get("server") || serverURL;
 }
@@ -244,7 +244,7 @@ function ajax(data) {
   if (!action || !apiid){
 	alert("no action or api ID provided; request won't work");
   } else {
-	var URL = "https://api.vdo.ninja/"+apiid+"/"+action+"/"+target+"/"+value;
+	var URL = "https://io.socialstream.ninja/"+apiid+"/"+action+"/"+target+"/"+value;
 	xhttp.open("GET", URL, true);
 	xhttp.send();
   }
@@ -266,7 +266,7 @@ function post(data) {
   if (!apiid){
 	alert("no action or api ID provided; request won't work");
   } else {
-	var URL = "https://api.vdo.ninja/"+apiid;
+	var URL = "https://io.socialstream.ninja/"+apiid;
 	xhttp.open("POST", URL, true);
 	xhttp.setRequestHeader("Content-Type", "application/json");
 	xhttp.send(JSON.stringify(data));
@@ -288,7 +288,7 @@ function loadSelfCommands(){
 
 	var br = document.createElement("br");
 	target_self.appendChild(br);
-	// https://api.vdo.ninja/XXXXXXXXXX/sendChat/null/Hello
+	// https://io.socialstream.ninja/XXXXXXXXXX/sendChat/null/Hello
 
 	var button = document.createElement("button");
 	button.innerHTML = "Send message via WSS";

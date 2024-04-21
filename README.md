@@ -486,7 +486,7 @@ This API end point supports WSS, HTTPS GET, and HTTP POST (JSON).  Support for t
 
 ##### A couple common examples
  
-An overly simple example of how to use the GET API would be: https://api.vdo.ninja/XXXXXXXXXX/sendChat/null/Hello, which sends HELLO.  Replace XXXXX with your Social Stream session ID.  Other options, like `https://api.vdo.ninja/XXXXXXXXXX/clearOverlay` should work, too.
+An overly simple example of how to use the GET API would be: https://io.socialstream.ninja/XXXXXXXXXX/sendChat/null/Hello, which sends HELLO.  Replace XXXXX with your Social Stream session ID.  Other options, like `https://io.socialstream.ninja/XXXXXXXXXX/clearOverlay` should work, too.
 
 You can use this API to clear the featured-chat, poke the next-in-queue item, and more. It works with WSS or HTTP requests.
 
@@ -494,7 +494,7 @@ You can use this API to clear the featured-chat, poke the next-in-queue item, an
 
 You can also target specific docks with your API requests by assigning a target name to each dock.html page using `&label`.
 
-For example, to set a dock with the target name of "NAMEHERE", we'd do: `https://socialstream.ninja/dock.html?session=XXXXXXXXXXXXX&server&sync&label=NAMEHERE`.  From there, we can target it with the API format like this: `https://api.vdo.ninja/XXXXXXXXXXXXX/nextInQueue/NAMEHERE/null`.  This all may be needed because if you have multiple docks connected to the API interface, you may not want to trigger the same command multiple times in all cases.
+For example, to set a dock with the target name of "NAMEHERE", we'd do: `https://socialstream.ninja/dock.html?session=XXXXXXXXXXXXX&server&sync&label=NAMEHERE`.  From there, we can target it with the API format like this: `https://io.socialstream.ninja/XXXXXXXXXXXXX/nextInQueue/NAMEHERE/null`.  This all may be needed because if you have multiple docks connected to the API interface, you may not want to trigger the same command multiple times in all cases.
 
 ##### More details
  
@@ -512,7 +512,7 @@ Remote API support is available via dock page or extensions.  You can currently 
 
 For some images provided in the outgoing data-structure, the assumed host location for certain files/images, if none provided, should be `https://socialstream.ninja/`.
 
-If wanting to connect to the websocket server, to publish or listen to messages, you can refer to the code for actual examples.  However, a simple way to listen for messages broadcasted by the extension is with `wss://api.overlay.ninja/join/SESSIONIDHERE/4`, which implies joining the room with our session ID as the name, and then subscribing to channel 4 for messages.  `wss://api.overlay.ninja/join/SESSIONIDHERE/1/2` on the other hand would listen on channel 1, and publish to channel 2.
+If wanting to connect to the websocket server, to publish or listen to messages, you can refer to the code for actual examples.  However, a simple way to listen for messages broadcasted by the extension is with `wss://io.socialstream.ninja/join/SESSIONIDHERE/4`, which implies joining the room with our session ID as the name, and then subscribing to channel 4 for messages.  `wss://io.socialstream.ninja/join/SESSIONIDHERE/1/2` on the other hand would listen on channel 1, and publish to channel 2.
 
 ##### Singular Live
 
@@ -548,7 +548,7 @@ In these cases, the JSON being delivered is in the Social Stream data-structure.
 
 If you create a Stripe payment link (eg: https://donate.stripe.com/YYYYYYYYYYYY), you can have successful payments show up in Social Stream. This is a great way to collect donations from viewers of your stream without needing to use middleware for payment processing.
 
-To get started, after creating a Stripe payment link, create a Stripe webhook that listens for the event `checkout.session.completed`. Have the webhook point to: `https://api.overlay.ninja/XXXXXX/stripe`, where XXXXXX is your Social Stream session ID. You don't need to worry about the verification signatures or API tokens in Stripe since we won't be verifying the payments. Of course, keep your session ID private as a result, else someone will be able to spoof fake donations to your end point.
+To get started, after creating a Stripe payment link, create a Stripe webhook that listens for the event `checkout.session.completed`. Have the webhook point to: `https://io.socialstream.ninja/XXXXXX/stripe`, where XXXXXX is your Social Stream session ID. You don't need to worry about the verification signatures or API tokens in Stripe since we won't be verifying the payments. Of course, keep your session ID private as a result, else someone will be able to spoof fake donations to your end point.
 
 If you wish to ask the payer for a name, include a custom field called "Display Name" or "Username" when creating your Stripe payment link. You can also include a field called "Message", which will allow the payer an opportunity to leave a custom message. The donation amount and current type should be dervived from the payment automatically, but some rare exotic currencies may not always show up with the right decimal place -- just keep that in mind.
 
@@ -564,7 +564,7 @@ This is very simliar to the Stripe support method, as seen above.
 
 To setup, sign into your Ko-Fi account, go to https://ko-fi.com/manage/webhooks
 
-Add `https://api.overlay.ninja/XXXXXXXX/kofi` to the Webhook URL text field, where you replace XXXXXXXX with your Social Stream session ID.
+Add `https://io.socialstream.ninja/XXXXXXXX/kofi` to the Webhook URL text field, where you replace XXXXXXXX with your Social Stream session ID.
 
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/9119d86a-d452-4658-b1c5-383f5b16fc9d)
 
@@ -770,7 +770,7 @@ Some icons used are licensced as attribution-required:
 
 ### Credit
 
-This project contains inspiration by my other project, chat.overlay.ninja, which was a derivation of another Youtube-specific chat widget, which was inspired by the stylings of other featured-chat code sample, of which that was also inspired by existing chat overlay designs. May the many new innovations of this project inspire the future foundation of other awesome projects as well.
+This project contains inspiration by my other project, chat.io.socialstream.ninja, which was a derivation of another Youtube-specific chat widget, which was inspired by the stylings of other featured-chat code sample, of which that was also inspired by existing chat overlay designs. May the many new innovations of this project inspire the future foundation of other awesome projects as well.
 
 ### Contributors to this project
 
