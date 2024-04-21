@@ -12,7 +12,7 @@
 
   let lastMessage = {};
 
-  // Función para obtener el tipo de stream basado en el atributo alt del icono
+  // Function to get the type of stream based on the alt attribute of the icon
   function getTypeFromAlt(altText) {
     if (altText.includes("YOUTUBE")) {
       return "youtube";
@@ -27,45 +27,46 @@
     } else if (altText.includes("AMAZON")) {
       return "amazon";
     } else {
-      return "discord"; // Devuelve 'discord' si no se reconoce el tipo... no se me ocurrió mas
+      return "wavevideo"; // You could also use "generic", if you wanted something that was brandless.
     }
   }
 
-  // Procesar mensajes individuales
+  // Process individual messages
   function processMessage(newMessage) {
     try {
       const messageText =
-        newMessage.querySelector(".jclrku-5.gsJWBK span")?.textContent ||
-        "Mensaje no encontrado";
+        newMessage.querySelector(".jclrku-5.gsJWBK span")?.textContent || ""; // Message not found
       const username =
-        newMessage.querySelector(".jclrku-2.dpJNMF")?.textContent ||
-        "Usuario no identificado";
+        newMessage.querySelector(".jclrku-2.dpJNMF")?.textContent || ""; // Unidentified user
       const profileImageUrl =
-        newMessage.querySelector(".sc-1f9oe74-3.cJigXz img")?.src ||
-        "URL de imagen no disponible";
+        newMessage.querySelector(".sc-1f9oe74-3.cJigXz img")?.src || ""; // Image URL not available
       const socialIconElement = newMessage.querySelector(
         ".sc-1f9oe74-2.gYhLbq img"
       );
-      const socialIconUrl =
-        socialIconElement?.src || "URL de ícono no disponible";
-      const socialIconAlt = socialIconElement?.alt || "";
-
+      const socialIconUrl = socialIconElement?.src || ""; // Icon URL not available
+      const socialIconAlt = socialIconElement?.alt || "wavevideo";
+	  
+	  if (!newMessage || !username){
+		  return; // we require a name and content for a message to be valid; either a message, donation, content-image, event, etc.
+	  }
+      
       const data = {
         chatname: escapeHtml(username),
         chatimg: profileImageUrl,
         chatmessage: escapeHtml(messageText),
-        chatIconUrl: socialIconUrl,
-        //type: "wavevideo",
-        type: getTypeFromAlt(socialIconAlt), // Determina el tipo de stream desde el alt
+        sourceImg: socialIconUrl,
+		// chatIconUrl: socialIconUrl,
+		textonly: false,
+        type: getTypeFromAlt(socialIconAlt), // Determine the type of stream from the alt.
       };
 
       if (lastMessage === JSON.stringify(data)) {
-        return; // Evita duplicados
+        return; // Avoid duplicates
       }
       lastMessage = JSON.stringify(data);
       pushMessage(data);
     } catch (e) {
-      console.error("Error procesando el mensaje:", e);
+      console.error("Error processing message:", e);
     }
   }
 
@@ -77,7 +78,7 @@
         function () {}
       );
     } catch (e) {
-      console.error("Error al enviar el mensaje:", e);
+      console.error("Error sending message:", e);
     }
   }
 
@@ -96,10 +97,10 @@
     const chatContainer = document.querySelector(chatContainerSelector);
     if (chatContainer) {
       observer.observe(chatContainer, config);
-      console.log("Observador de mensajes activado.");
+      console.log("Observador activated.");
     } else {
       console.log(
-        "Contenedor de chat no encontrado, reintento en 1 segundo..."
+        "Chat container not found, retry in 1 second..."
       );
       setTimeout(startObserving, 1000);
     }
@@ -107,6 +108,6 @@
 
   startObserving();
 
-  // Función para detener la observación
+  // Stop observation function
   window.stopMessageObserver = () => observer.disconnect();
 })();
