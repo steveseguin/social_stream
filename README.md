@@ -154,6 +154,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - riverside.fm (just open the chat bar. Note: you can opt-out of capture via the extension menu)
 - chzzk.naver.com (pop out the chat)
 - demo.openstreamingplatform.com (pop out chat)
+- wave.video
   
 [More on request](#requesting-a-site)
 
