@@ -96,11 +96,32 @@
 		return text;
 	}
 	
+	function extractYouTubeRedirectUrl(youtubeUrl) {
+		console.warn(youtubeUrl);
+		const url = new URL(youtubeUrl);
+		if (url.hostname === "www.youtube.com" && url.pathname === "/redirect") {
+			const actualUrl = url.searchParams.get("q");
+			console.log(actualUrl);
+			console.log(actualUrl.replace(/\&/g, '&amp;'));
+			if (actualUrl) {
+				return actualUrl.replace(/\&/g, '&amp;');
+			} else {
+				return youtubeUrl;
+			}
+		} else {
+			return youtubeUrl;
+		}
+	}
+	
 	function getAllContentNodes(element) {
 		var resp = "";
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
+				if (!settings.textonlymode && (node.nodeName === "A") && node.href && (node.childNodes.length===1)){
+					resp += extractYouTubeRedirectUrl(node.href);
+				} else {
+					resp += getAllContentNodes(node);
+				}
 			} else if ((node.nodeType === 3) && node.textContent){  // ah, so I was skipping the spaces before. that's breaking arabic. well, w/e
 				if (settings.textonlymode){
 					resp += escapeHtml(node.textContent)+"";
@@ -428,6 +449,7 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube";
 		
+		console.log(data);
 		
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, {

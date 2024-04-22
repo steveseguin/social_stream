@@ -2093,6 +2093,13 @@
 		activeLinks = true;
 	}
 	
+	var shortlink = false;
+	if (urlParams.has("shortlink")) {
+		shortlink = true;
+	}
+	
+	
+	
 	var stripEmojis = false;
 	if (urlParams.has("stripemoji")) {
 		stripEmojis = true;
@@ -5096,6 +5103,67 @@
 		}
 	}
 	
+	
+	function shortenURLs(element) {
+		if (!element) return; // Exit if the element is null or undefined
+
+		if (element.nodeType === 1) { // Element node
+			Array.from(element.childNodes).forEach(child => {
+				shortenURLs(child); // Recurse into each child node
+			});
+		} else if (element.nodeType === 3) { // Text node
+			const text = element.textContent;
+			const urlRegex = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g;
+			let match;
+			let lastIndex = 0;
+
+			const fragment = document.createDocumentFragment();
+
+			while ((match = urlRegex.exec(text)) !== null) {
+			
+				if (match.index > lastIndex) {
+					fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+				}
+
+				fragment.appendChild(document.createTextNode(shortenUrl(match[0])));
+				
+
+				lastIndex = match.index + match[0].length;
+			}
+
+			if (lastIndex < text.length) {
+				fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+			}
+
+			if (lastIndex > 0) {
+				element.parentNode.replaceChild(fragment, element);
+			}
+		}
+	}
+	
+	function shortenUrl(url, maxLength = 50) {
+		const parsedUrl = new URL(url);
+
+		const protocol = parsedUrl.protocol;
+		const domain = parsedUrl.hostname;
+		const path = parsedUrl.pathname + parsedUrl.search;
+
+		if (url.length <= maxLength) {
+			return url;
+		}
+
+		if (protocol.length + domain.length > maxLength) {
+			return protocol + '//' + domain.slice(0, maxLength - protocol.length - 3) + '...';
+		}
+
+		const remainingLength = maxLength - (protocol.length + domain.length + 3); // 3 for "//" and "..."
+		if (path.length > remainingLength) {
+			return protocol + '//' + domain + path.slice(0, remainingLength) + '...';
+		} else {
+			return protocol + '//' + domain + path;
+		}
+	}
+	
 	function activateURLs(element) {
 		if (!element) return; // Exit if the element is null or undefined
 
@@ -5122,6 +5190,8 @@
 				
 				if (stripLinks){
 					anchor.textContent = "[Link]";
+				} else if (shortlink){
+					anchor.textContent = shortenUrl(match[0]);
 				} else {
 					anchor.textContent = match[0];
 				}
@@ -5826,6 +5896,8 @@
 				}
 			} else if (activeLinks && chatmessage && hlMessage){
 				activateURLs(hlMessage);
+			} else if (shortlink && chatmessage && hlMessage){
+				shortenURLs(hlMessage);
 			}
 
 			if (data.type && (data.type == "twitch") && avatars && data.chatimg){
