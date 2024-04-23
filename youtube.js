@@ -1,110 +1,101 @@
 (function () {
-	
 	function toDataURL(url, callback) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.onload = function() {
-		  
-		var blob = xhr.response;
-    
-		if (blob.size > (55 * 1024)) {
-		  callback(url); // Image size is larger than 25kb.
-		  return;
-		}
+		var xhr = new XMLHttpRequest();
+		xhr.onload = function () {
+			var blob = xhr.response;
 
-		var reader = new FileReader();
-		
-		
-		reader.onloadend = function() {
-		  callback(reader.result);
-		}
-		reader.readAsDataURL(xhr.response);
-	  };
-	  xhr.open('GET', url);
-	  xhr.responseType = 'blob';
-	  xhr.send();
+			if (blob.size > 55 * 1024) {
+				callback(url); // Image size is larger than 25kb.
+				return;
+			}
+
+			var reader = new FileReader();
+
+			reader.onloadend = function () {
+				callback(reader.result);
+			};
+			reader.readAsDataURL(xhr.response);
+		};
+		xhr.open("GET", url);
+		xhr.responseType = "blob";
+		xhr.send();
 	}
-	
+
 	//var channelName = "";
-	
-	function getTranslation(key, value=false){
-		if (settings.translation && settings.translation.innerHTML && (key in settings.translation.innerHTML)){ // these are the proper translations
+
+	function getTranslation(key, value = false) {
+		if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
+			// these are the proper translations
 			return settings.translation.innerHTML[key];
-		} else if (settings.translation && settings.translation.miscellaneous && settings.translation.miscellaneous && (key in settings.translation.miscellaneous)){ 
+		} else if (settings.translation && settings.translation.miscellaneous && settings.translation.miscellaneous && key in settings.translation.miscellaneous) {
 			return settings.translation.miscellaneous[key];
-		} else if (value!==false){
+		} else if (value !== false) {
 			return value;
 		} else {
 			return key.replaceAll("-", " "); //
 		}
 	}
-	
-	function escapeHtml(unsafe){
+
+	function escapeHtml(unsafe) {
 		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+			if (settings.textonlymode) {
+				// we can escape things later, as needed instead I guess.
 				return unsafe;
 			}
-			return unsafe
-				 .replace(/&/g, "&amp;")
-				 .replace(/</g, "&lt;")
-				 .replace(/>/g, "&gt;")
-				 .replace(/"/g, "&quot;")
-				 .replace(/'/g, "&#039;") || "";
-		} catch(e){
+			return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") || "";
+		} catch (e) {
 			return "";
 		}
 	}
-	
-	
+
 	var messageHistory = [];
-	
-	function replaceEmotesWithImages2(message, emotesMap, zw=false) {
-		const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join('\\b|\\b')}\\b)(?!\\w|\\d|[!?.])`, 'g');
-		return message.replace(emotePattern, (match) => {
+
+	function replaceEmotesWithImages2(message, emotesMap, zw = false) {
+		const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join("\\b|\\b")}\\b)(?!\\w|\\d|[!?.])`, "g");
+		return message.replace(emotePattern, match => {
 			const emote = emotesMap[match];
-			if (!zw || (typeof emote==="string")){
+			if (!zw || typeof emote === "string") {
 				return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
-			} else if (emote.url){
+			} else if (emote.url) {
 				return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" />`;
 			}
 		});
 	}
-	
+
 	function replaceEmotesWithImages(text) {
-		if (BTTV){
-			if (settings.bttv){
+		if (BTTV) {
+			if (settings.bttv) {
 				try {
-					if (BTTV.channelEmotes){
+					if (BTTV.channelEmotes) {
 						text = replaceEmotesWithImages2(text, BTTV.channelEmotes, false);
 					}
-					if (BTTV.sharedEmotes){
+					if (BTTV.sharedEmotes) {
 						text = replaceEmotesWithImages2(text, BTTV.sharedEmotes, false);
 					}
-				} catch(e){
-				}
+				} catch (e) {}
 			}
 		}
-		if (SEVENTV){
-			if (settings.seventv){
+		if (SEVENTV) {
+			if (settings.seventv) {
 				try {
-					if (SEVENTV.channelEmotes){
+					if (SEVENTV.channelEmotes) {
 						text = replaceEmotesWithImages2(text, SEVENTV.channelEmotes, true);
 					}
-				} catch(e){
-				}
+				} catch (e) {}
 			}
 		}
 		return text;
 	}
-	
+
 	function extractYouTubeRedirectUrl(youtubeUrl) {
 		console.warn(youtubeUrl);
 		const url = new URL(youtubeUrl);
 		if (url.hostname === "www.youtube.com" && url.pathname === "/redirect") {
 			const actualUrl = url.searchParams.get("q");
 			console.log(actualUrl);
-			console.log(actualUrl.replace(/\&/g, '&amp;'));
+			console.log(actualUrl.replace(/\&/g, "&amp;"));
 			if (actualUrl) {
-				return actualUrl.replace(/\&/g, '&amp;');
+				return actualUrl.replace(/\&/g, "&amp;");
 			} else {
 				return youtubeUrl;
 			}
@@ -112,35 +103,36 @@
 			return youtubeUrl;
 		}
 	}
-	
+
 	function getAllContentNodes(element) {
 		var resp = "";
-		element.childNodes.forEach(node=>{
-			if (node.childNodes.length){
-				if (!settings.textonlymode && (node.nodeName === "A") && node.href && (node.childNodes.length===1)){
+		element.childNodes.forEach(node => {
+			if (node.childNodes.length) {
+				if (!settings.textonlymode && node.nodeName === "A" && node.href && node.childNodes.length === 1) {
 					resp += extractYouTubeRedirectUrl(node.href);
 				} else {
 					resp += getAllContentNodes(node);
 				}
-			} else if ((node.nodeType === 3) && node.textContent){  // ah, so I was skipping the spaces before. that's breaking arabic. well, w/e
-				if (settings.textonlymode){
-					resp += escapeHtml(node.textContent)+"";
+			} else if (node.nodeType === 3 && node.textContent) {
+				// ah, so I was skipping the spaces before. that's breaking arabic. well, w/e
+				if (settings.textonlymode) {
+					resp += escapeHtml(node.textContent) + "";
 				} else {
-					resp += replaceEmotesWithImages(escapeHtml(node.textContent))+"";
+					resp += replaceEmotesWithImages(escapeHtml(node.textContent)) + "";
 				}
-			} else if (node.nodeType === 1){
-				if (!settings.textonlymode){
+			} else if (node.nodeType === 1) {
+				if (!settings.textonlymode) {
 					resp += node.outerHTML;
 				}
-			} 
+			}
 		});
 		return resp;
 	}
-	
+
 	function findSingleInteger(input) {
 		// Ensure the input is a string
 		const str = String(input);
-		
+
 		const matches = str.match(/\d+/g);
 		if (matches && matches.length === 1) {
 			return parseInt(matches[0], 10);
@@ -149,8 +141,7 @@
 		}
 	}
 
-
-	function processMessage(ele, wss=true){
+	function processMessage(ele, wss = true) {
 		if (ele.hasAttribute("is-deleted")) {
 			//console.log("Message is deleted already");
 			return;
@@ -160,7 +151,7 @@
 			return;
 		}
 		try {
-			if (ele.skip){
+			if (ele.skip) {
 				return;
 			} else if (ele.id && messageHistory.includes(ele.id)) {
 				//console.log("Message already exists");
@@ -176,9 +167,9 @@
 				return;
 			}
 		} catch (e) {}
-		
+
 		ele.skip = true;
-		
+
 		//if (channelName && settings.customyoutubestate){
 		//if (settings.customyoutubeaccount && settings.customyoutubeaccount.textsetting && (settings.customyoutubeaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
 		//	return;
@@ -209,11 +200,10 @@
 					mod = true;
 				}
 			}
-
 		} catch (e) {}
 
 		try {
-			var BTT = ele.querySelectorAll('.bttv-tooltip');
+			var BTT = ele.querySelectorAll(".bttv-tooltip");
 			for (var i = 0; i < BTT.length; i++) {
 				BTT[i].outerHTML = "";
 			}
@@ -244,15 +234,16 @@
 		}
 
 		chatmessage = chatmessage.trim();
-		
-		chatmessage = chatmessage.replaceAll("=w16-h16-","=w48-h48-"); // increases the resolution of emojis
-		chatmessage = chatmessage.replaceAll("=w24-h24-","=w64-h64-");
-		chatmessage = chatmessage.replaceAll("=s16-","=s48-");
-		chatmessage = chatmessage.replaceAll("=s24-","=s48-");
-		
+
+		chatmessage = chatmessage.replaceAll("=w16-h16-", "=w48-h48-"); // increases the resolution of emojis
+		chatmessage = chatmessage.replaceAll("=w24-h24-", "=w64-h64-");
+		chatmessage = chatmessage.replaceAll("=s16-", "=s48-");
+		chatmessage = chatmessage.replaceAll("=s24-", "=s48-");
+
 		try {
 			chatimg = ele.querySelector("#img").src;
-			if (chatimg.startsWith("data:image/gif;base64")) { // document.querySelector("#panel-pages").querySelector("#img").src
+			if (chatimg.startsWith("data:image/gif;base64")) {
+				// document.querySelector("#panel-pages").querySelector("#img").src
 				chatimg = document.querySelector("#panel-pages").querySelector("#img").src; // this is the owner
 			}
 			chatimg = chatimg.replace("=s32-", "=s64-"); // double the resolution of avatars
@@ -264,30 +255,27 @@
 		} catch (e) {}
 
 		var chatmembership = "";
-		
+
 		try {
 			chatmembership = ele.querySelector(".yt-live-chat-membership-item-renderer #header-subtext").innerHTML;
-		} catch (e) {
-		}
+		} catch (e) {}
 
 		var treatAsMemberChat = false;
-		if (!chatmembership && settings.allmemberchat){
-			if (ele.hasAttribute("author-type")){
-				if (ele.getAttribute("author-type") === "member"){
+		if (!chatmembership && settings.allmemberchat) {
+			if (ele.hasAttribute("author-type")) {
+				if (ele.getAttribute("author-type") === "member") {
 					//chatmembership = chatmessage;
 					treatAsMemberChat = true;
 					member = true;
-				} else if (ele.getAttribute("author-type") === "moderator"){
+				} else if (ele.getAttribute("author-type") === "moderator") {
 					//chatmembership = chatmessage;
 					treatAsMemberChat = true;
 					mod = true;
 				}
-					
 			}
-		} else if (chatmembership){
+		} else if (chatmembership) {
 			treatAsMemberChat = true;
 		}
-
 
 		var chatsticker = "";
 		try {
@@ -297,7 +285,7 @@
 		if (chatsticker) {
 			try {
 				chatdonation = escapeHtml(ele.querySelector("#purchase-amount-chip").innerText);
-			} catch (e) {	}
+			} catch (e) {}
 		}
 
 		var chatbadges = [];
@@ -316,36 +304,34 @@
 					chatbadges.push(html);
 				}
 			});
-
 		} catch (e) {}
 
-
-		var hasDonation = '';
+		var hasDonation = "";
 		if (chatdonation) {
-			hasDonation = chatdonation
+			hasDonation = chatdonation;
 		}
 
-		var hasMembership = '';
-		
+		var hasMembership = "";
+
 		var subtitle = "";
-		
+
 		var giftedmemembership = ele.querySelector("#primary-text.ytd-sponsorships-live-chat-header-renderer");
 
 		if (treatAsMemberChat) {
 			if (chatmessage) {
-				if (mod){
+				if (mod) {
 					hasMembership = chatmembership || getTranslation("moderator-chat", "MODERATOR");
 				} else {
 					hasMembership = chatmembership || getTranslation("member-chat", "MEMBERSHIP");
 				}
 				var membershipLength = ele.querySelector("#header-subtext.yt-live-chat-membership-item-renderer, #header-primary-text.yt-live-chat-membership-item-renderer") || false;
-				if (membershipLength){
+				if (membershipLength) {
 					membershipLength = getAllContentNodes(membershipLength);
 					membershipLength = findSingleInteger(membershipLength);
 				}
-				if (membershipLength){
-					if (membershipLength==1){
-						subtitle = membershipLength + " " + getTranslation("month", "month")
+				if (membershipLength) {
+					if (membershipLength == 1) {
+						subtitle = membershipLength + " " + getTranslation("month", "month");
 					} else {
 						subtitle = membershipLength + " " + getTranslation("months", "months");
 					}
@@ -358,22 +344,21 @@
 					chatmessage = giftedmemembership.textContent;
 				}
 			} else {
-				hasMembership =  getTranslation("new-member", "NEW MEMBER");
+				hasMembership = getTranslation("new-member", "NEW MEMBER");
 				if (!settings.textonlymode) {
-					chatmessage = "<i>" + (chatmessage||chatmembership) + "</i>";
+					chatmessage = "<i>" + (chatmessage || chatmembership) + "</i>";
 				} else {
-					chatmessage = (chatmessage||chatmembership);
+					chatmessage = chatmessage || chatmembership;
 				}
 			}
-			
-			if (!hasMembership){
-				if (member){
+
+			if (!hasMembership) {
+				if (member) {
 					hasMembership = getTranslation("member-chat", "MEMBERSHIP");
-				} else if (mod){
+				} else if (mod) {
 					hasMembership = getTranslation("moderator-chat", "MODERATOR");
 				}
 			}
-		
 		} else if (!chatmessage && giftedmemembership) {
 			if (!settings.textonlymode) {
 				chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
@@ -382,21 +367,18 @@
 			}
 			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 		}
-		
-		
-		if (giftedmemembership && !hasDonation){
+
+		if (giftedmemembership && !hasDonation) {
 			try {
 				const match = giftedmemembership.innerText.match(/\b\d+\b/);
 				hasDonation = match ? parseInt(match[0], 10) : null;
-				if (hasDonation){
-					hasDonation += " "+ getTranslation("gifted-memberships", "Gifted");
+				if (hasDonation) {
+					hasDonation += " " + getTranslation("gifted-memberships", "Gifted");
 				}
-			} catch(e){
+			} catch (e) {
 				hasDonation = "";
 			}
 		}
-		
-		
 
 		if (chatsticker) {
 			if (!settings.textonlymode) {
@@ -407,13 +389,13 @@
 		var backgroundColor = "";
 
 		var textColor = "";
-		if (ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color')) {
-			backgroundColor = ele.style.getPropertyValue('--yt-live-chat-paid-message-primary-color');
+		if (ele.style.getPropertyValue("--yt-live-chat-paid-message-primary-color")) {
+			backgroundColor = ele.style.getPropertyValue("--yt-live-chat-paid-message-primary-color");
 			textColor = "#111;";
 		}
 
-		if (ele.style.getPropertyValue('--yt-live-chat-sponsor-color')) {
-			backgroundColor = ele.style.getPropertyValue('--yt-live-chat-sponsor-color');
+		if (ele.style.getPropertyValue("--yt-live-chat-sponsor-color")) {
+			backgroundColor = ele.style.getPropertyValue("--yt-live-chat-sponsor-color");
 			textColor = "#111;";
 		}
 
@@ -428,7 +410,6 @@
 		} else {
 			srcImg = "";
 		}
-
 
 		if (!chatmessage && !hasDonation) {
 			//console.error("No message or donation");
@@ -448,110 +429,108 @@
 		data.subtitle = subtitle;
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube";
-		
+
 		console.log(data);
-		
+
 		try {
-			chrome.runtime.sendMessage(chrome.runtime.id, {
-				"message": data
-			}, function() {});
-		} catch(e){
-		}
-		
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				{
+					message: data
+				},
+				function () {}
+			);
+		} catch (e) {}
 	}
 	var settings = {};
 	var BTTV = false;
 	var videosMuted = false;
 	var SEVENTV = false;
-	
-	chrome.runtime.onMessage.addListener(
-		function (request, sender, sendResponse) {
-			try{
-				if ("focusChat" == request){
-					document.querySelector("div#input").focus();
+
+	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		try {
+			if ("focusChat" == request) {
+				document.querySelector("div#input").focus();
+				sendResponse(true);
+				return;
+			}
+			if (typeof request === "object") {
+				if ("settings" in request) {
+					settings = request.settings;
+					sendResponse(true);
+					if (settings.bttv && !BTTV) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {});
+					}
+					if (settings.seventv && !SEVENTV) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {});
+					}
+					return;
+				}
+				if ("BTTV" in request) {
+					BTTV = request.BTTV;
 					sendResponse(true);
 					return;
-				} 
-				if (typeof request === "object"){
-					if ("settings" in request){
-						settings = request.settings;
-						sendResponse(true);
-						if (settings.bttv && !BTTV){
-							chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
-						}
-						if (settings.seventv && !SEVENTV){
-							chrome.runtime.sendMessage(chrome.runtime.id, { "getSEVENTV": true }, function(response){});
-						}
-						return;
-					} 
-					if ("BTTV" in request){
-						BTTV = request.BTTV;
-						sendResponse(true);
-						return;
-					}
-					if ("SEVENTV" in request){
-						SEVENTV = request.SEVENTV;
-						//console.log(SEVENTV);
-						sendResponse(true);
-						return;
-					}
-					if ("muteWindow" in request){
-						if (request.muteWindow){
-							clearInterval(videosMuted);
-							videosMuted = setInterval(function(){
-								document.querySelectorAll("video").forEach(v=>{
-									v.muted = true;
-									v.pause();
-								});
-							},1000);
-							document.querySelectorAll("video").forEach(v=>{
+				}
+				if ("SEVENTV" in request) {
+					SEVENTV = request.SEVENTV;
+					//console.log(SEVENTV);
+					sendResponse(true);
+					return;
+				}
+				if ("muteWindow" in request) {
+					if (request.muteWindow) {
+						clearInterval(videosMuted);
+						videosMuted = setInterval(function () {
+							document.querySelectorAll("video").forEach(v => {
 								v.muted = true;
 								v.pause();
 							});
-							sendResponse(true);
-							return;
+						}, 1000);
+						document.querySelectorAll("video").forEach(v => {
+							v.muted = true;
+							v.pause();
+						});
+						sendResponse(true);
+						return;
+					} else {
+						if (videosMuted) {
+							clearInterval(videosMuted);
+							document.querySelectorAll("video").forEach(v => {
+								v.muted = false;
+								v.play();
+							});
 						} else {
-							if (videosMuted){
-								clearInterval(videosMuted);
-								document.querySelectorAll("video").forEach(v=>{
-									v.muted = false;
-									v.play();
-								});
-							} else {
-								clearInterval(videosMuted);
-							}
-							videosMuted = false;
-							sendResponse(true);
-							return;
+							clearInterval(videosMuted);
 						}
+						videosMuted = false;
+						sendResponse(true);
+						return;
 					}
 				}
-				
-				
-			} catch(e){}
-			sendResponse(false);
-		}
-	);
-	
-	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if ("settings" in response){
-			settings = response.settings;
-			if (settings.bttv && !BTTV){
-				chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
 			}
-			if (settings.seventv && !SEVENTV){
-				chrome.runtime.sendMessage(chrome.runtime.id, { "getSEVENTV": true }, function(response){});
+		} catch (e) {}
+		sendResponse(false);
+	});
+
+	chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
+		// {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if ("settings" in response) {
+			settings = response.settings;
+			if (settings.bttv && !BTTV) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {});
+			}
+			if (settings.seventv && !SEVENTV) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {});
 			}
 		}
 	});
-	
 
 	function onElementInserted(target, callback) {
-		var onMutationsObserved = function(mutations) {
-			mutations.forEach(function(mutation) {
+		var onMutationsObserved = function (mutations) {
+			mutations.forEach(function (mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try{
+						try {
 							if (mutation.addedNodes[i] && mutation.addedNodes[i].classList && mutation.addedNodes[i].classList.contains("yt-live-chat-banner-renderer")) {
 								continue;
 							} else if (mutation.addedNodes[i].tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
@@ -567,124 +546,149 @@
 							} else {
 								//console.error("unknown: "+mutation.addedNodes[i].tagName);
 							}
-						} catch(e){}
+						} catch (e) {}
 					}
 				}
 			});
 		};
-		if (!target){return;}
+		if (!target) {
+			return;
+		}
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 	}
 
-    console.log("Social stream inserted");
-	
+	console.log("Social stream inserted");
+
 	// document.body.querySelector("#chat-messages").querySelectorAll("yt-live-chat-text-message-renderer")
-	
-	var checkTimer = setInterval(function(){
+
+	var checkTimer = setInterval(function () {
 		var ele = document.querySelector("yt-live-chat-app");
-		if (ele){
+		if (ele) {
 			clearInterval(checkTimer);
 			var cleared = false;
-			document.querySelectorAll("yt-live-chat-text-message-renderer").forEach(ele4=>{
+			document.querySelectorAll("yt-live-chat-text-message-renderer").forEach(ele4 => {
 				cleared = true;
 				ele4.skip = true;
-				if (ele4.id){
+				if (ele4.id) {
 					messageHistory.push(ele4.id);
 				}
 			});
-			
-			if (cleared){
-				onElementInserted(ele, function(ele2){
-					setTimeout(function(ele2){processMessage(ele2, false)}, 200, ele2);
+
+			if (cleared) {
+				onElementInserted(ele, function (ele2) {
+					setTimeout(
+						function (ele2) {
+							processMessage(ele2, false);
+						},
+						200,
+						ele2
+					);
 				});
 			} else {
-				setTimeout(function(){
-					onElementInserted(document.querySelector("yt-live-chat-app"), function(ele2){
-						setTimeout(function(ele2){processMessage(ele2, false)}, 200, ele2);
+				setTimeout(function () {
+					onElementInserted(document.querySelector("yt-live-chat-app"), function (ele2) {
+						setTimeout(
+							function (ele2) {
+								processMessage(ele2, false);
+							},
+							200,
+							ele2
+						);
 					});
-				},1000);
+				}, 1000);
 			}
 		}
 	}, 1000);
 
-	if (window.location.href.includes("youtube.com/watch")){
-		var checkTimer2 = setInterval(function(){
-			
+	if (window.location.href.includes("youtube.com/watch")) {
+		var checkTimer2 = setInterval(function () {
 			try {
-				if (document.querySelector('iframe[src]') && !document.querySelector('iframe[src]').src.includes("truffle.vip")){
-					var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages");
+				if (document.querySelector("iframe[src]") && !document.querySelector("iframe[src]").src.includes("truffle.vip")) {
+					var ele = document.querySelector("iframe").contentWindow.document.body.querySelector("#chat-messages");
 				} else {
 					var ele = false;
 				}
-			} catch(e){
-				
-			}
-			if (ele){
+			} catch (e) {}
+			if (ele) {
 				clearInterval(checkTimer2);
 				var cleared = false;
 				try {
-					ele.querySelectorAll("yt-live-chat-text-message-renderer").forEach(ele4=>{
+					ele.querySelectorAll("yt-live-chat-text-message-renderer").forEach(ele4 => {
 						ele4.skip = true;
 						cleared = true;
-						if (ele4.id){
+						if (ele4.id) {
 							messageHistory.push(ele4.id);
 						}
 					});
-				} catch(e){}
-				if (cleared){
-					onElementInserted(ele, function(ele2){
-						 setTimeout(function(ele2){processMessage(ele2, false)}, 200, ele2);
+				} catch (e) {}
+				if (cleared) {
+					onElementInserted(ele, function (ele2) {
+						setTimeout(
+							function (ele2) {
+								processMessage(ele2, false);
+							},
+							200,
+							ele2
+						);
 					});
 				} else {
-					setTimeout(function(){
-						onElementInserted(document.querySelector('iframe').contentWindow.document.body.querySelector("#chat-messages"), function(ele2){
-							 setTimeout(function(ele2){processMessage(ele2, false)}, 200, ele2);
+					setTimeout(function () {
+						onElementInserted(document.querySelector("iframe").contentWindow.document.body.querySelector("#chat-messages"), function (ele2) {
+							setTimeout(
+								function (ele2) {
+									processMessage(ele2, false);
+								},
+								200,
+								ele2
+							);
 						});
-					},1000);
+					}, 1000);
 				}
 			}
-		},3000);
+		}, 3000);
 	}
-	
+
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
 	try {
-		var receiveChannelCallback = function(e){
+		var receiveChannelCallback = function (e) {
 			remoteConnection.datachannel = event.channel;
-			remoteConnection.datachannel.onmessage = function(e){};;
-			remoteConnection.datachannel.onopen = function(e){};;
-			remoteConnection.datachannel.onclose = function(e){};;
-			setInterval(function(){
-				if (document.hidden){ // only poke ourselves if tab is hidden, to reduce cpu a tiny bit.
-					remoteConnection.datachannel.send("KEEPALIVE")
+			remoteConnection.datachannel.onmessage = function (e) {};
+			remoteConnection.datachannel.onopen = function (e) {};
+			remoteConnection.datachannel.onclose = function (e) {};
+			setInterval(function () {
+				if (document.hidden) {
+					// only poke ourselves if tab is hidden, to reduce cpu a tiny bit.
+					remoteConnection.datachannel.send("KEEPALIVE");
 				}
 			}, 800);
-		}
-		var errorHandle = function(e){}
+		};
+		var errorHandle = function (e) {};
 		var localConnection = new RTCPeerConnection();
 		var remoteConnection = new RTCPeerConnection();
-		localConnection.onicecandidate = (e) => !e.candidate ||	remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
-		remoteConnection.onicecandidate = (e) => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		localConnection.onicecandidate = e => !e.candidate || remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.onicecandidate = e => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
 		remoteConnection.ondatachannel = receiveChannelCallback;
 		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
-		localConnection.sendChannel.onopen = function(e){localConnection.sendChannel.send("CONNECTED");};
-		localConnection.sendChannel.onclose =  function(e){};
-		localConnection.sendChannel.onmessage = function(e){};
-		localConnection.createOffer()
-			.then((offer) => localConnection.setLocalDescription(offer))
+		localConnection.sendChannel.onopen = function (e) {
+			localConnection.sendChannel.send("CONNECTED");
+		};
+		localConnection.sendChannel.onclose = function (e) {};
+		localConnection.sendChannel.onmessage = function (e) {};
+		localConnection
+			.createOffer()
+			.then(offer => localConnection.setLocalDescription(offer))
 			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
 			.then(() => remoteConnection.createAnswer())
-			.then((answer) => remoteConnection.setLocalDescription(answer))
-			.then(() =>	{
+			.then(answer => remoteConnection.setLocalDescription(answer))
+			.then(() => {
 				localConnection.setRemoteDescription(remoteConnection.localDescription);
 				console.log("KEEP ALIVE TRICk ENABLED");
 			})
 			.catch(errorHandle);
-	} catch(e){
+	} catch (e) {
 		console.log(e);
 	}
-	
-	
 })();
