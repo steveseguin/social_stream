@@ -1774,7 +1774,7 @@
 
 			<!-- Queue buttons -->
 			<div id="queueSection" class="hidden">
-				<button class="imgButton" id="next_in_queue" data-state="0" onclick="nextInQueue();" style="background-image: url(./icons/queue_show_next.png)" title="Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)"><span id="next_in_queue_badge" class="buttonBadge">0</span></button>
+				<button class="imgButton" id="next_in_queue" data-state="0" onclick="nextInQueue(event);" style="background-image: url(./icons/queue_show_next.png)" title="Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)"><span id="next_in_queue_badge" class="buttonBadge">0</span></button>
 				<button class="imgButton imgSmallButton" id="show_only_queue" data-state="0" onclick="filterQueued();" style="background-image: url(./icons/queue_show_listonly_off.png)" title="Queue — 📑 Show only the messages in queue"></button>
 				<div class="horizontalSeparator"></div>
 			</div>
@@ -2629,11 +2629,21 @@
 			var autoshow = false;
 			var autoshowdonos = false;
 			var autoshowmembers = false;
+			
+			var autoshowqueued = false;
+			if (urlParams.has("autoshowqueued")) {
+				autoshowqueued = true;
+				getById("next_in_queue").style["background-image"] = "url(./icons/queue_show_autonext.png)";
+				getById("next_in_queue").title = "Auto-showing all queued messages. Click to disable";
+				getById("autoshow").classList.remove("hidden");
+				getById("queueSection").classList.remove("hidden");
+				//getById("next_in_queue_badge").classList.add("hidden");
+			}
 
 			if (urlParams.has("autoshow")) {
 				autoShow();
 			}
-
+			
 			var autoShowQueue = [];
 
 			if (urlParams.has("autoshowdonos")) {
@@ -3554,10 +3564,12 @@
 			var activeDonation = false;
 			var checkTimeout = null;
 			function checkAutoShow() {
+				
 				if (checkTimeout) {
 					return;
 				}
-
+				checkTimeout = true;
+				
 				let waitTime = activeWordLength * timePerCharacter;
 				let minimumTime = timePerCharacter * 42; // 42; the answer to life. the universe. and everything
 
@@ -3566,8 +3578,18 @@
 				} else if (waitTime > minimumTime * 10) {
 					waitTime = minimumTime * 10;
 				}
-
-				if (autoShowQueue.length) {
+				
+				if (autoshowqueued && selectedQueue.length){
+					checkTimeout = setTimeout(function () {
+							checkTimeout = false;
+							if (autoshowqueued){
+								nextInQueue();
+							} else {
+								checkAutoShow();
+							}
+						}, lastPushed + waitTime - Date.now() );
+					return;
+				} else if (autoShowQueue.length) {
 					if (lastPushed + waitTime > Date.now() + timePerCharacter) {
 						checkTimeout = setTimeout(function () {
 							checkTimeout = false;
@@ -3600,6 +3622,7 @@
 						selectedMessage(false, post);
 					}
 				} else {
+					checkTimeout = false;
 					return;
 				}
 
@@ -3633,6 +3656,8 @@
 						checkTimeout = false;
 						checkAutoShow();
 					}, waitTime);
+				} else {
+					checkTimeout = false;
 				}
 			}
 
@@ -4687,7 +4712,21 @@
 				//mainOutputWindow.appendChild(node);
 			}
 
-			function nextInQueue() {
+			function nextInQueue(event=false) {
+			
+				if (event && !autoshowqueued && (event.ctrlKey || event.metaKey)) {
+					autoshowqueued = true;
+					getById("next_in_queue").style["background-image"] = "url(./icons/queue_show_autonext.png)";
+					getById("next_in_queue").title = "Auto-showing all queued messages. Click to disable";
+				//	getById("next_in_queue_badge").classList.add("hidden");
+				} else if (event && autoshowqueued){
+					autoshowqueued = false;
+					getById("next_in_queue").style["background-image"] = "url(./icons/queue_show_next.png)";
+					getById("next_in_queue").title = "Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)";
+				//	getById("next_in_queue_badge").classList.remove("hidden");
+					return;
+				}
+				
 				if (!selectedQueue.length) {
 					sendDataP2P(false);
 					updateQueueButton();
@@ -4695,7 +4734,13 @@
 				}
 
 				element = selectedQueue.shift();
-				selectedMessage(false, element);
+				
+				if (autoshowqueued && !event){
+					lastPushed = Date.now();
+					selectedMessage(false, element, true);  
+				} else {
+					selectedMessage(false, element);  
+				}
 				element.classList.remove("queued");
 				delete element.children[0].dataset.qid;
 				updateQueueButton(true);
@@ -4822,6 +4867,9 @@
 				if (socketserver) {
 					socketserver.send(JSON.stringify({ queueLength: selectedQueue.length }));
 				}
+				if (autoshowqueued){
+					checkAutoShow();
+				}
 			}
 
 			function removeQueue(element) {
@@ -4835,7 +4883,7 @@
 				updateQueueButton(true);
 			}
 
-			function selectedMessage(event = false, element = false) {
+			function selectedMessage(event = false, element = false, lastpushreset = false) {
 				if (blockMessageSelecting || blockMessageSelecting2) {
 					return;
 				}
@@ -4892,6 +4940,7 @@
 				if (element.classList.contains("queued")) {
 					removeQueue(element);
 					syncQueueP2P(false, element);
+					
 				}
 				if (element.classList.contains("pinned")) {
 					unpinIt(element);
@@ -4900,7 +4949,7 @@
 					}
 				}
 
-				if (autoTimeoutEnabled) {
+				if (autoTimeoutEnabled || lastpushreset) {
 					lastPushed = Date.now();
 					if (event && autoShowQueue.length) {
 						// user selected and an auto queue
