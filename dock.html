@@ -2164,6 +2164,11 @@
 			if (urlParams.has("nomemberhighlight")) {
 				highlightMembers = false;
 			}
+			
+			var beepwords = false;
+			if (urlParams.has("beepwords")) {
+				beepwords = true;
+			}
 
 			var highlightSpecial = true;
 
@@ -6245,6 +6250,11 @@
 
 					msgPlain = msgPlain.replace(/!+/g, " "); // Replace multiple '!' with a single space
 					msgPlain = msgPlain.replace(/catJAM/gi, ""); // Remove 'catJAM' case-insensitively
+					if (beepwords){
+						msgPlain = msgPlain.replace(/\*+/g, ' beep ');
+					} else {
+						msgPlain = msgPlain.replace(/\*/g, '');
+					}
 					msgPlain = msgPlain.trim();
 				}
 

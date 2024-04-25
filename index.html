@@ -924,6 +924,11 @@
 				hideTwitch = true;
 			}
 
+			var beepwords = false;
+			if (urlParams.has("beepwords")) {
+				beepwords = true;
+			}
+			
 			var pseudodock = false;
 			if (urlParams.has("autoshow")) {
 				pseudodock = true;
@@ -1457,6 +1462,12 @@
 
 				if (replaceURLInLink) {
 					text = replaceURLsWithSubstring(text, "Link");
+				}
+				
+				if (beepwords){
+					text = text.replace(/\*+/g, ' beep ');
+				} else {
+					text = text.replace(/\*/g, '');
 				}
 
 				if (GoogleAPIKey) {
