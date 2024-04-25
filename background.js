@@ -4542,6 +4542,13 @@ async function applyBotActions(data, tab = false) {
 				console.error(e);
 			}
 		}
+		if (settings.blacklistname && data.chatname) {
+			try {
+				data.chatname = filterProfanity(data.chatname);
+			} catch (e) {
+				console.error(e);
+			}
+		}
 
 		if (settings.goodwordslist) {
 			if (goodWordsHashTable) {
