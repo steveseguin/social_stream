@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 2,
-  "version": "1.73.14",
+  "version": "1.73.15",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -21,6 +21,7 @@
   "permissions": [
     "webNavigation",
     "notifications",
+	"https://beamstream.gg/*/chat",
     "https://socialstream.ninja/wss/*",
     "https://cozy.tv/*",
     "https://play.afreecatv.com/*?vtype=chat",
@@ -148,6 +149,10 @@
     "default_popup": "popup.html"
   },
   "content_scripts": [
+    {
+      "js": ["beamstream.js"],
+      "matches": ["https://beamstream.gg/*/chat"]
+    },
     {
       "js": ["chzzk.js"],
       "matches": ["https://chzzk.naver.com/live/*/chat"]
