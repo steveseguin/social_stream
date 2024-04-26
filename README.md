@@ -155,6 +155,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - chzzk.naver.com (pop out the chat)
 - demo.openstreamingplatform.com (pop out chat)
 - wave.video
+- beamstream.gg (https://beamstream.gg/USERNAME/chat)
   
 [More on request](#requesting-a-site)
 
