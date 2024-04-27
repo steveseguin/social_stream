@@ -375,7 +375,8 @@
 		}
 
 		if (document.getElementById('chat-list-content')) {
-		    document.getElementById('chat-list-content').scrollTop = 10000; // prevent chat box from stop scrolling, which makes messages stop appearing
+		    // prevent chat box from stop scrolling, which makes messages stop appearing
+        document.getElementById('chat-list-content').scrollTop = document.getElementById('chat-list-content').scrollTop + 1000
 		}
 
 		if (document.querySelector('[aria-label="open the chat pane"]')) { // prevent chat box from being closed after screen-share by keeping it always open
