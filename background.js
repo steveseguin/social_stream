@@ -4407,14 +4407,22 @@ try {
 		});
 } catch (e) {}
 
-function sanitizeRelay(text, alt = false) {
+function sanitizeRelay(text, textonly=false, alt = false) {
 	if (!text.trim()) {
 		return text;
 	}
+	if (!textonly){
+		// convert to text from html if not text only mode
+		var textArea = document.createElement('textarea');
+		textArea.innerHTML = text;
+		text = textArea.value;
+	}
+	
 	text = text.replace(/(<([^>]+)>)/gi, "");
 	text = text.replace(/[!#@]/g, "");
 	text = text.replace(/cheer\d+/gi, " ");
 	text = text.replace(/\.(?=\S(?!$))/g, " ");
+	
 	if (!text.trim() && alt) {
 		return alt;
 	}
@@ -4612,7 +4620,7 @@ async function applyBotActions(data, tab = false) {
 					msg.url = tab.url;
 				}
 
-				msg.response = sanitizeRelay(data.chatname, "Someone") + " on " + data.type + " donated " + sanitizeRelay(data.hasDonation) + ". Thank you";
+				msg.response = sanitizeRelay(data.chatname, true, "Someone") + " on " + data.type + " donated " + sanitizeRelay(data.hasDonation, true) + ". Thank you";
 				processResponse(msg, true);
 			}
 		}
@@ -4644,9 +4652,9 @@ async function applyBotActions(data, tab = false) {
 					msg.url = tab.url;
 				}
 
-				let tmpmsg = sanitizeRelay(data.chatmessage).trim();
+				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
 				if (tmpmsg) {
-					msg.response = sanitizeRelay(data.chatname, "Someone") + " said: " + tmpmsg;
+					msg.response = sanitizeRelay(data.chatname, true, "Someone") + " said: " + tmpmsg;
 					checkExactDuplicate(msg.response);
 					processResponse(msg, true, data); // this should be the first and only message
 				}
