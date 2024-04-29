@@ -1708,6 +1708,7 @@
 			}
 
 			var iframeTimeout = null;
+			var lastMessageId = null
 
 			function processData(data) {
 				if (pseudodock) {
@@ -1730,6 +1731,14 @@
 					if (onlyTwitch && data.contents.type !== "twitch") {
 						// this is not a twitch message, so we're hiding them
 						return;
+					}
+					
+					if (lastMessageId && ("id" in data.contents) && data.contents.id === lastMessageId) {
+						return;
+					} else if ("id" in data.contents){
+						lastMessageId = data.contents.id;
+					} else {
+						lastMessageId = null;
 					}
 
 					clearTimeout(timeoutTimer);
@@ -2139,6 +2148,7 @@
 					}
 				} else if (data) {
 					if ("contents" in data) {
+						lastMessageId = null;
 						clearTimeout(timeoutTimer);
 						document.getElementById("output").classList.add(transitionType);
 						clearInterval(nextComment);

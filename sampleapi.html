@@ -602,7 +602,7 @@ function loadSelfCommands(){
 		//data.chatbadges.push(html);
 		
 		var message = {};
-		message.extContent = data;
+		message.extContent = data; // just a different structured way of sending messages:  {"action":"content","value":encoded} versus {"extContent":message}
 		//message.apiid = WID; // session ID key 
 
 		sendMessage(JSON.stringify(message)); 
@@ -642,6 +642,7 @@ function loadSelfCommands(){
 	
 	var button = document.createElement("button");
 	button.innerHTML = "Server -> dock message (alt)";
+	button.title = "this is the same as the other way, except the JSON structure is at the root, rather than in 'content'";
 	button.onclick = function(){
 
 		var data = {};
