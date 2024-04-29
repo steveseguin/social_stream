@@ -9,7 +9,7 @@
 		return new Promise(r => setTimeout(r, ms)); // LOLz!
 	}
 
-	function toDataURL2(blobUrl, callback) {
+	function toDataURL2(blobUrl, callback=false) {
 		var xhr = new XMLHttpRequest;
 		xhr.responseType = 'blob';
 
@@ -19,7 +19,9 @@
 		   var reader = new FileReader;
 
 		   reader.onload = function() {
-			 callback(reader.result);
+			   if (callback){
+				callback(reader.result);
+			   }
 		   };
 
 		   reader.readAsDataURL(recoveredBlob);
@@ -98,6 +100,14 @@
 				}
 			});
 		} catch(e){errorlog(e);}
+		
+		
+		if (ele.querySelector(".avatar-media[src]")){
+			chatimg = ele.querySelector(".avatar-media[src]").src;
+		}
+		if (ele.querySelector(".message-title-name") && ele.querySelector(".message-title-name").textContent){
+			chatname = escapeHtml(ele.querySelector(".message-title-name").textContent);
+		}
 		
 		try{
 			contentimg = ele.querySelector(".media-inner").querySelector("img").src;
@@ -183,6 +193,9 @@
 		var chatname = "";
 		try{
 			chatname = escapeHtml(document.querySelector(".ChatInfo>.info>.title").innerText);
+			if (chatname==="Replies"){
+				chatname = "";
+			}
 		} catch(e){errorlog(e);}
 		
 		
