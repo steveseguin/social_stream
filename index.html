@@ -2119,8 +2119,8 @@
 							}
 
 							if (timeoutDelay) {
-								clearTimeout(timeoutTimer);
 								timeoutTimer = setTimeout(function () {
+									lastMessageId = null;
 									document.getElementById("output").classList.add(transitionType);
 									clearInterval(nextComment);
 								}, timeoutDelay);
