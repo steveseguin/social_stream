@@ -253,13 +253,14 @@
 				bottom: 0;
 			}
 
-			.hl-imgContent img {
+			.hl-imgContent img, .hl-imgContent video {
 				max-width: 80px;
 				margin: 0 2px;
 				max-height: 30px;
 			}
+			
 
-			.largeContent .hl-imgContent img {
+			.largeContent .hl-imgContent img, .largeContent .hl-imgContent video {
 				max-width: 160px !important;
 				margin: 0 2px;
 				max-height: 80px !important;
@@ -462,7 +463,7 @@
 				max-height: 24px;
 			}
 
-			.hl-message .hl-content img {
+			.hl-message .hl-content img, .hl-message .hl-content video {
 				max-width: 36px;
 			}
 
@@ -483,7 +484,7 @@
 				margin-top: 1px;
 			}
 
-			.hl-message .hl-badge.img {
+			.hl-message .hl-badge.img, .hl-message .hl-badge.video {
 				max-height: 16px;
 				margin-top: 4px;
 			}
@@ -496,7 +497,7 @@
 				margin: auto 3px auto 1px;
 			}
 
-			.hl-message span > img {
+			.hl-message span > img, .hl-message span > video {
 				margin: auto 1px;
 			}
 
@@ -538,7 +539,7 @@
 				min-width: 75px;
 				min-height: 75px;
 			}
-			.hl-leftside img {
+			.hl-leftside img , .hl-leftside video{
 				max-height: 100%;
 				max-width: 100%;
 				height: 100%;
@@ -846,7 +847,7 @@
 				text-align: right;
 				margin-right: 8px;
 			}
-			.leftside > img {
+			.leftside > img , .leftside > video{
 				top: 0px;
 				margin: 2px 2px auto 1px;
 			}
@@ -5466,7 +5467,11 @@
 
 					var addImage = "";
 					if (data.contentimg) {
-						addImage = '<div class="hl-imgContent"><img src="' + data.contentimg + '" onerror="this.style.display = \'none\';" /></div>';
+						if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
+							addImage = '<div class="hl-imgContent"><video autoplay="true" loop="true" muted="true" src="' + data.contentimg + '" onerror="this.style.display = \'none\';" /></video></div>';
+						} else {
+							addImage = '<div class="hl-imgContent"><img src="' + data.contentimg + '" onerror="this.style.display = \'none\';" /></div>';
+						}
 					} else if (attachmentsonly) {
 						data.chatmessage = "";
 						data.hasDonation = "";

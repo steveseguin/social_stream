@@ -396,7 +396,7 @@
 				padding: var(--author-avatar-border-size);
 				z-index: 3;
 			}
-			.hl-img img {
+			.hl-img img , .hl-img video{
 				display: inline-block;
 				width: 100%;
 				height: 100%;
@@ -420,7 +420,7 @@
 				height: max(100%, 200px);
 			}
 
-			.hl-imgContent > img {
+			.hl-imgContent > img  , .hl-imgContent > video {
 				object-fit: contain;
 				display: block;
 				margin: 0;
@@ -1773,8 +1773,13 @@
 					nextComment = setTimeout(
 						function (data) {
 							var addImage = "";
-							if (data.contentimg) {
-								addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></div>';
+							
+							if (data.contentimg){
+								if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
+									addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video></div>';
+								} else {
+									addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></div>';
+								}
 							} else {
 								data.contentimg = "";
 							}

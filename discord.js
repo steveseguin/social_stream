@@ -133,11 +133,12 @@
 		
 		var contentimg = "";
 		try {
-			contentimg = ele.querySelector("div[class^='imageContent-'] img[src]").src+"";
+			contentimg = ele.querySelector("div[class^='imageContent'] img[src], div[class^='imageContent'] video[src]").src+"";
 		} catch(e){
 			try {
 				contentimg = ele.querySelector("img[data-type='sticker']").src+"";
-			} catch(e){}
+			} catch(e){
+			}
 		}
 		
 		
