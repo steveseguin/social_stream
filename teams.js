@@ -143,6 +143,7 @@
 		
 		if (name){
 		  name = name.trim();
+		  name = name.replace(/\s*\([^)]*\)/g, ''); // remove brackets tags.
 	    }
 
 		var msg = "";
