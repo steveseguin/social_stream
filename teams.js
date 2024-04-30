@@ -196,8 +196,18 @@
 		
         var name = "";
 		try {
-			name = escapeHtml(ele.querySelector("div[data-tid='threadBodyDisplayName'], div[data-tid='message-author-name']").innerText);
+			name = ele.querySelector("div[data-tid='threadBodyDisplayName'], div[data-tid='message-author-name']").innerText);
 		} catch(e){}
+		
+		if (name){
+		  name = name.trim();
+		  name = name.replace(/\s*\([^)]*\)/g, ''); // remove brackets tags.
+	    }
+		
+		try {
+			name = escapeHtml(name);
+		} catch(e){}
+		
 		
 
 		if (!chatimg){
