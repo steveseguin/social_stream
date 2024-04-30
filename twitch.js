@@ -590,6 +590,12 @@
 						sendResponse(true);
 						return;
 					}
+					if ("BTTV" in request) {
+						BTTV = request.BTTV;
+						//console.log(BTTV);
+						sendResponse(true);
+						return;
+					}
 				}
 
 				// twitch doesn't capture avatars already.
