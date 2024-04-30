@@ -196,7 +196,7 @@
 		
         var name = "";
 		try {
-			name = ele.querySelector("div[data-tid='threadBodyDisplayName'], div[data-tid='message-author-name']").innerText);
+			name = ele.querySelector("div[data-tid='threadBodyDisplayName'], div[data-tid='message-author-name']").innerText;
 		} catch(e){}
 		
 		if (name){
