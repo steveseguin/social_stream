@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 2,
-  "version": "1.74.0",
+  "version": "1.74.1",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -104,6 +104,7 @@
     "https://teams.microsoft.com/*",
     "https://livestream.com/accounts/*",
     "https://*/plugins/livechat/*router/webchat/room/*",
+	"https://*/p/livechat/room?room=*",
     "https://app.slack.com/client/*",
     "https://*.rooter.gg/*",
     "https://www.nonolive.com/*",
@@ -533,7 +534,8 @@
     },
     {
       "js": ["peertube.js"],
-      "matches": ["https://*/plugins/livechat/*router/webchat/room/*"]
+      "matches": ["https://*/plugins/livechat/*router/webchat/room/*","https://*/p/livechat/room?room=*"]
+	  
     },
     {
       "js": ["instagram.js"],
