@@ -94,7 +94,6 @@ function connect() {
 	messages.forEach((rawMessage) => {
 		if (rawMessage) {
 			const parsedMessage = parseMessage(rawMessage);
-			
 			if (parsedMessage.command === 'PING') {
 				websocket.send('PONG :tmi.twitch.tv');
 			} else if (parsedMessage.command === 'PRIVMSG') {
@@ -119,6 +118,7 @@ function connect() {
 }
 
 var BTTV = false;
+var SEVENTV = false;
 	
 chrome.runtime.onMessage.addListener(
 	function (request, sender, sendResponse) {
@@ -134,11 +134,20 @@ chrome.runtime.onMessage.addListener(
 					if (settings.bttv && !BTTV){
 						chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
 					}
+					if (settings.seventv && !SEVENTV){
+						chrome.runtime.sendMessage(chrome.runtime.id, { "getSEVENTV": true }, function(response){});
+					}
 					return;
 				} 
 				if ("BTTV" in request){
 					BTTV = request.BTTV;
 					console.log(BTTV);
+					sendResponse(true);
+					return;
+				}
+				if ("SEVENTV" in request){
+					SEVENTV = request.SEVENTV;
+					console.log(SEVENTV);
 					sendResponse(true);
 					return;
 				}
@@ -240,41 +249,39 @@ document.querySelector('button').onclick = function(){
 }
 	
 
+function replaceEmotesWithImages2(message, emotesMap, zw = false) {
+	const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join("\\b|\\b")}\\b)(?!\\w|\\d|[!?.])`, "g");
+	return message.replace(emotePattern, match => {
+		const emote = emotesMap[match];
+		if (!zw || typeof emote === "string") {
+			return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
+		} else if (emote.url) {
+			return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" />`;
+		}
+	});
+}
+
 function replaceEmotesWithImages(text) {
-	if (!BTTV){return text;}
-	if (!settings.bttv){return text;}
-	try {
-		if (BTTV.globalEmotes){
-			BTTV.globalEmotes.forEach(emote => {
-				const emoteCode = emote.code;
-				const emoteId = emote.id;
-				const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
-				const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
-
-				text = text.split(emoteCode).join(imageTag);
-			});
+	if (BTTV) {
+		if (settings.bttv) {
+			try {
+				if (BTTV.channelEmotes) {
+					text = replaceEmotesWithImages2(text, BTTV.channelEmotes, false);
+				}
+				if (BTTV.sharedEmotes) {
+					text = replaceEmotesWithImages2(text, BTTV.sharedEmotes, false);
+				}
+			} catch (e) {}
 		}
-		if (BTTV.channelEmotes){
-			BTTV.channelEmotes.forEach(emote => {
-				const emoteCode = emote.code;
-				const emoteId = emote.id;
-				const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
-				const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
-
-				text = text.split(emoteCode).join(imageTag);
-			});
+	}
+	if (SEVENTV) {
+		if (settings.seventv) {
+			try {
+				if (SEVENTV.channelEmotes) {
+					text = replaceEmotesWithImages2(text, SEVENTV.channelEmotes, true);
+				}
+			} catch (e) {}
 		}
-		if (BTTV.sharedEmotes){
-			BTTV.sharedEmotes.forEach(emote => {
-				const emoteCode = emote.code;
-				const emoteId = emote.id;
-				const imageUrl = `https://cdn.betterttv.net/emote/${emoteId}/1x`;
-				const imageTag = `<img src="${imageUrl}" alt="${emoteCode}"/>`;
-
-				text = text.split(emoteCode).join(imageTag);
-			});
-		}
-	} catch(e){
 	}
 	return text;
 }
@@ -382,7 +389,6 @@ function processMessage(parsedMessage){
 var settings = {};
 
 function pushMessage(data){
-	console.log("new");
 	try{
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
 	} catch(e){
