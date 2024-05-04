@@ -213,8 +213,22 @@ function sendMessage(msg){
 	
 }
 
-function log(msg){
-	console.log(msg);
+function log(msg) {
+	//	console.log(msg);
+}
+
+function warnlog(msg, url = false, lineNumber = false) {
+	//	console.warn(msg);
+	if (lineNumber) {
+		//		console.warn(lineNumber);
+	}
+}
+
+function errorlog(msg, url = false, lineNumber = false) {
+	console.error(msg);
+	if (lineNumber) {
+		console.error(lineNumber);
+	}
 }
 
 function ajax(data) {

@@ -1610,7 +1610,7 @@
 		<div class="wrapper">
 			<div class="collapsible">
 				<input type="checkbox" class="collapsible-input" id="wrapper-hostbot-options">
-				<label class="collapsible-label" for="wrapper-hostbot-options"><span data-translate="host--bot">🤖 Host &amp; bot</span></label>
+				<label class="collapsible-label" for="wrapper-hostbot-options"><span data-translate="host--bot">🤖 Host, bots, privileged users</span></label>
 				<div class="collapsible-text">
 					<div class="options">
 						<div class="options_group streaming_chat">
@@ -1619,23 +1619,36 @@
 Host/bot name(s) to help identify them.
 The list of names should be comma separated.
 The first name listed may be used as the host's name in stream when their name is not otherwise known.">
-								<input type="text" id="botnames" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam1="myname">
-								<label for="botnames"><span data-translate="hostbot-names">&gt; Host/bot name(s) - (this is being depreciated)</span></label>
+								<input type="text" disabled id="botnames" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam1="myname">
+								<label for="botnames"><span data-translate="hostbot-names">&gt; Host/bot name(s) - (this is depreciated)</span></label>
 							</div>
 							<a class="options-link rounded_area" href="#botnamesext" title="Jump to the new way to specify host/bot names."><span data-translate="replacement">jump to new replacement host/bot section to specify names..</span></a>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-param1="hidebotnames">
 									<span class="slider round"></span>
-								</label><span data-translate="delete-names-for-specified-host-or-bots">🤖🔤 Delete names for host or bots
-							</span></div>
+								</label>
+								<span data-translate="delete-names-for-specified-host-or-bots">🤖🔤 Delete names for host or bots
+								</span>
+							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-param1="hidebots">
 									<span class="slider round"></span>
-								</label><span data-translate="do-not-show-host-or-bot-messages">🤖🚫 Do not show host or bot messages
-							</span></div>
-
+								</label>
+								<span data-translate="do-not-show-host-or-bot-messages">🤖🚫 Do not show host or bot messages
+								</span>
+							</div>
+							
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="startstop">
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="allow-admins-to-start-stop-obs">🤖💪 Allow privileged users to !start or !stop OBS
+								</span>
+							</div>
+							<i><small>Note: Remote OBS control requires the dock.html to be added to OBS as a browser source, with full permissions enabled for it.</small></i>
 						</div>
 					</div>
 				</div>
@@ -2913,7 +2926,7 @@ The first name listed may be used as the host's name in stream when their name i
 		<div class="wrapper">
 			<div class="collapsible">
 				<input type="checkbox" class="collapsible-input" id="wrapper-hostbot-options-ext">
-				<label class="collapsible-label" for="wrapper-hostbot-options-ext"><span data-translate="host--bot">🤖 Host &amp; bot</span></label>
+				<label class="collapsible-label" for="wrapper-hostbot-options-ext"><span data-translate="host--bot">🤖 Host, bots, privileged users</span></label>
 				<div class="collapsible-text">
 					<div class="options">
 						<div class="options_group streaming_chat">
@@ -2930,15 +2943,27 @@ The first name listed may be used as the host's name in stream when their name i
 								<label class="switch">
 									<input type="checkbox" data-setting="hidebotnamesext">
 									<span class="slider round"></span>
-								</label><span data-translate="delete-names-for-specified-host-or-bots">🤖🔤 Delete names for specified host or bots
-							</span></div>
+								</label>
+								<span data-translate="delete-names-for-specified-host-or-bots">🤖🔤 Delete names for specified host or bots
+								</span>
+							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-setting="hidebotsext">
 									<span class="slider round"></span>
-								</label><span data-translate="do-not-show-host-or-bot-messages">🤖🚫 Filter out messages from host or bots
-							</span></div>
-
+								</label>
+								<span data-translate="do-not-show-host-or-bot-messages">🤖🚫 Filter out messages from host or bots
+								</span>
+							</div>
+							<h3><span data-translate="Privileged-users-h3">Privileged users</span></h3>
+							
+							<div class="textInputContainer" style="width: 95%" title="Note:
+Specify privileged/admin name(s) to help identify them in chat.
+The list of names should be comma separated.">
+								<input type="text" id="adminnames" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="adminnames">
+								<label for="adminnames"><span data-translate="admin-names">&gt; Privileged users</span></label>
+							</div>
+							
 						</div>
 					</div>
 				</div>

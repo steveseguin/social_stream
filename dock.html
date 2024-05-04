@@ -1873,6 +1873,24 @@
 				console.error("Unhandled Error occured"); //or any message
 				return false;
 			};
+			
+			function log(msg) {
+				//	console.log(msg);
+			}
+
+			function warnlog(msg, url = false, lineNumber = false) {
+				console.warn(msg);
+				//if (lineNumber) {
+					//console.warn(lineNumber);
+				//}
+			}
+
+			function errorlog(msg, url = false, lineNumber = false) {
+				console.error(msg);
+				if (lineNumber) {
+					console.error(lineNumber);
+				}
+			}
 
 			window.alert = function () {
 				console.log("blocked");
@@ -3564,7 +3582,17 @@
 				}
 				redoOdd();
 			}
-
+			
+			var startstop = false;
+			if (urlParams.has("startstop")) {
+				startstop = true;
+				
+				if (!window.obsstudio){
+					warnlog("⚠️ You need to run this in OBS as a browser source with Full Permissions enable. (&startstop mode)");
+				}
+				
+			}
+			
 			var lastPushed = Date.now();
 			var activeWordLength = 0;
 			var activeDonation = false;
@@ -5327,6 +5355,21 @@
 
 					if (filtercommands && data.chatmessage && data.chatmessage.startsWith("!")) {
 						return;
+					}
+					if (startstop && data.chatmessage && data.chatname && data.admin && window.obsstudio) {
+						if (data.chatmessage == "!start"){
+							try {
+								window.obsstudio["startStreaming"]();
+							} catch(e){
+								errorlog("You need to run this in OBS as a browser source with Full Permissions enabled");
+							}
+						} else if (data.chatmessage == "!stop"){
+							try {
+								window.obsstudio["stopStreaming"]();
+							} catch(e){
+								errorlog("You need to run this in OBS as a browser source with Full Permissions enabled");
+							}
+						}
 					}
 
 					if (eventsOnly) {

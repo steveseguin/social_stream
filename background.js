@@ -34,7 +34,12 @@ function log(msg, msg2 = null) {
 		}
 	}
 }
-
+function warnlog(msg) {
+  console.warn(msg);
+}
+function errorlog(msg) {
+  console.error(msg);
+}
 var priorityTabs = new Set();
 
 function generateStreamID() {
@@ -4499,6 +4504,16 @@ async function applyBotActions(data, tab = false) {
 		}
 		if (data.bot && data.chatname && settings.hidebotnamesext) {
 			data.chatname = "";
+		}
+		if (settings.adminnames && data.chatname){
+			try {
+				let admins = settings.adminnames.textsetting.toLowerCase().split(",");
+				if (admins.includes(data.chatname.toLowerCase())){
+					data.admin = true;
+				}
+			} catch(e){
+				errorlog(e);
+			}
 		}
 
 		if (settings.removeContentImage) {
