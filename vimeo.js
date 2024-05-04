@@ -205,9 +205,10 @@
 	console.log("social stream injected");
 
 	var initialsetup = setInterval(function(){
-		if (document.querySelector("#interaction-widget-auto-sidebar-content")){
-			if (!document.querySelector("#interaction-widget-auto-sidebar-content").marked){
-				document.querySelector("#interaction-widget-auto-sidebar-content").marked=true;
+		if (document.querySelector("#interaction-widget-auto-sidebar-content #interaction-widget-auto-sidebar-item-content-chat")){
+			if (!document.querySelector("#interaction-widget-auto-sidebar-content #interaction-widget-auto-sidebar-item-content-chat").marked){
+				document.querySelector("#interaction-widget-auto-sidebar-content #interaction-widget-auto-sidebar-item-content-chat").marked=true;
+				console.log("Chat found and loaded. Starting to listen...");
 				var eles = document.querySelectorAll("#live-chat-app li, #interaction-chat-history li, #interaction-widget-auto-sidebar-item-content-qna-questions-list-columns .interaction-sidebar-item-content-item");
 				for (var i=0; i < eles.length; i++) {
 					try{
