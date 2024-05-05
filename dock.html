@@ -3751,12 +3751,12 @@
 
 			function applyHiddenState(node) {
 				if (hideNotDonos && node.classList.contains("noDono")) {
-					if (hideNotMembers && node.classList.contains("member")) {
+					if (hideNotMembers && node.dataset.member) {
 						node.classList.remove("hidden");
 					} else {
 						node.classList.add("hidden");
 					}
-				} else if (hideNotMembers && !node.classList.contains("member")) {
+				} else if (hideNotMembers && !node.dataset.member) {
 					if (hideNotDonos && !node.classList.contains("noDono")) {
 						node.classList.remove("hidden");
 					} else {
@@ -5820,14 +5820,16 @@
 					if (data.hasMembership) {
 						data.membership = data.hasMembership.toString();
 						memebershipHTML = data.membership;
+						node.dataset.member = "true";
 					} else if (data.membership) {
 						data.membership = data.membership.toString();
 						memebershipHTML = '<div class="donation membership">' + data.membership + "</div>";
+						node.dataset.member = "true";
 					} else {
 						data.membership = "";
 					}
 
-					if (!bubble && highlightMembers && data.membership) {
+					if (data.membership && !bubble && highlightMembers) {
 						node.classList.add("member");
 					}
 
@@ -5902,12 +5904,12 @@
 					});
 
 					if (hideNotDonos && node.classList.contains("noDono")) {
-						if (hideNotMembers && node.classList.contains("member")) {
+						if (hideNotMembers && node.dataset.member) {
 							node.classList.remove("hidden");
 						} else {
 							node.classList.add("hidden");
 						}
-					} else if (hideNotMembers && !node.classList.contains("member")) {
+					} else if (hideNotMembers && !node.dataset.member) {
 						if (hideNotDonos && !node.classList.contains("noDono")) {
 							node.classList.remove("hidden");
 						} else {
