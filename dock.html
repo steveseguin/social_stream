@@ -5249,7 +5249,7 @@
 
 			function shortenUrl(url, maxLength = 50) {
 				try {
-					const parsedUrl = new URL(url);
+					var parsedUrl = new URL(url);
 				} catch(e){
 					console.warn("INVALID URL: "+url);
 					return url;
