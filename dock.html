@@ -5248,7 +5248,13 @@
 			}
 
 			function shortenUrl(url, maxLength = 50) {
-				const parsedUrl = new URL(url);
+				try {
+					const parsedUrl = new URL(url);
+				} catch(e){
+					errorlog(e);
+					console.log(url);
+					return url;
+				}
 
 				const protocol = parsedUrl.protocol;
 				const domain = parsedUrl.hostname;
