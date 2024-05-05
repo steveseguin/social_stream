@@ -1715,6 +1715,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "xcapture") {
 				pushSettingChange();
 			}
+			if (request.setting == "memberchatonly") {
+				pushSettingChange();
+			}
 			if (request.setting == "customtwitchstate") {
 				pushSettingChange();
 			}
@@ -4499,6 +4502,11 @@ async function applyBotActions(data, tab = false) {
 				data.bot = true;
 			}
 		}
+		
+		if (!(data.membership || data.hasMembership) && settings.memberchatonly) {
+			return false;
+		}
+		
 		if (data.bot && settings.hidebotsext) {
 			return false;
 		}

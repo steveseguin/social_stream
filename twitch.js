@@ -270,6 +270,10 @@
 				}
 			});
 		} catch (e) {}
+		
+		if (settings.memberchatonly && !subscriber){
+			return;
+		}
 
 		try {
 			var BTT = ele.querySelectorAll(".bttv-tooltip");

@@ -276,7 +276,7 @@
 		} else if (chatmembership) {
 			treatAsMemberChat = true;
 		}
-
+		
 		var chatsticker = "";
 		try {
 			chatsticker = ele.querySelector(".yt-live-chat-paid-sticker-renderer #sticker>#img").src;
@@ -366,6 +366,10 @@
 				chatmessage = giftedmemembership.textContent;
 			}
 			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
+		}
+		
+		if (settings.memberchatonly && !hasMembership){
+			return;
 		}
 
 		if (giftedmemembership && !hasDonation) {
