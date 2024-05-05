@@ -5251,8 +5251,7 @@
 				try {
 					const parsedUrl = new URL(url);
 				} catch(e){
-					errorlog(e);
-					console.log(url);
+					console.warn("INVALID URL: "+url);
 					return url;
 				}
 
