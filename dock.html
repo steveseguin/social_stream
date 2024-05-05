@@ -4729,6 +4729,12 @@
 			fallbackImage.onerror = function () {
 				fallbackImage = false;
 			};
+			
+			var fallbackImageAnnouncement = new Image();
+			fallbackImageAnnouncement.src = "./icons/announcement.png";
+			fallbackImageAnnouncement.onerror = function () {
+				fallbackImageAnnouncement = false;
+			};
 
 			function errorImage(ele) {
 				if (fallbackImage) {
@@ -5577,7 +5583,9 @@
 
 					var chatImg = data.chatimg;
 					if (!chatImg && avatars) {
-						if (fallbackImage) {
+						if (fallbackImageAnnouncement && !data.chatname && data.event){
+							chatImg = '<img id="img_' + data.id + '" src="./icons/announcement.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
+						} else if (fallbackImage) {
 							chatImg = '<img id="img_' + data.id + '" src="unknown.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
 						} else {
 							chatImg = "";

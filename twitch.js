@@ -230,8 +230,18 @@
 		} catch (e) {}
 
 		var chatbadges = [];
+		var subscriber = "";
+		var subtitle = "";
 		try {
 			ele.querySelectorAll("img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge").forEach(badge => {
+				if (badge.alt && badge.alt.includes("Subscriber")){
+					subscriber = "Subscriber";
+					subtitle = badge.alt.replace(/\s*\([^)]*\)/g, '');
+					subtitle = subtitle.replace("Subscriber","").trim();
+					if (subtitle && subtitle.endsWith("-Month") && (subtitle!=="1-Month")){
+						subtitle+="s";
+					}
+				}
 				if (badge.srcset) {
 					let bb = badge.srcset.split("https://").pop();
 					if (bb) {
@@ -483,7 +493,8 @@
 			data.chatimg = "";
 		}
 		data.hasDonation = hasDonation;
-		data.membership = "";
+		data.membership = subscriber;
+		data.subtitle = subtitle;
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
 

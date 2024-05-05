@@ -580,8 +580,8 @@ function update(response, sync=true){
 			document.getElementById("dock").raw = baseURL+"dock.html?session="+response.streamID+password;
 			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='"+baseURL+"dock.html?session="+response.streamID+password+"'>"+baseURL+"dock.html?session="+response.streamID+password+"</a>";
 
-			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='"+baseURL+"index.html?session="+response.streamID+password+"'>"+baseURL+"index.html?session="+response.streamID+password+"</a>";
-			document.getElementById("overlay").raw = baseURL+"index.html?session="+response.streamID+password;
+			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='"+baseURL+"featured.html?session="+response.streamID+password+"'>"+baseURL+"featured.html?session="+response.streamID+password+"</a>";
+			document.getElementById("overlay").raw = baseURL+"featured.html?session="+response.streamID+password;
 
 			document.getElementById("emoteswall").innerHTML = "<a target='_blank' id='emoteswalllink' href='"+baseURL+"emotes.html?session="+response.streamID+password+"'>"+baseURL+"emotes.html?session="+response.streamID+password+"</a>";
 			document.getElementById("emoteswall").raw = baseURL+"emotes.html?session="+response.streamID+password;
