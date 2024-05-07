@@ -1712,6 +1712,8 @@
 					}
 					clearInterval(nextComment);
 
+					console.log(data);
+
 					try {
 						if (data.contents.chatimg && data.contents.chatimg.startsWith("http")) {
 							// preload URL based
@@ -1751,17 +1753,6 @@
 							if (!data.chatimg) {
 								data.chatimg = "";
 							}
-
-							// <!-- try { -->
-							// 	<!-- if (data.type && (data.type == "facebook") && data.userID ){ -->
-							// 		<!-- var tmpImage2 = new Image(); -->
-							// 		<!-- tmpImage2.src = "https://graph.facebook.com/"+data.userID+"/picture?type=large"; -->
-							// 		<!-- tmpImage2.onload = function(){ -->
-							// 			<!-- document.getElementById("img_"+data.chatname).src = tmpImage2.src; -->
-							// 		<!-- }; -->
-							// 	<!-- } -->
-							// <!-- } catch(e){} -->
-
 							var showType = "";
 							if (!data.type) {
 								data.type = "none";
@@ -1907,6 +1898,8 @@
 										} else {
 											chatimg = "unknown.png";
 										}
+									} else {
+										chatimg = data.chatimg
 									}
 									avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + chatimg + '" class="hl-profile-pic" onerror="errorImage(this);"></div>';
 								}
