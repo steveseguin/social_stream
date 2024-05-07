@@ -316,6 +316,8 @@
 		var subtitle = "";
 
 		var giftedmemembership = ele.querySelector("#primary-text.ytd-sponsorships-live-chat-header-renderer");
+		
+		var eventType = false;
 
 		if (treatAsMemberChat) {
 			if (chatmessage) {
@@ -338,17 +340,16 @@
 				}
 			} else if (giftedmemembership) {
 				hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
-				if (!settings.textonlymode) {
-					chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
-				} else {
-					chatmessage = giftedmemembership.textContent;
-				}
+				chatmessage = getAllContentNodes(giftedmemembership);
+				eventType = true;
 			} else {
 				hasMembership = getTranslation("new-member", "NEW MEMBER");
-				if (!settings.textonlymode) {
-					chatmessage = "<i>" + (chatmessage || chatmembership) + "</i>";
+				eventType = true;
+				
+				if (chatmembership){
+					chatmessage =  getTranslation("new-membership", "Joined as a member - ") + chatmembership;
 				} else {
-					chatmessage = chatmessage || chatmembership;
+					chatmessage = getTranslation("new-membership", "Joined as a member");
 				}
 			}
 
@@ -360,11 +361,8 @@
 				}
 			}
 		} else if (!chatmessage && giftedmemembership) {
-			if (!settings.textonlymode) {
-				chatmessage = "<i>" + giftedmemembership.innerHTML + "</i>";
-			} else {
-				chatmessage = giftedmemembership.textContent;
-			}
+			eventType = true;
+			chatmessage = getAllContentNodes(giftedmemembership);
 			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 		}
 		
@@ -433,8 +431,11 @@
 		data.subtitle = subtitle;
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube";
-
-		console.log(data);
+		data.event = eventType;
+		
+		if (eventType){
+			console.log(data);
+		}
 
 		try {
 			chrome.runtime.sendMessage(
