@@ -1648,7 +1648,7 @@
 			}
 
 			try {
-				var ("sources/"+(ele.parentNode.dataset.target+".js")) = new Image(); // preload it.
+				var fallbackImage = new Image(); // preload it.
 				fallbackImage.src = "unknown.png";
 				fallbackImage.onerror = function () {
 					fallbackImage = false;
