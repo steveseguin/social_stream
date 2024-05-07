@@ -5010,7 +5010,13 @@ async function applyBotActions(data, tab = false) {
 		// webhook for configured custom chat commands
 		for (var i = 1; i <= 20; i++) {
 			if (data.chatmessage && settings["chatevent" + i] && settings["chatcommand" + i] && settings["chatwebhook" + i]) {
-				if (data.chatmessage === settings["chatcommand" + i].textsetting) {
+				let matches = false;
+				if (settings.chatwebhookstrict && (data.chatmessage === settings["chatcommand" + i].textsetting)) {
+					matches=true;
+				} else if (!settings.chatwebhookstrict && (data.chatmessage.startsWith(settings["chatcommand" + i].textsetting))){
+					matches=true;
+				}
+				if (matches){
 					if (Date.now() - messageTimeout > 1000) {
 						messageTimeout = Date.now();
 						let URL = settings["chatwebhook" + i].textsetting;

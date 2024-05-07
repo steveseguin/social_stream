@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 2,
-  "version": "1.74.5",
+  "version": "1.74.6",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -22,7 +22,7 @@
     "webNavigation",
     "notifications",
 	"https://beamstream.gg/*/chat",
-    "https://socialstream.ninja/wss/*",
+	"https://socialstream.ninja/sources/websocket/*",
     "https://cozy.tv/*",
     "https://play.afreecatv.com/*?vtype=chat",
     "https://kiwiirc.com/nextclient/*",
@@ -142,7 +142,6 @@
     "https://vk.com/*",
     "https://wave.video/live/*",
     "https://wave.video/*",
-    "file:///C:/Users/steve/Code/social_stream/wss/*",
     "storage",
     "debugger"
   ],
@@ -400,10 +399,6 @@
     {
       "js": ["./sources/vimm.js"],
       "matches": ["https://www.vimm.tv/c/*", "https://vimm.tv/c/*"]
-    },
-    {
-      "js": ["./sources/wss/vimm.js"],
-      "matches": ["https://socialstream.ninja/wss/vimm.html*"]
     },
     {
       "js": ["./sources/websocket/vimm.js"],
