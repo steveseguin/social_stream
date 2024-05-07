@@ -1649,7 +1649,7 @@
 
 			try {
 				var fallbackImage = new Image(); // preload it.
-				fallbackImage.src = "unknown.png";
+				fallbackImage.src = "./sources/images/unknown.png";
 				fallbackImage.onerror = function () {
 					fallbackImage = false;
 				};
@@ -1665,7 +1665,7 @@
 				if (ele.dataset.backupImage) {
 					ele.src = ele.dataset.backupImage;
 				} else if (fallbackImage) {
-					ele.src = "unknown.png";
+					ele.src = "./sources/images/unknown.png";
 				} else {
 					ele.style.display = "none";
 				}
@@ -1711,17 +1711,17 @@
 						document.getElementById("output").classList.add(transitionType);
 					}
 					clearInterval(nextComment);
-
+					
 					try {
 						if (data.contents.chatimg && data.contents.chatimg.startsWith("http")) {
 							// preload URL based
 							var tmpImage = new Image();
 							tmpImage.src = data.contents.chatimg; // preload the image, since there is time for it.
 						}
-						if (data.contents.showType && data.contents.showsource) {
+						if (data.contents.type && showsource) {
 							// preload URL based
 							var tempShowType = new Image();
-							tempShowType.src = data.contents.showType + ".png";
+							tempShowType.src = "./sources/images/" + data.contents.type + ".png";
 						}
 					} catch (e) {
 						warnlog(e);
@@ -1752,6 +1752,7 @@
 								data.chatimg = "";
 							}
 							var showType = "";
+							
 							if (!data.type) {
 								data.type = "none";
 							} else {
@@ -1761,18 +1762,18 @@
 
 							var customSourceClass = "sourceOffset";
 							if (showType && showsource && avatar) {
-								showType = '<img src="' + showType + '.png" class="icon sourcetype" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+								showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
 							} else if (showType && showsource && !avatar) {
-								showType = '<img src="' + showType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+								showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
 							} else {
 								customSourceClass = "";
 								showType = "";
 							}
 
 							if (data.sourceImg && customSource && avatar) {
-								showType += '<img src="' + data.sourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
+								showType += '<img src="./sources/images/' + data.sourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
 							} else if (data.sourceImg && customSource && !avatar) {
-								showType += '<img src="' + +data.sourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
+								showType += '<img src="./sources/images/' + +data.sourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
 							}
 
 							if (hideNames) {
