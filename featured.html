@@ -1648,8 +1648,8 @@
 			}
 
 			try {
-				var fallbackImage = new Image(); // preload it.
-				fallbackImage.src = "./sources/images/unknown.png";
+				var ("sources/"+(ele.parentNode.dataset.target+".js")) = new Image(); // preload it.
+				fallbackImage.src = "unknown.png";
 				fallbackImage.onerror = function () {
 					fallbackImage = false;
 				};
@@ -1665,7 +1665,7 @@
 				if (ele.dataset.backupImage) {
 					ele.src = ele.dataset.backupImage;
 				} else if (fallbackImage) {
-					ele.src = "./sources/images/unknown.png";
+					ele.src = "unknown.png";
 				} else {
 					ele.style.display = "none";
 				}
