@@ -2110,6 +2110,15 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				data.chatname = "NewGuest";
 				data.type = "twitch";
 				data.chatmessage = "hi";
+			} else if (Math.random() > 0.40) {
+				data.membership = "Coffee Addiction";
+				data.hasDonation = "";
+				data.subtitle = "32 Years";
+				data.highlightColor = "pink";
+				data.nameColor = "";
+				data.chatname = "Sir Drinks-a-lot";
+				data.type = "youtube";
+				data.chatmessage = "☕☕☕ COFFEE!";
 			} else if (Math.random() > 0.2) {
 				data.hasDonation = "";
 				data.membership = "";
