@@ -5013,7 +5013,7 @@ async function applyBotActions(data, tab = false) {
 				let matches = false;
 				if (settings.chatwebhookstrict && (data.chatmessage === settings["chatcommand" + i].textsetting)) {
 					matches=true;
-				} else if (!settings.chatwebhookstrict && (data.chatmessage.startsWith(settings["chatcommand" + i].textsetting))){
+				} else if (!settings.chatwebhookstrict && (data.chatmessage.split(" ")[0] === settings["chatcommand" + i].textsetting)){
 					matches=true;
 				}
 				if (matches){
