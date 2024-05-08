@@ -447,6 +447,16 @@ function loadSelfCommands(){
 	input.placeholder = "Donation";
 	input.id = "donationfake";
 	target_self.appendChild(input);
+	var br = document.createElement("br");
+	target_self.appendChild(br);
+	var input = document.createElement("label");
+	target_self.appendChild(input);
+	input.innerText = "Avatar URL";
+	var input = document.createElement("input");
+	input.style = "width:900px;max-width:80%";
+	input.placeholder = "eg: https://somedomain.com/images/user.png";
+	input.id = "avatarfake";
+	target_self.appendChild(input);
 	
 	
 	var br = document.createElement("br");
@@ -472,7 +482,7 @@ function loadSelfCommands(){
 	//	data.backgroundColor = "";
 	//	data.textColor = "";
 		data.chatmessage =  document.getElementById("msgfake").value;
-	//	data.chatimg = "";
+		data.chatimg = document.getElementById("avatarfake").value || ""; // will use Twitch API to get avatar is not specified
 		data.hasDonation = document.getElementById("donationfake").value;
 //		data.membership = "";
 		data.type = "twitch"; // twitch.png gets used as an icon, as a result
