@@ -2612,6 +2612,11 @@
 			if (urlParams.has("limit")) {
 				customNodeLimit = parseInt(urlParams.get("limit")) || 200;
 			}
+			
+			var hideshortmessages = false;
+			if (urlParams.has("hideshortmessages")) {
+				hideshortmessages = parseInt(urlParams.get("hideshortmessages")) || 5;
+			}
 
 			if (urlParams.has("hidebadges") || urlParams.has("nobadges")) {
 				showbadges = false;
@@ -5568,6 +5573,10 @@
 
 					if (!chatmessage && !data.contentimg && !data.hasDonation) {
 						return;
+					} else if (hideshortmessages && !data.contentimg && !data.hasDonation) {
+						if (chatmessage.replace(/(<([^>]+)>)/ig, "").length < hideshortmessages){
+							return;
+						}
 					}
 
 					if (hideNumbers && data.chatmessage && !data.contentimg && !data.hasDonation && data.chatmessage === parseFloat(data.chatmessage)) {

@@ -125,8 +125,13 @@
 		}
 	});
 	
+	let socket = false;
+	
 	function connectWebSocket(url) {
-		let socket = new WebSocket(url);
+		if(socket){return;}
+		
+		console.log("websocket server started");
+		socket = new WebSocket(url);
 
 		socket.onopen = function(event) {
 			console.log("WebSocket is open now.");
@@ -134,7 +139,7 @@
 		};
 
 		socket.onmessage = function(event) {
-			//console.log("Message from server: ", event.data);
+			console.log("Message from server: ", event.data);
 			processMessage(JSON.parse(event.data));
 		};
 
@@ -150,10 +155,12 @@
 			clearInterval(socket.interval);
 			// Reconnect immediately if the close was not intentional
 			if (!event.wasClean) {
-				setTimeout(function() { connectWebSocket(url); }, 5000);
+				setTimeout(function() { socket=false;connectWebSocket(url); }, 5000);
 			}
 		};
 	}
+	
+	console.log("Social stream injected");
 	
 	var url = window.location.href.split("/");
 	var channel = url.pop();
