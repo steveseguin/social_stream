@@ -2442,7 +2442,7 @@ function sendToH2R(data) {
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
 
-			if (data.type && data.type == "twitch" && data.chatname) {
+			if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
 				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
 			} else if (data.type && data.type == "youtube" && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
@@ -2510,7 +2510,7 @@ function sendToS10(data) {
 
 			msg.displayName = data.chatname;
 
-			if (data.type && data.type == "twitch" && data.chatname) {
+			if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
 				msg.displayPictureUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
 			} else if (data.type && data.type == "youtube" && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
@@ -2560,7 +2560,7 @@ function sendToPost(data) {
 				postServer += settings.postserver.textsetting; // Just going to assume they gave the token
 			}
 
-			if (data.type && !data.chatimg && data.type == "twitch" && data.chatname) {
+			if (data.type && !data.chatimg && (data.type == "twitch") && data.chatname) {
 				data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
 			} else if (data.type && data.type == "youtube" && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
@@ -3366,7 +3366,7 @@ function sendToDisk(data) {
 					data.chatimg = data.chatimg.replace("=s64-", "=s512-");
 				}
 
-				if (data.type && data.type == "twitch" && data.chatname) {
+				if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
 					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
 				}
 
@@ -3384,7 +3384,7 @@ function sendToDisk(data) {
 					data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 				}
 
-				if (data.type && data.type == "twitch" && data.chatname) {
+				if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
 					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
 				}
 				overwriteFileExcel(data);

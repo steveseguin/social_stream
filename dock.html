@@ -3301,7 +3301,7 @@
 			function upscaleImages(data) {
 				// for third party APIs
 				let chatimg = "";
-				if (data.type && data.type == "twitch" && data.chatname) {
+				if (data.type && (data.type == "twitch") && data.chatname && !data.chatimg) {
 					chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
 				} else if (data.type && data.type == "youtube" && data.chatimg) {
 					chatimg = data.chatimg.replace("=s32-", "=s256-");
@@ -5581,7 +5581,7 @@
 
 					if (largeavatar && data.chatname && data.type && avatars) {
 						data.chatimg = upscaleImages(data); // increase the resolution of avatars if possible
-					} else if (data.type && data.type == "twitch" && avatars && !data.chatimg && data.chatname) {
+					} else if (data.type && (data.type == "twitch") && avatars && !data.chatimg && data.chatname) {
 						// this is a temp fix until everyone updates.
 						data.chatimg = "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(data.chatname); // this is CORS restricted to socialstream, but this is to ensure reliability for all
 					}
