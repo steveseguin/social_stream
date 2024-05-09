@@ -2032,6 +2032,12 @@
 			if (urlParams.has("showtime")) {
 				timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
 			}
+			
+			var autoQueueTimeout = false
+			if (urlParams.has("autoshowtime")) {
+				autoQueueTimeout = parseInt(urlParams.get("autoshowtime")) || 20000;
+			}
+			
 			var timePerCharacter = 60;
 			if (urlParams.has("chartime")) {
 				timePerCharacter = parseInt(urlParams.get("chartime")) || 60;
@@ -3618,6 +3624,11 @@
 					waitTime = minimumTime * 10;
 				}
 				
+				if (autoQueueTimeout){
+					waitTime = autoQueueTimeout;
+					timePerCharacter = 0;
+				}
+				
 				if (autoshowqueued && selectedQueue.length){
 					checkTimeout = setTimeout(function () {
 							checkTimeout = false;
@@ -4778,18 +4789,25 @@
 					return;
 				}
 
-				element = selectedQueue.shift();
 				
-				if (autoshowqueued && !event){
+				
+				if (autoshowqueued){
+					element = selectedQueue.shift();
 					lastPushed = Date.now();
-					selectedMessage(false, element, true);  
+					selectedMessage(false, element, true); 
+					element.classList.remove("queued");
+					delete element.children[0].dataset.qid; 
 				} else {
+					
+					lastPushed = Date.now();
+					element = selectedQueue.shift();
 					selectedMessage(false, element);  
-				}
-				element.classList.remove("queued");
-				delete element.children[0].dataset.qid;
+					element.classList.remove("queued");
+					delete element.children[0].dataset.qid; 
+				} 
 				updateQueueButton(true);
 				syncQueueP2P();
+				
 			}
 
 			async function fetchWithTimeout(resource, options = {}) {
@@ -5120,6 +5138,8 @@
 			}
 
 			function transitionOutNode(node) {
+				if (!node){return;}
+				
 				if (animateout) {
 					animateCSS(node, animateout); // animate then delete
 				} else if (fadeout && horizontal) {
