@@ -3748,9 +3748,9 @@ function checkIfAllowed(sitename) {
 				// "instagram live" is allowed still, just not comments
 				return false;
 			}
-			if (sitename.startsWith("https://www.instagram.com/") && !sitename.includes("/live/")) {
-				return false;
-			}
+			//if (sitename.startsWith("https://www.instagram.com/") && !sitename.includes("/live/")) {
+			//	return false;
+			//}
 		} catch (e) {}
 	}
 	return true;

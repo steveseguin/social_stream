@@ -11,7 +11,7 @@
 		  
 		var blob = xhr.response;
     
-		if (blob.size > (55 * 1024)) {
+		if (blob.size > (25 * 1024)) {
 		  callback(url); // Image size is larger than 25kb.
 		  return;
 		}
@@ -182,6 +182,7 @@
 	}
 	
 	function processMessageIGLive(ele){
+	//	console.log(ele);
 		var content = ele.childNodes[0].childNodes[0].childNodes[0];
 		var chatname="";
 		var streamEvent = false;
@@ -199,7 +200,13 @@
 		var chatmessage="";
 		var badges = [];
 		try{
-			chatmessage = getAllContentNodes(Array.from(content.childNodes[2].querySelectorAll(":scope > span")).slice(-1)[0]);
+			try {
+				chatmessage = getAllContentNodes(Array.from(content.childNodes[2].querySelectorAll(":scope > span")).slice(-1)[0]);
+			} catch(e){
+				
+				chatmessage = getAllContentNodes(Array.from(content.querySelectorAll("div > span")).slice(-1)[0]);
+				
+			}
 			
 			try{
 				if (content.childNodes[1].querySelector("img")){
@@ -232,6 +239,7 @@
 				}
 				
 			} catch(e){
+				//console.log(e);
 				return;
 			}
 		}
@@ -242,6 +250,7 @@
 		} catch(e){
 		}
 		
+	//	console.log(chatmessage);
 	  
 	  if (!chatmessage){return;}
 	  
@@ -259,11 +268,17 @@
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "instagramlive";
 	  
+	//  console.log(data);
+	  
 		if (data.chatimg){
+			try{
 			toDataURL(data.chatimg, function(dataUrl) {
 				data.chatimg = dataUrl;
 				pushMessage(data);
 			});
+			} catch(e){
+				//console.log(e);
+			}
 		} else {
 			data.chatimg = "";
 			pushMessage(data);
@@ -275,7 +290,7 @@
 		console.log("LOADED SocialStream EXTENSION");
 		
 		try {
-			if (window.location.pathname.includes("/live/")){
+			if (window.location.pathname.includes("/live/")  || (window.location.pathname==="/")){
 				var main =  document.querySelectorAll("div>div>section>div");
 				
 				for (var j =0;j<main.length;j++){
@@ -291,7 +306,7 @@
 	
 		setInterval(function(){
 			try {
-				if (window.location.pathname.includes("/live")){
+				if (window.location.pathname.includes("/live") || (window.location.pathname==="/")){
 					try {
 						var main = document.querySelectorAll("div>div>section>div");
 						for (var j =0;j<main.length;j++){
