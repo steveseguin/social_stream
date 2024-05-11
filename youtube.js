@@ -378,7 +378,7 @@
 			}
 		} else if (!chatmessage && giftedmemembership) {
 			eventType = "gifted-sub";
-			chatmessage = getAllContentNodes(giftedmemembership);
+			chatmessage = getAllContentNodes(giftedmemembership); 
 			subtitle = getTranslation("sponsorship", "SPONSORSHIP");
 			//hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 		} else if (chatmessage && wasGiftted) {
