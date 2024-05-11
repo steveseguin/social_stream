@@ -328,26 +328,35 @@
 		}
 	});
 
+	window.duplicatedTeamsMessages = {}
+
+  setInterval(() => { window.duplicatedTeamsMessages = {} }, 10000)
+
 	function onElementInserted(target, callback) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].classList.contains("ui-chat__item--message")){  // ui-chat__item--message
+              if (window.duplicatedTeamsMessages[mutation.addedNodes[i].textContent]) {
+                console.log('duplicated')
+                return
+              } else if (mutation.addedNodes[i].classList.contains("ui-chat__item--message")){  // ui-chat__item--message
 								setTimeout(function(eee){callback(eee);},300, mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].classList.contains("ts-message-list-item")){  // ui-chat__item--message
 								setTimeout(function(eee){callback(eee);},300, mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].dataset.tid && (mutation.addedNodes[i].dataset.tid=="chat-pane-item")){  // enterprise chat?
 								setTimeout(function(eee){callback(eee);},300, mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].children[0].attributes['data-tid'].nodeValue === 'chat-pane-item') {
-                                                                setTimeout(function(eee){callback(eee);},300, mutation.addedNodes[i]);
+                window.duplicatedTeamsMessages[mutation.addedNodes[i].textContent] = true
+                setTimeout(function(eee){callback(eee);},300, mutation.addedNodes[i]);
 							}
 						} catch(e){}
 					}
 				}
 			});
 		};
+
 		if (!target){return;}
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
