@@ -478,8 +478,14 @@
 							});
 						},1000*60*60);
 					} else if (document.querySelector("[contenteditable='true'][placeholder]")){
+						
 						document.querySelector("[contenteditable='true'][placeholder]").focus();
 						sendResponse(true);
+						setTimeout(function(){
+							if (document.querySelector("[contenteditable='true'][placeholder]").textContent == ""){
+								document.querySelector("[contenteditable='true'][placeholder]").innerHTML = "";
+							}
+						},300);
 						clearInterval(pokeMe);
 						pokeMe = setInterval(function(){
 							chrome.runtime.sendMessage(chrome.runtime.id, { "pokeMe": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
