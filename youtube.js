@@ -317,42 +317,58 @@
 
 		var giftedmemembership = ele.querySelector("#primary-text.ytd-sponsorships-live-chat-header-renderer");
 		
+		var wasGiftted = ele.querySelector(".ytd-sponsorships-live-chat-gift-redemption-announcement-renderer");
+		
 		var eventType = false;
 
 		if (treatAsMemberChat) {
+			
+			var membershipLength = ele.querySelector("#header-subtext.yt-live-chat-membership-item-renderer, #header-primary-text.yt-live-chat-membership-item-renderer") || false;
+			if (membershipLength) {
+				membershipLength = getAllContentNodes(membershipLength);
+				membershipLength = findSingleInteger(membershipLength);
+			}
+			if (membershipLength) {
+				if (membershipLength == 1) {
+					subtitle = membershipLength + " " + getTranslation("month", "month");
+				} else {
+					subtitle = membershipLength + " " + getTranslation("months", "months");
+				}
+			}
+			
 			if (chatmessage) {
 				if (mod) {
 					hasMembership = chatmembership || getTranslation("moderator-chat", "MODERATOR");
 				} else {
 					hasMembership = chatmembership || getTranslation("member-chat", "MEMBERSHIP");
 				}
-				var membershipLength = ele.querySelector("#header-subtext.yt-live-chat-membership-item-renderer, #header-primary-text.yt-live-chat-membership-item-renderer") || false;
-				if (membershipLength) {
-					membershipLength = getAllContentNodes(membershipLength);
-					membershipLength = findSingleInteger(membershipLength);
-				}
-				if (membershipLength) {
-					if (membershipLength == 1) {
-						subtitle = membershipLength + " " + getTranslation("month", "month");
-					} else {
-						subtitle = membershipLength + " " + getTranslation("months", "months");
-					}
-				}
+				
 			} else if (giftedmemembership) {
 				hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 				chatmessage = getAllContentNodes(giftedmemembership);
-				eventType = true;
-			} else {
-				hasMembership = getTranslation("new-member", "NEW MEMBER");
-				eventType = true;
+				eventType = "gifted-sub";
+			} else if (wasGiftted){
+				hasMembership = getTranslation("sponsored", "SPONSORED");
+				eventType =  "was-gifted";
+			} else if (membershipLength && membershipLength > 1) {
+				hasMembership = getTranslation("member-resub", "MEMBER RESUB");
+				eventType = "resub";
+				
+				chatmessage =  getTranslation("resubbed-as-member", "Resubbed as a member");
 				
 				if (chatmembership){
-					chatmessage =  getTranslation("new-membership", "Joined as a member - ") + chatmembership;
-				} else {
-					chatmessage = getTranslation("new-membership", "Joined as a member");
+					chatmessage += " - " + chatmembership;
+				}
+				
+			} else {
+				hasMembership = getTranslation("new-member", "NEW MEMBER");
+				eventType = "new-sub";
+				subtitle = ""; // pointless to say 1 month
+				chatmessage = getTranslation("new-membership", "Joined as a member");
+				if (chatmembership){
+					chatmessage += " - " + chatmembership;
 				}
 			}
-
 			if (!hasMembership) {
 				if (member) {
 					hasMembership = getTranslation("member-chat", "MEMBERSHIP");
@@ -361,9 +377,14 @@
 				}
 			}
 		} else if (!chatmessage && giftedmemembership) {
-			eventType = true;
+			eventType = "gifted-sub";
 			chatmessage = getAllContentNodes(giftedmemembership);
-			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
+			subtitle = getTranslation("sponsorship", "SPONSORSHIP");
+			//hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
+		} else if (chatmessage && wasGiftted) {
+			subtitle = getTranslation("sponsored", "SPONSORED");
+			eventType = "was-gifted";
+			//hasMembership = getTranslation("new-member", "NEW MEMBER");
 		}
 		
 		if (settings.memberchatonly && !hasMembership){
@@ -433,9 +454,9 @@
 		data.type = "youtube";
 		data.event = eventType;
 		
-		if (eventType){
-			console.log(data);
-		}
+		//if (eventType){
+		//	console.log(data);
+		//}
 
 		try {
 			chrome.runtime.sendMessage(
@@ -547,6 +568,8 @@
 							} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-sticker-renderer".toUpperCase()) {
 								callback(mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].tagName == "ytd-sponsorships-live-chat-gift-purchase-announcement-renderer".toUpperCase()) {
+								callback(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].tagName == "ytd-sponsorships-live-chat-gift-redemption-announcement-renderer".toUpperCase()) {
 								callback(mutation.addedNodes[i]);
 							} else {
 								//console.error("unknown: "+mutation.addedNodes[i].tagName);
