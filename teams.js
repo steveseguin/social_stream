@@ -340,6 +340,8 @@
 								setTimeout(function(eee){callback(eee);},300, mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].dataset.tid && (mutation.addedNodes[i].dataset.tid=="chat-pane-item")){  // enterprise chat?
 								setTimeout(function(eee){callback(eee);},300, mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].children[0].attributes['data-tid'].nodeValue === 'chat-pane-item') {
+                                                                setTimeout(function(eee){callback(eee);},300, mutation.addedNodes[i]);
 							}
 						} catch(e){}
 					}
