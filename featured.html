@@ -1649,7 +1649,7 @@
 
 			try {
 				var fallbackImage = new Image(); // preload it.
-				fallbackImage.src = "unknown.png";
+				fallbackImage.src = "./sources/images/unknown.png";
 				fallbackImage.onerror = function () {
 					fallbackImage = false;
 				};
@@ -1665,7 +1665,7 @@
 				if (ele.dataset.backupImage) {
 					ele.src = ele.dataset.backupImage;
 				} else if (fallbackImage) {
-					ele.src = "unknown.png";
+					ele.src = "./sources/images/unknown.png";
 				} else {
 					ele.style.display = "none";
 				}
@@ -1895,7 +1895,7 @@
 										if (!data.chatname && data.event){
 											chatimg = "./icons/announcement.png";
 										} else {
-											chatimg = "unknown.png";
+											chatimg = "./sources/images/unknown.png";
 										}
 									} else {
 										chatimg = data.chatimg

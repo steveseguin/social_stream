@@ -3236,7 +3236,7 @@
 					if (data.type) {
 						msg.platform = {};
 						msg.platform.name = data.type;
-						msg.platform.logoUrl = "https://socialstream.ninja/" + data.type + ".png";
+						msg.platform.logoUrl = "https://socialstream.ninja/sources/images/" + data.type + ".png";
 					}
 
 					params = encodeURIComponent(JSON.stringify(msg));
@@ -3299,7 +3299,7 @@
 					if (data.type) {
 						msg.platform = {};
 						msg.platform.name = data.type;
-						msg.platform.logoUrl = "https://socialstream.ninja/" + data.type + ".png";
+						msg.platform.logoUrl = "https://socialstream.ninja/sources/images/" + data.type + ".png";
 					}
 
 					var h2r = {};
@@ -3318,7 +3318,7 @@
 					chatimg = data.chatimg.replace("=s32-", "=s256-");
 					chatimg = chatimg.replace("=s64-", "=s256-");
 				} else {
-					chatimg = data.chatimg || "https://socialstream.ninja/unknown.png";
+					chatimg = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
 				}
 				return chatimg;
 			}
@@ -4751,7 +4751,7 @@
 			}
 
 			var fallbackImage = new Image();
-			fallbackImage.src = "unknown.png";
+			fallbackImage.src = "./sources/images/unknown.png";
 			fallbackImage.onerror = function () {
 				fallbackImage = false;
 			};
@@ -4764,7 +4764,7 @@
 
 			function errorImage(ele) {
 				if (fallbackImage) {
-					ele.src = "unknown.png";
+					ele.src = "./sources/images/unknown.png";
 					if (darkmode) {
 						ele.classList.add("invert");
 					}
@@ -5640,13 +5640,13 @@
 						if (fallbackImageAnnouncement && !data.chatname && data.event){
 							chatImg = '<img id="img_' + data.id + '" src="./icons/announcement.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
 						} else if (fallbackImage) {
-							chatImg = '<img id="img_' + data.id + '" src="unknown.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
+							chatImg = '<img id="img_' + data.id + '" src="./sources/images/unknown.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
 						} else {
 							chatImg = "";
 						}
 					} else if (avatars) {
 						if (data.type && data.type == "twitch" && avatars) {
-							chatImg = '<img id="img_' + data.id + '" src="unknown.png" class="fade-in-image ' + (darkmode ? "invert" : "") + ' icon hl-profile-pic" onerror="errorImage(this);" />';
+							chatImg = '<img id="img_' + data.id + '" src="./sources/images/unknown.png" class="fade-in-image ' + (darkmode ? "invert" : "") + ' icon hl-profile-pic" onerror="errorImage(this);" />';
 						} else {
 							chatImg = '<img id="img_' + data.id + '" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />';
 						}
@@ -5655,9 +5655,9 @@
 					}
 
 					if (largeavatar && showType && showsource) {
-						showType = '<img src="' + showType + '.png" class="icon hl-source-type avatar-badge" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+						showType = '<img src="./sources/images/' + showType + '.png" class="icon hl-source-type avatar-badge" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
 					} else if (showType && showsource) {
-						showType = '<img src="' + showType + '.png" class="icon hl-source-type" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+						showType = '<img src="./sources/images/' + showType + '.png" class="icon hl-source-type" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
 					} else {
 						showType = "";
 					}
