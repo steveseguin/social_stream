@@ -1837,6 +1837,12 @@
 						<span>Text to Speech</span>
 					</a>
 				</li>
+				<li class="context-menu__item" data-action="Copy">
+					<a href="#" class="context-menu__link" data-action="copy">
+						<i class="las la-copy"></i>
+						<span>Copy Text</span>
+					</a>
+				</li>
 				<li class="hidden" id="TipRightClick">
 					<hr />
 					<span href="#">
@@ -6777,6 +6783,15 @@
 						}
 						lastMenu = false;
 					}
+					
+					function copyTextToClipboard(element) {
+						var textarea = document.createElement('textarea');
+						textarea.value = element.innerText;
+						document.body.appendChild(textarea);
+						textarea.select();
+						document.execCommand('copy');
+						document.body.removeChild(textarea);
+					}
 
 					function positionMenu(e) {
 						var clickCoords = getPosition(e);
@@ -6813,6 +6828,8 @@
 							replyToUser(taskItemInContext);
 						} else if (link.getAttribute("data-action") === "VIP") {
 							toggleVIPUser(taskItemInContext);
+						} else if (link.getAttribute("data-action") === "Copy") {
+							copyTextToClipboard(taskItemInContext);
 						} else if (link.getAttribute("data-action") === "Pin") {
 							if (taskItemInContext.classList.contains("pinned")) {
 								unpinIt(taskItemInContext);
