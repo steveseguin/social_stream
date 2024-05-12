@@ -3540,6 +3540,16 @@
 					eventsOnly = true;
 				}
 			}
+			
+			
+			var privateOnly = false;
+			var publicOnly = true;
+			if (urlParams.has("privateonly")) {
+				privateOnly = true;
+			} else if (urlParams.has("includeprivate")) {
+				publicOnly = false;
+			}
+			
 
 			var hideAllEvents = false;
 			if (urlParams.has("hideallevents")) {
@@ -5424,6 +5434,16 @@
 
 					if (hideAllEvents && data.event) {
 						return;
+					}
+					
+					if (privateOnly){
+						if (!data.private) {
+							return;
+						} 
+					} else if (publicOnly){
+						if (data.private){
+							return;
+						}
 					}
 
 					if (!("id" in data)) {

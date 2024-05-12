@@ -2086,6 +2086,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				data.chatimg = "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
 				data.chatname = "vdoninja";
 				data.type = "twitch";
+				data.event = "test";
 				var score = parseInt(Math.random() * 378);
 				data.chatmessage = jokes[score]["setup"] + "..  " + jokes[score]["punchline"] + " 😊";
 			} else if (Math.random() > 0.6) {
@@ -2116,6 +2117,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				data.subtitle = "32 Years";
 				data.highlightColor = "pink";
 				data.nameColor = "";
+				data.private = true;
 				data.chatname = "Sir Drinks-a-lot";
 				data.type = "youtube";
 				data.chatmessage = "☕☕☕ COFFEE!";
