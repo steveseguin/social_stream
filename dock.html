@@ -1909,6 +1909,7 @@
 				// js helper
 				var el = document.getElementById(id);
 				if (!el) {
+					console.log("couldn't find "+id);
 					el = document.createElement("span"); // create a fake element
 				}
 				return el;
@@ -2001,7 +2002,7 @@
 			var customNodeLimit = false;
 			var body = document.body;
 			var html = document.documentElement;
-			var mainOutputWindow = document.getElementById("output");
+			var mainOutputWindow = getById("output");
 			var fileStream, writer; // streaming message writer
 			var newFileHandle = false; // single message writer
 			var singlewriter = false;
@@ -2338,7 +2339,7 @@
 
 			var alignbottom = false;
 			if (urlParams.has("alignbottom")) {
-				document.getElementById("output").classList.add("alignbottom");
+				getById("output").classList.add("alignbottom");
 				alignbottom = true;
 			}
 
@@ -2474,15 +2475,15 @@
 			if (urlParams.has("reverse")) {
 				reversed = true;
 				forceAutoscroll = false;
-				document.getElementById("output").style.flexDirection = "column-reverse";
-				document.getElementById("output").style.display = "flex";
+				getById("output").style.flexDirection = "column-reverse";
+				getById("output").style.display = "flex";
 			}
 
 			if (urlParams.has("dropdown")) {
 				reversed = true;
 				forceAutoscroll = false;
-				document.getElementById("output").style.flexDirection = "column-reverse";
-				document.getElementById("output").style.display = "flex";
+				getById("output").style.flexDirection = "column-reverse";
+				getById("output").style.display = "flex";
 				transitionType.push("swipeup");
 			}
 
@@ -2509,7 +2510,7 @@
 			}
 
 			function updateAudioSource(newUrl) {
-				var audioElement = document.getElementById("testtone");
+				var audioElement = getById("testtone");
 				var sources = audioElement.getElementsByTagName("source");
 				var extension = newUrl.split(".").pop().toLowerCase();
 				var mimeType;
@@ -2560,7 +2561,7 @@
 
 			if (urlParams.has("beepvolume")) {
 				try {
-					document.getElementById("testtone").volume = parseInt(urlParams.get("beepvolume")) / 100 || 0;
+					getById("testtone").volume = parseInt(urlParams.get("beepvolume")) / 100 || 0;
 				} catch (e) {
 					console.error(e);
 				}
@@ -2570,7 +2571,7 @@
 			if (urlParams.has("beep")) {
 				// removes HTML from messages, donations, and names.
 				beep = true;
-				let ele = document.getElementById("notify");
+				let ele = getById("notify");
 				ele.dataset.state = beep * 1;
 				ele.style["background-image"] = "url(./icons/main_msg_notify_on.png)";
 				ele.title = "Main — 🔕 Stop beeping when there is a new message";
@@ -2592,25 +2593,25 @@
 				horizontal = true;
 				flexOrNotToFlex = "inline-block";
 				document.documentElement.style.setProperty("--list-or-horizontal", flexOrNotToFlex);
-				document.getElementById("output").style.width = "10000%";
-				document.getElementById("output").style.right = "0";
+				getById("output").style.width = "10000%";
+				getById("output").style.right = "0";
 				if (twoLines) {
-					document.getElementById("output").style.maxHeight = "70px";
-					document.getElementById("menu").style.top = "72px";
-					document.getElementById("output").style.overflow = "visible";
+					getById("output").style.maxHeight = "70px";
+					getById("menu").style.top = "72px";
+					getById("output").style.overflow = "visible";
 				} else if (stylizeEmoji) {
-					document.getElementById("output").style.maxHeight = "40px";
-					document.getElementById("menu").style.top = "42px";
-					document.getElementById("output").style.overflow = "hidden";
+					getById("output").style.maxHeight = "40px";
+					getById("menu").style.top = "42px";
+					getById("output").style.overflow = "hidden";
 				} else {
-					document.getElementById("output").style.maxHeight = "30px";
-					document.getElementById("menu").style.top = "42px";
-					document.getElementById("output").style.overflow = "hidden";
+					getById("output").style.maxHeight = "30px";
+					getById("menu").style.top = "42px";
+					getById("output").style.overflow = "hidden";
 				}
 
-				document.getElementById("output").style.position = "absolute";
-				document.getElementById("output").style.textAlign = "right";
-				document.getElementById("output").style.whiteSpace = "nowrap";
+				getById("output").style.position = "absolute";
+				getById("output").style.textAlign = "right";
+				getById("output").style.whiteSpace = "nowrap";
 				document.body.classList.remove("notcompactmode");
 				compactmode = true;
 				customNodeLimit = 15;
@@ -2644,7 +2645,7 @@
 			}
 
 			if (urlParams.has("largecontent")) {
-				document.getElementById("output").classList.add("largeContent");
+				getById("output").classList.add("largeContent");
 			}
 
 			var custombot = false;
@@ -2889,8 +2890,8 @@
 
 			if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
 				//  tts();
-				document.getElementById("tts").dataset.state = 1;
-				document.getElementById("tts").classList.remove("hidden");
+				getById("tts").dataset.state = 1;
+				getById("tts").classList.remove("hidden");
 
 				getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
 				getById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
@@ -3115,11 +3116,11 @@
 			if (urlParams.has("hidemenu") || urlParams.has("nomenu")) {
 				document.body.classList.add("electronDraggable");
 				if (urlParams.get("hidemenu") == "2" || urlParams.get("nomenu") == "2") {
-					document.getElementById("menu").classList.add("hideMenuKeepScrollLock");
-					document.getElementById("output").style.marginBottom = "0";
+					getById("menu").classList.add("hideMenuKeepScrollLock");
+					getById("output").style.marginBottom = "0";
 				} else {
-					document.getElementById("menu").style.display = "none";
-					document.getElementById("output").style.marginBottom = "0";
+					getById("menu").style.display = "none";
+					getById("output").style.marginBottom = "0";
 				}
 			}
 			if (urlParams.has("chatonly")) {
@@ -3155,14 +3156,14 @@
 
 			if (urlParams.has("savesingle")) {
 				singlewriter = true;
-				document.getElementById("select_save_file").classList.remove("hidden");
+				getById("select_save_file").classList.remove("hidden");
 				//overwriteFile(); // setup , but this needs a gesture, so bleh
 			}
 
 			singlefeaturedwriter = false;
 			if (urlParams.has("savefeatured")) {
 				singlefeaturedwriter = true;
-				document.getElementById("select_save_file").classList.remove("hidden");
+				getById("select_save_file").classList.remove("hidden");
 				//overwriteFile(); // setup , but this needs a gesture, so bleh
 			}
 
@@ -3172,7 +3173,7 @@
 				// enable compact mode also
 				compactmode = true;
 				document.body.classList.remove("notcompactmode");
-				document.getElementById("menu").style.display = "none";
+				getById("menu").style.display = "none";
 				document.body.classList.add("electronDraggable");
 				// hide shadows
 				// <!-- position: absolute; -->
@@ -3190,7 +3191,7 @@
 				// document.documentElement.style.setProperty("--list-or-horizontal", "flex");
 				document.documentElement.style.setProperty("--flex-direction", "row-reverse");
 				//textDirection = "rtl";
-				document.getElementById("main").classList.add("alignright");
+				getById("main").classList.add("alignright");
 			}
 
 			var postServer = "http://127.0.0.1";
@@ -3350,7 +3351,7 @@
 			}
 
 			if (urlParams.has("showmenu")) {
-				document.getElementById("menu").style.display = "block";
+				getById("menu").style.display = "block";
 			} else {
 				try {
 					if (window.obsstudio) {
@@ -3407,8 +3408,8 @@
 						}
 
 						window.obsstudio.getStatus(function (obsStatus) {
-							document.getElementById("menu").style.display = "none";
-							document.getElementById("output").style.marginBottom = "0";
+							getById("menu").style.display = "none";
+							getById("output").style.marginBottom = "0";
 							document.body.style.overflow = "hidden";
 							mainOutputWindow.style.overflow = "hidden";
 							triggerState = false;
@@ -3463,18 +3464,18 @@
 			}
 
 			if (darkmode) {
-				document.getElementById("menu").classList.add("darkmode");
+				getById("menu").classList.add("darkmode");
 				document.documentElement.style.setProperty("--background-color", "#000");
 				document.documentElement.style.setProperty("--menu-background-color", "#1c1d1d");
 			} else if (darkmode === null) {
 				// defaultmode
-				document.getElementById("menu").classList.add("darkmode");
+				getById("menu").classList.add("darkmode");
 				darkmode = true;
 			} else {
 				document.body.classList.add("lightmode");
-				document.getElementById("menu").classList.add("lightmode");
-				document.getElementById("chatInput_parent").classList.add("lightmode");
-				document.getElementById("filter_messages_parent").classList.add("lightmode");
+				getById("menu").classList.add("lightmode");
+				getById("chatInput_parent").classList.add("lightmode");
+				getById("filter_messages_parent").classList.add("lightmode");
 				document.documentElement.style.setProperty("--link-color", "#06F");
 				document.documentElement.style.setProperty("--font-color-name", "#000");
 				document.documentElement.style.setProperty("--background-color", "#FFF0");
@@ -3511,7 +3512,7 @@
 				document.documentElement.style.setProperty("--background-color", "#0000", "important");
 				document.documentElement.style.setProperty("--menu-background-color", "linear-gradient(to right, #0000, #0008, #0000)", "important");
 				//document.documentElement.style.setProperty("--menu-border-color", "0 0 0 #0000", "important");
-				document.getElementById("main").style.overflow = "hidden"; // transparent auto hides the scroll bar; i guess that makes sense, since likely used in studio software then.
+				getById("main").style.overflow = "hidden"; // transparent auto hides the scroll bar; i guess that makes sense, since likely used in studio software then.
 				try {
 					mainOutputWindow.style.overflow = "hidden";
 				} catch (e) {}
@@ -3567,8 +3568,8 @@
 
 			if (urlParams.has("queueonly")) {
 				hideNotQueued = true;
-				document.getElementById("show_only_queue").dataset.state = "1";
-				document.getElementById("show_only_queue").classList.add("pressed");
+				getById("show_only_queue").dataset.state = "1";
+				getById("show_only_queue").classList.add("pressed");
 			}
 
 			var hideNotPinned = false;
@@ -3591,7 +3592,7 @@
 			}
 
 			function emoji() {
-				var ele = document.getElementById("hide_emoji");
+				var ele = getById("hide_emoji");
 				if (ele.dataset.state == "0") {
 					ele.dataset.state = "1";
 					hideEmojiOnly = true;
@@ -3728,7 +3729,7 @@
 			}
 
 			function donos() {
-				var ele = document.getElementById("only_donos");
+				var ele = getById("only_donos");
 				if (ele.dataset.state == "0") {
 					ele.dataset.state = "1";
 					//document.documentElement.style.setProperty("--show-donos-only", "none");
@@ -3746,7 +3747,7 @@
 			}
 
 			function members() {
-				var ele = document.getElementById("only_members");
+				var ele = getById("only_members");
 				if (ele.dataset.state == "0") {
 					ele.dataset.state = "1";
 					//document.documentElement.style.setProperty("--show-donos-only", "none");
@@ -3778,7 +3779,7 @@
 				}
 
 				// Update search after add/remove name and time
-				filterMessages(document.getElementById("filter_messages").value);
+				filterMessages(getById("filter_messages").value);
 			}
 
 			function applyHiddenState(node) {
@@ -3864,7 +3865,7 @@
 			}
 			function pause() {
 				pauseState = !pauseState;
-				var ele = document.getElementById("pause");
+				var ele = getById("pause");
 				if (pauseState) {
 					ele.style["background-image"] = "url(./icons/main_msg_play.png)";
 					ele.title = "Main — ▶️ Play incoming chat messages";
@@ -3883,7 +3884,7 @@
 
 			function notify() {
 				beep = !beep;
-				var ele = document.getElementById("notify");
+				var ele = getById("notify");
 				if (beep) {
 					ele.dataset.state = beep * 1;
 					ele.style["background-image"] = "url(./icons/main_msg_notify_on.png)";
@@ -3910,7 +3911,7 @@
 				}
 			}
 			function tts() {
-				var ele = document.getElementById("tts");
+				var ele = getById("tts");
 
 				if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
 					// clear and stop tts
@@ -4149,8 +4150,8 @@
 					}
 
 					const span = document.getElementsByClassName("close-btn")[0];
-					const chatDestinationsList = document.getElementById("chatDestinationsList");
-					const messagesFor = document.getElementById("chatDestinationsFor");
+					const chatDestinationsList = getById("chatDestinationsList");
+					const messagesFor = getById("chatDestinationsFor");
 					chatDestinationsList.innerHTML = "";
 
 					messagesFor.innerText = "Custom Message Destinations. (if none set, it goes to all)";
@@ -4254,8 +4255,8 @@
 					}
 
 					const span = document.getElementsByClassName("close-btn")[0];
-					const messagesList = document.getElementById("messagesList");
-					const messagesFor = document.getElementById("messagesFor");
+					const messagesList = getById("messagesList");
+					const messagesFor = getById("messagesFor");
 					messagesList.innerHTML = "";
 
 					if (data.userHistory.length) {
@@ -4469,11 +4470,11 @@
 
 					if (data.action == "clear" || data.action == "clearAll") {
 						// clears all except pinned messages
-						document.getElementById("output").innerHTML = "";
+						getById("output").innerHTML = "";
 						autoShowQueue = [];
 						selectedQueue = [];
 						if (data.ctrl) {
-							document.getElementById("pinned").innerHTML = "";
+							getById("pinned").innerHTML = "";
 						}
 						sendDataP2P(false);
 						updateQueueButton();
@@ -4629,11 +4630,11 @@
 			}
 
 			//	if (forceAutoscroll){
-			//	document.getElementById("jumpto").classList.add("pressed");
+			//	getById("jumpto").classList.add("pressed");
 			//	}
 
 			function jumptoBottom() {
-				var ele = document.getElementById("jumpto");
+				var ele = getById("jumpto");
 				forceAutoscroll = !forceAutoscroll;
 				if (forceAutoscroll) {
 					ele.style["background-image"] = "url(./icons/scroll_to_bottom_on.png)";
@@ -4842,7 +4843,7 @@
 
 			function unpinIt(element) {
 				element.classList.remove("pinned");
-				document.getElementById("output").prepend(element);
+				getById("output").prepend(element);
 				element.title = "Alt + Click to pin message";
 				applyHiddenState(element);
 			}
@@ -4850,7 +4851,7 @@
 			function pinIt(element) {
 				element.classList.add("pinned");
 				element.title = "Alt + Click to remove pinned message";
-				document.getElementById("pinned").appendChild(element);
+				getById("pinned").appendChild(element);
 				applyHiddenState(element);
 			}
 
@@ -4908,7 +4909,7 @@
 
 			function filterQueued() {
 				// #show_only_queue
-				var ele = document.getElementById("show_only_queue");
+				var ele = getById("show_only_queue");
 				if (ele.dataset.state == "0") {
 					ele.dataset.state = "1";
 					//document.documentElement.style.setProperty("--show-queue-only", "none");
@@ -4927,12 +4928,12 @@
 
 			function updateQueueButton(relabel = false) {
 				if (!selectedQueue.length) {
-					document.getElementById("next_in_queue_badge").innerText = "0";
-					document.getElementById("next_in_queue").title = "Queue — ⏭ Feature next message in queue (since queue is empty, it will clear the active overlay)";
+					getById("next_in_queue_badge").innerText = "0";
+					getById("next_in_queue").title = "Queue — ⏭ Feature next message in queue (since queue is empty, it will clear the active overlay)";
 				} else {
-					document.getElementById("queueSection").classList.remove("hidden");
-					document.getElementById("next_in_queue_badge").innerText = selectedQueue.length;
-					document.getElementById("next_in_queue").title = "Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)";
+					getById("queueSection").classList.remove("hidden");
+					getById("next_in_queue_badge").innerText = selectedQueue.length;
+					getById("next_in_queue").title = "Queue — ⏭ Feature next message in queue (select messages holding CTRL for add them to the queue)";
 				}
 				if (relabel) {
 					for (var i = 0; i < selectedQueue.length; i++) {
@@ -6037,9 +6038,9 @@
 						var twitchImage = new Image();
 						twitchImage.onload = function () {
 							try {
-								document.getElementById("img_" + data.id).src = data.chatimg;
-								document.getElementById("img_" + data.id).classList.remove("invert");
-								document.getElementById("img_" + data.id).classList.remove("fade-in-image");
+								getById("img_" + data.id).src = data.chatimg;
+								getById("img_" + data.id).classList.remove("invert");
+								getById("img_" + data.id).classList.remove("fade-in-image");
 								node.querySelector("#img_" + data.id).src = data.chatimg;
 								node.querySelector("#img_" + data.id).classList.remove("invert");
 								node.querySelector("#img_" + data.id).classList.remove("fade-in-image");
@@ -6183,8 +6184,8 @@
 					if (reversed && !forceAutoscroll) {
 					} else {
 						var delta = 0;
-						if (document.getElementById("output").lastChild) {
-							delta = parseInt(document.getElementById("output").lastChild.clientHeight);
+						if (getById("output").lastChild) {
+							delta = parseInt(getById("output").lastChild.clientHeight);
 						}
 						if (getById("output").scrollHeight < getById("output").scrollTop + getById("output").clientHeight + autoScrollCatch + delta || forceAutoscroll) {
 							if (scrolltype == "instant") {
@@ -6205,8 +6206,8 @@
 					if (reversed && !forceAutoscroll) {
 					} else {
 						var delta = 0;
-						if (document.getElementById("output").lastChild) {
-							delta = parseInt(document.getElementById("output").lastChild.clientHeight);
+						if (getById("output").lastChild) {
+							delta = parseInt(getById("output").lastChild.clientHeight);
 						}
 						if (document.body.scrollHeight < document.body.scrollTop + document.body.clientHeight + autoScrollCatch + delta || forceAutoscroll) {
 							if (scrolltype == "instant") {
@@ -6440,7 +6441,7 @@
 			function applyBotActions(data) {
 				// this can be customized to create bot-like auto-responses/actions.
 				if (triggerState && data.chatmessage.includes("!highlight")) {
-					document.getElementById("msg_" + data.id).classList.add("highlight"); // sample method of highlighting
+					getById("msg_" + data.id).classList.add("highlight"); // sample method of highlighting
 				}
 
 				if (passTTS && data.chatmessage.includes("!pass")) {
@@ -6727,7 +6728,7 @@
 								if (e && (e.ctrlKey || e.metaKey)) {
 									return;
 								} else {
-									document.getElementById("TipRightClick").classList.remove("hidden");
+									getById("TipRightClick").classList.remove("hidden");
 								}
 							} else if (e && (e.ctrlKey || e.metaKey)) {
 								return;
@@ -6869,21 +6870,28 @@
 			}
 
 			document.onkeydown = function (evt) {
-				if (isEscape(evt)) {
-					if (!(!getById("chatInput_parent").classList.contains("hidden") && getById("chatInput").classList.contains("locked"))) {
-						getById("chatInput_parent").classList.add("hidden");
-					}
-					getById("filter_messages_parent").classList.add("hidden");
-					getById("chatInput").value = "";
-				} else if (!evt.altKey && !evt.Meta) {
-					if (!getById("chatInput_parent").classList.contains("hidden") && getById("chatInput").classList.contains("locked")) {
-						getById("chatInput").focus();
-					}
+				let chatInput_parent = document.getElementById("chatInput_parent");
+				if (!chatInput_parent){return;}
+				
+				try {
+					if (isEscape(evt)) {
+						if (!(!chatInput_parent.classList.contains("hidden") && getById("chatInput").classList.contains("locked"))) {
+							chatInput_parent.classList.add("hidden");
+						}
+						getById("filter_messages_parent").classList.add("hidden");
+						getById("chatInput").value = "";
+					} else if (!evt.altKey && !evt.Meta) {
+						if (!chatInput_parent.classList.contains("hidden") && getById("chatInput").classList.contains("locked")) {
+							getById("chatInput").focus();
+						}
+					} 
+				} catch(e){
+					console.error(e);
 				}
 			};
 
-			document.getElementById("filter_messages").addEventListener("keyup", function (e) {
-				filterMessages(document.getElementById("filter_messages").value);
+			getById("filter_messages").addEventListener("keyup", function (e) {
+				filterMessages(getById("filter_messages").value);
 			});
 
 			(function userFilterInputModalBox() {
@@ -6896,16 +6904,22 @@
 				menu.style.bottom = "5px";
 
 				function positionMenu(e) {
-					var rect = getById("filter").getBoundingClientRect();
-					menu.style.left = rect.right + "px";
-					menu.style.top = "unset";
-					menu.style.bottom = "5px";
+					if (document.getElementById("filter")){
+						var rect = document.getElementById("filter").getBoundingClientRect();
+						menu.style.left = rect.right + "px";
+						menu.style.top = "unset";
+						menu.style.bottom = "5px";
+					}
 				}
 
 				var lastWidth = window.innerWidth;
 				window.addEventListener("resize", function (event) {
-					var rect = getById("filter").getBoundingClientRect();
-					menu.style.left = rect.right + "px";
+				
+					if (document.getElementById("filter")){
+						var rect = document.getElementById("filter").getBoundingClientRect();
+						menu.style.left = rect.right + "px";
+					}
+					
 				});
 
 				function toggleInput(event) {
@@ -6925,11 +6939,15 @@
 					}
 					event.preventDefault();
 					event.stopPropagation();
-					getById("filter").removeEventListener("click", toggleInput);
+					if (document.getElementById("filter")){
+						document.getElementById("filter").addEventListener("click", toggleInput);
+					}
 					menu.classList.add("hidden");
 					setTimeout(function () {
 						// click vs hold
-						getById("filter").addEventListener("click", toggleInput);
+						if (document.getElementById("filter")){
+							document.getElementById("filter").addEventListener("click", toggleInput);
+						}
 					}, 300);
 					return false;
 				});
@@ -6946,7 +6964,9 @@
 					return false;
 				});
 
-				getById("filter").addEventListener("click", toggleInput);
+				if (document.getElementById("filter")){
+					document.getElementById("filter").addEventListener("click", toggleInput);
+				}
 			})();
 
 			(function userChatInputModalBox() {
@@ -7036,11 +7056,15 @@
 					event.preventDefault();
 					event.stopPropagation();
 
-					getById("say_hello").removeEventListener("click", toggleInput);
+					if (document.getElementById("say_hello")){
+						document.getElementById("say_hello").addEventListener("click", toggleInput);
+					}
 					menu.classList.add("hidden");
 					setTimeout(function () {
 						// click vs hold
-						getById("say_hello").addEventListener("click", toggleInput);
+						if (document.getElementById("say_hello")){
+							document.getElementById("say_hello").addEventListener("click", toggleInput);
+						}
 					}, 300);
 					return false;
 				});
@@ -7082,7 +7106,9 @@
 					return false;
 				});
 
-				getById("say_hello").addEventListener("click", toggleInput);
+				if (document.getElementById("say_hello")){
+					document.getElementById("say_hello").addEventListener("click", toggleInput);
+				}
 			})();
 
 			if (urlParams.has("js")) {
