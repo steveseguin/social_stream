@@ -825,6 +825,20 @@
 			if (urlParams.has("fontfit")) {
 				fontfit = true;
 			}
+			
+			var filterfeaturedusers = false;
+			if (urlParams.has("filterfeaturedusers")) {
+				filterfeaturedusers = urlParams.get("filterfeaturedusers");
+				filterfeaturedusers = filterfeaturedusers.split(",").map(user => {
+					const parts = user
+						.toLowerCase()
+						.trim()
+						.split(":")
+						.map(part => part.trim());
+					return { username: parts[0], type: parts[1] || "*" };
+				});
+			}
+			
 
 			if (urlParams.has("css")) {
 				var cssURL = urlParams.get("css");
@@ -1695,6 +1709,14 @@
 					if (onlyTwitch && data.contents.type !== "twitch") {
 						// this is not a twitch message, so we're hiding them
 						return;
+					}
+					
+					if (filterfeaturedusers){
+						if (!data.contents.chatname){return;}
+						const isWhitelisted = filterfeaturedusers.some(({ username, type }) => data.contents.chatname.toLowerCase().trim() === username && (type === "*" || data.contents.type === type));
+						if (!isWhitelisted){
+							return;
+						}
 					}
 					
 					if (lastMessageId && ("id" in data.contents) && data.contents.id === lastMessageId) {

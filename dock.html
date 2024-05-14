@@ -2336,6 +2336,11 @@
 				scrolltype = "smooth";
 				autoScrollCatch = autoScrollCatch * 2;
 			}
+			
+			var autofeaturepriv = false;
+			if (urlParams.has("autofeaturepriv")) {
+				autofeaturepriv = true;
+			}
 
 			var alignbottom = false;
 			if (urlParams.has("alignbottom")) {
@@ -6112,6 +6117,17 @@
 							// pass auto show, since filtered out
 						} else if (!(autoshowdonos || autoshowmembers) || (autoshowdonos && data.hasDonation) || (autoshowmembers && data.membership)) {
 							// dono or not to dono.
+							if (autoTimeoutEnabled) {
+								autoShowQueue.push(node);
+								checkAutoShow();
+							} else {
+								selectedMessage(false, node);
+							}
+						}
+					} else if (data.admin && autofeaturepriv){
+						if (doNotAutoshowFiltered && node.classList.contains("hide")) {
+						//
+						} else {
 							if (autoTimeoutEnabled) {
 								autoShowQueue.push(node);
 								checkAutoShow();

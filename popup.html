@@ -1642,14 +1642,8 @@
 					<div class="options">
 						<div class="options_group streaming_chat">
 
-							<div class="textInputContainer" style="width: 95%" title="Note:
-Host/bot name(s) to help identify them.
-The list of names should be comma separated.
-The first name listed may be used as the host's name in stream when their name is not otherwise known.">
-								<input type="text" disabled id="botnames" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam1="myname">
-								<label for="botnames"><span data-translate="hostbot-names">&gt; Host/bot name(s) - (this is depreciated)</span></label>
-							</div>
-							<a class="options-link rounded_area" href="#botnamesext" title="Jump to the new way to specify host/bot names."><span data-translate="replacement">jump to new replacement host/bot section to specify names..</span></a>
+							<a class="options-link rounded_area" href="#botnamesext" title="Jump to the new way to specify host/bot names."><span data-translate="replacement">🔗 jump to section to specify host/bot/privileged users..</span></a>
+							<br ><br >
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-param1="hidebotnames">
@@ -1666,7 +1660,14 @@ The first name listed may be used as the host's name in stream when their name i
 								<span data-translate="do-not-show-host-or-bot-messages">🤖🚫 Do not show host or bot messages
 								</span>
 							</div>
-							
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="autofeaturepriv">
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="auto-feature-privileged-users">🤴 Auto-feature messages from privileged users
+								</span>
+							</div>
 							<div>
 								<label class="switch">
 									<input type="checkbox" data-param1="startstop">
@@ -1898,6 +1899,11 @@ The first name listed may be used as the host's name in stream when their name i
 									<span class="slider round"></span>
 								</label><span data-translate="donos-only">🪙 Only show if includes a donation
 							</span></div>
+
+							<div class="textInputContainer" style="display: inline-block; width: 250px">
+								<input type="text" id="filterfeaturedusers" class="textInput" autocomplete="off" placeholder="eg: name,name2:source,bob:twitch,Name3:*" data-textparam2="filterfeaturedusers">
+								<label for="filterfeaturedusers"><span data-translate="filter-featured-users">&gt;Whitelist of allowed featured users</span></label>
+							</div>
 						</div>
 					</div>
 				</div>
