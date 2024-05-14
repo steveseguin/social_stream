@@ -307,6 +307,8 @@
 		data.type = "tiktok";
 		data.event = ital; // if an event or actual message
 		
+		// console.log(data);
+		
 		pushMessage(data);
 	}
 	

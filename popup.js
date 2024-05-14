@@ -1291,6 +1291,24 @@ function updateSettings(ele, sync=true, value=null){
 			}
 		}
 		
+		
+		if (ele.dataset.setting == "drawmode"){
+			if (ele.checked){
+				document.getElementById("drawmode").classList.remove("hidden");
+				document.getElementById("queuemode").classList.add("hidden");
+			} else {
+				document.getElementById("drawmode").classList.add("hidden");
+				document.getElementById("queuemode").classList.remove("hidden");
+			}
+		}
+		if (ele.dataset.setting == "waitlistmode"){
+			if (ele.checked){
+				document.getElementById("waitlistbuttons").classList.remove("hidden");
+			} else {
+				document.getElementById("waitlistbuttons").classList.add("hidden");
+			}
+		}
+		
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
 		}

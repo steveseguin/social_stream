@@ -1704,7 +1704,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				pushSettingChange();
 			}
 			if (request.setting == "drawmode") {
-				sendWaitlistP2P(waitlist, true);
+				sendWaitlistConfig(null, true);
 			}
 			if (request.setting == "collecttwitchpoints") {
 				pushSettingChange();
@@ -1790,13 +1790,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				}
 			}
 			if (request.setting == "waitlistmode") {
-				//if (!request.value){
-				processWaitlist2(); // stop hype and clear old hype
-				//}
+				initializeWaitlist();
 			}
 
 			if (request.setting == "customwaitlistmessagetoggle" || request.setting == "customwaitlistmessage" || request.setting == "customwaitlistcommand") {
-				sendWaitlistP2P(null, true); // stop hype and clear old hype
+				sendWaitlistConfig(null, true); // stop hype and clear old hype
 			}
 
 			if (request.setting == "translationlanguage") {
@@ -2034,11 +2032,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 			newSavedNamesFileHandle = false;
 		} else if (request.cmd && request.cmd === "selectwinner") {
-			selectwinner();
+			selectRandomWaitlist();
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "resetwaitlist") {
 			resetWaitlist();
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "stopentries") {
+			toggleEntries(false);
+			sendResponse({ state: isExtensionOn });	
 		} else if (request.cmd && request.cmd === "downloadwaitlist") {
 			downloadWaitlist();
 			sendResponse({ state: isExtensionOn });
@@ -2750,13 +2751,16 @@ function setupSocket() {
 				highlightWaitlist(parseInt(data.value) || 0);
 			} else if (data.action && data.action === "resetwaitlist") {
 				resetWaitlist();
+			} else if (request.cmd && request.cmd === "stopentries") {
+				toggleEntries(false);
+				sendResponse({ state: isExtensionOn });
 			} else if (data.action && data.action === "downloadwaitlist") {
 				downloadWaitlist();
 			} else if (data.action && data.action === "selectwinner") {
 				if (value in data) {
-					selectwinner(parseInt(data.value) || 0);
+					selectRandomWaitlist(parseInt(data.value) || 0);
 				} else {
-					selectwinner();
+					selectRandomWaitlist();
 				}
 			}
 
@@ -3142,13 +3146,16 @@ function sendHypeP2P(data, uid = null) {
 	}
 }
 
-////
+//////////
 
+var drawListCount = 0;
+var allowNewEntries = true;
 var waitListUsers = {};
 var waitlist = [];
+
 function processWaitlist(data) {
 	try {
-		if (!settings.waitlistmode) {
+		if (!allowNewEntries){
 			return;
 		}
 		var trigger = "!join";
@@ -3158,45 +3165,73 @@ function processWaitlist(data) {
 		if (!data.chatmessage || !data.chatmessage.trim().toLowerCase().startsWith(trigger.toLowerCase())) {
 			return;
 		}
-
+		var update = false;
 		if (waitListUsers[data.type]) {
 			if (!waitListUsers[data.type][data.chatname]) {
+				update = true;
+				waitListUsers[data.type][data.chatname] = Date.now();
 				waitlist.push(data);
 			}
-			waitListUsers[data.type][data.chatname] = Date.now();
 		} else {
 			var site = {};
 			site[data.chatname] = Date.now();
 			waitListUsers[data.type] = site;
 			waitlist.push(data);
+			update = true;
 		}
-		sendWaitlistP2P(waitlist, false);
-	} catch (e) {}
+		if (update){
+			drawListCount+=1;
+			
+			if (settings.drawmode){
+				var keys = Object.keys(connectedPeers);
+				for (var i = 0; i < keys.length; i++) {
+					try {
+						var UUID = keys[i];
+						var label = connectedPeers[UUID];
+						if (label === "waitlist") {
+							iframe.contentWindow.postMessage({ sendData: { overlayNinja: { "drawPoolSize":drawListCount } }, type: "pcs", UUID: UUID }, "*");
+						}
+					} catch (e) {}
+				}
+			} else {
+				sendWaitlistConfig(waitlist, false);
+			}
+			
+		}
+	} catch (e) {
+		console.error(e);
+	}
 }
-function processWaitlist2() {
+
+function initializeWaitlist() {
+	
 	try {
-		if (!settings.waitlistmode) {
+		if (!settings.waitlistmode) { // stop and clear
 			waitlist = [];
 			waitListUsers = {};
+			
+			drawListCount = 0;
 
-			sendWaitlistP2P(false, true);
+			sendWaitlistConfig(false, true);
 			return;
 		}
-		sendWaitlistP2P(waitlist, true);
+		console.log("initializeWaitlist");
+		sendWaitlistConfig(waitlist, true);
 	} catch (e) {}
 }
 function removeWaitlist(n = 0) {
+	console.log("removeWaitlist");
 	try {
 		var cc = 1;
 		for (var i = 0; i < waitlist.length; i++) {
 			if (waitlist[i].waitStatus !== 1) {
 				if (n == 0) {
 					waitlist[i].waitStatus = 1;
-					sendWaitlistP2P(waitlist, true);
+					sendWaitlistConfig(waitlist, true);
 					break;
 				} else if (cc == n) {
 					waitlist[i].waitStatus = 1;
-					sendWaitlistP2P(waitlist, true);
+					sendWaitlistConfig(waitlist, true);
 					break;
 				} else {
 					cc += 1;
@@ -3206,6 +3241,7 @@ function removeWaitlist(n = 0) {
 	} catch (e) {}
 }
 function highlightWaitlist(n = 0) {
+	console.log("highlightWaitlist");
 	try {
 		var cc = 1;
 		for (var i = 0; i < waitlist.length; i++) {
@@ -3214,12 +3250,12 @@ function highlightWaitlist(n = 0) {
 					if (waitlist[i].waitStatus !== 2) {
 						// selected
 						waitlist[i].waitStatus = 2;
-						sendWaitlistP2P(waitlist, true);
+						sendWaitlistConfig(waitlist, true);
 						break;
 					}
 				} else if (cc == n) {
 					waitlist[i].waitStatus = 2;
-					sendWaitlistP2P(waitlist, true);
+					sendWaitlistConfig(waitlist, true);
 					break;
 				} else {
 					cc += 1;
@@ -3240,6 +3276,7 @@ function shuffle(array) {
 	return array;
 }
 function selectRandomWaitlist(n = 1) {
+	console.log("selectRandomWaitlist: "+n);
 	try {
 		var cc = 1;
 		var selectable = [];
@@ -3256,22 +3293,39 @@ function selectRandomWaitlist(n = 1) {
 			}
 		}
 		shuffle(selectable);
-		for (var i = 0; i < n; i++) {
-			if (waitlist[selectable[i]]) {
-				waitlist[selectable[i]].randomStatus = 1;
+		var winners = [];
+		//console.log(selectable);
+		let count = Math.min(selectable.length,n);
+		for (var i = 0; i < count; i++) {
+			try {
+				if (waitlist[selectable[i]]) {
+					waitlist[selectable[i]].randomStatus = 1;
+					winners.push({...waitlist[selectable[i]]});
+				}
+			} catch(e){
+				console.log(e);
 			}
 		}
-		sendWaitlistP2P(waitlist, true);
+		//console.log("SENDING WINNDERS");
+		//console.log(winners);
+		
+		drawListCount = selectable.length - count;
+		sendWaitlistConfig(winners, true);
+		
 	} catch (e) {}
 }
 
-function selectwinner() {
-	selectRandomWaitlist();
-}
 function resetWaitlist() {
 	waitListUsers = {};
 	waitlist = [];
-	sendWaitlistP2P(waitlist, true);
+	drawListCount = 0;
+	allowNewEntries = true;
+	sendWaitlistConfig(waitlist, true, true);
+}
+
+function toggleEntries(state=false){
+	allowNewEntries = state;
+	sendWaitlistConfig();
 }
 function objectArrayToCSV(data, delimiter = ",") {
 	if (!data || !Array.isArray(data) || data.length === 0) {
@@ -3312,8 +3366,7 @@ async function downloadWaitlist() {
 	}
 }
 
-function sendWaitlistP2P(data = null, sendMessage = true) {
-	// function to send data to the DOCk via the VDO.Ninja API
+function sendWaitlistConfig(data = null, sendMessage = true, clear=false) {
 
 	if (iframe) {
 		if (sendMessage) {
@@ -3323,7 +3376,11 @@ function sendWaitlistP2P(data = null, sendMessage = true) {
 			}
 			var message = "Type " + trigger + " to join this wait list";
 			if (settings.drawmode) {
-				message = "Type " + trigger + " to join the random draw";
+				if (!allowNewEntries){
+					message = "No new entries allowed";
+				} else {
+					message = "Type " + trigger + " to join the random draw";
+				}
 			}
 			if (settings.customwaitlistmessagetoggle) {
 				if (settings.customwaitlistmessage) {
@@ -3334,6 +3391,8 @@ function sendWaitlistP2P(data = null, sendMessage = true) {
 			}
 		}
 
+		//console.log(data);
+
 		var keys = Object.keys(connectedPeers);
 		for (var i = 0; i < keys.length; i++) {
 			try {
@@ -3342,12 +3401,49 @@ function sendWaitlistP2P(data = null, sendMessage = true) {
 				if (label === "waitlist") {
 					if (sendMessage) {
 						if (data === null) {
-							iframe.contentWindow.postMessage({ sendData: { overlayNinja: { waitlistmessage: message, drawmode: settings.drawmode || false } }, type: "pcs", UUID: UUID }, "*");
+							if (settings.drawmode){
+								iframe.contentWindow.postMessage({ sendData: { overlayNinja: {
+									waitlistmessage: message, 
+									drawPoolSize: drawListCount,
+									drawmode: true,
+									clearWinner:clear,
+								} }, type: "pcs", UUID: UUID}, "*");
+							} else {
+								iframe.contentWindow.postMessage({ sendData: { overlayNinja: {
+									waitlistmessage: message, 
+									drawmode: false
+								} }, type: "pcs", UUID: UUID}, "*");
+							}
+						} else if (settings.drawmode){
+							iframe.contentWindow.postMessage({ sendData: { overlayNinja: {
+								waitlistmessage: message, 
+								winlist: data,
+								drawPoolSize: drawListCount,
+								drawmode: true,
+								clearWinner:clear
+							}}, type: "pcs", UUID: UUID }, "*");
 						} else {
-							iframe.contentWindow.postMessage({ sendData: { overlayNinja: { waitlist: data, waitlistmessage: message, drawmode: settings.drawmode || false } }, type: "pcs", UUID: UUID }, "*");
+							iframe.contentWindow.postMessage({ sendData: { overlayNinja: {
+								waitlist: data, 
+								waitlistmessage: message, 
+								drawmode: false
+							}}, type: "pcs", UUID: UUID }, "*");
 						}
 					} else if (data !== null) {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { waitlist: data, drawmode: settings.drawmode || false } }, type: "pcs", UUID: UUID }, "*");
+						
+						if (settings.drawmode){
+							iframe.contentWindow.postMessage({ sendData: { overlayNinja: {
+								drawPoolSize: drawListCount,
+								drawmode: true,
+								clearWinner:clear,
+								waitlist: data
+							} }, type: "pcs", UUID: UUID }, "*");
+						} else {
+							iframe.contentWindow.postMessage({ sendData: { overlayNinja: { 
+								drawmode: false,
+								waitlist: data
+							} }, type: "pcs", UUID: UUID }, "*");
+						}
 					}
 				}
 			} catch (e) {}
@@ -3617,7 +3713,7 @@ eventer(messageEvent, async function (e) {
 					if (connectedPeers[e.data.UUID] == "hype") {
 						processHype2();
 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
-						processWaitlist2();
+						initializeWaitlist();
 					}
 				}
 			} else if (e.data.UUID && e.data.value && e.data.action == "view-connection-info") {
@@ -3627,7 +3723,7 @@ eventer(messageEvent, async function (e) {
 					if (connectedPeers[e.data.UUID] == "hype") {
 						processHype2();
 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
-						processWaitlist2();
+						initializeWaitlist();
 					}
 				}
 			} else if (e.data.UUID && "value" in e.data && !e.data.value && e.data.action == "push-connection") {

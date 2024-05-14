@@ -88,12 +88,9 @@
 	}
 
 	function extractYouTubeRedirectUrl(youtubeUrl) {
-		console.warn(youtubeUrl);
 		const url = new URL(youtubeUrl);
 		if (url.hostname === "www.youtube.com" && url.pathname === "/redirect") {
 			const actualUrl = url.searchParams.get("q");
-			console.log(actualUrl);
-			console.log(actualUrl.replace(/\&/g, "&amp;"));
 			if (actualUrl) {
 				return actualUrl.replace(/\&/g, "&amp;");
 			} else {
@@ -378,7 +375,7 @@
 			}
 		} else if (!chatmessage && giftedmemembership) {
 			eventType = "gifted-sub";
-			chatmessage = getAllContentNodes(giftedmemembership); 
+			chatmessage = getAllContentNodes(giftedmemembership);
 			subtitle = getTranslation("sponsorship", "SPONSORSHIP");
 			//hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 		} else if (chatmessage && wasGiftted) {

@@ -293,7 +293,16 @@
 			justify-content: space-around;
 			align-items: center;
 			flex-direction: column;
-			
+		}
+		#waitlistsupertitle{
+			padding: 10px;
+			display: flex;
+			margin: auto;
+			flex-wrap: nowrap;
+			align-content: flex-end;
+			justify-content: space-around;
+			align-items: center;
+			flex-direction: column;
 		}
 		
 		.spacer{
@@ -316,8 +325,10 @@
 </head>
 <body class='electronDraggable scrolllll' id="output">
 	<div id="parentHolder" class='hidden '>
+		
 		<div id="waitlisttitle"></div>
 		<div id="waitlist" ></div>
+		<div id="waitlistsupertitle"></div>
 	</div>
 	<div id="confetti-wrapper"></div>
 	<audio id="sound" style="display:none;" preload="metadata">
@@ -482,6 +493,8 @@
 	
 	if (urlParams.has("hidetitle")){
 		document.getElementById("waitlisttitle").classList.add("hidden");
+		document.getElementById("waitlistsupertitlev").classList.add("hidden");
+		
 	}
 	
 	function loadGoogleFont(fontName) {
@@ -708,28 +721,120 @@
 	}
 	
 	var drawMode = false;
+	var winnerSelected = false;
 	
 	function randomNumber(min, max) {
 		return Math.floor(Math.random() * (max - min) + min);
 	}
 
 	function processInput(data){
+		//console.log(data);
 		if ("waitlistmessage" in data){
+		
+			document.getElementById("waitlistsupertitle").innerHTML = "";
 			document.getElementById("waitlisttitle").innerHTML = data.waitlistmessage || "";
 		}
 		if ("remove" in data){
+			document.getElementById("waitlistsupertitle").innerHTML = "";
 			document.getElementById("waitlisttitle").innerHTML = data.waitlistmessage || "";
 		}
 		
-		if ("drawmode" in data){
-			drawmode = data.drawmode || false;
-		}
-		// createConfetti(confettiFall);
-		if ("waitlist" in data){
-			console.log(data);
+		if (data.drawmode){
+			
+			document.getElementById("parentHolder").classList.remove("hidden");
+			
+			if (data.winlist && data.winlist.length){
+				document.getElementById("waitlist").innerHTML = "";
+				for (var i = 0; i<data.winlist.length;i++){
+					let extraData = "";
+					if (showsource){
+						extraData = "<img onerror='hideImage(this)' src='./sources/images/"+data.winlist[i].type+".png'>";
+					}
+					var classAdd = "winner";
+					
+					if (data.winlist[i].chatimg){
+						document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage(this)' src='"+data.winlist[i].chatimg+"'>"+data.winlist[i].chatname+"</div>";
+					} else {
+						document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<div class='spacer'></div>"+data.winlist[i].chatname+"</div>";
+					}
+					//console.log("added");
+				}
+				
+				if (data.winlist.length>1){
+					createConfetti(confettiFall);
+					document.getElementById("waitlisttitle").innerHTML = "Winners selected";
+				} else {
+					createConfetti(confettiFall);
+					document.getElementById("waitlisttitle").innerHTML = "Winner selected";
+				}
+				
+				winnerSelected = true;
+				if ("drawPoolSize" in data){
+					let entries = parseInt(data.drawPoolSize) || 0;
+					
+					if (!entries){
+						document.getElementById("waitlistsupertitle").innerHTML = "No entries remain";
+					} else if (entries==1){
+						document.getElementById("waitlistsupertitle").innerHTML = entries + " entry remain";
+					} else {
+						document.getElementById("waitlistsupertitle").innerHTML = entries + " entries remain";
+					}
+				}
+				
+			} else if ("drawPoolSize" in data){
+				if ("clearWinner" in data){
+					winnerSelected = false;
+				}
+				if (!winnerSelected){
+					document.getElementById("waitlistsupertitle").innerHTML =  "";
+					let entries = parseInt(data.drawPoolSize) || 0;
+					if (!entries){
+						document.getElementById("waitlist").innerHTML = "No entries yet in the draw!";
+					} else if (entries==1){
+						document.getElementById("waitlist").innerHTML = entries + " entry in the draw!";
+					} else {
+						document.getElementById("waitlist").innerHTML = entries + " entries in the draw!";
+					}
+				}
+			}
+		} else if ("drawPoolSize" in data){
+			if ("clearWinner" in data){
+				winnerSelected = false;
+			}
+			if (!winnerSelected){
+				let entries = parseInt(data.drawPoolSize) || 0;
+				document.getElementById("waitlistsupertitle").innerHTML =  "";
+				if (!entries){
+					document.getElementById("waitlist").innerHTML = "No entries yet in the draw!";
+				} else if (entries==1){
+					document.getElementById("waitlist").innerHTML = entries + " entry in the draw!";
+				} else {
+					document.getElementById("waitlist").innerHTML = entries + " entries in the draw!";
+				}
+			} else {
+				let entries = parseInt(data.drawPoolSize) || 0;
+					
+				if (!entries){
+					document.getElementById("waitlistsupertitle").innerHTML = "No entries remain";
+				} else if (entries==1){
+					document.getElementById("waitlistsupertitle").innerHTML = entries + " entry remain";
+				} else {
+					document.getElementById("waitlistsupertitle").innerHTML = entries + " entries remain";
+				}
+			}
+		
+		} else if ("waitlist" in data){
+			if ("drawmode" in data){
+				drawmode = false;
+			}
+			
+			if (drawmode === false){
+				document.getElementById("parentHolder").classList.add("hidden");
+			}
+		
+			//console.log(data);
 			var winnerStatus = 0;
 			var entries = 0;
-			var selected = 0;
 			document.getElementById("waitlist").innerHTML = "";
 			if (data.waitlist === false){
 				document.getElementById("parentHolder").classList.add("hidden");
@@ -743,7 +848,6 @@
 							continue;
 						} else if (data.waitlist[i].waitStatus == 2){
 							classAdd = "selected";
-							selected +=1;
 						}
 						if (drawmode || ("randomStatus" in data.waitlist[i])){
 							
@@ -761,7 +865,7 @@
 						}
 						let extraData = "";
 						if (showsource){
-							extraData = "<img onerror='hideImage(this)' src='"+data.waitlist[i].type+".png'>";
+							extraData = "<img onerror='hideImage(this)' src='./sources/images/"+data.waitlist[i].type+".png'>";
 						}
 						if (randomize){
 							var nodes = document.getElementById("waitlist").childNodes;
@@ -789,19 +893,19 @@
 						createConfetti(confettiFall);
 						document.getElementById("waitlisttitle").innerHTML = "Winner selected";
 					}
+					
 				} else if (drawmode){
+					document.getElementById("waitlistsupertitle").innerHTML =  "";
 					if (entries==1){
 						document.getElementById("waitlist").innerHTML = entries + " entry in the draw!";
 					} else {
 						document.getElementById("waitlist").innerHTML = entries + " entries in the draw!";
 					}
+					
 				} else if (winnerStatus && data.waitlistmessage){
 					createConfetti(confettiFall);
 				}
 			}
-			
-		} else {
-			console.warn(data);
 		}
 	}
 

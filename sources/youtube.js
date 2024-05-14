@@ -88,12 +88,9 @@
 	}
 
 	function extractYouTubeRedirectUrl(youtubeUrl) {
-		console.warn(youtubeUrl);
 		const url = new URL(youtubeUrl);
 		if (url.hostname === "www.youtube.com" && url.pathname === "/redirect") {
 			const actualUrl = url.searchParams.get("q");
-			console.log(actualUrl);
-			console.log(actualUrl.replace(/\&/g, "&amp;"));
 			if (actualUrl) {
 				return actualUrl.replace(/\&/g, "&amp;");
 			} else {

@@ -297,6 +297,13 @@
 		.pressed {
 			background-color: #2A2!important;
 		}
+		
+		.submenubuttons{
+			width:100%;
+		}
+		.submenubuttons .glowingButton{
+			 width: calc(50% - 10px);
+		}
 
 		#newVersion.show {
 			display: block;
@@ -2166,10 +2173,24 @@ The first name listed may be used as the host's name in stream when their name i
 			<div id="waitlist"  data-raw="" class="waitlist"></div>
 		</div>
 		<a href="" id="wait-list"></a> 
-		
+		<div class="wrapper hidden" id="waitlistbuttons">
+			<span id="drawmode" class="submenubuttons hidden">
+				<button  class="glowingButton" data-action="stopentries" title="Stop new entries from being submitted"><span data-translate="trigger-stop-entries">🛑 Stop entries</span></button>
+				<button  class="glowingButton" data-action="selectwinner"><span data-translate="trigger-new-selection">✅ Select winner</span></button>
+				<button  class="glowingButton" data-action="resetwaitlist"><span data-translate="trigger-waitlist-reset">🧹 Reset draw</span></button>
+				<button  class="glowingButton" data-action="downloadwaitlist" title="Download the entries list as a TSV file"><span data-translate="download-waitlist">⬇️ Download list</span></button>
+			</span>
+			<span id="queuemode" class="submenubuttons">
+				<button class="glowingButton" data-action="stopentries" title="Stop new entries from being submitted"><span data-translate="trigger-stop-entries-queue">🛑 Stop entries</span></button>
+				<button  class="glowingButton" data-action="selectwinner"><span data-translate="trigger-new-selection-queue">✅ Select a name</span></button>
+				<button  class="glowingButton" data-action="resetwaitlist"><span data-translate="trigger-waitlist-reset-queue">🧹 Reset queue</span></button>
+				<button  class="glowingButton" data-action="downloadwaitlist" title="Download the queue list as a TSV file"><span data-translate="download-waitlist">⬇️ Download list</span></button>
+			</span>
+		</div>
 		<div class="wrapper">
 			<div class="collapsible">
 				<input type="checkbox" class="collapsible-input" id="wrapper-waitlist-general-options">
+				
 				<label class="collapsible-label" for="wrapper-waitlist-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
 				<div class="collapsible-text">
 					<div class="options">
@@ -2189,9 +2210,6 @@ The first name listed may be used as the host's name in stream when their name i
 								</div>
 							</div>
 							
-							<button data-action="resetwaitlist"><span data-translate="trigger-waitlist-reset">Reset the wait list</span></button>
-							<button data-action="downloadwaitlist" title="Download the wait list as a TSV file"><span data-translate="download-waitlist">Download the wait list</span></button>
-							
 							<h3><span data-translate="select-winner-draw">Configure select-a-winner draw mode</span></h3>
 							<div>
 								<label class="switch">
@@ -2200,8 +2218,6 @@ The first name listed may be used as the host's name in stream when their name i
 								</label><span data-translate="configure as winner-draw mode">🏆 Configure as winner-draw mode instead of queue
 							</span></div>
 							
-							<button data-action="selectwinner"><span data-translate="trigger-new-selection">Select a new winner from current entries</span></button>
-							<button data-action="resetwaitlist"><span data-translate="trigger-waitlist-reset">Reset and start a new fresh draw</span></button>
 							
 							<h3><span data-translate="other-customization-options">Other customization options</span></h3>
 							<div>
