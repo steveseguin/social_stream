@@ -21,9 +21,11 @@
   "permissions": [
     "webNavigation",
     "notifications",
-	"https://beamstream.gg/*/chat",
-	"https://socialstream.ninja/sources/websocket/*",
-	"https://socialstream.ninja/websocket/*",
+    "https://chaturbate.com/*/",
+    "https://cherry.tv/*",
+    "https://beamstream.gg/*/chat",
+    "https://socialstream.ninja/sources/websocket/*",
+    "https://socialstream.ninja/websocket/*",
     "https://cozy.tv/*",
     "https://play.afreecatv.com/*?vtype=chat",
     "https://kiwiirc.com/nextclient/*",
@@ -151,173 +153,181 @@
   },
   "content_scripts": [
     {
-      "js": ["./sources/beamstream.js"],
-      "matches": ["https://beamstream.gg/*/chat"]
+      "js": [ "./sources/chaturbate.js" ],
+      "matches": [ "https://chaturbate.com/*/" ]
     },
     {
-      "js": ["./sources/chzzk.js"],
-      "matches": ["https://chzzk.naver.com/live/*/chat"]
+      "js": [ "./sources/cherry.js" ],
+      "matches": [ "https://cherry.tv/*" ]
     },
     {
-      "js": ["./sources/wavevideo.js"],
-      "matches": ["https://wave.video/live/*", "https://wave.video/*"]
+      "js": [ "./sources/beamstream.js" ],
+      "matches": [ "https://beamstream.gg/*/chat" ]
     },
     {
-      "js": ["./sources/openstreamingplatform.js"],
-      "matches": ["https://demo.openstreamingplatform.com/view/*chatOnly=True*"]
+      "js": [ "./sources/chzzk.js" ],
+      "matches": [ "https://chzzk.naver.com/live/*/chat" ]
     },
     {
-      "js": ["./sources/truffle.js"],
-      "matches": ["https://chat.truffle.vip/chat/*"]
+      "js": [ "./sources/wavevideo.js" ],
+      "matches": [ "https://wave.video/live/*", "https://wave.video/*" ]
     },
     {
-      "js": ["./sources/riverside.js"],
-      "matches": ["https://riverside.fm/studio/*"]
+      "js": [ "./sources/openstreamingplatform.js" ],
+      "matches": [ "https://demo.openstreamingplatform.com/view/*chatOnly=True*" ]
     },
     {
-      "js": ["./sources/pilled.js"],
-      "matches": ["https://pilled.net/*"]
+      "js": [ "./sources/truffle.js" ],
+      "matches": [ "https://chat.truffle.vip/chat/*" ]
     },
     {
-      "js": ["./sources/steam.js"],
-      "matches": ["https://steamcommunity.com/broadcast/chatonly/*"],
+      "js": [ "./sources/riverside.js" ],
+      "matches": [ "https://riverside.fm/studio/*" ]
+    },
+    {
+      "js": [ "./sources/pilled.js" ],
+      "matches": [ "https://pilled.net/*" ]
+    },
+    {
+      "js": [ "./sources/steam.js" ],
+      "matches": [ "https://steamcommunity.com/broadcast/chatonly/*" ],
       "all_frames": true
     },
     {
-      "js": ["./sources/caffeine.js"],
-      "matches": ["https://www.caffeine.tv/*"]
+      "js": [ "./sources/caffeine.js" ],
+      "matches": [ "https://www.caffeine.tv/*" ]
     },
     {
-      "js": ["./sources/megaphonetv.js"],
-      "matches": ["https://apps.megaphonetv.com/socialharvest/live/*"],
+      "js": [ "./sources/megaphonetv.js" ],
+      "matches": [ "https://apps.megaphonetv.com/socialharvest/live/*" ],
       "all_frames": true
     },
     {
-      "js": ["./sources/mixlr.js"],
-      "matches": ["https://*.mixlr.com/events/*"]
+      "js": [ "./sources/mixlr.js" ],
+      "matches": [ "https://*.mixlr.com/events/*" ]
     },
     {
-      "js": ["./sources/shareplay.js"],
-      "matches": ["https://www.shareplay.tv/chat/*"]
+      "js": [ "./sources/shareplay.js" ],
+      "matches": [ "https://www.shareplay.tv/chat/*" ]
     },
     {
-      "js": ["./sources/jaco.js"],
-      "matches": ["https://jaco.live/golive"]
+      "js": [ "./sources/jaco.js" ],
+      "matches": [ "https://jaco.live/golive" ]
     },
     {
-      "js": ["./sources/cozy.js"],
-      "matches": ["https://cozy.tv/*"]
+      "js": [ "./sources/cozy.js" ],
+      "matches": [ "https://cozy.tv/*" ]
     },
     {
-      "js": ["./sources/sessions.js"],
-      "matches": ["https://app.sessions.us/*"]
+      "js": [ "./sources/sessions.js" ],
+      "matches": [ "https://app.sessions.us/*" ]
     },
     {
-      "js": ["./sources/whatnot.js"],
-      "matches": ["https://www.whatnot.com/live/*"]
+      "js": [ "./sources/whatnot.js" ],
+      "matches": [ "https://www.whatnot.com/live/*" ]
     },
     {
-      "js": ["./sources/younow.js"],
-      "matches": ["https://www.younow.com/*"]
+      "js": [ "./sources/younow.js" ],
+      "matches": [ "https://www.younow.com/*" ]
     },
     {
-      "js": ["./sources/estrim.js"],
-      "matches": ["https://estrim.com/publications/view/*"]
+      "js": [ "./sources/estrim.js" ],
+      "matches": [ "https://estrim.com/publications/view/*" ]
     },
     {
-      "js": ["./sources/boltplus.js"],
-      "matches": ["https://boltplus.tv/chatpopout/*"]
+      "js": [ "./sources/boltplus.js" ],
+      "matches": [ "https://boltplus.tv/chatpopout/*" ]
     },
     {
-      "js": ["./sources/livestorm.js"],
-      "matches": ["https://app.livestorm.co/*/live?*"]
+      "js": [ "./sources/livestorm.js" ],
+      "matches": [ "https://app.livestorm.co/*/live?*" ]
     },
     {
-      "js": ["./sources/vstream.js"],
-      "matches": ["https://vstream.com/v/*/chat-popout"]
+      "js": [ "./sources/vstream.js" ],
+      "matches": [ "https://vstream.com/v/*/chat-popout" ]
     },
     {
-      "js": ["./sources/openai.js"],
-      "matches": ["https://chat.openai.com/*"]
+      "js": [ "./sources/openai.js" ],
+      "matches": [ "https://chat.openai.com/*" ]
     },
     {
-      "js": ["./sources/bandlab.js"],
-      "matches": ["https://*.bandlab.com/*"]
+      "js": [ "./sources/bandlab.js" ],
+      "matches": [ "https://*.bandlab.com/*" ]
     },
     {
-      "js": ["./sources/arena.js"],
-      "matches": ["https://arena.tv/*"]
+      "js": [ "./sources/arena.js" ],
+      "matches": [ "https://arena.tv/*" ]
     },
     {
-      "js": ["./sources/vercel.js"],
-      "matches": ["https://maestro-launcher.vercel.app/"]
+      "js": [ "./sources/vercel.js" ],
+      "matches": [ "https://maestro-launcher.vercel.app/" ]
     },
     {
-      "js": ["./sources/vkplay.js"],
+      "js": [ "./sources/vkplay.js" ],
       "matches": [
         "https://vkplay.live/*/only-chat?*",
         "https://live.vkplay.ru/*/only-chat?*"
       ]
     },
     {
-      "js": ["./sources/cbox.js"],
-      "matches": ["https://*.cbox.ws/box/*"],
+      "js": [ "./sources/cbox.js" ],
+      "matches": [ "https://*.cbox.ws/box/*" ],
       "all_frames": true
     },
     {
-      "js": ["./sources/nonolive.js"],
-      "matches": ["https://www.nonolive.com/*"]
+      "js": [ "./sources/nonolive.js" ],
+      "matches": [ "https://www.nonolive.com/*" ]
     },
     {
-      "js": ["./sources/quakenet.js"],
-      "matches": ["https://webchat.quakenet.org/*"]
+      "js": [ "./sources/quakenet.js" ],
+      "matches": [ "https://webchat.quakenet.org/*" ]
     },
     {
-      "js": ["./sources/kiwiirc.js"],
-      "matches": ["https://kiwiirc.com/nextclient/*"]
+      "js": [ "./sources/kiwiirc.js" ],
+      "matches": [ "https://kiwiirc.com/nextclient/*" ]
     },
     {
-      "js": ["./sources/afreecatv.js"],
-      "matches": ["https://play.afreecatv.com/*/*?vtype=chat"]
+      "js": [ "./sources/afreecatv.js" ],
+      "matches": [ "https://play.afreecatv.com/*/*?vtype=chat" ]
     },
     {
-      "js": ["./sources/loco.js"],
-      "matches": ["https://*.loco.gg/*"]
+      "js": [ "./sources/loco.js" ],
+      "matches": [ "https://*.loco.gg/*" ]
     },
     {
-      "js": ["./sources/joystick.js"],
-      "matches": ["https://joystick.tv/u/*/chat"]
+      "js": [ "./sources/joystick.js" ],
+      "matches": [ "https://joystick.tv/u/*/chat" ]
     },
     {
-      "js": ["./sources/rooter.js"],
-      "matches": ["https://*.rooter.gg/*"]
+      "js": [ "./sources/rooter.js" ],
+      "matches": [ "https://*.rooter.gg/*" ]
     },
     {
-      "js": ["./sources/twitter.js", "./sources/static/twitter.js"],
-      "matches": ["https://www.twitter.com/*", "https://twitter.com/*"]
+      "js": [ "./sources/twitter.js", "./sources/static/twitter.js" ],
+      "matches": [ "https://www.twitter.com/*", "https://twitter.com/*" ]
     },
     {
-      "js": ["./sources/static/threads.js"],
-      "matches": ["https://www.threads.net/*"]
+      "js": [ "./sources/static/threads.js" ],
+      "matches": [ "https://www.threads.net/*" ]
     },
     {
-      "js": ["./sources/tellonym.js"],
-      "matches": ["https://tellonym.me/*"]
+      "js": [ "./sources/tellonym.js" ],
+      "matches": [ "https://tellonym.me/*" ]
     },
     {
-      "js": ["./sources/floatplane.js"],
-      "matches": ["https://*.floatplane.com/popout/livechat"]
+      "js": [ "./sources/floatplane.js" ],
+      "matches": [ "https://*.floatplane.com/popout/livechat" ]
     },
     {
-      "js": ["./sources/castr.js"],
-      "matches": ["https://chat.castr.io/*"]
+      "js": [ "./sources/castr.js" ],
+      "matches": [ "https://chat.castr.io/*" ]
     },
     {
-      "js": ["./sources/tradingview.js"],
-      "matches": ["https://www.tradingview.com/streams/*"]
+      "js": [ "./sources/tradingview.js" ],
+      "matches": [ "https://www.tradingview.com/streams/*" ]
     },
     {
-      "js": ["./sources/youtube.js"],
+      "js": [ "./sources/youtube.js" ],
       "matches": [
         "https://www.youtube.com/watch*&socialstream",
         "https://youtube.com/live_chat*",
@@ -326,22 +336,22 @@
       ]
     },
     {
-      "js": ["./sources/static/youtube.js"],
-      "matches": ["https://www.youtube.com/*"]
+      "js": [ "./sources/static/youtube.js" ],
+      "matches": [ "https://www.youtube.com/*" ]
     },
     {
-      "js": ["./sources/meets.js"],
-      "matches": ["https://meet.google.com/*"]
+      "js": [ "./sources/meets.js" ],
+      "matches": [ "https://meet.google.com/*" ]
     },
     {
-      "js": ["./sources/rokfin.js"],
+      "js": [ "./sources/rokfin.js" ],
       "matches": [
         "https://*.rokfin.com/popout/chat/*",
         "https://rokfin.com/popout/chat/*"
       ]
     },
     {
-      "js": ["./sources/slido.js"],
+      "js": [ "./sources/slido.js" ],
       "matches": [
         "https://app.sli.do/event/*",
         "https://admin.sli.do/event/*",
@@ -349,82 +359,82 @@
       ]
     },
     {
-      "js": ["./sources/quickchannel.js"],
-      "matches": ["https://play.quickchannel.com/*"]
+      "js": [ "./sources/quickchannel.js" ],
+      "matches": [ "https://play.quickchannel.com/*" ]
     },
     {
-      "js": ["./sources/locals.js"],
-      "matches": ["https://*.locals.com/post/*", "https://*.locals.com/feed/*"]
+      "js": [ "./sources/locals.js" ],
+      "matches": [ "https://*.locals.com/post/*", "https://*.locals.com/feed/*" ]
     },
     {
-      "js": ["./sources/wix2.js"],
+      "js": [ "./sources/wix2.js" ],
       "matches": [
         "https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*"
       ],
       "all_frames": true
     },
     {
-      "js": ["./sources/wix.js"],
-      "matches": ["https://*.wix.com/*"]
+      "js": [ "./sources/wix.js" ],
+      "matches": [ "https://*.wix.com/*" ]
     },
     {
-      "js": ["./sources/nimo.js"],
+      "js": [ "./sources/nimo.js" ],
       "matches": [
         "https://www.nimo.tv/popout/chat/*",
         "https://dashboard.nimo.tv/popout/chat/*"
       ]
     },
     {
-      "js": ["./sources/kick.js"],
-      "matches": ["https://kick.com/*/chatroom"]
+      "js": [ "./sources/kick.js" ],
+      "matches": [ "https://kick.com/*/chatroom" ]
     },
     {
-      "js": ["./sources/cloudhub.js"],
-      "matches": ["https://app.clouthub.com/*"]
+      "js": [ "./sources/cloudhub.js" ],
+      "matches": [ "https://app.clouthub.com/*" ]
     },
     {
-      "js": ["./sources/bilibili.js"],
+      "js": [ "./sources/bilibili.js" ],
       "matches": [
         "https://bilibili.tv/*/live/*",
         "https://*.bilibili.tv/*/live/*"
       ]
     },
     {
-      "js": ["./sources/piczel.js"],
-      "matches": ["https://piczel.tv/chat/*"]
+      "js": [ "./sources/piczel.js" ],
+      "matches": [ "https://piczel.tv/chat/*" ]
     },
     {
-      "js": ["./sources/roll20.js"],
-      "matches": ["https://*.roll20.net/*", "https://roll20.net/*"]
+      "js": [ "./sources/roll20.js" ],
+      "matches": [ "https://*.roll20.net/*", "https://roll20.net/*" ]
     },
     {
-      "js": ["./sources/vimm.js"],
-      "matches": ["https://www.vimm.tv/c/*", "https://vimm.tv/c/*"]
+      "js": [ "./sources/vimm.js" ],
+      "matches": [ "https://www.vimm.tv/c/*", "https://vimm.tv/c/*" ]
     },
     {
-      "js": ["./sources/websocket/vimm.js"],
-      "matches": ["https://socialstream.ninja/sources/websocket/vimm.html*"]
+      "js": [ "./sources/websocket/vimm.js" ],
+      "matches": [ "https://socialstream.ninja/sources/websocket/vimm.html*" ]
     },
     {
-      "js": ["./sources/websocket/twitch.js"],
+      "js": [ "./sources/websocket/twitch.js" ],
       "matches": [
         "https://socialstream.ninja/sources/websocket/twitch.html*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/twitch.html*"
       ]
     },
-	 {
-      "js": ["./websocket/vimm.js"],
-      "matches": ["https://socialstream.ninja/websocket/vimm.html*"]
+    {
+      "js": [ "./websocket/vimm.js" ],
+      "matches": [ "https://socialstream.ninja/websocket/vimm.html*" ]
     },
     {
-      "js": ["./websocket/twitch.js"],
+      "js": [ "./websocket/twitch.js" ],
       "matches": [
         "https://socialstream.ninja/websocket/twitch.html*",
         "file:///C:/Users/steve/Code/social_stream/websocket/twitch.html*"
       ]
     },
     {
-      "js": ["./sources/minnit.js"],
+      "js": [ "./sources/minnit.js" ],
       "matches": [
         "https://minnit.chat/*&popout",
         "https://*.minnit.chat/*&popout",
@@ -433,55 +443,55 @@
       "all_frames": true
     },
     {
-      "js": ["./sources/chatroll.js"],
-      "matches": ["https://chatroll.com/embed/chat/*"],
+      "js": [ "./sources/chatroll.js" ],
+      "matches": [ "https://chatroll.com/embed/chat/*" ],
       "all_frames": true
     },
     {
-      "js": ["./sources/stageten.js"],
-      "matches": ["https://*.stageten.tv/*", "https://stageten.tv/*"],
+      "js": [ "./sources/stageten.js" ],
+      "matches": [ "https://*.stageten.tv/*", "https://stageten.tv/*" ],
       "all_frames": true
     },
     {
-      "js": ["./sources/odysee.js"],
-      "matches": ["https://odysee.com/$/popout/*"]
+      "js": [ "./sources/odysee.js" ],
+      "matches": [ "https://odysee.com/$/popout/*" ]
     },
     {
-      "js": ["./sources/picarto.js"],
-      "matches": ["https://picarto.tv/chatpopout/*"]
+      "js": [ "./sources/picarto.js" ],
+      "matches": [ "https://picarto.tv/chatpopout/*" ]
     },
     {
-      "js": ["./sources/mobcrush.js"],
-      "matches": ["https://studio.mobcrush.com/chatpopup.html"]
+      "js": [ "./sources/mobcrush.js" ],
+      "matches": [ "https://studio.mobcrush.com/chatpopup.html" ]
     },
     {
-      "js": ["./sources/livepush.js"],
-      "matches": ["https://multichat.livepush.io/*"]
+      "js": [ "./sources/livepush.js" ],
+      "matches": [ "https://multichat.livepush.io/*" ]
     },
     {
-      "js": ["./sources/dlive.js"],
-      "matches": ["https://dlive.tv/c/*"]
+      "js": [ "./sources/dlive.js" ],
+      "matches": [ "https://dlive.tv/c/*" ]
     },
     {
-      "js": ["./sources/instafeed.js"],
-      "matches": ["https://instafeed.me/*"]
+      "js": [ "./sources/instafeed.js" ],
+      "matches": [ "https://instafeed.me/*" ]
     },
     {
-      "js": ["./sources/whatsapp.js"],
-      "matches": ["https://web.whatsapp.com/"]
+      "js": [ "./sources/whatsapp.js" ],
+      "matches": [ "https://web.whatsapp.com/" ]
     },
     {
-      "js": ["./sources/twitch.js"],
-      "matches": ["https://*.twitch.tv/popout/*"],
+      "js": [ "./sources/twitch.js" ],
+      "matches": [ "https://*.twitch.tv/popout/*" ],
       "run_at": "document_start"
     },
     {
-      "js": ["./sources/static/twitch_points.js"],
-      "matches": ["https://*.twitch.tv/*"],
+      "js": [ "./sources/static/twitch_points.js" ],
+      "matches": [ "https://*.twitch.tv/*" ],
       "run_at": "document_start"
     },
     {
-      "js": ["./sources/facebook.js"],
+      "js": [ "./sources/facebook.js" ],
       "matches": [
         "https://facebook.com/*",
         "https://web.facebook.com/*",
@@ -491,34 +501,34 @@
       ]
     },
     {
-      "js": ["./sources/trovo.js"],
-      "matches": ["https://trovo.live/chat/*"],
+      "js": [ "./sources/trovo.js" ],
+      "matches": [ "https://trovo.live/chat/*" ],
       "runs_at": "document_start",
       "all_frames": true
     },
     {
-      "js": ["./sources/owncast.js"],
-      "matches": ["https://watch.owncast.online/*"]
+      "js": [ "./sources/owncast.js" ],
+      "matches": [ "https://watch.owncast.online/*" ]
     },
     {
-      "js": ["./sources/zoom.js"],
-      "matches": ["https://*.zoom.us/*"],
+      "js": [ "./sources/zoom.js" ],
+      "matches": [ "https://*.zoom.us/*" ],
       "all_frames": true
     },
     {
-      "js": ["./sources/crowdcast.js"],
-      "matches": ["https://www.crowdcast.io/e/*"]
+      "js": [ "./sources/crowdcast.js" ],
+      "matches": [ "https://www.crowdcast.io/e/*" ]
     },
     {
-      "js": ["./sources/discord.js"],
-      "matches": ["https://discord.com/*"]
+      "js": [ "./sources/discord.js" ],
+      "matches": [ "https://discord.com/*" ]
     },
     {
-      "js": ["./sources/mixcloud.js"],
-      "matches": ["https://www.mixcloud.com/live/*/chat/"]
+      "js": [ "./sources/mixcloud.js" ],
+      "matches": [ "https://www.mixcloud.com/live/*/chat/" ]
     },
     {
-      "js": ["./sources/vimeo.js"],
+      "js": [ "./sources/vimeo.js" ],
       "matches": [
         "https://www.vimeo.com/live*",
         "https://vimeo.com/live*",
@@ -526,83 +536,83 @@
       ]
     },
     {
-      "js": ["./sources/livestream.js"],
-      "matches": ["https://livestream.com/accounts/*"]
+      "js": [ "./sources/livestream.js" ],
+      "matches": [ "https://livestream.com/accounts/*" ]
     },
     {
-      "js": ["./sources/teams.js"],
-      "matches": ["https://teams.microsoft.com/*"],
+      "js": [ "./sources/teams.js" ],
+      "matches": [ "https://teams.microsoft.com/*" ],
       "all_frames": true
     },
     {
-      "js": ["./sources/teams.js"],
-      "matches": ["https://teams.live.com/*"]
+      "js": [ "./sources/teams.js" ],
+      "matches": [ "https://teams.live.com/*" ]
     },
     {
-      "js": ["./sources/peertube.js"],
-      "matches": ["https://*/plugins/livechat/*router/webchat/room/*","https://*/p/livechat/room?room=*"]
-	  
+      "js": [ "./sources/peertube.js" ],
+      "matches": [ "https://*/plugins/livechat/*router/webchat/room/*", "https://*/p/livechat/room?room=*" ]
+
     },
     {
-      "js": ["./sources/instagram.js"],
-      "matches": ["https://www.instagram.com/*"]
+      "js": [ "./sources/instagram.js" ],
+      "matches": [ "https://www.instagram.com/*" ]
     },
     {
-      "js": ["./sources/tiktok.js"],
+      "js": [ "./sources/tiktok.js" ],
       "matches": [
         "https://www.tiktok.com/*live*",
         "https://livecenter.tiktok.com/*"
       ]
     },
     {
-      "js": ["./sources/vdoninja.js"],
-      "matches": ["https://*.vdo.ninja/*popout.html*"]
+      "js": [ "./sources/vdoninja.js" ],
+      "matches": [ "https://*.vdo.ninja/*popout.html*" ]
     },
     {
-      "js": ["./sources/linkedin.js"],
-      "matches": ["https://www.linkedin.com/*"]
+      "js": [ "./sources/linkedin.js" ],
+      "matches": [ "https://www.linkedin.com/*" ]
     },
     {
-      "js": ["./sources/webex.js"],
-      "matches": ["https://*.webex.com/*", "https://webex.com/*"],
+      "js": [ "./sources/webex.js" ],
+      "matches": [ "https://*.webex.com/*", "https://webex.com/*" ],
       "all_frames": true
     },
     {
-      "js": ["./sources/telegram.js"],
-      "matches": ["https://*.telegram.org/z/*", "https://*.telegram.org/a/*"]
+      "js": [ "./sources/telegram.js" ],
+      "matches": [ "https://*.telegram.org/z/*", "https://*.telegram.org/a/*" ]
     },
     {
-      "js": ["./sources/telegramk.js"],
-      "matches": ["https://*.telegram.org/k/*"]
+      "js": [ "./sources/telegramk.js" ],
+      "matches": [ "https://*.telegram.org/k/*" ]
     },
     {
-      "js": ["./sources/restream.js"],
-      "matches": ["https://chat.restream.io/*"]
+      "js": [ "./sources/restream.js" ],
+      "matches": [ "https://chat.restream.io/*" ]
     },
     {
-      "js": ["./sources/amazon.js"],
-      "matches": ["https://www.amazon.com/live*"],
+      "js": [ "./sources/amazon.js" ],
+      "matches": [ "https://www.amazon.com/live*" ],
       "run_at": "document_start"
     },
     {
-      "js": ["./sources/rumble.js"],
-      "matches": ["https://rumble.com/chat/popup/*"]
+      "js": [ "./sources/rumble.js" ],
+      "matches": [ "https://rumble.com/chat/popup/*" ]
     },
     {
-      "js": ["./sources/slack.js"],
-      "matches": ["https://app.slack.com/client/*"]
+      "js": [ "./sources/slack.js" ],
+      "matches": [ "https://app.slack.com/client/*" ]
     },
     {
-      "js": ["./sources/chime.js"],
-      "matches": ["https://app.chime.aws/meetings/*"]
+      "js": [ "./sources/chime.js" ],
+      "matches": [ "https://app.chime.aws/meetings/*" ]
     },
     {
-      "js": ["./sources/buzzit.js"],
-      "matches": ["https://www.buzzit.ca/event/*/chat"]
+      "js": [ "./sources/buzzit.js" ],
+      "matches": [ "https://www.buzzit.ca/event/*/chat" ]
     },
     {
-      "js": ["./sources/vklive.js"],
-      "matches": ["https://vk.com/*"]
+      "js": [ "./sources/vklive.js" ],
+      "matches": [ "https://vk.com/*" ]
     }
   ],
   "options_ui": {
