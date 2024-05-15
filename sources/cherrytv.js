@@ -38,11 +38,11 @@
 				if (ele.querySelector('img[alt*="User Joined"]')) {
 					console.log("User joined:", ele.textContent.trim());
 					let data = {};
-					data.chatmessage = ele.textContent.trim();
+					data.chatmessage = getAllContentNodes(ele.textContent);
 					data.event = "joined";
 					data.type = "cherry";
-
-					chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function (response) { });
+					// I don't think we actually want to bother with joined events, but it's up to you.
+					// chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function (response) { });
 					return;
 				}
 
