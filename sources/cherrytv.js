@@ -69,7 +69,7 @@
 				var usernameEle = ele.querySelector('span.text-white.font-medium');
 				var messageEle = ele.querySelector('span[style*="word-break"]');
 				if (!usernameEle || !messageEle) {
-					console.warn("Chat message elements not found. Probably not a message but a divider");
+					console.log("Chat message elements not found. Probably not a message but a divider");
 					return;
 				}
 				var chatName = escapeHtml(usernameEle.textContent.trim());
