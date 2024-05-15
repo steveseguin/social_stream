@@ -214,7 +214,21 @@
 		var chatmessage = "";
 		try {
 			chatmessage = getAllContentNodes(ele.querySelector("div[class*='-DivUserInfo'], span[data-e2e='message-owner-name']").nextSibling);
-		} catch(e){}
+			//live-shared-ui-chat-list-chat-message-comment
+			if (!chatmessage){
+				try {
+					chatmessage = getAllContentNodes(ele.querySelector(".live-shared-ui-chat-list-chat-message-comment"));
+				} catch(e){
+					chatmessage = "";
+				}
+			}
+		} catch(e){
+			try {
+				chatmessage = getAllContentNodes(ele.querySelector(".live-shared-ui-chat-list-chat-message-comment"));
+			} catch(e){
+				chatmessage = "";
+			}
+		}
 		
 		if (chatmessage == "Moderator"){
 			chatmessage = "";
@@ -307,7 +321,7 @@
 		data.type = "tiktok";
 		data.event = ital; // if an event or actual message
 		
-		// console.log(data);
+		//console.log(data);
 		
 		pushMessage(data);
 	}
@@ -315,7 +329,7 @@
 	
 	function start() {
 		
-		var target = document.querySelector('[class*="DivChatMessageList"]');
+		var target = document.querySelector('[class*="DivChatMessageList"], .live-shared-ui-chat-list-scrolling-list'); //  [class^="LiveChat-"]
 		if (!target){
 			return;
 		}
@@ -331,7 +345,7 @@
 		} else {
 			target.set123 = true;
 		}
-		// class="tiktok-1dvdrb1-DivChatRoomMessage-StyledLikeMessageItem e12fsz0m0"
+		
 		console.log("STARTED SOCIAL STREAM");
 		
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -342,7 +356,6 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							
 							if (mutation.addedNodes[i].dataset && (mutation.addedNodes[i].dataset.e2e == "chat-message")){
 								setTimeout(function(ele2){
 									processMessage(ele2)
@@ -447,105 +460,110 @@
 	// settings.captureevents
 
 	
-	
-	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if ("settings" in response){
-			settings = response.settings;
-		}
-		if ("state" in response){
-			isExtensionOn = response.state;
-		}
-	});
+	try{
+		chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+			if ("settings" in response){
+				settings = response.settings;
+			}
+			if ("state" in response){
+				isExtensionOn = response.state;
+			}
+		});
+	} catch(e){}
 
 
 	var pokeMe = setInterval(function(){
-		chrome.runtime.sendMessage(chrome.runtime.id, { "pokeMe": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-			console.log("POKED");
-		});
+		try{
+			chrome.runtime.sendMessage(chrome.runtime.id, { "pokeMe": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+				console.log("POKED");
+			});
+		} catch(e){}
 	},1000*60*59);
 	
 	var videosMuted = false;
 	
-	chrome.runtime.onMessage.addListener(
-		function (request, sender, sendResponse) {
-			try{
-				if ("focusChat" == request){
-					if (document.querySelector('.public-DraftEditorPlaceholder-inner')){
-						document.querySelector(".public-DraftEditorPlaceholder-inner").focus();
-						sendResponse(true);
-						clearInterval(pokeMe);
-						pokeMe = setInterval(function(){
-							chrome.runtime.sendMessage(chrome.runtime.id, { "pokeMe": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-								
-							});
-						},1000*60*60);
-					} else if (document.querySelector("[contenteditable='true'][placeholder]")){
-						
-						document.querySelector("[contenteditable='true'][placeholder]").focus();
-						sendResponse(true);
-						setTimeout(function(){
-							if (document.querySelector("[contenteditable='true'][placeholder]").textContent == ""){
-								document.querySelector("[contenteditable='true'][placeholder]").innerHTML = "";
-							}
-						},300);
-						clearInterval(pokeMe);
-						pokeMe = setInterval(function(){
-							chrome.runtime.sendMessage(chrome.runtime.id, { "pokeMe": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-								
-							});
-						},1000*60*60);
-					} else {
-						sendResponse(false);
-					}
-					return;
-				}
-				if (typeof request === "object"){
-					if ("state" in request){
-						isExtensionOn = request.state;
-					}
-					if ("settings" in request){
-						settings = request.settings;
-						sendResponse(true);
+	try{
+		chrome.runtime.onMessage.addListener(
+			function (request, sender, sendResponse) {
+				try{
+					if ("focusChat" == request){
+						if (document.querySelector('.public-DraftEditorPlaceholder-inner')){
+							document.querySelector(".public-DraftEditorPlaceholder-inner").focus();
+							sendResponse(true);
+							clearInterval(pokeMe);
+							pokeMe = setInterval(function(){
+								chrome.runtime.sendMessage(chrome.runtime.id, { "pokeMe": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+									
+								});
+							},1000*60*60);
+						} else if (document.querySelector("[contenteditable='true'][placeholder]")){
+							
+							document.querySelector("[contenteditable='true'][placeholder]").focus();
+							sendResponse(true);
+							setTimeout(function(){
+								if (document.querySelector("[contenteditable='true'][placeholder]").textContent == ""){
+									document.querySelector("[contenteditable='true'][placeholder]").innerHTML = "";
+								}
+							},300);
+							clearInterval(pokeMe);
+							pokeMe = setInterval(function(){
+								chrome.runtime.sendMessage(chrome.runtime.id, { "pokeMe": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+									
+								});
+							},1000*60*60);
+						} else {
+							sendResponse(false);
+						}
 						return;
 					}
-					if ("muteWindow" in request){
-						
-						if (request.muteWindow){
-							clearInterval(videosMuted);
+					if (typeof request === "object"){
+						if ("state" in request){
+							isExtensionOn = request.state;
+						}
+						if ("settings" in request){
+							settings = request.settings;
+							sendResponse(true);
+							return;
+						}
+						if ("muteWindow" in request){
 							
-							videosMuted = setInterval(function(){
+							if (request.muteWindow){
+								clearInterval(videosMuted);
+								
+								videosMuted = setInterval(function(){
+									document.querySelectorAll("video").forEach(v=>{
+										v.muted = true;
+										v.pause();
+									});
+								},1000);
 								document.querySelectorAll("video").forEach(v=>{
 									v.muted = true;
 									v.pause();
 								});
-							},1000);
-							document.querySelectorAll("video").forEach(v=>{
-								v.muted = true;
-								v.pause();
-							});
-							sendResponse(true);
-							return;
-						} else {
-							if (videosMuted){
-								clearInterval(videosMuted);
-								document.querySelectorAll("video").forEach(v=>{
-									v.muted = false;
-									v.play();
-								});
+								sendResponse(true);
+								return;
 							} else {
-								clearInterval(videosMuted);
+								if (videosMuted){
+									clearInterval(videosMuted);
+									document.querySelectorAll("video").forEach(v=>{
+										v.muted = false;
+										v.play();
+									});
+								} else {
+									clearInterval(videosMuted);
+								}
+								videosMuted = false;
+								sendResponse(true);
+								return;
 							}
-							videosMuted = false;
-							sendResponse(true);
-							return;
 						}
 					}
-				}
-			} catch(e){	}
-			
-			sendResponse(false);
-		}
-	);
+				} catch(e){	}
+				
+				sendResponse(false);
+			}
+		);
+	} catch(e){}
 
 	
 })();
