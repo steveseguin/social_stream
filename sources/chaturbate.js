@@ -126,6 +126,30 @@
         }
     }
 
+    chrome.runtime.onMessage.addListener(
+        function (request, sender, sendResponse) {
+            try {
+                if ("focusChat" === request) {
+                    var chatInput = document.querySelector('div[data-testid="chat-input"]');
+                    if (chatInput) {
+                        chatInput.focus();
+                        sendResponse(true);
+                        return;
+                    }
+                }
+                if (typeof request === "object") {
+                    if ("settings" in request) {
+                        settings = request.settings;
+                        sendResponse(true);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error("Error in message listener:", e);
+            }
+            sendResponse(false);
+        }
+    );
     function onElementInserted(containerSelector) {
         var target = document.querySelector(containerSelector);
         if (!target) return;
