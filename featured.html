@@ -886,6 +886,11 @@
 				hideNames = true;
 			}
 
+			var hideDonations = false;
+			if (urlParams.has("hidedonations")) {
+				hideDonations = true;
+			}
+
 			var onlyTwitch = false;
 			var hideTwitch = false;
 
@@ -1700,6 +1705,14 @@
 				if (data && data.contents) {
 					if (onlyshowdonos && !data.contents.hasDonation) {
 						return;
+					}
+					
+					if (hideDonations){
+						data.contents.hasDonation = ""; // kiss
+						if (!data.contents.chatmessage && !data.contents.contentimg && !data.contents.subtitle && !data.contents.membership){
+							// there's nothing worth showing, so skip
+							return;
+						}
 					}
 
 					if (hideTwitch && data.contents.type === "twitch") {
