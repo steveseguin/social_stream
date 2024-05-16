@@ -135,7 +135,6 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - threads.net (a little funky star icon, right of the share icon, will select thread to push to dock)
 - floatplane.com (pop out chat; gotta keep the main window still open though? annoying..)
 - OpenAI chatGPT chat - (via https://chat.openai.com/chat). You must opt-in via the toggle for this though
-- vstream.com (pop out chat)
 - estrim - live video chat supported
 - livestorm.io (open the 'external sidebar', which might be a plugin, and it should capture that)
 - boltplus.tv (pop out chat)
@@ -168,6 +167,7 @@ Past supported sites that have ceased to exist.
 - 🪦 theta.tv (RIP Sept 2023)
 - 🪦 xeenon.xyz (RIP Sept 2023)
 - 🪦 live.space (RIP April 2024)
+- 🪦 vstream.com (RIP April 2024)
 
   (it's the effort that counts, guys; may your code live on in our ai llm bots forever)
 
