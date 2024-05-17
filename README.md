@@ -485,6 +485,16 @@ If using the MIDI API isn't something you can use, you can also check out the ho
 
 This API end point supports WSS, HTTPS GET, and HTTP POST (JSON).  Support for this API must be toggled on in the menu settings; there's several different toggles you may want to enable, depending on which HTTP/WSS API you want to use
 
+##### API Sandbox with many examples as buttons
+
+There's a link to this page in the Social Stream options menu itself, but it contains a large number of common API commands, available at a press of a button.
+
+https://socialstream.ninja/sampleapi.html?session=xxxxxxxxxx (replacing xxxxxxxx with your Social Stream session ID to have it work)
+
+Referring to the source code of the sampleapi.html page is useful if you wish to develop your own API integration, or get a better understanding of the basics.
+
+Most, but not all, API commands are listed there. Referring to the source code or asking Steve on Discord (socialstream.discord.vdo) can help with options not listed.
+
 ##### A couple common examples
  
 An overly simple example of how to use the GET API would be: https://io.socialstream.ninja/XXXXXXXXXX/sendChat/null/Hello, which sends HELLO.  Replace XXXXX with your Social Stream session ID.  Other options, like `https://io.socialstream.ninja/XXXXXXXXXX/clearOverlay` should work, too.
@@ -497,15 +507,56 @@ You can also target specific docks with your API requests by assigning a target 
 
 For example, to set a dock with the target name of "NAMEHERE", we'd do: `https://socialstream.ninja/dock.html?session=XXXXXXXXXXXXX&server&sync&label=NAMEHERE`.  From there, we can target it with the API format like this: `https://io.socialstream.ninja/XXXXXXXXXXXXX/nextInQueue/NAMEHERE/null`.  This all may be needed because if you have multiple docks connected to the API interface, you may not want to trigger the same command multiple times in all cases.
 
-##### More details
- 
-For details of the commands, see the following link for sample functionality and refer to its source code for examples.
+##### General technical concept of the API logic iteslf
 
-https://socialstream.ninja/sampleapi.html?session=xxxxxxxxxx (replacing xxxxxxxx with your Social Stream session ID to have it work)
+The public API for Social Stream is based on the same API server logic that VDO.Ninja uses, which is mentioned here: https://github.com/steveseguin/Companion-Ninja.
 
-More functionality can be added on request.
+More information on the routing logic below..
 
-![image](https://user-images.githubusercontent.com/2575698/189367779-67969f47-a305-4347-9a37-053b33479602.png)
+######  GET/POST API structure
+
+The generic structure of the API is:
+`https://io.socialstream.ninja/{sessionID}/{action}/{target}/{value}`
+
+or
+
+`https://api.vdo.ninja/{sessionID}/{action}/{value}`
+
+or
+
+`https://api.vdo.ninja/{sessionID}/{action}`
+
+Any field can be replaced with "null", if no value is being passed to it. Double slashes will cause issues though, so avoid those.
+
+There's a niche advanced command for the GET API, where if you publish with the action `content`, it will accept a JSON object via the URL, and send it to websocket's channel 1.  Using action `content2` sends it instead to channel 2, and `content3` will send to channel 3, etc. You could in theory publish predefined messages to the dock, extension, overlay page, etc, via a Streamdeck hotkey, this way.
+
+###### Websocket API
+If using the Websocket API, this accepts JSON-based commands
+
+connect to: wss://io.socialstream.ninja:443, which will by default have you'll join channel 1, I believe. For something more advanecd, try wss://io.socialstream.ninja/join/SESSIONIDHERE/CHANNELINBOUND/CHANNELOUTBOUND
+
+On connection, send: {"join": $sessionID }, where $sessionID is your session ID.
+
+be sure to stringify objects as JSON before sending over the websocket connection. ie: JSON.stringify(object)
+Once joined, you can then issue commands at will.
+
+Be sure to implement reconnection logic with the websocket connection, as it will timeout every minute or so by default otherwise. You will need to rejoin after a timeout.
+
+###### Server Side Events
+If you want to simply listen to events, using SSE connections, you can do so using the https://io.socialstream.ninja/sse/APIKEYHERE endpoint.
+
+Sample Javascript code is below:
+
+const apiID = "APIKEYHERE";
+const eventSource = new EventSource(`https://io.socialstream.ninja/sse/${sessionID}`);
+eventSource.onmessage = function(event) {
+ console.log(JSON.parse(event.data));
+};
+eventSource.onerror = function(error) {
+  console.error('SSE connection error:', error);
+  eventSource.close();
+};
+
 
 #### Remote server API support (publish messages to third parties)
 
