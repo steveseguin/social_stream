@@ -38,7 +38,7 @@
 			isExtensionOn = response.state;
 			if (document.getElementById("startupbutton")){
 				if (isExtensionOn){
-					document.getElementById("startupbutton").style.display = "block";
+					document.getElementById("startupbutton").style.display = "inline-block";
 				} else {
 					document.getElementById("startupbutton").style.display = "none";
 				}
@@ -89,14 +89,13 @@
 						
 						if (document.getElementById("startupbutton")){
 							if (isExtensionOn && settings.xcapture){
-								document.getElementById("startupbutton").style.display = "block";
-								document.getElementById("adbutton").style.display = "block";
+								document.getElementById("startupbutton").style.display = "inline-block";
+								document.getElementById("youaresuperfunnybutton").style.display = "inline-block";
 							} else {
 								document.getElementById("startupbutton").style.display = "none";
-								document.getElementById("adbutton").style.display = "none";
+								document.getElementById("youaresuperfunnybutton").style.display = "none";
 							}
 							if (enabledSSN){
-								document.getElementById("startupbutton").innerHTML = "Disable Overlay Service"
 								document.getElementById("startupbutton").style.backgroundColor = "#af5454";
 							}
 						}
@@ -397,10 +396,10 @@
 				} else {
 					if (!bases[i].dataset.set){
 						bases[i].dataset.set=true;
-						var button  = document.createElement("button");
+						var button = document.createElement("button");
 						button.onclick = prepMessage;
-						button.innerHTML = "Grab Tweet";
-						button.style = " transition: all 0.2s linear; border:1px solid #0007; width: 56px; height: 56px; border-radius: 50px; padding: 4px; margin: 10px; background-color: rgb(117 153 117); cursor:pointer;"
+						button.innerHTML = "Grab";
+						button.style = "text-align: center;font-family:Tahoma;transition: all 0.2s linear; border:1px solid #0007; width: 48px; height: 48px; border-radius: 50px; padding: 4px; margin: 8px 10px 10px 6px; background-color: rgb(117 153 117); cursor:pointer;"
 						button.className = "btn-push-twitter";
 						button.targetEle = bases[i];
 						//bases[i].appendChild(button);
@@ -434,25 +433,26 @@
 			clearTimeout(preStartupInteval);
 			startup();
 			
-			var eles = document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label][role="link"]');
+			var elesMain = document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label][role="link"]');
 			try {
-				eles[eles.length - 1].querySelector("a > div > span > div > div > span > span").innerText = "Tweet";
+				elesMain[elesMain.length - 1].querySelector("a > div").innerText = "Tweet";
 			} catch(e){}
 					
-			var button  = document.createElement("button");
+			var button = elesMain[elesMain.length - 1].cloneNode(true);
+			button.href =  "";
+			button.href = "javascript:void(0);"
+			button.id = "startupbutton";
 			button.onclick = function(){
 				//document.getElementById("startupbutton").remove();
-				
+				event.preventDefault();
 				enabledSSN = !enabledSSN;
 				localStorage.setItem('enabledSSN', enabledSSN.toString());
 				
 				if (enabledSSN){
-					document.getElementById("startupbutton").innerHTML = "Disable Overlay Service"
 					document.getElementById("startupbutton").style.backgroundColor = "#af5454";
-					document.getElementById("grabmodebutton").style.display = "block";
+					document.getElementById("grabmodebutton").style.display = "inline-block";
 					
 				} else {
-					document.getElementById("startupbutton").innerHTML = "Enable Overlay Service";
 					document.getElementById("startupbutton").style.backgroundColor = "#54af54";
 					
 					document.querySelectorAll(".btn-push-twitter").forEach(ele=>{
@@ -460,33 +460,29 @@
 					});
 					
 				}
+				return false;
 			};
-			button.id = "startupbutton";
-			button.innerHTML = "Enable Overlay Service";
-			button.style = "border: 0; width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; margin-top: 10px; background-color: #54af54; cursor:pointer;";
+			
+			button.querySelector("a > div").innerText = "Overlay Service";
+			
 			
 			if (!isExtensionOn || !settings.xcapture){
 				button.style.display = "none";
 			}
 			
+			
+			
+			
+			elesMain[elesMain.length - 1].parentNode.insertBefore(button, elesMain[elesMain.length - 1].nextSibling);
 			if (enabledSSN){
-				button.innerHTML = "Disable Overlay Service"
-				button.style.backgroundColor = "#af5454";
+				document.getElementById("startupbutton").style.backgroundColor = "#af5454";
+			} else {
+				document.getElementById("startupbutton").style.backgroundColor = "#54af54";
 			}
 			
-			try{
-				document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label="Tweet"]')[0].parentNode.appendChild(button);
-			} catch (e){
-				try{
-					var eles = document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label][role="link"]');
-					var ele = eles[eles.length - 1].parentNode.parentNode.appendChild(button);
-				} catch (e){
-					
-				}
-			}
-			
-			var button  = document.createElement("button");
-			button.onclick = function(){
+			var button3  = button.cloneNode(true);
+			button3.onclick = function(){
+				event.preventDefault();
 				autoGrabTweets = !autoGrabTweets;
 				console.log("switch to auto mode: " +autoGrabTweets.toString());
 				
@@ -508,34 +504,26 @@
 					});
 					
 				}
+				return false;
 			};
 			
-			button.id = "grabmodebutton";
+			button3.id = "grabmodebutton";
 			if (!autoGrabTweets){
-				button.innerHTML = "Auto-grab Mode";
+				button3.querySelector("a > div").innerHTML = "Auto-grab Mode";
 			} else {
-				button.innerHTML = "Manual Mode";
+				button3.querySelector("a > div").innerHTML = "Manual Mode";
 			}
-			button.style = "border: 0; width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; margin-top: 10px; background-color: #6254af; cursor:pointer;";
 			
 			if (!isExtensionOn || !enabledSSN || !settings.xcapture){
-				button.style.display = "none";
+				button3.style.display = "none";
 			}
 			
-			try{
-				document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label="Tweet"]')[0].parentNode.appendChild(button);
-			} catch (e){
-				try{
-					var eles = document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label][role="link"]');
-					var ele = eles[eles.length - 1].parentNode.parentNode.appendChild(button);
-				} catch (e){
-				}
-			}
-			
-			
-			var button2  = document.createElement("button");
+			button.parentNode.insertBefore(button3, button.nextSibling);
+			document.getElementById("grabmodebutton").style.backgroundColor = "#6254af";
+			var button2  = button.cloneNode(true);
 			button2.onclick = function(){
-				document.getElementById("adbutton").remove();
+				event.preventDefault();
+				document.getElementById("youaresuperfunnybutton").remove();
 				
 				blockingAds = !blockingAds;
 				localStorage.setItem('blockingAds', blockingAds.toString());
@@ -562,7 +550,7 @@
 							document.querySelector("[data-testid='block'] div span").click();
 						} catch(e){
 							try {
-								document.querySelectorAll("[data-testid='placementTracking'] article div[data-testid='caret'] svg")[0].parentNode.click();
+								document.querySelector("[data-testid='placementTracking'] article button[data-testid='caret']").click();
 								setTimeout(function(){
 									try {
 										document.querySelector("[data-testid='block'] div span").click();
@@ -590,26 +578,21 @@
 					
 					
 				},500);
+				return false;
 			};
 			
-			button2.id = "adbutton";
-			button2.innerHTML = "Block Promoted Tweets";
-			button2.style = "border: 0; margin-top: 10px;width:90%;transition: all 0.2s linear; height: 51px; border-radius: 100px; padding: 4px; background-color: rgb(151 151 151); cursor:pointer;";
+			button2.id = "youaresuperfunnybutton";
+			button2.querySelector("a > div").innerHTML = "Block Promoted";
+			
 			
 			if (!isExtensionOn || !settings.xcapture){
 				button2.style.display = "none";
 			}
 			
-			try{
-				document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label="Tweet"]')[0].parentNode.appendChild(button2);
-			} catch (e){
-				try{
-					var eles = document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label][role="link"]');
-					var ele = eles[eles.length - 1].parentNode.parentNode.appendChild(button2);
-				} catch (e){
-					
-				}
-			}
+			button.parentNode.insertBefore(button2, button.nextSibling);
+			
+			document.getElementById("youaresuperfunnybutton").style.backgroundColor = "rgb(151 151 151)";
+			
 
 		}
 	}
