@@ -541,7 +541,6 @@
 
 				setInterval(function(){
 					
-					
 					try {
 						document.querySelector("[data-testid='confirmationSheetConfirm'] div").click();
 						console.log("Blocked an ad");

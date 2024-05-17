@@ -71,15 +71,17 @@
 	}
 	
 	function processMessage(ele){
-		
+	//	console.log(ele);
 		var name="";
 		var nameEle = false;
 		
-		var root = ele.querySelector("[class*='avatar']");
+		var root = ele.childNodes[0];
+		
 		try {
 			nameEle = root.nextSibling.childNodes[0];
 			name = escapeHtml(nameEle.innerText);
 		} catch(e){
+		//	console.log(e);
 			return;
 		}
 		
@@ -99,6 +101,7 @@
 			
 			}
 		}catch(e){
+		//	console.log(e);
 			return;
 		}
 		msg = msg.trim();
@@ -108,8 +111,13 @@
 		
 		var chatimg = '';
 		try {
-			chatimg = root.querySelector("img[src]").src;
+			if ((root.nodeName == "IMG") && root.src){
+				chatimg = root.src;
+			} else {
+				chatimg = root.querySelector("img[src]").src;
+			}
 		} catch(e){
+			//console.log(e);
 			chatimg = "";
 		}
 		
@@ -125,7 +133,7 @@
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
 		data.type = "beamstream";
-		
+		//console.log(data);
 		pushMessage(data);
 		
 	}
