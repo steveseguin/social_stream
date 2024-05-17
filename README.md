@@ -307,7 +307,7 @@ To customize the featured chat overlay, the following URL parameters are availab
 - &swipe (will have featured messages swipe in from the left side)
 - &center (center featured messages)
 
-To customize the color, font-size and styling, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the and using the index.html file. See below:
+To customize the color, font-size and styling, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the and using the featured.html file. See below:
 
 #### More advanced styling customizations
 
@@ -344,7 +344,7 @@ body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
 	padding: 2px 10px !important;
 }
 ```
-Sample CSS of which you can use to customize some of the basic styles. There's not much that you can't do via CSS in this way, but you can edit things further at a code-level if needed. Mac/Linux users may face issues with OBS not liking self-hosted versions of the index/dock file, but it's not an issue for the PC version.
+Sample CSS of which you can use to customize some of the basic styles. There's not much that you can't do via CSS in this way, but you can edit things further at a code-level if needed. Mac/Linux users may face issues with OBS not liking self-hosted versions of the featured/dock file, but it's not an issue for the PC version.
 
 It's important in some cases to add `!important` at the end of some CSS values, to force them into use.
 
@@ -370,7 +370,7 @@ Note that `--highlight-compact` and `--highlight-compact2` are needed if using &
 
 ### Changing CSS without OBS
 
-You can also pass custom CSS to the dock and index page via URL parameters using either &css or &b64css.
+You can also pass custom CSS to the dock and featured page via URL parameters using either &css or &b64css.
 
 `&css=https://youdomain.com/style.css` or `&b64css=YOUR_CSS_CODE_HERE`
 
@@ -409,14 +409,14 @@ Check it out here: https://socialstream.ninja/sampleoverlay?session=XXXXX
 
 #### Custom Javascript
 
-You can inject a bit of javascript into the dock or index pages using `&js={URL ENCODED JAVASCRIPT}`
+You can inject a bit of javascript into the dock or featured pages using `&js={URL ENCODED JAVASCRIPT}`
 
 For example, 
-[https://socialstream.ninja/index.html?session=test123&js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js](https://socialstream.ninja/index.html?session=test123&js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js)
+[https://socialstream.ninja/featured.html?session=test123&js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js](https://socialstream.ninja/featured.html?session=test123&js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js)
 
 #### Auto responding / custom actions
 
-You can create your own custom auto-responding triggers or other actions by including a `custom.js` file. You don't need to host the index or dock file for this.
+You can create your own custom auto-responding triggers or other actions by including a `custom.js` file. You don't need to host the featured or dock file for this.
 
 Included in the code is the `custom_sample.js` file, which you can rename to custom.js to get started. Included in it is the `&auto1` trigger, which  auto responds "1" to any message that is also "1".  You need to add `&auto1` to the dock's URL to activate it.
 
@@ -669,7 +669,7 @@ Please note, do not share your Social Stream session ID with others as they will
 
 Text messages can be converted to speech for free, assuming your system supports TTS.  On my Windows machine running Chrome/Edge/OBS, it works just fine.  I have it set to English-US by default, but you can change the language to something else by editing the URL and adjusting the language code.
 
-ie: `index.html?session=XXXXXX&speech=en-US` or `socialstream.ninja/?session=xxx&&speech=en-US`
+ie: `featured.html?session=XXXXXX&speech=en-US` or `socialstream.ninja/?session=xxx&&speech=en-US`
 
 Please visit https://socialstream.ninja/tts for a list of available speech options for your specific browser + system. Google Chrome and MS Edge will offer both local and cloud-hosted language options, while "free" open-source browsers, like Chromium or Firefox may only have access to local system languages or none at all. Local options should work within the OBS browser source, such as the ones shown in the image below, but non-local free options will need to be used via Chrome or Edge.
 
@@ -714,7 +714,7 @@ Go to https://cloud.google.com/text-to-speech -> Enable the service, and then ge
 
 ![image](https://user-images.githubusercontent.com/2575698/180443408-5cc0f7a9-c015-420d-9541-fd94a520ef25.png)
 
-This premium text-to-speech is supported on the index.html (the featured chat overlay) and dock.html page. If  you stop the TTS with the button in the dock's menu, it will stop playback immediately in the dock. It will also delete any queued messages to be spoken.
+This premium text-to-speech is supported on the featured.html (the featured chat overlay) and dock.html page. If  you stop the TTS with the button in the dock's menu, it will stop playback immediately in the dock. It will also delete any queued messages to be spoken.
 
 You need at least &speech and &ttskey to enable the premium TTS, but there are customizations:
 ```
@@ -734,9 +734,9 @@ Anyways, documentation on getting start with finding a voice you want to use and
 API Social Stream is using: https://api.elevenlabs.io/docs#/text-to-speech/Text_to_speech_v1_text_to_speech__voice_id__stream_post
 Available voices: https://api.elevenlabs.io/docs#/voices/Get_voices_v1_voices_get
 
-To use this with Social Stream, you'll need to be using the featured-chat index.html or dock.html page, and you'll need to provide your api key there.
+To use this with Social Stream, you'll need to be using the featured-chat featured.html or dock.html page, and you'll need to provide your api key there.
 
-Example URL with options `https://socialstream.ninja/index.html?session=SESSIONIDHERE&tts&elevenlabskey=YOURELEVENLABSAPIKEYHERE&latency=4&voice=VR6AewLTigWG4xSOukaG`
+Example URL with options `https://socialstream.ninja/featured.html?session=SESSIONIDHERE&tts&elevenlabskey=YOURELEVENLABSAPIKEYHERE&latency=4&voice=VR6AewLTigWG4xSOukaG`
 
 - &tts is also required to enable TTS in general
 - &voice={VOICEIDHERE} , is the voice ID you want to use.
@@ -751,8 +751,8 @@ Please NOTE: Make sure to CLICK on the browser page after it loads, else audio m
 
 There is a toggle that lets you show the source of the chat messages.
 
-- &branded will show the channel-icon; Youtube and Twitch channels supported.  Use with the dock or index file.
-- &showsource can be added to the index.file, to show the main site the source is from; ie: Youtube, Facebook.
+- &branded will show the channel-icon; Youtube and Twitch channels supported.  Use with the dock or featured file.
+- &showsource can be added to the featured.file, to show the main site the source is from; ie: Youtube, Facebook.
 
 ![image](https://user-images.githubusercontent.com/2575698/166864138-00cd1e1c-2149-473f-be8d-d07a8d400c07.png)
 
