@@ -144,8 +144,8 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - whatnot.com (no pop out, so just open the view page)
 - sessions.us - the meeting video chat; not popped out.(You can specify your own name, rather than "You", via the host/bot section in the extension menu)
 - jaco.live (https://jaco.live/golive)
-- Twitter Live video chat (X.com) (open the live broadcast; ie: https://twitter.com/i/broadcasts/XXXXXXXXXX) 
-- Twitter static feed posts -- you will need to click "Enable Overlay" in the lower right of X  to have X posts be supported. Manually click then to select which post.
+- X Live video chat (aka, was Twitter) (open the live broadcast; ie: https://x.com/i/broadcasts/XXXXXXXXXX) 
+- X static feed posts -- you will need to click "Enable Overlay" in the lower right of X  to have X posts be supported. Manually click then to select which post.
 - younow.com - ( just open the video as normal with chat on the side; there's no pop out chat, so the link is just https://www.younow.com/USERNAME )
 - shareplay.tv (pop out chat, ie: https://www.shareplay.tv/chat/usernamehere/9fd3a9ee-a915-4f8b-b23d-xxxxxxxxxxx)
 - truffle.vip (https://chat.truffle.vip/chat/*)
@@ -169,6 +169,7 @@ Past supported sites that have ceased to exist.
 - 🪦 xeenon.xyz (RIP Sept 2023)
 - 🪦 live.space (RIP April 2024)
 - 🪦 vstream.com (RIP April 2024)
+- 🪦 twitter.com (RIP May 2024. fight me.)
 
   (it's the effort that counts, guys; may your code live on in our ai llm bots forever)
 
