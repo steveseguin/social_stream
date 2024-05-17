@@ -558,6 +558,39 @@ eventSource.onerror = function(error) {
 };
 
 
+#### Message structure
+
+Messages sent over VDO.Ninja contain normally a display name, avatar image of the user, source type, and normally a few other optional fields, like donations.
+
+Typically, some form of message content is needed to be accepted as a valid message. If just a name for example, that will typically be rejected as an empty message.
+
+While the data structure of the message is not formalized yet, as it's evolving still, you can find the current basic outline of it below.
+
+key name | value type | description
+--- | --- | ---
+chatname | string | Display name
+chatmessage | string | Chat message
+chatimg | string | URL or DataBlob (under ~55KB) of the user's avatar image
+type | lower-case string | the pre-qualified name of the source. eg: `twitch`
+textonly | boolean | Whether the chat message is only plain text; or does it contain HTML, etc.
+hasDonation | string | The donation amount with its units.  eg: "3 roses" or "$50 USD".
+chatbadges | array | An array of URLs/Objects. If an object, it may define itself as an img/svg and other attributes
+contentimg | string | URL to a single image or mp4/webm video
+membership | string | Membership event description / membership action / type or whatever
+subtitle | string | For added detail of a membership event, like number of months they have been a member.
+moderator | boolean | Whether they are a moderator in chat or not
+event | string or boolean | Whether this message should be treated as an event, and possible, what type of event it is
+admin | boolean | Whether they are a "priviledged" user or not
+bot | boolean | Whether the user is a bot / host or not
+question | boolean | Whether the message is a certified question or not
+uniqueid | string | Some form of unique user ID / username. Useful if the display name isn't unique or if needing the user ID external API needs
+karma | float | 1.0 is a happy message; 0.0 is negative message, so 0.1 is likely bad. AI generated
+id | integer | This is maintained mostly internally, but it's an internal message ID value
+private | boolean | whether this is a private/direct message; typically won't be made public by default
+nameColor | string | Manually specify the color of a display name by passing a color value
+textColor | string | Manually specify the background color of a featured message
+backgroundColor | string | Manually specify the color of a featured message's main text color
+
 #### Remote server API support (publish messages to third parties)
 
 Remote API support is available via dock page or extensions.  You can currently auto-publish messages via the dock with the &autoshow parameter, but there's also an option to publish to the featured chat via the dock directly. To capture these messages, you can use the websocket API server, which requires enabling a toggle in the General mechanics section. You can also publish messages via POST/PUT to an HTTP webserver, rather than connecting with websockets; there's a few options for singular / h2r specifically.
