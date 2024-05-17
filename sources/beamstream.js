@@ -74,18 +74,29 @@
 		
 		var name="";
 		var nameEle = false;
+		
+		var root = ele.querySelector("[class*='avatar']");
 		try {
-			nameEle = ele.querySelector("[class*='name']");
+			nameEle = root.nextSibling.childNodes[0];
 			name = escapeHtml(nameEle.innerText);
 		} catch(e){
 			return;
 		}
 		
 		var msg = "";
+		var contentimg = "";
 		try {
-			while (nameEle.nextSibling){
-				nameEle = nameEle.nextSibling;
-				msg += getAllContentNodes(nameEle) + " ";
+			if (nameEle.nextSibling){
+			
+				if ((nameEle.nextSibling.nodeName == "IMG") && nameEle.nextSibling.src){
+					contentimg = nameEle.nextSibling.src;
+				} else {
+					while (nameEle.nextSibling){
+						nameEle = nameEle.nextSibling;
+						msg += getAllContentNodes(nameEle) + " ";
+					}
+				}
+			
 			}
 		}catch(e){
 			return;
@@ -97,7 +108,7 @@
 		
 		var chatimg = '';
 		try {
-			chatimg = ele.querySelector("img[class*='avatar'][src]").src;
+			chatimg = root.querySelector("img[src]").src;
 		} catch(e){
 			chatimg = "";
 		}
@@ -111,6 +122,7 @@
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";
+		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
 		data.type = "beamstream";
 		
@@ -167,7 +179,7 @@
 				for (var i=0;i<nodes.length;i++){
 					try {
 						if (nodes[i] && nodes[i].nodeName && nodes[i].nodeName == "DIV"){
-							if (nodes[i].className.includes("message")){
+							if (nodes[i].parentNode && nodes[i].parentNode.classList.contains("scroll")){
 								if (nodes[i].dataset.mid){
 									continue;
 								}
