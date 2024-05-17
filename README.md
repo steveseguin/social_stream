@@ -584,7 +584,7 @@ event | string or boolean | Whether this message should be treated as an event, 
 admin | boolean | Whether they are a "priviledged" user or not
 bot | boolean | Whether the user is a bot / host or not
 question | boolean | Whether the message is a certified question or not
-uniqueid | string | Some form of unique user ID / username. Useful if the display name isn't unique or if needing the user ID external API needs
+userid | string | Some form of unique user ID / username for the source type. Useful if the display name isn't unique or if needing the user ID external API needs, like user blocking
 karma | float | 1.0 is a happy message; 0.0 is negative message, so 0.1 is likely bad. AI generated
 id | integer | This is maintained mostly internally, but it's an internal message ID value
 private | boolean | whether this is a private/direct message; typically won't be made public by default
