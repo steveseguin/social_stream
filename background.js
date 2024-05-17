@@ -2723,6 +2723,11 @@ function setupSocket() {
 					msg.destination = decodeURIComponent(data.target);
 				}
 				resp = processResponse(msg);
+			} else if (data.action && data.action === "blockUser" && data.value) {
+				var msg = {};
+				let source = data.target.trim().toLowerCase() || "*";
+				let username = data.value.trim();
+				resp = blockUser({chatname:username, type:source});
 			} else if (!data.action && data.extContent) {
 				// Not flattened
 				try {
@@ -3642,35 +3647,59 @@ function processIncomingRequest(request, UUID = false) {
 					sendDataP2P({ tabsList: tabsList }, UUID);
 				});
 			}
-		} else if (request.action === "blockUser" && request.value && request.value.chatname && request.value.type) {
-			// Initialize blacklist settings if not present
-			if (!settings.blacklistusers) {
-				settings.blacklistusers = { textsetting: "" };
-			}
-
-			const blacklist = settings.blacklistusers.textsetting.split(",").map(user => {
-				const parts = user.split(":").map(part => part.trim());
-				return { username: parts[0], type: parts[1] || "*" };
-			});
-
-			const userToBlock = { username: request.value.chatname, type: request.value.type };
-			const isAlreadyBlocked = blacklist.some(({ username, type }) => userToBlock.username === username && (userToBlock.type === type || type === "*"));
-
-			if (!isAlreadyBlocked) {
-				// Update blacklist settings
-				settings.blacklistusers.textsetting += (settings.blacklistusers.textsetting ? "," : "") + userToBlock.username + ":" + userToBlock.type;
-				chrome.storage.local.set({ settings: settings });
-				// Check for errors in chrome storage operations
-				if (chrome.runtime.lastError) {
-					console.error("Error updating settings:", chrome.runtime.lastError.message);
-				}
-			}
-
-			if (isExtensionOn) {
-				sendToDestinations({ blockUser: userToBlock });
-			}
+		} else if (request.action === "blockUser") {
+			blockUser(request.value);
 		}
 	}
+}
+
+function blockUser(data){
+	// Initialize blacklist settings if not present
+	
+	if (!(data && data.chatname && data.type)){
+		console.warn("Block request doesn't contain chatname and type. '*' can be used for all types.");
+		return false;
+	}
+	try {
+		if (!settings.blacklistusers) {
+			settings.blacklistusers = { textsetting: "" };
+		}
+		let resave = false;
+		if (!settings.blacklistuserstoggle){
+			settings.blacklistuserstoggle = {};
+			settings.blacklistuserstoggle.setting = true;
+			resave = true;
+		}
+
+		const blacklist = settings.blacklistusers.textsetting.split(",").map(user => {
+			const parts = user.split(":").map(part => part.trim());
+			return { username: parts[0], type: parts[1] || "*" };
+		});
+
+		const userToBlock = { username: data.chatname, type: data.type };
+		const isAlreadyBlocked = blacklist.some(({ username, type }) => userToBlock.username === username && (userToBlock.type === type || type === "*"));
+
+		if (!isAlreadyBlocked) {
+			// Update blacklist settings
+			settings.blacklistusers.textsetting += (settings.blacklistusers.textsetting ? "," : "") + userToBlock.username + ":" + userToBlock.type;
+			chrome.storage.local.set({ settings: settings });
+			// Check for errors in chrome storage operations
+			if (chrome.runtime.lastError) {
+				console.error("Error updating settings:", chrome.runtime.lastError.message);
+			}
+		} else if (resave){
+			chrome.storage.local.set({ settings: settings });
+		}
+
+		if (isExtensionOn) {
+			sendToDestinations({ blockUser: userToBlock });
+		}
+	} catch(e){
+		console.error(e);
+		return false;
+	}
+	
+	return true;
 }
 
 eventer(messageEvent, async function (e) {
