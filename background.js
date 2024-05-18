@@ -1905,7 +1905,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					sendResponse({ state: isExtensionOn });
 				}
 
-				if (request.message.type == "youtube") {
+				if ((request.message.type == "youtube") || (request.message.type == "youtubeshorts")){
 					if (sender.tab.url) {
 						var brandURL = getYoutubeAvatarImage(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
 						if (brandURL) {
@@ -2447,7 +2447,7 @@ function sendToH2R(data) {
 
 			if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
 				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
-			} else if (data.type && data.type == "youtube" && data.chatimg) {
+			} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				msg.authorDetails.profileImageUrl = chatimg.replace("=s64-", "=s256-");
 			} else {
@@ -2515,7 +2515,7 @@ function sendToS10(data) {
 
 			if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
 				msg.displayPictureUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
-			} else if (data.type && data.type == "youtube" && data.chatimg) {
+			} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				msg.displayPictureUrl = chatimg.replace("=s64-", "=s256-");
 			} else if (data.chatimg) {
@@ -2565,7 +2565,7 @@ function sendToPost(data) {
 
 			if (data.type && !data.chatimg && (data.type == "twitch") && data.chatname) {
 				data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
-			} else if (data.type && data.type == "youtube" && data.chatimg) {
+			} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				data.chatimg = chatimg.replace("=s64-", "=s256-");
 			} else {
@@ -2886,7 +2886,7 @@ async function openchat(target = null) {
 
 	// Opened in new window
 
-	if ((target == "youtube" || !target) && settings.youtube_username) {
+	if (((target == "youtube") || (target == "youtubeshorts") || !target) && settings.youtube_username) {
 		if (!settings.youtube_username.textsetting.startsWith("@")) {
 			settings.youtube_username.textsetting = "@" + settings.youtube_username.textsetting;
 		}
@@ -3464,7 +3464,7 @@ function sendToDisk(data) {
 			if (typeof data == "object") {
 				data.timestamp = new Date().getTime();
 
-				if (data.type && data.chatimg && data.type == "youtube") {
+				if (data.type && data.chatimg && ((data.type == "youtube") || (data.type == "youtubeshorts"))) {
 					data.chatimg = data.chatimg.replace("=s32-", "=s512-"); // high, but meh.
 					data.chatimg = data.chatimg.replace("=s64-", "=s512-");
 				}
@@ -3482,7 +3482,7 @@ function sendToDisk(data) {
 			if (typeof data == "object") {
 				data.timestamp = new Date().getTime();
 
-				if (data.type && data.chatimg && data.type == "youtube") {
+				if (data.type && data.chatimg && ((data.type == "youtube") || (data.type == "youtubeshorts"))) {
 					data.chatimg = data.chatimg.replace("=s32-", "=s256-");
 					data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 				}

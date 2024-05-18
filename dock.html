@@ -3348,7 +3348,7 @@
 				let chatimg = "";
 				if (data.type && (data.type == "twitch") && data.chatname && !data.chatimg) {
 					chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
-				} else if (data.type && data.type == "youtube" && data.chatimg) {
+				} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
 					chatimg = data.chatimg.replace("=s32-", "=s256-");
 					chatimg = chatimg.replace("=s64-", "=s256-");
 				} else {
@@ -5348,7 +5348,7 @@
 				if (thirdPartyAPI) {
 					// we upscale using a generic upsizing function for third parties.
 					thirdPartyAPI(data); // not going to send base64 to the third party API, since that would kill my server, but third parties won't expect a blob.
-				} else if (data.type && data.type == "youtube" && data.chatimg) {
+				} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
 					// youtube's images are a bit tricky; larger images don't always exist.
 					try {
 						toDataURL(data.chatimg, function (base64Image) {

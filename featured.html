@@ -741,7 +741,7 @@
 						if (typeof data == "object") {
 							data.timestamp = new Date().getTime();
 
-							if (data.type && data.chatimg && data.type == "youtube") {
+							if (data.type && data.chatimg && ((data.type == "youtube") || (data.type == "youtubeshorts"))) {
 								data.chatimg = data.chatimg.replace("=s32-", "=s512-"); // high, but meh.
 								data.chatimg = data.chatimg.replace("=s64-", "=s512-");
 							}
@@ -1870,7 +1870,7 @@
 							if (data.hasDonation) {
 								if (data.type === "twitch") {
 									donationHTML = '<div class="donation"><div class="donation-title">CHEERS</div><div class="subtitle">' + data.hasDonation + "</div></div>";
-								} else if (data.type === "youtube") {
+								} else if ((data.type == "youtube") || (data.type == "youtubeshorts")) {
 									if (memebershipHTML) {
 										donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
 									} else {
@@ -2147,7 +2147,7 @@
 					}
 
 					if (newImageHandle && data.contents && data.contents.chatimg) {
-						if (data.contents.type && data.contents.chatimg && data.contents.type == "youtube") {
+						if (data.contents.type && data.contents.chatimg && ((data.contents.type == "youtube") || (data.contents.type == "youtubeshorts"))) {
 							data.contents.chatimg = data.contents.chatimg.replace("=s32-", "=s512-"); // high, but meh.
 							data.contents.chatimg = data.contents.chatimg.replace("=s64-", "=s512-");
 						}

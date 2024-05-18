@@ -428,11 +428,16 @@
 		data.subtitle = subtitle;
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube";
+		
+		if (youtubeShorts){
+			data.type = "youtubeshorts";
+		}
+		
 		data.event = eventType;
 		
-		if (eventType){
-			console.log(data);
-		}
+		//if (eventType){
+		//	console.log(data);
+		//}
 
 		try {
 			chrome.runtime.sendMessage(
@@ -448,6 +453,19 @@
 	var BTTV = false;
 	var videosMuted = false;
 	var SEVENTV = false;
+	
+	function containsShorts(url) {
+		const urlObj = new URL(url);
+		const searchParams = new URLSearchParams(urlObj.search);
+		const hasShortsParam = searchParams.has('shorts');
+		const hasShortsPath = urlObj.pathname.includes('/shorts');
+		return hasShortsParam || hasShortsPath;
+	}
+	
+	var youtubeShorts = false;
+	if (containsShorts(window.location.href)){
+		youtubeShorts = true;
+	}
 
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		try {
