@@ -60,6 +60,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
   - [Other issues](#other-issues)
 - [Requesting a site](#requesting-a-site)
 - [Adding sites yourself](#adding-sites-yourself)
+- [OBS remote scene support](#obs-remote-scene-support)
 - [Support](#support)
 - [Donations](#donations)
 - [Icons](#icons)
