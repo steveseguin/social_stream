@@ -838,6 +838,20 @@ ie: `https://github.com/steveseguin/social_stream/commit/942fce2697d5f9d51af6da6
 
 For a simple site, a developer should need just 30 minutes to an hour to get a site supported. A more complicated and tricky site may take a few hours or longer, depending on the developer's skill.
 
+### OBS remote scene support
+
+Remote OBS control/stats are available with Social Stream, however they will require adding a Social Stream page to OBS as a browser source, along with setting that browser source's page permission to an appropriate level.
+
+To access scene state information, user access permissions are at least needed, while the ability to start/stop the stream will require full permissions.  A use for this is to access and display the current OBS scene state if doing an IRL stream with the dock open on mobile.
+
+![image](https://github.com/steveseguin/social_stream/assets/2575698/a52758a3-6eb9-4224-9bec-13f31a78c617)
+
+Adding a Social Stream page as an OBS custom dock will not work in providing the required permissions; it needs to be a browser source currently.  This could be changed in the future
+
+There are some options built into Social Stream to control OBS scenes/streaming state, and those will be expanded over time. Guests can change scenes with the `!cycle` option, when enabled, for example. 
+
+Given that Social Stream uses VDO.Ninja as its transport engine, you also can use VDO.Ninja [remote control software[(https://vdo.ninja/examples/obsremote) to have dedicated remote control pages that can work in conjuction with Social Stream. `&remote=XXXX` can be used on either VDO.Ninja or Social Stream's dock.html page to enable VDO.Ninja-based remote control when loaded in OBS with the right permissions; refer to the VDO.Ninja documentation on this. This is all pretty complicated though, requiring just the right URL parameters, but it's possible.
+
 ### Support
 
 You can find me on discord over at https://discord.socialstream.ninja or [https://discord.gg/7U4ERn9y](https://discord.gg/vFU8AuwNf3), offering free support in channel #chat.overlay-support 
