@@ -644,7 +644,32 @@ function update(response, sync=true){
 								var ele = document.querySelector("input[data-param2='"+key+"']");
 								if (ele){
 									ele.checked = response.settings[key].param2;
-									updateSettings(ele, sync);
+									if (!key.includes("=")){
+										if ("numbersetting2" in response.settings[key]){
+											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting2));
+										} else if (document.querySelector("input[data-numbersetting2='"+key+"']")){
+											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting2='"+key+"']").value));
+										} else {
+											updateSettings(ele, sync); 
+										}
+									} else {
+										updateSettings(ele, sync);
+									}
+								} else if (key.includes("=")){
+									var keys = key.split('=');
+									ele = document.querySelector("input[data-param2='"+keys[0]+"']");
+									if (ele){
+										ele.checked = response.settings[keys[0]].param2;
+										if (keys[1]){
+											var ele2 = document.querySelector("input[data-numbersetting2='"+keys[0]+"']");
+											if (ele2){
+												ele2.value = parseFloat(keys[1], keys[1]);
+											}
+											updateSettings(ele, sync, parseFloat(keys[1]));
+										} else{
+											updateSettings(ele, sync);
+										}
+									}
 								}
 							}
 							if ("param3" in response.settings[key]){
@@ -716,6 +741,18 @@ function update(response, sync=true){
 									var ele = document.querySelector("input[data-param1='"+key+"']");
 									if (ele && ele.checked){
 										updateSettings(ele, false, parseFloat(response.settings[key].numbersetting));
+									}
+								}
+							}
+							if ("numbersetting2" in response.settings[key]){
+								var ele = document.querySelector("input[data-numbersetting2='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].numbersetting2;
+									updateSettings(ele, sync);
+									
+									var ele = document.querySelector("input[data-param2='"+key+"']");
+									if (ele && ele.checked){
+										updateSettings(ele, false, parseFloat(response.settings[key].numbersetting2));
 									}
 								}
 							}
@@ -942,6 +979,8 @@ function updateSettings(ele, sync=true, value=null){
 	if (ele.target){
 		ele = this;
 	}
+	
+	console.log(ele);
 	if (ele.dataset.param1){
 		if (ele.checked){
 			
@@ -1152,11 +1191,20 @@ function updateSettings(ele, sync=true, value=null){
 	//
 	} else if (ele.dataset.param2){
 		if (ele.checked){
-			document.getElementById("overlay").raw = updateURL(ele.dataset.param2, document.getElementById("overlay").raw);
-		} else {
-			//document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace(ele.dataset.param2, "");
+			if (value!==null){
+				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
+			} else if (document.querySelector("input[data-numbersetting2='"+ele.dataset.param2+"']")){
+				value = document.querySelector("input[data-numbersetting2='"+ele.dataset.param2+"']").value;
+				
+				document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.param2);
+				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
+			} else {
+				document.getElementById("overlay").raw = updateURL(ele.dataset.param2, document.getElementById("overlay").raw);
+			}
+		}  else {
 			document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.param2);
 		}
+			
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
@@ -1335,7 +1383,19 @@ function updateSettings(ele, sync=true, value=null){
 		} else {
 			return;
 		}
+	} else if (ele.dataset.numbersetting2){ 
 		
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting2", setting: ele.dataset.numbersetting2, "value": ele.value}, function (response) {});
+		}
+		
+		if (document.querySelector("input[data-param2='"+ele.dataset.numbersetting2+"']") && document.querySelector("input[data-param2='"+ele.dataset.numbersetting2+"']").checked){
+			document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw,ele.dataset.numbersetting2);
+			document.getElementById("overlay").raw = updateURL(ele.dataset.numbersetting2+"="+ ele.value, document.getElementById("overlay").raw);
+		} else {
+			return;
+		}
+			
 	} else if (ele.dataset.special){
 		
 		if (ele.dataset.special==="session"){
