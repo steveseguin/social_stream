@@ -4568,36 +4568,36 @@
 					};
 				} else if ("blockUser" in data) {
 					try {
-						if (data.blockUser.chatname && data.blockUser.type) {
+						if (data.blockUser.username && data.blockUser.type) {
 							if (!localBlockUserList) {
 								localBlockUserList = {};
 							}
 
-							if (localBlockUserList[data.blockUser.chatname]) {
-								if (!localBlockUserList[data.blockUser.chatname].includes(data.blockUser.type)) {
-									localBlockUserList[data.blockUser.chatname].push(data.blockUser.type);
+							if (localBlockUserList[data.blockUser.username]) {
+								if (!localBlockUserList[data.blockUser.username].includes(data.blockUser.type)) {
+									localBlockUserList[data.blockUser.username].push(data.blockUser.type);
 								}
 							} else {
-								localBlockUserList[data.blockUser.chatname] = [data.blockUser.type];
+								localBlockUserList[data.blockUser.username] = [data.blockUser.type];
 							}
 
-							document.querySelectorAll("[data-chatname='" + data.blockUser.chatname + "'][data-source-type='" + data.blockUser.type + "']").forEach(ele => {
+							document.querySelectorAll("[data-chatname='" + data.blockUser.username + "'][data-source-type='" + data.blockUser.type + "']").forEach(ele => {
 								ele.remove();
 							});
-						} else if (data.blockUser.chatname) {
+						} else if (data.blockUser.username) {
 							if (!localBlockUserList) {
 								localBlockUserList = {};
 							}
 
-							if (localBlockUserList[data.blockUser.chatname]) {
-								if (!localBlockUserList[data.blockUser.chatname].includes("*")) {
-									localBlockUserList[data.blockUser.chatname].push("*");
+							if (localBlockUserList[data.blockUser.username]) {
+								if (!localBlockUserList[data.blockUser.username].includes("*")) {
+									localBlockUserList[data.blockUser.username].push("*");
 								}
 							} else {
-								localBlockUserList[data.blockUser.chatname] = ["*"];
+								localBlockUserList[data.blockUser.username] = ["*"];
 							}
 
-							document.querySelectorAll("[data-chatname='" + data.blockUser.chatname + "']").forEach(ele => {
+							document.querySelectorAll("[data-chatname='" + data.blockUser.username + "']").forEach(ele => {
 								ele.remove();
 							});
 						}
