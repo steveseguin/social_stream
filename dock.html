@@ -5154,39 +5154,45 @@
 
 			var localBlockUserList = false;
 			function blockUser(element) {
-				
-				var chatName = element.dataset.chatname;
-				var chatImg = element.dataset.chatimg;
-				var userID = element.dataset.userid;
-				var type = element.dataset.sourceType;
-				
-				if (!localBlockUserList) {
-					localBlockUserList = {};
-				}
-				if (chatName && type) {
-					if (localBlockUserList[chatName]) {
-						if (!(type in localBlockUserList[chatName])) {
-							localBlockUserList[chatName].push(type);
+				try{
+					var chatName = element.dataset.chatname;
+					var chatImg = element.dataset.chatimg || "";
+					var type = element.dataset.sourceType;
+					
+					//console.log(chatName, type);
+					
+					if (!localBlockUserList) {
+						localBlockUserList = {};
+					}
+					if (chatName && type) {
+						if (localBlockUserList[chatName]) {
+							if (!(type in localBlockUserList[chatName])) {
+								localBlockUserList[chatName].push(type);
+							}
+						} else {
+							localBlockUserList[chatName] = [type];
 						}
-					} else {
-						localBlockUserList[chatName] = [type];
+						document.querySelectorAll("[data-chatname='" + chatName + "'][data-source-type='" + type + "']").forEach(ele => {
+							ele.remove();
+						});
+						
+						let sendBlob = {};
+						sendBlob.chatname = chatName;
+						sendBlob.type = type;
+						
+						if (element.rawContents && element.rawContents.userid){
+							sendBlob.userid = element.rawContents.userid;
+						}
+						if (chatImg){
+							sendBlob.chatimg = chatImg;
+						}
+						
+						//console.log(sendBlob);
+						
+						send2Extension({ action: "blockUser", value: sendBlob });
 					}
-					document.querySelectorAll("[data-chatname='" + chatName + "'][data-source-type='" + type + "']").forEach(ele => {
-						ele.remove();
-					});
-					
-					let sendBlob = {};
-					sendBlob.chatname = chatName;
-					sendBlob.type = type;
-					
-					if (element.dataset.userid){
-						sendBlob.userid = element.dataset.userid;
-					}
-					if (element.dataset.chatimg){
-						sendBlob.chatimg = element.dataset.chatimg;
-					}
-					
-					send2Extension({ action: "blockUser", value: sendBlob });
+				} catch(e){
+					console.error(e);
 				}
 			}
 
@@ -5811,6 +5817,12 @@
 					} else {
 						data.hasDonation = "";
 					}
+					
+					var rawChatImg = false;
+					if (data.chatimg) {
+						rawChatImg = data.chatimg;
+					}
+					
 					var rawName = false;
 
 					if (data.chatname) {
@@ -6232,6 +6244,9 @@
 					}
 					if (rawName) {
 						node.dataset.chatname = rawName; // before its been parsed; this allows for clean deletion.
+					}
+					if (rawChatImg){
+						node.dataset.chatimg = rawChatImg;
 					}
 					// this part is used to filter out emojis, but also calculate the character-length of a message, to know how long to show it for
 					// emojis and images are counted with char-length zero-value
