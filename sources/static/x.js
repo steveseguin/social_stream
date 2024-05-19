@@ -384,9 +384,12 @@
 	function checkButtons(){
 		
 		if (!isExtensionOn || !enabledSSN || !settings.xcapture){return;}
-		
-		var bases = document.querySelector('main[role="main"]').querySelectorAll('article[role="article"]');
-		bases = [...bases].reverse();
+		try{
+			var bases = document.querySelector('main[role="main"]').querySelectorAll('article[role="article"]');
+			bases = [...bases].reverse();
+		} catch(e){
+			return;
+		}
 		
 		for (var i=0;i<bases.length;i++) {
 			
@@ -469,9 +472,6 @@
 			if (!isExtensionOn || !settings.xcapture){
 				button.style.display = "none";
 			}
-			
-			
-			
 			
 			elesMain[elesMain.length - 1].parentNode.insertBefore(button, elesMain[elesMain.length - 1].nextSibling);
 			if (enabledSSN){
