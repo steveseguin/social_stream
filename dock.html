@@ -5154,8 +5154,12 @@
 
 			var localBlockUserList = false;
 			function blockUser(element) {
+				
 				var chatName = element.dataset.chatname;
+				var chatImg = element.dataset.chatimg;
+				var userID = element.dataset.userid;
 				var type = element.dataset.sourceType;
+				
 				if (!localBlockUserList) {
 					localBlockUserList = {};
 				}
@@ -5170,7 +5174,19 @@
 					document.querySelectorAll("[data-chatname='" + chatName + "'][data-source-type='" + type + "']").forEach(ele => {
 						ele.remove();
 					});
-					send2Extension({ action: "blockUser", value: { chatname: chatName, type: type } });
+					
+					let sendBlob = {};
+					sendBlob.chatname = chatName;
+					sendBlob.type = type;
+					
+					if (element.dataset.userid){
+						sendBlob.userid = element.dataset.userid;
+					}
+					if (element.dataset.chatimg){
+						sendBlob.chatimg = element.dataset.chatimg;
+					}
+					
+					send2Extension({ action: "blockUser", value: sendBlob });
 				}
 			}
 

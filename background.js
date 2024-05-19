@@ -3676,7 +3676,12 @@ function blockUser(data){
 			return { username: parts[0], type: parts[1] || "*" };
 		});
 
-		const userToBlock = { username: data.chatname, type: data.type };
+		const userToBlock = { username: (data.userid || data.chatname), type: data.type };
+		
+		if (data.chatimg && !data.chatimg.endsWith("./unknown.png")){
+			userToBlock.chatimg = data.chatimg;
+		}
+		
 		const isAlreadyBlocked = blacklist.some(({ username, type }) => userToBlock.username === username && (userToBlock.type === type || type === "*"));
 
 		if (!isAlreadyBlocked) {
