@@ -47,6 +47,11 @@
 		}
 	}
 
+	function isEmoji(char) {
+		const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
+		return emojiRegex.test(char);
+	}
+	
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
@@ -77,6 +82,10 @@
 						node.src = node.src+"";
 					}
 					resp += node.outerHTML;
+				} else if (node.nodeName == "IMG"){
+					if (node.alt && isEmoji(node.alt)){
+						resp += escapeHtml(node.alt);
+					}
 				}
 			}
 		});
