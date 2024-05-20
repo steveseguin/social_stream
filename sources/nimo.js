@@ -54,7 +54,7 @@
 	  
 	  try {
 		var nameEle = ele.querySelector(".nm-message-nickname");
-		var chatname = escapeHtml(nameEle.innerText);
+		var chatname = escapeHtml(nameEle.innerText).trim();
 		try {
 			nameColor = nameEle.style.color;
 		} catch(e){}
