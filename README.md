@@ -12,7 +12,7 @@ Consolidates your live social messaging streams and more
 - Queuing of messages for later highlighting
 - Free community support at https://discord.socialstream.ninja
 
-Social Stream Ninja makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
+Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
 
 ![image](https://user-images.githubusercontent.com/2575698/148505639-972eec38-7d8b-4bf3-9f15-2bd02182591e.png) ![image](https://user-images.githubusercontent.com/2575698/148505691-8a08e7b0-29e6-4eb5-9632-9dbcac50c204.png)
 
