@@ -1,4 +1,4 @@
-# Social Stream
+# Social Stream Ninja
 Consolidates your live social messaging streams and more
 
  [Jump to Download and Install instructions](#to-install)
@@ -12,7 +12,7 @@ Consolidates your live social messaging streams and more
 - Queuing of messages for later highlighting
 - Free community support at https://discord.socialstream.ninja
 
-Social Stream makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
+Social Stream Ninja makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
 
 ![image](https://user-images.githubusercontent.com/2575698/148505639-972eec38-7d8b-4bf3-9f15-2bd02182591e.png) ![image](https://user-images.githubusercontent.com/2575698/148505691-8a08e7b0-29e6-4eb5-9632-9dbcac50c204.png)
 
@@ -44,7 +44,7 @@ Social Stream makes use of VDO.Ninja's data-transport API to stream data securel
 - [View chat while gaming; always-on-top](#view-chat-while-gaming-always-on-top)
 - [Hotkey (MIDI / Streamlabs) support](#hotkey-midi--streamlabs-support)
 - [Server API support](#server-api-support)
-  - [Social Stream's server API (ingest and clear messages via remote request)](#social-streams-server-api-ingest-and-clear-messages-via-remote-request)
+  - [Social Stream Ninja's server API (ingest and clear messages via remote request)](#social-streams-server-api-ingest-and-clear-messages-via-remote-request)
   - [Message structure](#message-structure)
   - [Remote server API support (publish messages to third parties)](#remote-server-api-support-publish-messages-to-third-parties)
   - [Inbound third-party donation support](#inbound-third-party-donation-support)
@@ -178,7 +178,7 @@ Past supported sites that have ceased to exist.
 
 Install guide for the extension: https://www.youtube.com/watch?v=Zql6Q5H2Eqw
 
-A bit about Social Stream (old now): https://www.youtube.com/watch?v=X_11Np2JHNU
+A bit about Social Stream Ninja (old now): https://www.youtube.com/watch?v=X_11Np2JHNU
 
 How to setup for discord, slack, whatsapp, meet, and telegram, see: https://www.youtube.com/watch?v=L3l0_8V1t0Q
 
@@ -206,11 +206,11 @@ Please note also that you will need to manually update the extension to access n
 
 If you see the browser say there is an "Error", specifically a manifest v2 warning or something, you can safely ignore it.  It is not actually an error and will not impact the function of the extension.
 
-Something of concern though is Google will be updating Chrome browsers on January 2023 to block many popular Chrome extensions, including many Adblockers and also Social Stream. I'm working to resolve this concern, but Social Stream may end up having diminished functionality if Google has their way. If necessary, Social Stream may evolve into a downloadable app instead to avoid these limiations, but I'm hoping to avoid that if possible.
+Something of concern though is Google will be updating Chrome browsers on January 2023 to block many popular Chrome extensions, including many Adblockers and also Social Stream Ninja. I'm working to resolve this concern, but Social Stream Ninja may end up having diminished functionality if Google has their way. If necessary, Social Stream Ninja may evolve into a downloadable app instead to avoid these limiations, but I'm hoping to avoid that if possible.
 
 #### Updating
 
-To update, just download the extension, replace the old files with the new files, and then reload the extension or completely restart the browser.  If just reloading the extension, you may then need to also reload any open chat sites that you wish to use Social Stream with.
+To update, just download the extension, replace the old files with the new files, and then reload the extension or completely restart the browser.  If just reloading the extension, you may then need to also reload any open chat sites that you wish to use Social Stream Ninja with.
 
 You can download the newest version here: https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip
 
@@ -238,7 +238,7 @@ You will still need to manually redo these steps to update when needed, but you 
 
 ### Standalone version of the app
 
-There is an upcoming standalone version of Social Stream, which installs as an app, rather than as a browser extension.
+There is an upcoming standalone version of Social Stream Ninja, which installs as an app, rather than as a browser extension.
 
 To try out the preview test version of the app, you can download it below, but keep in mind that the bugs are still being worked out:
 
@@ -251,13 +251,13 @@ Please note:  If using the same session ID in both the browser extension and the
 
 Open Twitch or Youtube "Pop out" chat; or just go to your Facebook Live chat while connected to Ethernet or WiFi. You must not minimize or close these windows, but they can be left in the background or moved to the side.
 
-Then, press the Social Stream chrome extension button and ENABLE streaming of chat data. (Red implies disabled. Green is enabled)
+Then, press the Social Stream Ninja chrome extension button and ENABLE streaming of chat data. (Red implies disabled. Green is enabled)
 
 ![image](https://user-images.githubusercontent.com/2575698/142856707-0a6bc4bd-51b4-4cd0-9fa3-ef5a1adfcbf7.png)
 
 ##### Please note:  If the Extension's icon is RED, then it means it is still off and wil not work.  You have to click "Enable extension", and the icon must change to the color green.
 
-Next, using the provided two links, you can manage the social stream of chat messages and view selected chat messages as overlays.
+Next, using the provided two links, you can manage the Social Stream Ninja of chat messages and view selected chat messages as overlays.
 
 ![image](https://user-images.githubusercontent.com/2575698/142935393-4ca90418-a645-45e3-8e37-f4884e16457a.png)
 
@@ -281,7 +281,7 @@ If using the automated chat response options, like auto-hi, you must ensure the 
  
 - Toggle the extension on and off, and reload the pop-out chat window.  Ideally the pop-out chat should be visible on screen, as even just a few pixels shown will allow the pop-out chat to work at full-power.  Chrome otherwise may throttle performance.
 - Open a new dock / overlay link if things still do not work, as the session ID may have changed.
-- Ensure that VDO.Ninja works with your browser, as if not, webRTC may be disabled and so this social stream extension will not work also.
+- Ensure that VDO.Ninja works with your browser, as if not, webRTC may be disabled and so this Social Stream Ninja extension will not work also.
 - If using Facebook live chat, please sure you are viewing the page as a "viewer", not as a publisher, and that you are connected to WiFi or Ethernet, and not mobile LTE/4G/5G.
 - The auto-responder requires you to be signed in to the social endpoint and that you have access to chat; ensure you accept any disclaimer and try issuing a test message first.
 - Try using the extension in Incognito mode or try disabling all other browser extensions, then reloading the browser, and trying again.  Many extension types will conflict with Socialstream, causing certain functions to fail.
@@ -398,13 +398,13 @@ For anyone who wants to create a custom theme/style/template for their chat stre
 
 #### Custom Overlays from scratch
 
-For those so inclined to make their own overlays for Social Stream from scratch, I've created a basic and bare HTML template for reference.
+For those so inclined to make their own overlays for Social Stream Ninja from scratch, I've created a basic and bare HTML template for reference.
 
 Check it out here: https://socialstream.ninja/sampleoverlay?session=XXXXX
 
 - There are no functions like TTS or style customization via URL parameters; it's just a simple fixed overlay with minimal code
 - It can be used as a featured overlay or as a dock-alternative, with all messages. In the code, toggle `featuredMode` on or off, depending on whether you want it work with featured messages only, or all incoming messages.
-- You can edit and load it via your browser locally, without needing to host it. Keep it perhaps in a different folder than Social Stream though to avoid having it deleted after an update.
+- You can edit and load it via your browser locally, without needing to host it. Keep it perhaps in a different folder than Social Stream Ninja though to avoid having it deleted after an update.
   
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/26f26421-ac44-47f7-bcfc-04627deb85f9)
 
@@ -442,7 +442,7 @@ These are some generic auto-reply commands that can be toggled on/off via the ex
 
 ### View chat while gaming; always-on-top
 
-The Standalone desktop version of Social Stream can pin windows on top of other applications, and can have the background be transparent. The Standalone app is still early in its development, so instead you might want to consider the Electron Capture app instead.  It offers the ability to keep any browser window on top of your apps, such as while gaming, and there is a hotkey function to toggle user input when needing to interact with it.
+The Standalone desktop version of Social Stream Ninja can pin windows on top of other applications, and can have the background be transparent. The Standalone app is still early in its development, so instead you might want to consider the Electron Capture app instead.  It offers the ability to keep any browser window on top of your apps, such as while gaming, and there is a hotkey function to toggle user input when needing to interact with it.
 
 check it out here: https://github.com/steveseguin/electroncapture
 
@@ -478,11 +478,11 @@ Lastly, please note that you will need to enable the MIDI option in the menu opt
 
 ### Server API support
 
-You can send messages to Social Stream via the hosted server ingest API, and you can also send messages from Social Stream to remote third-parties. Many options are supported; perhaps more than what is listed below.
+You can send messages to Social Stream Ninja via the hosted server ingest API, and you can also send messages from Social Stream Ninja to remote third-parties. Many options are supported; perhaps more than what is listed below.
 
-A simple use case is to ingest a donation from a third party via webhook. You can push those dono notifications to Social Stream and show as an overlay. You can also use a third-party service to overlay messages captured by Social Stream. More below.
+A simple use case is to ingest a donation from a third party via webhook. You can push those dono notifications to Social Stream Ninja and show as an overlay. You can also use a third-party service to overlay messages captured by Social Stream Ninja. More below.
 
-#### Social Stream's server API (ingest and clear messages via remote request)
+#### Social Stream Ninja's server API (ingest and clear messages via remote request)
 
 If using the MIDI API isn't something you can use, you can also check out the hosted API service to send messages to SocialStream, which will be redirected to your social live chat sites.  This API works with a Stream Deck or custom applications.
 
@@ -490,9 +490,9 @@ This API end point supports WSS, HTTPS GET, and HTTP POST (JSON).  Support for t
 
 ##### API Sandbox with many examples as buttons
 
-There's a link to this page in the Social Stream options menu itself, but it contains a large number of common API commands, available at a press of a button.
+There's a link to this page in the Social Stream Ninja options menu itself, but it contains a large number of common API commands, available at a press of a button.
 
-https://socialstream.ninja/sampleapi.html?session=xxxxxxxxxx (replacing xxxxxxxx with your Social Stream session ID to have it work)
+https://socialstream.ninja/sampleapi.html?session=xxxxxxxxxx (replacing xxxxxxxx with your Social Stream Ninja session ID to have it work)
 
 Referring to the source code of the sampleapi.html page is useful if you wish to develop your own API integration, or get a better understanding of the basics.
 
@@ -500,7 +500,7 @@ Most, but not all, API commands are listed there. Referring to the source code o
 
 ##### A couple common examples
  
-An overly simple example of how to use the GET API would be: https://io.socialstream.ninja/XXXXXXXXXX/sendChat/null/Hello, which sends HELLO.  Replace XXXXX with your Social Stream session ID.  Other options, like `https://io.socialstream.ninja/XXXXXXXXXX/clearOverlay` should work, too.
+An overly simple example of how to use the GET API would be: https://io.socialstream.ninja/XXXXXXXXXX/sendChat/null/Hello, which sends HELLO.  Replace XXXXX with your Social Stream Ninja session ID.  Other options, like `https://io.socialstream.ninja/XXXXXXXXXX/clearOverlay` should work, too.
 
 You can use this API to clear the featured-chat, poke the next-in-queue item, and more. It works with WSS or HTTP requests.
 
@@ -512,7 +512,7 @@ For example, to set a dock with the target name of "NAMEHERE", we'd do: `https:/
 
 ##### General technical concept of the API logic iteslf
 
-The public API for Social Stream is based on the same API server logic that VDO.Ninja uses, which is mentioned here: https://github.com/steveseguin/Companion-Ninja.
+The public API for Social Stream Ninja is based on the same API server logic that VDO.Ninja uses, which is mentioned here: https://github.com/steveseguin/Companion-Ninja.
 
 More information on the routing logic below..
 
@@ -626,7 +626,7 @@ A generic JSON-POST can be made using `&postserver`, with the address provided
 A generic JSON-PUT can be made using `&putserver`, with the address provided. There isn't much difference between POST and PUT, but some sites are picky.
 `&putserver=https://domain.com/input-source`
 
-In these cases, the JSON being delivered is in the Social Stream data-structure. Example usage is as follows:
+In these cases, the JSON being delivered is in the Social Stream Ninja data-structure. Example usage is as follows:
 
 `https://socialstream.ninja/dock?session=XXXXXX&postserver=https://127.0.0.1/messageingest/?socialstream`
 
@@ -634,13 +634,13 @@ In these cases, the JSON being delivered is in the Social Stream data-structure.
 
 ##### Stripe webhook donation support
 
-If you create a Stripe payment link (eg: https://donate.stripe.com/YYYYYYYYYYYY), you can have successful payments show up in Social Stream. This is a great way to collect donations from viewers of your stream without needing to use middleware for payment processing.
+If you create a Stripe payment link (eg: https://donate.stripe.com/YYYYYYYYYYYY), you can have successful payments show up in Social Stream Ninja. This is a great way to collect donations from viewers of your stream without needing to use middleware for payment processing.
 
-To get started, after creating a Stripe payment link, create a Stripe webhook that listens for the event `checkout.session.completed`. Have the webhook point to: `https://io.socialstream.ninja/XXXXXX/stripe`, where XXXXXX is your Social Stream session ID. You don't need to worry about the verification signatures or API tokens in Stripe since we won't be verifying the payments. Of course, keep your session ID private as a result, else someone will be able to spoof fake donations to your end point.
+To get started, after creating a Stripe payment link, create a Stripe webhook that listens for the event `checkout.session.completed`. Have the webhook point to: `https://io.socialstream.ninja/XXXXXX/stripe`, where XXXXXX is your Social Stream Ninja session ID. You don't need to worry about the verification signatures or API tokens in Stripe since we won't be verifying the payments. Of course, keep your session ID private as a result, else someone will be able to spoof fake donations to your end point.
 
 If you wish to ask the payer for a name, include a custom field called "Display Name" or "Username" when creating your Stripe payment link. You can also include a field called "Message", which will allow the payer an opportunity to leave a custom message. The donation amount and current type should be dervived from the payment automatically, but some rare exotic currencies may not always show up with the right decimal place -- just keep that in mind.
 
-Lastly, to allow these events to show up in the Social Stream dock, add &server to the dock URL; this will have the dock start listening for incoming messages from the webhook/api server. You can always test that the workflow is working using Stripe's "Test mode"; just spam 424242.. etc for the credit card number, expiration, cvc, etc, when using the test mode, rather than a valid credit card.
+Lastly, to allow these events to show up in the Social Stream Ninja dock, add &server to the dock URL; this will have the dock start listening for incoming messages from the webhook/api server. You can always test that the workflow is working using Stripe's "Test mode"; just spam 424242.. etc for the credit card number, expiration, cvc, etc, when using the test mode, rather than a valid credit card.
 
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/29bab9b6-8fb7-482d-87d1-2b7f2bd74f9f)
 
@@ -652,11 +652,11 @@ This is very simliar to the Stripe support method, as seen above.
 
 To setup, sign into your Ko-Fi account, go to https://ko-fi.com/manage/webhooks
 
-Add `https://io.socialstream.ninja/XXXXXXXX/kofi` to the Webhook URL text field, where you replace XXXXXXXX with your Social Stream session ID.
+Add `https://io.socialstream.ninja/XXXXXXXX/kofi` to the Webhook URL text field, where you replace XXXXXXXX with your Social Stream Ninja session ID.
 
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/9119d86a-d452-4658-b1c5-383f5b16fc9d)
 
-On your `dock.html` page, append &server to the URL (at the end is fine).  This has the dock connecting to the Social Stream API service, which is where our Ko-Fi notifications will come from.
+On your `dock.html` page, append &server to the URL (at the end is fine).  This has the dock connecting to the Social Stream Ninja API service, which is where our Ko-Fi notifications will come from.
 
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/d4669e90-1019-4b6d-a809-ed1483f0b770)
 
@@ -664,7 +664,7 @@ You can then press the Send Single Donation Test button.
 
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/73ba4b80-c599-45f6-85df-6ff629a3e6a5)
 
-Please note, do not share your Social Stream session ID with others as they will be able to create fake donations to Social Streams via posting to the API.
+Please note, do not share your Social Stream Ninja session ID with others as they will be able to create fake donations to Social Stream Ninjas via posting to the API.
 
 ### Text to speech
 
@@ -732,10 +732,10 @@ See the Google Cloud doc for more help
 If you want a different set of voices, or wish to train your own, ElevenLabs.io has a TTS service that you can try. There's a "free" version you can get started testing with, which just needs you to create an account there and get an API key from your profile settings there. You may need to provide attribution as required, for the free tier?
 
 Anyways, documentation on getting start with finding a voice you want to use and testing your API key:
-API Social Stream is using: https://api.elevenlabs.io/docs#/text-to-speech/Text_to_speech_v1_text_to_speech__voice_id__stream_post
+API Social Stream Ninja is using: https://api.elevenlabs.io/docs#/text-to-speech/Text_to_speech_v1_text_to_speech__voice_id__stream_post
 Available voices: https://api.elevenlabs.io/docs#/voices/Get_voices_v1_voices_get
 
-To use this with Social Stream, you'll need to be using the featured-chat featured.html or dock.html page, and you'll need to provide your api key there.
+To use this with Social Stream Ninja, you'll need to be using the featured-chat featured.html or dock.html page, and you'll need to provide your api key there.
 
 Example URL with options `https://socialstream.ninja/featured.html?session=SESSIONIDHERE&tts&elevenlabskey=YOURELEVENLABSAPIKEYHERE&latency=4&voice=VR6AewLTigWG4xSOukaG`
 
@@ -774,7 +774,7 @@ There is a toggle that lets you show the source of the chat messages.
 
 #### Chat stops when put in the background or minimized
 
-- Browser may pause non-visible windows, such as the chat streams Social Stream grabs from, and so you may need to disable this behaviour in your browser. To do so, "Disable" the option located at `chrome://flags/#enable-throttle-display-none-and-visibility-hidden-cross-origin-iframes`.  Also "Disable" the flag `chrome://flags/#calculate-native-win-occlusion`. Restart the browser after saving the changes.
+- Browser may pause non-visible windows, such as the chat streams Social Stream Ninja grabs from, and so you may need to disable this behaviour in your browser. To do so, "Disable" the option located at `chrome://flags/#enable-throttle-display-none-and-visibility-hidden-cross-origin-iframes`.  Also "Disable" the flag `chrome://flags/#calculate-native-win-occlusion`. Restart the browser after saving the changes.
 
 - Avoid minimizing any windows. Things work best if windows are kept visible and open, but if you need to put them in the background, don't minimize them at least. 
 
@@ -784,7 +784,7 @@ There is a toggle that lets you show the source of the chat messages.
 
 - Another option, if chat messages stop once put in them in background, if using Windows, is to do Win + Tab, and have two virtual Desktops on your PC.  Put the chat windows into one virtual desktop, and use OBS in the other. Win+Tab can let you switch between desktops/windows.
 
-- You can also try the Social Stream Standalone desktop app, as that has more controls and will avoid common throttling / visibility issues found while using Chrome
+- You can also try the Social Stream Ninja Standalone desktop app, as that has more controls and will avoid common throttling / visibility issues found while using Chrome
 
 - You can also download an application that can "pin" the chat windows, so they remain on top and visible. The windows can be made very small in those cases, and just push to the side.
 
@@ -831,7 +831,7 @@ There is no guarentee that a site that gets added will continue to be supported 
 
 ### Adding sites yourself
 
-I have a video walk-thru on how I added a simple social site to Social Stream:   [https://www.youtube.com/watch?v=5LquQ1xhmms](https://www.youtube.com/watch?v=5LquQ1xhmms)
+I have a video walk-thru on how I added a simple social site to Social Stream Ninja:   [https://www.youtube.com/watch?v=5LquQ1xhmms](https://www.youtube.com/watch?v=5LquQ1xhmms)
 
 You can also refer to some of my code commits, where you can see which changes I made to add support for any specific site.
 
@@ -841,17 +841,17 @@ For a simple site, a developer should need just 30 minutes to an hour to get a s
 
 ### OBS remote scene support
 
-Remote OBS control/stats are available with Social Stream, however they will require adding a Social Stream page to OBS as a browser source, along with setting that browser source's page permission to an appropriate level.
+Remote OBS control/stats are available with Social Stream Ninja, however they will require adding a Social Stream Ninja page to OBS as a browser source, along with setting that browser source's page permission to an appropriate level.
 
 To access scene state information, user access permissions are at least needed, while the ability to start/stop the stream will require full permissions.  A use for this is to access and display the current OBS scene state if doing an IRL stream with the dock open on mobile.
 
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/a52758a3-6eb9-4224-9bec-13f31a78c617)
 
-Adding a Social Stream page as an OBS custom dock will not work in providing the required permissions; it needs to be a browser source currently.  This could be changed in the future
+Adding a Social Stream Ninja page as an OBS custom dock will not work in providing the required permissions; it needs to be a browser source currently.  This could be changed in the future
 
-There are some options built into Social Stream to control OBS scenes/streaming state, and those will be expanded over time. Guests can change scenes with the `!cycle` option, when enabled, for example. 
+There are some options built into Social Stream Ninja to control OBS scenes/streaming state, and those will be expanded over time. Guests can change scenes with the `!cycle` option, when enabled, for example. 
 
-Given that Social Stream uses VDO.Ninja as its transport engine, you also can use VDO.Ninja [remote control software[(https://vdo.ninja/examples/obsremote) to have dedicated remote control pages that can work in conjuction with Social Stream. `&remote=XXXX` can be used on either VDO.Ninja or Social Stream's dock.html page to enable VDO.Ninja-based remote control when loaded in OBS with the right permissions; refer to the VDO.Ninja documentation on this. This is all pretty complicated though, requiring just the right URL parameters, but it's possible.
+Given that Social Stream Ninja uses VDO.Ninja as its transport engine, you also can use VDO.Ninja [remote control software[(https://vdo.ninja/examples/obsremote) to have dedicated remote control pages that can work in conjuction with Social Stream Ninja. `&remote=XXXX` can be used on either VDO.Ninja or Social Stream Ninja's dock.html page to enable VDO.Ninja-based remote control when loaded in OBS with the right permissions; refer to the VDO.Ninja documentation on this. This is all pretty complicated though, requiring just the right URL parameters, but it's possible.
 
 ### Support
 
