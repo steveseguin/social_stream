@@ -44,7 +44,7 @@ Social Stream Ninja makes use of VDO.Ninja's data-transport API to stream data s
 - [View chat while gaming; always-on-top](#view-chat-while-gaming-always-on-top)
 - [Hotkey (MIDI / Streamlabs) support](#hotkey-midi--streamlabs-support)
 - [Server API support](#server-api-support)
-  - [Social Stream Ninja's server API (ingest and clear messages via remote request)](#social-streams-server-api-ingest-and-clear-messages-via-remote-request)
+  - [Social Stream Ninja's server API (ingest and clear messages via remote request)](#social-stream-ninjas-server-api-ingest-and-clear-messages-via-remote-request)
   - [Message structure](#message-structure)
   - [Remote server API support (publish messages to third parties)](#remote-server-api-support-publish-messages-to-third-parties)
   - [Inbound third-party donation support](#inbound-third-party-donation-support)
