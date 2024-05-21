@@ -156,7 +156,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - chzzk.naver.com (pop out the chat)
 - demo.openstreamingplatform.com (pop out chat)
 - wave.video
-- beamstream.gg (https://beamstream.gg/USERNAME/chat)
+- beamstream.gg (open https://beamstream.gg/USERNAME/chat to user. *note the /chat added at the end)
   
 [More on request](#requesting-a-site)
 
