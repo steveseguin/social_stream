@@ -3379,7 +3379,7 @@ async function downloadWaitlist() {
 }
 
 function sendWaitlistConfig(data = null, sendMessage = true, clear=false) {
-	console.warn("sendWaitlistConfig");
+	//console.warn("sendWaitlistConfig");
 	if (iframe) {
 		if (sendMessage) {
 			var trigger = "!join";
