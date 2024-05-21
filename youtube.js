@@ -344,7 +344,7 @@
 				eventType = true;
 				
 				if (chatmembership){
-					chatmessage =  chatmembership
+					chatmessage =  chatmembership;
 				} else {
 					chatmessage = getTranslation("new-membership", "Joined as a member");
 				}
@@ -430,9 +430,9 @@
 		data.type = "youtube";
 		data.event = eventType;
 		
-		if (eventType){
-			console.log(data);
-		}
+	//	if (eventType){
+	//	console.log(data);
+	//	}
 
 		try {
 			chrome.runtime.sendMessage(

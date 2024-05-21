@@ -3410,7 +3410,7 @@ function sendWaitlistConfig(data = null, sendMessage = true, clear=false) {
 			try {
 				var UUID = keys[i];
 				var label = connectedPeers[UUID];
-				if (label === "waitlist") { 
+				if (label === "waitlist") {
 					if (sendMessage) {
 						if (data === null) {
 							if (settings.drawmode){

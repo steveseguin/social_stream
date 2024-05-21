@@ -51,10 +51,11 @@
 	  var chatmessage = "";
 	  var nameColor = "";
 	  
+	  console.log(ele);
 	  
 	  try {
 		var nameEle = ele.querySelector(".nm-message-nickname");
-		var chatname = escapeHtml(nameEle.innerText).trim();
+		var chatname = escapeHtml(nameEle.innerText);
 		try {
 			nameColor = nameEle.style.color;
 		} catch(e){}
@@ -62,18 +63,29 @@
 	  
 	  var chatbadges = [];
 	  
-	  ele.querySelectorAll("[class*='badge'] img[src], .LevelNumber svg").forEach(badge=>{
+	  ele.querySelectorAll("div.level-badge-icon, .nimo-cr_decoration_icon-img img[src], [class*='badge'] img[src]").forEach(badge=>{
 		try {
-			if (badge && badge.nodeName == "IMG"){
+			if (badge && badge.nodeName == "DIV"){
+				const backgroundImage = getComputedStyle(badge).backgroundImage;
+				if (backgroundImage){
+					let imgurl =  backgroundImage.match(/url\(["']?([^"']*)["']?\)/)[1];
+					if (imgurl && imgurl.endsWith(".png")){
+						var tmp = {};
+						tmp.src = imgurl;
+						tmp.type = "img";
+						chatbadges.push(tmp);
+					}
+				}
+			} else if (badge && badge.nodeName == "IMG"){
 				var tmp = {};
 				tmp.src = badge.src;
 				tmp.type = "img";
 				chatbadges.push(tmp);
 			} else {
-				var tmp = {};
-				tmp.html = badge.outerHTML;
-				tmp.type = "svg";
-				chatbadges.push(tmp);
+				//var tmp = {};
+				//tmp.html = badge.outerHTML;
+				//tmp.type = "svg";
+				//chatbadges.push(tmp); // SVG badges don't seem to be working, so ignore them
 			}
 		} catch(e){  }
 	  });
