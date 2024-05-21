@@ -3176,6 +3176,11 @@
 				selfQueue = urlParams.get("selfqueue") || "!queue";
 			}
 
+			var saveimg = false;
+			if (urlParams.has("saveimg")) {
+				saveimg = true;
+			}
+
 			if (urlParams.has("save")) {
 				encode = TextEncoder.prototype.encode.bind(new TextEncoder());
 				setupSaveToDisk();
@@ -5857,15 +5862,21 @@
 					}
 
 					if (writer) {
-						var date = new Date();
+						let date = new Date();
+						date = date.toLocaleString("en-US", { hour: "numeric", minute: "numeric", second: "numeric", hour12: true });
 						let text;
-						var date = date.toLocaleString("en-US", { hour: "numeric", minute: "numeric", second: "numeric", hour12: true });
+						
+						let extra = ""
+						if (saveimg){
+							extra = "\t" +  (data.chatimg || "") ;
+						}
+						
 						if ("sentiment" in data) {
-							text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + "\t" + (data.sentiment || "") + "\n");
+							text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + extra + "\t" + (data.sentiment || "") + "\n");
 						} else if ("karma" in data) {
-							text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + "\t" + (data.karma || "") + "\n");
+							text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + extra + "\t" + (data.karma || "") + "\n");
 						} else {
-							text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + "\n");
+							text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + extra + "\n");
 						}
 						if (writer) {
 							writer.write(text);

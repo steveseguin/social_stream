@@ -2549,18 +2549,18 @@ function sendToS10(data) {
 }
 
 function sendToPost(data) {
-	if (settings.post && settings.postserver && settings.postserver.textsetting) {
+	if (settings.post) {
 		try {
 			var postServer = "http://127.0.0.1:80";
 
-			if (settings.postserver.textsetting.startsWith("http")) {
+			if (settings.postserver && settings.postserver.textsetting && settings.postserver.textsetting.startsWith("http")) {
 				// full URL provided
 				postServer = settings.postserver.textsetting;
-			} else if (settings.postserver.textsetting.startsWith("127.0.0.1")) {
+			} else if (settings.postserver && settings.postserver.textsetting && settings.postserver.textsetting.startsWith("127.0.0.1")) {
 				// missing the HTTP, so assume what they mean
 				postServer = "http://" + settings.postserver.textsetting;
-			} else {
-				postServer += settings.postserver.textsetting; // Just going to assume they gave the token
+			} else if (settings.postserver && settings.postserver.textsetting && settings.postserver.textsetting){
+				postServer = "https://"+settings.postserver.textsetting; // Just going to assume they meant https
 			}
 
 			if (data.type && !data.chatimg && (data.type == "twitch") && data.chatname) {
