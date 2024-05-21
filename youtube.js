@@ -344,7 +344,7 @@
 				eventType = true;
 				
 				if (chatmembership){
-					chatmessage =  getTranslation("new-membership", "Joined as a member - ") + chatmembership;
+					chatmessage =  chatmembership
 				} else {
 					chatmessage = getTranslation("new-membership", "Joined as a member");
 				}
