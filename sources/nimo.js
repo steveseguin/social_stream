@@ -63,7 +63,7 @@
 	  
 	  var chatbadges = [];
 	  
-	  ele.querySelectorAll("div.level-badge-icon, .nimo-cr_decoration_icon-img img[src], [class*='badge'] img[src]").forEach(badge=>{
+	  ele.querySelectorAll("div.level-badge-icon, img.nimo-cr_decoration_icon-img[src], [class*='badge'] img[src]").forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "DIV"){
 				const backgroundImage = getComputedStyle(badge).backgroundImage;
