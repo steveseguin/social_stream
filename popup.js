@@ -516,7 +516,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				}
 			} else {
 				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
-					update(response); 
+					log("ignore callback for this action");
+					// update(response);  
 				});
 			}
 		};
@@ -980,7 +981,6 @@ function updateSettings(ele, sync=true, value=null){
 		ele = this;
 	}
 	
-	console.log(ele);
 	if (ele.dataset.param1){
 		if (ele.checked){
 			

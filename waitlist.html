@@ -523,7 +523,7 @@
 	
 	var conCon = 1;
 	var socketserver = false;
-	var serverURL = "wss://io.socialstream.ninja";
+	var serverURL = "wss://io.socialstream.ninja/extension";
 
 	function setupSocket(){
 		socketserver.onclose = function (){
@@ -535,7 +535,7 @@
 		};
 		socketserver.onopen = function (){
 			conCon = 1;
-			socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+			socketserver.send(JSON.stringify({"join":roomID, "out":5, "in":6}));
 		};
 		socketserver.addEventListener('message', function (event) {
 			var resp = false
@@ -553,11 +553,13 @@
 		});
 	}
 	
-	if (urlParams.has("server") || urlParams.has("server2")){
-		serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
-		socketserver = new WebSocket(serverURL);
-		setupSocket();
-	}
+	// I'm not yet supporting this.
+	
+	//if (urlParams.has("server") || urlParams.has("server2")){
+	//	serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+	//	socketserver = new WebSocket(serverURL);
+	//	setupSocket();
+	//}
 
 	if (urlParams.has("chroma")){
 		var chroma = urlParams.get("chroma") || "0F0";
@@ -728,7 +730,9 @@
 	}
 
 	function processInput(data){
-		//console.log(data);
+	
+		console.log(data);
+		
 		if ("waitlistmessage" in data){
 		
 			document.getElementById("waitlistsupertitle").innerHTML = "";

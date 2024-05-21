@@ -3040,8 +3040,9 @@ async function openchat(target = null) {
 function sendDataP2P(data, UUID = false) {
 	// function to send data to the DOCk via the VDO.Ninja API
 
-	if (settings.server2 && socketserverDock) {
+	if (settings.server2 && socketserverDock && (socketserverDock.readyState===1)) {
 		try {
+			
 			socketserverDock.send(JSON.stringify(data));
 			return;
 		} catch (e) {
@@ -3378,7 +3379,7 @@ async function downloadWaitlist() {
 }
 
 function sendWaitlistConfig(data = null, sendMessage = true, clear=false) {
-
+	console.warn("sendWaitlistConfig");
 	if (iframe) {
 		if (sendMessage) {
 			var trigger = "!join";
@@ -3409,7 +3410,7 @@ function sendWaitlistConfig(data = null, sendMessage = true, clear=false) {
 			try {
 				var UUID = keys[i];
 				var label = connectedPeers[UUID];
-				if (label === "waitlist") {
+				if (label === "waitlist") { 
 					if (sendMessage) {
 						if (data === null) {
 							if (settings.drawmode){
