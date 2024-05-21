@@ -2793,6 +2793,12 @@ function enableYouTube() {
 }
 
 async function openchat(target = null) {
+	
+	if (!settings.openchat && !target){
+		console.log("Open Chat is toggled off - no auto open all");
+		return;
+	}
+	
 	var res;
 	var promise = new Promise((resolve, reject) => {
 		res = resolve;
