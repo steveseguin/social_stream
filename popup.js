@@ -516,7 +516,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				}
 			} else {
 				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
-					log("ignore callback for this action");
+					console.log("ignore callback for this action");
 					// update(response);  
 				});
 			}
