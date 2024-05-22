@@ -1999,7 +1999,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			enableYouTube();
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "openchat") {
-			openchat(request.value);
+			openchat(request.value, true);
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "singlesave") {
 			sendResponse({ state: isExtensionOn });
@@ -2792,9 +2792,9 @@ function enableYouTube() {
 	}
 }
 
-async function openchat(target = null) {
+async function openchat(target = null, force=false) {
 	
-	if (!settings.openchat && !target){
+	if (!settings.openchat && !target && !force){
 		console.log("Open Chat is toggled off - no auto open all");
 		return;
 	}
