@@ -581,6 +581,7 @@ hasDonation | string | The donation amount with its units.  eg: "3 roses" or "$5
 chatbadges | array | An array of URLs/Objects. If an object, it may define itself as an img/svg and other attributes
 contentimg | string | URL to a single image or mp4/webm video
 membership | string | Membership event description / membership action / type or whatever
+title | string | An alternative name given for a donation event; CHEERS / DONATION are typical defaults
 subtitle | string | For added detail of a membership event, like number of months they have been a member.
 moderator | boolean | Whether they are a moderator in chat or not
 event | string or boolean | Whether this message should be treated as an event, and possible, what type of event it is
