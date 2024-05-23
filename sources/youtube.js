@@ -381,12 +381,17 @@
 				const match = giftedmemembership.innerText.match(/\b\d+\b/);
 				hasDonation = match ? parseInt(match[0], 10) : null;
 				if (hasDonation) {
-					hasDonation += " " + getTranslation("gifted-memberships", "Gifted");
+					if (hasDonation==1){
+						hasDonation += " " + getTranslation("gifted-membership", "Gifted");
+					} else {
+						hasDonation += " " + getTranslation("gifted-memberships", "Gifted");
+					}
 				}
 			} catch (e) {
 				hasDonation = "";
 			}
 		}
+		
 
 		if (chatsticker) {
 			if (!settings.textonlymode) {
@@ -440,6 +445,16 @@
 		
 		if (youtubeShorts){
 			data.type = "youtubeshorts";
+		}
+		
+		if (data.hasDonation){
+			data.title = getTranslation("donation", "DONATION");
+			if (!data.chatmessage){
+				data.chatmessage = getTranslation("thank-you", "Thank you for your donation!");
+				if (!data.event){
+					data.event = "thankyou";
+				}
+			}
 		}
 		
 		data.event = eventType;

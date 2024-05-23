@@ -30,19 +30,8 @@
 				--donation-gradient-stop1: #ede599;
 				--donation-gradient-stop2: #b38728;
 				--donation-label-color: #fff;
-				--donation-label-text: "Donation";
-				--youtubedonation-label-text: "SUPERCHAT";
 				--donation-shadow-color: #fff;
-
-				--cheer-color: #5a4211;
-				--cheer-bg-color: #fff;
-				--cheer-gradient-stop0: #bf953f;
-				--cheer-gradient-stop1: #ede599;
-				--cheer-gradient-stop2: #b38728;
-				--cheer-label-color: #fff;
-				--cheer-label-text: "Cheer";
-				--cheer-shadow-color: #fff;
-
+				
 				--image-content-max-height: 300px;
 				--shown-comment-bg-color: #555555;
 				--highlighted-comment-bg-color: #f0f07d;
@@ -506,7 +495,6 @@
 				border-radius: 10px 10px 0 0;
 				padding: 9px 2px 6px;
 				display: block;
-				content: var(--donation-label-text);
 				color: var(--donation-label-color);
 			}
 
@@ -633,9 +621,9 @@
 			}
 
 			function warnlog(msg, url = false, lineNumber = false) {
-				//	console.warn(msg);
+				// console.warn(msg);
 				if (lineNumber) {
-					//		console.warn(lineNumber);
+					//	console.warn(lineNumber);
 				}
 			}
 
@@ -651,7 +639,66 @@
 				errorlog("Unhandeled Error occured"); //or any message
 				return false;
 			};
-
+			
+			async function fetchWithTimeout(URL, timeout = 8000) {
+				// ref: https://dmitripavlutin.com/timeout-fetch-request/
+				try {
+					const controller = new AbortController();
+					const timeout_id = setTimeout(() => controller.abort(), timeout);
+					const response = await fetch(URL, { ...{ timeout: timeout }, signal: controller.signal });
+					clearTimeout(timeout_id);
+					return response;
+				} catch (e) {
+					warnlog(e);
+					return await fetch(URL);
+				}
+			}
+			var translation = {};
+			async function changeLg(lang="en", retry=false) {
+				log("changeLg: " + lang);
+				lang = lang.replace("_", "-");
+				await fetchWithTimeout("./translations/" + lang + ".json", 2000).then(async function (response) {
+					try {
+						if (response.status !== 200) {
+							if (retry) {
+								console.warn("Couldn't find the exact language file for '" + lang + "'; trying a more generic option instead");
+								lang = lang.split("-")[0];
+								if (lang && (lang.split("-").length==2)) {
+									await changeLg(lang.split("-")[0], false); // Retry with a more generic language code.
+								}
+							}
+							return;
+						}
+						await response
+							.json()
+							.then(function (data) {
+								if (translations){
+									translations = data;
+								}
+							})
+							.catch(function (e) {
+								log(e);
+							});
+					} catch (e) {
+						log(e);
+					}
+				}).catch(function (err) {
+					log(err);
+				});
+			}
+			function getTranslation(key, value = false) {
+				if (translation && translation.innerHTML && (key in translation.innerHTML)) {
+					// these are the proper translations
+					return translation.innerHTML[key];
+				} else if (translation && translation.miscellaneous && translation.miscellaneous && (key in translation.miscellaneous)) {
+					return translation.miscellaneous[key];
+				} else if (value !== false) {
+					return value;
+				} else {
+					return key.replaceAll("-", " "); //
+				}
+			}
+			
 			var newFileHandle = false;
 
 			async function overwriteFile(data = false) {
@@ -874,6 +921,14 @@
 				} catch (e) {
 					console.error(e);
 				}
+			}
+			
+			var ln_template = null;
+			if (urlParams.has("ln") || urlParams.has("language")) {
+				ln_template = urlParams.get("ln") || urlParams.get("language") || null;
+			}
+			if (ln_template){
+				changeLg(ln_template, true);
 			}
 
 			var firstNamesOnly = false;
@@ -1707,6 +1762,10 @@
 						return;
 					}
 					
+					if (data.contents.hasDonation || data.contents.membership){
+						console.log(data.contents);
+					}
+					
 					if (hideDonations){
 						data.contents.hasDonation = ""; // kiss
 						if (!data.contents.chatmessage && !data.contents.contentimg && !data.contents.subtitle && !data.contents.membership){
@@ -1837,16 +1896,16 @@
 
 							if (data.hasMembership) {
 								if (data.hasMembership===true){
-									data.hasMembership = "Membership";
+									data.hasMembership = getTranslation("membership", "Membership");
 								}
 								// doesn't have subtitles; shouldn't at least.
 								data.membership = data.hasMembership.toString();
 								memebershipHTML = data.membership;
 							} else if (data.membership) {
 								if (data.membership===true){
-									data.membership = "Membership";
+									data.membership = getTranslation("membership", "Membership");
 								} else {
-									data.membership = data.membership.toString();
+									data.membership = data.membership.toString(); 
 								}
 								
 								if (data.subtitle) {
@@ -1869,13 +1928,26 @@
 							var donationHTML = "";
 							if (data.hasDonation) {
 								if (data.type === "twitch") {
-									donationHTML = '<div class="donation"><div class="donation-title">CHEERS</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+									let donationTitle = getTranslation("cheers", "CHEERS");
+									if ("title" in data){
+										donationTitle = data.title;
+									}
+									donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+									
 								} else if ((data.type == "youtube") || (data.type == "youtubeshorts")) {
+									let donationTitle = getTranslation("donation", "DONATION");
+									if ("title" in data){
+										donationTitle = data.title;
+									}
 									if (memebershipHTML) {
 										donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
 									} else {
-										donationHTML = '<div class="donation"><div class="donation-title">DONATION</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+										donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
 									}
+									
+								} else if (data.title){
+									donationHTML = '<div class="donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+									
 								} else {
 									donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
 								}
