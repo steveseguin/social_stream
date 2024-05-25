@@ -1757,7 +1757,7 @@
 						if (data.contents.showType && data.contents.showsource) {
 							// preload URL based
 							var tempShowType = new Image();
-							tempShowType.src = data.contents.showType + ".png";
+							tempShowType.src = "./sources/images/"+data.contents.showType + ".png";
 						}
 					} catch (e) {
 						warnlog(e);
@@ -1808,18 +1808,18 @@
 
 							var customSourceClass = "sourceOffset";
 							if (showType && showsource && avatar) {
-								showType = '<img src="' + showType + '.png" class="icon sourcetype" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+								showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
 							} else if (showType && showsource && !avatar) {
-								showType = '<img src="' + showType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+								showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
 							} else {
 								customSourceClass = "";
 								showType = "";
 							}
 
 							if (data.sourceImg && customSource && avatar) {
-								showType += '<img src="' + data.sourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
+								showType += '<img src="./sources/images/' + data.sourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
 							} else if (data.sourceImg && customSource && !avatar) {
-								showType += '<img src="' + +data.sourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
+								showType += '<img src="./sources/images/' + +data.sourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
 							}
 
 							if (hideNames) {

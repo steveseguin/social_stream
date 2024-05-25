@@ -277,7 +277,7 @@
 				ele.querySelector(".chatimg").src = data.chatimg;
 			}
 			if (data.type){
-				ele.querySelector(".sourcetype").src = "https://socialstream.ninja/"+data.type+".png";
+				ele.querySelector(".sourcetype").src = "https://socialstream.ninja/sources/images/"+data.type+".png";
 			}
 			
 			document.querySelector("main ol").appendChild(ele.childNodes[0]);

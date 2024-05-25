@@ -1,1 +1,1 @@
-moving this folder to ./sources/websockets
+Contents of this folder moved to ../sources/websocket/ instead

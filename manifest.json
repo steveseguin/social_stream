@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 2,
-  "version": "1.75.11",
+  "version": "1.75.12",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -414,24 +414,17 @@
     },
     {
       "js": [ "./sources/websocket/vimm.js" ],
-      "matches": [ "https://socialstream.ninja/sources/websocket/vimm.html*" ]
+      "matches": [ 
+		"https://socialstream.ninja/sources/websocket/vimm.html*",
+		"https://socialstream.ninja/websocket/vimm.html*"
+	  ]
     },
     {
       "js": [ "./sources/websocket/twitch.js" ],
       "matches": [
         "https://socialstream.ninja/sources/websocket/twitch.html*",
+		"https://socialstream.ninja/websocket/twitch.html*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/twitch.html*"
-      ]
-    },
-    {
-      "js": [ "./websocket/vimm.js" ],
-      "matches": [ "https://socialstream.ninja/websocket/vimm.html*" ]
-    },
-    {
-      "js": [ "./websocket/twitch.js" ],
-      "matches": [
-        "https://socialstream.ninja/websocket/twitch.html*",
-        "file:///C:/Users/steve/Code/social_stream/websocket/twitch.html*"
       ]
     },
     {

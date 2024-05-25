@@ -87,7 +87,7 @@
 			try {
 				chatimg = ele.childNodes[0].querySelector("svg");
 				if (chatimg){
-					chatimg = "./openai.png";
+					chatimg = "./sources/images/openai.png";
 					name = "ChatGPT";
 				}
 			} catch(e){

@@ -154,7 +154,7 @@
 		
 		//data.sourceImg = brandedImageURL;
 		
-		var sourceImg = "restream.png";
+		var sourceImg = "./sources/images/restream.png";
 		try {
 			sourceImg = ele.querySelector("img:last-child[src^='https://restream.io/img/api/platforms/']").src;
 		} catch(e){}

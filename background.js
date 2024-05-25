@@ -1690,8 +1690,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					}
 				}
 			}
-
 			if (request.setting == "textonlymode") {
+				pushSettingChange();
+			}
+			if (request.setting == "discord") {
+				pushSettingChange();
+			}
+			if (request.setting == "customdiscordchannel") {
 				pushSettingChange();
 			}
 			if (request.setting == "flipYoutube") {
@@ -2458,14 +2463,14 @@ function sendToH2R(data) {
 				msg.platform = {};
 				msg.platform.name = data.type || "";
 				if (data.sourceImg === "restream.png") {
-					msg.platform.logoUrl = "https://socialstream.ninja/" + data.sourceImg;
+					msg.platform.logoUrl = "https://socialstream.ninja/sources/images/" + data.sourceImg;
 				} else {
 					msg.platform.logoUrl = data.sourceImg;
 				}
 			} else if (data.type) {
 				msg.platform = {};
 				msg.platform.name = data.type || "";
-				msg.platform.logoUrl = "https://socialstream.ninja/" + data.type + ".png";
+				msg.platform.logoUrl = "https://socialstream.ninja/sources/images/" + data.type + ".png";
 			}
 
 			var h2r = {};
@@ -2521,7 +2526,7 @@ function sendToS10(data) {
 			} else if (data.chatimg) {
 				msg.displayPictureUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
 			} else if (data.type) {
-				msg.displayPictureUrl = "https://socialstream.ninja/" + data.type + ".png";
+				msg.displayPictureUrl = "https://socialstream.ninja/sources/images/" + data.type + ".png";
 			} else {
 				msg.displayPictureUrl = "https://socialstream.ninja/unknown.png";
 			}
@@ -2573,7 +2578,7 @@ function sendToPost(data) {
 			}
 
 			if (data.type) {
-				data.logo = "https://socialstream.ninja/" + data.type + ".png";
+				data.logo = "https://socialstream.ninja/sources/images/" + data.type + ".png";
 			}
 
 			ajax(data, postServer, "POST");

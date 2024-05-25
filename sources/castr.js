@@ -124,7 +124,7 @@
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "castr";
-		data.sourceImg = sourceImg;
+		data.sourceImg = "./sources/images/"+sourceImg;
 		
 		
 		pushMessage(data);

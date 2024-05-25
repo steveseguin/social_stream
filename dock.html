@@ -1772,7 +1772,7 @@
 			<button class="imgButton" id="pause" data-state="0" onclick="pause();" style="background-image: url(./icons/main_msg_pause.png)" title="Main — ⏸ Pause incoming chat messages"></button>
 			<button class="imgButton" id="say_hello" data-state="0" style="background-image: url(./icons/main_msg_send.png)" title="Main — 💬 Send a text message to all social endpoints"></button>
 			<button class="imgButton imgSmallButton" id="notify" data-state="0" onclick="notify();" style="background-image: url(./icons/main_msg_notify_off.png)" title="Main — 🔔 Start beeping when there is a new message"></button>
-			<button class="imgButton imgSmallButton hidden" id="select_save_file" data-state="0" onclick="overwriteFile('setup');" style="background-image: url(./icons/main_msg_save.png)" title="Main — 💾 Select the file you want to save the most recent message to"></button>
+			<button class="imgButton imgSmallButton hidden" id="select_save_file" data-state="0" onclick="overwriteFile('setup');" style="border-radius:0;background-image: url(./icons/main_msg_save.png)" title="Main — 💾 Select the file you want to save the most recent message to"></button>
 
 			<div class="horizontalSeparator"></div>
 
@@ -5378,7 +5378,7 @@
 				} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
 					// youtube's images are a bit tricky; larger images don't always exist.
 					try {
-						toDataURL(data.chatimg, function (base64Image) {
+						toDataURL(data.chatimg, (base64Image) => {
 							// we upscale
 							data.chatimg = data.chatimg.replace("=s32-", "=s256-"); // Increases the resolution of the image
 							data.chatimg = data.chatimg.replace("=s64-", "=s256-");
@@ -7000,9 +7000,9 @@
 				if (data == "setup") {
 					newFileHandle = await window.showSaveFilePicker();
 				} else if (newFileHandle && data) {
-					const writableStream = await newFileHandle.createWritable();
-
 					try {
+						const writableStream = await newFileHandle.createWritable();
+						
 						if (typeof data == "object") {
 							data.chatimg = upscaleImages(data);
 							await writableStream.write(JSON.stringify(data));
@@ -7011,11 +7011,10 @@
 						} else {
 							await writableStream.write("");
 						}
+						await writableStream.close();
 					} catch (e) {
-						console.error("Error writing to file:", e);
+						console.error(e);
 					}
-
-					await writableStream.close();
 				} else if (!data) {
 					const writableStream = await newFileHandle.createWritable();
 					await writableStream.close();

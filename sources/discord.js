@@ -83,16 +83,28 @@
 
 
 	var lastMessage = "";
-	
+	var textSettingsArray = [];
 	
 	function processMessage(ele){
-		console.log(ele);
+		// console.log(ele);
 		
 		var mid = ele.id.split("chat-messages-");
 		if (mid.length==2){
 			mid = mid[1];
 		} else {
 			return;;
+		}
+		
+		if (!settings.discord){
+			// discord isn't allowed via settings
+			return;
+		}
+		
+		if (textSettingsArray.length) {
+			var channel = document.location.pathname.split("/").pop();
+			if (!textSettingsArray.includes(channel)) {
+				return;
+			}
 		}
 		
 		mid = mid.split("-");
@@ -229,6 +241,18 @@
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
+			if (settings && settings.customdiscordchannel){
+				if (settings.customdiscordchannel.textsetting){
+					textSettingsArray = settings.customdiscordchannel.textsetting
+						.split(",")
+						.map(value => value.trim())
+						.filter(value => value);
+				} else {
+					textSettingsArray = [];
+				}
+			} else if (settings){
+				textSettingsArray = [];
+			}
 		}
 	});
 
@@ -244,6 +268,19 @@
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
+						if (settings && settings.customdiscordchannel){
+							if (settings.customdiscordchannel.textsetting){
+								textSettingsArray = settings.customdiscordchannel.textsetting
+									.split(",")
+									.map(value => value.trim())
+									.filter(value => value);
+							} else {
+								textSettingsArray = [];
+							}
+						} else if (settings){
+							textSettingsArray = [];
+						}
+						
 						return;
 					}
 				}
