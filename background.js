@@ -1911,6 +1911,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				}
 
 				if ((request.message.type == "youtube") || (request.message.type == "youtubeshorts")){
+					if (settings.blockpremiumshorts && (request.message.type == "youtubeshorts")){
+						if (request.message.hasDonation || (request.message.membership && request.message.event)){
+							return;
+						}
+					}
 					if (sender.tab.url) {
 						var brandURL = getYoutubeAvatarImage(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
 						if (brandURL) {
