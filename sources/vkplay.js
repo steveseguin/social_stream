@@ -75,9 +75,12 @@
 		var chatimg = ""
 		
 		var name="";
+		var nameColor ="";
 		try {
 			name = escapeHtml(ele.querySelector("[class^='ChatMessageAuthorPanel_name']").textContent);
 			name = name.split(":")[0].trim();
+			
+			nameColor = ele.querySelector("[class^='ChatMessageAuthorPanel_name']").style.color || "";
 		} catch(e){
 		}
 
@@ -106,7 +109,7 @@
 		data.chatbadges = chatbadges;
 		data.backgroundColor = "";
 		data.textColor = "";
-		data.nameColor = "";
+		data.nameColor = nameColor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
