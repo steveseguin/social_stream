@@ -70,45 +70,32 @@
 	var channelName = "";
 	
 	function processMessage(ele){
-		
-		try {
-			if (settings.customlivespacestate){
-				channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
-			}
-		} catch(e){
-			channelName = window.location.href.split("/").pop();
-		}
-		
-	
-		if (channelName && settings.customlivespacestate){
-		  //
-		if (settings.customlivespaceaccount && settings.customlivespaceaccount.textsetting && (settings.customlivespaceaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
-			return;
-		} else if (!settings.customlivespaceaccount){
-			return;
-		}
-		}
-
+		console.log(ele);
 
 		var chatimg = ""
-
-		try {
-			chatimg = ele.querySelector("[class^='vkuiLink Link-module__link--V7bkY vkuiTappable vkuiInternalTappable vkuiTappable--hasActive vkui-focus-visible']").src;
-		} catch(e){
-		}
 		
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector(".VideoChat-module__ownerName--AGC7x").textContent.trim());
+			name = escapeHtml(ele.querySelector("[class^='ChatMessageAuthorPanel_name']").textContent);
+			name = name.split(":")[0].trim();
 		} catch(e){
 		}
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".VideoChat-module__messageText--SHnPZ")).trim();
+			msg = getAllContentNodes(ele.querySelector('[data-role="messageMainContent"]')).trim();
 		} catch(e){
 		}
 		
+		
+		var chatbadges = [];
+		try {
+			ele.querySelectorAll("img[class^='ChatBadge_image']").forEach(badge => {
+				if (badge.src && !chatbadges.includes(badge.src)) {
+					chatbadges.push(badge.src);
+				}
+			});
+		} catch (e) {}
 
 		if (!msg || !name){
 			return;
@@ -116,7 +103,7 @@
 		
 		var data = {};
 		data.chatname = name;
-		data.chatbadges = "";
+		data.chatbadges = chatbadges;
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.nameColor = "";
@@ -128,7 +115,7 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "vklive";
 		
-		
+		console.log(data);
 		pushMessage(data);
 	}
 
@@ -153,26 +140,7 @@
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 				
-					try {
-						if (settings.customlivespacestate){
-							channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
-						}
-					} catch(e){
-						channelName = window.location.href.split("/").pop();
-					}
-		
-					if (channelName && settings.customlivespacestate){
-					  //
-					if (settings.customlivespaceaccount && settings.customlivespaceaccount.textsetting && (settings.customlivespaceaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
-						sendResponse(false);
-						return;
-					} else if (!settings.customlivespaceaccount){
-						sendResponse(false);
-						return;
-					}
-				  }
-				
-					document.querySelector('#type-a-message').focus();
+					document.querySelector('#type-a-message, textarea').focus();
 					sendResponse(true);
 					return;
 				}
@@ -210,7 +178,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -222,31 +190,23 @@
 
 
 	setInterval(function(){
-		try {
-			channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
-		} catch(e){
-			channelName = window.location.href.split("/").pop();
-		}
 		
 		try {
-			document.querySelectorAll('#react_rootVideoChat').forEach(container=>{ // more than one #message .. tsk ;)
-				if (!container.marked){
-					container.marked=true;
+			var container = document.querySelector('[class^="ChatBoxBase_root"] > div');
+			if (container && !container.marked){
+				container.marked=true;
 
-					console.log("CONNECTED chat detected");
+				console.log("CONNECTED chat detected");
 
-					setTimeout(function(){
+				setTimeout(function(container){
+					onElementInserted(container);
 
-						container.querySelectorAll("[class^='VideoChat-module__message--da28x']").forEach(ele=>{
-							ele.skip=true;
-							processMessage(ele);  // maybe comment
-						});
-						onElementInserted(container);
-
-					},1000);
-				}
-			});
-		} catch(e){}
+				},1000, container);
+			}
+		} catch(e){
+			console.error(e);
+			
+		}
 	},2000);
 
 })();

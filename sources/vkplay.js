@@ -1,121 +1,146 @@
 (function () {
-	
-	function escapeHtml(unsafe){
+	 
+	function toDataURL(url, callback) {
+	  var xhr = new XMLHttpRequest();
+	  xhr.onload = function() {
+		  
+		var blob = xhr.response;
+    
+		if (blob.size > (55 * 1024)) {
+		  callback(url); // Image size is larger than 25kb.
+		  return;
+		}
+
+		var reader = new FileReader();
+		
+		
+		reader.onloadend = function() {
+		  callback(reader.result);
+		}
+		reader.readAsDataURL(xhr.response);
+	  };
+	  xhr.open('GET', url);
+	  xhr.responseType = 'blob';
+	  xhr.send();
+	}
+
+	function escapeHtml(unsafe){ // when goofs be trying to hack me
 		return unsafe
 			 .replace(/&/g, "&amp;")
 			 .replace(/</g, "&lt;")
 			 .replace(/>/g, "&gt;")
 			 .replace(/"/g, "&quot;")
-			 .replace(/'/g, "&#039;");
+			 .replace(/'/g, "&#039;") || "";
 	}
-	function getAllContentNodes(element) {
+
+	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
-		if (!element.childNodes.length || !element.childNodes){
-			return element.textContent || "";
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
 		}
 		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent);
+				resp += escapeHtml(node.textContent)+" ";
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
 					resp += node.outerHTML;
 				}
 			}
 		});
 		return resp;
 	}
-	var Timenow = 0;
 	
-	function processMessage(ele, send=true){	// twitch
-	  var chatsticker = false;
-	  var chatmessage = "";
-	  var nameColor = "";
-	  
-	  try {
-		var nameEle = ele.querySelector("[class^='ChatMessage_name_']");
-		var chatname = nameEle.childNodes[0].textContent; // remove the semi colon
-		try {
-			nameColor = nameEle.style.color;
-		} catch(e){}
-	  } catch(e){return;}
-	  
-	  var chatbadges = [];
-	  
-	  ele.querySelectorAll("img[class^='ChatBadge_image'][src]").forEach(badge=>{
-		try {
-			if (badge && badge.nodeName == "IMG"){
-				var tmp = {};
-				tmp.src = badge.src;
-				tmp.type = "img";
-				chatbadges.push(tmp);
-			} else {
-				var tmp = {};
-				tmp.html = badge.outerHTML;
-				tmp.type = "svg";
-				chatbadges.push(tmp);
-			}
-		} catch(e){  }
-	  });
-	  
-	  
-	  try {
-		 
-		var tttt = ele.querySelector('[class^="ChatMessage_text_"] > [class^="BlockRenderer"], [class^="ContentRendererWithTooltip_text_"] > [class^="BlockRenderer"]');
-		chatmessage = getAllContentNodes(tttt);
+	var settings = {};
+	// settings.textonlymode
+	// settings.captureevents
 	
-	  } catch(e){}
-	  
-	  
-	  var chatimg = ""; // https://images.vkplay.live/user/81334/avatar , but I can't get the userID based on the name.. not without an API.
-	 
-	  
-	  var hasDonation = '';
-	  
-	  var data = {};
-	  data.chatname = chatname;
-	  data.chatbadges = chatbadges;
-	  data.nameColor = nameColor;
-	  data.chatmessage = chatmessage;
-	  data.chatimg = chatimg;
-	  data.hasDonation = hasDonation;
-	  data.membership = "";
-	  data.textonly = settings.textonlymode || false;
-	  data.type = "vklive";
-	  
-	  
-	  if (!chatmessage && !hasDonation){
-		return;
-	  }
-	  try {
-		var time = escapeHtml(ele.querySelector('[class^="ChatMessage_publishTime"]').textContent);
-		var msgID = time+" -"+chatname +"/\!@#--"+ chatmessage;
-		// if (pastMessages.includes(msgID)){return;}
-		pastMessages.push(msgID);
-		pastMessages = pastMessages.slice(-200);
-	  } catch(e){console.log(e);}
-	  
-	  
-	  //if (brandedImageURL){
-	  //  data.sourceImg = brandedImageURL;
-	  //}
-	  if (send){
-		  try {
-			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
-		  } catch(e){
-			  //
-		  }
-	  }
+	var channelName = "";
+	
+	function processMessage(ele){
+		//console.log(ele);
+
+		var chatimg = ""
+		
+		var name="";
+		try {
+			name = escapeHtml(ele.querySelector("[class^='ChatMessageAuthorPanel_name']").textContent);
+			name = name.split(":")[0].trim();
+		} catch(e){
+		}
+
+		var msg="";
+		try {
+			msg = getAllContentNodes(ele.querySelector('[data-role="messageMainContent"]')).trim();
+		} catch(e){
+		}
+		
+		
+		var chatbadges = [];
+		try {
+			ele.querySelectorAll("img[class^='ChatBadge_image']").forEach(badge => {
+				if (badge.src && !chatbadges.includes(badge.src)) {
+					chatbadges.push(badge.src);
+				}
+			});
+		} catch (e) {}
+
+		if (!msg || !name){
+			return;
+		}
+		
+		var data = {};
+		data.chatname = name;
+		data.chatbadges = chatbadges;
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.nameColor = "";
+		data.chatmessage = msg;
+		data.chatimg = chatimg;
+		data.hasDonation = "";
+		data.membership = "";
+		data.contentimg = "";
+		data.textonly = settings.textonlymode || false;
+		data.type = "vklive";
+		
+		//console.log(data);
+		pushMessage(data);
 	}
+
+	function pushMessage(data){
+		try{
+			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+		} catch(e){
+		}
+	}
+	
+	
+	
+	
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if ("settings" in response){
+			settings = response.settings;
+		}
+	});
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				if ("focusChat" == request){
-					document.querySelector('.ce-block__content > [contenteditable="true"]').focus();
+				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+				
+					document.querySelector('#type-a-message, textarea').focus();
 					sendResponse(true);
 					return;
 				}
@@ -126,102 +151,61 @@
 						return;
 					}
 				}
-				// twitch doesn't capture avatars already.
 			} catch(e){}
 			sendResponse(false);
 		}
 	);
-	
-	var lastMessage = "";
-	var settings = {};
-	// settings.textonlymode
-	// settings.captureevents
-	
-	
-	var pastMessages = [];
-	
-	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if ("settings" in response){
-			settings = response.settings;
-		}
-	});
 
-	function onElementInserted(target, className) {
+	var lastURL =  "";
+	var observer = null;
+	
+	
+	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						if ( mutation.addedNodes[i] && mutation.addedNodes[i].querySelector){
-							var ele = mutation.addedNodes[i].querySelectorAll("[class^='ChatBoxBase_message'], [class^='ChatMessage_root']");
-							if (ele && (ele.length===1)){
-								if (ele[0].ignore){continue;}
-								ele[0].ignore=true;
-								processMessage(ele[0]);
-							}
+						try {
+							if (mutation.addedNodes[i].skip){continue;}
+
+							mutation.addedNodes[i].skip = true;
+
+							processMessage(mutation.addedNodes[i]); // maybe here
 							
-						}
+						} catch(e){}
 					}
 				}
 			});
 		};
-		var config = { childList: true, subtree: true };
+		
+		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		var observer = new MutationObserver(onMutationsObserved);
+		
+		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 	}
 	
-	console.log("social stream started");
-	
-	var xxx = setInterval(function(){
-		var clear = document.querySelectorAll("[class^='ChatBoxBase_message'], [class^='ChatMessage_root']");
-		for (var i = 0;i<clear.length;i++){
-			clear[i].ignore = true; // don't let already loaded messages to re-load.
-			processMessage(clear[i], false)
+	console.log("social stream injected");
+
+
+
+	setInterval(function(){
+		
+		try {
+			var container = document.querySelector('[class^="ChatBoxBase_root"] > div');
+			if (container && !container.marked){
+				container.marked=true;
+
+				console.log("CONNECTED chat detected");
+
+				setTimeout(function(container){
+					onElementInserted(container);
+
+				},1000, container);
+			}
+		} catch(e){
+			//console.error(e);
 		}
-		if (document.querySelector("#root")){
-			clearInterval(xxx);
-			setTimeout(function(){
-				onElementInserted(document.querySelector("#root"));
-			},3000);
-			
-		}
-	},1000);
-	
-	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
-	try {
-		var receiveChannelCallback = function(e){
-			remoteConnection.datachannel = event.channel;
-			remoteConnection.datachannel.onmessage = function(e){};;
-			remoteConnection.datachannel.onopen = function(e){};;
-			remoteConnection.datachannel.onclose = function(e){};;
-			setInterval(function(){
-				if (document.hidden){ // only poke ourselves if tab is hidden, to reduce cpu a tiny bit.
-					remoteConnection.datachannel.send("KEEPALIVE")
-				}
-			}, 800);
-		}
-		var errorHandle = function(e){}
-		var localConnection = new RTCPeerConnection();
-		var remoteConnection = new RTCPeerConnection();
-		localConnection.onicecandidate = (e) => !e.candidate ||	remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
-		remoteConnection.onicecandidate = (e) => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
-		remoteConnection.ondatachannel = receiveChannelCallback;
-		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
-		localConnection.sendChannel.onopen = function(e){localConnection.sendChannel.send("CONNECTED");};
-		localConnection.sendChannel.onclose =  function(e){};
-		localConnection.sendChannel.onmessage = function(e){};
-		localConnection.createOffer()
-			.then((offer) => localConnection.setLocalDescription(offer))
-			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
-			.then(() => remoteConnection.createAnswer())
-			.then((answer) => remoteConnection.setLocalDescription(answer))
-			.then(() =>	{
-				localConnection.setRemoteDescription(remoteConnection.localDescription);
-				console.log("KEEP ALIVE TRICk ENABLED");
-			})
-			.catch(errorHandle);
-	} catch(e){
-		console.log(e);
-	}
+	},2000);
 
 })();
