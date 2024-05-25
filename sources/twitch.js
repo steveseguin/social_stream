@@ -518,6 +518,7 @@
 		}
 		if (data.hasDonation){
 			data.title = getTranslation("cheers", "CHEERS");
+		}
 
 		try {
 			chrome.runtime.sendMessage(
