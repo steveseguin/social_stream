@@ -60,26 +60,32 @@
 	
 	
 	function processMessage(ele){
-		
+		//console.log(ele);
 		var chatimg = "";
 		try{
-		   chatimg = ele.querySelector(":scope > a > img[src]").src;
+		   chatimg = ele.querySelector(".tw-comment-item-icon img[src]").src;
 		} catch(e){
 		//	console.warn(e);
 		}
 		
 		var name="";
 		try {
-			name = ele.querySelector(":scope > a > span").textContent.trim();
+			name = ele.querySelector(".tw-comment-item-name").childNodes[0].textContent.trim();
 			name = escapeHtml(name);
+		} catch(e){
+		//	console.warn(e);
+		}
+		
+		var userid="";
+		try {
+			userid = ele.querySelector(".tw-comment-item-name[href]").href;
+			userid = userid.replace("/","");
 		} catch(e){
 		//	console.warn(e);
 		}
 		var msg="";
 		try {
-			ele.querySelectorAll(":scope > span[title] > span").forEach(xx=>{
-				msg+= getAllContentNodes(xx);
-			});
+			msg = getAllContentNodes(ele.querySelector(".tw-comment-item-comment"));
 		} catch(e){
 		//	console.warn(e);
 		}
@@ -91,6 +97,7 @@
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = "";
+		data.userid = userid;
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.chatmessage = msg;
@@ -99,9 +106,9 @@
 		data.membership = "";;
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
-		data.type = "zapstream";
+		data.type = "twitcasting";
 		
-		// console.log(data);
+	//	console.log(data);
 		
 		pushMessage(data);
 	}
@@ -156,21 +163,18 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
 							mutation.addedNodes[i].skip = true;
-							setTimeout(function(ele){
-								processMessage(ele);
-							},500,mutation.addedNodes[i])
+							processMessage(mutation.addedNodes[i]);
 						} catch(e){}
 					}
 				}
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -181,15 +185,11 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('.flex.flex-col-reverse')){
-			if (!document.querySelector('.flex.flex-col-reverse').marked){
-				document.querySelector('.flex.flex-col-reverse').marked=true;
+		if (document.querySelector('.tw-comment-list-view')){
+			if (!document.querySelector('.tw-comment-list-view').marked){
+				document.querySelector('.tw-comment-list-view').marked=true;
 				console.log("CONNECTED chat detected");
-				[...document.querySelectorAll(".flex.flex-col-reverse > div")].reverse().forEach(ele=>{
-						ele.skip=true;
-						//processMessage(ele);
-					});
-					onElementInserted('.flex.flex-col-reverse');
+				onElementInserted('.tw-comment-list-view');
 			}
 		}} catch(e){}
 	},2000);
