@@ -183,18 +183,30 @@
 	
 	function processMessageIGLive(ele){
 	//	console.log(ele);
-		var content = ele.childNodes[0].childNodes[0].childNodes[0];
+		try {
+			var content = ele.childNodes[0].childNodes[0].childNodes[0];
+		} catch(e){
+			return;
+		}
 		var chatname="";
 		var streamEvent = false;
 		try {
 			chatname = content.childNodes[1].children[0].textContent;
+			
+			if (content.childNodes[1].children.length==1){
+				streamEvent = true;
+				if (!settings.captureevents){return;}
+			}
+			
 			chatname = chatname.replace(/ .*/,'');
 			chatname = escapeHtml(chatname);
+			
 			if (chatname && (chatname.slice(-1) == ",")){
 				chatname = chatname.slice(0, -1);
 				streamEvent = true;
 				if (!settings.captureevents){return;}
 			}
+			
 		} catch(e){
 		}
 		var chatmessage="";
