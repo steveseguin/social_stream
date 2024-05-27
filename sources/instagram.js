@@ -198,6 +198,19 @@
 				if (!settings.captureevents){return;}
 			}
 			
+			let tt = chatname.split(" ");
+			if (tt.length == 2){
+				if (tt[1] == "joined"){
+					streamEvent = "joined";
+					if (!settings.capturejoinedevent){
+						return;
+					}
+					if (!settings.captureevents){
+						return;
+					}
+				}
+			}
+			
 			chatname = chatname.replace(/ .*/,'');
 			chatname = escapeHtml(chatname);
 			
@@ -215,9 +228,7 @@
 			try {
 				chatmessage = getAllContentNodes(Array.from(content.childNodes[2].querySelectorAll(":scope > span")).slice(-1)[0]);
 			} catch(e){
-				
 				chatmessage = getAllContentNodes(Array.from(content.querySelectorAll("div > span")).slice(-1)[0]);
-				
 			}
 			
 			try{
@@ -279,6 +290,8 @@
 	  data.event = streamEvent;
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "instagramlive";
+	  
+	 // console.log(data);
 	  
 	//  console.log(data);
 	  
