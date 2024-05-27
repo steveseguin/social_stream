@@ -98,7 +98,7 @@
 			return;
 		}
 		
-		console.log(ele);
+		//console.log(ele);
 		
 		try {
 			username = escapeHtml(nameElement.parentNode.parentNode.nextSibling.textContent.trim());
