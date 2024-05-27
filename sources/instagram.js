@@ -291,8 +291,6 @@
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "instagramlive";
 	  
-	  console.log(data);
-	  
 		if (data.chatimg){
 			try{
 			toDataURL(data.chatimg, function(dataUrl) {
