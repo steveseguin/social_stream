@@ -177,13 +177,15 @@
 	
 	setInterval(function(){ // lets just see if the chat has been updated or something
 	
-		if (document.querySelector("#chat-body > .chatbody")){
-			if (!document.querySelector("#chat-body > .chatbody").dataset.set123){
-				console.log("SocialStream Active");
-				document.querySelector("#chat-body > .chatbody").dataset.set123 = "true";
-				onElementInserted("#chat-body > .chatbody", function(element){
-				  processMessage(element, false);
-				});
+		if (window.location.pathname.startsWith("/c/")){
+			if (document.querySelector("#chat-body > .chatbody")){
+				if (!document.querySelector("#chat-body > .chatbody").dataset.set123){
+					console.log("SocialStream Active");
+					document.querySelector("#chat-body > .chatbody").dataset.set123 = "true";
+					onElementInserted("#chat-body > .chatbody", function(element){
+					  processMessage(element, false);
+					});
+				}
 			}
 		}
 	}, 2000);

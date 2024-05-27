@@ -78,43 +78,53 @@
 	}
 	
 	function processMessage(ele){
+		
+		
 		var chatname="";
 		var msg="";
 		var chatimg = "";
+		var username = "";
 		//console.log(ele);
-		
+		var badges = [];
+		var nameElement = "";
 		try {
-			var nameElement = ele.childNodes[0].childNodes[1].childNodes[0];
+			nameElement = ele.childNodes[0].querySelector("span[style*='color']");
 			chatname = escapeHtml(nameElement.textContent.trim());
 			chatname = chatname.split(":")[0];
-			
-			try {
-				chatimg = ele.childNodes[0].childNodes[0].querySelector("img[src]").src;
-			} catch(e){
-			}
-			
-		} catch(e){	
-			try {
-				var nameElement = ele.childNodes[0].childNodes[0].childNodes[0];
-				chatname = escapeHtml(nameElement.textContent.trim());
-				chatname = chatname.split(":")[0];
-			} catch(e){	
+			if (!chatname){
 				return;
 			}
-		}
-		try {
-			try {
-				var node = ele.childNodes[0].childNodes[1].childNodes[1];
-				msg = getAllContentNodes(node);
-			} catch(e){
-				//console.error(e);return;
-			}
-			msg = msg.trim();
-
 		} catch(e){
-			////console.log(e);
 			return;
 		}
+		
+		console.log(ele);
+		
+		try {
+			username = escapeHtml(nameElement.parentNode.parentNode.nextSibling.textContent.trim());
+			if (username.startsWith("@")){
+				username = username.replace("@","");
+			} else {
+				username = "";
+			}
+		} catch(e){	
+		
+		}
+		
+		try {
+			var node = ele.querySelector("button");
+			msg = getAllContentNodes(node);
+			msg = msg.trim();
+		} catch(e){
+			return;
+		}
+		
+		try {
+			chatimg = ele.parentNode.parentNode.querySelector("a[href] img[alt][src]").src;
+		} catch(e){
+			chatimg = "";
+		}
+		
 		
 		var nameColor = "";
 		try {
@@ -137,16 +147,19 @@
 			return;
 		}
 		
-		if (messageHistory.includes(chatname+"_"+msg)) {
+		if (messageHistory.includes((username || chatname)+"_"+msg)) {
 			//console.log("Message already exists");
 			return;
 		} else {
-			messageHistory.push(chatname+"_"+msg);
+			messageHistory.push((username || chatname)+"_"+msg);
 			messageHistory = messageHistory.slice(-10);
 		}
 		
 		var data = {};
 		data.chatname = chatname;
+		if (username){
+			data.username = username;
+		}
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
@@ -318,8 +331,8 @@
 				var container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);
 				if (!container.marked){
 					container.marked=true;
-
 					setTimeout(function(container){
+						console.log("Social Stream started");
 						if (container){
 							onElementInserted(container);
 						}
@@ -327,7 +340,8 @@
 					},1000, container);
 				}
 			}
-		} catch(e){}
+		} catch(e){
+		}
 	},2000);
 
 })();
