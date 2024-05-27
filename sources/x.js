@@ -120,7 +120,7 @@
 		}
 		
 		try {
-			chatimg = ele.parentNode.parentNode.querySelector("a[href] img[alt][src]").src;
+			chatimg = ele.querySelector("a[href] img[alt][src]").src;
 		} catch(e){
 			chatimg = "";
 		}
