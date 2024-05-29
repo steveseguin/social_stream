@@ -4,21 +4,25 @@
 	var lastName = "";
 	var lastImage = "";
 	var messageHistory = [];
-	
+
+  setInterval(() => {
+    lastMessage = {}
+  }, 5000)
+
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
-		  
+
 		var blob = xhr.response;
-	
+
 		if (blob.size > (55 * 1024)) {
 		  callback(url); // Image size is larger than 25kb.
 		  return;
 		}
 
 		var reader = new FileReader();
-		
-		
+
+
 		reader.onloadend = function() {
 		  callback(reader.result);
 		}
