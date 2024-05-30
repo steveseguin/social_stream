@@ -331,7 +331,7 @@
 		}
 		
 		if (isDuplicateMessage(chatname,chatmessage,ele)){
-			console.log("duplicate message; skipping");
+			//console.log("duplicate message; skipping");
 			return;
 		}
 	  
