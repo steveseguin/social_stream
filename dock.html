@@ -3219,6 +3219,17 @@
 				textDirection = "rtl"; // dir="rtl"
 			}
 
+			var debug = false;
+			if (urlParams.has("debug")) {
+				debug = true;
+			}
+			
+			var filtertid = false;
+			if (urlParams.has("filtertid")) {
+				filtertid = urlParams.get("filtertid");
+				filtertid = filtertid.split(",").map(Number);
+			}
+			
 			if (urlParams.has("alignright")) {
 				// document.documentElement.style.setProperty("--list-or-horizontal", "flex");
 				document.documentElement.style.setProperty("--flex-direction", "row-reverse");
@@ -4454,6 +4465,9 @@
 						checkbox.dataset.tab = tab.id;
 						checkbox.checked = activeChatDestinations.has(checkbox.dataset.tab.toString());
 						checkbox.value = activeChatDestinations.has(checkbox.dataset.tab.toString());
+						checkbox.style.cursor = "pointer";
+
+						para.title = "TabID: "+tab.id;
 
 						var titleText = false;
 						if (tab.title) {
@@ -5708,6 +5722,10 @@
 					data = data.contents;
 
 					var invisible = false;
+					
+					if (debug){
+						console.log(data);
+					}
 
 					if (hideTwitch && data.type === "twitch") {
 						// this is a twitch message, and we're hiding them.
@@ -5803,6 +5821,15 @@
 					if (filterEvents && data.event && data.chatmessage) {
 						if (filterEvents.some(v => data.chatmessage.includes(v))) {
 							return;
+						}
+					}
+					
+					if (filtertid){
+						try {
+							if (data && !filtertid.includes(data.tid)){
+								return;
+							}
+						} catch(e){
 						}
 					}
 
