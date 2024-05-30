@@ -79,6 +79,7 @@
 	
 	function processMessage(ele){
 		
+		//console.log(ele);
 		
 		var chatname="";
 		var msg="";
@@ -88,13 +89,15 @@
 		var badges = [];
 		var nameElement = "";
 		try {
-			nameElement = ele.childNodes[0].querySelector("span[style*='color']");
+			nameElement = ele.querySelector("span[style*='color']");
 			chatname = escapeHtml(nameElement.textContent.trim());
 			chatname = chatname.split(":")[0];
 			if (!chatname){
+			//	console.warn("no name");
 				return;
 			}
 		} catch(e){
+		//	console.warn(e);
 			return;
 		}
 		
@@ -108,7 +111,7 @@
 				username = "";
 			}
 		} catch(e){	
-		
+		//console.warn(e);
 		}
 		
 		try {
@@ -116,6 +119,7 @@
 			msg = getAllContentNodes(node);
 			msg = msg.trim();
 		} catch(e){
+		//	console.warn(e);
 			return;
 		}
 		
@@ -135,7 +139,7 @@
 				 }
 			}
 		} catch(e){
-			//console.log(e);
+		//	console.warn(e);
 		}
 		if (chatname.startsWith("This broadcast has ended")){
 			return;
@@ -144,11 +148,12 @@
 		//console.log(msg);
 		//console.log(chatname);
 		if (!msg || !chatname){
+		//	console.warn("no name or message");
 			return;
 		}
 		
 		if (messageHistory.includes((username || chatname)+"_"+msg)) {
-			//console.log("Message already exists");
+			console.log("Message already exists");
 			return;
 		} else {
 			messageHistory.push((username || chatname)+"_"+msg);
@@ -229,7 +234,7 @@
 				if (mutation.addedNodes.length) {
 					try {
 						for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-							if (mutation.addedNodes[i].tagName && (mutation.addedNodes[i].tagName == "DIV") && mutation.addedNodes[i].childNodes && mutation.addedNodes[i].parentNode && (mutation.addedNodes[i].parentNode.tagName == "DIV")){
+							if (mutation.addedNodes[i].tagName && (mutation.addedNodes[i].tagName == "DIV")){
 								setTimeout(function(ele){
 									processMessage(ele);
 								},500,mutation.addedNodes[i]);
