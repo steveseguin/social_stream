@@ -128,8 +128,34 @@
 
 	var savedavatars = {};
 	var channelName = false;
+	var msgCount = 0;
+	
+	const messageLog = {};
+	function isDuplicateMessage(name, message, ele) {
+		const currentTime = Date.now();
+		const messageKey = `${name}:${message}`;
+		
+		if (messageLog[messageKey] && (currentTime - messageLog[messageKey].currentTime) <= 3000) {
+			if (messageLog[messageKey].ele && !messageLog[messageKey].ele.isConnected){
+				return true; // exact same message already posted.
+			}
+		}
+		messageLog[messageKey] = {currentTime:currentTime, ele:ele};
+		
+		for (const key in messageLog) {
+			if ((currentTime - messageLog[key].currentTime) > 3000) {
+				delete messageLog[key];
+			}
+		}
+		return false;
+	}
 
 	function processMessage(ele, ital=false){
+		
+		if (ele && ele.dataset.skip){
+			return;
+		}
+		ele.dataset.skip = ++msgCount;
 		
 		var chatimg="";
 		try{
@@ -304,6 +330,10 @@
 			}
 		}
 		
+		if (isDuplicateMessage(chatname,chatmessage,ele)){
+			console.log("duplicate message; skipping");
+			return;
+		}
 	  
 		var data = {};
 		data.chatname = chatname;
@@ -358,7 +388,9 @@
 						try {
 							if (mutation.addedNodes[i].dataset && (mutation.addedNodes[i].dataset.e2e == "chat-message")){
 								setTimeout(function(ele2){
-									processMessage(ele2)
+									if (ele2 && ele2.isConnected) {
+										processMessage(ele2);
+									}
 								},300, mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].dataset.e2e){
 								setTimeout(function(ele2){
