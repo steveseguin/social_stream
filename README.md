@@ -159,6 +159,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - beamstream.gg (open https://beamstream.gg/USERNAME/chat to user. *note the /chat added at the end)
 - zap.stream (no pop out)
 - twitcasting.tv (no pop out)
+- bigo.tv (no pop out)
   
 [More on request](#requesting-a-site)
 
