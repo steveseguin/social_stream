@@ -155,11 +155,13 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - riverside.fm (just open the chat bar. Note: you can opt-out of capture via the extension menu)
 - chzzk.naver.com (pop out the chat)
 - demo.openstreamingplatform.com (pop out chat)
-- wave.video
+- wave.video|
+- cherry.tv
 - beamstream.gg (open https://beamstream.gg/USERNAME/chat to user. *note the /chat added at the end)
 - zap.stream (no pop out)
 - twitcasting.tv (no pop out)
 - bigo.tv (no pop out)
+- circle.so
   
 [More on request](#requesting-a-site)
 
