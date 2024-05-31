@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 2,
-  "version": "1.77.1",
+  "version": "1.77.2",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -22,6 +22,7 @@
     "webNavigation",
     "notifications",
 	"https://zap.stream/*",
+	"https://www.bigo.tv/*",
     "https://chaturbate.com/*/",
     "https://cherry.tv/*",
     "https://beamstream.gg/*/chat",
@@ -158,6 +159,10 @@
     {
       "js": [ "./sources/zapstream.js" ],
       "matches": [ "https://zap.stream/*" ]
+    },
+	{
+      "js": [ "./sources/bigo.js" ],
+      "matches": [ "https://www.bigo.tv/*" ]
     },	
     {
       "js": [ "./sources/chaturbate.js" ],
