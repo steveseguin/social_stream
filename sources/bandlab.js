@@ -13,7 +13,6 @@
 
 		var reader = new FileReader();
 		
-		
 		reader.onloadend = function() {
 		  callback(reader.result);
 		}
@@ -72,13 +71,13 @@
 		
 		var name="";
 		try {
-			name = ele.querySelector(".comment-author-name").textContent.trim();
+			name = ele.querySelector(".comment-author-name, .live-message-body-author").textContent.trim();
 		} catch(e){
 		}
 		var msg="";
 		try {
-			ele.querySelector(".comment-body").childNodes.forEach(xx=>{
-				if (xx.querySelector && xx.querySelector(".comment-author-name")){
+			ele.querySelector(".live-message-body").childNodes.forEach(xx=>{
+				if (xx.querySelector && xx.querySelector(".comment-author-name, .live-message-body-author")){
 					
 				} else {
 					msg+= getAllContentNodes(xx);
