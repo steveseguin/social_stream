@@ -162,6 +162,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - twitcasting.tv (no pop out)
 - bigo.tv (no pop out)
 - circle.so
+- sooplive.com (pop out the chat to use)
   
 [More on request](#requesting-a-site)
 
