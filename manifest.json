@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 2,
-  "version": "1.77.3",
+  "version": "1.77.4",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -149,6 +149,7 @@
     "https://estrim.com/publications/view/*",
     "https://vk.com/*",
     "https://wave.video/*",
+	"https://www.sooplive.com/chat/*",
     "storage",
     "debugger"
   ],
@@ -261,6 +262,10 @@
     {
       "js": [ "./sources/openai.js" ],
       "matches": [ "https://chat.openai.com/*" ]
+    },
+	{
+      "js": [ "./sources/sooplive.js" ],
+      "matches": [ "https://www.sooplive.com/chat/*" ]
     },
     {
       "js": [ "./sources/bandlab.js" ],
