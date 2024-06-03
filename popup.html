@@ -1761,12 +1761,20 @@
 				<div class="collapsible-text">
 					<div class="options">
 						<div class="options_group single_message">
-
 							<div>
 								<label class="switch">
-									<input type="checkbox" data-param2="showtime=20000">
+									<input type="checkbox" data-param2="showtime">
 									<span class="slider round"></span>
-								</label><span data-translate="hide-overlay-after-20s">⏲️ Hide overlay after 20s
+								</label><span data-translate="hide-overlay-after-20s">⏲️ Auto-hide message after
+								<input type="number" style='max-width:8ch;' max="999999" min="1" value="20000" size="6" data-numbersetting2="showtime">ms
+							</span></div>
+							
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param2="queuetime">
+									<span class="slider round"></span>
+								</label><span data-translate="queue-time">⌚ Queue & Show messages for at least
+								<input type="number" style='max-width:8ch;' max="999999" min="1" value="10000" size="6" data-numbersetting2="queuetime">ms
 							</span></div>
 							<div>
 								<label class="switch">
@@ -1839,7 +1847,7 @@
 									<span class="slider round"></span>
 								</label><span data-translate="text-align-right">🗨️🧱 Force right-to-left text reading
 							</span></div>
-							<div>
+							<div title="Using the dock is the recommended way to auto-show messages">
 								<label class="switch">
 									<input type="checkbox" data-param2="autoshow">
 									<span class="slider round"></span>

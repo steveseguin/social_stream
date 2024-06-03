@@ -1038,7 +1038,7 @@ function updateSettings(ele, sync=true, value=null){
 				}
 			}
 			
-			document.querySelectorAll("input[data-param1^='"+ele.dataset.param1.split("=")[0]+"']:not([data-param1='"+ele.dataset.param1+"'])").forEach(ele1=>{
+			document.querySelectorAll("input[data-param1^='"+ele.dataset.param1.split("=")[0]+"=']:not([data-param1='"+ele.dataset.param1+"']), input[data-param1='"+ele.dataset.param1.split("=")[0]+"']:not([data-param1='"+ele.dataset.param1+"'])").forEach(ele1=>{
 				if (ele1 && ele1.checked){
 					ele1.checked = false;
 					updateSettings(ele1, sync);

@@ -931,6 +931,14 @@
 				changeLg(ln_template, true);
 			}
 
+			// queuetime
+			var queue = [];
+			var queueTimer = null;
+			var queuetime = false;
+			if (urlParams.has("queuetime")) {
+				queuetime = urlParams.get("queuetime");
+			}
+			
 			var firstNamesOnly = false;
 			if (urlParams.has("firstnamesonly") || urlParams.has("firstname") || urlParams.has("firstnames")) {
 				firstNamesOnly = true;
@@ -1799,13 +1807,6 @@
 						lastMessageId = null;
 					}
 
-					clearTimeout(timeoutTimer);
-
-					if (!stacking) {
-						document.getElementById("output").classList.add(transitionType);
-					}
-					clearInterval(nextComment);
-					
 					try {
 						if (data.contents.chatimg && data.contents.chatimg.startsWith("http")) {
 							// preload URL based
@@ -1820,6 +1821,59 @@
 					} catch (e) {
 						warnlog(e);
 					}
+					
+					
+					if (queuetime){
+						queue.push(data.contents);
+						checkqueue(false);
+					} else {
+						showmessage(data.contents)
+					}
+					
+					
+				} else if (data) {
+					if ("contents" in data) {
+						lastMessageId = null;
+						clearTimeout(timeoutTimer);
+						document.getElementById("output").classList.add(transitionType);
+						clearTimeout(nextComment);
+						
+						checkqueue(true);
+
+						if (isIFrame) {
+							clearTimeout(iframeTimeout);
+							iframeTimeout = setTimeout(function () {
+								parent.postMessage({ resizeWindow: { height: "0px" } }, "*");
+							}, 300);
+						}
+
+						sendToDisk(data.contents);
+					}
+				}
+			}
+			
+			function checkqueue(reset=true){
+				if (reset && queueTimer){
+					clearTimeout(queueTimer);
+					queueTimer = null;
+				}
+				if (queuetime && queue.length && !queueTimer){
+					lastMessageId = null;
+					document.getElementById("output").classList.add(transitionType);
+					clearTimeout(nextComment);
+					showmessage(queue.shift());
+				}
+			}
+			
+			function showmessage(contents){
+				try {
+				
+					clearTimeout(timeoutTimer);
+					
+					if (!stacking) {
+						document.getElementById("output").classList.add(transitionType);
+					}
+					clearTimeout(nextComment);
 
 					if (isIFrame) {
 						clearTimeout(iframeTimeout);
@@ -1827,7 +1881,11 @@
 							parent.postMessage({ resizeWindow: { height: "220px" } }, "*");
 						}, 300);
 					}
-
+				
+					if (queuetime){
+						queueTimer = setTimeout(checkqueue,queuetime);
+					}
+				
 					nextComment = setTimeout(
 						function (data) {
 							var addImage = "";
@@ -2204,46 +2262,34 @@
 								timeoutTimer = setTimeout(function () {
 									lastMessageId = null;
 									document.getElementById("output").classList.add(transitionType);
-									clearInterval(nextComment);
+									clearTimeout(nextComment);
+									checkqueue(true);
+									
 								}, timeoutDelay);
 							}
 						},
-						500,
-						data.contents
+						500, // give time for the previous featured message to go fade/drop away
+						contents
 					);
 
-					sendToDisk(data.contents);
+					sendToDisk(contents);
 
 					if (beep) {
 						playtone();
 					}
 
-					if (newImageHandle && data.contents && data.contents.chatimg) {
-						if (data.contents.type && data.contents.chatimg && ((data.contents.type == "youtube") || (data.contents.type == "youtubeshorts"))) {
-							data.contents.chatimg = data.contents.chatimg.replace("=s32-", "=s512-"); // high, but meh.
-							data.contents.chatimg = data.contents.chatimg.replace("=s64-", "=s512-");
+					if (newImageHandle && contents && contents.chatimg) {
+						if (contents.type && contents.chatimg && ((contents.type == "youtube") || (contents.type == "youtubeshorts"))) {
+							contents.chatimg = contents.chatimg.replace("=s32-", "=s512-"); // high, but meh.
+							contents.chatimg = contents.chatimg.replace("=s64-", "=s512-");
 						}
-						if (data.contents.type && (data.contents.type == "twitch") && data.contents.chatname && !data.contents.chatimg) {
-							data.contents.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.contents.chatname); // 150x150
+						if (contents.type && (contents.type == "twitch") && contents.chatname && !contents.chatimg) {
+							contents.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(contents.chatname); // 150x150
 						}
-						overwriteImage(data.contents.chatimg);
+						overwriteImage(contents.chatimg);
 					}
-				} else if (data) {
-					if ("contents" in data) {
-						lastMessageId = null;
-						clearTimeout(timeoutTimer);
-						document.getElementById("output").classList.add(transitionType);
-						clearInterval(nextComment);
-
-						if (isIFrame) {
-							clearTimeout(iframeTimeout);
-							iframeTimeout = setTimeout(function () {
-								parent.postMessage({ resizeWindow: { height: "0px" } }, "*");
-							}, 300);
-						}
-
-						sendToDisk(data.contents);
-					}
+				} catch(e){
+					console.error(e);
 				}
 			}
 
