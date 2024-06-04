@@ -61,6 +61,7 @@
 				--bgcolor-bubble: #000d;
 				--bgcolor-bubble-odd: #111d;
 
+				--scrollbar-visible: inherit;
 				--padding-rows: 3px;
 			}
 			.closeBtn {
@@ -358,6 +359,7 @@
 
 			::-webkit-scrollbar {
 				width: 15px;
+				display: var(--scrollbar-visible);
 			}
 
 			::-webkit-scrollbar-track {
@@ -3554,11 +3556,20 @@
 			if (urlParams.has("transparent") || urlParams.has("transparency")) {
 				document.documentElement.style.setProperty("--background-color", "#0000", "important");
 				document.documentElement.style.setProperty("--menu-background-color", "linear-gradient(to right, #0000, #0008, #0000)", "important");
-				//document.documentElement.style.setProperty("--menu-border-color", "0 0 0 #0000", "important");
-				getById("main").style.overflow = "hidden"; // transparent auto hides the scroll bar; i guess that makes sense, since likely used in studio software then.
-				try {
-					mainOutputWindow.style.overflow = "hidden";
-				} catch (e) {}
+				mainOutputWindow.style.overflow = "hidden";
+				
+				if (window.obsstudio){
+					getById("main").style.overflow = "hidden"; // transparent auto hides the scroll bar; i guess that makes sense, since likely used in studio software then.
+				} else {
+					try {
+						document.documentElement.style.setProperty("--scrollbar-visible", "none");
+						// For IE, Edge, and Firefox
+						document.body.style.msOverflowStyle = 'none';  // IE and Edge
+						document.body.style.scrollbarWidth = 'none';  // Firefox
+					
+						
+					} catch (e) {}
+				}
 			}
 
 			var firstNamesOnly = false;
