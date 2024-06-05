@@ -6206,7 +6206,11 @@
 					} else if (splitMode) {
 						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>" + "<div class='leftside " + larger + "'>" + chatname + showType + chatImg + "</div>" + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
 					} else if (compactmode) {
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + "</div>" + addImage + donationHTML + "</div>");
+						if (bubble){
+							var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
+						} else {
+							var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + "</div>" + addImage + donationHTML + "</div>");
+						}
 					} else {
 						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
 					}
