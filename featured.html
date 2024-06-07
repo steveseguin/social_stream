@@ -418,6 +418,16 @@
 				bottom: 0px;
 				height: max(100%, 200px);
 			}
+			
+			.largeImage {
+				padding:0;
+				left:100px;
+			}
+			
+			.largeImage>img, .largeImage>video {
+				max-width: calc(100vw - 200px);
+				max-height: 240px;
+			}
 
 			.hl-imgContent > img  , .hl-imgContent > video {
 				object-fit: contain;
@@ -1889,8 +1899,16 @@
 					nextComment = setTimeout(
 						function (data) {
 							var addImage = "";
+							var largeImage = false;
 							
-							if (data.contentimg){
+							if (!data.chatmessage && data.contentimg){
+								if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
+									data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video>';
+								} else {
+									data.chatmessage = '<img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" />';
+								}
+								largeImage = true;
+							} else if (data.contentimg){
 								if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
 									addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video></div>';
 								} else {
@@ -1899,6 +1917,8 @@
 							} else {
 								data.contentimg = "";
 							}
+							
+							
 
 							if (!data.chatimg) {
 								data.chatimg = "";
@@ -2119,7 +2139,9 @@
 							var fontsize = "";
 							var limitchar = parseInt(window.innerWidth / 6.5);
 
-							if (fontfit) {
+							if (largeImage){
+								document.getElementById("message").classList.add("largeImage");
+							} else if (fontfit) {
 								if (document.getElementById("message").innerText.length > limitchar) {
 									fontsize = parseInt((limitchar * 100) / document.getElementById("message").innerText.length);
 									if (fontsize < 43) {
