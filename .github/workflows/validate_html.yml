@@ -1,6 +1,17 @@
-      on: push
-      name: HTML5Validator
-      uses: Cyb3r-Jak3/html5validator-action
+name: HTML5 and CSS Validator
+
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Validate HTML and CSS
+      uses: Cyb3r-Jak3/html5validator-action@v0.1.2
       with:
         root: /
         css: true
