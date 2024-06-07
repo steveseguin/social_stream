@@ -318,7 +318,11 @@
 		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
 	}
 	
-	
+	var badEmotes = false;
+	if (urlParams.has("bademotes")) {
+		badEmotes = urlParams.get("bademotes");
+		badEmotes = badEmotes.match(/(\p{Regional_Indicator}\p{Regional_Indicator}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\p{Emoji_Modifier}|\u200D\p{Emoji})*|\p{Emoji_Component}\uFE0F/gu) || [];
+	}
 
 	var custombot = false;
 	if (urlParams.has("myname") || urlParams.has("botlist")){
@@ -739,6 +743,10 @@
 		}
 
 		if (emojis){
+		
+			if (badEmotes){
+				emojis = emojis.filter(emoji => !badEmotes.includes(emoji));
+			}
 			
 			emojis.forEach(img=>{
 				if (["🏻","🏼","🏾","🏾","🏾"].includes(img)){return;} // we will not process skin tones only, as likely a glitch.

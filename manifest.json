@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 2,
-  "version": "1.77.5",
+  "version": "1.77.6",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -82,6 +82,7 @@
     "https://web.whatsapp.com/",
     "https://rumble.com/*",
     "https://www.amazon.com/live*",
+	"https://www.amazon.com/b/?node=*&broadcast=*",
     "https://*.telegram.org/*",
     "https://*.webex.com/*",
     "https://webex.com/*",
@@ -605,7 +606,7 @@
     },
     {
       "js": [ "./sources/amazon.js" ],
-      "matches": [ "https://www.amazon.com/live*" ],
+      "matches": [ "https://www.amazon.com/live*", "https://www.amazon.com/b/?node=*&broadcast=*"],
       "run_at": "document_start"
     },
     {
