@@ -98,6 +98,25 @@
 				top: 7px;
 				position: relative;
 			}
+			
+			.volume-container {
+				  position: relative;
+				  display: inline-block;
+			}
+
+			.volume-slider {
+			  position: absolute;
+			  bottom: 40px; /* Adjust as needed to position above the button */
+			  left: 50%;
+			  transform: translateX(-50%);
+			  display: none;
+			  z-index: 10;
+			  cursor: pointer;
+			}
+
+			.volume-container:hover .volume-slider {
+			  display: block;
+			}
 
 			@keyframes float {
 				0% {
@@ -1803,8 +1822,11 @@
 			<div class="horizontalSeparator"></div>
 
 			<!-- Text-to-speech buttons -->
-
-			<button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts();" style="background-image: url(./icons/tts_incoming_messages_off.png)" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
+			
+			<div class="volume-container">
+			    <input type="range" id="volumeSlider" min="0" max="100" value="100" class="volume-slider">
+			    <button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts();" style="background-image: url(./icons/tts_incoming_messages_off.png)" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
+			</div>
 
 			<!-- Scroll button -->
 			<button class="imgButton imgSmallButton" id="jumpto" data-state="0" onclick="jumptoBottom();" style="background-image: url(./icons/scroll_to_bottom_off.png)" title="Scroll to bottom"></button>
@@ -3007,7 +3029,9 @@
 			if (urlParams.has("volume")) {
 				volume = urlParams.get("volume") || 1;
 				volume = parseFloat(volume);
+				document.getElementById('volumeSlider').value = volume*100;
 			}
+			
 
 			var voiceLatency = 4; // 0 slowest, but best quality; 4 is fastest, but worst quality
 			if (urlParams.has("latency")) {
@@ -3104,7 +3128,7 @@
 				} else {
 					speechInput.voice = voice;
 				}
-
+				console.log("vooumlume:"+volume);
 				speechInput.volume = volume;
 				speechInput.rate = rate;
 				speechInput.pitch = pitch;
@@ -5183,6 +5207,10 @@
 				getById("pinned").appendChild(element);
 				applyHiddenState(element);
 			}
+			
+			document.getElementById('volumeSlider').addEventListener('input', function() {
+			    volume = this.value/100;
+			});
 
 			function deleteMessage(element) {
 				syncDataP2P({ deleteMessage: element.dataset.mid }, false, true);
