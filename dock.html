@@ -1853,9 +1853,15 @@
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="Copy">
-					<a href="#" class="context-menu__link" data-action="copy">
+					<a href="#" class="context-menu__link" data-action="Copy">
 						<i class="las la-copy"></i>
 						<span>Copy Text</span>
+					</a>
+				</li>
+				<li class="context-menu__item" data-action="Reply" title="Reply to this user; message goes to their tab only">
+					<a href="#" class="context-menu__link" data-action="Reply">
+						<i class="las la-external-link"></i>
+						<span>Reply to User</span>
 					</a>
 				</li>
 				<li class="hidden" id="TipRightClick">
@@ -4452,11 +4458,11 @@
 						modal.style.display = "block";
 						modal.innerHTML =
 							'<div class="modal-content">\
-					<span class="close-btn">&times;</span>\
-					<h2 id="chatDestinationsFor">Checking what chat destinations are available...</h2>\
-					<div id="chatDestinationsList"></div>\
-				  </div>\
-				';
+								<span class="close-btn">&times;</span>\
+								<h2 id="chatDestinationsFor">Checking what chat destinations are available...</h2>\
+								<div id="chatDestinationsList"></div>\
+							  </div>\
+							';
 						document.body.appendChild(modal);
 					}
 
@@ -5228,10 +5234,84 @@
 			}
 
 			function replyToUser(element) {
+				
+				if (isOBSBrowserSource) {
+					return;
+				}
+				
 				var chatName = element.dataset.chatname;
 				var type = element.dataset.sourceType;
-				// need to get the tab ID.
-				// configure chat for this specific user; it's tab?
+				var tid = null;
+				if (element.rawContents && element.rawContents.tid){
+					tid = element.rawContents.tid;
+				}
+				
+				if (document.getElementById("getChatSourceButton")) {
+					clearTimeout(getById("getChatSourcesButton").setTimeout);
+				}
+				var modal = document.getElementById("getReplyModule");
+				if (!modal) {
+					modal = document.createElement("div");
+					modal.id = "getReplyModule";
+					modal.classList.add("modal");
+					modal.style.display = "block";
+					modal.innerHTML =
+						'<div class="modal-content">\
+							<span class="close-btn">&times;</span>\
+							<h2 id="c">What message do you want to send '+chatName+'?</h2>\
+							<input type="textarea" style="width: calc(100% - 200px);min-width:200px;" id="getReplyModuleInput">\
+							<button id="getReplyModuleButton">SEND</button><br><br>\
+							'+(tid?"":"<div>⚠️ This message will go to all destinations, since it didn't come from a specific tab</div>")+'\
+						  </div>\
+						';
+					if (tid==null){
+						modal.innerHTML += "<div>⚠️ This message will go to all destinations, since it didn't come from a specific tab</div>";
+					}
+						
+					document.body.appendChild(modal);
+				} else {
+					modal.classList.remove("hidden");
+				}
+
+				const span = document.getElementsByClassName("close-btn")[0];
+				const getReplyModuleInput = getById("getReplyModuleInput");
+				const getReplyModuleButton = getById("getReplyModuleButton");
+				
+				getReplyModuleInput.focus();
+				
+				
+				span.onclick = () => {
+					modal.classList.add("hidden");
+					modal.remove();
+					delete modal;
+				};
+				
+				
+				getReplyModuleButton.onclick = () => {
+				
+					var response = getReplyModuleInput.value;
+					if (!response){return;}
+					response = response.trim();
+					if (!response){return;}
+					try {
+						modal.classList.add("hidden");
+						modal.remove();
+						delete modal;
+					} catch(e){
+						console.error(e);
+					}
+					
+					if (!response.startsWith("@")){
+						response =  "@"+chatName+": "+response;
+					}
+					
+					let sendBlob = {};
+					sendBlob.response = response;
+					if (tid!==null){
+						sendBlob.tid = tid
+					}
+					send2Extension(sendBlob);
+				}
 			}
 
 			function toggleVIPUser(element) {
@@ -7198,6 +7278,8 @@
 							menu.style.left = clickCoordsX + "px";
 						}
 						menu.style.top = "unset";
+						menu.style.position = "relative";
+						
 						var offset = document.body.scrollTop + document.body.clientHeight - clickCoordsY - menuHeight;
 						if (offset < -10) {
 							offset = -10;
