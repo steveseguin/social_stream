@@ -502,10 +502,10 @@
 				if ("settings" in request) {
 					settings = request.settings;
 					sendResponse(true);
-					if (settings.bttv && !BTTV) {
+					if (settings.bttv) {
 						chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {});
 					}
-					if (settings.seventv && !SEVENTV) {
+					if (settings.seventv) {
 						chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {});
 					}
 					return;

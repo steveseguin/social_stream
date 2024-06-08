@@ -1175,6 +1175,17 @@ function getItemWithExpiry(key) {
 	return item.value;
 }
 
+function clearAllWithPrefix(prefix) {
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith(prefix)) {
+      localStorage.removeItem(key);
+	  console.log("Cleared "+key);
+      i--;
+    }
+  }
+}
+
 var Globalbttv = false;
 var Globalseventv = false;
 
@@ -1216,7 +1227,7 @@ async function getBTTVEmotes(url = false) {
 					}
 				}
 				if (userID) {
-					bttv = getItemWithExpiry("uid2bttv2:" + userID);
+					bttv = getItemWithExpiry("uid2bttv2.youtube:" + userID);
 
 					if (!bttv) {
 						bttv = await fetch("https://api.betterttv.net/3/cached/users/youtube/" + userID)
@@ -1244,7 +1255,7 @@ async function getBTTVEmotes(url = false) {
 									return acc;
 								}, {});
 							}
-							setItemWithExpiry("uid2bttv2:" + userID, bttv);
+							setItemWithExpiry("uid2bttv2.youtube:" + userID, bttv);
 						} else {
 							bttv = {};
 						}
@@ -1770,12 +1781,16 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			if (request.setting == "bttv") {
 				if (settings.bttv) {
+					clearAllWithPrefix("uid2bttv2.twitch:");
+					clearAllWithPrefix("uid2bttv2.youtube:");
 					await getBTTVEmotes();
 				}
 				pushSettingChange();
 			}
 			if (request.setting == "seventv") {
-				if (settings.bttv) {
+				if (settings.seventv) {
+					clearAllWithPrefix("uid2seventv.twitch:");
+					clearAllWithPrefix("uid2seventv.youtube:");
 					await getSEVENTVEmotes();
 				}
 				pushSettingChange();
