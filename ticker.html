@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Ticker</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+        }
+        .ticker-container {
+            width: 100%;
+            height: 60px;
+            background-color: #001f3f;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            position: fixed;
+            bottom: 0;
+            border-top: 5px solid #ff4136;
+        }
+        .ticker {
+            display: flex;
+            white-space: nowrap;
+            will-change: transform;
+            animation: scroll 20s linear infinite;
+        }
+        .ticker-item {
+            padding: 0 50px;
+            font-size: 24px;
+            line-height: 60px;
+        }
+        @keyframes scroll {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ticker-container">
+        <div class="ticker">
+            <div class="ticker-item">Breaking News: Market hits an all-time high...</div>
+            <div class="ticker-item">Weather Update: Heavy rain expected this weekend...</div>
+            <div class="ticker-item">Sports: Local team wins championship...</div>
+            <div class="ticker-item">Entertainment: New blockbuster movie releases...</div>
+            <div class="ticker-item">Technology: New smartphone model unveiled...</div>
+        </div>
+    </div>
+</body>
+</html>
