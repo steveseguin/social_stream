@@ -210,7 +210,7 @@
 	var lastEle = null;
 	//var midList = [];
 
-	function processMessage(ele) {
+	function processMessage(ele, event=false) {
 		// twitch
 
 		var chatsticker = false;
@@ -218,7 +218,7 @@
 		var nameColor = "";
 		var donations = 0;
 		var highlightColor = "";
-
+		
 		try {
 			var displayNameEle = ele.querySelector(".chat-author__display-name, .chatter-name") || ele.querySelector(".seventv-chat-user-username");
 			var displayName = displayNameEle.innerText;
@@ -292,7 +292,11 @@
 		} catch (e) {}
 
 		try {
-			var eleContent = ele.querySelector(".seventv-chat-message-body") || ele.querySelector(".seventv-message-context") || ele.querySelector('*[data-test-selector="chat-line-message-body"]') || ele.querySelector('*[data-a-target="chat-line-message-body"]');
+			if (event){
+				var eleContent = ele.childNodes[0];
+			} else {
+				var eleContent = ele.querySelector(".seventv-chat-message-body") || ele.querySelector(".seventv-message-context") || ele.querySelector('*[data-test-selector="chat-line-message-body"]') || ele.querySelector('*[data-a-target="chat-line-message-body"]');
+			}
 
 			chatmessage = getAllContentNodes(eleContent);
 
@@ -301,7 +305,7 @@
 			}
 		} catch (e) {}
 
-		if (!chatmessage) {
+		if (!chatmessage && !event) {
 			try {
 				var eleContent = ele.querySelector("span.message");
 				chatmessage = getAllContentNodes(eleContent);
@@ -311,7 +315,7 @@
 			} catch (e) {}
 		}
 
-		if (!chatmessage) {
+		if (!chatmessage && !event) {
 			try {
 				var eleContent = ele.querySelector(".chat-line__message-container .chat-line__username-container").nextElementSibling.nextElementSibling;
 				chatmessage = getAllContentNodes(eleContent);
@@ -331,7 +335,7 @@
 			} catch (e) {}
 		}
 
-		if (!chatmessage) {
+		if (!chatmessage && !event) {
 			try {
 				var eleContent = ele.querySelector(".paid-pinned-chat-message-content-container").childNodes;
 
@@ -659,6 +663,13 @@
 	}
 
 	function processEvent(ele) {
+		
+		try {
+			ele = ele.childNodes[0];
+		} catch (e) {
+			//
+		}
+		
 		var data = {};
 		data.chatname = "";
 		data.chatbadges = "";
@@ -750,23 +761,26 @@
 							}
 
 							mutation.addedNodes[i].ignore = true;
-
+							
+							if (settings.captureevents && mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.testSelector == "user-notice-line") {
+								processEvent(mutation.addedNodes[i]);
+							} else if (settings.captureevents && mutation.addedNodes[i].className && mutation.addedNodes[i].classList.contains("user-notice-line")) {
+								processEvent(mutation.addedNodes[i]);
+							}
+							
 							if (mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message") || (mutation.addedNodes[i].querySelector && mutation.addedNodes[i].querySelector(".paid-pinned-chat-message-content-wrapper")))) {
-								mutation.addedNodes[i].ignore = true;
 								callback(mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].querySelector(".chat-line__message")) {
 								var ele = mutation.addedNodes[i].querySelector(".chat-line__message");
-								if (ele.ignore) {
+								
+								if (ele.ignore) { 
 									continue;
 								} else {
 									ele.ignore = true;
 									callback(ele);
 								}
-							} else if (settings.captureevents && mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.testSelector == "user-notice-line") {
-								processEvent(mutation.addedNodes[i]);
-							} else if (settings.captureevents && mutation.addedNodes[i].className && mutation.addedNodes[i].classList.contains("user-notice-line")) {
-								processEvent(mutation.addedNodes[i]);
 							}
+							
 						} catch (e) {}
 					}
 				}
