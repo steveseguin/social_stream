@@ -802,7 +802,7 @@
 								data.chatimg = data.chatimg.replace("=s64-", "=s512-");
 							}
 
-							if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
+							if (data.type && (data.type == "twitch") && data.chatname) {
 								data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
 							}
 
@@ -2156,7 +2156,7 @@
 							}
 
 							var username = data.username || data.chatname;
-							if ((data.type == "twitch") && avatar && username && !data.chatimg) {
+							if ((data.type == "twitch") && avatar && username) {
 								var twitchImage = new Image();
 								data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(username);
 								twitchImage.onload = function () {
@@ -2304,7 +2304,7 @@
 							contents.chatimg = contents.chatimg.replace("=s32-", "=s512-"); // high, but meh.
 							contents.chatimg = contents.chatimg.replace("=s64-", "=s512-");
 						}
-						if (contents.type && (contents.type == "twitch") && contents.chatname && !contents.chatimg) {
+						if (contents.type && (contents.type == "twitch") && contents.chatname) {
 							contents.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(contents.chatname); // 150x150
 						}
 						overwriteImage(contents.chatimg);
