@@ -592,6 +592,10 @@ function update(response, sync=true){
 			
 			document.getElementById("waitlist").innerHTML = "<a target='_blank' id='waitlistlink' href='"+baseURL+"waitlist.html?session="+response.streamID+password+"'>"+baseURL+"waitlist.html?session="+response.streamID+password+"</a>";
 			document.getElementById("waitlist").raw = baseURL+"waitlist.html?session="+response.streamID+password;
+			
+			document.getElementById("ticker").innerHTML = "<a target='_blank' id='tickerlink' href='"+baseURL+"ticker.html?session="+response.streamID+password+"'>"+baseURL+"ticker.html?session="+response.streamID+password+"</a>";
+			document.getElementById("ticker").raw = baseURL+"ticker.html?session="+response.streamID+password;
+			
 
 			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
 		
@@ -1120,6 +1124,17 @@ function updateSettings(ele, sync=true, value=null){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam5", setting: ele.dataset.textparam5, "value": ele.value}, function (response) {});
 		}
+	} else if (ele.dataset.textparam6){
+		document.getElementById("ticker").raw = removeQueryParamWithValue(document.getElementById("ticker").raw, ele.dataset.textparam6);
+		
+		if (ele.value){
+			document.getElementById("ticker").raw = updateURL(ele.dataset.textparam6+"="+encodeURIComponent(ele.value), document.getElementById("ticker").raw);
+		}
+		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("&&", "&");
+		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam6", setting: ele.dataset.textparam6, "value": ele.value}, function (response) {});
+		}
 	} else if (ele.dataset.optionparam1){
 		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.optionparam1);
 		
@@ -1188,7 +1203,18 @@ function updateSettings(ele, sync=true, value=null){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam5", setting: ele.dataset.optionparam5, "value": ele.value}, function (response) {});
 		}
-	//
+	} else if (ele.dataset.optionparam6){
+		document.getElementById("ticker").raw = removeQueryParamWithValue(document.getElementById("ticker").raw, ele.dataset.optionparam6);
+		
+		if (ele.value){
+			document.getElementById("ticker").raw = updateURL(ele.dataset.optionparam6+"="+encodeURIComponent(ele.value), document.getElementById("ticker").raw);
+		}
+		
+		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("&&", "&");
+		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam6", setting: ele.dataset.optionparam6, "value": ele.value}, function (response) {});
+		}
 	} else if (ele.dataset.param2){
 		if (ele.checked){
 			if (value!==null){
@@ -1431,6 +1457,9 @@ function updateSettings(ele, sync=true, value=null){
 	
 	document.getElementById("waitlistlink").innerText = document.getElementById("waitlist").raw;
 	document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
+	
+	document.getElementById("tickerlink").innerText = document.getElementById("ticker").raw;
+	document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
 }
 
 

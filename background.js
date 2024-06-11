@@ -1704,6 +1704,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "textonlymode") {
 				pushSettingChange();
 			}
+			if (request.setting == "ticker") {
+				await loadFileTicker();
+			}
 			if (request.setting == "discord") {
 				pushSettingChange();
 			}
@@ -2032,6 +2035,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "excelsave") {
 			sendResponse({ state: isExtensionOn });
 			overwriteFileExcel("setup");
+		} else if (request.cmd && request.cmd === "loadtickerfile") {
+			sendResponse({ state: isExtensionOn });
+			selectTickerFile();
 		} else if (request.cmd && request.cmd === "savenames") {
 			sendResponse({ state: isExtensionOn });
 			overwriteSavedNames("setup");
@@ -3190,6 +3196,29 @@ function sendHypeP2P(data, uid = null) {
 		}
 	}
 }
+function sendTickerP2P(data, uid = null) {
+	// function to send data to the DOCk via the VDO.Ninja API
+
+	if (iframe) {
+		if (!uid) {
+			var keys = Object.keys(connectedPeers);
+			for (var i = 0; i < keys.length; i++) {
+				try {
+					var UUID = keys[i];
+					var label = connectedPeers[UUID];
+					if (label === "ticker") {
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: UUID }, "*");
+					}
+				} catch (e) {}
+			}
+		} else {
+			var label = connectedPeers[uid];
+			if (label === "ticker") {
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: uid }, "*");
+			}
+		}
+	}
+}
 
 //////////
 
@@ -3786,6 +3815,8 @@ eventer(messageEvent, async function (e) {
 					connectedPeers[e.data.UUID] = e.data.value.label;
 					if (connectedPeers[e.data.UUID] == "hype") {
 						processHype2();
+					} else if (connectedPeers[e.data.UUID] == "ticker") {
+						processTicker();
 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
 						initializeWaitlist();
 					}
@@ -3796,6 +3827,8 @@ eventer(messageEvent, async function (e) {
 					connectedPeers[e.data.UUID] = e.data.value.label;
 					if (connectedPeers[e.data.UUID] == "hype") {
 						processHype2();
+					} else if (connectedPeers[e.data.UUID] == "ticker") {
+						processTicker();
 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
 						initializeWaitlist();
 					}
@@ -7749,3 +7782,69 @@ function getMessagesDB(chatname, type, page = 0, pageSize = 100, callback) {
 
 // Initialize the database
 initDatabase();
+
+//
+
+let fileHandleTicker;
+let fileContentTicker = "";
+let fileSizeTicker = 0;
+let monitorInterval = null;
+
+ 
+async function selectTickerFile() {
+	
+	[fileHandleTicker] = await window.showOpenFilePicker({
+		types: [{
+			description: 'Text Files',
+			accept: {'text/plain': ['.txt']},
+		}],
+	});
+	await loadFileTicker();
+	
+};
+
+function processTicker(){ 
+	if (fileContentTicker && settings.ticker){
+		sendTickerP2P([fileContentTicker]);
+	} else {
+		sendTickerP2P([]);
+	}
+}
+
+async function loadFileTicker(file=null) {
+	if (!settings.ticker) {
+		clearInterval(monitorInterval);
+		if (fileContentTicker){
+			fileContentTicker = "";
+			sendTickerP2P([]);
+		}
+		return;
+	}
+	if (fileHandleTicker) {
+		if (!file){
+			file = await fileHandleTicker.getFile();
+		}
+		fileContentTicker = await file.text();
+		sendTickerP2P([fileContentTicker]);
+		fileSizeTicker = file.size;
+		
+		monitorFileChanges();
+	} else {
+		selectTickerFile();
+	}
+}
+
+function monitorFileChanges() {
+	clearInterval(monitorInterval);
+	monitorInterval = setInterval(async () => {
+		if (fileHandleTicker) {
+			const newFile = await fileHandleTicker.getFile();
+			if (newFile.size !== fileSizeTicker) {
+				fileSizeTicker = newFile.size;
+				await loadFileTicker(newFile);
+			}
+		}
+	}, 1000); // Check for changes every second
+}
+	
+	//

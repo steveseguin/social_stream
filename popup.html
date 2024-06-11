@@ -36,6 +36,7 @@
     --emotes-wall-color: #ffd400;
     --hype-meter-color: #00ff5e;
     --waitlist-color: #ff00d2;
+	--ticker-color: #ff3a3bdd;
     --download-link: blue;
     --font-family: "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
 }
@@ -71,6 +72,7 @@
         --emotes-wall-color: #ffd400dd;
         --hype-meter-color: #00ff5edd;
         --waitlist-color: #ff00d2dd;
+		--ticker-color: #dd3334dd;
         --download-link: lightblue;
     }
 }
@@ -470,6 +472,10 @@ h2.hype_mode_title {
 
 h2.waitlist_mode_title {
     color: var(--waitlist-color);
+}
+
+h2.ticker_mode_title {
+    color: var(--ticker-color);
 }
 
 .link div a {
@@ -2580,6 +2586,60 @@ input:checked + .slider:before {
                                 <div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
                                     <input type="text" id="googlefont5" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam5="googlefont" />
                                     <label for="googlefont5"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+			
+			<div class="link" title="Customizable ticker banner bar">
+                <h2 class="ticker_mode_title">
+                    <span data-translate="tickermeter">Ticker </span><a class="options-link rounded_area" href="#ticker" title="Jump to the ticker link options."><span data-translate="options">options</span></a>
+                </h2>
+                <h3>
+                    <span data-translate="when-enabled-a-ticker">
+                       A ticker banner. Select the source for the ticker text messages
+                    </span>
+                </h3>
+				<div id="ticker" data-raw="" class="streaming_chat"><a href="" id="tickerlink"></a></div>
+            </div>
+            
+
+            <div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-ticker-general-options" />
+                    <label class="collapsible-label" for="wrapper-ticker-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group ticker">
+                                <h3><span data-translate="must-enable-the-trigger-to-use">Must enable the trigger to use</span></h3>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="ticker" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="enable-the-ticker">🚦 Enable </span>
+									<div>
+										<button class="glowingButton" style="width: 270px; border: 1px solid #000; padding: 12px;margin-top:10px;" data-action="loadtickerfile">
+											<span style="font-size: 0.8em;"><span data-translate="choose-location">📄 Select the ticker source file</span></span>
+										</button>
+									</div>
+                                </div>
+								
+                                <h3><span data-translate="other-customization-options">Other customization options</span></h3>
+                                <div>
+                                    <span data-translate="font-family">
+                                        Font Family
+                                    </span>
+                                    <select data-optionparam6="font">
+                                        <option value="Sora" style="font-family: 'Sora';"><span data-translate="Sora-abc123xyz">Sora - abc123XYZ</span></option>
+                                        <option value="opendyslexic" style="font-family: 'opendyslexic';"><span data-translate="open-dyslexic----abc123xyz">Open Dyslexic - abc123XYZ</span></option>
+                                    </select>
+                                </div>
+                                <div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
+                                    <input type="text" id="googlefont6" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam6="googlefont" />
+                                    <label for="googlefont6"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
                                 </div>
                             </div>
                         </div>
