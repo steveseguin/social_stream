@@ -632,7 +632,7 @@ function update(response, sync=true){
 									var keys = key.split('=');
 									ele = document.querySelector("input[data-param1='"+keys[0]+"']");
 									if (ele){
-										ele.checked = response.settings[keys[0]].param1;
+										ele.checked = response.settings[key].param1;
 										if (keys[1]){
 											var ele2 = document.querySelector("input[data-numbersetting='"+keys[0]+"']");
 											if (ele2){
@@ -663,8 +663,10 @@ function update(response, sync=true){
 								} else if (key.includes("=")){
 									var keys = key.split('=');
 									ele = document.querySelector("input[data-param2='"+keys[0]+"']");
+									console.log(keys);
+									console.log(response.settings);
 									if (ele){
-										ele.checked = response.settings[keys[0]].param2;
+										ele.checked = response.settings[key].param2;
 										if (keys[1]){
 											var ele2 = document.querySelector("input[data-numbersetting2='"+keys[0]+"']");
 											if (ele2){
