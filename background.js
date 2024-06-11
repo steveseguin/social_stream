@@ -258,7 +258,7 @@ if (typeof chrome.runtime == "undefined") {
 	window.showOpenFilePicker = async function (a = null, c = null) {
 		var importFile = await ipcRenderer.sendSync("showOpenDialog", "");
 		return importFile;
-	};
+	}; 
 
 	//ipcRenderer.send('backgroundLoaded');
 
@@ -7793,12 +7793,22 @@ let monitorInterval = null;
  
 async function selectTickerFile() {
 	
-	[fileHandleTicker] = await window.showOpenFilePicker({
+	fileHandleTicker = await window.showOpenFilePicker({
 		types: [{
 			description: 'Text Files',
 			accept: {'text/plain': ['.txt']},
 		}],
 	});
+	
+	if (!isSSAPP){
+		fileHandleTicker = fileHandleTicker[0];
+	}
+	
+	//try {
+	//	fileContentTicker = await fileHandleTicker[0].getFile();
+	//	fileContentTicker = await fileHandleTicker.text();
+	//} catch (e) {}
+	
 	await loadFileTicker();
 	
 };
@@ -7821,14 +7831,19 @@ async function loadFileTicker(file=null) {
 		return;
 	}
 	if (fileHandleTicker) {
-		if (!file){
-			file = await fileHandleTicker.getFile();
+		if (!isSSAPP){
+			if (!file){
+				file = await fileHandleTicker.getFile();
+			}
+			fileContentTicker = await file.text();
+		} else {
+			fileContentTicker = fileHandleTicker;
 		}
-		fileContentTicker = await file.text();
 		sendTickerP2P([fileContentTicker]);
 		fileSizeTicker = file.size;
-		
-		monitorFileChanges();
+		if (!isSSAPP){
+			monitorFileChanges();
+		}
 	} else {
 		selectTickerFile();
 	}
