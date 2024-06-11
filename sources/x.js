@@ -115,8 +115,15 @@
 		}
 		
 		try {
-			var node = ele.querySelector("button");
+			if (ele.childNodes.length>1){
+				var node = ele.childNodes[1];
+			} else {
+				var node = ele.querySelector("button");
+			}
 			msg = getAllContentNodes(node);
+			if (!msg){
+				msg = getAllContentNodes([...ele.querySelectorAll("span")].pop());
+			}
 			msg = msg.trim();
 		} catch(e){
 		//	console.warn(e);
