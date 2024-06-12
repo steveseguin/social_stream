@@ -15,62 +15,81 @@
 	}
 
 
+	function escapeHtml(unsafe){ // success is when goofs be trying to hack me
+		return unsafe
+			 .replace(/&/g, "&amp;")
+			 .replace(/</g, "&lt;")
+			 .replace(/>/g, "&gt;")
+			 .replace(/"/g, "&quot;")
+			 .replace(/'/g, "&#039;") || "";
+	}
 	function getAllContentNodes(element) {
 		var resp = "";
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.nodeType===3){
+				return escapeHtml(element.textContent) || "";
+			}
+		}
+		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				if (settings.textonlymode){
-					resp += node.textContent.trim()+" ";
-				} else {
-					resp += node.textContent.trim()+" ";
+				if (!node.classList.contains("comment-see-more")){
+					resp += getAllContentNodes(node)
 				}
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
-				if (settings.textonlymode){
-				//	if ("alt" in node){
-				//		resp += node.alt.trim()+" ";
-					//}
-				} else {
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
 					resp += node.outerHTML;
 				}
-			} 
+			}
 		});
 		return resp;
 	}
+	
 	
 	var lastMessage = "";
 	var lastUser  = "";
 	
 	async function processMessage(ele){	// twitch
 	
+		console.log(ele);
+		
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
 	  
 	  try {
 		  try {
-			var chatname = ele.querySelector("a[user_nick]");
-			if (!chatname){
-				chatname = ele.querySelector("a[user_id]").getAttribute("user_id");
-			} else {
-				chatname = chatname.getAttribute("user_nick");
-			}
+			var chatname = getAllContentNodes(ele.querySelector(".author, .username"));
+			
 			 chatname = chatname.trim();
+			 
+			 nameColor = chatname.querySelector(".author").dataset.color;
+			 if(nameColor){
+				 nameColor = "#"+nameColor;
+			 }
+			 
 		  } catch(e){
-			 return;
 		  }
 	 } catch(e){
 		return;
 	  }
 	  
-	 
+	  var userid = "";
+	  try {
+			userid = ele.querySelector("button").getAttribute("user_id");
+	  } catch(e){
+		  
+	  }
 	  if (!chatname){return;}
 	  
-	  
-	  
 	  try {
-		chatmessage = getAllContentNodes(ele.querySelector("dd"));
+		chatmessage = getAllContentNodes(ele.querySelector(".message-text"));
 		chatmessage = chatmessage.trim();
 	  } catch(e){
 		  
@@ -93,7 +112,7 @@
 	  var chatimg = "";
 	  var chatbadges= [];
 	 
-	  ele.querySelectorAll("dt img[src]").forEach(badge=>{
+	  ele.querySelectorAll(".thumb img[src]").forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "IMG"){
 				var tmp = {};
@@ -108,6 +127,9 @@
 	  var data = {};
 	  data.chatname = chatname;
 	  data.chatbadges = chatbadges;
+	  if (userid){
+		  data.userid = userid;
+	  }
 	  data.nameColor = nameColor;
 	  data.chatmessage = chatmessage;
 	  data.chatimg = chatimg;
@@ -165,7 +187,6 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].nodeName.toLowerCase() !== "dl"){continue;}
 							if (mutation.addedNodes[i].ignore){continue;}
 							mutation.addedNodes[i].ignore=true;
 							processMessage(mutation.addedNodes[i]);
@@ -176,7 +197,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -192,7 +213,7 @@
 			clearInterval(checkReady);
 			
 			setTimeout(function(){
-				var clear = document.querySelectorAll("#chat_area > dl");
+				var clear = document.querySelectorAll("#chat_area > div");
 				for (var i = 0;i<clear.length;i++){
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
 				}
