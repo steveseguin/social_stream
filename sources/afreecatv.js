@@ -57,8 +57,6 @@
 	
 	async function processMessage(ele){	// twitch
 	
-		console.log(ele);
-		
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
