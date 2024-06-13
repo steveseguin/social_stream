@@ -556,7 +556,6 @@ If you want to simply listen to events, using SSE connections, you can do so usi
 
 Sample Javascript code is below:
 ```
-const apiID = "APIKEYHERE";
 const eventSource = new EventSource(`https://io.socialstream.ninja/sse/${sessionID}`);
 eventSource.onmessage = function(event) {
  console.log(JSON.parse(event.data));
