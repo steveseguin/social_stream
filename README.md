@@ -555,7 +555,7 @@ Be sure to implement reconnection logic with the websocket connection, as it wil
 If you want to simply listen to events, using SSE connections, you can do so using the https://io.socialstream.ninja/sse/APIKEYHERE endpoint.
 
 Sample Javascript code is below:
-
+```
 const apiID = "APIKEYHERE";
 const eventSource = new EventSource(`https://io.socialstream.ninja/sse/${sessionID}`);
 eventSource.onmessage = function(event) {
@@ -565,7 +565,7 @@ eventSource.onerror = function(error) {
   console.error('SSE connection error:', error);
   eventSource.close();
 };
-
+```
 
 #### Message structure
 
