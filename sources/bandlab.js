@@ -74,6 +74,13 @@
 			name = ele.querySelector(".comment-author-name, .live-message-body-author").textContent.trim();
 		} catch(e){
 		}
+		
+		var userid="";
+		try {
+			userid = ele.querySelector(".live-message-body-author").href.split("/")[1];
+		} catch(e){
+		}
+		
 		var msg="";
 		try {
 			ele.querySelector(".live-message-body").childNodes.forEach(xx=>{
@@ -103,6 +110,8 @@
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
+		data.userid = userid;
+		
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
@@ -187,10 +196,10 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('.comments, .live-chat-block').children.length){
-			if (!document.querySelector('.comments, .live-chat-block').marked){
-				document.querySelector('.comments, .live-chat-block').marked=true;
-				onElementInserted('.comments, .live-chat-block');
+		if (document.querySelector('.comments, .live-chat-block, .comment-list-container').children.length){
+			if (!document.querySelector('.comments, .live-chat-block, .comment-list-container').marked){
+				document.querySelector('.comments, .live-chat-block, .comment-list-container').marked=true;
+				onElementInserted('.comments, .live-chat-block, .comment-list-container');
 			}
 		}} catch(e){}
 	},2000);
