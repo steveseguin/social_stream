@@ -5349,7 +5349,7 @@ function midiHotkeysCommand(number, value) {
 		msg.forward = false; // clears our featured chat overlay
 		sendDataP2P(msg);
 	} else if (number == 102 && value == 5) {
-        selectRandomWaitlist();
+        selectRandomWaitlist(); 
 	} else if (number == 102) {
 		if (settings.midiConfig && value + "" in settings.midiConfig) {
 			var msg = settings.midiConfig[value + ""];
