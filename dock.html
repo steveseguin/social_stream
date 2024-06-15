@@ -4862,6 +4862,12 @@
 							return true;
 						}
 						return false;
+					} else if (data.action == "feature"){
+						if (document.querySelector("div[data-mid]:not(.pressed)")){
+							selectedMessage(false, document.querySelector("div[data-mid]:not(.pressed)"));
+						} else{
+							console.log("No message found to feature that hasn't already been featured");
+						}
 					}
 				} else if ("forward" in data) {
 					sendDataP2P(data.forward);
