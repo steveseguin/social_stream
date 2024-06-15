@@ -63,6 +63,7 @@
 		//console.log(ele);
 		var chatimg = "";
 		
+		var nameColor = "";
 		
 		var name="";
 		try {
@@ -84,6 +85,14 @@
 			return;
 		}
 		
+		
+		
+		try {
+			nameColor = ele.querySelector(".bull-message-module__authorName").style.color;
+		} catch(e){
+		//	console.warn(e);
+		}
+		
 		try {
 			chatimg = ele.querySelector("img.bull-message-module__image[src]").src;
 		} catch(e){
@@ -94,6 +103,7 @@
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
+		data.nameColor = nameColor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
