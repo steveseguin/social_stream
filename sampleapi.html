@@ -2,13 +2,14 @@
 <head>
 	<title>Sample API</title>
 	<meta charset="utf-8"/>
-	<link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
     <link href="./nes.min.css" rel="stylesheet" />
 	<style>
 		html, body, pre, code, kbd, samp {
-			font-family:"Press Start 2P";
+			font-family:Arial, Tohoma
 		}
-
+		input {
+			margin:5px;
+		}
 		body{
 			margin:1%;
 			border:0;
@@ -49,13 +50,13 @@
 <h2>
 	Sample app using the Social Stream HTTP/WSS remote control API
 </h2>
-👉🏻Make sure to have <b>&server</b> appended to the social stream dock.html URL if intending to send messages to it directly. (This includes dock-specific actions, like next-in-queue actions)<br />
-<br /> Of course, also ensure you have matching session values; ( for example,👁️ dock.html?session=xxxx&server)
+
+Ensure that you have matching session values, both with this page if testing (for example, dock.html?session=xxxx&server), or used when calling the API itself.
 <br /><br />
-If sending messages/actions to the extension, you just need to make sure the extension is on and the enable-server toggle is enabled in the extension menu.
-<br /><br />
-See <a href="https://github.com/steveseguin/social_stream/blob/main/README.md#server-api-support" target="_blank">this link for details</a> on how to add these commands to your stream deck or application.
-<br /><br />
+
+See <a href="https://github.com/steveseguin/social_stream/blob/main/README.md#server-api-support" target="_blank">this link for details</a> on how to add these commands to your stream deck or application. 
+<br /><br /><br />As a basic example though, a call that uses a basic GET request would be structured like:<br /><p><b><i>https://io.socialstream.ninja/{sessionID}/{action}/{target}/{value}</i></b>.</p>
+<br />
 <div id="header"></div>
 <div id="target_self"></div>
 <div id="incoming_messages"></div>
@@ -294,6 +295,10 @@ function loadSelfCommands(){
 	var title = document.createElement("h2");
 	title.innerText = "Send message to all social sites (Extension-specific)";
 	target_self.appendChild(title);
+	
+	var title = document.createElement("p");
+	title.innerHTML = "If sending messages/actions to the extension directly, you just need to make sure the extension is on and the enable-server toggle is enabled in the extension menu.<br /><br />You can control the draw/waitlist function with this API, but also use it to send messages to the extension<br />";
+	target_self.appendChild(title);
 
 	var input = document.createElement("input");
 	input.placeholder = "Message to send to external chat here as the host";
@@ -354,9 +359,74 @@ function loadSelfCommands(){
 	};
 	target_self.appendChild(button);
 	
+	var title = document.createElement("h3");
+	title.innerText = "Wait List options";
+	target_self.appendChild(title);
+	
+	
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Clear First User in Wait List";
+	button.onclick = function(){
+
+		var data = {};
+		data.action = "removefromwaitlist";
+		data.value  = 1;
+		sendMessage(JSON.stringify(data)); 
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Clear Second User in Wait List";
+	button.onclick = function(){
+
+		var data = {};
+		data.action = "removefromwaitlist";
+		data.value  = 2;
+		sendMessage(JSON.stringify(data)); 
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Select First User in Wait List";
+	button.onclick = function(){
+
+		var data = {};
+		data.action = "highlightwaitlist";
+		data.value  = 1;
+		sendMessage(JSON.stringify(data)); 
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Select Second User in Wait List";
+	button.onclick = function(){
+
+		var data = {};
+		data.action = "highlightwaitlist";
+		data.value  = 2;
+		sendMessage(JSON.stringify(data)); 
+	};
+	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Select Next Unselected User in Wait List";
+	button.onclick = function(){
+
+		var data = {};
+		data.action = "highlightwaitlist";
+		data.value  = 0;
+		sendMessage(JSON.stringify(data)); 
+	};
+	target_self.appendChild(button);
+	
 	
 	var title = document.createElement("h2");
 	title.innerText = "Dock-specific options";
+	target_self.appendChild(title);
+	
+	var title = document.createElement("p");
+	title.innerHTML = "To use: Make sure to have <b>&server</b> appended to the social stream dock.html URL if intending to send messages to it directly. (This includes dock-specific actions, like next-in-queue actions)<br /><br />Enabling the &server mode also will let you obtain featured messages via the API, via SSE / WSS<br />";
 	target_self.appendChild(title);
 	
 	var button = document.createElement("button");
@@ -402,6 +472,14 @@ function loadSelfCommands(){
 		ajax({"action":"autoShow","value":"toggle", "apiid":WID});  // true, false, or "toggle"
 	};
 	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Feature next un-featured";
+	button.input = input;
+	button.onclick = function(){
+		ajax({"action":"feature","value":"true", "apiid":WID});  // true, false, or "toggle"
+	};
+	target_self.appendChild(button);
 	////////
 	
 	var br = document.createElement("br");
@@ -415,6 +493,9 @@ function loadSelfCommands(){
 	title.innerHTML = "Fake message <i>from</i> a social site";
 	target_self.appendChild(title);
 	
+	var title = document.createElement("p");
+	title.innerHTML = "There are different ways to fake a message from a social site, if for example you are injecting messages from your own application. You can create a test fake message below, and below that, choose which method you want to send it with.<br />";
+	target_self.appendChild(title);
 	
 	var input = document.createElement("label");
 	target_self.appendChild(input);
@@ -464,11 +545,8 @@ function loadSelfCommands(){
 	
 	var br = document.createElement("br");
 	target_self.appendChild(br);
-	var br = document.createElement("br");
-	target_self.appendChild(br);
-	
 	var title = document.createElement("h3");
-	title.innerText = "Fake as a Twitch message via POST request";
+	title.innerText = "Fake this message as a Twitch message via POST request";
 	target_self.appendChild(title);
 	
 	var button = document.createElement("button");
@@ -530,7 +608,7 @@ function loadSelfCommands(){
 	/////
 	
 	var title = document.createElement("h3");
-	title.innerText = "Fake as a Twitch message via GET request";
+	title.innerText = "Fake this message as a Twitch message via GET request";
 	target_self.appendChild(title);
 	
 	var button = document.createElement("button");
@@ -599,7 +677,7 @@ function loadSelfCommands(){
 	
 	
 	var title = document.createElement("h3");
-	title.innerText = "Fake as a Twitch message via WebSockets";
+	title.innerText = "Fake this message as a Twitch message via WebSockets";
 	target_self.appendChild(title);
 	
 	var button = document.createElement("button");
@@ -692,66 +770,7 @@ function loadSelfCommands(){
 	};
 	target_self.appendChild(button);
 	
-	var title = document.createElement("h3");
-	title.innerText = "Wait List options";
-	target_self.appendChild(title);
 	
-	
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Clear First User in Wait List";
-	button.onclick = function(){
-
-		var data = {};
-		data.action = "removefromwaitlist";
-		data.value  = 1;
-		sendMessage(JSON.stringify(data)); 
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Clear Second User in Wait List";
-	button.onclick = function(){
-
-		var data = {};
-		data.action = "removefromwaitlist";
-		data.value  = 2;
-		sendMessage(JSON.stringify(data)); 
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Select First User in Wait List";
-	button.onclick = function(){
-
-		var data = {};
-		data.action = "highlightwaitlist";
-		data.value  = 1;
-		sendMessage(JSON.stringify(data)); 
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Select Second User in Wait List";
-	button.onclick = function(){
-
-		var data = {};
-		data.action = "highlightwaitlist";
-		data.value  = 2;
-		sendMessage(JSON.stringify(data)); 
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Select Next Unselected User in Wait List";
-	button.onclick = function(){
-
-		var data = {};
-		data.action = "highlightwaitlist";
-		data.value  = 0;
-		sendMessage(JSON.stringify(data)); 
-	};
-	target_self.appendChild(button);
 	
 }
 
