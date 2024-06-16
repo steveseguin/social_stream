@@ -36,6 +36,7 @@
 				--profile-pic-border: 0 solid black;
 				--cursor-type: pointer;
 				--pressed-color: #9c9c;
+				--blur-amount: 5px;
 
 				--pinned-queued-bg: #9d99cc;
 				--pinned-bg: #712a65;
@@ -115,6 +116,10 @@
 
 			.volume-container:hover .volume-slider {
 			  display: block;
+			}
+			
+			.blurred {
+				filter: blur(var(--blur-amount));
 			}
 
 			@keyframes float {
@@ -2105,10 +2110,16 @@
 			if (urlParams.has("disabletimeout")) {
 				autoTimeoutEnabled = false;
 			}
-
+			
+			var blurred = false;
+			if (urlParams.has("blur") || urlParams.has("blurred")) {
+				blurred = urlParams.get("blur") ||  urlParams.get("blurred") || "5";
+				blurred = parseFloat(blurred)+"px";
+				document.documentElement.style.setProperty("--blur-amount", blurred);				
+			}
+			
 			var onlyTwitch = false;
 			var hideTwitch = false;
-
 			if (urlParams.has("onlytwitch")) {
 				onlyTwitch = true;
 			}
@@ -5843,6 +5854,7 @@
 					data = data.contents;
 
 					var invisible = false;
+					var makeBlurred = false;
 					
 					if (debug){
 						console.log(data);
@@ -5850,18 +5862,34 @@
 
 					if (hideTwitch && data.type === "twitch") {
 						// this is a twitch message, and we're hiding them.
-						return;
+						if (blurred){
+							makeBlurred = true;
+						} else {
+							return;
+						}
 					}
 					if (hideFrom && hideFrom.includes(data.type)) {
 						// this is an exclude source
-						return;
+						if (blurred){
+							makeBlurred = true;
+						} else {
+							return;
+						}
 					}
 					if (onlyTwitch && data.type !== "twitch") {
 						// this is not a twitch message, so we're hiding them
-						return;
+						if (blurred){
+							makeBlurred = true;
+						} else {
+							return;
+						}
 					}
 					if (onlyFrom && data.type !== onlyFrom) {
-						return;
+						if (blurred){
+							makeBlurred = true;
+						} else {
+							return;
+						}
 					}
 
 					if (filtercommands && data.chatmessage && data.chatmessage.startsWith("!")) {
@@ -6327,6 +6355,10 @@
 
 					if (filtering) {
 						filterMessage(node);
+					}
+					
+					if (makeBlurred){
+						node.classList.add("blurred");
 					}
 
 					if (bot && !horizontal) {
