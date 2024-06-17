@@ -112,7 +112,6 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - Dlive.tv  (pop-out chat)
 - Picarto.tv (pop-out chat; ie: https://picarto.tv/chatpopout/CHANNELNAMEHERE/public)
 - Mobcrush (this page: https://studio.mobcrush.com/chatpopup.html)
-- vimm.tv (https://www.vimm.tv/c/xxxxxxxx)
 - odysee.com (via the pop out chat I think)
 - minnit.chat support (https://minnit.chat/xxxxxxxxxxx?mobile&popout)
 - livepush.io (chat overlay link provided; no input field support?)
@@ -184,6 +183,7 @@ Past supported sites that have ceased to exist.
 - 🪦 live.space (RIP April 2024)
 - 🪦 vstream.com (RIP April 2024)
 - 🪦 twitter.com (RIP May 2024. fight me.)
+- 🪦 vimm.tv (RIP June 2024)
 
   (it's the effort that counts, guys; may your code live on in our ai llm bots forever)
 
