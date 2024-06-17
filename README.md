@@ -867,26 +867,68 @@ You can find me on discord over at https://discord.socialstream.ninja or [https:
 
 Feedback and feature requests are welcomed.  Please also make a Github issue if you're not a fan of Discord, but still need to report a bug or feature request.
 
+## License
+This project is licensed under the GPLv3.0 License - see the [LICENSE](LICENSE) file for details.
+
+## Terms of Service
+
+By using this software (including the open-source repository, downloadable application, browser extension, and related services), you agree to the following terms and conditions.
+
+### Disclaimer of Liability
+
+Beyond the terms covered by the GPLv3.0 license, you understand that this software and service are provided free of charge. The maintainers, contributors, and service providers disclaim any and all liability for any issues or damages arising from the use of this software, including but not limited to:
+
+- Service disruption or unavailability.
+- Security flaws or vulnerabilities.
+- Termination or suspension of accounts by third-party service providers.
+- Use of third-party logos, brands, or icons that may violate the rights of third parties or their terms of service.
+
+### Data Usage and User Responsibility
+
+Users are solely responsible for their use of the software and services. This includes ensuring that their use complies with applicable laws and regulations, as well as the terms of service of any third-party services they interact with. Users must not use the software to pull, transmit, process, or store personal user data from third parties in a manner that violates those third parties' terms of service or applicable data protection laws. 
+
+The maintainers, contributors, and service providers strive to avoid collecting, storing, and processing personal user data, but no guarantees are offered. Services such as avatar image caching, Cloudflare analytics, social sign-in, and rate limiting tooling may collect, store, and process data as needed to provide the service. The maintainers, contributors, and service providers are not responsible for any accidental data collection, storage, or processing.
+
+### Indemnification
+
+By using this software, you agree to indemnify and hold harmless the maintainers, contributors, and service providers from any claims, damages, or liabilities arising from your use of the software, including but not limited to any legal issues resulting from:
+
+- The use of third-party logos, brands, media, or icons.
+- The collection, use, or transmission of personal user data in violation of third-party terms of service or applicable laws.
+
+### No Warranty
+
+This software is provided "as-is," without any express or implied warranties, including but not limited to implied warranties of merchantability, fitness for a particular purpose, or non-infringement. The maintainers, contributors, and service providers do not guarantee that the software will be free from defects, errors, or security vulnerabilities.
+
+### Changes to Terms
+
+The maintainers reserve the right to modify these terms of service at any time. Users are encouraged to review the terms periodically for any changes. Continued use of the software and services after any changes constitutes acceptance of those changes.
+
 ###  Donations
 
-I condemn Russia's brutal invasion of Ukraine. 💙💛 Please consider supporting or donating to Ukraine instead: https://war.ukraine.ua/support-ukraine/
+I condemns Russia's brutal invasion of Ukraine. 💙💛 Please consider supporting or donating to Ukraine instead: https://war.ukraine.ua/support-ukraine/
 
-### Icons
+If you still wish to send a donation to Steve, it is considered a gift, with no exchange of value or service offered or expected in return.
 
-I do not claim rights of all the icons distributed. While I made some of the icons, trademarks and logos of third party companies/services are the rights of those respectivitive entities. Use them according to the terms that those entities may offer them under.
+### Icons and Media
 
-Some icons used are licensced as attribution-required:
+I do not claim rights of all the icons or images distributed. While I (or contributors) made some of the icons and images, trademarks and logos of third party companies/services are the rights of those respectivitive entities. Use them according to the terms that those entities may offer them under.
+
+Some icons used are licensed as attribution-required:
 
 <a href="https://www.flaticon.com/free-icons/communication" title="communication icons">Communication icons created by Freepik - Flaticon</a>
 
 <a href="https://www.flaticon.com/free-icons/announcement" title="announcement icons">Announcement icons created by Design Circle - Flaticon</a>
 
+If there is missing attribution or concerns over any media, please contact us.
+
 ### Credit
 
-This project contains inspiration by my other project, chat.io.socialstream.ninja, which was a derivation of another Youtube-specific chat widget, which was inspired by the stylings of other featured-chat code sample, of which that was also inspired by existing chat overlay designs. May the many new innovations of this project inspire the future foundation of other awesome projects as well.
+This project contains inspiration by my past project, chat.overlay.ninja, which was a derivation of another Youtube-specific chat widget, which was inspired by the stylings of other featured-chat code sample, of which that was also inspired by existing chat overlay designs. May the many new innovations of this project inspire the future foundation of other awesome projects as well.
 
 ### Contributors to this project
 
 <a href="https://github.com/steveseguin/social_stream/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=steveseguin/social_stream" />
 </a>
+
