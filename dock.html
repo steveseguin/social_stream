@@ -492,17 +492,43 @@
 			.hl-message .hl-content img, .hl-message .hl-content video {
 				max-width: 36px;
 			}
+			
+			.hl-message img.chat-line__message--emote-gigantified,
+			.hl-message svg.chat-line__message--emote-gigantified {
+				position: relative;
+				margin: auto 1px;
+				padding: 0;
+				display: inline-block;
+				height: 56px;
+				max-width: 112px;
+				max-height: 56px;
+			}
+
+			.hl-message .hl-content img, .hl-message .hl-content video.chat-line__message--emote-gigantified {
+				max-width: 112px;
+			}
 
 			.notcompactmode .hl-message img,
 			.notcompactmode .hl-message svg {
 				height: 19px;
 				max-height: 19px;
 			}
-
 			.notcompactmode .hl-content img,
 			.notcompactmode .hl-content svg {
 				max-width: 28.5px;
 				width: 28.5px;
+			}
+			
+			.notcompactmode .hl-message img.chat-line__message--emote-gigantified,
+			.notcompactmode .hl-message svg.chat-line__message--emote-gigantified {
+				height: 56px;
+				max-height: 56px;
+			}
+			
+			.notcompactmode .hl-content img.chat-line__message--emote-gigantified,
+			.notcompactmode .hl-content svg.chat-line__message--emote-gigantified {
+				max-width: 112px;
+				width: 112px;
 			}
 
 			.hl-message .hl-badge svg {
@@ -6223,6 +6249,8 @@
 									}
 								} else if (badge.type && badge.type == "svg" && badge.html) {
 									chatbadges += "<span class='hl-badge svg'>" + badge.html + "</span>";
+								} else if (badge.type && badge.type == "text" && badge.text) {
+									chatbadges += "<span class='hl-badge textbadge'>" + badge.text + "</span>";
 								}
 							} else {
 								chatbadges += "<img class='hl-badge' src='" + badge + "' />";
