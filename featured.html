@@ -803,7 +803,9 @@
 							}
 
 							if (data.type && (data.type == "twitch") && data.chatname) {
-								data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+								if (!data.chatimg || data.chatimg.startsWith("https://api.socialstream.ninja")){
+									data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+								}
 							}
 
 							overwriteFile(JSON.stringify(data));
@@ -2157,14 +2159,16 @@
 
 							var username = data.username || data.chatname;
 							if ((data.type == "twitch") && avatar && username) {
-								var twitchImage = new Image();
-								data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(username);
-								twitchImage.onload = function () {
-									try {
-										document.getElementById("img_" + data.id).src = data.chatimg;
-									} catch (e) {}
-								}.bind(data);
-								twitchImage.src = data.chatimg;
+								if (!data.chatimg || data.chatimg.startsWith("https://api.socialstream.ninja")){
+									var twitchImage = new Image();
+									data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(username);
+									twitchImage.onload = function () {
+										try {
+											document.getElementById("img_" + data.id).src = data.chatimg;
+										} catch (e) {}
+									}.bind(data);
+									twitchImage.src = data.chatimg;
+								}
 							}
 
 							if (centering) {
@@ -2305,7 +2309,9 @@
 							contents.chatimg = contents.chatimg.replace("=s64-", "=s512-");
 						}
 						if (contents.type && (contents.type == "twitch") && contents.chatname) {
-							contents.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(contents.chatname); // 150x150
+							if (!contents.chatimg  || contents.chatimg.startsWith("https://api.socialstream.ninja")){
+								contents.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(contents.chatname); // 150x150
+							}
 						}
 						overwriteImage(contents.chatimg);
 					}
