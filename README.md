@@ -69,10 +69,10 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
   - [Indemnification](#indemnification)
   - [No Warranty](#no-warranty)
   - [Changes to Terms](#changes-to-terms)
-  - [Donations](#donations)
-  - [Icons and Media](#icons-and-media)
-  - [Credit](#credit)
-  - [Contributors to this project](#contributors-to-this-project)
+- [Donations](#donations)
+- [Icons and Media](#icons-and-media)
+- [Credit](#credit)
+- [Contributors to this project](#contributors-to-this-project)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
