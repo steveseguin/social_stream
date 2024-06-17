@@ -242,7 +242,7 @@
 		var subscriber = "";
 		var subtitle = "";
 		try {
-			ele.querySelectorAll("img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge").forEach(badge => {
+			ele.querySelectorAll("img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge, .user-pronoun").forEach(badge => {
 				if (badge.alt && badge.alt.includes("Subscriber")){
 					subscriber = "Subscriber";
 					subtitle = badge.alt.replace(/\s*\([^)]*\)/g, '');
@@ -276,6 +276,13 @@
 							}
 						}
 					} catch (e) {}
+				} else if (badge.classList.contains("user-pronoun")) {
+					var bage = {};
+					bage.text = escapeHtml(badge.textContent);
+					bage.type = "text";
+					bage.bgcolor = "#000";
+					bage.color = "#FFF";
+					chatbadges.push(bage);
 				}
 			});
 		} catch (e) {}
