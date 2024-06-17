@@ -911,13 +911,13 @@ This software is provided "as-is," without any express or implied warranties, in
 
 The maintainers reserve the right to modify these terms of service at any time. Users are encouraged to review the terms periodically for any changes. Continued use of the software and services after any changes constitutes acceptance of those changes.
 
-###  Donations
+##  Donations
 
 I condemns Russia's brutal invasion of Ukraine. 💙💛 Please consider supporting or donating to Ukraine instead: https://war.ukraine.ua/support-ukraine/
 
 If you still wish to send a donation to Steve, it is considered a gift, with no exchange of value or service offered or expected in return.
 
-### Icons and Media
+## Icons and Media
 
 I do not claim rights of all the icons or images distributed. While I (or contributors) made some of the icons and images, trademarks and logos of third party companies/services are the rights of those respectivitive entities. Use them according to the terms that those entities may offer them under.
 
@@ -929,11 +929,11 @@ Some icons used are licensed as attribution-required:
 
 If there is missing attribution or concerns over any media, please contact us.
 
-### Credit
+## Credit
 
 This project contains inspiration by my past project, chat.overlay.ninja, which was a derivation of another Youtube-specific chat widget, which was inspired by the stylings of other featured-chat code sample, of which that was also inspired by existing chat overlay designs. May the many new innovations of this project inspire the future foundation of other awesome projects as well.
 
-### Contributors to this project
+## Contributors to this project
 
 <a href="https://github.com/steveseguin/social_stream/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=steveseguin/social_stream" />
