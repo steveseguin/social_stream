@@ -61,9 +61,10 @@
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
-						node.src = node.src+"";
+						resp += `<img src='${node.src}' />`;
+					} else {
+						resp += node.outerHTML;
 					}
-					resp += node.outerHTML;
 				}
 			}
 		});
