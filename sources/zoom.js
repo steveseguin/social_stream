@@ -377,6 +377,21 @@
 		if (document.getElementById("poll__body")){
 			streamPollRAW(document.getElementById("poll__body"));
 		}
+		
+		document.querySelectorAll('[class^="animation-reactions/"]:not([data-skip])').forEach(reaction=>{
+			reaction.dataset.skip = true;
+			
+			var data = {};
+			data.chatname = "";
+			data.chatmessage = reaction.querySelector("svg,img").outerHTML;
+			if (!data.chatmessage){return;}
+			data.event = "reaction";
+			data.type = "zoom";
+			data.textonlymode = false;
+			console.log(data);
+			pushMessage(data);
+			
+		});
 
 		if (document.getElementById('chat-list-content')) {
 		    // prevent chat box from stop scrolling, which makes messages stop appearing
