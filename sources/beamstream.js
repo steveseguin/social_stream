@@ -53,14 +53,23 @@
 			}
 		}
 		
-		element.childNodes.forEach(node=>{
-			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+		// Sticker-only messages
+		if (element.nodeName == "IMG" && element.src) {
+			if (!settings.textonlymode) {
+				return `<img src='${element.src}' />`;
+			} else {
+				return element.outerHTML;
+			}
+		}
+
+		element.childNodes.forEach(node => {
+			if (node.childNodes.length) {
+				resp += getAllContentNodes(node);
+			} else if (node.nodeType === 3 && node.textContent && node.textContent.trim().length > 0) {
 				resp += escapeHtml(node.textContent);
-			} else if (node.nodeType === 1){
-				if (!settings.textonlymode){
-					if ((node.nodeName == "IMG") && node.src){
+			} else if (node.nodeType === 1) {
+				if (!settings.textonlymode) {
+					if (node.nodeName == "IMG" && node.src) {
 						resp += `<img src='${node.src}' />`;
 					} else {
 						resp += node.outerHTML;
@@ -68,6 +77,7 @@
 				}
 			}
 		});
+
 		return resp;
 	}
 	
