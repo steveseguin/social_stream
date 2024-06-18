@@ -1180,10 +1180,109 @@ function clearAllWithPrefix(prefix) {
     const key = localStorage.key(i);
     if (key.startsWith(prefix)) {
       localStorage.removeItem(key);
-	  console.log("Cleared "+key);
+	  //console.log("Cleared "+key);
       i--;
     }
   }
+}
+
+var Pronouns = false;
+async function getPronouns() {
+    if (!Pronouns) {
+		try{
+			Pronouns = getItemWithExpiry("Pronouns");
+
+			if (!Pronouns) {
+				Pronouns = await fetch("https://api.pronouns.alejo.io/v1/pronouns")
+					.then(response => {
+						const cacheControl = response.headers.get('Cache-Control');
+						let maxAge = 3600; // Default to 60 minutes
+
+						if (cacheControl) {
+							const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
+							if (maxAgeMatch && maxAgeMatch[1]) {
+								maxAge = parseInt(maxAgeMatch[1]);
+							}
+						}
+
+						return response.json().then(result => {
+							for (const key in result) {
+								if (result.hasOwnProperty(key)) {
+									const { subject, object } = result[key];
+									result[key] = `${subject}/${object}`;
+									
+									result[key] = result[key]
+									.replace(/&/g, "&amp;") // i guess this counts as html
+									.replace(/</g, "&lt;")
+									.replace(/>/g, "&gt;")
+									.replace(/"/g, "&quot;")
+									.replace(/'/g, "&#039;") || ""
+								}
+							}
+							
+							setItemWithExpiry("Pronouns", result, maxAge / 60);
+							return result;
+						});
+					})
+					.catch(err => {
+						console.error(err);
+						return {};
+					});
+
+				if (!Pronouns) {
+					Pronouns = {};
+				}
+			} else {
+				console.log("Pronouns recovered from storage");
+			}
+		} catch(e){
+			Pronouns = {};
+		}
+    }
+}
+var PronounsNames = {};
+
+async function getPronounsNames(username = "") {
+    if (!username) {
+        return false;
+    }
+	try{
+		if (!(username in PronounsNames)) {
+			PronounsNames[username] = getItemWithExpiry("Pronouns:" + username);
+
+			if (!PronounsNames[username]) {
+				PronounsNames[username] = await fetch("https://api.pronouns.alejo.io/v1/users/" + username)
+					.then(response => {
+						const cacheControl = response.headers.get('Cache-Control');
+						let maxAge = 3600; // Default to 60 minutes
+
+						if (cacheControl) {
+							const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
+							if (maxAgeMatch && maxAgeMatch[1]) {
+								maxAge = parseInt(maxAgeMatch[1]);
+							}
+						}
+						//console.log(response);
+						return response.json().then(result => {
+							//console.log(result);
+							setItemWithExpiry("Pronouns:" + username, result, maxAge / 60);
+							return result;
+						});
+					})
+					.catch(err => {
+						console.error(err);
+						return false;
+					});
+
+				if (!PronounsNames[username]) {
+					PronounsNames[username] = false;
+				}
+			}
+		}
+	} catch(e){
+		 return false;
+	}
+    return PronounsNames[username];
 }
 
 var Globalbttv = false;
@@ -1800,7 +1899,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				}
 				pushSettingChange();
 			}
-
+			if (request.setting == "pronouns") {
+				if (settings.pronouns) {
+					clearAllWithPrefix("Pronouns");
+					Pronouns = false;
+					await getPronouns();
+				}
+			}
 			if (request.setting == "addkarma") {
 				if (request.value) {
 					if (!sentimentAnalysisLoaded) {
@@ -2412,6 +2517,28 @@ async function sendToDestinations(message) {
 			// replaceEmotesWithImagesText( ...  ); // maybe someday
 			//}
 		}
+		
+		
+		if (settings.pronouns && (message.type == "twitch") && message.chatname) {
+			let pronoun = await getPronounsNames(message.chatname);
+			if (!Pronouns && pronoun){
+				await getPronouns();
+			}
+			if (Pronouns && pronoun && pronoun.pronoun_id){
+				if (pronoun.pronoun_id in Pronouns){
+					if (!message.chatbadges){
+						message.chatbadges = [];
+					}
+					var bage = {};
+					bage.text = Pronouns[pronoun.pronoun_id];
+					bage.type = "text";
+					bage.bgcolor = "#000";
+					bage.color = "#FFF";
+					message.chatbadges.push(bage);
+				}
+			}
+		}
+		
 
 		if (settings.randomcolor && message && !message.nameColor && message.chatname) {
 			message.nameColor = getColorFromName(message.chatname);

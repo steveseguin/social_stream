@@ -276,14 +276,15 @@
 							}
 						}
 					} catch (e) {}
-				} else if (badge.classList.contains("user-pronoun")) {
+				}
+				/* else if (badge.classList.contains("user-pronoun")) { // I'm doing this via the official API now instead
 					var bage = {};
 					bage.text = escapeHtml(badge.textContent);
 					bage.type = "text";
 					bage.bgcolor = "#000";
 					bage.color = "#FFF";
 					chatbadges.push(bage);
-				}
+				} */
 			});
 		} catch (e) {}
 		
