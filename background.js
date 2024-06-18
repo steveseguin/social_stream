@@ -4899,7 +4899,9 @@ async function applyBotActions(data, tab = false) {
 							// respond to "1" with a "1" automatically; at most 1 time per minute.
 							messageTimeout = Date.now();
 							var msg = {};
-							msg.tid = data.tid;
+							if (!settings["botReplyAll" + i]){
+								msg.tid = data.tid;
+							}
 							msg.response = settings["botReplyMessageValue" + i].textsetting;
 							processResponse(msg);
 						}

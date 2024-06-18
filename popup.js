@@ -462,10 +462,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					<input type="text" id="botReplyMessageSource'+ i +'" class="textInput" min="0" autocomplete="off" placeholder="ie: youtube,twitch (comma separated)" data-textsetting="botReplyMessageSource'+ i +'">\
 					<label for="botReplyMessageSource'+ i +'">&gt; Limit to specific sites</label>\
 				</div>\
+				<span data-translate="reply-to-all">\
+					Reply to all instead of just the source\
+				</span>\
+				<label class="switch">\
+					<input type="checkbox" data-setting="botReplyAll'+ i +'">\
+					<span class="slider round"></span>\
+				</label>\
 			</div>';
 		document.getElementById("botReplyMessages").appendChild(chat);
 	}
-	
+	//botReplyAll
 	var iii = document.querySelectorAll("input[type='checkbox']");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
