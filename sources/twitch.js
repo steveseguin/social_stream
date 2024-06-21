@@ -689,6 +689,11 @@
 		data.type = "twitch";
 		data.textonly = settings.textonlymode || false;
 		data.event = true;
+		
+		// channel-points-reward-line__icon
+		if (ele.querySelector("[class*='channel-points-reward']")){
+			data.event = "reward";
+		}
 
 		if (!data.chatmessage) {
 			return;

@@ -5948,6 +5948,7 @@
 						if (!data.event) {
 							return;
 						} else if (eventsOnly !== true) {
+						
 							if (data.chatmessage) {
 								if (eventsOnly.some(v => !data.chatmessage.includes(v))) {
 									return;
@@ -5956,6 +5957,7 @@
 								return;
 							}
 						}
+						//console.log(data.event);
 					}
 
 					if (hideAllEvents && data.event) {
