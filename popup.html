@@ -37,6 +37,7 @@
     --hype-meter-color: #00ff5e;
     --waitlist-color: #ff00d2;
 	--ticker-color: #ff3a3bdd;
+	--poll-color: #a3ff3bdd;
     --download-link: blue;
     --font-family: "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
 }
@@ -73,6 +74,7 @@
         --hype-meter-color: #00ff5edd;
         --waitlist-color: #ff00d2dd;
 		--ticker-color: #dd3334dd;
+		--poll-color: #a3ff3bdd;
         --download-link: lightblue;
     }
 }
@@ -476,6 +478,10 @@ h2.waitlist_mode_title {
 
 h2.ticker_mode_title {
     color: var(--ticker-color);
+}
+
+h2.poll_mode_title {
+    color: var(--poll-color);
 }
 
 .link div a {
@@ -2156,25 +2162,30 @@ input:checked + .slider:before {
 
                                 <h3><span data-translate="colors">Colors</span></h3>
 
-                                <div class="textInputContainer" style="width: 95%;">
-                                    <input type="text" id="comment_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_color" />
+                                <div class="textInputContainer" style="width: 70%; display:inline-block;margin-right:5px;">
+                                    <input type="text" data-palette="comment_color_pallette" id="comment_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_color" />
+									
                                     <label for="comment_color"><span data-translate="comment-font-color">&gt; Comment font color</span></label>
                                 </div>
+								<input type="color" data-color="comment_color" id="comment_color_pallette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 
-                                <div class="textInputContainer" style="width: 95%;">
-                                    <input type="text" id="comment_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_background" />
+                                <div class="textInputContainer" style="width: 70%; display:inline-block;margin-right:5px;">
+                                    <input type="text" data-palette="comment_background_pallette" id="comment_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_background" />
                                     <label for="comment_background"><span data-translate="comment-background-color">&gt; Comment background color</span></label>
                                 </div>
-
-                                <div class="textInputContainer" style="width: 95%;">
-                                    <input type="text" id="name_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_color" />
+								<input type="color" data-color="comment_background" id="comment_background_pallette"  class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+								
+                                <div class="textInputContainer" style="width: 70%; display:inline-block;margin-right:5px;">
+                                    <input type="text" data-palette="name_color_pallette" id="name_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_color" />
                                     <label for="name_color"><span data-translate="default-name-font-color">&gt; Default name font color</span></label>
                                 </div>
+								<input type="color" data-color="name_color" id="name_color_pallette"  class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 
-                                <div class="textInputContainer" style="width: 95%;">
-                                    <input type="text" id="name_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_background" />
+                                <div class="textInputContainer" style="width: 70%; display:inline-block;margin-right:5px;">
+                                    <input type="text" data-palette="name_background_pallette" id="name_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_background" />
                                     <label for="name_background"><span data-translate="name-background-color">&gt; Name background color</span></label>
                                 </div>
+								<input type="color" data-color="name_background" id="name_background_pallette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 
                                 <div>
                                     <span data-translate="font-family">
@@ -2598,6 +2609,18 @@ input:checked + .slider:before {
                         </div>
                     </div>
                 </div>
+            </div>
+			
+			<div class="link" title="Polling system">
+                <h2 class="poll_mode_title">
+                    <span data-translate="pollmeter">Graphical Poll </span><a class="options-link rounded_area" href="#poll" title="Jump to the poll link options."><span data-translate="options">options</span></a>
+                </h2>
+                <h3>
+                    <span data-translate="when-enabled-a-poll">
+                       A graphic poll. Users can enter a hash-tagged word to vote it it.
+                    </span>
+                </h3>
+				<div id="poll" data-raw="" class="streaming_chat"><a href="" id="polllink"></a></div>
             </div>
 			
 			<div class="link" title="Customizable ticker banner bar">

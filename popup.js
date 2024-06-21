@@ -495,6 +495,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
+	var iii = document.querySelectorAll("input[type='color']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings; 
+	}
 	
 	var iii = document.querySelectorAll("select");
 	for (var i=0;i<iii.length;i++){
@@ -602,6 +606,9 @@ function update(response, sync=true){
 			
 			document.getElementById("ticker").innerHTML = "<a target='_blank' id='tickerlink' href='"+baseURL+"ticker.html?session="+response.streamID+password+"'>"+baseURL+"ticker.html?session="+response.streamID+password+"</a>";
 			document.getElementById("ticker").raw = baseURL+"ticker.html?session="+response.streamID+password;
+			
+			document.getElementById("poll").innerHTML = "<a target='_blank' id='polllink' href='"+baseURL+"poll.html?session="+response.streamID+password+"'>"+baseURL+"poll.html?session="+response.streamID+password+"</a>";
+			document.getElementById("poll").raw = baseURL+"poll.html?session="+response.streamID+password;
 			
 
 			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
@@ -736,6 +743,15 @@ function update(response, sync=true){
 								var ele = document.querySelector("input[data-textsetting='"+key+"']");
 								if (ele){
 									ele.value = response.settings[key].textsetting;
+									
+									if (ele.dataset.palette){
+										try {
+											document.getElementById(ele.dataset.palette).value = ele.value;
+										} catch(e){
+											console.log(e);
+										}
+									}
+									
 									updateSettings(ele, sync);
 								}
 							}
@@ -1449,6 +1465,15 @@ function updateSettings(ele, sync=true, value=null){
 			}
 			chrome.runtime.sendMessage({cmd: "sidUpdated", password: ele.value || ""}, function (response) {console.log("Password updated");});
 		}
+	} else if (ele.dataset.color){
+		
+		var ele2 = document.getElementById(ele.dataset.color);
+		if (ele2){
+			ele2.value = ele.value
+			updateSettings(ele2, sync);
+			return;
+		}
+		
 	}
 	
 
@@ -1469,6 +1494,9 @@ function updateSettings(ele, sync=true, value=null){
 	
 	document.getElementById("tickerlink").innerText = document.getElementById("ticker").raw;
 	document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
+	
+	document.getElementById("polllink").innerText = document.getElementById("poll").raw;
+	document.getElementById("polllink").href = document.getElementById("poll").raw;
 }
 
 

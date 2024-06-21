@@ -1,0 +1,303 @@
+<html lang="en">
+<head>
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Poll - Social Stream Ninja</title>
+	<meta name="title" content="Poll - Social Stream Ninja" />
+	<link rel="icon" href="./icons/favicon.ico" />
+	<link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+   
+    <title>Graphical Poll</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .poll-container {
+            background-color: #FFF;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+			min-width:300px
+        }
+
+        h2, h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .poll-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .option-label {
+            flex: 1;
+            min-width: 50px; /* Add min-width to prevent label from being too small */
+        }
+
+        .poll-bar {
+            height: 20px;
+            background-color: #3498db;
+            border-radius: 10px;
+            transition: width 1s ease; /* Add this line for smooth transition */
+        }
+
+        .poll-bar-container {
+            flex: 2;
+            margin-left: 10px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .percentage {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="poll-container">
+        <h2>#HASHTAG POLL</h2>
+		<h3>Enter a hashtagged word into chat to vote for it!</h3>
+        <div class="poll" id="poll">
+            <!-- Poll options will be dynamically added here -->
+        </div>
+    </div>
+<script>
+
+
+window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
+	console.error(errorMsg);
+	console.error(lineNumber);
+	console.error("Unhandled Error occured");
+	return false;
+};
+
+function getById(id) {
+	var el = document.getElementById(id);
+	if (!el) {
+		el = document.createElement("span");
+	}
+	return el;
+}
+
+(function (w) {
+	w.URLSearchParams = w.URLSearchParams || function (searchString) {
+		var self = this;
+		self.searchString = searchString;
+		self.get = function (name) {
+			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+			if (results == null) {
+				return null;
+			} else {
+				return decodeURI(results[1]) || 0;
+			}
+		};
+	};
+
+})(window);
+
+var urlParams = new URLSearchParams(window.location.search);
+
+try {
+	if (electronApi){ // fix for electron dragging.
+		document.body.style.width = "95%";
+		setTimeout(function(){
+			document.body.style.width = "100%";
+		},1000);
+
+		setTimeout(function(){
+			document.body.style.width = "98%";
+		},2000);
+
+		setTimeout(function(){
+			document.body.style.width = "100%";
+		},5000);
+	}
+} catch(e){
+}
+
+var roomID = "test";
+if (urlParams.has("session")){
+	roomID = urlParams.get("session");
+} else if (urlParams.has("s")){
+	roomID = urlParams.get("s");
+} else if (urlParams.has("id")){
+	roomID = urlParams.get("id");
+} else if (window.location.protocol=="file:"){
+	roomID = prompt("Enter your session ID here, or add it to the URL.");
+	if (roomID){
+		var href = window.location.href;
+		var arr = href.split('?');
+		var newurl;
+		if (arr.length > 1 && arr[1] !== '') {
+			newurl = href + '&session=' + roomID;
+		} else {
+			newurl = href + '?session=' + roomID;
+		}
+		window.history.pushState({path: newurl.toString()}, '', newurl.toString());
+	} else {
+		alert("You need to provide your extension's session ID for this page to work");
+	}
+} else {
+	window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
+}
+
+var password = "false";
+if (urlParams.has("password")){
+	password = urlParams.get("password") || "false";
+}
+
+if (urlParams.has('css')){
+	var cssURL = urlParams.get('css');
+	cssURL = decodeURI(cssURL);
+
+	var cssStylesheet = document.createElement('link');
+	cssStylesheet.rel = 'stylesheet';
+	cssStylesheet.type = 'text/css';
+	cssStylesheet.media = 'screen';
+	cssStylesheet.href = cssURL;
+	document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
+}
+
+if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
+	try {
+		var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
+		var css = decodeURIComponent(atob(base64Css)); // window.btoa(encodeURIComponent("#mainmenu{background-color: pink; ❤" ));
+		var cssStyleSheet = document.createElement("style");
+		cssStyleSheet.innerText = css;
+		document.querySelector("head").appendChild(cssStyleSheet);
+	} catch(e){console.error(e);}
+};
+
+var results = {};
+
+function extractHashtag(text) {
+    const hashtagRegex = /#(\w+)/;
+    const match = text.match(hashtagRegex);
+    return match ? match[1] : null;
+}
+var totalVotes = 0;
+function processData(data){
+	if (data && data.chatmessage){
+		let res = extractHashtag(data.chatmessage);
+		if (res){
+			res = res.toUpperCase();
+			if (results[res]){
+				results[res] += 1;
+				totalVotes += 1;
+			} else {
+				results[res] = 1;
+				totalVotes += 1;
+			}
+			updatePoll(results);
+		}
+	}
+}
+
+function processInput(data){
+	if ("mid" in data){
+		return;
+	} else if ("pin" in data){
+		return;
+	} else if ("unpin" in data){
+		return;
+	} else if ("queueInit" in data){
+		return;
+	} else if ("queue" in data){
+		return;
+	} else if ("deleteMessage" in data){
+		return;
+	}
+	if (data.action){
+	} else if ("forward" in data){
+	} else if ("html" in data){
+	} else if (data.content){
+		processData(data.content);
+	} else {
+		processData(data );
+	}
+}
+
+var iframe = document.createElement("iframe"); // we can leave it called "dock", as it will get all the same messages the dock gets. This could be optimized of course..
+iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password="+password+"&solo&view="+roomID+"&novideo&noaudio&label=dock&cleanoutput&room="+roomID; // view only connection (data two way of course)
+iframe.style.width = "0px";
+iframe.style.height = "0px";
+iframe.style.position = "fixed";
+iframe.style.left = "-100px";
+iframe.style.top = "-100px";
+iframe.id = "frame1"
+document.body.appendChild(iframe);
+
+var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+var eventer = window[eventMethod];
+var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+eventer(messageEvent, function (e) {
+	if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
+	if ("dataReceived" in e.data){ // raw data
+		if ("overlayNinja" in e.data.dataReceived){
+			processInput(e.data.dataReceived.overlayNinja);
+		}
+	}
+});
+
+function updatePoll(results) {
+	const poll = document.getElementById('poll');
+	Object.keys(results).forEach(label=>{
+		let votes = results[label];
+		let option = document.getElementById(`option${label}`);
+		let bar, percentageText;
+		
+		if (!option) {
+			option = document.createElement('div');
+			option.className = 'poll-option';
+			option.id = `option${label}`;
+
+			const optionLabel = document.createElement('span');
+			optionLabel.className = 'option-label';
+			optionLabel.innerText = label;
+
+			const barContainer = document.createElement('div');
+			barContainer.className = 'poll-bar-container';
+
+			bar = document.createElement('div');
+			bar.className = 'poll-bar';
+			bar.id = `bar${label}`;
+
+			barContainer.appendChild(bar);
+
+			percentageText = document.createElement('span');
+			percentageText.className = 'percentage';
+			percentageText.id = `percentage${label}`;
+			percentageText.innerText = '0%';
+
+			option.appendChild(optionLabel);
+			option.appendChild(barContainer);
+			option.appendChild(percentageText);
+
+			poll.appendChild(option);
+		} else {
+			bar = document.getElementById(`bar${label}`);
+			percentageText = document.getElementById(`percentage${label}`);
+		}
+
+		const percentage = ((votes / totalVotes) * 100).toFixed(2) + '%';
+		bar.style.width = percentage;
+		percentageText.innerText = percentage;
+	});
+}
+
+
+</script>
+</body>
+</html>

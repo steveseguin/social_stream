@@ -1225,7 +1225,7 @@ async function getPronouns() {
 						});
 					})
 					.catch(err => {
-						console.error(err);
+						// console.error(err);
 						return {};
 					});
 
@@ -1270,7 +1270,7 @@ async function getPronounsNames(username = "") {
 						});
 					})
 					.catch(err => {
-						console.error(err);
+						//console.error(err);
 						return false;
 					});
 

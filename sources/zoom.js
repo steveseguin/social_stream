@@ -363,15 +363,17 @@
 			}
 		} else if (document.querySelectorAll('iframe').length){
 			document.querySelectorAll('iframe').forEach( item =>{
-				if (item && item.contentWindow && item.contentWindow.document.body.querySelector('#chat-list-content')){
-					if (!item.contentWindow.document.body.querySelector('#chat-list-content').marked){
-						console.log("FOUND UNMARKED IFRAME ");
-						lastName = "";
-						lastImage = "";
-						item.contentWindow.document.body.querySelector('#chat-list-content').marked=true;
-						onElementInserted(item.contentWindow.document.body.querySelector('#chat-list-content'));
+				try {
+					if (item && item.contentWindow && item.contentWindow.document && item.contentWindow.document.body.querySelector('#chat-list-content')){
+						if (!item.contentWindow.document.body.querySelector('#chat-list-content').marked){
+							console.log("FOUND UNMARKED IFRAME ");
+							lastName = "";
+							lastImage = "";
+							item.contentWindow.document.body.querySelector('#chat-list-content').marked=true;
+							onElementInserted(item.contentWindow.document.body.querySelector('#chat-list-content'));
+						}
 					}
-				}
+				} catch(e){}
 			});
 		}
 		if (document.getElementById("poll__body")){
