@@ -255,6 +255,62 @@
 			}
 		}
 	});
+	
+	
+	
+	(function() {
+		var css = '.hidden123{display:none!important;} .unstyle123{inset:0 0 0 0!important;}',
+			head = document.head || document.getElementsByTagName('head')[0],
+			style = document.createElement('style');
+
+		style.type = 'text/css';
+		if (style.styleSheet) {
+			// This is required for IE8 and below.
+			style.styleSheet.cssText = css;
+		} else {
+			style.appendChild(document.createTextNode(css));
+		}
+
+		head.appendChild(style);
+
+		// Function to handle the visibility toggle
+		function toggleVisibility(hide) {
+			document.querySelectorAll("*:not(video):not([class^='overlayTitleText'])").forEach(x => {
+				if (x.querySelector && !x.querySelector("video,[class^='overlayTitleText']")) {
+					x.classList.toggle("hidden123", hide);
+				}
+				if (x.style && x.style.includes && x.style.includes("inset")) {
+					x.classList.toggle("unstyle123", hide);
+				}
+			});
+		}
+
+		// Add keydown event listener
+		document.addEventListener('keydown', function(event) {
+			if (event.ctrlKey && event.shiftKey) {
+				if (event.key === '<') {
+					console.log('CTRL + SHIFT + < pressed');
+					toggleVisibility(true);
+				} else if (event.key === '>') {
+					console.log('CTRL + SHIFT + > pressed');
+					toggleVisibility(false);
+				}
+			}
+		});
+
+		// MutationObserver to handle dynamically added elements
+		var observer = new MutationObserver(function(mutationsList) {
+			for (const mutation of mutationsList) {
+				if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+					toggleVisibility(document.querySelector('.hidden123') !== null);
+				}
+			}
+		});
+
+		// Observe the entire body for changes
+		observer.observe(document.body, { childList: true, subtree: true });
+
+	})();
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
@@ -264,6 +320,7 @@
 					sendResponse(true);
 					return;
 				}
+				
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
