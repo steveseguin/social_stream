@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Royale - Social Stream Ninja</title>
+	<meta name="title" content="Battle Royale - Social Stream Ninja" />
+	<link rel="icon" href="./icons/favicon.ico" />
+   <style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: green;
+        overflow: hidden;
+    }
+    #game-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+    }
+    #game-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        image-rendering: pixelated;
+    }
+    #ui-overlay {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-family: 'Courier New', monospace;
+        font-size: 24px;
+        color: #fff;
+        text-shadow: 2px 2px #000;
+    }
+    #timer {
+        font-size: 36px;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="ui-overlay">
+            <div id="timer">--</div>
+            <div id="player-count">Players: 0</div>
+			<div id="rules">Type !join to play</div>
+        </div>
+    </div>
+<script>
+
+window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
+	console.error(errorMsg);
+	console.error(lineNumber);
+	console.error("Unhandled Error occured");
+	return false;
+};
+
+function getById(id) {
+	var el = document.getElementById(id);
+	if (!el) {
+		el = document.createElement("span");
+	}
+	return el;
+}
+
+(function (w) {
+	w.URLSearchParams = w.URLSearchParams || function (searchString) {
+		var self = this;
+		self.searchString = searchString;
+		self.get = function (name) {
+			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+			if (results == null) {
+				return null;
+			} else {
+				return decodeURI(results[1]) || 0;
+			}
+		};
+	};
+
+})(window);
+
+var urlParams = new URLSearchParams(window.location.search);
+
+try {
+	if (electronApi){ // fix for electron dragging.
+		document.body.style.width = "95%";
+		setTimeout(function(){
+			document.body.style.width = "100%";
+		},1000);
+
+		setTimeout(function(){
+			document.body.style.width = "98%";
+		},2000);
+
+		setTimeout(function(){
+			document.body.style.width = "100%";
+		},5000);
+	}
+} catch(e){
+}
+
+var roomID = "test";
+if (urlParams.has("session")){
+	roomID = urlParams.get("session");
+} else if (urlParams.has("s")){
+	roomID = urlParams.get("s");
+} else if (urlParams.has("id")){
+	roomID = urlParams.get("id");
+} else if (window.location.protocol=="file:"){
+	roomID = prompt("Enter your session ID here, or add it to the URL.");
+	if (roomID){
+		var href = window.location.href;
+		var arr = href.split('?');
+		var newurl;
+		if (arr.length > 1 && arr[1] !== '') {
+			newurl = href + '&session=' + roomID;
+		} else {
+			newurl = href + '?session=' + roomID;
+		}
+		window.history.pushState({path: newurl.toString()}, '', newurl.toString());
+	} else {
+		alert("You need to provide your extension's session ID for this page to work");
+	}
+} else {
+	window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
+}
+
+var password = "false";
+if (urlParams.has("password")){
+	password = urlParams.get("password") || "false";
+}
+
+function processData(data){
+	if (data && data.chatmessage && data.chatname){
+	
+        if (gameOver) return;
+		
+		if (data.chatmessage.startsWith("!join")){
+			if (!players.get(data.chatname)){
+				addPlayer(data.chatname, data.chatimg, data.type, data.nameColor);
+			}
+		} else if (data.chatmessage.startsWith("!say ")){
+			if (players.get(data.chatname)){
+				handleChatMessage(data.chatname, data.chatmessage.split("!say ")[1]);
+			}
+		}
+	}
+}
+
+function processInput(data){
+	if ("mid" in data){
+		return;
+	} else if ("pin" in data){
+		return;
+	} else if ("unpin" in data){
+		return;
+	} else if ("queueInit" in data){
+		return;
+	} else if ("queue" in data){
+		return;
+	} else if ("deleteMessage" in data){
+		return;
+	}
+	if (data.action){
+	} else if ("forward" in data){
+	} else if ("html" in data){
+	} else if (data.content){
+		processData(data.content);
+	} else {
+		processData(data );
+	}
+}
+
+var iframe = document.createElement("iframe"); // we can leave it called "dock", as it will get all the same messages the dock gets. This could be optimized of course..
+iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password="+password+"&solo&view="+roomID+"&novideo&noaudio&label=dock&cleanoutput&room="+roomID; // view only connection (data two way of course)
+iframe.style.width = "0px";
+iframe.style.height = "0px";
+iframe.style.position = "fixed";
+iframe.style.left = "-100px";
+iframe.style.top = "-100px";
+iframe.id = "frame1"
+document.body.appendChild(iframe);
+
+var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+var eventer = window[eventMethod];
+var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+eventer(messageEvent, function (e) {
+	if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
+	if ("dataReceived" in e.data){ // raw data
+		if ("overlayNinja" in e.data.dataReceived){
+			processInput(e.data.dataReceived.overlayNinja);
+		}
+	}
+});
+
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+
+let timeLeft = 100;
+
+const timerElement = document.getElementById('timer');
+timerElement.textContent = timeLeft;
+
+const playerCountElement = document.getElementById('player-count');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const TILE_SIZE = 32;
+const GRID_WIDTH = Math.floor(canvas.width / TILE_SIZE);
+const GRID_HEIGHT = Math.floor(canvas.height / TILE_SIZE);
+const COMBAT_RANGE_BASE = 10; // Base combat range in tiles
+const DENSITY_THRESHOLD = 0.1; // Players per tile threshold for adjusting combat range
+const WEAPONS = ['sword_shield', 'two_handed_axe', 'long_spear', 'bow_arrow'];
+const arrows = [];
+const ARROW_SPEED = 0.2;
+const players = new Map();
+
+function createGrassPattern() {
+    const patternCanvas = document.createElement('canvas');
+    const patternCtx = patternCanvas.getContext('2d');
+    patternCanvas.width = 1000;
+    patternCanvas.height = 1000;
+
+    // Base grass color
+    patternCtx.fillStyle = '#228B22';
+    patternCtx.fillRect(0, 0, 1000, 1000);
+
+    // Add random grass blades
+    for (let i = 0; i < 20000; i++) {
+        patternCtx.strokeStyle = `rgb(${30 + Math.random() * 30}, ${100 + Math.random() * 50}, ${30 + Math.random() * 30})`;
+        patternCtx.beginPath();
+        const x = Math.random() * 1000;
+        const y = Math.random() * 1000;
+        patternCtx.moveTo(x, y);
+        patternCtx.lineTo(x + (Math.random() - 0.5) * 10, y + (Math.random() * 10) + 5);
+        patternCtx.stroke();
+    }
+
+    // Add some darker patches
+    for (let i = 0; i < 2000; i++) {
+        patternCtx.fillStyle = 'rgba(0, 50, 0, 0.02)';
+        patternCtx.beginPath();
+        patternCtx.arc(Math.random() * 1000, Math.random() * 1000, Math.random() * 10 + 5, 0, Math.PI * 2);
+        patternCtx.fill();
+    }
+
+    // Add stones
+    for (let i = 0; i < 25; i++) {
+        patternCtx.fillStyle = `rgb(${150 + Math.random() * 50}, ${150 + Math.random() * 50}, ${150 + Math.random() * 50})`;
+        patternCtx.beginPath();
+        patternCtx.arc(Math.random() * 1000, Math.random() * 1000, Math.random() * 3 + 1, 0, Math.PI * 2);
+        patternCtx.fill();
+    }
+
+    // Add weeds/flowers
+    for (let i = 0; i < 3; i++) {
+        const x = Math.random() * 1000;
+        const y = Math.random() * 1000;
+        patternCtx.fillStyle = 'yellow';
+        patternCtx.beginPath();
+        patternCtx.arc(x, y, 2, 0, Math.PI * 2);
+        patternCtx.fill();
+        
+        patternCtx.strokeStyle = 'darkgreen';
+        patternCtx.beginPath();
+        patternCtx.moveTo(x, y);
+        patternCtx.lineTo(x, y + 5);
+        patternCtx.stroke();
+    }
+
+    return ctx.createPattern(patternCanvas, 'repeat');
+}
+
+const grassPattern = createGrassPattern();
+
+const weaponStats = {
+    sword_shield: { attackDelay: 500, attackSpeed: 1000, damage: 20, absorption: 0.5, range: 1 },
+    two_handed_axe: { attackDelay: 1000, attackSpeed: 2000, damage: 30, absorption: 0, range: 1.2 },
+    long_spear: { attackDelay: 0, attackSpeed: 1500, damage: 15, absorption: 0.3, range: 2 },
+	bow_arrow: { attackDelay: 250, attackSpeed: 500, damage: 10, absorption: 0.1, range: 10 }
+};
+
+const combatMatrix = {
+    sword_shield: { sword_shield: 1, two_handed_axe: 0.8, long_spear: 1.2, bow_arrow: 1.2 },
+    two_handed_axe: { sword_shield: 1.2, two_handed_axe: 1, long_spear: 0.8, bow_arrow: 1.4 },
+    long_spear: { sword_shield: 0.8, two_handed_axe: 1.4, long_spear: 1.2, bow_arrow: 0.8 },
+	bow_arrow: { sword_shield: 0.8, two_handed_axe: 1.2, long_spear: 1.4, bow_arrow: 1.0 }
+};
+
+class Player {
+    constructor(name, x, y) {
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.weapon = WEAPONS[Math.floor(Math.random() * WEAPONS.length)];
+        this.health = 100;
+        this.kills = 0;
+        this.direction = Math.random() * Math.PI * 2;
+        this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        this.speed = 0.05;
+        this.inCombat = false;
+		this.nameColor = false;
+        this.animationFrame = 0;
+        this.joinTime = Date.now();
+        this.lastAttackTime = 0;
+		this.attackAnimationFrame = 0;
+        this.bloodSplatter = 0;
+		this.isAlive = true;
+        this.healthRegenRate = 0.04; // Health regen per frame
+		this.firstAttack = true;
+		this.message = null;
+        this.messageTimer = 0;
+		this.avatarImage = null;
+        this.avatarLoaded = false;
+    }
+	
+	setAvatar(imageUrl) {
+        this.avatarImage = new Image();
+        this.avatarImage.onload = () => {
+            this.avatarLoaded = true;
+        };
+        this.avatarImage.onerror = () => {
+            console.error(`Failed to load avatar for ${this.name}`);
+            this.avatarImage = null;
+        };
+        this.avatarImage.src = imageUrl;
+    }
+	
+	setNameColor(color) {
+        this.nameColor = color;
+    }
+	
+	setMessage(msg) {
+        if (this.isAlive && msg.length <= 50) {
+            this.message = msg;
+            this.messageTimer = 10000; // Message will display for 5 seconds
+        }
+    }
+
+    update() {
+        if (!this.isAlive) {
+			this.message = null;
+			return;
+		}
+		
+		if (!this.inCombat && this.health < 100) {
+            this.health = Math.min(100, this.health + this.healthRegenRate);
+        }
+
+        if (!this.inCombat) {
+            this.x += Math.cos(this.direction) * this.speed;
+            this.y += Math.sin(this.direction) * this.speed;
+
+            if (this.x < 0 || this.x > GRID_WIDTH - 1) {
+                this.direction = Math.PI - this.direction;
+            }
+            if (this.y < 0 || this.y > GRID_HEIGHT - 1) {
+                this.direction = -this.direction;
+            }
+
+            this.x = Math.max(0, Math.min(GRID_WIDTH - 1, this.x));
+            this.y = Math.max(0, Math.min(GRID_HEIGHT - 1, this.y));
+
+            if (Math.random() < 0.005) {
+                this.direction = (this.direction + (Math.random() * Math.PI * 2 * 0.01)) % (Math.PI * 2);
+            }
+        }
+		
+		if (this.messageTimer > 0) {
+            this.messageTimer -= 16; // Assuming 60 FPS, each frame is about 16ms
+            if (this.messageTimer <= 0) {
+                this.message = null;
+            }
+        }
+
+        this.animationFrame = (this.animationFrame + 1) % 60;
+    }
+
+    draw() {
+        const x = this.x * TILE_SIZE;
+        const y = this.y * TILE_SIZE;
+
+        ctx.globalAlpha = this.isAlive ? 1 : 0.5;
+
+        // Draw body
+        ctx.fillStyle = this.isAlive ? '#000000' : '#CCCCCC';
+        ctx.fillRect(x + 6, y + 10, 20, 20);
+
+        // Draw legs
+        const legOffset = this.isAlive ? Math.sin(this.animationFrame * 0.2) * 2 : 0;
+        ctx.fillRect(x + 8, y + 30 + legOffset, 6, 12);
+        ctx.fillRect(x + 18, y + 30 - legOffset, 6, 12);
+
+        // Draw head (avatar or colored box)
+        if (this.avatarLoaded && this.avatarImage) {
+			
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(x + 6, y, 20, 20);
+            ctx.clip();
+			
+            ctx.drawImage(this.avatarImage, x + 6, y, 20, 20);
+            ctx.restore();
+        } else {
+            ctx.fillStyle = this.isAlive ? this.color : '#FFFFFF';
+            ctx.fillRect(x + 6, y, 20, 20);
+        }
+
+        // Draw weapon
+        this.drawWeapon(x, y);
+
+        // Draw blood splatter
+        if (this.bloodSplatter > 0) {
+            ctx.fillStyle = `rgba(255, 0, 0, ${this.bloodSplatter / 100})`;
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            this.bloodSplatter -= 0.5;
+        }
+		ctx.font = '12px Arial';
+		if (this.nameColor){
+			ctx.strokeStyle = this.nameColor;
+			ctx.strokeText(this.name, x, y - 5);
+		}
+			
+		ctx.fillStyle = '#fff';
+		ctx.fillText(this.name, x, y - 5);
+		ctx.strokeStyle = "black";
+
+        // Draw health bar
+        ctx.fillStyle = 'red';
+        ctx.fillRect(x, y - 24, 32, 5);
+        ctx.fillStyle = 'green';
+        ctx.fillRect(x, y - 24, 32 * (this.health / 100), 5);
+		
+		if (this.message) {
+            const x = this.x * TILE_SIZE;
+            const y = this.y * TILE_SIZE;
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.lineWidth = 3;
+            ctx.strokeText(this.message, x + TILE_SIZE / 2, y - 25);
+            ctx.fillText(this.message, x + TILE_SIZE / 2, y - 25);
+        }
+		
+		ctx.globalAlpha = 1;
+    }
+
+    drawWeapon(x, y) {
+		ctx.fillStyle = this.isAlive ? '#888888' : '#CCCCCC';
+        const weaponOffset = this.inCombat ? Math.sin(this.attackAnimationFrame * 0.2) * 10 : 0;
+
+        switch (this.weapon) {
+            case 'sword_shield':
+                // Draw sword
+                ctx.fillRect(x + 26 + weaponOffset, y + 15, 4, 15);
+                // Draw shield
+				ctx.fillStyle = this.isAlive ? '#A0522D' : '#CCCCCC';
+                ctx.fillRect(x - 2 - weaponOffset/2, y + 15, 6, 20);
+                break;
+            case 'two_handed_axe':
+                // Draw axe handle
+				ctx.fillStyle = this.isAlive ? '#8B4513' : '#CCCCCC';
+                ctx.fillRect(x + 26 + weaponOffset, y + 10, 4, 20);
+                // Draw axe head
+				ctx.fillStyle = this.isAlive ? '#888888' : '#CCCCCC';
+                ctx.beginPath();
+                ctx.moveTo(x + 28 + weaponOffset, y + 10);
+                ctx.lineTo(x + 38 + weaponOffset, y + 5);
+                ctx.lineTo(x + 38 + weaponOffset, y + 15);
+				ctx.moveTo(x + 28 + weaponOffset, y + 10);
+                ctx.closePath();
+                ctx.fill();
+                break;
+            case 'long_spear':
+                // Draw spear
+				ctx.fillStyle = this.isAlive ? '#8B4513' : '#CCCCCC';
+                ctx.fillRect(x + weaponOffset*2 - 5, y + 18, 50, 2);
+                // Draw spearhead
+				//ctx.fillStyle = this.isAlive ? '#888888' : '#CCCCCC';
+                //ctx.beginPath();
+                //ctx.moveTo(x + weaponOffset*2 , y +13);
+                //ctx.lineTo(x + weaponOffset*2+5, y + 18);
+                //ctx.lineTo(x + weaponOffset*2, y + 13);
+                //ctx.closePath();
+                //ctx.fill();
+                break;
+			case 'bow_arrow':
+                // Draw bow
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = this.isAlive ? '#483224' : '#CCCCCC';
+                ctx.beginPath();
+                ctx.arc(x + 16, y + 16, 20, -Math.PI/2, Math.PI/2);
+                ctx.stroke();
+                
+                // Draw bowstring
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = this.isAlive ? 'black' : '#CCCCCC';
+                ctx.beginPath();
+                ctx.moveTo(x + 16, y - 4);
+                ctx.lineTo(x + 16, y + 36);
+                ctx.stroke();
+				
+				ctx.strokeStyle = 'black';
+                
+                // Draw arrow
+				if (this.inCombat) {
+					const arrowLength = 20;
+					const drawAngle = Math.PI / 20; // 45-degree angle
+					const arrowX = x + 16 + Math.cos(drawAngle) * weaponOffset;
+					const arrowY = y + 16 + Math.sin(drawAngle) * weaponOffset;
+
+					ctx.save();
+					ctx.translate(arrowX, arrowY);
+					ctx.rotate(drawAngle);
+
+					// Arrow shaft
+					ctx.fillRect(0, -1, arrowLength, 2);
+
+					// Arrow head
+					ctx.beginPath();
+					ctx.moveTo(arrowLength, 0);
+					ctx.lineTo(arrowLength - 5, -3);
+					ctx.lineTo(arrowLength - 5, 3);
+					ctx.fill();
+
+					// Arrow feathers
+					ctx.fillStyle = this.isAlive ? '#8B4513' : '#CCCCCC'; // Brown color for feathers
+					ctx.beginPath();
+					ctx.moveTo(0, 0);
+					ctx.lineTo(-3, -3);
+					ctx.lineTo(-3, 3);
+					ctx.fill();
+
+					ctx.restore();
+				}
+                break;
+        }
+    }
+
+    fireArrow(target) {
+        const dx = target.x - this.x;
+        const dy = target.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        arrows.push({
+            x: this.x,
+            y: this.y,
+            dx: (dx / distance) * ARROW_SPEED,
+            dy: (dy / distance) * ARROW_SPEED,
+            source: this,
+            target: target
+        });
+    }
+
+    meleeAttack(target) {
+        const damageModifier = combatMatrix[this.weapon][target.weapon];
+        const damage = weaponStats[this.weapon].damage * damageModifier;
+        const absorbedDamage = damage * weaponStats[target.weapon].absorption;
+        const actualDamage = damage - absorbedDamage;
+        target.health -= actualDamage;
+
+        target.bloodSplatter += actualDamage * 2;
+
+        if (target.health <= 0) {
+            target.isAlive = false;
+            this.kills++;
+            this.health = Math.min(100, this.health + 25);
+            return true;
+        }
+        return false;
+    }
+	
+	attack(target) {
+        const now = Date.now();
+        const weaponStat = weaponStats[this.weapon];
+        const requiredDelay = this.firstAttack ? weaponStat.attackDelay : weaponStat.attackSpeed;
+        
+        if (now - this.lastAttackTime < requiredDelay) return false;
+
+        this.lastAttackTime = now;
+        this.firstAttack = false;
+
+        if (this.weapon === 'bow_arrow') {
+            this.fireArrow(target);
+            return false; // Arrow damage will be applied when it hits
+        } else {
+            return this.meleeAttack(target);
+        }
+    }
+}
+
+function initiateCombat(player1, player2) {
+    player1.inCombat = true;
+    player2.inCombat = true;
+    player1.firstAttack = true;
+    player2.firstAttack = true;
+    player1.combatTarget = player2;
+    player2.combatTarget = player1;
+
+    function moveTowardsOpponent(player, target) {
+        const dx = target.x - player.x;
+        const dy = target.y - player.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const playerRange = weaponStats[player.weapon].range;
+        
+        if (distance > playerRange) {
+            player.x += (dx / distance) * 0.04;
+            player.y += (dy / distance) * 0.04;
+            return false;
+        }
+        return true;
+    }
+
+    function combatRound() {
+        if (!player1.isAlive || !player2.isAlive || !player1.inCombat || !player2.inCombat) {
+            endCombat(player1, player2);
+            return;
+        }
+
+        const player1InRange = moveTowardsOpponent(player1, player2);
+        const player2InRange = moveTowardsOpponent(player2, player1);
+
+        const now = Date.now();
+        const player1ReadyToAttack = player1.firstAttack
+            ? now - player1.lastAttackTime >= weaponStats[player1.weapon].attackDelay
+            : now - player1.lastAttackTime >= weaponStats[player1.weapon].attackSpeed;
+        const player2ReadyToAttack = player2.firstAttack
+            ? now - player2.lastAttackTime >= weaponStats[player2.weapon].attackDelay
+            : now - player2.lastAttackTime >= weaponStats[player2.weapon].attackSpeed;
+
+		if (player1InRange){
+			player1.attackAnimationFrame++;
+		}
+        if (player1InRange && player1ReadyToAttack) {
+            
+            const player1Wins = player1.attack(player2);
+            player1.firstAttack = false;
+            if (player1Wins) {
+                endCombat(player1, player2);
+                return;
+            }
+        }
+		if (player2InRange){
+			player2.attackAnimationFrame++;
+		}
+        if (player2InRange && player2ReadyToAttack) {
+           
+            const player2Wins = player2.attack(player1);
+            player2.firstAttack = false;
+            if (player2Wins) {
+                endCombat(player2, player1);
+                return;
+            }
+        }
+
+        requestAnimationFrame(combatRound);
+    }
+
+    combatRound();
+}
+
+
+function showDamageIndicator(x, y) {
+    ctx.fillStyle = 'red';
+    ctx.font = '20px Arial';
+    ctx.fillText('Hit!', x, y - 20);
+}
+
+function endCombat(winner, loser) {
+    winner.inCombat = false;
+    loser.inCombat = false;
+    winner.attackAnimationFrame = 0;
+    loser.attackAnimationFrame = 0;
+    winner.combatTarget = null;
+    loser.combatTarget = null;
+    if (loser.health <= 0) {
+        loser.isAlive = false; // Make loser a ghost
+    }
+    winner.firstAttack = true; // Reset firstAttack for the next combat
+    loser.firstAttack = true; // Reset firstAttack for the next combat (if resurrected)
+}
+
+function addPlayer(name, avatarUrl=false, type=false, color=false) {
+    const x = Math.floor(Math.random() * GRID_WIDTH);
+    const y = Math.floor(Math.random() * GRID_HEIGHT);
+	const player = new Player(name, x, y);
+	if (avatarUrl) {
+        player.setAvatar(avatarUrl);
+    }
+	if (color) {
+        player.setNameColor(color);
+    }
+    players.set(name, player);
+    updatePlayerCount();
+}
+
+function updatePlayerCount() {
+    playerCountElement.textContent = `Players: ${players.size}`;
+}
+
+function calculateCombatRange() {
+    const totalArea = GRID_WIDTH * GRID_HEIGHT;
+    const playerDensity = players.size / totalArea;
+    const densityFactor = Math.min(playerDensity / DENSITY_THRESHOLD, 1);
+    return COMBAT_RANGE_BASE * (1 - densityFactor * 0.7); // Reduce range up to 70% based on density
+}
+
+function checkCombat() {
+    const combatRange = calculateCombatRange();
+    const playerArray = Array.from(players.values());
+
+    for (let i = 0; i < playerArray.length; i++) {
+        for (let j = i + 1; j < playerArray.length; j++) {
+            const player1 = playerArray[i];
+            const player2 = playerArray[j];
+
+            if (!player1.isAlive || !player2.isAlive || player1.inCombat || player2.inCombat) continue;
+
+            const distance = Math.sqrt(
+                Math.pow(player1.x - player2.x, 2) + Math.pow(player1.y - player2.y, 2)
+            );
+
+            if (distance <= combatRange) {
+                initiateCombat(player1, player2);
+            }
+        }
+    }
+}
+
+let gameOver = false;
+let scoreboardData = null;
+
+function update() {
+    if (!gameOver) {
+        players.forEach(player => player.update());
+        updateArrows();
+        checkCombat();
+    }
+}
+
+function updateArrows() {
+    for (let i = arrows.length - 1; i >= 0; i--) {
+        const arrow = arrows[i];
+        arrow.x += arrow.dx;
+        arrow.y += arrow.dy;
+
+        const distance = Math.sqrt(
+            Math.pow(arrow.x - arrow.target.x, 2) + Math.pow(arrow.y - arrow.target.y, 2)
+        );
+
+        if (distance < 0.5) {
+            arrow.source.meleeAttack(arrow.target);
+            arrows.splice(i, 1);
+        } else if (arrow.x < 0 || arrow.x > GRID_WIDTH || arrow.y < 0 || arrow.y > GRID_HEIGHT) {
+            arrows.splice(i, 1);
+        }
+    }
+}
+
+function draw() {
+    // Draw grass background
+    ctx.fillStyle = grassPattern;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw players
+    players.forEach(player => {
+        player.draw();
+    });
+
+    // Draw arrows
+    ctx.fillStyle = '#000000';
+    arrows.forEach(arrow => {
+        ctx.fillRect(arrow.x * TILE_SIZE, arrow.y * TILE_SIZE, 2, 2);
+    });
+    
+    if (gameOver && scoreboardData) {
+        drawScoreboardModal(scoreboardData);
+    }
+}
+
+function updateTimer() {
+    if (gameOver) return;
+
+    timeLeft--;
+    timerElement.textContent = timeLeft;
+    if (timeLeft <= 0) {
+        endGame();
+    }
+}
+
+
+function endGame() {
+    gameOver = true;
+    const sortedPlayers = Array.from(players.values())
+        .filter(player => player.isAlive)
+        .sort((a, b) => {
+            if (b.kills !== a.kills) {
+                return b.kills - a.kills;
+            }
+            return a.joinTime - b.joinTime;
+        });
+
+    scoreboardData = sortedPlayers.slice(0, 3);
+}
+function displayScoreboard() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Game Over', canvas.width / 2, 100);
+
+    const sortedPlayers = Array.from(players.values())
+        .filter(player => player.isAlive)
+        .sort((a, b) => {
+            if (b.kills !== a.kills) {
+                return b.kills - a.kills;
+            }
+            return a.joinTime - b.joinTime;
+        });
+
+    const topPlayers = sortedPlayers.slice(0, 3);
+
+    drawScoreboardModal(topPlayers);
+}
+
+function drawScoreboardModal(topPlayers) {
+    const modalWidth = 300;
+    const modalHeight = 400;
+    const modalX = (canvas.width - modalWidth) / 2;
+    const modalY = (canvas.height - modalHeight) / 2;
+
+    // Draw semi-transparent background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw modal background
+    ctx.fillStyle = '#333';
+    ctx.fillRect(modalX, modalY, modalWidth, modalHeight);
+
+    // Draw modal border
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(modalX, modalY, modalWidth, modalHeight);
+
+    // Draw title
+    ctx.fillStyle = '#fff';
+    ctx.font = '24px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Top Survivors', canvas.width / 2, modalY + 40);
+
+    // Draw player information
+    topPlayers.forEach((player, index) => {
+        const yOffset = modalY + 100 + index * 100;
+
+        // Draw player avatar 
+
+		if (player.avatarLoaded && player.avatarImage) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(modalX + 20, yOffset, 60, 60);
+            ctx.clip();
+			
+            ctx.drawImage(player.avatarImage, modalX + 20, yOffset, 60, 60);
+            ctx.restore();
+        } else {
+            ctx.fillStyle = player.color;
+			ctx.fillRect(modalX + 20, yOffset, 60, 60);
+        }
+
+        // Draw player name and kills
+        ctx.fillStyle = '#fff';
+        ctx.font = '18px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${index + 1}. ${player.name}`, modalX + 90, yOffset + 25);
+        ctx.fillText(`Kills: ${player.kills}`, modalX + 90, yOffset + 50);
+
+        // Draw medal for top 3
+        const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+        if (index < 3) {
+            ctx.fillStyle = medalColors[index];
+            ctx.beginPath();
+            ctx.arc(modalX + 40, yOffset - 10, 15, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    });
+
+    // Draw "No survivors" message if there are no top players
+    if (topPlayers.length === 0) {
+        ctx.fillStyle = '#fff';
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('No survivors!', canvas.width / 2, modalY + 200);
+    }
+}
+
+function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+
+function simulateWebSocket() {
+    setInterval(() => {
+        if (gameOver) return;
+
+        const randomCommand = Math.random();
+        if (randomCommand < 0.2) {
+			if (players.size<5){
+				const name = `Computer${Math.floor(Math.random() * 10000)}`;
+				addPlayer(name);
+			}
+        } else if (randomCommand < 0.25) {
+            // Simulate a chat message
+            const playerArray = Array.from(players.values());
+            if (playerArray.length > 0) {
+                const randomPlayer = playerArray[Math.floor(Math.random() * playerArray.length)];
+                const randomMessage = `Ahhh-tauk!`;
+                handleChatMessage(randomPlayer.name, randomMessage);
+            }
+        } else if (randomCommand < 0.3) {
+            // Simulate a chat message
+            const playerArray = Array.from(players.values());
+            if (playerArray.length > 0) {
+                const randomPlayer = playerArray[Math.floor(Math.random() * playerArray.length)];
+                const randomMessage = `I will destroy you all`;
+                handleChatMessage(randomPlayer.name, randomMessage);
+            }
+        } else if (randomCommand < 0.35) {
+            // Simulate a chat message
+            const playerArray = Array.from(players.values());
+            if (playerArray.length > 0) {
+                const randomPlayer = playerArray[Math.floor(Math.random() * playerArray.length)];
+               const randomMessage = `Ooh! Pretty flowers!`;
+                handleChatMessage(randomPlayer.name, randomMessage);
+            }
+        }
+    }, 1500);
+}
+
+function handleChatMessage(playerName, message) {
+    const player = players.get(playerName);
+    if (player && player.isAlive) {
+        player.setMessage(message);
+    }
+}
+
+// Start the game
+simulateWebSocket();
+gameLoop();
+setInterval(updateTimer, 1000);
+</script>
+</body>
+</html>

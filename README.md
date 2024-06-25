@@ -913,7 +913,7 @@ The maintainers reserve the right to modify these terms of service at any time. 
 
 ##  Donations
 
-I condemns Russia's brutal invasion of Ukraine. 💙💛 Please consider supporting or donating to Ukraine instead: https://war.ukraine.ua/support-ukraine/
+I condemn Russia's brutal invasion of Ukraine. 💙💛 Please consider supporting or donating to Ukraine instead: https://war.ukraine.ua/support-ukraine/
 
 If you still wish to send a donation to Steve, it is considered a gift, with no exchange of value or service offered or expected in return.
 

@@ -610,6 +610,9 @@ function update(response, sync=true){
 			document.getElementById("poll").innerHTML = "<a target='_blank' id='polllink' href='"+baseURL+"poll.html?session="+response.streamID+password+"'>"+baseURL+"poll.html?session="+response.streamID+password+"</a>";
 			document.getElementById("poll").raw = baseURL+"poll.html?session="+response.streamID+password;
 			
+			document.getElementById("battle").innerHTML = "<a target='_blank' id='battlelink' href='"+baseURL+"battle.html?session="+response.streamID+password+"'>"+baseURL+"battle.html?session="+response.streamID+password+"</a>";
+			document.getElementById("battle").raw = baseURL+"battle.html?session="+response.streamID+password;
+			
 
 			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
 		
@@ -1497,6 +1500,9 @@ function updateSettings(ele, sync=true, value=null){
 	
 	document.getElementById("polllink").innerText = document.getElementById("poll").raw;
 	document.getElementById("polllink").href = document.getElementById("poll").raw;
+	
+	document.getElementById("battlelink").innerText = document.getElementById("battle").raw;
+	document.getElementById("battlelink").href = document.getElementById("battle").raw;
 }
 
 
