@@ -184,6 +184,7 @@ Past supported sites that have ceased to exist.
 - 🪦 vstream.com (RIP April 2024)
 - 🪦 twitter.com (RIP May 2024. fight me.)
 - 🪦 vimm.tv (RIP June 2024)
+- 🪦 caffeine.tv (RIP June 2024)
 
   (it's the effort that counts, guys; may your code live on in our ai llm bots forever)
 
