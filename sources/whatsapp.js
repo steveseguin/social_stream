@@ -2,27 +2,26 @@
 	
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
-	  
-	  xhr.open('GET', url, false);
-	  xhr.send(null);
-	  var data = stringToArrayBuffer(xhr.response);
-	  
-	  var reader = new FileReader();
-	  reader.onloadend = function() {
-		  callback(reader.result);
-	  }
-	  reader.readAsDataURL(new Blob([data])); // Failed to execute 'readAsDataURL' on 'FileReader': parameter 1 is not of type 'Blob'.
-	  
-	}
-	function stringToArrayBuffer(str) {
-		var buf = new ArrayBuffer(str.length);
-		var bufView = new Uint8Array(buf);
-
-		for (var i=0, strLen=str.length; i<strLen; i++) {
-			bufView[i] = str.charCodeAt(i);
+	  xhr.onload = function() {
+		  
+		var blob = xhr.response;
+    
+		if (blob.size > (55 * 1024)) {
+		  callback(url); // Image size is larger than 25kb.
+		  return;
 		}
 
-		return buf;
+		var reader = new FileReader();
+		
+		
+		reader.onloadend = function() {
+		  callback(reader.result);
+		}
+		reader.readAsDataURL(xhr.response);
+	  };
+	  xhr.open('GET', url);
+	  xhr.responseType = 'blob';
+	  xhr.send();
 	}
 	
 	function escapeHtml(unsafe){
@@ -77,23 +76,49 @@
 		return resp;
 	}
 	
-	function processMessage(ele){
+	var lastName = "";
+	
+	function processMessage(ele, skipProcessing=false){
 	  
-		//console.log(ele);
+		//// console.log(ele);
+		var labels = ele.querySelectorAll("[aria-label]");
+		
+		if (ele.querySelectorAll('[data-icon="tail-in"]')){
+			lastName = "";
+		}
 		
 		var chatmessage = "";
 		var chatname = "";
 		var chatimg = "";
-
-		try{
-			chatname = escapeHtml(ele.children[1].children[1].children[0].children[0].textContent);
-			if (chatname.split("] ").length>1){
-				chatname = chatname.split("] ")[1];
+		
+		if (labels[0].getAttribute("role") && (labels[0].getAttribute("role")=="button")){
+			if (labels[0].querySelector("img[src]")){
+				chatimg = labels[0].querySelector("img[src]").src;
+				chatname = escapeHtml(labels[1].textContent);
+			} else {
+				chatname = escapeHtml(labels[0].textContent);
 			}
-			chatname = chatname.split(":")[0];
-			chatname = chatname.trim();
-		} catch(e){
-			chatname = "";
+			if (chatname){
+				lastName = chatname
+			}
+			// console.log("9");
+		} else if (lastName){
+			chatname = lastName;
+			// console.log("8");
+		}
+
+		if (!chatname){
+			try{
+				chatname = escapeHtml(ele.children[1].children[1].children[0].children[0].textContent);
+				if (chatname.split("] ").length>1){
+					chatname = chatname.split("] ")[1];
+				}
+				chatname = chatname.split(":")[0];
+				chatname = chatname.trim();
+				// console.log("7");
+			} catch(e){
+				chatname = "";
+			}
 		}
 		
 		if (!chatname){
@@ -105,6 +130,7 @@
 				}
 				chatname = chatname.split(":")[0];
 				chatname = chatname.trim();
+				// console.log("5");
 			} catch(e){
 				chatname = "";
 			}
@@ -118,6 +144,7 @@
 				}
 				chatname = chatname.split(":")[0];
 				chatname = chatname.trim();
+				// console.log("4");
 			} catch(e){
 				chatname = "";
 			}
@@ -130,18 +157,29 @@
 				}
 				chatname = chatname.split(":")[0];
 				chatname = chatname.trim();
+				// console.log("3");
 			} catch(e){
 				chatname = "";
 			}
 		}
 		
 		if (!chatname){
-			if (ele.querySelector('[aria-label]')){
-				chatname = escapeHtml(ele.querySelector('[aria-label]').ariaLabel);
+			if (ele.querySelector('span[aria-label]')){
+				chatname = escapeHtml(ele.querySelector('span[aria-label]').ariaLabel);
 				chatname = chatname.split(":")[0];
+				if (chatname){
+					lastName = chatname;
+				} else if (lastName){
+					chatname = lastName;
+				}
 			} else {
 				return;
 			}
+			// console.log("1");
+		}
+		
+		if (skipProcessing){
+			return;
 		}
 
 
@@ -153,7 +191,9 @@
 				}
 				chatname = chatname.split(":")[0];
 				chatname = chatname.trim();
+				// console.log("2");
 			}
+
 		} catch(e){
 			chatname = "";
 		}
@@ -187,6 +227,9 @@
 		data.membership = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "whatsapp";
+		
+		
+		// console.log(data);
 		
 		if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
@@ -246,7 +289,7 @@
 				if (mutation.addedNodes.length) {
 					document.querySelector("#main").querySelectorAll("[data-id]:not([data-set123])").forEach((xx)=>{
 						xx.dataset.set123 = true;
-						console.log(xx);
+						// console.log(xx);
 						setTimeout(function(ele){
 							callback(ele);
 						}, 300, xx); // give it time to load fully
@@ -273,6 +316,7 @@
 				if (ele){
 					document.querySelector("#main").querySelectorAll("[data-id]:not([data-set123])").forEach((xx)=>{
 						xx.dataset.set123 = true;
+						processMessage(xx, true);
 					});
 					onElementInserted(ele, function(element){
 						processMessage(element);
