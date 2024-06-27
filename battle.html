@@ -134,21 +134,53 @@ if (urlParams.has("password")){
 	password = urlParams.get("password") || "false";
 }
 
-function processData(data){
-	if (data && data.chatmessage && data.chatname){
-	
+function processData(data) {
+    if (data && data.chatmessage && data.chatname) {
         if (gameOver) return;
-		
-		if (data.chatmessage.startsWith("!join")){
-			if (!players.get(data.chatname)){
-				addPlayer(data.chatname, data.chatimg, data.type, data.nameColor);
-			}
-		} else if (data.chatmessage.startsWith("!say ")){
-			if (players.get(data.chatname)){
-				handleChatMessage(data.chatname, data.chatmessage.split("!say ")[1]);
-			}
-		}
-	}
+
+        if (data.chatmessage.toLowerCase().startsWith("!join")) {
+            if (!players.get(data.chatname)) {
+                const parts = data.chatmessage.toLowerCase().split(" ");
+                let weaponType = null;
+
+                if (parts.length > 1) {
+                    const classInput = parts[1];
+                    switch (classInput) {
+                        case "sword":
+                        case "shield":
+                        case "swordshield":
+                        case "sword_shield":
+                            weaponType = "sword_shield";
+                            break;
+                        case "axe":
+                        case "twohandedaxe":
+                        case "two_handed_axe":
+                            weaponType = "two_handed_axe";
+                            break;
+                        case "spear":
+                        case "longspear":
+                        case "long_spear":
+                            weaponType = "long_spear";
+                            break;
+                        case "bow":
+                        case "arrow":
+                        case "bowarrow":
+                        case "bow_arrow":
+                            weaponType = "bow_arrow";
+                            break;
+                        default:
+                            weaponType = null; // Random selection
+                    }
+                }
+
+                addPlayer(data.chatname, data.chatimg, data.type, data.nameColor, weaponType);
+            }
+        } else if (data.chatmessage.startsWith("!say ")) {
+            if (players.get(data.chatname)) {
+                handleChatMessage(data.chatname, data.chatmessage.split("!say ")[1]);
+            }
+        }
+    }
 }
 
 function processInput(data){
@@ -221,6 +253,94 @@ const arrows = [];
 const ARROW_SPEED = 0.2;
 const players = new Map();
 
+const POWERUPS = ['speed', 'invincibility', 'regen', 'damage'];
+const powerUps = [];
+const obstacles = [];
+
+let countdownTimer = null;
+let countdownSeconds = 15;
+
+function spawnPowerUps() {
+    if (Math.random() < 0.005 && powerUps.length < 5) {
+        const x = Math.floor(Math.random() * GRID_WIDTH);
+        const y = Math.floor(Math.random() * GRID_HEIGHT);
+        const type = POWERUPS[Math.floor(Math.random() * POWERUPS.length)];
+        powerUps.push({ x, y, type });
+    }
+}
+
+function spawnObstacles() {
+    if (Math.random() < 0.002 && obstacles.length < 10) {
+        const x = Math.floor(Math.random() * GRID_WIDTH);
+        const y = Math.floor(Math.random() * GRID_HEIGHT);
+        obstacles.push({ x, y });
+    }
+}
+
+function checkPowerUpCollisions() {
+    players.forEach(player => {
+        if (!player.isAlive) return;
+
+        const playerX = Math.floor(player.x);
+        const playerY = Math.floor(player.y);
+
+        for (let i = powerUps.length - 1; i >= 0; i--) {
+            const powerUp = powerUps[i];
+            if (playerX === powerUp.x && playerY === powerUp.y) {
+                applyPowerUp(player, powerUp.type);
+                powerUps.splice(i, 1);
+            }
+        }
+    });
+}
+
+function checkObstacleCollisions() {
+    players.forEach(player => {
+        if (!player.isAlive) return;
+
+        const playerX = Math.floor(player.x);
+        const playerY = Math.floor(player.y);
+
+        obstacles.forEach(obstacle => {
+            if (playerX === obstacle.x && playerY === obstacle.y) {
+                player.speed *= 0.5; // Slow down the player
+                setTimeout(() => {
+                    player.speed /= 0.5; // Restore normal speed after 3 seconds
+                }, 3000);
+            }
+        });
+    });
+}
+
+function applyPowerUp(player, type) {
+    switch (type) {
+        case 'speed':
+            player.speed *= 1.5;
+            setTimeout(() => {
+                player.speed /= 1.5;
+            }, 5000);
+            break;
+        case 'invincibility':
+            player.invincible = true;
+            setTimeout(() => {
+                player.invincible = false;
+            }, 5000);
+            break;
+        case 'regen':
+            player.healthRegenRate *= 3;
+            setTimeout(() => {
+                player.healthRegenRate /= 3;
+            }, 5000);
+            break;
+        case 'damage':
+            player.damageMultiplier = 1.5;
+            setTimeout(() => {
+                player.damageMultiplier = 1;
+            }, 5000);
+            break;
+    }
+}
+
 function createGrassPattern() {
     const patternCanvas = document.createElement('canvas');
     const patternCtx = patternCanvas.getContext('2d');
@@ -280,25 +400,25 @@ function createGrassPattern() {
 const grassPattern = createGrassPattern();
 
 const weaponStats = {
-    sword_shield: { attackDelay: 500, attackSpeed: 1000, damage: 20, absorption: 0.5, range: 1 },
-    two_handed_axe: { attackDelay: 1000, attackSpeed: 2000, damage: 30, absorption: 0, range: 1.2 },
-    long_spear: { attackDelay: 0, attackSpeed: 1500, damage: 15, absorption: 0.3, range: 2 },
-	bow_arrow: { attackDelay: 250, attackSpeed: 500, damage: 10, absorption: 0.1, range: 10 }
+    sword_shield: { attackDelay: 1000, attackSpeed: 1250, damage: 20, absorption: 0.5, range: 1 },
+    two_handed_axe: { attackDelay: 400, attackSpeed: 1800, damage: 40, absorption: 0, range: 1.2 },
+    long_spear: { attackDelay: 0, attackSpeed: 1400, damage: 18, absorption: 0.3, range: 2.2 },
+    bow_arrow: { attackDelay: 100, attackSpeed: 800, damage: 15, absorption: 0.1, range: 10 }
 };
 
 const combatMatrix = {
-    sword_shield: { sword_shield: 1, two_handed_axe: 0.8, long_spear: 1.2, bow_arrow: 1.2 },
-    two_handed_axe: { sword_shield: 1.2, two_handed_axe: 1, long_spear: 0.8, bow_arrow: 1.4 },
-    long_spear: { sword_shield: 0.8, two_handed_axe: 1.4, long_spear: 1.2, bow_arrow: 0.8 },
-	bow_arrow: { sword_shield: 0.8, two_handed_axe: 1.2, long_spear: 1.4, bow_arrow: 1.0 }
+    sword_shield: { sword_shield: 1.0, two_handed_axe: 1.4, long_spear: 0.7, bow_arrow: 1.0 },
+    two_handed_axe: { sword_shield: 0.8, two_handed_axe: 1.0, long_spear: 1.2, bow_arrow: 1.1 },
+    long_spear: { sword_shield: 1.4, two_handed_axe: 0.8, long_spear: 1.0, bow_arrow: 0.9 },
+    bow_arrow: { sword_shield: 1.6, two_handed_axe: 1.0, long_spear: 0.7, bow_arrow: 1.2 }
 };
 
 class Player {
-    constructor(name, x, y) {
+    constructor(name, x, y, weaponType) {
         this.name = name;
         this.x = x;
         this.y = y;
-        this.weapon = WEAPONS[Math.floor(Math.random() * WEAPONS.length)];
+        this.weapon = weaponType;
         this.health = 100;
         this.kills = 0;
         this.direction = Math.random() * Math.PI * 2;
@@ -318,6 +438,8 @@ class Player {
         this.messageTimer = 0;
 		this.avatarImage = null;
         this.avatarLoaded = false;
+		this.invincible = false;
+        this.damageMultiplier = 1;
     }
 	
 	setAvatar(imageUrl) {
@@ -368,7 +490,7 @@ class Player {
             this.y = Math.max(0, Math.min(GRID_HEIGHT - 1, this.y));
 
             if (Math.random() < 0.005) {
-                this.direction = (this.direction + (Math.random() * Math.PI * 2 * 0.01)) % (Math.PI * 2);
+                this.direction = (this.direction + (Math.random() * Math.PI * 2 * 0.03)) % (Math.PI * 2);
             }
         }
 		
@@ -414,13 +536,23 @@ class Player {
 
         // Draw weapon
         this.drawWeapon(x, y);
-
-        // Draw blood splatter
-        if (this.bloodSplatter > 0) {
+		
+		if (this.invincible) {
+            ctx.strokeStyle = 'purple';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+			this.bloodSplatter = 0;
+        } else if (this.bloodSplatter > 0) { // Draw blood splatter
             ctx.fillStyle = `rgba(255, 0, 0, ${this.bloodSplatter / 100})`;
             ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
             this.bloodSplatter -= 0.5;
         }
+
+        if (this.damageMultiplier > 1) {
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        }
+        
 		ctx.font = '12px Arial';
 		if (this.nameColor){
 			ctx.strokeStyle = this.nameColor;
@@ -559,8 +691,10 @@ class Player {
     }
 
     meleeAttack(target) {
+        if (target.invincible) return false;
+
         const damageModifier = combatMatrix[this.weapon][target.weapon];
-        const damage = weaponStats[this.weapon].damage * damageModifier;
+        const damage = weaponStats[this.weapon].damage * damageModifier * this.damageMultiplier;
         const absorbedDamage = damage * weaponStats[target.weapon].absorption;
         const actualDamage = damage - absorbedDamage;
         target.health -= actualDamage;
@@ -570,6 +704,11 @@ class Player {
         if (target.health <= 0) {
             target.isAlive = false;
             this.kills++;
+            if (killed[this.weapon]){
+                killed[this.weapon]++;
+            } else {
+                killed[this.weapon] = 1;
+            }
             this.health = Math.min(100, this.health + 25);
             return true;
         }
@@ -594,6 +733,8 @@ class Player {
         }
     }
 }
+
+var killed = {};
 
 function initiateCombat(player1, player2) {
     player1.inCombat = true;
@@ -686,16 +827,24 @@ function endCombat(winner, loser) {
     loser.firstAttack = true; // Reset firstAttack for the next combat (if resurrected)
 }
 
-function addPlayer(name, avatarUrl=false, type=false, color=false) {
+function addPlayer(name, avatarUrl, type, nameColor, weaponType) {
     const x = Math.floor(Math.random() * GRID_WIDTH);
     const y = Math.floor(Math.random() * GRID_HEIGHT);
-	const player = new Player(name, x, y);
-	if (avatarUrl) {
+    
+    if (!weaponType) {
+        weaponType = WEAPONS[Math.floor(Math.random() * WEAPONS.length)];
+    }
+    
+    const player = new Player(name, x, y, weaponType);
+    
+    if (avatarUrl) {
         player.setAvatar(avatarUrl);
     }
-	if (color) {
-        player.setNameColor(color);
+    
+    if (nameColor) {
+        player.color = nameColor;
     }
+    
     players.set(name, player);
     updatePlayerCount();
 }
@@ -741,6 +890,10 @@ function update() {
         players.forEach(player => player.update());
         updateArrows();
         checkCombat();
+       // spawnPowerUps();
+       // spawnObstacles();
+       // checkPowerUpCollisions();
+      //  checkObstacleCollisions();
     }
 }
 
@@ -768,6 +921,20 @@ function draw() {
     ctx.fillStyle = grassPattern;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Draw obstacles
+    ctx.fillStyle = 'brown';
+    obstacles.forEach(obstacle => {
+        ctx.fillRect(obstacle.x * TILE_SIZE, obstacle.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    });
+
+    // Draw power-ups
+    powerUps.forEach(powerUp => {
+        ctx.fillStyle = getPowerUpColor(powerUp.type);
+        ctx.beginPath();
+        ctx.arc((powerUp.x + 0.5) * TILE_SIZE, (powerUp.y + 0.5) * TILE_SIZE, TILE_SIZE / 3, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
     // Draw players
     players.forEach(player => {
         player.draw();
@@ -779,8 +946,17 @@ function draw() {
         ctx.fillRect(arrow.x * TILE_SIZE, arrow.y * TILE_SIZE, 2, 2);
     });
     
-    if (gameOver && scoreboardData) {
+    if (gameOver) {
         drawScoreboardModal(scoreboardData);
+    }
+}
+
+function getPowerUpColor(type) {
+    switch (type) {
+        case 'speed': return 'yellow';
+        case 'invincibility': return 'purple';
+        case 'regen': return 'green';
+        case 'damage': return 'red';
     }
 }
 
@@ -794,9 +970,17 @@ function updateTimer() {
     }
 }
 
+function updateCountdown() {
+    countdownSeconds--;
+    if (countdownSeconds <= 0) {
+        clearInterval(countdownTimer);
+        restartGame();
+    }
+}
 
 function endGame() {
     gameOver = true;
+	console.log(killed);
     const sortedPlayers = Array.from(players.values())
         .filter(player => player.isAlive)
         .sort((a, b) => {
@@ -807,6 +991,20 @@ function endGame() {
         });
 
     scoreboardData = sortedPlayers.slice(0, 3);
+    countdownSeconds = 15;
+    countdownTimer = setInterval(updateCountdown, 1000);
+}
+
+function restartGame() {
+    // Reset game state
+    gameOver = false;
+    players.clear();
+    timeLeft = 60; // Or whatever your initial game time is
+    // Reset any other necessary game state variables
+    
+    // Restart the game loop
+    //gameLoop();
+    //simulateWebSocket();
 }
 function displayScoreboard() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -833,7 +1031,7 @@ function displayScoreboard() {
 
 function drawScoreboardModal(topPlayers) {
     const modalWidth = 300;
-    const modalHeight = 400;
+    const modalHeight = 420;
     const modalX = (canvas.width - modalWidth) / 2;
     const modalY = (canvas.height - modalHeight) / 2;
 
@@ -860,8 +1058,7 @@ function drawScoreboardModal(topPlayers) {
     topPlayers.forEach((player, index) => {
         const yOffset = modalY + 100 + index * 100;
 
-        // Draw player avatar 
-
+        // Draw player avatar	
 		if (player.avatarLoaded && player.avatarImage) {
             ctx.save();
             ctx.beginPath();
@@ -892,6 +1089,15 @@ function drawScoreboardModal(topPlayers) {
         }
     });
 
+    // Draw countdown message
+    if (countdownSeconds <= 10) {
+        const alpha = (10 - countdownSeconds) / 5; // Fade in over 5 seconds
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Game will restart in ${countdownSeconds}s`, canvas.width / 2, modalY + modalHeight - 10);
+    }
+
     // Draw "No survivors" message if there are no top players
     if (topPlayers.length === 0) {
         ctx.fillStyle = '#fff';
@@ -902,12 +1108,12 @@ function drawScoreboardModal(topPlayers) {
 }
 
 function gameLoop() {
-    update();
+    if (!gameOver) {
+        update();
+    }
     draw();
     requestAnimationFrame(gameLoop);
 }
-
-
 function simulateWebSocket() {
     setInterval(() => {
         if (gameOver) return;
