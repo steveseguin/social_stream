@@ -1,26 +1,27 @@
 {
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
-  "manifest_version": 2,
-  "version": "1.78.9",
+ "manifest_version": 3,
+  "version": "3.0.0",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
   },
   "background": {
-    "scripts": [
-      "./thirdparty/webmidi3.js",
-      "./thirdparty/tf.min.js",
-      "sentiment.js",
-      "background.js",
-      "./thirdparty/xlsx.full.min.js"
-    ],
-    "persistent": true
+    "service_worker": "service_worker.js"
   },
-  "content_security_policy": "script-src 'self' ./thirdparty/tf.min.js 'unsafe-eval'; object-src 'self'",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
   "permissions": [
     "webNavigation",
     "notifications",
+	"storage",
+    "debugger",
+    "scripting",
+	"tabs"
+  ],
+  "host_permissions": [
 	"https://zap.stream/*",
 	"https://www.bigo.tv/*",
     "https://chaturbate.com/*/",
@@ -83,7 +84,7 @@
     "https://web.whatsapp.com/",
     "https://rumble.com/*",
     "https://www.amazon.com/live*",
-	"https://www.amazon.com/b/?node=*&broadcast=*",
+    "https://www.amazon.com/b/?node=*&broadcast=*",
     "https://*.telegram.org/*",
     "https://*.webex.com/*",
     "https://webex.com/*",
@@ -150,13 +151,17 @@
     "https://estrim.com/publications/view/*",
     "https://vk.com/*",
     "https://wave.video/*",
-	"https://www.sooplive.com/chat/*",
-    "storage",
-    "debugger"
+	"https://www.sooplive.com/chat/*"  
   ],
-  "browser_action": {
-    "default_popup": "popup.html"
-  },
+  "web_accessible_resources": [
+    {
+      "resources": ["background.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "content_scripts": [
     {
       "js": [ "./sources/zapstream.js" ],
@@ -626,5 +631,8 @@
   ],
   "options_ui": {
     "page": "settings/options.html"
+  },
+  "action": {
+    "default_popup": "popup.html"
   }
 }
