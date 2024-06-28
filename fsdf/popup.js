@@ -29,17 +29,6 @@ if (typeof(chrome.runtime)=='undefined'){
 		}
 	})
 	
-	/* ipcRenderer.on('fromBackground', (event, ...args) => {
-		console.log("FROM BACKGROUND");
-		console.log(args[0]);
-	}) */
-	
-	/* window.addEventListener("message", function(event) {
-		console.log(event.origin);
-		var messageData = event.data;
-		console.log("Received a message from the parent window:", messageData);
-	}); */
-	
 }
 
 
@@ -1535,8 +1524,6 @@ if (!chrome.browserAction){
 	  });
 	  
 }
-
-
 
 
 

@@ -999,7 +999,8 @@ function restartGame() {
     // Reset game state
     gameOver = false;
     players.clear();
-    timeLeft = 60; // Or whatever your initial game time is
+	updatePlayerCount();
+    timeLeft = 60; // first match 100s; more matches 60s
     // Reset any other necessary game state variables
     
     // Restart the game loop
