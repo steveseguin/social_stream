@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 2,
-  "version": "1.78.11",
+  "version": "1.78.12",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -355,12 +355,17 @@
     {
       "js": [ "./sources/youtube.js" ],
       "matches": [
-        "https://www.youtube.com/watch*&socialstream",
-        "https://youtube.com/live_chat*",
-        "https://www.youtube.com/live_chat*",
         "https://studio.youtube.com/live_chat*"
       ],
 	  "all_frames": true
+    },
+	{
+      "js": [ "./sources/youtube.js" ],
+      "matches": [
+        "https://www.youtube.com/watch*&socialstream",
+        "https://youtube.com/live_chat*",
+        "https://www.youtube.com/live_chat*"
+      ]
     },
     {
       "js": [ "./sources/static/youtube.js" ],
