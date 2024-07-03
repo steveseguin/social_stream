@@ -63,8 +63,10 @@
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
+						resp += node.outerHTML;
+					} else {
+						resp += node.textContent;
 					}
-					resp += node.outerHTML;
 				}
 			}
 		});
@@ -241,7 +243,7 @@
 						try {
 							if (mutation.addedNodes[i].skip){return;}
 							mutation.addedNodes[i].skip = true;
-							if (mutation.addedNodes[i] && mutation.addedNodes[i].className && mutation.addedNodes[i].dataset.messageId){return;}
+							if (mutation.addedNodes[i] && mutation.addedNodes[i].className && mutation.addedNodes[i].className.includes("chat-history--rant-sticky")){return;}
 							processMessage(mutation.addedNodes[i]);
 						} catch(e){}
 					}
