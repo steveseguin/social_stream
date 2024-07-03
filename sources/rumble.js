@@ -105,25 +105,13 @@
 		var msg = "";
 		
 		if (ele.querySelector('.chat-history--message')){
-			if (settings.textonlymode){
-				try {
-					msg = escapeHtml(ele.querySelector('.chat-history--message').innerText);
-				} catch(e){}
-			} else {
-				try {
-					msg = ele.querySelector('.chat-history--message').innerHTML;
-				} catch(e){}
-			}
+			try {
+				msg = getAllContentNodes(ele.querySelector('.chat-history--message'));
+			} catch(e){}
 		} else if (ele.querySelector('.chat-history--rant-text')){
-			if (settings.textonlymode){
-				try {
-					msg = escapeHtml(ele.querySelector('.chat-history--rant-text').innerText);
-				} catch(e){}
-			} else {
-				try {
-					msg = ele.querySelector('.chat-history--rant-text').innerHTML;
-				} catch(e){}
-			}
+			try {
+				msg = getAllContentNodes(ele.querySelector('.chat-history--rant-text'));
+			} catch(e){}
 		}
 		
 		var dono = "";
@@ -253,7 +241,7 @@
 						try {
 							if (mutation.addedNodes[i].skip){return;}
 							mutation.addedNodes[i].skip = true;
-							if (mutation.addedNodes[i] && mutation.addedNodes[i].className && mutation.addedNodes[i].className.includes("chat-history--rant-sticky")){return;}
+							if (mutation.addedNodes[i] && mutation.addedNodes[i].className && mutation.addedNodes[i].dataset.messageId){return;}
 							processMessage(mutation.addedNodes[i]);
 						} catch(e){}
 					}
