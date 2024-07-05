@@ -6222,10 +6222,24 @@
 					var timeArrived = "";
 					if (datestamp) {
 						var date = new Date();
-						timeArrived = date.toLocaleString("en-US", { hour: "numeric", minute: "numeric", hour12: !clock24hr });
-						if (compactmode) {
-							timeArrived = timeArrived.split(" ")[0];
+						var hours = date.getHours();
+						var minutes = date.getMinutes();
+						minutes = minutes < 10 ? "0" + minutes : minutes;
+
+						if (!clock24hr) {
+							var ampm = hours >= 12 ? "PM" : "AM";
+							hours = hours % 12;
+							hours = hours ? hours : 12; // the hour '0' should be '12'
+							timeArrived = `${hours}:${minutes} ${ampm}`;
+
+							if (compactmode) {
+								timeArrived = timeArrived.split(" ")[0]; // Removes AM/PM part
+							}
+						} else {
+							hours = hours < 10 ? "0" + hours : hours;
+							timeArrived = `${hours}:${minutes}`;
 						}
+
 						timeArrived = "<div class='time-arrived'>" + timeArrived + "</div>";
 					}
 

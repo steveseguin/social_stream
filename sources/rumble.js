@@ -63,8 +63,10 @@
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
+						resp += node.outerHTML;
+					} else {
+						resp += node.textContent;
 					}
-					resp += node.outerHTML;
 				}
 			}
 		});
@@ -105,25 +107,13 @@
 		var msg = "";
 		
 		if (ele.querySelector('.chat-history--message')){
-			if (settings.textonlymode){
-				try {
-					msg = escapeHtml(ele.querySelector('.chat-history--message').innerText);
-				} catch(e){}
-			} else {
-				try {
-					msg = ele.querySelector('.chat-history--message').innerHTML;
-				} catch(e){}
-			}
+			try {
+				msg = getAllContentNodes(ele.querySelector('.chat-history--message'));
+			} catch(e){}
 		} else if (ele.querySelector('.chat-history--rant-text')){
-			if (settings.textonlymode){
-				try {
-					msg = escapeHtml(ele.querySelector('.chat-history--rant-text').innerText);
-				} catch(e){}
-			} else {
-				try {
-					msg = ele.querySelector('.chat-history--rant-text').innerHTML;
-				} catch(e){}
-			}
+			try {
+				msg = getAllContentNodes(ele.querySelector('.chat-history--rant-text'));
+			} catch(e){}
 		}
 		
 		var dono = "";

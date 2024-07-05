@@ -1406,14 +1406,20 @@
 			if (urlParams.has("ttsdonos")) {
 				readDonos = urlParams.get("ttsdonos") || "en-US";
 			}
-			if (readDonos || urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
+			
+			var newmembertts = false;
+			if (urlParams.has("ttsnewmembers")) {
+				newmembertts = urlParams.get("ttsnewmembers") || "en-US";
+			}
+			
+			if (readDonos || newmembertts || urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
 				if (document.getElementById("tts")) {
 					document.getElementById("tts").dataset.state = 1;
 					document.getElementById("tts").classList.remove("hidden");
 					document.getElementById("tts").classList.add("pressed");
 				}
 				var speech = true;
-				speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || readDonos || "en-US";
+				speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || readDonos || newmembertts || "en-US";
 				if (speechLang.split("-")[0].toLowerCase() == "en") {
 					English = true;
 				} else {
@@ -2207,6 +2213,8 @@
 							}
 							document.getElementById("output").classList.remove(transitionType);
 
+							
+							
 							if (speech) {
 								var msgPlain = document.getElementById("message"); // text only
 								//var msgPlain = document.getElementById('content_'+data.counter); // text only
@@ -2230,7 +2238,8 @@
 									chatname = chatname.replaceAll("!", " ");
 								}
 
-								if (data.hasDonation) {
+								
+								if (data.hasDonation && (!newmembertts || readDonos)) {
 									var donoText = document.createElement("div");
 									donoText.innerHTML = data.hasDonation;
 									donoText = donoText.innerText.trim();
@@ -2265,7 +2274,21 @@
 									} else {
 										speak(donoText);
 									}
-								} else if (msgPlain && !readDonos) {
+								} else if (msgPlain && newmembertts && data.event && (data.event == "newmember")){
+									if (chatname) {
+										// NAME
+										if (English) {
+											speak(chatname + " says! " + msgPlain);
+										} else {
+											speak(chatname + "! ! .. " + msgPlain);
+										}
+									} else if (English) {
+										// NO NAME
+										speak("Someone says! " + msgPlain);
+									} else {
+										speak(msgPlain);
+									}
+								} else if (msgPlain && (!readDonos && !newmembertts)) {
 									// NO DONATION
 									if (chatname) {
 										// NAME

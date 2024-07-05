@@ -347,10 +347,10 @@
 			} else if (giftedmemembership) {
 				hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 				chatmessage = getAllContentNodes(giftedmemembership);
-				eventType = true;
+				eventType = "sponsorship";
 			} else {
 				hasMembership = getTranslation("new-member", "NEW MEMBER");
-				eventType = true;
+				eventType = "newmember";
 				
 				if (chatmembership){
 					chatmessage =  chatmembership;
@@ -367,7 +367,7 @@
 				}
 			}
 		} else if (!chatmessage && giftedmemembership) {
-			eventType = true;
+			eventType = "sponsorship";
 			chatmessage = getAllContentNodes(giftedmemembership);
 			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 		}
