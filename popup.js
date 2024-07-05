@@ -390,7 +390,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	console.log("pop up asking main for settings");
 	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
 		console.log("getSettings response",response);
-		update(response, false); // we dont want to sync things
+		if ((response == undefined) || (!response.streamID)){
+			console.log("WOO");
+			setTimeout(function(){
+				chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
+					update(response, false);
+				});
+			},200);
+		} else {
+			update(response, false); // we dont want to sync things
+		}
 	});
 
 	//chrome.runtime.sendMessage({cmd: "getOnOffState"}, function (response) { //  getSettings will include the state and everything
