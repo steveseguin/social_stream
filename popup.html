@@ -2631,6 +2631,53 @@ input:checked + .slider:before {
 				<div id="poll" data-raw="" class="streaming_chat"><a href="" id="polllink"></a></div>
             </div>
 			
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-poll-options" />
+					<label class="collapsible-label" for="wrapper-poll-options"><span>📊 Poll Options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group poll">
+								<h3>Poll Settings</h3>
+								<p>Enable and customize the poll:</p>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="pollEnabled" />
+										<span class="slider round"></span>
+									</label>
+									<span>Enable Poll</span>
+								</div>
+								<div>
+									<label>Poll Type:</label>
+									<select data-setting="pollType" id="pollType">
+										<option value="freeform">Free-form</option>
+										<option value="yesno">Yes/No</option>
+										<option value="multiple">Multiple Choice</option>
+									</select>
+								</div>
+								<div>
+									<label>Poll Question:</label>
+									<input type="text" id="pollQuestion" class="textInput" autocomplete="off" placeholder="Enter poll question" data-textsetting="pollQuestion" />
+								</div>
+								<div id="multipleChoiceOptions" style="display: none;">
+									<label>Options (comma separated):</label>
+									<input type="text" id="multipleChoiceInput" class="textInput" autocomplete="off" placeholder="Option 1, Option 2, ..." data-textsetting="multipleChoiceOptions" />
+								</div>
+								<div>
+									<label>Timer (seconds):</label>
+									<input type="number" id="pollTimer" class="textInput" autocomplete="off" placeholder="60" data-textsetting="pollTimer" />
+								</div>
+								<div>
+									<button class="glowingButton" data-action="startPoll">Start Poll</button>
+									<button class="glowingButton" data-action="endPoll">End Poll</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			
 			<div class="link" title="Battle Royal">
                 <h2 class="battle_mode_title">
                     <span data-translate="pollmeter">Battle Royal </span><a class="options-link rounded_area" href="#battle" title="Jump to the battle royal link options."><span data-translate="options">options</span></a>
