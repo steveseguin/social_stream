@@ -121,8 +121,6 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "bandlab";
 		
-		console.log(data);
-		
 		pushMessage(data);
 	}
 
