@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 2,
-  "version": "1.78.14",
+  "version": "1.78.15",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -329,8 +329,12 @@
       "matches": [ "https://*.rooter.gg/*" ]
     },
     {
-      "js": [ "./sources/x.js", "./sources/static/x.js" ],
-      "matches": [ "https://www.x.com/*", "https://x.com/*", "https://www.twitter.com/*", "https://twitter.com/*" ]
+      "js": ["./sources/static/x.js" ],
+      "matches": [ "https://www.x.com/*", "https://x.com/*"]
+    },
+	{
+      "js": [ "./sources/x.js" ],
+      "matches": [ "https://www.x.com/i/broadcasts/*/chat", "https://x.com/i/broadcasts/*/chat",  "https://www.twitter.com/*", "https://twitter.com/*" ]
     },
     {
       "js": [ "./sources/static/threads.js" ],

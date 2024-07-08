@@ -436,6 +436,8 @@
 			clearTimeout(preStartupInteval);
 			startup();
 			
+			if (!document.querySelector('header[role="banner"]')){return;}
+			
 			var elesMain = document.querySelector('header[role="banner"]').querySelectorAll('a[aria-label][role="link"]');
 			try {
 				elesMain[elesMain.length - 1].querySelector("a > div").innerText = "Tweet";
