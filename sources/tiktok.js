@@ -506,9 +506,11 @@
 
 	var pokeMe = setInterval(function(){
 		try{
-			chrome.runtime.sendMessage(chrome.runtime.id, { "pokeMe": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-				console.log("POKED");
-			});
+			//if (chrome.runtime.id !== 1){
+				chrome.runtime.sendMessage(chrome.runtime.id, { "pokeMe": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+					console.log("POKED");
+				});
+			//}
 		} catch(e){}
 	},1000*60*59);
 	
