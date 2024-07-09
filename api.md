@@ -147,7 +147,7 @@ Note: Not all commands support or require this callback mechanism.
 
 ### Message Targeting System
 
-Social Stream Ninja implements a targeting system that allows messages to be directed to specific instances of the dock or featured pages. This system enables more granular control in scenarios where multiple streams or displays are running simultaneously.
+Social Stream Ninja implements a targeting system that allows messages to be directed to specific instances of the dock or featured pages if multiple of either are open. It still respects messaging channels, offering an additional layer of targetting and filtering for compatible commands. Some commands may not be compatible with this option, but most should be.
 
 #### How it works
 
@@ -188,4 +188,4 @@ if (data.target && data.target !== "null" && data.target !== thisLabel) {
 - Sending commands to specific control panels
 - Updating particular displays without affecting others
 
-This targeting system allows for more flexible and powerful setups, especially in complex streaming environments.
+This targeting system allows for more flexible and powerful setups, especially in complex streaming environments. 
