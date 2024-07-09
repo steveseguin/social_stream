@@ -537,11 +537,11 @@ The generic structure of the API is:
 
 or
 
-`https://api.vdo.ninja/{sessionID}/{action}/{value}`
+`https://io.socialstream.ninja/{sessionID}/{action}/{value}`
 
 or
 
-`https://api.vdo.ninja/{sessionID}/{action}`
+`https://io.socialstream.ninja/{sessionID}/{action}`
 
 Any field can be replaced with "null", if no value is being passed to it. Double slashes will cause issues though, so avoid those.
 
@@ -577,7 +577,7 @@ eventSource.onerror = function(error) {
 
 #### Message structure
 
-Messages sent over VDO.Ninja contain normally a display name, avatar image of the user, source type, and normally a few other optional fields, like donations.
+Messages sent over `io.socialstream.ninja` contain normally a display name, avatar image of the user, source type, and normally a few other optional fields, like donations.
 
 Typically, some form of message content is needed to be accepted as a valid message. If just a name for example, that will typically be rejected as an empty message.
 
