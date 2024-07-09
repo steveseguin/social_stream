@@ -17,7 +17,12 @@ There are two methods to connect and join a session:
 
 2.  Connect first, then send a join message:
 
-`ws =  new  WebSocket("wss://io.socialstream.ninja"); ws.onopen  =  function()  {   ws.send(JSON.stringify({  join:  "SESSION_ID",  in:  IN_CHANNEL,  out:  OUT_CHANNEL  })); };`
+```
+ws =  new  WebSocket("wss://io.socialstream.ninja");
+ws.onopen  =  function()  {   
+    ws.send(JSON.stringify({  join:  "SESSION_ID",  in:  IN_CHANNEL,  out:  OUT_CHANNEL  }));
+};
+```
 
 Parameters:
 
