@@ -151,13 +151,13 @@ Social Stream Ninja implements a targeting system that allows messages to be dir
 
 #### How it works
 
-1. **URL Parameter**: Each instance can be given a unique label using the `label` URL parameter.
+1. **URL Parameter**: Each instance (featured/dock) can be given a unique label using the `label` URL parameter.
    
-   Example: `featured.html?label=stream1` or `dock.html?label=controlpanel1`
+Example: `featured.html?label=stream1` or `dock.html?label=controlpanel1`
 
 2. **Message Structure**: When sending a message through the API, include a `target` field with the label of the intended recipient.
 
-   Example:
+Example:
 ```
    {
      "action": "someAction",
