@@ -144,3 +144,47 @@ Note: Not all commands support or require this callback mechanism.
     -   Toggle in the extension menu
     -   Allows predefined chat messages to be sent to all social destinations
     -   MIDI actions available on Control Change channel 1
+
+### Message Targeting System
+
+Social Stream Ninja implements a targeting system that allows messages to be directed to specific instances of the dock or featured pages. This system enables more granular control in scenarios where multiple streams or displays are running simultaneously.
+
+#### How it works
+
+1. **URL Parameter**: Each instance can be given a unique label using the `label` URL parameter.
+   
+   Example: `featured.html?label=stream1` or `dock.html?label=controlpanel1`
+
+2. **Message Structure**: When sending a message through the API, include a `target` field with the label of the intended recipient.
+
+   Example:
+```
+   {
+     "action": "someAction",
+     "target": "stream1",
+     "value": "someValue"
+   }
+```
+
+Message Processing: The application checks each incoming message for a target. If the message has a target that doesn't match the instance's label, the message is ignored.
+
+Implementation Details
+The following code is used in both dock.html and featured.html to implement this system:
+
+```var thisLabel = false;
+if (urlParams.has("label")) {
+    thisLabel = urlParams.get("label") || false;
+}
+
+// In the message processing function:
+if (data.target && data.target !== "null" && data.target !== thisLabel) { 
+    return; // does not match, so we assume this isn't for us.
+}
+```
+Use Cases
+
+Running multiple streams with different configurations
+Sending commands to specific control panels
+Updating particular displays without affecting others
+
+This targeting system allows for more flexible and powerful setups, especially in complex streaming environments.
