@@ -166,12 +166,13 @@ Social Stream Ninja implements a targeting system that allows messages to be dir
    }
 ```
 
-Message Processing: The application checks each incoming message for a target. If the message has a target that doesn't match the instance's label, the message is ignored.
+2. **Message Processing**: The application checks each incoming message for a target. If the message has a target that doesn't match the instance's label, the message is ignored.
 
-Implementation Details
+#### Implementation Details
 The following code is used in both dock.html and featured.html to implement this system:
 
-```var thisLabel = false;
+```
+var thisLabel = false;
 if (urlParams.has("label")) {
     thisLabel = urlParams.get("label") || false;
 }
@@ -181,10 +182,10 @@ if (data.target && data.target !== "null" && data.target !== thisLabel) {
     return; // does not match, so we assume this isn't for us.
 }
 ```
-Use Cases
+#### Use Cases
 
-Running multiple streams with different configurations
-Sending commands to specific control panels
-Updating particular displays without affecting others
+- Running multiple streams with different configurations
+- Sending commands to specific control panels
+- Updating particular displays without affecting others
 
 This targeting system allows for more flexible and powerful setups, especially in complex streaming environments.
