@@ -105,7 +105,6 @@
 			return;
 		}
 		msg = msg.trim();
-		msg = escapeHtml(msg);
 		if (!msg){return;}
 		
 		
