@@ -2623,7 +2623,7 @@ function sendToH2R(data) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				msg.authorDetails.profileImageUrl = chatimg.replace("=s64-", "=s256-");
 			} else {
-				msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+				msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
 			}
 
 			if (data.type && data.sourceImg && data.type == "restream") {
@@ -2691,11 +2691,11 @@ function sendToS10(data) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				msg.displayPictureUrl = chatimg.replace("=s64-", "=s256-");
 			} else if (data.chatimg) {
-				msg.displayPictureUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+				msg.displayPictureUrl = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
 			} else if (data.type) {
 				msg.displayPictureUrl = "https://socialstream.ninja/sources/images/" + data.type + ".png";
 			} else {
-				msg.displayPictureUrl = "https://socialstream.ninja/unknown.png";
+				msg.displayPictureUrl = "https://socialstream.ninja/sources/images/unknown.png";
 			}
 
 			if (data.type) {
@@ -2741,7 +2741,7 @@ function sendToPost(data) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				data.chatimg = chatimg.replace("=s64-", "=s256-");
 			} else {
-				data.chatimg = data.chatimg || "https://socialstream.ninja/unknown.png";
+				data.chatimg = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
 			}
 
 			if (data.type) {
@@ -3880,7 +3880,7 @@ function blockUser(data){
 
 		const userToBlock = { username: (data.userid || data.chatname), type: data.type };
 		
-		if (data.chatimg && !data.chatimg.endsWith("./unknown.png")){
+		if (data.chatimg && !data.chatimg.endsWith("/unknown.png")){
 			userToBlock.chatimg = data.chatimg;
 		}
 		

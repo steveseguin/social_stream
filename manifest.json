@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 2,
-  "version": "1.78.17",
+  "version": "1.78.18",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -132,6 +132,7 @@
     "https://maestro-launcher.vercel.app/",
     "https://arena.tv/*",
     "https://boltplus.tv/chatpopout/*",
+	"https://boltplus.tv/chatpopout?*",
     "https://chat.openai.com/*",
     "https://app.livestorm.co/*/live?*",
     "https://steamcommunity.com/broadcast/chatonly/*",
@@ -258,7 +259,7 @@
     },
     {
       "js": [ "./sources/boltplus.js" ],
-      "matches": [ "https://boltplus.tv/chatpopout/*" ]
+      "matches": [ "https://boltplus.tv/chatpopout/*", "https://boltplus.tv/chatpopout?*" ]
     },
     {
       "js": [ "./sources/livestorm.js" ],

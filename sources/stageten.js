@@ -263,7 +263,7 @@
 		console.log(data);
 		try {
 			var ele = document.createElement("span");
-				ele.innerHTML = '<li data-align-right="true" class="sc-bPyhqo evxXzp" data-set123="true"><div class="sc-fWIMVQ cejOrE"><div data-view="default" data-pull-right="true" class="sc-gITdmR s1"><div class="s3"><div class="message-data"><div class="ss"><img class="chatimg" src="https://socialstream.ninja/unknown.png" onerror="this.style.display = \'none\';"></div><span class="ss"><img onerror="this.style.display = \'none\';" class="sourcetype"></span><span class=""><span class="display-name"></span></span><span class="timestamp"></span><p class="message-text"></p></div></div></div></div></li>';
+				ele.innerHTML = '<li data-align-right="true" class="sc-bPyhqo evxXzp" data-set123="true"><div class="sc-fWIMVQ cejOrE"><div data-view="default" data-pull-right="true" class="sc-gITdmR s1"><div class="s3"><div class="message-data"><div class="ss"><img class="chatimg" src="https://socialstream.ninja/sources/images/unknown.png" onerror="this.style.display = \'none\';"></div><span class="ss"><img onerror="this.style.display = \'none\';" class="sourcetype"></span><span class=""><span class="display-name"></span></span><span class="timestamp"></span><p class="message-text"></p></div></div></div></div></li>';
 			if (data.chatname){
 				ele.querySelector(".message-text").innerText = data.chatmessage;
 			}
