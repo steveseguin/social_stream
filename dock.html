@@ -4851,7 +4851,7 @@
 				}
 
 				if (data.action) {
-					if (data.target && data.target !== "null" && data.target !== thisLabel) {
+					if (data.target && data.target !== "null" && data.target !== thisLabel) { 
 						return; // does not match, so we assume this isn't for us.
 					}
 
@@ -4882,6 +4882,14 @@
 						// or just send data=false
 						if (data.value == "toggle") {
 							autoshow = !autoshow;
+						} else if (data.value == "true") {
+							autoshow = true;
+						} else if (data.value == "false") {
+							autoshow = false;
+						} else if (data.value == "1") {
+							autoshow = true;
+						} else if (data.value == "0") {
+							autoshow = false;
 						} else if (data.value) {
 							autoshow = true;
 						} else {
@@ -4912,6 +4920,36 @@
 						} else{
 							console.log("No message found to feature that hasn't already been featured");
 						}
+					} else if (data.action === "toggleTTS") {
+						if (data.value == "toggle") {
+							speech = !speech;
+						} else if (data.value == "true") {
+							speech = true;
+						} else if (data.value == "false") {
+							speech = false;
+						} else if (data.value == "1") {
+							speech = true;
+						} else if (data.value == "0") {
+							speech = false;
+						} else if (data.value == "on") {
+							speech = true;
+						} else if (data.value == "off") {
+							speech = false;
+						} else if (data.value) {
+							speech = true;
+						} else {
+							speech = false;
+						}
+						if (speech) {
+							getById("tts").dataset.state = "1";
+							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
+							getById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
+						} else {
+							getById("tts").dataset.state = "0";
+							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
+							getById("tts").title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
+						}
+						return true;
 					}
 				} else if ("forward" in data) {
 					sendDataP2P(data.forward);

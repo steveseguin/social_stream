@@ -5304,6 +5304,27 @@ async function applyBotActions(data, tab = false) {
 				);
 			}
 		}
+		
+		if (settings.dice && (data.chatmessage.toLowerCase().startsWith("!dice ") || data.chatmessage.toLowerCase() === "!dice")) {
+			if (Date.now() - messageTimeout > 5100) {
+				
+				let maxRoll = data.chatmessage.toLowerCase().split(" ");
+				if (maxRoll.length == 1) {
+					maxRoll = 6;
+				} else {
+					maxRoll = parseInt(maxRoll[1]) || 6;
+				}
+				
+				let roll = Math.floor(Math.random() * maxRoll) + 1;
+
+				messageTimeout = Date.now();
+				var msg = {};
+				msg.tid = data.tid;
+				msg.response = "@" + data.chatname + ", the bot rolled you a " + roll +".";
+				processResponse(msg);
+			}
+		}
+
 	} catch (e) {
 		console.error(e);
 	}
