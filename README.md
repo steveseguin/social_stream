@@ -132,7 +132,6 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - Tradingview.com (just the normal viewer page; no pop out)
 - rooter.gg (no pop out; just pause the video I guess)
 - loco.gg (no pop out; just pause the video I guess)
-- joystick.tv (+18, pop-out chat, ie: https://joystick.tv/u/USERNAMEHERE/chat)
 - buzzit.ca (community member submitted integration)
 - afreecatv.com (pop out the chat; you can't close the main window it seems tho?)
 - nonolive.com (no pop out; partial support added so far only)
@@ -151,7 +150,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - whatnot.com (no pop out, so just open the view page)
 - sessions.us - the meeting video chat; not popped out.(You can specify your own name, rather than "You", via the host/bot section in the extension menu)
 - jaco.live (https://jaco.live/golive)
-- X Live video chat (aka, was Twitter) (open the live broadcast; ie: https://x.com/i/broadcasts/XXXXXXXXXX) 
+- X Live video chat (aka, was Twitter) (open the chat pop out; ie: https://x.com/i/broadcasts/XXXXXXXXXX/chat) 
 - X static feed posts -- you will need to click "Enable Overlay" in the lower right of X  to have X posts be supported. Manually click then to select which post.
 - younow.com - ( just open the video as normal with chat on the side; there's no pop out chat, so the link is just https://www.younow.com/USERNAME )
 - shareplay.tv (pop out chat, ie: https://www.shareplay.tv/chat/usernamehere/9fd3a9ee-a915-4f8b-b23d-xxxxxxxxxxx)
@@ -162,13 +161,14 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - chzzk.naver.com (pop out the chat)
 - demo.openstreamingplatform.com (pop out chat)
 - wave.video
-- cherry.tv
 - beamstream.gg (open https://beamstream.gg/USERNAME/chat to user. *note the /chat added at the end)
 - zap.stream (no pop out)
 - twitcasting.tv (no pop out)
 - bigo.tv (no pop out)
 - circle.so
 - sooplive.com (pop out the chat to use)
+
+There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   
 [More on request](#requesting-a-site)
 
@@ -537,11 +537,11 @@ The generic structure of the API is:
 
 or
 
-`https://api.vdo.ninja/{sessionID}/{action}/{value}`
+`https://io.socialstream.ninja/{sessionID}/{action}/{value}`
 
 or
 
-`https://api.vdo.ninja/{sessionID}/{action}`
+`https://io.socialstream.ninja/{sessionID}/{action}`
 
 Any field can be replaced with "null", if no value is being passed to it. Double slashes will cause issues though, so avoid those.
 
@@ -577,7 +577,7 @@ eventSource.onerror = function(error) {
 
 #### Message structure
 
-Messages sent over VDO.Ninja contain normally a display name, avatar image of the user, source type, and normally a few other optional fields, like donations.
+Messages sent over `io.socialstream.ninja` contain normally a display name, avatar image of the user, source type, and normally a few other optional fields, like donations.
 
 Typically, some form of message content is needed to be accepted as a valid message. If just a name for example, that will typically be rejected as an empty message.
 
@@ -939,4 +939,3 @@ This project contains inspiration by my past project, chat.overlay.ninja, which 
 <a href="https://github.com/steveseguin/social_stream/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=steveseguin/social_stream" />
 </a>
-
