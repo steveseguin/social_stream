@@ -132,7 +132,6 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - Tradingview.com (just the normal viewer page; no pop out)
 - rooter.gg (no pop out; just pause the video I guess)
 - loco.gg (no pop out; just pause the video I guess)
-- joystick.tv (+18, pop-out chat, ie: https://joystick.tv/u/USERNAMEHERE/chat)
 - buzzit.ca (community member submitted integration)
 - afreecatv.com (pop out the chat; you can't close the main window it seems tho?)
 - nonolive.com (no pop out; partial support added so far only)
@@ -162,13 +161,14 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - chzzk.naver.com (pop out the chat)
 - demo.openstreamingplatform.com (pop out chat)
 - wave.video
-- cherry.tv
 - beamstream.gg (open https://beamstream.gg/USERNAME/chat to user. *note the /chat added at the end)
 - zap.stream (no pop out)
 - twitcasting.tv (no pop out)
 - bigo.tv (no pop out)
 - circle.so
 - sooplive.com (pop out the chat to use)
+
+There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   
 [More on request](#requesting-a-site)
 
