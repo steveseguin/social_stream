@@ -18,14 +18,11 @@
     "notifications",
 	"storage",
     "debugger",
-	"tabs",
-	"activeTab"
+	"tabs"
   ],
   "host_permissions": [
 	"https://zap.stream/*",
 	"https://www.bigo.tv/*",
-    "https://chaturbate.com/*/",
-    "https://cherry.tv/*",
     "https://beamstream.gg/*/chat",
     "https://socialstream.ninja/sources/websocket/*",
     "https://socialstream.ninja/websocket/*",
@@ -34,20 +31,20 @@
     "https://kiwiirc.com/nextclient/*",
     "https://webchat.quakenet.org/*",
     "https://www.cbox.ws/box/*",
-	"https://www3.cbox.ws/box/*",
-	"https://www1.cbox.ws/box/*",
-	"https://www2.cbox.ws/box/*",
-	"https://cbox.ws/box/*",
-	"https://community.talkinghealthtech.com/live/*",
+    "https://www3.cbox.ws/box/*",
+    "https://www1.cbox.ws/box/*",
+    "https://www2.cbox.ws/box/*",
+    "https://cbox.ws/box/*",
+    "https://community.talkinghealthtech.com/live/*",
     "https://community.insidethe.show/live/*",
     "https://community.circle.so/live/*",
     "https://tellonym.me/*",
     "https://chat.wix.com/*",
-	"https://live.wix.com/*",
-	"https://www.wix.com/*",
-	"https://wix.com/*",
-	"https://verticalpixelzone.com/*",
-	"https://rutube.ru/live/chat/*/",
+    "https://live.wix.com/*",
+    "https://www.wix.com/*",
+    "https://wix.com/*",
+    "https://verticalpixelzone.com/*",
+    "https://rutube.ru/live/chat/*/",
     "https://chat.castr.io/*",
     "https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*",
     "https://www.x.com/*",
@@ -130,7 +127,6 @@
     "https://www.tradingview.com/streams/*",
     "https://app.chime.aws/meetings/*",
     "https://*.loco.gg/*",
-    "https://joystick.tv/u/*/chat",
     "https://www.buzzit.ca/event/*/chat",
     "https://*.floatplane.com/popout/livechat",
     "https://www.threads.net/*",
@@ -158,7 +154,7 @@
     "https://estrim.com/publications/view/*",
     "https://vk.com/*",
     "https://wave.video/*",
-	"https://www.sooplive.com/chat/*"  
+    "https://www.sooplive.com/chat/*"  
   ],
   "content_scripts": [
     {
@@ -169,14 +165,6 @@
       "js": [ "./sources/bigo.js" ],
       "matches": [ "https://www.bigo.tv/*" ]
     },	
-    {
-      "js": [ "./sources/chaturbate.js" ],
-      "matches": [ "https://chaturbate.com/*/" ]
-    },
-    {
-      "js": [ "./sources/cherrytv.js" ],
-      "matches": [ "https://cherry.tv/*" ]
-    },
     {
       "js": [ "./sources/beamstream.js" ],
       "matches": [ "https://beamstream.gg/*/chat" ]
@@ -322,10 +310,6 @@
     {
       "js": [ "./sources/loco.js" ],
       "matches": [ "https://*.loco.gg/*" ]
-    },
-    {
-      "js": [ "./sources/joystick.js" ],
-      "matches": [ "https://joystick.tv/u/*/chat" ]
     },
     {
       "js": [ "./sources/rooter.js" ],
