@@ -59,7 +59,10 @@
 
 	  return message.replace(emoteRegex, (match) => {
 		const emote = emotesMap[match];
-		if (!zw || typeof emote === "string") {
+		if (!emote){
+			return match;
+		}
+		if (!zw && typeof emote === "string") {
 		  return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
 		} else if (emote.url) {
 		  return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" />`;
