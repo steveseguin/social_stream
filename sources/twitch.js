@@ -551,15 +551,25 @@
 	}
 
 	function replaceEmotesWithImages2(message, emotesMap, zw = false) {
-		const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join("\\b|\\b")}\\b)(?!\\w|\\d|[!?.])`, "g");
-		return message.replace(emotePattern, match => {
-			const emote = emotesMap[match];
-			if (!zw || typeof emote === "string") {
-				return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
-			} else if (emote.url) {
-				return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" />`;
-			}
-		});
+	  const emoteKeys = Object.keys(emotesMap);
+	  const emoteRegex = new RegExp(
+		`(${emoteKeys.map(escapeRegex).join('|')})`,
+		'g'
+	  );
+
+	  return message.replace(emoteRegex, (match) => {
+		const emote = emotesMap[match];
+		if (!zw || typeof emote === "string") {
+		  return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
+		} else if (emote.url) {
+		  return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" />`;
+		}
+		return match;
+	  });
+	}
+
+	function escapeRegex(str) {
+	  return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 	}
 
 	function replaceEmotesWithImages(text) {
@@ -625,13 +635,13 @@
 					}
 					if ("SEVENTV" in request) {
 						SEVENTV = request.SEVENTV;
-						//console.log(SEVENTV);
+						console.log(SEVENTV);
 						sendResponse(true);
 						return;
 					}
 					if ("BTTV" in request) {
 						BTTV = request.BTTV;
-						//console.log(BTTV);
+						console.log(BTTV);
 						sendResponse(true);
 						return;
 					}
