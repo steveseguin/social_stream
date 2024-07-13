@@ -83,17 +83,17 @@
 	function escapeHtml(unsafe) {
 		try {
 			if (settings.textonlymode) {
-				// we can escape things later, as needed instead I guess.
 				return unsafe;
 			}
-			return (
-				unsafe
-					.replace(/&/g, "&amp;") // i guess this counts as html
-					.replace(/</g, "&lt;")
-					.replace(/>/g, "&gt;")
-					.replace(/"/g, "&quot;")
-					.replace(/'/g, "&#039;") || ""
-			);
+			return unsafe.replace(/[&<>"']/g, function(m) {
+				return {
+					'&': '&amp;',
+					'<': '&lt;',
+					'>': '&gt;',
+					'"': '&quot;',
+					"'": '&#039;'
+				}[m];
+			}) || "";
 		} catch (e) {
 			return "";
 		}
@@ -550,31 +550,23 @@
 		}
 	}
 
+	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
+	
 	function replaceEmotesWithImages2(message, emotesMap, zw = false) {
-	  const emoteKeys = Object.keys(emotesMap);
-	  const emoteRegex = new RegExp(
-		`(${emoteKeys.map(escapeRegex).join('|')})`,
-		'g'
-	  );
-
-	  return message.replace(emoteRegex, (match) => {
-		const emote = emotesMap[match];
-		if (!emote){
-			return match;
-		}
-		if (!zw && typeof emote === "string") {
-		  return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
-		} else if (emote.url) {
-		  return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" />`;
+	  return message.replace(emoteRegex, (match, emoteMatch) => {
+		const emote = emotesMap[emoteMatch];
+		if (emote) {
+		  const escapedMatch = escapeHtml(match);
+		  if (!zw || typeof emote === "string") {
+			return `<img src="${emote}" alt="${escapedMatch}" class='zero-width-friendly'/>`;
+		  } else if (emote.url) {
+			return `<span class="zero-width-span"><img src="${emote.url}" alt="${escapedMatch}" class="zero-width-emote" /></span>`;
+		  }
 		}
 		return match;
 	  });
 	}
-
-	function escapeRegex(str) {
-	  return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-	}
-
+	
 	function replaceEmotesWithImages(text) {
 		if (BTTV) {
 			if (settings.bttv) {

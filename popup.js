@@ -393,9 +393,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		update(response, false); // we dont want to sync things
 	});
 
-	//chrome.runtime.sendMessage({cmd: "getOnOffState"}, function (response) { //  getSettings will include the state and everything
-	//	update(response);
-	//});
 	
 	for (var i=1;i<=20;i++){
 		var chat = document.createElement("div");
@@ -512,6 +509,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			msg.cmd = this.dataset.action;
 			msg.ctrl = e.ctrlKey || false;
 			
+			if (this.dataset.target){
+				msg.target = this.dataset.target;
+			}
+			
 			msg.value = this.dataset.value || null;
 			if (msg.cmd == "fakemsg"){
 				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
@@ -571,7 +572,6 @@ var streamID = false;
 function update(response, sync=true){
 	console.log("update-> response: ",response);
 	if (response !== undefined){
-		
 		
 		if (response.streamID){
 			streamID = true;
@@ -1013,6 +1013,11 @@ function updateSettings(ele, sync=true, value=null){
 		ele = this;
 	}
 	
+	var target = null;
+	if (ele.dataset.target){
+		target = ele.dataset.target;
+	}
+	
 	if (ele.dataset.param1){
 		if (ele.checked){
 			
@@ -1093,7 +1098,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "param1", setting: ele.dataset.param1, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "param1", target:target, setting: ele.dataset.param1, "value": ele.checked}, function (response) {});
 		}
 
 	} else if (ele.dataset.textparam1){
@@ -1106,7 +1111,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1",  target:target, setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.textparam2){
 		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.textparam2);
@@ -1117,7 +1122,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam2", setting: ele.dataset.textparam2, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam2",  target:target, setting: ele.dataset.textparam2, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.textparam3){
 		document.getElementById("emoteswall").raw = removeQueryParamWithValue(document.getElementById("emoteswall").raw, ele.dataset.textparam3);
@@ -1128,7 +1133,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam3", setting: ele.dataset.textparam3, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam3",  target:target, setting: ele.dataset.textparam3, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.textparam4){
 		document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.textparam4);
@@ -1139,7 +1144,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam4", setting: ele.dataset.textparam4, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam4",  target:target, setting: ele.dataset.textparam4, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.textparam5){
 		document.getElementById("waitlist").raw = removeQueryParamWithValue(document.getElementById("waitlist").raw, ele.dataset.textparam5);
@@ -1150,7 +1155,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam5", setting: ele.dataset.textparam5, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam5",  target:target, setting: ele.dataset.textparam5, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.textparam6){
 		document.getElementById("ticker").raw = removeQueryParamWithValue(document.getElementById("ticker").raw, ele.dataset.textparam6);
@@ -1161,7 +1166,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("&&", "&");
 		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam6", setting: ele.dataset.textparam6, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam6",  target:target, setting: ele.dataset.textparam6, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam1){
 		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.optionparam1);
@@ -1177,7 +1182,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1", setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1",  target:target, setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam2){
 		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.optionparam2);
@@ -1193,7 +1198,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2", setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2",  target:target, setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
 		}
 	///
 	} else if (ele.dataset.optionparam3){
@@ -1205,7 +1210,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam3", setting: ele.dataset.optionparam3, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam3",  target:target, setting: ele.dataset.optionparam3, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam4){
 		document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.optionparam4);
@@ -1217,7 +1222,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4",  target:target, setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam5){
 		document.getElementById("waitlist").raw = removeQueryParamWithValue(document.getElementById("waitlist").raw, ele.dataset.optionparam5);
@@ -1229,7 +1234,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam5", setting: ele.dataset.optionparam5, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam5",  target:target, setting: ele.dataset.optionparam5, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam6){
 		document.getElementById("ticker").raw = removeQueryParamWithValue(document.getElementById("ticker").raw, ele.dataset.optionparam6);
@@ -1241,7 +1246,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("&&", "&");
 		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam6", setting: ele.dataset.optionparam6, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam6", target:target,  setting: ele.dataset.optionparam6, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.param2){
 		if (ele.checked){
@@ -1262,7 +1267,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param2", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param2",  target:target, setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
 		}
 		
 		document.querySelectorAll("input[data-param2^='"+ele.dataset.param2.split("=")[0]+"']:not([data-param2='"+ele.dataset.param2+"'])").forEach(ele1=>{
@@ -1282,7 +1287,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param3", setting: ele.dataset.param3, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param3",  target:target, setting: ele.dataset.param3, "value": ele.checked}, function (response) {});
 		}
 		
 		document.querySelectorAll("input[data-param3^='"+ele.dataset.param3.split("=")[0]+"']:not([data-param3='"+ele.dataset.param3+"'])").forEach(ele1=>{
@@ -1302,7 +1307,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param4", setting: ele.dataset.param4, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param4",  target:target, setting: ele.dataset.param4, "value": ele.checked}, function (response) {});
 		}
 		
 		document.querySelectorAll("input[data-param4^='"+ele.dataset.param4.split("=")[0]+"']:not([data-param4='"+ele.dataset.param4+"'])").forEach(ele1=>{
@@ -1324,7 +1329,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5", setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5",  target:target, setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
 		}
 		
 		
@@ -1379,7 +1384,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "both", setting: ele.dataset.both, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "both",  target:target, setting: ele.dataset.both, "value": ele.checked}, function (response) {});
 		}
 
 	} else if (ele.dataset.setting){
@@ -1392,7 +1397,6 @@ function updateSettings(ele, sync=true, value=null){
 				}
 			}
 		}
-		
 		
 		if (ele.dataset.setting == "drawmode"){
 			if (ele.checked){
@@ -1412,23 +1416,33 @@ function updateSettings(ele, sync=true, value=null){
 		}
 		
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting",  target:target, setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
 		}
 		return;
 	} else if (ele.dataset.optionsetting){
+		
+		if (ele.dataset.optionsetting == "pollType"){
+			if (ele.value == "multiple"){
+				document.getElementById("multipleChoiceOptions").classList.remove("hidden");
+			} else {
+				document.getElementById("multipleChoiceOptions").classList.add("hidden");
+			}
+		}
+		
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "optionsetting", setting: ele.dataset.optionsetting, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "optionsetting", target:target,  setting: ele.dataset.optionsetting, "value": ele.value}, function (response) {});
 		}
 		return;
 	} else if (ele.dataset.textsetting){
+		
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", target:target,  setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
 		}
 		return;
 	} else if (ele.dataset.numbersetting){ 
 		
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting", setting: ele.dataset.numbersetting, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting",  target:target, setting: ele.dataset.numbersetting, "value": ele.value}, function (response) {});
 		}
 		
 		if (document.querySelector("input[data-param1='"+ele.dataset.numbersetting+"']") && document.querySelector("input[data-param1='"+ele.dataset.numbersetting+"']").checked){
@@ -1440,7 +1454,7 @@ function updateSettings(ele, sync=true, value=null){
 	} else if (ele.dataset.numbersetting2){ 
 		
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting2", setting: ele.dataset.numbersetting2, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting2",  target:target, setting: ele.dataset.numbersetting2, "value": ele.value}, function (response) {});
 		}
 		
 		if (document.querySelector("input[data-param2='"+ele.dataset.numbersetting2+"']") && document.querySelector("input[data-param2='"+ele.dataset.numbersetting2+"']").checked){
@@ -1458,7 +1472,7 @@ function updateSettings(ele, sync=true, value=null){
 					streamID: ele.value
 				});
 			}
-			chrome.runtime.sendMessage({cmd: "sidUpdated", streamID: ele.value}, function (response) {console.log("streamID updated");});
+			chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, streamID: ele.value}, function (response) {console.log("streamID updated");});
 			
 		} else if (ele.dataset.special==="password"){
 			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
@@ -1466,7 +1480,7 @@ function updateSettings(ele, sync=true, value=null){
 					password: ele.value
 				});
 			}
-			chrome.runtime.sendMessage({cmd: "sidUpdated", password: ele.value || ""}, function (response) {console.log("Password updated");});
+			chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, password: ele.value || ""}, function (response) {console.log("Password updated");});
 		}
 	} else if (ele.dataset.color){
 		

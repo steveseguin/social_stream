@@ -1655,29 +1655,20 @@ async function getSEVENTVEmotes(url = false) {
 	return seventv;
 }
 
+const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
 function replaceEmotesWithImages(message, emotesMap, zw = false) {
-	const emotePattern = new RegExp(`(?<!<[^>]*)\\b(${Object.keys(emotesMap).join("|")})\\b(?!\\w|\\d|[!?.,]|[^<]*>)`, "g");
-	return message.replace(emotePattern, match => {
-		const emote = emotesMap[match];
-		if (!zw || typeof emote === "string") {
-			return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
-		} else if (emote.url) {
-			return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" /></span>`;
-		}
-	});
-}
-
-function replaceEmotesWithImagesText(message, emotesMap, zw = false) {
-	// Simplified regex that matches emote codes anywhere, including within HTML tags.
-	const emotePattern = new RegExp(`\\b(${Object.keys(emotesMap).join("|")})\\b`, "g");
-	return message.replace(emotePattern, match => {
-		const emote = emotesMap[match];
-		if (!zw || typeof emote === "string") {
-			return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
-		} else if (emote.url) {
-			return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" /></span>`;
-		}
-	});
+  return message.replace(emoteRegex, (match, emoteMatch) => {
+	const emote = emotesMap[emoteMatch];
+	if (emote) {
+	  const escapedMatch = escapeHtml(match);
+	  if (!zw || typeof emote === "string") {
+		return `<img src="${emote}" "${escapedMatch}" class='zero-width-friendly'/>`;
+	  } else if (emote.url) {
+		return `<span class="zero-width-span"><img src="${emote.url}" "${escapedMatch}" class="zero-width-emote" /></span>`;
+	  }
+	}
+	return match;
+  });
 }
 
 chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
@@ -1736,6 +1727,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			chrome.runtime.lastError;
 
 			sendResponse({ state: isExtensionOn });
+			
+			if (request.target){
+				sendTargetP2P(request, request.target);
+			}
 
 			if (request.setting == "midi") {
 				toggleMidi();
@@ -1886,7 +1881,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			if (request.setting == "capturejoinedevent") {
 				pushSettingChange();
-			}
+			} 
 			if (request.setting == "bttv") {
 				if (settings.bttv) {
 					clearAllWithPrefix("uid2bttv2.twitch:");
@@ -1925,6 +1920,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			if (request.setting == "waitlistmode") {
 				initializeWaitlist();
+			}
+			
+			if (request.setting == "pollEnabled") {
+				initializePoll();
 			}
 
 			if (request.setting == "customwaitlistmessagetoggle" || request.setting == "customwaitlistmessage" || request.setting == "customwaitlistcommand") {
@@ -2558,7 +2557,14 @@ async function sendToDestinations(message) {
 	}
 
 	try {
-		sendDataP2P(message);
+		sendDataP2P(message); 
+	} catch (e) {
+		console.error(e);
+	}
+	try {
+		if (settings.pollEnabled){
+			sendTargetP2P(message, "poll");
+		}
 	} catch (e) {
 		console.error(e);
 	}
@@ -2578,6 +2584,23 @@ function unescapeHtml(safe) {
 		.replace(/&quot;/g, '"')
 		.replace(/&#039;/g, "'");
 }
+
+function escapeHtml(unsafe) {
+	try {
+		return unsafe.replace(/[&<>"']/g, function(m) {
+			return {
+				'&': '&amp;',
+				'<': '&lt;',
+				'>': '&gt;',
+				'"': '&quot;',
+				"'": '&#039;'
+			}[m];
+		}) || "";
+	} catch (e) {
+		return "";
+	}
+}
+
 function sendToH2R(data) {
 	if (settings.h2r && settings.h2rserver && settings.h2rserver.textsetting) {
 		try {
@@ -3329,6 +3352,23 @@ function sendHypeP2P(data, uid = null) {
 		}
 	}
 }
+function sendTargetP2P(data, target) {
+	// function to send data to the DOCk via the VDO.Ninja API
+
+	if (iframe) {
+		var keys = Object.keys(connectedPeers);
+		for (var i = 0; i < keys.length; i++) {
+			try {
+				var UUID = keys[i];
+				var label = connectedPeers[UUID];
+				if (label === target) {
+					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+				}
+			} catch (e) {}
+		}
+	
+	}
+}
 function sendTickerP2P(data, uid = null) {
 	// function to send data to the DOCk via the VDO.Ninja API
 
@@ -3410,8 +3450,21 @@ function processWaitlist(data) {
 	}
 }
 
+
+
+function initializePoll() {
+	try {
+		//if (!settings.pollEnabled) { // stop and clear
+		//	return;
+		//}
+		if (isExtensionOn){
+			//console.log("initializePoll");
+			sendTargetP2P({settings:settings}, "poll");
+		}
+	} catch (e) {}
+}
+
 function initializeWaitlist() {
-	
 	try {
 		if (!settings.waitlistmode) { // stop and clear
 			waitlist = [];
@@ -3851,7 +3904,17 @@ function processIncomingRequest(request, UUID = false) {
 			}
 		} else if (request.action === "blockUser") {
 			blockUser(request.value);
+		} else if (request.action === "obsCommand") {
+			//console.log(request);
+			fowardOBSCommand(request);
 		}
+	}
+}
+
+function fowardOBSCommand(data){
+	// data.value = {value:{action: 'setCurrentScene', value: sceneName}}
+	if (isExtensionOn && data.value) {
+		sendToDestinations({obsCommand: data.value});
 	}
 }
 
@@ -3952,6 +4015,8 @@ eventer(messageEvent, async function (e) {
 						processTicker();
 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
 						initializeWaitlist();
+					} else if (connectedPeers[e.data.UUID] == "poll") {
+						initializePoll();
 					}
 				}
 			} else if (e.data.UUID && e.data.value && e.data.action == "view-connection-info") {
@@ -3964,6 +4029,8 @@ eventer(messageEvent, async function (e) {
 						processTicker();
 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
 						initializeWaitlist();
+					} else if (connectedPeers[e.data.UUID] == "poll") {
+						initializePoll();
 					}
 				}
 			} else if (e.data.UUID && "value" in e.data && !e.data.value && e.data.action == "push-connection") {
