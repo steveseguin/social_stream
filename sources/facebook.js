@@ -52,7 +52,7 @@
 		return emojiRegex.test(char);
 	}
 	
-	function getAllContentNodes(element) { // takes an element.
+	function getAllContentNodes(element, textonly=false) { // takes an element.
 		var resp = "";
 		
 		if (!element){return resp;}
@@ -72,12 +72,12 @@
 		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
+				resp += getAllContentNodes(node, textonly)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				node.skip = true; // facebook specific need
-				if (!settings.textonlymode){
+				if (!settings.textonlymode && !textonly){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
 					}
@@ -160,6 +160,25 @@
 				}
 			}
 		}
+		
+		
+		try {
+			if (settings.replyingto && msg && ele.previousSibling) {
+				try {
+					//console.log(ele);
+					var replyMessage = getAllContentNodes(ele.previousSibling.querySelector("div>div>span>span"), true);
+					if (replyMessage) {
+						if (settings.textonlymode) {
+							msg = replyMessage + ": " + msg;
+						} else {
+							msg = "<i><small>" + replyMessage + ":&nbsp;</small></i> " + msg;
+						}
+					}
+				} catch (e) {
+					//console.error(e);
+				}
+			}
+		} catch (e) {}
 		
 		var contentimg = "";
 		if (!msg){
