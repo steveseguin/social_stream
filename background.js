@@ -4392,6 +4392,14 @@ function processResponse(data, reverse = false, metadata = null) {
 					} catch (e) {
 						console.error(e);
 					}
+				} else if (tabs[i].url.startsWith("https://app.zoom.us/")) { // I was getting double messages sent, so this I hope fixes that.
+					if (!debuggerEnabled[tabs[i].id]) {
+						debuggerEnabled[tabs[i].id] = false;
+						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, zoomFakeChat, data.response, false, true, false));
+					} else {
+						zoomFakeChat(tabs[i].id, data.response, false, true, false);
+					}
+					continue; // Skip the rest of the loop after handling Zoom
 				} else {
 					// all other destinations. ; generic
 
@@ -4415,6 +4423,35 @@ function processResponse(data, reverse = false, metadata = null) {
 	return true;
 }
 
+function zoomFakeChat(tabid, message, middle = false, keypress = true, backspace = false) {
+    chrome.tabs.sendMessage(tabid, "focusChat", function (response = false) {
+        if (!response) {
+            if (debuggerEnabled[tabid]) {
+                chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+            }
+            return;
+        }
+
+        chrome.debugger.sendCommand({ tabId: tabid }, "Input.insertText", { text: message }, function (e) {
+            chrome.debugger.sendCommand(
+                { tabId: tabid },
+                "Input.dispatchKeyEvent",
+                {
+                    type: "keyDown",
+                    key: "Enter",
+                    code: "Enter",
+                    nativeVirtualKeyCode: 13,
+                    windowsVirtualKeyCode: 13
+                },
+                function (e) {
+                    if (debuggerEnabled[tabid]) {
+                        chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+                    }
+                }
+            );
+        });
+    });
+}
 function limitString(string, maxLength) {
 	let count = 0;
 	let result = "";

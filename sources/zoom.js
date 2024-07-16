@@ -235,6 +235,8 @@
 
 	function pushMessage(data){
 		try{
+			//console.log(data);
+			//console.log(window.self !== window.top);
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 		} catch(e){}
 	}
@@ -254,7 +256,23 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector("textarea.chat-box__chat-textarea.window-content-bottom").focus();
+					//console.log("Focusing");
+					var sent=false;
+					//console.log(window.self !== window.top);
+					document.querySelectorAll('iframe').forEach( item =>{
+						if (sent){return;}
+						if (item && item.contentWindow && item.contentWindow.document && item.contentWindow.document.body.querySelector("textarea.chat-box__chat-textarea.window-content-bottom, .chat-rtf-box__chat-textarea-wrapper div[contenteditable='true']")){
+							sent = true;
+							//console.log("iframe sent")
+							item.contentWindow.document.body.querySelector("textarea.chat-box__chat-textarea.window-content-bottom, .chat-rtf-box__chat-textarea-wrapper div[contenteditable='true']").focus();
+						}
+					});
+					if (!sent && document.querySelector("textarea.chat-box__chat-textarea.window-content-bottom, .chat-rtf-box__chat-textarea-wrapper div[contenteditable='true']")){
+						document.querySelector("textarea.chat-box__chat-textarea.window-content-bottom, .chat-rtf-box__chat-textarea-wrapper div[contenteditable='true']").focus();
+						//console.log("main sent")
+						sent=true;
+					}
+					//console.log("sent: "+sent);
 					sendResponse(true);
 					return;
 				}
@@ -390,7 +408,7 @@
 			data.event = "reaction";
 			data.type = "zoom";
 			data.textonlymode = false;
-			console.log(data);
+			//console.log(data);
 			pushMessage(data);
 			
 		});
