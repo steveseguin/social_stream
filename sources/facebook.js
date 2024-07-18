@@ -116,12 +116,112 @@
 		if (!chatimg){ // give this image time to load in, and cancel if the message is removed due to react.
 			await sleep(50);
 			if (!ele.isConnected){return;}
+			try {
+				var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+				imgele.skip = true;
+				chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			} catch(e){
+				//console.log(e);
+			}
+		}
+		if (!chatimg){ // give this image time to load in, and cancel if the message is removed due to react.
 			await sleep(50);
 			if (!ele.isConnected){return;}
+			try {
+				var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+				imgele.skip = true;
+				chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			} catch(e){
+				//console.log(e);
+			}
+		}
+		if (!chatimg){ // give this image time to load in, and cancel if the message is removed due to react.
 			await sleep(50);
 			if (!ele.isConnected){return;}
+			try {
+				var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+				imgele.skip = true;
+				chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			} catch(e){
+				//console.log(e);
+			}
+		}
+		if (!chatimg){ // give this image time to load in, and cancel if the message is removed due to react.
 			await sleep(50);
 			if (!ele.isConnected){return;}
+			try {
+				var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+				imgele.skip = true;
+				chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			} catch(e){
+				//console.log(e);
+			}
+		}
+		if (!chatimg){ // give this image time to load in, and cancel if the message is removed due to react.
+			await sleep(50);
+			if (!ele.isConnected){return;}
+			try {
+				var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+				imgele.skip = true;
+				chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			} catch(e){
+				//console.log(e);
+			}
+		}
+		if (!chatimg){ // give this image time to load in, and cancel if the message is removed due to react.
+			await sleep(50);
+			if (!ele.isConnected){return;}
+			try {
+				var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+				imgele.skip = true;
+				chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			} catch(e){
+				//console.log(e);
+			}
+		}
+		if (!chatimg){ // give this image time to load in, and cancel if the message is removed due to react.
+			await sleep(50);
+			if (!ele.isConnected){return;}
+			try {
+				var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+				imgele.skip = true;
+				chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			} catch(e){
+				//console.log(e);
+			}
+		}
+		if (!chatimg){ // give this image time to load in, and cancel if the message is removed due to react.
+			await sleep(50);
+			if (!ele.isConnected){return;}
+			try {
+				var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+				imgele.skip = true;
+				chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			} catch(e){
+				//console.log(e);
+			}
+		}
+		if (!chatimg){ // give this image time to load in, and cancel if the message is removed due to react.
+			await sleep(50);
+			if (!ele.isConnected){return;}
+			try {
+				var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+				imgele.skip = true;
+				chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			} catch(e){
+				//console.log(e);
+			}
+		}
+		if (!chatimg){ // give this image time to load in, and cancel if the message is removed due to react.
+			await sleep(50);
+			if (!ele.isConnected){return;}
+			try {
+				var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+				imgele.skip = true;
+				chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			} catch(e){
+				//console.log(e);
+			}
 		}
 		
 		var name = "";
