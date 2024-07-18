@@ -93,6 +93,11 @@
 	}
 	
 	var dupCheck2 = [];
+	
+	function sleep(ms) {
+	  return new Promise(resolve => setTimeout(resolve, ms));
+	}
+
 
 	async function processMessage(ele) {
 		if (ele == window) {
@@ -106,6 +111,17 @@
 			chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
 		} catch(e){
 			//console.log(e);
+		}
+		
+		if (!chatimg){ // give this image time to load in, and cancel if the message is removed due to react.
+			await sleep(50);
+			if (!ele.isConnected){return;}
+			await sleep(50);
+			if (!ele.isConnected){return;}
+			await sleep(50);
+			if (!ele.isConnected){return;}
+			await sleep(50);
+			if (!ele.isConnected){return;}
 		}
 		
 		var name = "";
@@ -161,6 +177,7 @@
 			}
 		}
 		
+		var dupMessage = msg; // I dont want to include original replies in the dup check; just the message.
 		
 		try {
 			if (settings.replyingto && msg && ele.previousSibling) {
@@ -224,7 +241,7 @@
 		}
 		
 		
-		var entry = data.chatname + "+" + data.hasDonation + "+" + data.chatmessage;
+		var entry = data.chatname + "+" + data.hasDonation + "+" + dupMessage;
 		var entryString = JSON.stringify(entry);
 
 		if (!dupCheck2.includes(entryString)) {
