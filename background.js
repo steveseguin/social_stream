@@ -1671,6 +1671,44 @@ function replaceEmotesWithImages(message, emotesMap, zw = false) {
   });
 }
 
+class CheckDuplicateSources {
+  constructor() {
+    this.messages = new Map();
+    this.expireTime = 6000;
+  }
+
+  generateKey(channel, user, text) {
+    return `${channel}-${user}-${text}`;
+  }
+
+  isDuplicate(channel, user, text) {
+    const currentTime = Date.now();
+    const key = this.generateKey(channel, user, text);
+
+    if (this.messages.has(key)) {
+      const lastTime = this.messages.get(key);
+      if (currentTime - lastTime < this.expireTime) {
+        return true;
+      }
+    }
+
+    this.messages.set(key, currentTime);
+    this.cleanUp(currentTime);
+
+    return false;
+  }
+
+  cleanUp(currentTime) {
+    for (const [key, time] of this.messages.entries()) {
+      if (currentTime - time > this.expireTime) {
+        this.messages.delete(key);
+      }
+    }
+  }
+}
+
+const checkDuplicateSources = new CheckDuplicateSources();
+
 chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
 	var response = {};
 	var alreadySet = false;
@@ -1841,6 +1879,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				pushSettingChange();
 			}
 			if (request.setting == "replyingto") {
+				pushSettingChange();
+			}
+			if (request.setting == "delayyoutube") {
 				pushSettingChange();
 			}
 			if (request.setting == "customtwitchaccount") {
@@ -2029,6 +2070,17 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						return response;
 					}
 				}
+				
+				
+				if (settings.noduplicates &&
+					checkDuplicateSources.isDuplicate(
+						request.message.type, 
+						(request.message.userid || request.message.chatname), 
+						(request.message.chatmessage || request.message.hasDonation || (request.message.membership && request.message.event)))) {
+							sendResponse({ state: isExtensionOn });
+							return response;
+				}
+				
 
 				if (!request.message.id) {
 					messageCounter += 1;

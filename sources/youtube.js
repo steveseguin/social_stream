@@ -160,10 +160,14 @@
 	}
 
 	function processMessage(ele, wss = true) {
+		if (!ele || !ele.isConnected){
+			return;
+		}
 		if (ele.hasAttribute("is-deleted")) {
 			//console.log("Message is deleted already");
 			return;
 		}
+	
 
 		if (settings.customyoutubestate) {
 			return;
@@ -520,6 +524,13 @@
 					if (settings.seventv) {
 						chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {});
 					}
+					if (settings.delayyoutube){
+						captureDelay = 3200;
+						console.log(captureDelay);
+					} else {
+						captureDelay = 200;
+						console.log(captureDelay);
+					}
 					return;
 				}
 				if ("BTTV" in request) {
@@ -534,6 +545,7 @@
 					sendResponse(true);
 					return;
 				}
+
 				if ("muteWindow" in request) {
 					if (request.muteWindow) {
 						clearInterval(videosMuted);
@@ -569,6 +581,8 @@
 		sendResponse(false);
 	});
 
+	var captureDelay = 200;
+
 	chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
 		// {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response) {
@@ -578,6 +592,13 @@
 			}
 			if (settings.seventv && !SEVENTV) {
 				chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {});
+			}
+			if (settings.delayyoutube){
+				captureDelay = 2000;
+				console.log(captureDelay);
+			} else {
+				captureDelay = 200;
+				console.log(captureDelay);
 			}
 		}
 	});
@@ -640,7 +661,7 @@
 						function (ele2) {
 							processMessage(ele2, false);
 						},
-						200,
+						captureDelay,
 						ele2
 					);
 				});
@@ -651,7 +672,7 @@
 							function (ele2) {
 								processMessage(ele2, false);
 							},
-							200,
+							captureDelay,
 							ele2
 						);
 					});
@@ -687,7 +708,7 @@
 							function (ele2) {
 								processMessage(ele2, false);
 							},
-							200,
+							captureDelay,
 							ele2
 						);
 					});
@@ -698,7 +719,7 @@
 								function (ele2) {
 									processMessage(ele2, false);
 								},
-								200,
+								captureDelay,
 								ele2
 							);
 						});
