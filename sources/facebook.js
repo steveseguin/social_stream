@@ -141,13 +141,19 @@
 		
 		chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
 		if (chatimg.includes("32x32")) {
-			let isGeneric = await getImageInfo(chatimg);
-			await sleep(200);
-			if (!ele.isConnected){return;}
-			await sleep(200);
-			if (!ele.isConnected){return;}
-			var imgele = ele.childNodes[0].querySelector("image");
-			chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			try {
+				let isGeneric = await getImageInfo(chatimg);
+				if (isGeneric){
+					await sleep(200);
+					if (!ele.isConnected){return;}
+					await sleep(200);
+					if (!ele.isConnected){return;}
+					var imgele = ele.childNodes[0].querySelector("image");
+					chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+				}
+			} catch(e){
+				console.log(e);
+			}
 		}
 		
 		var name = "";
