@@ -105,26 +105,33 @@
 		}
 		
 		var chatimg = "";
-		try {
-			var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
-			imgele.skip = true;
-			chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
-		} catch(e){
-			//console.log(e);
+		
+		var test = ele.querySelectorAll("div[dir='auto'] > div[role='button'][tabindex='0']")
+		if (test.length ===1){
+			test[0].click();
 		}
 		
 		let counter = 0;
-		while (!chatimg && (counter < 20)){ // give this image time to load in, and cancel if the message is removed due to react.
+		while (counter < 10){ // give this image time to load in, and cancel if the message is removed due to react.
+			counter += 1;
 			await sleep(50);
 			if (!ele.isConnected){return;}
 			try {
 				var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
 				imgele.skip = true;
-				chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+				tmp = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+				if (!chatimg){
+					chatimg = tmp
+				} else if (chatimg !== tmp){
+					chatimg = tmp
+					break;
+				}
 			} catch(e){
-				//console.log(e);
 			}
-			counter += 1;
+		}
+		
+		if ((counter<3) && (test.length ===1)){
+			await sleep(200);
 		}
 		
 		var name = "";
@@ -141,12 +148,6 @@
 			}
 		}
 
-		
-		var test = ele.querySelectorAll("div[dir='auto'] > div[role='button'][tabindex='0']")
-		if (test.length ===1){
-			test[0].click();
-			await new Promise(r => setTimeout(r, 100));
-		}
 
 		var msg = "";
 		
