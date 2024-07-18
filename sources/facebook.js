@@ -7,28 +7,39 @@
 		} catch (e) {}
 	}
 
-	function toDataURL(url, callback) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.onload = function() {
-		  
-		var blob = xhr.response;
-    
-		if (blob.size > (55 * 1024)) {
-		  callback(url); // Image size is larger than 25kb.
-		  return;
-		}
+	function getImageInfo(imgOrUrl) {
+		return new Promise((resolve, reject) => {
+			const checkImage = (blob, img) => {
+				// console.log(imgOrUrl, blob.size);
+				if (img.naturalWidth !== 32 || img.naturalHeight !== 32 || blob.size < 800 || blob.size > 900) {
+					
+					resolve(false);
+				} else {
+					resolve(true);
+				}
+			};
 
-		var reader = new FileReader();
-		
-		
-		reader.onloadend = function() {
-		  callback(reader.result);
-		}
-		reader.readAsDataURL(xhr.response);
-	  };
-	  xhr.open('GET', url);
-	  xhr.responseType = 'blob';
-	  xhr.send();
+			const fetchImage = (url) => {
+				fetch(url)
+					.then(response => response.blob())
+					.then(blob => {
+						const img = new Image();
+						img.onload = () => checkImage(blob, img);
+						img.onerror = () => reject(new Error('Failed to load image'));
+						img.src = URL.createObjectURL(blob);
+					})
+					.catch(() => reject(new Error('Failed to fetch image')));
+			};
+
+			if (imgOrUrl instanceof SVGImageElement) {
+				const href = imgOrUrl.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+				fetchImage(href);
+			} else if (typeof imgOrUrl === 'string') {
+				fetchImage(imgOrUrl);
+			} else {
+				reject(new Error('Invalid input'));
+			}
+		});
 	}
 	
 	function escapeHtml(unsafe){
@@ -46,6 +57,7 @@
 			return "";
 		}
 	}
+
 
 	function isEmoji(char) {
 		const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
@@ -98,7 +110,6 @@
 	  return new Promise(resolve => setTimeout(resolve, ms));
 	}
 
-
 	async function processMessage(ele) {
 		if (ele == window) {
 			return;
@@ -109,29 +120,22 @@
 		var test = ele.querySelectorAll("div[dir='auto'] > div[role='button'][tabindex='0']")
 		if (test.length ===1){
 			test[0].click();
+			await sleep(100);
 		}
+		if (!ele.isConnected){return;}
 		
-		let counter = 0;
-		while (counter < 10){ // give this image time to load in, and cancel if the message is removed due to react.
-			counter += 1;
-			await sleep(50);
-			if (!ele.isConnected){return;}
-			try {
-				var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
-				imgele.skip = true;
-				tmp = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
-				if (!chatimg){
-					chatimg = tmp
-				} else if (chatimg !== tmp){
-					chatimg = tmp
-					break;
-				}
-			} catch(e){
-			}
-		}
+		var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+		imgele.skip = true;
 		
-		if ((counter<3) && (test.length ===1)){
+		chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+		if (chatimg.includes("32x32")){
+			let generic = getImageInfo(chatimg);
 			await sleep(200);
+			if (!ele.isConnected){return;}
+			await sleep(200);
+			if (!ele.isConnected){return;}
+			var imgele = ele.childNodes[0].querySelector("image");
+			chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
 		}
 		
 		var name = "";
