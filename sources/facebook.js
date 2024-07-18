@@ -8,7 +8,7 @@
 	}
 
 	// Add this at the top of your script, outside any function
-	const genericImageCache = new Set();
+	const imageCache = new Map();
 
 	function getImageInfo(imgOrUrl) {
 		return new Promise((resolve, reject) => {
@@ -21,18 +21,15 @@
 				return reject(new Error('Invalid input'));
 			}
 
-			// Check if the image URL is already known to be generic
-			if (genericImageCache.has(url)) {
-				return resolve(true);
+			// Check if the image URL is already in the cache
+			if (imageCache.has(url)) {
+				return resolve(imageCache.get(url));
 			}
 
 			const checkImage = (blob, img) => {
-				if (img.naturalWidth !== 32 || img.naturalHeight !== 32 || blob.size < 800 || blob.size > 900) {
-					resolve(false);
-				} else {
-					genericImageCache.add(url); // Add to cache if it's generic
-					resolve(true);
-				}
+				const isGeneric = img.naturalWidth === 32 && img.naturalHeight === 32 && blob.size >= 800 && blob.size <= 900;
+				imageCache.set(url, isGeneric); // Cache the result
+				resolve(isGeneric);
 			};
 
 			const fetchImage = (url) => {
@@ -41,16 +38,21 @@
 					.then(blob => {
 						const img = new Image();
 						img.onload = () => checkImage(blob, img);
-						img.onerror = () => reject(new Error('Failed to load image'));
+						img.onerror = () => {
+							imageCache.set(url, false); // Cache as non-generic on error
+							reject(new Error('Failed to load image'));
+						};
 						img.src = URL.createObjectURL(blob);
 					})
-					.catch(() => reject(new Error('Failed to fetch image')));
+					.catch(() => {
+						imageCache.set(url, false); // Cache as non-generic on fetch error
+						reject(new Error('Failed to fetch image'));
+					});
 			};
 
 			fetchImage(url);
 		});
 	}
-
 	
 	function escapeHtml(unsafe){
 		try {
