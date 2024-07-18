@@ -143,6 +143,7 @@
 		if (chatimg.includes("32x32")) {
 			try {
 				let isGeneric = await getImageInfo(chatimg);
+				if (!ele.isConnected){return;}
 				if (isGeneric){
 					await sleep(200);
 					if (!ele.isConnected){return;}
