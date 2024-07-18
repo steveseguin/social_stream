@@ -7,14 +7,30 @@
 		} catch (e) {}
 	}
 
+	// Add this at the top of your script, outside any function
+	const genericImageCache = new Set();
+
 	function getImageInfo(imgOrUrl) {
 		return new Promise((resolve, reject) => {
+			let url;
+			if (imgOrUrl instanceof SVGImageElement) {
+				url = imgOrUrl.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			} else if (typeof imgOrUrl === 'string') {
+				url = imgOrUrl;
+			} else {
+				return reject(new Error('Invalid input'));
+			}
+
+			// Check if the image URL is already known to be generic
+			if (genericImageCache.has(url)) {
+				return resolve(true);
+			}
+
 			const checkImage = (blob, img) => {
-				// console.log(imgOrUrl, blob.size);
 				if (img.naturalWidth !== 32 || img.naturalHeight !== 32 || blob.size < 800 || blob.size > 900) {
-					
 					resolve(false);
 				} else {
+					genericImageCache.add(url); // Add to cache if it's generic
 					resolve(true);
 				}
 			};
@@ -31,16 +47,10 @@
 					.catch(() => reject(new Error('Failed to fetch image')));
 			};
 
-			if (imgOrUrl instanceof SVGImageElement) {
-				const href = imgOrUrl.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
-				fetchImage(href);
-			} else if (typeof imgOrUrl === 'string') {
-				fetchImage(imgOrUrl);
-			} else {
-				reject(new Error('Invalid input'));
-			}
+			fetchImage(url);
 		});
 	}
+
 	
 	function escapeHtml(unsafe){
 		try {
@@ -128,8 +138,8 @@
 		imgele.skip = true;
 		
 		chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
-		if (chatimg.includes("32x32")){
-			let generic = getImageInfo(chatimg);
+		if (chatimg.includes("32x32")) {
+			let isGeneric = await getImageInfo(chatimg);
 			await sleep(200);
 			if (!ele.isConnected){return;}
 			await sleep(200);
