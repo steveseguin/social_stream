@@ -412,6 +412,25 @@
 			pushMessage(data);
 			
 		});
+		
+		document.querySelectorAll('iframe').forEach( item =>{
+			if (item && item.contentWindow && item.contentWindow.document && item.contentWindow.document.body){
+				item.contentWindow.document.body.querySelectorAll('[class^="animation-reactions/"]:not([data-skip])').forEach(reaction=>{
+					reaction.dataset.skip = true;
+					
+					var data = {};
+					data.chatname = "";
+					data.chatmessage = reaction.querySelector("svg,img").outerHTML;
+					if (!data.chatmessage){return;}
+					data.event = "reaction";
+					data.type = "zoom";
+					data.textonlymode = false;
+					//console.log(data);
+					pushMessage(data);
+				});
+			}
+		});
+		
 
 		if (document.getElementById('chat-list-content')) {
 		    // prevent chat box from stop scrolling, which makes messages stop appearing
