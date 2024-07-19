@@ -428,13 +428,22 @@
 					//console.log(data);
 					pushMessage(data);
 				});
+				
+				if (item.contentWindow.document.body.querySelector("#q-a-container-window")){
+					item.contentWindow.document.body.querySelectorAll("#q-a-container-window .q-a-question").forEach(ele=>{
+						if (ele.ignore){return;}
+						ele.ignore = true;
+						processQuestion(ele);
+						
+					});
+				}
 			}
 		});
 		
 
 		if (document.getElementById('chat-list-content')) {
 		    // prevent chat box from stop scrolling, which makes messages stop appearing
-        document.getElementById('chat-list-content').scrollTop = document.getElementById('chat-list-content').scrollTop + 1000
+			document.getElementById('chat-list-content').scrollTop = document.getElementById('chat-list-content').scrollTop + 1000
 		}
 
 		if (document.querySelector('[aria-label="open the chat pane"]')) { // prevent chat box from being closed after screen-share by keeping it always open
@@ -449,6 +458,9 @@
 				
 			});
 		}
+		
+		
+		
 		
 	},1000);
 })();
