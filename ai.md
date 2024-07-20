@@ -5,7 +5,9 @@ In this guide we will do a VERY basic setup of the Llama3 LLM, using Ollama, on 
 
 ## Installing Ollama
 
-![image](https://github.com/user-attachments/assets/66dcfdac-5583-4986-b1f6-cf72a9fbeb0f)
+https://ollama.com
+
+![image](https://github.com/user-attachments/assets/b6a0b236-f550-4a5a-a2a7-2b5063bd2a7a)
 
 ### Installing an LLM model
 
