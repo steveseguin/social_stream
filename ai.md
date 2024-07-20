@@ -38,7 +38,7 @@ To make this CORS permission permanant on Windows, you need to add OLLAMA_ORIGIN
 
 ![image](https://github.com/user-attachments/assets/065d69a6-2773-4ddd-a290-1b57660955af)
 
-This allows us to access Ollama from our Social Stream Ninja extension.  If you want to use it via the dock.html page, with custom.s commands, you may need to host Ollama behind a reverse proxy service. Refer to their documentation for info on this.
+This allows us to access Ollama from our Social Stream Ninja extension.  If you want to use it via the dock.html page, with custom.js commands, you may need to host Ollama behind a reverse proxy service. Refer to their documentation for info on this.
 
 ## Using
 
