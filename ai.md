@@ -42,7 +42,7 @@ This allows us to access Ollama from our Social Stream Ninja extension.  If you 
 
 ## Using
 
-Just make sure the toggle is on, and that you have Ollama /w Llama3 installed locally, and you should be good to go now.
+Just make sure the toggle is on, and that you have Ollama /w Llama3 installed/running locally, and you should be good to go now.
 
 
 ![image](https://github.com/user-attachments/assets/f4195658-85d4-4b6c-9481-e0fcbb9d4f05)
