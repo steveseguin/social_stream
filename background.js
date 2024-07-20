@@ -5577,8 +5577,86 @@ async function applyBotActions(data, tab = false) {
 	} catch (e) {
 		console.error(e);
 	}
+	try {
+		
+		if (settings.ollama){
+			processMessageWithOllama(data);
+		}
+	} catch (e) {
+		console.error(e);
+	}
+	
 	return data;
 }
+
+let isProcessing = false;
+const lastResponseTime = {};
+
+function processMessageWithOllama(data) {
+	return new Promise((resolve, reject) => {
+		const currentTime = Date.now();
+		
+		if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < 5000)) {
+			resolve(); // Skip this message if we've responded recently
+			return;
+		}
+
+		if (isProcessing) {
+			resolve();
+			return;
+		}
+
+		isProcessing = true;
+
+		const xhr = new XMLHttpRequest();
+		xhr.open('POST',  'http://localhost:11434/api/generate', true);
+		xhr.setRequestHeader('Content-Type', 'application/json');
+		
+		xhr.onload = function() {
+			if (xhr.status === 200) {
+				try {
+					const result = JSON.parse(xhr.responseText);
+					const aiResponse = result.response.trim();
+
+					if (!aiResponse.includes("RESPONSE")) {
+						const msg = {
+							tid: data.tid,
+							response: "🦙🤖💬: "+aiResponse.replace("Response:","").trim()
+						};
+						processResponse(msg);
+						lastResponseTime[data.tid] = currentTime;
+					}
+				} catch (error) {
+					console.error('Error parsing response:', error);
+				}
+			} else {
+				console.error('Request failed. Status:', xhr.status);
+			}
+
+			isProcessing = false;
+			resolve();
+		};
+
+		xhr.onerror = function() {
+			console.error('Request failed. Network error.');
+			isProcessing = false;
+			reject(new Error('Network error'));
+		};
+
+		const requestData = JSON.stringify({
+			model: "llama3",
+			stream: false,
+			prompt: `You are an AI assistant in a public all-ages-friendly chat room. Your task is to decide whether to respond to the following message. If you think a response is warranted (e.g., the message is directed at you, or you have a witty comment), provide a short, engaging response. This response should only contain the chat room reply and nothing else. Do not mention that is it is your response. If you don't think a response is necessary or of high-value, simply respond with "NO_RESPONSE"  .
+
+User ${data.chatname} says: ${data.chatmessage}
+
+Your decision and potential response:`
+		});
+
+		xhr.send(requestData);
+	});
+}
+
 var store = [];
 
 var MidiInit = false;
