@@ -1,6 +1,5 @@
 (function () {
-console.log('circle')
-
+	
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
@@ -100,6 +99,17 @@ console.log('circle')
 		if (!name || !msg){
 			return;
 		}
+		try {
+			
+			
+		} catch(e){}
+		
+		//console.log(circleUser);
+		if (circleUser && circleUser.name && name == "You" && ele.querySelector("svg[class^='icon icon-host']")){
+			name = circleUser.name;
+		} else if (name == "You" && ele.querySelector("svg[class^='icon icon-host']")){
+			name = "Host";
+		}
 
 		var data = {};
 		data.chatname = name;
@@ -190,13 +200,34 @@ console.log('circle')
 
 	console.log("social stream injected");
 
+	function getCircleUser() {
+	  const script = document.createElement('script');
+	  script.textContent = `
+		const circleUser = window.circleUser;
+		document.dispatchEvent(new CustomEvent('GET_CIRCLE_USER', { detail: circleUser }));
+	  `;
+	  (document.head || document.documentElement).appendChild(script);
+	  script.remove();
+	}
+	
+	var circleUser = false;
+	document.addEventListener('GET_CIRCLE_USER', function(event) {
+	  if (event.detail && event.detail.name){
+		circleUser = event.detail;
+	  }
+	  console.log(circleUser);
+	});
+	
 	setInterval(function(){
 		try {
 		if (document.querySelector('#message-scroll-view')){
 			if (!document.querySelector('#message-scroll-view').marked){
 				document.querySelector('#message-scroll-view').marked=true;
 				console.log("CONNECTED chat detected");
+				
 				onElementInserted('#message-scroll-view');
+				getCircleUser();
+				
 			}
 		}} catch(e){}
 	},2000);

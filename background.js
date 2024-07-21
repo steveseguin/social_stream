@@ -5646,7 +5646,7 @@ function processMessageWithOllama(data) {
 		const requestData = JSON.stringify({
 			model: "llama3",
 			stream: false,
-			prompt: `You are an AI assistant in a public all-ages-friendly chat room. Your task is to decide whether to respond to the following message. If you think a response is warranted (e.g., the message is directed at you, or you have a witty comment), provide a short, engaging response. This response should only contain the chat room reply and nothing else. Do not mention that is it is your response. If you don't think a response is necessary or of high-value, simply respond with "NO_RESPONSE"  .
+			prompt: `You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it's directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response. Respond to the following message:  .
 
 User ${data.chatname} says: ${data.chatmessage}
 
