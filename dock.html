@@ -2115,17 +2115,17 @@
 		  </div>
 		</div>
 
-		<div id="chatInput_parent" class="popInModal hidden">
-			<input id="chatInput" class="modalTextInput" type="text" placeholder="Send message..." />
+		<div id="chatInput_parent" class="popInModal">
+			<input id="chatInput" class="modalTextInput locked" type="text" placeholder="Send message...">
 			<button id="chatInputButton" class="imgButton imgSmallButton" style="background-image: url(./icons/send_confirm.png)" title="💬 Send this message"></button>
 			<button id="chatClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png)" title="🧹 Clear this message"></button>
 
 			<button id="getChatSources" class="imgButton imgSmallButton" title="Change destination to send messages to. Default is all.">🌐</button>
 
-			<button id="chatInputLockButton" class="imgButton imgSmallButton" title="🔐 Keep this chat cpen">🔓</button>
-			<button id="chatInputCloseButton" class="imgButton imgSmallButton" style="background-image: url(./icons/close.png)" title="❌ Close this dialog"></button>
+			<button id="chatInputLockButton" class="imgButton imgSmallButton" title="🔐 Keep this chat cpen">🔒</button>
+			<button id="createPopoutChat" style="padding:0" class="imgButton imgSmallButton" onclick="createPopoutChat()" title="Open the chat input box into its own browser window">🔗</button><button id="chatInputCloseButton" class="imgButton imgSmallButton" style="margin-right: 0;background-image: url(./icons/close.png)" title="❌ Close this dialog"></button>
 		</div>
-
+		
 		<div id="filter_messages_parent" class="popInModal hidden">
 			<input id="filter_messages" class="modalTextInput" type="text" placeholder="Filter..." onchange="filterMessages(this.value);" />
 			<button id="filterAddNameAndTimeButton" class="imgButton imgSmallButton" data-state="0" onclick="onClickFilterAddNameAndTimeButton(this);" style="background-image: url(./icons/filter_addnametime_off.png)" title="🆔 Include name and time when filtering"></button>
@@ -4151,6 +4151,42 @@
 					}
 				}
 			}
+			
+			
+		function createPopoutChat() {
+			//  todo -- make broadcast channel based.
+			<!-- if (session.broadcastChannelID === false) { -->
+				<!-- session.broadcastChannelID = session.generateStreamID(8); -->
+				<!-- log(session.broadcastChannelID); -->
+
+				<!-- session.broadcastChannel = new BroadcastChannel(session.broadcastChannelID); -->
+				<!-- session.broadcastChannel.onmessage = function (e) { -->
+					<!-- if ("loaded" in e.data) { -->
+						<!-- session.broadcastChannel.postMessage({ -->
+							<!-- messageList: messageList -->
+						<!-- }); -->
+					<!-- } else if ("msg" in e.data) { -->
+						<!-- sendChatMessage(e.data.msg, true); -->
+					<!-- } -->
+				<!-- }; -->
+
+				<!-- session.broadcastChannel.onmessageerror = function (e) { -->
+					<!-- errorlog(e); -->
+				<!-- }; -->
+			<!-- } -->
+			let pass = "";
+			if (urlParams.has("password")) {
+				pass = "&password="+password;
+			}
+			const popup = window.open("./input.html?session=" + roomID+pass, "popup", "width=600,height=480,toolbar=no,menubar=no,resizable=yes");
+
+			popup.document.body.style.margin = "0";
+			popup.document.body.style.padding = "0";
+			
+			//window.open("./popout.html?id=" + session.broadcastChannelID, "popup", "width=600,height=480,toolbar=no,menubar=no,resizable=yes");
+			return false;
+		}
+
 
 			function toggleTriggers(ele) {
 				triggerState = !triggerState;
