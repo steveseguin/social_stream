@@ -1985,7 +1985,7 @@
 			<!-- Main buttons -->
 
 			<button class="imgButton" id="pause" data-state="0" onclick="pause();" style="background-image: url(./icons/main_msg_pause.png)" title="Main — ⏸ Pause incoming chat messages"></button>
-			<button class="imgButton" id="say_hello" data-state="0" style="background-image: url(./icons/main_msg_send.png)" title="Main — 💬 Send a text message to all social endpoints"></button>
+			<button class="imgButton" id="say_hello" data-state="0" style="background-image: url(./icons/main_msg_send.png)" title="Main — 💬 Send a text message to social endpoint. (Hold ALT to pop out)"></button>
 			<button class="imgButton imgSmallButton" id="notify" data-state="0" onclick="notify();" style="background-image: url(./icons/main_msg_notify_off.png)" title="Main — 🔔 Start beeping when there is a new message"></button>
 			<button class="imgButton imgSmallButton hidden" id="select_save_file" data-state="0" onclick="overwriteFile('setup');" style="border-radius:0;background-image: url(./icons/main_msg_save.png)" title="Main — 💾 Select the file you want to save the most recent message to"></button>
 
@@ -2123,7 +2123,7 @@
 			<button id="getChatSources" class="imgButton imgSmallButton" title="Change destination to send messages to. Default is all.">🌐</button>
 
 			<button id="chatInputLockButton" class="imgButton imgSmallButton" title="🔐 Keep this chat cpen">🔓</button>
-			<button id="createPopoutChat" style="padding:0" class="imgButton imgSmallButton" onclick="createPopoutChat()" title="Open the chat input box into its own browser window">🔗</button><button id="chatInputCloseButton" class="imgButton imgSmallButton" style="margin-right: 0;background-image: url(./icons/close.png)" title="❌ Close this dialog"></button>
+			<button id="chatInputCloseButton" class="imgButton imgSmallButton" style="margin-right: 0;background-image: url(./icons/close.png)" title="❌ Close this dialog"></button>
 		</div>
 		
 		<div id="filter_messages_parent" class="popInModal hidden">
@@ -7901,7 +7901,7 @@
 					
 				});
 
-				function toggleInput(event) {
+				function toggleInput(event) { // mouse click
 					event.preventDefault();
 					event.stopPropagation();
 					positionMenu(event);
@@ -7961,6 +7961,12 @@
 				function toggleInput(event) {
 					event.preventDefault();
 					event.stopPropagation();
+					
+					if (event.altKey) {
+						createPopoutChat();
+						return false;
+					}
+					
 					menu.classList.toggle("hidden");
 					input.focus();
 					return false;
