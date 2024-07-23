@@ -475,7 +475,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		iii[i].onchange = updateSettings;
 	}
 
-	var iii = document.querySelectorAll("input[type='text']");
+	var iii = document.querySelectorAll("input[type='text'],textarea");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
@@ -743,7 +743,7 @@ function update(response, sync=true){
 								}
 							}
 							if ("textsetting" in response.settings[key]){
-								var ele = document.querySelector("input[data-textsetting='"+key+"']");
+								var ele = document.querySelector("input[data-textsetting='"+key+"'],textarea[data-textsetting='"+key+"']");
 								if (ele){
 									ele.value = response.settings[key].textsetting;
 									
@@ -866,7 +866,7 @@ function update(response, sync=true){
 								ele.checked = response.settings[key];
 								updateSettings(ele, sync);
 							}
-							var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"']");
+							var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"'], textarea[data-textsetting='"+key+"']");
 							if (ele){
 								ele.value = response.settings[key];
 								updateSettings(ele, sync);

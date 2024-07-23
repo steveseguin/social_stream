@@ -697,6 +697,13 @@ async function overwriteSavedNames(data = false) {
 		};
 
 		newSavedNamesFileHandle = await window.showSaveFilePicker(opts);
+	} else if (data == "clear") {
+		uniqueNameSet = [];
+		
+	} else if (data == "stop") {
+		newSavedNamesFileHandle = false;
+		uniqueNameSet = [];
+		
 	} else if (newSavedNamesFileHandle && data) {
 		if (uniqueNameSet.includes(data)) {
 			return;
@@ -2203,6 +2210,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "savenames") {
 			sendResponse({ state: isExtensionOn });
 			overwriteSavedNames("setup");
+		} else if (request.cmd && request.cmd === "savenamesStop") {
+			sendResponse({ state: isExtensionOn });
+			overwriteSavedNames("stop");
+		} else if (request.cmd && request.cmd === "savenamesClear") {
+			sendResponse({ state: isExtensionOn });
+			overwriteSavedNames("clear");
 		} else if (request.cmd && request.cmd === "loadmidi") {
 			await loadmidi();
 			sendResponse({ settings: settings, state: isExtensionOn });
@@ -2221,9 +2234,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "singlesaveStop") {
 			sendResponse({ state: isExtensionOn });
 			newFileHandle = false;
-		} else if (request.cmd && request.cmd === "singlesaveStop") {
-			sendResponse({ state: isExtensionOn });
-			newSavedNamesFileHandle = false;
 		} else if (request.cmd && request.cmd === "selectwinner") {
 			selectRandomWaitlist();
 			sendResponse({ state: isExtensionOn });
@@ -5579,8 +5589,29 @@ async function applyBotActions(data, tab = false) {
 	}
 	try {
 		
-		if (settings.ollama){
-			processMessageWithOllama(data);
+		if (settings.ollama && data.chatmessage && data.chatname){
+			
+			let skip = 0;
+			if (data.chatmessage.startsWith("🤖💬")){  // ensure the bot doesn't respond to itself
+				skip += 1;
+			}
+			
+			if (Date.now() - lastSentTimestamp < 7000) { // ensure the bot doesn't respond to itself or to the host.
+				skip += 1;
+			}
+			
+			if (skip < 2){
+				var cleanText = data.chatmessage.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
+				cleanText = cleanText.replace(/\s\s+/g, " ");
+				var score = levenshtein(cleanText, lastSentMessage);
+				
+				if (score < 7) { // make sure bot doesn't respond to itself or to the host.
+					skip +=1;
+				}
+				if (skip<2){ // enough criteria were met to skip this message
+					processMessageWithOllama(data);
+				}
+			}
 		}
 	} catch (e) {
 		console.error(e);
@@ -5594,6 +5625,7 @@ const lastResponseTime = {};
 
 function processMessageWithOllama(data) {
 	return new Promise((resolve, reject) => {
+		
 		const currentTime = Date.now();
 		
 		if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < 5000)) {
@@ -5621,7 +5653,7 @@ function processMessageWithOllama(data) {
 					if (!aiResponse.includes("RESPONSE")) {
 						const msg = {
 							tid: data.tid,
-							response: "🦙🤖💬: "+aiResponse.replace("Response:","").trim()
+							response: "🤖💬: "+aiResponse.replace("Response:","").trim()
 						};
 						processResponse(msg);
 						lastResponseTime[data.tid] = currentTime;
@@ -5642,15 +5674,21 @@ function processMessageWithOllama(data) {
 			isProcessing = false;
 			reject(new Error('Network error'));
 		};
+		
+		var botinstructions = `You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it's directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response. Respond to the following message:  .
+
+User ${data.chatname} says: ${data.chatmessage}
+
+Your decision and potential response:`;
+
+		if (settings['ollamaprompt'] && settings['ollamaprompt'].textsetting){
+			botinstructions = settings['ollamaprompt'].textsetting.trim();
+		}
 
 		const requestData = JSON.stringify({
 			model: "llama3",
 			stream: false,
-			prompt: `You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it's directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response. Respond to the following message:  .
-
-User ${data.chatname} says: ${data.chatmessage}
-
-Your decision and potential response:`
+			prompt: botinstructions
 		});
 
 		xhr.send(requestData);

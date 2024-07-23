@@ -499,6 +499,10 @@ h3 {
     display: grid;
     grid-template-columns: 1fr 1fr;
 }
+.grid3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
 
 /* The switch - the box around the slider */
 
@@ -714,80 +718,81 @@ input:checked + .slider:before {
     align-items: center;
 }
 
-/* Text input */
+ 
+	/* Text input */
+	.textInputContainer {
+		position: relative;
+		width: 200px;
+		margin-top: 2px;
+		margin-bottom: 4px;
+	}
 
-.textInputContainer {
-    position: relative;
-    width: 200px;
-    margin-top: 2px;
-    margin-bottom: 4px;
-}
+	.textInput {
+		width: 100%;
+		height: 100%;
+		padding: 2px;
+		background-color: var(--color-accent-subtle);
+		color: var(--default-text-color);
+		border: 1px solid var(--collapsible-border-color);
+		border-radius: 4px;
+		font-size: 1em;
+		font-weight: 400;
+		outline: none;
+		transition: all 0.3s;
+	}
 
-.textInput {
-    width: 100%;
-    height: 100%;
-    padding: 2px;
-    background-color: var(--color-accent-subtle);
-    color: var(--default-text-color);
-    border: 1px solid var(--collapsible-border-color);
-    border-radius: 4px;
-    font-size: 1em;
-    font-weight: 400;
-    outline: none;
-    transition: all 0.3s;
-}
+	.textInput:focus {
+		border: 1px solid var(--color-accent);
+	}
 
-.textInput:focus {
-    border: 1px solid var(--color-accent);
-}
+	.textInput + label {
+		position: absolute;
+		left: 8px;
+		top: 2px;
+		padding: 0 2px;
+		color: var(--default-text-color);
+		font-size: 1.2em;
+		transition: all 0.2s;
+		cursor: text;
+		z-index: 1;
+	}
 
-.textInput + label {
-    /*down*/
-    position: absolute;
-    left: 8px;
-    top: 2px;
-    padding: 0 2px;
-    color: var(--default-text-color);
-    font-size: 1.2em;
-    transition: all 0.2s;
-    cursor: text;
-    z-index: 1;
-}
+	.textInput + label::before {
+		position: absolute;
+		width: 100%;
+		left: 0;
+		top: 8px;
+		border-radius: 4px;
+		content: "";
+		z-index: -1;
+	}
 
-.textInput + label::before {
-    position: absolute;
-    width: 100%;
-    left: 0;
-    top: 8px;
-    border-radius: 4px;
-    content: "";
-    z-index: -1;
-}
+	.textInput:focus + label::before,
+	.textInput:valid + label::before {
+		height: 6px;
+		background-color: var(--color-accent-subtle);
+	}
 
-.textInput:focus + label::before,
-.textInput:valid + label::before {
-    height: 6px;
-    background-color: var(--color-accent-subtle);
-}
+	.textInput:focus + label,
+	.textInput:valid + label,
+	.textInput:not(:placeholder-shown) + label,
+	textarea:focus + label,
+	textarea:not(:placeholder-shown) + label {
+		top: -7px;
+		color: var(--color-accent);
+		font-size: 1em;
+	}
 
-.textInput:focus + label,
-		/*.textInput:valid + label,*//* if 'required' and input is valid */
-		input:not(:placeholder-shown).textInput + label /* input is not empty */ {
-    top: -7px;
-    color: var(--color-accent);
-    font-size: 1em;
-}
+	.textInput::placeholder {
+		font-size: 1em;
+		opacity: 0;
+		transition: all 0.2s;
+	}
 
-.textInput::placeholder {
-    font-size: 1em;
-    opacity: 0;
-    transition: all 0.2s;
-}
-
-.textInput:focus::placeholder {
-    opacity: 1;
-    animation-delay: 0.2s;
-}
+	.textInput:focus::placeholder {
+		opacity: 1;
+		animation-delay: 0.2s;
+	}
 
         </style>
     </head>
@@ -3221,14 +3226,6 @@ input:checked + .slider:before {
                                     <span data-translate="enable-dice-rolls">🎲 Respond with a random dice roll on !dice</span>
                                 </div>
 								
-								<div style="display: inline-block;" title="Enable the Ollama AI Bot responder; requires Ollama to be installed locally.">
-                                    <label class="switch">
-                                        <input type="checkbox" id="ollama" data-setting="ollama" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="enable-ollama-bot">🦙🤖 Enable the Ollama AI bot (<a href="https://github.com/steveseguin/social_stream/blob/main/ai.md" style="color:lightblue" target="_blank">Requires Install</a>)</span>
-                                </div>
-								
                                 <div>
                                     <button class="glowingButton" data-action="tellajoke" style="width: 120px;">
                                         <span><span data-translate="tell-a-joke-now">Tell a joke now</span></span>
@@ -3498,55 +3495,84 @@ input:checked + .slider:before {
             </div>
 
             <div class="wrapper">
-                <div class="collapsible">
-                    <input type="checkbox" class="collapsible-input" id="wrapper-hostbot-options-ext" />
-                    <label class="collapsible-label" for="wrapper-hostbot-options-ext"><span data-translate="host--bot">🤖 Host, bots, privileged users</span></label>
-                    <div class="collapsible-text">
-                        <div class="options">
-                            <div class="options_group streaming_chat">
-                                <div
-                                    class="textInputContainer"
-                                    style="width: 95%;"
-                                    title="Note:
+    <div class="collapsible">
+        <input type="checkbox" class="collapsible-input" id="wrapper-hostbot-options-ext" />
+        <label class="collapsible-label" for="wrapper-hostbot-options-ext">
+            <span data-translate="host--bot">🤖 Host, bots, privileged users</span>
+        </label>
+        <div class="collapsible-text">
+            <div class="options">
+                <div class="options_group streaming_chat">
+                    <div
+                        class="textInputContainer"
+                        style="width: 95%;"
+                        title="Note:
 Host/bot name(s) to help identify them.
 The list of names should be comma separated.
 The first name listed may be used as the host's name in stream when their name is not otherwise known."
-                                >
-                                    <input type="text" id="botnamesext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="mynameext" />
-                                    <label for="botnamesext"><span data-translate="hostbot-names">&gt; Host/bot name(s) </span></label>
-                                </div>
+                    >
+                        <input type="text" id="botnamesext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="mynameext" />
+                        <label for="botnamesext">
+                            <span data-translate="hostbot-names">&gt; Host/bot name(s)</span>
+                        </label>
+                    </div>
 
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-setting="hidebotnamesext" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="delete-names-for-specified-host-or-bots">🤖🔤 Delete names for specified host or bots </span>
-                                </div>
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-setting="hidebotsext" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="do-not-show-host-or-bot-messages">🤖🚫 Filter out messages from host or bots </span>
-                                </div>
-                                <h3><span data-translate="Privileged-users-h3">Privileged users</span></h3>
+                    <div>
+                        <label class="switch">
+                            <input type="checkbox" data-setting="hidebotnamesext" />
+                            <span class="slider round"></span>
+                        </label>
+                        <span data-translate="delete-names-for-specified-host-or-bots">🤖🔤 Delete names for specified host or bots</span>
+                    </div>
+                    <div>
+                        <label class="switch">
+                            <input type="checkbox" data-setting="hidebotsext" />
+                            <span class="slider round"></span>
+                        </label>
+                        <span data-translate="do-not-show-host-or-bot-messages">🤖🚫 Filter out messages from host or bots</span>
+                    </div>
+                    <h3><span data-translate="Privileged-users-h3">Privileged users</span></h3>
 
-                                <div
-                                    class="textInputContainer"
-                                    style="width: 95%;"
-                                    title="Note:
+                    <div
+                        class="textInputContainer"
+                        style="width: 95%;"
+                        title="Note:
 Specify privileged/admin name(s) to help identify them in chat.
 The list of names should be comma separated."
-                                >
-                                    <input type="text" id="adminnames" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="adminnames" />
-                                    <label for="adminnames"><span data-translate="admin-names">&gt; Privileged users</span></label>
-                                </div>
-                            </div>
-                        </div>
+                    >
+                        <input type="text" id="adminnames" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="adminnames" />
+                        <label for="adminnames">
+                            <span data-translate="admin-names">&gt; Privileged users</span>
+                        </label>
+                    </div>
+                    
+                    <h3><span data-translate="local-chat-bot">Local chat bot</span></h3>
+                    <div style="display: inline-block;" title="Enable the Ollama AI Bot responder; requires Ollama to be installed locally.">
+                        <label class="switch">
+                            <input type="checkbox" id="ollama" data-setting="ollama" />
+                            <span class="slider round"></span>
+                        </label>
+                        <span data-translate="enable-ollama-bot">🦙🤖 Enable the Ollama AI bot (<a href="https://github.com/steveseguin/social_stream/blob/main/ai.md" style="color:lightblue" target="_blank">Requires Install</a>)</span>
+                    </div>
+					<br /><br>
+                    <div class="textInputContainer" style="width: 95%;">
+                        <textarea id="botinstructions" class="textInput" style="height:80px" autocomplete="off" placeholder="Enter your custom bot instructions here. Leave blank for a friendly and helpful bot to be used." data-textsetting="ollamaprompt">
+							You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it's directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response. Respond to the following message:  .
+
+							User ${data.chatname} says: ${data.chatmessage}
+
+							Your decision and potential response:
+						</textarea>
+                        <label for="botinstructions">
+                            <span data-translate="ollamaprompt">&gt; Enter your custom bot instructions below</span>
+                        </label>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
 
             <div class="wrapper">
                 <div class="collapsible">
@@ -3921,12 +3947,15 @@ The list of names should be comma separated."
                                 <span data-translate="just-a-unique-list-of-names-seen-in-chat-no-messages">
                                     Just a unique list of names seen in chat; no messages
                                 </span>
-                                <div class="grid">
-                                    <button class="glowingButton" style="width: 140px;" data-action="savenames">
+                                <div class="grid3">
+                                    <button class="glowingButton" style="width: 138px;" data-action="savenames">
                                         <span style="font-size: 0.8em;"><span data-translate="choose-location">💾 Choose location</span></span>
                                     </button>
-                                    <button class="glowingButton" style="width: 140px;" data-action="savenamesStop">
-                                        <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving (if active)</span></span>
+                                    <button class="glowingButton" style="width: 95px;" data-action="savenamesStop">
+                                        <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving</span></span>
+                                    </button>
+									<button class="glowingButton" style="width: 85px;" data-action="savenamesClear">
+                                        <span style="font-size: 0.8em;"><span data-translate="reset-user-list">Reset list</span></span>
                                     </button>
                                 </div>
 
