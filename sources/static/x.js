@@ -480,6 +480,7 @@
 			};
 			
 			button.querySelector("a > div").innerText = "Overlay Service";
+			button.querySelector("a > div").style.height = "100%";
 			
 			
 			if (!isExtensionOn || !settings.xcapture){
@@ -501,15 +502,15 @@
 				
 				localStorage.setItem('autoGrabTweets', autoGrabTweets.toString());
 				if (!autoGrabTweets){
-					this.innerHTML = "Auto-grab Mode";
-					
+					this.querySelector("div").innerText = "Auto-grab Mode";
 					document.querySelectorAll(".btn-push-twitter").forEach(ele=>{
 						ele.style.display = "inline-block";
 					});
 					
 					
 				} else {
-					this.innerHTML = "Manual Mode";
+					
+					this.querySelector("div").innerText = "Manual Mode";
 					
 					document.querySelectorAll(".btn-push-twitter").forEach(ele=>{
 						ele.click();
@@ -595,6 +596,7 @@
 			
 			button2.id = "youaresuperfunnybutton";
 			button2.querySelector("a > div").innerHTML = "Block Promoted";
+			button2.querySelector("a > div").style.height = "100%";
 			
 			
 			if (!isExtensionOn || !settings.xcapture){
