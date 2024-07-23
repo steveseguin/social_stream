@@ -125,7 +125,13 @@
 		}
 	}
 
-	function getAllContentNodes(element) { // takes an element.
+
+	function isEmoji(char) {
+		const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
+		return emojiRegex.test(char);
+	}
+	
+	function getAllContentNodes(element, textonly=false) { // takes an element.
 		var resp = "";
 		
 		if (!element){return resp;}
@@ -138,17 +144,22 @@
 			}
 		}
 		
+		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
+				resp += getAllContentNodes(node, textonly)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
-				if (!settings.textonlymode){
+				if (!settings.textonlymode && !textonly){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
 					}
 					resp += node.outerHTML;
+				} else if (node.nodeName == "IMG"){
+					if (node.alt && isEmoji(node.alt)){
+						resp += escapeHtml(node.alt);
+					}
 				}
 			}
 		});
@@ -216,11 +227,11 @@
 					links[i].innerText = links[i].innerText.substring(0, 15) + "...";
 				  }
 			  }
-			  chatmessage = escapeHtml(chatmessage.innerText);
+			  chatmessage = getAllContentNodes(chatmessage);
 		  }
 		  
 		  if (!chatmessage.length){
-			  chatmessage =  escapeHtml(base.childNodes[1].childNodes[1].childNodes[1].innerText);
+			  chatmessage =  getAllContentNodes(base.childNodes[1].childNodes[1].childNodes[1].innerText);
 		  }
 		  try{
 			contentimg = base.querySelector("video").getAttribute("poster");
@@ -237,7 +248,7 @@
 		  if (!chatmessage){
 			  try{
 				  if (ele.parentNode.querySelectorAll("[lang]").length){
-					chatmessage =  escapeHtml(ele.parentNode.querySelector("[lang]").innerText);
+					chatmessage =  getAllContentNodes(ele.parentNode.querySelector("[lang]").innerText);
 				  }
 			  }catch(e){}
 		  } else {
