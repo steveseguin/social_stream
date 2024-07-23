@@ -61,10 +61,12 @@
 
 	function processMessage(ele){
 
-    if (ele.querySelector('[data-testid="number-of-replies"]')?.parentElement?.textContent?.includes('Sending...')) {
-      // Ignore because it is still sending the message
-      return
-    }
+		console.log(ele);
+		
+		if (ele.querySelector('[data-testid="number-of-replies"]')?.parentElement?.textContent?.includes('Sending...')) {
+		  // Ignore because it is still sending the message
+		  return
+		}
 
 		//console.log(ele);
 		var chatimg = "";
@@ -105,9 +107,9 @@
 		} catch(e){}
 		
 		//console.log(circleUser);
-		if (circleUser && circleUser.name && name == "You" && ele.querySelector("svg[class^='icon icon-host']")){
+		if (circleUser && circleUser.name && (name == "You") && ele.querySelector("svg[class^='icon icon-host']")){
 			name = circleUser.name;
-		} else if (name == "You" && ele.querySelector("svg[class^='icon icon-host']")){
+		} else if ((name == "You") && ele.querySelector("svg[class^='icon icon-host']")){
 			name = "Host";
 		}
 
@@ -126,7 +128,6 @@
 		data.type = "circle";
 
 	//	console.log(data);
-
 		pushMessage(data);
 	}
 
@@ -151,7 +152,9 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+				
+				if (!checkUrlAndRunScript() && ("focusChat" == request)){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+				
 					document.querySelector('textarea').focus();
 					sendResponse(true);
 					return;
@@ -170,14 +173,28 @@
 
 	var lastURL =  "";
 	var observer = null;
+	
+	var enabledState = false;
+	
+	
+	function checkUrlAndRunScript(e=false) {
+		if (window.location.href.includes("/live/")){
+			enabledState = true;
+		} else {
+			enabledState = false;
+		}
+		return enabledState;
+	}
+
+	window.addEventListener('popstate', checkUrlAndRunScript);
 
 
-	function onElementInserted(containerSelector) {
-		var target = document.querySelector(containerSelector);
-		if (!target){return;}
-
+	function onElementInserted(target) {
 
 		var onMutationsObserved = function(mutations) {
+			
+			if (!checkUrlAndRunScript()){return;}
+			
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
@@ -220,15 +237,16 @@
 	
 	setInterval(function(){
 		try {
-		if (document.querySelector('#message-scroll-view')){
-			if (!document.querySelector('#message-scroll-view').marked){
-				document.querySelector('#message-scroll-view').marked=true;
-				console.log("CONNECTED chat detected");
-				
-				onElementInserted('#message-scroll-view');
-				getCircleUser();
-				
-			}
+			if (!checkUrlAndRunScript()){return;}
+			if (document.querySelector('#message-scroll-view')){
+				if (!document.querySelector('#message-scroll-view').marked){
+					document.querySelector('#message-scroll-view').marked=true;
+					console.log("CONNECTED chat detected");
+					
+					onElementInserted(document.querySelector('#message-scroll-view'));
+					getCircleUser();
+					
+				}
 		}} catch(e){}
 	},2000);
 
