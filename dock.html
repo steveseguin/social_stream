@@ -2955,6 +2955,7 @@
 			var autoshow = false;
 			var autoshowdonos = false;
 			var autoshowmembers = false;
+			var autoyoutubememberchat = false;
 			
 			var autoshowqueued = false;
 			if (urlParams.has("autoshowqueued")) {
@@ -2978,6 +2979,10 @@
 
 			if (urlParams.has("autoshowmembers")) {
 				autoshowmembers = true;
+			}
+			
+			if (urlParams.has("autoyoutubememberchat")) {
+				autoyoutubememberchat = true;
 			}
 
 			var openChatAutomatically = false;
@@ -7074,7 +7079,14 @@
 
 					node.rawContents = data;
 
-					if (autoshow && !bot) {
+					if (autoyoutubememberchat && (data.type == "youtube") && data.membership){
+						if (autoTimeoutEnabled) {
+							autoShowQueue.push(node);
+							checkAutoShow();
+						} else {
+							selectedMessage(false, node);
+						}
+					} else if (autoshow && !bot) {
 						if (doNotAutoshowFiltered && node.classList.contains("hide")) {
 							// pass auto show, since filtered out
 						} else if (!(autoshowdonos || autoshowmembers) || (autoshowdonos && data.hasDonation) || (autoshowmembers && data.membership)) {
