@@ -1,9 +1,9 @@
 var clientId = 'sjjsgy1sgzxmy346tdkghbyz4gtx0k'; 
-var redirectURI = 'https://socialstream.ninja/websocket/twitch.html';
+var redirectURI = 'https://socialstream.ninja/sources/websocket/twitch.html';
 var scope = 'chat%3Aread+chat%3Aedit';
 var ws;
 var token = "";
-
+console.log("Injected");
 (function (w) {
 	w.URLSearchParams = w.URLSearchParams || function (searchString) {
 		var self = this;
