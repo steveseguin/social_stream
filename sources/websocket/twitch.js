@@ -24,7 +24,30 @@ var urlParams = new URLSearchParams(window.location.search);
 var hashParams = new URLSearchParams(window.location.hash.slice(1));
 
 const username = "SocialStreamNinja"; // Not supported at the moment
-var channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || '';
+
+var channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || '';
+
+
+function fetchUserInfo() {
+    fetch('https://api.twitch.tv/helix/users', {
+        headers: {
+            'Authorization': 'Bearer ' + sessionStorage.twitchOAuthToken,
+            'Client-Id': clientId
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.data && data.data[0]) {
+            const username = data.data[0].login;
+            if (!channel) {
+                channel = username;
+                localStorage.setItem("twitchChannel", channel);
+            }
+            connect();
+        }
+    })
+    .catch(error => console.error('Error fetching user info:', error));
+}
 
 function parseFragment(hash) {
     var hashMatch = function(expr) {
@@ -40,6 +63,11 @@ function parseFragment(hash) {
     token = hashMatch(/access_token=(\w+)/);
     if (sessionStorage.twitchOAuthState == state)
         sessionStorage.twitchOAuthToken = token;
+
+	if (sessionStorage.twitchOAuthState == state) {
+        sessionStorage.twitchOAuthToken = token;
+        fetchUserInfo(); // Fetch user info after authentication
+    }
     return;
 }
 
@@ -211,15 +239,13 @@ if (document.location.hash.match(/access_token=(\w+)/)){
 }
 
 if (sessionStorage.twitchOAuthToken || token) {
-    if (!channel && (typeof electronApi !== "undefined")){ // twitch.html#
-        channel = 'vdoninja'; // Default channel if not specified
+    if (!channel) {
+        fetchUserInfo();
+    } else {
+        localStorage.setItem("twitchChannel", channel);
+        connect();
     }
-
-    console.log("Channel: " + channel);
-
-    connect();
     document.querySelector('.socket').classList.remove("hidden");
-    
 } else {
     var url = authUrl();
     document.querySelector('#auth-link').href = url;
@@ -234,6 +260,14 @@ document.querySelector('button').onclick = function(event){
         document.querySelector('#input-text').value = "";
     }
 };
+
+// Prevent form submission on Enter key press
+document.querySelector('#input-text').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        document.querySelector('button').click();
+    }
+});
 
 function replaceEmotesWithImages2(message, emotesMap, zw = false) {
 	const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join("\\b|\\b")}\\b)(?!\\w|\\d|[!?.])`, "g");
