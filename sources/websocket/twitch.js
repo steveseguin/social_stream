@@ -26,7 +26,13 @@ var hashParams = new URLSearchParams(window.location.hash.slice(1));
 const username = "SocialStreamNinja"; // Not supported at the moment
 
 var channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || '';
+let userAlias = '';
 
+// Add this function to update the alias
+function updateAlias() {
+    userAlias = document.querySelector('#alias-input').value.trim();
+    localStorage.setItem('twitchUserAlias', userAlias);
+}
 
 function fetchUserInfo() {
     fetch('https://api.twitch.tv/helix/users', {
@@ -111,7 +117,10 @@ function connect() {
         websocket.send(`JOIN #${channel}`);
         
         var span = document.createElement("div");
-        span.innerText += "Joined the channel: " + channel;
+        span.innerText += `Joined the channel: ${channel}`;
+        if (userAlias) {
+            span.innerText += ` (as ${userAlias})`;
+        }
         document.querySelector("#textarea").appendChild(span);
         if (document.querySelector("#textarea").childNodes.length > 10){
             document.querySelector("#textarea").childNodes[0].remove();
@@ -220,15 +229,20 @@ function parseMessage(rawMessage) {
 
 
 function sendMessage(message) {
-	if (websocket.readyState === WebSocket.OPEN) {
-		websocket.send(`PRIVMSG #${channel} :${message}`);
-	} else {
-		console.error('WebSocket is not open.');
-	}
+    if (websocket.readyState === WebSocket.OPEN) {
+        websocket.send(`PRIVMSG #${channel} :${message}`);
+        
+        // Display the message locally with the alias
+        var span = document.createElement("div");
+        span.innerText = `${userAlias || username}: ${message}`;
+        document.querySelector("#textarea").appendChild(span);
+        if (document.querySelector("#textarea").childNodes.length > 10){
+            document.querySelector("#textarea").childNodes[0].remove();
+        }
+    } else {
+        console.error('WebSocket is not open.');
+    }
 }
-
-
-
 
 if (!channel){
 	var urlParams = new URLSearchParams(window.location.hash);
@@ -252,14 +266,25 @@ if (sessionStorage.twitchOAuthToken || token) {
     document.querySelector('.auth').classList.remove("hidden");
 }
 
+// Modify the button click handler
 document.querySelector('button').onclick = function(event){
     event.preventDefault(); // Prevent form submission
+    updateAlias(); // Update the alias before sending the message
     var msg = document.querySelector('#input-text').value.trim();
     if (msg){
         sendMessage(msg);
         document.querySelector('#input-text').value = "";
     }
 };
+
+// Load saved alias on page load
+window.addEventListener('load', () => {
+    const savedAlias = localStorage.getItem('twitchUserAlias');
+    if (savedAlias) {
+        document.querySelector('#alias-input').value = savedAlias;
+        userAlias = savedAlias;
+    }
+});
 
 // Prevent form submission on Enter key press
 document.querySelector('#input-text').addEventListener('keypress', function(event) {
