@@ -1662,36 +1662,21 @@ async function getSEVENTVEmotes(url = false) {
 	return seventv;
 }
 
-	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
-
-	function replaceEmotesWithImages(message, emotesMap) {
-	  let lastEmote = null;
-	  
-	  return message.replace(emoteRegex, (match, emoteMatch) => {
-		const emote = emotesMap[emoteMatch];
-		if (emote) {
-		  const escapedMatch = escapeHtml(match);
-		  const isZeroWidth = typeof emote !== "string" && emote.zw;
-		  
-		  if (!isZeroWidth) {
-			// Regular emote
-			lastEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
-			return lastEmote;
-		  } else if (lastEmote) {
-			// Zero-width emote with a preceding emote
-			const zeroWidthEmote = `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
-			const result = `<span class="emote-container">${lastEmote}${zeroWidthEmote}</span>`;
-			lastEmote = null;
-			return result;
-		  } else {
-			// Zero-width emote without a preceding emote
-			return `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
-		  }
-		}
-		lastEmote = null;
-		return match;
-	  });
+const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
+function replaceEmotesWithImages(message, emotesMap, zw = false) {
+  return message.replace(emoteRegex, (match, emoteMatch) => {
+	const emote = emotesMap[emoteMatch];
+	if (emote) {
+	  const escapedMatch = escapeHtml(match);
+	  if (!zw || typeof emote === "string") {
+		return `<img src="${emote}" "${escapedMatch}" class='zero-width-friendly'/>`;
+	  } else if (emote.url) {
+		return `<span class="zero-width-span"><img src="${emote.url}" "${escapedMatch}" class="zero-width-emote" /></span>`;
+	  }
 	}
+	return match;
+  });
+}
 
 class CheckDuplicateSources {
   constructor() {
