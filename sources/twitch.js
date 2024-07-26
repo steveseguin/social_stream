@@ -551,46 +551,22 @@
 	}
 
 	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
-
-	function replaceEmotesWithImages2(message, emotesMap, zw=false) {
-	  let result = '';
-	  let lastRegularEmote = null;
-
-	  message.replace(emoteRegex, (match, emoteMatch) => {
+	
+	function replaceEmotesWithImages2(message, emotesMap, zw = false) {
+	  return message.replace(emoteRegex, (match, emoteMatch) => {
 		const emote = emotesMap[emoteMatch];
 		if (emote) {
 		  const escapedMatch = escapeHtml(match);
-		  if (typeof emote === "string" || !emote.zw) {
-			// Regular emote
-			if (lastRegularEmote) {
-			  result += lastRegularEmote;
-			}
-			lastRegularEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-friendly"/>`;
-		  } else if (emote.zw && lastRegularEmote) {
-			// Zero-width emote with a preceding regular emote
-			const zeroWidthEmote = `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote"/>`;
-			result += `<span class="emote-container">${lastRegularEmote}${zeroWidthEmote}</span>`;
-			lastRegularEmote = null;
-		  } else {
-			// Zero-width emote without a preceding regular emote
-			result += `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote"/>`;
+		  if (!zw || typeof emote === "string") {
+			return `<img src="${emote}" alt="${escapedMatch}" class='zero-width-friendly'/>`;
+		  } else if (emote.url) {
+			return `<span class="zero-width-span"><img src="${emote.url}" alt="${escapedMatch}" class="zero-width-emote" /></span>`;
 		  }
-		} else {
-		  if (lastRegularEmote) {
-			result += lastRegularEmote;
-		  }
-		  result += match;
-		  lastRegularEmote = null;
 		}
+		return match;
 	  });
-
-	  // Add any remaining lastRegularEmote
-	  if (lastRegularEmote) {
-		result += lastRegularEmote;
-	  }
-
-	  return result;
-}
+	}
+	
 	function replaceEmotesWithImages(text) {
 		if (BTTV) {
 			if (settings.bttv) {
