@@ -177,16 +177,18 @@ chrome.runtime.onMessage.addListener(
 					}
 					return;
 				} 
-				if ("BTTV" in request){
-					BTTV = request.BTTV;
-					console.log(BTTV);
+				if ("SEVENTV" in request) {
+					SEVENTV = request.SEVENTV;
+					//console.log(SEVENTV);
 					sendResponse(true);
+					mergeEmotes();
 					return;
 				}
-				if ("SEVENTV" in request){
-					SEVENTV = request.SEVENTV;
-					console.log(SEVENTV);
+				if ("BTTV" in request) {
+					BTTV = request.BTTV;
+					//console.log(BTTV);
 					sendResponse(true);
+					mergeEmotes();
 					return;
 				}
 			}
@@ -196,6 +198,48 @@ chrome.runtime.onMessage.addListener(
 		sendResponse(false);
 	}
 );
+
+var EMOTELIST = false;
+function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
+	
+	EMOTELIST = {};
+	
+	if (BTTV) {
+		console.log(BTTV);
+		if (settings.bttv) {
+			try {
+				if (BTTV.channelEmotes) {
+					EMOTELIST = BTTV.channelEmotes;
+				}
+				if (BTTV.sharedEmotes) {
+					EMOTELIST = deepMerge(BTTV.sharedEmotes, EMOTELIST);
+				}
+				if (BTTV.globalEmotes) {
+					EMOTELIST = deepMerge(BTTV.globalEmotes, EMOTELIST);
+				}
+				// for testing.
+				EMOTELIST = deepMerge({"ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true}}, EMOTELIST);
+				
+			} catch (e) {}
+		}
+	}
+	if (SEVENTV) {
+		console.log(SEVENTV);
+		if (settings.seventv) {
+			try {
+				if (SEVENTV.channelEmotes) {
+					EMOTELIST = deepMerge(SEVENTV.channelEmotes, EMOTELIST);
+				}
+			} catch (e) {}
+			try {
+				if (SEVENTV.globalEmotes) {
+					EMOTELIST = deepMerge(SEVENTV.globalEmotes, EMOTELIST);
+				}
+			} catch (e) {}
+		}
+	}
+	console.log(EMOTELIST);
+}
 
 function parseMessage(rawMessage) {
   const parsedMessage = {
@@ -294,33 +338,61 @@ document.querySelector('#input-text').addEventListener('keypress', function(even
     }
 });
 
-
 const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
-function replaceEmotesWithImages2(message, emotesMap, zw = false) {
-  let lastRegularEmote = null;
+	
+function replaceEmotesWithImages(message) {
+  //console.log(EMOTELIST);
+  if (!EMOTELIST) {
+	return message;
+  }
   
-  return message.replace(emoteRegex, (match, emoteMatch) => {
-	const emote = emotesMap[emoteMatch];
+  let result = '';
+  let lastEmote = null;
+  let lastIndex = 0;
+  
+  message.replace(emoteRegex, (match, emoteMatch, offset) => {
+	// Add any text before this emote
+	result += message.slice(lastIndex, offset);
+	lastIndex = offset + match.length;
+
+	const emote = EMOTELIST[emoteMatch];
 	if (emote) {
 	  const escapedMatch = escapeHtml(match);
-	  if (typeof emote === "string" || !zw) {
+	  const isZeroWidth = typeof emote !== "string" && emote.zw;
+	  
+	  if (!isZeroWidth) {
 		// Regular emote
-		lastRegularEmote = `<img src="${emote}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
-		return lastRegularEmote;
-	  } else if (emote.url && lastRegularEmote) {
-		// Zero-width emote with a preceding regular emote
+		if (lastEmote) {
+		  result += lastEmote;
+		}
+		lastEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
+	  } else if (lastEmote) {
+		// Zero-width emote with a preceding emote
 		const zeroWidthEmote = `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
-		const result = `<span class="emote-container">${lastRegularEmote}${zeroWidthEmote}</span>`;
-		lastRegularEmote = null;
-		return result;
-	  } else if (emote.url) {
-		// Zero-width emote without a preceding regular emote
-		return `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
+		result += `<span class="emote-container">${lastEmote}${zeroWidthEmote}</span>`;
+		lastEmote = null;
+	  } else {
+		// Zero-width emote without a preceding emote
+		result += `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
 	  }
+	} else {
+	  if (lastEmote) {
+		result += lastEmote;
+	  }
+	  result += match;
+	  lastEmote = null;
 	}
-	lastRegularEmote = null;
-	return match;
   });
+  
+  // Add any remaining text after the last emote
+  result += message.slice(lastIndex);
+
+  // Add any remaining lastEmote
+  if (lastEmote) {
+	result += lastEmote;
+  }
+  
+  return result;
 }
 
 /* function replaceEmotesWithImages2(message, emotesMap, zw = false) {
@@ -419,16 +491,16 @@ function getTwitchAvatarImage(username) {
 
 
 function processMessage(parsedMessage){
-	console.log(parsedMessage);
+	//console.log(parsedMessage);
 	var chan = parsedMessage.params[0];
 	
 	getTwitchAvatarImage(chan);
 	
-	console.log("channel: "+chan);
+	//console.log("channel: "+chan);
 	const message = parsedMessage.trailing;
 	const user = parsedMessage.prefix.split('!')[0];
 	
-	console.log(`Message from ${user} in ${chan}: ${message}`);
+	//console.log(`Message from ${user} in ${chan}: ${message}`);
 	var span = document.createElement("div");
 	span.innerText += user+": "+message;
 	document.querySelector("#textarea").appendChild(span);
@@ -456,7 +528,7 @@ function processMessage(parsedMessage){
 	data.textonly = settings.textonlymode || false;
 	data.type = "twitch";
 	
-	console.log(data);
+	//console.log(data);
 	pushMessage(data);
 }
 

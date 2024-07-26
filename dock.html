@@ -576,7 +576,6 @@
 
 			.hl-message img,
 			.hl-message svg {
-				position: relative;
 				margin: auto 1px;
 				padding: 0;
 				display: inline-block;
@@ -611,7 +610,7 @@
 			}
 			.notcompactmode .hl-content img,
 			.notcompactmode .hl-content svg {
-				max-width: 38px;
+				max-width: 60px;
 			}
 			
 			.notcompactmode .hl-message img.chat-line__message--emote-gigantified,
@@ -675,7 +674,7 @@
 				margin: auto;
 				padding: 0;
 				object-fit: contain;
-				vertical-align: top;
+				vertical-align: bottom;
 			}
 			
 			#sceneButtons button.active {
@@ -1949,25 +1948,7 @@
 				position: absolute;
 				right: 0;
 			}
-			
-			.emote-container {
-			  position: relative;
-			  display: inline-block;
-			  vertical-align: middle;
-			}
 
-			.regular-emote {
-			  vertical-align: middle;
-			}
-
-			.zero-width-emote-centered {
-			  position: absolute;
-			  top: 50%;
-			  left: 50%;
-			  transform: translate(-50%, -50%);
-			  z-index: 1;
-			}
-			
 			.alignright .compactmode {
 				margin-left: auto;
 				margin-right: 0;
@@ -1991,6 +1972,28 @@
 			
 			#meta:empty {
 				display: none;
+			}
+			
+			.emote-container {
+			  display: inline-block;
+			  position: relative;
+			  vertical-align: top;
+			}
+
+			.emote-container .regular-emote {
+			  position: absolute;
+			  top: 50%;
+			  left: 50%;
+			  transform: translate(-50%, -50%);
+			  
+			}
+
+			.zero-width-emote-centered {
+			  display: block;
+			  width: auto;
+			  height: auto;
+			  max-width: none;
+			  max-height: none;
 			}
 			
 		</style>

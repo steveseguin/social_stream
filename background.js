@@ -1470,7 +1470,11 @@ async function getBTTVEmotes(url = false) {
 			} else {
 				log("Globalbttv recovererd from storage");
 			}
-			// bttv.globalEmotes = Globalbttv;
+			
+		}
+		
+		if (Globalbttv){
+			bttv.globalEmotes = Globalbttv;
 		}
 		bttv.url = url;
 		bttv.type = type;
@@ -1650,7 +1654,9 @@ async function getSEVENTVEmotes(url = false) {
 			} else {
 				log("Globalseventv recovererd from storage");
 			}
-			// seventv.globalEmotes = Globalseventv;
+		}
+		if (Globalseventv){
+			seventv.globalEmotes = Globalseventv;
 		}
 		seventv.url = url;
 		seventv.type = type;
@@ -1663,20 +1669,22 @@ async function getSEVENTVEmotes(url = false) {
 }
 
 const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
+
 function replaceEmotesWithImages(message, emotesMap, zw = false) {
   return message.replace(emoteRegex, (match, emoteMatch) => {
 	const emote = emotesMap[emoteMatch];
 	if (emote) {
 	  const escapedMatch = escapeHtml(match);
 	  if (!zw || typeof emote === "string") {
-		return `<img src="${emote}" "${escapedMatch}" class='zero-width-friendly'/>`;
+		return `<img src="${emote}" alt="${escapedMatch}" class='zero-width-friendly'/>`;
 	  } else if (emote.url) {
-		return `<span class="zero-width-span"><img src="${emote.url}" "${escapedMatch}" class="zero-width-emote" /></span>`;
+		return `<span class="zero-width-span"><img src="${emote.url}" alt="${escapedMatch}" class="zero-width-emote" /></span>`;
 	  }
 	}
 	return match;
   });
 }
+	
 
 class CheckDuplicateSources {
   constructor() {

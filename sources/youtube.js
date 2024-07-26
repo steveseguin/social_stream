@@ -67,44 +67,101 @@
 
 	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
 	
-	function replaceEmotesWithImages2(message, emotesMap, zw = false) {
-	  return message.replace(emoteRegex, (match, emoteMatch) => {
-		const emote = emotesMap[emoteMatch];
+	function replaceEmotesWithImages(message) {
+	  //console.log(EMOTELIST);
+	  if (!EMOTELIST) {
+		return message;
+	  }
+	  
+	  let result = '';
+	  let lastEmote = null;
+	  let lastIndex = 0;
+	  
+	  message.replace(emoteRegex, (match, emoteMatch, offset) => {
+		// Add any text before this emote
+		result += message.slice(lastIndex, offset);
+		lastIndex = offset + match.length;
+
+		const emote = EMOTELIST[emoteMatch];
 		if (emote) {
 		  const escapedMatch = escapeHtml(match);
-		  if (!zw || typeof emote === "string") {
-			return `<img src="${emote}" alt="${escapedMatch}" class='zero-width-friendly'/>`;
-		  } else if (emote.url) {
-			return `<span class="zero-width-span"><img src="${emote.url}" alt="${escapedMatch}" class="zero-width-emote" /></span>`;
+		  const isZeroWidth = typeof emote !== "string" && emote.zw;
+		  
+		  if (!isZeroWidth) {
+			// Regular emote
+			if (lastEmote) {
+			  result += lastEmote;
+			}
+			lastEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
+		  } else if (lastEmote) {
+			// Zero-width emote with a preceding emote
+			const zeroWidthEmote = `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
+			result += `<span class="emote-container">${lastEmote}${zeroWidthEmote}</span>`;
+			lastEmote = null;
+		  } else {
+			// Zero-width emote without a preceding emote
+			result += `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
 		  }
+		} else {
+		  if (lastEmote) {
+			result += lastEmote;
+		  }
+		  result += match;
+		  lastEmote = null;
 		}
-		return match;
 	  });
+	  
+	  // Add any remaining text after the last emote
+	  result += message.slice(lastIndex);
+
+	  // Add any remaining lastEmote
+	  if (lastEmote) {
+		result += lastEmote;
+	  }
+	  
+	  return result;
 	}
 
-	function replaceEmotesWithImages(text) {
+	var EMOTELIST = false;
+	function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
+		
+		EMOTELIST = {};
+		
 		if (BTTV) {
+			//console.log(BTTV);
 			if (settings.bttv) {
 				try {
 					if (BTTV.channelEmotes) {
-						text = replaceEmotesWithImages2(text, BTTV.channelEmotes, false);
+						EMOTELIST = BTTV.channelEmotes;
 					}
 					if (BTTV.sharedEmotes) {
-						text = replaceEmotesWithImages2(text, BTTV.sharedEmotes, false);
+						EMOTELIST = deepMerge(BTTV.sharedEmotes, EMOTELIST);
 					}
+					if (BTTV.globalEmotes) {
+						EMOTELIST = deepMerge(BTTV.globalEmotes, EMOTELIST);
+					}
+					// for testing.
+					EMOTELIST = deepMerge({"ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/1x.webp","zw":true}}, EMOTELIST);
+					
 				} catch (e) {}
 			}
 		}
 		if (SEVENTV) {
+			//console.log(SEVENTV);
 			if (settings.seventv) {
 				try {
 					if (SEVENTV.channelEmotes) {
-						text = replaceEmotesWithImages2(text, SEVENTV.channelEmotes, true);
+						EMOTELIST = deepMerge(SEVENTV.channelEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+				try {
+					if (SEVENTV.globalEmotes) {
+						EMOTELIST = deepMerge(SEVENTV.globalEmotes, EMOTELIST);
 					}
 				} catch (e) {}
 			}
 		}
-		return text;
+		//console.log(EMOTELIST);
 	}
 
 	function extractYouTubeRedirectUrl(youtubeUrl) {
@@ -537,23 +594,25 @@
 					}
 					if (settings.delayyoutube){
 						captureDelay = 3200;
-						console.log(captureDelay);
+						//console.log(captureDelay);
 					} else {
 						captureDelay = 200;
-						console.log(captureDelay);
+						//console.log(captureDelay);
 					}
-					return;
-				}
-				if ("BTTV" in request) {
-					BTTV = request.BTTV;
-					console.log(BTTV);
-					sendResponse(true);
 					return;
 				}
 				if ("SEVENTV" in request) {
 					SEVENTV = request.SEVENTV;
-					console.log(SEVENTV);
+					//console.log(SEVENTV);
 					sendResponse(true);
+					mergeEmotes();
+					return;
+				}
+				if ("BTTV" in request) {
+					BTTV = request.BTTV;
+					//console.log(BTTV);
+					sendResponse(true);
+					mergeEmotes();
 					return;
 				}
 
