@@ -1662,21 +1662,36 @@ async function getSEVENTVEmotes(url = false) {
 	return seventv;
 }
 
-const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
-function replaceEmotesWithImages(message, emotesMap, zw = false) {
-  return message.replace(emoteRegex, (match, emoteMatch) => {
-	const emote = emotesMap[emoteMatch];
-	if (emote) {
-	  const escapedMatch = escapeHtml(match);
-	  if (!zw || typeof emote === "string") {
-		return `<img src="${emote}" "${escapedMatch}" class='zero-width-friendly'/>`;
-	  } else if (emote.url) {
-		return `<span class="zero-width-span"><img src="${emote.url}" "${escapedMatch}" class="zero-width-emote" /></span>`;
-	  }
+	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
+
+	function replaceEmotesWithImages(message, emotesMap) {
+	  let lastEmote = null;
+	  
+	  return message.replace(emoteRegex, (match, emoteMatch) => {
+		const emote = emotesMap[emoteMatch];
+		if (emote) {
+		  const escapedMatch = escapeHtml(match);
+		  const isZeroWidth = typeof emote !== "string" && emote.zw;
+		  
+		  if (!isZeroWidth) {
+			// Regular emote
+			lastEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
+			return lastEmote;
+		  } else if (lastEmote) {
+			// Zero-width emote with a preceding emote
+			const zeroWidthEmote = `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
+			const result = `<span class="emote-container">${lastEmote}${zeroWidthEmote}</span>`;
+			lastEmote = null;
+			return result;
+		  } else {
+			// Zero-width emote without a preceding emote
+			return `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
+		  }
+		}
+		lastEmote = null;
+		return match;
+	  });
 	}
-	return match;
-  });
-}
 
 class CheckDuplicateSources {
   constructor() {
@@ -1725,32 +1740,40 @@ function extractVideoId(url) {
 
 let activeChatSources = new Map();
 
-chrome.tabs.onRemoved.addListener((tabId) => {
-  for (let key of activeChatSources.keys()) {
-    if (key.startsWith(`${tabId}-`)) {
-      activeChatSources.delete(key);
-    }
-  }
-});
-
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url) {
-    const videoId = extractVideoId(tab.url);
-    if (videoId && (
-      tab.url.includes('https://studio.youtube.com/live_chat?') ||
-      (tab.url.includes('https://studio.youtube.com/video/') && tab.url.includes('/livestreaming'))
-    )) {
-      const isPopout = tab.url.includes('live_chat?is_popout=1');
-      activeChatSources.set(`${tabId}-0`, { url: tab.url, videoId: videoId, isPopout: isPopout });
-    } else {
-      for (let key of activeChatSources.keys()) {
-        if (key.startsWith(`${tabId}-`)) {
-          activeChatSources.delete(key);
-        }
-      }
-    }
-  }
-});
+try {
+	if (chrome.tabs.onRemoved){
+		chrome.tabs.onRemoved.addListener((tabId) => {
+		  for (let key of activeChatSources.keys()) {
+			if (key.startsWith(`${tabId}-`)) {
+			  activeChatSources.delete(key);
+			}
+		  }
+		});
+	}
+	if (chrome.tabs.onUpdated){
+		chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+		  if (changeInfo.status === 'complete' && tab.url) {
+			const videoId = extractVideoId(tab.url);
+			if (videoId && (
+			  tab.url.includes('https://studio.youtube.com/live_chat?') ||
+			   tab.url.includes('https://www.youtube.com/live_chat?') ||
+			  (tab.url.includes('https://studio.youtube.com/video/') && tab.url.includes('/livestreaming'))
+			)) {
+			  const isPopout = tab.url.includes('live_chat?is_popout=1');
+			  activeChatSources.set(`${tabId}-0`, { url: tab.url, videoId: videoId, isPopout: isPopout });
+			} else {
+			  for (let key of activeChatSources.keys()) {
+				if (key.startsWith(`${tabId}-`)) {
+				  activeChatSources.delete(key);
+				}
+			  }
+			}
+		  }
+		});
+	}
+} catch(e){
+	console.warn(e);
+}
 
 function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
   const videoId = msg.videoid || extractVideoId(tabUrl);
@@ -4865,12 +4888,14 @@ function generalFakeChat(tabid, message, middle = true, keypress = true, backspa
 function createTab(url) {
 	return new Promise(resolve => {
 		chrome.windows.create({ focused: false, height: 200, width: 400, left: 0, top: 0, type: "popup", url: url }, async tab => {
-			chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
-				if (info.status === "complete" && tabId === tab.id) {
-					chrome.tabs.onUpdated.removeListener(listener);
-					resolve(tab);
-				}
-			});
+			if (chrome.tabs.onUpdated){
+				chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+					if (info.status === "complete" && tabId === tab.id) {
+						chrome.tabs.onUpdated.removeListener(listener);
+						resolve(tab);
+					}
+				});
+			}
 		});
 	});
 }

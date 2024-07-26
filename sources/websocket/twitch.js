@@ -294,7 +294,36 @@ document.querySelector('#input-text').addEventListener('keypress', function(even
     }
 });
 
+
+const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
 function replaceEmotesWithImages2(message, emotesMap, zw = false) {
+  let lastRegularEmote = null;
+  
+  return message.replace(emoteRegex, (match, emoteMatch) => {
+	const emote = emotesMap[emoteMatch];
+	if (emote) {
+	  const escapedMatch = escapeHtml(match);
+	  if (typeof emote === "string" || !zw) {
+		// Regular emote
+		lastRegularEmote = `<img src="${emote}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
+		return lastRegularEmote;
+	  } else if (emote.url && lastRegularEmote) {
+		// Zero-width emote with a preceding regular emote
+		const zeroWidthEmote = `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
+		const result = `<span class="emote-container">${lastRegularEmote}${zeroWidthEmote}</span>`;
+		lastRegularEmote = null;
+		return result;
+	  } else if (emote.url) {
+		// Zero-width emote without a preceding regular emote
+		return `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
+	  }
+	}
+	lastRegularEmote = null;
+	return match;
+  });
+}
+
+/* function replaceEmotesWithImages2(message, emotesMap, zw = false) {
 	const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join("\\b|\\b")}\\b)(?!\\w|\\d|[!?.])`, "g");
 	return message.replace(emotePattern, match => {
 		const emote = emotesMap[match];
@@ -304,7 +333,7 @@ function replaceEmotesWithImages2(message, emotesMap, zw = false) {
 			return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" />`;
 		}
 	});
-}
+} */
 
 function replaceEmotesWithImages(text) {
 	if (BTTV) {
