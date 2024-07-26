@@ -1714,6 +1714,74 @@ class CheckDuplicateSources {
   }
 }
 
+
+
+
+function extractVideoId(url) {
+  if (!url) return null;
+  const match = url.match(/[?&]v=([^&]+)/);
+  return match ? match[1] : null;
+}
+
+let activeChatSources = new Map();
+
+chrome.tabs.onRemoved.addListener((tabId) => {
+  for (let key of activeChatSources.keys()) {
+    if (key.startsWith(`${tabId}-`)) {
+      activeChatSources.delete(key);
+    }
+  }
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url) {
+    const videoId = extractVideoId(tab.url);
+    if (videoId && (
+      tab.url.includes('https://studio.youtube.com/live_chat?') ||
+      (tab.url.includes('https://studio.youtube.com/video/') && tab.url.includes('/livestreaming'))
+    )) {
+      const isPopout = tab.url.includes('live_chat?is_popout=1');
+      activeChatSources.set(`${tabId}-0`, { url: tab.url, videoId: videoId, isPopout: isPopout });
+    } else {
+      for (let key of activeChatSources.keys()) {
+        if (key.startsWith(`${tabId}-`)) {
+          activeChatSources.delete(key);
+        }
+      }
+    }
+  }
+});
+
+function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
+  const videoId = msg.videoid || extractVideoId(tabUrl);
+  if (!videoId) return true;
+
+  const sourceId = `${tabId}-${frameId}`;
+  
+  const isPopout = tabUrl.includes('live_chat?is_popout=1');
+  
+  activeChatSources.set(sourceId, { 
+    url: tabUrl, 
+    videoId: videoId, 
+    isPopout: isPopout
+  });
+
+  const sourcesForThisVideo = Array.from(activeChatSources.entries())
+    .filter(([, data]) => data.videoId === videoId);
+
+  if (sourcesForThisVideo.length === 1) {
+    return true; 
+  }
+
+  const hasPopout = sourcesForThisVideo.some(([, data]) => data.isPopout);
+
+  if (hasPopout) {
+    return isPopout; 
+  }
+
+  return sourceId === sourcesForThisVideo[0][0];
+}
+
 const checkDuplicateSources = new CheckDuplicateSources();
 
 chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
@@ -2103,15 +2171,26 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 							return;
 						}
 					}
+					try {
+						//console.log("Sender:", sender);
+						//console.log("Message:", request.message);
+						const shouldAllowMessage = shouldAllowYouTubeMessage(sender.tab.id, sender.tab.url, request.message, sender.frameId);
+						//console.log("Should allow message:", shouldAllowMessage);
+						if (!shouldAllowMessage) {
+						 // console.log("Blocking message from:", sender.tab.url, "Frame ID:", sender.frameId);
+						  return;
+						}
+					  } catch(e) {
+						//console.warn("Error in shouldAllowYouTubeMessage:", e);
+					  }
+					
 					if (sender.tab.url) {
 						var brandURL = getYoutubeAvatarImage(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
 						if (brandURL) {
 							request.message.sourceImg = brandURL;
 						}
 					}
-				} // else {
-				//	getBTTVEmotes();
-				//}
+				} 
 
 				if (request.message.type == "facebook") {
 					// since Facebook dupes are a common issue

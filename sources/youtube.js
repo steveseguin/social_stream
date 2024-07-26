@@ -22,6 +22,14 @@
 	}
 
 	//var channelName = "";
+	var videoId = false;
+	try {
+		const parentUrl = window.top.location.href;
+		const parentStudioMatch = parentUrl.match(/\/video\/([^\/]+)/);
+		if (parentStudioMatch) {
+			videoId = parentStudioMatch[1];
+		}
+	} catch(e){}
 
 	function getTranslation(key, value = false) {
 		if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
@@ -456,6 +464,9 @@
 		data.hasDonation = hasDonation;
 		data.membership = hasMembership;
 		data.subtitle = subtitle;
+		if (videoId){
+			data.videoid = videoId;
+		}
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube";
 		
