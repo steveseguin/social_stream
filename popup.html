@@ -101,10 +101,18 @@
 
 #searchIcon {
     position: fixed;
-    top: 50px;
+    top: 54px;
     right: 0px;
     z-index: 100;
     cursor: pointer;
+}
+#activeIcon {
+position: absolute;
+    top: 54px;
+    right: 17px;
+    cursor: pointer;
+    display: block;
+    height: 0;
 }
 
 /* example of how to remotely load a font */
@@ -298,6 +306,24 @@ p a {
     gap: 1rem;
     font-weight: 200;
     margin-bottom: 0;
+}
+
+.wrapper:not(:empty) {
+  display: block; /* or whatever display value you want */
+}
+
+.wrapper:empty {
+  display: none;
+}
+
+/* Hide children with display: none */
+.wrapper > *[style*="display: none"] {
+  display: none !important;
+}
+
+/* If all direct children are hidden, hide the wrapper */
+.wrapper:not(:empty):not(:has(*:not([style*="display: none"]))) {
+  display: none;
 }
 
 .pressed {
@@ -798,7 +824,7 @@ input:checked + .slider:before {
     </head>
 
     <body>
-        <button id="disableButton">
+        <button class="showalways" id="disableButton">
             <span id="disableButtonText" data-translate="toggle-on-off">
                 Toggle On/Off
             </span>
@@ -807,12 +833,12 @@ input:checked + .slider:before {
                 <span class="slider round"></span>
             </label>
         </button>
-        <div style="display: flex; width: 100%; padding: 0; margin: 1px 0 0 0; border: 0;">
-            <button class="glowingButton" style="margin: 0 0 0 1px; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; position: sticky; top: 35px; z-index: 10; padding: 0;" data-action="fakemsg">
+        <div  style="display: flex; width: 100%; padding: 0; margin: 1px 0 0 0; border: 0;">
+            <button class="glowingButton showalways" style="margin: 0 0 0 1px; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; position: sticky; top: 35px; z-index: 10; padding: 0;" data-action="fakemsg">
                 <span data-translate="trigger-fake-message">Trigger a fake test message</span>
             </button>
             <button
-                class="glowingButton"
+                class="glowingButton showalways"
                 style="margin: 0 1px 0 1px; width: unset; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; position: sticky; top: 35px; z-index: 10; padding: 0; max-width: 100px;"
                 data-action="cleardock"
                 title="Clears messages in the dock, excluding pinned messages. Hold CTRL while clicking to clear pinned messages as well."
@@ -823,7 +849,7 @@ input:checked + .slider:before {
         <div id="newVersion"></div>
         <input type="text" id="searchInput" placeholder="Search options by keyword..." />
         <div id="searchIcon" title="Search options">🔍</div>
-
+		<div id="activeIcon" title="Show enabled options">🔰</div>
         <div class="container">
             <div class="link" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock.">
                 <h2 class="streaming_chat_title">

@@ -387,6 +387,71 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	});
 	
+	var activeToggle = false;
+	document.getElementById('activeIcon').addEventListener('click', function() {
+		activeToggle = !activeToggle;
+		if (activeToggle) {
+			// Open all collapsible sections
+			document.querySelectorAll('input.collapsible-input').forEach(ele => {
+				ele.checked = true;
+			});
+			
+			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
+				item.style.display = 'none';
+			});
+
+			document.querySelectorAll('.wrapper').forEach(w => {
+				var menuItems = w.querySelectorAll('.options_group > div');
+				var matches = 0;
+				menuItems.forEach(function(item) {
+					var checkbox = item.querySelector('input[type="checkbox"]');
+					var textInput = item.querySelector('input[type="text"], input[type="password"], input[type="number"]');
+					
+					var isActive = false;
+
+					if (checkbox && checkbox.checked) {
+						isActive = true;
+					} else if (textInput) {
+						var associatedToggle = item.querySelector('input[type="checkbox"]');
+						if (associatedToggle && associatedToggle.checked && textInput.value.trim() !== '') {
+							isActive = true;
+						} else if (!associatedToggle && textInput.value.trim() !== '') {
+							isActive = true;
+						}
+					}
+
+					if (isActive) {
+						matches += 1;
+						item.style.display = '';
+					} else {
+						item.style.display = 'none';
+					}
+				});
+				
+				if (!matches) {
+					w.style.display = "none";
+				} else {
+					w.style.display = "";
+				}
+			});
+		} else {
+			
+			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
+				item.style.display = '';
+			});
+			// Reset to original state
+			document.querySelectorAll('input.collapsible-input').forEach(ele => {
+				ele.checked = false;
+			});
+			document.querySelectorAll('.wrapper').forEach(ele => {
+				ele.style.display = "";
+			});
+			document.querySelectorAll('.options_group > div').forEach(ele => {
+				ele.style.display = "";
+			});
+		}
+	});
+	
 	console.log("pop up asking main for settings");
 	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
 		console.log("getSettings response",response);
