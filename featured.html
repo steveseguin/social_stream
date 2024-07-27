@@ -618,26 +618,25 @@
 				right: -70px;
 				left: unset;
 			}
+			
 			.emote-container {
 			  display: inline-block;
 			  position: relative;
-			  vertical-align: top;
+			  vertical-align: middle;
 			}
 
-			.emote-container .regular-emote {
+			.emote-container .regular-emote,
+			.emote-container .zero-width-emote-centered {
+			  display: block;
+			}
+
+			.emote-container .zero-width-emote-centered {
 			  position: absolute;
 			  top: 50%;
 			  left: 50%;
 			  transform: translate(-50%, -50%);
-			  
-			}
-
-			.zero-width-emote-centered {
-			  display: block;
-			  width: auto;
-			  height: auto;
-			  max-width: none;
-			  max-height: none;
+			  max-width: 100%; /* Ensure it doesn't overflow the container */
+			  max-height: 100%;
 			}
 		</style>
 	</head>

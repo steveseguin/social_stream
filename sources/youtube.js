@@ -68,7 +68,7 @@
 	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
 	
 	function replaceEmotesWithImages(message) {
-	  //console.log(EMOTELIST);
+	  console.log(EMOTELIST);
 	  if (!EMOTELIST) {
 		return message;
 	  }
@@ -93,9 +93,11 @@
 			  result += lastEmote;
 			}
 			lastEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
+
 		  } else if (lastEmote) {
 			// Zero-width emote with a preceding emote
 			const zeroWidthEmote = `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
+
 			result += `<span class="emote-container">${lastEmote}${zeroWidthEmote}</span>`;
 			lastEmote = null;
 		  } else {
@@ -141,7 +143,7 @@
 						EMOTELIST = deepMerge(BTTV.globalEmotes, EMOTELIST);
 					}
 					// for testing.
-					EMOTELIST = deepMerge({"ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/1x.webp","zw":true}}, EMOTELIST);
+					// EMOTELIST = deepMerge({"ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/1x.webp","zw":true}}, EMOTELIST);
 					
 				} catch (e) {}
 			}

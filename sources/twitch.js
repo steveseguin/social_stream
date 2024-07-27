@@ -578,9 +578,11 @@
 			  result += lastEmote;
 			}
 			lastEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
+
 		  } else if (lastEmote) {
 			// Zero-width emote with a preceding emote
 			const zeroWidthEmote = `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
+
 			result += `<span class="emote-container">${lastEmote}${zeroWidthEmote}</span>`;
 			lastEmote = null;
 		  } else {
@@ -724,9 +726,6 @@
 					if (BTTV.globalEmotes) {
 						EMOTELIST = deepMerge(BTTV.globalEmotes, EMOTELIST);
 					}
-					// for testing.
-					EMOTELIST = deepMerge({"ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true}}, EMOTELIST);
-					
 				} catch (e) {}
 			}
 		}
@@ -745,7 +744,14 @@
 				} catch (e) {}
 			}
 		}
-		//console.log(EMOTELIST);
+		
+		// for testing.
+/* 		EMOTELIST = deepMerge({
+			"ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true},
+			"oEDM": {url:"https://cdn.7tv.app/emote/62127910041f77b2480365f4/2x.webp","zw":true},
+			"widepeepoHappy": "https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp"
+		}, EMOTELIST);
+		console.log(EMOTELIST); */
 	}
 
 	function processEvent(ele) {
