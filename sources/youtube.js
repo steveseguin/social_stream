@@ -68,20 +68,19 @@
 	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
 	
 	function replaceEmotesWithImages(message) {
-	  console.log(EMOTELIST);
 	  if (!EMOTELIST) {
 		return message;
 	  }
 	  
 	  let result = '';
-	  let lastEmote = null;
 	  let lastIndex = 0;
+	  let pendingRegularEmote = null;
 	  
 	  message.replace(emoteRegex, (match, emoteMatch, offset) => {
 		// Add any text before this emote
 		result += message.slice(lastIndex, offset);
 		lastIndex = offset + match.length;
-
+		
 		const emote = EMOTELIST[emoteMatch];
 		if (emote) {
 		  const escapedMatch = escapeHtml(match);
@@ -89,36 +88,37 @@
 		  
 		  if (!isZeroWidth) {
 			// Regular emote
-			if (lastEmote) {
-			  result += lastEmote;
+			if (pendingRegularEmote) {
+			  // If there's a pending regular emote, add it to the result
+			  result += pendingRegularEmote;
 			}
-			lastEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
-
-		  } else if (lastEmote) {
-			// Zero-width emote with a preceding emote
-			const zeroWidthEmote = `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
-
-			result += `<span class="emote-container">${lastEmote}${zeroWidthEmote}</span>`;
-			lastEmote = null;
+			pendingRegularEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
 		  } else {
-			// Zero-width emote without a preceding emote
-			result += `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
+			// Zero-width emote
+			if (pendingRegularEmote) {
+			  // If there's a pending regular emote, create a container with both
+			  result += `<span class="emote-container">${pendingRegularEmote}<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/></span>`;
+			  pendingRegularEmote = null;
+			} else {
+			  // Zero-width emote without a preceding emote
+			  result += `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
+			}
 		  }
 		} else {
-		  if (lastEmote) {
-			result += lastEmote;
+		  if (pendingRegularEmote) {
+			result += pendingRegularEmote;
+			pendingRegularEmote = null;
 		  }
 		  result += match;
-		  lastEmote = null;
 		}
 	  });
 	  
 	  // Add any remaining text after the last emote
 	  result += message.slice(lastIndex);
-
-	  // Add any remaining lastEmote
-	  if (lastEmote) {
-		result += lastEmote;
+	  
+	  // Add any pending regular emote
+	  if (pendingRegularEmote) {
+		result += pendingRegularEmote;
 	  }
 	  
 	  return result;
