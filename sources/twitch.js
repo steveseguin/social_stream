@@ -746,12 +746,12 @@
 		}
 		
 		// for testing.
- 		EMOTELIST = deepMerge({
-			"ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true},
-			"oEDM": {url:"https://cdn.7tv.app/emote/62127910041f77b2480365f4/2x.webp","zw":true},
-			"widepeepoHappy": "https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp"
-		}, EMOTELIST);
-		console.log(EMOTELIST);
+ 		// EMOTELIST = deepMerge({
+			// "ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true},
+			// "oEDM": {url:"https://cdn.7tv.app/emote/62127910041f77b2480365f4/2x.webp","zw":true},
+			// "widepeepoHappy": "https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp"
+		// }, EMOTELIST);
+		//console.log(EMOTELIST);
 	}
 
 	function processEvent(ele) {
