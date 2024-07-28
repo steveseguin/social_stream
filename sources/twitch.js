@@ -553,20 +553,19 @@
 	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
 	
 	function replaceEmotesWithImages(message) {
-	  console.log(EMOTELIST);
 	  if (!EMOTELIST) {
 		return message;
 	  }
 	  
 	  let result = '';
-	  let lastEmote = null;
 	  let lastIndex = 0;
+	  let pendingRegularEmote = null;
 	  
 	  message.replace(emoteRegex, (match, emoteMatch, offset) => {
 		// Add any text before this emote
 		result += message.slice(lastIndex, offset);
 		lastIndex = offset + match.length;
-
+		
 		const emote = EMOTELIST[emoteMatch];
 		if (emote) {
 		  const escapedMatch = escapeHtml(match);
@@ -574,41 +573,42 @@
 		  
 		  if (!isZeroWidth) {
 			// Regular emote
-			if (lastEmote) {
-			  result += lastEmote;
+			if (pendingRegularEmote) {
+			  // If there's a pending regular emote, add it to the result
+			  result += pendingRegularEmote;
 			}
-			lastEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
-
-		  } else if (lastEmote) {
-			// Zero-width emote with a preceding emote
-			const zeroWidthEmote = `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
-
-			result += `<span class="emote-container">${lastEmote}${zeroWidthEmote}</span>`;
-			lastEmote = null;
+			pendingRegularEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
 		  } else {
-			// Zero-width emote without a preceding emote
-			result += `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
+			// Zero-width emote
+			if (pendingRegularEmote) {
+			  // If there's a pending regular emote, create a container with both
+			  result += `<span class="emote-container">${pendingRegularEmote}<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/></span>`;
+			  pendingRegularEmote = null;
+			} else {
+			  // Zero-width emote without a preceding emote
+			  result += `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
+			}
 		  }
 		} else {
-		  if (lastEmote) {
-			result += lastEmote;
+		  if (pendingRegularEmote) {
+			result += pendingRegularEmote;
+			pendingRegularEmote = null;
 		  }
 		  result += match;
-		  lastEmote = null;
 		}
 	  });
 	  
 	  // Add any remaining text after the last emote
 	  result += message.slice(lastIndex);
-
-	  // Add any remaining lastEmote
-	  if (lastEmote) {
-		result += lastEmote;
+	  
+	  // Add any pending regular emote
+	  if (pendingRegularEmote) {
+		result += pendingRegularEmote;
 	  }
 	  
 	  return result;
 	}
-
+	
 	var settings = {};
 	var BTTV = false;
 	var SEVENTV = false;
@@ -746,12 +746,12 @@
 		}
 		
 		// for testing.
-/* 		EMOTELIST = deepMerge({
+ 		EMOTELIST = deepMerge({
 			"ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true},
 			"oEDM": {url:"https://cdn.7tv.app/emote/62127910041f77b2480365f4/2x.webp","zw":true},
 			"widepeepoHappy": "https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp"
 		}, EMOTELIST);
-		console.log(EMOTELIST); */
+		console.log(EMOTELIST);
 	}
 
 	function processEvent(ele) {
