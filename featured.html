@@ -996,6 +996,21 @@
 			if (urlParams.has("hidetwitch")) {
 				hideTwitch = true;
 			}
+			
+			var onlyFrom = false;
+			if (urlParams.get("onlyfrom")) {
+				onlyFrom = urlParams.get("onlyfrom").toLowerCase().trim();
+			} else if (urlParams.get("fromonly")) {
+				onlyFrom = urlParams.get("fromonly").toLowerCase().trim(); // for the dylslexic users
+			}
+
+			var hideFrom = false;
+			if (urlParams.get("hidefrom") || urlParams.get("exclude")) {
+				hideFrom = [];
+				(urlParams.get("hidefrom") || urlParams.get("exclude")).split(",").forEach(x => {
+					hideFrom.push(x.trim().toLowerCase());
+				});
+			}
 
 			var beepwords = false;
 			if (urlParams.has("beepwords")) {
@@ -1871,6 +1886,13 @@
 					}
 					if (onlyTwitch && data.contents.type !== "twitch") {
 						// this is not a twitch message, so we're hiding them
+						return;
+					}
+					
+					if (onlyFrom && data.contents.type !== onlyFrom) {
+						return;
+					}
+					if (hideFrom && hideFrom.includes(data.contents.type)) {
 						return;
 					}
 					
