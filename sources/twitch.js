@@ -118,11 +118,6 @@
 		return clonedSvg;
 	}
 	
-	function isEmoji(char) {
-		const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
-		return emojiRegex.test(char);
-	}
-	
 	function replaceEmotesWithImages(text) {
 		if (!EMOTELIST) {
 			return text;
@@ -145,14 +140,28 @@
 		let pendingRegularEmote = null;
 
 		function processNode(node) {
-			if (node.nodeType === 3 && node.textContent.trim().length > 0) {
+			if (node.nodeType === 3 && node.textContent.length > 0) {
 				// Text node
-				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent.trim())); 
+				if (settings.textonlymode){
+					result += node.textContent;
+					return;
+				}
+				if (!EMOTELIST){
+					result += escapeHtml(node.textContent);
+					return;
+				}
+				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent)); 
 				const tempDiv = document.createElement('div');
 				tempDiv.innerHTML = processedText;
 				
 				Array.from(tempDiv.childNodes).forEach(child => {
 					if (child.nodeType === 3) {
+						
+						if (pendingRegularEmote && child.textContent.trim()) {
+							result += pendingRegularEmote;
+							pendingRegularEmote = null;
+						}
+						
 						result += child.textContent;
 					} else if (child.nodeName === 'IMG') {
 						processEmote(child);
@@ -163,12 +172,15 @@
 				if (node.nodeName === "IMG") {
 					processEmote(node);
 				} else if (node.nodeName.toLowerCase() === "svg" && node.classList.contains("seventv-chat-emote")) {
+					if (settings.textonlymode){
+						return;
+					}
 					const resolvedSvg = cloneSvgWithResolvedUse(node);
 					resolvedSvg.style = "";
 					result += resolvedSvg.outerHTML;
 				} else if (node.childNodes.length) {
 					Array.from(node.childNodes).forEach(processNode);
-				} else {
+				} else if (!settings.textonlymode){
 					result += node.outerHTML;
 				}
 			}
@@ -176,12 +188,11 @@
 
 		function processEmote(emoteNode) {
 			if (settings.textonlymode){
-				if (emoteNode.alt && isEmoji(emoteNode.alt)){
+				if (emoteNode.alt){
 					result += escapeHtml(emoteNode.alt);
 				}
 				return;
 			}
-			
 			const isZeroWidth = emoteNode.classList.contains("zero-width-emote") || 
 								emoteNode.classList.contains("zero-width-emote-centered");
 								
@@ -691,11 +702,11 @@
 		}
 		
 		// for testing.
- 		EMOTELIST = deepMerge({
-			 "ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true},
-			 "oEDM": {url:"https://cdn.7tv.app/emote/62127910041f77b2480365f4/2x.webp","zw":true},
-			 "widepeepoHappy": "https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp"
-		 }, EMOTELIST);
+ 		//EMOTELIST = deepMerge({
+		//	 "ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true},
+		//	 "oEDM": {url:"https://cdn.7tv.app/emote/62127910041f77b2480365f4/2x.webp","zw":true},
+		//	 "widepeepoHappy": "https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp"
+		// }, EMOTELIST);
 		//console.log(EMOTELIST);
 	}
 

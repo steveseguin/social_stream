@@ -105,40 +105,68 @@
 		return emojiRegex.test(char);
 	}
 
+	function replaceEmotesWithImages(text) {
+		if (!EMOTELIST) {
+			return text;
+		}
+		
+		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+			const emote = EMOTELIST[emoteMatch];
+			if (emote) {
+				const escapedMatch = escapeHtml(emoteMatch);
+				const isZeroWidth = typeof emote !== "string" && emote.zw;
+				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
+			}
+			return match;
+		});
+	}
+
 	function getAllContentNodes(element) {
 		let result = '';
 		let pendingRegularEmote = null;
 
 		function processNode(node) {
-			if (node.nodeType === 3 && node.textContent.trim().length > 0) {
+			if (node.nodeType === 3 && node.textContent.length > 0) {
 				// Text node
-				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent.trim()));
+				if (settings.textonlymode){
+					result += node.textContent;
+					return;
+				}
+				if (!EMOTELIST){
+					result += escapeHtml(node.textContent);
+					return;
+				}
+				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent)); 
 				const tempDiv = document.createElement('div');
 				tempDiv.innerHTML = processedText;
 				
 				Array.from(tempDiv.childNodes).forEach(child => {
 					if (child.nodeType === 3) {
+						
+						if (pendingRegularEmote && child.textContent.trim()) {
+							result += pendingRegularEmote;
+							pendingRegularEmote = null;
+						}
+						
 						result += child.textContent;
 					} else if (child.nodeName === 'IMG') {
 						processEmote(child);
 					}
 				});
-			} else if (node.nodeType === 1) { 
+			} else if (node.nodeType === 1) {
 				// Element node
 				if (node.nodeName === "IMG") {
-					processEmote(node); 
+					processEmote(node);
 				} else if (node.nodeName.toLowerCase() === "svg" && node.classList.contains("seventv-chat-emote")) {
+					if (settings.textonlymode){
+						return;
+					}
 					const resolvedSvg = cloneSvgWithResolvedUse(node);
 					resolvedSvg.style = "";
 					result += resolvedSvg.outerHTML;
 				} else if (node.childNodes.length) {
-					
-					if (!settings.textonlymode && node.nodeName === "A" && node.href && node.childNodes.length === 1) {
-						result += extractYouTubeRedirectUrl(node.href);
-						return;
-					}
 					Array.from(node.childNodes).forEach(processNode);
-				} else {
+				} else if (!settings.textonlymode){
 					result += node.outerHTML;
 				}
 			}
@@ -233,13 +261,8 @@
 			return youtubeUrl;
 		}
 	}
-	
-	function isEmoji(char) {
-		const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
-		return emojiRegex.test(char);
-	}
 
-	function getAllContentNodesOLD(element) {
+	/* function getAllContentNodesOLD(element) {
 		var resp = "";
 		element.childNodes.forEach(node => {
 			if (node.childNodes.length) {
@@ -266,7 +289,7 @@
 			}
 		});
 		return resp;
-	}
+	} */
 
 	function findSingleInteger(input) {
 		// Ensure the input is a string
