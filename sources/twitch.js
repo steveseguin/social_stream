@@ -122,87 +122,91 @@
 		const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
 		return emojiRegex.test(char);
 	}
+	
+	function replaceEmotesWithImages(text) {
+		if (!EMOTELIST) {
+			return text;
+		}
+		
+		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+			const emote = EMOTELIST[emoteMatch];
+			if (emote) {
+				const escapedMatch = escapeHtml(emoteMatch);
+				const isZeroWidth = typeof emote !== "string" && emote.zw;
+				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
+			}
+			return match;
+		});
+	}
+	
 
 	function getAllContentNodes(element) {
-		// takes an element.
-		var resp = "";
-		if (!element) {
-			return resp;
-		}
+		let result = '';
+		let pendingRegularEmote = null;
 
-		if (!element.childNodes || !element.childNodes.length) {
-			if (element.textContent) {
-				return escapeHtml(element.textContent) || "";
-			} else {
-				return "";
-			}
-		}
-
-		element.childNodes.forEach(node => {
-			if (node.childNodes.length) {
-				if (node.nodeName.toLowerCase() == "svg") {
-					if (node.classList.contains("seventv-chat-emote")) {
-						const resolvedSvg = cloneSvgWithResolvedUse(node);
-						resolvedSvg.style = "";
-						resp += resolvedSvg.outerHTML;
+		function processNode(node) {
+			if (node.nodeType === 3 && node.textContent.trim().length > 0) {
+				// Text node
+				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent.trim())); 
+				const tempDiv = document.createElement('div');
+				tempDiv.innerHTML = processedText;
+				
+				Array.from(tempDiv.childNodes).forEach(child => {
+					if (child.nodeType === 3) {
+						result += child.textContent;
+					} else if (child.nodeName === 'IMG') {
+						processEmote(child);
 					}
-					return;
-				} else if (node.classList.contains("seventv-chat-user-username")) {
-					resp += escapeHtml(node.textContent.trim()) + " ";
-				} else {
-					resp += getAllContentNodes(node);
-				}
-			} else if (node.nodeType === 3 && node.textContent && node.textContent.trim().length > 0) {
-				if (settings.textonlymode) {
-					resp += escapeHtml(node.textContent.trim()) + " ";
-				} else {
-					resp += replaceEmotesWithImages(escapeHtml(node.textContent).trim()) + " ";
-				}
+				});
 			} else if (node.nodeType === 1) {
-				if (!settings.textonlymode) {
-					if (node.nodeName === "IMG") {
-						var srcset = node.getAttribute("srcset");
-						if (srcset) {
-							var sources = srcset.split(",");
-							var image2xSource = sources.find(function (source) {
-								return source.trim().endsWith(" 2x");
-							});
-							if (image2xSource) {
-								var imageUrl = image2xSource.trim().split(" ")[0];
-								if (imageUrl) {
-									if (node.classList.contains("zero-width-emote")) {
-										resp += `<span class='zero-width-parent'><img src='${imageUrl}' /></span>`;
-									} else {
-										resp += `<img src='${imageUrl}' />`;
-									}
-									return;
-								}
-							}
-						}
-					}
-
-					if (node.nodeName.toLowerCase() == "svg") {
-						if (node.classList.contains("seventv-chat-emote")) {
-							const resolvedSvg = cloneSvgWithResolvedUse(node);
-							resolvedSvg.style = "";
-							resp += resolvedSvg.outerHTML;
-						}
-						return;
-					} else if (node.nodeName == "SPAN" && !node.textContent.length) {
-						return;
-					} else if (node && node.classList && node.classList.contains("zero-width-emote")) {
-						resp += "<span class='zero-width-parent'>" + node.outerHTML + "</span>";
-					} else {
-						resp += node.outerHTML;
-					}
-				}
-			} else if (node.nodeName == "IMG"){
-				if (node.alt && isEmoji(node.alt)){
-					resp += escapeHtml(node.alt);
+				// Element node
+				if (node.nodeName === "IMG") {
+					processEmote(node);
+				} else if (node.nodeName.toLowerCase() === "svg" && node.classList.contains("seventv-chat-emote")) {
+					const resolvedSvg = cloneSvgWithResolvedUse(node);
+					resolvedSvg.style = "";
+					result += resolvedSvg.outerHTML;
+				} else if (node.childNodes.length) {
+					Array.from(node.childNodes).forEach(processNode);
+				} else {
+					result += node.outerHTML;
 				}
 			}
-		});
-		return resp;
+		}
+
+		function processEmote(emoteNode) {
+			if (settings.textonlymode){
+				if (emoteNode.alt && isEmoji(emoteNode.alt)){
+					result += escapeHtml(emoteNode.alt);
+				}
+				return;
+			}
+			
+			const isZeroWidth = emoteNode.classList.contains("zero-width-emote") || 
+								emoteNode.classList.contains("zero-width-emote-centered");
+								
+			if (isZeroWidth && pendingRegularEmote) {
+				result += `<span class="emote-container">${pendingRegularEmote}${emoteNode.outerHTML}</span>`;
+				pendingRegularEmote = null;
+			} else if (!isZeroWidth) {
+				if (pendingRegularEmote) {
+					result += pendingRegularEmote;
+				}
+				emoteNode.classList.add("regular-emote");
+				pendingRegularEmote = emoteNode.outerHTML;
+			} else {
+				emoteNode.classList.add("regular-emote");
+				result += emoteNode.outerHTML;
+			}
+		}
+
+		processNode(element);
+
+		if (pendingRegularEmote) {
+			result += pendingRegularEmote;
+		}
+
+		return result;
 	}
 
 	var lastMessage = "";
@@ -549,65 +553,6 @@
 			//
 		}
 	}
-
-	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
-	
-	function replaceEmotesWithImages(message) {
-	  if (!EMOTELIST) {
-		return message;
-	  }
-	  
-	  let result = '';
-	  let lastIndex = 0;
-	  let pendingRegularEmote = null;
-	  
-	  message.replace(emoteRegex, (match, emoteMatch, offset) => {
-		// Add any text before this emote
-		result += message.slice(lastIndex, offset);
-		lastIndex = offset + match.length;
-		
-		const emote = EMOTELIST[emoteMatch];
-		if (emote) {
-		  const escapedMatch = escapeHtml(match);
-		  const isZeroWidth = typeof emote !== "string" && emote.zw;
-		  
-		  if (!isZeroWidth) {
-			// Regular emote
-			if (pendingRegularEmote) {
-			  // If there's a pending regular emote, add it to the result
-			  result += pendingRegularEmote;
-			}
-			pendingRegularEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
-		  } else {
-			// Zero-width emote
-			if (pendingRegularEmote) {
-			  // If there's a pending regular emote, create a container with both
-			  result += `<span class="emote-container">${pendingRegularEmote}<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/></span>`;
-			  pendingRegularEmote = null;
-			} else {
-			  // Zero-width emote without a preceding emote
-			  result += `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
-			}
-		  }
-		} else {
-		  if (pendingRegularEmote) {
-			result += pendingRegularEmote;
-			pendingRegularEmote = null;
-		  }
-		  result += match;
-		}
-	  });
-	  
-	  // Add any remaining text after the last emote
-	  result += message.slice(lastIndex);
-	  
-	  // Add any pending regular emote
-	  if (pendingRegularEmote) {
-		result += pendingRegularEmote;
-	  }
-	  
-	  return result;
-	}
 	
 	var settings = {};
 	var BTTV = false;
@@ -746,11 +691,11 @@
 		}
 		
 		// for testing.
- 		// EMOTELIST = deepMerge({
-			// "ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true},
-			// "oEDM": {url:"https://cdn.7tv.app/emote/62127910041f77b2480365f4/2x.webp","zw":true},
-			// "widepeepoHappy": "https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp"
-		// }, EMOTELIST);
+ 		EMOTELIST = deepMerge({
+			 "ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true},
+			 "oEDM": {url:"https://cdn.7tv.app/emote/62127910041f77b2480365f4/2x.webp","zw":true},
+			 "widepeepoHappy": "https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp"
+		 }, EMOTELIST);
 		//console.log(EMOTELIST);
 	}
 

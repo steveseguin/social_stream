@@ -87,8 +87,6 @@
 				background-color: #7a7a7a;
 			}
 			
-			
-
 			#TipRightClick {
 				text-shadow: 0 0 black;
 				cursor: help;
@@ -814,7 +812,9 @@
 			.brush {
 				animation: ani 400ms alternate 1;
 			}
-
+			img.icon:not(:loaded){
+				aspect-ratio: 1;
+			}
 			.larger-emojis img:not(.hl-badge, .icon) {
 				height: var(--stylized-img);
 				max-width: calc(var(--stylized-img) * 1.5);
@@ -1978,7 +1978,7 @@
 		  display: inline-grid;
 		  grid-template-columns: 1fr;
 		  grid-template-rows: 1fr;
-		  vertical-align: middle;
+		  vertical-align: top;
 		  justify-items: center;  /* Center horizontally */
 		  align-items: center;    /* Center vertically */
 		}
@@ -1998,7 +1998,7 @@
 
 		.regular-emote,
 		.zero-width-emote-centered {
-		  vertical-align: middle;
+		  vertical-align: top;
 		}
 			
 		</style>
@@ -7032,7 +7032,7 @@
 						shortenURLs(hlMessage);
 					}
 
-					if (data.type && data.type == "twitch" && avatars && data.chatimg) {
+					if (data.type && data.type == "twitch" && avatars && data.chatimg) { 
 						var twitchImage = new Image();
 						twitchImage.onload = function () {
 							try {

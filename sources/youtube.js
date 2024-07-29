@@ -64,64 +64,118 @@
 	}
 
 	var messageHistory = [];
-
-	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
 	
-	function replaceEmotesWithImages(message) {
-	  if (!EMOTELIST) {
-		return message;
-	  }
-	  
-	  let result = '';
-	  let lastIndex = 0;
-	  let pendingRegularEmote = null;
-	  
-	  message.replace(emoteRegex, (match, emoteMatch, offset) => {
-		// Add any text before this emote
-		result += message.slice(lastIndex, offset);
-		lastIndex = offset + match.length;
-		
-		const emote = EMOTELIST[emoteMatch];
-		if (emote) {
-		  const escapedMatch = escapeHtml(match);
-		  const isZeroWidth = typeof emote !== "string" && emote.zw;
-		  
-		  if (!isZeroWidth) {
-			// Regular emote
-			if (pendingRegularEmote) {
-			  // If there's a pending regular emote, add it to the result
-			  result += pendingRegularEmote;
-			}
-			pendingRegularEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
-		  } else {
-			// Zero-width emote
-			if (pendingRegularEmote) {
-			  // If there's a pending regular emote, create a container with both
-			  result += `<span class="emote-container">${pendingRegularEmote}<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/></span>`;
-			  pendingRegularEmote = null;
-			} else {
-			  // Zero-width emote without a preceding emote
-			  result += `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
-			}
-		  }
-		} else {
-		  if (pendingRegularEmote) {
-			result += pendingRegularEmote;
-			pendingRegularEmote = null;
-		  }
-		  result += match;
+	function replaceEmotesWithImages(text) {
+		if (!EMOTELIST) {
+			return text;
 		}
-	  });
-	  
-	  // Add any remaining text after the last emote
-	  result += message.slice(lastIndex);
-	  
-	  // Add any pending regular emote
-	  if (pendingRegularEmote) {
-		result += pendingRegularEmote;
-	  }
-	  
-	  return result;
+		
+		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+			const emote = EMOTELIST[emoteMatch];
+			if (emote) {
+				const escapedMatch = escapeHtml(emoteMatch);
+				const isZeroWidth = typeof emote !== "string" && emote.zw;
+				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
+			}
+			return match;
+		});
+	}
+	
+	function cloneSvgWithResolvedUse(svgElement) {
+		const clonedSvg = svgElement.cloneNode(true);
+
+		const useElements = clonedSvg.querySelectorAll("use");
+		useElements.forEach(use => {
+			const refId = use.getAttribute("href") || use.getAttribute("xlink:href");
+			if (refId) {
+				const id = refId.startsWith("#") ? refId.slice(1) : refId;
+				const referencedElement = document.getElementById(id);
+				if (referencedElement) {
+					const clonedReferencedElement = referencedElement.cloneNode(true);
+					use.parentNode.replaceChild(clonedReferencedElement, use);
+				}
+			}
+		});
+
+		return clonedSvg;
+	}
+	
+	function isEmoji(char) {
+		const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
+		return emojiRegex.test(char);
+	}
+
+	function getAllContentNodes(element) {
+		let result = '';
+		let pendingRegularEmote = null;
+
+		function processNode(node) {
+			if (node.nodeType === 3 && node.textContent.trim().length > 0) {
+				// Text node
+				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent.trim()));
+				const tempDiv = document.createElement('div');
+				tempDiv.innerHTML = processedText;
+				
+				Array.from(tempDiv.childNodes).forEach(child => {
+					if (child.nodeType === 3) {
+						result += child.textContent;
+					} else if (child.nodeName === 'IMG') {
+						processEmote(child);
+					}
+				});
+			} else if (node.nodeType === 1) { 
+				// Element node
+				if (node.nodeName === "IMG") {
+					processEmote(node); 
+				} else if (node.nodeName.toLowerCase() === "svg" && node.classList.contains("seventv-chat-emote")) {
+					const resolvedSvg = cloneSvgWithResolvedUse(node);
+					resolvedSvg.style = "";
+					result += resolvedSvg.outerHTML;
+				} else if (node.childNodes.length) {
+					
+					if (!settings.textonlymode && node.nodeName === "A" && node.href && node.childNodes.length === 1) {
+						result += extractYouTubeRedirectUrl(node.href);
+						return;
+					}
+					Array.from(node.childNodes).forEach(processNode);
+				} else {
+					result += node.outerHTML;
+				}
+			}
+		}
+
+		function processEmote(emoteNode) {
+			if (settings.textonlymode){
+				if (emoteNode.alt && isEmoji(emoteNode.alt)){
+					result += escapeHtml(emoteNode.alt);
+				}
+				return;
+			}
+			const isZeroWidth = emoteNode.classList.contains("zero-width-emote") || 
+								emoteNode.classList.contains("zero-width-emote-centered");
+								
+			if (isZeroWidth && pendingRegularEmote) {
+				result += `<span class="emote-container">${pendingRegularEmote}${emoteNode.outerHTML}</span>`;
+				pendingRegularEmote = null;
+			} else if (!isZeroWidth) {
+				if (pendingRegularEmote) {
+					result += pendingRegularEmote;
+				}
+				emoteNode.classList.add("regular-emote");
+				pendingRegularEmote = emoteNode.outerHTML;
+			} else {
+				emoteNode.classList.add("regular-emote");
+				result += emoteNode.outerHTML;
+			}
+		}
+
+		processNode(element);
+
+		if (pendingRegularEmote) {
+			result += pendingRegularEmote;
+		}
+
+		return result;
 	}
 
 	var EMOTELIST = false;
@@ -185,7 +239,7 @@
 		return emojiRegex.test(char);
 	}
 
-	function getAllContentNodes(element) {
+	function getAllContentNodesOLD(element) {
 		var resp = "";
 		element.childNodes.forEach(node => {
 			if (node.childNodes.length) {

@@ -5720,76 +5720,117 @@ async function applyBotActions(data, tab = false) {
 let isProcessing = false;
 const lastResponseTime = {};
 
+function getFirstAvailableModel() {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'http://localhost:11434/api/tags', true);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                const datar = JSON.parse(xhr.responseText);
+                if (datar && datar.models && datar.models.length > 0) {
+                    resolve(datar.models[0].name);
+                } else {
+                    reject(new Error('No models available'));
+                }
+            } else {
+                reject(new Error('Failed to fetch models'));
+            }
+        };
+        xhr.onerror = function() {
+            reject(new Error('Network error while fetching models'));
+        };
+        xhr.send();
+    });
+}
+
 function processMessageWithOllama(data) {
-	return new Promise((resolve, reject) => {
-		
-		const currentTime = Date.now();
-		
-		if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < 5000)) {
-			resolve(); // Skip this message if we've responded recently
-			return;
-		}
+    return new Promise((resolve, reject) => {
+        const currentTime = Date.now();
+        
+        if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < 5000)) {
+            resolve(); // Skip this message if we've responded recently
+            return;
+        }
+        if (isProcessing) {
+            resolve();
+            return;
+        }
+        isProcessing = true;
+        
+        let ollamamodel = "llama3.1:latest";
+        if (settings['ollamamodel'] && settings['ollamamodel'].textsetting) {
+            ollamamodel = settings['ollamamodel'].textsetting.trim();
+        }
 
-		if (isProcessing) {
-			resolve();
-			return;
-		}
+        const sendRequest = (model) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'http://localhost:11434/api/generate', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+                        const aiResponse = result.response.trim();
+                        if (!aiResponse.includes("RESPONSE")) {
+                            const msg = {
+                                tid: data.tid,
+                                response: "🤖💬: " + aiResponse.replace("Response:", "").trim()
+                            };
+                            processResponse(msg);
+                            lastResponseTime[data.tid] = currentTime;
+                        }
+                    } catch (error) {
+                        console.log('Error parsing response:', error);
+                    }
+                } else if (xhr.status === 404) {
+                    console.log(`Model ${model} not found. Status:`, xhr.status);
+                    if (!settings['ollamamodel']?.textsetting) {
+                        // Model not found and no user-specified model, try to get first available model
+                        getFirstAvailableModel()
+                            .then(newModel => {
+                                console.log(`Using ${newModel} instead.`);
+                                settings['ollamamodel'] = { textsetting: newModel };
+                                sendRequest(newModel);
+                            })
+                            .catch(error => {
+                                console.log('Failed to get available model:', error);
+                                isProcessing = false;
+                                reject(error);
+                            });
+                        return;
+                    }
+                } else {
+                    console.log('Request failed. Status:', xhr.status);
+                }
+                isProcessing = false;
+                resolve();
+            };
 
-		isProcessing = true;
+            xhr.onerror = function() {
+                console.log('Request failed. Network error.');
+                isProcessing = false;
+                reject(new Error('Network error'));
+            };
 
-		const xhr = new XMLHttpRequest();
-		xhr.open('POST',  'http://localhost:11434/api/generate', true);
-		xhr.setRequestHeader('Content-Type', 'application/json');
-		
-		xhr.onload = function() {
-			if (xhr.status === 200) {
-				try {
-					const result = JSON.parse(xhr.responseText);
-					const aiResponse = result.response.trim();
-
-					if (!aiResponse.includes("RESPONSE")) {
-						const msg = {
-							tid: data.tid,
-							response: "🤖💬: "+aiResponse.replace("Response:","").trim()
-						};
-						processResponse(msg);
-						lastResponseTime[data.tid] = currentTime;
-					}
-				} catch (error) {
-					console.error('Error parsing response:', error);
-				}
-			} else {
-				console.error('Request failed. Status:', xhr.status);
-			}
-
-			isProcessing = false;
-			resolve();
-		};
-
-		xhr.onerror = function() {
-			console.error('Request failed. Network error.');
-			isProcessing = false;
-			reject(new Error('Network error'));
-		};
-		
-		var botinstructions = `You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it's directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response. Respond to the following message:  .
-
+            var botinstructions = `You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it's directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response. Respond to the following message:  .
 User ${data.chatname} says: ${data.chatmessage}
-
 Your decision and potential response:`;
 
-		if (settings['ollamaprompt'] && settings['ollamaprompt'].textsetting){
-			botinstructions = settings['ollamaprompt'].textsetting.trim();
-		}
+            if (settings['ollamaprompt'] && settings['ollamaprompt'].textsetting) {
+                botinstructions = settings['ollamaprompt'].textsetting.trim();
+            }
 
-		const requestData = JSON.stringify({
-			model: "llama3",
-			stream: false,
-			prompt: botinstructions
-		});
+            const requestData = JSON.stringify({
+                model: model,
+                stream: false,
+                prompt: botinstructions
+            });
+            xhr.send(requestData);
+        };
 
-		xhr.send(requestData);
-	});
+        sendRequest(ollamamodel);
+    });
 }
 
 var store = [];
