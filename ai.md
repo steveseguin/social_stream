@@ -13,14 +13,14 @@ https://ollama.com
 
 There's many choices available; go to https://ollama.com/library for a list of options.
 
-Social Stream Ninja is currently hard-coded to work with Llama3, so lets use that.
+Social Stream Ninja targets Llama3.1 by default, but you can specify the model to use the Social Stream Ninja menu. For now though, let's just use `llama3.1`
 
 To install the model, lets open Command Prompt (or Terminal)
-`> ollama pull llama3`
+`> ollama pull llama3.1`
 
 ![image](https://github.com/user-attachments/assets/4852506e-7761-47d1-99ce-8b2b01f34bac)
 
-If you need to remove it, you can run `ollama rm llama3`
+If you need to remove it, you can run `ollama rm llama3`. 
 
 ![image](https://github.com/user-attachments/assets/235ec0fb-aa70-4206-8b8d-98dbe173a096)
 
