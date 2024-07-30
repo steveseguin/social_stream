@@ -107,7 +107,7 @@
     cursor: pointer;
 }
 #activeIcon {
-position: absolute;
+	position: absolute;
     top: 54px;
     right: 17px;
     cursor: pointer;
@@ -308,23 +308,6 @@ p a {
     margin-bottom: 0;
 }
 
-.wrapper:not(:empty) {
-  display: block; /* or whatever display value you want */
-}
-
-.wrapper:empty {
-  display: none;
-}
-
-/* Hide children with display: none */
-.wrapper > *[style*="display: none"] {
-  display: none !important;
-}
-
-/* If all direct children are hidden, hide the wrapper */
-.wrapper:not(:empty):not(:has(*:not([style*="display: none"]))) {
-  display: none;
-}
 
 .pressed {
     background-color: #2a2 !important;
@@ -744,81 +727,85 @@ input:checked + .slider:before {
     align-items: center;
 }
 
+
+/* Text input */
+
  
-	/* Text input */
-	.textInputContainer {
-		position: relative;
-		width: 200px;
-		margin-top: 2px;
-		margin-bottom: 4px;
-	}
+				 
+.textInputContainer {
+    position: relative;
+    width: 200px;
+    margin-top: 2px;
+    margin-bottom: 4px;
+}
 
-	.textInput {
-		width: 100%;
-		height: 100%;
-		padding: 2px;
-		background-color: var(--color-accent-subtle);
-		color: var(--default-text-color);
-		border: 1px solid var(--collapsible-border-color);
-		border-radius: 4px;
-		font-size: 1em;
-		font-weight: 400;
-		outline: none;
-		transition: all 0.3s;
-	}
+.textInput {
+    width: 100%;
+    height: 100%;
+    padding: 2px;
+    background-color: var(--color-accent-subtle);
+    color: var(--default-text-color);
+    border: 1px solid var(--collapsible-border-color);
+    border-radius: 4px;
+    font-size: 1em;
+    font-weight: 400;
+    outline: none;
+    transition: all 0.3s;
+}
 
-	.textInput:focus {
-		border: 1px solid var(--color-accent);
-	}
+.textInput:focus {
+    border: 1px solid var(--color-accent);
+}
 
-	.textInput + label {
-		position: absolute;
-		left: 8px;
-		top: 2px;
-		padding: 0 2px;
-		color: var(--default-text-color);
-		font-size: 1.2em;
-		transition: all 0.2s;
-		cursor: text;
-		z-index: 1;
-	}
+.textInput + label {
+    /*down*/
+    position: absolute;
+    left: 8px;
+    top: 2px;
+    padding: 0 2px;
+    color: var(--default-text-color);
+    font-size: 1.2em;
+    transition: all 0.2s;
+    cursor: text;
+    z-index: 1;
+}
 
-	.textInput + label::before {
-		position: absolute;
-		width: 100%;
-		left: 0;
-		top: 8px;
-		border-radius: 4px;
-		content: "";
-		z-index: -1;
-	}
+.textInput + label::before {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 8px;
+    border-radius: 4px;
+    content: "";
+    z-index: -1;
+}
 
-	.textInput:focus + label::before,
-	.textInput:valid + label::before {
-		height: 6px;
-		background-color: var(--color-accent-subtle);
-	}
+.textInput:focus + label::before,
+.textInput:valid + label::before {
+    height: 6px;
+    background-color: var(--color-accent-subtle);
+}
 
-	.textInput:focus + label,
-	.textInput:valid + label,
-	.textInput:not(:placeholder-shown) + label,
-	textarea:focus + label,
-	textarea:not(:placeholder-shown) + label {
-		top: -7px;
-		color: var(--color-accent);
-		font-size: 1em;
-	}
+.textInput:focus + label,
+		/*.textInput:valid + label,*//* if 'required' and input is valid */
+		input:not(:placeholder-shown).textInput + label /* input is not empty */ {
+						
+										   
+    top: -7px;
+    color: var(--color-accent);
+    font-size: 1em;
+}
 
-	.textInput::placeholder {
-		font-size: 1em;
-		opacity: 0;
-		transition: all 0.2s;
-	}
+.textInput::placeholder {
+    font-size: 1em;
+    opacity: 0;
+    transition: all 0.2s;
+}
 
-	.textInput:focus::placeholder {
-		opacity: 1;
-		animation-delay: 0.2s;
-	}
+.textInput:focus::placeholder {
+    opacity: 1;
+    animation-delay: 0.2s;
+}
 
         </style>
     </head>
@@ -3594,7 +3581,12 @@ The list of names should be comma separated."
 							<label for="ollamamodel"><span data-translate="ollama-model">&gt; Ollama Model to use</span></label>
 						</div>
 					</div>
-					<br />
+					<div>
+						<div class="textInputContainer" style="width: 95%;">
+							<input type="text" id="ollamaendpoint" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
+							<label for="ollamaendpoint"><span data-translate="ollama-API-endpoint">&gt; Ollama API endpoint</span></label>
+						</div>
+					</div>
                     <div class="textInputContainer" style="width: 95%;">
                         <textarea id="botinstructions" class="textInput" style="height:80px" autocomplete="off" placeholder="Enter your custom bot instructions here. Leave blank for a friendly and helpful bot to be used." data-textsetting="ollamaprompt">
 							You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it's directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response. Respond to the following message:  .

@@ -5723,7 +5723,13 @@ const lastResponseTime = {};
 function getFirstAvailableModel() {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', 'http://localhost:11434/api/tags', true);
+		
+		let ollamaendpoint = "http://localhost:11434";
+		if (settings.ollamaendpoint && settings.ollamaendpoint.textsetting){
+			ollamaendpoint = settings.ollamaendpoint.textsetting;
+		}
+		
+        xhr.open('GET', ollamaendpoint+'/api/tags', true);
         xhr.onload = function() {
             if (xhr.status === 200) {
                 const datar = JSON.parse(xhr.responseText);
@@ -5763,8 +5769,14 @@ function processMessageWithOllama(data) {
         }
 
         const sendRequest = (model) => {
+			
+			let ollamaendpoint = "http://localhost:11434";
+			if (settings.ollamaendpoint && settings.ollamaendpoint.textsetting){
+				ollamaendpoint = settings.ollamaendpoint.textsetting;
+			}
+			
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', 'http://localhost:11434/api/generate', true);
+            xhr.open('POST', ollamaendpoint+'/api/generate', true);
             xhr.setRequestHeader('Content-Type', 'application/json');
             
             xhr.onload = function() {
