@@ -4746,6 +4746,24 @@
 						}
 					}
 					return;
+				} else if ("action" in data && data.action == "nextPinned") {
+					console.log("nextPinned");
+					try {
+						let pinned = document.querySelector(".pinned[data-mid]");
+						if (pinned){
+							selectedMessage(false,pinned);
+						}
+						return true;
+					} catch (e) {}
+				} else if ("nextPinned" in data){
+					// selectedMessage
+					try {
+						let pinned = document.querySelector(".pinned[data-mid]");
+						if (pinned){
+							selectedMessage(false,pinned);
+						}
+						return true;
+					} catch (e) {}
 				} else if ("deleteMessage" in data) {
 					// delete by message ID; likely another dock is syncing their delete with me
 					//if (syncDocks){
