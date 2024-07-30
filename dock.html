@@ -5687,7 +5687,7 @@
 			}
 
 			function deleteMessage(element) {
-				syncDataP2P({ deleteMessage: element.dataset.mid }, false, true);
+				syncDataAny({ deleteMessage: element.dataset.mid }, false, true);
 				element.remove();
 			}
 
@@ -5920,14 +5920,14 @@
 					if (element.classList.contains("pinned")) {
 						unpinIt(element);
 						if (element.dataset.mid) {
-							syncDataP2P({ unpin: [element.dataset.mid] });
+							syncDataAny({ unpin: [element.dataset.mid] });
 						}
 					} else {
 						pinIt(element);
 						if (element.dataset.mid && element.rawContents) {
-							syncDataP2P({ pin: [element.rawContents] });
+							syncDataAny({ pin: [element.rawContents] });
 						} else if (element.dataset.mid) {
-							syncDataP2P({ pin: [element.dataset.mid] });
+							syncDataAny({ pin: [element.dataset.mid] });
 						}
 					}
 					return;
@@ -5952,7 +5952,7 @@
 				if (element.classList.contains("pinned")) {
 					unpinIt(element);
 					if (element.dataset.mid) {
-						syncDataP2P({ unpin: [element.dataset.mid] });
+						syncDataAny({ unpin: [element.dataset.mid] });
 					}
 				}
 
@@ -7476,7 +7476,7 @@
 				document.querySelectorAll(".pinned[data-mid]").forEach(ele => {
 					pins.push(ele.rawContents);
 				});
-				syncDataP2P({ pin: pins }, UUID);
+				syncDataAny({ pin: pins }, UUID);
 				syncQueueP2P(UUID);
 			}
 
@@ -7491,7 +7491,7 @@
 						selectedQueue.forEach(ele => {
 							data.push(ele.rawContents);
 						});
-						syncDataP2P({ queueInit: data }, UUID);
+						syncDataAny({ queueInit: data }, UUID);
 					}
 				} else {
 					selectedQueue.forEach(ele => {
@@ -7501,7 +7501,7 @@
 							data.push(ele.rawContents.id);
 						}
 					});
-					syncDataP2P({ queue: data });
+					syncDataAny({ queue: data });
 				}
 			}
 
@@ -7539,6 +7539,14 @@
 						}
 					}
 				});
+			}
+			
+			function syncDataAny(data, UUID = false, force = false) {
+				if (socketserver) {
+					socketserver.send(JSON.stringify({...data, out:1}));
+				} else {
+					syncDataP2P(data, UUID, force)
+				}
 			}
 
 			function syncDataP2P(data, UUID = false, force = false) {
@@ -7851,10 +7859,10 @@
 						} else if (link.getAttribute("data-action") === "Pin") {
 							if (taskItemInContext.classList.contains("pinned")) {
 								unpinIt(taskItemInContext);
-								syncDataP2P({ unpin: [taskItemInContext.dataset.mid] });
+								syncDataAny({ unpin: [taskItemInContext.dataset.mid] });
 							} else {
 								pinIt(taskItemInContext);
-								syncDataP2P({ pin: [taskItemInContext.rawContents] });
+								syncDataAny({ pin: [taskItemInContext.rawContents] });
 							}
 						} else if (link.getAttribute("data-action") === "TTS") {
 							speechMeta(taskItemInContext.rawContents, true);
