@@ -147,6 +147,10 @@
 					return;
 				}
 				if (!EMOTELIST){
+					if (pendingRegularEmote && node.textContent.trim()) {
+						result += pendingRegularEmote;
+						pendingRegularEmote = null;
+					}
 					result += escapeHtml(node.textContent);
 					return;
 				}

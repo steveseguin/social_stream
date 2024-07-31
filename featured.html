@@ -619,25 +619,35 @@
 				left: unset;
 			}
 			
-			.emote-container {
-			  display: inline-block;
-			  position: relative;
-			  vertical-align: top;
-			}
+		.emote-container {
+		  display: inline-grid;
+		  grid-template-columns: 1fr;
+		  grid-template-rows: 1fr;
+		  vertical-align: top;
+		  justify-items: center;  /* Center horizontally */
+		  align-items: center;    /* Center vertically */
+		}
 
-			.emote-container .regular-emote,
-			.emote-container .zero-width-emote-centered {
-			  display: block;
-			}
+		.emote-container .regular-emote,
+		.emote-container .zero-width-emote-centered,
+		.emote-container .zero-width-emote {
+		  grid-column: 1;
+		  grid-row: 1;
+		  max-width: 100%;
+		  max-height: 100%;
+		  object-fit: contain;
+		}
 
-			.emote-container .zero-width-emote-centered {
-			  position: absolute;
-			  top: 50%;
-			  left: 50%;
-			  transform: translate(-50%, -50%);
-			  max-width: 100%; /* Ensure it doesn't overflow the container */
-			  max-height: 100%;
-			}
+		.emote-container .zero-width-emote-centered,
+		.emote-container .zero-width-emote	{
+		  z-index: 1;
+		}
+
+		.regular-emote,
+		.zero-width-emote,
+		.zero-width-emote-centered {
+		  vertical-align: top;
+		}
 		</style>
 	</head>
 	<body>
