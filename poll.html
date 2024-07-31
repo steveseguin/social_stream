@@ -204,7 +204,9 @@
 					settings.pollQuestion = data.settings.pollQuestion.textsetting || 'Enter a hashtagged word into chat to vote for it!';;
 				}
 				if (data.settings.multipleChoiceOptions){
-					settings.pollOptions = data.settings.multipleChoiceOptions ? data.settings.multipleChoiceOptions.textsetting.toUpperCase().split(',') : [];
+					settings.pollOptions = data.settings.multipleChoiceOptions.textsetting
+						.split(',')
+						.map(option => option.trim());
 				}
 				if (data.settings.pollTimer){
 					settings.pollTimer = data.settings.pollTimer.numbersetting  || 60;
@@ -234,7 +236,7 @@
 					}
 				} else if (settings.pollType === 'multiple') {
 					console.log(vote);
-					if (settings.pollOptions.includes(vote)) {
+					if (settings.pollOptions.map(option => option.toLowerCase()).includes(vote.toLowerCase())) {
 						results[vote] = results[vote] ? results[vote] + 1 : 1;
 						totalVotes++;
 						updatePoll(results);
