@@ -2830,18 +2830,28 @@ function sendToH2R(data) {
 	}
 }
 function sendToS10(data) {
-	if (settings.s10 && settings.s10server && settings.s10server.textsetting) {
+	if (settings.s10 && settings.s10apikey && settings.s10apikey.textsetting) {
 		try {
-			// channelId - The Stage TEN channel to send the message on
 			// displayName - The display name associated with the message
 			// messageBody - The text body of the message
-			// displayPictureUrl - (optional) The URL of a display picture (this will be included in the message's metadata)
-			// userId - (optional) Will associate the message with a specific user ID. If not provided, the user ID will default to "plugin-service"
+			// sourceName - The source type; eg: twitch, youtube, etc.
+			// sourceIconUrl - source icon; eg: https://socialstream.ninja/sources/images/youtube.png
+			// displayPictureUrl - (NOT SUPPORTED ATM) The URL of a display picture (this will be included in the message's metadata)
+			// userId - (REQUIRED) Will associate the message with a specific user ID.
+
+			// msg =  '{
+				// "userId": "my-external-id",
+				// "displayName": "Tyler",
+				// "messageBody": "Testing 123",
+				// "sourceName": "twitch",
+				// "sourceIconUrl": "https://cdn.shopify.com/app-store/listing_images/715abff73d9178aa7f665d7feadf7edf/icon/CPTw1Y2Mp4UDEAE=.png"
+			// }';
+
+			
+			const StageTEN_API_URL = "https://app.stageten.tv/apis/plugin-service/chat/message/send"
 
 			var msg = {};
-
-			msg.channelId = settings.s10server.textsetting;
-
+			
 			if (data.chatmessage) {
 				if (!data.textonly) {
 					msg.messageBody = unescapeHtml(data.chatmessage);
@@ -2855,17 +2865,16 @@ function sendToS10(data) {
 				return;
 			}
 
-			if (!data.chatname) {
-				return;
-			}
-
 			if (data.type && data.type === "stageten") {
 				return;
 			}
+			
+			msg.sourceName = data.type || "unknown";
+			msg.sourceIconUrl = "https://socialstream.ninja/sources/images/"+msg.sourceName+".png";
+			msg.displayName = data.chatname || data.userid || "⚡";
+			msg.userId = "socialstream";
 
-			msg.displayName = data.chatname;
-
-			if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
+			/* if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
 				msg.displayPictureUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
 			} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
@@ -2876,21 +2885,18 @@ function sendToS10(data) {
 				msg.displayPictureUrl = "https://socialstream.ninja/sources/images/" + data.type + ".png";
 			} else {
 				msg.displayPictureUrl = "https://socialstream.ninja/sources/images/unknown.png";
-			}
-
-			if (data.type) {
-				msg.displayName = msg.displayName + " via " + data.type; // "twitch", "youtube", "kick", etc.
-			}
-
-			//const data = '{"displayName":"Tyler", "messageBody":"Hey!", "channelId":"a075c262-f409-4915-8aaa-3c83d06fd324"}';
+			} */
 
 			let xhr = new XMLHttpRequest();
-			xhr.withCredentials = true;
-			xhr.open("POST", "https://bee1-plugin-service.stageten.tv/chat/webhooks/message/send");
+			xhr.open("POST", StageTEN_API_URL);
 			xhr.setRequestHeader("content-type", "application/json");
-
+			xhr.setRequestHeader("x-s10-chat-api-key", settings.s10apikey.textsetting);
+			//xhr.withCredentials = true;
 			xhr.onload = function () {
-				// log(xhr.response);
+				//log(xhr.response);
+			};
+			xhr.onerror = function (e) {
+				//log("error sending to stageten");
 			};
 
 			xhr.send(JSON.stringify(msg));
