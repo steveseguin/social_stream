@@ -1984,7 +1984,8 @@
 		}
 
 		.emote-container .regular-emote,
-		.emote-container .zero-width-emote-centered {
+		.emote-container .zero-width-emote-centered,
+		.emote-container .zero-width-emote {
 		  grid-column: 1;
 		  grid-row: 1;
 		  max-width: 100%;
@@ -1992,11 +1993,13 @@
 		  object-fit: contain;
 		}
 
-		.emote-container .zero-width-emote-centered {
+		.emote-container .zero-width-emote-centered,
+		.emote-container .zero-width-emote	{
 		  z-index: 1;
 		}
 
 		.regular-emote,
+		.zero-width-emote,
 		.zero-width-emote-centered {
 		  vertical-align: top;
 		}
@@ -4747,7 +4750,7 @@
 					}
 					return;
 				} else if ("action" in data && data.action == "nextPinned") {
-					console.log("nextPinned");
+					//console.log("nextPinned");
 					try {
 						let pinned = document.querySelector(".pinned[data-mid]");
 						if (pinned){
