@@ -2895,12 +2895,18 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				lastSentMessage = cleaned; 
 				lastSentTimestamp = Date.now();
 				lastMessageCounter = 0;
-			} 
+			}
+			
+			let username = "";
+			if (cleaned.startsWith("🤖💬:")){
+				cleaned = cleaned.replace("🤖💬:","").trim();
+				username = "Bot🤖💬";
+			}
 			
 			var msg = {};
 			msg.sourceName = data.type || "unknown";
 			msg.sourceIconUrl = "https://socialstream.ninja/sources/images/"+msg.sourceName+".png";
-			msg.displayName = data.chatname || data.userid || "⚡";
+			msg.displayName = data.chatname || data.userid || username || "Host⚡";
 			msg.userId = "socialstream";
 			msg.messageBody = cleaned;
 			
