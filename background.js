@@ -123,8 +123,6 @@ if (typeof chrome.runtime == "undefined") {
 	chrome.debugger.attach = function (a, b, c) {
 		log("chrome.debugger.attach", c);
 		c();
-		// { tabId: tabs[i].id },  "1.3", onAttach.bind(null,
-		// onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false
 	};
 
 	chrome.tabs.sendMessage = async function (tab = null, message = null, callback = null) {
@@ -1686,7 +1684,7 @@ function replaceEmotesWithImages(message, emotesMap, zw = false) {
 }
 	
 
-class CheckDuplicateSources {
+class CheckDuplicateSources { // doesn't need to be text-only, as from the same source / site, so expected the same formating
   constructor() {
     this.messages = new Map();
     this.expireTime = 6000;
@@ -2155,18 +2153,15 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					}
 				}
 
-				if (settings.firstsourceonly) {
-					if (!verifyOriginal(request.message)) {
+				if (settings.firstsourceonly || settings.hideallreplies) {
+					if (!verifyOriginalNewIncomingMessage(request.message.chatmessage.replace(/\s\s+/g, " "), request.message.textonly)) { 
 						sendResponse({ state: isExtensionOn });
 						return response;
 					}
 				}
 				
-				
-				if (settings.noduplicates &&
-					checkDuplicateSources.isDuplicate(
-						request.message.type, 
-						(request.message.userid || request.message.chatname), 
+				if (settings.noduplicates && // filters echos if same TYPE, USERID, and MESSAGE 
+					checkDuplicateSources.isDuplicate(request.message.type, (request.message.userid || request.message.chatname), 
 						(request.message.chatmessage || request.message.hasDonation || (request.message.membership && request.message.event)))) {
 							sendResponse({ state: isExtensionOn });
 							return response;
@@ -2579,18 +2574,20 @@ function _min(d0, d1, d2, bx, ay) {
 ////////////////////////////
 
 var previousMessages = [];
-function checkExactDuplicate(msg) {
+function checkExactDuplicateAlreadySent(msg) {
 	// just in case the " said: " filter doesn't work, maybe due to a missing space or HTML
-
+	
 	var cleanText = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
 	cleanText = cleanText.replace(/\s\s+/g, " ").trim();
 	if (!cleanText) {
 		return false;
 	}
-
+	
 	if (previousMessages.includes(cleanText)) {
+		// console.error(cleanText, previousMessages);
 		var ret = true;
 	} else {
+		// console.warn(cleanText, previousMessages);
 		var ret = false;
 	}
 	previousMessages.push(cleanText);
@@ -2600,25 +2597,40 @@ function checkExactDuplicate(msg) {
 	return ret;
 }
 
-function verifyOriginal(msg) {
+function verifyOriginalNewIncomingMessage(msg, cleaned=false) {
+	
+	if (Date.now() - lastSentTimestamp > 5000) {
+		// 2 seconds has passed; assume good.
+		return true;
+	}
+	
+	// console.log(msg,lastSentMessage);
+	
 	try {
-		if (Date.now() - lastSentTimestamp > 5000) {
-			// 2 seconds has passed; assume good.
-			return true;
+		if (!cleaned){
+			msg = decodeAndCleanHtml(msg);
 		}
-		var cleanText = msg.chatmessage.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
-		cleanText = cleanText.replace(/\s\s+/g, " ");
-		var score = levenshtein(cleanText, lastSentMessage);
-		if (score < 7) {
-			if (lastMessageCounter) {
+		
+		var score = levenshtein(msg, lastSentMessage);
+		// console.log(msg, score);
+		if (score < 7) { // same message
+			
+			lastMessageCounter += 1;
+			if (lastMessageCounter>1) {
+				// console.log("1");
 				return false;
 			}
-			lastMessageCounter = 1;
-		} else {
-			return false;
+			if (settings.hideallreplies){
+				// console.log("2");
+				return false;
+			}
 		}
-	} catch (e) {}
+	} catch(e){
+		errorlog(e);
+	}
+		
 	return true;
+	
 }
 
 function ajax(object2send, url, ajaxType = "PUT", type = "application/json; charset=utf-8") {
@@ -2729,7 +2741,6 @@ async function sendToDestinations(message) {
 	sendToDisk(message);
 	sendToH2R(message);
 	sendToPost(message);
-	sendToS10(message);
 	addMessageDB(message);
 	return true;
 }
@@ -2829,16 +2840,9 @@ function sendToH2R(data) {
 		}
 	}
 }
-function sendToS10(data) {
+function sendToS10(data, fakechat=false, relayed=false) {
 	if (settings.s10 && settings.s10apikey && settings.s10apikey.textsetting) {
 		try {
-			// displayName - The display name associated with the message
-			// messageBody - The text body of the message
-			// sourceName - The source type; eg: twitch, youtube, etc.
-			// sourceIconUrl - source icon; eg: https://socialstream.ninja/sources/images/youtube.png
-			// displayPictureUrl - (NOT SUPPORTED ATM) The URL of a display picture (this will be included in the message's metadata)
-			// userId - (REQUIRED) Will associate the message with a specific user ID.
-
 			// msg =  '{
 				// "userId": "my-external-id",
 				// "displayName": "Tyler",
@@ -2846,46 +2850,61 @@ function sendToS10(data) {
 				// "sourceName": "twitch",
 				// "sourceIconUrl": "https://cdn.shopify.com/app-store/listing_images/715abff73d9178aa7f665d7feadf7edf/icon/CPTw1Y2Mp4UDEAE=.png"
 			// }';
-
-			
-			const StageTEN_API_URL = "https://app.stageten.tv/apis/plugin-service/chat/message/send"
-
-			var msg = {};
-			
-			if (data.chatmessage) {
-				if (!data.textonly) {
-					msg.messageBody = unescapeHtml(data.chatmessage);
-				} else {
-					msg.messageBody = data.chatmessage;
-				}
-				msg.messageBody = msg.messageBody.replace(/(<([^>]+)>)/gi, "") || "";
-			}
-
-			if (!msg.messageBody) {
-				return;
-			}
-
 			if (data.type && data.type === "stageten") {
 				return;
 			}
 			
+			if (data.chatmessage.includes(" said: ")){
+				return null;
+			}
+			
+			const StageTEN_API_URL = "https://app.stageten.tv/apis/plugin-service/chat/message/send"
+
+			let cleaned = data.chatmessage;
+			if (data.textonly){
+				cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
+				cleaned = cleaned.replace(/\s\s+/g, " ");
+			} else {
+				cleaned = decodeAndCleanHtml(cleaned);
+			}
+			if (!cleaned){
+				return;
+			}
+			
+			// console.error(cleaned, data,data.textonly);
+			
+			if (relayed && !verifyOriginalNewIncomingMessage(cleaned, true)){
+				if (checkExactDuplicateAlreadySent(cleaned, true)){
+					return;
+				}
+				
+				if (settings.myname) {
+					let custombot = settings.myname.textparam1.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
+					custombot = custombot.split(",");
+					if (custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
+						return null;
+					}
+				}
+			} else if (!fakechat && checkExactDuplicateAlreadySent(cleaned, true)){
+				return null;
+			} else {
+				checkExactDuplicateAlreadySent(cleaned, true)
+			}
+			
+			if (fakechat){
+				lastSentMessage = cleaned; 
+				lastSentTimestamp = Date.now();
+				lastMessageCounter = 0;
+			} 
+			
+			var msg = {};
 			msg.sourceName = data.type || "unknown";
 			msg.sourceIconUrl = "https://socialstream.ninja/sources/images/"+msg.sourceName+".png";
 			msg.displayName = data.chatname || data.userid || "⚡";
 			msg.userId = "socialstream";
-
-			/* if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
-				msg.displayPictureUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
-			} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
-				let chatimg = data.chatimg.replace("=s32-", "=s256-");
-				msg.displayPictureUrl = chatimg.replace("=s64-", "=s256-");
-			} else if (data.chatimg) {
-				msg.displayPictureUrl = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
-			} else if (data.type) {
-				msg.displayPictureUrl = "https://socialstream.ninja/sources/images/" + data.type + ".png";
-			} else {
-				msg.displayPictureUrl = "https://socialstream.ninja/sources/images/unknown.png";
-			} */
+			msg.messageBody = cleaned;
+			
+			// console.error(msg, fakechat);
 
 			let xhr = new XMLHttpRequest();
 			xhr.open("POST", StageTEN_API_URL);
@@ -4446,7 +4465,7 @@ function generalFakePoke(tabid) {
 	}
 }
 
-function processResponse(data, reverse = false, metadata = null) {
+function processResponse(data, reverse = false, metadata = null, relay=false) {
 	if (!chrome.debugger) {
 		return false;
 	}
@@ -4456,6 +4475,10 @@ function processResponse(data, reverse = false, metadata = null) {
 	if (settings.disablehost) {
 		return;
 	}
+	
+	checkExactDuplicateAlreadySent(data.response);
+	
+	
 	chrome.tabs.query({}, function (tabs) {
 		if (chrome.runtime.lastError) {
 			//console.warn(chrome.runtime.lastError.message);
@@ -4511,7 +4534,19 @@ function processResponse(data, reverse = false, metadata = null) {
 
 				published[tabs[i].url] = true;
 				//messageTimeout = Date.now();
-				if (tabs[i].url.startsWith("https://www.twitch.tv/popout/")) {
+				if (tabs[i].url.includes(".stageten.tv") && settings.s10apikey && settings.s10){
+					if (!data.response){continue;}
+					// we will not send fake chat as we're likely sending it via POST instead directly
+					if (metadata){
+						sendToS10(metadata, true);
+					} else {
+						var msg = {};
+						msg.chatmessage = data.response;
+						msg.type = "socialstream";
+						msg.chatimg = "https://socialstream.ninja/icons/icon-128.png"; 
+						sendToS10(msg, true); // contains the original message 
+					}
+				} else if (tabs[i].url.startsWith("https://www.twitch.tv/popout/")) {
 					// twitch, but there's also cases for youtube/facebook
 					if (!debuggerEnabled[tabs[i].id]) {
 						debuggerEnabled[tabs[i].id] = false;
@@ -4565,7 +4600,7 @@ function processResponse(data, reverse = false, metadata = null) {
 					continue; // Skip the rest of the loop after handling Zoom
 				} else {
 					// all other destinations. ; generic
-
+					
 					if (tabs[i].url.includes("youtube.com/live_chat")) {
 						getYoutubeAvatarImage(tabs[i].url, true); // see if I can pre-cache the channel image, if not loaded.
 					}
@@ -5074,7 +5109,7 @@ async function applyBotActions(data, tab = false) {
 				return null;
 			}
 		}
-
+		
 		if (settings.whitelistuserstoggle && settings.whitelistusers) {
 			if (!data.chatname) {
 				return null; // no name, so won't allow
@@ -5094,6 +5129,7 @@ async function applyBotActions(data, tab = false) {
 				return null;
 			}
 		}
+		
 
 		if (settings.viplistuserstoggle && data.chatname && settings.viplistusers) {
 			const viplist = settings.viplistusers.textsetting.split(",").map(user => {
@@ -5146,6 +5182,45 @@ async function applyBotActions(data, tab = false) {
 				// there's no content worth sending I'm assuming
 				return false;
 			}
+		}
+		
+		if (settings.relayall && data.chatmessage && data.chatname && !data.event) {
+			// don't relay events
+			if (checkExactDuplicateAlreadySent(data.chatmessage)) {  
+				// not matching exactly
+				return null;
+			}
+
+			if (data.chatmessage.includes(" said: ")) {
+				return null;
+			} // probably a reply
+
+			if (settings.myname) {
+				let custombot = settings.myname.textparam1.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
+				custombot = custombot.split(",");
+				if (custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
+					return null;
+				} // a bot or host, so we don't want to relay that
+			}
+
+			if (Date.now() - messageTimeout > 1000) {
+				messageTimeout = Date.now();
+				var msg = {};
+				msg.tid = data.tid;
+				// this should be ideall HTML stripped
+				if (tab) {
+					msg.url = tab.url;
+				}
+
+				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
+				if (tmpmsg) { 
+					msg.response = sanitizeRelay(data.chatname, true, "Someone") + " said: " + tmpmsg;
+					processResponse(msg, true, data); // this should be the first and only message
+				}
+			}
+		} else if (settings.s10relay && data.chatmessage && data.chatname && !data.event){
+			console.log(data); 
+			sendToS10(data, false, true); // we'll handle the relay logic here instead
 		}
 
 		if (data.chatmessage) {
@@ -5265,42 +5340,7 @@ async function applyBotActions(data, tab = false) {
 				processResponse(msg, true);
 			}
 		}
-		if (settings.relayall && data.chatmessage && data.chatname && !data.event) {
-			// don't relay events
-			if (checkExactDuplicate(data.chatmessage)) {
-				// not matching exactly
-				return null;
-			}
-
-			if (data.chatmessage.includes(" said: ")) {
-				return null;
-			} // probably a reply
-
-			if (settings.myname) {
-				let custombot = settings.myname.textparam1.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
-				custombot = custombot.split(",");
-				if (custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
-					return null;
-				} // a bot or host, so we don't want to relay that
-			}
-
-			if (Date.now() - messageTimeout > 1000) {
-				messageTimeout = Date.now();
-				var msg = {};
-				msg.tid = data.tid;
-				// this should be ideall HTML stripped
-				if (tab) {
-					msg.url = tab.url;
-				}
-
-				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
-				if (tmpmsg) {
-					msg.response = sanitizeRelay(data.chatname, true, "Someone") + " said: " + tmpmsg;
-					checkExactDuplicate(msg.response);
-					processResponse(msg, true, data); // this should be the first and only message
-				}
-			}
-		}
+		
 
 		if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy && data.chatmessage && data.chatmessage.indexOf("!giphy") != -1 && !data.contentimg) {
 			var searchGif = data.chatmessage;
@@ -5694,24 +5734,9 @@ async function applyBotActions(data, tab = false) {
 		
 		if (settings.ollama && data.chatmessage && data.chatname){
 			
-			let skip = 0;
-			if (data.chatmessage.startsWith("🤖💬")){  // ensure the bot doesn't respond to itself
-				skip += 1;
-			}
-			
-			if (Date.now() - lastSentTimestamp < 7000) { // ensure the bot doesn't respond to itself or to the host.
-				skip += 1;
-			}
-			
-			if (skip < 2){
-				var cleanText = data.chatmessage.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
-				cleanText = cleanText.replace(/\s\s+/g, " ");
-				var score = levenshtein(cleanText, lastSentMessage);
-				
-				if (score < 7) { // make sure bot doesn't respond to itself or to the host.
-					skip +=1;
-				}
-				if (skip<2){ // enough criteria were met to skip this message
+			if (!data.chatmessage.startsWith("🤖💬:")){  // ensure the bot doesn't respond to itself
+				let skip = 0;
+				if (Date.now() - lastSentTimestamp > 7000) { // ensure the bot doesn't respond to itself or to the host.
 					processMessageWithOllama(data);
 				}
 			}
@@ -5721,6 +5746,16 @@ async function applyBotActions(data, tab = false) {
 	}
 	
 	return data;
+}
+
+function decodeAndCleanHtml(input) {
+    var doc = new DOMParser().parseFromString(input, 'text/html');
+    doc.querySelectorAll('img[alt]').forEach(img => {
+        var alt = img.getAttribute('alt');
+        img.parentNode.replaceChild(doc.createTextNode(alt), img);
+    });
+    var decodedInput = doc.body.textContent || "";
+    return decodedInput.replace(/\s\s+/g, " ").trim();
 }
 
 let isProcessing = false;
@@ -5767,6 +5802,33 @@ function processMessageWithOllama(data) {
             resolve();
             return;
         }
+		
+		if (!data.chatmessage || !data.chatname || data.chatmessage.startsWith("🤖💬:")){
+			resolve();
+            return;
+		}
+		
+		var cleanedText = data.chatmessage;
+					
+		if (!data.textonly){
+			cleanedText = decodeAndCleanHtml(cleanedText);
+		}
+		if (!cleanedText){
+			resolve();
+            return;
+		}
+		
+		var score = levenshtein(cleanedText, lastSentMessage);
+		
+		if (score < 7) { // make sure bot doesn't respond to itself or to the host.
+			resolve();
+            return;
+		}
+		
+		//let cleaned = decodeAndCleanHtml(message);
+		
+		// console.warn(data.chatmessage, cleanedText);
+		
         isProcessing = true;
         
         let ollamamodel = "llama3.1:latest";
@@ -5795,6 +5857,7 @@ function processMessageWithOllama(data) {
                                 tid: data.tid,
                                 response: "🤖💬: " + aiResponse.replace("Response:", "").trim()
                             };
+							//checkExactDuplicateAlreadySent(msg.response); 
                             processResponse(msg);
                             lastResponseTime[data.tid] = currentTime;
                         }
@@ -5832,7 +5895,7 @@ function processMessageWithOllama(data) {
             };
 
             var botinstructions = `You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it's directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response. Respond to the following message:  .
-User ${data.chatname} says: ${data.chatmessage}
+User ${data.chatname} says: ${cleanedText}
 Your decision and potential response:`;
 
             if (settings['ollamaprompt'] && settings['ollamaprompt'].textsetting) {
@@ -5851,6 +5914,137 @@ Your decision and potential response:`;
     });
 }
 
+/* var ollamaRNN = [];
+function processMessageWithOllama(data) {
+    return new Promise((resolve, reject) => {
+        const currentTime = Date.now();
+        
+        if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < 5000)) {
+            resolve(); // Skip this message if we've responded recently
+            return;
+        }
+        if (isProcessing) {
+            resolve();
+            return;
+        }
+		
+		if (!data.chatmessage || !data.chatname || data.chatmessage.startsWith("🤖💬:")){
+			resolve();
+            return;
+		}
+		
+		var cleanedText = data.chatmessage;
+					
+		if (!data.textonly){
+			cleanedText = decodeAndCleanHtml(cleanedText);
+		}
+		if (!cleanedText){
+			resolve();
+            return;
+		}
+		
+		var score = levenshtein(cleanedText, lastSentMessage);
+		
+		if (score < 7) { // make sure bot doesn't respond to itself or to the host.
+			resolve();
+            return;
+		}
+		
+		//let cleaned = decodeAndCleanHtml(message);
+		
+		// console.warn(data.chatmessage, cleanedText);
+		
+        isProcessing = true;
+        
+        let ollamamodel = "llama3.1:latest";
+        if (settings['ollamamodel'] && settings['ollamamodel'].textsetting) {
+            ollamamodel = settings['ollamamodel'].textsetting.trim();
+        }
+
+        const sendRequest = (model) => {
+			
+			let ollamaendpoint = "http://localhost:11434";
+			if (settings.ollamaendpoint && settings.ollamaendpoint.textsetting){
+				ollamaendpoint = settings.ollamaendpoint.textsetting;
+			}
+			
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', ollamaendpoint+'/api/generate', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+                        const aiResponse = result.response.trim();
+                        if (!aiResponse.includes("RESPONSE")) {
+							let resp = aiResponse.replace("Response:", "").trim();
+                            const msg = {
+                                tid: data.tid,
+                                response: "🤖💬: " +  resp
+                            };
+							//checkExactDuplicateAlreadySent(msg.response); 
+							ollamaRNN.push(`User ${data.chatname} says: ${cleanedText}
+Your previous response: ${resp}`);
+							if (ollamaRNN.length>30){
+								ollamaRNN.shift();
+							}
+                            processResponse(msg);
+                            lastResponseTime[data.tid] = currentTime;
+                        }
+                    } catch (error) {
+                        console.log('Error parsing response:', error);
+                    }
+                } else if (xhr.status === 404) {
+                    console.log(`Model ${model} not found. Status:`, xhr.status);
+                    if (!settings['ollamamodel']?.textsetting) {
+                        // Model not found and no user-specified model, try to get first available model
+                        getFirstAvailableModel()
+                            .then(newModel => {
+                                console.log(`Using ${newModel} instead.`);
+                                settings['ollamamodel'] = { textsetting: newModel };
+                                sendRequest(newModel);
+                            })
+                            .catch(error => {
+                                console.log('Failed to get available model:', error);
+                                isProcessing = false;
+                                reject(error);
+                            });
+                        return;
+                    }
+                } else {
+                    console.log('Request failed. Status:', xhr.status);
+                }
+                isProcessing = false;
+                resolve();
+            };
+
+            xhr.onerror = function() {
+                console.log('Request failed. Network error.');
+                isProcessing = false;
+                reject(new Error('Network error'));
+            };
+
+            var botinstructions = `You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it's directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response. Respond to the following conversation:  . ${ollamaRNN.join(" ")}
+User ${data.chatname} says: ${cleanedText}
+Your decision and potential response:`;
+
+            if (settings['ollamaprompt'] && settings['ollamaprompt'].textsetting) {
+                botinstructions = settings['ollamaprompt'].textsetting.trim();
+            }
+
+            const requestData = JSON.stringify({
+                model: model,
+                stream: false,
+                prompt: botinstructions
+            });
+            xhr.send(requestData);
+        };
+
+        sendRequest(ollamamodel);
+    });
+}
+ */
 var store = [];
 
 var MidiInit = false;

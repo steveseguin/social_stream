@@ -3114,6 +3114,32 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="dock-sends-its-commands-to-extension-via-server">Dock sends its commands to Extension via server</span>
                                 </div>
+								<div title="Only others on the same network/computer as yours can connect to this via p2p">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="lanonly" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="allow-lan-only-p2p-connections">🖥️💻 P2P connections via LAN only </span>
+                                </div>
+								<div title="Relay messages from other sites to Stage TEN">
+									<label class="switch">
+										<input type="checkbox" id="s10relay" data-setting="s10relay" />
+										<span class="slider round"></span>
+									</label>
+									<img class="icon" src="./sources/images/stageten.png" style="display: inline-block;" />📨 <span data-translate="send-chat-messages-to-staeten">Send all messages to Stage TEN</span>
+								</div>
+								<div>	
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="s10" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                        <input type="text" id="s10apikey" class="textInput" autocomplete="off" placeholder="Enter your StageTEN API key here" data-textsetting="s10apikey" />
+                                        <label for="s10apikey"><span data-translate="send-all-to-s10-server">&gt; Use the Stage TEN Chat API</span></label>
+                                    </div>
+                                   
+                                </div>
+								
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-setting="h2r" />
@@ -3126,16 +3152,6 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-setting="s10" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
-                                        <input type="text" id="s10apikey" class="textInput" autocomplete="off" placeholder="Provide StageTEN API key here" data-textsetting="s10apikey" />
-                                        <label for="s10apikey"><span data-translate="send-all-to-s10-server">&gt; Send all chat to Stage TEN</span></label>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="switch">
                                         <input type="checkbox" data-setting="post" />
                                         <span class="slider round"></span>
                                     </label>
@@ -3144,13 +3160,7 @@ input:checked + .slider:before {
                                         <label for="postserver"><span data-translate="send-all-to-post-server">&gt; Send all to POST server</span></label>
                                     </div>
                                 </div>
-                                <div title="Only others on the same network/computer as yours can connect to this via p2p">
-                                    <label class="switch">
-                                        <input type="checkbox" data-setting="lanonly" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="allow-lan-only-p2p-connections">🖥️💻 P2P connections via LAN only </span>
-                                </div>
+
                                 <div>
                                     <span data-translate="select-a-different-translation">
                                         Select a different translation
@@ -3353,20 +3363,32 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group">
-                                <div title="Just text is captured; no HTML, so no BTTV emotes, etc.">
+							
+								<h3><span data-translate="message-echos">Message doubling / echos / duplicates</span></h3>
+								
+								<div title="Do not capture your responses that you make to chat. They will be filtered out, so will not appear in the dock">
+                                    <label class="switch">
+                                        <input type="checkbox" id="hideallreplies" data-setting="hideallreplies" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="hide-all-messages-rplies">💬🚫 Do not capture / show any of your replies</span>
+                                </div>
+                                <div title="Filter out duplicate messages as a result of you replying to multiple chat sites. Only the first reply is captured">
                                     <label class="switch">
                                         <input type="checkbox" id="firstsourceonly" data-setting="firstsourceonly" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="filter-out-duplicate-message-echos">💬💬🚫🎯 Filter out duplicate message per tab </span>
+                                    <span data-translate="filter-out-duplicate-message-echos">💬💬🚫 Hide duplicates of your replies; show first only</span>
                                 </div>
-								<div title="Just text is captured; no HTML, so no BTTV emotes, etc.">
+								<div title="Filter out duplicate messages that might occur with a specific source only.">
                                     <label class="switch">
                                         <input type="checkbox" id="noduplicates" data-setting="noduplicates" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="filter-out-duplicate-message-all">💬💬🚫🌍 Filter out duplicate message per source </span>
+                                    <span data-translate="filter-out-duplicate-message-all">💬💬🚫 Filter out messages that echo / double</span>
                                 </div>
+								
+								<h3><span data-translate="swear-words">Other filters</span></h3>
 								
                                 <div title="Censor common bad words with asterixis. Create badwords.txt to make your own blacklist.">
                                     <label class="switch">

@@ -77,22 +77,42 @@
 	}
 	
 	function processMessage(content){
+		//console.log(content);
 		
 		var chatname="";
 		try {
-			chatname = escapeHtml(content.querySelector(".display-name").textContent);
+			chatname = escapeHtml(content.querySelector(".display-name,[class*='chatComponents_name_']").textContent);
 			chatname = chatname.trim();
 			chatname = escapeHtml(chatname);
 		} catch(e){
 			return;
 		}
 		
+		var badges = [];
+		
+		content.querySelectorAll("[class*='chatComponents_name_'] svg").forEach(ele=>{
+			try {
+				if (badge && badge.nodeName == "IMG"){
+					var tmp = {};
+					tmp.src = badge.src;
+					tmp.type = "img";
+					chatbadges.push(tmp);
+				} else {
+					var tmp = {};
+					tmp.html = badge.outerHTML;
+					tmp.type = "svg";
+					chatbadges.push(tmp);
+				}
+			} catch(e){  }
+		});
+		
+		
 		var chatmessage="";
 		try{
 			 if (settings.textonlymode){
-				chatmessage = escapeHtml(content.querySelector(".message-text").innerText);
+				chatmessage = escapeHtml(content.querySelector(".message-text,[class*='chatComponents_bubble']").innerText);
 			 } else {
-				var ele2 = content.querySelector(".message-text");
+				var ele2 = content.querySelector(".message-text,[class*='chatComponents_bubble']");
 				ele2.childNodes.forEach(ele3=>{
 					if (ele3.nodeName == "IMG"){
 						if (ele3.src){
@@ -124,6 +144,8 @@
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "stageten";
+		
+		//console.log(data);
 
 		pushMessage(data);
 	}
@@ -134,7 +156,7 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						if (mutation.addedNodes[i] && (mutation.addedNodes[i].tagName == "LI")) {
+						if (mutation.addedNodes[i] && ((mutation.addedNodes[i].tagName == "LI") || (mutation.addedNodes[i].tagName == "DIV"))) {
 							if (!mutation.addedNodes[i].dataset.set123){
 								mutation.addedNodes[i].dataset.set123 = "true";
 								callback(mutation.addedNodes[i]);
@@ -155,7 +177,16 @@
 	
 	setInterval(function(){ // clear existing messages; just too much for a stream.
 	
-		if (document.querySelector("ol")){
+		if (document.querySelector("[class*='chatComponents_messageHistory']")){
+			if (!document.querySelector("[class*='chatComponents_messageHistory']").set123){
+				document.querySelector("[class*='chatComponents_messageHistory']").set123 = true;
+				console.log("LOADED SocialStream EXTENSION");
+				
+				onElementInserted(document.querySelector("[class*='chatComponents_messageHistory']"), function(element){
+					processMessage(element, false);
+				});
+			}
+		} else if (document.querySelector("ol")){
 			if (!document.querySelector("ol").set123){
 				document.querySelector("ol").set123 = true;
 				console.log("LOADED SocialStream EXTENSION");
