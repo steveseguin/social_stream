@@ -5225,7 +5225,7 @@ async function applyBotActions(data, tab = false) {
 				}
 			}
 		} else if (settings.s10relay && data.chatmessage && data.chatname && !data.event){
-			console.log(data); 
+			// console.log(data); 
 			sendToS10(data, false, true); // we'll handle the relay logic here instead
 		}
 
