@@ -93,7 +93,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - instagram live (instagram.com/*/live/),  css note:  `[data.type = "instagramlive"]`
 - Instagram post non-live comments (REQUIRES the TOGGLE in menu to enable it), css note: `[data.type = "instagram"]`
 - instafeed.me (no pop out; alternative instagram live support)
-- tiktok live (tiktok.com/*/live)
+- tiktok live (tiktok.com/*/live -- the chat must be left open/visible if using the extension version)
 - webex live chat (not the pop out)
 - linkedin events and live comments. (works with linkedin.com/videos/live/* or linkedin.com/videos/events/* or linkedin.com/events/*)
 - vdo.ninja (pop-out chat)
