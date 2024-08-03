@@ -129,7 +129,7 @@
 			
 			walkTheDOM(ele.querySelector('.chat-text-normal'), function(node) {
 				if (node.nodeName === "#text") {
-					var text = node.data.trim();
+					var text = node.data;
 					if (text.length) {
 						msg += escapeHtml(text);
 					}
