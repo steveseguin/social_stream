@@ -3139,13 +3139,13 @@ function setupSocket() {
 				highlightWaitlist(parseInt(data.value) || 0);
 			} else if (data.action && data.action === "resetwaitlist") {
 				resetWaitlist();
-			} else if (request.cmd && request.cmd === "stopentries") {
+			} else if (data.action && data.action === "stopentries") {
 				toggleEntries(false);
 				sendResponse({ state: isExtensionOn });
 			} else if (data.action && data.action === "downloadwaitlist") {
 				downloadWaitlist();
 			} else if (data.action && data.action === "selectwinner") {
-				if (value in data) {
+				if ("value" in data) {
 					selectRandomWaitlist(parseInt(data.value) || 0);
 				} else {
 					selectRandomWaitlist();
