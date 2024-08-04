@@ -34,14 +34,8 @@ if (typeof(chrome.runtime)=='undefined'){
 		console.log(args[0]);
 	}) */
 	
-	/* window.addEventListener("message", function(event) {
-		console.log(event.origin);
-		var messageData = event.data;
-		console.log("Received a message from the parent window:", messageData);
-	}); */
 	
 }
-
 
 var translation = {};
 
@@ -372,8 +366,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				});
 			}
 		});
-
-	}
+	}	
+	
 	
 	document.getElementById('searchIcon').addEventListener('click', function() {
 		var searchInput = document.getElementById('searchInput');
@@ -452,6 +446,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	});
 	
+	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
+	const ragFileManagement = document.getElementById('ragFileManagement');
+	const uploadButton = document.querySelector('[data-action="uploadRAGfile"]');
+
+	ragEnabledCheckbox.addEventListener('change', function() {
+		ragFileManagement.style.display = this.checked ? 'block' : 'none';
+	});
+
 	console.log("pop up asking main for settings");
 	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
 		console.log("getSettings response",response);
@@ -580,7 +582,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			
 			msg.value = this.dataset.value || null;
 			if (msg.cmd == "fakemsg"){
-				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
+				chrome.runtime.sendMessage(msg, function (response) {
+					// actions have callbacks? maybe
+				});
+			} else if (msg.cmd == "uploadRAGfile"){
+				chrome.runtime.sendMessage({cmd: "uploadRAGfile", enhancedProcessing: document.getElementById('enhancedProcessing').checked}, function (response) {
 				});
 			} else if (msg.cmd == "bigwipe"){
 				var confirmit = confirm("Are you sure you want to reset all your settings?");
@@ -632,11 +638,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	};
 
 	checkVersion();
+	
 });
 var streamID = false;
 function update(response, sync=true){
 	console.log("update-> response: ",response);
 	if (response !== undefined){
+		
+		if (response.documents){
+			updateDocumentList(response.documents);
+		}
 		
 		if (response.streamID){
 			streamID = true;
@@ -805,6 +816,8 @@ function update(response, sync=true){
 										}
 										chrome.runtime.sendMessage({cmd: "saveSetting", type: "setting", setting: "sentiment", "value": false}, function (response) {}); // delete sentiment
 									} catch(e){console.error(e);}
+								} else if (key == "ollamaRagEnabled"){
+									document.getElementById('ragFileManagement').style.display = 'block';
 								}
 							}
 							if ("textsetting" in response.settings[key]){
@@ -1616,8 +1629,50 @@ if (!chrome.browserAction){
 }
 
 
+function updateDocumentList(documents = []) {
+    console.log(documents);
+    const fileList = document.getElementById('ragFileList');
+    fileList.innerHTML = '';
 
+    documents.forEach(doc => {
+        const docElement = document.createElement('div');
+        docElement.innerHTML = `
+            <span>${doc.title}</span>
+            <span>${doc.status}</span>
+            ${doc.progress !== undefined ? `<progress value="${doc.progress}" max="100"></progress>` : ''}
+            ${doc.status !== 'Deleting' && doc.status !== 'Uploading' ? 
+                `<button data-action="deleteDocument" data-id="${doc.id}" ${doc.status === 'Deleting' ? 'disabled' : ''}>Delete</button>` : 
+                ''
+            }
+        `;
+        fileList.appendChild(docElement);
+    });
 
+    // Add event listeners for delete buttons
+    document.querySelectorAll('[data-action="deleteDocument"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const docId = this.getAttribute('data-id');
+            chrome.runtime.sendMessage({cmd: "deleteRAGfile", docId: docId});
+        });
+    });
+}
+
+try {
+	chrome.runtime.onMessage.addListener(
+		function(request, sender, sendResponse) {
+			if (request.forPopup) {
+				console.log("Message received in popup:", request.forPopup);
+				if (request.forPopup.documents){
+					updateDocumentList(request.forPopup.documents);
+				}
+				// Handle the message data here
+				sendResponse({status: "Message received in popup"});
+			}
+		}
+	);
+} catch(e){
+	console.log(e);
+}
 
 
 

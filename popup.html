@@ -964,12 +964,14 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
-                                <div>
+								 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param1="showtime=20000" />
+                                        <input type="checkbox" data-param1="showtime" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="hide-messages-after-20s">⏲️ Hide messages after 20s </span>
+                                    <span data-translate="hide-messages-after-20s">
+                                        ⏲️ Auto-hide message after <input type="number" style="max-width: 8ch;" max="999999" min="1" value="20000" size="6" data-numbersetting="showtime" />ms
+                                    </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -3596,7 +3598,12 @@ The list of names should be comma separated."
                         </label>
                         <span data-translate="enable-ollama-bot">🦙🤖 Enable the Ollama AI bot (<a href="https://github.com/steveseguin/social_stream/blob/main/ai.md" style="color:lightblue" target="_blank">Requires Install</a>)</span>
                     </div>
-					<br /><br>
+					<div title="There's a minimum of 5-seconds by default" style="margin:5px 0">
+						<span data-translate="custom-tts-rate">
+							🐢 Rate limit for responses per tab / source
+							<input type="number" style="max-width: 7ch;" step="1000" max="9999999" min="5000" value="5000" size="6" data-numbersetting="ollamaRateLimitPerTab" />ms
+						</span>
+					</div>
 					<div>
 						<div class="textInputContainer" style="width: 95%;">
 							<input type="text" id="ollamamodel" class="textInput" autocomplete="off" placeholder="eg: llama3.1" data-textsetting="ollamamodel" />
@@ -3610,17 +3617,37 @@ The list of names should be comma separated."
 						</div>
 					</div>
                     <div class="textInputContainer" style="width: 95%;">
-                        <textarea id="botinstructions" class="textInput" style="height:80px" autocomplete="off" placeholder="Enter your custom bot instructions here. Leave blank for a friendly and helpful bot to be used." data-textsetting="ollamaprompt">
-							You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it's directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response. Respond to the following message:  .
-
-							User ${data.chatname} says: ${data.chatmessage}
-
-							Your decision and potential response:
-						</textarea>
-                        <label for="botinstructions">
-                            <span data-translate="ollamaprompt">&gt; Enter your custom bot instructions below</span>
+						<textarea id="ollamaprompt" class="textInput" style="height:80px" autocomplete="off" placeholder="Enter additional instructions or context for the bot (e.g., 'You are a shopping assistant for a YouTube stream; only respond if you think it's important')" data-textsetting="ollamaprompt"></textarea>
+						<label for="ollamaprompt">
+							<span data-translate="ollamaprompt">&gt; Additional Bot Instructions (Optional)</span>
+						</label>
+					</div>
+					<div style="display: inline-block;" title="Enable the RAG mode, which has the LLM bot access a local database containing additional knowledge that if may reference in its responses.">
+                        <label class="switch">
+                            <input type="checkbox" id="ollamaRagEnabled" data-setting="ollamaRagEnabled" />
+                            <span class="slider round"></span>
                         </label>
-                    </div>
+                        <span data-translate="enable-ragEnabled-bot">Use a custom knowledge-base (RAG)</span> 
+					</div>
+					<br /><br />
+					<div id="ragFileManagement" style="display: none; margin-top: 10px;" title="A list of uploaded files that will populate the knowledge database, along with any progress state">
+						<div>
+							<button class="glowingButton" style="width: 160px; margin-left: 0px;" data-action="uploadRAGfile" title="Ideally, plain text or markdown files should be used">
+								<span data-translate="add-another-rag-file">Add a resource file</span>
+							</button>
+							<button class="glowingButton" style="width: 160px; margin-left: 0px;" data-action="clearRag" title="This will remove the local database of knowledge and delete upload files">
+								<span data-translate="clear-rag">Clear all</span>
+							</button>
+						</div>
+						<h4>Custom knowledge-base - File Management</h4>
+						<div id="ragFileList"></div>
+						<div>
+							<input type="checkbox" id="enhancedProcessing" checked>
+							<label for="enhancedProcessing">Use enhanced processing (may work better with multiple documents)</label>
+						</div>
+						<br>
+						<span data-translate="works-better-when"><i>💁‍ tip: The quality of data uploaded will impact results. Too much data may be harmful.</i></span> 
+					</div>
                 </div>
             </div>
         </div>

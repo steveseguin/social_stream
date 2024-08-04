@@ -824,6 +824,18 @@ async function overwriteFileExcel(data = false) {
 	}
 }
 
+async function resetSettings(item = false) {
+	log("reset settings");
+	chrome.storage.sync.get(properties, async function (item) {
+		if (!item) {
+			item = {};
+		}
+		item.settings = {};
+		loadSettings(item, true);
+		// window.location.reload()
+	});
+}
+
 async function exportSettings() {
 	chrome.storage.sync.get(properties, async function (item) {
 		item.settings = settings;
@@ -847,18 +859,6 @@ async function exportSettings() {
 			await writableStream.write(JSON.stringify(item));
 			await writableStream.close();
 		}
-	});
-}
-
-async function resetSettings(item = false) {
-	log("reset settings");
-	chrome.storage.sync.get(properties, async function (item) {
-		if (!item) {
-			item = {};
-		}
-		item.settings = {};
-		loadSettings(item, true);
-		// window.location.reload()
 	});
 }
 
@@ -1826,7 +1826,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "getOnOffState") {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
 		} else if (request.cmd && request.cmd === "getSettings") {
-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
+			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG});
 		} else if (request.cmd && request.cmd === "saveSetting") {
 			if (typeof settings[request.setting] == "object") {
 				if (!request.value) {
@@ -2348,6 +2348,17 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} catch (e) {
 				console.error(e);
 			}
+		} else if (request.cmd && request.cmd === "uploadRAGfile") {
+			sendResponse({ state: isExtensionOn });
+			await importSettingsLLM(request.enhancedProcessing || false);
+			messagePopup({documents: documentsRAG});
+		} else if (request.cmd && request.cmd === "clearRag") {
+			sendResponse({ state: isExtensionOn });
+			await clearDatabase();
+			messagePopup({documents: documentsRAG});
+		} else if (request.cmd === "deleteRAGfile") {
+			await deleteDocument(request.docId);
+			messagePopup({documents: documentsRAG});
 		} else if (request.cmd && request.cmd === "fakemsg") {
 			sendResponse({ state: isExtensionOn });
 			var data = {};
@@ -3146,9 +3157,9 @@ function setupSocket() {
 				downloadWaitlist();
 			} else if (data.action && data.action === "selectwinner") {
 				if ("value" in data) {
-					selectRandomWaitlist(parseInt(data.value) || 0);
+					resp = selectRandomWaitlist(parseInt(data.value) || 0);
 				} else {
-					selectRandomWaitlist();
+					resp = selectRandomWaitlist();
 				}
 			}
 
@@ -3759,8 +3770,10 @@ function selectRandomWaitlist(n = 1) {
 		
 		drawListCount = selectable.length - count;
 		sendWaitlistConfig(winners, true);
+		return winners;
 		
 	} catch (e) {}
+	return false;
 }
 
 function resetWaitlist() {
@@ -4349,6 +4362,19 @@ function checkIfAllowed(sitename) {
 	return true;
 }
 
+function messagePopup(data) {
+    const popupMessage = {
+        forPopup: data
+    };
+    chrome.runtime.sendMessage(popupMessage, function(response) {
+        if (chrome.runtime.lastError) {
+            // console.warn("Error sending message:", chrome.runtime.lastError.message);
+        } else {
+            // console.log("Message sent successfully:", response);
+        }
+    });
+    return true;
+}
 function pokeSite(url = false, tabid = false) {
 	if (!chrome.debugger) {
 		return false;
@@ -5738,12 +5764,12 @@ async function applyBotActions(data, tab = false) {
 	}
 	try {
 		
-		if (settings.ollama && data.chatmessage && data.chatname){
-			
-			if (!data.chatmessage.startsWith("🤖💬:")){  // ensure the bot doesn't respond to itself
-				let skip = 0;
-				if (Date.now() - lastSentTimestamp > 7000) { // ensure the bot doesn't respond to itself or to the host.
+		if (settings.ollama){
+			if (Date.now() - lastSentTimestamp > 5000) {
+				try{
 					processMessageWithOllama(data);
+				} catch(e){
+					console.warn(e); // ai.js file missing?
 				}
 			}
 		}
@@ -5764,293 +5790,6 @@ function decodeAndCleanHtml(input) {
     return decodedInput.replace(/\s\s+/g, " ").trim();
 }
 
-let isProcessing = false;
-const lastResponseTime = {};
-
-function getFirstAvailableModel() {
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-		
-		let ollamaendpoint = "http://localhost:11434";
-		if (settings.ollamaendpoint && settings.ollamaendpoint.textsetting){
-			ollamaendpoint = settings.ollamaendpoint.textsetting;
-		}
-		
-        xhr.open('GET', ollamaendpoint+'/api/tags', true);
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                const datar = JSON.parse(xhr.responseText);
-                if (datar && datar.models && datar.models.length > 0) {
-                    resolve(datar.models[0].name);
-                } else {
-                    reject(new Error('No models available'));
-                }
-            } else {
-                reject(new Error('Failed to fetch models'));
-            }
-        };
-        xhr.onerror = function() {
-            reject(new Error('Network error while fetching models'));
-        };
-        xhr.send();
-    });
-}
-
-function processMessageWithOllama(data) {
-    return new Promise((resolve, reject) => {
-        const currentTime = Date.now();
-        
-        if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < 5000)) {
-            resolve(); // Skip this message if we've responded recently
-            return;
-        }
-        if (isProcessing) {
-            resolve();
-            return;
-        }
-		
-		if (!data.chatmessage || !data.chatname || data.chatmessage.startsWith("🤖💬:")){
-			resolve();
-            return;
-		}
-		
-		var cleanedText = data.chatmessage;
-					
-		if (!data.textonly){
-			cleanedText = decodeAndCleanHtml(cleanedText);
-		}
-		if (!cleanedText){
-			resolve();
-            return;
-		}
-		
-		var score = levenshtein(cleanedText, lastSentMessage);
-		
-		if (score < 7) { // make sure bot doesn't respond to itself or to the host.
-			resolve();
-            return;
-		}
-		
-		//let cleaned = decodeAndCleanHtml(message);
-		
-		// console.warn(data.chatmessage, cleanedText);
-		
-        isProcessing = true;
-        
-        let ollamamodel = "llama3.1:latest";
-        if (settings['ollamamodel'] && settings['ollamamodel'].textsetting) {
-            ollamamodel = settings['ollamamodel'].textsetting.trim();
-        }
-
-        const sendRequest = (model) => {
-			
-			let ollamaendpoint = "http://localhost:11434";
-			if (settings.ollamaendpoint && settings.ollamaendpoint.textsetting){
-				ollamaendpoint = settings.ollamaendpoint.textsetting;
-			}
-			
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', ollamaendpoint+'/api/generate', true);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    try {
-                        const result = JSON.parse(xhr.responseText);
-                        const aiResponse = result.response.trim();
-                        if (!aiResponse.includes("RESPONSE")) {
-                            const msg = {
-                                tid: data.tid,
-                                response: "🤖💬: " + aiResponse.replace("Response:", "").trim()
-                            };
-							//checkExactDuplicateAlreadySent(msg.response); 
-                            processResponse(msg);
-                            lastResponseTime[data.tid] = currentTime;
-                        }
-                    } catch (error) {
-                        console.log('Error parsing response:', error);
-                    }
-                } else if (xhr.status === 404) {
-                    console.log(`Model ${model} not found. Status:`, xhr.status);
-                    if (!settings['ollamamodel']?.textsetting) {
-                        // Model not found and no user-specified model, try to get first available model
-                        getFirstAvailableModel()
-                            .then(newModel => {
-                                console.log(`Using ${newModel} instead.`);
-                                settings['ollamamodel'] = { textsetting: newModel };
-                                sendRequest(newModel);
-                            })
-                            .catch(error => {
-                                console.log('Failed to get available model:', error);
-                                isProcessing = false;
-                                reject(error);
-                            });
-                        return;
-                    }
-                } else {
-                    console.log('Request failed. Status:', xhr.status);
-                }
-                isProcessing = false;
-                resolve();
-            };
-
-            xhr.onerror = function() {
-                console.log('Request failed. Network error.');
-                isProcessing = false;
-                reject(new Error('Network error'));
-            };
-
-            var botinstructions = `You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it's directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response. Respond to the following message:  .
-User ${data.chatname} says: ${cleanedText}
-Your decision and potential response:`;
-
-            if (settings['ollamaprompt'] && settings['ollamaprompt'].textsetting) {
-                botinstructions = settings['ollamaprompt'].textsetting.trim();
-            }
-
-            const requestData = JSON.stringify({
-                model: model,
-                stream: false,
-                prompt: botinstructions
-            });
-            xhr.send(requestData);
-        };
-
-        sendRequest(ollamamodel);
-    });
-}
-
-/* var ollamaRNN = [];
-function processMessageWithOllama(data) {
-    return new Promise((resolve, reject) => {
-        const currentTime = Date.now();
-        
-        if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < 5000)) {
-            resolve(); // Skip this message if we've responded recently
-            return;
-        }
-        if (isProcessing) {
-            resolve();
-            return;
-        }
-		
-		if (!data.chatmessage || !data.chatname || data.chatmessage.startsWith("🤖💬:")){
-			resolve();
-            return;
-		}
-		
-		var cleanedText = data.chatmessage;
-					
-		if (!data.textonly){
-			cleanedText = decodeAndCleanHtml(cleanedText);
-		}
-		if (!cleanedText){
-			resolve();
-            return;
-		}
-		
-		var score = levenshtein(cleanedText, lastSentMessage);
-		
-		if (score < 7) { // make sure bot doesn't respond to itself or to the host.
-			resolve();
-            return;
-		}
-		
-		//let cleaned = decodeAndCleanHtml(message);
-		
-		// console.warn(data.chatmessage, cleanedText);
-		
-        isProcessing = true;
-        
-        let ollamamodel = "llama3.1:latest";
-        if (settings['ollamamodel'] && settings['ollamamodel'].textsetting) {
-            ollamamodel = settings['ollamamodel'].textsetting.trim();
-        }
-
-        const sendRequest = (model) => {
-			
-			let ollamaendpoint = "http://localhost:11434";
-			if (settings.ollamaendpoint && settings.ollamaendpoint.textsetting){
-				ollamaendpoint = settings.ollamaendpoint.textsetting;
-			}
-			
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', ollamaendpoint+'/api/generate', true);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            
-            xhr.onload = () => {
-                if (xhr.status === 200) {
-                    try {
-                        const result = JSON.parse(xhr.responseText);
-                        const aiResponse = result.response.trim();
-                        if (!aiResponse.includes("RESPONSE")) {
-							let resp = aiResponse.replace("Response:", "").trim();
-                            const msg = {
-                                tid: data.tid,
-                                response: "🤖💬: " +  resp
-                            };
-							//checkExactDuplicateAlreadySent(msg.response); 
-							ollamaRNN.push(`User ${data.chatname} says: ${cleanedText}
-Your previous response: ${resp}`);
-							if (ollamaRNN.length>30){
-								ollamaRNN.shift();
-							}
-                            processResponse(msg);
-                            lastResponseTime[data.tid] = currentTime;
-                        }
-                    } catch (error) {
-                        console.log('Error parsing response:', error);
-                    }
-                } else if (xhr.status === 404) {
-                    console.log(`Model ${model} not found. Status:`, xhr.status);
-                    if (!settings['ollamamodel']?.textsetting) {
-                        // Model not found and no user-specified model, try to get first available model
-                        getFirstAvailableModel()
-                            .then(newModel => {
-                                console.log(`Using ${newModel} instead.`);
-                                settings['ollamamodel'] = { textsetting: newModel };
-                                sendRequest(newModel);
-                            })
-                            .catch(error => {
-                                console.log('Failed to get available model:', error);
-                                isProcessing = false;
-                                reject(error);
-                            });
-                        return;
-                    }
-                } else {
-                    console.log('Request failed. Status:', xhr.status);
-                }
-                isProcessing = false;
-                resolve();
-            };
-
-            xhr.onerror = function() {
-                console.log('Request failed. Network error.');
-                isProcessing = false;
-                reject(new Error('Network error'));
-            };
-
-            var botinstructions = `You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it's directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response. Respond to the following conversation:  . ${ollamaRNN.join(" ")}
-User ${data.chatname} says: ${cleanedText}
-Your decision and potential response:`;
-
-            if (settings['ollamaprompt'] && settings['ollamaprompt'].textsetting) {
-                botinstructions = settings['ollamaprompt'].textsetting.trim();
-            }
-
-            const requestData = JSON.stringify({
-                model: model,
-                stream: false,
-                prompt: botinstructions
-            });
-            xhr.send(requestData);
-        };
-
-        sendRequest(ollamamodel);
-    });
-}
- */
 var store = [];
 
 var MidiInit = false;
