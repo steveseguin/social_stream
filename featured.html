@@ -1502,15 +1502,19 @@
 			if (urlParams.has("ttsnewmembers")) {
 				newmembertts = urlParams.get("ttsnewmembers") || "en-US";
 			}
+			var ttsclicked = false;
+			if (urlParams.has("ttsclicked")) {
+				ttsclicked = urlParams.get("ttsclicked") || "en-US";
+			}
 			
-			if (readDonos || newmembertts || urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
+			if (readDonos || newmembertts || ttsclicked || urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
 				if (document.getElementById("tts")) {
 					document.getElementById("tts").dataset.state = 1;
 					document.getElementById("tts").classList.remove("hidden");
 					document.getElementById("tts").classList.add("pressed");
 				}
 				var speech = true;
-				speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || readDonos || newmembertts || "en-US";
+				speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || readDonos || newmembertts || ttsclicked || "en-US";
 				if (speechLang.split("-")[0].toLowerCase() == "en") {
 					English = true;
 				} else {
@@ -2337,7 +2341,7 @@
 								}
 
 								
-								if (data.hasDonation && (!newmembertts || readDonos)) {
+								if (data.hasDonation && (!(newmembertts || ttsclicked) || readDonos)) {
 									var donoText = document.createElement("div");
 									donoText.innerHTML = data.hasDonation;
 									donoText = donoText.innerText.trim();
@@ -2386,7 +2390,7 @@
 									} else {
 										speak(msgPlain);
 									}
-								} else if (msgPlain && (!readDonos && !newmembertts)) {
+								} else if (msgPlain && ((!readDonos && !newmembertts && !ttsclicked) || (ttsclicked && data.clicked))) {
 									// NO DONATION
 									if (chatname) {
 										// NAME

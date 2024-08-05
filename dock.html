@@ -5663,7 +5663,7 @@
 				if (autoshowqueued){
 					element = selectedQueue.shift();
 					lastPushed = Date.now();
-					selectedMessage(false, element, true); 
+					selectedMessage(false, element, true);  
 					element.classList.remove("queued");
 					delete element.children[0].dataset.qid; 
 				} else {
@@ -5911,7 +5911,7 @@
 				updateQueueButton(true);
 			}
 
-			function selectedMessage(event = false, element = false, lastpushreset = false) {
+			function selectedMessage(event = false, element = false, lastpushreset = false) { 
 				if (blockMessageSelecting || blockMessageSelecting2) {
 					return;
 				}
@@ -6000,6 +6000,10 @@
 				} catch (e) {}
 
 				var data = element.rawContents;
+				
+				if (event){
+					data.clicked = true;
+				}
 
 				if (thirdPartyAPI) {
 					// we upscale using a generic upsizing function for third parties.
