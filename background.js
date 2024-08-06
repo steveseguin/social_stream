@@ -4249,7 +4249,6 @@ eventer(messageEvent, async function (e) {
 				if (e.data.value && e.data.value == "Stream ID is already in use.") {
 					isExtensionOn = false;
 					updateExtensionState();
-
 					try {
 						chrome.notifications.create({
 							type: "basic",
@@ -4257,7 +4256,9 @@ eventer(messageEvent, async function (e) {
 							title: "Cannot enable Social Stream",
 							message: "Your specified Session ID is already in use.\n\nDisable Social Stream elsewhere if already in use first, or change your session ID to something unique."
 						});
+						messagePopup({alert: "Your specified Session ID is already in use.\n\nDisable Social Stream elsewhere if already in use first, or change your session ID to something unique."});
 					} catch (e) {
+						
 						console.error(e);
 					}
 				}

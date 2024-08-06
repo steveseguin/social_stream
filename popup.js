@@ -1665,6 +1665,10 @@ try {
 				if (request.forPopup.documents){
 					updateDocumentList(request.forPopup.documents);
 				}
+				
+				if (request.forPopup.alert){
+					alert(request.forPopup.alert);
+				}
 				// Handle the message data here
 				sendResponse({status: "Message received in popup"});
 			}

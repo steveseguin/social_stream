@@ -306,8 +306,12 @@ if (sessionStorage.twitchOAuthToken || token) {
     document.querySelector('.socket').classList.remove("hidden");
 } else {
     var url = authUrl();
-    document.querySelector('#auth-link').href = url;
-    document.querySelector('.auth').classList.remove("hidden");
+	try {
+		document.querySelector('#auth-link').href = url;
+		document.querySelector('.auth').classList.remove("hidden");
+	} catch(e){
+		console.error(e);
+	}
 }
 
 // Modify the button click handler

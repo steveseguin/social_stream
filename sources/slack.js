@@ -94,7 +94,7 @@
 
     // Get the sender  name
     try {
-      chatname = escapeHtml(ele.querySelector('[data-qa="message_sender"]').innerText);
+      chatname = escapeHtml(ele.querySelector('[data-qa="message_sender"]').innerText.split("\n")[0]);
     } catch (e) {
 	  chatname = "";
       errorlog(e);
