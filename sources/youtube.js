@@ -381,12 +381,7 @@
 
 		if (!settings.textonlymode) {
 			try {
-				if (EMOTELIST){
-					//console.log(EMOTELIST);
-					chatmessage = getAllContentNodes2(ele.querySelector("#message, .seventv-yt-message-content"));
-				} else {
-					chatmessage = getAllContentNodes(ele.querySelector("#message, .seventv-yt-message-content"));
-				}
+				chatmessage = getAllContentNodes2(ele.querySelector("#message, .seventv-yt-message-content"));
 			} catch (e) {
 				//console.warn(ele);
 				//console.error(e);
