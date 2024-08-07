@@ -67,18 +67,37 @@
 	
 	function replaceEmotesWithImages(text) {
 		if (!EMOTELIST) {
-			return text;
+			return [document.createTextNode(text)];
 		}
 		
-		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+		const result = [];
+		let lastIndex = 0;
+		
+		text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch, offset) => {
+			if (offset > lastIndex) {
+				result.push(document.createTextNode(text.slice(lastIndex, offset)));
+			}
+			
 			const emote = EMOTELIST[emoteMatch];
 			if (emote) {
-				const escapedMatch = escapeHtml(emoteMatch);
-				const isZeroWidth = typeof emote !== "string" && emote.zw;
-				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
+				const img = document.createElement('img');
+				img.src = typeof emote === 'string' ? emote : emote.url;
+				img.alt = emoteMatch;
+				img.title = emoteMatch;
+				img.className = typeof emote !== "string" && emote.zw ? 'zero-width-emote-centered' : 'regular-emote';
+				result.push(img);
+			} else {
+				result.push(document.createTextNode(match));
 			}
-			return match;
+			
+			lastIndex = offset + match.length;
 		});
+		
+		if (lastIndex < text.length) {
+			result.push(document.createTextNode(text.slice(lastIndex)));
+		}
+		
+		return result;
 	}
 	
 	function cloneSvgWithResolvedUse(svgElement) {
@@ -105,22 +124,6 @@
 		return emojiRegex.test(char);
 	}
 
-	function replaceEmotesWithImages(text) {
-		if (!EMOTELIST) {
-			return text;
-		}
-		
-		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
-			const emote = EMOTELIST[emoteMatch];
-			if (emote) {
-				const escapedMatch = escapeHtml(emoteMatch);
-				const isZeroWidth = typeof emote !== "string" && emote.zw;
-				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
-			}
-			return match;
-		});
-	}
-
 	function getAllContentNodes2(element) {
 		let result = '';
 		let pendingRegularEmote = null;
@@ -140,11 +143,8 @@
 					result += escapeHtml(node.textContent);
 					return;
 				}
-				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent)); 
-				const tempDiv = document.createElement('div');
-				tempDiv.innerHTML = processedText;
-				
-				Array.from(tempDiv.childNodes).forEach(child => {
+				const processedNodes = replaceEmotesWithImages(escapeHtml(node.textContent));
+				processedNodes.forEach(child => {
 					if (child.nodeType === 3) {
 						
 						if (pendingRegularEmote && child.textContent.trim()) {
@@ -382,7 +382,7 @@
 		if (!settings.textonlymode) {
 			try {
 				if (EMOTELIST){
-					console.log(EMOTELIST);
+					//console.log(EMOTELIST);
 					chatmessage = getAllContentNodes2(ele.querySelector("#message, .seventv-yt-message-content"));
 				} else {
 					chatmessage = getAllContentNodes(ele.querySelector("#message, .seventv-yt-message-content"));
