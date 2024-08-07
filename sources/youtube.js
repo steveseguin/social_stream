@@ -121,7 +121,7 @@
 		});
 	}
 
-	function getAllContentNodes(element) {
+	function getAllContentNodes2(element) {
 		let result = '';
 		let pendingRegularEmote = null;
 
@@ -266,7 +266,7 @@
 		}
 	}
 
-	/* function getAllContentNodesOLD(element) {
+	function getAllContentNodes(element) {
 		var resp = "";
 		element.childNodes.forEach(node => {
 			if (node.childNodes.length) {
@@ -293,7 +293,7 @@
 			}
 		});
 		return resp;
-	} */
+	}
 
 	function findSingleInteger(input) {
 		// Ensure the input is a string
@@ -381,7 +381,12 @@
 
 		if (!settings.textonlymode) {
 			try {
-				chatmessage = getAllContentNodes(ele.querySelector("#message, .seventv-yt-message-content"));
+				if (EMOTELIST){
+					console.log(EMOTELIST);
+					chatmessage = getAllContentNodes2(ele.querySelector("#message, .seventv-yt-message-content"));
+				} else {
+					chatmessage = getAllContentNodes(ele.querySelector("#message, .seventv-yt-message-content"));
+				}
 			} catch (e) {
 				//console.warn(ele);
 				//console.error(e);
