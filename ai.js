@@ -92,9 +92,18 @@ async function callOllamaAPI(prompt) {
 				stream: false
 			};
 			let data = await postNode(`${ollamaendpoint}/api/generate`, body, (headers = { "Content-Type": 'application/json' }));
-			//console.log(data);
-			data = JSON.parse(data);
-			return data.response;
+			
+			try {
+				data = JSON.parse(data);
+			} catch(e){
+				console.log(data);
+			}
+			if (data && data.response){
+				return data.response;
+			} else {
+				console.log(data);
+				throw new Error("Failed to call Ollama API..");
+			}
 		} else {
 			const response = await fetch(`${ollamaendpoint}/api/generate`, {
 				method: 'POST',
@@ -113,7 +122,6 @@ async function callOllamaAPI(prompt) {
 			}
 
 			const data = await response.json();
-			
 			//console.log("Ollama API response:", data);
 			return data.response; // Return only the 'response' field
 		}
@@ -530,7 +538,7 @@ User ${data.chatname || 'user'} says: ${userInput}
 Your response:`;
 			log(userInput);
             let response =  await callOllamaAPI(prompt);
-			if (response.includes("NO_RESPONSE")){
+			if (!response || response.includes("NO_RESPONSE")){
 				return false;
 			}
 			return response;
@@ -1289,9 +1297,11 @@ Focus on key topics, themes, and types of information available.`;
 
     try {
         let descriptor = await callOllamaAPI(prompt);
-		descriptor = descriptor.split("**Database Contents**").pop();
-		descriptor = descriptor.replaceAll("\n"," ");
-        localStorage.setItem('databaseDescriptor', descriptor.trim());
+		if (descriptor){
+			descriptor = descriptor.split("**Database Contents**").pop();
+			descriptor = descriptor.replaceAll("\n"," ");
+			localStorage.setItem('databaseDescriptor', descriptor.trim());
+		}
     } catch (error) {
         console.error("Error updating database descriptor:", error);
         localStorage.setItem('databaseDescriptor', 'Error generating database description.');
