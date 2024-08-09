@@ -5017,7 +5017,7 @@
 						data.stripe.data.object.custom_fields.forEach(xx => {
 							if (xx.key == "displayname") {
 								message.chatname = xx.text.value;
-							} else if (xx.key.toLowerCase() == "pseudo") {
+							} else if (typeof xx.key === 'string' && xx.key.toLowerCase() == "pseudo") {
 								message.chatname = xx.text.value;
 							} else if (xx.key == "tonpseudo") {
 								message.chatname = xx.text.value;
@@ -5027,13 +5027,13 @@
 								message.chatmessage = xx.text.value;
 							} else if (xx.key == "messagetchat") {
 								message.chatmessage = xx.text.value;
-							} else if (!message.chatname && xx.label && xx.label.toLowerCase() == "display name") {
+							} else if (!message.chatname && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "display name") {
 								message.chatname = xx.text.value;
-							} else if (!message.chatname && xx.label && xx.label.toLowerCase() == "name") {
+							} else if (!message.chatname && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "name") {
 								message.chatname = xx.text.value;
-							} else if (!message.chatmessage && xx.label && xx.label.toLowerCase() == "message") {
+							} else if (!message.chatmessage && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "message") {
 								message.chatmessage = xx.text.value;
-							} else if (!message.chatname && xx.label && xx.label.toLowerCase() == "pseudo") {
+							} else if (!message.chatname && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "pseudo") {
 								message.chatname = xx.text.value;
 							}
 						});
