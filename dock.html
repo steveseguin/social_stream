@@ -5035,6 +5035,10 @@
 								message.chatmessage = xx.text.value;
 							} else if (!message.chatname && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "pseudo") {
 								message.chatname = xx.text.value;
+							} else if (!message.chatname && xx.key && typeof xx.key === 'string' && xx.key.toLowerCase() == "name") {
+								if (xx.text && xx.text.value && typeof xx.text.value === 'string' ){
+									message.chatname = xx.text.value;
+								}
 							}
 						});
 
