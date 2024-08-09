@@ -91,9 +91,10 @@ async function callOllamaAPI(prompt) {
 				prompt: prompt,
 				stream: false
 			};
-			let response = await postNode(`${ollamaendpoint}/api/generate`, body, (headers = { "Content-Type": 'application/json' }));
-			console.log(response);
-			return JSON.parse(response.response);
+			let data = await postNode(`${ollamaendpoint}/api/generate`, body, (headers = { "Content-Type": 'application/json' }));
+			console.log(data);
+			data = JSON.parse(data);
+			return data.response;
 		} else {
 			const response = await fetch(`${ollamaendpoint}/api/generate`, {
 				method: 'POST',
