@@ -5007,6 +5007,8 @@
 						if (data.stripe.type !== "checkout.session.completed") {
 							return false;
 						}
+						
+						console.log(data.stripe);
 
 						var message = {};
 						message.chatname = "";
@@ -5040,7 +5042,9 @@
 
 						try {
 							currency = data.stripe.data.object.currency.toLowerCase() || "";
-						} catch (e) {}
+						} catch (e) {
+							console.error(e);
+						}
 
 						var symbol = {};
 						if (currency && currency in Currencies) {
@@ -5051,8 +5055,16 @@
 						}
 
 						if (data.stripe.data.object.amount_total) {
-							message.hasDonation = (symbol.s || "") + (data.stripe.data.object.amount_total || "") + " " + (data.stripe.data.object.currency.toUpperCase() || "");
-							message.hasDonation = message.hasDonation.trim();
+							try {
+								if (symbol.s && (data.stripe.data.object.currency.toUpperCase() == "EUR")){
+									message.hasDonation = (symbol.s || "") + (data.stripe.data.object.amount_total || "");
+								} else {
+									message.hasDonation = (symbol.s || "") + (data.stripe.data.object.amount_total || "") + " " + (data.stripe.data.object.currency.toUpperCase() || "");
+								}
+								message.hasDonation = message.hasDonation.trim();
+							} catch (e) {
+								console.error(e);
+							}
 						}
 						message.id = parseInt(Math.random() * 100000 + 1000000);
 						message.chatbadges = "";
@@ -5066,6 +5078,7 @@
 
 						data = message; // replace inbound stripe message with new message
 					} catch (e) {
+						console.error(e);
 						return;
 					}
 				} else if ("kofi" in data) {
