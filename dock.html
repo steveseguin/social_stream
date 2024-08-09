@@ -5061,6 +5061,11 @@
 								}
 							}
 						});
+						
+						if (!foundCustomField){
+							console.warn("No custom name / custom display-name field found. We will skip this incoming stripe api webhook");
+							return;
+						}
 
 						var currency = "";
 

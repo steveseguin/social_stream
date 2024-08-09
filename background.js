@@ -1826,7 +1826,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "getOnOffState") {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
 		} else if (request.cmd && request.cmd === "getSettings") {
-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG});
+			try {
+				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG});
+			} catch(e){
+				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings});
+			}
 		} else if (request.cmd && request.cmd === "saveSetting") {
 			if (typeof settings[request.setting] == "object") {
 				if (!request.value) {
@@ -2351,14 +2355,20 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "uploadRAGfile") {
 			sendResponse({ state: isExtensionOn });
 			await importSettingsLLM(request.enhancedProcessing || false);
-			messagePopup({documents: documentsRAG});
+			try {
+				messagePopup({documents: documentsRAG});
+			} catch(e){}
 		} else if (request.cmd && request.cmd === "clearRag") {
 			sendResponse({ state: isExtensionOn });
-			await clearDatabase();
-			messagePopup({documents: documentsRAG});
+			try {
+				await clearDatabase();
+				messagePopup({documents: documentsRAG});
+			} catch(e){}
 		} else if (request.cmd === "deleteRAGfile") {
-			await deleteDocument(request.docId);
-			messagePopup({documents: documentsRAG});
+			try {
+				await deleteDocument(request.docId);
+				messagePopup({documents: documentsRAG});
+			} catch(e){}
 		} else if (request.cmd && request.cmd === "fakemsg") {
 			sendResponse({ state: isExtensionOn });
 			var data = {};
@@ -5771,6 +5781,18 @@ async function applyBotActions(data, tab = false) {
 					processMessageWithOllama(data);
 				} catch(e){
 					console.warn(e); // ai.js file missing?
+					
+					ensureFunction('processMessageWithOllama', 'https://socialstream.ninja/ai.js') // temporary fix for older standalone app users. MUST remove for manifest version 3 version.
+						.then(() => {
+							try {
+								processMessageWithOllama(data);
+							} catch (e) {
+								console.warn(e);
+							}
+						})
+						.catch(error => {
+							console.error('Failed to load script or find function:', error);
+						});
 				}
 			}
 		}
@@ -5780,6 +5802,29 @@ async function applyBotActions(data, tab = false) {
 	
 	return data;
 }
+
+function loadScript(url) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+function ensureFunction(functionName, scriptUrl) {
+    if (typeof window[functionName] === 'function') {
+        return Promise.resolve();
+    }
+    
+    return loadScript(scriptUrl).then(() => {
+        if (typeof window[functionName] !== 'function') {
+            throw new Error(`Function ${functionName} not found after loading script`);
+        }
+    });
+}
+
 
 function decodeAndCleanHtml(input) {
     var doc = new DOMParser().parseFromString(input, 'text/html');
