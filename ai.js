@@ -85,25 +85,37 @@ async function callOllamaAPI(prompt) {
     const ollamamodel = settings.ollamamodel?.textsetting || "llama3.1:latest";
 
     try {
-        const response = await fetch(`${ollamaendpoint}/api/generate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                model: ollamamodel,
-                prompt: prompt,
-                stream: false
-            }),
-        });
+		if (postNode){
+			let body = JSON.stringify({
+				model: ollamamodel,
+				prompt: prompt,
+				stream: false
+			});
+			let response = await postNode(`${ollamaendpoint}/api/generate`, body, (headers = { "Content-Type": 'application/json' }));
+			console.log(response);
+			return JSON.parse(response);
+		} else {
+			const response = await fetch(`${ollamaendpoint}/api/generate`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					model: ollamamodel,
+					prompt: prompt,
+					stream: false
+				}),
+			});
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
 
-        const data = await response.json();
-        //console.log("Ollama API response:", data);
-        return data.response; // Return only the 'response' field
+			const data = await response.json();
+			
+			//console.log("Ollama API response:", data);
+			return data.response; // Return only the 'response' field
+		}
     } catch (error) {
         console.error("Error in callOllamaAPI:", error);
         throw new Error("Failed to call Ollama API: " + error.message);
