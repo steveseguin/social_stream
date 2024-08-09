@@ -5780,9 +5780,9 @@ async function applyBotActions(data, tab = false) {
 				try{
 					processMessageWithOllama(data);
 				} catch(e){
-					console.warn(e); // ai.js file missing?
-					
-					ensureFunction('processMessageWithOllama', 'https://socialstream.ninja/ai.js') // temporary fix for older standalone app users. MUST remove for manifest version 3 version.
+					console.log(e); // ai.js file missing?
+					console.log("If the ai.js file is missing, we're going to remotely load it, if possible...");
+					ensureFunction('processMessageWithOllama', 'https://socialstream.ninja/ai.js?v=ssapp') // temporary fix for older standalone app users. MUST remove for manifest version 3 version.
 						.then(() => {
 							try {
 								processMessageWithOllama(data);
