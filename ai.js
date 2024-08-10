@@ -102,6 +102,8 @@ async function callOllamaAPI(prompt) {
 				return data.response;
 			} else {
 				console.log(data);
+				console.log(ollamamodel);
+				console.log(`${ollamaendpoint}/api/generate`);
 				throw new Error("Failed to call Ollama API..");
 			}
 		} else {
