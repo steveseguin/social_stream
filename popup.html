@@ -964,13 +964,22 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
-								 <div>
+								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="showtime" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="hide-messages-after-20s">
                                         ⏲️ Auto-hide message after <input type="number" style="max-width: 8ch;" max="999999" min="1" value="20000" size="6" data-numbersetting="showtime" />ms
+                                    </span>
+                                </div>
+								<div title="This option gives you time to delete a message with another dock that doesn't have the delay; censorship-friendly then">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="delaytime" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="show-messages-after-10s">
+                                        🚫🤬️ Delay showing messages for <input type="number" style="max-width: 8ch;" max="999999" min="1" value="10000" size="6" data-numbersetting="delaytime" />ms
                                     </span>
                                 </div>
                                 <div>

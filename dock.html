@@ -1690,6 +1690,10 @@
 
 			.hidden {
 				display: none !important;
+				opacity: 0 !important;
+				width: 0 !important;
+				height: 0 !important;
+				visibility: hidden !important;
 			}
 
 			#pinned {
@@ -2328,6 +2332,14 @@
 			var timeoutDelay = 0;
 			if (urlParams.has("showtime")) {
 				timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
+			}
+			
+			var waitToReveal = 0;
+			if (urlParams.has("delaytime")) {
+				waitToReveal = parseInt(urlParams.get("delaytime")) || 10000;
+				if (timeoutDelay){
+					timeoutDelay += waitToReveal;
+				}
 			}
 			
 			var autoQueueTimeout = false
@@ -7008,6 +7020,16 @@
 					transitionType.forEach(classtype => {
 						node.classList.add(classtype);
 					});
+					
+					
+					if (waitToReveal){
+						node.classList.add("hidden");
+						setTimeout(function(node){
+							if (node){
+								node.classList.remove("hidden");
+							}
+						},waitToReveal,node)
+					}
 
 					mainOutputWindow.appendChild(node);
 
