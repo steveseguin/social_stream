@@ -270,15 +270,13 @@ function startLobbyCountdown() {
 }
 
 function processData(data) {
-
-	if (data && data.startgame && hostControlled) {
-		startGame();
-	} else if (data && data.restartgame && hostControlled) {
-		enterLobby();
-	} else if (data && data.chatmessage && data.chatname) {
-        if (gameOver) return;
+    if (data && data.startgame && hostControlled) {
+        startGame();
+    } else if (data && data.restartgame && hostControlled) {
+        enterLobby();
+    } else if (data && data.chatmessage && data.chatname) {
         if (data.chatmessage.toLowerCase().startsWith("!join")) {
-            if (!players.get(data.chatname)) {
+            if (!players.get(data.chatname) && !scoreboardData) {
                 const parts = data.chatmessage.toLowerCase().split(" ");
                 let weaponType = null;
 
@@ -320,6 +318,30 @@ function processData(data) {
             }
         }
     }
+}
+
+function addPlayer(name, avatarUrl, type, nameColor, weaponType) {
+    if (scoreboardData) return; // Don't add players during scoring stage
+
+    const x = Math.floor(Math.random() * GRID_WIDTH);
+    const y = Math.floor(Math.random() * GRID_HEIGHT);
+    
+    if (!weaponType) {
+        weaponType = WEAPONS[Math.floor(Math.random() * WEAPONS.length)];
+    }
+    
+    const player = new Player(name, x, y, weaponType);
+    
+    if (avatarUrl) {
+        player.setAvatar(avatarUrl);
+    }
+    
+    if (nameColor) {
+        player.color = nameColor;
+    }
+    
+    players.set(name, player);
+    updatePlayerCount();
 }
 
 function processInput(data) {
@@ -972,28 +994,6 @@ function endCombat(winner, loser) {
     loser.firstAttack = true; // Reset firstAttack for the next combat (if resurrected)
 }
 
-function addPlayer(name, avatarUrl, type, nameColor, weaponType) {
-    const x = Math.floor(Math.random() * GRID_WIDTH);
-    const y = Math.floor(Math.random() * GRID_HEIGHT);
-    
-    if (!weaponType) {
-        weaponType = WEAPONS[Math.floor(Math.random() * WEAPONS.length)];
-    }
-    
-    const player = new Player(name, x, y, weaponType);
-    
-    if (avatarUrl) {
-        player.setAvatar(avatarUrl);
-    }
-    
-    if (nameColor) {
-        player.color = nameColor;
-    }
-    
-    players.set(name, player);
-    updatePlayerCount();
-}
-
 function updatePlayerCount() {
     playerCountElement.textContent = `Players: ${players.size}`;
 }
@@ -1312,9 +1312,7 @@ function simulateWebSocket() {
 				} else {
 					const randomMessage = `Ooh! Pretty flowers!`;
 					handleChatMessage(randomPlayer.name, randomMessage);
-				} 
-				
-				
+				}
             }
         }
     }, 1500);
