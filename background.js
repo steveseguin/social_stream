@@ -2292,6 +2292,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "openchat") {
 			openchat(request.value, true);
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "startgame") {
+			//startgame(request.value, true);
+			sendDataP2P({startgame:true}); 
+			sendResponse({ state: isExtensionOn });	
 		} else if (request.cmd && request.cmd === "singlesave") {
 			sendResponse({ state: isExtensionOn });
 			overwriteFile("setup");

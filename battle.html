@@ -39,6 +39,10 @@
         font-size: 36px;
         font-weight: bold;
     }
+	.hidden {
+		opacity:0!important;
+		display:none!important;
+	}
 </style>
 </head>
 <body>
@@ -134,10 +138,145 @@ if (urlParams.has("password")){
 	password = urlParams.get("password") || "false";
 }
 
-function processData(data) {
-    if (data && data.chatmessage && data.chatname) {
-        if (gameOver) return;
 
+var addComputers = true;
+if (urlParams.has("nocomputers")){
+	addComputers = false;
+}
+
+var lobbyTimeInit = 10;
+if (urlParams.has("lobbytime")) {
+	lobbyTimeInit = parseInt(urlParams.get("lobbytime"));
+}
+
+let hostControlled = urlParams.has("lobby");
+let lobbyDuration = lobbyTimeInit // Default lobby duration in seconds
+let lobbyTimer = null;
+let isFirstGame = true;
+
+function drawLobby() {
+    document.getElementById("ui-overlay").classList.add("hidden");
+    
+    // Draw grass background
+    ctx.fillStyle = grassPattern;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add semi-transparent overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Calculate font sizes based on canvas width
+    const titleFontSize = Math.max(24, Math.floor(canvas.width / 20));
+    const textFontSize = Math.max(16, Math.floor(canvas.width / 40));
+    
+    // Set up text styles
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Draw title
+    ctx.font = `bold ${titleFontSize}px Arial`;
+    ctx.fillText('Waiting for players', canvas.width / 2, canvas.height * 0.3);
+    
+    // Draw player count
+    ctx.font = `${textFontSize}px Arial`;
+    ctx.fillText(`Players in lobby: ${players.size}`, canvas.width / 2, canvas.height * 0.5);
+    
+    // Draw instructions
+    ctx.fillText('Type !join to enter the game', canvas.width / 2, canvas.height * 0.6);
+    
+    // Draw countdown if not host controlled
+    if (!hostControlled) {
+        ctx.fillText(`Game starts in ${lobbyDuration} seconds`, canvas.width / 2, canvas.height * 0.7);
+    }
+}
+
+function enterLobby() {
+    gameOver = true;
+    updatePlayerCount();
+    drawLobby();
+}
+
+function restartGame() {
+    players.clear();
+
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+    }
+
+    lobbyDuration = lobbyTimeInit;
+	
+    if (hostControlled) {
+        enterLobby();
+    } else {
+        startGame();
+    }
+
+    resizeCanvas();
+}
+
+function startGame() {
+    gameOver = false;
+	if (scoreboardData){
+		scoreboardData = null;
+		restartGame();
+		return;
+	}
+	scoreboardData = null;
+    if (isFirstGame) {
+        timeLeft = 10; // 100 seconds for the first game
+        isFirstGame = false; // Set to false after the first game
+    } else {
+        timeLeft = 60; // 60 seconds for subsequent games
+    }
+    
+    arrows.length = 0; // Clear all arrows
+    powerUps.length = 0; // Clear all power-ups
+    obstacles.length = 0; // Clear all obstacles
+    killed = {}; // Reset kill counts
+
+    // Reset all players
+    players.forEach(player => {
+        player.isAlive = true;
+        player.health = 100;
+        player.kills = 0;
+        player.inCombat = false;
+        player.combatTarget = null;
+        player.bloodSplatter = 0;
+        player.invincible = false;
+        player.damageMultiplier = 1;
+        player.speed = 0.05; // Reset to default speed
+        player.healthRegenRate = 0.04; // Reset to default regen rate
+        player.x = Math.floor(Math.random() * GRID_WIDTH);
+        player.y = Math.floor(Math.random() * GRID_HEIGHT);
+        player.direction = Math.random() * Math.PI * 2;
+    });
+
+    updatePlayerCount();
+    document.getElementById("ui-overlay").classList.remove("hidden");
+}
+
+function startLobbyCountdown() {
+    lobbyTimer = setInterval(() => {
+        lobbyDuration--;
+        if (lobbyDuration <= 0) {
+            clearInterval(lobbyTimer);
+            startGame();
+        } else {
+            drawLobby();
+        }
+    }, 1000);
+}
+
+function processData(data) {
+
+	if (data && data.startgame && hostControlled) {
+		startGame();
+	} else if (data && data.restartgame && hostControlled) {
+		enterLobby();
+	} else if (data && data.chatmessage && data.chatname) {
+        if (gameOver) return;
         if (data.chatmessage.toLowerCase().startsWith("!join")) {
             if (!players.get(data.chatname)) {
                 const parts = data.chatmessage.toLowerCase().split(" ");
@@ -183,8 +322,14 @@ function processData(data) {
     }
 }
 
-function processInput(data){
-	if ("mid" in data){
+function processInput(data) {
+    if (data && data.startgame && hostControlled) {
+        startGame();
+        return; // Add this line to prevent further processing
+    } else if (data && data.restartgame && hostControlled) {
+        enterLobby();
+        return; // Add this line to prevent further processing
+    } else if ("mid" in data){
 		return;
 	} else if ("pin" in data){
 		return;
@@ -946,8 +1091,8 @@ function draw() {
         ctx.fillRect(arrow.x * TILE_SIZE, arrow.y * TILE_SIZE, 2, 2);
     });
     
-    if (gameOver) {
-        drawScoreboardModal(scoreboardData);
+    if (gameOver) { 
+        drawScoreboardModal();
     }
 }
 
@@ -974,13 +1119,19 @@ function updateCountdown() {
     countdownSeconds--;
     if (countdownSeconds <= 0) {
         clearInterval(countdownTimer);
-        restartGame();
+        if (hostControlled || lobbyDuration > 0) {
+            enterLobby();
+            if (!hostControlled) {
+                lobbyDuration = lobbyTimeInit
+                startLobbyCountdown();
+            }
+        } else {
+            restartGame();
+        }
     }
 }
-
 function endGame() {
     gameOver = true;
-	console.log(killed);
     const sortedPlayers = Array.from(players.values())
         .filter(player => player.isAlive)
         .sort((a, b) => {
@@ -991,53 +1142,43 @@ function endGame() {
         });
 
     scoreboardData = sortedPlayers.slice(0, 3);
-    countdownSeconds = 15;
-    countdownTimer = setInterval(updateCountdown, 1000);
-}
-
-function restartGame() {
-    // Reset game state
-    gameOver = false;
-    players.clear();
-	updatePlayerCount();
-    timeLeft = 60; // first match 100s; more matches 60s
-    // Reset any other necessary game state variables
     
-    // Restart the game loop
-    //gameLoop();
-    //simulateWebSocket();
-}
-function displayScoreboard() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = '#fff';
-    ctx.font = '36px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Game Over', canvas.width / 2, 100);
-
-    const sortedPlayers = Array.from(players.values())
-        .filter(player => player.isAlive)
-        .sort((a, b) => {
-            if (b.kills !== a.kills) {
-                return b.kills - a.kills;
-            }
-            return a.joinTime - b.joinTime;
-        });
-
-    const topPlayers = sortedPlayers.slice(0, 3);
-
-    drawScoreboardModal(topPlayers);
+    if (hostControlled) {
+        drawScoreboardModal();
+    } else {
+        countdownSeconds = 15;
+        countdownTimer = setInterval(updateCountdown, 1000);
+    }
 }
 
-function drawScoreboardModal(topPlayers) {
+
+function initGame() { // run one time, and only one time
+    
+    lobbyDuration = lobbyTimeInit;
+
+    if (hostControlled) {
+        isFirstGame = true; // Reset this when entering lobby mode
+        enterLobby();
+    } else if (lobbyDuration > 0) {
+        isFirstGame = true; // Reset this when entering lobby mode
+        enterLobby();
+        startLobbyCountdown();
+    } else {
+        startGame();
+    }
+}
+
+
+function drawScoreboardModal() {
+
     const modalWidth = 300;
     const modalHeight = 420;
     const modalX = (canvas.width - modalWidth) / 2;
     const modalY = (canvas.height - modalHeight) / 2;
+	
 
     // Draw semi-transparent background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw modal background
@@ -1056,7 +1197,7 @@ function drawScoreboardModal(topPlayers) {
     ctx.fillText('Top Survivors', canvas.width / 2, modalY + 40);
 
     // Draw player information
-    topPlayers.forEach((player, index) => {
+    scoreboardData.forEach((player, index) => {
         const yOffset = modalY + 100 + index * 100;
 
         // Draw player avatar	
@@ -1091,7 +1232,13 @@ function drawScoreboardModal(topPlayers) {
     });
 
     // Draw countdown message
-    if (countdownSeconds <= 10) {
+	if (hostControlled){
+		document.getElementById("ui-overlay").classList.add("hidden");
+		ctx.fillStyle = 'white';
+		ctx.font = '20px Arial';
+		ctx.textAlign = 'center';
+		ctx.fillText('Waiting for host to restart the game', canvas.width / 2, canvas.height - 30);
+	} else if (countdownSeconds <= 10) {
         const alpha = (10 - countdownSeconds) / 5; // Fade in over 5 seconds
         ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
         ctx.font = '20px Arial';
@@ -1100,7 +1247,7 @@ function drawScoreboardModal(topPlayers) {
     }
 
     // Draw "No survivors" message if there are no top players
-    if (topPlayers.length === 0) {
+    if (scoreboardData.length === 0) {
         ctx.fillStyle = '#fff';
         ctx.font = '24px Arial';
         ctx.textAlign = 'center';
@@ -1111,10 +1258,15 @@ function drawScoreboardModal(topPlayers) {
 function gameLoop() {
     if (!gameOver) {
         update();
-    }
-    draw();
+        draw();
+    } else if (scoreboardData){
+		draw();
+    } else {
+		drawLobby();
+	}
     requestAnimationFrame(gameLoop);
 }
+
 function simulateWebSocket() {
     setInterval(() => {
         if (gameOver) return;
@@ -1122,10 +1274,12 @@ function simulateWebSocket() {
         const randomCommand = Math.random();
         if (randomCommand < 0.2) {
 			if (players.size<5){
-				const name = `Computer${Math.floor(Math.random() * 10000)}`;
-				addPlayer(name);
+				if (addComputers){
+					const name = `Computer${Math.floor(Math.random() * 10000)}`;
+					addPlayer(name);
+				}
 			}
-        } else if (randomCommand < 0.25) {
+        } else if (randomCommand < 0.24) {
             // Simulate a chat message
             const playerArray = Array.from(players.values());
             if (playerArray.length > 0) {
@@ -1133,7 +1287,7 @@ function simulateWebSocket() {
                 const randomMessage = `Ahhh-tauk!`;
                 handleChatMessage(randomPlayer.name, randomMessage);
             }
-        } else if (randomCommand < 0.3) {
+        } else if (randomCommand < 0.28) {
             // Simulate a chat message
             const playerArray = Array.from(players.values());
             if (playerArray.length > 0) {
@@ -1143,11 +1297,24 @@ function simulateWebSocket() {
             }
         } else if (randomCommand < 0.35) {
             // Simulate a chat message
-            const playerArray = Array.from(players.values());
+            const playerArray = Array.from(players.values()); 
             if (playerArray.length > 0) {
                 const randomPlayer = playerArray[Math.floor(Math.random() * playerArray.length)];
-               const randomMessage = `Ooh! Pretty flowers!`;
-                handleChatMessage(randomPlayer.name, randomMessage);
+				if (!randomPlayer.isAlive){
+					const randomMessage = `BooOoo..`;
+					handleChatMessage(randomPlayer.name, randomMessage);
+				} else if (randomPlayer.health<20){
+					const randomMessage = `Red is my favourite color`;
+					handleChatMessage(randomPlayer.name, randomMessage);
+				} else if (randomPlayer.inCombat){
+					const randomMessage = `Just die already`;
+					handleChatMessage(randomPlayer.name, randomMessage);
+				} else {
+					const randomMessage = `Ooh! Pretty flowers!`;
+					handleChatMessage(randomPlayer.name, randomMessage);
+				} 
+				
+				
             }
         }
     }, 1500);
@@ -1160,8 +1327,22 @@ function handleChatMessage(playerName, message) {
     }
 }
 
-// Start the game
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    // Redraw the current state (lobby or game)
+    if (gameOver) {
+        drawLobby();
+    } else {
+        draw();
+    }
+}
+
+window.addEventListener('resize', resizeCanvas);
+
+// Initialize the game
 simulateWebSocket();
+initGame();
 gameLoop();
 setInterval(updateTimer, 1000);
 </script>

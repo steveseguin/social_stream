@@ -2717,7 +2717,47 @@ input:checked + .slider:before {
                     </span>
                 </h3>
 				<div id="battle" data-raw="" class="streaming_chat"><a href="" id="battlelink"></a></div>
-            </div>
+			</div>
+			
+			<div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-battle-general-options" />
+                    <label class="collapsible-label" for="wrapper-battle-general-options">📊 <span data-translate="options-and-actions">Options and actions</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group battle">
+								<div>
+										<label class="switch">
+											<input type="checkbox" data-param8="lobby" />
+											<span class="slider round"></span>
+										</label>
+
+										🚦 <span data-translate="enable-the-battle">Host Starts</span>
+									
+										<button class="glowingButton" style="width: 170px; border: 1px solid #000; padding: 2px;" data-action="startgame">
+											<span style="font-size: 0.8em;"><span data-translate="start-game">Start the game</span></span>
+										</button>
+								</div>
+							
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param8="nocomputers" />
+										<span class="slider round"></span>
+									</label>
+									🚫🤖 <span data-translate="disable-computer-players">Disable computer players</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param8="lobbytime=30" />
+										<span class="slider round"></span>
+									</label>
+									⌚ <span data-translate="auto-start-lobby">Increase lobby wait time to 30s</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 			
 			<div class="link" title="Customizable ticker banner bar">
                 <h2 class="ticker_mode_title">
@@ -2730,8 +2770,6 @@ input:checked + .slider:before {
                 </h3>
 				<div id="ticker" data-raw="" class="streaming_chat"><a href="" id="tickerlink"></a></div>
             </div>
-            
-
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-ticker-general-options" />

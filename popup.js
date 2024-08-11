@@ -34,7 +34,6 @@ if (typeof(chrome.runtime)=='undefined'){
 		console.log(args[0]);
 	}) */
 	
-	
 }
 
 var translation = {};
@@ -793,6 +792,13 @@ function update(response, sync=true){
 									updateSettings(ele, sync);
 								}
 							}
+							if ("param8" in response.settings[key]){
+								var ele = document.querySelector("input[data-param8='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param8;
+									updateSettings(ele, sync);
+								}
+							}
 							if ("both" in response.settings[key]){
 								var ele = document.querySelector("input[data-both='"+key+"']");
 								if (ele){
@@ -1389,6 +1395,26 @@ function updateSettings(ele, sync=true, value=null){
 		}
 		
 		document.querySelectorAll("input[data-param4^='"+ele.dataset.param4.split("=")[0]+"']:not([data-param4='"+ele.dataset.param4+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
+		
+	} else if (ele.dataset.param8){
+		if (ele.checked){
+			document.getElementById("battle").raw = updateURL(ele.dataset.param8, document.getElementById("battle").raw);
+		} else {
+			//document.getElementById("battle").raw = document.getElementById("battle").raw.replace(ele.dataset.param8, "");
+			document.getElementById("battle").raw = removeQueryParamWithValue(document.getElementById("battle").raw, ele.dataset.param8);
+		}
+		document.getElementById("battle").raw = document.getElementById("battle").raw.replace("&&", "&");
+		document.getElementById("battle").raw = document.getElementById("battle").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param8",  target:target, setting: ele.dataset.param8, "value": ele.checked}, function (response) {});
+		}
+		
+		document.querySelectorAll("input[data-param8^='"+ele.dataset.param8.split("=")[0]+"']:not([data-param8='"+ele.dataset.param8+"'])").forEach(ele1=>{
 			if (ele1 && ele1.checked){
 				ele1.checked = false;
 				updateSettings(ele1, sync);
