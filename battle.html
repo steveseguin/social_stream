@@ -153,9 +153,9 @@ let hostControlled = urlParams.has("lobby");
 let lobbyDuration = lobbyTimeInit // Default lobby duration in seconds
 let lobbyTimer = null;
 let isFirstGame = true;
+let topPlayers = null;
 
 function drawLobby() {
-    document.getElementById("ui-overlay").classList.add("hidden");
     
     // Draw grass background
     ctx.fillStyle = grassPattern;
@@ -168,6 +168,7 @@ function drawLobby() {
     // Calculate font sizes based on canvas width
     const titleFontSize = Math.max(24, Math.floor(canvas.width / 20));
     const textFontSize = Math.max(16, Math.floor(canvas.width / 40));
+	const textFontSizeSmall = Math.max(12, Math.floor(canvas.width / 60));
     
     // Set up text styles
     ctx.fillStyle = '#fff';
@@ -179,85 +180,46 @@ function drawLobby() {
     ctx.fillText('Waiting for players', canvas.width / 2, canvas.height * 0.3);
     
     // Draw player count
-    ctx.font = `${textFontSize}px Arial`;
+    ctx.font = `${textFontSizeSmall}px Arial`;
     ctx.fillText(`Players in lobby: ${players.size}`, canvas.width / 2, canvas.height * 0.5);
     
     // Draw instructions
+	ctx.font = `${textFontSize}px Arial`; 
     ctx.fillText('Type !join to enter the game', canvas.width / 2, canvas.height * 0.6);
     
     // Draw countdown if not host controlled
     if (!hostControlled) {
+		ctx.font = `${textFontSizeSmall}px Arial`; 
         ctx.fillText(`Game starts in ${lobbyDuration} seconds`, canvas.width / 2, canvas.height * 0.7);
     }
 }
-
 function enterLobby() {
     gameOver = true;
+	players.clear();
+	document.getElementById("ui-overlay").classList.add("hidden");
+	players.clear();
     updatePlayerCount();
-    drawLobby();
-}
+	if (!hostControlled) {
+		startLobbyCountdown();
+	} else {
+		drawLobby();
+	}
+}						
+function startLobbyCountdown() {
+	lobbyDuration = lobbyTimeInit;
 
-function restartGame() {
-    players.clear();
-
-    if (countdownTimer) {
-        clearInterval(countdownTimer);
-        countdownTimer = null;
-    }
-
-    lobbyDuration = lobbyTimeInit;
-	
-    if (hostControlled) {
-        enterLobby();
-    } else {
-        startGame();
-    }
-
-    resizeCanvas();
-}
-
-function startGame() {
-    gameOver = false;
-	if (scoreboardData){
-		scoreboardData = null;
-		restartGame();
+	if (lobbyDuration <= 0) {
+		startGame();
 		return;
 	}
-	scoreboardData = null;
-    if (isFirstGame) {
-        timeLeft = 10; // 100 seconds for the first game
-        isFirstGame = false; // Set to false after the first game
-    } else {
-        timeLeft = 60; // 60 seconds for subsequent games
-    }
-    
-    arrows.length = 0; // Clear all arrows
-    powerUps.length = 0; // Clear all power-ups
-    obstacles.length = 0; // Clear all obstacles
-    killed = {}; // Reset kill counts
-
-    // Reset all players
-    players.forEach(player => {
-        player.isAlive = true;
-        player.health = 100;
-        player.kills = 0;
-        player.inCombat = false;
-        player.combatTarget = null;
-        player.bloodSplatter = 0;
-        player.invincible = false;
-        player.damageMultiplier = 1;
-        player.speed = 0.05; // Reset to default speed
-        player.healthRegenRate = 0.04; // Reset to default regen rate
-        player.x = Math.floor(Math.random() * GRID_WIDTH);
-        player.y = Math.floor(Math.random() * GRID_HEIGHT);
-        player.direction = Math.random() * Math.PI * 2;
-    });
-
-    updatePlayerCount();
-    document.getElementById("ui-overlay").classList.remove("hidden");
-}
-
-function startLobbyCountdown() {
+	
+	if (isFirstGame && !urlParams.has("lobbytime")){
+		lobbyDuration+=5;
+	}
+	
+	drawLobby();
+	
+	clearInterval(lobbyTimer);
     lobbyTimer = setInterval(() => {
         lobbyDuration--;
         if (lobbyDuration <= 0) {
@@ -268,15 +230,10 @@ function startLobbyCountdown() {
         }
     }, 1000);
 }
-
 function processData(data) {
-    if (data && data.startgame && hostControlled) {
-        startGame();
-    } else if (data && data.restartgame && hostControlled) {
-        enterLobby();
-    } else if (data && data.chatmessage && data.chatname) {
+	if (data && data.chatmessage && data.chatname) {
         if (data.chatmessage.toLowerCase().startsWith("!join")) {
-            if (!players.get(data.chatname) && !scoreboardData) {
+            if (!players.get(data.chatname)) {
                 const parts = data.chatmessage.toLowerCase().split(" ");
                 let weaponType = null;
 
@@ -311,6 +268,7 @@ function processData(data) {
                 }
 
                 addPlayer(data.chatname, data.chatimg, data.type, data.nameColor, weaponType);
+				
             }
         } else if (data.chatmessage.startsWith("!say ")) {
             if (players.get(data.chatname)) {
@@ -320,37 +278,10 @@ function processData(data) {
     }
 }
 
-function addPlayer(name, avatarUrl, type, nameColor, weaponType) {
-    if (scoreboardData) return; // Don't add players during scoring stage
-
-    const x = Math.floor(Math.random() * GRID_WIDTH);
-    const y = Math.floor(Math.random() * GRID_HEIGHT);
-    
-    if (!weaponType) {
-        weaponType = WEAPONS[Math.floor(Math.random() * WEAPONS.length)];
-    }
-    
-    const player = new Player(name, x, y, weaponType);
-    
-    if (avatarUrl) {
-        player.setAvatar(avatarUrl);
-    }
-    
-    if (nameColor) {
-        player.color = nameColor;
-    }
-    
-    players.set(name, player);
-    updatePlayerCount();
-}
-
-function processInput(data) {
-    if (data && data.startgame && hostControlled) {
+function processInput(data){
+	if (data.startgame && hostControlled) {
         startGame();
-        return; // Add this line to prevent further processing
-    } else if (data && data.restartgame && hostControlled) {
-        enterLobby();
-        return; // Add this line to prevent further processing
+        return;
     } else if ("mid" in data){
 		return;
 	} else if ("pin" in data){
@@ -400,7 +331,7 @@ eventer(messageEvent, function (e) {
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 
-let timeLeft = 100;
+let timeLeft = 20;
 
 const timerElement = document.getElementById('timer');
 timerElement.textContent = timeLeft;
@@ -425,7 +356,10 @@ const powerUps = [];
 const obstacles = [];
 
 let countdownTimer = null;
-let countdownSeconds = 15;
+let countdownSeconds = 0;
+var killed = {};
+let gameOver = false;
+let scoreboardData = null;
 
 function spawnPowerUps() {
     if (Math.random() < 0.005 && powerUps.length < 5) {
@@ -901,7 +835,6 @@ class Player {
     }
 }
 
-var killed = {};
 
 function initiateCombat(player1, player2) {
     player1.inCombat = true;
@@ -994,7 +927,32 @@ function endCombat(winner, loser) {
     loser.firstAttack = true; // Reset firstAttack for the next combat (if resurrected)
 }
 
+function addPlayer(name, avatarUrl, type, nameColor, weaponType) {
+    const x = Math.floor(Math.random() * GRID_WIDTH);
+    const y = Math.floor(Math.random() * GRID_HEIGHT);
+    
+    if (!weaponType) {
+        weaponType = WEAPONS[Math.floor(Math.random() * WEAPONS.length)];
+    }
+    
+    const player = new Player(name, x, y, weaponType);
+    
+    if (avatarUrl) {
+        player.setAvatar(avatarUrl);
+    }
+    
+    if (nameColor) {
+        player.color = nameColor;
+    }
+    
+    players.set(name, player);
+    updatePlayerCount();
+}
+
 function updatePlayerCount() {
+	if (gameOver && (countdownSeconds<=0)) {
+		drawLobby();
+	}
     playerCountElement.textContent = `Players: ${players.size}`;
 }
 
@@ -1027,8 +985,7 @@ function checkCombat() {
     }
 }
 
-let gameOver = false;
-let scoreboardData = null;
+
 
 function update() {
     if (!gameOver) {
@@ -1090,10 +1047,7 @@ function draw() {
     arrows.forEach(arrow => {
         ctx.fillRect(arrow.x * TILE_SIZE, arrow.y * TILE_SIZE, 2, 2);
     });
-    
-    if (gameOver) { 
-        drawScoreboardModal();
-    }
+ 
 }
 
 function getPowerUpColor(type) {
@@ -1119,20 +1073,17 @@ function updateCountdown() {
     countdownSeconds--;
     if (countdownSeconds <= 0) {
         clearInterval(countdownTimer);
-        if (hostControlled || lobbyDuration > 0) {
-            enterLobby();
-            if (!hostControlled) {
-                lobbyDuration = lobbyTimeInit
-                startLobbyCountdown();
-            }
-        } else {
-            restartGame();
-        }
-    }
+		enterLobby();
+    } else {
+		displayScoreboard();
+	}
 }
+
 function endGame() {
-    gameOver = true;
-    const sortedPlayers = Array.from(players.values())
+	console.warn("endGame");
+	gameOver = true;
+	
+	const sortedPlayers = Array.from(players.values())
         .filter(player => player.isAlive)
         .sort((a, b) => {
             if (b.kills !== a.kills) {
@@ -1141,45 +1092,40 @@ function endGame() {
             return a.joinTime - b.joinTime;
         });
 
-    scoreboardData = sortedPlayers.slice(0, 3);
-    
-    if (hostControlled) {
-        drawScoreboardModal();
-    } else {
-        countdownSeconds = 15;
-        countdownTimer = setInterval(updateCountdown, 1000);
-    }
+    topPlayers = sortedPlayers.slice(0, 3);
+	
+    countdownSeconds = 15;
+	document.getElementById("ui-overlay").classList.add("hidden");
+	displayScoreboard();
+	clearInterval(countdownTimer);
+    countdownTimer = setInterval(updateCountdown, 1000); 
 }
 
-
-function initGame() { // run one time, and only one time
-    
-    lobbyDuration = lobbyTimeInit;
-
-    if (hostControlled) {
-        isFirstGame = true; // Reset this when entering lobby mode
-        enterLobby();
-    } else if (lobbyDuration > 0) {
-        isFirstGame = true; // Reset this when entering lobby mode
-        enterLobby();
-        startLobbyCountdown();
-    } else {
-        startGame();
-    }
+function startGame() {
+    // Reset game state
+	console.warn("StartGame");
+	updatePlayerCount();
+    timeLeft = 60; // first match 100s; more matches 60s
+	gameOver = false;
+	document.getElementById("ui-overlay").classList.remove("hidden");
 }
 
+function displayScoreboard() { 
 
-function drawScoreboardModal() {
+	draw();
+	
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Game Over', canvas.width / 2, 100);
 
     const modalWidth = 300;
     const modalHeight = 420;
     const modalX = (canvas.width - modalWidth) / 2;
     const modalY = (canvas.height - modalHeight) / 2;
-	
-
-    // Draw semi-transparent background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw modal background
     ctx.fillStyle = '#333';
@@ -1197,77 +1143,66 @@ function drawScoreboardModal() {
     ctx.fillText('Top Survivors', canvas.width / 2, modalY + 40);
 
     // Draw player information
-    scoreboardData.forEach((player, index) => {
-        const yOffset = modalY + 100 + index * 100;
+	if (topPlayers){
+		topPlayers.forEach((player, index) => {
+			const yOffset = modalY + 100 + index * 100;
 
-        // Draw player avatar	
-		if (player.avatarLoaded && player.avatarImage) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(modalX + 20, yOffset, 60, 60);
-            ctx.clip();
-			
-            ctx.drawImage(player.avatarImage, modalX + 20, yOffset, 60, 60);
-            ctx.restore();
-        } else {
-            ctx.fillStyle = player.color;
-			ctx.fillRect(modalX + 20, yOffset, 60, 60);
-        }
+			// Draw player avatar	
+			if (player.avatarLoaded && player.avatarImage) {
+				ctx.save();
+				ctx.beginPath();
+				ctx.rect(modalX + 20, yOffset, 60, 60);
+				ctx.clip();
+				
+				ctx.drawImage(player.avatarImage, modalX + 20, yOffset, 60, 60);
+				ctx.restore();
+			} else {
+				ctx.fillStyle = player.color;
+				ctx.fillRect(modalX + 20, yOffset, 60, 60);
+			}
 
-        // Draw player name and kills
+			// Draw player name and kills
+			ctx.fillStyle = '#fff';
+			ctx.font = '18px Arial';
+			ctx.textAlign = 'left';
+			ctx.fillText(`${index + 1}. ${player.name}`, modalX + 90, yOffset + 25);
+			ctx.fillText(`Knock outs: ${player.kills}`, modalX + 90, yOffset + 50);
+
+			// Draw medal for top 3
+			const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+			if (index < 3) {
+				ctx.fillStyle = medalColors[index];
+				ctx.beginPath();
+				ctx.arc(modalX + 40, yOffset - 10, 15, 0, Math.PI * 2);
+				ctx.fill();
+			}
+		});
+	} else if (!topPlayers || topPlayers.length === 0) {
         ctx.fillStyle = '#fff';
-        ctx.font = '18px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(`${index + 1}. ${player.name}`, modalX + 90, yOffset + 25);
-        ctx.fillText(`Knock outs: ${player.kills}`, modalX + 90, yOffset + 50);
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('No survivors!', canvas.width / 2, modalY + 200);
+    }
 
-        // Draw medal for top 3
-        const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
-        if (index < 3) {
-            ctx.fillStyle = medalColors[index];
-            ctx.beginPath();
-            ctx.arc(modalX + 40, yOffset - 10, 15, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    });
-
-    // Draw countdown message
-	if (hostControlled){
-		document.getElementById("ui-overlay").classList.add("hidden");
-		ctx.fillStyle = 'white';
-		ctx.font = '20px Arial';
-		ctx.textAlign = 'center';
-		ctx.fillText('Waiting for host to restart the game', canvas.width / 2, canvas.height - 30);
-	} else if (countdownSeconds <= 10) {
+    // Draw countdown message																	 
+    if (countdownSeconds <= 10) {
         const alpha = (10 - countdownSeconds) / 5; // Fade in over 5 seconds
         ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
         ctx.font = '20px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(`Game will restart in ${countdownSeconds}s`, canvas.width / 2, modalY + modalHeight - 10);
     }
-
-    // Draw "No survivors" message if there are no top players
-    if (scoreboardData.length === 0) {
-        ctx.fillStyle = '#fff';
-        ctx.font = '24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('No survivors!', canvas.width / 2, modalY + 200);
-    }
 }
 
 function gameLoop() {
     if (!gameOver) {
         update();
-        draw();
-    } else if (scoreboardData){
 		draw();
-    } else {
-		drawLobby();
 	}
-    requestAnimationFrame(gameLoop);
+	requestAnimationFrame(gameLoop);
 }
-
 function simulateWebSocket() {
+	console.warn("simulateWebSocket");
     setInterval(() => {
         if (gameOver) return;
 
@@ -1279,7 +1214,7 @@ function simulateWebSocket() {
 					addPlayer(name);
 				}
 			}
-        } else if (randomCommand < 0.24) {
+        } else if (randomCommand < 0.25) {
             // Simulate a chat message
             const playerArray = Array.from(players.values());
             if (playerArray.length > 0) {
@@ -1287,17 +1222,17 @@ function simulateWebSocket() {
                 const randomMessage = `Ahhh-tauk!`;
                 handleChatMessage(randomPlayer.name, randomMessage);
             }
-        } else if (randomCommand < 0.28) {
+        } else if (randomCommand < 0.3) {
             // Simulate a chat message
             const playerArray = Array.from(players.values());
             if (playerArray.length > 0) {
                 const randomPlayer = playerArray[Math.floor(Math.random() * playerArray.length)];
-                const randomMessage = `I will defeat you all`;
+                const randomMessage = `I will destroy you all`;
                 handleChatMessage(randomPlayer.name, randomMessage);
             }
         } else if (randomCommand < 0.35) {
             // Simulate a chat message
-            const playerArray = Array.from(players.values()); 
+            const playerArray = Array.from(players.values());
             if (playerArray.length > 0) {
                 const randomPlayer = playerArray[Math.floor(Math.random() * playerArray.length)];
 				if (!randomPlayer.isAlive){
@@ -1329,19 +1264,21 @@ function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     // Redraw the current state (lobby or game)
-    if (gameOver) {
+    if (gameOver && (countdownSeconds<=0)) {
         drawLobby();
+	} else if (gameOver){
+		displayScoreboard();
     } else {
         draw();
     }
 }
 
-window.addEventListener('resize', resizeCanvas);
-
-// Initialize the game
+window.addEventListener('resize', resizeCanvas);											
+// Start the game
+enterLobby();
 simulateWebSocket();
-initGame();
 gameLoop();
+
 setInterval(updateTimer, 1000);
 </script>
 </body>
