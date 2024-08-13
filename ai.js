@@ -198,8 +198,8 @@ async function processMessageWithOllama(data) {
     }
     
 	const botname = "🤖💬";
-	if (settings.ollamabotname && settings.ollamabotname.textsettings){
-		botname = settings.ollamabotname.textsettings.trim();
+	if (settings.ollamabotname && settings.ollamabotname.textsetting){
+		botname = settings.ollamabotname.textsetting.trim();
 	}
 	
     if (!data.chatmessage || data.chatmessage.startsWith(botname+":")) {
@@ -233,8 +233,8 @@ async function processMessageWithOllama(data) {
 			additionalInstructions = settings.ollamaprompt.textsetting;
 		}
 		const botname = "🤖💬";
-		if (settings.ollamabotname && settings.ollamabotname.textsettings){
-			botname = settings.ollamabotname.textsettings.trim();
+		if (settings.ollamabotname && settings.ollamabotname.textsetting){
+			botname = settings.ollamabotname.textsetting.trim();
 		}
         const response = await processUserInput(cleanedText, data, additionalInstructions);
 		log(response);

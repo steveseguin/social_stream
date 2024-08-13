@@ -2919,8 +2919,8 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			}
 			
 			const botname = "🤖💬";
-			if (settings.ollamabotname && settings.ollamabotname.textsettings){
-				botname = settings.ollamabotname.textsettings.trim();
+			if (settings.ollamabotname && settings.ollamabotname.textsetting){
+				botname = settings.ollamabotname.textsetting.trim();
 			}
 			
 			let username = "";
