@@ -197,7 +197,7 @@ async function processMessageWithOllama(data) {
         return; // Skip this message if we've responded recently
     }
     
-	const botname = "🤖💬";
+	let botname = "🤖💬";
 	if (settings.ollamabotname && settings.ollamabotname.textsetting){
 		botname = settings.ollamabotname.textsetting.trim();
 	}
@@ -232,7 +232,7 @@ async function processMessageWithOllama(data) {
 		if (settings.ollamaprompt){
 			additionalInstructions = settings.ollamaprompt.textsetting;
 		}
-		const botname = "🤖💬";
+		let botname = "🤖💬";
 		if (settings.ollamabotname && settings.ollamabotname.textsetting){
 			botname = settings.ollamabotname.textsetting.trim();
 		}

@@ -2918,7 +2918,7 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				lastMessageCounter = 0;
 			}
 			
-			const botname = "🤖💬";
+			let botname = "🤖💬";
 			if (settings.ollamabotname && settings.ollamabotname.textsetting){
 				botname = settings.ollamabotname.textsetting.trim();
 			}
