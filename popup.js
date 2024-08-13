@@ -12,7 +12,6 @@ if (typeof(chrome.runtime)=='undefined'){
 	
 	if (typeof require !== "undefined"){
 		var { ipcRenderer, contextBridge } = require("electron");
-		chrome.runtime.onMessage.addListener = window.electronApi.exposeDoSomethingInWebApp;
 	} else {
 		var ipcRenderer = {};
 		ipcRenderer.sendSync = function(){};
@@ -43,9 +42,6 @@ if (typeof(chrome.runtime)=='undefined'){
 		} catch(e){
 		}
 	})
-	
-	
-
 	
 	new Promise((resolve, reject) => {
 	   try {
