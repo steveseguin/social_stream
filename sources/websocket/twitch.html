@@ -15,26 +15,44 @@
         body {
             background-color: #ddd;
         }
-        .sign-out-button {
-            background-color: #f44336;
+        .auth-button, .sign-out-button {
+            background-color: #9146FF;
             color: white;
             padding: 10px 15px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: background-color 0.3s;
+        }
+        .auth-button:hover {
+            background-color: #7D3CD0;
+        }
+        .sign-out-button {
+            background-color: #f44336;
             float: right;
-            margin-top: 10px;
         }
         .sign-out-button:hover {
             background-color: #d32f2f;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .text-center {
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="row">
-            <div class="hidden auth text-center">
-                <a id="auth-link">Sign in to Twitch</a>
+            <div class="auth text-center">
+                <a id="auth-link" class="auth-button">Sign in to Twitch</a>
             </div>
             <div class="hidden socket">
                 <button id="sign-out-button" class="sign-out-button">Sign Out</button>
@@ -58,36 +76,40 @@
             sessionStorage.removeItem('twitchOAuthState');
             sessionStorage.removeItem('twitchOAuthToken');
             
-            // Close WebSocket connection if it's open
             if (typeof websocket !== 'undefined' && websocket && websocket.readyState === WebSocket.OPEN) {
                 websocket.close();
             }
 
-            // Hide the socket div and show the auth div
             document.querySelector('.socket').classList.add('hidden');
             document.querySelector('.auth').classList.remove('hidden');
 
-            // Clear the textarea
             document.querySelector('#textarea').innerHTML = '';
 
             console.log('Signed out successfully');
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Set up event listener for the sign-out button
             const signOutButton = document.getElementById('sign-out-button');
             if (signOutButton) {
                 signOutButton.addEventListener('click', signOut);
             }
 
-            // Load saved alias
+            const authLink = document.getElementById('auth-link');
+            if (authLink) {
+                authLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Call your authentication function here
+                    // For example: initiateAuth();
+                    console.log('Initiating Twitch authentication');
+                });
+            }
+
             const savedAlias = localStorage.getItem('twitchUserAlias');
             const aliasInput = document.getElementById('alias-input');
             if (savedAlias && aliasInput) {
                 aliasInput.value = savedAlias;
             }
 
-            // Save alias when it changes
             if (aliasInput) {
                 aliasInput.addEventListener('change', function() {
                     localStorage.setItem('twitchUserAlias', this.value);

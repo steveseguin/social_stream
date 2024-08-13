@@ -40,19 +40,19 @@ function initializePage() {
     var hashParams = new URLSearchParams(window.location.hash.slice(1));
     channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || '';
 
-    const storedToken = getStoredToken();
-    if (storedToken) {
-        verifyAndUseToken(storedToken);
-    } else if (window.location.hash) {
-        parseFragment(window.location.hash);
-    } else {
-        showAuthButton();
-    }
-
     // Set up event listeners
     const signOutButton = document.getElementById('sign-out-button');
     if (signOutButton) {
         signOutButton.addEventListener('click', signOut);
+    }
+
+    const authLink = document.getElementById('auth-link');
+    if (authLink) {
+        authLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            const authURL = authUrl();
+            window.location.href = authURL;
+        });
     }
 
     const sendButton = document.querySelector('button');
@@ -63,6 +63,28 @@ function initializePage() {
     const inputText = document.querySelector('#input-text');
     if (inputText) {
         inputText.addEventListener('keypress', handleEnterKey);
+    }
+
+    // Load and set up alias
+    const savedAlias = localStorage.getItem('twitchUserAlias');
+    const aliasInput = document.getElementById('alias-input');
+    if (savedAlias && aliasInput) {
+        aliasInput.value = savedAlias;
+    }
+    if (aliasInput) {
+        aliasInput.addEventListener('change', function() {
+            localStorage.setItem('twitchUserAlias', this.value);
+        });
+    }
+
+    // Check authentication state
+    const storedToken = getStoredToken();
+    if (storedToken) {
+        verifyAndUseToken(storedToken);
+    } else if (window.location.hash) {
+        parseFragment(window.location.hash);
+    } else {
+        showAuthButton();
     }
 }
 function verifyAndUseToken(token) {
@@ -230,7 +252,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     sendResponse(false);
 });
 
-
 function authUrl() {
     sessionStorage.twitchOAuthState = nonce(15);
     var url = 'https://id.twitch.tv/oauth2/authorize' +
@@ -241,7 +262,6 @@ function authUrl() {
         '&state=' + sessionStorage.twitchOAuthState + "@" + (channel || "");
     
     return url;
-
 }
 
 function deepMerge(target, source) {
