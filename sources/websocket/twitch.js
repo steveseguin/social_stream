@@ -1,3 +1,5 @@
+
+
 var clientId = 'sjjsgy1sgzxmy346tdkghbyz4gtx0k'; 
 var redirectURI = 'https://socialstream.ninja/sources/websocket/twitch.html';
 var scope = 'chat%3Aread+chat%3Aedit';
@@ -28,6 +30,15 @@ const username = "SocialStreamNinja"; // Not supported at the moment
 var channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || '';
 let userAlias = '';
 
+// At the beginning of the script, add:
+function getStoredToken() {
+    return localStorage.getItem('twitchOAuthToken');
+}
+
+function setStoredToken(token) {
+    localStorage.setItem('twitchOAuthToken', token);
+}
+
 // Add this function to update the alias
 function updateAlias() {
     userAlias = document.querySelector('#alias-input').value.trim();
@@ -37,11 +48,17 @@ function updateAlias() {
 function fetchUserInfo() {
     fetch('https://api.twitch.tv/helix/users', {
         headers: {
-            'Authorization': 'Bearer ' + sessionStorage.twitchOAuthToken,
+            'Authorization': 'Bearer ' + getStoredToken(),
             'Client-Id': clientId
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (response.status === 401) {
+            // Token expired
+            throw new Error('Token expired');
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.data && data.data[0]) {
             const username = data.data[0].login;
@@ -52,7 +69,13 @@ function fetchUserInfo() {
             connect();
         }
     })
-    .catch(error => console.error('Error fetching user info:', error));
+    .catch(error => {
+        if (error.message === 'Token expired') {
+            handleTokenExpiration();
+        } else {
+            console.error('Error fetching user info:', error);
+        }
+    });
 }
 
 function parseFragment(hash) {
@@ -67,12 +90,9 @@ function parseFragment(hash) {
         channel = hashMatch(/%40(\w+)/);
     }
     token = hashMatch(/access_token=(\w+)/);
-    if (sessionStorage.twitchOAuthState == state)
-        sessionStorage.twitchOAuthToken = token;
-
-	if (sessionStorage.twitchOAuthState == state) {
-        sessionStorage.twitchOAuthToken = token;
-        fetchUserInfo(); // Fetch user info after authentication
+    if (sessionStorage.twitchOAuthState == state) {
+        setStoredToken(token);
+        fetchUserInfo();
     }
     return;
 }
@@ -112,7 +132,7 @@ function connect() {
         console.log('Connected');
         // Authenticate and join a channel
         
-        websocket.send(`PASS oauth:${sessionStorage.twitchOAuthToken || token}`);
+        websocket.send(`PASS oauth:${getStoredToken()}`);
         websocket.send(`NICK ${username}`);
         websocket.send(`JOIN #${channel}`);
         
@@ -296,7 +316,8 @@ if (document.location.hash.match(/access_token=(\w+)/)){
     parseFragment(document.location.hash);
 }
 
-if (sessionStorage.twitchOAuthToken || token) {
+const storedToken = getStoredToken();
+if (storedToken) {
     if (!channel) {
         fetchUserInfo();
     } else {
@@ -306,12 +327,18 @@ if (sessionStorage.twitchOAuthToken || token) {
     document.querySelector('.socket').classList.remove("hidden");
 } else {
     var url = authUrl();
-	try {
-		document.querySelector('#auth-link').href = url;
-		document.querySelector('.auth').classList.remove("hidden");
-	} catch(e){
-		console.error(e);
-	}
+    try {
+        document.querySelector('#auth-link').href = url;
+        document.querySelector('.auth').classList.remove("hidden");
+    } catch(e){
+        console.error(e);
+    }
+}
+
+function handleTokenExpiration() {
+    localStorage.removeItem('twitchOAuthToken');
+    var url = authUrl();
+    window.location.href = url;
 }
 
 // Modify the button click handler
