@@ -787,10 +787,7 @@ input:checked + .slider:before {
 }
 
 .textInput:focus + label,
-		/*.textInput:valid + label,*//* if 'required' and input is valid */
-		input:not(:placeholder-shown).textInput + label /* input is not empty */ {
-						
-										   
+.textInput:not(:placeholder-shown) + label {
     top: -7px;
     color: var(--color-accent);
     font-size: 1em;
@@ -3670,7 +3667,7 @@ input:checked + .slider:before {
 								<p>Using this section requires a bot service to be made available.</p>
 								<p>You can install one for free with Ollama: <a href="https://github.com/steveseguin/social_stream/blob/main/ai.md" style="color:lightblue" target="_blank">Installation Guide Here</a></p>
 
-								<h3>Configure LLM API</h3>
+								<h3>Configure LLM API 🦙</h3>
 								<div>
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" id="ollamamodel" class="textInput" autocomplete="off" placeholder="eg: llama3.1" data-textsetting="ollamamodel" />
@@ -3691,7 +3688,7 @@ input:checked + .slider:before {
 											<input type="checkbox" id="ollamaCensorBot" data-setting="ollamaCensorBot" />
 											<span class="slider round"></span>
 										</label>
-										🚦 <span data-translate="enable-censor-bot">Enable the censor bot</span> 
+										🚦 <span data-translate="enable-censor-bot">Enable the censor bot. <i>(non-blocking by default)</i></span> 
 									</div>
 								</div>
 								<div>
@@ -3709,7 +3706,7 @@ input:checked + .slider:before {
 										<input type="checkbox" id="ollama" data-setting="ollama" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="enable-ollama-bot">🦙🤖 Enable the Ollama AI chat bot</span>
+									🚦 <span data-translate="enable-ollama-bot">Enable the Ollama AI chat bot</span>
 								</div>
 								<div>
 									<div class="textInputContainer" style="width: 95%;">
