@@ -45,6 +45,61 @@ function updateAlias() {
     localStorage.setItem('twitchUserAlias', userAlias);
 }
 
+function initializePage() {
+    const storedToken = getStoredToken();
+    if (storedToken) {
+        // Token exists, attempt to use it
+        verifyAndUseToken(storedToken);
+    } else if (window.location.hash) {
+        // Check if we're returning from Twitch OAuth
+        parseFragment(window.location.hash);
+    } else {
+        // No token and not returning from OAuth, show sign-in button
+        showAuthButton();
+    }
+}
+
+function clearStoredToken() {
+    localStorage.removeItem('twitchOAuthToken');
+    localStorage.removeItem('twitchChannel');
+}
+
+function showAuthButton() {
+    document.querySelector('.auth').classList.remove("hidden");
+    document.querySelector('.socket').classList.add("hidden");
+}
+function showSocketInterface() {
+    document.querySelector('.socket').classList.remove("hidden");
+    document.querySelector('.auth').classList.add("hidden");
+}
+function verifyAndUseToken(token) {
+    fetch('https://id.twitch.tv/oauth2/validate', {
+        headers: {
+            'Authorization': `OAuth ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.login) {
+            // Token is valid
+            setStoredToken(token);
+            channel = data.login;
+            localStorage.setItem("twitchChannel", channel);
+            connect();
+            showSocketInterface();
+        } else {
+            // Token is invalid
+            clearStoredToken();
+            showAuthButton();
+        }
+    })
+    .catch(error => {
+        console.error('Error validating token:', error);
+        clearStoredToken();
+        showAuthButton();
+    });
+}
+
 function fetchUserInfo() {
     fetch('https://api.twitch.tv/helix/users', {
         headers: {
@@ -97,6 +152,26 @@ function parseFragment(hash) {
     return;
 }
 
+function parseFragment(hash) {
+    var hashMatch = function(expr) {
+        var match = hash.match(expr);
+        return match ? match[1] : null;
+    };
+    var state = hashMatch(/state=(\w+)/);
+    if (hashMatch(/@(\w+)/)){
+        channel = hashMatch(/@(\w+)/);
+    } else if (hashMatch(/%40(\w+)/)){
+        channel = hashMatch(/%40(\w+)/);
+    }
+    token = hashMatch(/access_token=(\w+)/);
+    if (sessionStorage.twitchOAuthState == state) {
+        verifyAndUseToken(token);
+    } else {
+        console.error('OAuth state mismatch');
+        showAuthButton();
+    }
+}
+
 function authUrl() {
     sessionStorage.twitchOAuthState = nonce(15);
     var url = 'https://id.twitch.tv/oauth2/authorize' +
@@ -131,8 +206,14 @@ function connect() {
     websocket.onopen = () => {
         console.log('Connected');
         // Authenticate and join a channel
+        const token = getStoredToken();
+        if (!token) {
+            console.error('No token available');
+            showAuthButton();
+            return;
+        }
         
-        websocket.send(`PASS oauth:${getStoredToken()}`);
+        websocket.send(`PASS oauth:${token}`);
         websocket.send(`NICK ${username}`);
         websocket.send(`JOIN #${channel}`);
         
@@ -316,24 +397,30 @@ if (document.location.hash.match(/access_token=(\w+)/)){
     parseFragment(document.location.hash);
 }
 
-const storedToken = getStoredToken();
-if (storedToken) {
-    if (!channel) {
-        fetchUserInfo();
-    } else {
-        localStorage.setItem("twitchChannel", channel);
-        connect();
+function signOut() {
+    clearStoredToken();
+    sessionStorage.removeItem('twitchOAuthState');
+    
+    // Close WebSocket connection if it's open
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+        websocket.close();
     }
-    document.querySelector('.socket').classList.remove("hidden");
-} else {
-    var url = authUrl();
-    try {
-        document.querySelector('#auth-link').href = url;
-        document.querySelector('.auth').classList.remove("hidden");
-    } catch(e){
-        console.error(e);
-    }
+
+    showAuthButton();
+
+    // Clear the textarea
+    document.querySelector('#textarea').innerHTML = '';
+
+    console.log('Signed out successfully');
 }
+
+// Add event listener for the sign-out button
+document.getElementById('sign-out-button').addEventListener('click', signOut);
+
+// This replaces the previous authentication check
+document.addEventListener('DOMContentLoaded', initializePage);
+
+console.log("INJECTED");
 
 function handleTokenExpiration() {
     localStorage.removeItem('twitchOAuthToken');
