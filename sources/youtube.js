@@ -270,30 +270,20 @@
 		var resp = "";
 		element.childNodes.forEach(node => {
 			if (node.childNodes.length) {
-				if (!settings.textonlymode && node.nodeName === "A" && node.href && node.childNodes.length === 1) {
-					resp += extractYouTubeRedirectUrl(node.href);
-				} else {
-					resp += getAllContentNodes(node);
-				}
-			} else if (node.nodeType === 3 && node.textContent) {
-				// ah, so I was skipping the spaces before. that's breaking arabic. well, w/e
-				if (settings.textonlymode) {
-					resp += escapeHtml(node.textContent) + "";
-				} else {
-					resp += replaceEmotesWithImages(escapeHtml(node.textContent)) + "";
-				}
+				resp += getAllContentNodes(node);
+			} else if (node.nodeType === 3) {
+				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1) {
-				if (!settings.textonlymode) {
+				if (node.nodeName === "IMG" && node.src) {
+					resp += `<img src="${node.src}">`;
+				} else {
 					resp += node.outerHTML;
-				} else if (node.nodeName == "IMG"){
-					if (node.alt && isEmoji(node.alt)){
-						resp += escapeHtml(node.alt);
-					}
 				}
 			}
 		});
 		return resp;
 	}
+
 
 	function findSingleInteger(input) {
 		// Ensure the input is a string
@@ -305,6 +295,14 @@
 		} else {
 			return false;
 		}
+	}
+	
+	function isHTMLElement(variable) {
+	  return variable instanceof HTMLElement || variable instanceof Node;
+	}
+
+	function isObject(variable) {
+	  return typeof variable === 'object' && variable !== null && !isHTMLElement(variable);
 	}
 
 	function processMessage(ele, wss = true) {
@@ -397,7 +395,7 @@
 				for (var i = 0; i < children.length; i++) {
 					children[i].outerHTML = "";
 				}
-				chatmessage = getAllContentNodes(cloned);
+				chatmessage = getAllContentNodes2(cloned);
 			} catch (e) {
 				//console.error(e);
 			}
@@ -498,7 +496,7 @@
 				}
 				var membershipLength = ele.querySelector("#header-subtext.yt-live-chat-membership-item-renderer, #header-primary-text.yt-live-chat-membership-item-renderer") || false;
 				if (membershipLength) {
-					membershipLength = getAllContentNodes(membershipLength);
+					membershipLength = getAllContentNodes2(membershipLength);
 					membershipLength = findSingleInteger(membershipLength);
 				}
 				if (membershipLength) {
@@ -510,7 +508,7 @@
 				}
 			} else if (giftedmemembership) {
 				hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
-				chatmessage = getAllContentNodes(giftedmemembership);
+				chatmessage = getAllContentNodes2(giftedmemembership);
 				eventType = "sponsorship";
 			} else {
 				hasMembership = getTranslation("new-member", "NEW MEMBER");
@@ -532,7 +530,7 @@
 			}
 		} else if (!chatmessage && giftedmemembership) {
 			eventType = "sponsorship";
-			chatmessage = getAllContentNodes(giftedmemembership);
+			chatmessage = getAllContentNodes2(giftedmemembership);
 			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 		}
 		
@@ -592,6 +590,15 @@
 			//console.error("No message or donation");
 			return;
 		}
+		
+		if (isHTMLElement(chatmessage)){
+			console.error(chatmessage);
+			chatmessage = escapeHtml(chatmessage.textContent.trim());
+		} else if (isObject(chatmessage)){
+			console.error(chatmessage);
+			chatmessage = "";
+		}
+		
 
 		var data = {};
 		data.chatname = chatname;
