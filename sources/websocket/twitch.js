@@ -97,7 +97,7 @@ function verifyAndUseToken(token) {
     .then(data => {
         if (data.login) {
             setStoredToken(token);
-            channel = data.login;
+            username = data.login;
             localStorage.setItem("twitchChannel", channel);
             connect();
             showSocketInterface();
@@ -213,6 +213,8 @@ async function connect() {
             showAuthButton();
             return;
         }
+		
+		channel = channel || username;
         
         websocket.send(`PASS oauth:${token}`);
         websocket.send(`NICK ${username}`);
@@ -242,8 +244,6 @@ function handleWebSocketMessage(event, badges) {
             if (parsedMessage.command === 'PING') {
                 websocket.send('PONG :tmi.twitch.tv');
 				return;
-            } else if (parsedMessage.params && parsedMessage.command === '001') {
-                username = parsedMessage.params.pop() || username;
             } else if (parsedMessage.command === 'PRIVMSG') {
                 processMessage(parsedMessage, badges);
             } 
@@ -338,7 +338,7 @@ function authUrl() {
         '&client_id=' + clientId + 
         '&redirect_uri=' + redirectURI +
         '&scope=' + scope +
-        '&state=' + sessionStorage.twitchOAuthState + "@" + (channel || "");
+        '&state=' + sessionStorage.twitchOAuthState + "@" + (username || "");
     
     return url;
 }
@@ -442,13 +442,6 @@ function parseMessage(rawMessage) {
 function sendMessage(message) {
     if (websocket.readyState === WebSocket.OPEN) {
         websocket.send(`PRIVMSG #${channel} :${message}`);
-        
-        var span = document.createElement("div");
-        span.innerText = `${username}: ${message}`;
-        document.querySelector("#textarea").appendChild(span);
-        if (document.querySelector("#textarea").childNodes.length > 10){
-            document.querySelector("#textarea").childNodes[0].remove();
-        }
 		return true;
     } else {
         console.error('WebSocket is not open.');
