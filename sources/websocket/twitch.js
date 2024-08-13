@@ -1,72 +1,69 @@
-
-
 var clientId = 'sjjsgy1sgzxmy346tdkghbyz4gtx0k'; 
 var redirectURI = 'https://socialstream.ninja/sources/websocket/twitch.html';
 var scope = 'chat%3Aread+chat%3Aedit';
 var ws;
 var token = "";
-console.log("Injected");
-(function (w) {
-	w.URLSearchParams = w.URLSearchParams || function (searchString) {
-		var self = this;
-		self.searchString = searchString;
-		self.get = function (name) {
-			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
-			if (results == null) {
-				return null;
-			} else {
-				return decodeURI(results[1]) || 0;
-			}
-		};
-	};
-
-})(window);
-
-var urlParams = new URLSearchParams(window.location.search);
-var hashParams = new URLSearchParams(window.location.hash.slice(1));
-
+var channel = '';
 const username = "SocialStreamNinja"; // Not supported at the moment
+let websocket;
+var BTTV = false;
+var SEVENTV = false;
+var EMOTELIST = false;
+var settings = {};
 
-var channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || '';
 
 // At the beginning of the script, add:
 function getStoredToken() {
     return localStorage.getItem('twitchOAuthToken');
 }
-
 function setStoredToken(token) {
     localStorage.setItem('twitchOAuthToken', token);
 }
-
-
-
-function initializePage() {
-    const storedToken = getStoredToken();
-    if (storedToken) {
-        // Token exists, attempt to use it
-        verifyAndUseToken(storedToken);
-    } else if (window.location.hash) {
-        // Check if we're returning from Twitch OAuth
-        parseFragment(window.location.hash);
-    } else {
-        // No token and not returning from OAuth, show sign-in button
-        showAuthButton();
-    }
-}
-
-
 function clearStoredToken() {
     localStorage.removeItem('twitchOAuthToken');
     localStorage.removeItem('twitchChannel');
 }
-
 function showAuthButton() {
-    document.querySelector('.auth').classList.remove("hidden");
-    document.querySelector('.socket').classList.add("hidden");
+    const authElement = document.querySelector('.auth');
+    const socketElement = document.querySelector('.socket');
+    if (authElement) authElement.classList.remove("hidden");
+    if (socketElement) socketElement.classList.add("hidden");
 }
 function showSocketInterface() {
-    document.querySelector('.socket').classList.remove("hidden");
-    document.querySelector('.auth').classList.add("hidden");
+    const authElement = document.querySelector('.auth');
+    const socketElement = document.querySelector('.socket');
+    if (socketElement) socketElement.classList.remove("hidden");
+    if (authElement) authElement.classList.add("hidden");
+}
+function initializePage() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var hashParams = new URLSearchParams(window.location.hash.slice(1));
+    channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || '';
+
+    const storedToken = getStoredToken();
+    if (storedToken) {
+        verifyAndUseToken(storedToken);
+    } else if (window.location.hash) {
+        parseFragment(window.location.hash);
+    } else {
+        showAuthButton();
+    }
+
+    // Set up event listeners
+    const signOutButton = document.getElementById('sign-out-button');
+    if (signOutButton) {
+        signOutButton.addEventListener('click', signOut);
+    }
+
+    const sendButton = document.querySelector('button');
+    if (sendButton) {
+        sendButton.onclick = handleSendMessage;
+    }
+
+    const inputText = document.querySelector('#input-text');
+    if (inputText) {
+        inputText.addEventListener('keypress', handleEnterKey);
+    }
 }
 function verifyAndUseToken(token) {
     fetch('https://id.twitch.tv/oauth2/validate', {
@@ -77,14 +74,12 @@ function verifyAndUseToken(token) {
     .then(response => response.json())
     .then(data => {
         if (data.login) {
-            // Token is valid
             setStoredToken(token);
             channel = data.login;
             localStorage.setItem("twitchChannel", channel);
             connect();
             showSocketInterface();
         } else {
-            // Token is invalid
             clearStoredToken();
             showAuthButton();
         }
@@ -95,59 +90,6 @@ function verifyAndUseToken(token) {
         showAuthButton();
     });
 }
-
-function fetchUserInfo() {
-    fetch('https://api.twitch.tv/helix/users', {
-        headers: {
-            'Authorization': 'Bearer ' + getStoredToken(),
-            'Client-Id': clientId
-        }
-    })
-    .then(response => {
-        if (response.status === 401) {
-            // Token expired
-            throw new Error('Token expired');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.data && data.data[0]) {
-            const username = data.data[0].login;
-            if (!channel) {
-                channel = username;
-                localStorage.setItem("twitchChannel", channel);
-            }
-            connect();
-        }
-    })
-    .catch(error => {
-        if (error.message === 'Token expired') {
-            handleTokenExpiration();
-        } else {
-            console.error('Error fetching user info:', error);
-        }
-    });
-}
-
-function parseFragment(hash) {
-    var hashMatch = function(expr) {
-        var match = hash.match(expr);
-        return match ? match[1] : null;
-    };
-    var state = hashMatch(/state=(\w+)/);
-    if (hashMatch(/@(\w+)/)){
-        channel = hashMatch(/@(\w+)/);
-    } else if (hashMatch(/%40(\w+)/)){
-        channel = hashMatch(/%40(\w+)/);
-    }
-    token = hashMatch(/access_token=(\w+)/);
-    if (sessionStorage.twitchOAuthState == state) {
-        setStoredToken(token);
-        fetchUserInfo();
-    }
-    return;
-}
-
 function parseFragment(hash) {
     var hashMatch = function(expr) {
         var match = hash.match(expr);
@@ -167,6 +109,127 @@ function parseFragment(hash) {
         showAuthButton();
     }
 }
+function connect() {
+    websocket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+
+    websocket.onopen = () => {
+        console.log('Connected');
+        const token = getStoredToken();
+        if (!token) {
+            console.error('No token available');
+            showAuthButton();
+            return;
+        }
+        
+        websocket.send(`PASS oauth:${token}`);
+        websocket.send(`NICK ${username}`);
+        websocket.send(`JOIN #${channel}`);
+        
+        const textarea = document.querySelector("#textarea");
+        if (textarea) {
+            var span = document.createElement("div");
+            span.innerText = `Joined the channel: ${channel}`;
+            textarea.appendChild(span);
+            if (textarea.childNodes.length > 10){
+                textarea.childNodes[0].remove();
+            }
+        }
+    };
+
+    websocket.onmessage = handleWebSocketMessage;
+    websocket.onerror = (event) => console.error('WebSocket error:', event);
+    websocket.onclose = handleWebSocketClose;
+}
+function handleWebSocketMessage(event) {
+    const messages = event.data.split(/\r?\n/);
+    messages.forEach((rawMessage) => {
+        if (rawMessage) {
+            const parsedMessage = parseMessage(rawMessage);
+            if (parsedMessage.command === 'PING') {
+                websocket.send('PONG :tmi.twitch.tv');
+            } else if (parsedMessage.command === 'PRIVMSG') {
+                processMessage(parsedMessage);
+            } else {
+                console.log(rawMessage);
+            }
+        }
+    });
+}
+function handleWebSocketClose(event) {
+    console.log('Disconnected:', event);
+    console.log('Attempting to reconnect...');
+    setTimeout(connect, 10000); // Reconnect after 10 seconds
+}
+function signOut() {
+    clearStoredToken();
+    sessionStorage.removeItem('twitchOAuthState');
+    
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+        websocket.close();
+    }
+
+    showAuthButton();
+
+    const textarea = document.querySelector('#textarea');
+    if (textarea) textarea.innerHTML = '';
+
+    console.log('Signed out successfully');
+}
+function handleSendMessage(event) {
+    event.preventDefault();
+    const inputElement = document.querySelector('#input-text');
+    if (inputElement) {
+        var msg = inputElement.value.trim();
+        if (msg) {
+            sendMessage(msg);
+            inputElement.value = "";
+        }
+    }
+}
+function handleEnterKey(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        const sendButton = document.querySelector('button');
+        if (sendButton) sendButton.click();
+    }
+}
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    try {
+        if ("focusChat" == request) {
+            sendResponse(true);
+            return;
+        } 
+        if (typeof request === "object") {
+            if ("settings" in request) {
+                settings = request.settings;
+                sendResponse(true);
+                if (settings.bttv && !BTTV) {
+                    chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
+                }
+                if (settings.seventv && !SEVENTV) {
+                    chrome.runtime.sendMessage(chrome.runtime.id, { "getSEVENTV": true }, function(response){});
+                }
+                return;
+            } 
+            if ("SEVENTV" in request) {
+                SEVENTV = request.SEVENTV;
+                sendResponse(true);
+                mergeEmotes();
+                return;
+            }
+            if ("BTTV" in request) {
+                BTTV = request.BTTV;
+                sendResponse(true);
+                mergeEmotes();
+                return;
+            }
+        }
+    } catch(e) {
+        console.error('Error handling Chrome message:', e);
+    }
+    sendResponse(false);
+});
+
 
 function authUrl() {
     sessionStorage.twitchOAuthState = nonce(15);
@@ -181,6 +244,19 @@ function authUrl() {
 
 }
 
+function deepMerge(target, source) {
+    for (const key in source) {
+        if (source.hasOwnProperty(key)) {
+            if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+                target[key] = deepMerge(target[key] || {}, source[key]);
+            } else {
+                target[key] = source[key];
+            }
+        }
+    }
+    return target;
+}
+
 // Source: https://www.thepolyglotdeveloper.com/2015/03/create-a-random-nonce-string-using-javascript/
 function nonce(length) {
 	var text = "";
@@ -191,110 +267,6 @@ function nonce(length) {
 	return text;
 }
 
-
-const wsUri = 'wss://irc-ws.chat.twitch.tv:443';
-
-let websocket;
-
-function connect() {
-    websocket = new WebSocket(wsUri);
-
-    websocket.onopen = () => {
-        console.log('Connected');
-        // Authenticate and join a channel
-        const token = getStoredToken();
-        if (!token) {
-            console.error('No token available');
-            showAuthButton();
-            return;
-        }
-        
-        websocket.send(`PASS oauth:${token}`);
-        websocket.send(`NICK ${username}`);
-        websocket.send(`JOIN #${channel}`);
-        
-        var span = document.createElement("div");
-        span.innerText += `Joined the channel: ${channel}`;
-		
-        document.querySelector("#textarea").appendChild(span);
-        if (document.querySelector("#textarea").childNodes.length > 10){
-            document.querySelector("#textarea").childNodes[0].remove();
-        }
-    };
-
-	websocket.onmessage = (event) => {
-		const messages = event.data.split(/\r?\n/);
-		messages.forEach((rawMessage) => {
-			if (rawMessage) {
-				const parsedMessage = parseMessage(rawMessage);
-				if (parsedMessage.command === 'PING') {
-					websocket.send('PONG :tmi.twitch.tv');
-				} else if (parsedMessage.command === 'PRIVMSG') {
-					processMessage(parsedMessage);
-				} else {
-					console.log(rawMessage);
-				}
-			}
-		  });
-	};
-		
-
-	websocket.onerror = (event) => {
-		console.error('WebSocket error:', event);
-	};
-
-	websocket.onclose = (event) => {
-		console.log('Disconnected:', event);
-		console.log('Attempting to reconnect...');
-		setTimeout(connect, 10000); // Reconnect after 10 seconds
-	};
-}
-
-var BTTV = false;
-var SEVENTV = false;
-	
-chrome.runtime.onMessage.addListener(
-	function (request, sender, sendResponse) {
-		try{
-			if ("focusChat" == request){
-				sendResponse(true);
-				return;
-			} 
-			if (typeof request === "object"){
-				if ("settings" in request){
-					settings = request.settings;
-					sendResponse(true);
-					if (settings.bttv && !BTTV){
-						chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
-					}
-					if (settings.seventv && !SEVENTV){
-						chrome.runtime.sendMessage(chrome.runtime.id, { "getSEVENTV": true }, function(response){});
-					}
-					return;
-				} 
-				if ("SEVENTV" in request) {
-					SEVENTV = request.SEVENTV;
-					//console.log(SEVENTV);
-					sendResponse(true);
-					mergeEmotes();
-					return;
-				}
-				if ("BTTV" in request) {
-					BTTV = request.BTTV;
-					//console.log(BTTV);
-					sendResponse(true);
-					mergeEmotes();
-					return;
-				}
-			}
-			
-			
-		} catch(e){}
-		sendResponse(false);
-	}
-);
-
-var EMOTELIST = false;
 function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
 	
 	EMOTELIST = {};
@@ -335,6 +307,7 @@ function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
 	}
 	console.log(EMOTELIST);
 }
+
 
 function parseMessage(rawMessage) {
   const parsedMessage = {
@@ -382,72 +355,7 @@ function sendMessage(message) {
     }
 }
 
-if (!channel){
-	var urlParams = new URLSearchParams(window.location.hash);
-	channel = urlParams.get("channel") || urlParams.get("username") || '';
-}
-if (document.location.hash.match(/access_token=(\w+)/)){
-    parseFragment(document.location.hash);
-}
-
-function signOut() {
-	console.log("sign out new");
-    clearStoredToken();
-    sessionStorage.removeItem('twitchOAuthState');
-    
-    // Close WebSocket connection if it's open
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.close();
-    }
-
-    showAuthButton();
-
-    // Clear the textarea
-    document.querySelector('#textarea').innerHTML = '';
-
-    console.log('Signed out successfully');
-}
-
-
-// Replace both event listeners with this single one
-document.addEventListener('DOMContentLoaded', () => {
-    initializePage();
-    
-});
-
-// Set up sign-out button event listener
-const signOutButton = document.getElementById('sign-out-button');
-if (signOutButton) {
-	signOutButton.addEventListener('click', signOut);
-}
-console.log("INJECTED");
-
-function handleTokenExpiration() {
-    localStorage.removeItem('twitchOAuthToken');
-    var url = authUrl();
-    window.location.href = url;
-}
-
-// Modify the button click handler
-document.querySelector('button').onclick = function(event){
-    event.preventDefault(); // Prevent form submission
-    var msg = document.querySelector('#input-text').value.trim();
-    if (msg){
-        sendMessage(msg);
-        document.querySelector('#input-text').value = "";
-    }
-};
-
-// Prevent form submission on Enter key press
-document.querySelector('#input-text').addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        document.querySelector('button').click();
-    }
-});
-
 const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
-	
 function replaceEmotesWithImages(message) {
   if (!EMOTELIST) {
 	return message;
@@ -505,18 +413,6 @@ function replaceEmotesWithImages(message) {
   return result;
 }
 
-/* function replaceEmotesWithImages2(message, emotesMap, zw = false) {
-	const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join("\\b|\\b")}\\b)(?!\\w|\\d|[!?.])`, "g");
-	return message.replace(emotePattern, match => {
-		const emote = emotesMap[match];
-		if (!zw || typeof emote === "string") {
-			return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
-		} else if (emote.url) {
-			return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" />`;
-		}
-	});
-} */
-
 function escapeHtml(unsafe) {
 	try {
 		// Unescape the text
@@ -540,22 +436,20 @@ function escapeHtml(unsafe) {
 	}
 }
 
-async function fetchWithTimeout(URL, timeout = 8000) { // ref: https://dmitripavlutin.com/timeout-fetch-request/
-	try {
-		const controller = new AbortController();
-		const timeout_id = setTimeout(() => controller.abort(), timeout);
-		const response = await fetch(URL, {
-			...{
-				timeout: timeout
-			},
-			signal: controller.signal
-		});
-		clearTimeout(timeout_id);
-		return response;
-	} catch (e) {
-		errorlog(e);
-		return await fetch(URL); // iOS 11.x/12.0
-	}
+async function fetchWithTimeout(URL, timeout = 8000) {
+    try {
+        const controller = new AbortController();
+        const timeout_id = setTimeout(() => controller.abort(), timeout);
+        const response = await fetch(URL, {
+            timeout: timeout,
+            signal: controller.signal
+        });
+        clearTimeout(timeout_id);
+        return response;
+    } catch (e) {
+        console.error(e); // Changed from errorlog to console.error
+        return await fetch(URL); // iOS 11.x/12.0
+    }
 }
 
 var channels = {};
@@ -632,7 +526,9 @@ chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(
 	if (settings && settings.bttv && !BTTV){
 		chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
 	}
+	initializePage();
 });
+
 
 
 console.log("INJECTED");

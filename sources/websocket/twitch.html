@@ -39,7 +39,8 @@
             <div class="hidden socket">
                 <button id="sign-out-button" class="sign-out-button">Sign Out</button>
                 <div id="textarea" class="ws-output" rows="20" style="font-family:Courier;width:100%"></div>
-                <form id="topic-form" class="text-right form-inline" >
+                <form id="topic-form" class="text-right form-inline">
+                    <input type="text" id="alias-input" placeholder="Enter your alias">
                     <label id="topic-label" for="topic-text"></label>
                     <input type="text" id="input-text" placeholder="Send Message">
                     <button type="submit" class="btn">SEND</button>
@@ -50,15 +51,15 @@
     <script>
         console.log(".");
 
-        // Add this function to handle sign out
         function signOut() {
             localStorage.removeItem('twitchOAuthToken');
             localStorage.removeItem('twitchChannel');
+            localStorage.removeItem('twitchUserAlias');
             sessionStorage.removeItem('twitchOAuthState');
             sessionStorage.removeItem('twitchOAuthToken');
             
             // Close WebSocket connection if it's open
-            if (websocket && websocket.readyState === WebSocket.OPEN) {
+            if (typeof websocket !== 'undefined' && websocket && websocket.readyState === WebSocket.OPEN) {
                 websocket.close();
             }
 
@@ -72,8 +73,27 @@
             console.log('Signed out successfully');
         }
 
-        // Add event listener for the sign-out button
-        document.getElementById('sign-out-button').addEventListener('click', signOut);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up event listener for the sign-out button
+            const signOutButton = document.getElementById('sign-out-button');
+            if (signOutButton) {
+                signOutButton.addEventListener('click', signOut);
+            }
+
+            // Load saved alias
+            const savedAlias = localStorage.getItem('twitchUserAlias');
+            const aliasInput = document.getElementById('alias-input');
+            if (savedAlias && aliasInput) {
+                aliasInput.value = savedAlias;
+            }
+
+            // Save alias when it changes
+            if (aliasInput) {
+                aliasInput.addEventListener('change', function() {
+                    localStorage.setItem('twitchUserAlias', this.value);
+                });
+            }
+        });
 
         // The rest of your existing JavaScript code goes here
     </script>
