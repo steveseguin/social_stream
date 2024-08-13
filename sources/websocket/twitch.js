@@ -4,7 +4,7 @@ var scope = 'chat%3Aread+chat%3Aedit';
 var ws;
 var token = "";
 var channel = '';
-const username = "SocialStreamNinja"; // Not supported at the moment
+var username = "SocialStreamNinja"; // Not supported at the moment
 let websocket;
 var BTTV = false;
 var SEVENTV = false;
@@ -39,7 +39,7 @@ function initializePage() {
     var urlParams = new URLSearchParams(window.location.search);
     var hashParams = new URLSearchParams(window.location.hash.slice(1));
     channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || '';
-
+	
     // Set up event listeners
     const signOutButton = document.getElementById('sign-out-button');
     if (signOutButton) {
@@ -55,7 +55,7 @@ function initializePage() {
         });
     }
 
-    const sendButton = document.querySelector('button');
+    const sendButton = document.querySelector('#sendmessage');
     if (sendButton) {
         sendButton.onclick = handleSendMessage;
     }
@@ -131,7 +131,78 @@ function parseFragment(hash) {
         showAuthButton();
     }
 }
-function connect() {
+
+var userDetails = {};
+
+async function getUserInfo(username) {
+	
+	if (userDetails[username]){
+		return userDetails[username];
+	}
+	
+    const token = getStoredToken();
+    if (!token) {
+        console.error('No token available');
+        return null;
+    }
+	
+	if (username){
+		console.log("username: "+username);
+	} else {
+		return null;
+	}
+
+    try {
+        const response = await fetchWithTimeout(`https://api.twitch.tv/helix/users?login=${username}`, 5000, {'Client-ID': clientId, 'Authorization': `Bearer ${token}`});
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        const deets = data.data[0];
+		userDetails[username] = deets;
+		return deets;
+    } catch (error) {
+        console.error('Error fetching user info:', error);
+        return null;
+    }
+}
+
+async function getChatBadges(channelId) {
+    const token = getStoredToken();
+    if (!token) {
+        console.error('No token available');
+        return null;
+    }
+
+    try {
+        const globalResponse = await fetchWithTimeout('https://api.twitch.tv/helix/chat/badges/global', 5000, {'Client-ID': clientId, 'Authorization': `Bearer ${token}`});
+        const channelResponse = await fetchWithTimeout(`https://api.twitch.tv/helix/chat/badges?broadcaster_id=${channelId}`, 5000, {'Client-ID': clientId, 'Authorization': `Bearer ${token}`});
+
+        if (!globalResponse.ok || !channelResponse.ok) {
+            throw new Error(`HTTP error! status: ${globalResponse.status} ${channelResponse.status}`);
+        }
+
+        const globalBadges = await globalResponse.json();
+        const channelBadges = await channelResponse.json();
+
+        return { globalBadges: globalBadges.data, channelBadges: channelBadges.data };
+    } catch (error) {
+        console.error('Error fetching chat badges:', error);
+        return null;
+    }
+}
+
+async function connect() {
+    const channelInfo = await getUserInfo(channel);
+    if (!channelInfo) {
+        console.error('Failed to get channel info');
+        return;
+    }
+
+    const channelId = channelInfo.id;
+    const badges = await getChatBadges(channelId);
+	console.log(badges);
+
     websocket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
 
     websocket.onopen = () => {
@@ -158,22 +229,25 @@ function connect() {
         }
     };
 
-    websocket.onmessage = handleWebSocketMessage;
+    websocket.onmessage = (event) => handleWebSocketMessage(event, badges);
     websocket.onerror = (event) => console.error('WebSocket error:', event);
     websocket.onclose = handleWebSocketClose;
 }
-function handleWebSocketMessage(event) {
+
+function handleWebSocketMessage(event, badges) {
     const messages = event.data.split(/\r?\n/);
     messages.forEach((rawMessage) => {
         if (rawMessage) {
             const parsedMessage = parseMessage(rawMessage);
             if (parsedMessage.command === 'PING') {
                 websocket.send('PONG :tmi.twitch.tv');
+				return;
+            } else if (parsedMessage.params && parsedMessage.command === '001') {
+                username = parsedMessage.params.pop() || username;
             } else if (parsedMessage.command === 'PRIVMSG') {
-                processMessage(parsedMessage);
-            } else {
-                console.log(rawMessage);
-            }
+                processMessage(parsedMessage, badges);
+            } 
+			console.log(parsedMessage);
         }
     });
 }
@@ -203,16 +277,21 @@ function handleSendMessage(event) {
     if (inputElement) {
         var msg = inputElement.value.trim();
         if (msg) {
-            sendMessage(msg);
-            inputElement.value = "";
+            if (sendMessage(msg)){
+				inputElement.value = "";
+				let builtmsg = {};
+				builtmsg.command = "PRIVMSG";
+				builtmsg.params = [username];
+				builtmsg.prefix = username+"!"+username+"@"+username+".tmi.twitch.tv";
+				builtmsg.trailing = msg;
+				processMessage(builtmsg);
+			}
         }
     }
 }
 function handleEnterKey(event) {
     if (event.key === 'Enter') {
-        event.preventDefault();
-        const sendButton = document.querySelector('button');
-        if (sendButton) sendButton.click();
+		handleSendMessage(event);
     }
 }
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -370,9 +449,11 @@ function sendMessage(message) {
         if (document.querySelector("#textarea").childNodes.length > 10){
             document.querySelector("#textarea").childNodes[0].remove();
         }
+		return true;
     } else {
         console.error('WebSocket is not open.');
     }
+	return false;
 }
 
 const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
@@ -456,16 +537,27 @@ function escapeHtml(unsafe) {
 	}
 }
 
-async function fetchWithTimeout(URL, timeout = 8000) {
+async function fetchWithTimeout(URL, timeout = 8000, headers=false) {
     try {
         const controller = new AbortController();
         const timeout_id = setTimeout(() => controller.abort(), timeout);
-        const response = await fetch(URL, {
-            timeout: timeout,
-            signal: controller.signal
-        });
-        clearTimeout(timeout_id);
-        return response;
+		if (!headers) {
+			const response = await fetch(URL, {
+				timeout: timeout,
+				signal: controller.signal
+			});
+			clearTimeout(timeout_id);
+			return response;
+		} else {
+			const response = await fetch(URL, {
+				timeout: timeout,
+				signal: controller.signal,
+				headers: headers
+			});
+			clearTimeout(timeout_id);
+			return response;
+		}
+        
     } catch (e) {
         console.error(e); // Changed from errorlog to console.error
         return await fetch(URL); // iOS 11.x/12.0
@@ -473,12 +565,12 @@ async function fetchWithTimeout(URL, timeout = 8000) {
 }
 
 var channels = {};
-function getTwitchAvatarImage(username) {
-	if (!username || channels[username]){return;}
-	fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username=" + encodeURIComponent(username)).then(response => {
+function getTwitchAvatarImage(usernome) {
+	if (!usernome || channels[usernome]){return;}
+	fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username=" + encodeURIComponent(usernome)).then(response => {
 		response.text().then(function(text) {
 			if (text.startsWith("https://")) {
-				channels[username] = text;
+				channels[usernome] = text;
 			}
 		});
 	}).catch(error => {
@@ -486,48 +578,53 @@ function getTwitchAvatarImage(username) {
 	});
 }
 
+async function processMessage(parsedMessage, badges) {
+    var chan = parsedMessage.params[0];
+    getTwitchAvatarImage(chan);
 
+    const message = parsedMessage.trailing;
+    const user = parsedMessage.prefix.split('!')[0];
 
-function processMessage(parsedMessage){
-	//console.log(parsedMessage);
-	var chan = parsedMessage.params[0];
+    // Fetch user info
+    const userInfo = await getUserInfo(user);
+
+    var span = document.createElement("div");
+    span.innerText += (userInfo ? userInfo.display_name : user) + ": " + message;
+    document.querySelector("#textarea").appendChild(span);
+    if (document.querySelector("#textarea").childNodes.length > 10) {
+        document.querySelector("#textarea").childNodes[0].remove();
+    }
+
+    var data = {};
+    data.chatname = userInfo ? userInfo.display_name : user;
+    data.chatbadges = parseBadges(parsedMessage, badges);
+    data.backgroundColor = "";
+    data.textColor = userInfo ? userInfo.color : "";
+    data.chatmessage = replaceEmotesWithImages(message);
+
+    try {
+        data.chatimg = userInfo ? userInfo.profile_image_url : "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(user);
+    } catch (e) {
+        data.chatimg = "";
+    }
+    data.hasDonation = "";
+    data.membership = "";
+    if (chan && channels[chan]) {
+        data.sourceImg = channels[chan];
+    }
+    data.textonly = settings.textonlymode || false;
+    data.type = "twitch";
+
+    pushMessage(data);
+}
+
+function parseBadges(parsedMessage, badges) {
+	console.log(parsedMessage, badges);
 	
-	getTwitchAvatarImage(chan);
-	
-	//console.log("channel: "+chan);
-	const message = parsedMessage.trailing;
-	const user = parsedMessage.prefix.split('!')[0];
-	
-	//console.log(`Message from ${user} in ${chan}: ${message}`);
-	var span = document.createElement("div");
-	span.innerText += user+": "+message;
-	document.querySelector("#textarea").appendChild(span);
-	if (document.querySelector("#textarea").childNodes.length>10){
-		document.querySelector("#textarea").childNodes[0].remove();
-	}
-	
-	var data = {};
-	data.chatname = user;
-	data.chatbadges = "";
-	data.backgroundColor = "";
-	data.textColor = "";
-	data.chatmessage = replaceEmotesWithImages(message);
-	
-	try {
-		data.chatimg = "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(user);
-	} catch (e) {
-		data.chatimg = "";
-	}
-	data.hasDonation = "";
-	data.membership = "";;
-	if (chan && channels[chan]){
-		data.sourceImg = channels[chan];
-	}
-	data.textonly = settings.textonlymode || false;
-	data.type = "twitch";
-	
-	//console.log(data);
-	pushMessage(data);
+    // This function needs to be implemented to parse the badges from the message
+    // and match them with the badge info fetched earlier
+    // For now, we'll return an empty string
+    return "";
 }
 
 var settings = {};
