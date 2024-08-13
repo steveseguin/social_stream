@@ -28,7 +28,6 @@ var hashParams = new URLSearchParams(window.location.hash.slice(1));
 const username = "SocialStreamNinja"; // Not supported at the moment
 
 var channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || '';
-let userAlias = '';
 
 // At the beginning of the script, add:
 function getStoredToken() {
@@ -39,23 +38,9 @@ function setStoredToken(token) {
     localStorage.setItem('twitchOAuthToken', token);
 }
 
-// Add this function to update the alias
-function updateAlias() {
-    userAlias = document.querySelector('#alias-input').value.trim();
-    localStorage.setItem('twitchUserAlias', userAlias);
-}
+
 
 function initializePage() {
-    // Load saved alias
-    const savedAlias = localStorage.getItem('twitchUserAlias');
-    if (savedAlias) {
-        const aliasInput = document.querySelector('#alias-input');
-        if (aliasInput) {
-            aliasInput.value = savedAlias;
-            userAlias = savedAlias;
-        }
-    }
-
     const storedToken = getStoredToken();
     if (storedToken) {
         // Token exists, attempt to use it
@@ -230,9 +215,7 @@ function connect() {
         
         var span = document.createElement("div");
         span.innerText += `Joined the channel: ${channel}`;
-        if (userAlias) {
-            span.innerText += ` (as ${userAlias})`;
-        }
+		
         document.querySelector("#textarea").appendChild(span);
         if (document.querySelector("#textarea").childNodes.length > 10){
             document.querySelector("#textarea").childNodes[0].remove();
@@ -388,9 +371,8 @@ function sendMessage(message) {
     if (websocket.readyState === WebSocket.OPEN) {
         websocket.send(`PRIVMSG #${channel} :${message}`);
         
-        // Display the message locally with the alias
         var span = document.createElement("div");
-        span.innerText = `${userAlias || username}: ${message}`;
+        span.innerText = `${username}: ${message}`;
         document.querySelector("#textarea").appendChild(span);
         if (document.querySelector("#textarea").childNodes.length > 10){
             document.querySelector("#textarea").childNodes[0].remove();
@@ -449,7 +431,6 @@ function handleTokenExpiration() {
 // Modify the button click handler
 document.querySelector('button').onclick = function(event){
     event.preventDefault(); // Prevent form submission
-    updateAlias(); // Update the alias before sending the message
     var msg = document.querySelector('#input-text').value.trim();
     if (msg){
         sendMessage(msg);
