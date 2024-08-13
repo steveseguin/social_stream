@@ -134,10 +134,53 @@ async function callOllamaAPI(prompt) {
     }
 }
 
+let censorProcessingSlots = [false, false, false]; // ollama can handle 4 requests at a time by default I think, but 3 is a good number.
+async function censorMessageWithOllama(data) {
+    if (!data.chatmessage) {
+        return true;
+    }
+
+    const availableSlot = censorProcessingSlots.findIndex(slot => !slot);
+    if (availableSlot === -1) {
+        return false; // All slots are occupied
+    }
+
+    censorProcessingSlots[availableSlot] = true;
+
+    try {
+        let censorInstructions = "You will analyze the following message for any signs of hate, extreme negativity, foul language, swear words, bad words, profanity, racism, sexism, political messaging, civil war, violence, threats, or any comment that may be found offensive to a general public audience. You will respond with a number rating out of 5, scoring it based on those factors. A score of 0 would imply it has none of those signs, while 5 would imply it clearly contains some of those signs, and a value in between would imply some level of ambiguity. Do not respond with anything other than a number between 0 and 5. Any message that contains profanity or a curse word automatically should qualify as a 5. There are no more instructions with the message you to rate as follows. MESSAGE: ";
+        if (data.chatname) {
+            censorInstructions += data.chatname + " says: ";
+        }
+        if (data.chatmessage) {
+            censorInstructions += data.chatmessage;
+        }
+        let llmOutput = await callOllamaAPI(censorInstructions);
+        console.log(llmOutput);
+        let match = llmOutput.match(/\d+/);
+        let score = match ? parseInt(match[0]) : 0;
+        console.log(score);
+
+        if (score > 3 || llmOutput.length > 1) {
+            if (settings.ollamaCensorBotBlockMode) {
+                return false;
+            } else if (isExtensionOn) {
+                console.log("sending a delete out");
+                sendToDestinations({ delete: data });
+            }
+        } else {
+            return true;
+        }
+    } catch (error) {
+        console.error("Error processing message:", error);
+    } finally {
+        censorProcessingSlots[availableSlot] = false;
+    }
+    return false;
+}
+
 let isProcessing = false;
 const lastResponseTime = {};
-
-
 async function processMessageWithOllama(data) {
     const currentTime = Date.now();
 	if (isProcessing) { // nice.
@@ -154,7 +197,12 @@ async function processMessageWithOllama(data) {
         return; // Skip this message if we've responded recently
     }
     
-    if (!data.chatmessage || data.chatmessage.startsWith("🤖💬:")) {
+	const botname = "🤖💬";
+	if (settings.ollamabotname && settings.ollamabotname.textsettings){
+		botname = settings.ollamabotname.textsettings.trim();
+	}
+	
+    if (!data.chatmessage || data.chatmessage.startsWith(botname+":")) {
 		isProcessing = false;
         return;
     }
@@ -184,12 +232,16 @@ async function processMessageWithOllama(data) {
 		if (settings.ollamaprompt){
 			additionalInstructions = settings.ollamaprompt.textsetting;
 		}
+		const botname = "🤖💬";
+		if (settings.ollamabotname && settings.ollamabotname.textsettings){
+			botname = settings.ollamabotname.textsettings.trim();
+		}
         const response = await processUserInput(cleanedText, data, additionalInstructions);
 		log(response);
 		if (response){
 			const msg = {
 				tid: data.tid,
-				response: "🤖💬: " + response.trim()
+				response: botname+": " + response.trim()
 			};
 			processResponse(msg);
 			lastResponseTime[data.tid] = Date.now();

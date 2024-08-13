@@ -2682,11 +2682,7 @@ function ajax(object2send, url, ajaxType = "PUT", type = "application/json; char
 var messageCounter = 0;
 async function sendToDestinations(message) {
 	if (typeof message == "object") {
-		if (!message.id) {
-			messageCounter += 1;
-			message.id = messageCounter;
-		}
-
+		
 		if (message.chatname) {
 			message.chatname = filterXSS(message.chatname); // I do escapeHtml at the point of capture instead
 		}
@@ -2922,10 +2918,15 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				lastMessageCounter = 0;
 			}
 			
+			const botname = "🤖💬";
+			if (settings.ollamabotname && settings.ollamabotname.textsettings){
+				botname = settings.ollamabotname.textsettings.trim();
+			}
+			
 			let username = "";
-			if (cleaned.startsWith("🤖💬:")){
-				cleaned = cleaned.replace("🤖💬:","").trim();
-				username = "Bot🤖💬";
+			if (cleaned.startsWith(botname+":")){
+				cleaned = cleaned.replace(botname+":","").trim();
+				username = botname;
 			}
 			
 			var msg = {};
@@ -5139,6 +5140,11 @@ function sanitizeRelay(text, textonly=false, alt = false) {
 async function applyBotActions(data, tab = false) {
 	// this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
+	
+	if (!data.id) {
+		messageCounter += 1;
+		data.id = messageCounter;
+	}
 
 	try {
 		if (settings.blacklistuserstoggle && data.chatname && settings.blacklistusers) {
@@ -5778,6 +5784,33 @@ async function applyBotActions(data, tab = false) {
 		console.error(e);
 	}
 	try {
+		
+		if (settings.ollamaCensorBot){
+			try{
+				if (settings.ollamaCensorBotBlockMode){
+					let good = await censorMessageWithOllama(data);
+					if (!good){
+						return false;
+					}
+				} else {
+					censorMessageWithOllama(data);
+				}
+			} catch(e){
+				console.log(e); // ai.js file missing?
+				console.log("If the ai.js file is missing, we're going to remotely load it, if possible...");
+				ensureFunction('censorMessageWithOllama', 'https://socialstream.ninja/ai.js?v=ssapp') // temporary fix for older standalone app users. MUST remove for manifest version 3 version.
+					.then(() => {
+						try {
+							censorMessageWithOllama(data);
+						} catch (e) {
+							console.warn(e);
+						}
+					})
+					.catch(error => {
+						console.error('Failed to load script or find function:', error);
+					});
+			}
+		}
 		
 		if (settings.ollama){
 			if (Date.now() - lastSentTimestamp > 5000) {

@@ -1837,7 +1837,7 @@ input:checked + .slider:before {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-hostbot-options" />
-                    <label class="collapsible-label" for="wrapper-hostbot-options"><span data-translate="host--bot">🤖 Host, bots, privileged users</span></label>
+                    <label class="collapsible-label" for="wrapper-hostbot-options"><span data-translate="identify-hosts">👁️ Options — 🦸 Host, mod, streambots, VIPs</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
@@ -1846,6 +1846,10 @@ input:checked + .slider:before {
                                 </a>
                                 <br />
                                 <br />
+								<p>
+									<i>Note:</i> Bots referenced here are third-party stream bot and not in reference to our own local LLM bots.
+								</p>
+								<br />
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="hidebotnames" />
@@ -3596,123 +3600,167 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
+			
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-privhostbot-options-ext" />
+					<label class="collapsible-label" for="wrapper-privhostbot-options-ext">
+						<span data-translate="identify-hosts">🦸 Identify who is a host, mod, bot, vip</span>
+					</label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat">
+								<div
+									class="textInputContainer"
+									style="width: 95%;"
+									title="Note:
+			Host/bot name(s) to help identify them.
+			The list of names should be comma separated.
+			The first name listed may be used as the host's name in stream when their name is not otherwise known."
+								>
+									<input type="text" id="botnamesext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="mynameext" />
+									<label for="botnamesext">
+										<span data-translate="hostbot-names">&gt; Identify by name who are hosts or bots</span>
+									</label>
+								</div>
 
-            <div class="wrapper">
-    <div class="collapsible">
-        <input type="checkbox" class="collapsible-input" id="wrapper-hostbot-options-ext" />
-        <label class="collapsible-label" for="wrapper-hostbot-options-ext">
-            <span data-translate="host--bot">🤖 Host, bots, privileged users</span>
-        </label>
-        <div class="collapsible-text">
-            <div class="options">
-                <div class="options_group streaming_chat">
-                    <div
-                        class="textInputContainer"
-                        style="width: 95%;"
-                        title="Note:
-Host/bot name(s) to help identify them.
-The list of names should be comma separated.
-The first name listed may be used as the host's name in stream when their name is not otherwise known."
-                    >
-                        <input type="text" id="botnamesext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="mynameext" />
-                        <label for="botnamesext">
-                            <span data-translate="hostbot-names">&gt; Host/bot name(s)</span>
-                        </label>
-                    </div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="hidebotnamesext" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="delete-names-for-specified-host-or-bots">🤖🔤 Delete names for specified host or bots</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="hidebotsext" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="do-not-show-host-or-bot-messages">🤖🚫 Filter out messages from above hosts or bots</span>
+								</div>
+								<h3><span data-translate="Privileged-users-h3">Privileged users</span></h3>
 
-                    <div>
-                        <label class="switch">
-                            <input type="checkbox" data-setting="hidebotnamesext" />
-                            <span class="slider round"></span>
-                        </label>
-                        <span data-translate="delete-names-for-specified-host-or-bots">🤖🔤 Delete names for specified host or bots</span>
-                    </div>
-                    <div>
-                        <label class="switch">
-                            <input type="checkbox" data-setting="hidebotsext" />
-                            <span class="slider round"></span>
-                        </label>
-                        <span data-translate="do-not-show-host-or-bot-messages">🤖🚫 Filter out messages from host or bots</span>
-                    </div>
-                    <h3><span data-translate="Privileged-users-h3">Privileged users</span></h3>
-
-                    <div
-                        class="textInputContainer"
-                        style="width: 95%;"
-                        title="Note:
-Specify privileged/admin name(s) to help identify them in chat.
-The list of names should be comma separated."
-                    >
-                        <input type="text" id="adminnames" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="adminnames" />
-                        <label for="adminnames">
-                            <span data-translate="admin-names">&gt; Privileged users</span>
-                        </label>
-                    </div>
-                    
-                    <h3><span data-translate="local-chat-bot">Local chat bot</span></h3>
-                    <div style="display: inline-block;" title="Enable the Ollama AI Bot responder; requires Ollama to be installed locally.">
-                        <label class="switch">
-                            <input type="checkbox" id="ollama" data-setting="ollama" />
-                            <span class="slider round"></span>
-                        </label>
-                        <span data-translate="enable-ollama-bot">🦙🤖 Enable the Ollama AI bot (<a href="https://github.com/steveseguin/social_stream/blob/main/ai.md" style="color:lightblue" target="_blank">Requires Install</a>)</span>
-                    </div>
-					<div title="There's a minimum of 5-seconds by default" style="margin:5px 0">
-						<span data-translate="custom-tts-rate">
-							🐢 Rate limit for responses per tab / source
-							<input type="number" style="max-width: 7ch;" step="1000" max="9999999" min="5000" value="5000" size="6" data-numbersetting="ollamaRateLimitPerTab" />ms
-						</span>
-					</div>
-					<div>
-						<div class="textInputContainer" style="width: 95%;">
-							<input type="text" id="ollamamodel" class="textInput" autocomplete="off" placeholder="eg: llama3.1" data-textsetting="ollamamodel" />
-							<label for="ollamamodel"><span data-translate="ollama-model">&gt; Ollama Model to use</span></label>
+								<div
+									class="textInputContainer"
+									style="width: 95%;"
+									title="Note:
+			Specify privileged/admin name(s) to help identify them in chat.
+			The list of names should be comma separated."
+								>
+									<input type="text" id="adminnames" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="adminnames" />
+									<label for="adminnames">
+										<span data-translate="admin-names">&gt; Privileged users</span>
+									</label>
+								</div>
+							</div>
 						</div>
 					</div>
-					<div>
-						<div class="textInputContainer" style="width: 95%;">
-							<input type="text" id="ollamaendpoint" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
-							<label for="ollamaendpoint"><span data-translate="ollama-API-endpoint">&gt; Ollama API endpoint</span></label>
-						</div>
-					</div>
-                    <div class="textInputContainer" style="width: 95%;">
-						<textarea id="ollamaprompt" class="textInput" style="height:80px" autocomplete="off" placeholder="Enter additional instructions or context for the bot (e.g., 'You are a shopping assistant for a YouTube stream; only respond if you think it's important')" data-textsetting="ollamaprompt"></textarea>
-						<label for="ollamaprompt">
-							<span data-translate="ollamaprompt">&gt; Additional Bot Instructions (Optional)</span>
-						</label>
-					</div>
-					<div style="display: inline-block;" title="Enable the RAG mode, which has the LLM bot access a local database containing additional knowledge that if may reference in its responses.">
-                        <label class="switch">
-                            <input type="checkbox" id="ollamaRagEnabled" data-setting="ollamaRagEnabled" />
-                            <span class="slider round"></span>
-                        </label>
-                        <span data-translate="enable-ragEnabled-bot">Use a custom knowledge-base (RAG)</span> 
-					</div>
-					<br /><br />
-					<div id="ragFileManagement" style="display: none; margin-top: 10px;" title="A list of uploaded files that will populate the knowledge database, along with any progress state">
-						<div>
-							<button class="glowingButton" style="width: 160px; margin-left: 0px;" data-action="uploadRAGfile" title="Ideally, plain text or markdown files should be used">
-								<span data-translate="add-another-rag-file">Add a resource file</span>
-							</button>
-							<button class="glowingButton" style="width: 160px; margin-left: 0px;" data-action="clearRag" title="This will remove the local database of knowledge and delete upload files">
-								<span data-translate="clear-rag">Clear all</span>
-							</button>
-						</div>
-						<h4>Custom knowledge-base - File Management</h4>
-						<div id="ragFileList"></div>
-						<div>
-							<input type="checkbox" id="enhancedProcessing" checked>
-							<label for="enhancedProcessing">Use enhanced processing (may work better with multiple documents)</label>
-						</div>
-						<br>
-						<span data-translate="works-better-when"><i>💁‍ tip: The quality of data uploaded will impact results. Too much data may be harmful.</i></span> 
-					</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+				</div>
+			</div>						
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-bots-options-ext" />
+					<label class="collapsible-label" for="wrapper-bots-options-ext">
+						<span data-translate="local-bot">🤖 Local chat bot (LLM)</span>
+					</label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat">
+							
+								<p>Using this section requires a bot service to be made available.</p>
+								<p>You can install one for free with Ollama: <a href="https://github.com/steveseguin/social_stream/blob/main/ai.md" style="color:lightblue" target="_blank">Installation Guide Here</a></p>
 
+								<h3>Configure LLM API</h3>
+								<div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="ollamamodel" class="textInput" autocomplete="off" placeholder="eg: llama3.1" data-textsetting="ollamamodel" />
+										<label for="ollamamodel"><span data-translate="ollama-model">&gt; Ollama Model to use</span></label>
+									</div>
+								</div>
+								<div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="ollamaendpoint" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
+										<label for="ollamaendpoint"><span data-translate="ollama-API-endpoint">&gt; Ollama API endpoint</span></label>
+									</div>
+								</div>
+								
+								<h3><span data-translate="local-censor-bot">Censor bot options 🤖🚫🤬</span></h3>
+								<div>
+									<div style="display: inline-block;" title="Use the bot to moderate messages, deleting messages that it thinks aren't fit. It will skip messages if it can't keep up.">
+										<label class="switch">
+											<input type="checkbox" id="ollamaCensorBot" data-setting="ollamaCensorBot" />
+											<span class="slider round"></span>
+										</label>
+										🚦 <span data-translate="enable-censor-bot">Enable the censor bot</span> 
+									</div>
+								</div>
+								<div>
+									<div style="display: inline-block;" title="Only approved messages get thru, but this may slow things down and messages will get skipped.">
+										<label class="switch">
+											<input type="checkbox" id="ollamaCensorBotBlockMode" data-setting="ollamaCensorBotBlockMode" />
+											<span class="slider round"></span>
+										</label>
+										🤚 <span data-translate="censor-bot-hold">Block messages until approved by the censor bot</span>
+									</div>
+								</div>
+								<h3 title="Chat bots can reply to the chat"><span data-translate="local-chat-bot">Chat bot 🤖💬</span></h3>
+								<div style="display: inline-block;" title="Enable the Ollama AI Bot responder; requires Ollama to be installed locally.">
+									<label class="switch">
+										<input type="checkbox" id="ollama" data-setting="ollama" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="enable-ollama-bot">🦙🤖 Enable the Ollama AI chat bot</span>
+								</div>
+								<div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="ollamabotname" class="textInput" autocomplete="off" placeholder="The default bot name is '🤖💬'" data-textsetting="ollamabotname" />
+										<label for="ollamabotname"><span data-translate="ollama-bot-name">&gt; Customize bot name</span></label>
+									</div>
+								</div>
+								<div title="There's a minimum of 5-seconds by default" style="margin:5px 0">
+									<span data-translate="custom-tts-rate">
+										🐢 Rate limit for responses per tab / source
+										<input type="number" style="max-width: 7ch;" step="1000" max="9999999" min="5000" value="5000" size="6" data-numbersetting="ollamaRateLimitPerTab" />ms
+									</span>
+								</div>
+								
+								<div class="textInputContainer" style="width: 95%;">
+									<textarea id="ollamaprompt" class="textInput" style="height:80px" autocomplete="off" placeholder="Enter additional instructions or context for the bot (e.g., 'You are a shopping assistant for a YouTube stream; only respond if you think it's important')" data-textsetting="ollamaprompt"></textarea>
+									<label for="ollamaprompt">
+										<span data-translate="ollamaprompt">&gt; Additional Bot Instructions (Optional)</span>
+									</label>
+								</div>
+								<div style="display: inline-block;" title="Enable the RAG mode, which has the LLM bot access a local database containing additional knowledge that if may reference in its responses.">
+									<label class="switch">
+										<input type="checkbox" id="ollamaRagEnabled" data-setting="ollamaRagEnabled" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="enable-ragEnabled-bot">Use a custom knowledge-base (RAG)</span> 
+								</div>
+								<br /><br />
+								<div id="ragFileManagement" style="display: none; margin-top: 10px;" title="A list of uploaded files that will populate the knowledge database, along with any progress state">
+									<div>
+										<button class="glowingButton" style="width: 160px; margin-left: 0px;" data-action="uploadRAGfile" title="Ideally, plain text or markdown files should be used">
+											<span data-translate="add-another-rag-file">Add a resource file</span>
+										</button>
+										<button class="glowingButton" style="width: 160px; margin-left: 0px;" data-action="clearRag" title="This will remove the local database of knowledge and delete upload files">
+											<span data-translate="clear-rag">Clear all</span>
+										</button>
+									</div>
+									<h4>Custom knowledge-base - File Management</h4>
+									<div id="ragFileList"></div>
+									<div>
+										<input type="checkbox" id="enhancedProcessing" checked>
+										<label for="enhancedProcessing">Use enhanced processing (may work better with multiple documents)</label>
+									</div>
+									<br>
+									<span data-translate="works-better-when"><i>💁‍ tip: The quality of data uploaded will impact results. Too much data may be harmful.</i></span> 
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 
             <div class="wrapper">
                 <div class="collapsible">

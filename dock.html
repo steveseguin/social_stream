@@ -4996,7 +4996,11 @@
 				} else if ("delete" in data) {
 					// we will trigger a deleteMessage I guess after, if sync mode is needed.
 					try {
-						if (data.delete.chatname && data.delete.type) {
+						if (data.delete.id) {
+							document.querySelectorAll("[data-mid='"+data.delete.id+"']").forEach(ele => {
+								ele.remove();
+							});
+						} else if (data.delete.chatname && data.delete.type) {
 							document.querySelectorAll("[data-chatname='" + data.delete.chatname + "'][data-source-type='" + data.delete.type + "']").forEach(ele => {
 								ele.remove();
 							});
