@@ -156,16 +156,16 @@ async function censorMessageWithOllama(data) {
             censorInstructions += data.chatmessage;
         }
         let llmOutput = await callOllamaAPI(censorInstructions);
-        console.log(llmOutput);
+        //console.log(llmOutput);
         let match = llmOutput.match(/\d+/);
         let score = match ? parseInt(match[0]) : 0;
-        console.log(score);
+        //console.log(score);
 
         if (score > 3 || llmOutput.length > 1) {
             if (settings.ollamaCensorBotBlockMode) {
                 return false;
             } else if (isExtensionOn) {
-                console.log("sending a delete out");
+                //console.log("sending a delete out");
                 sendToDestinations({ delete: data });
             }
         } else {
