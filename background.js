@@ -58,8 +58,17 @@ function generateStreamID() {
 }
 
 if (typeof chrome.runtime == "undefined") {
-	var { ipcRenderer, contextBridge } = require("electron");
-	isSSAPP = true;
+	if (typeof require !== "undefined"){
+		var { ipcRenderer, contextBridge } = require("electron");
+		isSSAPP = true;
+	} else {
+		var ipcRenderer = {};
+		ipcRenderer.sendSync = function(){};
+		ipcRenderer.invoke = function(){};
+		ipcRenderer.on = function(){};
+		console.warn("This isn't a functional mode; not yet at least.");
+	}
+	
 	chrome = {};
 	chrome.browserAction = {};
 	chrome.browserAction.setIcon = function (icon) {}; // there is no icon in the ssapp
