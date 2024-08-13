@@ -46,6 +46,16 @@ function updateAlias() {
 }
 
 function initializePage() {
+    // Load saved alias
+    const savedAlias = localStorage.getItem('twitchUserAlias');
+    if (savedAlias) {
+        const aliasInput = document.querySelector('#alias-input');
+        if (aliasInput) {
+            aliasInput.value = savedAlias;
+            userAlias = savedAlias;
+        }
+    }
+
     const storedToken = getStoredToken();
     if (storedToken) {
         // Token exists, attempt to use it
@@ -58,6 +68,7 @@ function initializePage() {
         showAuthButton();
     }
 }
+
 
 function clearStoredToken() {
     localStorage.removeItem('twitchOAuthToken');
@@ -398,6 +409,7 @@ if (document.location.hash.match(/access_token=(\w+)/)){
 }
 
 function signOut() {
+	console.log("sign out new");
     clearStoredToken();
     sessionStorage.removeItem('twitchOAuthState');
     
@@ -414,12 +426,18 @@ function signOut() {
     console.log('Signed out successfully');
 }
 
-// Add event listener for the sign-out button
-document.getElementById('sign-out-button').addEventListener('click', signOut);
 
-// This replaces the previous authentication check
-document.addEventListener('DOMContentLoaded', initializePage);
+// Replace both event listeners with this single one
+document.addEventListener('DOMContentLoaded', () => {
+    initializePage();
+    
+});
 
+// Set up sign-out button event listener
+const signOutButton = document.getElementById('sign-out-button');
+if (signOutButton) {
+	signOutButton.addEventListener('click', signOut);
+}
 console.log("INJECTED");
 
 function handleTokenExpiration() {
@@ -438,15 +456,6 @@ document.querySelector('button').onclick = function(event){
         document.querySelector('#input-text').value = "";
     }
 };
-
-// Load saved alias on page load
-window.addEventListener('load', () => {
-    const savedAlias = localStorage.getItem('twitchUserAlias');
-    if (savedAlias) {
-        document.querySelector('#alias-input').value = savedAlias;
-        userAlias = savedAlias;
-    }
-});
 
 // Prevent form submission on Enter key press
 document.querySelector('#input-text').addEventListener('keypress', function(event) {
