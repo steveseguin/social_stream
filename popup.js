@@ -2,14 +2,29 @@ var isExtensionOn = false;
 
 if (typeof(chrome.runtime)=='undefined'){
 	
-	var { ipcRenderer, contextBridge } = require('electron');
-	
-	console.log("pop up started");
-	
 	chrome = {};
 	chrome.browserAction = {};
 	chrome.browserAction.setIcon = function(icon){}
 	chrome.runtime = {}
+	chrome.runtime.id = 1;
+	chrome.runtime.onMessage = {};
+	
+	
+	if (typeof require !== "undefined"){
+		var { ipcRenderer, contextBridge } = require("electron");
+		chrome.runtime.onMessage.addListener = window.electronApi.exposeDoSomethingInWebApp;
+	} else {
+		var ipcRenderer = {};
+		ipcRenderer.sendSync = function(){};
+		ipcRenderer.invoke = function(){};
+		ipcRenderer.on = function(){};
+		chrome.runtime.onMessage.addListener = function(){};
+		console.warn("This isn't a functional mode; not yet at least.");
+	}
+	
+	console.log("pop up started");
+	
+	
 	
 	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
 		let response = await ipcRenderer.sendSync('fromPopup',data);
@@ -27,6 +42,19 @@ if (typeof(chrome.runtime)=='undefined'){
 			update(args[0], false); // do not re-sync with ourself
 		} catch(e){
 		}
+	})
+	
+	
+
+	
+	new Promise((resolve, reject) => {
+	   try {
+		  `+text+`
+	   } catch(err) {
+		   try {
+		  throw { name: err.name, message: err.message, stack: err.stack }
+		   } catch(e){}
+	   }
 	})
 	
 	/* ipcRenderer.on('fromBackground', (event, ...args) => {
