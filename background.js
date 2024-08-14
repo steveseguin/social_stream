@@ -76,13 +76,13 @@ if (typeof chrome.runtime == "undefined") {
 	chrome.runtime.lastError = false;
 	//chrome.runtime.lastError.message = "";
 
-	/* chrome.runtime.sendMessage = async function(data, callback){ // uncomment if I need to use it.
+	chrome.runtime.sendMessage = async function(data, callback){ // uncomment if I need to use it.
 		let response = await ipcRenderer.sendSync('fromBackground',data);
 		if (typeof(callback) == "function"){
 			callback(response);
 			log(response);
 		}
-	}; */
+	};
 
 	chrome.runtime.getManifest = function () {
 		return false; // I'll need to add version info eventually

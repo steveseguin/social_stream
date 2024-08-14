@@ -1,5 +1,9 @@
 var isExtensionOn = false;
 
+function log(msg,a,b){
+	console.log(msg,a,b);
+}
+
 if (typeof(chrome.runtime)=='undefined'){
 	
 	chrome = {};
@@ -8,10 +12,18 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.runtime = {}
 	chrome.runtime.id = 1;
 	
-	
+	log("pop up started");
 	
 	if (typeof require !== "undefined"){
 		var { ipcRenderer, contextBridge } = require("electron");
+		
+		try {
+			window.showOpenFilePicker = async function (a = null, c = null) {
+				var importFile = await ipcRenderer.sendSync("showOpenDialog", "");
+				return importFile;
+			}; 
+		} catch(e){}
+	
 	} else {
 		var ipcRenderer = {};
 		ipcRenderer.sendSync = function(){};
@@ -20,17 +32,58 @@ if (typeof(chrome.runtime)=='undefined'){
 		console.warn("This isn't a functional mode; not yet at least.");
 	}
 	
-	console.log("pop up started");
 	
 	try {
+		
+		var onMessageCallback = function (a, b, c) {};
+
 		chrome.runtime.onMessage = {};
-		chrome.runtime.onMessage.addListener = async function(request, sender, sendResponse){
-			ipcRenderer.on('fromBackground', (event, ...args) => {
-				console.log("FROM BACKGROUND");
-				console.log(args[0]);
-			})
-		}
-	} catch(e){}
+		chrome.runtime.onMessage.addListener = function (callback) {
+			onMessageCallback = callback;
+		};
+
+		ipcRenderer.on("fromMain", (event, ...args) => {
+			log("FROM MAIN", args);
+			
+			var sender = {};
+			sender.tab = {};
+			sender.tab.id = null;
+
+			if (args[0] && args[0].forPopup) {
+				log("for pop up");
+				onMessageCallback(args[0], sender, function (response) {
+					if (event.returnValue) {
+						event.returnValue = response;
+					}
+					ipcRenderer.send("fromMainResponse", response);
+				});
+			} else {
+				log("some returned promise probably");
+				update(args[0], false);
+			}
+		});
+		
+		ipcRenderer.on("fromBackground", (event, ...args) => {
+			log("FROM BACKGROUND", args);
+
+			var sender = {};
+			sender.tab = {};
+			sender.tab.id = null;
+
+			if (args[0]) {
+				onMessageCallback(args[0], sender, function (response) {
+					if (event.returnValue) {
+						event.returnValue = response;
+					}
+					ipcRenderer.send("fromBackgroundResponse", response);
+				});
+			}
+		});
+		
+		
+	} catch(e){
+		console.error(e);
+	}
 	
 	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
 		let response = await ipcRenderer.sendSync('fromPopup',data);
@@ -42,14 +95,6 @@ if (typeof(chrome.runtime)=='undefined'){
 		return false; // I'll need to add version info eventually
 	}
 	
-	ipcRenderer.on('fromMain', (event, ...args) => {
-		
-		try {
-			update(args[0], false); // do not re-sync with ourself
-		} catch(e){
-		}
-	})
-	
 	new Promise((resolve, reject) => {
 	   try {
 		  `+text+`
@@ -60,10 +105,6 @@ if (typeof(chrome.runtime)=='undefined'){
 	   }
 	})
 	
-	/* ipcRenderer.on('fromBackground', (event, ...args) => {
-		console.log("FROM BACKGROUND");
-		console.log(args[0]);
-	}) */
 	
 }
 
@@ -1687,7 +1728,6 @@ if (!chrome.browserAction){
 
 
 function updateDocumentList(documents = []) {
-    console.log(documents);
     const fileList = document.getElementById('ragFileList');
     fileList.innerHTML = '';
 
@@ -1717,6 +1757,7 @@ function updateDocumentList(documents = []) {
 try {
 	chrome.runtime.onMessage.addListener(
 		function(request, sender, sendResponse) {
+			console.log("INCOMING MESSAGE--------------------------");
 			if (request.forPopup) {
 				console.log("Message received in popup:", request.forPopup);
 				if (request.forPopup.documents){

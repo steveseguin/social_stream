@@ -1426,11 +1426,16 @@ async function processUploadQueue() {
 async function importSettingsLLM(usePreprocessing = true) {
     try {
         var importFile = await window.showOpenFilePicker();
-        importFile = await importFile[0].getFile();
-        const fileContent = await importFile.text();
-        const title = importFile.name;
+		var title = "";
+		
+		try {
+			importFile = await importFile[0].getFile();
+			title = importFile.name;
+			importFile = await importFile.text();
+			
+		} catch(e){}
         
-        await addNewDocument(title, fileContent, usePreprocessing);
+        await addNewDocument(title, importFile, usePreprocessing);
         
         log("Import completed successfully");
     } catch (e) {
