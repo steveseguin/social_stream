@@ -4230,6 +4230,8 @@ eventer(messageEvent, async function (e) {
 						sendToDestinations(data);
 					}
 				}
+			} else if (e.data.action == "view-stats-updated") {
+				return;
 			} else if (e.data.UUID && e.data.value && e.data.action == "push-connection-info") {
 				// flip this
 				if ("label" in e.data.value) {

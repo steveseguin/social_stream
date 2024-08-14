@@ -7,7 +7,7 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.browserAction.setIcon = function(icon){}
 	chrome.runtime = {}
 	chrome.runtime.id = 1;
-	chrome.runtime.onMessage = {};
+	
 	
 	
 	if (typeof require !== "undefined"){
@@ -17,13 +17,20 @@ if (typeof(chrome.runtime)=='undefined'){
 		ipcRenderer.sendSync = function(){};
 		ipcRenderer.invoke = function(){};
 		ipcRenderer.on = function(){};
-		chrome.runtime.onMessage.addListener = function(){};
 		console.warn("This isn't a functional mode; not yet at least.");
 	}
 	
 	console.log("pop up started");
 	
-	
+	try {
+		chrome.runtime.onMessage = {};
+		chrome.runtime.onMessage.addListener = async function(request, sender, sendResponse){
+			ipcRenderer.on('fromBackground', (event, ...args) => {
+				console.log("FROM BACKGROUND");
+				console.log(args[0]);
+			})
+		}
+	} catch(e){}
 	
 	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
 		let response = await ipcRenderer.sendSync('fromPopup',data);

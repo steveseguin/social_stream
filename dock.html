@@ -5352,6 +5352,10 @@
 						return;
 					} // reject messages send from other iframes
 
+					if ("action" in e.data && e.data.action == "view-stats-updated") {
+						return;
+					}
+
 					if ("action" in e.data && e.data.UUID && e.data.value && e.data.action == "push-connection-info") {
 						// flip this
 						if ("label" in e.data.value) {
