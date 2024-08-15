@@ -4294,7 +4294,7 @@ eventer(messageEvent, async function (e) {
 });
 
 function checkIfAllowed(sitename) {
-	if (isSSAPP){return;}
+	if (isSSAPP){return true;}
 	
 	if (!settings.discord) {
 		try {
