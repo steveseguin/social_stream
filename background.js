@@ -4294,6 +4294,8 @@ eventer(messageEvent, async function (e) {
 });
 
 function checkIfAllowed(sitename) {
+	if (isSSAPP){return;}
+	
 	if (!settings.discord) {
 		try {
 			if (sitename == "discord") {
@@ -4354,7 +4356,7 @@ function checkIfAllowed(sitename) {
 			}
 		} catch (e) {}
 	}
-	if (!settings.telegram) {
+	if (!settings.telegram) { 
 		try {
 			if (sitename == "telegram") {
 				return false;

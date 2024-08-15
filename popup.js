@@ -322,7 +322,11 @@ function createUniqueVoiceIdentifiers(voices) {
 }
 
 document.addEventListener("DOMContentLoaded", async function(event) {
-	document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
+	if (ssapp){
+		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
+	} else {
+		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
+	}
 	//document.body.className = "extension-disabled";
 	document.getElementById("disableButton").style.display = "";
 	//chrome.browserAction.setIcon({path: "/icons/off.png"});
@@ -1043,12 +1047,20 @@ function update(response, sync=true){
 			isExtensionOn = response.state;
 			if (isExtensionOn){
 				document.body.className = "extension-enabled";
-				document.getElementById("disableButtonText").innerHTML = "⚡ Extension active";
+				if (ssapp){
+					document.getElementById("disableButtonText").innerHTML = "⚡ Service Active";
+				} else {
+					document.getElementById("disableButtonText").innerHTML = "⚡ Extension active";
+				}
 				document.getElementById("disableButton").style.display = "";
 				document.getElementById("extensionState").checked = true;
 				chrome.browserAction.setIcon({path: "/icons/on.png"});
 			} else {
-				document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
+				if (ssapp){
+					document.getElementById("disableButtonText").innerHTML = "🔌 Service Disabled";
+				} else {
+					document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
+				}
 				document.body.className = "extension-disabled";
 				document.getElementById("disableButton").style.display = "";
 				chrome.browserAction.setIcon({path: "/icons/off.png"});
@@ -1132,6 +1144,14 @@ function checkVersion(){
 var urlParams = new URLSearchParams(window.location.search);
 
 const devmode = urlParams.has("devmode");
+const ssapp = urlParams.has("ssapp");
+
+if (ssapp){
+	const style = document.createElement('style');
+	style.textContent = '.ssapp { display: none !important; }';
+	style.id = 'hide-ssapp-style';
+	document.head.appendChild(style);
+} 
 	
 function updateURL(param, href) {
 
