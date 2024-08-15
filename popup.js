@@ -1,11 +1,12 @@
 var isExtensionOn = false;
+var ssapp = false;
 
 function log(msg,a,b){
 	console.log(msg,a,b);
 }
 
 if (typeof(chrome.runtime)=='undefined'){
-	
+	ssapp = true;
 	chrome = {};
 	chrome.browserAction = {};
 	chrome.browserAction.setIcon = function(icon){}
@@ -1144,7 +1145,7 @@ function checkVersion(){
 var urlParams = new URLSearchParams(window.location.search);
 
 const devmode = urlParams.has("devmode");
-const ssapp = urlParams.has("ssapp");
+ssapp = urlParams.has("ssapp") || ssapp;
 
 if (ssapp){
 	const style = document.createElement('style');
