@@ -6,7 +6,7 @@ function log(msg,a,b){
 }
 
 if (typeof(chrome.runtime)=='undefined'){
-	ssapp = true;
+	
 	chrome = {};
 	chrome.browserAction = {};
 	chrome.browserAction.setIcon = function(icon){}
@@ -17,6 +17,8 @@ if (typeof(chrome.runtime)=='undefined'){
 	
 	if (typeof require !== "undefined"){
 		var { ipcRenderer, contextBridge } = require("electron");
+		
+		ssapp = true;
 		
 		try {
 			window.showOpenFilePicker = async function (a = null, c = null) {
