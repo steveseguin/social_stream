@@ -58,19 +58,28 @@
 		}
 		
 		for (let i = 0; i < element.childNodes.length; i++) {
-			const node = element.childNodes[i];
-			if (node.childNodes.length){
-				resp += await getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent);
-			} else if (node.nodeType === 1){
-				if (!settings.textonlymode){
-					if ((node.nodeName == "IMG") && node.src){
-						node.src = await toDataURL(node.src);
-					}
-					resp += node.outerHTML;
-				}
+		  const node = element.childNodes[i];
+		  
+		  // Check if the node is an element and if it's visible
+		  if (!settings.textonlymode && (node.nodeType === 1)) {
+			const style = window.getComputedStyle(node);
+			if (style.display === 'none') {
+			  continue; // Skip this node and move to the next iteration
 			}
+		  }
+
+		  if (node.childNodes.length) {
+			resp += await getAllContentNodes(node);
+		  } else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
+			resp += escapeHtml(node.textContent);
+		  } else if (node.nodeType === 1) {
+			if (!settings.textonlymode) {
+			  if ((node.nodeName == "IMG") && node.src) {
+				node.src = await toDataURL(node.src);
+			  }
+			  resp += node.outerHTML;
+			}
+		  }
 		}
 		return resp;
 	}
