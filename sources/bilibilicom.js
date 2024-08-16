@@ -87,6 +87,8 @@
 		} catch(e){
 		}
 		
+		name = name.split(":")[0].trim();
+		
 		var msg = "";
 		try {
 			msg = getAllContentNodes(ele.querySelector(".danmaku-item-right"));
