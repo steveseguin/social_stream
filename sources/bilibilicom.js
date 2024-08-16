@@ -1,29 +1,29 @@
 (function () {
 	 
-	function toDataURL(url, callback) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.onload = function() {
+	async function toDataURL(url) {
+	  return new Promise((resolve, reject) => {
+		const xhr = new XMLHttpRequest();
+		xhr.onload = function() {
+		  const blob = xhr.response;
 		  
-		var blob = xhr.response;
-    
-		if (blob.size > (25 * 1024)) {
-		  callback(url); // Image size is larger than 25kb.
-		  return;
-		}
-
-		var reader = new FileReader();
-		
-		
-		reader.onloadend = function() {
-		  callback(reader.result);
-		}
-		reader.readAsDataURL(xhr.response);
-	  };
-	  xhr.open('GET', url);
-	  xhr.responseType = 'blob';
-	  xhr.send();
+		  if (blob.size > (25 * 1024)) {
+			resolve(url); // Image size is larger than 25kb.
+			return;
+		  }
+		  
+		  const reader = new FileReader();
+		  reader.onloadend = function() {
+			resolve(reader.result);
+		  };
+		  reader.onerror = reject;
+		  reader.readAsDataURL(blob);
+		};
+		xhr.onerror = reject;
+		xhr.open('GET', url);
+		xhr.responseType = 'blob';
+		xhr.send();
+	  });
 	}
-
 
 	var lastMessage = "";
 	
@@ -44,7 +44,7 @@
 		}
 	}
 
-	function getAllContentNodes(element) { // takes an element.
+	async function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
 		if (!element){return resp;}
@@ -57,25 +57,26 @@
 			}
 		}
 		
-		element.childNodes.forEach(node=>{
+		for (let i = 0; i < element.childNodes.length; i++) {
+			const node = element.childNodes[i];
 			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
+				resp += await getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
-						node.src = node.src+"";
+						node.src = await toDataURL(node.src);
 					}
 					resp += node.outerHTML;
 				}
 			}
-		});
+		}
 		return resp;
 	}
 	
 	
-	function processMessage(ele){
+	async function processMessage(ele){
 		
 	
 		var chatimg = "";
@@ -91,7 +92,7 @@
 		
 		var msg = "";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".danmaku-item-right"));
+			msg = await getAllContentNodes(ele.querySelector(".danmaku-item-right"));
 		} catch(e){
 		}
 		
@@ -111,7 +112,14 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "bilibili";
 		
-		pushMessage(data);
+		if (data.chatimg){
+			toDataURL(data.chatimg, function(dataUrl) {
+				data.chatimg = dataUrl;
+				pushMessage(data);
+			});
+		} else {
+			pushMessage(data);
+		}
 		
 	}
 
