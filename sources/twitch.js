@@ -207,8 +207,19 @@
 				if (pendingRegularEmote) {
 					result += pendingRegularEmote;
 				}
-				emoteNode.classList.add("regular-emote");
-				pendingRegularEmote = emoteNode.outerHTML;
+				
+				let newImgAttributes = 'class="regular-emote"';
+				if (emoteNode.src) {
+					newImgAttributes += ` src="${emoteNode.src.replace('/1.0', '/2.0')}"`;
+				}
+				if (emoteNode.srcset) {
+					let newSrcset = emoteNode.srcset.replace(/^[^,]+,\s*/, ''); // remove first low-res srcset.
+					if (newSrcset) {
+						newImgAttributes += ` srcset="${newSrcset}"`;
+					}
+				}
+				
+				pendingRegularEmote = `<img ${newImgAttributes}>`;
 			} else {
 				emoteNode.classList.add("regular-emote");
 				result += emoteNode.outerHTML;
