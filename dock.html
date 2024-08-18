@@ -662,6 +662,10 @@
 			.highlight {
 				background-color: yellow !important;
 			}
+			
+			svg.regular-emote, img.regular-emote {
+				margin: auto 0;
+			}
 
 			img,
 			svg {
@@ -817,9 +821,11 @@
 			}
 			.larger-emojis img:not(.hl-badge, .icon) {
 				height: var(--stylized-img);
-				max-width: calc(var(--stylized-img) * 1.5);
+				max-width: calc(var(--stylized-img) * 3);
 				max-height: var(--stylized-img);
+				margin: auto 1px;
 			}
+
 
 			.hl-message img:not(.hl-badge, .icon) {
 				display: var(--show-images);
@@ -838,6 +844,11 @@
 				top: 3px;
 				height: 24px;
 				max-height: 24px;
+				vertical-align: top;
+			}
+			
+			.larger-emojis  .time-arrived {
+				vertical-align: top;
 			}
 
 			.hl-badge.svg {

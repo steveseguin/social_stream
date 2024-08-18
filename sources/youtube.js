@@ -65,40 +65,7 @@
 
 	var messageHistory = [];
 	
-	function replaceEmotesWithImages(text) {
-		if (!EMOTELIST) {
-			return [document.createTextNode(text)];
-		}
-		
-		const result = [];
-		let lastIndex = 0;
-		
-		text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch, offset) => {
-			if (offset > lastIndex) {
-				result.push(document.createTextNode(text.slice(lastIndex, offset)));
-			}
-			
-			const emote = EMOTELIST[emoteMatch];
-			if (emote) {
-				const img = document.createElement('img');
-				img.src = typeof emote === 'string' ? emote : emote.url;
-				img.alt = emoteMatch;
-				img.title = emoteMatch;
-				img.className = typeof emote !== "string" && emote.zw ? 'zero-width-emote-centered' : 'regular-emote';
-				result.push(img);
-			} else {
-				result.push(document.createTextNode(match));
-			}
-			
-			lastIndex = offset + match.length;
-		});
-		
-		if (lastIndex < text.length) {
-			result.push(document.createTextNode(text.slice(lastIndex)));
-		}
-		
-		return result;
-	}
+	
 	
 	function cloneSvgWithResolvedUse(svgElement) {
 		const clonedSvg = svgElement.cloneNode(true);
@@ -119,14 +86,31 @@
 		return clonedSvg;
 	}
 	
+	function replaceEmotesWithImages(text) {
+		if (!EMOTELIST) {
+			return text;
+		}
+		
+		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+			const emote = EMOTELIST[emoteMatch];
+			if (emote) {
+				const escapedMatch = escapeHtml(emoteMatch);
+				const isZeroWidth = typeof emote !== "string" && emote.zw;
+				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
+			}
+			return match;
+		});
+	}
+	
 	function isEmoji(char) {
 		const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
 		return emojiRegex.test(char);
 	}
 
-	function getAllContentNodes2(element) {
+	function getAllContentNodes(element) {
 		let result = '';
 		let pendingRegularEmote = null;
+		let pendingSpace = "";
 
 		function processNode(node) {
 			if (node.nodeType === 3 && node.textContent.length > 0) {
@@ -139,12 +123,20 @@
 					if (pendingRegularEmote && node.textContent.trim()) {
 						result += pendingRegularEmote;
 						pendingRegularEmote = null;
+						
 					}
-					result += escapeHtml(node.textContent);
+					if (pendingSpace){
+						result += pendingSpace;
+						pendingSpace = null;
+					} 
+					pendingSpace = escapeHtml(node.textContent);
 					return;
 				}
-				const processedNodes = replaceEmotesWithImages(escapeHtml(node.textContent));
-				processedNodes.forEach(child => {
+				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent)); 
+				const tempDiv = document.createElement('div');
+				tempDiv.innerHTML = processedText;
+				
+				Array.from(tempDiv.childNodes).forEach(child => {
 					if (child.nodeType === 3) {
 						
 						if (pendingRegularEmote && child.textContent.trim()) {
@@ -152,7 +144,12 @@
 							pendingRegularEmote = null;
 						}
 						
-						result += child.textContent;
+						if (pendingSpace){
+							result += pendingSpace;
+							pendingSpace = null;
+						} 
+						pendingSpace = escapeHtml(child.textContent);
+						
 					} else if (child.nodeName === 'IMG') {
 						processEmote(child);
 					}
@@ -189,13 +186,37 @@
 			if (isZeroWidth && pendingRegularEmote) {
 				result += `<span class="emote-container">${pendingRegularEmote}${emoteNode.outerHTML}</span>`;
 				pendingRegularEmote = null;
+				if (pendingSpace){
+					result += pendingSpace;
+					pendingSpace = null;
+				}
 			} else if (!isZeroWidth) {
 				if (pendingRegularEmote) {
 					result += pendingRegularEmote;
+					pendingRegularEmote = null;
 				}
-				emoteNode.classList.add("regular-emote");
-				pendingRegularEmote = emoteNode.outerHTML;
+				if (pendingSpace){
+					result += pendingSpace;
+					pendingSpace = null;
+				}
+				
+				let newImgAttributes = 'class="regular-emote"';
+				if (emoteNode.src) {
+					newImgAttributes += ` src="${emoteNode.src.replace('/1.0', '/2.0')}"`;
+				}
+				if (emoteNode.srcset) {
+					let newSrcset = emoteNode.srcset.replace(/^[^,]+,\s*/, ''); // remove first low-res srcset.
+					if (newSrcset) {
+						newImgAttributes += ` srcset="${newSrcset}"`;
+					}
+				}
+				
+				pendingRegularEmote = `<img ${newImgAttributes}>`;
 			} else {
+				if (pendingSpace){
+					result += pendingSpace;
+					pendingSpace = null;
+				}
 				emoteNode.classList.add("regular-emote");
 				result += emoteNode.outerHTML;
 			}
@@ -205,6 +226,9 @@
 
 		if (pendingRegularEmote) {
 			result += pendingRegularEmote;
+		}
+		if (pendingSpace){
+			result += pendingSpace;
 		}
 
 		return result;
@@ -379,7 +403,7 @@
 
 		if (!settings.textonlymode) {
 			try {
-				chatmessage = getAllContentNodes2(ele.querySelector("#message, .seventv-yt-message-content"));
+				chatmessage = getAllContentNodes(ele.querySelector("#message, .seventv-yt-message-content"));
 			} catch (e) {
 				//console.warn(ele);
 				//console.error(e);
@@ -395,7 +419,7 @@
 				for (var i = 0; i < children.length; i++) {
 					children[i].outerHTML = "";
 				}
-				chatmessage = getAllContentNodes2(cloned);
+				chatmessage = getAllContentNodes(cloned);
 			} catch (e) {
 				//console.error(e);
 			}
@@ -495,7 +519,7 @@
 				}
 				var membershipLength = ele.querySelector("#header-subtext.yt-live-chat-membership-item-renderer, #header-primary-text.yt-live-chat-membership-item-renderer") || false;
 				if (membershipLength) {
-					membershipLength = getAllContentNodes2(membershipLength);
+					membershipLength = getAllContentNodes(membershipLength);
 					membershipLength = findSingleInteger(membershipLength);
 				}
 				if (membershipLength) {
@@ -507,7 +531,7 @@
 				}
 			} else if (giftedmemembership) {
 				hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
-				chatmessage = getAllContentNodes2(giftedmemembership);
+				chatmessage = getAllContentNodes(giftedmemembership);
 				eventType = "sponsorship";
 			} else {
 				hasMembership = getTranslation("new-member", "NEW MEMBER");
@@ -529,7 +553,7 @@
 			}
 		} else if (!chatmessage && giftedmemembership) {
 			eventType = "sponsorship";
-			chatmessage = getAllContentNodes2(giftedmemembership);
+			chatmessage = getAllContentNodes(giftedmemembership);
 			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 		}
 		

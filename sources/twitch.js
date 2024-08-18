@@ -138,6 +138,7 @@
 	function getAllContentNodes(element) {
 		let result = '';
 		let pendingRegularEmote = null;
+		let pendingSpace = "";
 
 		function processNode(node) {
 			if (node.nodeType === 3 && node.textContent.length > 0) {
@@ -150,8 +151,13 @@
 					if (pendingRegularEmote && node.textContent.trim()) {
 						result += pendingRegularEmote;
 						pendingRegularEmote = null;
+						
 					}
-					result += escapeHtml(node.textContent);
+					if (pendingSpace){
+						result += pendingSpace;
+						pendingSpace = null;
+					} 
+					pendingSpace = escapeHtml(node.textContent);
 					return;
 				}
 				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent)); 
@@ -166,7 +172,12 @@
 							pendingRegularEmote = null;
 						}
 						
-						result += child.textContent;
+						if (pendingSpace){
+							result += pendingSpace;
+							pendingSpace = null;
+						} 
+						pendingSpace = escapeHtml(child.textContent);
+						
 					} else if (child.nodeName === 'IMG') {
 						processEmote(child);
 					}
@@ -203,9 +214,18 @@
 			if (isZeroWidth && pendingRegularEmote) {
 				result += `<span class="emote-container">${pendingRegularEmote}${emoteNode.outerHTML}</span>`;
 				pendingRegularEmote = null;
+				if (pendingSpace){
+					result += pendingSpace;
+					pendingSpace = null;
+				}
 			} else if (!isZeroWidth) {
 				if (pendingRegularEmote) {
 					result += pendingRegularEmote;
+					pendingRegularEmote = null;
+				}
+				if (pendingSpace){
+					result += pendingSpace;
+					pendingSpace = null;
 				}
 				
 				let newImgAttributes = 'class="regular-emote"';
@@ -221,6 +241,10 @@
 				
 				pendingRegularEmote = `<img ${newImgAttributes}>`;
 			} else {
+				if (pendingSpace){
+					result += pendingSpace;
+					pendingSpace = null;
+				}
 				emoteNode.classList.add("regular-emote");
 				result += emoteNode.outerHTML;
 			}
@@ -230,6 +254,9 @@
 
 		if (pendingRegularEmote) {
 			result += pendingRegularEmote;
+		}
+		if (pendingSpace){
+			result += pendingSpace;
 		}
 
 		return result;
