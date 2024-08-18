@@ -241,16 +241,15 @@
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
-			if (settings && settings.customdiscordchannel){
-				if (settings.customdiscordchannel.textsetting){
-					textSettingsArray = settings.customdiscordchannel.textsetting
-						.split(",")
-						.map(value => value.trim())
-						.filter(value => value);
-				} else {
-					textSettingsArray = [];
-				}
-			} else if (settings){
+			if (settings.customdiscordchannel.textsetting) {
+				textSettingsArray = settings.customdiscordchannel.textsetting
+					.split(",")
+					.map(value => {
+						value = value.trim();
+						return value.split("/").pop();
+					})
+					.filter(value => value);
+			} else {
 				textSettingsArray = [];
 			}
 		}
@@ -316,6 +315,15 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+				
+					if (textSettingsArray.length) {
+						var channel = document.location.pathname.split("/").pop();
+						if (!textSettingsArray.includes(channel)) {
+							sendResponse(false);
+							return;
+						}
+					}
+				
 					document.querySelector('div[class*="slateTextArea"]').focus();
 					sendResponse(true);
 					return;
@@ -325,16 +333,15 @@
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
-						if (settings && settings.customdiscordchannel){
-							if (settings.customdiscordchannel.textsetting){
-								textSettingsArray = settings.customdiscordchannel.textsetting
-									.split(",")
-									.map(value => value.trim())
-									.filter(value => value);
-							} else {
-								textSettingsArray = [];
-							}
-						} else if (settings){
+						if (settings.customdiscordchannel.textsetting) {
+							textSettingsArray = settings.customdiscordchannel.textsetting
+								.split(",")
+								.map(value => {
+									value = value.trim();
+									return value.split("/").pop();
+								})
+								.filter(value => value);
+						} else {
 							textSettingsArray = [];
 						}
 						
