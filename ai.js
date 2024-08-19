@@ -83,7 +83,6 @@ async function rebuildIndex() {
 async function callOllamaAPI(prompt, model = null, callback = null) {
     const ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
     let ollamamodel = model || settings.ollamamodel?.textsetting || "llama3.1:latest";
-	console.log("callOllamaAPI");
     
     async function makeRequest(currentModel) {
         const isStreaming = callback !== null;

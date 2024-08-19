@@ -4141,11 +4141,11 @@ async function processIncomingRequest(request, UUID = false) {
 					model = settings.ollamamodel?.textsetting || model; // if you manually set it via the settings
 					
 					callOllamaAPI(prompt, model, (chunk) => {
-						console.log("Received chunk:", chunk);
+						//console.log("Received chunk:", chunk);
 						sendDataP2P({ chatbotChunk: {value: chunk, target: request.target}}, UUID);
 						// Process the chunk as needed
 					}).then((fullResponse) => {
-						console.log("Full response:", fullResponse);
+						//console.log("Full response:", fullResponse);
 						sendDataP2P({ chatbotResponse: {value: fullResponse, target: request.target}}, UUID);
 					}).catch((error) => {
 						console.error("Error:", error);
