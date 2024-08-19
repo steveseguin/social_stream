@@ -3458,9 +3458,8 @@ async function openchat(target = null, force=false) {
 function sendDataP2P(data, UUID = false) {
 	// function to send data to the DOCk via the VDO.Ninja API
 
-	if (settings.server2 && socketserverDock && (socketserverDock.readyState===1)) {
+	if (!UUID && settings.server2 && socketserverDock && (socketserverDock.readyState===1)) {
 		try {
-			
 			socketserverDock.send(JSON.stringify(data));
 			return;
 		} catch (e) {
@@ -3475,10 +3474,7 @@ function sendDataP2P(data, UUID = false) {
 	if (iframe) {
 		if (UUID && connectedPeers) {
 			try {
-				var label = connectedPeers[UUID] || false;
-				if (!label || label === "dock") {
-					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // the docks and emotes page are VIEWERS, since backend is PUSH-only
-				}
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
 			} catch (e) {
 				console.error(e);
 			}
@@ -4039,7 +4035,7 @@ function onAttach(debuggeeId, callback, message, a = null, b = null, c = null) {
 	}
 }
 
-function processIncomingRequest(request, UUID = false) {
+async function processIncomingRequest(request, UUID = false) {
 	if (settings.disablehost) {
 		return;
 	}
@@ -4130,8 +4126,35 @@ function processIncomingRequest(request, UUID = false) {
 		} else if (request.action === "blockUser") {
 			blockUser(request.value);
 		} else if (request.action === "obsCommand") {
-			//console.log(request);
-			fowardOBSCommand(request);
+			if (isExtensionOn){
+				fowardOBSCommand(request);
+			}
+		} else if (request.value && ("target" in request) && UUID && request.action === "chatbot"){ // target is the callback ID
+			if (isExtensionOn && settings.allowChatBot){
+				try {
+					let model = "vanilj/llama-3.1-70b-instruct-lorablated-iq2_xs:latest"
+					let prompt = request.value;
+					if (request.turbo){
+						model = "rolandroland/llama3.1-uncensored"; // a faster model
+						prompt = "You're an AI assistant. Keep responses limited to a few sentences.\n"+prompt;
+					}
+					callOllamaAPI(prompt, model, (chunk) => {
+						console.log("Received chunk:", chunk);
+						sendDataP2P({ chatbotChunk: {value: chunk, target: request.target}}, UUID);
+						// Process the chunk as needed
+					}).then((fullResponse) => {
+						console.log("Full response:", fullResponse);
+						sendDataP2P({ chatbotResponse: {value: fullResponse, target: request.target}}, UUID);
+					}).catch((error) => {
+						console.error("Error:", error);
+					});
+					//let resp = await callOllamaAPI(prompt, model); // will default to first available model if not found.
+					// console.log({ chatbotResponse: {value: resp, target: request.target}}, UUID);
+					
+				} catch(e){
+					console.error(e);
+				}
+			}
 		}
 	}
 }

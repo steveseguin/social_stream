@@ -80,57 +80,138 @@ async function rebuildIndex() {
     globalLunrIndex = initLunrIndex(documents);
 }
 
-async function callOllamaAPI(prompt) {
+async function callOllamaAPI(prompt, model = null, callback = null) {
     const ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
-    const ollamamodel = settings.ollamamodel?.textsetting || "llama3.1:latest";
-
+    let ollamamodel = model || settings.ollamamodel?.textsetting || "llama3.1:latest";
+	console.log("callOllamaAPI");
+    
+    async function makeRequest(currentModel) {
+        const isStreaming = callback !== null;
+        
+        try {
+            if (postNode) {
+                let body = {
+                    model: currentModel,
+                    prompt: prompt,
+                    stream: isStreaming
+                };
+                
+                if (isStreaming) {
+                    // Implement streaming for postNode (you may need to adjust this based on postNode's capabilities)
+                    return await new Promise((resolve, reject) => {
+                        let fullResponse = '';
+                        postNode(`${ollamaendpoint}/api/generate`, body, 
+                            { "Content-Type": 'application/json' },
+                            (chunk) => {
+                                try {
+                                    const data = JSON.parse(chunk);
+                                    if (data.response) {
+                                        fullResponse += data.response;
+                                        callback(data.response);
+                                    }
+                                    if (data.done) {
+                                        resolve(fullResponse);
+                                    }
+                                } catch (e) {
+                                    console.error("Error parsing chunk:", e);
+                                }
+                            }
+                        ).catch(reject);
+                    });
+                } else {
+                    let data = await postNode(`${ollamaendpoint}/api/generate`, body, { "Content-Type": 'application/json' });
+                    try {
+                        data = JSON.parse(data);
+                    } catch(e) {
+                        console.log(data);
+                    }
+                    if (data && data.response) {
+                        return data.response;
+                    } else {
+                        throw new Error("Failed to call Ollama API..");
+                    }
+                }
+            } else {
+                if (isStreaming) {
+                    const response = await fetch(`${ollamaendpoint}/api/generate`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            model: currentModel,
+                            prompt: prompt,
+                            stream: true
+                        }),
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let fullResponse = '';
+                    
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split('\n');
+                        for (const line of lines) {
+                            if (line.trim() !== '') {
+                                try {
+                                    const data = JSON.parse(line);
+                                    if (data.response) {
+                                        fullResponse += data.response;
+                                        callback(data.response);
+                                    }
+                                } catch (e) {
+                                    console.error("Error parsing line:", e);
+                                }
+                            }
+                        }
+                    }
+                    
+                    return fullResponse;
+                } else {
+                    const response = await fetch(`${ollamaendpoint}/api/generate`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            model: currentModel,
+                            prompt: prompt,
+                            stream: false
+                        }),
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    return data.response;
+                }
+            }
+        } catch (error) {
+            console.error(`Error in callOllamaAPI with model ${currentModel}:`, error);
+            throw error;
+        }
+    }
+    
     try {
-		if (postNode){
-			let body = {
-				model: ollamamodel,
-				prompt: prompt,
-				stream: false
-			};
-			let data = await postNode(`${ollamaendpoint}/api/generate`, body, (headers = { "Content-Type": 'application/json' }));
-			
-			try {
-				data = JSON.parse(data);
-			} catch(e){
-				console.log(data);
-			}
-			if (data && data.response){
-				return data.response;
-			} else {
-				console.log(data);
-				console.log(body);
-				console.log(ollamamodel);
-				console.log(`${ollamaendpoint}/api/generate`);
-				throw new Error("Failed to call Ollama API..");
-			}
-		} else {
-			const response = await fetch(`${ollamaendpoint}/api/generate`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					model: ollamamodel,
-					prompt: prompt,
-					stream: false
-				}),
-			});
-
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-
-			const data = await response.json();
-			//console.log("Ollama API response:", data);
-			return data.response; // Return only the 'response' field
-		}
+        return await makeRequest(ollamamodel);
     } catch (error) {
-        console.error("Error in callOllamaAPI:", error);
-        throw new Error("Failed to call Ollama API: " + error.message);
+        console.warn(`Failed to use model ${ollamamodel}. Attempting to get first available model.`);
+        try {
+            const availableModel = await getFirstAvailableModel();
+            console.log(`Attempting with available model: ${availableModel}`);
+            return await makeRequest(availableModel);
+        } catch (fallbackError) {
+            console.error("Error in callOllamaAPI even with fallback:", fallbackError);
+            throw new Error("Failed to call Ollama API with any available model: " + fallbackError.message);
+        }
     }
 }
 
