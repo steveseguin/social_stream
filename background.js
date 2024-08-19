@@ -4138,6 +4138,8 @@ async function processIncomingRequest(request, UUID = false) {
 						model = "rolandroland/llama3.1-uncensored"; // a faster model
 						prompt = "You're an AI assistant. Keep responses limited to a few sentences.\n"+prompt;
 					}
+					model = settings.ollamamodel?.textsetting || model; // if you manually set it via the settings
+					
 					callOllamaAPI(prompt, model, (chunk) => {
 						console.log("Received chunk:", chunk);
 						sendDataP2P({ chatbotChunk: {value: chunk, target: request.target}}, UUID);
