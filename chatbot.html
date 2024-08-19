@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLM Chat Bot</title>
+	<link rel="icon" href="./icons/favicon.ico" />
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -52,6 +53,7 @@
             background: rgba(60, 60, 60, 0.8);
             color: #f0f0f0;
             font-size: 16px;
+            min-width: 0;
         }
         button {
             padding: 12px 20px;
@@ -62,6 +64,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 16px;
+            white-space: nowrap;
         }
         button:hover {
             transform: translateY(-2px);
@@ -73,6 +76,7 @@
             border-radius: 15px;
             max-width: 80%;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
         }
         .user {
             background: linear-gradient(45deg, #4a4a4a, #5a5a5a);
@@ -98,10 +102,11 @@
         }
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(100, 100, 100, 0.8);
-		}
-        }.waiting {
+        }
+        .waiting {
             font-style: italic;
             color: #888;
+			display: flex;
         }
         .spinner {
             display: inline-block;
@@ -116,6 +121,42 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                align-items: flex-start;
+                padding: 20px 0;
+            }
+            .container {
+                width: 100%;
+                height: calc(100vh - 40px);
+                border-radius: 0;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+            }
+            h1 {
+                font-size: 1.2em;
+                margin-bottom: 10px;
+            }
+            #chat-container {
+                flex-grow: 1;
+                height: 0;
+                margin-bottom: 10px;
+            }
+            #input-container {
+                flex-wrap: wrap;
+            }
+            #user-input {
+                width: 100%;
+                order: -1;
+            }
+            button {
+                flex-grow: 1;
+                padding: 10px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -134,15 +175,14 @@
         const chatContainer = document.getElementById('chat-container');
 		const userInput = document.getElementById('user-input');
 		userInput.focus(); 
+		window.onload = ()=> {
+			userInput.focus();
+		};
 		var iframe = null;
 		var urlParams = new URLSearchParams(window.location.search);
 		var roomID = false;
 		var password = "false";
 		var conversationHistory = [];
-		
-		window.onload = ()=> {
-			userInput.focus();
-		};
 
 		if (urlParams.has("session")) {
 			roomID = urlParams.get("session");
