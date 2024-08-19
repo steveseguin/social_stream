@@ -121,10 +121,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>Ask me anything! LLM Chat Bot</h1>
+        <h1>Ask me anything! I'm a LLM Chat Bot</h1>
         <div id="chat-container"></div>
         <div id="input-container">
-            <input type="text" id="user-input" placeholder="Type your message here...">
+            <input type="text" id="user-input" placeholder="Type your message or question here...">
             <button onclick="sendMessage()">Send</button>
             <button onclick="newConversation()">New Chat</button>
         </div>
@@ -133,11 +133,16 @@
     <script>
         const chatContainer = document.getElementById('chat-container');
 		const userInput = document.getElementById('user-input');
+		userInput.focus(); 
 		var iframe = null;
 		var urlParams = new URLSearchParams(window.location.search);
 		var roomID = false;
 		var password = "false";
 		var conversationHistory = [];
+		
+		window.onload = ()=> {
+			userInput.focus();
+		};
 
 		if (urlParams.has("session")) {
 			roomID = urlParams.get("session");
