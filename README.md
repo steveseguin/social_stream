@@ -111,7 +111,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - clouthub (no pop out; just the video page)
 - rumble.com (pop out chat)
 - trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/CHANNEL_NAME_HERE)
-- Dlive.tv  (pop-out chat)
+- Dlive.tv  (just the regular viewer page; no pop out needed)
 - Picarto.tv (pop-out chat; ie: https://picarto.tv/chatpopout/CHANNELNAMEHERE/public)
 - Mobcrush (this page: https://studio.mobcrush.com/chatpopup.html)
 - odysee.com (via the pop out chat I think)
