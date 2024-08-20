@@ -5208,16 +5208,31 @@
 						if (!data.bmac) {
 							return false;
 						}
-						var bmac = data.bmac; 
-
-						if (bmac.type !== "membership.started") {
-							return false;
-						} 
-						else if (bmac.type === "membership.started") {
+						else {
+							var bmac = data.bmac; 
 							var message = {};
-							message.chatname = bmac.data.supporter_name || "Anonymous"; 
-							message.chatmessage = bmac.data.support_note.trim(); 
+							if (bmac.type === "membership.started") {
+								message.chatname = bmac.data.supporter_name || "Anonymous"; 
+								message.chatmessage = bmac.data.support_note.trim(); 
+								//We use the donation badge from Kofi to feature the membership level name
+								message.hasDonation = bmac.data.membership_level_name; 
+						
+							}
+							if (bmac.type === "donation.created") {
+								var currency = "";
+								try {
+									currency = kofi.currency.toLowerCase() || "";
+								} catch (e) {}
 
+								var symbol = {};
+								if (currency && currency in Currencies) {
+									symbol = Currencies[currency];
+								}		
+								message.chatmessage = (bmac.data.message + " - " + "<em>" + bmac.data.support_note + "</em>").trim();
+								message.hasDonation = (symbol.s || "") + (bmac.data.amount || "") + " " + (bmac.data.currency.toUpperCase() || "");
+								message.hasDonation = message.hasDonation.trim();			
+							}
+							message.contentimg = "";
 							message.id = parseInt(Math.random() * 100000 + 1000000);
 							message.chatbadges = "";
 							message.backgroundColor = "";
@@ -5225,14 +5240,11 @@
 							message.nameColor = "";
 							message.chatimg = "";
 							message.membership = "";
-							message.contentimg = "";
-							//We use the donation badge to feature the membership level name
-							message.hasDonation = bmac.data.membership_level_name; 
 							message.type = "bmac";
 							data = message; 
-						}
 
-					} catch (e) {
+					} 
+				} catch (e) {
 						return;
 					}
 
