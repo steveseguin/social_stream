@@ -687,7 +687,7 @@ Please note, do not share your Social Stream Ninja session ID with others as the
 
 ##### BuyMeACoffee webhook support
 
-See above for details, as Buy-me-a-coffee support is similar in concept to Ko-Fi. 
+See above for usage details, as Buy-me-a-coffee support is similar in concept to Ko-Fi. Added specifics below:
 
 The webhook URL for it however is: `https://io.socialstream.ninja/XXXXXXXX/bmac`
 
