@@ -691,6 +691,14 @@ See above for details, as Buy-me-a-coffee support is similar in concept to Ko-Fi
 
 The webhook URL for it however is: `https://io.socialstream.ninja/XXXXXXXX/bmac`
 
+Event types supported include: `membership.started` and `donation.created`.
+
+The default display name if none provided by the user will be `Anonymous`.
+
+`support_note` and `membership_level_name` will be used as fields for the new membership event.
+
+`support_note` and amount donated, with currency type, will be used as fields for the donation event.
+
 ### Text to speech
 
 Text messages can be converted to speech for free, assuming your system supports TTS.  On my Windows machine running Chrome/Edge/OBS, it works just fine.  I have it set to English-US by default, but you can change the language to something else by editing the URL and adjusting the language code.
