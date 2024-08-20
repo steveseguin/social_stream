@@ -5199,7 +5199,47 @@
 					} catch (e) {
 						return;
 					}
-				} else if ("obsCommand" in data) {
+
+				
+				}
+				// Buy Me a Coffe New Membership detection 
+				else if ("bmac" in data) {
+					try {
+						if (!data.bmac) {
+							return false;
+						}
+						var bmac = data.bmac; 
+
+						if (bmac.type !== "membership.started") {
+							return false;
+						} 
+						else if (bmac.type === "membership.started") {
+							var message = {};
+							message.chatname = bmac.data.supporter_name || "Anonymous"; 
+							message.chatmessage = bmac.data.support_note.trim(); 
+
+							message.id = parseInt(Math.random() * 100000 + 1000000);
+							message.chatbadges = "";
+							message.backgroundColor = "";
+							message.textColor = "";
+							message.nameColor = "";
+							message.chatimg = "";
+							message.membership = "";
+							message.contentimg = "";
+							//We use the donation badge to feature the membership level name
+							message.hasDonation = bmac.data.membership_level_name; 
+							message.type = "bmac";
+							data = message; 
+						}
+
+					} catch (e) {
+						return;
+					}
+
+				
+				}
+				
+				else if ("obsCommand" in data) {
 					// console.log(data);
 					// obsCommand = {value:{action: 'setCurrentScene', value: sceneName}}
 					if (data.obsCommand && data.obsCommand.action && window.obsstudio){
