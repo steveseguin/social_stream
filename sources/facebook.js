@@ -382,7 +382,7 @@
 			processed += 1;
 		}
 		try {
-			if (window.location.href.includes("/live/producer/") || window.location.href.includes("/videos")) {
+			if (window.location.href.includes("/live/producer/") || window.location.href.endsWith("/videos") || window.location.href.includes("/videos/") || window.location.href.includes("?v=")) {
 				var main = document.querySelectorAll("[role='article']");
 				for (var j = 0; j < main.length; j++) {
 					try {
