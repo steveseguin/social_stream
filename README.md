@@ -685,6 +685,12 @@ You can then press the Send Single Donation Test button.
 
 Please note, do not share your Social Stream Ninja session ID with others as they will be able to create fake donations to Social Stream Ninjas via posting to the API.
 
+##### BuyMeACoffee webhook support
+
+See above for details, as Buy-me-a-coffee support is similar in concept to Ko-Fi. 
+
+The webhook URL for it however is: `https://io.socialstream.ninja/XXXXXXXX/bmac`
+
 ### Text to speech
 
 Text messages can be converted to speech for free, assuming your system supports TTS.  On my Windows machine running Chrome/Edge/OBS, it works just fine.  I have it set to English-US by default, but you can change the language to something else by editing the URL and adjusting the language code.
