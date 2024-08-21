@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Overlay</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
+    <style>
+	
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap');
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(10, 22, 40, 0.8); /* Dark, semi-transparent background */
+    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	background-color: #0000;
+}
+
+#chat-container {
+    padding: 25px;
+    max-width: 350px;
+    margin: auto;
+}
+
+.message {
+    background: linear-gradient(145deg, #1a2a48, #162238);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 15px;
+    border: 1px solid #2e3b55;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    color: #e4e6eb;
+    transition: transform 0.2s ease-in-out;
+	opacity: 0;
+    transform: translateY(-20px);
+    animation: slideFadeIn 0.5s ease forwards;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes slideFadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#chat-container .message + .message {
+    transition: transform 0.5s ease;
+}
+
+.name {
+	color: white;
+    font-size: 1.2em;
+    font-weight: 700;
+}
+
+.text {
+    font-size: 0.95em;
+    line-height: 1.4;
+    margin: 8px 0;
+}
+.text img {
+	max-width:100px;
+	max-height: 24px;
+	vertical-align: bottom;
+}
+
+.donation {
+    color: #4cd137;
+    font-weight: 600;
+}
+
+
+/* Clear float */
+.message:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* Stylish separator line */
+.separator {
+    height: 2px;
+    background: linear-gradient(to right, #4ab8f9, #4cd137);
+    margin: 20px 0;
+}
+
+
+
+
+.name-bg {
+    background-color: #4a6fa5;
+    padding: 5px 10px;
+    border-radius: 5px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.membership-status {
+    color: #ffd700;
+    font-weight: 700;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+}
+
+.large-image {
+    max-width: 100%;
+    height: auto;
+    margin-top: 10px;
+    border-radius: 10px;
+}
+.avatar-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 15px;
+    position: relative;
+    overflow: hidden;
+	background: linear-gradient(45deg, #4ab8f9, #4cd137);
+	padding: 3px;
+	vertical-align: middle;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: url('https://somdomain.com/avatar.png') no-repeat center center;
+    background-size: cover;
+    position: relative;
+	
+}
+
+.avatar-wrapper::after {
+    content: '';
+    position: absolute;
+    top: -5px; right: -5px; bottom: -5px; left: -5px;
+    background: linear-gradient(45deg, #4ab8f9, #4cd137);
+    border-radius: 50%;
+    z-index: -1;
+}
+
+.source-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    position: relative;
+}
+
+.badge {
+    display: inline-block;
+    height: 1em;
+    margin-left: 5px;
+	vertical-align: middle;
+}
+
+
+	</style>
+</head>
+<body>
+     <div id="chat-container">
+       
+    </div>
+    <script>
+	
+		var urlParams = new URLSearchParams(window.location.search);
+		var roomID = "iWWnKL28tQ";
+		
+		if (urlParams.has("session")){
+			roomID = urlParams.get("session");
+		}
+		var password = "false";
+		var featuredMode = false; // featured == selected messages only.  not featured == all messages.
+		
+		const chatContainer = document.getElementById('chat-container');
+		
+		function addMessageToOverlay(data) {
+			
+			const messageDiv = document.createElement('div');
+			messageDiv.classList.add('message');
+			if (data.mid){messageDiv.id = data.mid;}
+			data.sourceicon = "https://socialstream.ninja/sources/images/"+data.type+".png";
+			console.log(data.chatbadges);
+			
+			var chatbadges = "";
+			if (data.chatbadges) {
+				data.chatbadges.forEach(badge => {
+					if (typeof badge === "object") {
+						if (badge.type === "img" && badge.src) {
+							chatbadges += `<img class='badge' src='${badge.src}' />`;
+						} else if (badge.type === "svg" && badge.html) {
+							chatbadges += `<span class='badge svg'>${badge.html}</span>`;
+						}
+					} else {
+						chatbadges += `<img class='badge' src='${badge}' />`;
+					}
+				});
+			}
+			
+			messageDiv.innerHTML = `
+				${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : ''}
+				${data.chatname ? `<div class="name-bg"><div class="name">${data.chatname}</div></div>` : ''}
+				${data.membership ? `<div class="membership-status">${data.membership}</div>` : ''}
+				${data.sourceicon ? `<img src="${data.sourceicon}" alt="Channel Source" class="source-icon">` : ''}
+				${chatbadges}
+				<div class="text">${data.chatmessage ? data.chatmessage : ''}</div>
+				${data.donation ? `<div class="donation">${data.donation}</div>` : ''}
+				${data.contentimg ? `<img src="${data.contentimg}" alt="Large Content" class="large-image" onerror="this.style.display='none';">` : ''}
+			`;
+			
+			 Array.from(chatContainer.children).forEach(child => {
+				child.style.transform = 'translateY(' + messageDiv.offsetHeight + 'px)';
+			});
+			
+			chatContainer.prepend(messageDiv);
+			
+			while (chatContainer.children.length > 20) {
+				chatContainer.removeChild(chatContainer.lastChild);
+			}
+			
+			setTimeout(() => {
+				Array.from(chatContainer.children).forEach(child => {
+					child.style.transform = '';
+				});
+			}, 500); 
+		}
+		
+		document.addEventListener('DOMContentLoaded', () => {
+			
+			var iframe = document.createElement("iframe");
+			if (featuredMode){
+				iframe.src = `https://vdo.socialstream.ninja/?wss2=test.socialstream.ninja&ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+			} else {
+				iframe.src = "https://vdo.socialstream.ninja/?wss2=test.socialstream.ninja&ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+			}
+			
+			iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+			document.body.appendChild(iframe);
+
+			window.addEventListener("message", function (e) {
+				if (e.source != iframe.contentWindow) return;
+				if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+					addMessageToOverlay(e.data.dataReceived.overlayNinja);
+				}
+			});
+
+		});
+	</script>
+</body>
+</html>
