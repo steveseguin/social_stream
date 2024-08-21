@@ -574,12 +574,16 @@
 
 			.hl-message img,
 			.hl-message svg {
-				margin: auto 1px;
+				margin: auto 0px;
 				padding: 0;
 				display: inline-block;
 				height: 24px;
 				max-width: 24px;
 				max-height: 24px;
+			}
+			
+			.hl-message img+img, .hl-message img+svg, .hl-message svg+img, .hl-message svg+svg {
+				margin: auto 0px;
 			}
 
 			.hl-message .hl-content img, .hl-message .hl-content video {
@@ -634,7 +638,7 @@
 			}
 
 			.hl-message img:not(:first-child):last-child {
-				margin: auto 3px auto 0px;
+				margin: auto 1px auto 0px;
 			}
 
 			.hl-message span > img, .hl-message span > video {
@@ -819,7 +823,6 @@
 				height: var(--stylized-img);
 				max-width: calc(var(--stylized-img) * 3);
 				max-height: var(--stylized-img);
-				margin: auto 1px;
 			}
 
 
