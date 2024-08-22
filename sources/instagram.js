@@ -560,7 +560,7 @@
 			}
 		
 			try {
-				if (window.location.pathname.includes("/live") || (window.location.pathname==="/")){
+				if (window.location.pathname.includes("/live") || (window.location.pathname.endsWith("/") || document.querySelector("video") || document.querySelector("textarea")) || (window.location.pathname==="/")){
 					try {
 						var main = document.querySelectorAll("div>div>section>div");
 						for (var j =0;j<main.length;j++){
