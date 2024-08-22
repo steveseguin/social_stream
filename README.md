@@ -1,8 +1,3 @@
-Update-- If you're having issues with messages not working at all, join the Discord for support at: https://discord.socialstream.ninja 
-
-
-
-
 # Social Stream Ninja
 Consolidates your live social messaging streams and more. Free.
 
