@@ -184,6 +184,51 @@ a:hover {
 img {
 	max-width: 100%;
 }
+
+#notice {
+    background-color: #fffbe6;
+    border: 1px solid #ffe58f;
+    border-radius: 4px;
+    padding: 16px;
+    margin: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+#notice-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#notice-header::before {
+    content: "\26A0"; /* Unicode for warning sign */
+    font-size: 24px;
+    margin-right: 10px;
+    color: #faad14;
+}
+
+#notice strong {
+    color: #d46b08;
+}
+
+#notice a {
+    color: #1890ff;
+    text-decoration: none;
+}
+
+#notice a:hover {
+    text-decoration: underline;
+}
+
+#notice ol {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-left: 20px;
+}
+</style>
+
+
 	</style>
 </head>
 <body>
@@ -212,6 +257,19 @@ img {
 		<a href="https://chromewebstore.google.com/detail/social-stream-ninja/cppibjhfemifednoimlblfcmjgfhfjeg" title="Manifest Version 3 version of Social Stream Ninja; available via the Chrome Webstore" class="download-btn">Chrome Webstore (v3)</a>
 		
     </section>
+	
+<section id="notice">
+    <div id="notice-header">
+        <strong>Update August 22nd::</strong>
+	</div>
+    <p> If you're experiencing new issues with messages not working, please follow these steps:</p>
+    <ol>
+        <li>Refresh your browser sources in OBS to clear the browser cache. (there's a button at the bottom of the browser source settings)</li>
+        <li>Try toggling the extension off and on again.</li>
+        <li>If problems persist, enable the "via server" options in the extension's global settings menu, and then open new links.</li>
+    </ol>
+    <p>Still having trouble? Join our Discord for support: <a href="https://discord.socialstream.ninja">https://discord.socialstream.ninja</a> 🆘</p>
+</section>
 
     <section id="video">
         <h2>Demo Video</h2>
