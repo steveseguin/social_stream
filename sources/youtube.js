@@ -577,6 +577,17 @@
 			}
 		}
 		
+		if (giftedmemembership && !chatimg) {
+			try {
+				chatimg = ele.querySelector("#img").src;
+				if (chatimg.startsWith("data:image/gif;base64")) {
+					chatimg = document.querySelector("#panel-pages").querySelector("#img").src;
+				}
+				chatimg = chatimg.replace("=s32-", "=s64-");
+			} catch (e) {
+				console.error("Failed to extract avatar for gifted membership:", e);
+			}
+		}
 
 		if (chatsticker) {
 			if (!settings.textonlymode) {

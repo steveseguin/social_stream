@@ -79,6 +79,42 @@
     }
 }
 
+.username-list-container {
+	max-height: 80px;
+	overflow-y: auto;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	padding: 5px;
+	font-family: Arial, sans-serif;
+	font-size: 12px;
+}
+.username-item {
+	display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 3px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    flex-direction: row;
+}
+.remove-username {
+	cursor: pointer;
+	color: #ff0000;
+	font-weight: bold;
+	margin-right: 8px;
+}
+.add-username-container {
+	display: flex;
+	margin-top: 5px;
+}
+#newUsername {
+	flex-grow: 1;
+	margin-right: 5px;
+}
+#addUsername {
+	cursor: pointer;
+}
+
 #searchInput {
     appearance: none;
     position: fixed;
@@ -3525,17 +3561,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="strip-html-from-messages-and-donations">📤 Strip HTML/images from messages and donations </span>
                                 </div>
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-setting="blacklistuserstoggle" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; values that match a username will be rejected.">
-                                        <input type="text" id="blacklistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="blacklistusers" />
-                                        <label for="blacklistusers"><span data-translate="hide-and-block-specified-users">&gt; Hide and block specified users</span></label>
-                                    </div>
-                                </div>
-                                <div>
+								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-setting="whitelistuserstoggle" />
                                         <span class="slider round"></span>
@@ -3545,6 +3571,27 @@ input:checked + .slider:before {
                                         <label for="whitelistusers"><span data-translate="only-allow-specified-users">&gt; Show only specified users</span></label>
                                     </div>
                                 </div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="blacklistuserstoggle" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="hide-and-block-specified-users">&gt; Hide and block the following specified users:</span>
+									<div class="textInputContainer hidden" style="display: inline-block; width: 250px;" title="Provide comma separated values; values that match a username will be rejected.">
+                                        <input type="text" id="blacklistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="blacklistusers" />
+                                    </div>
+								</div>
+								<div>
+									<div class="username-list-container" id="usernameList"></div>
+									<div class="add-username-container">
+										<input type="text" id="newUsername" placeholder="Add username to block list">
+										<button id="addUsername">Add</button>
+										
+									</div>
+									
+									
+								</div>
+                                
                             </div>
                         </div>
                     </div>

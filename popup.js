@@ -1,5 +1,6 @@
 var isExtensionOn = false;
 var ssapp = false;
+var usernames = [];
 
 function log(msg,a,b){
 	console.log(msg,a,b);
@@ -343,6 +344,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return false;
 	};
 	
+	try {
+		document.getElementById('usernameList').addEventListener('click', (e) => {
+			if (e.target.classList.contains('remove-username')) {
+				removeUsername(e.target.dataset.username);
+			}
+		});
+
+		document.getElementById('addUsername').addEventListener('click', () => {
+			const newUsernameInput = document.getElementById('newUsername');
+			const newUsername = newUsernameInput.value.trim();
+			if (newUsername) {
+				addUsername(newUsername);
+				newUsernameInput.value = '';
+			}
+		});
+	} catch(e){
+		console.error(e);
+	}
+
 	populateFontDropdown();
 	
 	// populate language drop down
@@ -920,7 +940,14 @@ function update(response, sync=true){
 									}
 									
 									updateSettings(ele, sync);
+									
+									if (key == "blacklistusers"){
+										console.log(ele.value);
+										usernames = ele.value.split(',').map(u => u.trim()).filter(u => u);
+										updateUsernameList();
+									}
 								}
+								
 							}
 							if ("optionsetting" in response.settings[key]){
 								var ele = document.querySelector("select[data-optionsetting='"+key+"']");
@@ -1801,7 +1828,40 @@ try {
 }
 
 
+function updateUsernameList() {
+	const usernameList = document.getElementById('usernameList');
+	usernameList.innerHTML = '';
+	usernames.forEach(username => {
+		const item = document.createElement('div');
+		item.className = 'username-item';
+		item.innerHTML = `
+			<span class="remove-username" data-username="${username}" title="Remove user from block-list">×</span>
+			<span>${username}</span>
+		`;
+		usernameList.appendChild(item);
+	});
+	updateUsernamesString();
+}
 
+function addUsername(username) {
+	if (username && !usernames.includes(username)) {
+		usernames.push(username);
+		updateUsernameList();
+	}
+}
+
+function removeUsername(username) {
+	usernames = usernames.filter(u => u !== username);
+	updateUsernameList();
+}
+
+function updateUsernamesString() {
+	var ele = document.querySelector("input[data-textsetting='blacklistusers'],textarea[data-textsetting='blacklistusers']");
+	if (ele){
+		ele.value = usernames.join(',');
+		updateSettings(ele);
+	}
+}
 
 
 
