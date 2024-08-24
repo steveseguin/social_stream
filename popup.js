@@ -1828,7 +1828,7 @@ try {
 }
 
 
-function updateUsernameList() {
+function updateUsernameList(save=false) {
 	const usernameList = document.getElementById('usernameList');
 	usernameList.innerHTML = '';
 	usernames.forEach(username => {
@@ -1840,28 +1840,29 @@ function updateUsernameList() {
 		`;
 		usernameList.appendChild(item);
 	});
-	updateUsernamesString();
+	var ele = document.querySelector("input[data-textsetting='blacklistusers'],textarea[data-textsetting='blacklistusers']");
+	if (ele){
+		ele.value = usernames.join(',');
+		console.log(
+		
+		if (save){
+			updateSettings(ele);
+		}
+	}
 }
 
 function addUsername(username) {
 	if (username && !usernames.includes(username)) {
 		usernames.push(username);
-		updateUsernameList();
+		updateUsernameList(true);
 	}
 }
 
 function removeUsername(username) {
 	usernames = usernames.filter(u => u !== username);
-	updateUsernameList();
+	updateUsernameList(true);
 }
 
-function updateUsernamesString() {
-	var ele = document.querySelector("input[data-textsetting='blacklistusers'],textarea[data-textsetting='blacklistusers']");
-	if (ele){
-		ele.value = usernames.join(',');
-		updateSettings(ele);
-	}
-}
 
 
 
