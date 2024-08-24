@@ -1843,7 +1843,7 @@ function updateUsernameList(save=false) {
 	var ele = document.querySelector("input[data-textsetting='blacklistusers'],textarea[data-textsetting='blacklistusers']");
 	if (ele){
 		ele.value = usernames.join(',');
-		console.log(
+		console.log(ele.value);
 		
 		if (save){
 			updateSettings(ele);
