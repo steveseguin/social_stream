@@ -2888,7 +2888,7 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				return null;
 			}
 			
-			const StageTEN_API_URL = "https://app.stageten.tv/apis/plugin-service/chat/message/send"
+			const StageTEN_API_URL = "https://demo.stageten.tv/apis/plugin-service/chat/message/send"
 
 			let cleaned = data.chatmessage;
 			if (data.textonly){
@@ -2944,6 +2944,8 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			msg.displayName = data.chatname || data.userid || username || "Host⚡";
 			msg.userId = "socialstream";
 			msg.messageBody = cleaned;
+			
+			msg.displayName += "-"+data.type+")";
 			
 			// console.error(msg, fakechat);
 

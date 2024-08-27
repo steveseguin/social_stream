@@ -585,7 +585,7 @@
 									main[j].dataset.set = "post";
 									main[j].querySelectorAll("div[role='button']").forEach(xx=>{
 										if (xx.textContent === "more"){
-											xx.click();
+											//xx.click();
 										}
 									});
 									setTimeout(function(node){
