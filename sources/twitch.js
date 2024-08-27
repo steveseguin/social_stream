@@ -269,6 +269,10 @@
 
 	function processMessage(ele, event=false) {
 		// twitch
+		
+		if (ele.classList.contains("chat-line__unpublished-message-body") || ele.querySelector(".chat-line__unpublished-message-body")){
+			return;
+		}
 
 		var chatsticker = false;
 		var chatmessage = "";
@@ -944,7 +948,7 @@
 						document.querySelector(".consent-banner").remove();
 					}
 				}
-			}, 4500);
+			}, 3000);
 		}
 
 		if (document.querySelector('[data-a-target="consent-banner-accept"]')) {
