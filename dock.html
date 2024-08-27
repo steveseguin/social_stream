@@ -3216,6 +3216,9 @@
 
 			var GoogleAPIKey = false; // You can get your API key from Google Cloud ; KEEP IT PRIVATE/SECRET.  It will look like: "ahasdfuyu234hjjUASDtu1234gughasdguhaU" or somnething like that.
 			var ElevenLabsKey = false;
+			var SpeechifyAPIKey = false;
+
+
 
 			var premiumQueueTTS = [];
 			var premiumQueueActive = false;
@@ -3228,6 +3231,8 @@
 					speak(premiumQueueTTS.shift()); // play next
 				}
 			}
+			
+			
 
 			if (urlParams.has("ttskey")) {
 				audio = document.createElement("audio");
@@ -3237,6 +3242,10 @@
 				audio = document.createElement("audio");
 				audio.onended = finishedAudio;
 				ElevenLabsKey = urlParams.get("elevenlabskey") || false;
+			} else if (urlParams.has("speechifykey")) {
+				audio = document.createElement("audio");
+				audio.onended = finishedAudio;
+				SpeechifyAPIKey = urlParams.get("speechifykey") || false;
 			}
 
 			if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
@@ -3364,6 +3373,13 @@
 				} else if (ElevenLabsKey) {
 					if (!premiumQueueActive) {
 						ElevenLabsTTS(text);
+					} else {
+						premiumQueueTTS.push(text);
+					}
+					return;
+				} else if (SpeechifyAPIKey) {
+					if (!premiumQueueActive) {
+						SpeechifyTTS(text);
 					} else {
 						premiumQueueTTS.push(text);
 					}
@@ -7474,6 +7490,63 @@
 					finishedAudio();
 				}
 			}
+			function SpeechifyTTS(tts) {
+				premiumQueueActive = true;
+
+				try {
+					const url = "https://api.speechify.com/api/v1/tts";
+					const data = {
+						text: tts,
+						voice: voiceName || "Jenny", // Default voice, adjust as needed
+						language: speechLang,
+						audioFormat: "mp3",
+						quality: "high",
+						sampleRate: 24000
+					};
+
+					const otherparam = {
+						headers: {
+							"Content-Type": "application/json",
+							"X-API-Key": SpeechifyAPIKey // Make sure to define this variable with the user's API key
+						},
+						body: JSON.stringify(data),
+						method: "POST"
+					};
+
+					fetch(url, otherparam)
+						.then(response => {
+							if (!response.ok) {
+								throw new Error(`HTTP error! status: ${response.status}`);
+							}
+							return response.blob();
+						})
+						.then(blob => {
+							const audioUrl = URL.createObjectURL(blob);
+							if (!audio) {
+								audio = document.createElement("audio");
+								audio.onended = finishedAudio;
+							}
+							audio.src = audioUrl;
+							if (volume) {
+								audio.volume = volume;
+							}
+							try {
+								audio.play();
+							} catch (e) {
+								finishedAudio();
+								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+							}
+						})
+						.catch(error => {
+							finishedAudio();
+							console.error("Error with Speechify TTS:", error);
+						});
+				} catch (e) {
+					finishedAudio();
+					console.error("Error in SpeechifyTTS function:", e);
+				}
+			}
+
 			function ElevenLabsTTS(tts) {
 				try {
 					premiumQueueActive = true;
