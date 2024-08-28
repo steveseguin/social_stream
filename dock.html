@@ -7496,10 +7496,7 @@
 				premiumQueueActive = true;
 				try {
 					const url = "https://api.sws.speechify.com/v1/audio/speech";
-					let model = "simba-english";
-					if (!English) {
-						model = "simba-multilingual";
-					}
+					let model = English ? "simba-english" : "simba-multilingual";
 					const data = {
 						input: "<speak>"+tts+"</speak>",
 						voice_id: voiceName || "henry",
@@ -7510,14 +7507,9 @@
 						method: "POST",
 						headers: {
 							"Authorization": `Bearer ${SpeechifyAPIKey}`,
-							"Accept": "*/*",
-							"Content-Type": "text/plain;charset=UTF-8",
-							"Cache-Control": "no-cache",
-							"Pragma": "no-cache"
+							"Content-Type": "application/json"
 						},
-						body: JSON.stringify(data),
-						mode: "cors",
-						credentials: "include"
+						body: JSON.stringify(data)
 					};
 					fetch(url, otherparam)
 						.then(response => {
