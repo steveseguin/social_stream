@@ -69,7 +69,7 @@
 		return resp;
 	}
 
-	function processMessage(ele){
+	function processQuestion(ele){
 		
 		var childs = ele.childNodes;
 		if (childs.length!=4){return;}
@@ -90,6 +90,26 @@
 		data.question = true;
 		data.sourceImg = "";
 		
+		pushMessage(data);
+		
+	}
+	
+	function processMessage(ele){
+		
+		var data = {};
+		data.chatname = escapeHtml(ele.querySelector(".message-sender").textContent).trim();
+		data.chatbadges = "";
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.nameColor = "";
+		data.chatmessage = escapeHtml(ele.querySelector(".message-content").textContent).trim();
+		data.chatimg = "";
+		data.hasDonation = "";
+		data.membership = "";
+		data.contentimg = "";
+		data.textonly = settings.textonlymode || false;
+		data.type = "on24";
+		data.sourceImg = "";
 		
 		pushMessage(data);
 		
@@ -135,18 +155,30 @@
 		}
 	});
 	
+	var questionList = [];
 
 	setInterval(function(){
 		try {
 			document.querySelectorAll(".table-row-question").forEach(x=>{
-				if (!x.marked){
-					x.marked = true;
-					var ele = x.querySelector(".question-collapsed > p, .edit-question>div");
-					if (ele){
-						processMessage(ele);
+				if (x.dataset.id){
+					if (!questionList.includes(x.dataset.id)){
+						var ele = x.querySelector(".question-collapsed > p, .edit-question>div");
+						if (ele){
+							questionList.push(x.dataset.id);
+							processQuestion(ele);
+						}
 					}
 				}
 			});
+			
+			document.querySelectorAll(".message-list .message").forEach(x=>{
+				if (!x.marked){
+					x.marked = true;
+					processMessage(x);
+				}
+			});
+			
+			
 		} catch(e){}
 	},1000);
 
