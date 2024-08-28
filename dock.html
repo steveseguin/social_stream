@@ -7496,23 +7496,25 @@
 				premiumQueueActive = true;
 
 				try {
-					const url = "https://api.speechify.com/api/v1/tts";
+					const url = "https://api.sws.speechify.com/v1/audio/speech";
 					const data = {
-						text: tts,
-						voice: voiceName || "Jenny", // Default voice, adjust as needed
+						input: tts,
 						language: speechLang,
-						audioFormat: "mp3",
-						quality: "high",
-						sampleRate: 24000
+						model: "simba-english", // or "simba-multilingual" for non-English
+						options: {
+							voice_id: voiceName || "henry" // Replace with an actual default voice ID
+						},
+						audio_format: "mp3" // You can change this to wav, ogg, or aac if needed
 					};
 
 					const otherparam = {
+						method: "POST",
 						headers: {
-							"Content-Type": "application/json",
-							"X-API-Key": SpeechifyAPIKey // Make sure to define this variable with the user's API key
+							"Authorization": SpeechifyAPIKey, // Make sure to define this variable with the user's API key
+							"Accept": "audio/mpeg", // This matches the audio_format in the request
+							"Content-Type": "application/json"
 						},
-						body: JSON.stringify(data),
-						method: "POST"
+						body: JSON.stringify(data)
 					};
 
 					fetch(url, otherparam)

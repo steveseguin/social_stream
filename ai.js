@@ -673,7 +673,7 @@ User ${data.chatname || 'user'} says: ${userInput}
 Your response:`;
 			log(userInput);
             let response =  await callOllamaAPI(prompt);
-			if (!response || response.includes("NO_RESPONSE")){
+			if (!response || response.includes("NO_RESPONSE") || response.startsWith("No ") || response.startsWith("NO ")){
 				return false;
 			}
 			return response;
