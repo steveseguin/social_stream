@@ -7497,10 +7497,14 @@
 
 				try {
 					const url = "https://api.sws.speechify.com/v1/audio/speech";
+					let model = "simba-english";
+					if (!English){
+						model = "simba-multilingual";
+					}
 					const data = {
 						input: tts,
 						language: speechLang,
-						model: "simba-english", // or "simba-multilingual" for non-English
+						model: model, // or "simba-multilingual" for non-English
 						options: {
 							voice_id: voiceName || "henry" // Replace with an actual default voice ID
 						},
