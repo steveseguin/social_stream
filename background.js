@@ -2945,7 +2945,29 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			msg.userId = "socialstream";
 			msg.messageBody = cleaned;
 			
-			msg.displayName += "-"+data.type+")";
+			if (false){
+				if (data.type == "stageten"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/stageten_200x200.png";
+				}
+				if (data.type == "youtube"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/youtube_200x200.png";
+				}
+				if (data.type == "youtubeshorts"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/youtubeshorts_200x200.png";
+				}
+				if (data.type == "twitch"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/twitch_200x200.png";
+				}
+				if (data.type == "twitch"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/twitch_200x200.png";
+				}
+				if (data.type == "socialstream"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/socialstream_200x200.png";
+				}
+				if (data.type == "twitch"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/twitch_200x200.png";
+				}
+			}
 			
 			// console.error(msg, fakechat);
 
