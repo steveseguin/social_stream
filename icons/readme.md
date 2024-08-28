@@ -8,4 +8,7 @@ Some icons used are licensced as attribution-required:
 
 <a href="https://www.flaticon.com/free-icons/announcement" title="announcement icons">Announcement icons created by Design Circle - Flaticon</a>
 
+<a href="https://www.freepik.com/icon/chatbot_10817282#fromView=resource_detail&position=91">Icon by juicy_fish</a>
+
+
 The main readme.md may contain additional attributions.

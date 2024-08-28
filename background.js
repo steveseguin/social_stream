@@ -2933,19 +2933,25 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			}
 			
 			let username = "";
+			let isBot = false;
 			if (cleaned.startsWith(botname+":")){
 				cleaned = cleaned.replace(botname+":","").trim();
 				username = botname;
+				isBot = true;
 			}
 			
 			var msg = {};
-			msg.sourceName = data.type || "unknown";
+			msg.sourceName = data.type || "stageten";
 			msg.sourceIconUrl = "https://socialstream.ninja/sources/images/"+msg.sourceName+".png";
 			msg.displayName = data.chatname || data.userid || username || "Host⚡";
 			msg.userId = "socialstream";
 			msg.messageBody = cleaned;
 			
-			if (false){
+			if (isBot){
+				"https://socialstream.ninja/icons/bot.png";
+			}
+			
+			if (false){ // this is a backup, just in case.
 				if (data.type == "stageten"){
 					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/stageten_200x200.png";
 				}
