@@ -2948,7 +2948,7 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			msg.messageBody = cleaned;
 			
 			if (isBot){
-				"https://socialstream.ninja/icons/bot.png";
+				msg.sourceIconUrl = "https://socialstream.ninja/icons/bot.png";
 			}
 			
 			if (false){ // this is a backup, just in case.
