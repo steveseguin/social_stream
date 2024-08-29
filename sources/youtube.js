@@ -233,6 +233,28 @@
 
 		return result;
 	}
+	
+	function deleteThis(ele) {
+		if (ele.deleted){
+			return;
+		}
+		ele.deleted = true;
+		try {
+			var chatname = ele.querySelector("#author-name");
+			if (chatname) {
+				var data = {};
+				data.chatname = escapeHtml(chatname.innerText);
+				data.type = "youtube";
+				try {
+					chrome.runtime.sendMessage(chrome.runtime.id, {
+						"delete": data
+					}, function(e) {});
+				} catch (e) {
+					//
+				}
+			}
+		} catch (e) {}
+	}
 
 	var EMOTELIST = false;
 	function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
@@ -334,6 +356,7 @@
 			return;
 		}
 		if (ele.hasAttribute("is-deleted")) {
+			deleteThis(ele)
 			//console.log("Message is deleted already");
 			return;
 		}
@@ -800,7 +823,9 @@
 	function onElementInserted(target, callback) {
 		var onMutationsObserved = function (mutations) {
 			mutations.forEach(function (mutation) {
-				if (mutation.addedNodes.length) {
+				if (mutation.type && mutation.type === 'attributes' && mutation.attributeName === 'is-deleted') {
+					deleteThis(mutation.target);
+				} else if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i] && mutation.addedNodes[i].classList && mutation.addedNodes[i].classList.contains("yt-live-chat-banner-renderer")) {
@@ -826,7 +851,13 @@
 		if (!target) {
 			return;
 		}
-		var config = { childList: true, subtree: true };
+		var config = {
+			childList: true, // Observe the addition of new child nodes
+			subtree: true, // Observe the target node and its descendants
+			attributes: true, // Observe attributes changes
+			attributeOldValue: true, // Optionally capture the old value of the attribute
+			attributeFilter: ['is-deleted'] // Only observe changes to 'is-deleted' attribute
+		};
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
