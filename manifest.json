@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
  "manifest_version": 3,
-  "version": "3.0.5",
+  "version": "3.0.6",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -21,6 +21,8 @@
     "tabs"
   ],
   "host_permissions": [
+    "http://localhost:11434/api/generate",
+    "http://127.0.0.1:11434/api/generate",
     "https://zap.stream/*",
     "https://www.bigo.tv/*",
     "https://beamstream.gg/*/chat",
@@ -37,7 +39,7 @@
     "https://cbox.ws/box/*",
     "https://community.talkinghealthtech.com/live/*",
     "https://community.insidethe.show/live/*",
-    "https://community.circle.so/live/*",
+    "https://*.circle.so/*",
     "https://tellonym.me/*",
     "https://chat.wix.com/*",
     "https://live.wix.com/*",
@@ -67,6 +69,7 @@
     "https://*.locals.com/post/*",
     "https://*.locals.com/feed/*",
     "https://bilibili.tv/*/live/*",
+	"https://live.bilibili.com/*",
     "https://*.minnit.chat/*/Main",
     "https://*.bilibili.tv/*/live/*",
     "https://app.clouthub.com/*",
@@ -136,6 +139,7 @@
     "https://maestro-launcher.vercel.app/",
     "https://arena.tv/*",
     "https://boltplus.tv/chatpopout/*",
+	"https://boltplus.tv/chatpopout?*",
     "https://chat.openai.com/*",
     "https://app.livestorm.co/*/live?*",
     "https://steamcommunity.com/broadcast/chatonly/*",
@@ -154,7 +158,8 @@
     "https://estrim.com/publications/view/*",
     "https://vk.com/*",
     "https://wave.video/*",
-    "https://www.sooplive.com/chat/*"  
+    "https://www.sooplive.com/chat/*",
+    "https://*.on24.com/view/*"
   ],
   "content_scripts": [
     {
@@ -229,7 +234,7 @@
     },
     {
       "js": [ "./sources/circle.js" ],
-      "matches": [ "https://community.insidethe.show/live/*", "https://community.talkinghealthtech.com/live/*", "https://community.circle.so/live/*" ]
+      "matches": [ "https://community.insidethe.show/*", "https://community.talkinghealthtech.com/*", "https://*.circle.so/*" ]
     },
     {
       "js": [ "./sources/sessions.js" ],
@@ -249,7 +254,7 @@
     },
     {
       "js": [ "./sources/boltplus.js" ],
-      "matches": [ "https://boltplus.tv/chatpopout/*" ]
+      "matches": [ "https://boltplus.tv/chatpopout/*", "https://boltplus.tv/chatpopout?*" ]
     },
     {
       "js": [ "./sources/livestorm.js" ],
@@ -316,8 +321,12 @@
       "matches": [ "https://*.rooter.gg/*" ]
     },
     {
-      "js": [ "./sources/x.js", "./sources/static/x.js" ],
-      "matches": [ "https://www.x.com/*", "https://x.com/*", "https://www.twitter.com/*", "https://twitter.com/*" ]
+      "js": ["./sources/static/x.js" ],
+      "matches": [ "https://www.x.com/*", "https://x.com/*"]
+    },
+	{
+      "js": [ "./sources/x.js" ],
+      "matches": [ "https://www.x.com/i/broadcasts/*/chat", "https://x.com/i/broadcasts/*/chat",  "https://www.twitter.com/*", "https://twitter.com/*" ]
     },
     {
       "js": [ "./sources/static/threads.js" ],
@@ -418,6 +427,12 @@
         "https://*.bilibili.tv/*/live/*"
       ]
     },
+	{
+      "js": [ "./sources/bilibilicom.js" ],
+      "matches": [
+		"https://live.bilibili.com/*"
+      ]
+    },
     {
       "js": [ "./sources/piczel.js" ],
       "matches": [ "https://piczel.tv/chat/*" ]
@@ -430,7 +445,7 @@
       "js": [ "./sources/websocket/twitch.js" ],
       "matches": [
         "https://socialstream.ninja/sources/websocket/twitch.html*",
-		"https://socialstream.ninja/websocket/twitch.html*",
+		"https://socialstream.ninja/sources/websocket/twitch?*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/twitch.html*"
       ]
     },
@@ -513,8 +528,7 @@
     },
     {
       "js": [ "./sources/zoom.js" ],
-      "matches": [ "https://*.zoom.us/*" ],
-      "all_frames": true
+      "matches": [ "https://*.zoom.us/*" ]
     },
     {
       "js": [ "./sources/crowdcast.js" ],
@@ -539,6 +553,10 @@
     {
       "js": [ "./sources/livestream.js" ],
       "matches": [ "https://livestream.com/accounts/*" ]
+    },
+	{
+      "js": [ "./sources/on24.js" ],
+      "matches": [ "https://*.on24.com/view/*" ]
     },
     {
       "js": [ "./sources/teams.js" ],

@@ -71,7 +71,7 @@
 		
 		var name="";
 		try {
-			name = ele.querySelector(".comment-author-name, .live-message-body-author").textContent.trim();
+			name = escapeHtml(ele.querySelector(".comment-author-name, .live-message-body-author").textContent.trim());
 		} catch(e){
 		}
 		
@@ -84,7 +84,9 @@
 		var msg="";
 		try {
 			ele.querySelector(".live-message-body").childNodes.forEach(xx=>{
-				if (xx.querySelector && xx.querySelector(".comment-author-name, .live-message-body-author")){
+				if (xx.classList && (xx.classList.contains("comment-author-name") || xx.classList.contains("live-message-body-author") || xx.classList.contains("live-message-body-author"))){
+					
+				} else if (xx.querySelector && xx.querySelector(".comment-author-name, .live-message-body-author, .live-message-body-author")){
 					
 				} else {
 					msg+= getAllContentNodes(xx);
@@ -103,7 +105,6 @@
 		}
 		
 		if (!msg && !contentimg){return;}
-		
 		
 		var data = {};
 		data.chatname = name;
@@ -196,10 +197,10 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('.comments, .live-chat-block, .comment-list-container').children.length){
-			if (!document.querySelector('.comments, .live-chat-block, .comment-list-container').marked){
-				document.querySelector('.comments, .live-chat-block, .comment-list-container').marked=true;
-				onElementInserted('.comments, .live-chat-block, .comment-list-container');
+		if (document.querySelector('.comments, .live-chat-block, .comment-list-container>div').children.length){
+			if (!document.querySelector('.comments, .live-chat-block, .comment-list-container>div').marked){
+				document.querySelector('.comments, .live-chat-block, .comment-list-container>div').marked=true;
+				onElementInserted('.comments, .live-chat-block, .comment-list-container>div');
 			}
 		}} catch(e){}
 	},2000);

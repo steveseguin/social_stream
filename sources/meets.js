@@ -187,8 +187,8 @@
 	function (request, sender, sendResponse) {
 		try{
 			if ("focusChat" == request){
-				document.querySelector('.DraftEditor-editorContainer .public-DraftStyleDefault-block[data-offset-key]').click();
-				document.querySelector('.DraftEditor-editorContainer .public-DraftStyleDefault-block[data-offset-key]').focus();
+				document.querySelector('.DraftEditor-editorContainer .public-DraftStyleDefault-block[data-offset-key], textarea[maxlength="500"], textarea').click();
+				document.querySelector('.DraftEditor-editorContainer .public-DraftStyleDefault-block[data-offset-key], textarea[maxlength="500"], textarea').focus();
 
 				sendResponse(true);
 				return;

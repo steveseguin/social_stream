@@ -1,78 +1,34 @@
 (function () {
-	
-	function pushMessage(data) {
-	  try {
-		  
-		// Create a unique key for the message
-		const messageKey = `${data.chatname}:${data.chatmessage}:${data.contentimg}`;
+	function pushMessage(data){	  
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+		} catch(e){}
+	}
 
-		// Check if this message already exists in the history
-		if (!messageHistory.includes(messageKey)) {
-		  // If it's a new message, add it to the history
-		  messageHistory.push(messageKey);
-
-		  // Keep only the most recent 100 messages
-		  if (messageHistory.length > 100) {
-			messageHistory = messageHistory.slice(-100);
-		  }
+	function toDataURL(url, callback) {
+	  var xhr = new XMLHttpRequest();
+	  xhr.onload = function() {
 		  
-		  chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(response) {
-			if (chrome.runtime.lastError) {
-			  //console.error('Error sending message:', chrome.runtime.lastError);
-			}
-		  });
-		} else {
-		 // console.log('Duplicate message filtered out:', messageKey);
+		var blob = xhr.response;
+    
+		if (blob.size > (25 * 1024)) {
+		  callback(url); // Image size is larger than 25kb.
+		  return;
 		}
-	  } catch (e) {
-		//console.error('Error in pushMessage:', e);
-	  }
+
+		var reader = new FileReader();
+		
+		
+		reader.onloadend = function() {
+		  callback(reader.result);
+		}
+		reader.readAsDataURL(xhr.response);
+	  };
+	  xhr.open('GET', url);
+	  xhr.responseType = 'blob';
+	  xhr.send();
 	}
-
-	// Make sure to initialize messageHistory if it's not already defined
-	if (typeof messageHistory === 'undefined') {
-	  var messageHistory = [];
-	}
-
-	function toDataURL(url, callback, maxSizeKB = 6) {
-	  fetch(url)
-		.then(response => response.blob())
-		.then(blob => {
-		  const img = new Image();
-		  img.onload = function() {
-			const canvas = document.createElement('canvas');
-			let width = img.width;
-			let height = img.height;
-			
-			// Calculate aspect ratio
-			let aspectRatio = width / height;
-			
-			// Resize logic
-			let scaleFactor = 1;
-			do {
-			  width = img.width * scaleFactor;
-			  height = width / aspectRatio;
-			  
-			  canvas.width = width;
-			  canvas.height = height;
-			  
-			  const ctx = canvas.getContext('2d');
-			  ctx.drawImage(img, 0, 0, width, height);
-			  
-			  scaleFactor *= 0.9;
-			} while (canvas.toDataURL('image/jpeg', 0.7).length > maxSizeKB * 1024);
-
-			const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-			callback(resizedDataUrl);
-		  };
-		  img.src = URL.createObjectURL(blob);
-		})
-		.catch(error => {
-		  //console.error('Error:', error);
-		  callback(null);
-		});
-	}
-
+	
 	function escapeHtml(unsafe){
 		try {
 			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
@@ -122,56 +78,15 @@
 	function processMessagePosts(ele){ // not supported currently.  Instagram is just a bunch of reels at this point, so thats not chat
 		if (ele == window){return;}
 		
-		var contentimg = "";
-		try {
-			contentimg = ele.childNodes[0].childNodes[1].querySelector("div > div[role='button'] > div div > img[alt][src][class][style]").src;
-		}catch(e){
-		}
-		try {
-			ele.querySelector("article ul ul").dataset.set = "subpost";
-		}catch(e){}
 		
+		var contentimg = "";
+
 		var name = "";
 		
-		try {
-			name = escapeHtml(ele.childNodes[0].childNodes[0].querySelector("div > span > span div > a[href] div > span").textContent.trim());
-		}catch(e){
-			
-		}
-		
 		var msg="";
-		
-		try {
-			msg = escapeHtml(ele.childNodes[0].childNodes[2].childNodes[0].childNodes[0].childNodes[2].childNodes[1].textContent.trim());
-		}catch(e){
-			
-		}
 	
 		var img = "";
 		
-		try {
-			img = ele.childNodes[0].childNodes[0].childNodes[0].querySelector("[role='link'] > img[src]").src;
-		}catch(e){
-			
-		}
-		
-		if (!name){return;}
-		
-		if (msg.length > 50){
-		  msg = cleanString(msg);
-	    }
-		if (msg.length > 50){
-		  msg = cleanString2(msg);
-	    }
-		if (msg.length > 200){
-		  msg = msg.split("\n")[0]
-	    }
-		if (msg.length > 200){
-		  msg = msg.split("!")[0]
-	    }
-		if (msg.length > 200){
-		  msg = msg.split(".")[0]
-	    }
 
 		var data = {};
 		data.chatname = name;
@@ -185,105 +100,13 @@
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
 		data.type = "instagram";
-		
-		if (data.contentimg){
-			toDataURL(contentimg, (dataUrl)=>{
-			  data.contentimg = dataUrl;
-			  if (data.chatimg){
-					toDataURL(data.chatimg, (dataUrl2)=>{
-						data.chatimg = dataUrl2;
-						pushMessage(data);
-					});
-			  } else {
-				   pushMessage(data);
-			  }
-			});
-		} else if (data.chatimg){
-			toDataURL(data.chatimg, (dataUrl)=>{
-				data.chatimg = dataUrl;
-				pushMessage(data);
-			});
-		} else {
-		   pushMessage(data);
-		}
-	}
-	
-	function processMessageSingle(ele){ // not supported currently.  Instagram is just a bunch of reels at this point, so thats not chat
-		if (ele == window){return;}
-		
-		var contentimg = "";
-		try {
-			contentimg = ele.querySelector("div > div[role='button'] > div div > img[alt][src][class][style]").src;
-		}catch(e){
-		}
-		
-		var name = "";
-		
-		try {
-			name = escapeHtml(ele.childNodes[0].childNodes[0].querySelector("div > span > span div > a[href] div > span").textContent.trim());
-		}catch(e){
-			
-		}
-		var msg="";
-		try {
-			var named = ele.querySelector("hr").nextElementSibling.childNodes[0].childNodes[0].querySelector("span span").textContent;
-			if (named == name){
-				try {
-					msg = escapeHtml(ele.querySelector("hr").nextElementSibling.childNodes[0].childNodes[0].querySelector("span > div > span").textContent.trim());
-				}catch(e){
-					
-				}
-			}
-		
-		
-		}catch(e){
-			
-		}
-	
-		var img = "";
-		try {
-			img = ele.querySelector("hr").nextElementSibling.childNodes[0].childNodes[0].querySelector("[role='link'] > img[src]").src;
-		}catch(e){
-			
-		}
-		
-		if (!name){return;}
-		
-		if (msg.length > 50){
-		  msg = cleanString(msg);
-	    }
-		if (msg.length > 50){
-		  msg = cleanString2(msg);
-	    }
-		if (msg.length > 200){
-		  msg = msg.split("\n")[0]
-	    }
-		if (msg.length > 200){
-		  msg = msg.split("!")[0]
-	    }
-		if (msg.length > 200){
-		  msg = msg.split(".")[0]
-	    }
 
-		var data = {};
-		data.chatname = name;
-		data.chatbadges = "";
-		data.backgroundColor = "";
-		data.textColor = "";
-		data.chatmessage = msg;
-		data.chatimg = img;
-		data.hasDonation = "";
-		data.membership = "";;
-		data.contentimg = contentimg;
-		data.textonly = settings.textonlymode || false;
-		data.type = "instagram";
-		
 		if (data.contentimg){
-			toDataURL(contentimg, (dataUrl)=>{
+			toDataURL(contentimg, function(dataUrl) {
 			  data.contentimg = dataUrl;
 			  if (data.chatimg){
-					toDataURL(data.chatimg, (dataUrl2)=>{
-						data.chatimg = dataUrl2;
+					toDataURL(data.chatimg, function(dataUrl) {
+						data.chatimg = dataUrl;
 						pushMessage(data);
 					});
 			  } else {
@@ -291,7 +114,7 @@
 			  }
 			});
 		} else if (data.chatimg){
-			toDataURL(data.chatimg, (dataUrl)=>{
+			toDataURL(data.chatimg, function(dataUrl) {
 				data.chatimg = dataUrl;
 				pushMessage(data);
 			});
@@ -306,7 +129,6 @@
 		var name = "";
 		try {
 			name = escapeHtml(ele.querySelector("h3").innerText);
-			name = name.trim();
 		} catch(e){
 			name = "";
 		}
@@ -322,24 +144,7 @@
 		try {
 		img = ele.querySelector("div > div > a > img[src]").src;
 		} catch(e){}
-		
-		if (!name){return;}
 
-		if (msg.length > 50){
-		  msg = cleanString(msg);
-	    }
-		if (msg.length > 50){
-		  msg = cleanString2(msg);
-	    }
-		if (msg.length > 200){
-		  msg = msg.split("\n")[0]
-	    }
-		if (msg.length > 200){
-		  msg = msg.split("!")[0]
-	    }
-		if (msg.length > 200){
-		  msg = msg.split(".")[0]
-	    }
 
 		var data = {};
 		data.chatname = name;
@@ -472,24 +277,6 @@
 	  
 	  if (!chatmessage){return;}
 	  
-	  if (!chatname){return;}
-	  
-	  if (chatmessage.length > 50){
-		  chatmessage = cleanString(chatmessage);
-	  }
-	  if (chatmessage.length > 50){
-		  chatmessage = cleanString2(chatmessage);
-	  }
-	  if (chatmessage.length > 200){
-		  chatmessage = chatmessage.split("\n")[0]
-	  }
-	  if (chatmessage.length > 200){
-		  chatmessage = chatmessage.split("!")[0]
-	  }
-	  if (chatmessage.length > 200){
-		  chatmessage = chatmessage.split(".")[0]
-	    }
-	  
 	  var data = {};
 	  data.chatname = chatname;
 	  data.chatbadges = badges || "";
@@ -519,23 +306,8 @@
 		}
 	}
 	
-	var isOn = false;
-	
-	function cleanString(input) {
-	  return input
-		.replace(/#\w+\s*/g, '')  // Remove hashtags and their associated words
-		.replace(/\s+/g, ' ')     // Replace multiple spaces with a single space
-		.trim();                  // Remove leading and trailing spaces
-	}
-	
-	function cleanString2(input) {
-	  return input
-		.replace(/[#@]\w+\s*/g, '')  // Remove hashtags, at-mentions, and their associated words
-		.trim();                     // Remove leading and trailing spaces
-	}
-	
 	setTimeout(function(){ // clear existing messages; just too much for a stream.
-		
+	
 		console.log("LOADED SocialStream EXTENSION");
 		
 		try {
@@ -554,13 +326,8 @@
 		} catch(e){  }
 	
 		setInterval(function(){
-			
-			if (!isOn){
-				return;
-			}
-		
 			try {
-				if (window.location.pathname.includes("/live") || (window.location.pathname.endsWith("/") || document.querySelector("video") || document.querySelector("textarea")) || (window.location.pathname==="/")){
+				if (window.location.pathname.includes("/live") || (window.location.pathname==="/")){
 					try {
 						var main = document.querySelectorAll("div>div>section>div");
 						for (var j =0;j<main.length;j++){
@@ -582,15 +349,8 @@
 						for (var j =0;j<main.length;j++){
 							try{
 								if (!main[j].dataset.set){
-									main[j].dataset.set = "post";
-									main[j].querySelectorAll("div[role='button']").forEach(xx=>{
-										if (xx.textContent === "more"){
-											//xx.click();
-										}
-									});
-									setTimeout(function(node){
-										processMessagePosts(node);
-									},100, main[j])
+									main[j].dataset.set = true;
+									processMessagePosts(main[j]);
 								}
 							} catch(e){
 								//console.error(e);
@@ -602,23 +362,12 @@
 					document.querySelectorAll("article ul ul").forEach(main=>{
 						if (main && main.childNodes){
 							if (!main.dataset.set){
-								main.dataset.set = "comment";	
+								main.dataset.set = true;	
 								processMessageComment(main);
 							}
 						}
 					});
 				} catch(e){}
-				try {
-					document.querySelectorAll("div > section > main[role='main']").forEach(main=>{
-						if (main && main.childNodes){
-							if (!main.dataset.set){
-								main.dataset.set = "single";	
-								processMessageSingle(main);
-							}
-						}
-					});
-				} catch(e){}
-				
 			}
 			
 			document.querySelectorAll("video").forEach(v=>{
@@ -645,9 +394,6 @@
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
-		}
-		if ("state" in response){
-			isOn = response.state;
 		}
 	});
 	

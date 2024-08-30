@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Chat Bot</title>
+	<link rel="icon" href="./icons/favicon.ico" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(40, 40, 40, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            color: #f0f0f0;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-size: min(200%, 10vh);
+        }
+        #chat-container {
+            height: 400px;
+            border: 1px solid #4a4a4a;
+            border-radius: 15px;
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: rgba(30, 30, 30, 0.6);
+            max-height: calc(100vh - 215px);
+        }
+        #input-container {
+            display: flex;
+            gap: 10px;
+        }
+        #user-input {
+            flex-grow: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(60, 60, 60, 0.8);
+            color: #f0f0f0;
+            font-size: 16px;
+            min-width: 0;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #6a5acd, #4b0082);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(75, 0, 130, 0.4);
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
+        }
+        .user {
+            background: linear-gradient(45deg, #4a4a4a, #5a5a5a);
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        .assistant {
+            background: linear-gradient(45deg, #3a3a3a, #4a4a4a);
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 30, 30, 0.6);
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(80, 80, 80, 0.8);
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 100, 100, 0.8);
+        }
+        .waiting {
+            font-style: italic;
+            color: #888;
+            display: flex;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #888;
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                align-items: flex-start;
+                padding: 20px 0;
+            }
+            .container {
+                width: 100%;
+                height: calc(100vh - 40px);
+                border-radius: 0;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+            }
+            h1 {
+                font-size: 1.2em;
+                margin-bottom: 10px;
+            }
+            #chat-container {
+                flex-grow: 1;
+                height: 0;
+                margin-bottom: 10px;
+            }
+            #input-container {
+                flex-wrap: wrap;
+            }
+            #user-input {
+                width: 100%;
+                order: -1;
+            }
+            button {
+                flex-grow: 1;
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ask me anything! I'm a LLM Chat Bot</h1>
+        <div id="chat-container"></div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Type your message or question here...">
+            <button onclick="sendMessage()">Send</button>
+            <button onclick="newConversation()">New Chat</button>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+		const userInput = document.getElementById('user-input');
+		userInput.focus(); 
+		window.onload = ()=> {
+			userInput.focus();
+		};
+		var iframe = null;
+		var urlParams = new URLSearchParams(window.location.search);
+		var roomID = false;
+		var password = "false";
+		var conversationHistory = [];
+
+		if (urlParams.has("session")) {
+			roomID = urlParams.get("session");
+		} else {
+			roomID = prompt("Enter you session ID");
+			if (!roomID){
+				alert("you need to have a session ID for this page to work..");
+			}
+		}
+			
+		if (urlParams.has("password")) {
+			password = urlParams.get("password");
+		}
+		let currentID = 0;
+		
+		async function sendMessage() {
+			const message = userInput.value.trim();
+			if (message === '') return;
+			let messageID = parseInt(Math.random()*99999999);
+			addMessageToChat('user', message, messageID);
+			addWaitingMessage(messageID);
+			userInput.value = '';
+
+			// Add the user's message to the conversation history
+			conversationHistory.push({ role: 'user', content: message });
+
+			var data = {};
+			data.value = formatConversationForLlama(conversationHistory);
+			data.target = messageID;
+			data.action = "chatbot";
+			data.turbo = false; // true to use a faster model with shorter responses; useful if you have a slow/limited computer/gpu
+
+			iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs" }, "*");
+		}
+
+		function formatConversationForLlama(history) {
+			return history.map(msg => `${msg.role}: ${msg.content}`).join('\n') + '\nassistant:';
+		}
+
+		function addMessageToChat(role, content, id) {
+			const messageDiv = document.createElement('div');
+			messageDiv.classList.add('message', role);
+			messageDiv.setAttribute('data-message-id', id);
+			messageDiv.textContent = content;
+			chatContainer.appendChild(messageDiv);
+			chatContainer.scrollTop = chatContainer.scrollHeight;
+		}
+		
+		var messageChunks = {};
+
+		function addWaitingMessage(id) {
+			const waitingDiv = document.createElement('div');
+			waitingDiv.classList.add('message', 'assistant', 'waiting');
+			waitingDiv.setAttribute('data-response-id', id);
+			waitingDiv.innerHTML = '<div class="spinner"></div>Waiting for response...';
+			chatContainer.appendChild(waitingDiv);
+			if (currentID in messageChunks){
+				conversationHistory.push({ role: 'assistant', content: messageChunks[currentID].join("") });
+				messageChunks = {};
+			}
+			currentID = id;
+			messageChunks[id] = [];
+			chatContainer.scrollTop = chatContainer.scrollHeight;
+			
+			setTimeout(()=>{
+				if (waitingDiv.classList.contains("waiting")){
+					waitingDiv.innerHTML = '⚠️ Theo may be unavailable right now. Keep waiting or try again.';
+				}
+			},10000);
+		}
+
+		function updateWaitingMessage(id, content, chunk=false) {
+			const waitingMessage = document.querySelector(`[data-response-id="${id}"]`);
+			if (waitingMessage) {
+				waitingMessage.classList.remove('waiting');
+			
+				if (chunk){
+					if (messageChunks[id]){
+						messageChunks[id].push(content);
+						waitingMessage.innerHTML = messageChunks[id].join("").replaceAll("\n","<br>");
+					}
+				} else {
+					if (messageChunks[id]){
+						delete messageChunks[id];
+					}
+					waitingMessage.innerHTML = content.replaceAll("\n","<br>");
+					conversationHistory.push({ role: 'assistant', content: content });
+				}
+				chatContainer.scrollTop = chatContainer.scrollHeight;
+			} 
+		}
+
+		function newConversation() {
+			chatContainer.innerHTML = '';
+			messageID = 0;
+			currentID = 0;
+			messageChunks = {};
+			conversationHistory = []; // Clear the conversation history
+		}
+
+		userInput.addEventListener('keypress', function(e) {
+			if (e.key === 'Enter') {
+				sendMessage();
+			}
+		});
+
+		document.addEventListener('DOMContentLoaded', () => {
+			iframe = document.createElement("iframe");
+			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=chatbot&view=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+			
+			iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+			document.body.appendChild(iframe);
+			window.addEventListener("message", function (e) {
+				if (e.source != iframe.contentWindow) return;
+				if (e.data.dataReceived && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotChunk && e.data.dataReceived.overlayNinja.chatbotChunk.value) {
+					const response = e.data.dataReceived.overlayNinja.chatbotChunk;
+					updateWaitingMessage(response.target, response.value, true);
+				} else if (e.data.dataReceived && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotResponse && e.data.dataReceived.overlayNinja.chatbotResponse.value) {
+					const response = e.data.dataReceived.overlayNinja.chatbotResponse;
+					updateWaitingMessage(response.target, response.value);
+				}
+			});
+		});
+    </script>
+</body>
+</html>

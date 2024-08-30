@@ -150,6 +150,10 @@
 			#tooltip {
 				display: none;
 			}
+			
+			svg.regular-emote, img.regular-emote {
+				margin: auto 0;
+			}
 
 			.sourcetype {
 				position: absolute;
@@ -370,12 +374,14 @@
 
 			.hl-message img,
 			.hl-message svg {
-				max-width: 50px;
+				max-width: 200px;
 				height: 45px;
 				vertical-align: sub;
 				z-index: 1;
 				object-fit: contain;
-				padding: 0 5px 1px 5px;
+				margin: auto 1px;
+				position: relative;
+				display: inline-block;
 			}
 			.hl-message a {
 				color: white;
@@ -403,6 +409,11 @@
 				border-radius: 50%;
 				z-index: 1;
 				margin: auto auto;
+			}
+			
+			
+			.hl-message img+img, .hl-message img+svg, .hl-message svg+img, .hl-message svg+svg {
+				margin: auto 0px;
 			}
 
 			.hl-imgContent {
@@ -616,6 +627,37 @@
 				right: -70px;
 				left: unset;
 			}
+			
+		.emote-container {
+		  display: inline-grid;
+		  grid-template-columns: 1fr;
+		  grid-template-rows: 1fr;
+		  vertical-align: top;
+		  justify-items: center;  /* Center horizontally */
+		  align-items: center;    /* Center vertically */
+		  vertical-align: sub;
+		}
+
+		.emote-container .regular-emote,
+		.emote-container .zero-width-emote-centered,
+		.emote-container .zero-width-emote {
+		  grid-column: 1;
+		  grid-row: 1;
+		  max-width: 100%;
+		  max-height: 100%;
+		  object-fit: contain;
+		}
+
+		.emote-container .zero-width-emote-centered,
+		.emote-container .zero-width-emote	{
+		  z-index: 1;
+		}
+
+		.regular-emote,
+		.zero-width-emote,
+		.zero-width-emote-centered {
+		  vertical-align: top;
+		}
 		</style>
 	</head>
 	<body>
@@ -974,6 +1016,21 @@
 			if (urlParams.has("hidetwitch")) {
 				hideTwitch = true;
 			}
+			
+			var onlyFrom = false;
+			if (urlParams.get("onlyfrom")) {
+				onlyFrom = urlParams.get("onlyfrom").toLowerCase().trim();
+			} else if (urlParams.get("fromonly")) {
+				onlyFrom = urlParams.get("fromonly").toLowerCase().trim(); // for the dylslexic users
+			}
+
+			var hideFrom = false;
+			if (urlParams.get("hidefrom") || urlParams.get("exclude")) {
+				hideFrom = [];
+				(urlParams.get("hidefrom") || urlParams.get("exclude")).split(",").forEach(x => {
+					hideFrom.push(x.trim().toLowerCase());
+				});
+			}
 
 			var beepwords = false;
 			if (urlParams.has("beepwords")) {
@@ -1063,6 +1120,12 @@
 			if (urlParams.has("aligntop")) {
 				document.getElementById("output").style.bottom = "unset";
 				document.getElementById("output").style.top = "0";
+			}
+			
+			
+			var thisLabel = false;
+			if (urlParams.has("label")) {
+				thisLabel = urlParams.get("label") || false;
 			}
 
 			var timeoutTimer = null;
@@ -1341,6 +1404,10 @@
 						if (data && "overlayNinja" in data) {
 							data = data.overlayNinja;
 						}
+						
+						if (data.target && data.target !== "null" && data.target !== thisLabel) { 
+							return; // does not match, so we assume this isn't for us.
+						}
 
 						if (data == false) {
 							processData({ contents: false });
@@ -1355,7 +1422,7 @@
 								return;
 							}
 						}
-
+	
 						if (data.action && "value" in data && data.action == "content") {
 							if (data.value) {
 								data = JSON.parse(data.value);
@@ -1363,6 +1430,40 @@
 								processData({ contents: false });
 								return;
 							}
+						} else if (data.action){
+						
+							if (data.action === "toggleTTS") {
+								if (data.value == "toggle") {
+									speech = !speech;
+								} else if (data.value == "true") {
+									speech = true;
+								} else if (data.value == "false") {
+									speech = false;
+								} else if (data.value == "on") {
+									speech = true;
+								} else if (data.value == "off") {
+									speech = false;
+								} else if (data.value == "1") {
+									speech = true;
+								} else if (data.value == "0") {
+									speech = false;
+								} else if (data.value) {
+									speech = true;
+								} else {
+									speech = false;
+								}
+								if (speech) {
+									getById("tts").dataset.state = "1";
+									getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
+									getById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
+								} else {
+									getById("tts").dataset.state = "0";
+									getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
+									getById("tts").title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
+								}
+								return true;
+							}
+						
 						}
 
 						if (!data || !("contents" in data)) {
@@ -1411,15 +1512,19 @@
 			if (urlParams.has("ttsnewmembers")) {
 				newmembertts = urlParams.get("ttsnewmembers") || "en-US";
 			}
+			var ttsclicked = false;
+			if (urlParams.has("ttsclicked")) {
+				ttsclicked = urlParams.get("ttsclicked") || "en-US";
+			}
 			
-			if (readDonos || newmembertts || urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
+			if (readDonos || newmembertts || ttsclicked || urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
 				if (document.getElementById("tts")) {
 					document.getElementById("tts").dataset.state = 1;
 					document.getElementById("tts").classList.remove("hidden");
 					document.getElementById("tts").classList.add("pressed");
 				}
 				var speech = true;
-				speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || readDonos || newmembertts || "en-US";
+				speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || readDonos || newmembertts || ttsclicked || "en-US";
 				if (speechLang.split("-")[0].toLowerCase() == "en") {
 					English = true;
 				} else {
@@ -1487,6 +1592,7 @@
 
 			var GoogleAPIKey = false; // You can get your API key from Google Cloud ; KEEP IT PRIVATE/SECRET.  It will look like: "ahasdfuyu234hjjUASDtu1234gughasdguhaU" or somnething like that.
 			var ElevenLabsKey = false;
+			var SpeechifyAPIKey = false;
 
 			if (urlParams.has("ttskey")) {
 				audio = document.createElement("audio");
@@ -1494,6 +1600,10 @@
 			} else if (urlParams.has("elevenlabskey")) {
 				audio = document.createElement("audio");
 				ElevenLabsKey = urlParams.get("elevenlabskey") || false;
+			} else if (urlParams.has("speechifykey")) {
+				audio = document.createElement("audio");
+				audio.onended = finishedAudio;
+				SpeechifyAPIKey = urlParams.get("speechifykey") || false;
 			}
 
 			function replaceURLs(node) {
@@ -1532,6 +1642,9 @@
 					return;
 				} else if (ElevenLabsKey) {
 					ElevenLabsTTS(text);
+					return;
+				} else if (SpeechifyAPIKey){
+					SpeechifyTTS(text);
 					return;
 				}
 
@@ -1594,6 +1707,67 @@
 			} catch (e) {
 				errorlog(e);
 			}
+			
+			function SpeechifyTTS(tts) {
+				premiumQueueActive = true;
+
+				try {
+					const url = "https://api.sws.speechify.com/v1/audio/speech";
+					let model = "simba-english";
+					if (!English){
+						model = "simba-multilingual";
+					}
+					const data = {
+						input: "<speak>"+tts+"</speak>",
+						language: speechLang,
+						model: model, // or "simba-multilingual" for non-English
+						voice_id: voiceName || "henry",
+						audio_format: "mp3" // You can change this to wav, ogg, or aac if needed
+					};
+
+					const otherparam = {
+						method: "POST",
+						headers: {
+							"Authorization": "Bearer "+SpeechifyAPIKey, // Make sure to define this variable with the user's API key
+							"Accept": "*/*",  // This matches the audio_format in the request
+							"Content-Type": "application/json"
+						},
+						body: JSON.stringify(data)
+					};
+
+					fetch(url, otherparam)
+						.then(response => {
+							if (!response.ok) {
+								throw new Error(`HTTP error! status: ${response.status}`);
+							}
+							return response.blob();
+						})
+						.then(blob => {
+							const audioUrl = URL.createObjectURL(blob);
+							if (!audio) {
+								audio = document.createElement("audio");
+								audio.onended = finishedAudio;
+							}
+							audio.src = audioUrl;
+							if (volume) {
+								audio.volume = volume;
+							}
+							try {
+								audio.play();
+							} catch (e) {
+								finishedAudio();
+								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+							}
+						})
+						.catch(error => {
+							finishedAudio();
+							console.error("Error with Speechify TTS:", error);
+						});
+				} catch (e) {
+					finishedAudio();
+					console.error("Error in SpeechifyTTS function:", e);
+				}
+			}
 
 			function googleTTS(tts) {
 				const url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=" + GoogleAPIKey;
@@ -1607,7 +1781,8 @@
 						ssmlGender: "FEMALE"
 					},
 					audioConfig: {
-						audioEncoding: "MP3"
+						audioEncoding: "MP3",
+						speakingRate: rate
 					}
 				};
 
@@ -1805,6 +1980,13 @@
 					}
 					if (onlyTwitch && data.contents.type !== "twitch") {
 						// this is not a twitch message, so we're hiding them
+						return;
+					}
+					
+					if (onlyFrom && data.contents.type !== onlyFrom) {
+						return;
+					}
+					if (hideFrom && hideFrom.includes(data.contents.type)) {
 						return;
 					}
 					
@@ -2239,7 +2421,7 @@
 								}
 
 								
-								if (data.hasDonation && (!newmembertts || readDonos)) {
+								if (data.hasDonation && (!(newmembertts || ttsclicked) || readDonos)) {
 									var donoText = document.createElement("div");
 									donoText.innerHTML = data.hasDonation;
 									donoText = donoText.innerText.trim();
@@ -2288,7 +2470,7 @@
 									} else {
 										speak(msgPlain);
 									}
-								} else if (msgPlain && (!readDonos && !newmembertts)) {
+								} else if (msgPlain && ((!readDonos && !newmembertts && !ttsclicked) || (ttsclicked && data.clicked))) {
 									// NO DONATION
 									if (chatname) {
 										// NAME

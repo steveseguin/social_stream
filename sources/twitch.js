@@ -83,17 +83,17 @@
 	function escapeHtml(unsafe) {
 		try {
 			if (settings.textonlymode) {
-				// we can escape things later, as needed instead I guess.
 				return unsafe;
 			}
-			return (
-				unsafe
-					.replace(/&/g, "&amp;") // i guess this counts as html
-					.replace(/</g, "&lt;")
-					.replace(/>/g, "&gt;")
-					.replace(/"/g, "&quot;")
-					.replace(/'/g, "&#039;") || ""
-			);
+			return unsafe.replace(/[&<>"']/g, function(m) {
+				return {
+					'&': '&amp;',
+					'<': '&lt;',
+					'>': '&gt;',
+					'"': '&quot;',
+					"'": '&#039;'
+				}[m];
+			}) || "";
 		} catch (e) {
 			return "";
 		}
@@ -118,91 +118,148 @@
 		return clonedSvg;
 	}
 	
-	function isEmoji(char) {
-		const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
-		return emojiRegex.test(char);
+	function replaceEmotesWithImages(text) {
+		if (!EMOTELIST) {
+			return text;
+		}
+		
+		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+			const emote = EMOTELIST[emoteMatch];
+			if (emote) {
+				const escapedMatch = escapeHtml(emoteMatch);
+				const isZeroWidth = typeof emote !== "string" && emote.zw;
+				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
+			}
+			return match;
+		});
 	}
+	
 
 	function getAllContentNodes(element) {
-		// takes an element.
-		var resp = "";
-		if (!element) {
-			return resp;
-		}
+		let result = '';
+		let pendingRegularEmote = null;
+		let pendingSpace = "";
 
-		if (!element.childNodes || !element.childNodes.length) {
-			if (element.textContent) {
-				return escapeHtml(element.textContent) || "";
-			} else {
-				return "";
-			}
-		}
-
-		element.childNodes.forEach(node => {
-			if (node.childNodes.length) {
-				if (node.nodeName.toLowerCase() == "svg") {
-					if (node.classList.contains("seventv-chat-emote")) {
-						const resolvedSvg = cloneSvgWithResolvedUse(node);
-						resolvedSvg.style = "";
-						resp += resolvedSvg.outerHTML;
-					}
+		function processNode(node) {
+			if (node.nodeType === 3 && node.textContent.length > 0) {
+				// Text node
+				if (settings.textonlymode){
+					result += node.textContent;
 					return;
-				} else if (node.classList.contains("seventv-chat-user-username")) {
-					resp += escapeHtml(node.textContent.trim()) + " ";
-				} else {
-					resp += getAllContentNodes(node);
 				}
-			} else if (node.nodeType === 3 && node.textContent && node.textContent.trim().length > 0) {
-				if (settings.textonlymode) {
-					resp += escapeHtml(node.textContent.trim()) + " ";
-				} else {
-					resp += replaceEmotesWithImages(escapeHtml(node.textContent).trim()) + " ";
+				if (!EMOTELIST){
+					if (pendingRegularEmote && node.textContent.trim()) {
+						result += pendingRegularEmote;
+						pendingRegularEmote = null;
+						
+					}
+					if (pendingSpace){
+						result += pendingSpace;
+						pendingSpace = null;
+					} 
+					pendingSpace = escapeHtml(node.textContent);
+					return;
 				}
+				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent)); 
+				const tempDiv = document.createElement('div');
+				tempDiv.innerHTML = processedText;
+				
+				Array.from(tempDiv.childNodes).forEach(child => {
+					if (child.nodeType === 3) {
+						
+						if (pendingRegularEmote && child.textContent.trim()) {
+							result += pendingRegularEmote;
+							pendingRegularEmote = null;
+						}
+						
+						if (pendingSpace){
+							result += pendingSpace;
+							pendingSpace = null;
+						} 
+						pendingSpace = escapeHtml(child.textContent);
+						
+					} else if (child.nodeName === 'IMG') {
+						processEmote(child);
+					}
+				});
 			} else if (node.nodeType === 1) {
-				if (!settings.textonlymode) {
-					if (node.nodeName === "IMG") {
-						var srcset = node.getAttribute("srcset");
-						if (srcset) {
-							var sources = srcset.split(",");
-							var image2xSource = sources.find(function (source) {
-								return source.trim().endsWith(" 2x");
-							});
-							if (image2xSource) {
-								var imageUrl = image2xSource.trim().split(" ")[0];
-								if (imageUrl) {
-									if (node.classList.contains("zero-width-emote")) {
-										resp += `<span class='zero-width-parent'><img src='${imageUrl}' /></span>`;
-									} else {
-										resp += `<img src='${imageUrl}' />`;
-									}
-									return;
-								}
-							}
-						}
-					}
-
-					if (node.nodeName.toLowerCase() == "svg") {
-						if (node.classList.contains("seventv-chat-emote")) {
-							const resolvedSvg = cloneSvgWithResolvedUse(node);
-							resolvedSvg.style = "";
-							resp += resolvedSvg.outerHTML;
-						}
+				// Element node
+				if (node.nodeName === "IMG") {
+					processEmote(node);
+				} else if (node.nodeName.toLowerCase() === "svg" && node.classList.contains("seventv-chat-emote")) {
+					if (settings.textonlymode){
 						return;
-					} else if (node.nodeName == "SPAN" && !node.textContent.length) {
-						return;
-					} else if (node && node.classList && node.classList.contains("zero-width-emote")) {
-						resp += "<span class='zero-width-parent'>" + node.outerHTML + "</span>";
-					} else {
-						resp += node.outerHTML;
 					}
-				}
-			} else if (node.nodeName == "IMG"){
-				if (node.alt && isEmoji(node.alt)){
-					resp += escapeHtml(node.alt);
+					const resolvedSvg = cloneSvgWithResolvedUse(node);
+					resolvedSvg.style = "";
+					result += resolvedSvg.outerHTML;
+				} else if (node.childNodes.length) {
+					Array.from(node.childNodes).forEach(processNode);
+				} else if (!settings.textonlymode){
+					result += node.outerHTML;
 				}
 			}
-		});
-		return resp;
+		}
+
+		function processEmote(emoteNode) {
+			if (settings.textonlymode){
+				if (emoteNode.alt){
+					result += escapeHtml(emoteNode.alt);
+				}
+				return;
+			}
+			const isZeroWidth = emoteNode.classList.contains("zero-width-emote") || 
+								emoteNode.classList.contains("zero-width-emote-centered");
+								
+			if (isZeroWidth && pendingRegularEmote) {
+				result += `<span class="emote-container">${pendingRegularEmote}${emoteNode.outerHTML}</span>`;
+				pendingRegularEmote = null;
+				if (pendingSpace){
+					result += pendingSpace;
+					pendingSpace = null;
+				}
+			} else if (!isZeroWidth) {
+				if (pendingRegularEmote) {
+					result += pendingRegularEmote;
+					pendingRegularEmote = null;
+				}
+				if (pendingSpace){
+					result += pendingSpace;
+					pendingSpace = null;
+				}
+				
+				let newImgAttributes = 'class="regular-emote"';
+				if (emoteNode.src) {
+					newImgAttributes += ` src="${emoteNode.src.replace('/1.0', '/2.0')}"`;
+				}
+				if (emoteNode.srcset) {
+					let newSrcset = emoteNode.srcset.replace(/^[^,]+,\s*/, ''); // remove first low-res srcset.
+					if (newSrcset) {
+						newImgAttributes += ` srcset="${newSrcset}"`;
+					}
+				}
+				
+				pendingRegularEmote = `<img ${newImgAttributes}>`;
+			} else {
+				if (pendingSpace){
+					result += pendingSpace;
+					pendingSpace = null;
+				}
+				emoteNode.classList.add("regular-emote");
+				result += emoteNode.outerHTML;
+			}
+		}
+
+		processNode(element);
+
+		if (pendingRegularEmote) {
+			result += pendingRegularEmote;
+		}
+		if (pendingSpace){
+			result += pendingSpace;
+		}
+
+		return result;
 	}
 
 	var lastMessage = "";
@@ -212,6 +269,10 @@
 
 	function processMessage(ele, event=false) {
 		// twitch
+		
+		if (ele.classList.contains("chat-line__unpublished-message-body") || ele.querySelector(".chat-line__unpublished-message-body")){
+			return;
+		}
 
 		var chatsticker = false;
 		var chatmessage = "";
@@ -549,44 +610,7 @@
 			//
 		}
 	}
-
-	function replaceEmotesWithImages2(message, emotesMap, zw = false) {
-		const emotePattern = new RegExp(`(?<![\\w\\d!?.])(\\b${Object.keys(emotesMap).join("\\b|\\b")}\\b)(?!\\w|\\d|[!?.])`, "g");
-		return message.replace(emotePattern, match => {
-			const emote = emotesMap[match];
-			if (!zw || typeof emote === "string") {
-				return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
-			} else if (emote.url) {
-				return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" />`;
-			}
-		});
-	}
-
-	function replaceEmotesWithImages(text) {
-		if (BTTV) {
-			if (settings.bttv) {
-				try {
-					if (BTTV.channelEmotes) {
-						text = replaceEmotesWithImages2(text, BTTV.channelEmotes, false);
-					}
-					if (BTTV.sharedEmotes) {
-						text = replaceEmotesWithImages2(text, BTTV.sharedEmotes, false);
-					}
-				} catch (e) {}
-			}
-		}
-		if (SEVENTV) {
-			if (settings.seventv) {
-				try {
-					if (SEVENTV.channelEmotes) {
-						text = replaceEmotesWithImages2(text, SEVENTV.channelEmotes, true);
-					}
-				} catch (e) {}
-			}
-		}
-		return text;
-	}
-
+	
 	var settings = {};
 	var BTTV = false;
 	var SEVENTV = false;
@@ -627,12 +651,14 @@
 						SEVENTV = request.SEVENTV;
 						//console.log(SEVENTV);
 						sendResponse(true);
+						mergeEmotes();
 						return;
 					}
 					if ("BTTV" in request) {
 						BTTV = request.BTTV;
 						//console.log(BTTV);
 						sendResponse(true);
+						mergeEmotes();
 						return;
 					}
 				}
@@ -668,6 +694,66 @@
 				}
 			}
 		);
+	}
+	
+	function deepMerge(target, source) {
+	  for (let key in source) {
+		if (source.hasOwnProperty(key)) {
+		  if (typeof source[key] === 'object' && source[key] !== null) {
+			target[key] = target[key] || {};
+			deepMerge(target[key], source[key]);
+		  } else {
+			target[key] = source[key];
+		  }
+		}
+	  }
+	  return target;
+	}
+	
+	var EMOTELIST = false;
+	function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
+		
+		EMOTELIST = {};
+		
+		if (BTTV) {
+			//console.log(BTTV);
+			if (settings.bttv) {
+				try {
+					if (BTTV.channelEmotes) {
+						EMOTELIST = BTTV.channelEmotes;
+					}
+					if (BTTV.sharedEmotes) {
+						EMOTELIST = deepMerge(BTTV.sharedEmotes, EMOTELIST);
+					}
+					if (BTTV.globalEmotes) {
+						EMOTELIST = deepMerge(BTTV.globalEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+			}
+		}
+		if (SEVENTV) {
+			//console.log(SEVENTV);
+			if (settings.seventv) {
+				try {
+					if (SEVENTV.channelEmotes) {
+						EMOTELIST = deepMerge(SEVENTV.channelEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+				try {
+					if (SEVENTV.globalEmotes) {
+						EMOTELIST = deepMerge(SEVENTV.globalEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+			}
+		}
+		
+		// for testing.
+ 		//EMOTELIST = deepMerge({
+		//	 "ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true},
+		//	 "oEDM": {url:"https://cdn.7tv.app/emote/62127910041f77b2480365f4/2x.webp","zw":true},
+		//	 "widepeepoHappy": "https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp"
+		// }, EMOTELIST);
+		//console.log(EMOTELIST);
 	}
 
 	function processEvent(ele) {
@@ -862,7 +948,7 @@
 						document.querySelector(".consent-banner").remove();
 					}
 				}
-			}, 4500);
+			}, 3000);
 		}
 
 		if (document.querySelector('[data-a-target="consent-banner-accept"]')) {

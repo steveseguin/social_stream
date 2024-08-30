@@ -480,6 +480,14 @@ function loadSelfCommands(){
 		ajax({"action":"feature","value":"true", "apiid":WID});  // true, false, or "toggle"
 	};
 	target_self.appendChild(button);
+	
+	var button = document.createElement("button");
+	button.innerHTML = "Feature next pinned msg";
+	button.input = input;
+	button.onclick = function(){
+		ajax({"action":"nextPinned","value":"true", "apiid":WID});  // true, false, or "toggle"
+	};
+	target_self.appendChild(button);
 	////////
 	
 	var br = document.createElement("br");

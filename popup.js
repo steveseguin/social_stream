@@ -1,15 +1,93 @@
 var isExtensionOn = false;
+var ssapp = false;
+var usernames = [];
+
+function log(msg,a,b){
+	console.log(msg,a,b);
+}
 
 if (typeof(chrome.runtime)=='undefined'){
-	
-	var { ipcRenderer, contextBridge } = require('electron');
-	
-	console.log("pop up started");
 	
 	chrome = {};
 	chrome.browserAction = {};
 	chrome.browserAction.setIcon = function(icon){}
 	chrome.runtime = {}
+	chrome.runtime.id = 1;
+	
+	log("pop up started");
+	
+	if (typeof require !== "undefined"){
+		var { ipcRenderer, contextBridge } = require("electron");
+		
+		ssapp = true;
+		
+		try {
+			window.showOpenFilePicker = async function (a = null, c = null) {
+				var importFile = await ipcRenderer.sendSync("showOpenDialog", "");
+				return importFile;
+			}; 
+		} catch(e){}
+	
+	} else {
+		var ipcRenderer = {};
+		ipcRenderer.sendSync = function(){};
+		ipcRenderer.invoke = function(){};
+		ipcRenderer.on = function(){};
+		console.warn("This isn't a functional mode; not yet at least.");
+	}
+	
+	
+	try {
+		
+		var onMessageCallback = function (a, b, c) {};
+
+		chrome.runtime.onMessage = {};
+		chrome.runtime.onMessage.addListener = function (callback) {
+			onMessageCallback = callback;
+		};
+
+		ipcRenderer.on("fromMain", (event, ...args) => {
+			log("FROM MAIN", args);
+			
+			var sender = {};
+			sender.tab = {};
+			sender.tab.id = null;
+
+			if (args[0] && args[0].forPopup) {
+				log("for pop up");
+				onMessageCallback(args[0], sender, function (response) {
+					if (event.returnValue) {
+						event.returnValue = response;
+					}
+					ipcRenderer.send("fromMainResponse", response);
+				});
+			} else {
+				log("some returned promise probably");
+				update(args[0], false);
+			}
+		});
+		
+		ipcRenderer.on("fromBackground", (event, ...args) => {
+			log("FROM BACKGROUND", args);
+
+			var sender = {};
+			sender.tab = {};
+			sender.tab.id = null;
+
+			if (args[0]) {
+				onMessageCallback(args[0], sender, function (response) {
+					if (event.returnValue) {
+						event.returnValue = response;
+					}
+					ipcRenderer.send("fromBackgroundResponse", response);
+				});
+			}
+		});
+		
+		
+	} catch(e){
+		console.error(e);
+	}
 	
 	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
 		let response = await ipcRenderer.sendSync('fromPopup',data);
@@ -21,27 +99,18 @@ if (typeof(chrome.runtime)=='undefined'){
 		return false; // I'll need to add version info eventually
 	}
 	
-	ipcRenderer.on('fromMain', (event, ...args) => {
-		
-		try {
-			update(args[0], false); // do not re-sync with ourself
-		} catch(e){
-		}
+	new Promise((resolve, reject) => {
+	   try {
+		  `+text+`
+	   } catch(err) {
+		   try {
+		  throw { name: err.name, message: err.message, stack: err.stack }
+		   } catch(e){}
+	   }
 	})
 	
-	/* ipcRenderer.on('fromBackground', (event, ...args) => {
-		console.log("FROM BACKGROUND");
-		console.log(args[0]);
-	}) */
-	
-	/* window.addEventListener("message", function(event) {
-		console.log(event.origin);
-		var messageData = event.data;
-		console.log("Received a message from the parent window:", messageData);
-	}); */
 	
 }
-
 
 var translation = {};
 
@@ -257,7 +326,11 @@ function createUniqueVoiceIdentifiers(voices) {
 }
 
 document.addEventListener("DOMContentLoaded", async function(event) {
-	document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
+	if (ssapp){
+		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
+	} else {
+		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
+	}
 	//document.body.className = "extension-disabled";
 	document.getElementById("disableButton").style.display = "";
 	//chrome.browserAction.setIcon({path: "/icons/off.png"});
@@ -271,6 +344,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return false;
 	};
 	
+	try {
+		document.getElementById('usernameList').addEventListener('click', (e) => {
+			if (e.target.classList.contains('remove-username')) {
+				removeUsername(e.target.dataset.username);
+			}
+		});
+
+		document.getElementById('addUsername').addEventListener('click', () => {
+			const newUsernameInput = document.getElementById('newUsername');
+			const newUsername = newUsernameInput.value.trim();
+			if (newUsername) {
+				addUsername(newUsername);
+				newUsernameInput.value = '';
+			}
+		});
+	} catch(e){
+		console.error(e);
+	}
+
 	populateFontDropdown();
 	
 	// populate language drop down
@@ -372,8 +464,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				});
 			}
 		});
-
-	}
+	}	
+	
 	
 	document.getElementById('searchIcon').addEventListener('click', function() {
 		var searchInput = document.getElementById('searchInput');
@@ -387,6 +479,79 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	});
 	
+	var activeToggle = false;
+	document.getElementById('activeIcon').addEventListener('click', function() {
+		activeToggle = !activeToggle;
+		if (activeToggle) {
+			// Open all collapsible sections
+			document.querySelectorAll('input.collapsible-input').forEach(ele => {
+				ele.checked = true;
+			});
+			
+			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
+				item.style.display = 'none';
+			});
+
+			document.querySelectorAll('.wrapper').forEach(w => {
+				var menuItems = w.querySelectorAll('.options_group > div');
+				var matches = 0;
+				menuItems.forEach(function(item) {
+					var checkbox = item.querySelector('input[type="checkbox"]');
+					var textInput = item.querySelector('input[type="text"], input[type="password"], input[type="number"]');
+					
+					var isActive = false;
+
+					if (checkbox && checkbox.checked) {
+						isActive = true;
+					} else if (textInput) {
+						var associatedToggle = item.querySelector('input[type="checkbox"]');
+						if (associatedToggle && associatedToggle.checked && textInput.value.trim() !== '') {
+							isActive = true;
+						} else if (!associatedToggle && textInput.value.trim() !== '') {
+							isActive = true;
+						}
+					}
+
+					if (isActive) {
+						matches += 1;
+						item.style.display = '';
+					} else {
+						item.style.display = 'none';
+					}
+				});
+				
+				if (!matches) {
+					w.style.display = "none";
+				} else {
+					w.style.display = "";
+				}
+			});
+		} else {
+			
+			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
+				item.style.display = '';
+			});
+			// Reset to original state
+			document.querySelectorAll('input.collapsible-input').forEach(ele => {
+				ele.checked = false;
+			});
+			document.querySelectorAll('.wrapper').forEach(ele => {
+				ele.style.display = "";
+			});
+			document.querySelectorAll('.options_group > div').forEach(ele => {
+				ele.style.display = "";
+			});
+		}
+	});
+	
+	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
+	const ragFileManagement = document.getElementById('ragFileManagement');
+	const uploadButton = document.querySelector('[data-action="uploadRAGfile"]');
+
+	ragEnabledCheckbox.addEventListener('change', function() {
+		ragFileManagement.style.display = this.checked ? 'block' : 'none';
+	});
+
 	console.log("pop up asking main for settings");
 	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
 		console.log("getSettings response",response);
@@ -402,9 +567,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	});
 
-	//chrome.runtime.sendMessage({cmd: "getOnOffState"}, function (response) { //  getSettings will include the state and everything
-	//	update(response);
-	//});
 	
 	for (var i=1;i<=20;i++){
 		var chat = document.createElement("div");
@@ -487,7 +649,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		iii[i].onchange = updateSettings;
 	}
 
-	var iii = document.querySelectorAll("input[type='text']");
+	var iii = document.querySelectorAll("input[type='text'],textarea");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
@@ -521,9 +683,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			msg.cmd = this.dataset.action;
 			msg.ctrl = e.ctrlKey || false;
 			
+			if (this.dataset.target){
+				msg.target = this.dataset.target;
+			}
+			
 			msg.value = this.dataset.value || null;
 			if (msg.cmd == "fakemsg"){
-				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
+				chrome.runtime.sendMessage(msg, function (response) {
+					// actions have callbacks? maybe
+				});
+			} else if (msg.cmd == "uploadRAGfile"){
+				chrome.runtime.sendMessage({cmd: "uploadRAGfile", enhancedProcessing: document.getElementById('enhancedProcessing').checked}, function (response) {
 				});
 			} else if (msg.cmd == "bigwipe"){
 				var confirmit = confirm("Are you sure you want to reset all your settings?");
@@ -575,12 +745,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	};
 
 	checkVersion();
+	
 });
 var streamID = false;
 function update(response, sync=true){
 	console.log("update-> response: ",response);
 	if (response !== undefined){
 		
+		if (response.documents){
+			updateDocumentList(response.documents);
+		}
 		
 		if (response.streamID){
 			streamID = true;
@@ -622,7 +796,8 @@ function update(response, sync=true){
 			document.getElementById("battle").innerHTML = "<a target='_blank' id='battlelink' href='"+baseURL+"battle.html?session="+response.streamID+password+"'>"+baseURL+"battle.html?session="+response.streamID+password+"</a>";
 			document.getElementById("battle").raw = baseURL+"battle.html?session="+response.streamID+password;
 			
-
+			document.getElementById("chatbotlink").outerHTML = "<a target='_blank' style='color:lightblue;' id='chatbotlink' href='"+baseURL+"chatbot.html?session="+response.streamID+password+"'>[LINK TO CHAT BOT]</a>";
+			
 			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
 		
 			
@@ -726,6 +901,13 @@ function update(response, sync=true){
 									updateSettings(ele, sync);
 								}
 							}
+							if ("param8" in response.settings[key]){
+								var ele = document.querySelector("input[data-param8='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param8;
+									updateSettings(ele, sync);
+								}
+							}
 							if ("both" in response.settings[key]){
 								var ele = document.querySelector("input[data-both='"+key+"']");
 								if (ele){
@@ -749,10 +931,12 @@ function update(response, sync=true){
 										}
 										chrome.runtime.sendMessage({cmd: "saveSetting", type: "setting", setting: "sentiment", "value": false}, function (response) {}); // delete sentiment
 									} catch(e){console.error(e);}
+								} else if (key == "ollamaRagEnabled"){
+									document.getElementById('ragFileManagement').style.display = 'block';
 								}
 							}
 							if ("textsetting" in response.settings[key]){
-								var ele = document.querySelector("input[data-textsetting='"+key+"']");
+								var ele = document.querySelector("input[data-textsetting='"+key+"'],textarea[data-textsetting='"+key+"']");
 								if (ele){
 									ele.value = response.settings[key].textsetting;
 									
@@ -765,7 +949,14 @@ function update(response, sync=true){
 									}
 									
 									updateSettings(ele, sync);
+									
+									if (key == "blacklistusers"){
+										console.log(ele.value);
+										usernames = ele.value.split(',').map(u => u.trim()).filter(u => u);
+										updateUsernameList();
+									}
 								}
+								
 							}
 							if ("optionsetting" in response.settings[key]){
 								var ele = document.querySelector("select[data-optionsetting='"+key+"']");
@@ -875,7 +1066,7 @@ function update(response, sync=true){
 								ele.checked = response.settings[key];
 								updateSettings(ele, sync);
 							}
-							var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"']");
+							var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"'], textarea[data-textsetting='"+key+"']");
 							if (ele){
 								ele.value = response.settings[key];
 								updateSettings(ele, sync);
@@ -896,12 +1087,20 @@ function update(response, sync=true){
 			isExtensionOn = response.state;
 			if (isExtensionOn){
 				document.body.className = "extension-enabled";
-				document.getElementById("disableButtonText").innerHTML = "⚡ Extension active";
+				if (ssapp){
+					document.getElementById("disableButtonText").innerHTML = "⚡ Service Active";
+				} else {
+					document.getElementById("disableButtonText").innerHTML = "⚡ Extension active";
+				}
 				document.getElementById("disableButton").style.display = "";
 				document.getElementById("extensionState").checked = true;
 				chrome.browserAction.setIcon({path: "/icons/on.png"});
 			} else {
-				document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
+				if (ssapp){
+					document.getElementById("disableButtonText").innerHTML = "🔌 Service Disabled";
+				} else {
+					document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
+				}
 				document.body.className = "extension-disabled";
 				document.getElementById("disableButton").style.display = "";
 				chrome.browserAction.setIcon({path: "/icons/off.png"});
@@ -985,6 +1184,14 @@ function checkVersion(){
 var urlParams = new URLSearchParams(window.location.search);
 
 const devmode = urlParams.has("devmode");
+ssapp = urlParams.has("ssapp") || ssapp;
+
+if (ssapp){
+	const style = document.createElement('style');
+	style.textContent = '.ssapp { display: none !important; }';
+	style.id = 'hide-ssapp-style';
+	document.head.appendChild(style);
+} 
 	
 function updateURL(param, href) {
 
@@ -1020,6 +1227,11 @@ function updateSettings(ele, sync=true, value=null){
 	
 	if (ele.target){
 		ele = this;
+	}
+	
+	var target = null;
+	if (ele.dataset.target){
+		target = ele.dataset.target;
 	}
 	
 	if (ele.dataset.param1){
@@ -1102,7 +1314,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "param1", setting: ele.dataset.param1, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "param1", target:target, setting: ele.dataset.param1, "value": ele.checked}, function (response) {});
 		}
 
 	} else if (ele.dataset.textparam1){
@@ -1115,7 +1327,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1", setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1",  target:target, setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.textparam2){
 		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.textparam2);
@@ -1126,7 +1338,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam2", setting: ele.dataset.textparam2, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam2",  target:target, setting: ele.dataset.textparam2, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.textparam3){
 		document.getElementById("emoteswall").raw = removeQueryParamWithValue(document.getElementById("emoteswall").raw, ele.dataset.textparam3);
@@ -1137,7 +1349,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam3", setting: ele.dataset.textparam3, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam3",  target:target, setting: ele.dataset.textparam3, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.textparam4){
 		document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.textparam4);
@@ -1148,7 +1360,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam4", setting: ele.dataset.textparam4, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam4",  target:target, setting: ele.dataset.textparam4, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.textparam5){
 		document.getElementById("waitlist").raw = removeQueryParamWithValue(document.getElementById("waitlist").raw, ele.dataset.textparam5);
@@ -1159,7 +1371,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam5", setting: ele.dataset.textparam5, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam5",  target:target, setting: ele.dataset.textparam5, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.textparam6){
 		document.getElementById("ticker").raw = removeQueryParamWithValue(document.getElementById("ticker").raw, ele.dataset.textparam6);
@@ -1170,7 +1382,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("&&", "&");
 		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam6", setting: ele.dataset.textparam6, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam6",  target:target, setting: ele.dataset.textparam6, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam1){
 		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.optionparam1);
@@ -1186,7 +1398,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1", setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1",  target:target, setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam2){
 		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.optionparam2);
@@ -1202,7 +1414,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2", setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2",  target:target, setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
 		}
 	///
 	} else if (ele.dataset.optionparam3){
@@ -1214,7 +1426,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam3", setting: ele.dataset.optionparam3, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam3",  target:target, setting: ele.dataset.optionparam3, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam4){
 		document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.optionparam4);
@@ -1226,7 +1438,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4",  target:target, setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam5){
 		document.getElementById("waitlist").raw = removeQueryParamWithValue(document.getElementById("waitlist").raw, ele.dataset.optionparam5);
@@ -1238,7 +1450,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam5", setting: ele.dataset.optionparam5, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam5",  target:target, setting: ele.dataset.optionparam5, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam6){
 		document.getElementById("ticker").raw = removeQueryParamWithValue(document.getElementById("ticker").raw, ele.dataset.optionparam6);
@@ -1250,7 +1462,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("&&", "&");
 		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam6", setting: ele.dataset.optionparam6, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam6", target:target,  setting: ele.dataset.optionparam6, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.param2){
 		if (ele.checked){
@@ -1271,7 +1483,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param2", setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param2",  target:target, setting: ele.dataset.param2, "value": ele.checked}, function (response) {});
 		}
 		
 		document.querySelectorAll("input[data-param2^='"+ele.dataset.param2.split("=")[0]+"']:not([data-param2='"+ele.dataset.param2+"'])").forEach(ele1=>{
@@ -1291,7 +1503,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
 		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param3", setting: ele.dataset.param3, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param3",  target:target, setting: ele.dataset.param3, "value": ele.checked}, function (response) {});
 		}
 		
 		document.querySelectorAll("input[data-param3^='"+ele.dataset.param3.split("=")[0]+"']:not([data-param3='"+ele.dataset.param3+"'])").forEach(ele1=>{
@@ -1311,10 +1523,30 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param4", setting: ele.dataset.param4, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param4",  target:target, setting: ele.dataset.param4, "value": ele.checked}, function (response) {});
 		}
 		
 		document.querySelectorAll("input[data-param4^='"+ele.dataset.param4.split("=")[0]+"']:not([data-param4='"+ele.dataset.param4+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
+		
+	} else if (ele.dataset.param8){
+		if (ele.checked){
+			document.getElementById("battle").raw = updateURL(ele.dataset.param8, document.getElementById("battle").raw);
+		} else {
+			//document.getElementById("battle").raw = document.getElementById("battle").raw.replace(ele.dataset.param8, "");
+			document.getElementById("battle").raw = removeQueryParamWithValue(document.getElementById("battle").raw, ele.dataset.param8);
+		}
+		document.getElementById("battle").raw = document.getElementById("battle").raw.replace("&&", "&");
+		document.getElementById("battle").raw = document.getElementById("battle").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param8",  target:target, setting: ele.dataset.param8, "value": ele.checked}, function (response) {});
+		}
+		
+		document.querySelectorAll("input[data-param8^='"+ele.dataset.param8.split("=")[0]+"']:not([data-param8='"+ele.dataset.param8+"'])").forEach(ele1=>{
 			if (ele1 && ele1.checked){
 				ele1.checked = false;
 				updateSettings(ele1, sync);
@@ -1333,7 +1565,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
 		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5", setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5",  target:target, setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
 		}
 		
 		
@@ -1388,7 +1620,7 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "both", setting: ele.dataset.both, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "both",  target:target, setting: ele.dataset.both, "value": ele.checked}, function (response) {});
 		}
 
 	} else if (ele.dataset.setting){
@@ -1401,7 +1633,6 @@ function updateSettings(ele, sync=true, value=null){
 				}
 			}
 		}
-		
 		
 		if (ele.dataset.setting == "drawmode"){
 			if (ele.checked){
@@ -1421,23 +1652,33 @@ function updateSettings(ele, sync=true, value=null){
 		}
 		
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting", setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting",  target:target, setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
 		}
 		return;
 	} else if (ele.dataset.optionsetting){
+		
+		if (ele.dataset.optionsetting == "pollType"){
+			if (ele.value == "multiple"){
+				document.getElementById("multipleChoiceOptions").classList.remove("hidden");
+			} else {
+				document.getElementById("multipleChoiceOptions").classList.add("hidden");
+			}
+		}
+		
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "optionsetting", setting: ele.dataset.optionsetting, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "optionsetting", target:target,  setting: ele.dataset.optionsetting, "value": ele.value}, function (response) {});
 		}
 		return;
 	} else if (ele.dataset.textsetting){
+		
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textsetting", target:target,  setting: ele.dataset.textsetting, "value": ele.value}, function (response) {});
 		}
 		return;
 	} else if (ele.dataset.numbersetting){ 
 		
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting", setting: ele.dataset.numbersetting, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting",  target:target, setting: ele.dataset.numbersetting, "value": ele.value}, function (response) {});
 		}
 		
 		if (document.querySelector("input[data-param1='"+ele.dataset.numbersetting+"']") && document.querySelector("input[data-param1='"+ele.dataset.numbersetting+"']").checked){
@@ -1449,7 +1690,7 @@ function updateSettings(ele, sync=true, value=null){
 	} else if (ele.dataset.numbersetting2){ 
 		
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting2", setting: ele.dataset.numbersetting2, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting2",  target:target, setting: ele.dataset.numbersetting2, "value": ele.value}, function (response) {});
 		}
 		
 		if (document.querySelector("input[data-param2='"+ele.dataset.numbersetting2+"']") && document.querySelector("input[data-param2='"+ele.dataset.numbersetting2+"']").checked){
@@ -1467,7 +1708,7 @@ function updateSettings(ele, sync=true, value=null){
 					streamID: ele.value
 				});
 			}
-			chrome.runtime.sendMessage({cmd: "sidUpdated", streamID: ele.value}, function (response) {console.log("streamID updated");});
+			chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, streamID: ele.value}, function (response) {console.log("streamID updated");});
 			
 		} else if (ele.dataset.special==="password"){
 			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
@@ -1475,7 +1716,7 @@ function updateSettings(ele, sync=true, value=null){
 					password: ele.value
 				});
 			}
-			chrome.runtime.sendMessage({cmd: "sidUpdated", password: ele.value || ""}, function (response) {console.log("Password updated");});
+			chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, password: ele.value || ""}, function (response) {console.log("Password updated");});
 		}
 	} else if (ele.dataset.color){
 		
@@ -1546,10 +1787,90 @@ if (!chrome.browserAction){
 }
 
 
+function updateDocumentList(documents = []) {
+    const fileList = document.getElementById('ragFileList');
+    fileList.innerHTML = '';
+
+    documents.forEach(doc => {
+        const docElement = document.createElement('div');
+        docElement.innerHTML = `
+            <span>${doc.title}</span>
+            <span>${doc.status}</span>
+            ${doc.progress !== undefined ? `<progress value="${doc.progress}" max="100"></progress>` : ''}
+            ${doc.status !== 'Deleting' && doc.status !== 'Uploading' ? 
+                `<button data-action="deleteDocument" data-id="${doc.id}" ${doc.status === 'Deleting' ? 'disabled' : ''}>Delete</button>` : 
+                ''
+            }
+        `;
+        fileList.appendChild(docElement);
+    });
+
+    // Add event listeners for delete buttons
+    document.querySelectorAll('[data-action="deleteDocument"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const docId = this.getAttribute('data-id');
+            chrome.runtime.sendMessage({cmd: "deleteRAGfile", docId: docId});
+        });
+    });
+}
+
+try {
+	chrome.runtime.onMessage.addListener(
+		function(request, sender, sendResponse) {
+			console.log("INCOMING MESSAGE--------------------------");
+			if (request.forPopup) {
+				console.log("Message received in popup:", request.forPopup);
+				if (request.forPopup.documents){
+					updateDocumentList(request.forPopup.documents);
+				}
+				
+				if (request.forPopup.alert){
+					alert(request.forPopup.alert);
+				}
+				// Handle the message data here
+				sendResponse({status: "Message received in popup"});
+			}
+		}
+	);
+} catch(e){
+	console.log(e);
+}
 
 
+function updateUsernameList(save=false) {
+	const usernameList = document.getElementById('usernameList');
+	usernameList.innerHTML = '';
+	usernames.forEach(username => {
+		const item = document.createElement('div');
+		item.className = 'username-item';
+		item.innerHTML = `
+			<span class="remove-username" data-username="${username}" title="Remove user from block-list">×</span>
+			<span>${username}</span>
+		`;
+		usernameList.appendChild(item);
+	});
+	var ele = document.querySelector("input[data-textsetting='blacklistusers'],textarea[data-textsetting='blacklistusers']");
+	if (ele){
+		ele.value = usernames.join(',');
+		console.log(ele.value);
+		
+		if (save){
+			updateSettings(ele);
+		}
+	}
+}
 
+function addUsername(username) {
+	if (username && !usernames.includes(username)) {
+		usernames.push(username);
+		updateUsernameList(true);
+	}
+}
 
+function removeUsername(username) {
+	usernames = usernames.filter(u => u !== username);
+	updateUsernameList(true);
+}
 
 
 

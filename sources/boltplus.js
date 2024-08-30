@@ -204,23 +204,21 @@
 	
 	
 	
-	function onElementInserted(containerSelector) {
-		var target = document.querySelector(containerSelector);
+	function onElementInserted(target) {
 		if (!target){return;}
-		
-		
+	
 		var onMutationsObserved = function(mutations) {
-			var ele = document.querySelectorAll(".chatbox-scrollbar > .MuiBox-root")[0];
-			
-			if (processMessage(ele.cloneNode(true))){
-				setTimeout(function(ee){
-					processMessage(ee)
-			}, 600, document.querySelectorAll(".chatbox-scrollbar > .MuiBox-root")[0]);
-			}
-			
+			mutations.forEach(function(mutation) {
+				if (mutation.addedNodes.length) {
+					var ele = document.querySelector(".MuiAvatar-root").parentNode.parentNode.parentNode.childNodes[0];
+					setTimeout(function(ele){
+						processMessage(ele);
+					}, 600, ele)
+				}
+			})
 		};
 		
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -231,22 +229,22 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector(".chatbox-scrollbar")){
-			if (!document.querySelector(".chatbox-scrollbar").marked){
-				document.querySelector(".chatbox-scrollbar").marked=true;
+		if (document.querySelector(".MuiAvatar-root").parentNode.parentNode.parentNode){
+			if (!document.querySelector(".MuiAvatar-root").parentNode.parentNode.parentNode.marked){
+				document.querySelector(".MuiAvatar-root").parentNode.parentNode.parentNode.marked=true;
 
 				console.log("CONNECTED chat detected");
 
 				setTimeout(function(){
 					
-					onElementInserted('.chatbox-scrollbar');
+					onElementInserted(document.querySelector(".MuiAvatar-root").parentNode.parentNode.parentNode);
 
 				},1000);
 
 
 			}
 		}} catch(e){
-			console.error(e);
+			//console.error(e);
 		}
 	},2000);
 

@@ -241,6 +241,7 @@
 				if (mutation.addedNodes.length) {
 					try {
 						for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+							//console.log(mutation.addedNodes[i]);
 							if (mutation.addedNodes[i].tagName && (mutation.addedNodes[i].tagName == "DIV")){
 								setTimeout(function(ele){
 									processMessage(ele);
@@ -340,19 +341,38 @@
 	setInterval(function(){
 		try {
 			if (pattern.test(window.location.href) || pattern2.test(window.location.href)){
-				var container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);
-				if (!container.marked){
-					container.marked=true;
-					setTimeout(function(container){
-						console.log("Social Stream started");
-						if (container){
-							onElementInserted(container);
-						}
+				//console.log("pattern");
+				if (document.querySelector('[data-testid="chatContainer"]')){
+					//console.log("found it");
+					var container = document.querySelector('[data-testid="chatContainer"]');
+					if (!container.marked){
+						container.marked=true;
+						setTimeout(function(container){
+							console.log("Social Stream started");
+							if (container){
+								onElementInserted(container);
+							}
 
-					},1000, container);
+						},1000, container);
+					}
+				} else {
+					var container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);
+					if (!container.marked){
+						container.marked=true;
+						setTimeout(function(container){
+							console.log("Social Stream started");
+							if (container){
+								onElementInserted(container);
+							}
+
+						},1000, container);
+					}
 				}
+			} else {
+				//console.log("no pat");
 			}
 		} catch(e){
+			//console.warn(e);
 		}
 	},2000);
 

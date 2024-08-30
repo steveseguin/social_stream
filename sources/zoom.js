@@ -235,6 +235,8 @@
 
 	function pushMessage(data){
 		try{
+			//console.log(data);
+			//console.log(window.self !== window.top);
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
 		} catch(e){}
 	}
@@ -254,7 +256,23 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector("textarea.chat-box__chat-textarea.window-content-bottom").focus();
+					//console.log("Focusing");
+					var sent=false;
+					//console.log(window.self !== window.top);
+					document.querySelectorAll('iframe').forEach( item =>{
+						if (sent){return;}
+						if (item && item.contentWindow && item.contentWindow.document && item.contentWindow.document.body.querySelector("textarea.chat-box__chat-textarea.window-content-bottom, .chat-rtf-box__chat-textarea-wrapper div[contenteditable='true']")){
+							sent = true;
+							//console.log("iframe sent")
+							item.contentWindow.document.body.querySelector("textarea.chat-box__chat-textarea.window-content-bottom, .chat-rtf-box__chat-textarea-wrapper div[contenteditable='true']").focus();
+						}
+					});
+					if (!sent && document.querySelector("textarea.chat-box__chat-textarea.window-content-bottom, .chat-rtf-box__chat-textarea-wrapper div[contenteditable='true']")){
+						document.querySelector("textarea.chat-box__chat-textarea.window-content-bottom, .chat-rtf-box__chat-textarea-wrapper div[contenteditable='true']").focus();
+						//console.log("main sent")
+						sent=true;
+					}
+					//console.log("sent: "+sent);
 					sendResponse(true);
 					return;
 				}
@@ -390,14 +408,42 @@
 			data.event = "reaction";
 			data.type = "zoom";
 			data.textonlymode = false;
-			console.log(data);
+			//console.log(data);
 			pushMessage(data);
 			
 		});
+		
+		document.querySelectorAll('iframe').forEach( item =>{
+			if (item && item.contentWindow && item.contentWindow.document && item.contentWindow.document.body){
+				item.contentWindow.document.body.querySelectorAll('[class^="animation-reactions/"]:not([data-skip])').forEach(reaction=>{
+					reaction.dataset.skip = true;
+					
+					var data = {};
+					data.chatname = "";
+					data.chatmessage = reaction.querySelector("svg,img").outerHTML;
+					if (!data.chatmessage){return;}
+					data.event = "reaction";
+					data.type = "zoom";
+					data.textonlymode = false;
+					//console.log(data);
+					pushMessage(data);
+				});
+				
+				if (item.contentWindow.document.body.querySelector("#q-a-container-window")){
+					item.contentWindow.document.body.querySelectorAll("#q-a-container-window .q-a-question").forEach(ele=>{
+						if (ele.ignore){return;}
+						ele.ignore = true;
+						processQuestion(ele);
+						
+					});
+				}
+			}
+		});
+		
 
 		if (document.getElementById('chat-list-content')) {
 		    // prevent chat box from stop scrolling, which makes messages stop appearing
-        document.getElementById('chat-list-content').scrollTop = document.getElementById('chat-list-content').scrollTop + 1000
+			document.getElementById('chat-list-content').scrollTop = document.getElementById('chat-list-content').scrollTop + 1000
 		}
 
 		if (document.querySelector('[aria-label="open the chat pane"]')) { // prevent chat box from being closed after screen-share by keeping it always open
@@ -412,6 +458,9 @@
 				
 			});
 		}
+		
+		
+		
 		
 	},1000);
 })();

@@ -39,6 +39,10 @@
         font-size: 36px;
         font-weight: bold;
     }
+	.hidden {
+		opacity:0!important;
+		display:none!important;
+	}
 </style>
 </head>
 <body>
@@ -134,10 +138,100 @@ if (urlParams.has("password")){
 	password = urlParams.get("password") || "false";
 }
 
-function processData(data) {
-    if (data && data.chatmessage && data.chatname) {
-        if (gameOver) return;
 
+var addComputers = true;
+if (urlParams.has("nocomputers")){
+	addComputers = false;
+}
+
+var lobbyTimeInit = 10;
+if (urlParams.has("lobbytime")) {
+	lobbyTimeInit = parseInt(urlParams.get("lobbytime"));
+}
+
+let hostControlled = urlParams.has("lobby");
+let lobbyDuration = lobbyTimeInit // Default lobby duration in seconds
+let lobbyTimer = null;
+let isFirstGame = true;
+let topPlayers = null;
+
+function drawLobby() {
+    
+    // Draw grass background
+    ctx.fillStyle = grassPattern;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add semi-transparent overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Calculate font sizes based on canvas width
+    const titleFontSize = Math.max(24, Math.floor(canvas.width / 20));
+    const textFontSize = Math.max(16, Math.floor(canvas.width / 40));
+	const textFontSizeSmall = Math.max(12, Math.floor(canvas.width / 60));
+    
+    // Set up text styles
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Draw title
+    ctx.font = `bold ${titleFontSize}px Arial`;
+    ctx.fillText('Waiting for players', canvas.width / 2, canvas.height * 0.3);
+    
+    // Draw player count
+    ctx.font = `${textFontSizeSmall}px Arial`;
+    ctx.fillText(`Players in lobby: ${players.size}`, canvas.width / 2, canvas.height * 0.5);
+    
+    // Draw instructions
+	ctx.font = `${textFontSize}px Arial`; 
+    ctx.fillText('Type !join to enter the game', canvas.width / 2, canvas.height * 0.6);
+    
+    // Draw countdown if not host controlled
+    if (!hostControlled) {
+		ctx.font = `${textFontSizeSmall}px Arial`; 
+        ctx.fillText(`Game starts in ${lobbyDuration} seconds`, canvas.width / 2, canvas.height * 0.7);
+    }
+}
+function enterLobby() {
+    gameOver = true;
+	players.clear();
+	document.getElementById("ui-overlay").classList.add("hidden");
+	players.clear();
+    updatePlayerCount();
+	if (!hostControlled) {
+		startLobbyCountdown();
+	} else {
+		drawLobby();
+	}
+}						
+function startLobbyCountdown() {
+	lobbyDuration = lobbyTimeInit;
+
+	if (lobbyDuration <= 0) {
+		startGame();
+		return;
+	}
+	
+	if (isFirstGame && !urlParams.has("lobbytime")){
+		lobbyDuration+=5;
+	}
+	
+	drawLobby();
+	
+	clearInterval(lobbyTimer);
+    lobbyTimer = setInterval(() => {
+        lobbyDuration--;
+        if (lobbyDuration <= 0) {
+            clearInterval(lobbyTimer);
+            startGame();
+        } else {
+            drawLobby();
+        }
+    }, 1000);
+}
+function processData(data) {
+	if (data && data.chatmessage && data.chatname) {
         if (data.chatmessage.toLowerCase().startsWith("!join")) {
             if (!players.get(data.chatname)) {
                 const parts = data.chatmessage.toLowerCase().split(" ");
@@ -174,6 +268,7 @@ function processData(data) {
                 }
 
                 addPlayer(data.chatname, data.chatimg, data.type, data.nameColor, weaponType);
+				
             }
         } else if (data.chatmessage.startsWith("!say ")) {
             if (players.get(data.chatname)) {
@@ -184,7 +279,10 @@ function processData(data) {
 }
 
 function processInput(data){
-	if ("mid" in data){
+	if (data.startgame && hostControlled) {
+        startGame();
+        return;
+    } else if ("mid" in data){
 		return;
 	} else if ("pin" in data){
 		return;
@@ -233,7 +331,7 @@ eventer(messageEvent, function (e) {
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 
-let timeLeft = 100;
+let timeLeft = 20;
 
 const timerElement = document.getElementById('timer');
 timerElement.textContent = timeLeft;
@@ -258,7 +356,10 @@ const powerUps = [];
 const obstacles = [];
 
 let countdownTimer = null;
-let countdownSeconds = 15;
+let countdownSeconds = 0;
+var killed = {};
+let gameOver = false;
+let scoreboardData = null;
 
 function spawnPowerUps() {
     if (Math.random() < 0.005 && powerUps.length < 5) {
@@ -734,7 +835,6 @@ class Player {
     }
 }
 
-var killed = {};
 
 function initiateCombat(player1, player2) {
     player1.inCombat = true;
@@ -850,6 +950,9 @@ function addPlayer(name, avatarUrl, type, nameColor, weaponType) {
 }
 
 function updatePlayerCount() {
+	if (gameOver && (countdownSeconds<=0)) {
+		drawLobby();
+	}
     playerCountElement.textContent = `Players: ${players.size}`;
 }
 
@@ -882,8 +985,7 @@ function checkCombat() {
     }
 }
 
-let gameOver = false;
-let scoreboardData = null;
+
 
 function update() {
     if (!gameOver) {
@@ -945,10 +1047,7 @@ function draw() {
     arrows.forEach(arrow => {
         ctx.fillRect(arrow.x * TILE_SIZE, arrow.y * TILE_SIZE, 2, 2);
     });
-    
-    if (gameOver) {
-        drawScoreboardModal(scoreboardData);
-    }
+ 
 }
 
 function getPowerUpColor(type) {
@@ -974,14 +1073,17 @@ function updateCountdown() {
     countdownSeconds--;
     if (countdownSeconds <= 0) {
         clearInterval(countdownTimer);
-        restartGame();
-    }
+		enterLobby();
+    } else {
+		displayScoreboard();
+	}
 }
 
 function endGame() {
-    gameOver = true;
-	console.log(killed);
-    const sortedPlayers = Array.from(players.values())
+	console.warn("endGame");
+	gameOver = true;
+	
+	const sortedPlayers = Array.from(players.values())
         .filter(player => player.isAlive)
         .sort((a, b) => {
             if (b.kills !== a.kills) {
@@ -990,25 +1092,29 @@ function endGame() {
             return a.joinTime - b.joinTime;
         });
 
-    scoreboardData = sortedPlayers.slice(0, 3);
+    topPlayers = sortedPlayers.slice(0, 3);
+	
     countdownSeconds = 15;
-    countdownTimer = setInterval(updateCountdown, 1000);
+	document.getElementById("ui-overlay").classList.add("hidden");
+	displayScoreboard();
+	clearInterval(countdownTimer);
+    countdownTimer = setInterval(updateCountdown, 1000); 
 }
 
-function restartGame() {
+function startGame() {
     // Reset game state
-    gameOver = false;
-    players.clear();
+	console.warn("StartGame");
 	updatePlayerCount();
     timeLeft = 60; // first match 100s; more matches 60s
-    // Reset any other necessary game state variables
-    
-    // Restart the game loop
-    //gameLoop();
-    //simulateWebSocket();
+	gameOver = false;
+	document.getElementById("ui-overlay").classList.remove("hidden");
 }
-function displayScoreboard() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+
+function displayScoreboard() { 
+
+	draw();
+	
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.fillStyle = '#fff';
@@ -1016,29 +1122,10 @@ function displayScoreboard() {
     ctx.textAlign = 'center';
     ctx.fillText('Game Over', canvas.width / 2, 100);
 
-    const sortedPlayers = Array.from(players.values())
-        .filter(player => player.isAlive)
-        .sort((a, b) => {
-            if (b.kills !== a.kills) {
-                return b.kills - a.kills;
-            }
-            return a.joinTime - b.joinTime;
-        });
-
-    const topPlayers = sortedPlayers.slice(0, 3);
-
-    drawScoreboardModal(topPlayers);
-}
-
-function drawScoreboardModal(topPlayers) {
     const modalWidth = 300;
     const modalHeight = 420;
     const modalX = (canvas.width - modalWidth) / 2;
     const modalY = (canvas.height - modalHeight) / 2;
-
-    // Draw semi-transparent background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw modal background
     ctx.fillStyle = '#333';
@@ -1056,41 +1143,48 @@ function drawScoreboardModal(topPlayers) {
     ctx.fillText('Top Survivors', canvas.width / 2, modalY + 40);
 
     // Draw player information
-    topPlayers.forEach((player, index) => {
-        const yOffset = modalY + 100 + index * 100;
+	if (topPlayers){
+		topPlayers.forEach((player, index) => {
+			const yOffset = modalY + 100 + index * 100;
 
-        // Draw player avatar	
-		if (player.avatarLoaded && player.avatarImage) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(modalX + 20, yOffset, 60, 60);
-            ctx.clip();
-			
-            ctx.drawImage(player.avatarImage, modalX + 20, yOffset, 60, 60);
-            ctx.restore();
-        } else {
-            ctx.fillStyle = player.color;
-			ctx.fillRect(modalX + 20, yOffset, 60, 60);
-        }
+			// Draw player avatar	
+			if (player.avatarLoaded && player.avatarImage) {
+				ctx.save();
+				ctx.beginPath();
+				ctx.rect(modalX + 20, yOffset, 60, 60);
+				ctx.clip();
+				
+				ctx.drawImage(player.avatarImage, modalX + 20, yOffset, 60, 60);
+				ctx.restore();
+			} else {
+				ctx.fillStyle = player.color;
+				ctx.fillRect(modalX + 20, yOffset, 60, 60);
+			}
 
-        // Draw player name and kills
+			// Draw player name and kills
+			ctx.fillStyle = '#fff';
+			ctx.font = '18px Arial';
+			ctx.textAlign = 'left';
+			ctx.fillText(`${index + 1}. ${player.name}`, modalX + 90, yOffset + 25);
+			ctx.fillText(`Knock outs: ${player.kills}`, modalX + 90, yOffset + 50);
+
+			// Draw medal for top 3
+			const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+			if (index < 3) {
+				ctx.fillStyle = medalColors[index];
+				ctx.beginPath();
+				ctx.arc(modalX + 40, yOffset - 10, 15, 0, Math.PI * 2);
+				ctx.fill();
+			}
+		});
+	} else if (!topPlayers || topPlayers.length === 0) {
         ctx.fillStyle = '#fff';
-        ctx.font = '18px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(`${index + 1}. ${player.name}`, modalX + 90, yOffset + 25);
-        ctx.fillText(`Kills: ${player.kills}`, modalX + 90, yOffset + 50);
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('No survivors!', canvas.width / 2, modalY + 200);
+    }
 
-        // Draw medal for top 3
-        const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
-        if (index < 3) {
-            ctx.fillStyle = medalColors[index];
-            ctx.beginPath();
-            ctx.arc(modalX + 40, yOffset - 10, 15, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    });
-
-    // Draw countdown message
+    // Draw countdown message																	 
     if (countdownSeconds <= 10) {
         const alpha = (10 - countdownSeconds) / 5; // Fade in over 5 seconds
         ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
@@ -1098,32 +1192,27 @@ function drawScoreboardModal(topPlayers) {
         ctx.textAlign = 'center';
         ctx.fillText(`Game will restart in ${countdownSeconds}s`, canvas.width / 2, modalY + modalHeight - 10);
     }
-
-    // Draw "No survivors" message if there are no top players
-    if (topPlayers.length === 0) {
-        ctx.fillStyle = '#fff';
-        ctx.font = '24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('No survivors!', canvas.width / 2, modalY + 200);
-    }
 }
 
 function gameLoop() {
     if (!gameOver) {
         update();
-    }
-    draw();
-    requestAnimationFrame(gameLoop);
+		draw();
+	}
+	requestAnimationFrame(gameLoop);
 }
 function simulateWebSocket() {
+	console.warn("simulateWebSocket");
     setInterval(() => {
         if (gameOver) return;
 
         const randomCommand = Math.random();
         if (randomCommand < 0.2) {
 			if (players.size<5){
-				const name = `Computer${Math.floor(Math.random() * 10000)}`;
-				addPlayer(name);
+				if (addComputers){
+					const name = `Computer${Math.floor(Math.random() * 10000)}`;
+					addPlayer(name);
+				}
 			}
         } else if (randomCommand < 0.25) {
             // Simulate a chat message
@@ -1146,8 +1235,19 @@ function simulateWebSocket() {
             const playerArray = Array.from(players.values());
             if (playerArray.length > 0) {
                 const randomPlayer = playerArray[Math.floor(Math.random() * playerArray.length)];
-               const randomMessage = `Ooh! Pretty flowers!`;
-                handleChatMessage(randomPlayer.name, randomMessage);
+				if (!randomPlayer.isAlive){
+					const randomMessage = `BooOoo..`;
+					handleChatMessage(randomPlayer.name, randomMessage);
+				} else if (randomPlayer.health<20){
+					const randomMessage = `Red is my favourite color`;
+					handleChatMessage(randomPlayer.name, randomMessage);
+				} else if (randomPlayer.inCombat){
+					const randomMessage = `Just give up already`;
+					handleChatMessage(randomPlayer.name, randomMessage);
+				} else {
+					const randomMessage = `Ooh! Pretty flowers!`;
+					handleChatMessage(randomPlayer.name, randomMessage);
+				}
             }
         }
     }, 1500);
@@ -1160,9 +1260,25 @@ function handleChatMessage(playerName, message) {
     }
 }
 
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    // Redraw the current state (lobby or game)
+    if (gameOver && (countdownSeconds<=0)) {
+        drawLobby();
+	} else if (gameOver){
+		displayScoreboard();
+    } else {
+        draw();
+    }
+}
+
+window.addEventListener('resize', resizeCanvas);											
 // Start the game
+enterLobby();
 simulateWebSocket();
 gameLoop();
+
 setInterval(updateTimer, 1000);
 </script>
 </body>

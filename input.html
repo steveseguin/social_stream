@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta charset="UTF-8">
+    <title>Social Stream - Chat Input Bar</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #2F3136;
+			width:100%;
+        }
+
+        #chatInput_parent {
+            position: fixed;
+            bottom: 5px;
+            width: 100%;
+            max-width: calc(100% - 20px);
+            padding: 5px;
+            display: flex;
+            justify-content: center;
+            background-color: #6f6f6f;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+
+        #chatInput {
+            width: 100%;
+            max-width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        #chatInput:focus {
+            width: 100%;
+            border-color: #007BFF;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin-left: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #chatInput_parent.hidden {
+            display: none;
+        }
+		
+		.electronDraggable {
+			-webkit-app-region: drag;
+		}
+		
+		body > div {
+			-webkit-app-region: no-drag;
+		}
+		.hidden {
+			display:none;
+			opacity:hidden;
+			width:0;
+			height:0;
+		}
+    </style>
+</head>
+<body class="electronDraggable">
+
+	<div id="loading">Loading...</div>
+    <div id="chatInput_parent">
+        <input id="chatInput" type="text" placeholder="Send message..." />
+        <button id="chatInputButton">Send</button>
+    </div>
+
+    <script>
+        window.onerror = function (errorMsg, url, lineNumber) {
+            console.error(errorMsg, lineNumber);
+            return false;
+        };
+
+        function getById(id) {
+            return document.getElementById(id);
+        }
+
+        function sendMessage(event) {
+            event.preventDefault();
+            const input = getById("chatInput");
+            if (input.value) {
+                respondP2P(input.value);
+                input.value = "";
+            }
+        }
+
+        getById("chatInputButton").addEventListener("click", sendMessage);
+        getById("chatInput").addEventListener("keyup", function (event) {
+            if (event.keyCode === 13) {
+                sendMessage(event);
+            }
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomID = urlParams.get("session") || "test";
+        const password = urlParams.get("password") || "false";
+        let iframes = [];
+        let connectedPeers = {};
+
+        function RecvDataWindow(room) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&notmobile&label=chatinput&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${room}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = `frame_${room}`;
+            iframe.allow = "midi;geolocation;microphone;";
+            iframes.push(iframe);
+            document.body.appendChild(iframe);
+
+            window.addEventListener("message", function (e) {
+                if (e.source !== iframe.contentWindow) return;
+                if ("action" in e.data && e.data.UUID && "value" in e.data && !e.data.value && e.data.action === "push-connection") {
+                    delete connectedPeers[e.data.UUID];
+					
+				} else if ("action" in e.data && e.data.UUID && e.data.value && e.data.action === "push-connection-info") {
+                    connectedPeers[e.data.UUID] = e.data.value.label;
+					
+					if (connectedPeers[e.data.UUID] === "SocialStream"){
+						document.getElementById("loading").classList.add("hidden");
+					}
+				} else if ("action" in e.data && e.data.UUID && e.data.value && e.data.action === "view-connection-info") {
+                    connectedPeers[e.data.UUID] = e.data.value.label;
+					
+					if (connectedPeers[e.data.UUID] === "SocialStream"){
+						document.getElementById("loading").classList.add("hidden");
+					}
+                } else if ("action" in e.data && e.data.UUID && "value" in e.data && !e.data.value && e.data.action === "view-connection") {
+                    delete connectedPeers[e.data.UUID];
+					
+                } else if ("action" in e.data && e.data.UUID && "label" in e.data) {
+                    connectedPeers[e.data.UUID] = e.data.label;
+					
+					if (connectedPeers[e.data.UUID] === "SocialStream"){
+						document.getElementById("loading").classList.add("hidden");
+					}
+                }
+            });
+        }
+
+        roomID.split(",").forEach(room => {
+            RecvDataWindow(room.trim());
+        });
+
+        function send2Extension(data, uid = null) {
+            iframes.forEach(iframe => {
+                if (!uid) {
+                    Object.keys(connectedPeers).forEach(UUID => {
+                        if (connectedPeers[UUID] === "SocialStream") {
+                            iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID }, "*");
+                        }
+                    });
+                } else {
+                    if (connectedPeers[uid] === "SocialStream") {
+                        iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: uid }, "*");
+                    }
+                }
+            });
+        }
+
+		const socketserverURL = urlParams.get("server");
+		let socketserver = null;
+
+		function connectWebSocket() {
+			if (socketserverURL) {
+				socketserver = new WebSocket(socketserverURL);
+
+				socketserver.onopen = function () {
+					document.getElementById("loading").classList.add("hidden");
+					console.log("WebSocket connected");
+				};
+
+				socketserver.onclose = function (e) {
+					console.log("WebSocket disconnected. Attempting to reconnect...");
+					setTimeout(connectWebSocket, 5000);
+				};
+
+				socketserver.onerror = function (err) {
+					console.error("WebSocket error:", err);
+					socketserver.close();
+				};
+			}
+		}
+
+		connectWebSocket(); 
+
+		function respondP2P(data) {
+			var msg = {};
+			msg.response = data.trim();
+			
+			if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+				socketserver.send(JSON.stringify(msg));
+			} else {
+				send2Extension(msg);
+			}
+		}
+    </script>
+</body>
+</html>

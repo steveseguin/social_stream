@@ -1,13 +1,15 @@
 # Social Stream Ninja
-Consolidates your live social messaging streams and more
+Consolidates your live social messaging streams and more. Free.
 
  [Jump to Download and Install instructions](#to-install)
 
 - Supports live automated two-way chat messaging with Facebook, Youtube, Twitch, Zoom, and dozens more
 - Includes a "featured chat" overlay, with messages selectable via the dockable dashboard; auto or manual selection.
 - Supports bot-commands and automated chat responses, with custom logic supported via scriptable plugin file.
-- Text-to-speech support, along with many other niche features supported.
+- Support for LLMs, including native Ollama API support; powering AI-based moderation, chat, RAG, and custom instructions.
+- Text-to-speech support, including free, premium and ultra-premium TTS services supported.
 - Multi-channel source-icon support, so you can differentiate between different streams and creators
+- Message relaying support; send messages from one platform to other platforms automatically
 - No user login, API key, or permission needed to capture the chat messages from most sites and services.
 - Queuing of messages for later highlighting
 - Free community support at https://discord.socialstream.ninja
@@ -93,7 +95,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - instagram live (instagram.com/*/live/),  css note:  `[data.type = "instagramlive"]`
 - Instagram post non-live comments (REQUIRES the TOGGLE in menu to enable it), css note: `[data.type = "instagram"]`
 - instafeed.me (no pop out; alternative instagram live support)
-- tiktok live (tiktok.com/*/live)
+- tiktok live (tiktok.com/*/live -- the chat must be left open/visible if using the extension version)
 - webex live chat (not the pop out)
 - linkedin events and live comments. (works with linkedin.com/videos/live/* or linkedin.com/videos/events/* or linkedin.com/events/*)
 - vdo.ninja (pop-out chat)
@@ -109,14 +111,15 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - clouthub (no pop out; just the video page)
 - rumble.com (pop out chat)
 - trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/CHANNEL_NAME_HERE)
-- Dlive.tv  (pop-out chat)
+- Dlive.tv  (just the regular viewer page; no pop out needed)
 - Picarto.tv (pop-out chat; ie: https://picarto.tv/chatpopout/CHANNELNAMEHERE/public)
 - Mobcrush (this page: https://studio.mobcrush.com/chatpopup.html)
 - odysee.com (via the pop out chat I think)
 - minnit.chat support (https://minnit.chat/xxxxxxxxxxx?mobile&popout)
 - livepush.io (chat overlay link provided; no input field support?)
 - piczel.tv (pop out chat @ https://piczel.tv/chat/xxxxxxxxx)
-- bilibili.tv added (just regular view page /w chat; no pop out)
+- bilibili.tv (just regular view page /w chat; no pop out)
+- bilibili.com (just regular view page /w chat; no pop out.)
 - Amazon Chime (https://app.chime.aws/meetings/xxxxxxxxx)
 - Locals.com (no pop out needed)
 - Nimo.TV (pop out chat, ie: https://www.nimo.tv/popout/chat/xxxx)
@@ -167,6 +170,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - bigo.tv (no pop out)
 - circle.so
 - sooplive.com (pop out the chat to use)
+- on24.com ( Q&A - questions supported)
 
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   
@@ -682,6 +686,20 @@ You can then press the Send Single Donation Test button.
 
 Please note, do not share your Social Stream Ninja session ID with others as they will be able to create fake donations to Social Stream Ninjas via posting to the API.
 
+##### BuyMeACoffee webhook support
+
+See above for usage details, as Buy-me-a-coffee support is similar in concept to Ko-Fi. Added specifics below:
+
+The webhook URL for it however is: `https://io.socialstream.ninja/XXXXXXXX/bmac`
+
+Event types supported include: `membership.started` and `donation.created`.
+
+The default display name if none provided by the user will be `Anonymous`.
+
+`support_note` and `membership_level_name` will be used as fields for the new membership event.
+
+`support_note` and amount donated, with currency type, will be used as fields for the donation event.
+
 ### Text to speech
 
 Text messages can be converted to speech for free, assuming your system supports TTS.  On my Windows machine running Chrome/Edge/OBS, it works just fine.  I have it set to English-US by default, but you can change the language to something else by editing the URL and adjusting the language code.
@@ -939,3 +957,4 @@ This project contains inspiration by my past project, chat.overlay.ninja, which 
 <a href="https://github.com/steveseguin/social_stream/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=steveseguin/social_stream" />
 </a>
+

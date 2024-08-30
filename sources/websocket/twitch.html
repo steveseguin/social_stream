@@ -1,36 +1,128 @@
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
 <head>
-	<meta charset="utf-8">
-	<title>twitch</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<style>
-		.hidden {
-			display: none;
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta content="utf-8" http-equiv="encoding" />
+    <title>Social Stream - Twitch</title>
+    <meta name="title" content="Social Stream - Overlay" />
+    <link rel="icon" href="../../icons/favicon.ico" />
+    <link rel="preload" href="../../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
+    <style>
+        .hidden {
+            display: none;
+        }
+        body {
+            background-color: #ddd;
+        }
+        .auth-button, .sign-out-button {
+            background-color: #9146FF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: background-color 0.3s;
+        }
+        .auth-button:hover {
+            background-color: #7D3CD0;
+        }
+        .sign-out-button {
+            background-color: #f44336;
+            float: right;
+        }
+        .sign-out-button:hover {
+            background-color: #d32f2f;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .text-center {
+            text-align: center;
+        }
+		#textarea {
+			margin-bottom: 10px;
 		}
-		body {
-			background-color:  #ddd;
+		#textarea > div {
+			padding: 2px 0;
 		}
-	</style>
+    </style>
 </head>
 <body>
-	<div class="container">
-		<div class="row">
-			<div class="hidden auth text-center">
-				<a id="auth-link">Sign in to Twitch</a>
-			</div>
-			<div class="hidden socket">
-				<div id="textarea" class="ws-output" rows="20" style="font-family:Courier;width:100%"></div>
-				<form id="topic-form" class="text-right form-inline" >
-					<label id="topic-label" for="topic-text"></label>
-					<input type="text" id="input-text" placeholder="Send Message">
-					<button type="submit" class="btn">SEND</button>
-				</form>
-			</div>
-		</div>
-	</div>
-	<script>
+    <div class="container">
+        <div class="row">
+            <div class="auth text-center">
+                <a id="auth-link" class="auth-button">Sign in to Twitch</a>
+            </div>
+            <div class="hidden socket">
+                <button id="sign-out-button" class="sign-out-button">Sign Out</button>
+                <div id="textarea" class="ws-output" rows="20" style="font-family:Courier;width:100%"></div>
+                <form id="topic-form" class="text-right form-inline">
+                    <label id="topic-label" for="topic-text"></label>
+                    <input type="text" id="input-text" placeholder="Send Message">
+                    <button id="sendmessage" type="submit" class="btn">SEND</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        console.log(".");
 
-console.log("loaded");
-</script>
+        function signOut() {
+            localStorage.removeItem('twitchOAuthToken');
+            localStorage.removeItem('twitchChannel');
+            localStorage.removeItem('twitchUserAlias');
+            sessionStorage.removeItem('twitchOAuthState');
+            sessionStorage.removeItem('twitchOAuthToken');
+            
+            if (typeof websocket !== 'undefined' && websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.close();
+            }
+
+            document.querySelector('.socket').classList.add('hidden');
+            document.querySelector('.auth').classList.remove('hidden');
+
+            document.querySelector('#textarea').innerHTML = '';
+
+            console.log('Signed out successfully');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const signOutButton = document.getElementById('sign-out-button');
+            if (signOutButton) {
+                signOutButton.addEventListener('click', signOut);
+            }
+
+            const authLink = document.getElementById('auth-link');
+            if (authLink) {
+                authLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Call your authentication function here
+                    // For example: initiateAuth();
+                    console.log('Initiating Twitch authentication');
+                });
+            }
+
+            const savedAlias = localStorage.getItem('twitchUserAlias');
+            const aliasInput = document.getElementById('alias-input');
+            if (savedAlias && aliasInput) {
+                aliasInput.value = savedAlias;
+            }
+
+            if (aliasInput) {
+                aliasInput.addEventListener('change', function() {
+                    localStorage.setItem('twitchUserAlias', this.value);
+                });
+            }
+        });
+
+        // The rest of your existing JavaScript code goes here
+    </script>
 </body>
 </html>

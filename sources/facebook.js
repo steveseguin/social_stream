@@ -7,28 +7,51 @@
 		} catch (e) {}
 	}
 
-	function toDataURL(url, callback) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.onload = function() {
-		  
-		var blob = xhr.response;
-    
-		if (blob.size > (55 * 1024)) {
-		  callback(url); // Image size is larger than 25kb.
-		  return;
-		}
+	// Add this at the top of your script, outside any function
+	const imageCache = new Map();
 
-		var reader = new FileReader();
-		
-		
-		reader.onloadend = function() {
-		  callback(reader.result);
-		}
-		reader.readAsDataURL(xhr.response);
-	  };
-	  xhr.open('GET', url);
-	  xhr.responseType = 'blob';
-	  xhr.send();
+	function getImageInfo(imgOrUrl) {
+		return new Promise((resolve, reject) => {
+			let url;
+			if (imgOrUrl instanceof SVGImageElement) {
+				url = imgOrUrl.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			} else if (typeof imgOrUrl === 'string') {
+				url = imgOrUrl;
+			} else {
+				return reject(new Error('Invalid input'));
+			}
+
+			// Check if the image URL is already in the cache
+			if (imageCache.has(url)) {
+				return resolve(imageCache.get(url));
+			}
+
+			const checkImage = (blob, img) => {
+				const isGeneric = img.naturalWidth === 32 && img.naturalHeight === 32 && blob.size >= 800 && blob.size <= 900;
+				imageCache.set(url, isGeneric); // Cache the result
+				resolve(isGeneric);
+			};
+
+			const fetchImage = (url) => {
+				fetch(url)
+					.then(response => response.blob())
+					.then(blob => {
+						const img = new Image();
+						img.onload = () => checkImage(blob, img);
+						img.onerror = () => {
+							imageCache.set(url, false); // Cache as non-generic on error
+							reject(new Error('Failed to load image'));
+						};
+						img.src = URL.createObjectURL(blob);
+					})
+					.catch(() => {
+						imageCache.set(url, false); // Cache as non-generic on fetch error
+						reject(new Error('Failed to fetch image'));
+					});
+			};
+
+			fetchImage(url);
+		});
 	}
 	
 	function escapeHtml(unsafe){
@@ -47,12 +70,13 @@
 		}
 	}
 
+
 	function isEmoji(char) {
 		const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
 		return emojiRegex.test(char);
 	}
 	
-	function getAllContentNodes(element) { // takes an element.
+	function getAllContentNodes(element, textonly=false) { // takes an element.
 		var resp = "";
 		
 		if (!element){return resp;}
@@ -72,12 +96,12 @@
 		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
+				resp += getAllContentNodes(node, textonly)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				node.skip = true; // facebook specific need
-				if (!settings.textonlymode){
+				if (!settings.textonlymode && !textonly){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
 					}
@@ -93,6 +117,10 @@
 	}
 	
 	var dupCheck2 = [];
+	
+	function sleep(ms) {
+	  return new Promise(resolve => setTimeout(resolve, ms));
+	}
 
 	async function processMessage(ele) {
 		if (ele == window) {
@@ -100,12 +128,33 @@
 		}
 		
 		var chatimg = "";
-		try {
-			var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
-			imgele.skip = true;
-			chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
-		} catch(e){
-			//console.log(e);
+		
+		var test = ele.querySelectorAll("div[dir='auto'] > div[role='button'][tabindex='0']")
+		if (test.length ===1){
+			test[0].click();
+			await sleep(100);
+		}
+		if (!ele.isConnected){return;}
+		
+		var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+		imgele.skip = true;
+		
+		chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+		if (chatimg.includes("32x32")) {
+			try {
+				let isGeneric = await getImageInfo(chatimg);
+				if (!ele.isConnected){return;}
+				if (isGeneric){
+					await sleep(200);
+					if (!ele.isConnected){return;}
+					await sleep(200);
+					if (!ele.isConnected){return;}
+					var imgele = ele.childNodes[0].querySelector("image");
+					chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+				}
+			} catch(e){
+				console.log(e);
+			}
 		}
 		
 		var name = "";
@@ -122,12 +171,6 @@
 			}
 		}
 
-		
-		var test = ele.querySelectorAll("div[dir='auto'] > div[role='button'][tabindex='0']")
-		if (test.length ===1){
-			test[0].click();
-			await new Promise(r => setTimeout(r, 100));
-		}
 
 		var msg = "";
 		
@@ -160,6 +203,26 @@
 				}
 			}
 		}
+		
+		var dupMessage = msg; // I dont want to include original replies in the dup check; just the message.
+		
+		try {
+			if (settings.replyingto && msg && ele.previousSibling) {
+				try {
+					//console.log(ele);
+					var replyMessage = getAllContentNodes(ele.previousSibling.querySelector("div>div>span>span"), true);
+					if (replyMessage) {
+						if (settings.textonlymode) {
+							msg = replyMessage + ": " + msg;
+						} else {
+							msg = "<i><small>" + replyMessage + ":&nbsp;</small></i> " + msg;
+						}
+					}
+				} catch (e) {
+					//console.error(e);
+				}
+			}
+		} catch (e) {}
 		
 		var contentimg = "";
 		if (!msg){
@@ -205,7 +268,7 @@
 		}
 		
 		
-		var entry = data.chatname + "+" + data.hasDonation + "+" + data.chatmessage;
+		var entry = data.chatname + "+" + data.hasDonation + "+" + dupMessage;
 		var entryString = JSON.stringify(entry);
 
 		if (!dupCheck2.includes(entryString)) {
@@ -319,7 +382,7 @@
 			processed += 1;
 		}
 		try {
-			if (window.location.href.includes("/live/producer/") || window.location.href.includes("/videos/")) {
+			if (window.location.href.includes("/live/producer/") || window.location.href.endsWith("/videos") || window.location.href.includes("/videos/") || window.location.href.includes("?v=") || window.location.href.includes("/watch/live/")) {
 				var main = document.querySelectorAll("[role='article']");
 				for (var j = 0; j < main.length; j++) {
 					try {

@@ -1690,7 +1690,7 @@
 
 			try {
 				var fallbackImage = new Image(); // preload it.
-				fallbackImage.src = "unknown.png";
+				fallbackImage.src = "./sources/images/unknown.png";
 				fallbackImage.onerror = function () {
 					fallbackImage = false;
 				};
@@ -1700,7 +1700,7 @@
 				if (ele.dataset.backupImage) {
 					ele.src = ele.dataset.backupImage;
 				} else if (fallbackImage) {
-					ele.src = "unknown.png";
+					ele.src = "./sources/images/unknown.png";
 				} else {
 					ele.style.display = "none";
 				}

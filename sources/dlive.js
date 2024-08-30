@@ -177,7 +177,7 @@
 	
 	setInterval(function(){ // lets just see if the chat has been updated or something
 	
-		if (window.location.pathname.startsWith("/c/")){
+		//if (window.location.pathname.startsWith("/c/")){
 			if (document.querySelector("#chat-body > .chatbody")){
 				if (!document.querySelector("#chat-body > .chatbody").dataset.set123){
 					console.log("SocialStream Active");
@@ -187,7 +187,7 @@
 					});
 				}
 			}
-		}
+	//	}
 	}, 2000);
 
 	var settings = {};

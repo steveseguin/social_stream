@@ -58,8 +58,17 @@ function generateStreamID() {
 }
 
 if (typeof chrome.runtime == "undefined") {
-	var { ipcRenderer, contextBridge } = require("electron");
-	isSSAPP = true;
+	if (typeof require !== "undefined"){
+		var { ipcRenderer, contextBridge } = require("electron");
+		isSSAPP = true;
+	} else {
+		var ipcRenderer = {};
+		ipcRenderer.sendSync = function(){};
+		ipcRenderer.invoke = function(){};
+		ipcRenderer.on = function(){};
+		console.warn("This isn't a functional mode; not yet at least.");
+	}
+	
 	chrome = {};
 	chrome.browserAction = {};
 	chrome.browserAction.setIcon = function (icon) {}; // there is no icon in the ssapp
@@ -67,13 +76,13 @@ if (typeof chrome.runtime == "undefined") {
 	chrome.runtime.lastError = false;
 	//chrome.runtime.lastError.message = "";
 
-	/* chrome.runtime.sendMessage = async function(data, callback){ // uncomment if I need to use it.
+	chrome.runtime.sendMessage = async function(data, callback){ // uncomment if I need to use it.
 		let response = await ipcRenderer.sendSync('fromBackground',data);
 		if (typeof(callback) == "function"){
 			callback(response);
 			log(response);
 		}
-	}; */
+	};
 
 	chrome.runtime.getManifest = function () {
 		return false; // I'll need to add version info eventually
@@ -123,8 +132,6 @@ if (typeof chrome.runtime == "undefined") {
 	chrome.debugger.attach = function (a, b, c) {
 		log("chrome.debugger.attach", c);
 		c();
-		// { tabId: tabs[i].id },  "1.3", onAttach.bind(null,
-		// onAttach.bind(null,  { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false
 	};
 
 	chrome.tabs.sendMessage = async function (tab = null, message = null, callback = null) {
@@ -697,6 +704,13 @@ async function overwriteSavedNames(data = false) {
 		};
 
 		newSavedNamesFileHandle = await window.showSaveFilePicker(opts);
+	} else if (data == "clear") {
+		uniqueNameSet = [];
+		
+	} else if (data == "stop") {
+		newSavedNamesFileHandle = false;
+		uniqueNameSet = [];
+		
 	} else if (newSavedNamesFileHandle && data) {
 		if (uniqueNameSet.includes(data)) {
 			return;
@@ -819,6 +833,18 @@ async function overwriteFileExcel(data = false) {
 	}
 }
 
+async function resetSettings(item = false) {
+	log("reset settings");
+	chrome.storage.sync.get(properties, async function (item) {
+		if (!item) {
+			item = {};
+		}
+		item.settings = {};
+		loadSettings(item, true);
+		// window.location.reload()
+	});
+}
+
 async function exportSettings() {
 	chrome.storage.sync.get(properties, async function (item) {
 		item.settings = settings;
@@ -842,18 +868,6 @@ async function exportSettings() {
 			await writableStream.write(JSON.stringify(item));
 			await writableStream.close();
 		}
-	});
-}
-
-async function resetSettings(item = false) {
-	log("reset settings");
-	chrome.storage.sync.get(properties, async function (item) {
-		if (!item) {
-			item = {};
-		}
-		item.settings = {};
-		loadSettings(item, true);
-		// window.location.reload()
 	});
 }
 
@@ -1463,7 +1477,11 @@ async function getBTTVEmotes(url = false) {
 			} else {
 				log("Globalbttv recovererd from storage");
 			}
-			// bttv.globalEmotes = Globalbttv;
+			
+		}
+		
+		if (Globalbttv){
+			bttv.globalEmotes = Globalbttv;
 		}
 		bttv.url = url;
 		bttv.type = type;
@@ -1643,7 +1661,9 @@ async function getSEVENTVEmotes(url = false) {
 			} else {
 				log("Globalseventv recovererd from storage");
 			}
-			// seventv.globalEmotes = Globalseventv;
+		}
+		if (Globalseventv){
+			seventv.globalEmotes = Globalseventv;
 		}
 		seventv.url = url;
 		seventv.type = type;
@@ -1655,30 +1675,137 @@ async function getSEVENTVEmotes(url = false) {
 	return seventv;
 }
 
+const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
+
 function replaceEmotesWithImages(message, emotesMap, zw = false) {
-	const emotePattern = new RegExp(`(?<!<[^>]*)\\b(${Object.keys(emotesMap).join("|")})\\b(?!\\w|\\d|[!?.,]|[^<]*>)`, "g");
-	return message.replace(emotePattern, match => {
-		const emote = emotesMap[match];
-		if (!zw || typeof emote === "string") {
-			return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
-		} else if (emote.url) {
-			return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" /></span>`;
-		}
-	});
+  return message.replace(emoteRegex, (match, emoteMatch) => {
+	const emote = emotesMap[emoteMatch];
+	if (emote) {
+	  const escapedMatch = escapeHtml(match);
+	  if (!zw || typeof emote === "string") {
+		return `<img src="${emote}" alt="${escapedMatch}" class='zero-width-friendly'/>`;
+	  } else if (emote.url) {
+		return `<span class="zero-width-span"><img src="${emote.url}" alt="${escapedMatch}" class="zero-width-emote" /></span>`;
+	  }
+	}
+	return match;
+  });
+}
+	
+
+class CheckDuplicateSources { // doesn't need to be text-only, as from the same source / site, so expected the same formating
+  constructor() {
+    this.messages = new Map();
+    this.expireTime = 6000;
+  }
+
+  generateKey(channel, user, text) {
+    return `${channel}-${user}-${text}`;
+  }
+
+  isDuplicate(channel, user, text) {
+    const currentTime = Date.now();
+    const key = this.generateKey(channel, user, text);
+
+    if (this.messages.has(key)) {
+      const lastTime = this.messages.get(key);
+      if (currentTime - lastTime < this.expireTime) {
+        return true;
+      }
+    }
+
+    this.messages.set(key, currentTime);
+    this.cleanUp(currentTime);
+
+    return false;
+  }
+
+  cleanUp(currentTime) {
+    for (const [key, time] of this.messages.entries()) {
+      if (currentTime - time > this.expireTime) {
+        this.messages.delete(key);
+      }
+    }
+  }
 }
 
-function replaceEmotesWithImagesText(message, emotesMap, zw = false) {
-	// Simplified regex that matches emote codes anywhere, including within HTML tags.
-	const emotePattern = new RegExp(`\\b(${Object.keys(emotesMap).join("|")})\\b`, "g");
-	return message.replace(emotePattern, match => {
-		const emote = emotesMap[match];
-		if (!zw || typeof emote === "string") {
-			return `<img src="${emote}" alt="${match}" class='zero-width-friendly'/>`;
-		} else if (emote.url) {
-			return `<span class="zero-width-span"><img src="${emote.url}" alt="${match}" class="zero-width-emote" /></span>`;
-		}
-	});
+
+
+
+function extractVideoId(url) {
+  if (!url) return null;
+  const match = url.match(/[?&]v=([^&]+)/);
+  return match ? match[1] : null;
 }
+
+let activeChatSources = new Map();
+
+try {
+	if (chrome.tabs.onRemoved){
+		chrome.tabs.onRemoved.addListener((tabId) => {
+		  for (let key of activeChatSources.keys()) {
+			if (key.startsWith(`${tabId}-`)) {
+			  activeChatSources.delete(key);
+			}
+		  }
+		});
+	}
+	if (chrome.tabs.onUpdated){
+		chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+		  if (changeInfo.status === 'complete' && tab.url) {
+			const videoId = extractVideoId(tab.url);
+			if (videoId && (
+			  tab.url.includes('https://studio.youtube.com/live_chat?') ||
+			   tab.url.includes('https://www.youtube.com/live_chat?') ||
+			  (tab.url.includes('https://studio.youtube.com/video/') && tab.url.includes('/livestreaming'))
+			)) {
+			  const isPopout = tab.url.includes('live_chat?is_popout=1');
+			  activeChatSources.set(`${tabId}-0`, { url: tab.url, videoId: videoId, isPopout: isPopout });
+			} else {
+			  for (let key of activeChatSources.keys()) {
+				if (key.startsWith(`${tabId}-`)) {
+				  activeChatSources.delete(key);
+				}
+			  }
+			}
+		  }
+		});
+	}
+} catch(e){
+	console.warn(e);
+}
+
+function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
+  const videoId = msg.videoid || extractVideoId(tabUrl);
+  if (!videoId) return true;
+
+  const sourceId = `${tabId}-${frameId}`;
+  
+  const isPopout = tabUrl.includes('live_chat?is_popout=1');
+  
+  activeChatSources.set(sourceId, { 
+    url: tabUrl, 
+    videoId: videoId, 
+    isPopout: isPopout
+  });
+
+  const sourcesForThisVideo = Array.from(activeChatSources.entries())
+    .filter(([, data]) => data.videoId === videoId);
+
+  if (sourcesForThisVideo.length === 1) {
+    return true; 
+  }
+
+  const hasPopout = sourcesForThisVideo.some(([, data]) => data.isPopout);
+
+  if (hasPopout) {
+    return isPopout; 
+  }
+
+  return sourceId === sourcesForThisVideo[0][0];
+}
+
+const checkDuplicateSources = new CheckDuplicateSources();
 
 chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
 	var response = {};
@@ -1708,7 +1835,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "getOnOffState") {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
 		} else if (request.cmd && request.cmd === "getSettings") {
-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
+			try {
+				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG});
+			} catch(e){
+				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings});
+			}
 		} else if (request.cmd && request.cmd === "saveSetting") {
 			if (typeof settings[request.setting] == "object") {
 				if (!request.value) {
@@ -1736,6 +1867,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			chrome.runtime.lastError;
 
 			sendResponse({ state: isExtensionOn });
+			
+			if (request.target){
+				sendTargetP2P(request, request.target);
+			}
 
 			if (request.setting == "midi") {
 				toggleMidi();
@@ -1848,6 +1983,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "replyingto") {
 				pushSettingChange();
 			}
+			if (request.setting == "delayyoutube") {
+				pushSettingChange();
+			}
 			if (request.setting == "customtwitchaccount") {
 				pushSettingChange();
 			}
@@ -1886,7 +2024,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			if (request.setting == "capturejoinedevent") {
 				pushSettingChange();
-			}
+			} 
 			if (request.setting == "bttv") {
 				if (settings.bttv) {
 					clearAllWithPrefix("uid2bttv2.twitch:");
@@ -1925,6 +2063,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			if (request.setting == "waitlistmode") {
 				initializeWaitlist();
+			}
+			
+			if (request.setting == "pollEnabled") {
+				initializePoll();
 			}
 
 			if (request.setting == "customwaitlistmessagetoggle" || request.setting == "customwaitlistmessage" || request.setting == "customwaitlistcommand") {
@@ -2024,12 +2166,20 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					}
 				}
 
-				if (settings.firstsourceonly) {
-					if (!verifyOriginal(request.message)) {
+				if (settings.firstsourceonly || settings.hideallreplies) {
+					if (!verifyOriginalNewIncomingMessage(request.message.chatmessage.replace(/\s\s+/g, " "), request.message.textonly)) { 
 						sendResponse({ state: isExtensionOn });
 						return response;
 					}
 				}
+				
+				if (settings.noduplicates && // filters echos if same TYPE, USERID, and MESSAGE 
+					checkDuplicateSources.isDuplicate(request.message.type, (request.message.userid || request.message.chatname), 
+						(request.message.chatmessage || request.message.hasDonation || (request.message.membership && request.message.event)))) {
+							sendResponse({ state: isExtensionOn });
+							return response;
+				}
+				
 
 				if (!request.message.id) {
 					messageCounter += 1;
@@ -2045,15 +2195,26 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 							return;
 						}
 					}
+					try {
+						//console.log("Sender:", sender);
+						//console.log("Message:", request.message);
+						const shouldAllowMessage = shouldAllowYouTubeMessage(sender.tab.id, sender.tab.url, request.message, sender.frameId);
+						//console.log("Should allow message:", shouldAllowMessage);
+						if (!shouldAllowMessage) {
+						 // console.log("Blocking message from:", sender.tab.url, "Frame ID:", sender.frameId);
+						  return;
+						}
+					  } catch(e) {
+						//console.warn("Error in shouldAllowYouTubeMessage:", e);
+					  }
+					
 					if (sender.tab.url) {
 						var brandURL = getYoutubeAvatarImage(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
 						if (brandURL) {
 							request.message.sourceImg = brandURL;
 						}
 					}
-				} // else {
-				//	getBTTVEmotes();
-				//}
+				} 
 
 				if (request.message.type == "facebook") {
 					// since Facebook dupes are a common issue
@@ -2140,6 +2301,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "openchat") {
 			openchat(request.value, true);
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "startgame") {
+			//startgame(request.value, true);
+			sendDataP2P({startgame:true}); 
+			sendResponse({ state: isExtensionOn });	
 		} else if (request.cmd && request.cmd === "singlesave") {
 			sendResponse({ state: isExtensionOn });
 			overwriteFile("setup");
@@ -2152,6 +2317,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "savenames") {
 			sendResponse({ state: isExtensionOn });
 			overwriteSavedNames("setup");
+		} else if (request.cmd && request.cmd === "savenamesStop") {
+			sendResponse({ state: isExtensionOn });
+			overwriteSavedNames("stop");
+		} else if (request.cmd && request.cmd === "savenamesClear") {
+			sendResponse({ state: isExtensionOn });
+			overwriteSavedNames("clear");
 		} else if (request.cmd && request.cmd === "loadmidi") {
 			await loadmidi();
 			sendResponse({ settings: settings, state: isExtensionOn });
@@ -2170,9 +2341,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "singlesaveStop") {
 			sendResponse({ state: isExtensionOn });
 			newFileHandle = false;
-		} else if (request.cmd && request.cmd === "singlesaveStop") {
-			sendResponse({ state: isExtensionOn });
-			newSavedNamesFileHandle = false;
 		} else if (request.cmd && request.cmd === "selectwinner") {
 			selectRandomWaitlist();
 			sendResponse({ state: isExtensionOn });
@@ -2197,6 +2365,23 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} catch (e) {
 				console.error(e);
 			}
+		} else if (request.cmd && request.cmd === "uploadRAGfile") {
+			sendResponse({ state: isExtensionOn });
+			await importSettingsLLM(request.enhancedProcessing || false);
+			try {
+				messagePopup({documents: documentsRAG});
+			} catch(e){}
+		} else if (request.cmd && request.cmd === "clearRag") {
+			sendResponse({ state: isExtensionOn });
+			try {
+				await clearDatabase();
+				messagePopup({documents: documentsRAG});
+			} catch(e){}
+		} else if (request.cmd === "deleteRAGfile") {
+			try {
+				await deleteDocument(request.docId);
+				messagePopup({documents: documentsRAG});
+			} catch(e){}
 		} else if (request.cmd && request.cmd === "fakemsg") {
 			sendResponse({ state: isExtensionOn });
 			var data = {};
@@ -2423,18 +2608,20 @@ function _min(d0, d1, d2, bx, ay) {
 ////////////////////////////
 
 var previousMessages = [];
-function checkExactDuplicate(msg) {
+function checkExactDuplicateAlreadySent(msg) {
 	// just in case the " said: " filter doesn't work, maybe due to a missing space or HTML
-
+	
 	var cleanText = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
 	cleanText = cleanText.replace(/\s\s+/g, " ").trim();
 	if (!cleanText) {
 		return false;
 	}
-
+	
 	if (previousMessages.includes(cleanText)) {
+		// console.error(cleanText, previousMessages);
 		var ret = true;
 	} else {
+		// console.warn(cleanText, previousMessages);
 		var ret = false;
 	}
 	previousMessages.push(cleanText);
@@ -2444,25 +2631,40 @@ function checkExactDuplicate(msg) {
 	return ret;
 }
 
-function verifyOriginal(msg) {
+function verifyOriginalNewIncomingMessage(msg, cleaned=false) {
+	
+	if (Date.now() - lastSentTimestamp > 5000) {
+		// 2 seconds has passed; assume good.
+		return true;
+	}
+	
+	// console.log(msg,lastSentMessage);
+	
 	try {
-		if (Date.now() - lastSentTimestamp > 5000) {
-			// 2 seconds has passed; assume good.
-			return true;
+		if (!cleaned){
+			msg = decodeAndCleanHtml(msg);
 		}
-		var cleanText = msg.chatmessage.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
-		cleanText = cleanText.replace(/\s\s+/g, " ");
-		var score = levenshtein(cleanText, lastSentMessage);
-		if (score < 7) {
-			if (lastMessageCounter) {
+		
+		var score = levenshtein(msg, lastSentMessage);
+		// console.log(msg, score);
+		if (score < 7) { // same message
+			
+			lastMessageCounter += 1;
+			if (lastMessageCounter>1) {
+				// console.log("1");
 				return false;
 			}
-			lastMessageCounter = 1;
-		} else {
-			return false;
+			if (settings.hideallreplies){
+				// console.log("2");
+				return false;
+			}
 		}
-	} catch (e) {}
+	} catch(e){
+		errorlog(e);
+	}
+		
 	return true;
+	
 }
 
 function ajax(object2send, url, ajaxType = "PUT", type = "application/json; charset=utf-8") {
@@ -2489,11 +2691,7 @@ function ajax(object2send, url, ajaxType = "PUT", type = "application/json; char
 var messageCounter = 0;
 async function sendToDestinations(message) {
 	if (typeof message == "object") {
-		if (!message.id) {
-			messageCounter += 1;
-			message.id = messageCounter;
-		}
-
+		
 		if (message.chatname) {
 			message.chatname = filterXSS(message.chatname); // I do escapeHtml at the point of capture instead
 		}
@@ -2558,7 +2756,14 @@ async function sendToDestinations(message) {
 	}
 
 	try {
-		sendDataP2P(message);
+		sendDataP2P(message); 
+	} catch (e) {
+		console.error(e);
+	}
+	try {
+		if (settings.pollEnabled){
+			sendTargetP2P(message, "poll");
+		}
 	} catch (e) {
 		console.error(e);
 	}
@@ -2566,7 +2771,6 @@ async function sendToDestinations(message) {
 	sendToDisk(message);
 	sendToH2R(message);
 	sendToPost(message);
-	sendToS10(message);
 	addMessageDB(message);
 	return true;
 }
@@ -2578,6 +2782,23 @@ function unescapeHtml(safe) {
 		.replace(/&quot;/g, '"')
 		.replace(/&#039;/g, "'");
 }
+
+function escapeHtml(unsafe) {
+	try {
+		return unsafe.replace(/[&<>"']/g, function(m) {
+			return {
+				'&': '&amp;',
+				'<': '&lt;',
+				'>': '&gt;',
+				'"': '&quot;',
+				"'": '&#039;'
+			}[m];
+		}) || "";
+	} catch (e) {
+		return "";
+	}
+}
+
 function sendToH2R(data) {
 	if (settings.h2r && settings.h2rserver && settings.h2rserver.textsetting) {
 		try {
@@ -2623,7 +2844,7 @@ function sendToH2R(data) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				msg.authorDetails.profileImageUrl = chatimg.replace("=s64-", "=s256-");
 			} else {
-				msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
+				msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
 			}
 
 			if (data.type && data.sourceImg && data.type == "restream") {
@@ -2649,68 +2870,123 @@ function sendToH2R(data) {
 		}
 	}
 }
-function sendToS10(data) {
-	if (settings.s10 && settings.s10server && settings.s10server.textsetting) {
+function sendToS10(data, fakechat=false, relayed=false) {
+	if (settings.s10 && settings.s10apikey && settings.s10apikey.textsetting) {
 		try {
-			// channelId - The Stage TEN channel to send the message on
-			// displayName - The display name associated with the message
-			// messageBody - The text body of the message
-			// displayPictureUrl - (optional) The URL of a display picture (this will be included in the message's metadata)
-			// userId - (optional) Will associate the message with a specific user ID. If not provided, the user ID will default to "plugin-service"
-
-			var msg = {};
-
-			msg.channelId = settings.s10server.textsetting;
-
-			if (data.chatmessage) {
-				if (!data.textonly) {
-					msg.messageBody = unescapeHtml(data.chatmessage);
-				} else {
-					msg.messageBody = data.chatmessage;
-				}
-				msg.messageBody = msg.messageBody.replace(/(<([^>]+)>)/gi, "") || "";
-			}
-
-			if (!msg.messageBody) {
-				return;
-			}
-
-			if (!data.chatname) {
-				return;
-			}
-
+			// msg =  '{
+				// "userId": "my-external-id",
+				// "displayName": "Tyler",
+				// "messageBody": "Testing 123",
+				// "sourceName": "twitch",
+				// "sourceIconUrl": "https://cdn.shopify.com/app-store/listing_images/715abff73d9178aa7f665d7feadf7edf/icon/CPTw1Y2Mp4UDEAE=.png"
+			// }';
 			if (data.type && data.type === "stageten") {
 				return;
 			}
+			
+			if (data.chatmessage.includes(" said: ")){
+				return null;
+			}
+			
+			const StageTEN_API_URL = "https://demo.stageten.tv/apis/plugin-service/chat/message/send"
 
-			msg.displayName = data.chatname;
-
-			if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
-				msg.displayPictureUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
-			} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
-				let chatimg = data.chatimg.replace("=s32-", "=s256-");
-				msg.displayPictureUrl = chatimg.replace("=s64-", "=s256-");
-			} else if (data.chatimg) {
-				msg.displayPictureUrl = data.chatimg || "https://socialstream.ninja/unknown.png";
-			} else if (data.type) {
-				msg.displayPictureUrl = "https://socialstream.ninja/sources/images/" + data.type + ".png";
+			let cleaned = data.chatmessage;
+			if (data.textonly){
+				cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
+				cleaned = cleaned.replace(/\s\s+/g, " ");
 			} else {
-				msg.displayPictureUrl = "https://socialstream.ninja/unknown.png";
+				cleaned = decodeAndCleanHtml(cleaned);
 			}
-
-			if (data.type) {
-				msg.displayName = msg.displayName + " via " + data.type; // "twitch", "youtube", "kick", etc.
+			if (!cleaned){
+				return;
 			}
-
-			//const data = '{"displayName":"Tyler", "messageBody":"Hey!", "channelId":"a075c262-f409-4915-8aaa-3c83d06fd324"}';
+			
+			// console.error(cleaned, data,data.textonly);
+			
+			if (relayed && !verifyOriginalNewIncomingMessage(cleaned, true)){
+				if (checkExactDuplicateAlreadySent(cleaned, true)){
+					return;
+				}
+				
+				if (settings.myname) {
+					let custombot = settings.myname.textparam1.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
+					custombot = custombot.split(",");
+					if (custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
+						return null;
+					}
+				}
+			} else if (!fakechat && checkExactDuplicateAlreadySent(cleaned, true)){
+				return null;
+			} else {
+				checkExactDuplicateAlreadySent(cleaned, true)
+			}
+			
+			if (fakechat){
+				lastSentMessage = cleaned; 
+				lastSentTimestamp = Date.now();
+				lastMessageCounter = 0;
+			}
+			
+			let botname = "🤖💬";
+			if (settings.ollamabotname && settings.ollamabotname.textsetting){
+				botname = settings.ollamabotname.textsetting.trim();
+			}
+			
+			let username = "";
+			let isBot = false;
+			if (cleaned.startsWith(botname+":")){
+				cleaned = cleaned.replace(botname+":","").trim();
+				username = botname;
+				isBot = true;
+			}
+			
+			var msg = {};
+			msg.sourceName = data.type || "stageten";
+			msg.sourceIconUrl = "https://socialstream.ninja/sources/images/"+msg.sourceName+".png";
+			msg.displayName = data.chatname || data.userid || username || "Host⚡";
+			msg.userId = "socialstream";
+			msg.messageBody = cleaned;
+			
+			if (isBot){
+				msg.sourceIconUrl = "https://socialstream.ninja/icons/bot.png";
+			}
+			
+			if (false){ // this is a backup, just in case.
+				if (data.type == "stageten"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/stageten_200x200.png";
+				}
+				if (data.type == "youtube"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/youtube_200x200.png";
+				}
+				if (data.type == "youtubeshorts"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/youtubeshorts_200x200.png";
+				}
+				if (data.type == "twitch"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/twitch_200x200.png";
+				}
+				if (data.type == "twitch"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/twitch_200x200.png";
+				}
+				if (data.type == "socialstream"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/socialstream_200x200.png";
+				}
+				if (data.type == "twitch"){
+					msg.sourceIconUrl = "https://cdn.shopify.com/s/files/1/0463/6753/9356/files/twitch_200x200.png";
+				}
+			}
+			
+			// console.error(msg, fakechat);
 
 			let xhr = new XMLHttpRequest();
-			xhr.withCredentials = true;
-			xhr.open("POST", "https://bee1-plugin-service.stageten.tv/chat/webhooks/message/send");
+			xhr.open("POST", StageTEN_API_URL);
 			xhr.setRequestHeader("content-type", "application/json");
-
+			xhr.setRequestHeader("x-s10-chat-api-key", settings.s10apikey.textsetting);
+			//xhr.withCredentials = true;
 			xhr.onload = function () {
-				// log(xhr.response);
+				//log(xhr.response);
+			};
+			xhr.onerror = function (e) {
+				//log("error sending to stageten");
 			};
 
 			xhr.send(JSON.stringify(msg));
@@ -2741,7 +3017,7 @@ function sendToPost(data) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				data.chatimg = chatimg.replace("=s64-", "=s256-");
 			} else {
-				data.chatimg = data.chatimg || "https://socialstream.ninja/unknown.png";
+				data.chatimg = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
 			}
 
 			if (data.type) {
@@ -2928,16 +3204,16 @@ function setupSocket() {
 				highlightWaitlist(parseInt(data.value) || 0);
 			} else if (data.action && data.action === "resetwaitlist") {
 				resetWaitlist();
-			} else if (request.cmd && request.cmd === "stopentries") {
+			} else if (data.action && data.action === "stopentries") {
 				toggleEntries(false);
 				sendResponse({ state: isExtensionOn });
 			} else if (data.action && data.action === "downloadwaitlist") {
 				downloadWaitlist();
 			} else if (data.action && data.action === "selectwinner") {
-				if (value in data) {
-					selectRandomWaitlist(parseInt(data.value) || 0);
+				if ("value" in data) {
+					resp = selectRandomWaitlist(parseInt(data.value) || 0);
 				} else {
-					selectRandomWaitlist();
+					resp = selectRandomWaitlist();
 				}
 			}
 
@@ -3212,9 +3488,8 @@ async function openchat(target = null, force=false) {
 function sendDataP2P(data, UUID = false) {
 	// function to send data to the DOCk via the VDO.Ninja API
 
-	if (settings.server2 && socketserverDock && (socketserverDock.readyState===1)) {
+	if (!UUID && settings.server2 && socketserverDock && (socketserverDock.readyState===1)) {
 		try {
-			
 			socketserverDock.send(JSON.stringify(data));
 			return;
 		} catch (e) {
@@ -3229,10 +3504,7 @@ function sendDataP2P(data, UUID = false) {
 	if (iframe) {
 		if (UUID && connectedPeers) {
 			try {
-				var label = connectedPeers[UUID] || false;
-				if (!label || label === "dock") {
-					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // the docks and emotes page are VIEWERS, since backend is PUSH-only
-				}
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
 			} catch (e) {
 				console.error(e);
 			}
@@ -3329,6 +3601,23 @@ function sendHypeP2P(data, uid = null) {
 		}
 	}
 }
+function sendTargetP2P(data, target) {
+	// function to send data to the DOCk via the VDO.Ninja API
+
+	if (iframe) {
+		var keys = Object.keys(connectedPeers);
+		for (var i = 0; i < keys.length; i++) {
+			try {
+				var UUID = keys[i];
+				var label = connectedPeers[UUID];
+				if (label === target) {
+					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+				}
+			} catch (e) {}
+		}
+	
+	}
+}
 function sendTickerP2P(data, uid = null) {
 	// function to send data to the DOCk via the VDO.Ninja API
 
@@ -3410,8 +3699,21 @@ function processWaitlist(data) {
 	}
 }
 
+
+
+function initializePoll() {
+	try {
+		//if (!settings.pollEnabled) { // stop and clear
+		//	return;
+		//}
+		if (isExtensionOn){
+			//console.log("initializePoll");
+			sendTargetP2P({settings:settings}, "poll");
+		}
+	} catch (e) {}
+}
+
 function initializeWaitlist() {
-	
 	try {
 		if (!settings.waitlistmode) { // stop and clear
 			waitlist = [];
@@ -3518,8 +3820,10 @@ function selectRandomWaitlist(n = 1) {
 		
 		drawListCount = selectable.length - count;
 		sendWaitlistConfig(winners, true);
+		return winners;
 		
 	} catch (e) {}
+	return false;
 }
 
 function resetWaitlist() {
@@ -3761,7 +4065,7 @@ function onAttach(debuggeeId, callback, message, a = null, b = null, c = null) {
 	}
 }
 
-function processIncomingRequest(request, UUID = false) {
+async function processIncomingRequest(request, UUID = false) {
 	if (settings.disablehost) {
 		return;
 	}
@@ -3851,7 +4155,46 @@ function processIncomingRequest(request, UUID = false) {
 			}
 		} else if (request.action === "blockUser") {
 			blockUser(request.value);
+		} else if (request.action === "obsCommand") {
+			if (isExtensionOn){
+				fowardOBSCommand(request);
+			}
+		} else if (request.value && ("target" in request) && UUID && request.action === "chatbot"){ // target is the callback ID
+			if (isExtensionOn && settings.allowChatBot){
+				try {
+					let model = "vanilj/llama-3.1-70b-instruct-lorablated-iq2_xs:latest"
+					let prompt = request.value;
+					if (request.turbo){
+						model = "rolandroland/llama3.1-uncensored"; // a faster model
+						prompt = "You're an AI assistant. Keep responses limited to a few sentences.\n"+prompt;
+					}
+					model = settings.ollamamodel?.textsetting || model; // if you manually set it via the settings
+					
+					callOllamaAPI(prompt, model, (chunk) => {
+						//console.log("Received chunk:", chunk);
+						sendDataP2P({ chatbotChunk: {value: chunk, target: request.target}}, UUID);
+						// Process the chunk as needed
+					}).then((fullResponse) => {
+						//console.log("Full response:", fullResponse);
+						sendDataP2P({ chatbotResponse: {value: fullResponse, target: request.target}}, UUID);
+					}).catch((error) => {
+						console.error("Error:", error);
+					});
+					//let resp = await callOllamaAPI(prompt, model); // will default to first available model if not found.
+					// console.log({ chatbotResponse: {value: resp, target: request.target}}, UUID);
+					
+				} catch(e){
+					console.error(e);
+				}
+			}
 		}
+	}
+}
+
+function fowardOBSCommand(data){
+	// data.value = {value:{action: 'setCurrentScene', value: sceneName}}
+	if (isExtensionOn && data.value) {
+		sendToDestinations({obsCommand: data.value});
 	}
 }
 
@@ -3880,7 +4223,7 @@ function blockUser(data){
 
 		const userToBlock = { username: (data.userid || data.chatname), type: data.type };
 		
-		if (data.chatimg && !data.chatimg.endsWith("./unknown.png")){
+		if (data.chatimg && !data.chatimg.endsWith("/unknown.png")){
 			userToBlock.chatimg = data.chatimg;
 		}
 		
@@ -3942,6 +4285,8 @@ eventer(messageEvent, async function (e) {
 						sendToDestinations(data);
 					}
 				}
+			} else if (e.data.action == "view-stats-updated") {
+				return;
 			} else if (e.data.UUID && e.data.value && e.data.action == "push-connection-info") {
 				// flip this
 				if ("label" in e.data.value) {
@@ -3952,6 +4297,8 @@ eventer(messageEvent, async function (e) {
 						processTicker();
 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
 						initializeWaitlist();
+					} else if (connectedPeers[e.data.UUID] == "poll") {
+						initializePoll();
 					}
 				}
 			} else if (e.data.UUID && e.data.value && e.data.action == "view-connection-info") {
@@ -3964,6 +4311,8 @@ eventer(messageEvent, async function (e) {
 						processTicker();
 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
 						initializeWaitlist();
+					} else if (connectedPeers[e.data.UUID] == "poll") {
+						initializePoll();
 					}
 				}
 			} else if (e.data.UUID && "value" in e.data && !e.data.value && e.data.action == "push-connection") {
@@ -3981,7 +4330,6 @@ eventer(messageEvent, async function (e) {
 				if (e.data.value && e.data.value == "Stream ID is already in use.") {
 					isExtensionOn = false;
 					updateExtensionState();
-
 					try {
 						chrome.notifications.create({
 							type: "basic",
@@ -3989,7 +4337,9 @@ eventer(messageEvent, async function (e) {
 							title: "Cannot enable Social Stream",
 							message: "Your specified Session ID is already in use.\n\nDisable Social Stream elsewhere if already in use first, or change your session ID to something unique."
 						});
+						messagePopup({alert: "Your specified Session ID is already in use.\n\nDisable Social Stream elsewhere if already in use first, or change your session ID to something unique."});
 					} catch (e) {
+						
 						console.error(e);
 					}
 				}
@@ -3999,6 +4349,8 @@ eventer(messageEvent, async function (e) {
 });
 
 function checkIfAllowed(sitename) {
+	if (isSSAPP){return true;}
+	
 	if (!settings.discord) {
 		try {
 			if (sitename == "discord") {
@@ -4059,7 +4411,7 @@ function checkIfAllowed(sitename) {
 			}
 		} catch (e) {}
 	}
-	if (!settings.telegram) {
+	if (!settings.telegram) { 
 		try {
 			if (sitename == "telegram") {
 				return false;
@@ -4094,6 +4446,19 @@ function checkIfAllowed(sitename) {
 	return true;
 }
 
+function messagePopup(data) {
+    const popupMessage = {
+        forPopup: data
+    };
+    chrome.runtime.sendMessage(popupMessage, function(response) {
+        if (chrome.runtime.lastError) {
+            // console.warn("Error sending message:", chrome.runtime.lastError.message);
+        } else {
+            // console.log("Message sent successfully:", response);
+        }
+    });
+    return true;
+}
 function pokeSite(url = false, tabid = false) {
 	if (!chrome.debugger) {
 		return false;
@@ -4216,7 +4581,7 @@ function generalFakePoke(tabid) {
 	}
 }
 
-function processResponse(data, reverse = false, metadata = null) {
+function processResponse(data, reverse = false, metadata = null, relay=false) {
 	if (!chrome.debugger) {
 		return false;
 	}
@@ -4226,6 +4591,10 @@ function processResponse(data, reverse = false, metadata = null) {
 	if (settings.disablehost) {
 		return;
 	}
+	
+	checkExactDuplicateAlreadySent(data.response);
+	
+	
 	chrome.tabs.query({}, function (tabs) {
 		if (chrome.runtime.lastError) {
 			//console.warn(chrome.runtime.lastError.message);
@@ -4281,7 +4650,19 @@ function processResponse(data, reverse = false, metadata = null) {
 
 				published[tabs[i].url] = true;
 				//messageTimeout = Date.now();
-				if (tabs[i].url.startsWith("https://www.twitch.tv/popout/")) {
+				if (tabs[i].url.includes(".stageten.tv") && settings.s10apikey && settings.s10){
+					if (!data.response){continue;}
+					// we will not send fake chat as we're likely sending it via POST instead directly
+					if (metadata){
+						sendToS10(metadata, true);
+					} else {
+						var msg = {};
+						msg.chatmessage = data.response;
+						msg.type = "socialstream";
+						msg.chatimg = "https://socialstream.ninja/icons/icon-128.png"; 
+						sendToS10(msg, true); // contains the original message 
+					}
+				} else if (tabs[i].url.startsWith("https://www.twitch.tv/popout/")) {
 					// twitch, but there's also cases for youtube/facebook
 					if (!debuggerEnabled[tabs[i].id]) {
 						debuggerEnabled[tabs[i].id] = false;
@@ -4325,9 +4706,17 @@ function processResponse(data, reverse = false, metadata = null) {
 					} catch (e) {
 						console.error(e);
 					}
+				} else if (tabs[i].url.startsWith("https://app.zoom.us/")) { // I was getting double messages sent, so this I hope fixes that.
+					if (!debuggerEnabled[tabs[i].id]) {
+						debuggerEnabled[tabs[i].id] = false;
+						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, zoomFakeChat, data.response, false, true, false));
+					} else {
+						zoomFakeChat(tabs[i].id, data.response, false, true, false);
+					}
+					continue; // Skip the rest of the loop after handling Zoom
 				} else {
 					// all other destinations. ; generic
-
+					
 					if (tabs[i].url.includes("youtube.com/live_chat")) {
 						getYoutubeAvatarImage(tabs[i].url, true); // see if I can pre-cache the channel image, if not loaded.
 					}
@@ -4348,6 +4737,35 @@ function processResponse(data, reverse = false, metadata = null) {
 	return true;
 }
 
+function zoomFakeChat(tabid, message, middle = false, keypress = true, backspace = false) {
+    chrome.tabs.sendMessage(tabid, "focusChat", function (response = false) {
+        if (!response) {
+            if (debuggerEnabled[tabid]) {
+                chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+            }
+            return;
+        }
+
+        chrome.debugger.sendCommand({ tabId: tabid }, "Input.insertText", { text: message }, function (e) {
+            chrome.debugger.sendCommand(
+                { tabId: tabid },
+                "Input.dispatchKeyEvent",
+                {
+                    type: "keyDown",
+                    key: "Enter",
+                    code: "Enter",
+                    nativeVirtualKeyCode: 13,
+                    windowsVirtualKeyCode: 13
+                },
+                function (e) {
+                    if (debuggerEnabled[tabid]) {
+                        chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+                    }
+                }
+            );
+        });
+    });
+}
 function limitString(string, maxLength) {
 	let count = 0;
 	let result = "";
@@ -4620,12 +5038,14 @@ function generalFakeChat(tabid, message, middle = true, keypress = true, backspa
 function createTab(url) {
 	return new Promise(resolve => {
 		chrome.windows.create({ focused: false, height: 200, width: 400, left: 0, top: 0, type: "popup", url: url }, async tab => {
-			chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
-				if (info.status === "complete" && tabId === tab.id) {
-					chrome.tabs.onUpdated.removeListener(listener);
-					resolve(tab);
-				}
-			});
+			if (chrome.tabs.onUpdated){
+				chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+					if (info.status === "complete" && tabId === tab.id) {
+						chrome.tabs.onUpdated.removeListener(listener);
+						resolve(tab);
+					}
+				});
+			}
 		});
 	});
 }
@@ -4787,6 +5207,11 @@ function sanitizeRelay(text, textonly=false, alt = false) {
 async function applyBotActions(data, tab = false) {
 	// this can be customized to create bot-like auto-responses/actions.
 	// data.tid,, => processResponse({tid:N, response:xx})
+	
+	if (!data.id) {
+		messageCounter += 1;
+		data.id = messageCounter;
+	}
 
 	try {
 		if (settings.blacklistuserstoggle && data.chatname && settings.blacklistusers) {
@@ -4804,7 +5229,7 @@ async function applyBotActions(data, tab = false) {
 				return null;
 			}
 		}
-
+		
 		if (settings.whitelistuserstoggle && settings.whitelistusers) {
 			if (!data.chatname) {
 				return null; // no name, so won't allow
@@ -4824,6 +5249,7 @@ async function applyBotActions(data, tab = false) {
 				return null;
 			}
 		}
+		
 
 		if (settings.viplistuserstoggle && data.chatname && settings.viplistusers) {
 			const viplist = settings.viplistusers.textsetting.split(",").map(user => {
@@ -4876,6 +5302,45 @@ async function applyBotActions(data, tab = false) {
 				// there's no content worth sending I'm assuming
 				return false;
 			}
+		}
+		
+		if (settings.relayall && data.chatmessage && data.chatname && !data.event) {
+			// don't relay events
+			if (checkExactDuplicateAlreadySent(data.chatmessage)) {  
+				// not matching exactly
+				return null;
+			}
+
+			if (data.chatmessage.includes(" said: ")) {
+				return null;
+			} // probably a reply
+
+			if (settings.myname) {
+				let custombot = settings.myname.textparam1.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
+				custombot = custombot.split(",");
+				if (custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
+					return null;
+				} // a bot or host, so we don't want to relay that
+			}
+
+			if (Date.now() - messageTimeout > 1000) {
+				messageTimeout = Date.now();
+				var msg = {};
+				msg.tid = data.tid;
+				// this should be ideall HTML stripped
+				if (tab) {
+					msg.url = tab.url;
+				}
+
+				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
+				if (tmpmsg) { 
+					msg.response = sanitizeRelay(data.chatname, true, "Someone") + " said: " + tmpmsg;
+					processResponse(msg, true, data); // this should be the first and only message
+				}
+			}
+		} else if (settings.s10relay && data.chatmessage && data.chatname && !data.event){
+			// console.log(data); 
+			sendToS10(data, false, true); // we'll handle the relay logic here instead
 		}
 
 		if (data.chatmessage) {
@@ -4995,42 +5460,7 @@ async function applyBotActions(data, tab = false) {
 				processResponse(msg, true);
 			}
 		}
-		if (settings.relayall && data.chatmessage && data.chatname && !data.event) {
-			// don't relay events
-			if (checkExactDuplicate(data.chatmessage)) {
-				// not matching exactly
-				return null;
-			}
-
-			if (data.chatmessage.includes(" said: ")) {
-				return null;
-			} // probably a reply
-
-			if (settings.myname) {
-				let custombot = settings.myname.textparam1.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
-				custombot = custombot.split(",");
-				if (custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
-					return null;
-				} // a bot or host, so we don't want to relay that
-			}
-
-			if (Date.now() - messageTimeout > 1000) {
-				messageTimeout = Date.now();
-				var msg = {};
-				msg.tid = data.tid;
-				// this should be ideall HTML stripped
-				if (tab) {
-					msg.url = tab.url;
-				}
-
-				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
-				if (tmpmsg) {
-					msg.response = sanitizeRelay(data.chatname, true, "Someone") + " said: " + tmpmsg;
-					checkExactDuplicate(msg.response);
-					processResponse(msg, true, data); // this should be the first and only message
-				}
-			}
-		}
+		
 
 		if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy && data.chatmessage && data.chatmessage.indexOf("!giphy") != -1 && !data.contentimg) {
 			var searchGif = data.chatmessage;
@@ -5303,6 +5733,27 @@ async function applyBotActions(data, tab = false) {
 				);
 			}
 		}
+		
+		if (settings.dice && (data.chatmessage.toLowerCase().startsWith("!dice ") || data.chatmessage.toLowerCase() === "!dice")) {
+			if (Date.now() - messageTimeout > 5100) {
+				
+				let maxRoll = data.chatmessage.toLowerCase().split(" ");
+				if (maxRoll.length == 1) {
+					maxRoll = 6;
+				} else {
+					maxRoll = parseInt(maxRoll[1]) || 6;
+				}
+				
+				let roll = Math.floor(Math.random() * maxRoll) + 1;
+
+				messageTimeout = Date.now();
+				var msg = {};
+				msg.tid = data.tid;
+				msg.response = "@" + data.chatname + ", the bot rolled you a " + roll +".";
+				processResponse(msg);
+			}
+		}
+
 	} catch (e) {
 		console.error(e);
 	}
@@ -5399,8 +5850,96 @@ async function applyBotActions(data, tab = false) {
 	} catch (e) {
 		console.error(e);
 	}
+	try {
+		
+		if (settings.ollamaCensorBot){
+			try{
+				if (settings.ollamaCensorBotBlockMode){
+					let good = await censorMessageWithOllama(data);
+					if (!good){
+						return false;
+					}
+				} else {
+					censorMessageWithOllama(data);
+				}
+			} catch(e){
+				console.log(e); // ai.js file missing?
+				console.log("If the ai.js file is missing, we're going to remotely load it, if possible...");
+				ensureFunction('censorMessageWithOllama', 'https://socialstream.ninja/ai.js?v=ssapp') // temporary fix for older standalone app users. MUST remove for manifest version 3 version.
+					.then(() => {
+						try {
+							censorMessageWithOllama(data);
+						} catch (e) {
+							console.warn(e);
+						}
+					})
+					.catch(error => {
+						console.error('Failed to load script or find function:', error);
+					});
+			}
+		}
+		
+		if (settings.ollama){
+			if (Date.now() - lastSentTimestamp > 5000) {
+				try{
+					processMessageWithOllama(data);
+				} catch(e){
+					console.log(e); // ai.js file missing?
+					console.log("If the ai.js file is missing, we're going to remotely load it, if possible...");
+					ensureFunction('processMessageWithOllama', 'https://socialstream.ninja/ai.js?v=ssapp') // temporary fix for older standalone app users. MUST remove for manifest version 3 version.
+						.then(() => {
+							try {
+								processMessageWithOllama(data);
+							} catch (e) {
+								console.warn(e);
+							}
+						})
+						.catch(error => {
+							console.error('Failed to load script or find function:', error);
+						});
+				}
+			}
+		}
+	} catch (e) {
+		console.error(e);
+	}
+	
 	return data;
 }
+
+function loadScript(url) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+function ensureFunction(functionName, scriptUrl) {
+    if (typeof window[functionName] === 'function') {
+        return Promise.resolve();
+    }
+    
+    return loadScript(scriptUrl).then(() => {
+        if (typeof window[functionName] !== 'function') {
+            throw new Error(`Function ${functionName} not found after loading script`);
+        }
+    });
+}
+
+
+function decodeAndCleanHtml(input) {
+    var doc = new DOMParser().parseFromString(input, 'text/html');
+    doc.querySelectorAll('img[alt]').forEach(img => {
+        var alt = img.getAttribute('alt');
+        img.parentNode.replaceChild(doc.createTextNode(alt), img);
+    });
+    var decodedInput = doc.body.textContent || "";
+    return decodedInput.replace(/\s\s+/g, " ").trim();
+}
+
 var store = [];
 
 var MidiInit = false;
