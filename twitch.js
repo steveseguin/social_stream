@@ -867,7 +867,7 @@
 						document.querySelector(".consent-banner").remove();
 					}
 				}
-			}, 4500);
+			}, 3000);
 		}
 
 		if (document.querySelector('[data-a-target="consent-banner-accept"]')) {

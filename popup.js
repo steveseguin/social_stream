@@ -147,7 +147,7 @@ function miniTranslate(ele, ident = false, direct=false) {
 			}
 			return;
 		} else {
-			console.log(ident + ": not found in translation file");
+			log(ident + ": not found in translation file");
 			
 			if (!translation.miscellaneous || !(ident in translation.miscellaneous)){ 
 				var value = ident.replaceAll("-", " "); // lets use the key as the translation
@@ -339,6 +339,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	document.getElementById("disableButton").onclick = function(event){
 		event.stopPropagation()
 		chrome.runtime.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}}, function (response) {
+			chrome.runtime.lastError;
 			update(response);
 		});
 		return false;
@@ -552,10 +553,20 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		ragFileManagement.style.display = this.checked ? 'block' : 'none';
 	});
 
-	console.log("pop up asking main for settings");
+	log("pop up asking main for settings");
 	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
-		console.log("getSettings response",response);
-		update(response, false); // we dont want to sync things
+		chrome.runtime.lastError;
+		log("getSettings response",response);
+		if ((response == undefined) || (!response.streamID)){
+			log("WOO");
+			setTimeout(function(){
+				chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
+					update(response, false);
+				});
+			},200);
+		} else {
+			update(response, false); // we dont want to sync things
+		}
 	});
 
 	
@@ -697,7 +708,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				}
 			} else {
 				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
-					console.log("ignore callback for this action");
+					log("ignore callback for this action");
 					// update(response);  
 				});
 			}
@@ -718,7 +729,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			document.getElementById("ytcopy").innerHTML = "🔄";
 			try{
 				var videoID = data.split('{"videoId":"')[1].split('"')[0];
-				console.log(videoID);
+				log(videoID);
 				if (videoID){
 					navigator.clipboard.writeText(videoID).then(() => {
 						document.getElementById("ytcopy").innerHTML = "✔️"; // Video ID copied to clipboard
@@ -740,7 +751,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 });
 var streamID = false;
 function update(response, sync=true){
-	console.log("update-> response: ",response);
+	log("update-> response: ",response);
 	if (response !== undefined){
 		
 		if (response.documents){
@@ -855,8 +866,8 @@ function update(response, sync=true){
 								} else if (key.includes("=")){
 									var keys = key.split('=');
 									ele = document.querySelector("input[data-param2='"+keys[0]+"']");
-									console.log(keys);
-									console.log(response.settings);
+									log(keys);
+									log(response.settings);
 									if (ele){
 										ele.checked = response.settings[key].param2;
 										if (keys[1]){
@@ -935,14 +946,14 @@ function update(response, sync=true){
 										try {
 											document.getElementById(ele.dataset.palette).value = ele.value;
 										} catch(e){
-											console.log(e);
+											log(e);
 										}
 									}
 									
 									updateSettings(ele, sync);
 									
 									if (key == "blacklistusers"){
-										console.log(ele.value);
+										log(ele.value);
 										usernames = ele.value.split(',').map(u => u.trim()).filter(u => u);
 										updateUsernameList();
 									}
@@ -1699,7 +1710,7 @@ function updateSettings(ele, sync=true, value=null){
 					streamID: ele.value
 				});
 			}
-			chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, streamID: ele.value}, function (response) {console.log("streamID updated");});
+			chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, streamID: ele.value}, function (response) {log("streamID updated");});
 			
 		} else if (ele.dataset.special==="password"){
 			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
@@ -1707,7 +1718,7 @@ function updateSettings(ele, sync=true, value=null){
 					password: ele.value
 				});
 			}
-			chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, password: ele.value || ""}, function (response) {console.log("Password updated");});
+			chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, password: ele.value || ""}, function (response) {log("Password updated");});
 		}
 	} else if (ele.dataset.color){
 		
@@ -1748,7 +1759,13 @@ function updateSettings(ele, sync=true, value=null){
 
 if (!chrome.browserAction){
 	chrome.browserAction = {};
-	chrome.browserAction.setIcon = function (icon) {};
+																																										   
+	
+	if (chrome.action && chrome.action.setIcon){
+		chrome.browserAction.setIcon = chrome.action.setIcon
+	} else {
+		chrome.browserAction.setIcon = function (icon) {};
+	}
 	
 	function sendMessageToBackground(message, timeout = 15000) {
 	  return new Promise((resolve, reject) => {
@@ -1768,7 +1785,7 @@ if (!chrome.browserAction){
 	}
 
 	sendMessageToBackground({cmd: "getSettings"}, 20000).then(response => {
-		console.log("Received response:", response);
+		log("Received response:", response);
 		update(response, false);
 	  })
 	  .catch(error => {
@@ -1808,9 +1825,9 @@ function updateDocumentList(documents = []) {
 try {
 	chrome.runtime.onMessage.addListener(
 		function(request, sender, sendResponse) {
-			console.log("INCOMING MESSAGE--------------------------");
+			log("INCOMING MESSAGE--------------------------");
 			if (request.forPopup) {
-				console.log("Message received in popup:", request.forPopup);
+				log("Message received in popup:", request.forPopup);
 				if (request.forPopup.documents){
 					updateDocumentList(request.forPopup.documents);
 				}
@@ -1824,7 +1841,7 @@ try {
 		}
 	);
 } catch(e){
-	console.log(e);
+	log(e);
 }
 
 
@@ -1843,7 +1860,7 @@ function updateUsernameList(save=false) {
 	var ele = document.querySelector("input[data-textsetting='blacklistusers'],textarea[data-textsetting='blacklistusers']");
 	if (ele){
 		ele.value = usernames.join(',');
-		console.log(ele.value);
+		log(ele.value);
 		
 		if (save){
 			updateSettings(ele);
