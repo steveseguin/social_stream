@@ -23,11 +23,55 @@ var maxLen;
 var wordIndex;
 var vocabularySize;
 
+
+// Global variable to track if TensorFlow.js is loaded
+let tfLoaded = false;
+
+// Function to load TensorFlow.js
+async function loadTensorFlow() {
+  if (tfLoaded) return;
+
+  // Check if we're in a Chrome extension
+  const isExtension = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id;
+
+  let scriptUrl;
+  if (isExtension) {
+    // Use chrome.runtime.getURL for extensions
+    scriptUrl = chrome.runtime.getURL('thirdparty/tf.min.js');
+  } else {
+    // Use a relative path for websites
+    scriptUrl = './thirdparty/tf.min.js';
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = scriptUrl;
+    script.onload = () => {
+      console.log('TensorFlow.js loaded successfully');
+      tfLoaded = true;
+      resolve();
+    };
+    script.onerror = () => {
+      console.error('Failed to load TensorFlow.js');
+      reject(new Error('Failed to load TensorFlow.js'));
+    };
+    document.body.appendChild(script);
+  });
+}
+
 async function loadSentimentAnalysis(){
 	if (sentimentAnalysisLoaded!==false){return;}
 	sentimentAnalysisLoaded = null;
 	
-
+	if (!tfLoaded) {
+		try {
+		  await loadTensorFlow();
+		} catch (error) {
+		  console.error('Error loading TensorFlow:', error);
+		  return;
+		}
+	}
+  
 	model = await tf.loadLayersModel('./thirdparty/model.json');
 	metadataJson = await fetch('./thirdparty/metadata.json');
 	var sentimentMetadata = await metadataJson.json();

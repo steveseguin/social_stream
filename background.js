@@ -1126,7 +1126,13 @@ function updateExtensionState(sync = true) {
 	log("updateExtensionState", isExtensionOn);
 
 	if (isExtensionOn) {
-		chrome.browserAction.setIcon({ path: "/icons/on.png" });
+
+		if (chrome.browserAction && chrome.browserAction.setIcon){
+			chrome.browserAction.setIcon({ path: "/icons/on.png" });
+		}
+		if (chrome.action && chrome.action.setIcon){
+			chrome.action.setIcon({ path: "/icons/on.png" });
+		}
 		if (streamID) {
 			loadIframe(streamID, password);
 		}
@@ -1152,7 +1158,12 @@ function updateExtensionState(sync = true) {
 				clearInterval(intervalMessages[i]);
 			}
 		}
-		chrome.browserAction.setIcon({ path: "/icons/off.png" });
+		if (chrome.browserAction && chrome.browserAction.setIcon){
+			chrome.browserAction.setIcon({ path: "/icons/off.png" });
+		}
+		if (chrome.action && chrome.action.setIcon){
+			chrome.action.setIcon({ path: "/icons/off.png" });
+		}
 	}
 
 	if (sync) {
@@ -6052,7 +6063,12 @@ function tellAJoke() {
 	processResponse(data);
 }
 
-chrome.browserAction.setIcon({ path: "/icons/off.png" });
+if (chrome.browserAction && chrome.browserAction.setIcon){
+	chrome.browserAction.setIcon({ path: "/icons/off.png" });
+}
+if (chrome.action && chrome.action.setIcon){
+	chrome.action.setIcon({ path: "/icons/off.png" });
+}
 
 async function fetchData(url) {
 	try {
