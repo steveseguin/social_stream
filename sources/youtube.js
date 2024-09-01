@@ -1,25 +1,5 @@
 (function () {
-	function toDataURL(url, callback) {
-		var xhr = new XMLHttpRequest();
-		xhr.onload = function () {
-			var blob = xhr.response;
 
-			if (blob.size > 55 * 1024) {
-				callback(url); // Image size is larger than 25kb.
-				return;
-			}
-
-			var reader = new FileReader();
-
-			reader.onloadend = function () {
-				callback(reader.result);
-			};
-			reader.readAsDataURL(xhr.response);
-		};
-		xhr.open("GET", url);
-		xhr.responseType = "blob";
-		xhr.send();
-	}
 
 	//var channelName = "";
 	var videoId = false;
@@ -381,8 +361,12 @@
 	function isObject(variable) {
 	  return typeof variable === 'object' && variable !== null && !isHTMLElement(variable);
 	}
+	
+	function delay(ms) {
+	  return new Promise(resolve => setTimeout(resolve, ms));
+	}
 
-	function processMessage(ele, wss = true) {
+	async function processMessage(ele, wss = true) {
 		if (!ele || !ele.isConnected){
 			return;
 		}
@@ -486,13 +470,21 @@
 		chatmessage = chatmessage.replaceAll("=s24-", "=s48-");
 
 		try {
-			chatimg = ele.querySelector("#img").src;
-			if (chatimg.startsWith("data:image/gif;base64")) {
-				// document.querySelector("#panel-pages").querySelector("#img").src
-				chatimg = document.querySelector("#panel-pages").querySelector("#img").src; // this is the owner
+			chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
+			if (chatimg.startsWith("data:image/gif;base64")) { 
+				//console.log("waiting..");
+				await delay(1000);
+				chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
+				
+				if (chatimg.startsWith("data:image/gif;base64")) { 
+					//console.log(ele.cloneNode(true));
+					chatimg = document.querySelector("#panel-pages").querySelector("#img[src]").src; // this is the owner
+				}
 			}
 			chatimg = chatimg.replace("=s32-", "=s64-"); // double the resolution of avatars
-		} catch (e) {}
+		} catch (e) {
+			chatimg = "";
+		}
 
 		var chatdonation = "";
 		try {
@@ -524,7 +516,7 @@
 		
 		var chatsticker = "";
 		try {
-			chatsticker = ele.querySelector(".yt-live-chat-paid-sticker-renderer #sticker>#img").src;
+			chatsticker = ele.querySelector(".yt-live-chat-paid-sticker-renderer #sticker>#img[src]").src;
 		} catch (e) {}
 
 		if (chatsticker) {
@@ -633,13 +625,21 @@
 		
 		if (giftedmemembership && !chatimg) {
 			try {
-				chatimg = ele.querySelector("#img").src;
+				chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
 				if (chatimg.startsWith("data:image/gif;base64")) {
-					chatimg = document.querySelector("#panel-pages").querySelector("#img").src;
+					//console.log("waiting..");
+					await delay(1000);
+					chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
+					
+					if (chatimg.startsWith("data:image/gif;base64")) {
+						//console.log(ele.cloneNode(true));
+						chatimg = document.querySelector("#panel-pages").querySelector("#img[src]").src; // this is the owner
+					}
 				}
 				chatimg = chatimg.replace("=s32-", "=s64-");
 			} catch (e) {
-				console.error("Failed to extract avatar for gifted membership:", e);
+				chatimg = "";
+				//console.error("Failed to extract avatar for gifted membership:", e);
 			}
 		}
 
@@ -664,7 +664,7 @@
 
 		srcImg = document.querySelector("#input-panel");
 		if (srcImg) {
-			srcImg = srcImg.querySelector("#img");
+			srcImg = srcImg.querySelector("#img[src]");
 			if (srcImg) {
 				srcImg = srcImg.src || "";
 			} else {
@@ -680,10 +680,10 @@
 		}
 		
 		if (isHTMLElement(chatmessage)){
-			console.error(chatmessage);
+			//console.error(chatmessage);
 			chatmessage = escapeHtml(chatmessage.textContent.trim());
 		} else if (isObject(chatmessage)){
-			console.error(chatmessage);
+			//console.error(chatmessage);
 			chatmessage = "";
 		}
 		
