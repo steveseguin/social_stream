@@ -63,9 +63,40 @@
 		}
 	}
 
-	var messageHistory = [];
+	function setupDeletionObserver(target) {
+	  const deletionObserver = new MutationObserver((mutations) => {
+		mutations.forEach((mutation) => {
+		  if (mutation.type === 'attributes' && mutation.attributeName === 'is-deleted') {
+			deleteThis(mutation.target);
+		  }
+		});
+	  });
+
+	  deletionObserver.observe(target, {
+		attributes: true,
+		attributeFilter: ['is-deleted'],
+		subtree: true
+	  });
+	}
 	
-	
+	function deleteThis(ele) {
+	  if (ele.deleted) return;
+	  ele.deleted = true;
+	  try {
+		const chatname = ele.querySelector("#author-name");
+		if (chatname) {
+		  const data = {
+			chatname: escapeHtml(chatname.innerText),
+			type: "youtube"
+		  };
+		  chrome.runtime.sendMessage(chrome.runtime.id, { "delete": data }, function(e) {});
+		}
+	  } catch (e) {
+		console.error("Error in deleteThis:", e);
+	  }
+	}
+
+	const messageHistory = new Set();
 	
 	function cloneSvgWithResolvedUse(svgElement) {
 		const clonedSvg = svgElement.cloneNode(true);
@@ -357,7 +388,6 @@
 		}
 		if (ele.hasAttribute("is-deleted")) {
 			deleteThis(ele)
-			//console.log("Message is deleted already");
 			return;
 		}
 	
@@ -368,15 +398,16 @@
 		try {
 			if (ele.skip) {
 				return;
-			} else if (ele.id && messageHistory.includes(ele.id)) {
-				//console.log("Message already exists");
-				return;
 			} else if (ele.id) {
-				messageHistory.push(ele.id);
-				messageHistory = messageHistory.slice(-400);
-			} else {
+				if (messageHistory.has(ele.id)) return;
+				messageHistory.add(ele.id);
+				if (messageHistory.size > 400) {
+				  const iterator = messageHistory.values();
+				  messageHistory.delete(iterator.next().value);
+				}
+		    } else {
 				return; // no id.
-			}
+		    }
 			if (ele.querySelector("[in-banner]")) {
 				//console.log("Message in-banner");
 				return;
@@ -812,10 +843,10 @@
 			}
 			if (settings.delayyoutube){
 				captureDelay = 2000;
-				console.log(captureDelay);
+				//console.log(captureDelay);
 			} else {
 				captureDelay = 200;
-				console.log(captureDelay);
+				//console.log(captureDelay);
 			}
 		}
 	});
@@ -823,9 +854,7 @@
 	function onElementInserted(target, callback) {
 		var onMutationsObserved = function (mutations) {
 			mutations.forEach(function (mutation) {
-				if (mutation.type && mutation.type === 'attributes' && mutation.attributeName === 'is-deleted') {
-					deleteThis(mutation.target);
-				} else if (mutation.addedNodes.length) {
+				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i] && mutation.addedNodes[i].classList && mutation.addedNodes[i].classList.contains("yt-live-chat-banner-renderer")) {
@@ -851,13 +880,7 @@
 		if (!target) {
 			return;
 		}
-		var config = {
-			childList: true, // Observe the addition of new child nodes
-			subtree: true, // Observe the target node and its descendants
-			attributes: true, // Observe attributes changes
-			attributeOldValue: true, // Optionally capture the old value of the attribute
-			attributeFilter: ['is-deleted'] // Only observe changes to 'is-deleted' attribute
-		};
+		var config = {childList: true, subtree: true};
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -865,45 +888,17 @@
 
 	console.log("Social stream inserted");
 
-	// document.body.querySelector("#chat-messages").querySelectorAll("yt-live-chat-text-message-renderer")
-
-	var checkTimer = setInterval(function () {
-		var ele = document.querySelector("yt-live-chat-app");
-		if (ele) {
-			clearInterval(checkTimer);
-			var cleared = false;
-			document.querySelectorAll("yt-live-chat-text-message-renderer").forEach(ele4 => {
-				cleared = true;
-				ele4.skip = true;
-				if (ele4.id) {
-					messageHistory.push(ele4.id);
-				}
-			});
-
-			if (cleared) {
-				onElementInserted(ele, function (ele2) {
-					setTimeout(
-						function (ele2) {
-							processMessage(ele2, false);
-						},
-						captureDelay,
-						ele2
-					);
-				});
-			} else {
-				setTimeout(function () {
-					onElementInserted(document.querySelector("yt-live-chat-app"), function (ele2) {
-						setTimeout(
-							function (ele2) {
-								processMessage(ele2, false);
-							},
-							captureDelay,
-							ele2
-						);
-					});
-				}, 1000);
-			}
-		}
+	const checkTimer = setInterval(function () {
+	  const ele = document.querySelector("yt-live-chat-app");
+	  if (ele) {
+		clearInterval(checkTimer);
+		setupDeletionObserver(ele);
+		
+		// Set up the regular message observer
+		onElementInserted(ele, function (ele2) {
+		  setTimeout(() => processMessage(ele2, false), captureDelay);
+		});
+	  }
 	}, 1000);
 
 	if (window.location.href.includes("youtube.com/watch")) {
@@ -953,8 +948,8 @@
 			}
 		}, 3000);
 	}
+	
 
-	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
 	try {
 		var receiveChannelCallback = function (e) {
 			remoteConnection.datachannel = event.channel;
