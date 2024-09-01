@@ -77,7 +77,7 @@
 	}
 
 	const messageHistory = new Set();
-	const avatarHistory = {};
+	const avatarHistory = new Map();
 	
 	function cloneSvgWithResolvedUse(svgElement) {
 		const clonedSvg = svgElement.cloneNode(true);
@@ -476,12 +476,10 @@
 		try {
 			chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
 			if (chatimg.startsWith("data:image/gif;base64")) { 
-				await delay(500);
-				chatimg = document.querySelector("#"+ele.id+" #author-photo img[src]:not([src^='data:image/gif;base64'])");
+				await delay(500);console.log(ele);
+				chatimg = document.querySelector("#"+ele.id+" #author-photo img[src]:not([src^='data:image/gif;base64'])") || "";
 				if (chatimg){
 					chatimg = chatimg.src;
-				} else {
-					console.log(ele);
 				}
 			}
 		} catch (e) {
@@ -491,9 +489,10 @@
 		
 		if (chatimg){
 			chatimg = chatimg.replace("=s32-", "=s64-"); 
-			avatarHistory[chatname] = chatimg;
+			avatarHistory.set(chatname, chatimg);
 		} else {
-			chatimg = avatarHistory[chatname] || "";
+			chatimg = avatarHistory.get(chatname) || "";
+			console.log("no image..", chatimg);
 		}
 
 		var chatdonation = "";
