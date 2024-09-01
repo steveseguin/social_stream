@@ -494,11 +494,15 @@
 	
 	try{
 		chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-			if ("settings" in response){
-				settings = response.settings;
-			}
-			if ("state" in response){
-				isExtensionOn = response.state;
+			if (response){
+				if ("settings" in response){
+					settings = response.settings;
+				}
+				if ("state" in response){
+					isExtensionOn = response.state;
+				}
+			} else {
+				console.log(response);
 			}
 		});
 	} catch(e){}
