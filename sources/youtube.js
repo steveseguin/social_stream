@@ -77,6 +77,7 @@
 	}
 
 	const messageHistory = new Set();
+	const avatarHistory = {};
 	
 	function cloneSvgWithResolvedUse(svgElement) {
 		const clonedSvg = svgElement.cloneNode(true);
@@ -385,7 +386,7 @@
 			} else if (ele.id) {
 				if (messageHistory.has(ele.id)) return;
 				messageHistory.add(ele.id);
-				if (messageHistory.size > 400) {
+				if (messageHistory.size > 255) { // 250 seems to be Youtube's max?
 				  const iterator = messageHistory.values();
 				  messageHistory.delete(iterator.next().value);
 				}
@@ -420,6 +421,9 @@
 		try {
 			var nameElement = ele.querySelector("#author-name");
 			chatname = escapeHtml(nameElement.innerText);
+			if (!chatname){
+				return;
+			}
 
 			if (!settings.nosubcolor) {
 				if (nameElement.classList.contains("member")) {
@@ -472,18 +476,24 @@
 		try {
 			chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
 			if (chatimg.startsWith("data:image/gif;base64")) { 
-				//console.log("waiting..");
-				await delay(1000);
-				chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
-				
-				if (chatimg.startsWith("data:image/gif;base64")) { 
-					//console.log(ele.cloneNode(true));
-					chatimg = document.querySelector("#panel-pages").querySelector("#img[src]").src; // this is the owner
+				await delay(500);
+				chatimg = document.querySelector("#"+ele.id+" #author-photo img[src]:not([src^='data:image/gif;base64'])");
+				if (chatimg){
+					chatimg = chatimg.src;
+				} else {
+					console.log(ele);
 				}
 			}
-			chatimg = chatimg.replace("=s32-", "=s64-"); // double the resolution of avatars
 		} catch (e) {
+			console.log(e);
 			chatimg = "";
+		}
+		
+		if (chatimg){
+			chatimg = chatimg.replace("=s32-", "=s64-"); 
+			avatarHistory[chatname] = chatimg;
+		} else {
+			chatimg = avatarHistory[chatname] || "";
 		}
 
 		var chatdonation = "";
@@ -623,26 +633,6 @@
 			}
 		}
 		
-		if (giftedmemembership && !chatimg) {
-			try {
-				chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
-				if (chatimg.startsWith("data:image/gif;base64")) {
-					//console.log("waiting..");
-					await delay(1000);
-					chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
-					
-					if (chatimg.startsWith("data:image/gif;base64")) {
-						//console.log(ele.cloneNode(true));
-						chatimg = document.querySelector("#panel-pages").querySelector("#img[src]").src; // this is the owner
-					}
-				}
-				chatimg = chatimg.replace("=s32-", "=s64-");
-			} catch (e) {
-				chatimg = "";
-				//console.error("Failed to extract avatar for gifted membership:", e);
-			}
-		}
-
 		if (chatsticker) {
 			if (!settings.textonlymode) {
 				chatmessage = '<img class="supersticker" src="' + chatsticker + '">';
@@ -752,7 +742,7 @@
 	if (containsShorts(window.location.href)){
 		youtubeShorts = true;
 	}
-
+	
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		try {
 			if ("focusChat" == request) {
@@ -868,6 +858,7 @@
 							} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-sticker-renderer".toUpperCase()) {
 								callback(mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].tagName == "ytd-sponsorships-live-chat-gift-purchase-announcement-renderer".toUpperCase()) {
+								// ytd-sponsorships-live-chat-gift-purchase-announcement-renderer
 								callback(mutation.addedNodes[i]);
 							} else {
 								//console.error("unknown: "+mutation.addedNodes[i].tagName);
@@ -880,7 +871,7 @@
 		if (!target) {
 			return;
 		}
-		var config = {childList: true, subtree: true};
+		var config = {childList: true, subtree: false};
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -889,14 +880,12 @@
 	console.log("Social stream inserted");
 
 	const checkTimer = setInterval(function () {
-	  const ele = document.querySelector("yt-live-chat-app");
-	  if (ele) {
-		clearInterval(checkTimer);
+	  const ele = document.querySelector("yt-live-chat-app #items.yt-live-chat-item-list-renderer");
+	  if (ele && !ele.skip) {
+		ele.skip = true;
 		setupDeletionObserver(ele);
-		
-		// Set up the regular message observer
 		onElementInserted(ele, function (ele2) {
-		  setTimeout(() => processMessage(ele2, false), captureDelay);
+			setTimeout(() => processMessage(ele2, false), captureDelay);
 		});
 	  }
 	}, 1000);
