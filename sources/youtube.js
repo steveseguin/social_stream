@@ -492,7 +492,7 @@
 			avatarHistory.set(chatname, chatimg);
 		} else {
 			chatimg = avatarHistory.get(chatname) || "";
-			console.log("no image..", chatimg);
+			// console.log("no image..", chatimg);
 		}
 
 		var chatdonation = "";
