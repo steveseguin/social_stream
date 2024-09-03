@@ -3863,7 +3863,11 @@
 				getById("filter_messages_parent").classList.add("lightmode");
 				document.documentElement.style.setProperty("--link-color", "#06F");
 				document.documentElement.style.setProperty("--font-color-name", "#000");
-				document.documentElement.style.setProperty("--background-color", "#FFF0");
+				if (navigator.userAgent.toLowerCase().indexOf(" electron/") === -1) {
+					document.documentElement.style.setProperty("--background-color", "#FFF0");
+				} else {
+					document.documentElement.style.setProperty("--background-color", "#FFFF");
+				}
 				document.documentElement.style.setProperty("--font-color", "#000");
 				document.documentElement.style.setProperty("--highlight-base2", "#EEE7");
 
