@@ -5887,18 +5887,6 @@ async function applyBotActions(data, tab = false) {
 				}
 			} catch(e){
 				console.log(e); // ai.js file missing?
-				console.log("If the ai.js file is missing, we're going to remotely load it, if possible...");
-				ensureFunction('censorMessageWithOllama', 'https://socialstream.ninja/ai.js?v=ssapp') // temporary fix for older standalone app users. MUST remove for manifest version 3 version.
-					.then(() => {
-						try {
-							censorMessageWithOllama(data);
-						} catch (e) {
-							console.warn(e);
-						}
-					})
-					.catch(error => {
-						console.error('Failed to load script or find function:', error);
-					});
 			}
 		}
 		
@@ -5908,18 +5896,6 @@ async function applyBotActions(data, tab = false) {
 					processMessageWithOllama(data);
 				} catch(e){
 					console.log(e); // ai.js file missing?
-					console.log("If the ai.js file is missing, we're going to remotely load it, if possible...");
-					ensureFunction('processMessageWithOllama', 'https://socialstream.ninja/ai.js?v=ssapp') // temporary fix for older standalone app users. MUST remove for manifest version 3 version.
-						.then(() => {
-							try {
-								processMessageWithOllama(data);
-							} catch (e) {
-								console.warn(e);
-							}
-						})
-						.catch(error => {
-							console.error('Failed to load script or find function:', error);
-						});
 				}
 			}
 		}
