@@ -8,6 +8,9 @@ var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
 var sentimentAnalysisLoaded = false;
 
+var messageCounter = 0;
+var lastAntiSpam = 0;
+
 var connectedPeers = {};
 var isSSAPP = false;
 
@@ -555,6 +558,8 @@ function checkIntervalState(i) {
 
 	intervalMessages[i] = setTimeout(
 		function (i) {
+			let antispam = true;
+			
 			if ("timemessageinterval" + i in settings) {
 				if (settings["timemessageinterval" + i].numbersetting == 0) {
 					if (!isExtensionOn) {
@@ -569,7 +574,8 @@ function checkIntervalState(i) {
 					messageTimeout = Date.now();
 					var msg = {};
 					msg.response = settings["timemessagecommand" + i].textsetting;
-					processResponse(msg);
+					processResponse(msg, false, null, false, antispam);
+					
 				} else if (settings["timemessageinterval" + i].numbersetting) {
 					intervalMessages[i] = setInterval(
 						function (i) {
@@ -585,7 +591,7 @@ function checkIntervalState(i) {
 							messageTimeout = Date.now();
 							var msg = {};
 							msg.response = settings["timemessagecommand" + i].textsetting;
-							processResponse(msg);
+							processResponse(msg, false, null, false, antispam);
 						},
 						settings["timemessageinterval" + i].numbersetting * 60000,
 						i
@@ -606,7 +612,7 @@ function checkIntervalState(i) {
 						messageTimeout = Date.now();
 						var msg = {};
 						msg.response = settings["timemessagecommand" + i].textsetting;
-						processResponse(msg);
+						processResponse(msg, false, null, false, antispam);
 					},
 					15 * 60000,
 					i
@@ -2699,7 +2705,6 @@ function ajax(object2send, url, ajaxType = "PUT", type = "application/json; char
 	} catch (e) {}
 }
 
-var messageCounter = 0;
 async function sendToDestinations(message) {
 	if (typeof message == "object") {
 		
@@ -4592,7 +4597,7 @@ function generalFakePoke(tabid) {
 	}
 }
 
-function processResponse(data, reverse = false, metadata = null, relay=false) {
+function processResponse(data, reverse = false, metadata = null, relay=false, antispam=false) {
 	if (!chrome.debugger) {
 		return false;
 	}
@@ -4603,8 +4608,14 @@ function processResponse(data, reverse = false, metadata = null, relay=false) {
 		return;
 	}
 	
-	checkExactDuplicateAlreadySent(data.response);
+	if (antispam && settings["dynamictiming"]){
+		if (lastAntiSpam + 10 > messageCounter){
+			return;
+		}
+	}
+	lastAntiSpam = messageCounter;
 	
+	checkExactDuplicateAlreadySent(data.response);
 	
 	chrome.tabs.query({}, function (tabs) {
 		if (chrome.runtime.lastError) {
@@ -5875,18 +5886,6 @@ async function applyBotActions(data, tab = false) {
 				}
 			} catch(e){
 				console.log(e); // ai.js file missing?
-				console.log("If the ai.js file is missing, we're going to remotely load it, if possible...");
-				ensureFunction('censorMessageWithOllama', 'https://socialstream.ninja/ai.js?v=ssapp') // temporary fix for older standalone app users. MUST remove for manifest version 3 version.
-					.then(() => {
-						try {
-							censorMessageWithOllama(data);
-						} catch (e) {
-							console.warn(e);
-						}
-					})
-					.catch(error => {
-						console.error('Failed to load script or find function:', error);
-					});
 			}
 		}
 		
@@ -5896,18 +5895,6 @@ async function applyBotActions(data, tab = false) {
 					processMessageWithOllama(data);
 				} catch(e){
 					console.log(e); // ai.js file missing?
-					console.log("If the ai.js file is missing, we're going to remotely load it, if possible...");
-					ensureFunction('processMessageWithOllama', 'https://socialstream.ninja/ai.js?v=ssapp') // temporary fix for older standalone app users. MUST remove for manifest version 3 version.
-						.then(() => {
-							try {
-								processMessageWithOllama(data);
-							} catch (e) {
-								console.warn(e);
-							}
-						})
-						.catch(error => {
-							console.error('Failed to load script or find function:', error);
-						});
 				}
 			}
 		}

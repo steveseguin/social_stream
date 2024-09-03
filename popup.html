@@ -3496,14 +3496,21 @@ input:checked + .slider:before {
 
                                 <div id="chatCommands"></div>
                                 <br />
-
+								
                                 <h3><span data-translate="send-fixed-messages-at-intervals">Send fixed messages at intervals</span></h3>
-                                <span data-translate="specify-frequency-and-starting-offset-of-fixed-messages">
+                                
+								<span data-translate="specify-frequency-and-starting-offset-of-fixed-messages">
                                     Specify frequency and starting offset of fixed messages
                                 </span>
                                 <div id="timedMessages"></div>
                                 <br />
-
+								<div title="If less than 10 messages total have come in, skip the automated message interval">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="dynamictiming" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    🦗 <span data-translate="dynamic-timing">Skip auto-message if chat is too quiet</span>
+                                </div>
                                 <h3><span data-translate="custom-commands">Auto-responder</span></h3>
                                 <span data-translate="auto-responder">
                                     Auto-respond to custom chat commands
