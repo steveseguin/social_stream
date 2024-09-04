@@ -220,11 +220,11 @@ You're ready to start using it!
 
 Please note also that you will need to manually update the extension to access newer versions; it currently does not auto-update aspects of the extension; just the dock and single overlay page auto-update as they are hosted online.
 
-#### Seeing an error message?
+#### Seeing an error message about Manifest Version 2?
 
-If you see the browser say there is an "Error", specifically a manifest v2 warning or something, you can safely ignore it.  It is not actually an error and will not impact the function of the extension.
+If you see the browser say there is an "Error", specifically a manifest v2 warning, you can safely ignore it. It is not actually an error and will not impact the function of the extension at present. If it worries you, please note that both a manifest version 3 version of the extension is available for download or via the Chrome webstore; there is also a standalone desktop app version. Manifest version 2 just happens to remain the most tried and test version at the moment.
 
-Something of concern though is Google will be updating Chrome browsers on January 2023 to block many popular Chrome extensions, including many Adblockers and also Social Stream Ninja. I'm working to resolve this concern, but Social Stream Ninja may end up having diminished functionality if Google has their way. If necessary, Social Stream Ninja may evolve into a downloadable app instead to avoid these limiations, but I'm hoping to avoid that if possible.
+While Google will eventually kill manifest version 2 extensions, it's possible to keep them alive until at least June 2025, as noted in <a href="https://www.reddit.com/r/chrome/comments/1dln9ev/tutorial_extend_manifest_v2/">this guide here</a>. I will depreciate version 2 when the times come, and while manifest version 3 is more restrictive, it should still work. If you download the v3 version from the Webstore, please note that I will only update it every couple weeks, due to review restrictions by Google.
 
 #### Updating
 
