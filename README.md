@@ -26,7 +26,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
     - [Chat graveyard 🪦🪦🪦](#chat-graveyard-)
   - [Video walk-thru](#video-walk-thru)
   - [To install](#to-install)
-    - [Seeing an error message?](#seeing-an-error-message)
+    - [Seeing an error message about Manifest Version 2?](#seeing-an-error-message-about-manifest-version-2)
     - [Updating](#updating)
     - [Firefox support](#firefox-support)
   - [Standalone version of the app](#standalone-version-of-the-app)
