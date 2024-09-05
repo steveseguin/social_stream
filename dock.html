@@ -2670,6 +2670,12 @@
 			if (urlParams.has("autofeaturepriv")) {
 				autofeaturepriv = true;
 			}
+			
+			var trimChat = false;
+			if (urlParams.has("trim")) {
+				trimChat = urlParams.get("trim") || 200;
+				trimChat = parseInt(trimChat) || 0;
+			}
 
 			var alignbottom = false;
 			if (urlParams.has("alignbottom")) {
@@ -6994,6 +7000,11 @@
 					} else {
 						console.error("Messages should have an ID, else queuing/pinning won't work");
 					}
+					
+					if (trimChat){
+						chatmessage = truncateHTMLContent(chatmessage, trimChat);
+					}
+
 
 					if (largeavatar) {
 						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived + "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
@@ -7901,6 +7912,43 @@
 				msg.overlayNinja.response = data;
 
 				send2Extension(msg.overlayNinja);
+			}
+			
+			function truncateHTMLContent(html, maxLength) {
+				const tempDiv = document.createElement('div');
+				tempDiv.innerHTML = html;
+
+				function traverseAndTruncate(node, remainingChars) {
+					if (remainingChars <= 0) return 0;
+
+					if (node.nodeType === Node.TEXT_NODE) {
+						if (node.textContent.length > remainingChars) {
+							node.textContent = node.textContent.slice(0, remainingChars) + '...';
+							return 0;
+						}
+						return remainingChars - node.textContent.length;
+					}
+
+					if (node.nodeType === Node.ELEMENT_NODE) {
+						let currentRemaining = remainingChars;
+						for (let i = 0; i < node.childNodes.length; i++) {
+							currentRemaining = traverseAndTruncate(node.childNodes[i], currentRemaining);
+							if (currentRemaining <= 0) {
+								// Remove any remaining siblings
+								while (node.childNodes.length > i + 1) {
+									node.removeChild(node.lastChild);
+								}
+								break;
+							}
+						}
+						return currentRemaining;
+					}
+
+					return remainingChars;
+				}
+
+				traverseAndTruncate(tempDiv, maxLength);
+				return tempDiv.innerHTML;
 			}
 
 			function setupSaveToDisk() {
