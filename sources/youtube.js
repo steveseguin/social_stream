@@ -324,7 +324,7 @@
 		}
 	}
 
-	function getAllContentNodes2(element) {
+	function getAllContentNodes(element) {
 		var resp = "";
 		element.childNodes.forEach(node => {
 			if (node.childNodes.length) {
