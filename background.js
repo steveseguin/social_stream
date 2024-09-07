@@ -3321,7 +3321,7 @@ async function openchat(target = null, force=false) {
 
 	if ((target == "twitch" || !target) && settings.twitch_username) {
 		let url = "https://www.twitch.tv/popout/" + settings.twitch_username.textsetting + "/chat?popout=";
-		openURL(url);
+		openURL(url, true);
 	}
 
 	if ((target == "kick" || !target) && settings.kick_username) {
