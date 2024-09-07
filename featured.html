@@ -1395,10 +1395,18 @@
 				};
 				socketserver.addEventListener("message", function (event) {
 					if (event.data) {
+					
+						var resp = false;
+						
 						if (typeof event.data !== "object") {
 							var data = JSON.parse(event.data);
 						} else {
-							data = event.data;
+							var data = event.data;
+						}
+						
+						var pid = false;
+						if (data && data.get){
+							pid = data.get;
 						}
 
 						if (data && "overlayNinja" in data) {
@@ -1406,72 +1414,68 @@
 						}
 						
 						if (data.target && data.target !== "null" && data.target !== thisLabel) { 
-							return; // does not match, so we assume this isn't for us.
+							return; // does not match, so we assume this isn't for us. no callback.
 						}
-
-						if (data == false) {
-							processData({ contents: false });
-							return;
-						}
-
-						if ("content" in data) {
-							if (data.content) {
-								processData({ contents: data.content });
-							} else {
-								processData({ contents: false });
-								return;
-							}
-						}
-	
-						if (data.action && "value" in data && data.action == "content") {
+						
+						if (!("content" in data) && data.action && "value" in data && data.action == "content") {
 							if (data.value) {
 								data = JSON.parse(data.value);
 							} else {
-								processData({ contents: false });
-								return;
+								data = false;
 							}
-						} else if (data.action){
-						
-							if (data.action === "toggleTTS") {
-								if (data.value == "toggle") {
-									speech = !speech;
-								} else if (data.value == "true") {
-									speech = true;
-								} else if (data.value == "false") {
-									speech = false;
-								} else if (data.value == "on") {
-									speech = true;
-								} else if (data.value == "off") {
-									speech = false;
-								} else if (data.value == "1") {
-									speech = true;
-								} else if (data.value == "0") {
-									speech = false;
-								} else if (data.value) {
-									speech = true;
-								} else {
-									speech = false;
-								}
-								if (speech) {
-									getById("tts").dataset.state = "1";
-									getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
-									getById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
-								} else {
-									getById("tts").dataset.state = "0";
-									getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
-									getById("tts").title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
-								}
-								return true;
-							}
-						
 						}
 
-						if (!data || !("contents" in data)) {
-							if (!("action" in data) && "chatmessage" in data) {
-								processData({ contents: data });
+						if (data == false) {
+							resp = processData({ contents: false });
+						} else if ("content" in data) {
+							if (data.content) {
+								resp = processData({ contents: data.content });
+							} else {
+								resp = processData({ contents: false });
 							}
+						} else if (data.action && (data.action === "toggleTTS")){
+							if (data.value == "toggle") {
+								speech = !speech;
+							} else if (data.value == "true") {
+								speech = true;
+							} else if (data.value == "false") {
+								speech = false;
+							} else if (data.value == "on") {
+								speech = true;
+							} else if (data.value == "off") {
+								speech = false;
+							} else if (data.value == "1") {
+								speech = true;
+							} else if (data.value == "0") {
+								speech = false;
+							} else if (data.value) {
+								speech = true;
+							} else {
+								speech = false;
+							}
+							if (speech) {
+								getById("tts").dataset.state = "1";
+								getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
+								getById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
+							} else {
+								getById("tts").dataset.state = "0";
+								getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
+								getById("tts").title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
+							}
+							resp = true;
+						} else if (!("action" in data) && ("chatmessage" in data)) {
+							resp = processData({ contents: data });
 						} else {
-							processData(data);
+							resp = processData(data);
+						}
+						
+						if (resp !== null) {
+							var ret = {};
+							data.result = resp;
+							data.get = pid;
+							ret.callback = data;
+							log(ret);
+							socketserver.send(JSON.stringify(ret));
 						}
 					}
 				});
@@ -1959,47 +1963,43 @@
 				}
 				if (data && data.contents) {
 					if (onlyshowdonos && !data.contents.hasDonation) {
-						return;
-					}
-					
-					if (data.contents.hasDonation || data.contents.membership){
-						console.log(data.contents);
+						return false;
 					}
 					
 					if (hideDonations){
 						data.contents.hasDonation = ""; // kiss
 						if (!data.contents.chatmessage && !data.contents.contentimg && !data.contents.subtitle && !data.contents.membership){
 							// there's nothing worth showing, so skip
-							return;
+							return false;
 						}
 					}
 
 					if (hideTwitch && data.contents.type === "twitch") {
 						// this is a twitch message, and we're hiding them.
-						return;
+						return false;
 					}
 					if (onlyTwitch && data.contents.type !== "twitch") {
 						// this is not a twitch message, so we're hiding them
-						return;
+						return false;
 					}
 					
 					if (onlyFrom && data.contents.type !== onlyFrom) {
-						return;
+						return false;
 					}
 					if (hideFrom && hideFrom.includes(data.contents.type)) {
-						return;
+						return false;
 					}
 					
 					if (filterfeaturedusers){
-						if (!data.contents.chatname){return;}
+						if (!data.contents.chatname){return false;}
 						const isWhitelisted = filterfeaturedusers.some(({ username, type }) => data.contents.chatname.toLowerCase().trim() === username && (type === "*" || data.contents.type === type));
 						if (!isWhitelisted){
-							return;
+							return false;
 						}
 					}
 					
 					if (lastMessageId && ("id" in data.contents) && data.contents.id === lastMessageId) {
-						return;
+						return "a message with this ID is already featured. Change or remove the ID."
 					} else if ("id" in data.contents){
 						lastMessageId = data.contents.id;
 					} else {
@@ -2029,9 +2029,8 @@
 						showmessage(data.contents)
 					}
 					
-					
-				} else if (data) {
-					if ("contents" in data) {
+					return true;
+				} else if (data && ("contents" in data)) { // clear
 						lastMessageId = null;
 						clearTimeout(timeoutTimer);
 						document.getElementById("output").classList.add(transitionType);
@@ -2047,8 +2046,9 @@
 						}
 
 						sendToDisk(data.contents);
-					}
+						return true;
 				}
+				return false;
 			}
 			
 			function checkqueue(reset=true){
