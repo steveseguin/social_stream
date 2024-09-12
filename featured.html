@@ -1433,36 +1433,6 @@
 							} else {
 								resp = processData({ contents: false });
 							}
-						} else if (data.action && (data.action === "toggleTTS")){
-							if (data.value == "toggle") {
-								speech = !speech;
-							} else if (data.value == "true") {
-								speech = true;
-							} else if (data.value == "false") {
-								speech = false;
-							} else if (data.value == "on") {
-								speech = true;
-							} else if (data.value == "off") {
-								speech = false;
-							} else if (data.value == "1") {
-								speech = true;
-							} else if (data.value == "0") {
-								speech = false;
-							} else if (data.value) {
-								speech = true;
-							} else {
-								speech = false;
-							}
-							if (speech) {
-								getById("tts").dataset.state = "1";
-								getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
-								getById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
-							} else {
-								getById("tts").dataset.state = "0";
-								getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
-								getById("tts").title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
-							}
-							resp = true;
 						} else if (!("action" in data) && ("chatmessage" in data)) {
 							resp = processData({ contents: data });
 						} else {
@@ -1474,7 +1444,6 @@
 							data.result = resp;
 							data.get = pid;
 							ret.callback = data;
-							log(ret);
 							socketserver.send(JSON.stringify(ret));
 						}
 					}
@@ -2031,24 +2000,49 @@
 					
 					return true;
 				} else if (data && ("contents" in data)) { // clear
-						lastMessageId = null;
-						clearTimeout(timeoutTimer);
-						document.getElementById("output").classList.add(transitionType);
-						clearTimeout(nextComment);
-						
-						checkqueue(true);
+					lastMessageId = null;
+					clearTimeout(timeoutTimer);
+					document.getElementById("output").classList.add(transitionType);
+					clearTimeout(nextComment);
+					
+					checkqueue(true);
 
-						if (isIFrame) {
-							clearTimeout(iframeTimeout);
-							iframeTimeout = setTimeout(function () {
-								parent.postMessage({ resizeWindow: { height: "0px" } }, "*");
-							}, 300);
+					if (isIFrame) {
+						clearTimeout(iframeTimeout);
+						iframeTimeout = setTimeout(function () {
+							parent.postMessage({ resizeWindow: { height: "0px" } }, "*");
+						}, 300);
+					}
+
+					sendToDisk(data.contents);
+					return true;
+				} else if (data.action && (data.action === "toggleTTS" || data.action === "tts")) {
+					if ("value" in data){
+						if (data.value == "toggle") {
+							speech = !speech;
+						} else if (data.value == "true") {
+							speech = true;
+						} else if (data.value == "false") {
+							speech = false;
+						} else if (data.value == "1") {
+							speech = true;
+						} else if (data.value == "0") {
+							speech = false;
+						} else if (data.value == "on") {
+							speech = true;
+						} else if (data.value == "off") {
+							speech = false;
+						} else if (data.value) {
+							speech = true;
+						} else {
+							speech = false;
 						}
-
-						sendToDisk(data.contents);
-						return true;
+					} else {
+						speech = !speech;
+					}
+					return speech
 				}
-				return false;
+				return null;
 			}
 			
 			function checkqueue(reset=true){

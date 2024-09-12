@@ -3107,13 +3107,16 @@
 						} catch (e) {
 							return;
 						}
-						processInput(data);
-						if (data.get) {
-							var ret = {};
-							ret.callback = {};
-							ret.callback.get = data.get;
-							ret.callback.result = true;
-							socketserver.send(JSON.stringify(ret));
+						resp = processInput(data);
+						console.log(resp);
+						if (resp !== null) {
+							if (data.get) {
+								var ret = {};
+								ret.callback = {};
+								ret.callback.get = data.get;
+								ret.callback.result = resp;
+								socketserver.send(JSON.stringify(ret));
+							}
 						}
 					}
 				});
@@ -5359,25 +5362,29 @@
 						} else{
 							console.log("No message found to feature that hasn't already been featured");
 						}
-					} else if (data.action === "toggleTTS") {
-						if (data.value == "toggle") {
-							speech = !speech;
-						} else if (data.value == "true") {
-							speech = true;
-						} else if (data.value == "false") {
-							speech = false;
-						} else if (data.value == "1") {
-							speech = true;
-						} else if (data.value == "0") {
-							speech = false;
-						} else if (data.value == "on") {
-							speech = true;
-						} else if (data.value == "off") {
-							speech = false;
-						} else if (data.value) {
-							speech = true;
+					} else if (data.action === "toggleTTS" || data.action === "tts") {
+						if ("value" in data){
+							if (data.value == "toggle") {
+								speech = !speech;
+							} else if (data.value == "true") {
+								speech = true;
+							} else if (data.value == "false") {
+								speech = false;
+							} else if (data.value == "1") {
+								speech = true;
+							} else if (data.value == "0") {
+								speech = false;
+							} else if (data.value == "on") {
+								speech = true;
+							} else if (data.value == "off") {
+								speech = false;
+							} else if (data.value) {
+								speech = true;
+							} else {
+								speech = false;
+							}
 						} else {
-							speech = false;
+							speech = !speech;
 						}
 						if (speech) {
 							getById("tts").dataset.state = "1";
@@ -5388,7 +5395,7 @@
 							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
 							getById("tts").title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
 						}
-						return true;
+						return speech;
 					}
 				} else if ("forward" in data) {
 					sendDataP2P(data.forward);
