@@ -1387,16 +1387,20 @@
 					conCon = 1;
 					if (allin == 1) {
 						socketserver.send(JSON.stringify({ join: roomID, out: 3 }));
+						console.log("output channel: 3, input channel: default");
 					} else if (allin == 2) {
 						socketserver.send(JSON.stringify({ join: roomID, out: 3, in: 1 }));
+						console.log("output channel: 3, input channel: 1");
 					} else {
 						socketserver.send(JSON.stringify({ join: roomID, out: 3, in: 2 })); // main default
+						console.log("output channel: 3, input channel: 2");
 					}
+					
 				};
 				socketserver.addEventListener("message", function (event) {
 					if (event.data) {
 					
-						var resp = false;
+						
 						
 						if (typeof event.data !== "object") {
 							var data = JSON.parse(event.data);
@@ -1412,26 +1416,23 @@
 						if (data && "overlayNinja" in data) {
 							data = data.overlayNinja;
 						}
-						
-						if (data.target && data.target !== "null" && data.target !== thisLabel) { 
-							return; // does not match, so we assume this isn't for us. no callback.
-						}
-						
-						if (!("content" in data) && data.action && "value" in data && data.action == "content") {
-							if (data.value) {
-								data = JSON.parse(data.value);
-							} else {
-								data = false;
-							}
-						}
 
+						var resp = false;
 						if (data == false) {
 							resp = processData({ contents: false });
+						} else if (data.target && data.target !== "null" && data.target !== thisLabel) { 
+							return; // does not match, so we assume this isn't for us. no callback.
 						} else if ("content" in data) {
 							if (data.content) {
 								resp = processData({ contents: data.content });
 							} else {
 								resp = processData({ contents: false });
+							}
+						} else if (data.action && "value" in data && data.action == "content") {
+							if (data.value) {
+								data = JSON.parse(data.value);
+							} else {
+								data = false;
 							}
 						} else if (!("action" in data) && ("chatmessage" in data)) {
 							resp = processData({ contents: data });
@@ -2016,31 +2017,35 @@
 
 					sendToDisk(data.contents);
 					return true;
-				} else if (data.action && (data.action === "toggleTTS" || data.action === "tts")) {
-					if ("value" in data){
-						if (data.value == "toggle") {
-							speech = !speech;
-						} else if (data.value == "true") {
-							speech = true;
-						} else if (data.value == "false") {
-							speech = false;
-						} else if (data.value == "1") {
-							speech = true;
-						} else if (data.value == "0") {
-							speech = false;
-						} else if (data.value == "on") {
-							speech = true;
-						} else if (data.value == "off") {
-							speech = false;
-						} else if (data.value) {
-							speech = true;
+				} else if (data.action){
+					console.log(data);
+					if (data.action === "toggleTTS" || data.action === "tts") {
+						if ("value" in data){
+							if (data.value == "toggle") {
+								speech = !speech;
+							} else if (data.value == "true") {
+								speech = true;
+							} else if (data.value == "false") {
+								speech = false;
+							} else if (data.value == "1") {
+								speech = true;
+							} else if (data.value == "0") {
+								speech = false;
+							} else if (data.value == "on") {
+								speech = true;
+							} else if (data.value == "off") {
+								speech = false;
+							} else if (data.value) {
+								speech = true;
+							} else {
+								speech = false;
+							}
 						} else {
-							speech = false;
+							speech = !speech;
 						}
-					} else {
-						speech = !speech;
+						console.log("TTS: "+speech);
+						return speech
 					}
-					return speech
 				}
 				return null;
 			}

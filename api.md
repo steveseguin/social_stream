@@ -110,8 +110,12 @@ The channel system allows for more granular control over message routing:
 - Channel 5: Used for waitlist.html communication
 - Channel 6: Reserved for future use
 - Channel 7: Reserved for future use
+- Channel 8: Reserved for future use
+- Channel 9: Reserved for future use
 
 When specifying channels, you're defining which channels to receive messages from (IN_CHANNEL) and which to send messages to (OUT_CHANNEL). This allows different components of your setup to communicate on separate channels, reducing noise and improving organization.
+
+When a message is sent, it goes to the specified output channel. Those who have that channel set as their input channel will recieve the message.
 
 ### Available Commands
 
@@ -306,11 +310,13 @@ The featured.html page is designed to display featured content, typically used f
 
 ### Connection Options
 
-The featured page can be configured to connect to the WebSocket server in three different ways:
+The featured.html page can be configured to connect to the WebSocket server in three different ways:
 
-1. Default: Connects to `wss://io.socialstream.ninja`, joins the room, and sets output to channel 3 and input to channel 2.
-2. Server2: Sets output to channel 3 and input to channel 1.
-3. Server3: Sets output to channel 3 and input to channels 1 and 2.
+1. Default (server): Connects to `wss://io.socialstream.ninja`, joins the room, and sets output to channel 3 and input to channel 2.
+2. Server2: Sets output to channel 3 and input to default channel.
+3. Server3: Sets output to channel 3 and input to channel 1.
+
+In all cases, channel 3 is reserved for output from the featured.html page.
 
 These can be set using URL parameters:
 - `?server`: Default connection
@@ -409,7 +415,7 @@ The dock.html page serves as a control center for managing chat messages and int
 
 The dock page can be configured to connect to different WebSocket servers:
 
-1. Main Server: 
+1. Main Server (default): 
    - URL: `wss://io.socialstream.ninja/api`
    - Configurable via the `server` URL parameter
    - Joins room with `out: 2, in: 1`
@@ -425,7 +431,7 @@ The dock page can be configured to connect to different WebSocket servers:
 - `server2`: Enables connection to the extension server and sets its URL
 - `server3`: Enables connection to both main and extension servers
 
-### Websocket Message Processing
+### WebSocket Message Processing
 
 The dock page processes incoming WebSocket messages using the `processInput` function. This function handles various types of messages and actions, including:
 

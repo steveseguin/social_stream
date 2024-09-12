@@ -1,788 +1,532 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>Sample API</title>
-	<meta charset="utf-8"/>
-    <link href="./nes.min.css" rel="stylesheet" />
-	<style>
-		html, body, pre, code, kbd, samp {
-			font-family:Arial, Tohoma
-		}
-		input {
-			margin:5px;
-		}
-		body{
-			margin:1%;
-			border:0;
-			background-image: linear-gradient(to left, #e1c5d5, #ddc5da, #d8c6e0, #d1c7e5, #c8c9e9, #c1cded, #bad2f0, #b4d6f2, #b1ddf3, #b1e4f3, #b4eaf0, #bbf0ed);
-			width:96%;
-			height:100%;
-		} 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream API Sandbox</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --primary-color: #4a90e2;
+            --tertiary-color: #38393a;
+            --secondary-color: #283037;
+            --accent-color: #e74c3c;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --info-color: #3498db;
+        }
 
-		button {
-			margin:10px 3px;
-		}
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
 
-		button, input, optgroup, select, textarea {
-			font-family: inherit;
-			font-size: inherit;
-			line-height: inherit;
-			padding: 8px 12px;
-		}
-		
-		button:active{
-			background-color:#BBB;
-		}
+        .container {
+            max-width: 1200px;
+        }
 
-		#incoming_messages {
-			overflow: auto;
-			height: calc(100% - 146px);
-			margin: 10px;
-			display: inline;
-			width: calc(100% - 51px);
-			word-break: break-word;
-		}
-		.inbound {
-			margin: 40px 0;
-		}
-	</style>
+        h1, h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .section {
+            background-color: var(--tertiary-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        #incoming_messages {
+            height: 300px;
+            overflow-y: auto;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .inbound {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .btn {
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            border-color: var(--warning-color);
+        }
+
+        .btn-info {
+            background-color: var(--info-color);
+            border-color: var(--info-color);
+        }
+
+        .form-control {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+        }
+
+        .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+            color: var(--text-color);
+        }
+
+        #connectionStatus {
+            font-weight: bold;
+        }
+
+        .connected {
+            color: var(--success-color);
+        }
+
+        .disconnected {
+            color: var(--accent-color);
+        }
+
+        .note {
+            font-size: 0.9em;
+            font-style: italic;
+            color: var(--info-color);
+            margin-top: 10px;
+        }
+
+        #testMessageForm .form-group {
+            margin-bottom: 10px;
+        }
+
+        #testMessageForm label {
+            color: var(--text-color);
+        }
+    </style>
 </head>
 <body>
-<h2>
-	Sample app using the Social Stream HTTP/WSS remote control API
-</h2>
+    <div class="container">
+        <h1 class="mb-4">Social Stream API Sandbox</h1>
+		
+		<div class="container mt-3">
+			<p class="lead">
+				This Social Stream API Sandbox is a comprehensive tool for developers to test and interact with the Social Stream Ninja API. It provides a user-friendly interface to experiment with various API features, including message generation, user management, and channel-specific communications. For full API documentation, please visit <a href="https://socialstream.ninja/api" target="_blank">socialstream.ninja/api</a>.
+			</p>
+		</div>
 
-Ensure that you have matching session values, both with this page if testing (for example, dock.html?session=xxxx&server), or used when calling the API itself.
-<br /><br />
-
-See <a href="https://github.com/steveseguin/social_stream/blob/main/README.md#server-api-support" target="_blank">this link for details</a> on how to add these commands to your stream deck or application. 
-<br /><br /><br />As a basic example though, a call that uses a basic GET request would be structured like:<br /><p><b><i>https://io.socialstream.ninja/{sessionID}/{action}/{target}/{value}</i></b>.</p>
-<br />
-<div id="header"></div>
-<div id="target_self"></div>
-<div id="incoming_messages"></div>
-
-<script>
-function generateStreamID(){
-	var text = "";
-	var possible = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-	for (var i = 0; i < 10; i++){
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
-	return text;
-};
-
-(function (w) {
-	w.URLSearchParams = w.URLSearchParams || function (searchString) {
-		var self = this;
-		self.searchString = searchString;
-		self.get = function (name) {
-			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
-			if (results == null) {
-				return null;
+		<style>
+			.lead {
+				font-size: 1.1rem;
+				color: #e0e0e0;
+				background-color: rgba(255, 255, 255, 0.1);
+				padding: 15px;
+				border-radius: 5px;
+				margin-bottom: 20px;
 			}
-			else {
-				return decodeURI(results[1]) || 0;
+			.lead a {
+				color: #4a90e2;
+				text-decoration: none;
 			}
-		};
-	};
+			.lead a:hover {
+				text-decoration: underline;
+			}
+		</style>
+        
+        <div class="section">
+            <h2>Connection Settings</h2>
+            <div class="mb-3">
+                <label for="sessionID" class="form-label">Session ID:</label>
+                <input type="text" id="sessionID" class="form-control" placeholder="Enter session ID">
+            </div>
+            <button id="connectButton" class="btn btn-primary">Connect</button>
+            <button id="disconnectButton" class="btn btn-danger">Disconnect</button>
+            <span id="connectionStatus" class="ms-3"></span>
+            <p class="note">Note: The connection will automatically attempt to reconnect if disconnected. The session ID for the API needs to match the session ID provided by the extension; this should correspond to the ?session value found on the dock.html and featured.html links.</p>
+        </div>
 
-})(window);
+        <div class="section">
+            <h2>General Commands</h2>
+            <div class="btn-group" role="group">
+                <button class="btn btn-secondary" onclick="sendCommand('clearOverlay')">Clear Overlay</button>
+                <button class="btn btn-secondary" onclick="sendCommand('clearAll')">Clear All Messages</button>
+                <button class="btn btn-secondary" onclick="sendCommand('feature')">Feature Next Unfeatured</button>
+                <button class="btn btn-secondary" onclick="sendCommand('autoShow', 'toggle')">Toggle Auto-show</button>
+                <button class="btn btn-secondary" onclick="sendCommand('nextInQueue')">Next in Queue</button>
+                <button class="btn btn-secondary" onclick="sendCommand('getQueueSize')">Get Queue Size</button>
+            </div>
+            <p class="note">These commands control the general behavior of the overlay and message queue.</p>
+        </div>
+		
+		<div class="section">
+            <h2>TTS Controls</h2>
+            <div class="btn-group" role="group">
+                <button class="btn btn-info" onclick="sendCommand('tts', 'on', 1)">Turn TTS On (via Dock)</button>
+                <button class="btn btn-info" onclick="sendCommand('tts', 'off', 1)">Turn TTS Off (via Dock)</button>
+                <button class="btn btn-info" onclick="sendCommand('tts', 'on', 2)">Turn TTS On (via Featured)</button>
+                <button class="btn btn-info" onclick="sendCommand('tts', 'off', 2)">Turn TTS Off (via Featured)</button>
+            </div>
+            <p class="note">TTS (Text-to-Speech) can be controlled separately for the dock and featured messages. Make sure to enable the &server mode for the target you wish to directly interact with.</p>
+        </div>
 
-var urlParams = new URLSearchParams(window.location.search);
+        <div class="section">
+            <h2>Test Message Generator</h2>
+            <form id="testMessageForm">
+                <div class="form-group">
+                    <label for="chatname">Username:</label>
+                    <input type="text" class="form-control" id="chatname" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label for="chatmessage">Message:</label>
+                    <input type="text" class="form-control" id="chatmessage" placeholder="Enter message">
+                </div>
+                <div class="form-group">
+                    <label for="type">Platform:</label>
+                    <select class="form-control" id="type">
+                        <option value="twitch">Twitch</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="discord">Discord</option>
+                        <option value="slack">Slack</option>
+                        <option value="zoom">Zoom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="hasDonation">Donation Amount:</label>
+                    <input type="text" class="form-control" id="hasDonation" placeholder="Enter donation amount (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="membership">Membership:</label>
+                    <input type="text" class="form-control" id="membership" placeholder="Enter membership status (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="chatimg">Avatar URL:</label>
+                    <input type="text" class="form-control" id="chatimg" placeholder="Enter avatar URL (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="nameColor">Name Color:</label>
+                    <input type="color" class="form-control" id="nameColor">
+                </div>
+                <div class="form-group">
+                    <label for="contentimg">Content Image URL:</label>
+                    <input type="text" class="form-control" id="contentimg" placeholder="Enter content image URL (optional)">
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="isQuestion">
+                    <label class="form-check-label" for="isQuestion">Mark as Question</label>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="sendTestMessage()">Send Test Message</button>
+                <button type="button" class="btn btn-secondary" onclick="generateRandomMessage()">Generate Random Message</button>
+            </form>
+            <p class="note">Generate custom test messages to simulate different platforms and scenarios.</p>
+        </div>
 
-window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
-	console.error(errorMsg);
-	console.error(lineNumber);
-	console.error("Unhandeled Error occured"); //or any message
-	return false;
-};
+        <div class="section">
+            <h2>Send Custom Message</h2>
+            <div class="mb-3">
+                <input type="text" id="customMessage" class="form-control" placeholder="Enter custom message">
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-success" onclick="sendCustomMessage('sendChat')">Send via WSS</button>
+                <button class="btn btn-success" onclick="sendCustomMessage('sendEncodedChat', true)">Send via HTTPS GET</button>
+                <button class="btn btn-success" onclick="sendCustomMessage('sendChat', false, true)">Send via HTTPS POST</button>
+            </div>
+            <p class="note">Custom messages can be sent using different methods: WebSocket (WSS), HTTPS GET, or HTTPS POST.</p>
+        </div>
 
-window.onbeforeunload = function() {
-	return "Dude, are you sure you want to leave? Think of the kittens!"; // prevents accidental page reloads.
-}
-	
-var WID = "testOBSN";
-if (urlParams.has("api")){
-	WID = urlParams.get("api");
-} else if (urlParams.has("osc")){
-	WID = urlParams.get("osc");
-} else if (urlParams.has("id")){
-	WID = urlParams.get("id");
-} else if (urlParams.has("ID")){
-	WID = urlParams.get("ID");
-} else if (urlParams.has("wid")){
-	WID = urlParams.get("wid");
-} else if (urlParams.has("session")){
-	WID = urlParams.get("session");
-} else {
+        <div class="section">
+            <h2>Channel-Specific Messaging</h2>
+            <div class="mb-3">
+                <input type="text" id="channelMessage" class="form-control" placeholder="Enter channel-specific message">
+                <select id="channelSelect" class="form-control mt-2">
+                    <option value="1">Channel 1</option>
+                    <option value="2">Channel 2</option>
+                    <option value="3">Channel 3</option>
+                    <option value="4">Channel 4</option>
+                    <option value="5">Channel 5</option>
+                    <option value="6">Channel 6</option>
+                    <option value="7">Channel 7</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="sendChannelMessage()">Send Channel Message</button>
+            <p class="note">Send messages to specific channels for more granular control.</p>
+        </div>
+		
+        <div class="section">
+            <h2>Waitlist Commands</h2>
+            <div class="btn-group" role="group">
+                <button class="btn btn-warning" onclick="sendCommand('removefromwaitlist', 1)">Remove First from Waitlist</button>
+                <button class="btn btn-warning" onclick="sendCommand('highlightwaitlist', 1)">Highlight First in Waitlist</button>
+                <button class="btn btn-warning" onclick="sendCommand('resetwaitlist')">Reset Waitlist</button>
+                <button class="btn btn-warning" onclick="sendCommand('downloadwaitlist')">Download Waitlist</button>
+                <button class="btn btn-warning" onclick="sendCommand('selectwinner')">Select Winner</button>
+                <button class="btn btn-warning" onclick="sendCommand('stopentries')">Stop Entries</button>
+                <button class="btn btn-warning" onclick="sendCommand('waitlistmessage', 'Custom waitlist message')">Set Waitlist Message</button>
+            </div>
+            <p class="note">These commands manage the waitlist functionality, useful for giveaways or queue management.</p>
+        </div>
 
-	WID = prompt("Enter your session ID here, or add it to the URL.") || generateStreamID(10);
-	
-	var href = window.location.href;
-	var arr = href.split('?');
-	var newurl;
-	if (arr.length > 1 && arr[1] !== '') {
-		newurl = href + '&session=' + WID;
-	} else {
-		newurl = href + '?session=' + WID;
-	}
+        <div class="section">
+            <h2>User Management</h2>
+            <div class="btn-group" role="group">
+                <button class="btn btn-danger" onclick="blockUser()">Block User</button>
+                <button class="btn btn-success" onclick="toggleVIPUser()">Toggle VIP User</button>
+                <button class="btn btn-info" onclick="getUserHistory()">Get User History</button>
+            </div>
+            <p class="note">Manage users, including blocking, VIP status, and viewing history.</p>
+        </div>
 
-	window.history.pushState({path: newurl.toString()}, '', newurl.toString());
-	
-}
-var serverURL = "wss://io.socialstream.ninja:443";
-if (urlParams.has("server")){
-	serverURL = urlParams.get("server") || serverURL;
-}
+        <div class="section">
+            <h2>Incoming Messages</h2>
+            <div id="incoming_messages"></div>
+            <p class="note">This area displays incoming messages from the server.</p>
+        </div>
+    </div>
 
-var socket = null;
-var connecting = false;
-var failedCount = 0;
-	
-var callbackID = parseInt(Math.random()*1000);
+    <script>
+        let socket;
+        let sessionID;
+        let quick = true;
 
-	
-function connect(){
-	clearTimeout(connecting);
-	if (socket){
-		if (socket.readyState === socket.OPEN){return;}
-		try{
-			socket.close();
-		} catch(e){}
-	}
-	socket = new WebSocket(serverURL);
-	
-	socket.onclose = function (){
-		failedCount+=1;
-		clearTimeout(connecting);
-		connecting = setTimeout(function(){connect();},100*(failedCount-1));
-	};
+        function getSessionIdFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('session');
+        }
 
-	socket.onerror = function (){
-		failedCount+=1;
-		clearTimeout(connecting);
-		connecting = setTimeout(function(){connect();},100*failedCount);
-	};
+        function updateConnectionStatus(status) {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.textContent = status;
+            statusElement.className = status === 'Connected' ? 'connected' : 'disconnected';
+        }
 
-	socket.onopen = function (){
-		failedCount = 0;
-		try{
-			socket.send(JSON.stringify({"join":WID, "out":1, "in":2}));
-		} catch(e){
-			connecting = setTimeout(function(){connect();},1);
-		}
-	};
-	
-	socket.addEventListener('message', function (event) {
-		if (event.data){
-			var data = JSON.parse(event.data);
-			console.log(data);
-			if (!data){
-				console.log("False? so Clear overlay");
-			} else if ("callback" in data){
-				if (data.callback.value == callbackID){
-					alert("Received response. See developer console for the message.");
+        function connect() {
+            sessionID = document.getElementById('sessionID').value;
+            if (!sessionID) {
+                alert('Please enter a session ID');
+                return;
+            }
+            socket = new WebSocket('wss://io.socialstream.ninja:443');
+            socket.onopen = function() {
+                socket.send(JSON.stringify({"join": sessionID, "out": 1, "in": 2}));
+                updateConnectionStatus('Connected');
+                document.getElementById('connectButton').disabled = true;
+                document.getElementById('disconnectButton').disabled = false;
+                quick = true;
+            };
+            socket.onmessage = function(event) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'inbound';
+                messageDiv.textContent = event.data;
+                document.getElementById('incoming_messages').prepend(messageDiv);
+            };
+            socket.onclose = function() {
+                updateConnectionStatus('Disconnected');
+                document.getElementById('connectButton').disabled = false;
+                document.getElementById('disconnectButton').disabled = true;
+                if (quick) {
+                    quick = false;
+                    connect();
+                } else {
+                    setTimeout(function() {
+                        connect();
+                    }, 5000);
+                }
+            };
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.close();
+            }
+        }
+
+        function sendCommand(action, value = null, channel = null) {
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                alert('Please connect first');
+                return;
+            }
+            const message = {
+                action: action,
+                apiid: sessionID
+            };
+            if (value !== null) message.value = value;
+            if (channel !== null) message.out = channel;
+            socket.send(JSON.stringify(message));
+        }
+
+        function sendCustomMessage(action, isEncodedGet = false, isPost = false) {
+            const message = document.getElementById('customMessage').value;
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+            if (isEncodedGet) {
+                const encodedMessage = encodeURIComponent(message);
+                fetch(`https://io.socialstream.ninja/${sessionID}/${action}/null/${encodedMessage}`)
+                    .then(response => response.text())
+                    .then(data => alert('Message sent via HTTPS GET'));
+            } else if (isPost) {
+                fetch(`https://io.socialstream.ninja/${sessionID}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({action: action, value: message, apiid: sessionID}),
+                })
+                    .then(response => response.text())
+                    .then(data => alert('Message sent via HTTPS POST'));
+            } else {
+                sendCommand(action, message);
+            }
+        }
+
+        function sendTestMessage() {
+            const testMessage = {
+                chatname: document.getElementById('chatname').value,
+                chatmessage: document.getElementById('chatmessage').value,
+                type: document.getElementById('type').value,
+                hasDonation: document.getElementById('hasDonation').value,
+                membership: document.getElementById('membership').value,
+                chatimg: document.getElementById('chatimg').value,
+                nameColor: document.getElementById('nameColor').value,
+                contentimg: document.getElementById('contentimg').value,
+                question: document.getElementById('isQuestion').checked
+            };
+            sendCommand('extContent', JSON.stringify(testMessage));
+        }
+
+        function generateRandomMessage() {
+			const randomData = {
+				chatname: "User" + Math.floor(Math.random() * 1000),
+				chatmessage: "Random message " + Math.random().toString(36).substring(7),
+				type: ["twitch", "youtube", "facebook", "discord", "slack", "zoom"][Math.floor(Math.random() * 6)],
+				hasDonation: Math.random() > 0.7 ? "$" + (Math.random() * 100).toFixed(2) : "",
+				membership: Math.random() > 0.8 ? "Premium Member" : "",
+				chatimg: "https://picsum.photos/50/50?random=" + Math.random(),
+				nameColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+				contentimg: Math.random() > 0.9 ? "https://picsum.photos/200/200?random=" + Math.random() : "",
+				question: Math.random() > 0.8
+			};
+			Object.keys(randomData).forEach(key => {
+				const element = document.getElementById(key);
+				if (element) {
+					if (element.type === 'checkbox') {
+						element.checked = randomData[key];
+					} else if (element.tagName === 'SELECT') {
+						const option = Array.from(element.options).find(opt => opt.value === randomData[key]);
+						if (option) option.selected = true;
+					} else {
+						element.value = randomData[key];
+					}
 				}
-			} else {
-				var ele = document.createElement("div");
-				ele.className = "inbound";
-				ele.innerText = event.data;
-				document.getElementById("incoming_messages").prepend(ele); 
+			});
+		}
+
+		function blockUser() {
+			const username = document.getElementById('chatname').value;
+			const platform = document.getElementById('type').value;
+			if (!username || !platform) {
+				alert('Please enter a username and select a platform');
+				return;
 			}
+			sendCommand('blockUser', { chatname: username, type: platform });
 		}
-	});
-	
-}
 
-connect();
-
-function sendGuestCommand(target, action, value=null){
-	sendMessage(JSON.stringify({"target":target, "action":action, "value":value}));
-}
-
-function sendMessage(msg){
-	if (socket.readyState !== socket.OPEN){
-		console.log("not connected; msg didn't send");
-		connect();
-		return;
-	}
-	try {
-		socket.send(msg);
-	} catch(e){
-		connecting = setTimeout(function(){connect();},100);
-	}
-	
-}
-
-function log(msg) {
-	//	console.log(msg);
-}
-
-function warnlog(msg, url = false, lineNumber = false) {
-	//	console.warn(msg);
-	if (lineNumber) {
-		//		console.warn(lineNumber);
-	}
-}
-
-function errorlog(msg, url = false, lineNumber = false) {
-	console.error(msg);
-	if (lineNumber) {
-		console.error(lineNumber);
-	}
-}
-
-function ajax(data) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      log("AJAX MESSAGE SENT SUCCESSFULL");
-    }
-  };
-  var action = false
-  if ("action" in data){
-	action=data['action'];
-  }
-  var value = "null"
-  if ("value" in data){
-	value=data['value'];
-  }
-  var apiid = false
-  if ("apiid" in data){
-	apiid=data['apiid'];
-  }
-  var target = "null";
-  if ("target" in data){
-	target=data['target'];
-  }
-  
-  if (!action || !apiid){
-	alert("no action or api ID provided; request won't work");
-  } else {
-	var URL = "https://io.socialstream.ninja/"+apiid+"/"+action+"/"+target+"/"+value;
-	xhttp.open("GET", URL, true);
-	xhttp.send();
-  }
-}
-
-function post(data) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      log("AJAX MESSAGE SENT SUCCESSFULL");
-    }
-  };
- 
-  var apiid = false
-  if ("apiid" in data){
-	apiid=data['apiid'];
-  }
-  
-  if (!apiid){
-	alert("no action or api ID provided; request won't work");
-  } else {
-	var URL = "https://io.socialstream.ninja/"+apiid;
-	xhttp.open("POST", URL, true);
-	xhttp.setRequestHeader("Content-Type", "application/json");
-	xhttp.send(JSON.stringify(data));
-  }
-}
-
-function loadSelfCommands(){
-	
-	var target_self = document.getElementById("target_self");
-	
-	var title = document.createElement("h2");
-	title.innerText = "Send message to all social sites (Extension-specific)";
-	target_self.appendChild(title);
-	
-	var title = document.createElement("p");
-	title.innerHTML = "If sending messages/actions to the extension directly, you just need to make sure the extension is on and the enable-server toggle is enabled in the extension menu.<br /><br />You can control the draw/waitlist function with this API, but also use it to send messages to the extension<br />";
-	target_self.appendChild(title);
-
-	var input = document.createElement("input");
-	input.placeholder = "Message to send to external chat here as the host";
-	input.style = "width:100%";
-	target_self.appendChild(input);
-
-	var br = document.createElement("br");
-	target_self.appendChild(br);
-	// https://io.socialstream.ninja/XXXXXXXXXX/sendChat/null/Hello
-
-	var button = document.createElement("button");
-	button.innerHTML = "Send message via WSS";
-	button.input = input;
-	button.onclick = function(){
-		if (this.input.value){
-			sendMessage(JSON.stringify({"action":"sendChat","value":this.input.value}));
-		} else {
-			alert("please enter a message first");
+		function toggleVIPUser() {
+			const username = document.getElementById('chatname').value;
+			const platform = document.getElementById('type').value;
+			if (!username || !platform) {
+				alert('Please enter a username and select a platform');
+				return;
+			}
+			sendCommand('toggleVIPUser', { chatname: username, type: platform });
 		}
-	};
-	target_self.appendChild(button);
 
-	var button = document.createElement("button");
-	button.innerHTML = "Send message via HTTPS GET";
-	button.input = input;
-	button.onclick = function(){
-		if (this.input.value){
-			var msg = encodeURIComponent(this.input.value); // we can use sendChat for simple words that don't need encoding
-			ajax({"action":"sendEncodedChat","value":msg, "apiid":WID}); 
-		} else {
-			alert("please enter a message first");
+		function getUserHistory() {
+			const username = document.getElementById('chatname').value;
+			const platform = document.getElementById('type').value;
+			if (!username || !platform) {
+				alert('Please enter a username and select a platform');
+				return;
+			}
+			sendCommand('getUserHistory', { chatname: username, type: platform });
 		}
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Send message via HTTPS POST";
-	button.input = input;
-	button.onclick = function(){
-		if (this.input.value){
-			post({"action":"sendChat","value":this.input.value, "apiid":WID}); 
-		} else {
-			alert("please enter a message first");
+
+		function sendChannelMessage() {
+			const message = document.getElementById('channelMessage').value;
+			const channel = document.getElementById('channelSelect').value;
+			if (!message) {
+				alert('Please enter a message');
+				return;
+			}
+			sendCommand('content' + channel, message);
 		}
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Send message only to Twitch chat";
-	button.input = input;
-	button.onclick = function(){
-		if (this.input.value){
-			var msg = encodeURIComponent(this.input.value); // we can use sendChat for simple words that don't need encoding
-			ajax({"action":"sendEncodedChat","value":msg, "apiid":WID, "target": "twitch"}); 
-		} else {
-			alert("please enter a message first");
-		}
-	};
-	target_self.appendChild(button);
-	
-	var title = document.createElement("h3");
-	title.innerText = "Wait List options";
-	target_self.appendChild(title);
-	
-	
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Clear First User in Wait List";
-	button.onclick = function(){
 
-		var data = {};
-		data.action = "removefromwaitlist";
-		data.value  = 1;
-		sendMessage(JSON.stringify(data)); 
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Clear Second User in Wait List";
-	button.onclick = function(){
+		// Event listeners
+		document.getElementById('connectButton').addEventListener('click', connect);
+		document.getElementById('disconnectButton').addEventListener('click', disconnect);
 
-		var data = {};
-		data.action = "removefromwaitlist";
-		data.value  = 2;
-		sendMessage(JSON.stringify(data)); 
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Select First User in Wait List";
-	button.onclick = function(){
+		// Auto-connect if session ID is provided in URL
+		window.addEventListener('load', function() {
+			const urlSessionId = getSessionIdFromURL();
+			if (urlSessionId) {
+				document.getElementById('sessionID').value = urlSessionId;
+				connect();
+			}
+		});
 
-		var data = {};
-		data.action = "highlightwaitlist";
-		data.value  = 1;
-		sendMessage(JSON.stringify(data)); 
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Select Second User in Wait List";
-	button.onclick = function(){
-
-		var data = {};
-		data.action = "highlightwaitlist";
-		data.value  = 2;
-		sendMessage(JSON.stringify(data)); 
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Select Next Unselected User in Wait List";
-	button.onclick = function(){
-
-		var data = {};
-		data.action = "highlightwaitlist";
-		data.value  = 0;
-		sendMessage(JSON.stringify(data)); 
-	};
-	target_self.appendChild(button);
-	
-	
-	var title = document.createElement("h2");
-	title.innerText = "Dock-specific options";
-	target_self.appendChild(title);
-	
-	var title = document.createElement("p");
-	title.innerHTML = "To use: Make sure to have <b>&server</b> appended to the social stream dock.html URL if intending to send messages to it directly. (This includes dock-specific actions, like next-in-queue actions)<br /><br />Enabling the &server mode also will let you obtain featured messages via the API, via SSE / WSS<br />";
-	target_self.appendChild(title);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Clear featured overlay (via dashboard)";
-	button.input = input;
-	button.onclick = function(){
-		sendMessage(JSON.stringify({"action":"clearOverlay", "apiid":WID})); 
-		
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Stop and clear all messages (except Pinned)";
-	button.input = input;
-	button.onclick = function(){
-		sendMessage(JSON.stringify({"action":"clearAll", "apiid":WID})); 
-		
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Next in Queue";
-	button.input = input;
-	button.onclick = function(){
-		sendMessage(JSON.stringify({"action":"nextInQueue", "apiid":WID})); 
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button"); 
-	button.innerHTML = "Get Current Queue Size";
-	button.title = "This is only needed when first connecting; auto-updates after";
-	button.input = input;
-	button.onclick = function(){
-		sendMessage(JSON.stringify({"action":"getQueueSize", "apiid":WID})); // WSS is ideal, since you don't get an echo then
-	};
-	target_self.appendChild(button);
-	
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Toggle auto-show";
-	button.input = input;
-	button.onclick = function(){
-		ajax({"action":"autoShow","value":"toggle", "apiid":WID});  // true, false, or "toggle"
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Feature next un-featured";
-	button.input = input;
-	button.onclick = function(){
-		ajax({"action":"feature","value":"true", "apiid":WID});  // true, false, or "toggle"
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Feature next pinned msg";
-	button.input = input;
-	button.onclick = function(){
-		ajax({"action":"nextPinned","value":"true", "apiid":WID});  // true, false, or "toggle"
-	};
-	target_self.appendChild(button);
-	////////
-	
-	var br = document.createElement("br");
-	target_self.appendChild(br);
-	var br = document.createElement("br");
-	target_self.appendChild(br);
-	var br = document.createElement("br");
-	target_self.appendChild(br);
-	
-	var title = document.createElement("h2");
-	title.innerHTML = "Fake message <i>from</i> a social site";
-	target_self.appendChild(title);
-	
-	var title = document.createElement("p");
-	title.innerHTML = "There are different ways to fake a message from a social site, if for example you are injecting messages from your own application. You can create a test fake message below, and below that, choose which method you want to send it with.<br />";
-	target_self.appendChild(title);
-	
-	var input = document.createElement("label");
-	target_self.appendChild(input);
-	input.innerText = "Name of sender";
-	var input = document.createElement("input");
-	input.placeholder = "Name of sender";
-	input.style = "width:300px;max-width:50%";
-	input.id = "namesenderfake";
-	input.value = "Bob";
-	target_self.appendChild(input);
-	var br = document.createElement("br");
-	target_self.appendChild(br);
-	
-	var input = document.createElement("label");
-	target_self.appendChild(input);
-	input.innerText = "Message";
-	var input = document.createElement("input");
-	input.placeholder = "Message ";
-	input.style = "width:900px;max-width:80%";
-	input.id = "msgfake";
-	input.value = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 "; 
-	target_self.appendChild(input);
-	var br = document.createElement("br");
-	target_self.appendChild(br);
-	
-	var input = document.createElement("label");
-	target_self.appendChild(input);
-	input.innerText = "Donation";
-	var input = document.createElement("input");
-	input.placeholder = "Donation";
-	input.id = "donationfake";
-	target_self.appendChild(input);
-	var br = document.createElement("br");
-	target_self.appendChild(br);
-	var input = document.createElement("label");
-	target_self.appendChild(input);
-	input.innerText = "Avatar URL";
-	var input = document.createElement("input");
-	input.style = "width:900px;max-width:80%";
-	input.placeholder = "eg: https://somedomain.com/images/user.png";
-	input.id = "avatarfake";
-	target_self.appendChild(input);
-	
-	
-	var br = document.createElement("br");
-	target_self.appendChild(br);
-	
-	var br = document.createElement("br");
-	target_self.appendChild(br);
-	var title = document.createElement("h3");
-	title.innerText = "Fake this message as a Twitch message via POST request";
-	target_self.appendChild(title);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Server -> extension message";
-	button.onclick = function(){
-		
-		var data = {};
-		data.chatname = document.getElementById("namesenderfake").value;
-	//	data.nameColor = "";
-	//	data.chatbadges = "";
-	//	data.backgroundColor = "";
-	//	data.textColor = "";
-		data.chatmessage =  document.getElementById("msgfake").value;
-		data.chatimg = document.getElementById("avatarfake").value || ""; // will use Twitch API to get avatar is not specified
-		data.hasDonation = document.getElementById("donationfake").value;
-//		data.membership = "";
-		data.type = "twitch"; // twitch.png gets used as an icon, as a result
-		data.id = Date.now() + parseInt(Math.random()*1000000); // not required, but useful for keeping track of order or assigning message uniquiness
-		
-		//var html = {};
-		//html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
-		//html.type = "svg";
-		//data.chatbadges = [];
-		//data.chatbadges.push(html);
-		
-		post({"extContent":data, "apiid":WID}); 
-		
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Server -> dock message";
-	button.onclick = function(){
-		
-		var data = {};
-		data.chatname = document.getElementById("namesenderfake").value;
-	//	data.nameColor = "";
-	//	data.chatbadges = "";
-	//	data.backgroundColor = "";
-	//	data.textColor = "";
-		data.chatmessage =  document.getElementById("msgfake").value;
-		data.chatimg = document.getElementById("avatarfake").value || ""; // will use Twitch API to get avatar is not specified
-		data.hasDonation = document.getElementById("donationfake").value;
-//		data.membership = "";
-		data.type = "twitch"; // twitch.png gets used as an icon, as a result
-		data.id = Date.now() + parseInt(Math.random()*1000000);  // not required, but useful for keeping track of order or assigning message uniquiness
-		
-		//var html = {};
-		//html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
-		//html.type = "svg";
-		//data.chatbadges = [];
-		//data.chatbadges.push(html);
-		
-		post({content:data, "apiid":WID}); 
-		
-	};
-	target_self.appendChild(button);
-	
-	/////
-	
-	var title = document.createElement("h3");
-	title.innerText = "Fake this message as a Twitch message via GET request";
-	target_self.appendChild(title);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Server -> extension message";
-	button.onclick = function(){
-		
-		var data = {};
-		data.chatname = document.getElementById("namesenderfake").value;
-	//	data.nameColor = "";
-	//	data.chatbadges = "";
-	//	data.backgroundColor = "";
-	//	data.textColor = "";
-		data.chatmessage =  document.getElementById("msgfake").value;
-		data.chatimg = document.getElementById("avatarfake").value || ""; // will use Twitch API to get avatar is not specified
-		data.hasDonation = document.getElementById("donationfake").value;
-//		data.membership = "";
-		data.type = "twitch"; // twitch.png gets used as an icon, as a result
-		data.id = Date.now() + parseInt(Math.random()*1000000);  // not required, but useful for keeping track of order or assigning message uniquiness
-		
-		//var html = {};
-		//html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
-		//html.type = "svg";
-		//data.chatbadges = [];
-		//data.chatbadges.push(html);
-		
-		var encoded = JSON.stringify(data);
-		encoded = encodeURIComponent(encoded);
-		
-		ajax({"action":"extContent","value":encoded, "apiid":WID}); 
-		
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Server -> dock message";
-	button.onclick = function(){
-		
-		var data = {};
-		data.chatname = document.getElementById("namesenderfake").value;
-	//	data.nameColor = "";
-	//	data.chatbadges = "";
-	//	data.backgroundColor = "";
-	//	data.textColor = "";
-		data.chatmessage =  document.getElementById("msgfake").value;
-		data.chatimg = document.getElementById("avatarfake").value || ""; // will use Twitch API to get avatar is not specified
-		data.hasDonation = document.getElementById("donationfake").value;
-//		data.membership = "";
-		data.type = "twitch"; // twitch.png gets used as an icon, as a result
-		data.id = Date.now() + parseInt(Math.random()*1000000);  // not required, but useful for keeping track of order or assigning message uniquiness
-		
-		//var html = {};
-		//html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
-		//html.type = "svg";
-		//data.chatbadges = [];
-		//data.chatbadges.push(html);
-		
-		var encoded = JSON.stringify(data);
-		encoded = encodeURIComponent(encoded);
-		
-		ajax({"action":"content","value":encoded, "apiid":WID}); 
-		
-	};
-	target_self.appendChild(button);
-	
-	/////
-	
-	
-	var title = document.createElement("h3");
-	title.innerText = "Fake this message as a Twitch message via WebSockets";
-	target_self.appendChild(title);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Server -> extension message";
-	button.onclick = function(){
-
-		var data = {};
-		data.chatname = document.getElementById("namesenderfake").value;
-	//	data.nameColor = "";
-	//	data.chatbadges = "";
-	//	data.backgroundColor = "";
-	//	data.textColor = "";
-		data.chatmessage =  document.getElementById("msgfake").value;
-		data.chatimg = document.getElementById("avatarfake").value || ""; // will use Twitch API to get avatar is not specified
-		data.hasDonation = document.getElementById("donationfake").value;
-//		data.membership = "";
-		data.type = "twitch"; // twitch.png gets used as an icon, as a result
-		data.id = Date.now() + parseInt(Math.random()*1000000);  // not required, but useful for keeping track of order or assigning message uniquiness
-		
-		//var html = {};
-		//html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
-		//html.type = "svg";
-		//data.chatbadges = [];
-		//data.chatbadges.push(html);
-		
-		var message = {};
-		message.extContent = data; // just a different structured way of sending messages:  {"action":"content","value":encoded} versus {"extContent":message}
-		//message.apiid = WID; // session ID key 
-
-		sendMessage(JSON.stringify(message)); 
-	};
-	target_self.appendChild(button);
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Server -> dock message";
-	button.onclick = function(){
-
-		var data = {};
-		data.chatname = document.getElementById("namesenderfake").value;
-	//	data.nameColor = "";
-	//	data.chatbadges = "";
-	//	data.backgroundColor = "";
-	//	data.textColor = "";
-		data.chatmessage =  document.getElementById("msgfake").value;
-		data.chatimg = document.getElementById("avatarfake").value || ""; // will use Twitch API to get avatar is not specified
-		data.hasDonation = document.getElementById("donationfake").value;
-//		data.membership = "";
-		data.type = "twitch"; // twitch.png gets used as an icon, as a result
-		data.id = Date.now() + parseInt(Math.random()*1000000);
-		
-		//var html = {};
-		//html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
-		//html.type = "svg";
-		//data.chatbadges = [];
-		//data.chatbadges.push(html);
-		
-		var message = {};
-		message.content = data;
-
-		sendMessage(JSON.stringify(message)); 
-	};
-	target_self.appendChild(button);
-	
-	
-	var button = document.createElement("button");
-	button.innerHTML = "Server -> dock message (alt)";
-	button.title = "this is the same as the other way, except the JSON structure is at the root, rather than in 'content'";
-	button.onclick = function(){
-
-		var data = {};
-		data.chatname = document.getElementById("namesenderfake").value;
-	//	data.nameColor = "";
-	//	data.chatbadges = "";
-	//	data.backgroundColor = "";
-	//	data.textColor = "";
-		data.chatmessage =  document.getElementById("msgfake").value;
-		data.chatimg = document.getElementById("avatarfake").value || ""; // will use Twitch API to get avatar is not specified
-		data.hasDonation = document.getElementById("donationfake").value;
-//		data.membership = "";
-		data.type = "twitch"; // twitch.png gets used as an icon, as a result
-		data.id = Date.now() + parseInt(Math.random()*1000000);  // not required, but useful for keeping track of order or assigning message uniquiness
-		
-		//var html = {};
-		//html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
-		//html.type = "svg";
-		//data.chatbadges = [];
-		//data.chatbadges.push(html);
-		
-		sendMessage(JSON.stringify(data)); 
-	};
-	target_self.appendChild(button);
-	
-	
-	
-}
-
-loadSelfCommands();
-</script>
-</body>
-</html>
+		// Developer Notes
+		console.log(`
+Developer Notes:
+1. The WebSocket server is at wss://io.socialstream.ninja:443
+2. Session ID is crucial for connecting to the correct room
+3. Use channel 1 for general communication, channel 2 for dock.html, etc.
+4. The 'extContent' action is used to send simulated messages from various platforms
+5. Custom actions can be added using a custom.js file in your project
+6. MIDI hotkey support is available for predefined chat messages
+7. The API supports both WebSocket and HTTP (GET/POST) methods
+8. Use the 'target' field in messages for specific instance targeting
+9. Error handling and reconnection logic is implemented for robustness
+10. Experiment with different message types and actions to understand the full capabilities of the API
+		`);
+		</script>
+		</body>
+		</html>

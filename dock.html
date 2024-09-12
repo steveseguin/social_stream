@@ -3092,6 +3092,7 @@
 				socketserver.onopen = function () {
 					conCon = 1;
 					socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 2, in: 1 }));
+					console.log("output channel: 2, input channel: 1");
 				};
 
 				socketserver.onerror = function (error) {
@@ -3159,6 +3160,7 @@
 				socketserverExtension.onopen = function () {
 					conConExtension = 1;
 					socketserverExtension.send(JSON.stringify({ join: roomID.split(",")[0], out: 3, in: 4 }));
+					console.log("output channel: 3, input channel: 4");
 				};
 
 				socketserverExtension.onerror = function (error) {
@@ -5293,9 +5295,11 @@
 				}
 
 				if (data.action) {
-					if (data.target && data.target !== "null" && data.target !== thisLabel) { 
+				
+					if (data.target && data.target !== "null" && data.target !== thisLabel) {
 						return; // does not match, so we assume this isn't for us.
 					}
+					console.log(data);
 
 					if (data.action == "clear" || data.action == "clearAll") {
 						// clears all except pinned messages
@@ -5386,6 +5390,7 @@
 						} else {
 							speech = !speech;
 						}
+						console.log("TTS: "+speech);
 						if (speech) {
 							getById("tts").dataset.state = "1";
 							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
