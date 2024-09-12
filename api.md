@@ -2,6 +2,8 @@
 
 The API allows real-time, bidirectional communication between your application and the Social Stream Ninja extension/app, the dock page, and the overlay pages.
 
+There is an easy to use sandbox to play with some of the common API commands and options [over here](sampleapi.html).
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
