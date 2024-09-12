@@ -206,9 +206,20 @@
             </div>
             <p class="note">TTS (Text-to-Speech) can be controlled separately for the dock and featured messages. Make sure to enable the &server mode for the target you wish to directly interact with.</p>
         </div>
-
+		        <div class="section">
+            <h2>Send Simple Message</h2>
+            <div class="mb-3">
+                <input type="text" id="customMessage" class="form-control" placeholder="Enter custom message">
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-success" onclick="sendCustomMessage('sendChat')">Send via WSS</button>
+                <button class="btn btn-success" onclick="sendCustomMessage('sendEncodedChat', true)">Send via HTTPS GET</button>
+                <button class="btn btn-success" onclick="sendCustomMessage('sendChat', false, true)">Send via HTTPS POST</button>
+            </div>
+            <p class="note">Custom messages can be sent using different methods: WebSocket (WSS), HTTPS GET, or HTTPS POST.</p>
+        </div>
         <div class="section">
-            <h2>Test Message Generator</h2>
+            <h2>Advanced Message Generator</h2>
             <form id="testMessageForm">
                 <div class="form-group">
                     <label for="chatname">Username:</label>
@@ -258,20 +269,6 @@
             </form>
             <p class="note">Generate custom test messages to simulate different platforms and scenarios.</p>
         </div>
-
-        <div class="section">
-            <h2>Send Custom Message</h2>
-            <div class="mb-3">
-                <input type="text" id="customMessage" class="form-control" placeholder="Enter custom message">
-            </div>
-            <div class="btn-group" role="group">
-                <button class="btn btn-success" onclick="sendCustomMessage('sendChat')">Send via WSS</button>
-                <button class="btn btn-success" onclick="sendCustomMessage('sendEncodedChat', true)">Send via HTTPS GET</button>
-                <button class="btn btn-success" onclick="sendCustomMessage('sendChat', false, true)">Send via HTTPS POST</button>
-            </div>
-            <p class="note">Custom messages can be sent using different methods: WebSocket (WSS), HTTPS GET, or HTTPS POST.</p>
-        </div>
-
         <div class="section">
             <h2>Channel-Specific Messaging</h2>
             <div class="mb-3">
