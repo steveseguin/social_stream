@@ -8,7 +8,6 @@ There is an easy to use sandbox to play with some of the common API commands and
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-  - [WebSocket API](#websocket-api)
     - [Connecting to the API Server](#connecting-to-the-api-server)
     - [Channel System Explained](#channel-system-explained)
     - [Available Commands](#available-commands)
