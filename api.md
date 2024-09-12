@@ -1,5 +1,7 @@
 # Social Stream Ninja API Documentation
 
+The API allows real-time, bidirectional communication between your application and the Social Stream Ninja extension/app, the dock page, and the overlay pages.
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
@@ -62,10 +64,6 @@
     - [Integration with Extension](#integration-with-extension)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-## WebSocket API
-
-The WebSocket API allows real-time, bidirectional communication between your application and the Social Stream Ninja server.
 
 ### Connecting to the API Server
 
