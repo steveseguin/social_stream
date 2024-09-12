@@ -30,6 +30,8 @@ Parameters:
 - `IN_CHANNEL`: Channel number to receive messages (optional)
 - `OUT_CHANNEL`: Channel number to send messages (optional)
 
+The default channel value is used if not specified
+
 ### Channel System Explained
 
 The channel system allows for more granular control over message routing:
