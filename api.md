@@ -4,7 +4,6 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Social Stream Ninja API Documentation](#social-stream-ninja-api-documentation)
   - [WebSocket API](#websocket-api)
     - [Connecting to the API Server](#connecting-to-the-api-server)
     - [Channel System Explained](#channel-system-explained)
@@ -36,7 +35,7 @@
     - [API Actions](#api-actions-1)
     - [Example API Usage](#example-api-usage-1)
     - [Best Practices and Improvements](#best-practices-and-improvements-1)
-- [Social Stream Ninja API Documentation](#social-stream-ninja-api-documentation-1)
+- [Social Stream Ninja API Documentation](#social-stream-ninja-api-documentation)
 - [Extension](#extension)
     - [WebSocket Connections](#websocket-connections)
     - [Message Flow](#message-flow)
