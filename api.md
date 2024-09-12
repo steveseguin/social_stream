@@ -66,6 +66,10 @@ There is an easy to use sandbox to play with some of the common API commands and
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## WebSocket API
+
+The WebSocket API allows real-time, bidirectional communication between your application and the Social Stream Ninja server.
+
 ### Connecting to the API Server
 
 Connect to the WebSocket server at `wss://io.socialstream.ninja`.
