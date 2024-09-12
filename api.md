@@ -1,3 +1,5 @@
+# Social Stream Ninja API Documentation
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
@@ -61,8 +63,6 @@
     - [Integration with Extension](#integration-with-extension)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-# Social Stream Ninja API Documentation
 
 ## WebSocket API
 
