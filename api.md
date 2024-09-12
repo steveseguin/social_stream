@@ -34,7 +34,7 @@ There is an easy to use sandbox to play with some of the common API commands and
 - [Dock Page (dock.html)](#dock-page-dockhtml)
     - [Connection Options](#connection-options-1)
     - [URL Parameters](#url-parameters)
-    - [Websocket Message Processing](#websocket-message-processing)
+    - [WebSocket Message Processing](#websocket-message-processing)
     - [Key Features](#key-features)
     - [API Actions](#api-actions-1)
     - [Example API Usage](#example-api-usage-1)
