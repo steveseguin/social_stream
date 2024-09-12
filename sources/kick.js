@@ -37,6 +37,8 @@
 			if (node.childNodes.length){
 				if (node.classList && node.classList.contains("seventv-painted-content")){
 					resp += node.outerHTML;
+				} else if (node && (node.tagName == "A")){
+					resp += " " + getAllContentNodes(node).trim() + " ";
 				} else {
 					resp += getAllContentNodes(node)
 				}
@@ -45,6 +47,8 @@
 			} else if (node.nodeType === 1){
 				if (node && node.classList && node.classList.contains("zero-width-emote")){
 					resp += "<span class='zero-width-parent'>"+node.outerHTML+"</span>";
+				} else if (node && (node.tagName == "A")){
+					resp += " " + node.outerHTML.trim() + " ";
 				} else {
 					resp += node.outerHTML;
 				}
