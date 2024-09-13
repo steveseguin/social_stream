@@ -266,7 +266,7 @@
 	var pastMessages = [];
 	var SevenTV = false;
 	
-	console.log("Social stream injected");
+	console.log("Social stream injected - old");
 	var xxx = setInterval(function(){
 		if (document.getElementById("chatroom")){
 			clearInterval(xxx);
