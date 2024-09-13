@@ -37,8 +37,6 @@
 			if (node.childNodes.length){
 				if (node.classList && node.classList.contains("seventv-painted-content")){
 					resp += node.outerHTML;
-				} else if (node && (node.tagName == "A")){
-					resp += " " + getAllContentNodes(node).trim() + " ";
 				} else {
 					resp += getAllContentNodes(node)
 				}
@@ -47,8 +45,6 @@
 			} else if (node.nodeType === 1){
 				if (node && node.classList && node.classList.contains("zero-width-emote")){
 					resp += "<span class='zero-width-parent'>"+node.outerHTML+"</span>";
-				} else if (node && (node.tagName == "A")){
-					resp += " " + node.outerHTML.trim() + " ";
 				} else {
 					resp += node.outerHTML;
 				}
@@ -107,13 +103,13 @@
 	  
 	  
 	  try {
-		chatname = escapeHtml(ele.querySelector("button[title]").innerText);
+		chatname = escapeHtml(ele.querySelector(".chat-entry-username").innerText);
 		
 	  } catch(e){
 		  return;
 	  }
 	  try {
-		nameColor = ele.querySelector("button[title]").style.color;
+		nameColor = ele.querySelector(".chat-entry-username").style.color;
 	  } catch(e){}
 	  
 	  
@@ -126,31 +122,24 @@
 				chatNodes = ele.querySelectorAll(".chat-entry-content, .chat-emote-container, .break-all");
 			} else {
 				chatNodes = ele.querySelectorAll("seventv-container, .chat-emote-container, .seventv-painted-content"); // 7tv support, as of june 20th
+				
 			}
-			
-			if (!chatNodes.length){
-				let tmp = ele.querySelector("div span[class^='font-normal']");
-				if (tmp){
-					chatmessage = getAllContentNodes(tmp);
-					chatmessage = chatmessage.trim();
-				}
-			} 
+			for (var i=0;i<chatNodes.length;i++){
+				chatmessage += getAllContentNodes(chatNodes[i])+" ";
+			}
+			chatmessage = chatmessage.trim();
 		  } catch(e){
 		  }
 	  } else {
-		  if (!chatNodes.length){
-			let tmp = ele.querySelector("div span[class^='font-normal']");
-			if (tmp){
-				chatmessage = getAllContentNodes(tmp);
-				chatmessage = chatmessage.trim();
-			}
-		  }
+		  try{
+			chatmessage = escapeHtml(ele.querySelector(".chat-entry-content").innerText);
+		  } catch(e){}
 	  }
 	  
 	  if (!chatmessage){return;}
 	  
 	  
-	  ele.querySelectorAll("div > div > div > div > div > div[data-state] img[src], div > div > div > div > div > div[data-state] svg").forEach(badge=>{
+	  ele.querySelector(".chat-message-identity").querySelectorAll(".badge-tooltip img[src], .badge-tooltip svg, .base-badge img[src], .base-badge svg, .badge img[src], .badge svg").forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "IMG"){
 				var tmp = {};
@@ -238,16 +227,16 @@
 		}
 	});
 
-	function onElementInserted(target, subtree=false) {
+	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
-								if (pastMessages.includes(mutation.addedNodes[i].dataset.index)){continue;}
+							if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.chatEntry){
+								if (pastMessages.includes(mutation.addedNodes[i].dataset.chatEntry)){continue;}
 							
-								pastMessages.push(mutation.addedNodes[i].dataset.index)
+								pastMessages.push(mutation.addedNodes[i].dataset.chatEntry)
 								pastMessages = pastMessages.slice(-300);
 								
 								if (SevenTV){
@@ -268,7 +257,7 @@
 				}
 			});
 		};
-		var config = { childList: true, subtree: subtree };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -279,7 +268,7 @@
 	
 	console.log("Social stream injected");
 	var xxx = setInterval(function(){
-		if (document.querySelectorAll("#chatroom-messages > div").length){
+		if (document.getElementById("chatroom")){
 			clearInterval(xxx);
 			setTimeout(function(){
 				if (document.getElementById("seventv-extension")){
@@ -289,10 +278,7 @@
 				for (var i = 0;i<clear.length;i++){
 					pastMessages.push(clear[i].dataset.chatEntry);
 				}
-				onElementInserted(document.querySelectorAll("#chatroom-messages > div")[0], false);
-				if (document.querySelectorAll("#chatroom-messages > div").length>1){
-					onElementInserted(document.querySelectorAll("#chatroom-messages > div")[1], true);
-				}
+				onElementInserted(document.getElementById("chatroom"));
 			},3000);
 		}
 	},1000);
