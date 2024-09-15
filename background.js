@@ -1864,7 +1864,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					delete settings[request.setting];
 				} else {
 					settings[request.setting][request.type] = request.value;
-					//settings[request.setting].value = request.value; // not sure this is a good idea
+					if (request.type == "json"){
+						settings[request.setting]["object"] = JSON.parse(request.value); // convert to object for use
+					}
 				}
 			} else if ("type" in request) {
 				if (!request.value) {
@@ -1872,6 +1874,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				} else {
 					settings[request.setting] = {};
 					settings[request.setting][request.type] = request.value;
+					if (request.type == "json"){
+						settings[request.setting]["object"] = JSON.parse(request.value); // convert to object for use
+					}
 					//settings[request.setting].value = request.value; // I'll use request.value instead
 				}
 			} else {
@@ -1892,6 +1897,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "midi") {
 				toggleMidi();
 			}
+			
+			// if (request.setting == "customGifCommands") {
+				// if (request.setting["customGifCommands"].array){
+					// request.setting["customGifCommands"].array
+				// }
+			// }
 
 			if (request.setting == "socketserver") {
 				if (request.value) {
@@ -2779,6 +2790,19 @@ async function sendToDestinations(message) {
 	try {
 		if (settings.pollEnabled){
 			sendTargetP2P(message, "poll");
+		}
+	} catch (e) {
+		console.error(e);
+	}
+	
+	try {
+		if (settings.enableCustomGifCommands && settings["customGifCommands"]){
+			// settings.enableCustomGifCommands.object = JSON.stringify([{command,url},{command,url},{command,url})
+			settings["customGifCommands"]["object"].forEach(values=>{
+				if (message && message.chatmessage && values.command && message.chatmessage.startsWith(values.command)){
+					sendTargetP2P({...message,...{contentimg: values.url || "https://picsum.photos/1280/720?random="+values.command}}, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
+				}
+			});
 		}
 	} catch (e) {
 		console.error(e);

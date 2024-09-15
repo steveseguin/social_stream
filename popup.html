@@ -840,6 +840,33 @@ input:checked + .slider:before {
     animation-delay: 0.2s;
 }
 
+.custom_gif_commands_title {
+    color: #00a6ff; /* You can adjust this color to match your theme */
+}
+
+.custom-gif-command-entry {
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.custom-gif-command-entry .textInputContainer {
+    margin-right: 10px;
+}
+
+.removeCustomGifCommand {
+    padding: 5px 10px;
+    background-color: #ff0000;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.removeCustomGifCommand:hover {
+    background-color: #cc0000;
+}
+
         </style>
     </head>
 
@@ -2927,6 +2954,45 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
+			
+			<div class="link" title="Custom GIF Commands">
+				<h2 class="custom_gif_commands_title">
+					<span data-translate="custom-gif-commands">Custom GIF Commands </span><a class="options-link rounded_area" href="#custom-gif-commands" title="Jump to the custom GIF commands options."><span data-translate="options">options</span></a>
+				</h2>
+				<h3>
+					<span data-translate="when-enabled-custom-commands">
+						When enabled, custom commands will trigger specific GIFs or media in the overlay.
+					</span>
+				</h3>
+				<div id="custom-gif-commands" data-raw="" class="streaming_chat"><a href="" id="custom-gif-commands-link"></a></div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-custom-gif-commands-options" />
+					<label class="collapsible-label" for="wrapper-custom-gif-commands-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group custom_gif_commands">
+								<h3><span data-translate="custom-gif-commands-settings">Custom GIF Commands Settings</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="enableCustomGifCommands" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="enable-custom-gif-commands">🚦 Enable Custom GIF Commands</span>
+								</div>
+								
+								<div id="customGifCommandsList"></div>
+								
+								<button class="glowingButton" id="addCustomGifCommand" style="margin-top: 10px; width: 200px;">
+									<span data-translate="add-new-command">+ Add New Command</span>
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 
             <div class="generic_category_title">
                 <h2>

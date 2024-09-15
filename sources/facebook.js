@@ -104,6 +104,8 @@
 				if (!settings.textonlymode && !textonly){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
+						node.removeAttribute("width");
+						node.removeAttribute("height");
 					}
 					resp += node.outerHTML;
 				} else if (node.nodeName == "IMG"){
