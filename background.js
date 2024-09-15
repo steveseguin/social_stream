@@ -2800,6 +2800,7 @@ async function sendToDestinations(message) {
 			// settings.enableCustomGifCommands.object = JSON.stringify([{command,url},{command,url},{command,url})
 			settings["customGifCommands"]["object"].forEach(values=>{
 				if (message && message.chatmessage && values.url && values.command && message.chatmessage.startsWith(values.command)){
+					//  || "https://picsum.photos/1280/720?random="+values.command
 					sendTargetP2P({...message,...{contentimg: values.url}}, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
 				}
 			});
