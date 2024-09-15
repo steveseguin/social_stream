@@ -2799,8 +2799,8 @@ async function sendToDestinations(message) {
 		if (settings.enableCustomGifCommands && settings["customGifCommands"]){
 			// settings.enableCustomGifCommands.object = JSON.stringify([{command,url},{command,url},{command,url})
 			settings["customGifCommands"]["object"].forEach(values=>{
-				if (message && message.chatmessage && values.command && message.chatmessage.startsWith(values.command)){
-					sendTargetP2P({...message,...{contentimg: values.url || "https://picsum.photos/1280/720?random="+values.command}}, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
+				if (message && message.chatmessage && values.url && values.command && message.chatmessage.startsWith(values.command)){
+					sendTargetP2P({...message,...{contentimg: values.url}}, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
 				}
 			});
 		}
