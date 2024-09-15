@@ -808,8 +808,8 @@ function update(response, sync=true){
 			
 			document.getElementById("chatbotlink").outerHTML = "<a target='_blank' style='color:lightblue;' id='chatbotlink' href='"+baseURL+"chatbot.html?session="+response.streamID+password+"'>[LINK TO CHAT BOT]</a>";
 			
-			document.getElementById("custom-gif-commands").innerHTML = "<a target='_blank' id='custom-gif-commands-link' href='"+baseURL+"custom-gif-commands.html?session="+response.streamID+password+"'>"+baseURL+"custom-gif-commands.html?session="+response.streamID+password+"</a>";
-			document.getElementById("custom-gif-commands").raw = baseURL+"custom-gif-commands.html?session="+response.streamID+password;
+			document.getElementById("custom-gif-commands").innerHTML = "<a target='_blank' id='custom-gif-commands-link' href='"+baseURL+"gif.html?session="+response.streamID+password+"'>"+baseURL+"gif.html?session="+response.streamID+password+"</a>";
+			document.getElementById("custom-gif-commands").raw = baseURL+"gif.html?session="+response.streamID+password;
 			
 			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
 		
