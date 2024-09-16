@@ -581,6 +581,23 @@
             function(request, sender, sendResponse) {
                 try {
                     if ("focusChat" == request) {
+						
+						if (settings.customtiktokstate) {
+							var channel = window.location.pathname.split("/@");
+							if (channel.length > 1) {
+								channel = channel[1].split("/")[0].trim();
+							}
+							if (!channel) {
+								return;
+							}
+							if (settings.customtiktokaccount && settings.customtiktokaccount.textsetting && ((settings.customtiktokaccount.textsetting.toLowerCase() !== channel.toLowerCase()) && (settings.customtiktokaccount.textsetting.toLowerCase() !== "@" + channel.toLowerCase()))) {
+								return;
+							} else if (!settings.customtiktokaccount) {
+								return;
+							}
+						}
+						
+						
                         if (document.querySelector('.public-DraftEditorPlaceholder-inner')) {
                             document.querySelector(".public-DraftEditorPlaceholder-inner").focus();
                             sendResponse(true);
