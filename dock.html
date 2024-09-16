@@ -7559,6 +7559,7 @@
 				}
 			}
 			function SpeechifyTTS(tts) {
+				console.log(tts);
 				premiumQueueActive = true;
 				try {
 					const url = "https://api.sws.speechify.com/v1/audio/speech";
@@ -7581,21 +7582,29 @@
 						.then(response => {
 							if (!response.ok) {
 								throw new Error(`HTTP error! status: ${response.status}`);
+							} else if (!response.blob){
+								throw new Error(`Blob error; no data returned?`);
 							}
 							return response.blob();
 						})
 						.then(blob => {
-							const audioUrl = URL.createObjectURL(blob);
-							if (!audio) {
-								audio = document.createElement("audio");
-								audio.onended = finishedAudio;
-							}
-							audio.src = audioUrl;
-							if (volume) {
-								audio.volume = volume;
-							}
 							try {
-								audio.play();
+								const audioUrl = URL.createObjectURL(blob);
+								if (!audio) {
+									audio = document.createElement("audio");
+									audio.onended = finishedAudio;
+								}
+								audio.src = audioUrl;
+								if (volume) {
+									audio.volume = volume;
+								}
+							
+								audio.play().then(() => {
+									console.log("Audio playing successfully");
+								}).catch(err => {
+									console.error("Audio play failed, user interaction required", err);
+									finishedAudio();  // Ensure the queue is released
+								});
 							} catch (e) {
 								finishedAudio();
 								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
