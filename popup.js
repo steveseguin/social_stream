@@ -1390,7 +1390,7 @@ function updateSettings(ele, sync=true, value=null){
 			document.getElementById("hypemeter").raw = updateURL(ele.dataset.textparam4+"="+encodeURIComponent(ele.value), document.getElementById("hypemeter").raw);
 		}
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
-} else if (ele.dataset.textparam4){
+	} else if (ele.dataset.textparam4){
 		document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.textparam4);
 		
 		if (ele.value){
@@ -1429,7 +1429,7 @@ function updateSettings(ele, sync=true, value=null){
 		
 		if (ele.value){
 			ele.value.split("&").forEach(rem=>{
-				if (rem.includes("=")){
+				if (rem.includes("=")){ // this isn't covering all cases, but good enough for the existing values
 					document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, rem.split("=")[0]);
 				}
 			});
@@ -1733,32 +1733,39 @@ function updateSettings(ele, sync=true, value=null){
 			return;
 		}
 		
-	}
+	} 
 	
-
-	document.getElementById("docklink").innerText = document.getElementById("dock").raw;
+	let hideLinks = false;
+	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
+		if (x.checked){
+			hideLinks = true;
+		}
+	});
+	
+	document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
 	document.getElementById("docklink").href = document.getElementById("dock").raw;
 
-	document.getElementById("overlaylink").innerText = document.getElementById("overlay").raw;
+	document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
 	document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
 
-	document.getElementById("emoteswalllink").innerText = document.getElementById("emoteswall").raw;
+	document.getElementById("emoteswalllink").innerText = hideLinks ? "Click to open link" : document.getElementById("emoteswall").raw;
 	document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
 	
-	document.getElementById("hypemeterlink").innerText = document.getElementById("hypemeter").raw;
+	document.getElementById("hypemeterlink").innerText = hideLinks ? "Click to open link" : document.getElementById("hypemeter").raw;
 	document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
 	
-	document.getElementById("waitlistlink").innerText = document.getElementById("waitlist").raw;
+	document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
 	document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
 	
-	document.getElementById("tickerlink").innerText = document.getElementById("ticker").raw;
+	document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
 	document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
 	
-	document.getElementById("polllink").innerText = document.getElementById("poll").raw;
+	document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
 	document.getElementById("polllink").href = document.getElementById("poll").raw;
 	
-	document.getElementById("battlelink").innerText = document.getElementById("battle").raw;
+	document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
 	document.getElementById("battlelink").href = document.getElementById("battle").raw;
+
 }
 
 if (!chrome.browserAction){
