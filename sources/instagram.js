@@ -42,7 +42,7 @@
 			}
 		  });
 		} else {
-		  console.log('Duplicate message filtered out:', messageKey);
+		  //console.log('Duplicate message filtered out:', messageKey);
 		}
 	  } catch (e) {
 		//console.error('Error in pushMessage:', e);
