@@ -1424,6 +1424,29 @@ function updateSettings(ele, sync=true, value=null){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam6",  target:target, setting: ele.dataset.textparam6, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam1){
+		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.optionparam1);
+		
+		if (ele.value){
+			document.getElementById("dock").raw = updateURL(ele.dataset.optionparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").raw);
+		}
+		
+		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
+		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1", target:target,  setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
+		}
+	} else if (ele.dataset.optionparam2){
+		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.optionparam2);
+		
+		if (ele.value){
+			document.getElementById("overlay").raw = updateURL(ele.dataset.optionparam2+"="+encodeURIComponent(ele.value), document.getElementById("overlay").raw);
+		}
+		
+		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
+		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2", target:target,  setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
+		}
 	} else if (ele.dataset.optionparam6){
 		document.getElementById("ticker").raw = removeQueryParamWithValue(document.getElementById("ticker").raw, ele.dataset.optionparam6);
 		
