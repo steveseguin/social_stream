@@ -7585,9 +7585,10 @@
 							} else if (!response.blob){
 								throw new Error(`Blob error; no data returned?`);
 							}
-							return response.blob();
+							return response.json();
 						})
-						.then(blob => {
+						.then(json => {
+							console.log(json);
 							try {
 								const audioUrl = URL.createObjectURL(blob);
 								if (!audio) {
