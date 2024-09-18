@@ -7565,7 +7565,7 @@
 					const url = "https://api.sws.speechify.com/v1/audio/speech";
 					let model = English ? "simba-english" : "simba-multilingual";
 					const data = {
-						input: "<speak>"+tts+"</speak>",
+						input: "<speak>" + tts + "</speak>",
 						voice_id: voiceName || "henry",
 						model: model,
 						audio_format: "mp3"
@@ -7580,16 +7580,24 @@
 					};
 					fetch(url, otherparam)
 						.then(response => {
+							console.log(response);
 							if (!response.ok) {
 								throw new Error(`HTTP error! status: ${response.status}`);
-							} else if (!response.blob){
-								throw new Error(`Blob error; no data returned?`);
 							}
 							return response.json();
 						})
 						.then(json => {
 							console.log(json);
 							try {
+								// Convert base64 to Blob
+								const byteCharacters = atob(json.audio_data);
+								const byteNumbers = new Array(byteCharacters.length);
+								for (let i = 0; i < byteCharacters.length; i++) {
+									byteNumbers[i] = byteCharacters.charCodeAt(i);
+								}
+								const byteArray = new Uint8Array(byteNumbers);
+								const blob = new Blob([byteArray], { type: 'audio/mp3' });
+
 								const audioUrl = URL.createObjectURL(blob);
 								if (!audio) {
 									audio = document.createElement("audio");
@@ -7607,6 +7615,7 @@
 									finishedAudio();  // Ensure the queue is released
 								});
 							} catch (e) {
+								console.error(e);
 								finishedAudio();
 								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
 							}
