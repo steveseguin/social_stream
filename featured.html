@@ -1717,52 +1717,62 @@
 			}
 			
 			function SpeechifyTTS(tts) {
-				premiumQueueActive = true;
-
+				//console.log(tts);
 				try {
 					const url = "https://api.sws.speechify.com/v1/audio/speech";
-					let model = "simba-english";
-					if (!English){
-						model = "simba-multilingual";
-					}
+					let model = English ? "simba-english" : "simba-multilingual";
 					const data = {
-						input: "<speak>"+tts+"</speak>",
-						language: speechLang,
-						model: model, // or "simba-multilingual" for non-English
+						input: "<speak>" + tts + "</speak>",
 						voice_id: voiceName || "henry",
-						audio_format: "mp3" // You can change this to wav, ogg, or aac if needed
+						model: model,
+						audio_format: "mp3"
 					};
-
 					const otherparam = {
 						method: "POST",
 						headers: {
-							"Authorization": "Bearer "+SpeechifyAPIKey, // Make sure to define this variable with the user's API key
-							"Accept": "*/*",  // This matches the audio_format in the request
+							"Authorization": `Bearer ${SpeechifyAPIKey}`,
 							"Content-Type": "application/json"
 						},
 						body: JSON.stringify(data)
 					};
-
 					fetch(url, otherparam)
 						.then(response => {
+							//console.log(response);
 							if (!response.ok) {
 								throw new Error(`HTTP error! status: ${response.status}`);
 							}
-							return response.blob();
+							return response.json();
 						})
-						.then(blob => {
-							const audioUrl = URL.createObjectURL(blob);
-							if (!audio) {
-								audio = document.createElement("audio");
-								audio.onended = finishedAudio;
-							}
-							audio.src = audioUrl;
-							if (volume) {
-								audio.volume = volume;
-							}
+						.then(json => {
+							//console.log(json);
 							try {
-								audio.play();
+								// Convert base64 to Blob
+								const byteCharacters = atob(json.audio_data);
+								const byteNumbers = new Array(byteCharacters.length);
+								for (let i = 0; i < byteCharacters.length; i++) {
+									byteNumbers[i] = byteCharacters.charCodeAt(i);
+								}
+								const byteArray = new Uint8Array(byteNumbers);
+								const blob = new Blob([byteArray], { type: 'audio/mp3' });
+
+								const audioUrl = URL.createObjectURL(blob);
+								if (!audio) {
+									audio = document.createElement("audio");
+									audio.onended = finishedAudio;
+								}
+								audio.src = audioUrl;
+								if (volume) {
+									audio.volume = volume;
+								}
+							
+								audio.play().then(() => {
+									//console.log("Audio playing successfully");
+								}).catch(err => {
+									console.error("Audio play failed, user interaction required", err);
+									finishedAudio();  // Ensure the queue is released
+								});
 							} catch (e) {
+								console.error(e);
 								finishedAudio();
 								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
 							}
