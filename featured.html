@@ -1746,9 +1746,9 @@
 						.then(json => {
 							//console.log(json);
 							if (!json.audio_data) {
+								finishedAudio();
 								throw new Error("No audio data in JSON response");
 							}
-							
 							try {
 								if (!audio) {
 									audio = document.createElement("audio");
