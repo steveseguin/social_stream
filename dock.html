@@ -3245,10 +3245,10 @@
 			
 			
 
-			if (urlParams.has("ttskey")) {
+			if (urlParams.has("ttskey") || urlParams.has("googlettskey")) {
 				audio = document.createElement("audio");
 				audio.onended = finishedAudio;
-				GoogleAPIKey = urlParams.get("ttskey") || false;
+				GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
 			} else if (urlParams.has("elevenlabskey")) {
 				audio = document.createElement("audio");
 				audio.onended = finishedAudio;
