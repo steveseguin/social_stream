@@ -1,33 +1,30 @@
 {
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
-  "manifest_version": 2,
-  "version": "1.83.9",
+  "manifest_version": 3,
+  "version": "3.0.13",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
   },
   "background": {
-    "scripts": [
-      "./thirdparty/webmidi3.js",
-      "./thirdparty/sentiment.js",
-      "background.js",
-	   "./thirdparty/lunr.js",
-	  "ai.js",
-      "./thirdparty/xlsx.full.min.js"
-    ],
-    "persistent": true
+    "service_worker": "service_worker.js"
   },
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
   "permissions": [
     "webNavigation",
     "notifications",
-	"http://localhost:11434/api/generate",
-	"http://127.0.0.1:11434/api/generate",
-	"https://zap.stream/*",
-	"https://www.bigo.tv/*",
-    "https://chaturbate.com/*/",
-    "https://cherry.tv/*",
+    "storage",
+    "debugger",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://localhost:11434/api/generate",
+    "http://127.0.0.1:11434/api/generate",
+    "https://zap.stream/*",
+    "https://www.bigo.tv/*",
     "https://beamstream.gg/*/chat",
     "https://socialstream.ninja/sources/websocket/*",
     "https://socialstream.ninja/websocket/*",
@@ -35,15 +32,22 @@
     "https://play.afreecatv.com/*?vtype=chat",
     "https://kiwiirc.com/nextclient/*",
     "https://webchat.quakenet.org/*",
-    "https://*.cbox.ws/box/*",
-	"https://community.talkinghealthtech.com/live/*",
+    "https://www.cbox.ws/box/*",
+    "https://www3.cbox.ws/box/*",
+    "https://www1.cbox.ws/box/*",
+    "https://www2.cbox.ws/box/*",
+    "https://cbox.ws/box/*",
+    "https://community.talkinghealthtech.com/live/*",
     "https://community.insidethe.show/live/*",
 	"https://members.firstinfam.com/live/*",
     "https://*.circle.so/*",
     "https://tellonym.me/*",
-    "https://*.wix.com/*",
-	"https://verticalpixelzone.com/*",
-	"https://rutube.ru/live/chat/*/",
+    "https://chat.wix.com/*",
+    "https://live.wix.com/*",
+    "https://www.wix.com/*",
+    "https://wix.com/*",
+    "https://verticalpixelzone.com/*",
+    "https://rutube.ru/live/chat/*/",
     "https://chat.castr.io/*",
     "https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*",
     "https://www.x.com/*",
@@ -53,7 +57,7 @@
     "https://app.sli.do/event/*",
     "https://wall.sli.do/event/*",
     "https://admin.sli.do/event/*",
-    "https://*.rokfin.com/popout/chat/*",
+    "https://www.rokfin.com/popout/chat/*",
     "https://rokfin.com/popout/chat/*",
     "https://instafeed.me/*",
     "https://meet.google.com/*",
@@ -89,12 +93,12 @@
     "https://web.whatsapp.com/",
     "https://rumble.com/*",
     "https://www.amazon.com/live*",
-	"https://www.amazon.com/b/?node=*&broadcast=*",
+    "https://www.amazon.com/b/?node=*&broadcast=*",
     "https://*.telegram.org/*",
     "https://*.webex.com/*",
     "https://webex.com/*",
     "https://www.linkedin.com/*",
-    "https://*.vdo.ninja/*",
+    "https://vdo.ninja/*",
     "https://youtube.com/*",
     "https://www.youtube.com/*",
     "https://studio.youtube.com/*",
@@ -120,15 +124,14 @@
     "https://teams.live.com/*",
     "https://teams.microsoft.com/*",
     "https://livestream.com/accounts/*",
-    "https://*/plugins/livechat/*router/webchat/room/*",
-    "https://*/p/livechat/room?room=*",
+    "https://joinpeertube.org/*/plugins/livechat/*router/webchat/room/*",
+    "https://joinpeertube.org/*/p/livechat/room?room=*",
     "https://app.slack.com/client/*",
     "https://*.rooter.gg/*",
     "https://www.nonolive.com/*",
     "https://www.tradingview.com/streams/*",
     "https://app.chime.aws/meetings/*",
     "https://*.loco.gg/*",
-    "https://joystick.tv/u/*/chat",
     "https://www.buzzit.ca/event/*/chat",
     "https://*.floatplane.com/popout/livechat",
     "https://www.threads.net/*",
@@ -157,14 +160,9 @@
     "https://estrim.com/publications/view/*",
     "https://vk.com/*",
     "https://wave.video/*",
-	"https://www.sooplive.com/chat/*",
-	"https://*.on24.com/view/*",
-    "storage",
-    "debugger"
+    "https://www.sooplive.com/chat/*",
+    "https://*.on24.com/view/*"
   ],
-  "browser_action": {
-    "default_popup": "popup.html"
-  },
   "content_scripts": [
     {
       "js": [ "./sources/zapstream.js" ],
@@ -174,14 +172,6 @@
       "js": [ "./sources/bigo.js" ],
       "matches": [ "https://www.bigo.tv/*" ]
     },	
-    {
-      "js": [ "./sources/chaturbate.js" ],
-      "matches": [ "https://chaturbate.com/*/" ]
-    },
-    {
-      "js": [ "./sources/cherrytv.js" ],
-      "matches": [ "https://cherry.tv/*" ]
-    },
     {
       "js": [ "./sources/beamstream.js" ],
       "matches": [ "https://beamstream.gg/*/chat" ]
@@ -327,10 +317,6 @@
     {
       "js": [ "./sources/loco.js" ],
       "matches": [ "https://*.loco.gg/*" ]
-    },
-    {
-      "js": [ "./sources/joystick.js" ],
-      "matches": [ "https://joystick.tv/u/*/chat" ]
     },
     {
       "js": [ "./sources/rooter.js" ],
@@ -657,5 +643,8 @@
   ],
   "options_ui": {
     "page": "settings/options.html"
+  },
+  "action": {
+    "default_popup": "popup.html"
   }
 }

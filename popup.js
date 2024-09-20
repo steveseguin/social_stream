@@ -1770,7 +1770,6 @@ function updateSettings(ele, sync=true, value=null){
 
 if (!chrome.browserAction){
 	chrome.browserAction = {};
-																																										   
 	
 	if (chrome.action && chrome.action.setIcon){
 		chrome.browserAction.setIcon = chrome.action.setIcon
