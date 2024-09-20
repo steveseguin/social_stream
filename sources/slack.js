@@ -102,7 +102,7 @@
       chatname = getAllContentNodes(ele.querySelector('[data-qa="message_sender"]'));
     } catch (e) {
 	  chatname = "";
-      console.warn(e);
+      //console.warn(e);
     }
 	var prev = false;
     if (!chatname) {
@@ -116,7 +116,7 @@
           chatname = getAllContentNodes(prev.querySelector('[data-qa="message_sender"]'));
         } catch (e) {
           chatname = "";
-		  console.warn(e);
+		  //console.warn(e);
         }
       }
 	  if (!prev){
@@ -161,6 +161,10 @@
           chatimg = "";
         }
     }
+	
+	if (!chatname){
+		return;
+	}
 
     if (chatimg) {
       // Use higher resolution image by replacing last digits with 128
