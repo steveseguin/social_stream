@@ -464,6 +464,14 @@
                     hashtag = hashtag[1].toUpperCase();
                     results[hashtag] = (results[hashtag] || 0) + 1;
                     totalVotes++;
+                } else {
+                    // Check for numerical selection
+                    let numericVote = parseInt(vote, 10);
+                    if (!isNaN(numericVote) && numericVote > 0 && numericVote <= Object.keys(results).length) {
+                        let selectedOption = Object.keys(results)[numericVote - 1];
+                        results[selectedOption]++;
+                        totalVotes++;
+                    }
                 }
             }
 
