@@ -2799,7 +2799,7 @@ async function sendToDestinations(message) {
 		if (settings.enableCustomGifCommands && settings["customGifCommands"]){
 			// settings.enableCustomGifCommands.object = JSON.stringify([{command,url},{command,url},{command,url})
 			settings["customGifCommands"]["object"].forEach(values=>{
-				if (message && message.chatmessage && values.url && values.command && message.chatmessage.startsWith(values.command)){
+				if (message && message.chatmessage && values.url && values.command && (message.chatmessage.split(" ")[0] === values.command)){
 					//  || "https://picsum.photos/1280/720?random="+values.command
 					sendTargetP2P({...message,...{contentimg: values.url}}, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
 				}
@@ -5850,10 +5850,10 @@ async function applyBotActions(data, tab = false) {
 		// webhook for configured custom chat commands
 		for (var i = 1; i <= 20; i++) {
 			if (data.chatmessage && settings["chatevent" + i] && settings["chatcommand" + i] && settings["chatwebhook" + i]) {
-				let matches = false;
+				let matches = false; 
 				if (settings.chatwebhookstrict && (data.chatmessage === settings["chatcommand" + i].textsetting)) {
 					matches=true;
-				} else if (!settings.chatwebhookstrict && (data.chatmessage.split(" ")[0].toLowerCase() === settings["chatcommand" + i].textsetting.toLowerCase())){
+				} else if (!settings.chatwebhookstrict && (data.chatmessage.toLowerCase().startsWith(settings["chatcommand" + i].textsetting.toLowerCase()))){
 					matches=true;
 				}
 				if (matches){
