@@ -34,6 +34,8 @@
 		
 		if (!element){return resp;}
 		
+		if (element.classList.contains("offscreen")){return resp;}
+		
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
 				return escapeHtml(element.textContent) || "";
@@ -43,6 +45,9 @@
 		}
 		
 		element.childNodes.forEach(node=>{
+			if (node.classList && node.classList.contains("offscreen")){
+				return;
+			}
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
@@ -94,10 +99,10 @@
 
     // Get the sender  name
     try {
-      chatname = escapeHtml(ele.querySelector('[data-qa="message_sender"]').innerText.split("\n")[0]);
+      chatname = getAllContentNodes(ele.querySelector('[data-qa="message_sender"]'));
     } catch (e) {
 	  chatname = "";
-      errorlog(e);
+      console.warn(e);
     }
 	var prev = false;
     if (!chatname) {
@@ -108,9 +113,10 @@
         try {
           count++;
           prev = prev.previousElementSibling;
-          chatname = escapeHtml(prev.querySelector('[data-qa="message_sender"]').innerText);
+          chatname = getAllContentNodes(prev.querySelector('[data-qa="message_sender"]'));
         } catch (e) {
           chatname = "";
+		  console.warn(e);
         }
       }
 	  if (!prev){
@@ -118,9 +124,6 @@
 	  }
     }
 	
-	if (!chatname){
-		return;
-	}
 	
 	if (ele.id){
 		if (messageHistory.includes(ele.id)){
