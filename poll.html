@@ -455,7 +455,7 @@
                     totalVotes++;
                 }
             } else if (settings.pollType === 'freeform') {
-                let hashtag = vote.match(/#(\w+)/);
+                let hashtag = vote.match(/^#(\w+)$/);
                 if (hashtag) {
                     hashtag = hashtag[1].toUpperCase();
                     results[hashtag] = (results[hashtag] || 0) + 1;
