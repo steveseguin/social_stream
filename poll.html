@@ -6,275 +6,523 @@
     <title>Poll - Social Stream Ninja</title>
     <link rel="icon" href="./icons/favicon.ico" />
     <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@400;700&family=Oswald:wght@400;700&family=Poppins:wght@400;600&family=Press+Start+2P&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&family=Courier+Prime:wght@400;700&display=swap');
 
         body {
-            font-family: 'Montserrat', Arial, sans-serif;
-            background-color: #0000;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            background-color: transparent;
         }
 
         .poll-container {
-            background-color: #e2e2e2e2;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
             width: 90%;
             max-width: 600px;
+            padding: 20px;
+            border-radius: 10px;
         }
 
-        h2, h3 {
+        .poll-title {
             text-align: center;
             margin-bottom: 20px;
-        }
-
-        h2 {
-            font-size: 32px;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-
-        h3 {
-            font-size: 18px;
-            font-weight: 400;
-            color: #7f8c8d;
         }
 
         .poll-option {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .option-label {
-            flex: 1;
-            font-size: 16px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .poll-bar {
-            height: 16px;
-            background-color: #4caf50;
-            border-radius: 8px;
-            transition: width 1s ease;
-        }
-
-        .poll-bar-container {
-            flex: 2;
-            margin-left: 10px;
-            background-color: #e0e0e0;
-            border-radius: 8px;
+            margin-bottom: 10px;
+            position: relative;
             overflow: hidden;
         }
 
-        .percentage {
-            margin-left: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #7f8c8d;
+        .option-number {
+            margin-right: 10px;
+            font-weight: bold;
+            z-index: 2;
         }
-		.hidden {
-			display:none;
-			visibility: hidden;
-		}
-		
-		@keyframes fadeIn {
-		  0% { opacity: 0; }
-		  100% { opacity: 1; }
-		}
 
-		.fadein {
-		  animation: fadeIn 1s ease-in;
-		  animation-delay: 2s;
-		  animation-fill-mode: both;
-		}
-		
-		@keyframes fadeIn {
-		  0% { opacity: 0; }
-		  100% { opacity: 1; }
-		}
+        .option-text {
+            flex-grow: 1;
+            z-index: 2;
+        }
 
-		.fadeinfast {
-		  animation: fadeIn .2s ease-in;
-		  animation-delay: 0s;
-		  animation-fill-mode: both;
-		}
+        .option-percentage {
+            margin-left: 10px;
+            z-index: 2;
+        }
 
+        .poll-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+            z-index: 1;
+        }
+
+        /* Default Style */
+        .style-default {
+            font-family: 'Montserrat', sans-serif;
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .style-default .poll-title {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .style-default .poll-option {
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .style-default .poll-bar {
+            background-color: rgba(76, 175, 80, 0.3);
+        }
+
+        /* Neon Style */
+        .style-neon {
+            font-family: 'Oswald', sans-serif;
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.8);
+            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #ff00de, 0 0 35px #ff00de, 0 0 40px #ff00de, 0 0 50px #ff00de, 0 0 75px #ff00de;
+        }
+
+        .style-neon .poll-title {
+            font-size: 36px;
+            color: #0ff;
+        }
+
+        .style-neon .poll-option {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid #0ff;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .style-neon .poll-bar {
+            background-color: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff, 0 0 40px #0ff;
+        }
+
+        .style-neon .option-number {
+            color: #0ff;
+        }
+
+        /* Minimalist Style */
+        .style-minimalist {
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .style-minimalist .poll-title {
+            font-size: 28px;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .style-minimalist .poll-option {
+            background-color: #f5f5f5;
+            border-left: 4px solid #3498db;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .style-minimalist .poll-bar {
+            background-color: rgba(52, 152, 219, 0.2);
+        }
+
+        .style-minimalist .option-number {
+            color: #3498db;
+        }
+
+        /* Retro Gaming Style */
+        .style-retro-gaming {
+            font-family: 'Press Start 2P', cursive;
+            color: #33ff00;
+            background-color: rgba(0, 0, 0, 0.9);
+            text-shadow: 2px 2px #000;
+        }
+
+        .style-retro-gaming .poll-title {
+            font-size: 24px;
+            color: #ff6600;
+            margin-bottom: 30px;
+        }
+
+        .style-retro-gaming .poll-option {
+            background-color: #000;
+            border: 2px solid #33ff00;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .style-retro-gaming .poll-bar {
+            background-color: rgba(51, 255, 0, 0.3);
+            box-shadow: 0 0 5px #33ff00;
+        }
+
+        .style-retro-gaming .option-number {
+            color: #ff6600;
+        }
+
+        .style-retro-gaming .option-percentage {
+            color: #ff6600;
+        }
+
+        /* Elegant Style */
+        .style-elegant {
+            font-family: 'Playfair Display', serif;
+            color: #2c3e50;
+            background-color: rgba(245, 245, 245, 0.9);
+        }
+
+        .style-elegant .poll-title {
+            font-size: 32px;
+            color: #34495e;
+            font-weight: 700;
+            border-bottom: 2px solid #34495e;
+            padding-bottom: 10px;
+        }
+
+        .style-elegant .poll-option {
+            background-color: #fff;
+            border: 1px solid #bdc3c7;
+            border-radius: 3px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .style-elegant .poll-bar {
+            background-color: rgba(52, 73, 94, 0.2);
+        }
+
+        .style-elegant .option-number {
+            color: #16a085;
+            font-weight: 700;
+        }
+
+        /* Futuristic Style */
+        .style-futuristic {
+            font-family: 'Roboto', sans-serif;
+            color: #ecf0f1;
+            background-color: rgba(44, 62, 80, 0.9);
+        }
+
+        .style-futuristic .poll-title {
+            font-size: 28px;
+            color: #3498db;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .style-futuristic .poll-option {
+            background-color: rgba(52, 152, 219, 0.1);
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .style-futuristic .poll-option:hover {
+            background-color: rgba(52, 152, 219, 0.2);
+        }
+
+        .style-futuristic .poll-bar {
+            background-color: rgba(52, 152, 219, 0.5);
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.7);
+        }
+
+        .style-futuristic .option-number {
+            color: #e74c3c;
+            font-weight: 700;
+        }
+
+        /* Vintage Style */
+        .style-vintage {
+            font-family: 'Merriweather', serif;
+            color: #3c3c3c;
+            background-color: rgba(255, 253, 231, 0.9);
+        }
+
+        .style-vintage .poll-title {
+            font-size: 30px;
+            color: #8b4513;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(139, 69, 19, 0.3);
+        }
+
+        .style-vintage .poll-option {
+            background-color: rgba(255, 248, 220, 0.7);
+            border: 2px solid #d2b48c;
+            border-radius: 0;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 3px 3px 0 #d2b48c;
+        }
+
+        .style-vintage .poll-bar {
+            background-color: rgba(210, 180, 140, 0.4);
+        }
+
+        .style-vintage .option-number {
+            color: #8b4513;
+            font-weight: 700;
+        }
+
+        /* Cyberpunk Style */
+        .style-cyberpunk {
+            font-family: 'Courier Prime', monospace;
+            color: #0f0;
+            background-color: rgba(0, 0, 0, 0.8);
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .style-cyberpunk .poll-title {
+            font-size: 28px;
+            color: #f0f;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f;
+            padding-bottom: 10px;
+        }
+
+        .style-cyberpunk .poll-option {
+            background-color: rgba(0, 255, 0, 0.1);
+            border: 1px solid #0f0;
+            padding: 15px;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .style-cyberpunk .poll-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 49%, #0f0 49%, #0f0 51%, transparent 51%);
+            background-size: 6px 6px;
+            opacity: 0.1;
+        }
+
+        .style-cyberpunk .poll-bar {
+            background-color: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 10px #0f0;
+        }
+
+        .style-cyberpunk .option-number {
+            color: #ff0;
+            font-weight: 700;
+        }
+
+        .style-cyberpunk .option-percentage {
+            color: #f0f;
+        }
     </style>
 </head>
-<body class="fadein">
-    <div class="poll-container">
-        <h2 id="poll-title">#HASHTAG POLL</h2>
-        <h3 id="poll-description">Enter a hashtagged word into chat to vote for it!</h3>
-        <div class="poll" id="poll">
-            <!-- Poll options will be dynamically added here -->
-        </div>
+<body>
+    <div id="poll-container" class="poll-container style-default">
+        <h2 id="poll-title" class="poll-title">Loading poll...</h2>
+        <div id="poll-options"></div>
     </div>
+
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-		let settings = {}
-        settings.pollType = urlParams.get('pollType') || 'freeform';
-        settings.pollQuestion = urlParams.get('pollQuestion') || 'Enter a hashtagged word into chat to vote for it!';
-        settings.pollOptions = urlParams.get('pollOptions') ? urlParams.get('pollOptions').split(',') : [];
-        settings.pollTimer = urlParams.get('pollTimer') || 60;
-		settings.pollEnabled = true;
-
-        document.getElementById('poll-title').innerText = settings.pollType === 'freeform' ? '#HASHTAG POLL' : settings.pollQuestion;
-        document.getElementById('poll-description').innerText = settings.pollQuestion;
+        const settings = {
+            pollType: urlParams.get('pollType') || 'multiple',
+            pollQuestion: urlParams.get('pollQuestion') || 'Loading poll ...',
+            pollOptions: urlParams.get('pollOptions') ? urlParams.get('pollOptions').split(',').map(opt => opt.trim()) : [],
+            pollTimer: urlParams.get('pollTimer') || 60,
+            pollEnabled: true,
+            styleType: urlParams.get('style') || 'default'
+        };
 
         let results = {};
         let totalVotes = 0;
 
-        function updatePoll(results) {
-            const poll = document.getElementById('poll');
-            poll.innerHTML = ''; // Clear previous poll options
+        function initializePoll() {
+            document.getElementById('poll-container').className = `poll-container style-${settings.styleType}`;
+            document.getElementById('poll-title').innerText = settings.pollQuestion;
+            updatePollOptions();
+        }
+
+        function updatePollOptions() {
+            const pollOptionsContainer = document.getElementById('poll-options');
+            pollOptionsContainer.innerHTML = '';
+
+            if (settings.pollType === 'yesno') {
+                settings.pollOptions = ['Yes', 'No'];
+            }
 			
-			if (settings.pollEnabled){
-				document.body.classList.add('fadeinfast');
-				document.body.classList.remove('hidden');
-				document.body.classList.remove('fadein');
-			} else {
-				document.body.classList.add('hidden');
-			}
-			
-            Object.keys(results).forEach(label => {
-                let votes = results[label];
-                let percentage = ((votes / totalVotes) * 100).toFixed(2) + '%';
+            if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+                settings.pollOptions.forEach((option, index) => {
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'poll-option';
+                    optionElement.innerHTML = `
+                        <span class="option-number">${index + 1}</span>
+                        <span class="option-text">${option}</span>
+                        <span class="option-percentage">0%</span>
+                        <div class="poll-bar" style="width: 0%;"></div>
+                    `;
+                    pollOptionsContainer.appendChild(optionElement);
+                });
+            } else if (settings.pollType === 'freeform') {
+                const instructionElement = document.createElement('div');
+                instructionElement.className = 'poll-instruction';
+                instructionElement.textContent = 'Enter a hashtagged word into chat to vote for it!';
+                pollOptionsContainer.appendChild(instructionElement);
+            }
+        }
 
-                let option = document.createElement('div');
-                option.className = 'poll-option';
+        function updatePollResults() {
+            const pollOptionsContainer = document.getElementById('poll-options');
+            pollOptionsContainer.innerHTML = '';
 
-                let optionLabel = document.createElement('span');
-                optionLabel.className = 'option-label';
-                optionLabel.innerText = label;
+            if (settings.pollType === 'freeform') {
+                const instructionElement = document.createElement('div');
+                instructionElement.className = 'poll-instruction';
+                instructionElement.textContent = 'Enter a hashtagged word into chat to vote for it!';
+                pollOptionsContainer.appendChild(instructionElement);
+            }
 
-                let barContainer = document.createElement('div');
-                barContainer.className = 'poll-bar-container';
+            let displayOptions = [];
 
-                let bar = document.createElement('div');
-                bar.className = 'poll-bar';
-                bar.style.width = percentage;
-                bar.style.backgroundColor = percentage === '0.00%' ? '#e0e0e0' : '#4caf50';
+            if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+                displayOptions = settings.pollOptions.map(option => [option, results[option] || 0]);
+            } else if (settings.pollType === 'freeform') {
+                displayOptions = Object.entries(results).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            }
 
-                barContainer.appendChild(bar);
+            displayOptions.forEach(([option, votes], index) => {
+                const percentage = totalVotes > 0 ? (votes / totalVotes * 100).toFixed(1) : 0;
 
-                let percentageText = document.createElement('span');
-                percentageText.className = 'percentage';
-                percentageText.innerText = percentage;
+                const optionElement = document.createElement('div');
+                optionElement.className = 'poll-option';
+                optionElement.innerHTML = `
+                    <span class="option-number">${index + 1}</span>
+                    <span class="option-text">${option}</span>
+                    <span class="option-percentage">${percentage}%</span>
+                    <div class="poll-bar" style="width: ${percentage}%;"></div>
+                `;
 
-                option.appendChild(optionLabel);
-                option.appendChild(barContainer);
-                option.appendChild(percentageText);
+                // Adjust text color for better visibility when bar is full
+                if (parseFloat(percentage) > 90) {
+                    optionElement.style.color = '#fff';
+                    optionElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
+                }
 
-                poll.appendChild(option);
+                pollOptionsContainer.appendChild(optionElement);
             });
         }
 
-        function processData(data) {
-			console.log(data);
-			
-			if (data.setting && !data.settings){
-				data.settings = {}
-				data.settings[data.setting] = {};
-				if ("value" in data){
-					data.settings[data.setting][data.type] = data.value
-				} else {
-					data.settings[data.setting][data.type] = false;
-				}
-			}
-			
-			if (data.settings){
-			
-				settings.pollEnabled = data.settings.pollEnabled ? true : false;
-				
-				if (data.settings.pollType){
-					settings.pollType = data.settings.pollType.optionsetting || 'freeform';
-				}
-				if (data.settings.pollQuestion){
-					settings.pollQuestion = data.settings.pollQuestion.textsetting || 'Enter a hashtagged word into chat to vote for it!';;
-				}
-				if (data.settings.multipleChoiceOptions){
-					settings.pollOptions = data.settings.multipleChoiceOptions.textsetting
-						.split(',')
-						.map(option => option.trim());
-				}
-				if (data.settings.pollTimer){
-					settings.pollTimer = data.settings.pollTimer.numbersetting  || 60;
-				}
+        function processVote(vote) {
+            vote = vote.trim();
+            
+            if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+                let matchedOption = settings.pollOptions.find((option, index) => 
+                    option.toLowerCase() === vote.toLowerCase() ||
+                    option.toLowerCase().includes(vote.toLowerCase()) ||
+                    vote.toLowerCase().includes(option.toLowerCase()) ||
+                    vote === (index + 1).toString()
+                );
 
-                document.getElementById('poll-title').innerText = settings.pollType === 'freeform' ? '#HASHTAG POLL' : settings.pollQuestion;
-				if (settings.pollType === 'freeform'){
-					document.getElementById('poll-description').innerText = settings.pollQuestion;
-				} else if (settings.pollType === 'multiple'){
-					document.getElementById('poll-description').innerText = settings.pollOptions.join("? ");
-				}  else if (settings.pollType === 'yesno'){
-					document.getElementById('poll-description').innerText = "Yes or No";
-				}
+                if (settings.pollType === 'yesno') {
+                    if (['yes', 'y', '1', 'true'].includes(vote.toLowerCase())) {
+                        matchedOption = 'Yes';
+                    } else if (['no', 'n', '0', '2', 'false'].includes(vote.toLowerCase())) {
+                        matchedOption = 'No';
+                    }
+                }
 
-                results = {};
-                totalVotes = 0;
-                updatePoll(results);
-				return;
-            }
-			if (data.chatmessage){
-				let vote = data.chatmessage.trim().toUpperCase();
-				if (settings.pollType === 'yesno') {
-					if (vote === 'YES' || vote === 'NO') {
-						results[vote] = results[vote] ? results[vote] + 1 : 1;
-						totalVotes++;
-						updatePoll(results);
-					}
-				} else if (settings.pollType === 'multiple') {
-					console.log(vote);
-					if (settings.pollOptions.map(option => option.toLowerCase()).includes(vote.toLowerCase())) {
-						results[vote] = results[vote] ? results[vote] + 1 : 1;
-						totalVotes++;
-						updatePoll(results);
-					}
-				} else {
-					let hashtag = vote.match(/#(\w+)/);
-					if (hashtag) {
-						hashtag = hashtag[1];
-						results[hashtag] = results[hashtag] ? results[hashtag] + 1 : 1;
-						totalVotes++;
-						updatePoll(results);
-					}
-				}
-			}
-        }
-
-        var iframe = document.createElement("iframe");
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label=poll&cleanoutput&room=" + urlParams.get('session');
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
-
-        var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-        var eventer = window[eventMethod];
-        var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-
-        eventer(messageEvent, function (e) {
-            if (e.source != iframe.contentWindow) return;
-            if ("dataReceived" in e.data) {
-                if ("overlayNinja" in e.data.dataReceived) {
-                    processData(e.data.dataReceived.overlayNinja);
+                if (matchedOption) {
+                    results[matchedOption] = (results[matchedOption] || 0) + 1;
+                    totalVotes++;
+                }
+            } else if (settings.pollType === 'freeform') {
+                let hashtag = vote.match(/#(\w+)/);
+                if (hashtag) {
+                    hashtag = hashtag[1].toUpperCase();
+                    results[hashtag] = (results[hashtag] || 0) + 1;
+                    totalVotes++;
                 }
             }
+
+            updatePollResults();
+        }
+
+        function processData(data) {
+            console.log("Received data:", data);  // For debugging
+
+            if (data.setting && !data.settings) {
+                data.settings = {
+                    [data.setting]: {
+                        [data.type]: data.value !== undefined ? data.value : false
+                    }
+                };
+            }
+
+            if (data.settings) {
+			
+				console.log(data);
+				
+                if (data.settings.pollEnabled !== undefined) {
+                    settings.pollEnabled = !!data.settings.pollEnabled;
+                }
+                if (data.settings.pollType) {
+                    settings.pollType = data.settings.pollType.optionsetting || 'multiple';
+                }
+                if (data.settings.pollQuestion) {
+                    settings.pollQuestion = data.settings.pollQuestion.textsetting || 'What\'s your favorite genre?';
+                }
+				if (data.settings.pollStyle) {
+                    settings.styleType = data.settings.pollStyle.optionsetting || 'default';
+                }
+                if (data.settings.multipleChoiceOptions) {
+                    settings.pollOptions = data.settings.multipleChoiceOptions.textsetting
+                        .split(',')
+                        .map(option => option.trim());
+                }
+                if (data.settings.pollTimer) {
+                    settings.pollTimer = data.settings.pollTimer.numbersetting || 60;
+                }
+                results = {};
+                totalVotes = 0;
+                initializePoll();
+            } else if (data.chatmessage) {
+                processVote(data.chatmessage);
+            }
+        }
+
+        // Initialize iframe for communication
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=${urlParams.get('session')}&novideo&noaudio&label=poll&cleanoutput&room=${urlParams.get('session')}`;
+        iframe.style.cssText = "width:0;height:0;border:0;border:none;position:absolute;";
+        document.body.appendChild(iframe);
+
+        window.addEventListener("message", (event) => {
+            if (event.source !== iframe.contentWindow) return;
+            if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+                processData(event.data.dataReceived.overlayNinja);
+            }
         });
+
+        initializePoll();
     </script>
 </body>
 </html>

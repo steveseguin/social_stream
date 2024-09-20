@@ -2895,29 +2895,48 @@ input:checked + .slider:before {
 							<div class="options_group poll">
 								<h3>Poll Settings</h3>
 								<p>Enable and customize the poll:</p>
+								<br>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-target="poll" data-setting="pollEnabled" />
 										<span class="slider round"></span>
 									</label>
-									<span>Enable Poll</span>
+									<span>🚦 Enable Poll</span>
 								</div>
+								<br>
 								<div>
-									<label>Poll Type:</label>
+									<label>📊 Poll Type:</label>
 									<select data-optionsetting="pollType" data-target="poll" id="pollType">
 										<option value="freeform">Free-form</option>
 										<option value="yesno">Yes/No</option>
 										<option value="multiple">Multiple Choice</option>
 									</select>
 								</div>
+								<br>
 								<div>
-									<label>Poll Question:</label>
+									<label>🎨 Poll Style/Theme:</label>
+									<select data-optionsetting="pollStyle" data-target="poll" id="pollStyle">
+										<option value="default">Default</option>
+										<option value="neon">Neon</option>
+										<option value="minimalist">Minimalist</option>
+										<option value="retro-gaming">Retro Gaming</option>
+										<option value="elegant">Elegant</option>
+										<option value="futuristic">Futuristic</option>
+										<option value="vintage">Vintage</option>
+										<option value="cyberpunk">Cyberpunk</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<label>❔ Poll Question:</label>
 									<input type="text" id="pollQuestion" class="textInput" autocomplete="off" placeholder="Enter poll question" data-textsetting="pollQuestion" data-target="poll" />
 								</div>
+								<br>
 								<div id="multipleChoiceOptions" class="hidden">
-									<label>Options (comma separated):</label>
+									<label>🔢 Options (comma separated):</label>
 									<input type="text" id="multipleChoiceInput" class="textInput" autocomplete="off" placeholder="Option 1, Option 2, ..." data-textsetting="multipleChoiceOptions" data-target="poll" />
 								</div>
+								<br>
 								<div class="hidden">
 									<label>Timer (seconds):</label>
 									<input type="number" id="pollTimer" class="textInput" autocomplete="off" placeholder="60" data-textsetting="pollTimer" data-target="poll" />
