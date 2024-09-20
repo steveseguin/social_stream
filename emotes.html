@@ -634,6 +634,9 @@
 						images[i].className = "zero-width-emote";
 					}
 					
+					images[i].removeAttribute("width");
+					images[i].removeAttribute("height");
+					
 					if (images[i].src && images2[images[i].src]){
 						if (!images[i].classList.contains("zero-width-emote") || !prevImage){
 							prevImage = null;

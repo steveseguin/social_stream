@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Overlay - Social Stream Ninja</title>
+    <link rel="icon" href="./icons/favicon.ico" />
+    <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        #mediaContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #mediaContent {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div id="mediaContainer">
+        <img id="mediaContent" src="" alt="Media Content">
+    </div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const mediaContainer = document.getElementById('mediaContainer');
+        const mediaContent = document.getElementById('mediaContent');
+        let mediaQueue = [];
+        let isPlaying = false;
+
+        function processData(data) {
+            console.log(data);
+            
+            if (data.content) {
+                data = data.content;
+            }
+            
+			// the URL should be a direct image/video/audio/svg, but it might also be a link to tenor/giphy.
+			
+			// Here, we want to show contentimg as an near full window or full window
+			// we want to make sure its preloaded before display it, to ensure a smooth fade in and out, and that it is valid
+			// we want to mute it, and play it, if the audio context is suspended and can't be resumed/enabled due to lack of user gesture input.
+			// if we're using window.obsstudio, then gestures aren't needed to play audio, but we need to make sure thats the casse.
+			// if a user has urlParams.has('muted') enabled, then we should mute any video by default
+			// we can look at the file type to tell if its a webm, gif, jpeg, svg, webp, audio, or mp4; and treat it accordingly; video/img/svg tag, audio-muted, etc.
+			// if it can't play, lets put an error in the console log saying say; CORS issue?
+			
+			// additional data that will be available, that we dont need to use now, but is available, is:
+			// data.chatimg - avatar of user
+			// data.chatname - name of user
+			// data.chatmessage - a text message from user 
+			// data.type - what site, like twitch or facebook, that the message came from
+			// data.donation - an possible donation value if there was a donation attached.
+			// data.contentimg = "https://picsum.photos/1280/720?random=" + Math.random();
+            if (data.contentimg) {
+                mediaQueue.push(data.contentimg);
+                if (!isPlaying) {
+                    playNextMedia();
+                }
+            }
+        }
+
+        function playNextMedia() {
+            if (mediaQueue.length === 0) {
+                isPlaying = false;
+                return;
+            }
+
+            isPlaying = true;
+            const mediaUrl = mediaQueue.shift();
+            const fileExtension = mediaUrl.split('.').pop().toLowerCase();
+
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
+                displayImage(mediaUrl);
+            } else if (['mp4', 'webm'].includes(fileExtension)) {
+                displayVideo(mediaUrl);
+            } else if (['mp3', 'wav', 'ogg'].includes(fileExtension)) {
+                playAudio(mediaUrl);
+            } else if (fileExtension === 'svg') {
+                displaySVG(mediaUrl);
+			} else if (mediaUrl.split('/').pop().split('.').length==1){
+				displayImage(mediaUrl); // lets assume its an image
+			} else if (mediaUrl.split('/').pop().split('.').pop().length>4){
+				displayImage(mediaUrl); // lets assume its an image
+            } else {
+                console.error('Unsupported file type:', fileExtension);
+                playNextMedia();
+            }
+        }
+
+        function displayImage(url) {
+            mediaContent.onload = () => {
+                fadeIn();
+                setTimeout(() => {
+                    fadeOut(() => playNextMedia());
+                }, 5000);
+            };
+            mediaContent.onerror = () => {
+                console.error('Failed to load image:', url);
+                playNextMedia();
+            };
+            mediaContent.src = url;
+        }
+
+        function displayVideo(url) {
+            const video = document.createElement('video');
+            video.src = url;
+            video.muted = urlParams.has('muted');
+            video.oncanplay = () => {
+                mediaContent.replaceWith(video);
+                fadeIn();
+                video.play();
+            };
+            video.onended = () => {
+                fadeOut(() => {
+                    video.replaceWith(mediaContent);
+                    playNextMedia();
+                });
+            };
+            video.onerror = () => {
+                console.error('Failed to load video:', url);
+                playNextMedia();
+            };
+        }
+
+        function playAudio(url) {
+            const audio = new Audio(url);
+            audio.muted = urlParams.has('muted');
+            audio.oncanplay = () => {
+                fadeIn();
+                audio.play();
+            };
+            audio.onended = () => {
+                fadeOut(() => playNextMedia());
+            };
+            audio.onerror = () => {
+                console.error('Failed to load audio:', url);
+                playNextMedia();
+            };
+        }
+
+        function displaySVG(url) {
+            fetch(url)
+                .then(response => response.text())
+                .then(svgContent => {
+                    mediaContainer.innerHTML = svgContent;
+                    fadeIn();
+                    setTimeout(() => {
+                        fadeOut(() => {
+                            mediaContainer.innerHTML = '';
+                            mediaContainer.appendChild(mediaContent);
+                            playNextMedia();
+                        });
+                    }, 5000);
+                })
+                .catch(error => {
+                    console.error('Failed to load SVG:', url, error);
+                    playNextMedia();
+                });
+        }
+
+        function fadeIn() {
+            mediaContainer.style.opacity = '1';
+        }
+
+        function fadeOut(callback) {
+            mediaContainer.style.opacity = '0';
+            setTimeout(callback, 500);
+        }
+
+        const iframe = document.createElement("iframe");
+        const filename = new URL(window.location.href).pathname.split('/').pop().split('.')[0] || "dock";
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label="+filename+"&cleanoutput&room=" + urlParams.get('session');
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+        const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+        const eventer = window[eventMethod];
+        const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+        eventer(messageEvent, function (e) {
+            if (e.source != iframe.contentWindow) return;
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+
+        // Handle audio context for browsers that require user interaction
+        document.addEventListener('click', () => {
+            if (window.AudioContext || window.webkitAudioContext) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const audioContext = new AudioContext();
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

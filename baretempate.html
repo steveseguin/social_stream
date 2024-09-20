@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template - Social Stream Ninja</title>
+    <link rel="icon" href="./icons/favicon.ico" />
+    <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: #0000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+    </style>
+</head>
+<body>
+    </div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+		
+
+        function processData(data) {
+			console.log(data);
+			
+			if (data.content) {
+                data = data.content;
+            }
+			if (data.chatmessage){
+			
+				// data.chatimg - avatar of user
+				// data.chatname - name of user
+				// data.chatmessage - a text message from user 
+				// data.contentimg - a link to a media file
+				// data.type - what site, like twitch or facebook, that the message came from
+				// data.donation - an possible donation value if there was a donation attached.
+				
+			}
+        }
+	
+		// we get the data via this embedded iFRAME.
+        const iframe = document.createElement("iframe");
+		const filename = new URL(window.location.href).pathname.split('/').pop().split('.')[0] || "dock";
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label="+filename+"&cleanoutput&room=" + urlParams.get('session');
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+
+        const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+        const eventer = window[eventMethod];
+        const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+        eventer(messageEvent, function (e) {
+            if (e.source != iframe.contentWindow) return;
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

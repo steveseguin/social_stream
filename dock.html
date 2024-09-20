@@ -2670,6 +2670,12 @@
 			if (urlParams.has("autofeaturepriv")) {
 				autofeaturepriv = true;
 			}
+			
+			var trimChat = false;
+			if (urlParams.has("trim")) {
+				trimChat = urlParams.get("trim") || 200;
+				trimChat = parseInt(trimChat) || 0;
+			}
 
 			var alignbottom = false;
 			if (urlParams.has("alignbottom")) {
@@ -3086,6 +3092,7 @@
 				socketserver.onopen = function () {
 					conCon = 1;
 					socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 2, in: 1 }));
+					console.log("output channel: 2, input channel: 1");
 				};
 
 				socketserver.onerror = function (error) {
@@ -3101,13 +3108,16 @@
 						} catch (e) {
 							return;
 						}
-						processInput(data);
-						if (data.get) {
-							var ret = {};
-							ret.callback = {};
-							ret.callback.get = data.get;
-							ret.callback.result = true;
-							socketserver.send(JSON.stringify(ret));
+						resp = processInput(data);
+						console.log(resp);
+						if (resp !== null) {
+							if (data.get) {
+								var ret = {};
+								ret.callback = {};
+								ret.callback.get = data.get;
+								ret.callback.result = resp;
+								socketserver.send(JSON.stringify(ret));
+							}
 						}
 					}
 				});
@@ -3150,6 +3160,7 @@
 				socketserverExtension.onopen = function () {
 					conConExtension = 1;
 					socketserverExtension.send(JSON.stringify({ join: roomID.split(",")[0], out: 3, in: 4 }));
+					console.log("output channel: 3, input channel: 4");
 				};
 
 				socketserverExtension.onerror = function (error) {
@@ -3234,10 +3245,10 @@
 			
 			
 
-			if (urlParams.has("ttskey")) {
+			if (urlParams.has("ttskey") || urlParams.has("googlettskey")) {
 				audio = document.createElement("audio");
 				audio.onended = finishedAudio;
-				GoogleAPIKey = urlParams.get("ttskey") || false;
+				GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
 			} else if (urlParams.has("elevenlabskey")) {
 				audio = document.createElement("audio");
 				audio.onended = finishedAudio;
@@ -3863,7 +3874,11 @@
 				getById("filter_messages_parent").classList.add("lightmode");
 				document.documentElement.style.setProperty("--link-color", "#06F");
 				document.documentElement.style.setProperty("--font-color-name", "#000");
-				document.documentElement.style.setProperty("--background-color", "#FFF0");
+				if (navigator.userAgent.toLowerCase().indexOf(" electron/") === -1) {
+					document.documentElement.style.setProperty("--background-color", "#FFF0");
+				} else {
+					document.documentElement.style.setProperty("--background-color", "#FFFF");
+				}
 				document.documentElement.style.setProperty("--font-color", "#000");
 				document.documentElement.style.setProperty("--highlight-base2", "#EEE7");
 
@@ -5280,9 +5295,11 @@
 				}
 
 				if (data.action) {
-					if (data.target && data.target !== "null" && data.target !== thisLabel) { 
+				
+					if (data.target && data.target !== "null" && data.target !== thisLabel) {
 						return; // does not match, so we assume this isn't for us.
 					}
+					console.log(data);
 
 					if (data.action == "clear" || data.action == "clearAll") {
 						// clears all except pinned messages
@@ -5349,26 +5366,31 @@
 						} else{
 							console.log("No message found to feature that hasn't already been featured");
 						}
-					} else if (data.action === "toggleTTS") {
-						if (data.value == "toggle") {
-							speech = !speech;
-						} else if (data.value == "true") {
-							speech = true;
-						} else if (data.value == "false") {
-							speech = false;
-						} else if (data.value == "1") {
-							speech = true;
-						} else if (data.value == "0") {
-							speech = false;
-						} else if (data.value == "on") {
-							speech = true;
-						} else if (data.value == "off") {
-							speech = false;
-						} else if (data.value) {
-							speech = true;
+					} else if (data.action === "toggleTTS" || data.action === "tts") {
+						if ("value" in data){
+							if (data.value == "toggle") {
+								speech = !speech;
+							} else if (data.value == "true") {
+								speech = true;
+							} else if (data.value == "false") {
+								speech = false;
+							} else if (data.value == "1") {
+								speech = true;
+							} else if (data.value == "0") {
+								speech = false;
+							} else if (data.value == "on") {
+								speech = true;
+							} else if (data.value == "off") {
+								speech = false;
+							} else if (data.value) {
+								speech = true;
+							} else {
+								speech = false;
+							}
 						} else {
-							speech = false;
+							speech = !speech;
 						}
+						console.log("TTS: "+speech);
 						if (speech) {
 							getById("tts").dataset.state = "1";
 							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
@@ -5378,7 +5400,7 @@
 							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
 							getById("tts").title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
 						}
-						return true;
+						return speech;
 					}
 				} else if ("forward" in data) {
 					sendDataP2P(data.forward);
@@ -6472,17 +6494,56 @@
 				}
 			}
 
+			<!-- function replaceURLsWithSubstring(text, replacement = "[Link]") { -->
+				<!-- if (typeof text !== "string") { -->
+					<!-- return text; -->
+				<!-- } -->
+				<!-- try { -->
+					<!-- const urlPattern = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g; -->
+					<!-- return text.replace(urlPattern, replacement); -->
+				<!-- } catch (e) { -->
+					<!-- console.error(e); -->
+					<!-- return text; -->
+				<!-- } -->
+			<!-- } -->
+			
+			const validTLDs = new Set(["a","aaa","aarp","abb","abbott","abbvie","abc","able","abogado","abudhabi","ac","academy","accenture","accountant","accountants","aco","actor","ad","ads","adult","ae","aeg","aero","aetna","af","afl","africa","ag","agakhan","agency","ai","aig","airbus","airforce","airtel","akdn","al","alibaba","alipay","allfinanz","allstate","ally","alsace","alstom","am","amazon","americanexpress","americanfamily","amex","amfam","amica","amsterdam","analytics","android","anquan","anz","ao","aol","apartments","app","apple","aq","aquarelle","ar","arab","aramco","archi","army","arpa","art","arte","as","asda","asia","associates","at","athleta","attorney","au","auction","audi","audible","audio","auspost","author","auto","autos","aw","aws","ax","axa","az","azure","b","ba","baby","baidu","banamex","band","bank","bar","barcelona","barclaycard","barclays","barefoot","bargains","baseball","basketball","bauhaus","bayern","bb","bbc","bbt","bbva","bcg","bcn","bd","be","beats","beauty","beer","bentley","berlin","best","bestbuy","bet","bf","bg","bh","bharti","bi","bible","bid","bike","bing","bingo","bio","biz","bj","black","blackfriday","blockbuster","blog","bloomberg","blue","bm","bms","bmw","bn","bnpparibas","bo","boats","boehringer","bofa","bom","bond","boo","book","booking","bosch","bostik","boston","bot","boutique","box","br","bradesco","bridgestone","broadway","broker","brother","brussels","bs","bt","build","builders","business","buy","buzz","bv","bw","by","bz","bzh","c","ca","cab","cafe","cal","call","calvinklein","cam","camera","camp","canon","capetown","capital","capitalone","car","caravan","cards","care","career","careers","cars","casa","case","cash","casino","cat","catering","catholic","cba","cbn","cbre","cc","cd","center","ceo","cern","cf","cfa","cfd","cg","ch","chanel","channel","charity","chase","chat","cheap","chintai","christmas","chrome","church","ci","cipriani","circle","cisco","citadel","citi","citic","city","ck","cl","claims","cleaning","click","clinic","clinique","clothing","cloud","club","clubmed","cm","cn","co","coach","codes","coffee","college","cologne","com","commbank","community","company","compare","computer","comsec","condos","construction","consulting","contact","contractors","cooking","cool","coop","corsica","country","coupon","coupons","courses","cpa","cr","credit","creditcard","creditunion","cricket","crown","crs","cruise","cruises","cu","cuisinella","cv","cw","cx","cy","cymru","cyou","cz","d","dabur","dad","dance","data","date","dating","datsun","day","dclk","dds","de","deal","dealer","deals","degree","delivery","dell","deloitte","delta","democrat","dental","dentist","desi","design","dev","dhl","diamonds","diet","digital","direct","directory","discount","discover","dish","diy","dj","dk","dm","dnp","do","docs","doctor","dog","domains","dot","download","drive","dtv","dubai","dunlop","dupont","durban","dvag","dvr","dz","e","earth","eat","ec","eco","edeka","edu","education","ee","eg","email","emerck","energy","engineer","engineering","enterprises","epson","equipment","er","ericsson","erni","es","esq","estate","et","eu","eurovision","eus","events","exchange","expert","exposed","express","extraspace","f","fage","fail","fairwinds","faith","family","fan","fans","farm","farmers","fashion","fast","fedex","feedback","ferrari","ferrero","fi","fidelity","fido","film","final","finance","financial","fire","firestone","firmdale","fish","fishing","fit","fitness","fj","fk","flickr","flights","flir","florist","flowers","fly","fm","fo","foo","food","football","ford","forex","forsale","forum","foundation","fox","fr","free","fresenius","frl","frogans","frontier","ftr","fujitsu","fun","fund","furniture","futbol","fyi","g","ga","gal","gallery","gallo","gallup","game","games","gap","garden","gay","gb","gbiz","gd","gdn","ge","gea","gent","genting","george","gf","gg","ggee","gh","gi","gift","gifts","gives","giving","gl","glass","gle","global","globo","gm","gmail","gmbh","gmo","gmx","gn","godaddy","gold","goldpoint","golf","goo","goodyear","goog","google","gop","got","gov","gp","gq","gr","grainger","graphics","gratis","green","gripe","grocery","group","gs","gt","gu","gucci","guge","guide","guitars","guru","gw","gy","h","hair","hamburg","hangout","haus","hbo","hdfc","hdfcbank","health","healthcare","help","helsinki","here","hermes","hiphop","hisamitsu","hitachi","hiv","hk","hkt","hm","hn","hockey","holdings","holiday","homedepot","homegoods","homes","homesense","honda","horse","hospital","host","hosting","hot","hotels","hotmail","house","how","hr","hsbc","ht","hu","hughes","hyatt","hyundai","i","ibm","icbc","ice","icu","id","ie","ieee","ifm","ikano","il","im","imamat","imdb","immo","immobilien","in","inc","industries","infiniti","info","ing","ink","institute","insurance","insure","int","international","intuit","investments","io","ipiranga","iq","ir","irish","is","ismaili","ist","istanbul","it","itau","itv","j","jaguar","java","jcb","je","jeep","jetzt","jewelry","jio","jll","jm","jmp","jnj","jo","jobs","joburg","jot","joy","jp","jpmorgan","jprs","juegos","juniper","k","kaufen","kddi","ke","kerryhotels","kerrylogistics","kerryproperties","kfh","kg","kh","ki","kia","kids","kim","kindle","kitchen","kiwi","km","kn","koeln","komatsu","kosher","kp","kpmg","kpn","kr","krd","kred","kuokgroup","kw","ky","kyoto","kz","l","la","lacaixa","lamborghini","lamer","lancaster","land","landrover","lanxess","lasalle","lat","latino","latrobe","law","lawyer","lb","lc","lds","lease","leclerc","lefrak","legal","lego","lexus","lgbt","li","lidl","life","lifeinsurance","lifestyle","lighting","like","lilly","limited","limo","lincoln","link","lipsy","live","living","lk","llc","llp","loan","loans","locker","locus","lol","london","lotte","lotto","love","lpl","lplfinancial","lr","ls","lt","ltd","ltda","lu","lundbeck","luxe","luxury","lv","ly","m","ma","madrid","maif","maison","makeup","man","management","mango","map","market","marketing","markets","marriott","marshalls","mattel","mba","mc","mckinsey","md","me","med","media","meet","melbourne","meme","memorial","men","menu","merckmsd","mg","mh","miami","microsoft","mil","mini","mint","mit","mitsubishi","mk","ml","mlb","mls","mm","mma","mn","mo","mobi","mobile","moda","moe","moi","mom","monash","money","monster","mormon","mortgage","moscow","moto","motorcycles","mov","movie","mp","mq","mr","ms","msd","mt","mtn","mtr","mu","museum","music","mv","mw","mx","my","mz","n","na","nab","nagoya","name","navy","nba","nc","ne","nec","net","netbank","netflix","network","neustar","new","news","next","nextdirect","nexus","nf","nfl","ng","ngo","nhk","ni","nico","nike","nikon","ninja","nissan","nissay","nl","no","nokia","norton","now","nowruz","nowtv","np","nr","nra","nrw","ntt","nu","nyc","nz","o","obi","observer","office","okinawa","olayan","olayangroup","ollo","om","omega","one","ong","onl","online","ooo","open","oracle","orange","org","organic","origins","osaka","otsuka","ott","ovh","p","pa","page","panasonic","paris","pars","partners","parts","party","pay","pccw","pe","pet","pf","pfizer","pg","ph","pharmacy","phd","philips","phone","photo","photography","photos","physio","pics","pictet","pictures","pid","pin","ping","pink","pioneer","pizza","pk","pl","place","play","playstation","plumbing","plus","pm","pn","pnc","pohl","poker","politie","porn","post","pr","pramerica","praxi","press","prime","pro","prod","productions","prof","progressive","promo","properties","property","protection","pru","prudential","ps","pt","pub","pw","pwc","py","q","qa","qpon","quebec","quest","r","racing","radio","re","read","realestate","realtor","realty","recipes","red","redstone","redumbrella","rehab","reise","reisen","reit","reliance","ren","rent","rentals","repair","report","republican","rest","restaurant","review","reviews","rexroth","rich","richardli","ricoh","ril","rio","rip","ro","rocks","rodeo","rogers","room","rs","rsvp","ru","rugby","ruhr","run","rw","rwe","ryukyu","s","sa","saarland","safe","safety","sakura","sale","salon","samsclub","samsung","sandvik","sandvikcoromant","sanofi","sap","sarl","sas","save","saxo","sb","sbi","sbs","sc","scb","schaeffler","schmidt","scholarships","school","schule","schwarz","science","scot","sd","se","search","seat","secure","security","seek","select","sener","services","seven","sew","sex","sexy","sfr","sg","sh","shangrila","sharp","shell","shia","shiksha","shoes","shop","shopping","shouji","show","si","silk","sina","singles","site","sj","sk","ski","skin","sky","skype","sl","sling","sm","smart","smile","sn","sncf","so","soccer","social","softbank","software","sohu","solar","solutions","song","sony","soy","spa","space","sport","spot","sr","srl","ss","st","stada","staples","star","statebank","statefarm","stc","stcgroup","stockholm","storage","store","stream","studio","study","style","su","sucks","supplies","supply","support","surf","surgery","suzuki","sv","swatch","swiss","sx","sy","sydney","systems","sz","t","tab","taipei","talk","taobao","target","tatamotors","tatar","tattoo","tax","taxi","tc","tci","td","tdk","team","tech","technology","tel","temasek","tennis","teva","tf","tg","th","thd","theater","theatre","tiaa","tickets","tienda","tips","tires","tirol","tj","tjmaxx","tjx","tk","tkmaxx","tl","tm","tmall","tn","to","today","tokyo","tools","top","toray","toshiba","total","tours","town","toyota","toys","tr","trade","trading","training","travel","travelers","travelersinsurance","trust","trv","tt","tube","tui","tunes","tushu","tv","tvs","tw","tz","u","ua","ubank","ubs","ug","uk","unicom","university","uno","uol","ups","us","uy","uz","v","va","vacations","vana","vanguard","vc","ve","vegas","ventures","verisign","vermögensberater","vermögensberatung","versicherung","vet","vg","vi","viajes","video","vig","viking","villas","vin","vip","virgin","visa","vision","viva","vivo","vlaanderen","vn","vodka","volvo","vote","voting","voto","voyage","vu","w","wales","walmart","walter","wang","wanggou","watch","watches","weather","weatherchannel","webcam","weber","website","wed","wedding","weibo","weir","wf","whoswho","wien","wiki","williamhill","win","windows","wine","winners","wme","wolterskluwer","woodside","work","works","world","wow","ws","wtc","wtf","x","xbox","xerox","xihuan","xin","xxx","xyz","y","yachts","yahoo","yamaxun","yandex","ye","yodobashi","yoga","yokohama","you","youtube","yt","yun","z","za","zappos","zara","zero","zip","zm","zone","zuerich","zw","IDNs","ελ","ευ","бг","бел","дети","ею","католик","ком","мкд","мон","москва","онлайн","орг","рус","рф","сайт","срб","укр","қаз","հայ","ישראל","קום","ابوظبي","ارامكو","الاردن","البحرين","الجزائر","السعودية","العليان","المغرب","امارات","ایران","بارت","بازار","بيتك","بھارت","تونس","سودان","سورية","شبكة","عراق","عرب","عمان","فلسطين","قطر","كاثوليك","كوم","مصر","مليسيا","موريتانيا","موقع","همراه","پاكستان","پاکستان","ڀارت","कॉम","नेट","भारत","भारतम्","भारोत","संगठन","বাংলা","ভারত","ভাৰত","ਭਾਰਤ","ભારત","ଭାରତ","இந்தியா","இலங்கை","சிங்கப்பூர்","భారత్","ಭಾರತ","ഭാരതം","ලංකා","คอม","ไทย","ລາວ","გე","みんな","アマゾン","クラウド","グーグル","コム","ストア","セール","ファッション","ポイント","世界","中信","中国","中國","中文网","亚马逊","企业","佛山","信息","健康","八卦","公司","公益","台湾","台灣","商城","商店","商标","嘉里","嘉里大酒店","在线","大拿","天主教","娱乐","家電","广东","微博","慈善","我爱你","手机","招聘","政务","政府","新加坡","新闻","时尚","書籍","机构","淡马锡","游戏","澳門","点看","移动","组织机构","网址","网店","网站","网络","联通","谷歌","购物","通販","集团","電訊盈科","飞利浦","食品","餐厅","香格里拉","香港","닷넷","닷컴","삼성","한국"]);
+			
+			function isValidTLD(tld) {
+			  return validTLDs.has(tld.toLowerCase());
+			}
+			
 			function replaceURLsWithSubstring(text, replacement = "[Link]") {
-				if (typeof text !== "string") {
-					return text;
-				}
-				try {
-					const urlPattern = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g;
-					return text.replace(urlPattern, replacement);
-				} catch (e) {
-					console.error(e);
-					return text;
-				}
+			  if (typeof text !== "string") {
+				return text;
+			  }
+
+			  try {
+				// This pattern matches potential URLs more strictly
+				const urlPattern = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g;
+
+				return text.replace(urlPattern, (match) => {
+				  // Split the match by dots to check the TLD
+				  const parts = match.split('.');
+				  const potentialTLD = parts[parts.length - 1].split(/[/?#]/)[0];
+
+				  // If it doesn't contain a slash, only replace if it starts with http:// or https://
+				  if (match.startsWith('http://') || match.startsWith('https://')) {
+					return replacement;
+				  }
+				  
+				  // Check if it's a valid TLD and contains a slash (indicating it's likely a URL)
+				  if (match.includes('/') || isValidTLD(potentialTLD)) {
+					return replacement;
+				  }
+
+				  // Otherwise, return the original match
+				  return match;
+				});
+			  } catch (e) {
+				console.error(e);
+				return text;
+			  }
 			}
 
 			function processData(data, reloaded = false) {
@@ -6990,6 +7051,11 @@
 					} else {
 						console.error("Messages should have an ID, else queuing/pinning won't work");
 					}
+					
+					if (trimChat){
+						chatmessage = truncateHTMLContent(chatmessage, trimChat);
+					}
+
 
 					if (largeavatar) {
 						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived + "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
@@ -7493,12 +7559,13 @@
 				}
 			}
 			function SpeechifyTTS(tts) {
+				console.log(tts);
 				premiumQueueActive = true;
 				try {
 					const url = "https://api.sws.speechify.com/v1/audio/speech";
 					let model = English ? "simba-english" : "simba-multilingual";
 					const data = {
-						input: "<speak>"+tts+"</speak>",
+						input: "<speak>" + tts + "</speak>",
 						voice_id: voiceName || "henry",
 						model: model,
 						audio_format: "mp3"
@@ -7513,24 +7580,36 @@
 					};
 					fetch(url, otherparam)
 						.then(response => {
+							//console.log(response);
 							if (!response.ok) {
 								throw new Error(`HTTP error! status: ${response.status}`);
 							}
-							return response.blob();
+							return response.json();
 						})
-						.then(blob => {
-							const audioUrl = URL.createObjectURL(blob);
-							if (!audio) {
-								audio = document.createElement("audio");
-								audio.onended = finishedAudio;
-							}
-							audio.src = audioUrl;
-							if (volume) {
-								audio.volume = volume;
+						.then(json => {
+							//console.log(json);
+							if (!json.audio_data) {
+								finishedAudio();
+								throw new Error("No audio data in JSON response");
 							}
 							try {
-								audio.play();
+								if (!audio) {
+									audio = document.createElement("audio");
+									audio.onended = finishedAudio;
+								}
+								audio.src = "data:audio/mp3;base64," + json.audio_data;
+								if (volume) {
+									audio.volume = volume;
+								}
+							
+								audio.play().then(() => {
+									//console.log("Audio playing successfully");
+								}).catch(err => {
+									console.error("Audio play failed, user interaction required", err);
+									finishedAudio();  // Ensure the queue is released
+								});
 							} catch (e) {
+								console.error(e);
 								finishedAudio();
 								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
 							}
@@ -7897,6 +7976,43 @@
 				msg.overlayNinja.response = data;
 
 				send2Extension(msg.overlayNinja);
+			}
+			
+			function truncateHTMLContent(html, maxLength) {
+				const tempDiv = document.createElement('div');
+				tempDiv.innerHTML = html;
+
+				function traverseAndTruncate(node, remainingChars) {
+					if (remainingChars <= 0) return 0;
+
+					if (node.nodeType === Node.TEXT_NODE) {
+						if (node.textContent.length > remainingChars) {
+							node.textContent = node.textContent.slice(0, remainingChars) + '...';
+							return 0;
+						}
+						return remainingChars - node.textContent.length;
+					}
+
+					if (node.nodeType === Node.ELEMENT_NODE) {
+						let currentRemaining = remainingChars;
+						for (let i = 0; i < node.childNodes.length; i++) {
+							currentRemaining = traverseAndTruncate(node.childNodes[i], currentRemaining);
+							if (currentRemaining <= 0) {
+								// Remove any remaining siblings
+								while (node.childNodes.length > i + 1) {
+									node.removeChild(node.lastChild);
+								}
+								break;
+							}
+						}
+						return currentRemaining;
+					}
+
+					return remainingChars;
+				}
+
+				traverseAndTruncate(tempDiv, maxLength);
+				return tempDiv.innerHTML;
 			}
 
 			function setupSaveToDisk() {

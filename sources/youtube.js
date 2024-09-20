@@ -118,6 +118,10 @@
 		const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
 		return emojiRegex.test(char);
 	}
+	
+	const policy = trustedTypes.createPolicy("myTrustedPolicy", {
+	  createHTML: (string) => string
+	});
 
 	function getAllContentNodes(element) {
 		let result = '';
@@ -146,7 +150,7 @@
 				}
 				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent)); 
 				const tempDiv = document.createElement('div');
-				tempDiv.innerHTML = processedText;
+				tempDiv.innerHTML = policy.createHTML(processedText);
 				
 				Array.from(tempDiv.childNodes).forEach(child => {
 					if (child.nodeType === 3) {
@@ -324,7 +328,7 @@
 		}
 	}
 
-	function getAllContentNodes(element) {
+	function getAllContentNodes2(element) {
 		var resp = "";
 		element.childNodes.forEach(node => {
 			if (node.childNodes.length) {

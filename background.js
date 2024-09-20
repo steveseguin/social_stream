@@ -1864,7 +1864,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					delete settings[request.setting];
 				} else {
 					settings[request.setting][request.type] = request.value;
-					//settings[request.setting].value = request.value; // not sure this is a good idea
+					if (request.type == "json"){
+						settings[request.setting]["object"] = JSON.parse(request.value); // convert to object for use
+					}
 				}
 			} else if ("type" in request) {
 				if (!request.value) {
@@ -1872,6 +1874,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				} else {
 					settings[request.setting] = {};
 					settings[request.setting][request.type] = request.value;
+					if (request.type == "json"){
+						settings[request.setting]["object"] = JSON.parse(request.value); // convert to object for use
+					}
 					//settings[request.setting].value = request.value; // I'll use request.value instead
 				}
 			} else {
@@ -1892,6 +1897,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "midi") {
 				toggleMidi();
 			}
+			
+			// if (request.setting == "customGifCommands") {
+				// if (request.setting["customGifCommands"].array){
+					// request.setting["customGifCommands"].array
+				// }
+			// }
 
 			if (request.setting == "socketserver") {
 				if (request.value) {
@@ -2783,6 +2794,20 @@ async function sendToDestinations(message) {
 	} catch (e) {
 		console.error(e);
 	}
+	
+	try {
+		if (settings.enableCustomGifCommands && settings["customGifCommands"]){
+			// settings.enableCustomGifCommands.object = JSON.stringify([{command,url},{command,url},{command,url})
+			settings["customGifCommands"]["object"].forEach(values=>{
+				if (message && message.chatmessage && values.url && values.command && (message.chatmessage.split(" ")[0] === values.command)){
+					//  || "https://picsum.photos/1280/720?random="+values.command
+					sendTargetP2P({...message,...{contentimg: values.url}}, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
+				}
+			});
+		}
+	} catch (e) {
+		console.error(e);
+	}
 
 	sendToDisk(message);
 	sendToH2R(message);
@@ -3321,7 +3346,7 @@ async function openchat(target = null, force=false) {
 
 	if ((target == "twitch" || !target) && settings.twitch_username) {
 		let url = "https://www.twitch.tv/popout/" + settings.twitch_username.textsetting + "/chat?popout=";
-		openURL(url);
+		openURL(url, true);
 	}
 
 	if ((target == "kick" || !target) && settings.kick_username) {
@@ -4184,8 +4209,10 @@ async function processIncomingRequest(request, UUID = false) {
 						model = "rolandroland/llama3.1-uncensored"; // a faster model
 						prompt = "You're an AI assistant. Keep responses limited to a few sentences.\n"+prompt;
 					}
+					if (request.model){
+						model = request.model; // a faster model
+					}
 					model = settings.ollamamodel?.textsetting || model; // if you manually set it via the settings
-					
 					callOllamaAPI(prompt, model, (chunk) => {
 						//console.log("Received chunk:", chunk);
 						sendDataP2P({ chatbotChunk: {value: chunk, target: request.target}}, UUID);
@@ -5822,10 +5849,10 @@ async function applyBotActions(data, tab = false) {
 		// webhook for configured custom chat commands
 		for (var i = 1; i <= 20; i++) {
 			if (data.chatmessage && settings["chatevent" + i] && settings["chatcommand" + i] && settings["chatwebhook" + i]) {
-				let matches = false;
+				let matches = false; 
 				if (settings.chatwebhookstrict && (data.chatmessage === settings["chatcommand" + i].textsetting)) {
 					matches=true;
-				} else if (!settings.chatwebhookstrict && (data.chatmessage.split(" ")[0].toLowerCase() === settings["chatcommand" + i].textsetting.toLowerCase())){
+				} else if (!settings.chatwebhookstrict && (data.chatmessage.toLowerCase().startsWith(settings["chatcommand" + i].textsetting.toLowerCase()))){
 					matches=true;
 				}
 				if (matches){

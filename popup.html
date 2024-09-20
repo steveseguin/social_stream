@@ -804,6 +804,7 @@ input:checked + .slider:before {
     transition: all 0.2s;
     cursor: text;
     z-index: 1;
+	pointer-events: none;
 }
 
 .textInput + label::before {
@@ -838,6 +839,33 @@ input:checked + .slider:before {
 .textInput:focus::placeholder {
     opacity: 1;
     animation-delay: 0.2s;
+}
+
+.custom_gif_commands_title {
+    color: #00a6ff; /* You can adjust this color to match your theme */
+}
+
+.custom-gif-command-entry {
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.custom-gif-command-entry .textInputContainer {
+    margin-right: 10px;
+}
+
+.removeCustomGifCommand {
+    padding: 5px 10px;
+    background-color: #ff0000;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.removeCustomGifCommand:hover {
+    background-color: #cc0000;
 }
 
         </style>
@@ -1036,6 +1064,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="messages-drop-down-reversed-order">🔃 Messages drop down (reversed order) </span>
                                 </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="reverse" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="messages-reverse-order">🔀 Reverse order (top down new messages)</span>
+                                </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="random" />
@@ -1095,10 +1130,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="reload" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="reload-the-last-50-messages-when-refreshing-the-page">🔄️ Reload the last ~50-messages when refreshing the page </span>
-																																		
-																																	  
-																																																																																																																																																																						  
+                                    <span data-translate="reload-the-last-50-messages-when-refreshing-the-page">🔄️ Reload the last ~50-messages when refreshing the page </span>									
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -1142,12 +1174,8 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="autoyoutubememberchat" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="auto-feature-monthly-member-chat">👑<img src="./sources/images/youtube.png" class="icon" /> Auto-feature YouTube monthly member chat </span>
-																																																																					 
-																																																																																																																																																																																					 
-																																									  
+                                    <span data-translate="auto-feature-monthly-member-chat">👑<img src="./sources/images/youtube.png" class="icon" /> Auto-feature YouTube monthly member chat </span>																														  
                                 </div>
-
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="sync" />
@@ -1181,9 +1209,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="helpermode" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="view-pin-and-queue-cant-chat-or-feature">👁️ View, Pin, and Queue. (Can't chat or feature) </span>
-																																																																																																																																																																																																																																																																													  
-																																									  
+                                    <span data-translate="view-pin-and-queue-cant-chat-or-feature">👁️ View, Pin, and Queue. (Can't chat or feature) </span> 
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -1222,8 +1248,12 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="speech" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="text-to-speech-incoming-messages">🗣️ Text-to-speech incoming messages </span>
+                                    <span data-translate="text-to-speech-incoming-messages">🚦🗣️ Text-to-speech incoming messages </span>
                                 </div>
+								<br />
+								<i>note: the free built-in TTS plays out via the default audio device.</i>
+								<br />
+								<br />
                                 <div>
                                     <select id="languageSelect1" data-optionparam1="lang" title="Select the default text to speech language"> </select>
                                 </div>
@@ -1275,23 +1305,60 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param1="queue=queue" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="clear-current-tts-queue-on">🔇 Clear current TTS queue on "</span><b><span data-translate="pass">!pass</span></b>"
-                                </div>
-                                <div>
-                                    <label class="switch">
                                         <input type="checkbox" data-param1="passtts" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="pass-tts">🔇 Next tts message control via chat"</span><b><span data-translate="pass">!pass</span></b>"
-																																		
-																																																																																																																																																																						
-																																																																																																																																																																																																																					
-																																																																																																																																																																						 
+                                    <span data-translate="pass-tts">🔇 Next tts message control via chat "</span><b><span data-translate="pass">!pass</span></b>"												 
                                 </div>
-                               
+								<br />
+								<!-- Google TTS Options -->
+								<div class="tts-provider-options">
+									<h4>Google TTS Options</h4>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="googleAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam1="ttskey" />
+										<label for="googleAPIKey"><span data-translate="google-api-key">Google API Key</span></label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="googleVoiceName" class="textInput instant" autocomplete="off" placeholder="e.g., en-GB-Standard-A" data-textparam1="voice" />
+										<label for="googleVoiceName"><span data-translate="google-voice-name">Google Voice Name</span></label>
+									</div>
+								</div>
+								<br />
+								<!-- ElevenLabs TTS Options -->
+								<div class="tts-provider-options">
+									<h4>ElevenLabs TTS Options</h4>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="elevenLabsKey" class="textInput instant" autocomplete="off" placeholder="Your ElevenLabs API Key" data-textparam1="elevenlabskey" />
+										<label for="elevenLabsKey"><span data-translate="elevenlabs-api-key">ElevenLabs API Key</span></label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="elevenLabsVoiceID" class="textInput instant" autocomplete="off" placeholder="e.g., VR6AewLTigWG4xSOukaG" data-textparam1="voice" />
+										<label for="elevenLabsVoiceID"><span data-translate="elevenlabs-voice-id">ElevenLabs Voice ID</span></label>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param1="latency" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="elevenlabs-latency">
+											🚀 ElevenLabs Latency Optimization
+											<input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="0" size="5" data-numbersetting="latency" />
+										</span>
+									</div>
+								</div>
+								<br />
+								<!-- Speechify TTS Options -->
+								<div class="tts-provider-options">
+									<h4>Speechify TTS Options</h4>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="speechifyAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam1="speechifykey" />
+										<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="speechifyVoiceID" class="textInput instant" autocomplete="off" placeholder="e.g., henry" data-textparam1="voice" />
+										<label for="speechifyVoiceID"><span data-translate="speechify-voice-id">Speechify Voice ID</span></label>
+									</div>
+								</div>
                             </div>
                         </div>
                     </div>
@@ -1653,6 +1720,13 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="horizontal-scrolling-messages"> ↔️ Horizontal scrolling messages </span>
+                                </div>
+								 <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="trim=200" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    ✂️ <span data-translate="trim-mesages-to-200">Trim messages to 200 characters... </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -2028,10 +2102,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param2="beep" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message </span>
-																																		
-																																	  
-																																																																																																																																																																						  
+                                    <span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message </span>		
                                 </div>
                                 <div title="Lower the beep's volume by 50%">
                                     <label class="switch">
@@ -2043,9 +2114,7 @@ input:checked + .slider:before {
 
                                 <div class="textInputContainer" style="width: 95%;" title="Specify a URL for a custom beep audio file">
                                     <input type="text" id="custombeep2" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-textparam2="custombeep" />
-                                    <label for="custombeep2"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
-																																										  
-																																																																																																																																																																											   
+                                    <label for="custombeep2"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>												 
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -2111,15 +2180,14 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param2="speech" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="enable-text-to-speech">🗣️ Enable text-to-speech </span>
-																																																																					 
-																																																																																																																																																																																							 
-																																									  
+                                    <span data-translate="enable-text-to-speech">🗣️ Enable text-to-speech </span>									  
                                 </div>
+								<br />
+								<i>note: the free built-in TTS plays out via the default audio device.</i>
+								<br />
+								<br />
                                 <div>
-                                    <select id="languageSelect2" data-optionparam2="lang" title="Select the default text to speech language"> </select>
-																																																																																																																																																																																																																																																																														 
-																																																																																																																																																																	 
+                                    <select id="languageSelect2" data-optionparam2="lang" title="Select the default text to speech language"> </select>								 
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -2147,10 +2215,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param2="simpletts" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="do-not-say-says-or-someone-says-with-tts">🗣️ Do not say "says" or "someone says" with TTS </span>
-																																																																																   
-																																																																																																																																							  
-																																									  
+                                    <span data-translate="do-not-say-says-or-someone-says-with-tts">🗣️ Do not say "says" or "someone says" with TTS </span> 
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -2177,6 +2242,55 @@ input:checked + .slider:before {
                                     </span>
                                 </div>
 
+								<br />
+								<!-- Google TTS Options -->
+								<div class="tts-provider-options">
+									<h4>Google TTS Options</h4>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="googleAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam2="ttskey" />
+										<label for="googleAPIKey"><span data-translate="google-api-key">Google API Key</span></label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="googleVoiceName2" class="textInput instant" autocomplete="off" placeholder="e.g., en-GB-Standard-A" data-textparam2="voice" />
+										<label for="googleVoiceName"><span data-translate="google-voice-name">Google Voice Name</span></label>
+									</div>
+								</div>
+								<br />
+								<!-- ElevenLabs TTS Options -->
+								<div class="tts-provider-options">
+									<h4>ElevenLabs TTS Options</h4>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="elevenLabsKey2" class="textInput instant" autocomplete="off" placeholder="Your ElevenLabs API Key" data-textparam2="elevenlabskey" />
+										<label for="elevenLabsKey"><span data-translate="elevenlabs-api-key">ElevenLabs API Key</span></label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="elevenLabsVoiceID2" class="textInput instant" autocomplete="off" placeholder="e.g., VR6AewLTigWG4xSOukaG" data-textparam2="voice" />
+										<label for="elevenLabsVoiceID"><span data-translate="elevenlabs-voice-id">ElevenLabs Voice ID</span></label>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param2="latency" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="elevenlabs-latency">
+											🚀 ElevenLabs Latency Optimization
+											<input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="0" size="5" data-numbersetting="latency" />
+										</span>
+									</div>
+								</div>
+								<br />
+								<!-- Speechify TTS Options -->
+								<div class="tts-provider-options">
+									<h4>Speechify TTS Options</h4>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="speechifyAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam2="speechifykey" />
+										<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="speechifyVoiceID2" class="textInput instant" autocomplete="off" placeholder="e.g., henry" data-textparam2="voice" />
+										<label for="speechifyVoiceID"><span data-translate="speechify-voice-id">Speechify Voice ID</span></label>
+									</div>
+								</div>
                             </div>
                         </div>
                     </div>
@@ -2781,29 +2895,48 @@ input:checked + .slider:before {
 							<div class="options_group poll">
 								<h3>Poll Settings</h3>
 								<p>Enable and customize the poll:</p>
+								<br>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-target="poll" data-setting="pollEnabled" />
 										<span class="slider round"></span>
 									</label>
-									<span>Enable Poll</span>
+									<span>🚦 Enable Poll</span>
 								</div>
+								<br>
 								<div>
-									<label>Poll Type:</label>
+									<label>📊 Poll Type:</label>
 									<select data-optionsetting="pollType" data-target="poll" id="pollType">
 										<option value="freeform">Free-form</option>
 										<option value="yesno">Yes/No</option>
 										<option value="multiple">Multiple Choice</option>
 									</select>
 								</div>
+								<br>
 								<div>
-									<label>Poll Question:</label>
+									<label>🎨 Poll Style/Theme:</label>
+									<select data-optionsetting="pollStyle" data-target="poll" id="pollStyle">
+										<option value="default">Default</option>
+										<option value="neon">Neon</option>
+										<option value="minimalist">Minimalist</option>
+										<option value="retro-gaming">Retro Gaming</option>
+										<option value="elegant">Elegant</option>
+										<option value="futuristic">Futuristic</option>
+										<option value="vintage">Vintage</option>
+										<option value="cyberpunk">Cyberpunk</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<label>❔ Poll Question:</label>
 									<input type="text" id="pollQuestion" class="textInput" autocomplete="off" placeholder="Enter poll question" data-textsetting="pollQuestion" data-target="poll" />
 								</div>
+								<br>
 								<div id="multipleChoiceOptions" class="hidden">
-									<label>Options (comma separated):</label>
+									<label>🔢 Options (comma separated):</label>
 									<input type="text" id="multipleChoiceInput" class="textInput" autocomplete="off" placeholder="Option 1, Option 2, ..." data-textsetting="multipleChoiceOptions" data-target="poll" />
 								</div>
+								<br>
 								<div class="hidden">
 									<label>Timer (seconds):</label>
 									<input type="number" id="pollTimer" class="textInput" autocomplete="off" placeholder="60" data-textsetting="pollTimer" data-target="poll" />
@@ -2920,6 +3053,45 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
+			
+			<div class="link" title="Custom GIF Commands">
+				<h2 class="custom_gif_commands_title">
+					<span data-translate="custom-gif-commands">Custom GIF Commands </span><a class="options-link rounded_area" href="#custom-gif-commands" title="Jump to the custom GIF commands options."><span data-translate="options">options</span></a>
+				</h2>
+				<h3>
+					<span data-translate="when-enabled-custom-commands">
+						When enabled, custom commands will trigger specific GIFs or media in the overlay.
+					</span>
+				</h3>
+				<div id="custom-gif-commands" data-raw="" class="streaming_chat"><a href="" id="custom-gif-commands-link"></a></div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-custom-gif-commands-options" />
+					<label class="collapsible-label" for="wrapper-custom-gif-commands-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group custom_gif_commands">
+								<h3><span data-translate="custom-gif-commands-settings">Custom GIF Commands Settings</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="enableCustomGifCommands" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="enable-custom-gif-commands">🚦 Enable Custom GIF Commands</span>
+								</div>
+								
+								<div id="customGifCommandsList"></div>
+								
+								<button class="glowingButton" id="addCustomGifCommand" style="margin-top: 10px; width: 200px;">
+									<span data-translate="add-new-command">+ Add New Command</span>
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 
             <div class="generic_category_title">
                 <h2>
@@ -3945,17 +4117,6 @@ input:checked + .slider:before {
                                 <h3><span data-translate="opened-in-new-tab">Opened in new tab</span></h3>
 
                                 <div class="textInputContainer" style="width: 95%;">
-                                    <input type="text" id="twitch_username" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="twitch_username" />
-                                    <label for="twitch_username"><span data-translate="twitch">&gt; Twitch</span></label>
-                                </div>
-                                <center>
-                                    <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="twitch">
-                                        <span><span data-translate="open-chat">Open chat</span></span>
-                                    </button>
-                                </center>
-                                <br />
-
-                                <div class="textInputContainer" style="width: 95%;">
                                     <input type="text" id="instagramlive_username" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="instagramlive_username" />
                                     <label for="instagramlive_username"><span data-translate="instagram-live">&gt; Instagram Live</span></label>
                                 </div>
@@ -4007,6 +4168,16 @@ input:checked + .slider:before {
                                     <span style="color: #ff0000dd;">
                                         <b><span data-translate="note">Note</span></b><span data-translate="do">: Do </span><u><span data-translate="not">NOT</span></u><span data-translate="minimize-them"> minimize them!</span>
                                     </span>
+                                </center>
+								
+								<div class="textInputContainer" style="width: 95%;">
+                                    <input type="text" id="twitch_username" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="twitch_username" />
+                                    <label for="twitch_username"><span data-translate="twitch">&gt; Twitch</span></label>
+                                </div>
+                                <center>
+                                    <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="twitch">
+                                        <span><span data-translate="open-chat">Open chat</span></span>
+                                    </button>
                                 </center>
 
                                 <div class="textInputContainer" style="width: 95%;">
@@ -4323,6 +4494,17 @@ input:checked + .slider:before {
                                     <label for="sessionpassword"><span data-translate="unique-session-password">&gt; Set or change your session password</span></label>
                                 </div>
                                 <i>It's okay to set a custom password.</i>
+								<br />
+                                <h3><span data-translate="hide-urls">Hide your links</span></h3>
+								
+                                <div title="Hide the links for each page so it can't be seen on stream.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="hideyourlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="hide-your-ssn-links">👁️🔗 Obscure your links in this menu </span>
+                                </div>
+								<i>Better safe than sorry.</i>
                             </div>
                         </div>
                     </div>

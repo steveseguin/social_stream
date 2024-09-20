@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.0.12",
+  "version": "3.0.13",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -39,6 +39,7 @@
     "https://cbox.ws/box/*",
     "https://community.talkinghealthtech.com/live/*",
     "https://community.insidethe.show/live/*",
+	"https://members.firstinfam.com/live/*",
     "https://*.circle.so/*",
     "https://tellonym.me/*",
     "https://chat.wix.com/*",
@@ -62,6 +63,7 @@
     "https://meet.google.com/*",
     "https://play.quickchannel.com/*",
     "https://kick.com/*/chatroom",
+	"https://kick.com/popout/*/chat",
     "https://chatroll.com/embed/chat/*",
     "https://www.nimo.tv/popout/chat/*",
     "https://dashboard.nimo.tv/popout/chat/*",
@@ -234,7 +236,7 @@
     },
     {
       "js": [ "./sources/circle.js" ],
-      "matches": [ "https://community.insidethe.show/*", "https://community.talkinghealthtech.com/*", "https://*.circle.so/*" ]
+      "matches": [ "https://community.insidethe.show/*", "https://community.talkinghealthtech.com/*", "https://members.firstinfam.com/*","https://*.circle.so/*" ]
     },
     {
       "js": [ "./sources/sessions.js" ],
@@ -414,7 +416,11 @@
     },
     {
       "js": [ "./sources/kick.js" ],
-      "matches": [ "https://kick.com/*/chatroom" ]
+      "matches": [ "https://kick.com/*/chatroom"]
+    },
+	{
+      "js": [ "./sources/kick_new.js" ],
+      "matches": [ "https://kick.com/popout/*/chat"]
     },
     {
       "js": [ "./sources/cloudhub.js" ],

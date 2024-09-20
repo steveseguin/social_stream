@@ -25,8 +25,9 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
   - [Supported sites:](#supported-sites)
     - [Chat graveyard 🪦🪦🪦](#chat-graveyard-)
   - [Video walk-thru](#video-walk-thru)
-  - [To install](#to-install)
-    - [Seeing an error message?](#seeing-an-error-message)
+  - [Manually install extension](#manually-install-extension)
+    - [Seeing an error message about Manifest Version 2?](#seeing-an-error-message-about-manifest-version-2)
+  - [Chrome Web Store version](#chrome-web-store-version)
     - [Updating](#updating)
     - [Firefox support](#firefox-support)
   - [Standalone version of the app](#standalone-version-of-the-app)
@@ -200,13 +201,11 @@ A bit about Social Stream Ninja (old now): https://www.youtube.com/watch?v=X_11N
 
 How to setup for discord, slack, whatsapp, meet, and telegram, see: https://www.youtube.com/watch?v=L3l0_8V1t0Q
 
-### To install
+### Manually install extension
 
 This extension should work with Chromium-based browser on systems that support webRTC. This includes Chrome, Edge, and Brave. [Firefox users see here](https://github.com/steveseguin/social_stream#firefox-support).
 
-Currently you must download, extract, and load the browser extension manually.  It is not available yet in the browser's web store.
-
-The link to download newest version is here: https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip
+The link to download newest main version is here: https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip
 
 Once extracted into a folder, you can go here to load it: chrome://extensions/
 
@@ -220,11 +219,19 @@ You're ready to start using it!
 
 Please note also that you will need to manually update the extension to access newer versions; it currently does not auto-update aspects of the extension; just the dock and single overlay page auto-update as they are hosted online.
 
-#### Seeing an error message?
+#### Seeing an error message about Manifest Version 2?
 
-If you see the browser say there is an "Error", specifically a manifest v2 warning or something, you can safely ignore it.  It is not actually an error and will not impact the function of the extension.
+If you see the browser say there is an "Error", specifically a manifest v2 warning, you can safely ignore it. It is not actually an error and will not impact the function of the extension at present. If it worries you, please note that both a manifest version 3 version of the extension is available for download or via the Chrome webstore; there is also a standalone desktop app version. Manifest version 2 just happens to remain the most tried and test version at the moment.
 
-Something of concern though is Google will be updating Chrome browsers on January 2023 to block many popular Chrome extensions, including many Adblockers and also Social Stream Ninja. I'm working to resolve this concern, but Social Stream Ninja may end up having diminished functionality if Google has their way. If necessary, Social Stream Ninja may evolve into a downloadable app instead to avoid these limiations, but I'm hoping to avoid that if possible.
+While Google will eventually kill manifest version 2 extensions, it's possible to keep them alive until at least June 2025, as noted in <a href="https://www.reddit.com/r/chrome/comments/1dln9ev/tutorial_extend_manifest_v2/">this guide here</a>. I will depreciate version 2 when the times come, and while manifest version 3 is more restrictive, it should still work. If you download the v3 version from the Webstore, please note that I will only update it every couple weeks, due to review restrictions by Google. You can download version 3 all directly from Github, under the v3 branch.
+
+### Chrome Web Store version
+
+You can install Social Stream Ninja via the Chrome Web Store, however it only gets updated every few weeks, due to the lengthly review process involved in updating it.
+
+https://chromewebstore.google.com/detail/social-stream-ninja/cppibjhfemifednoimlblfcmjgfhfjeg
+
+It's based on Chrome Manifest v3, and will require you to leave a small browser tab open to use it.
 
 #### Updating
 

@@ -213,12 +213,90 @@ async function callOllamaAPI(prompt, model = null, callback = null) {
         }
     }
 }
+// strip emotes
+// if longer than 32-character, check it with AI
+
+/* let badList = new Set(['🍆', '💩', '🖕', '👉👌', '🍑', '🤬', '🔞', 'fuck', 'sexy']);
+function containsBadContent(message) {
+  const words = message.toLowerCase().split(/\s+/);
+  return words.some(word => badList.has(word)) || 
+         Array.from(message).some(char => badList.has(char));
+} */
+
+let safePhrasesSet = new Set(["lmfao","uuh","lmao","lol","gg","ww","wow","caught","huh","ben","cap","ta","hi","oooo","rt","no","damn","lmaooo","lmfao 󠀀","what","ez","hah","yes","???","pffttt","omg","noway","lmaoooo","ewww","o7","saj","hiii","omegalul","ofc","..","lmfaooo","????","ew","ggs","herehego","ome44","xdd","??","lmfaoooo","lmaoo","capping","lmaoooooooooo","www","hello","gay","10","wwww","hii","lmaooooo","mhm","?????","wwwww","ok","kekw","lmfaooooo","lmfaoo","yo","ayy","pog","...","hahaha","bro","gigachad","cmb","nice","icant","do it","arky","oh","banger","hey","clap","??????","ww arky","dorkin","ja","holy","lmfaoooooo","???????","bye","klat","oh nah","1 of 1","zyzzbass","wwwwww","no way","ww 5","monka","lmaoooooo","aura","-10k","true","uuh 󠀀","hahahaha","o wow","bruh","mmmmm","nah","me","hmm","rip","mmmmmm","haha","nooo","life","lmfaooooooo","xd","piece","buh","5.5","classic","real voice","frenn","noooo","????????","ayo","same","󠀀","ra","guuh","ono","man of meat","aaaa","ewwww","yamfam","letsgo","derp","yeah","ego","eww","yep","wwwwwww","mmmmmmm","mmmm","cinema","yooo","gayge","uhh","cungus","piece blash","?????????","stfu","pa","ww method","piece lotus","oh no","wicked","exit","ginji","dtm","lmaooooooo","nt","meat7","ayaya","widespeedlaugh","uuh uuh","chip","cringe","hahahahaha",":)","back","mmmmmmmm","danse","ogre","hesright","w arky","fax","what a save","its real","necco","ff","here we go","poll is uppppp","a u r a","d:","yoooo","men","mmmmmmmmm","gachademon","mmmmmmmmmm","oof","wwwwwwww","wwwwwwwww","catjam","o nah","okay","fr","??????????","idiot","ww emp","hahahah","ome5","mogged","lets goooo","yesss","ewwwww","nooooo","om","mmmmmmmmmmm","looking","real","hiiii","go","brb","yoo","hesgay","lmfao lmfao","lmfaoooooooo","lets go","....","sign bob","stop","acha","ll","lmao 󠀀","man of crabs","lmaoooooooo","ome","cucked","lmfaooooooooo","lets gooo","crazy","kek","ww 󠀀","ddl","meow","orange","وعليكم السلام","dicktone","oooo 󠀀","lmfaoooooooooo","rockn","20","yea","good","tarky","tuuh","memegym","sus","woah","we good","hello everyone","tf","ww deshae","ww segment","11","hmmm","loool","whattt","hola","sold","ww ww","lmfaooooooooooo","w method","yup","hit","السلام عليكم","uhhh","wwwwwwwwwww","nahhh","ta ta","ww unc","lacy","ot","lmaooooooooo","herehego 󠀀","predify","ww max","100","nope","based","goat","noooooo","press 1","stand","ww cap","dam","shiza","glaze","idk","???????????","smh","sakina","hiiiii","yay","سلام","na","xa","f a t","w 5","oh wow","bds","thanks","facts","uhoh","how","finally","byee","refresh","????????????","sped","sheesh","stare","exactly","damnnn","nahhhh","yess","wwwwwwwwww","ww 50","hah hah","sweater","why","who","thats crazy","hahah","lelw","oh shit","w raid","listening","team","caught 󠀀","cool","uh oh","ooo","w tim","whattttt","oh my","kishan","ww red","ayoo","mmm","no one said that","deji","400k","thank you","insane","bro what","what?","nahh","omggg","و عليكم السلام","vamos","f5","sniffa","leaked","rime","ayy 󠀀","unlucky","hahahahah","loll","lolol","looooool","lfg","hi guys","hacked","ye","awww","bra","ww beavo","taway","wedidit","lazer woo","assept","let it go","ww siggy","12","oop","whatttt","oh my god","never","ha","focus","looool","wwwwwwwwwwwww","this guy","wth","wwwwwwwwwwww","pwr","yooooo","jorkin","lmaaooo","ez points","?????????????","hell nah","mmmmmmmmmmmmmm","here he go","pffttt 󠀀","ewwwwww","clix","cap of doom","darla","damn lacy","sup","thx","i was here","nvm","well well well","huh?","brother","pause","clueless","hlo","ahahahaha","lies","ta 󠀀","ome44 󠀀","jira","noticinggg","call clix","pffttt pffttt","lmfaooooooooooooo","max coming","ww elizabeth","gerd","ez clap","bwajaja","lock in","dang","noo","close","aint no way","red","eu","nahhhhh","peepodj","ewwwwwww","ayooo","gachibass","jungcooked","alien3","hinge","herewego","hollon","big oz","gl","uwu","lollll","ayoooo","uh","oi","lmaooooooooooo","black","ohhh","hi everyone","tc","السماء الزرقاء","we back","lets gooooo","wwwwwwwwwwwwww","offline","huh 󠀀","catpls","cappp","asked and answered","ww 10","ll ego","lmfao lmfao lmfao","ww press","gg lacy","lmfaoooooooooooo","xqc","ick monster","bob","huhh","cooked","chill","yessss","lololol","let's go","pari g sis","hehe","nhi","привет","woooo","ai","lets goo","tuff","w torsos","feed bepsy","ewww 󠀀","steph curry","ironic","ta attack","ll jason","mmmmmmmmmmmmm","mmmmmmmmmmmm","blm","ww jax","l print","nice shot","lool","football","clean","aww","sorry","yesssss","hello guys","max","ruined","sakina are","hahahahahaha","nothing","lady","bholenath","boom","o na","widespeedlaugh2","knutwalk","hah 󠀀","juuh","relevance","marie","pre 3","pre 10","ww mans","pity 8","show the edit","cap cap","dude","ty","wrong","sadge","copium","flirt","normal","hasan","nooooooo","timing","who is this","hey everyone","guys","you","hm","well","pred","interesting","loooool","yoooooo","what happened","hallowfall","gg 󠀀","aliendance","? 󠀀","waste of time","wow 󠀀","ll host","yap","oh hell nah","check","oz","jax","capp","solos","man of bumps","19","403","lucky","good morning","washed","brooo","ahahaha","wrong boots","??????????????","run","heyy","omggggg","hi all","المحققة ؟","forsen","ohh",".....","omgggg","l ads","what is this","mrsavaben","gg's","nahhhhhh","call him","aware","bang","cs","khanada","santi","pfffttt","night trap","raid","ww jason","omefaded","ll print","hiii colleen","duos","play cmb","arky lying","rofl","yikes","good one","lolll","noooooooo",".......","uhm","omgg","amen","ouch","sigma","usa","boring","gym","pls","mods","bathroom entrance","xit","ewwwwwwww","alizee","wolfie","me too","emp","......","good boy","oj","last","عليكم السلام","ggm1","ta ta ta","uhhhhh","firstgarf","ez 4 m80","ooooo","noway 󠀀","na defense","objection","casa","hell no","widereacting","ww instigator","lfmao","jasssssssson","lmaaaoooo","bring us with you","10/10","ftc","mr 5.5","arky45","lmfao arky","maybe","wut","gg ez","almost","zzz","good night","weird","sure","widevibe","no shot","click","jk","gggg","woo","ads","qual","moi 7e luokka","um","who?","oops","man","wait","ugh","eh","he is","mit wem spielt er","muted","benn","feelsstrongman","hell yeah","derp2","cuuh","rizz","camariah","deadge","???????????????","booba","ll poll","miz","ick","raid veno","hiii 󠀀","abb demon","0/3","oh nahhh","w elizabeth","show edit","arkyyy","check earnings","400k a month","squads","kc","letttss gooooo maxx","14","1000","amazing","lul","wat","i do",":(","broo","who cares","gooo","it is","erm","oh brother","okk","peace","goodnight","chat","woww","bye bye","morning","elsa","tsunami","hn","ok bye","gogeta","really","priya","sa","ciao","huhhhh","lotus","blue sky","ong","lets goooooooo","pfffft","e z","moin","whatt","wwwwwwwwwwwwwww","yessir","kekl","dance","just go","w red","oooooo","niceee","w deshae","call deshae","vip","veno","分かった","weirdo","lmfoa","behind you","ayy ayy","w cap","noticing","o z","what?????","what is happening","lmaoooooooooooooo","ww yay","ar","jassssssssson","rime mommy","ww t1","devry","4love lac","oh hell no","oooo 50","jumpscare","mmmmmmmmmmmmmmm","ww john","w lacy","lmaoooooooooooo","w jax","play max song","buh buh","man of steel","buh buh buh","cmon kc","13","50","150","good luck","np","right","so close","congratulations","joever","lolololol","please","welp","fair","my goat","wowwww","womp womp","not bad","whatttttt","again","lets goooooo","next week","there is","perfect","ooof","oh boy","alisha","sumedh","si","walaikum assalam","card","hahahahahahaha","wha","blackjack","i love it","xddd","heyyyy","hlw","hmmmmm","yooooooooo","kyu","scatter","うん","hallo","*sips horchata*","oo","hi chat","ozempic","rezon","ne","w graal","foul ball","meatloaf","mm","come on","lmaooooooooooooo","lmaaaooo","oh god","oh nahh","nessie","ome3","schizo","what a pass","gooner","ottt","bye az","ww pr","l ego","geng washed","piece red","reallymad","oce > na","mizunprepared","uuhh","dead","can i play","furia","full motion video","ron dtm","chip 󠀀","lmfaoooooooooooooo","????????????????","ww predify","hiii hiii","commmmmmmmmmm","nobody said that","honey pack","edit","capppp","pre 4","frank ocean","ww deji","short","hot to go","ssg","16","awesome","hype","kk","nice one","sheeeesh","wait what","crashout","the goat","bro...","noice","both","here we go again","yapping","we?","w stream","omggggggg","why not","cute","cheers","none","niceeee","اي","not really","help","hii guys","fadak","да","boy","hiiiiii","anyways","jay one","yoooooooo","hell","sakin","ahhhh","hail","ron","get it","sell","ope","w song","complent","bye guys","ggg","richa","dont","its over","nooooooooo","fff","glazing","gg gg","yo bro","twink","awwww","hack","ww ww ww","ww adapt","col is finished","kirbycoom","vip deshae","lmfao what","rizz dot","no ot","l host","free palestine","i am","activationfingers","lets go pwr","gggggg","ayy2","cs2","ww timing","loooooooooool","delete capcut","uuh uuh uuh","???????????????????","ugly emp","ta lk","jason?","jason","bedge","this guy hah","hdmi","ww gooner","both?","caught caught","helloimmaxwell","what???","huh huh","0/4","cap of hell","w h a t","mmmmmmmmmmmmmmmm","owow","vinnie","ww 45","piece arky","srry","lacy cap","arky capping","ww bepsy","22","26","kappa","lulw","calculated","amogus","nice try","noted","waiting","nooooooooooo","cope","hahahhaha","easy","awkward","what is going on","whoa","ummm","ok ok",":3","nodders","q first","so","hahahahha","ban","byeee","ya","rose","görüşürüzz","skibidi sigma","aw","اوك","مرحبا","yeahh","left","niharika","gtk","لا","omg lol","hello all","umm","hello?","hi faith","good morning faith","hi.","gulp","cherry","kevin","how are you","*chuckles*","ohhhh","oxygen","سلام عليكم","og","alr","free","hi happy","l beard","-_-","goty","tata","no lol","comm","maram","savage","hahahahahah","ayo?","thank god","sick","looooooooool","holy crap","sez u","wowww","bepsy aura","lift0","alien44","ome20","lazy","w gifted","ayoooooo","yessssss","vip him","xdd 󠀀","jeez","qual?","ww hasan","yam","monkers","w pwr","luck","letsgooo","na washed","real voice lmfao","ww 808","o7 󠀀","firstdork","dumbass","hard watch","goon","dragging it","ww lag","ww f","sheeesh","hah mods","drops","u did this","o ma","o 󠀀","ravetime","lll","bs","commm","ron stfu","w hasan","yooooooo","ome44 ome44","jassssssson","jasssssssssssson","jasssssson","sonii","will","he coming","elizabeth","hah hah hah","fake chat","nahhhhhhh","w honesty","chopped","tacaught","lunch","w max","lmfaooooooooooooooo","uhhhh","ewwwwwwwwww","rockin","5k","check his earnings","trios","freak","lmfao max","arky lmao","what 󠀀","poor dude","8.3","15","peepoclap","ayyy","clutch","gn","happy birthday","congrats","blabbering","off","this is crazy","sad","so true","val","game","saved","noooooooooooooo","noooooooooo","bro?","lets gooooooooo","big w","ah","hahahahhahaha","miami","japan","valorant","good flash","hahahahahahahaha","assalamualaikum","good job","its ok","oh yeah","hold","i agree","bruhhh","liar","w gooner","tupang","word","cmon","green","00","love","win","wsg","احبك","=)","helloo","i knew it","accha","null","lupz","hy","me?","yeahhh","adios","privet","selam","kartal","holy moly","helloooo","ahh","dang it","absolute cinema","kicks","im back","nhii","may","ha?","hahhaha","hnnn","beard","janvi","lol.","what a shot","ns","rip az","yassss","respect","yash bro","whoops","aliyeva","اتقوا الله","***","ne(yankili)","jt","hnn","homie","im dying","qualed ?","ggez","grim.","nein","كيفن","kick jt","usa usa usa","هههههههه","madge","why skip","na production","ez 󠀀","ww ad","ta ta ta ta","knutready","rug juice","relax","yes 󠀀","gg\\","ll friend","pffttt2","gay af","coming","ww asian brother","regret","w save","daddy","call","was","no no no","ww santi","disgusting","lmaoaoa","weebsdetected","colleen","my oil","brooooo","what the","ego 󠀀","awwe","weak","wuh","ew 󠀀","w press","oooo oooo","speak up","nepo","ليلي","ooooooo","lmaaoo","whats going on","you got this","my points","omescrajj","gigachad sonii","send it to cinna","jorkers","ooh","nowaying","lacy comment","bricked","lets go furia","lmaoooooooooo 󠀀","l ad","w ad","reacting","solo cc","what????","poor guy","jassssssssssson","taj","taassemble","0-3 esports","commmmmmmmmmmm","commmmmmmmmm","lock the door","hes coming","play it","damm","bad pics","pre 5","ofcccc","jerry woo","omestare","pre 1","oh nahhhh","lmao lmao","wow wow","silky","jerkify","kiss","6????","do xqc","arkyyyy","امين","w h a tt","check it","lmfaoaooo","saj 󠀀","emilio","so jason","well stream","arky lmfao","capping 󠀀","tya","piece vinnie","om 󠀀","5.3","the man of meat","man of shmeat","duke","no f","17","21","23","greetings","well played","absolutely","correct"])
+
+let longestLength = 19; // safePhrases.reduce((maxLength, str) => Math.max(maxLength, str.length), 0);
+var quickPass = 0;
+var newlyAdded = 0;
+
+function isSafePhrase(data) {
+	
+	let cleanedText = data.chatmessage;
+            
+    if (!data.textonly) {
+        cleanedText = decodeAndCleanHtml(cleanedText);
+    }
+	
+	cleanedText = cleanedText.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "").replace(/[\u200D\uFE0F]/g, ""); // Remove zero-width joiner and variation selector
+	cleanedText = cleanedText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, ""); // fail safe?
+	cleanedText = cleanedText.replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim();
+	cleanedText = cleanedText.toLowerCase();
+	 
+    if (!cleanedText) { // nothing, so it's safe.
+        return { isSafe: true, cleanedText: "" };
+    }
+    if (cleanedText.length > longestLength) {
+        return { isSafe: false, cleanedText };
+    }
+    if (!cleanedText) {
+        return { isSafe: true, cleanedText };
+    }
+    if (cleanedText.length == 1) {
+        return { isSafe: true, cleanedText };
+    }
+    return { isSafe: safePhrasesSet.has(cleanedText), cleanedText };
+}
+
+function setToObject(set) {
+  return Object.fromEntries(
+    Array.from(set).map(value => [value, 1])
+  );
+}
+function getTop100(obj, total=100) {
+  const entries = Object.entries(obj);
+  entries.sort((a, b) => b[1] - a[1]);
+  const top100 = entries.slice(0, total);
+  return top100.map(entry => entry[0]);
+}
+
+//let safePhrasesObject = setToObject(safePhrasesSet)
+function addSafePhrase(cleanedText, score=-1) {
+	//if (score>1){return;}
+	if (cleanedText.length>longestLength){return}; // too long to validate
+	if (!cleanedText){return};
+	if (cleanedText.length==1){return}; // single characeter; must be safe
+	safePhrasesSet.add(cleanedText);
+	newlyAdded+=1;
+	//if (safePhrasesObject[cleanedText]){ // remoev this object part, as I dont need it in productino.
+	//	safePhrasesObject[cleanedText] +=1;
+	//} else {
+	//	safePhrasesObject[cleanedText] = 1;
+	//}
+	//console.log("Added ("+score+"): "+cleanedText);
+}
 
 let censorProcessingSlots = [false, false, false]; // ollama can handle 4 requests at a time by default I think, but 3 is a good number.
 async function censorMessageWithOllama(data) {
     if (!data.chatmessage) {
         return true;
     }
+	
+	const { isSafe, cleanedText } = isSafePhrase(data);
+	if (isSafe){
+		// addSafePhrase(cleanedText);
+		quickPass+=1;
+		return true;
+	} // it's safe
 
     const availableSlot = censorProcessingSlots.findIndex(slot => !slot);
     if (availableSlot === -1) {
@@ -232,23 +310,29 @@ async function censorMessageWithOllama(data) {
         if (data.chatname) {
             censorInstructions += data.chatname + " says: ";
         }
-        if (data.chatmessage) {
-            censorInstructions += data.chatmessage;
+        if (cleanedText) {
+            censorInstructions += cleanedText;
         }
         let llmOutput = await callOllamaAPI(censorInstructions);
+		
+		censorProcessingSlots[availableSlot] = false;
+		
         //console.log(llmOutput);
         let match = llmOutput.match(/\d+/);
         let score = match ? parseInt(match[0]) : 0;
         //console.log(score);
 
         if (score > 3 || llmOutput.length > 1) {
+			//console.log("Bad phrase: "+data.chatname +" said " +cleanedText);
             if (settings.ollamaCensorBotBlockMode) {
                 return false;
             } else if (isExtensionOn) {
                 //console.log("sending a delete out");
                 sendToDestinations({ delete: data });
             }
+			return false;
         } else {
+			addSafePhrase(cleanedText, score);
             return true;
         }
     } catch (error) {

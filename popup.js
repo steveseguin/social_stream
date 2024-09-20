@@ -345,6 +345,13 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return false;
 	};
 	
+	document.getElementById('addCustomGifCommand').addEventListener('click', function() {
+		const commandsList = document.getElementById('customGifCommandsList');
+		const newCommandEntry = createCommandEntry();
+		commandsList.appendChild(newCommandEntry);
+		updateSettings(newCommandEntry, true);
+	});
+	
 	try {
 		document.getElementById('usernameList').addEventListener('click', (e) => {
 			if (e.target.classList.contains('remove-username')) {
@@ -589,6 +596,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		document.getElementById("chatCommands").appendChild(chat);
 	}
 	
+
 	for (var i=1;i<=10;i++){
 		var chat = document.createElement("div");
 		chat.innerHTML = '<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">\
@@ -799,6 +807,9 @@ function update(response, sync=true){
 			document.getElementById("battle").raw = baseURL+"battle.html?session="+response.streamID+password;
 			
 			document.getElementById("chatbotlink").outerHTML = "<a target='_blank' style='color:lightblue;' id='chatbotlink' href='"+baseURL+"chatbot.html?session="+response.streamID+password+"'>[LINK TO CHAT BOT]</a>";
+			
+			document.getElementById("custom-gif-commands").innerHTML = "<a target='_blank' id='custom-gif-commands-link' href='"+baseURL+"gif.html?session="+response.streamID+password+"'>"+baseURL+"gif.html?session="+response.streamID+password+"</a>";
+			document.getElementById("custom-gif-commands").raw = baseURL+"gif.html?session="+response.streamID+password;
 			
 			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
 		
@@ -1061,6 +1072,14 @@ function update(response, sync=true){
 									updateSettings(ele, sync);
 								}
 							}
+							if (('customGifCommands' in response.settings) && response.settings.customGifCommands.json) {
+								const commands = JSON.parse(response.settings.customGifCommands.json || '[]');
+								const commandsList = document.getElementById('customGifCommandsList');
+								commandsList.innerHTML = '';
+								commands.forEach(cmd => {
+									commandsList.appendChild(createCommandEntry(cmd.command, cmd.url));
+								});
+							}
 
 						} else { // obsolete method
 							var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
@@ -1236,6 +1255,17 @@ function updateSettings(ele, sync=true, value=null){
 		target = ele.dataset.target;
 	}
 	
+	if (ele.closest('.custom-gif-command-entry')) {
+        const commands = Array.from(document.querySelectorAll('.custom-gif-command-entry')).map(entry => ({
+            command: entry.querySelector('.custom-command').value,
+            url: entry.querySelector('.custom-media-url').value
+        }));
+
+        if (sync) {
+            chrome.runtime.sendMessage({cmd: "saveSetting", type: "json", setting: "customGifCommands", value: JSON.stringify(commands)}, function (response) {});
+        }
+    }
+	
 	if (ele.dataset.param1){
 		if (ele.checked){
 			
@@ -1360,6 +1390,13 @@ function updateSettings(ele, sync=true, value=null){
 			document.getElementById("hypemeter").raw = updateURL(ele.dataset.textparam4+"="+encodeURIComponent(ele.value), document.getElementById("hypemeter").raw);
 		}
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
+	} else if (ele.dataset.textparam4){
+		document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.textparam4);
+		
+		if (ele.value){
+			document.getElementById("hypemeter").raw = updateURL(ele.dataset.textparam4+"="+encodeURIComponent(ele.value), document.getElementById("hypemeter").raw);
+		}
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
 		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam4",  target:target, setting: ele.dataset.textparam4, "value": ele.value}, function (response) {});
@@ -1389,70 +1426,37 @@ function updateSettings(ele, sync=true, value=null){
 	} else if (ele.dataset.optionparam1){
 		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.optionparam1);
 		
+		
 		if (ele.value){
-			if (ele.value.includes("&voice=")){
-				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, "voice");
-				document.getElementById("dock").raw = updateURL(ele.dataset.optionparam1+"="+ele.value, document.getElementById("dock").raw);
-			} else {
-				document.getElementById("dock").raw = updateURL(ele.dataset.optionparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").raw);
-			}
+			ele.value.split("&").forEach(rem=>{
+				if (rem.includes("=")){ // this isn't covering all cases, but good enough for the existing values
+					document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, rem.split("=")[0]);
+				}
+			});
+			document.getElementById("dock").raw = updateURL(ele.dataset.optionparam1+"="+encodeURIComponent(ele.value).replace(/%26/g, '&').replace(/%3D/g, '='), document.getElementById("dock").raw);
 		}
+		
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1",  target:target, setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1", target:target,  setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam2){
 		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.optionparam2);
 		
 		if (ele.value){
-			if (ele.value.includes("&voice=")){
-				document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, "voice");
-				document.getElementById("overlay").raw = updateURL(ele.dataset.optionparam2+"="+ele.value, document.getElementById("overlay").raw);
-			} else {
-				document.getElementById("overlay").raw = updateURL(ele.dataset.optionparam2+"="+encodeURIComponent(ele.value), document.getElementById("overlay").raw);
-			}
+			ele.value.split("&").forEach(rem=>{
+				if (rem.includes("=")){
+					document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, rem.split("=")[0]);
+				}
+			});
+			document.getElementById("overlay").raw = updateURL(ele.dataset.optionparam2+"="+encodeURIComponent(ele.value).replace(/%26/g, '&').replace(/%3D/g, '='), document.getElementById("overlay").raw);
 		}
+		
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2",  target:target, setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
-		}
-	///
-	} else if (ele.dataset.optionparam3){
-		document.getElementById("emoteswall").raw = removeQueryParamWithValue(document.getElementById("emoteswall").raw, ele.dataset.optionparam3);
-		
-		if (ele.value){
-			document.getElementById("emoteswall").raw = updateURL(ele.dataset.optionparam3+"="+encodeURIComponent(ele.value), document.getElementById("emoteswall").raw);
-		}
-		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
-		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
-		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam3",  target:target, setting: ele.dataset.optionparam3, "value": ele.value}, function (response) {});
-		}
-	} else if (ele.dataset.optionparam4){
-		document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.optionparam4);
-		
-		if (ele.value){
-			document.getElementById("hypemeter").raw = updateURL(ele.dataset.optionparam4+"="+encodeURIComponent(ele.value), document.getElementById("hypemeter").raw);
-		}
-		
-		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
-		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
-		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4",  target:target, setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
-		}
-	} else if (ele.dataset.optionparam5){
-		document.getElementById("waitlist").raw = removeQueryParamWithValue(document.getElementById("waitlist").raw, ele.dataset.optionparam5);
-		
-		if (ele.value){
-			document.getElementById("waitlist").raw = updateURL(ele.dataset.optionparam5+"="+encodeURIComponent(ele.value), document.getElementById("waitlist").raw);
-		}
-		
-		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
-		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
-		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam5",  target:target, setting: ele.dataset.optionparam5, "value": ele.value}, function (response) {});
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2", target:target,  setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam6){
 		document.getElementById("ticker").raw = removeQueryParamWithValue(document.getElementById("ticker").raw, ele.dataset.optionparam6);
@@ -1729,32 +1733,39 @@ function updateSettings(ele, sync=true, value=null){
 			return;
 		}
 		
-	}
+	} 
 	
-
-	document.getElementById("docklink").innerText = document.getElementById("dock").raw;
+	let hideLinks = false;
+	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
+		if (x.checked){
+			hideLinks = true;
+		}
+	});
+	
+	document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
 	document.getElementById("docklink").href = document.getElementById("dock").raw;
 
-	document.getElementById("overlaylink").innerText = document.getElementById("overlay").raw;
+	document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
 	document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
 
-	document.getElementById("emoteswalllink").innerText = document.getElementById("emoteswall").raw;
+	document.getElementById("emoteswalllink").innerText = hideLinks ? "Click to open link" : document.getElementById("emoteswall").raw;
 	document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
 	
-	document.getElementById("hypemeterlink").innerText = document.getElementById("hypemeter").raw;
+	document.getElementById("hypemeterlink").innerText = hideLinks ? "Click to open link" : document.getElementById("hypemeter").raw;
 	document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
 	
-	document.getElementById("waitlistlink").innerText = document.getElementById("waitlist").raw;
+	document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
 	document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
 	
-	document.getElementById("tickerlink").innerText = document.getElementById("ticker").raw;
+	document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
 	document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
 	
-	document.getElementById("polllink").innerText = document.getElementById("poll").raw;
+	document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
 	document.getElementById("polllink").href = document.getElementById("poll").raw;
 	
-	document.getElementById("battlelink").innerText = document.getElementById("battle").raw;
+	document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
 	document.getElementById("battlelink").href = document.getElementById("battle").raw;
+
 }
 
 if (!chrome.browserAction){
@@ -1879,7 +1890,36 @@ function removeUsername(username) {
 	updateUsernameList(true);
 }
 
-
+function createCommandEntry(command = '', url = '') {
+    const entry = document.createElement('div');
+    entry.className = 'custom-gif-command-entry';
+    entry.innerHTML = `
+        <div class="textInputContainer" style="width: 90%;">
+            <input type="text" class="textInput custom-command" value="${command}" autocomplete="off" placeholder="!command" data-textsetting="customGifCommand" />
+            <label><span data-translate="chat-command">&gt; Chat Command</span></label>
+        </div>
+        <div class="textInputContainer" style="width: 90%;">
+            <input type="text" class="textInput custom-media-url" value="${url}" autocomplete="off" placeholder="https://media.giphy.com/media/..." data-textsetting="customGifUrl" />
+            <label><span data-translate="media-url">&gt; Media URL (GIF, image, or video)</span></label>
+        </div>
+        <button class="removeCustomGifCommand" style="width: auto; min-width: 60px; padding: 0 5px;">
+            <span data-translate="remove">Remove</span>
+        </button>
+    `;
+    
+    entry.querySelector('.removeCustomGifCommand').addEventListener('click', function() {
+        entry.remove();
+        updateSettings(entry, true);
+    });
+    
+    entry.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', function() {
+            updateSettings(this, true);
+        });
+    });
+    
+    return entry;
+}
 
 
 

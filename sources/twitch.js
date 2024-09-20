@@ -162,7 +162,9 @@
 				}
 				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent)); 
 				const tempDiv = document.createElement('div');
-				tempDiv.innerHTML = processedText;
+				try {
+					tempDiv.innerHTML = processedText;
+				} catch(e){}
 				
 				Array.from(tempDiv.childNodes).forEach(child => {
 					if (child.nodeType === 3) {
