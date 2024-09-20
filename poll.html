@@ -38,6 +38,10 @@
             position: relative;
             overflow: hidden;
         }
+		
+		.poll-instruction {
+			text-align: center;
+		}
 
         .option-number {
             margin-right: 10px;
@@ -385,7 +389,7 @@
             } else if (settings.pollType === 'freeform') {
                 const instructionElement = document.createElement('div');
                 instructionElement.className = 'poll-instruction';
-                instructionElement.textContent = 'Enter a hashtagged word into chat to vote for it!';
+                instructionElement.textContent = 'Enter a hashtagged #word into chat to vote for it!';
                 pollOptionsContainer.appendChild(instructionElement);
             }
         }
@@ -397,7 +401,7 @@
             if (settings.pollType === 'freeform') {
                 const instructionElement = document.createElement('div');
                 instructionElement.className = 'poll-instruction';
-                instructionElement.textContent = 'Enter a hashtagged word into chat to vote for it!';
+                instructionElement.textContent = 'Enter a hashtagged #word into chat to vote for it!';
                 pollOptionsContainer.appendChild(instructionElement);
             }
 
