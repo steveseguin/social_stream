@@ -15,15 +15,19 @@ async function updateIconToOff() {
   }
 }
 
+function log(msg, msg2=""){
+	//console.log(msg, msg2);
+}
+
 async function checkBackgroundPageIsOpen() {
-  console.log("Checking if background page is open", backgroundPageTabId);
+  log("Checking if background page is open", backgroundPageTabId);
   
   if (backgroundPageTabId !== null) {
     try {
       await chrome.tabs.get(backgroundPageTabId);
       return backgroundPageTabIdLoaded;
     } catch (error) {
-      console.log("Background page tab no longer exists");
+      log("Background page tab no longer exists");
       backgroundPageTabId = null;
       backgroundPageTabIdLoaded = false;
       await updateIconToOff();
@@ -35,11 +39,11 @@ async function checkBackgroundPageIsOpen() {
 }
 
 async function ensureBackgroundPageIsOpen() {
-  console.log("Ensuring background page is open", backgroundPageTabId);
+  log("Ensuring background page is open", backgroundPageTabId);
   
   const isOpen = await checkBackgroundPageIsOpen();
   if (isOpen) {
-    console.log("Background page is already open");
+    log("Background page is already open");
     await updateIconToOn();
     return;
   }
@@ -47,7 +51,7 @@ async function ensureBackgroundPageIsOpen() {
   try {
     const existingTabs = await chrome.tabs.query({url: chrome.runtime.getURL('../background.html')});
     if (existingTabs.length > 0) {
-      console.log("Found existing background page");
+      log("Found existing background page");
       backgroundPageTabId = existingTabs[0].id;
       backgroundPageTabIdLoaded = true;
     } else {
@@ -57,15 +61,15 @@ async function ensureBackgroundPageIsOpen() {
 		pinned: true
       });
       backgroundPageTabId = tab.id;
-      console.log("Background page created with ID:", backgroundPageTabId);
+      log("Background page created with ID:", backgroundPageTabId);
       // Wait for the background page to initialize
       await new Promise(resolve => setTimeout(resolve, 500));
       backgroundPageTabIdLoaded = true;
-      console.log("Background page loaded");
+      log("Background page loaded");
     }
     await updateIconToOn();
     // Process any queued messages
-    console.log("Message queue:", messageQueue);
+    log("Message queue:", messageQueue);
     await processMessageQueue();
   } catch (error) {
     console.error("Error ensuring background page is open:", error);
@@ -84,7 +88,7 @@ async function processMessageQueue() {
 // Listener for tab removal to reset state if the background page is closed
 chrome.tabs.onRemoved.addListener(async (tabId) => {
   if (tabId === backgroundPageTabId) {
-    console.log("Background page tab was closed");
+    log("Background page tab was closed");
     backgroundPageTabId = null;
     backgroundPageTabIdLoaded = false;
     await updateIconToOff();
@@ -92,9 +96,9 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
 });
 
 function sendMessageToBackgroundPage(message, sendResponse) {
-  console.log("sending message", message);
+  log("sending message", message);
   chrome.runtime.sendMessage(message.data, (response) => {
-    console.log("response", response);
+    log("response", response);
     if (chrome.runtime.lastError) {
       console.error("Error sending message to background:", chrome.runtime.lastError);
       sendResponse({error: 'Failed to communicate with background page'});
@@ -106,7 +110,7 @@ function sendMessageToBackgroundPage(message, sendResponse) {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'toBackground') {
-    console.log("SERVICE WORKER: ", message);
+    log("SERVICE WORKER: ", message);
     
     checkBackgroundPageIsOpen().then((isOpen) => {
       if (!isOpen) {
@@ -132,12 +136,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Ensure the background page is opened when the extension starts
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("Extension installed, opening background page");
+  log("Extension installed, opening background page");
   ensureBackgroundPageIsOpen();
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  console.log("Extension starting up, opening background page");
+  log("Extension starting up, opening background page");
   ensureBackgroundPageIsOpen();
 });
 
