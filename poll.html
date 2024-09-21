@@ -338,14 +338,28 @@
         .style-cyberpunk .option-percentage {
             color: #f0f;
         }
+		
+		.hidden {
+            display: none;
+        }
+		
+		.poll-container {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .poll-container.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
     </style>
 </head>
 <body>
-    <div id="poll-container" class="poll-container style-default">
+    <div id="poll-container" class="poll-container style-default hidden">
         <h2 id="poll-title" class="poll-title">Loading poll...</h2>
         <div id="poll-options"></div>
     </div>
-
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const settings = {
@@ -353,7 +367,7 @@
             pollQuestion: urlParams.get('pollQuestion') || 'Loading poll ...',
             pollOptions: urlParams.get('pollOptions') ? urlParams.get('pollOptions').split(',').map(opt => opt.trim()) : [],
             pollTimer: urlParams.get('pollTimer') || 60,
-            pollEnabled: true,
+            pollEnabled: urlParams.get('pollEnabled') || false,
             styleType: urlParams.get('style') || 'default'
         };
 
@@ -361,7 +375,8 @@
         let totalVotes = 0;
 
         function initializePoll() {
-            document.getElementById('poll-container').className = `poll-container style-${settings.styleType}`;
+            const pollContainer = document.getElementById('poll-container');
+            pollContainer.className = `poll-container style-${settings.styleType} ${settings.pollEnabled ? '' : 'hidden'}`;
             document.getElementById('poll-title').innerText = settings.pollQuestion;
             updatePollOptions();
         }
@@ -477,6 +492,15 @@
 
             updatePollResults();
         }
+		
+		function updatePollVisibility() {
+            const pollContainer = document.getElementById('poll-container');
+            if (settings.pollEnabled) {
+                pollContainer.classList.remove('hidden');
+            } else {
+                pollContainer.classList.add('hidden');
+            }
+        }
 
         function processData(data) {
             console.log("Received data:", data);  // For debugging
@@ -493,9 +517,8 @@
 			
 				console.log(data);
 				
-                if (data.settings.pollEnabled !== undefined) {
-                    settings.pollEnabled = !!data.settings.pollEnabled;
-                }
+                settings.pollEnabled = data.settings.pollEnabled || false;
+				
                 if (data.settings.pollType) {
                     settings.pollType = data.settings.pollType.optionsetting || 'multiple';
                 }
