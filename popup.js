@@ -1765,7 +1765,9 @@ function updateSettings(ele, sync=true, value=null){
 	
 	document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
 	document.getElementById("battlelink").href = document.getElementById("battle").raw;
-
+	
+	document.getElementById("custom-gif-commands").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
+	document.getElementById("custom-gif-commands").href = document.getElementById("custom-gif-commands").raw;
 }
 
 if (!chrome.browserAction){
