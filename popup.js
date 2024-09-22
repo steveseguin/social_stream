@@ -108,9 +108,34 @@ if (typeof(chrome.runtime)=='undefined'){
 		   } catch(e){}
 	   }
 	})
-	
-	
 }
+
+
+function copyToClipboard(event) {
+	console.log(event);
+   
+	if (event.target.parentNode.parentNode.querySelector("[data-raw]")){
+		navigator.clipboard.writeText(event.target.parentNode.querySelector("[data-raw]").textContent).then(function() {
+			console.log('Link copied to clipboard!');
+		}, function(err) {
+			console.error('Could not copy text: ', err);
+		});
+	} else if (event.target.parentNode.parentNode.parentNode.querySelector("[data-raw]")){
+		navigator.clipboard.writeText(event.target.parentNode.parentNode.parentNode.querySelector("[data-raw]").textContent).then(function() {
+			console.log('Link copied to clipboard!');
+		}, function(err) {
+			console.error('Could not copy text: ', err);
+		});
+	} else if (event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw]")){
+		navigator.clipboard.writeText(event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw]").textContent).then(function() {
+			console.log('Link copied to clipboard!');
+		}, function(err) {
+			console.error('Could not copy text: ', err);
+		});
+	}
+}
+
+
 
 var translation = {};
 
@@ -350,6 +375,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		const newCommandEntry = createCommandEntry();
 		commandsList.appendChild(newCommandEntry);
 		updateSettings(newCommandEntry, true);
+	});
+	
+	document.querySelectorAll("[data-copy]").forEach(ele=>{
+		ele.onclick = copyToClipboard;
 	});
 	
 	try {

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poll - Two Circles from Social Stream Ninja</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: #0000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .poll-container {
+            background-color: #e2e2e2;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .circle-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 20px auto;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+        }
+
+        .circle-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            clip-path: inset(100% 0 0 0); /* Initially hides the fill */
+            transition: clip-path 1s ease;
+        }
+
+        .circle-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .circle-wrapper {
+            display: inline-block;
+            text-align: center;
+        }
+
+        .vote-count {
+            font-size: 18px;
+            color: #333;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="poll-container">
+        <h2 id="poll-title">Poll Question Goes Here</h2>
+        <div class="circle-wrapper">
+            <div class="circle-container">
+                <div class="circle-fill" id="yes-fill"></div>
+                <div class="circle-text" id="yes-text">0%</div>
+            </div>
+            <div class="vote-count">
+                Yes: <span id="yes-votes">0</span>
+            </div>
+        </div>
+        <div class="circle-wrapper">
+            <div class="circle-container">
+                <div class="circle-fill" id="no-fill"></div>
+                <div class="circle-text" id="no-text">0%</div>
+            </div>
+            <div class="vote-count">
+                No: <span id="no-votes">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let totalVotes = 0;
+        let results = { "Yes": 0, "No": 0 };
+		
+		const urlParams = new URLSearchParams(window.location.search);
+
+        function updatePoll() {
+            const yesVotes = results["Yes"];
+            const noVotes = results["No"];
+            totalVotes = yesVotes + noVotes;
+
+            const yesPercentage = totalVotes ? ((yesVotes / totalVotes) * 100).toFixed(0) : 0;
+            const noPercentage = totalVotes ? ((noVotes / totalVotes) * 100).toFixed(0) : 0;
+
+            // Update Yes circle
+            document.getElementById('yes-fill').style.clipPath = `inset(${100 - yesPercentage}% 0 0 0)`; // Fill the Yes circle based on percentage
+            document.getElementById('yes-text').innerText = `${yesPercentage}%`;
+            document.getElementById('yes-votes').innerText = yesVotes;
+
+            // Update No circle
+            document.getElementById('no-fill').style.clipPath = `inset(${100 - noPercentage}% 0 0 0)`; // Fill the No circle based on percentage
+            document.getElementById('no-text').innerText = `${noPercentage}%`;
+            document.getElementById('no-votes').innerText = noVotes;
+        }
+
+        function processData(data) {
+            console.log("Data received:", data); // Debugging log
+            if (data.chatmessage) {
+                let vote = data.chatmessage.trim().toUpperCase();
+                if (vote === 'YES' || vote === 'NO') {
+					console.log(vote);
+                    results[vote]++;
+                    updatePoll();
+                }
+            }
+        }
+
+       // Initialize iframe for communication
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=${urlParams.get('session')}&novideo&noaudio&label=poll&cleanoutput&room=${urlParams.get('session')}`;
+        iframe.style.cssText = "width:0;height:0;border:0;border:none;position:absolute;";
+        document.body.appendChild(iframe);
+
+        window.addEventListener("message", (event) => {
+            if (event.source !== iframe.contentWindow) return;
+            if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+                processData(event.data.dataReceived.overlayNinja);
+            }
+        });
+    </script>
+</body>
+</html>

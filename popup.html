@@ -151,6 +151,18 @@
     height: 0;
 }
 
+.copy-link-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: 5px;
+    padding: 5px;
+}
+.copy-link-btn:hover {
+    background-color: #f0f0f0;
+    border-radius: 50%;
+}
+
 /* example of how to remotely load a font */
 @font-face {
     font-family: "opendyslexic";
@@ -368,6 +380,13 @@ p a {
     text-decoration: none;
     color: var(--text-button-text);
     font-size: 0.6rem;
+}
+
+.copy-link {
+    text-decoration: none;
+    color: var(--text-button-text);
+    font-size: 0.6rem;
+	cursor: copy!important;
 }
 
 #disableButton {
@@ -902,9 +921,12 @@ input:checked + .slider:before {
             <div class="link" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock.">
                 <h2 class="streaming_chat_title">
                     <span data-translate="streaming-chat-dockable">Streaming chat (dockable) </span>
-                    <a class="options-link rounded_area" href="#streaming-chat-options" title="Jump to dockable streaming chat link options."><span data-translate="options">options</span></a>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+                    <a class="options-link rounded_area" href="#streaming-chat-options" title="Jump to dockable streaming chat link options."><span data-translate="options">[options]</span></a>
+					
                 </h2>
                 <div id="dock" data-raw="" class="streaming_chat"></div>
+				
             </div>
 
             <a href="" id="streaming-chat-options"></a>
@@ -2024,7 +2046,8 @@ input:checked + .slider:before {
             <div class="link" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
                 <h2 class="single_message_title">
                     <span data-translate="featured-chat-overlay">Featured chat overlay </span>
-                    <a class="options-link rounded_area" href="#single-message-options" title="Jump to single message overlay link options."><span data-translate="options">options</span></a>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+                    <a class="options-link rounded_area" href="#single-message-options" title="Jump to single message overlay link options."><span data-translate="options">[options]</span></a>
                 </h2>
                 <div id="overlay" data-raw="" class="single_message"></div>
             </div>
@@ -2493,7 +2516,10 @@ input:checked + .slider:before {
 
             <div class="link" title="This link will only show the inbound emotes, bouncing them around the full page.">
                 <h2 class="emotes_wall_title">
-                    <span data-translate="emotes-wall">Emotes wall </span><a class="options-link rounded_area" href="#emote-wall-options" title="Jump to the emote wall link options."><span data-translate="options">options</span></a>
+					
+                    <span data-translate="emotes-wall">Emotes wall </span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#emote-wall-options" title="Jump to the emote wall link options."><span data-translate="options">[options]</span></a>
                 </h2>
                 <div id="emoteswall" data-raw="" class="emotes_wall"></div>
             </div>
@@ -2587,7 +2613,10 @@ input:checked + .slider:before {
 
             <div class="link" title="This link shows a score for recent chat activity per chat source">
                 <h2 class="hype_mode_title">
-                    <span data-translate="hype-meter">Hype Meter </span><a class="options-link rounded_area" href="#hype-meter" title="Jump to the hype meter link options."><span data-translate="options">options</span></a>
+                    <span data-translate="hype-meter">Hype Meter </span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#hype-meter" title="Jump to the hype meter link options."><span data-translate="options">[options]</span></a>
+					
                 </h2>
                 <h3>
                     <span data-translate="when-enabled-a-tally-score-of-unique-names-per-chat-source-is-tracked-stopstart-to-reset-the-tally">
@@ -2693,7 +2722,9 @@ input:checked + .slider:before {
 
             <div class="link" title="This link shows a list of names representing users in a waiting list">
                 <h2 class="waitlist_mode_title">
-                    <span data-translate="wait-list">Wait List / Winner Draw</span><a class="options-link rounded_area" href="#waitlist" title="Jump to the waitlist link options."><span data-translate="options">options</span></a>
+                    <span data-translate="wait-list">Wait List / Winner Draw</span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#waitlist" title="Jump to the waitlist link options."><span data-translate="options">[options]</span></a>
                 </h2>
                 <h3>
                     <span data-translate="when-enabled-guests-can-type">When enabled, guests can type </span>
@@ -2877,7 +2908,9 @@ input:checked + .slider:before {
 			
 			<div class="link" title="Polling system">
                 <h2 class="poll_mode_title">
-                    <span data-translate="pollmeter">Graphical Poll </span><a class="options-link rounded_area" href="#poll" title="Jump to the poll link options."><span data-translate="options">options</span></a>
+                    <span data-translate="pollmeter">Graphical Poll </span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#poll" title="Jump to the poll link options."><span data-translate="options">[options]</span></a>
                 </h2>
                 <h3>
                     <span data-translate="when-enabled-a-poll">
@@ -2952,7 +2985,9 @@ input:checked + .slider:before {
 			</div>
 			<div class="link" title="Battle Royal">
                 <h2 class="battle_mode_title">
-                    <span data-translate="pollmeter">Battle Royal </span><a class="options-link rounded_area" href="#battle" title="Jump to the battle royal link options."><span data-translate="options">options</span></a>
+                    <span data-translate="pollmeter">Battle Royal </span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#battle" title="Jump to the battle royal link options."><span data-translate="options">[options]</span></a>
                 </h2>
                 <h3>
                     <span data-translate="when-enabled-a-battle">
@@ -3004,7 +3039,9 @@ input:checked + .slider:before {
 			
 			<div class="link" title="Customizable ticker banner bar">
                 <h2 class="ticker_mode_title">
-                    <span data-translate="tickermeter">Ticker </span><a class="options-link rounded_area" href="#ticker" title="Jump to the ticker link options."><span data-translate="options">options</span></a>
+                    <span data-translate="tickermeter">Ticker </span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#ticker" title="Jump to the ticker link options."><span data-translate="options">[options]</span></a>
                 </h2>
                 <h3>
                     <span data-translate="when-enabled-a-ticker">
@@ -3056,7 +3093,9 @@ input:checked + .slider:before {
 			
 			<div class="link" title="Custom GIF Commands">
 				<h2 class="custom_gif_commands_title">
-					<span data-translate="custom-gif-commands">Custom GIF Commands </span><a class="options-link rounded_area" href="#custom-gif-commands" title="Jump to the custom GIF commands options."><span data-translate="options">options</span></a>
+					<span data-translate="custom-gif-commands">Custom GIF Commands </span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#custom-gif-commands" title="Jump to the custom GIF commands options."><span data-translate="options">[options]</span></a>
 				</h2>
 				<h3>
 					<span data-translate="when-enabled-custom-commands">
@@ -3096,7 +3135,7 @@ input:checked + .slider:before {
             <div class="generic_category_title">
                 <h2>
                     <span data-translate="global-settings-and-tools">Global settings and tools </span>
-                    <a class="options-link rounded_area" href="#global-settings-and-tools-options" title="Jump to the global settings and tools."><span data-translate="options">options</span></a>
+                    <a class="options-link rounded_area" href="#global-settings-and-tools-options" title="Jump to the global settings and tools."><span data-translate="options">[options]</span></a>
                 </h2>
                 <div id="globalsettings" class="global_settings"></div>
             </div>
