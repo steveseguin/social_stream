@@ -115,6 +115,17 @@
 	cursor: pointer;
 }
 
+.hidelinks a[href^="http"] {
+  text-decoration: none; /* Remove default underline */
+  filter: blur(4px); /* Apply blur effect */
+  transition: filter 0.3s ease; /* Smooth transition for hover effect */
+}
+/* Remove blur on hover */
+.hidelinks a[href^="http"]:hover {
+  filter: blur(0);
+}
+
+
 #searchInput {
     appearance: none;
     position: fixed;
@@ -3862,7 +3873,7 @@ input:checked + .slider:before {
 										<input type="checkbox" data-setting="blacklistuserstoggle" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="hide-and-block-specified-users">&gt; Hide and block the following specified users:</span>
+									<span data-translate="hide-and-block-specified-users">🔮 Hide and block the following specified users:</span>
 									<div class="textInputContainer hidden" style="display: inline-block; width: 250px;" title="Provide comma separated values; values that match a username will be rejected.">
                                         <input type="text" id="blacklistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="blacklistusers" />
                                     </div>

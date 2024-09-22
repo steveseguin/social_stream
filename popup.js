@@ -1148,7 +1148,9 @@ function update(response, sync=true){
 		if (("state" in response) && streamID){
 			isExtensionOn = response.state;
 			if (isExtensionOn){
-				document.body.className = "extension-enabled";
+				document.body.classList.add("extension-enabled");
+				document.body.classList.remove("extension-disabled");
+				
 				if (ssapp){
 					document.getElementById("disableButtonText").innerHTML = "⚡ Service Active";
 				} else {
@@ -1163,7 +1165,9 @@ function update(response, sync=true){
 				} else {
 					document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
 				}
-				document.body.className = "extension-disabled";
+				document.body.classList.remove("extension-enabled");
+				document.body.classList.add("extension-disabled");
+				
 				document.getElementById("disableButton").style.display = "";
 				chrome.browserAction.setIcon({path: "/icons/off.png"});
 				document.getElementById("extensionState").checked = null;
@@ -1783,8 +1787,14 @@ function updateSettings(ele, sync=true, value=null){
 		}
 	});
 	
-	document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
-	document.getElementById("docklink").href = document.getElementById("dock").raw;
+	if (hideLinks){
+		document.body.classList.add("hidelinks");
+	} else {
+		document.body.classList.remove("hidelinks");
+	}
+	
+	//document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
+	//document.getElementById("docklink").href = document.getElementById("dock").raw;
 
 	document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
 	document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
@@ -1806,7 +1816,9 @@ function updateSettings(ele, sync=true, value=null){
 	
 	document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
 	document.getElementById("battlelink").href = document.getElementById("battle").raw;
-
+	
+	document.getElementById("custom-gif-commands").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
+	document.getElementById("custom-gif-commands").href = document.getElementById("battle").raw;
 }
 
 if (!chrome.browserAction){
