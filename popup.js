@@ -1793,8 +1793,8 @@ function updateSettings(ele, sync=true, value=null){
 		document.body.classList.remove("hidelinks");
 	}
 	
-	//document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
-	//document.getElementById("docklink").href = document.getElementById("dock").raw;
+	document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
+	document.getElementById("docklink").href = document.getElementById("dock").raw;
 
 	document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
 	document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
