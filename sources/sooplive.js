@@ -128,7 +128,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('textarea').focus();
+					document.querySelector('[contenteditable="true"],textarea').focus();
 					sendResponse(true);
 					return;
 				}
