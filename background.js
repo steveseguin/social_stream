@@ -1836,7 +1836,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		}
 		response = msg;
 	}
-	log("processing messge:", request);
+	
 	try {
 		if (typeof request !== "object") {
 			//sendResponse({"state": isExtensionOn});
@@ -2542,6 +2542,20 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			// isSSAPP
 
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && (request.cmd === 'uploadBadwords')) {
+			localStorage.setItem('customBadwords', request.data);
+			try {
+				let customBadWordsList = request.data.split(/\r?\n|\r|\n/g);
+				customBadWordsList = generateVariationsList(customBadWordsList);
+				profanityHashTable = createProfanityHashTable(customBadWordsList);
+				sendResponse({success: true, state: isExtensionOn });
+			} catch(e){
+				sendResponse({success: false, state: isExtensionOn });
+			}
+		} else if (request.cmd && (request.cmd === 'deleteBadwords')) {
+			localStorage.removeItem('customBadwords');
+			initialLoadBadWords();
+			sendResponse({success: true, state: isExtensionOn });
 		} else {
 			sendResponse({ state: isExtensionOn });
 		}
@@ -5181,25 +5195,44 @@ function filterProfanity(sentence) {
 	return sentence;
 }
 var profanityHashTable = false;
-try {
-	// use a custom file named badwords.txt to replace the badWords that are hard-coded. one per line.
-	fetch("./badwords.txt")
-		.then(response => response.text())
-		.then(text => {
-			let customBadWords = text.split(/\r?\n|\r|\n/g);
-			customBadWords = generateVariationsList(customBadWords);
-			profanityHashTable = createProfanityHashTable(customBadWords);
-		})
-		.catch(error => {
-			badWords = generateVariationsList(badWords);
-			profanityHashTable = createProfanityHashTable(badWords);
-		});
-} catch (e) {
-	badWords = generateVariationsList(badWords);
-	profanityHashTable = createProfanityHashTable(badWords);
+
+function initialLoadBadWords(){
+	try {
+		// use a custom file named badwords.txt to replace the badWords that are hard-coded. one per line.
+		fetch("./badwords.txt")
+			.then(response => response.text())
+			.then(text => {
+				let customBadWords = text.split(/\r?\n|\r|\n/g);
+				customBadWords = generateVariationsList(customBadWords);
+				profanityHashTable = createProfanityHashTable(customBadWords);
+			})
+			.catch(error => {
+				try {
+					  const customBadwords = localStorage.getItem('customBadwords');
+					  if (customBadwords) {
+						let customBadWordsList = customBadwords.split(/\r?\n|\r|\n/g);
+						customBadWordsList = generateVariationsList(customBadWordsList);
+						profanityHashTable = createProfanityHashTable(customBadWordsList);
+					  } else {
+						// Use default badwords if no custom file is present
+						badWords = generateVariationsList(badWords);
+						profanityHashTable = createProfanityHashTable(badWords);
+					  }
+				} catch (e) {
+				  badWords = generateVariationsList(badWords);
+				  profanityHashTable = createProfanityHashTable(badWords);
+				}
+
+			});
+	} catch (e) {
+		badWords = generateVariationsList(badWords);
+		profanityHashTable = createProfanityHashTable(badWords);
+	}
 }
+initialLoadBadWords();
 
 /////// end of bad word filter
+
 
 var goodWordsHashTable = false;
 function isGoodWord(word) {

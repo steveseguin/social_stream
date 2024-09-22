@@ -1,3 +1,5 @@
+// popup.js
+
 var isExtensionOn = false;
 var ssapp = false;
 var usernames = [];
@@ -399,7 +401,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	} catch(e){
 		console.error(e);
 	}
-
+	
+	
 	populateFontDropdown();
 	
 	// populate language drop down
@@ -580,6 +583,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			});
 		}
 	});
+	
+	const uploadBadwordsButton = document.getElementById('uploadBadwordsButton');
+	const deleteBadwordsButton = document.getElementById('deleteBadwordsButton');
+	if (uploadBadwordsButton) {
+		uploadBadwordsButton.addEventListener('click', uploadBadwordsFile);
+	}
+	if (deleteBadwordsButton) {
+		deleteBadwordsButton.addEventListener('click', deleteBadwordsFile);
+	}
 	
 	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
 	const ragFileManagement = document.getElementById('ragFileManagement');
@@ -1950,6 +1962,43 @@ function createCommandEntry(command = '', url = '') {
     return entry;
 }
 
+//bad words upload code
+/// Add these functions to handle file upload and deletion
+function uploadBadwordsFile() {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.txt';
+  fileInput.onchange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const contents = e.target.result;
+		console.log({cmd: 'uploadBadwords', data: contents});
+        chrome.runtime.sendMessage({cmd: 'uploadBadwords', data: contents}, (response) => {
+		  console.log(response);
+          if (response.success) {
+            alert('Badwords file uploaded successfully.');
+          } else {
+            alert('Failed to upload badwords file.');
+          }
+        });
+      };
+      reader.readAsText(file);
+    }
+  };
+  fileInput.click();
+}
 
-
+function deleteBadwordsFile() {
+  if (confirm('Are you sure you want to delete the custom badwords file?')) {
+    chrome.runtime.sendMessage({cmd: 'deleteBadwords'}, (response) => {
+      if (response.success) {
+        alert('Badwords file deleted successfully.');
+      } else {
+        alert('Failed to delete badwords file.');
+      }
+    });
+  }
+}
 
