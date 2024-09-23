@@ -797,6 +797,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	checkVersion();
 	
+	let hideLinks = false;
+	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
+		if (x.checked){
+			hideLinks = true;
+		}
+	});
+	
+	if (hideLinks){
+		document.body.classList.add("hidelinks");
+	} 
 });
 var streamID = false;
 function update(response, sync=true){
@@ -819,6 +829,22 @@ function update(response, sync=true){
 				baseURL = "file:///C:/Users/steve/Code/social_stream/";
 			}
 			
+			
+			
+			let hideLinks = false;
+			document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
+				if (x.checked){
+					hideLinks = true;
+				}
+			});
+			
+			if (hideLinks){
+				document.body.classList.add("hidelinks");
+			} else {
+				document.body.classList.remove("hidelinks");
+			}
+			
+			
 			document.getElementById("sessionid").value = response.streamID;
 			document.getElementById("sessionpassword").value = response.password || "";
 			
@@ -826,30 +852,30 @@ function update(response, sync=true){
 			document.getElementById("dock").raw = baseURL+"dock.html?session="+response.streamID+password;
 			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='"+baseURL+"dock.html?session="+response.streamID+password+"'>"+baseURL+"dock.html?session="+response.streamID+password+"</a>";
 
-			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='"+baseURL+"featured.html?session="+response.streamID+password+"'>"+baseURL+"featured.html?session="+response.streamID+password+"</a>";
+			document.getElementById("overlay").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='overlaylink' href='"+baseURL+"featured.html?session="+response.streamID+password+"'>"+baseURL+"featured.html?session="+response.streamID+password+"</a>";
 			document.getElementById("overlay").raw = baseURL+"featured.html?session="+response.streamID+password;
 
-			document.getElementById("emoteswall").innerHTML = "<a target='_blank' id='emoteswalllink' href='"+baseURL+"emotes.html?session="+response.streamID+password+"'>"+baseURL+"emotes.html?session="+response.streamID+password+"</a>";
+			document.getElementById("emoteswall").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='emoteswalllink' href='"+baseURL+"emotes.html?session="+response.streamID+password+"'>"+baseURL+"emotes.html?session="+response.streamID+password+"</a>";
 			document.getElementById("emoteswall").raw = baseURL+"emotes.html?session="+response.streamID+password;
 			
-			document.getElementById("hypemeter").innerHTML = "<a target='_blank' id='hypemeterlink' href='"+baseURL+"hype.html?session="+response.streamID+password+"'>"+baseURL+"hype.html?session="+response.streamID+password+"</a>";
+			document.getElementById("hypemeter").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='hypemeterlink' href='"+baseURL+"hype.html?session="+response.streamID+password+"'>"+baseURL+"hype.html?session="+response.streamID+password+"</a>";
 			document.getElementById("hypemeter").raw = baseURL+"hype.html?session="+response.streamID+password;
 			
-			document.getElementById("waitlist").innerHTML = "<a target='_blank' id='waitlistlink' href='"+baseURL+"waitlist.html?session="+response.streamID+password+"'>"+baseURL+"waitlist.html?session="+response.streamID+password+"</a>";
+			document.getElementById("waitlist").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='waitlistlink' href='"+baseURL+"waitlist.html?session="+response.streamID+password+"'>"+baseURL+"waitlist.html?session="+response.streamID+password+"</a>";
 			document.getElementById("waitlist").raw = baseURL+"waitlist.html?session="+response.streamID+password;
 			
-			document.getElementById("ticker").innerHTML = "<a target='_blank' id='tickerlink' href='"+baseURL+"ticker.html?session="+response.streamID+password+"'>"+baseURL+"ticker.html?session="+response.streamID+password+"</a>";
+			document.getElementById("ticker").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='tickerlink' href='"+baseURL+"ticker.html?session="+response.streamID+password+"'>"+baseURL+"ticker.html?session="+response.streamID+password+"</a>";
 			document.getElementById("ticker").raw = baseURL+"ticker.html?session="+response.streamID+password;
 			
-			document.getElementById("poll").innerHTML = "<a target='_blank' id='polllink' href='"+baseURL+"poll.html?session="+response.streamID+password+"'>"+baseURL+"poll.html?session="+response.streamID+password+"</a>";
+			document.getElementById("poll").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='polllink' href='"+baseURL+"poll.html?session="+response.streamID+password+"'>"+baseURL+"poll.html?session="+response.streamID+password+"</a>";
 			document.getElementById("poll").raw = baseURL+"poll.html?session="+response.streamID+password;
 			
-			document.getElementById("battle").innerHTML = "<a target='_blank' id='battlelink' href='"+baseURL+"battle.html?session="+response.streamID+password+"'>"+baseURL+"battle.html?session="+response.streamID+password+"</a>";
+			document.getElementById("battle").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='battlelink' href='"+baseURL+"battle.html?session="+response.streamID+password+"'>"+baseURL+"battle.html?session="+response.streamID+password+"</a>";
 			document.getElementById("battle").raw = baseURL+"battle.html?session="+response.streamID+password;
 			
 			document.getElementById("chatbotlink").outerHTML = "<a target='_blank' style='color:lightblue;' id='chatbotlink' href='"+baseURL+"chatbot.html?session="+response.streamID+password+"'>[LINK TO CHAT BOT]</a>";
 			
-			document.getElementById("custom-gif-commands").innerHTML = "<a target='_blank' id='custom-gif-commands-link' href='"+baseURL+"gif.html?session="+response.streamID+password+"'>"+baseURL+"gif.html?session="+response.streamID+password+"</a>";
+			document.getElementById("custom-gif-commands").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='custom-gif-commands-link' href='"+baseURL+"gif.html?session="+response.streamID+password+"'>"+baseURL+"gif.html?session="+response.streamID+password+"</a>";
 			document.getElementById("custom-gif-commands").raw = baseURL+"gif.html?session="+response.streamID+password;
 			
 			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
@@ -985,9 +1011,12 @@ function update(response, sync=true){
 										}
 										chrome.runtime.sendMessage({cmd: "saveSetting", type: "setting", setting: "sentiment", "value": false}, function (response) {}); // delete sentiment
 									} catch(e){console.error(e);}
+								} else if (key == "hideyourlinks"){
+									document.body.classList.add("hidelinks");
 								} else if (key == "ollamaRagEnabled"){
 									document.getElementById('ragFileManagement').style.display = 'block';
 								}
+								
 							}
 							if ("textsetting" in response.settings[key]){
 								var ele = document.querySelector("input[data-textsetting='"+key+"'],textarea[data-textsetting='"+key+"']");
@@ -1817,8 +1846,9 @@ function updateSettings(ele, sync=true, value=null){
 	document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
 	document.getElementById("battlelink").href = document.getElementById("battle").raw;
 	
-	document.getElementById("custom-gif-commands").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
-	document.getElementById("custom-gif-commands").href = document.getElementById("custom-gif-commands").raw;
+	document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
+	document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
+	
 }
 
 if (!chrome.browserAction){
