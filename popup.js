@@ -1,3 +1,5 @@
+// popup.js
+
 var isExtensionOn = false;
 var ssapp = false;
 var usernames = [];
@@ -108,9 +110,46 @@ if (typeof(chrome.runtime)=='undefined'){
 		   } catch(e){}
 	   }
 	})
-	
-	
 }
+
+
+function copyToClipboard(event) {
+	console.log(event);
+   
+	if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){
+		navigator.clipboard.writeText(event.target.parentNode.querySelector("[data-raw] a[href]").href).then(function() {
+			console.log('Link copied to clipboard!');
+			event.target.classList.add("flashing");
+			setTimeout(()=>{
+				event.target.classList.remove("flashing");
+			},500);
+		}, function(err) {
+			console.error('Could not copy text: ', err);
+		});
+	} else if (event.target.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){
+		navigator.clipboard.writeText(event.target.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]").href).then(function() {
+			console.log('Link copied to clipboard!');
+			event.target.classList.add("flashing");
+			setTimeout(()=>{
+				event.target.classList.remove("flashing");
+			},500);
+		}, function(err) {
+			console.error('Could not copy text: ', err);
+		});
+	} else if (event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){
+		navigator.clipboard.writeText(event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]").href).then(function() {
+			console.log('Link copied to clipboard!');
+			event.target.classList.add("flashing");
+			setTimeout(()=>{
+				event.target.classList.remove("flashing");
+			},500);
+		}, function(err) {
+			console.error('Could not copy text: ', err);
+		});
+	}
+}
+
+
 
 var translation = {};
 
@@ -352,6 +391,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		updateSettings(newCommandEntry, true);
 	});
 	
+	document.querySelectorAll("[data-copy]").forEach(ele=>{
+		ele.onclick = copyToClipboard;
+	});
+	
 	try {
 		document.getElementById('usernameList').addEventListener('click', (e) => {
 			if (e.target.classList.contains('remove-username')) {
@@ -370,7 +413,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	} catch(e){
 		console.error(e);
 	}
-
+	
+	
 	populateFontDropdown();
 	
 	// populate language drop down
@@ -552,6 +596,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	});
 	
+
 	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
 	const ragFileManagement = document.getElementById('ragFileManagement');
 	const uploadButton = document.querySelector('[data-action="uploadRAGfile"]');
@@ -756,6 +801,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	checkVersion();
 	
+	let hideLinks = false;
+	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
+		if (x.checked){
+			hideLinks = true;
+		}
+	});
+	
+	if (hideLinks){
+		document.body.classList.add("hidelinks");
+	} 
 });
 var streamID = false;
 function update(response, sync=true){
@@ -778,6 +833,20 @@ function update(response, sync=true){
 				baseURL = "file:///C:/Users/steve/Code/social_stream/";
 			}
 			
+			let hideLinks = false;
+			document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
+				if (x.checked){
+					hideLinks = true;
+				}
+			});
+			
+			if (hideLinks){
+				document.body.classList.add("hidelinks");
+			} else {
+				document.body.classList.remove("hidelinks");
+			}
+			
+			
 			document.getElementById("sessionid").value = response.streamID;
 			document.getElementById("sessionpassword").value = response.password || "";
 			
@@ -785,34 +854,35 @@ function update(response, sync=true){
 			document.getElementById("dock").raw = baseURL+"dock.html?session="+response.streamID+password;
 			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='"+baseURL+"dock.html?session="+response.streamID+password+"'>"+baseURL+"dock.html?session="+response.streamID+password+"</a>";
 
-			document.getElementById("overlay").innerHTML = "<a target='_blank' id='overlaylink' href='"+baseURL+"featured.html?session="+response.streamID+password+"'>"+baseURL+"featured.html?session="+response.streamID+password+"</a>";
+			document.getElementById("overlay").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='overlaylink' href='"+baseURL+"featured.html?session="+response.streamID+password+"'>"+baseURL+"featured.html?session="+response.streamID+password+"</a>";
 			document.getElementById("overlay").raw = baseURL+"featured.html?session="+response.streamID+password;
 
-			document.getElementById("emoteswall").innerHTML = "<a target='_blank' id='emoteswalllink' href='"+baseURL+"emotes.html?session="+response.streamID+password+"'>"+baseURL+"emotes.html?session="+response.streamID+password+"</a>";
+			document.getElementById("emoteswall").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='emoteswalllink' href='"+baseURL+"emotes.html?session="+response.streamID+password+"'>"+baseURL+"emotes.html?session="+response.streamID+password+"</a>";
 			document.getElementById("emoteswall").raw = baseURL+"emotes.html?session="+response.streamID+password;
 			
-			document.getElementById("hypemeter").innerHTML = "<a target='_blank' id='hypemeterlink' href='"+baseURL+"hype.html?session="+response.streamID+password+"'>"+baseURL+"hype.html?session="+response.streamID+password+"</a>";
+			document.getElementById("hypemeter").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='hypemeterlink' href='"+baseURL+"hype.html?session="+response.streamID+password+"'>"+baseURL+"hype.html?session="+response.streamID+password+"</a>";
 			document.getElementById("hypemeter").raw = baseURL+"hype.html?session="+response.streamID+password;
 			
-			document.getElementById("waitlist").innerHTML = "<a target='_blank' id='waitlistlink' href='"+baseURL+"waitlist.html?session="+response.streamID+password+"'>"+baseURL+"waitlist.html?session="+response.streamID+password+"</a>";
+			document.getElementById("waitlist").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='waitlistlink' href='"+baseURL+"waitlist.html?session="+response.streamID+password+"'>"+baseURL+"waitlist.html?session="+response.streamID+password+"</a>";
 			document.getElementById("waitlist").raw = baseURL+"waitlist.html?session="+response.streamID+password;
 			
-			document.getElementById("ticker").innerHTML = "<a target='_blank' id='tickerlink' href='"+baseURL+"ticker.html?session="+response.streamID+password+"'>"+baseURL+"ticker.html?session="+response.streamID+password+"</a>";
+			document.getElementById("ticker").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='tickerlink' href='"+baseURL+"ticker.html?session="+response.streamID+password+"'>"+baseURL+"ticker.html?session="+response.streamID+password+"</a>";
 			document.getElementById("ticker").raw = baseURL+"ticker.html?session="+response.streamID+password;
 			
-			document.getElementById("poll").innerHTML = "<a target='_blank' id='polllink' href='"+baseURL+"poll.html?session="+response.streamID+password+"'>"+baseURL+"poll.html?session="+response.streamID+password+"</a>";
+			document.getElementById("poll").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='polllink' href='"+baseURL+"poll.html?session="+response.streamID+password+"'>"+baseURL+"poll.html?session="+response.streamID+password+"</a>";
 			document.getElementById("poll").raw = baseURL+"poll.html?session="+response.streamID+password;
 			
-			document.getElementById("battle").innerHTML = "<a target='_blank' id='battlelink' href='"+baseURL+"battle.html?session="+response.streamID+password+"'>"+baseURL+"battle.html?session="+response.streamID+password+"</a>";
+			document.getElementById("battle").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='battlelink' href='"+baseURL+"battle.html?session="+response.streamID+password+"'>"+baseURL+"battle.html?session="+response.streamID+password+"</a>";
 			document.getElementById("battle").raw = baseURL+"battle.html?session="+response.streamID+password;
 			
 			document.getElementById("chatbotlink").outerHTML = "<a target='_blank' style='color:lightblue;' id='chatbotlink' href='"+baseURL+"chatbot.html?session="+response.streamID+password+"'>[LINK TO CHAT BOT]</a>";
 			
-			document.getElementById("custom-gif-commands").innerHTML = "<a target='_blank' id='custom-gif-commands-link' href='"+baseURL+"gif.html?session="+response.streamID+password+"'>"+baseURL+"gif.html?session="+response.streamID+password+"</a>";
+			document.getElementById("custom-gif-commands").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='custom-gif-commands-link' href='"+baseURL+"gif.html?session="+response.streamID+password+"'>"+baseURL+"gif.html?session="+response.streamID+password+"</a>";
 			document.getElementById("custom-gif-commands").raw = baseURL+"gif.html?session="+response.streamID+password;
 			
 			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
 		
+			hideLinks = false;
 			
 			if ('settings' in response){
 				for (var key in response.settings){
@@ -944,9 +1014,13 @@ function update(response, sync=true){
 										}
 										chrome.runtime.sendMessage({cmd: "saveSetting", type: "setting", setting: "sentiment", "value": false}, function (response) {}); // delete sentiment
 									} catch(e){console.error(e);}
+								} else if (key == "hideyourlinks"){
+									document.body.classList.add("hidelinks");
+									hideLinks = true;
 								} else if (key == "ollamaRagEnabled"){
 									document.getElementById('ragFileManagement').style.display = 'block';
 								}
+								
 							}
 							if ("textsetting" in response.settings[key]){
 								var ele = document.querySelector("input[data-textsetting='"+key+"'],textarea[data-textsetting='"+key+"']");
@@ -1102,12 +1176,49 @@ function update(response, sync=true){
 					miniTranslate(document.body);
 				}
 			}
+		
+			
+			if (hideLinks){
+				document.body.classList.add("hidelinks");
+			} else {
+				document.body.classList.remove("hidelinks");
+			}
+			
+			document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
+			document.getElementById("docklink").href = document.getElementById("dock").raw;
+
+			document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
+			document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
+
+			document.getElementById("emoteswalllink").innerText = hideLinks ? "Click to open link" : document.getElementById("emoteswall").raw;
+			document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
+			
+			document.getElementById("hypemeterlink").innerText = hideLinks ? "Click to open link" : document.getElementById("hypemeter").raw;
+			document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
+			
+			document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
+			document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
+			
+			document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
+			document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
+			
+			document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
+			document.getElementById("polllink").href = document.getElementById("poll").raw;
+			
+			document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
+			document.getElementById("battlelink").href = document.getElementById("battle").raw;
+			
+			document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
+			document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
+		
 		}
 		
 		if (("state" in response) && streamID){
 			isExtensionOn = response.state;
 			if (isExtensionOn){
-				document.body.className = "extension-enabled";
+				document.body.classList.add("extension-enabled");
+				document.body.classList.remove("extension-disabled");
+				
 				if (ssapp){
 					document.getElementById("disableButtonText").innerHTML = "⚡ Service Active";
 				} else {
@@ -1122,7 +1233,9 @@ function update(response, sync=true){
 				} else {
 					document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
 				}
-				document.body.className = "extension-disabled";
+				document.body.classList.remove("extension-enabled");
+				document.body.classList.add("extension-disabled");
+				
 				document.getElementById("disableButton").style.display = "";
 				chrome.browserAction.setIcon({path: "/icons/off.png"});
 				document.getElementById("extensionState").checked = null;
@@ -1657,6 +1770,14 @@ function updateSettings(ele, sync=true, value=null){
 			}
 		}
 		
+		if (ele.dataset.setting == "hideyourlinks"){
+			if (ele.checked){
+				refreshLinks();
+			} else {
+				refreshLinks();
+			}
+		}
+		
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting",  target:target, setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
 		}
@@ -1735,12 +1856,23 @@ function updateSettings(ele, sync=true, value=null){
 		
 	} 
 	
+	refreshLinks();
+}
+
+function refreshLinks(){
+	
 	let hideLinks = false;
 	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
 		if (x.checked){
 			hideLinks = true;
 		}
 	});
+	
+	if (hideLinks){
+		document.body.classList.add("hidelinks");
+	} else {
+		document.body.classList.remove("hidelinks");
+	}
 	
 	document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
 	document.getElementById("docklink").href = document.getElementById("dock").raw;
@@ -1772,7 +1904,7 @@ function updateSettings(ele, sync=true, value=null){
 
 if (!chrome.browserAction){
 	chrome.browserAction = {};
-																																										   
+																																					  
 	
 	if (chrome.action && chrome.action.setIcon){
 		chrome.browserAction.setIcon = chrome.action.setIcon
@@ -1923,7 +2055,3 @@ function createCommandEntry(command = '', url = '') {
     
     return entry;
 }
-
-
-
-
