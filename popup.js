@@ -116,21 +116,33 @@ if (typeof(chrome.runtime)=='undefined'){
 function copyToClipboard(event) {
 	console.log(event);
    
-	if (event.target.parentNode.parentNode.querySelector("[data-raw]")){
-		navigator.clipboard.writeText(event.target.parentNode.querySelector("[data-raw]").textContent).then(function() {
+	if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){
+		navigator.clipboard.writeText(event.target.parentNode.querySelector("[data-raw] a[href]").href).then(function() {
 			console.log('Link copied to clipboard!');
+			event.target.classList.add("flashing");
+			setTimeout(()=>{
+				event.target.classList.remove("flashing");
+			},500);
 		}, function(err) {
 			console.error('Could not copy text: ', err);
 		});
-	} else if (event.target.parentNode.parentNode.parentNode.querySelector("[data-raw]")){
-		navigator.clipboard.writeText(event.target.parentNode.parentNode.parentNode.querySelector("[data-raw]").textContent).then(function() {
+	} else if (event.target.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){
+		navigator.clipboard.writeText(event.target.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]").href).then(function() {
 			console.log('Link copied to clipboard!');
+			event.target.classList.add("flashing");
+			setTimeout(()=>{
+				event.target.classList.remove("flashing");
+			},500);
 		}, function(err) {
 			console.error('Could not copy text: ', err);
 		});
-	} else if (event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw]")){
-		navigator.clipboard.writeText(event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw]").textContent).then(function() {
+	} else if (event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){
+		navigator.clipboard.writeText(event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]").href).then(function() {
 			console.log('Link copied to clipboard!');
+			event.target.classList.add("flashing");
+			setTimeout(()=>{
+				event.target.classList.remove("flashing");
+			},500);
 		}, function(err) {
 			console.error('Could not copy text: ', err);
 		});
