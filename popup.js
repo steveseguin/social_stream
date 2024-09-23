@@ -829,8 +829,6 @@ function update(response, sync=true){
 				baseURL = "file:///C:/Users/steve/Code/social_stream/";
 			}
 			
-			
-			
 			let hideLinks = false;
 			document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
 				if (x.checked){
@@ -880,6 +878,7 @@ function update(response, sync=true){
 			
 			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID;
 		
+			hideLinks = false;
 			
 			if ('settings' in response){
 				for (var key in response.settings){
@@ -1013,6 +1012,7 @@ function update(response, sync=true){
 									} catch(e){console.error(e);}
 								} else if (key == "hideyourlinks"){
 									document.body.classList.add("hidelinks");
+									hideLinks = true;
 								} else if (key == "ollamaRagEnabled"){
 									document.getElementById('ragFileManagement').style.display = 'block';
 								}
@@ -1172,6 +1172,41 @@ function update(response, sync=true){
 					miniTranslate(document.body);
 				}
 			}
+		
+			
+			if (hideLinks){
+				document.body.classList.add("hidelinks");
+			} else {
+				document.body.classList.remove("hidelinks");
+			}
+			
+			document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
+			document.getElementById("docklink").href = document.getElementById("dock").raw;
+
+			document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
+			document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
+
+			document.getElementById("emoteswalllink").innerText = hideLinks ? "Click to open link" : document.getElementById("emoteswall").raw;
+			document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
+			
+			document.getElementById("hypemeterlink").innerText = hideLinks ? "Click to open link" : document.getElementById("hypemeter").raw;
+			document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
+			
+			document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
+			document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
+			
+			document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
+			document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
+			
+			document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
+			document.getElementById("polllink").href = document.getElementById("poll").raw;
+			
+			document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
+			document.getElementById("battlelink").href = document.getElementById("battle").raw;
+			
+			document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
+			document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
+		
 		}
 		
 		if (("state" in response) && streamID){
@@ -1731,6 +1766,14 @@ function updateSettings(ele, sync=true, value=null){
 			}
 		}
 		
+		if (ele.dataset.setting == "hideyourlinks"){
+			if (ele.checked){
+				refreshLinks();
+			} else {
+				refreshLinks();
+			}
+		}
+		
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "setting",  target:target, setting: ele.dataset.setting, "value": ele.checked}, function (response) {});
 		}
@@ -1809,6 +1852,11 @@ function updateSettings(ele, sync=true, value=null){
 		
 	} 
 	
+	refreshLinks();
+}
+
+function refreshLinks(){
+	
 	let hideLinks = false;
 	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
 		if (x.checked){
@@ -1848,7 +1896,6 @@ function updateSettings(ele, sync=true, value=null){
 	
 	document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
 	document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
-	
 }
 
 if (!chrome.browserAction){
