@@ -2556,6 +2556,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			localStorage.removeItem('customBadwords');
 			initialLoadBadWords();
 			sendResponse({success: true, state: isExtensionOn });
+		} else if (request.cmd && request.target){
+			sendResponse({ state: isExtensionOn });
+			sendTargetP2P(request, request.target);
 		} else {
 			sendResponse({ state: isExtensionOn });
 		}
@@ -4120,7 +4123,7 @@ function onAttach(debuggeeId, callback, message, a = null, b = null, c = null) {
 	}
 }
 
-async function processIncomingRequest(request, UUID = false) {
+async function processIncomingRequest(request, UUID = false) { // from the dock or chat bot, etc.
 	if (settings.disablehost) {
 		return;
 	}
@@ -4246,6 +4249,7 @@ async function processIncomingRequest(request, UUID = false) {
 			}
 		}
 	}
+	console.log(request);
 }
 
 function fowardOBSCommand(data){

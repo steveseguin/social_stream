@@ -368,7 +368,8 @@
             pollOptions: urlParams.get('pollOptions') ? urlParams.get('pollOptions').split(',').map(opt => opt.trim()) : [],
             pollTimer: urlParams.get('pollTimer') || 60,
             pollEnabled: urlParams.get('pollEnabled') || false,
-            styleType: urlParams.get('style') || 'default'
+            styleType: urlParams.get('style') || 'default',
+			pollClosed: false 
         };
 
         let results = {};
@@ -410,47 +411,56 @@
         }
 
         function updatePollResults() {
-            const pollOptionsContainer = document.getElementById('poll-options');
-            pollOptionsContainer.innerHTML = '';
+			const pollOptionsContainer = document.getElementById('poll-options');
+			pollOptionsContainer.innerHTML = '';
 
-            if (settings.pollType === 'freeform') {
-                const instructionElement = document.createElement('div');
-                instructionElement.className = 'poll-instruction';
-                instructionElement.textContent = 'Enter a hashtagged #word into chat to vote for it!';
-                pollOptionsContainer.appendChild(instructionElement);
-            }
+			if (settings.pollType === 'freeform' && !settings.pollClosed) {
+				const instructionElement = document.createElement('div');
+				instructionElement.className = 'poll-instruction';
+				instructionElement.textContent = 'Enter a hashtagged #word into chat to vote for it!';
+				pollOptionsContainer.appendChild(instructionElement);
+			}
 
-            let displayOptions = [];
+			let displayOptions = [];
 
-            if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
-                displayOptions = settings.pollOptions.map(option => [option, results[option] || 0]);
-            } else if (settings.pollType === 'freeform') {
-                displayOptions = Object.entries(results).sort((a, b) => b[1] - a[1]).slice(0, 10);
-            }
+			if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+				displayOptions = settings.pollOptions.map(option => [option, results[option] || 0]);
+			} else if (settings.pollType === 'freeform') {
+				displayOptions = Object.entries(results).sort((a, b) => b[1] - a[1]).slice(0, 10);
+			}
 
-            displayOptions.forEach(([option, votes], index) => {
-                const percentage = totalVotes > 0 ? (votes / totalVotes * 100).toFixed(1) : 0;
+			const maxVotes = Math.max(...displayOptions.map(([_, votes]) => votes));
 
-                const optionElement = document.createElement('div');
-                optionElement.className = 'poll-option';
-                optionElement.innerHTML = `
-                    <span class="option-number">${index + 1}</span>
-                    <span class="option-text">${option}</span>
-                    <span class="option-percentage">${percentage}%</span>
-                    <div class="poll-bar" style="width: ${percentage}%;"></div>
-                `;
+			displayOptions.forEach(([option, votes], index) => {
+				const percentage = totalVotes > 0 ? (votes / totalVotes * 100).toFixed(1) : 0;
 
-                // Adjust text color for better visibility when bar is full
-                if (parseFloat(percentage) > 90) {
-                    optionElement.style.color = '#fff';
-                    optionElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
-                }
+				const optionElement = document.createElement('div');
+				optionElement.className = 'poll-option';
+				
+				if (votes === maxVotes && settings.pollClosed) {
+					optionElement.style.fontWeight = 'bold';
+					optionElement.style.fontSize = '1.1em';
+				}
 
-                pollOptionsContainer.appendChild(optionElement);
-            });
-        }
+				optionElement.innerHTML = `
+					${!settings.pollClosed ? `<span class="option-number">${index + 1}</span>` : ''}
+					<span class="option-text">${option}</span>
+					<span class="option-percentage">${percentage}%</span>
+					<div class="poll-bar" style="width: ${percentage}%;"></div>
+				`;
+
+				if (parseFloat(percentage) > 90) {
+					optionElement.style.color = '#fff';
+					optionElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
+				}
+
+				pollOptionsContainer.appendChild(optionElement);
+			});
+		}
 
         function processVote(vote) {
+			if (settings.pollClosed) return;
+			
             vote = vote.trim();
             
             if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
@@ -503,46 +513,73 @@
         }
 
         function processData(data) {
-            console.log("Received data:", data);  // For debugging
+			// console.log("Received data:", data);  // For debugging
 
-            if (data.setting && !data.settings) {
-                data.settings = {
-                    [data.setting]: {
-                        [data.type]: data.value !== undefined ? data.value : false
-                    }
-                };
-            }
+			if (data.setting && !data.settings) {
+				data.settings = {
+					[data.setting]: {
+						[data.type]: data.value !== undefined ? data.value : false
+					}
+				};
+			}
 
-            if (data.settings) {
-			
-				console.log(data);
+			if (data.settings) {
+				// console.log(data);
 				
-                settings.pollEnabled = data.settings.pollEnabled || false;
+				const wasEnabled = settings.pollEnabled;
+				settings.pollEnabled = data.settings.pollEnabled || settings.pollEnabled; // Keep enabled if it was already enabled
 				
-                if (data.settings.pollType) {
-                    settings.pollType = data.settings.pollType.optionsetting || 'multiple';
-                }
-                if (data.settings.pollQuestion) {
-                    settings.pollQuestion = data.settings.pollQuestion.textsetting || 'What\'s your favorite genre?';
-                }
+				if (data.settings.pollType) {
+					settings.pollType = data.settings.pollType.optionsetting || 'multiple';
+				}
+				if (data.settings.pollQuestion) {
+					settings.pollQuestion = data.settings.pollQuestion.textsetting || 'What\'s your favorite genre?';
+				}
 				if (data.settings.pollStyle) {
-                    settings.styleType = data.settings.pollStyle.optionsetting || 'default';
-                }
-                if (data.settings.multipleChoiceOptions) {
-                    settings.pollOptions = data.settings.multipleChoiceOptions.textsetting
-                        .split(',')
-                        .map(option => option.trim());
-                }
-                if (data.settings.pollTimer) {
-                    settings.pollTimer = data.settings.pollTimer.numbersetting || 60;
-                }
-                results = {};
-                totalVotes = 0;
-                initializePoll();
-            } else if (data.chatmessage) {
-                processVote(data.chatmessage);
-            }
-        }
+					settings.styleType = data.settings.pollStyle.optionsetting || 'default';
+				}
+				if (data.settings.multipleChoiceOptions) {
+					settings.pollOptions = data.settings.multipleChoiceOptions.textsetting
+						.split(',')
+						.map(option => option.trim());
+				}
+				if (data.settings.pollTimer) {
+					settings.pollTimer = data.settings.pollTimer.numbersetting || 60;
+				}
+				settings.pollTimerState = data.settings.pollTimerState ? true : false;
+			   
+				results = {};
+				totalVotes = 0;
+				settings.pollClosed = false; // Reset closed state when settings change
+				initializePoll();
+				
+				if (wasEnabled || settings.pollEnabled) {
+					updatePollVisibility();
+				}
+			} else if (data.chatmessage) {
+				processVote(data.chatmessage);
+			} else if (data.cmd) {
+				if (data.cmd === "closepoll") {
+					closePoll();
+				} else if (data.cmd === "resetpoll") {
+					resetPoll();
+				}
+			}
+		}
+		
+		function closePoll() {
+			settings.pollClosed = true;
+			const pollTitle = document.getElementById('poll-title');
+			pollTitle.innerText = settings.pollQuestion + " (Closed)";
+			updatePollResults();
+		}
+
+		function resetPoll() {
+			settings.pollClosed = false;
+			results = {};
+			totalVotes = 0;
+			initializePoll();
+		}
 
         // Initialize iframe for communication
         const iframe = document.createElement("iframe");

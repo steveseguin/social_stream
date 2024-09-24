@@ -2988,19 +2988,23 @@ input:checked + .slider:before {
 									<label>❔ Poll Question:</label>
 									<input type="text" id="pollQuestion" class="textInput" autocomplete="off" placeholder="Enter poll question" data-textsetting="pollQuestion" data-target="poll" />
 								</div>
-								<br>
 								<div id="multipleChoiceOptions" class="hidden">
+									<br>
 									<label>🔢 Options (comma separated):</label>
 									<input type="text" id="multipleChoiceInput" class="textInput" autocomplete="off" placeholder="Option 1, Option 2, ..." data-textsetting="multipleChoiceOptions" data-target="poll" />
 								</div>
 								<br>
-								<div class="hidden">
-									<label>Timer (seconds):</label>
-									<input type="number" id="pollTimer" class="textInput" autocomplete="off" placeholder="60" data-textsetting="pollTimer" data-target="poll" />
-								</div>
-								<div class="hidden">
-									<button class="glowingButton" data-action="startPoll" data-target="poll">Start Poll</button>
-									<button class="glowingButton" data-action="endPoll" data-target="poll">End Poll</button>
+								<label class="switch">
+									<input type="checkbox" data-setting="pollTimerState" />
+									<span class="slider round"></span>
+								</label>
+								<span>
+									Timer (seconds): <input type="number" style="max-width: 5ch;" max="999999" min="1" value="60" size="4" data-numbersetting="pollTimer" />
+								</span>
+								<br>
+								<div>
+									<button class="glowingButton" data-action="closepoll" data-target="poll"><span>End Poll</span></button>
+									<button class="glowingButton" data-action="resetpoll" data-target="poll"><span>Reset Poll</span></button>
 								</div>
 							</div>
 						</div>
