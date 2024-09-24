@@ -526,9 +526,9 @@
 			if (data.settings) {
 				// console.log(data);
 				
-				const wasEnabled = settings.pollEnabled;
-				settings.pollEnabled = data.settings.pollEnabled || settings.pollEnabled; // Keep enabled if it was already enabled
-				
+				if (data.settings.pollEnabled){
+					settings.pollEnabled = data.settings.pollEnabled.setting;
+				}
 				if (data.settings.pollType) {
 					settings.pollType = data.settings.pollType.optionsetting || 'multiple';
 				}
@@ -553,9 +553,8 @@
 				settings.pollClosed = false; // Reset closed state when settings change
 				initializePoll();
 				
-				if (wasEnabled || settings.pollEnabled) {
-					updatePollVisibility();
-				}
+				updatePollVisibility();
+				
 			} else if (data.chatmessage) {
 				processVote(data.chatmessage);
 			} else if (data.cmd) {
