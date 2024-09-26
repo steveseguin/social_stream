@@ -51,9 +51,16 @@ async function ensureBackgroundPageIsOpen() {
   try {
     const existingTabs = await chrome.tabs.query({url: chrome.runtime.getURL('../background.html')});
     if (existingTabs.length > 0) {
-      log("Found existing background page");
-      backgroundPageTabId = existingTabs[0].id;
-      backgroundPageTabIdLoaded = true;
+		log("Found existing background page");
+		if (existingTabs.length > 1) {
+			log(`Found ${tabs.length} background tabs. Closing extras.`);
+			for (let i = 1; i < tabs.length; i++) {
+				await chrome.tabs.remove(tabs[i].id);
+			}
+		}
+		// Set the remaining tab as our active background page
+		backgroundPageTabId = tabs[0].id;
+		backgroundPageTabIdLoaded = true;
     } else {
       const tab = await chrome.tabs.create({
         url: chrome.runtime.getURL('../background.html'),

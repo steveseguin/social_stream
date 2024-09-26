@@ -859,9 +859,8 @@ function update(response, sync=true){
 			document.getElementById("sessionid").value = response.streamID;
 			document.getElementById("sessionpassword").value = response.password || "";
 			
-			//document.getElementById("version").innerHTML = "Stream ID is : "+response.streamID;
+			document.getElementById("dock").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='docklink' href='"+baseURL+"dock.html?session="+response.streamID+password+"'>"+baseURL+"dock.html?session="+response.streamID+password+"</a>";
 			document.getElementById("dock").raw = baseURL+"dock.html?session="+response.streamID+password;
-			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='"+baseURL+"dock.html?session="+response.streamID+password+"'>"+baseURL+"dock.html?session="+response.streamID+password+"</a>";
 
 			document.getElementById("overlay").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='overlaylink' href='"+baseURL+"featured.html?session="+response.streamID+password+"'>"+baseURL+"featured.html?session="+response.streamID+password+"</a>";
 			document.getElementById("overlay").raw = baseURL+"featured.html?session="+response.streamID+password;
@@ -1193,32 +1192,34 @@ function update(response, sync=true){
 				document.body.classList.remove("hidelinks");
 			}
 			
-			document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
-			document.getElementById("docklink").href = document.getElementById("dock").raw;
+			try {
+				document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
+				document.getElementById("docklink").href = document.getElementById("dock").raw;
 
-			document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
-			document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
+				document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
+				document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
 
-			document.getElementById("emoteswalllink").innerText = hideLinks ? "Click to open link" : document.getElementById("emoteswall").raw;
-			document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
-			
-			document.getElementById("hypemeterlink").innerText = hideLinks ? "Click to open link" : document.getElementById("hypemeter").raw;
-			document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
-			
-			document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
-			document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
-			
-			document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
-			document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
-			
-			document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
-			document.getElementById("polllink").href = document.getElementById("poll").raw;
-			
-			document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
-			document.getElementById("battlelink").href = document.getElementById("battle").raw;
-			
-			document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
-			document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
+				document.getElementById("emoteswalllink").innerText = hideLinks ? "Click to open link" : document.getElementById("emoteswall").raw;
+				document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
+				
+				document.getElementById("hypemeterlink").innerText = hideLinks ? "Click to open link" : document.getElementById("hypemeter").raw;
+				document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
+				
+				document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
+				document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
+				
+				document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
+				document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
+				
+				document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
+				document.getElementById("polllink").href = document.getElementById("poll").raw;
+				
+				document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
+				document.getElementById("battlelink").href = document.getElementById("battle").raw;
+				
+				document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
+				document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
+			} catch(e){}
 		
 		}
 		
@@ -1882,33 +1883,34 @@ function refreshLinks(){
 	} else {
 		document.body.classList.remove("hidelinks");
 	}
-	
-	document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
-	document.getElementById("docklink").href = document.getElementById("dock").raw;
+	try {
+		document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
+		document.getElementById("docklink").href = document.getElementById("dock").raw;
 
-	document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
-	document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
+		document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
+		document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
 
-	document.getElementById("emoteswalllink").innerText = hideLinks ? "Click to open link" : document.getElementById("emoteswall").raw;
-	document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
-	
-	document.getElementById("hypemeterlink").innerText = hideLinks ? "Click to open link" : document.getElementById("hypemeter").raw;
-	document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
-	
-	document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
-	document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
-	
-	document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
-	document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
-	
-	document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
-	document.getElementById("polllink").href = document.getElementById("poll").raw;
-	
-	document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
-	document.getElementById("battlelink").href = document.getElementById("battle").raw;
-	
-	document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
-	document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
+		document.getElementById("emoteswalllink").innerText = hideLinks ? "Click to open link" : document.getElementById("emoteswall").raw;
+		document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
+		
+		document.getElementById("hypemeterlink").innerText = hideLinks ? "Click to open link" : document.getElementById("hypemeter").raw;
+		document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
+		
+		document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
+		document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
+		
+		document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
+		document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
+		
+		document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
+		document.getElementById("polllink").href = document.getElementById("poll").raw;
+		
+		document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
+		document.getElementById("battlelink").href = document.getElementById("battle").raw;
+		
+		document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
+		document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
+	} catch(e){}
 }
 
 if (!chrome.browserAction){
