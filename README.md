@@ -172,6 +172,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - circle.so
 - sooplive.com (pop out the chat to use)
 - on24.com ( Q&A - questions supported)
+- meetme
 
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   
