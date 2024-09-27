@@ -890,7 +890,42 @@
 		onElementInserted(ele, function (ele2) {
 			setTimeout(() => processMessage(ele2, false), captureDelay);
 		});
+	  } else if (!ele){
+		 const message = document.querySelector("yt-live-chat-app yt-formatted-string.yt-live-chat-message-renderer");
+		if (message && !document.getElementById("videoIdInput")) {
+			message.innerText = 
+				"It doesn't seem like we've been able to find any active live Youtube chat.\n\n" +
+				"➡️ Your Youtube stream must be already Live, active, and public for this option to work.\n\n" +
+				"Please stop and reactivate this Youtube option once your video is public and live.\n\n\n\n\n" +
+				"For unlisted videos, you can use a specific video ID instead.\n\n" +
+				"If you know the video ID, you can try loading it specifically below:\n\n\n";
+
+			// Create input element
+			const input = document.createElement('input');
+			input.type = 'text';
+			input.id = 'videoIdInput';
+			input.placeholder = 'Enter video ID';
+			message.parentNode.insertBefore(input, message.nextSibling);
+
+			// Create button element
+			const button = document.createElement('button');
+			button.id = 'loadChatButton';
+			button.textContent = 'Load Chat';
+			message.parentNode.insertBefore(button, input.nextSibling);
+
+			// Add event listener to the button
+			button.addEventListener('click', () => {
+				const videoId = input.value.trim();
+				if (videoId) {
+					window.location.href = `https://www.youtube.com/live_chat?is_popout=1&v=${videoId}`;
+				} else {
+					alert('Please enter a valid video ID');
+				}
+			});
+		}
 	  }
+	  // style-scope yt-live-chat-message-renderer
+	  
 	}, 1000);
 
 	if (window.location.href.includes("youtube.com/watch")) {
