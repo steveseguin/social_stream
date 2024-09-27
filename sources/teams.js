@@ -187,7 +187,7 @@
 		
 		var chatimg = "";
 		try{
-			chatimg = mainEle.querySelector('profile-picture, div[data-tid="message-avatar"]').querySelector("img").src;
+			chatimg = mainEle.querySelector('profile-picture, div [data-tid="message-avatar"]').querySelector("img").src;
 		} catch(e){
 			
 		}
@@ -196,7 +196,7 @@
 		
         var name = "";
 		try {
-			name = ele.querySelector("div[data-tid='threadBodyDisplayName'], div[data-tid='message-author-name']").innerText;
+			name = ele.querySelector("div [data-tid='threadBodyDisplayName'], div [data-tid='message-author-name']").innerText;
 		} catch(e){}
 		
 		if (name){
@@ -225,7 +225,7 @@
 					}
 				}
 				chatimg = prev.querySelector('profile-picture').querySelector("img").src
-				name = escapeHtml(prev.querySelector("div[data-tid='threadBodyDisplayName']").innerText);
+				name = escapeHtml(prev.querySelector("div [data-tid='threadBodyDisplayName']").innerText);
 				
 			} catch(e){} 
 		}
@@ -237,7 +237,7 @@
 
 		var msg = "";
 		try {
-			msg = getAllContentNodes(ele.querySelector("div[data-tid='messageBodyContent'], [data-tid='chat-pane-message']"));
+			msg = getAllContentNodes(ele.querySelector("div [data-tid='messageBodyContent'], [data-tid='chat-pane-message']"));
 		} catch(e){}
 		
 		if (msg){
@@ -284,7 +284,7 @@
 				try{
 					if ("focusChat" == request){
 						try {
-							var ele = document.querySelector('iframe').contentWindow.document.body.querySelector(".cke_textarea_inline[contenteditable='true'], div[role='textbox']>p[data-placeholder]");
+							var ele = document.querySelector('iframe').contentWindow.document.body.querySelector(".cke_textarea_inline[contenteditable='true'], div [role='textbox']>p[data-placeholder]");
 							if (ele){
 								ele.focus();
 								sendResponse(true);
@@ -293,7 +293,7 @@
 						} catch(e){}
 						
 						try {
-							ele = document.body.querySelector(".cke_textarea_inline[contenteditable='true']>p, div[role='textbox']>p[data-placeholder]");
+							ele = document.body.querySelector(".cke_textarea_inline[contenteditable='true']>p, div [role='textbox']>p[data-placeholder]");
 							if (ele){
 								ele.focus();
 								sendResponse(true);
