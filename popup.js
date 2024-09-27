@@ -596,7 +596,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	});
 	
-
+	const uploadBadwordsButton = document.getElementById('uploadBadwordsButton');
+	const deleteBadwordsButton = document.getElementById('deleteBadwordsButton');
+	if (uploadBadwordsButton) {
+		uploadBadwordsButton.addEventListener('click', uploadBadwordsFile);
+	}
+	if (deleteBadwordsButton) {
+		deleteBadwordsButton.addEventListener('click', deleteBadwordsFile);
+	}
+	
 	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
 	const ragFileManagement = document.getElementById('ragFileManagement');
 	const uploadButton = document.querySelector('[data-action="uploadRAGfile"]');
@@ -760,6 +768,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					});
 				}
 			} else {
+				console.log(msg);
 				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
 					log("ignore callback for this action");
 					// update(response);  
@@ -850,9 +859,8 @@ function update(response, sync=true){
 			document.getElementById("sessionid").value = response.streamID;
 			document.getElementById("sessionpassword").value = response.password || "";
 			
-			//document.getElementById("version").innerHTML = "Stream ID is : "+response.streamID;
+			document.getElementById("dock").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='docklink' href='"+baseURL+"dock.html?session="+response.streamID+password+"'>"+baseURL+"dock.html?session="+response.streamID+password+"</a>";
 			document.getElementById("dock").raw = baseURL+"dock.html?session="+response.streamID+password;
-			document.getElementById("dock").innerHTML = "<a target='_blank' id='docklink' href='"+baseURL+"dock.html?session="+response.streamID+password+"'>"+baseURL+"dock.html?session="+response.streamID+password+"</a>";
 
 			document.getElementById("overlay").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='overlaylink' href='"+baseURL+"featured.html?session="+response.streamID+password+"'>"+baseURL+"featured.html?session="+response.streamID+password+"</a>";
 			document.getElementById("overlay").raw = baseURL+"featured.html?session="+response.streamID+password;
@@ -1184,32 +1192,34 @@ function update(response, sync=true){
 				document.body.classList.remove("hidelinks");
 			}
 			
-			document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
-			document.getElementById("docklink").href = document.getElementById("dock").raw;
+			try {
+				document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
+				document.getElementById("docklink").href = document.getElementById("dock").raw;
 
-			document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
-			document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
+				document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
+				document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
 
-			document.getElementById("emoteswalllink").innerText = hideLinks ? "Click to open link" : document.getElementById("emoteswall").raw;
-			document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
-			
-			document.getElementById("hypemeterlink").innerText = hideLinks ? "Click to open link" : document.getElementById("hypemeter").raw;
-			document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
-			
-			document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
-			document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
-			
-			document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
-			document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
-			
-			document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
-			document.getElementById("polllink").href = document.getElementById("poll").raw;
-			
-			document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
-			document.getElementById("battlelink").href = document.getElementById("battle").raw;
-			
-			document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
-			document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
+				document.getElementById("emoteswalllink").innerText = hideLinks ? "Click to open link" : document.getElementById("emoteswall").raw;
+				document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
+				
+				document.getElementById("hypemeterlink").innerText = hideLinks ? "Click to open link" : document.getElementById("hypemeter").raw;
+				document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
+				
+				document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
+				document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
+				
+				document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
+				document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
+				
+				document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
+				document.getElementById("polllink").href = document.getElementById("poll").raw;
+				
+				document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
+				document.getElementById("battlelink").href = document.getElementById("battle").raw;
+				
+				document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
+				document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
+			} catch(e){}
 		
 		}
 		
@@ -1873,38 +1883,38 @@ function refreshLinks(){
 	} else {
 		document.body.classList.remove("hidelinks");
 	}
-	
-	document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
-	document.getElementById("docklink").href = document.getElementById("dock").raw;
+	try {
+		document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
+		document.getElementById("docklink").href = document.getElementById("dock").raw;
 
-	document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
-	document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
+		document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
+		document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
 
-	document.getElementById("emoteswalllink").innerText = hideLinks ? "Click to open link" : document.getElementById("emoteswall").raw;
-	document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
-	
-	document.getElementById("hypemeterlink").innerText = hideLinks ? "Click to open link" : document.getElementById("hypemeter").raw;
-	document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
-	
-	document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
-	document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
-	
-	document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
-	document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
-	
-	document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
-	document.getElementById("polllink").href = document.getElementById("poll").raw;
-	
-	document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
-	document.getElementById("battlelink").href = document.getElementById("battle").raw;
-	
-	document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
-	document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
+		document.getElementById("emoteswalllink").innerText = hideLinks ? "Click to open link" : document.getElementById("emoteswall").raw;
+		document.getElementById("emoteswalllink").href = document.getElementById("emoteswall").raw;
+		
+		document.getElementById("hypemeterlink").innerText = hideLinks ? "Click to open link" : document.getElementById("hypemeter").raw;
+		document.getElementById("hypemeterlink").href = document.getElementById("hypemeter").raw;
+		
+		document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
+		document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
+		
+		document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
+		document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
+		
+		document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
+		document.getElementById("polllink").href = document.getElementById("poll").raw;
+		
+		document.getElementById("battlelink").innerText = hideLinks ? "Click to open link" : document.getElementById("battle").raw;
+		document.getElementById("battlelink").href = document.getElementById("battle").raw;
+		
+		document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
+		document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
+	} catch(e){}
 }
 
 if (!chrome.browserAction){
 	chrome.browserAction = {};
-																																					  
 	
 	if (chrome.action && chrome.action.setIcon){
 		chrome.browserAction.setIcon = chrome.action.setIcon
@@ -2055,3 +2065,44 @@ function createCommandEntry(command = '', url = '') {
     
     return entry;
 }
+
+//bad words upload code
+/// Add these functions to handle file upload and deletion
+function uploadBadwordsFile() {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.txt';
+  fileInput.onchange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const contents = e.target.result;
+		console.log({cmd: 'uploadBadwords', data: contents});
+        chrome.runtime.sendMessage({cmd: 'uploadBadwords', data: contents}, (response) => {
+		  console.log(response);
+          if (response.success) {
+            alert('Badwords file uploaded successfully.');
+          } else {
+            alert('Failed to upload badwords file.');
+          }
+        });
+      };
+      reader.readAsText(file);
+    }
+  };
+  fileInput.click();
+}
+
+function deleteBadwordsFile() {
+  if (confirm('Are you sure you want to delete the custom badwords file?')) {
+    chrome.runtime.sendMessage({cmd: 'deleteBadwords'}, (response) => {
+      if (response.success) {
+        alert('Badwords file deleted successfully.');
+      } else {
+        alert('Failed to delete badwords file.');
+      }
+    });
+  }
+}
+

@@ -285,6 +285,7 @@ function addSafePhrase(cleanedText, score=-1) {
 	//console.log("Added ("+score+"): "+cleanedText);
 }
 
+
 let censorProcessingSlots = [false, false, false]; // ollama can handle 4 requests at a time by default I think, but 3 is a good number.
 async function censorMessageWithOllama(data) {
     if (!data.chatmessage) {
@@ -292,8 +293,9 @@ async function censorMessageWithOllama(data) {
     }
 	
 	const { isSafe, cleanedText } = isSafePhrase(data);
+	
 	if (isSafe){
-		// addSafePhrase(cleanedText);
+		addRecentMessage(cleanedText);
 		quickPass+=1;
 		return true;
 	} // it's safe
@@ -333,6 +335,7 @@ async function censorMessageWithOllama(data) {
 			return false;
         } else {
 			addSafePhrase(cleanedText, score);
+			addRecentMessage(cleanedText);
             return true;
         }
     } catch (error) {
@@ -342,6 +345,105 @@ async function censorMessageWithOllama(data) {
     }
     return false;
 }
+
+//
+const recentMessages = [];
+const MAX_RECENT_MESSAGES = 10;
+
+function addRecentMessage(message) {
+    recentMessages.push(message);
+    if (recentMessages.length > MAX_RECENT_MESSAGES) {
+        recentMessages.shift(); // Remove the oldest message if we exceed the limit
+    }
+}
+
+async function censorMessageWithHistory(data) {
+    if (!data.chatmessage) {
+        return true;
+    }
+	
+	let cleanedText = data.chatmessage;
+	if (!data.textonly) {
+		cleanedText = decodeAndCleanHtml(cleanedText);
+	}
+	console.log(cleanedText);
+	
+	console.log("censorMessageWithHistory");
+	
+    const availableSlot = censorProcessingSlots.findIndex(slot => !slot);
+    if (availableSlot === -1) {
+        return false; // All slots are occupied
+    }
+    censorProcessingSlots[availableSlot] = true;
+
+    try {
+		
+        let censorInstructions = `Analyze the following live text chat history and the latest message for any signs of hate, extreme negativity, foul language, swear words, bad words, profanity, racism, sexism, political messaging, civil war, violence, threats, or any content that may be offensive to a general public audience. Messages may be long or very short, such as a single letter or a collection of emoji-based characters. Pay special attention to words that might be spelled out across multiple messages. Respond ONLY with a number rating out of 5, where 0 implies no offensive content and 5 implies clearly offensive content. Any message containing profanity or curse words automatically qualifies as a 5. ONLY respond with a number between 0 and 5 and nothing else.
+
+Recent chat history:
+${recentMessages.join('\n')}
+
+Latest message:
+${data.chatname} says: ${cleanedText}`;
+
+        let llmOutput = await callOllamaAPI(censorInstructions);
+        console.log(llmOutput);
+		
+        censorProcessingSlots[availableSlot] = false;
+        
+        let match = llmOutput.match(/\d+/);
+        let score = match ? parseInt(match[0]) : 0;
+        
+        if (score > 3 || llmOutput.length > 1) {
+            if (settings.ollamaCensorBotBlockMode) {
+                return false;
+            } else if (isExtensionOn) {
+                sendToDestinations({ delete: data });
+            }
+            return false;
+        } else {
+            addSafePhrase(cleanedText, score);
+			addRecentMessage(cleanedText);
+            return true;
+        }
+    } catch (error) {
+        console.error("Error processing message history:", error);
+    } finally {
+        censorProcessingSlots[availableSlot] = false;
+    }
+    return false;
+}
+
+// Function to get recent messages from IndexedDB
+function getRecentMessages(chatname, limit, timeWindow) {
+    return new Promise((resolve, reject) => {
+        const endTime = new Date();
+        const startTime = new Date(endTime.getTime() - timeWindow);
+        
+        const transaction = db.transaction([storeName], "readonly");
+        const store = transaction.objectStore(storeName);
+        const index = store.index("unique_user");
+        const range = IDBKeyRange.bound([chatname, "user"], [chatname, "user"]);
+        
+        const request = index.openCursor(range, "prev");
+        const results = [];
+        
+        request.onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor && results.length < limit && cursor.value.timestamp >= startTime) {
+                results.push(cursor.value);
+                cursor.continue();
+            } else {
+                resolve(results);
+            }
+        };
+        
+        request.onerror = (event) => {
+            reject(new Error("Error fetching recent messages: " + event.target.error));
+        };
+    });
+}
+
 
 let isProcessing = false;
 const lastResponseTime = {};

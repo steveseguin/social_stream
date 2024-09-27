@@ -1,1 +1,0 @@
-Contents of this folder moved to ../sources/websocket/ instead
