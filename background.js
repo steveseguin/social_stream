@@ -1132,6 +1132,8 @@ function updateExtensionState(sync = true) {
 	log("updateExtensionState", isExtensionOn);
 
 	if (isExtensionOn) {
+		
+		// document.title = "Keep Open - Social Stream Ninja";
 
 		if (chrome.browserAction && chrome.browserAction.setIcon){
 			chrome.browserAction.setIcon({ path: "/icons/on.png" });
@@ -1145,6 +1147,9 @@ function updateExtensionState(sync = true) {
 		setupSocket();
 		setupSocketDock();
 	} else {
+		
+		// document.title = "Idle - Social Stream Ninja";
+		
 		if (iframe) {
 			iframe.src = null;
 			iframe.remove();
@@ -3099,7 +3104,7 @@ function setupSocketDock() {
 	} else if (!isExtensionOn) {
 		return;
 	}
-
+	
 	if (reconnectionTimeoutDock) {
 		clearTimeout(reconnectionTimeoutDock);
 		reconnectionTimeoutDock = null;
@@ -3167,7 +3172,7 @@ function setupSocket() {
 	} else if (!isExtensionOn) {
 		return;
 	}
-
+	
 	if (reconnectionTimeout) {
 		clearTimeout(reconnectionTimeout);
 		reconnectionTimeout = null;
