@@ -2101,6 +2101,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "pollEnabled") {
 				initializePoll();
 			}
+			
+			if (request.setting == "wordcloud") {
+				setWordcloud(request.value);
+			}
 
 			if (request.setting == "customwaitlistmessagetoggle" || request.setting == "customwaitlistmessage" || request.setting == "customwaitlistcommand") {
 				sendWaitlistConfig(null, true); // stop hype and clear old hype
@@ -2812,6 +2816,14 @@ async function sendToDestinations(message) {
 	try {
 		if (settings.pollEnabled){
 			sendTargetP2P(message, "poll");
+		}
+	} catch (e) {
+		console.error(e);
+	}
+	
+	try {
+		if (settings.wordcloud){
+			sendTargetP2P(message, "wordcloud");
 		}
 	} catch (e) {
 		console.error(e);
@@ -3762,7 +3774,14 @@ function processWaitlist(data) {
 	}
 }
 
-
+function setWordcloud(state=true) {
+	console.log(setWordcloud);
+	try {
+		if (isExtensionOn){
+			sendTargetP2P({state:state}, "wordcloud");
+		}
+	} catch (e) {}
+}
 
 function initializePoll() {
 	try {

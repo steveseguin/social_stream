@@ -37,6 +37,8 @@
     --hype-meter-color: #00ff5e;
     --waitlist-color: #ff00d2;
 	--ticker-color: #ff3a3bdd;
+	--gif-color: #9a3f7bdd;
+	--wordcloud-color: #6a6bffdd;
 	--poll-color: #a3ff3bdd;
     --download-link: blue;
     --font-family: "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
@@ -566,6 +568,14 @@ h2.waitlist_mode_title {
 
 h2.ticker_mode_title {
     color: var(--ticker-color);
+}
+
+h2.wordcloud_mode_title {
+    color: var(--wordcloud-color);
+}
+
+h2.custom_gif_commands_title {
+    color: var(--gif-color);
 }
 
 h2.poll_mode_title {
@@ -3112,6 +3122,56 @@ input:checked + .slider:before {
                                 <div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
                                     <input type="text" id="googlefont6" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam6="googlefont" />
                                     <label for="googlefont6"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+			
+			<div class="link" title="Word cloud overlay">
+                <h2 class="wordcloud_mode_title">
+                    <span data-translate="wordcloudmeter">Word Cloud </span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#wordcloud" title="Jump to the wordcloud link options."><span data-translate="options">[options]</span></a>
+                </h2>
+                <h3>
+                    <span data-translate="when-enabled-a-wordcloud">
+                       A wordcloud overlay. Chat messages that contain a single word are allowed.
+                    </span>
+                </h3>
+				<div id="wordcloud" data-raw="" class="streaming_chat"><a href="" id="wordcloudlink"></a></div>
+            </div>
+            <div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-wordcloud-general-options" />
+                    <label class="collapsible-label" for="wrapper-wordcloud-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group wordcloud">
+                                <h3><span data-translate="must-enable-the-trigger-to-use">Must enable the trigger to use</span></h3>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="wordcloud" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="enable-the-wordcloud">🚦 Enable </span>
+                                </div>
+								
+                                <h3><span data-translate="other-customization-options">Other customization options</span></h3>
+                                <div>
+                                    <span data-translate="font-family">
+                                        Font Family
+                                    </span>
+                                    <select data-optionparam6="font">
+                                        <option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
+                                        <option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
+                                    </select>
+                                </div>
+								<br>
+                                <div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
+                                    <input type="text" id="googlefont7" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam7="googlefont" />
+                                    <label for="googlefont7"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
                                 </div>
                             </div>
                         </div>

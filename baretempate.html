@@ -1,3 +1,10 @@
+<!-- 
+This is a simple boilerplate for creating custom Social Stream Ninja overlay pages and other integrations with the Social Stream Ninja IFRAME API.
+Messages can be sent to and from the API.
+By default, the API is configured in a consume-all messages mode, which is useful for most applications.
+Messages contain many fields, but the chatname, chatmessage, chatimg, and type are the primary ones.
+ -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,7 +54,7 @@
 	
 		// we get the data via this embedded iFRAME.
         const iframe = document.createElement("iframe");
-		const filename = new URL(window.location.href).pathname.split('/').pop().split('.')[0] || "dock";
+		const filename = "dock"; //new URL(window.location.href).pathname.split('/').pop().split('.')[0];
         iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label="+filename+"&cleanoutput&room=" + urlParams.get('session');
         iframe.style.width = "0px";
         iframe.style.height = "0px";

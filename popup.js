@@ -877,6 +877,9 @@ function update(response, sync=true){
 			document.getElementById("ticker").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='tickerlink' href='"+baseURL+"ticker.html?session="+response.streamID+password+"'>"+baseURL+"ticker.html?session="+response.streamID+password+"</a>";
 			document.getElementById("ticker").raw = baseURL+"ticker.html?session="+response.streamID+password;
 			
+			document.getElementById("wordcloud").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='wordcloudlink' href='"+baseURL+"wordcloud.html?session="+response.streamID+password+"'>"+baseURL+"wordcloud.html?session="+response.streamID+password+"</a>";
+			document.getElementById("wordcloud").raw = baseURL+"wordcloud.html?session="+response.streamID+password;
+			
 			document.getElementById("poll").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='polllink' href='"+baseURL+"poll.html?session="+response.streamID+password+"'>"+baseURL+"poll.html?session="+response.streamID+password+"</a>";
 			document.getElementById("poll").raw = baseURL+"poll.html?session="+response.streamID+password;
 			
@@ -989,6 +992,20 @@ function update(response, sync=true){
 								var ele = document.querySelector("input[data-param5='"+key+"']");
 								if (ele){
 									ele.checked = response.settings[key].param5;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("param6" in response.settings[key]){
+								var ele = document.querySelector("input[data-param6='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param6;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("param7" in response.settings[key]){
+								var ele = document.querySelector("input[data-param7='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param7;
 									updateSettings(ele, sync);
 								}
 							}
@@ -1119,6 +1136,20 @@ function update(response, sync=true){
 									updateSettings(ele, sync);
 								}
 							}
+							if ("textparam6" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam6='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam6;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("textparam7" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam7='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam7;
+									updateSettings(ele, sync);
+								}
+							}
 							if ("optionparam1" in response.settings[key]){
 								var ele = document.querySelector("select[data-optionparam1='"+key+"']");
 								if (ele){
@@ -1151,6 +1182,20 @@ function update(response, sync=true){
 								var ele = document.querySelector("select[data-optionparam5='"+key+"']");
 								if (ele){
 									ele.value = response.settings[key].optionparam5;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("optionparam6" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam6='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam6;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("optionparam7" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam7='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam7;
 									updateSettings(ele, sync);
 								}
 							}
@@ -1210,6 +1255,9 @@ function update(response, sync=true){
 				
 				document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
 				document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
+				
+				document.getElementById("wordcloudlink").innerText = hideLinks ? "Click to open link" : document.getElementById("wordcloud").raw;
+				document.getElementById("wordcloudlink").href = document.getElementById("wordcloud").raw;
 				
 				document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
 				document.getElementById("polllink").href = document.getElementById("poll").raw;
@@ -1546,6 +1594,17 @@ function updateSettings(ele, sync=true, value=null){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam6",  target:target, setting: ele.dataset.textparam6, "value": ele.value}, function (response) {});
 		}
+	} else if (ele.dataset.textparam7){
+		document.getElementById("wordcloud").raw = removeQueryParamWithValue(document.getElementById("wordcloud").raw, ele.dataset.textparam7);
+		
+		if (ele.value){
+			document.getElementById("wordcloud").raw = updateURL(ele.dataset.textparam7+"="+encodeURIComponent(ele.value), document.getElementById("wordcloud").raw);
+		}
+		document.getElementById("wordcloud").raw = document.getElementById("wordcloud").raw.replace("&&", "&");
+		document.getElementById("wordcloud").raw = document.getElementById("wordcloud").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam7",  target:target, setting: ele.dataset.textparam7, "value": ele.value}, function (response) {});
+		}
 	} else if (ele.dataset.optionparam1){
 		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.optionparam1);
 		
@@ -1592,6 +1651,18 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam6", target:target,  setting: ele.dataset.optionparam6, "value": ele.value}, function (response) {});
+		}
+	} else if (ele.dataset.optionparam7){
+		document.getElementById("wordcloud").raw = removeQueryParamWithValue(document.getElementById("wordcloud").raw, ele.dataset.optionparam7);
+		
+		if (ele.value){
+			document.getElementById("wordcloud").raw = updateURL(ele.dataset.optionparam7+"="+encodeURIComponent(ele.value), document.getElementById("wordcloud").raw);
+		}
+		
+		document.getElementById("wordcloud").raw = document.getElementById("wordcloud").raw.replace("&&", "&");
+		document.getElementById("wordcloud").raw = document.getElementById("wordcloud").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam7", target:target,  setting: ele.dataset.optionparam7, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.param2){
 		if (ele.checked){
@@ -1901,6 +1972,9 @@ function refreshLinks(){
 		
 		document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
 		document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
+		
+		document.getElementById("wordcloudlink").innerText = hideLinks ? "Click to open link" : document.getElementById("wordcloud").raw;
+		document.getElementById("wordcloudlink").href = document.getElementById("wordcloud").raw;
 		
 		document.getElementById("polllink").innerText = hideLinks ? "Click to open link" : document.getElementById("poll").raw;
 		document.getElementById("polllink").href = document.getElementById("poll").raw;
