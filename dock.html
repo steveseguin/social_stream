@@ -2677,6 +2677,12 @@
 				trimChat = urlParams.get("trim") || 200;
 				trimChat = parseInt(trimChat) || 0;
 			}
+			
+			var trimName = false;
+			if (urlParams.has("trimname")) {
+				trimName = urlParams.get("trimname") || 8;
+			}
+			
 
 			var alignbottom = false;
 			if (urlParams.has("alignbottom")) {
@@ -7001,26 +7007,30 @@
 						data.bot = true;
 					}
 
-					var chatname = "";
+					var chatname = data.chatname;
 
 					var afterName = ":";
 					if (twoLines) {
 						afterName = "";
 					}
+					
+					if (trimName){
+						chatname = truncateText(chatname, trimName);
+					} 
 
 					if (largeavatar) {
-						chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + (data.chatname || "") + '<span class="hl-badges">' + chatbadges + "</span></div>";
-					} else if (data.chatname) {
+						chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + (chatname || "") + '<span class="hl-badges">' + chatbadges + "</span></div>";
+					} else if (chatname) {
 						if (compactmode) {
 							if (specialMessage) {
 								chatname = '<div dir="' + textDirection + '" class="hl-name' + splitMode + '"></div>';
 							} else if (chatbadges) {
-								chatname = '<span class="hl-badges">' + chatbadges + "</span><div " + nameColor + ' dir="' + textDirection + '" class="hl-name' + splitMode + '">' + data.chatname + afterName + "</div>";
+								chatname = '<span class="hl-badges">' + chatbadges + "</span><div " + nameColor + ' dir="' + textDirection + '" class="hl-name' + splitMode + '">' + chatname + afterName + "</div>";
 							} else {
-								chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + data.chatname + afterName + "</div>";
+								chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + chatname + afterName + "</div>";
 							}
 						} else {
-							chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + chatbadges + data.chatname + "</div>";
+							chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + chatbadges + chatname + "</div>";
 						}
 					} else if (specialMessage && compactmode) {
 						chatname = '<div dir="' + textDirection + '" class="hl-name' + splitMode + '"></div>';
@@ -7056,7 +7066,6 @@
 					if (trimChat){
 						chatmessage = truncateHTMLContent(chatmessage, trimChat);
 					}
-
 
 					if (largeavatar) {
 						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived + "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
@@ -7977,6 +7986,13 @@
 				msg.overlayNinja.response = data;
 
 				send2Extension(msg.overlayNinja);
+			}
+			
+			function truncateText(text, maxLength) {
+				if (text.length <= maxLength) {
+					return text;
+				}
+				return text.slice(0, maxLength - 1) + '...';
 			}
 			
 			function truncateHTMLContent(html, maxLength) {
