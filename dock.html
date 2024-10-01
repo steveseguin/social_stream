@@ -278,6 +278,10 @@
 			  cursor: pointer;
 			  transition: background-color 0.3s;
 			}
+			
+			.expand .bubble {
+				vertical-align: top;
+			}
 
 			#obsControlModal button:hover {
 			  background-color: #666;
@@ -2947,7 +2951,7 @@
 
 			var flexOrNotToFlex = "flex";
 
-			if (urlParams.has("horizontal")) {
+			if (urlParams.has("horizontal")) { 
 				tainted = true;
 				horizontal = true;
 				flexOrNotToFlex = "inline-block";
@@ -2959,13 +2963,20 @@
 					getById("menu").style.top = "72px";
 					getById("output").style.overflow = "visible";
 				} else if (stylizeEmoji) {
-					getById("output").style.maxHeight = "40px";
+					getById("output").style.maxHeight = "70px";
 					getById("menu").style.top = "42px";
 					getById("output").style.overflow = "hidden";
 				} else {
-					getById("output").style.maxHeight = "30px";
+					getById("output").style.maxHeight = "60px";
 					getById("menu").style.top = "42px";
 					getById("output").style.overflow = "hidden";
+				}
+				if (largeavatar){
+					if (twoLines){
+						getById("output").style.maxHeight = "140px";
+					} else {
+						getById("output").style.maxHeight = "100px";
+					}
 				}
 
 				getById("output").style.position = "absolute";
