@@ -1,3 +1,12 @@
+try {
+	if (document.title=="Keep Open - Social Stream Ninja"){
+		window.close();
+	}
+	if (document.title == "Close me - Social Stream Ninja"){
+		window.close();
+	}
+} catch(e){}
+
 var isExtensionOn = false;
 var iframe = null;
 
@@ -1130,11 +1139,11 @@ var intervalMessages = {};
 
 function updateExtensionState(sync = true) {
 	log("updateExtensionState", isExtensionOn);
+	
+	document.title = "Keep Open - Social Stream Ninja";
 
 	if (isExtensionOn) {
 		
-		// document.title = "Keep Open - Social Stream Ninja";
-
 		if (chrome.browserAction && chrome.browserAction.setIcon){
 			chrome.browserAction.setIcon({ path: "/icons/on.png" });
 		}
@@ -4413,6 +4422,7 @@ eventer(messageEvent, async function (e) {
 				}
 			} else if (e.data.action === "alert") {
 				if (e.data.value && e.data.value == "Stream ID is already in use.") {
+					document.title = "Close me? - Social Stream Ninja"
 					isExtensionOn = false;
 					updateExtensionState();
 					try {
@@ -8688,4 +8698,12 @@ function monitorFileChanges() {
 		}
 	}, 1000); // Check for changes every second
 }
+
+window.addEventListener('beforeunload', async function() {
+  document.title = "Close me - Social Stream Ninja";
+});
+
+window.addEventListener('unload', async function() {
+  document.title = "Close me - Social Stream Ninja";
+});
 
