@@ -4947,13 +4947,14 @@
 
 						var titleText = false;
 						if (tab.title) {
-							titleText = document.createTextNode(tab.title.slice(0, 100) + " - ");
+							titleText = document.createTextNode(tab.title.slice(0, 100));
 						}
 						const smallText = document.createElement("small");
 						const italicsText = document.createElement("i");
-						italicsText.textContent = `(${tab.url.slice(0, 100)})`;
-
-						smallText.appendChild(italicsText);
+						if (tab.url){
+							italicsText.textContent = ` - (${tab.url.slice(0, 100)})`;
+							smallText.appendChild(italicsText);
+						}
 
 						if (tab.favIconUrl) {
 							const img = document.createElement("img");
@@ -8029,6 +8030,25 @@
 				if (!data) {
 					return;
 				}
+				if (tid){
+					if (typeof tid == "object") {
+						if (tid.includes("TTS")) {
+							tid = tid.filter(item => item !== "TTS");
+							if (data){
+								speak(data, true);
+							}
+							if (!tid.length){
+								return;
+							}
+						}
+					} else if (tid === "TTS") {
+						if (data){
+							speak(data, true);
+						}
+						return;
+					}
+				}
+				
 				var msg = {};
 				msg.overlayNinja = {};
 				msg.overlayNinja.tid = tid; // specific or array

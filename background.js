@@ -4240,6 +4240,14 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 							}
 						} catch (e) {}
 					}
+					
+					let ttsTab = {};
+					ttsTab.url = "";
+					ttsTab.id = "TTS";
+					ttsTab.title = "Text to Speech your message";
+					ttsTab.favIconUrl = "./icons/tts_incoming_messages_on.png";
+					
+					tabsList.push(ttsTab)
 
 					sendDataP2P({ tabsList: tabsList }, UUID);
 				});
