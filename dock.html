@@ -279,7 +279,7 @@
 			  transition: background-color 0.3s;
 			}
 			
-			.expand .bubble {
+			.horizontal .bubble {
 				vertical-align: top;
 			}
 
@@ -540,6 +540,16 @@
 				display: flex;
 				margin-top: 8px;
 			}
+			
+			.allowfat .hl-message{
+				max-width: 300px;
+				word-break: keep-all;
+				line-break: loose;
+				overflow-wrap: break-word;
+				overflow:auto;
+				white-space: normal;
+			}
+				
 
 			.twoLines.alignright .hl-firstline {
 				display: flex;
@@ -705,6 +715,9 @@
 				margin: 0;
 				padding: 0;
 			}
+			horizontal .largeavatar .hl-leftside {
+				margin: 0px;
+			}
 
 			.hl-righttopline {
 				max-height: 16px;
@@ -775,6 +788,20 @@
 				word-break: break-all;
 				line-break: anywhere;
 			}
+			
+			@keyframes slideLeft { 
+				from {
+					transform: translateX(150%);
+				}
+				to {
+					transform: translateX(0px);
+				}
+			}
+			
+			.horizontal .highlight-chat {
+				animation: expand 4s, slideLeft 1s ease-in-out forwards;
+			}
+			
 
 			.larger-emojis {
 				top: 0px;
@@ -785,19 +812,19 @@
 				overflow: hidden;
 			}
 
-			.highlight-chat.compactmode.expand {
+			.horizontal .highlight-chat.compactmode {
 				padding-top: 3px;
 				background-color: #0000;
 			}
 
-			.compactmode.expand.time-arrived {
+			.horizontal .compactmode.time-arrived {
 				margin: auto 0;
 			}
 			.larger-emojis:not(.expand) .hl-message {
 				line-height: 34px !important;
 			}
 
-			.highlight-chat.expand.larger-emojis {
+			.horizontal .highlight-chat.larger-emojis {
 				line-height: 30px;
 				height: 40px;
 				max-height: 40px;
@@ -911,11 +938,8 @@
 				0% {
 					max-width: 0px;
 				}
-				20% {
-					max-width: 300px;
-				}
-				50% {
-					max-width: 800px;
+				40% {
+					max-width: 600px;
 				}
 				100% {
 					max-width: 20000px;
@@ -1135,7 +1159,6 @@
 				text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ffe60073, 0 0 40px #ffe60073, 0 0 50px #ffe60073, 0 0 60px #ffe60073, 0 0 70px #ffe60073;
 				padding-left: 5px;
 				margin: auto;
-				white-space: nowrap;
 				white-space: nowrap;
 			}
 
@@ -2632,6 +2655,7 @@
 			var largeavatar = false;
 			if (urlParams.has("largeavatar")) {
 				largeavatar = true;
+				getById("output").classList.add("largeavatar");
 			} else if (urlParams.has("twolines")) {
 				tainted = true;
 				twoLines = true;
@@ -2952,6 +2976,7 @@
 			var flexOrNotToFlex = "flex";
 
 			if (urlParams.has("horizontal")) { 
+				
 				tainted = true;
 				horizontal = true;
 				flexOrNotToFlex = "inline-block";
@@ -2975,13 +3000,23 @@
 					if (twoLines){
 						getById("output").style.maxHeight = "140px";
 					} else {
-						getById("output").style.maxHeight = "100px";
+						getById("output").style.maxHeight = "120px";
 					}
 				}
 
 				getById("output").style.position = "absolute";
 				getById("output").style.textAlign = "right";
-				getById("output").style.whiteSpace = "nowrap";
+				
+				if (!(urlParams.has("compact") || urlParams.has("overlaymode"))) {
+					getById("output").style.whiteSpace = "nowrap"
+				} else {
+					getById("output").style.maxHeight = "200px";
+					getById("output").classList.add("allowfat");
+					getById("output").style.whiteSpace = "nowrap"
+				}
+				
+				getById("output").classList.add('horizontal');
+				
 				document.body.classList.remove("notcompactmode");
 				compactmode = true;
 				customNodeLimit = 15;
@@ -7056,7 +7091,7 @@
 
 					var expand = "";
 
-					if (horizontal) {
+					if (horizontal && !compactmode) {
 						expand = " expand";
 					}
 
