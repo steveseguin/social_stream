@@ -94,7 +94,13 @@
 			}
 
 			isPlaying = true;
-			const mediaUrl = mediaQueue.shift();
+			let mediaUrl = mediaQueue.shift();
+			
+			
+			const youtubeVideoId = getYouTubeVideoId(mediaUrl);
+			if (youtubeVideoId) {
+				mediaUrl = createYouTubeEmbed(youtubeVideoId);
+			}
 
 			if (isEmbeddedContent(mediaUrl)) {
 				displayEmbeddedContent(mediaUrl);
@@ -123,6 +129,16 @@
 		function isEmbeddedContent(content) {
 			return content.includes('<iframe') || content.includes('<embed');
 		}
+		
+		function getYouTubeVideoId(url) {
+			const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+			const match = url.match(regExp);
+			return (match && match[2].length === 11) ? match[2] : null;
+		}
+
+		function createYouTubeEmbed(videoId) {
+			return `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+		}
 
 		function displayEmbeddedContent(content) {
 			let embedElement;
@@ -140,7 +156,7 @@
 				}
 			}
 
-			const src = embedElement.src;
+			let src = embedElement.src;
 			for (let i = embedElement.attributes.length - 1; i >= 0; i--) {
 				embedElement.removeAttribute(embedElement.attributes[i].name);
 			}
@@ -156,6 +172,7 @@
 			embedElement.style.width = '100%';
 			embedElement.style.height = '100%';
 			embedElement.style.border = 'none';
+			embedElement.setAttribute("allow","autoplay");
 
 			embedElement.replaceWith(embedElement.cloneNode(true));
 
