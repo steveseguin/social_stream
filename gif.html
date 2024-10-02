@@ -129,19 +129,31 @@
 			if (content.startsWith('http') || content.endsWith('.html')) {
 				embedElement = document.createElement('iframe');
 				embedElement.src = content;
-				embedElement.style.width = '100%';
-				embedElement.style.height = '100%';
-				embedElement.style.border = 'none';
 			} else {
 				const tempDiv = document.createElement('div');
 				tempDiv.innerHTML = content;
-				embedElement = tempDiv.firstElementChild;
-				if (!embedElement || (embedElement.tagName !== 'IFRAME' && embedElement.tagName !== 'EMBED')) {
+				embedElement = tempDiv.querySelector('iframe, embed');
+				if (!embedElement) {
 					console.error('Invalid embedded content');
 					playNextMedia();
 					return;
 				}
 			}
+
+			// Remove all attributes except src
+			const src = embedElement.src;
+			for (let i = embedElement.attributes.length - 1; i >= 0; i--) {
+				embedElement.removeAttribute(embedElement.attributes[i].name);
+			}
+			embedElement.src = src;
+
+			// Set style to ensure it obeys your CSS
+			embedElement.style.width = '100%';
+			embedElement.style.height = '100%';
+			embedElement.style.border = 'none';
+
+			// Remove all event listeners
+			embedElement.replaceWith(embedElement.cloneNode(true));
 
 			mediaContainer.innerHTML = '';
 			mediaContainer.appendChild(embedElement);
