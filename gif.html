@@ -51,7 +51,8 @@
         const mediaContent = document.getElementById('mediaContent');
         let mediaQueue = [];
         let isPlaying = false;
-        const minDisplayTime = 5000; 
+        const minDisplayTime = parseInt(urlParams.get('showtime')) || 5000; 
+		
 		const fadeoutTime = 300
 
         function processData(data) {
@@ -87,32 +88,73 @@
         }
 
         function playNextMedia() {
-            if (mediaQueue.length === 0) {
-                isPlaying = false;
-                return;
-            }
+			if (mediaQueue.length === 0) {
+				isPlaying = false;
+				return;
+			}
 
-            isPlaying = true;
-            const mediaUrl = mediaQueue.shift();
-            const fileExtension = mediaUrl.split('.').pop().toLowerCase();
+			isPlaying = true;
+			const mediaUrl = mediaQueue.shift();
 
-            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
-                displayImage(mediaUrl);
-            } else if (['mp4', 'webm'].includes(fileExtension)) {
-                displayVideo(mediaUrl);
-            } else if (['mp3', 'wav', 'ogg'].includes(fileExtension)) {
-                playAudio(mediaUrl);
-            } else if (fileExtension === 'svg') {
-                displaySVG(mediaUrl);
-            } else if (mediaUrl.split('/').pop().split('.').length == 1) {
-                displayImage(mediaUrl); // Assume it's an image
-            } else if (mediaUrl.split('/').pop().split('.').pop().length > 4) {
-                displayImage(mediaUrl); // Assume it's an image
-            } else {
-                console.error('Unsupported file type:', fileExtension);
-                playNextMedia();
-            }
-        }
+			if (isEmbeddedContent(mediaUrl)) {
+				displayEmbeddedContent(mediaUrl);
+			} else {
+				const fileExtension = mediaUrl.split('.').pop().toLowerCase();
+
+				if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
+					displayImage(mediaUrl);
+				} else if (['mp4', 'webm'].includes(fileExtension)) {
+					displayVideo(mediaUrl);
+				} else if (['mp3', 'wav', 'ogg'].includes(fileExtension)) {
+					playAudio(mediaUrl);
+				} else if (fileExtension === 'svg') {
+					displaySVG(mediaUrl);
+				} else if (fileExtension === 'html' || mediaUrl.split('/').pop().split('.').length == 1) {
+					displayEmbeddedContent(mediaUrl);
+				} else if (mediaUrl.split('/').pop().split('.').pop().length > 4) {
+					displayImage(mediaUrl);
+				} else {
+					console.error('Unsupported file type:', fileExtension);
+					playNextMedia();
+				}
+			}
+		}
+
+		function isEmbeddedContent(content) {
+			return content.includes('<iframe') || content.includes('<embed');
+		}
+
+		function displayEmbeddedContent(content) {
+			let embedElement;
+			if (content.startsWith('http') || content.endsWith('.html')) {
+				embedElement = document.createElement('iframe');
+				embedElement.src = content;
+				embedElement.style.width = '100%';
+				embedElement.style.height = '100%';
+				embedElement.style.border = 'none';
+			} else {
+				const tempDiv = document.createElement('div');
+				tempDiv.innerHTML = content;
+				embedElement = tempDiv.firstElementChild;
+				if (!embedElement || (embedElement.tagName !== 'IFRAME' && embedElement.tagName !== 'EMBED')) {
+					console.error('Invalid embedded content');
+					playNextMedia();
+					return;
+				}
+			}
+
+			mediaContainer.innerHTML = '';
+			mediaContainer.appendChild(embedElement);
+			fadeIn();
+
+			setTimeout(() => {
+				fadeOut(() => {
+					mediaContainer.innerHTML = '';
+					mediaContainer.appendChild(mediaContent);
+					playNextMedia();
+				});
+			}, minDisplayTime);
+		}
 
         function displayImage(url) {
             const img = new Image();
