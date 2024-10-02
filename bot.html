@@ -1457,6 +1457,8 @@
 
 			var speechLang = "en-US";
 			var speech = false;
+			
+			
 			var English = true;
 			var voice = false;
 			var voices = window.speechSynthesis.getVoices();
@@ -1486,7 +1488,7 @@
 					document.getElementById("tts").classList.remove("hidden");
 					document.getElementById("tts").classList.add("pressed");
 				}
-				var speech = true;
+				speech = true;
 				speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || readDonos || newmembertts || ttsclicked || "en-US";
 				if (speechLang.split("-")[0].toLowerCase() == "en") {
 					English = true;
@@ -1509,6 +1511,8 @@
 				ttsSpeakChatname = false;
 				English = false;
 			}
+			
+			var speechOriginal = speech;
 
 			if (urlParams.has("simpletts")) {
 				English = false;
@@ -1902,6 +1906,8 @@
 							} catch (e) {
 								console.error(e);
 							}
+							
+							
 
 							//console.log(e.data.dataReceived.overlayNinja);
 							if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
@@ -2416,8 +2422,10 @@
 								} catch (e) {}
 							}
 							document.getElementById("output").classList.remove(transitionType);
-
 							
+							if ("tts" in data){
+								speech = speechOriginal || (data.tts ? true : false);
+							}
 							
 							if (speech) {
 								var msgPlain = document.getElementById("message"); // text only

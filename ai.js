@@ -507,9 +507,9 @@ async function processMessageWithOllama(data) {
 		}
         const response = await processUserInput(cleanedText, data, additionalInstructions);
 		
-		if (response){
+		if (response && !(response.toLowerCase().startsWith("not available"))){
 			
-			sendTargetP2P({"chatmessage":response,"chatname":botname, "chatimg":"./icons/bot.png", "type":"socialstream", "request": data}, "bot");
+			sendTargetP2P({"chatmessage":response,"chatname":botname, "chatimg":"./icons/bot.png", "type":"socialstream", "request": data, "tts": (settings.ollamatts ? true : false)}, "bot");
 			
 			if (!settings.ollamaoverlayonly){
 				const msg = {

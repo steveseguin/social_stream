@@ -2111,6 +2111,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				initializePoll();
 			}
 			
+			//if (request.setting == "ollamatts") {
+			//	sendTargetP2P({settings:settings}, "bot");
+			//}
+			
 			if (request.setting == "wordcloud") {
 				setWordcloud(request.value);
 			}
