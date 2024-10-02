@@ -140,14 +140,24 @@
 				}
 			}
 
-			// Remove all attributes except src
+			// Preserve src, width, height, and allowFullScreen attributes
 			const src = embedElement.src;
+			const width = embedElement.width;
+			const height = embedElement.height;
+			const allowFullScreen = embedElement.allowFullScreen;
+
+			// Remove all attributes
 			for (let i = embedElement.attributes.length - 1; i >= 0; i--) {
 				embedElement.removeAttribute(embedElement.attributes[i].name);
 			}
-			embedElement.src = src;
 
-			// Set style to ensure it obeys your CSS
+			// Restore preserved attributes
+			embedElement.src = src;
+			if (width) embedElement.width = width;
+			if (height) embedElement.height = height;
+			if (allowFullScreen) embedElement.allowFullScreen = allowFullScreen;
+
+			// Set style to ensure it fits in the container
 			embedElement.style.width = '100%';
 			embedElement.style.height = '100%';
 			embedElement.style.border = 'none';
@@ -155,6 +165,7 @@
 			// Remove all event listeners
 			embedElement.replaceWith(embedElement.cloneNode(true));
 
+			// Remove any surrounding paragraphs or links
 			mediaContainer.innerHTML = '';
 			mediaContainer.appendChild(embedElement);
 			fadeIn();
@@ -167,6 +178,8 @@
 				});
 			}, minDisplayTime);
 		}
+
+		// ... (rest of the code remains unchanged)
 
         function displayImage(url) {
             const img = new Image();
