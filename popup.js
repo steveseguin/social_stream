@@ -2113,15 +2113,23 @@ function removeUsername(username) {
 }
 
 function createCommandEntry(command = '', url = '') {
+    function encodeHTML(str) {
+        return str.replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;')
+                  .replace(/'/g, '&#039;');
+    }
+
     const entry = document.createElement('div');
     entry.className = 'custom-gif-command-entry';
     entry.innerHTML = `
         <div class="textInputContainer" style="width: 90%;">
-            <input type="text" class="textInput custom-command" value="${command}" autocomplete="off" placeholder="!command" data-textsetting="customGifCommand" />
+            <input type="text" class="textInput custom-command" value="${encodeHTML(command)}" autocomplete="off" placeholder="!command" data-textsetting="customGifCommand" />
             <label><span data-translate="chat-command">&gt; Chat Command</span></label>
         </div>
         <div class="textInputContainer" style="width: 90%;">
-            <input type="text" class="textInput custom-media-url" value="${url}" autocomplete="off" placeholder="https://media.giphy.com/media/..." data-textsetting="customGifUrl" />
+            <input type="text" class="textInput custom-media-url" value="${encodeHTML(url)}" autocomplete="off" placeholder="https://media.giphy.com/media/..." data-textsetting="customGifUrl" />
             <label><span data-translate="media-url">&gt; Media URL (GIF, image, or video)</span></label>
         </div>
         <button class="removeCustomGifCommand" style="width: auto; min-width: 60px; padding: 0 5px;">

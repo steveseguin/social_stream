@@ -140,32 +140,18 @@
 				}
 			}
 
-			// Preserve src, width, height, and allowFullScreen attributes
 			const src = embedElement.src;
-			const width = embedElement.width;
-			const height = embedElement.height;
-			const allowFullScreen = embedElement.allowFullScreen;
-
-			// Remove all attributes
 			for (let i = embedElement.attributes.length - 1; i >= 0; i--) {
 				embedElement.removeAttribute(embedElement.attributes[i].name);
 			}
-
-			// Restore preserved attributes
 			embedElement.src = src;
-			if (width) embedElement.width = width;
-			if (height) embedElement.height = height;
-			if (allowFullScreen) embedElement.allowFullScreen = allowFullScreen;
 
-			// Set style to ensure it fits in the container
 			embedElement.style.width = '100%';
 			embedElement.style.height = '100%';
 			embedElement.style.border = 'none';
 
-			// Remove all event listeners
 			embedElement.replaceWith(embedElement.cloneNode(true));
 
-			// Remove any surrounding paragraphs or links
 			mediaContainer.innerHTML = '';
 			mediaContainer.appendChild(embedElement);
 			fadeIn();
@@ -179,15 +165,12 @@
 			}, minDisplayTime);
 		}
 
-		// ... (rest of the code remains unchanged)
-
         function displayImage(url) {
             const img = new Image();
             img.onload = () => {
                 mediaContent.src = url;
                 fadeIn();
                 if (url.toLowerCase().endsWith('.gif')) {
-                    // For GIFs, we need to ensure it plays for at least minDisplayTime
                     const gifDuration = getGifDuration(img);
                     const displayTime = Math.max(gifDuration, minDisplayTime);
                     setTimeout(() => {
@@ -214,11 +197,10 @@
                 mediaContent.replaceWith(video);
                 fadeIn();
                 video.play();
-                const videoDuration = video.duration * 1000; // Convert to milliseconds
+                const videoDuration = video.duration * 1000; 
                 const displayTime = Math.max(videoDuration, minDisplayTime);
                 setTimeout(() => {
                     if (videoDuration < minDisplayTime) {
-                        // If video is shorter than minDisplayTime, loop it
                         video.loop = true;
                         setTimeout(() => {
                             video.loop = false;
