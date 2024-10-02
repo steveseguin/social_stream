@@ -3784,7 +3784,6 @@ function processWaitlist(data) {
 }
 
 function setWordcloud(state=true) {
-	console.log(setWordcloud);
 	try {
 		if (isExtensionOn){
 			sendTargetP2P({state:state}, "wordcloud");
@@ -4274,6 +4273,7 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 					callOllamaAPI(prompt, model, (chunk) => {
 						//console.log("Received chunk:", chunk);
 						sendDataP2P({ chatbotChunk: {value: chunk, target: request.target}}, UUID);
+						
 						// Process the chunk as needed
 					}).then((fullResponse) => {
 						//console.log("Full response:", fullResponse);

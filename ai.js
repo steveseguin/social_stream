@@ -82,7 +82,7 @@ async function rebuildIndex() {
 
 async function callOllamaAPI(prompt, model = null, callback = null) {
     const ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
-    let ollamamodel = model || settings.ollamamodel?.textsetting || "llama3.1:latest";
+    let ollamamodel = model || settings.ollamamodel?.textsetting || "llama3.2:latest";
     
     async function makeRequest(currentModel) {
         const isStreaming = callback !== null;
@@ -458,10 +458,13 @@ async function processMessageWithOllama(data) {
 	if (settings.ollamaRateLimitPerTab){
 		ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting)||0);
 	}
-    if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
-		isProcessing = false;
-        return; // Skip this message if we've responded recently
-    }
+	
+	if (!settings.ollamaoverlayonly){
+		if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
+			isProcessing = false;
+			return; // Skip this message if we've responded recently
+		}
+	}
     
 	let botname = "🤖💬";
 	if (settings.ollamabotname && settings.ollamabotname.textsetting){
@@ -503,14 +506,20 @@ async function processMessageWithOllama(data) {
 			botname = settings.ollamabotname.textsetting.trim();
 		}
         const response = await processUserInput(cleanedText, data, additionalInstructions);
-		log(response);
+		
 		if (response){
-			const msg = {
-				tid: data.tid,
-				response: botname+": " + response.trim()
-			};
-			processResponse(msg);
-			lastResponseTime[data.tid] = Date.now();
+			
+			sendTargetP2P({"chatmessage":response,"chatname":botname, "chatimg":"./icons/bot.png", "type":"socialstream", "request": data}, "bot");
+			
+			if (!settings.ollamaoverlayonly){
+				const msg = {
+					tid: data.tid,
+					response: botname+": " + response.trim()
+				};
+				processResponse(msg);
+			
+				lastResponseTime[data.tid] = Date.now();
+			}
 		}
     } catch (error) {
         console.error("Error processing message:", error);
