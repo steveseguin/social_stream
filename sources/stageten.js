@@ -177,12 +177,12 @@
 	
 	setInterval(function(){ // clear existing messages; just too much for a stream.
 	
-		if (document.querySelector("[class*='chatComponents_messageHistory']")){
-			if (!document.querySelector("[class*='chatComponents_messageHistory']").set123){
-				document.querySelector("[class*='chatComponents_messageHistory']").set123 = true;
+		if (document.querySelector('[role="tabpanel]')){
+			if (!document.querySelector('[[role="tabpanel]').set123){
+				document.querySelector('[role="tabpanel]').set123 = true;
 				console.log("LOADED SocialStream EXTENSION");
 				
-				onElementInserted(document.querySelector("[class*='chatComponents_messageHistory']"), function(element){
+				onElementInserted(document.querySelector('[role="tabpanel]'), function(element){
 					processMessage(element, false);
 				});
 			}
