@@ -1714,10 +1714,10 @@
 				}
 			}
 
-			.last-message {
+			.last-message:not(.horizontal) {
 				border: 3px white solid;
 			}
-			.last-message2 {
+			.last-message2:not(.horizontal) {
 				background-color: var(--pressed-color) !important;
 			}
 			.pressed {
@@ -2021,10 +2021,37 @@
 				margin-left: auto;
 				margin-right: 0;
 			}
+			
+			.horizontal .hl-message {
+				min-height: 24px;
+			}
+			
+			.alignright .horizontal .hl-donation {
+				padding-right: 11px;
+			}
+			
+			.alignright .horizontal {
+				direction: ltr; 
+			}
+			
+			.horizontal .hl-leftside:empty{
+				 display: none;
+			}
+			
+			.horizontal .hl-content {
+				align-content: center;
+			}
 
 			.alignright .compactmode .hl-message {
 				flex-direction: var(--flex-direction);
 				display: flex;
+				overflow:hidden;
+				text-overflow: ellipsis;
+			}
+			
+			.alignright .highlight-chat .hl-firstline {
+				overflow:hidden;
+				text-overflow: ellipsis;
 			}
 			
 			#meta {
