@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Browser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #search-container {
+            padding: 10px;
+            background-color: #f0f0f0;
+        }
+        #search-input {
+            width: 100%;
+            padding: 5px;
+            font-size: 16px;
+        }
+        #messages-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .message {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .message:hover {
+            background-color: #f9f9f9;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .message-content {
+            flex-grow: 1;
+        }
+        .user-name {
+            font-weight: bold;
+        }
+        .message-text {
+            margin-top: 5px;
+        }
+        .content-image {
+            max-height: 100px;
+            margin-top: 5px;
+        }
+        .donation {
+            color: green;
+            font-weight: bold;
+        }
+		img, svg, video {
+			max-width:20px;
+			max-height:20px;
+		}
+		.avatar {
+			max-width:40px;
+			max-height:40px;
+			width:40px;
+		}
+    </style>
+</head>
+<body>
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="Search messages...">
+    </div>
+    <div id="messages-container"></div>
+	<script type="text/javascript" src="./chathistory.js?v=1"></script>
+</body>
+</html>
