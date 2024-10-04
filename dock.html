@@ -781,7 +781,8 @@
 				padding-top: var(--padding-rows) !important;
 				padding-bottom: var(--padding-rows) !important;
 			}
-
+			
+			
 			.highlight-chat.expand {
 				animation: expand 2s;
 				overflow: visible;
@@ -799,9 +800,17 @@
 			}
 			
 			.horizontal .highlight-chat {
+				vertical-align:top;
 				animation: expand 4s, slideLeft 1s ease-in-out forwards;
 			}
 			
+			.horizontal .highlight-chat.fadein {
+				animation: expand 4s, slideLeft 1s ease-in-out forwards, fadein 2s;
+			}
+			
+			.horizontal .highlight-chat.fadeout {
+				animation:  expand 4s, slideLeft 1s ease-in-out forwards, fadeout 1s;
+			}
 
 			.larger-emojis {
 				top: 0px;
@@ -1822,6 +1831,9 @@
 				transition: opacity 0.5 ease-in-out;
 				opacity: 1;
 			}
+			
+
+			
 			@keyframes fadein {
 				0% {
 					opacity: 0;
@@ -2988,15 +3000,15 @@
 				getById("output").style.right = "0";
 				if (twoLines) {
 					getById("output").style.maxHeight = "70px";
-					getById("menu").style.top = "72px";
+					//getById("menu").style.top = "72px";
 					getById("output").style.overflow = "visible";
 				} else if (stylizeEmoji) {
 					getById("output").style.maxHeight = "70px";
-					getById("menu").style.top = "42px";
+					//getById("menu").style.top = "42px";
 					getById("output").style.overflow = "hidden";
 				} else {
 					getById("output").style.maxHeight = "60px";
-					getById("menu").style.top = "42px";
+					//getById("menu").style.top = "42px";
 					getById("output").style.overflow = "hidden";
 				}
 				if (largeavatar){
@@ -6340,7 +6352,7 @@
 				if (animateout) {
 					animateCSS(node, animateout); // animate then delete
 				} else if (fadeout && horizontal) {
-					node.classList.add("fadeout");
+					node.classList.add("fadeout"); 
 					setTimeout(
 						function (node) {
 							nodeRemove(node);
