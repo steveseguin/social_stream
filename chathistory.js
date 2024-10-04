@@ -44,11 +44,9 @@ function loadMessages(page = 0, direction = 'down') {
                     loadedMessages.push(cursor.value);
                     cursor.continue();
                 } else {
-                    //console.log(`Loaded ${loadedMessages.length} messages for page ${page}, direction: ${direction}`);
                     resolve(loadedMessages);
                 }
             } else {
-                //console.log(`Finished loading. Got ${loadedMessages.length} messages for page ${page}, direction: ${direction}`);
                 resolve(loadedMessages);
             }
         };
@@ -56,18 +54,13 @@ function loadMessages(page = 0, direction = 'down') {
     });
 }
 function loadMoreMessages(direction) {
-    //console.log(`Starting to load more messages: ${direction}`);
     if (isLoading) {
-        //console.log('Already loading, returning early');
         return;
     }
     isLoading = true;
-    //console.log('Set isLoading to true');
     const pageToLoad = direction === 'up' ? currentPage - 1 : currentPage + 1;
-    //console.log(`Attempting to load page: ${pageToLoad}`);
     loadMessages(pageToLoad, direction)
         .then(newMessages => {
-            //console.log(`Loaded ${newMessages.length} new messages`);
             if (newMessages.length > 0) {
                 if (direction === 'up') {
                     messages = [...newMessages, ...messages];
@@ -83,17 +76,13 @@ function loadMoreMessages(direction) {
                     const heightDiff = messagesContainer.scrollHeight - messagesContainer.scrollTop;
                     messagesContainer.scrollTop = messagesContainer.scrollHeight - heightDiff;
                 }
-                //console.log(`Updated currentPage: ${currentPage}, totalPages: ${totalPages}, total messages: ${messages.length}`);
             } else {
-                //console.log('No new messages loaded. Might have reached the end of available messages.');
             }
             isLoading = false;
-            //console.log('Set isLoading back to false');
         })
         .catch(error => {
             console.error("Error loading more messages:", error);
             isLoading = false;
-            //console.log('Set isLoading back to false after error');
         });
 }
 function removeOldMessages() {
@@ -101,6 +90,25 @@ function removeOldMessages() {
         const messagesToRemove = PAGE_SIZE;
         messages = messages.slice(messagesToRemove);
         totalPages--;
+    }
+}
+function formatTimestamp(timestamp) {
+    const now = new Date();
+    const messageDate = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - messageDate) / 1000);
+    if (diffInSeconds < 60) {
+        return 'Just now';
+    } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `${minutes}m ago`;
+    } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `${hours}h ago`;
+    } else if (diffInSeconds < 604800) {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `${days}d ago`;
+    } else {
+        return messageDate.toLocaleDateString();
     }
 }
 function renderMessages() {
@@ -115,8 +123,11 @@ function renderMessages() {
             <div class="message">
                 <img src="${message.chatimg}" alt="Avatar" class="avatar" data-error-hide="message">
                 <div class="message-content">
-                    <span class="user-name">${message.chatname}</span>
-                    <img src="./sources/images/${message.type}.png" alt="${message.type}" class="type-image" data-error-hide="self">
+                    <div class="message-header">
+                        <span class="user-name">${message.chatname}</span>
+                        <img src="./sources/images/${message.type}.png" alt="${message.type}" class="type-image" data-error-hide="self">
+                        <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
+                    </div>
                     <p class="message-text">${message.chatmessage}</p>
                     ${message.contentimg ? `<img src="${message.contentimg}" alt="Content" class="content-image" data-error-hide="self">` : ''}
                     ${message.donation ? `<p class="donation">Donation: ${message.donation}</p>` : ''}
@@ -146,25 +157,19 @@ messagesContainer.addEventListener('scroll', () => {
     const scrollPosition = messagesContainer.scrollTop + messagesContainer.clientHeight;
     const totalHeight = messagesContainer.scrollHeight;
     const scrollPercentage = (scrollPosition / totalHeight) * 100;
-    //console.log(`Scroll Percentage: ${scrollPercentage.toFixed(2)}%`);
     if (scrollPercentage > 80 && !isLoading) {
-        //console.log("Threshold met. Attempting to load more messages (DOWN)");
         loadMoreMessages('down');
     }
     if (messagesContainer.scrollTop === 0 && !isLoading) {
-        //console.log("Loading more messages (UP)");
         loadMoreMessages('up');
     }
 });
 function checkAndLoadMore() {
     const containerHeight = messagesContainer.clientHeight;
     const contentHeight = messagesContainer.scrollHeight;
-    //console.log(`Container height: ${containerHeight}, Content height: ${contentHeight}`);
     if (contentHeight <= containerHeight && !isLoading) {
-        //console.log("Container not full, loading more messages");
         loadMoreMessages('down');
     } else {
-        //console.log("Container is full or already loading");
     }
 }
 initDatabase()
