@@ -68,12 +68,36 @@
 			max-height:40px;
 			width:40px;
 		}
+		.export-container {
+			display: inline-block;
+			margin-left: 10px;
+		}
+
+		#export-button {
+			padding: 5px 10px;
+			background-color: #4CAF50;
+			color: white;
+			border: none;
+			cursor: pointer;
+		}
+
+		#export-format {
+			margin-left: 5px;
+		}
     </style>
 </head>
 <body>
-    <div id="search-container">
-        <input type="text" id="search-input" placeholder="Search messages...">
-    </div>
+	<div id="search-container">
+		<input type="text" id="search-input" placeholder="Search messages...">
+		<div class="export-container">
+			<button id="export-button">Download All</button>
+			<select id="export-format">
+				<option value="json">JSON</option>
+				<option value="tsv">TSV</option>
+				<option value="html">HTML</option>
+			</select>
+		</div>
+	</div>
     <div id="messages-container"></div>
 	<script type="text/javascript" src="./chathistory.js?v=1"></script>
 </body>

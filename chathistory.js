@@ -9,11 +9,16 @@ let totalPages = 0;
 let isLoading = false;
 const searchInput = document.getElementById('search-input');
 const messagesContainer = document.getElementById('messages-container');
+const exportButton = document.getElementById('export-button');
+const exportFormat = document.getElementById('export-format');
 function initDatabase() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, 1);
         request.onerror = event => reject(event.target.error);
-        request.onsuccess = event => resolve(event.target.result);
+        request.onsuccess = event => {
+            db = event.target.result;
+            resolve(db);
+        };
         request.onupgradeneeded = event => {
             const db = event.target.result;
             if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -164,6 +169,10 @@ messagesContainer.addEventListener('scroll', () => {
         loadMoreMessages('up');
     }
 });
+exportButton.addEventListener('click', () => {
+    const format = exportFormat.value;
+    exportMessages(format);
+});
 function checkAndLoadMore() {
     const containerHeight = messagesContainer.clientHeight;
     const contentHeight = messagesContainer.scrollHeight;
@@ -171,6 +180,70 @@ function checkAndLoadMore() {
         loadMoreMessages('down');
     } else {
     }
+}
+function exportMessages(format) {
+    const searchTerm = searchInput.value.toLowerCase();
+    const filteredMessages = messages.filter(message =>
+        message.chatname.toLowerCase().includes(searchTerm) ||
+        message.type.toLowerCase().includes(searchTerm) ||
+        message.chatmessage.toLowerCase().includes(searchTerm)
+    );
+    let content = '';
+    let filename = `chat_export_${new Date().toISOString()}.${format}`;
+    switch (format) {
+        case 'json':
+            content = JSON.stringify(filteredMessages, null, 2);
+            break;
+        case 'tsv':
+            content = 'ID\tTimestamp\tUsername\tType\tMessage\tDonation\n' +
+                filteredMessages.map(m =>
+                    `${m.id}\t${m.timestamp}\t${m.chatname}\t${m.type}\t${m.chatmessage}\t${m.donation || ''}`
+                ).join('\n');
+            break;
+        case 'html':
+            content = `
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; }
+                        .message { border-bottom: 1px solid #ccc; padding: 10px; }
+                        .username { font-weight: bold; }
+                        .timestamp { color: #888; font-size: 0.8em; }
+                    </style>
+                </head>
+                <body>
+                    ${filteredMessages.map(m => `
+                        <div class="message">
+                            <span class="username">${m.chatname}</span>
+                            <span class="timestamp">${new Date(m.timestamp).toLocaleString()}</span>
+                            <p>${m.chatmessage}</p>
+                            ${m.donation ? `<p>Donation: ${m.donation}</p>` : ''}
+                        </div>
+                    `).join('')}
+                </body>
+                </html>
+            `;
+            break;
+    }
+    const blob = new Blob([content], { type: 'text/' + format });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(link.href);
+}
+document.getElementById('export-button').addEventListener('click', () => {
+    const format = document.getElementById('export-format').value;
+    exportMessages(format);
+});
+function loadAllMessages() {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], "readonly");
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.getAll();
+        request.onerror = event => reject(event.target.error);
+        request.onsuccess = event => resolve(event.target.result);
+    });
 }
 initDatabase()
     .then(result => {
