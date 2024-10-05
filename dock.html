@@ -3543,7 +3543,7 @@
 				} else {
 					speechInput.voice = voice;
 				}
-				console.log("volume: "+volume);
+				// console.log("volume: "+volume);
 				speechInput.volume = volume;
 				speechInput.rate = rate;
 				speechInput.pitch = pitch;
@@ -4075,9 +4075,13 @@
 				getById("show_only_queue").dataset.state = "1";
 				getById("show_only_queue").classList.add("pressed");
 			}
-
+			
+			var ttscommand = false;
+			if (urlParams.has("ttscommand")) {
+				ttscommand = true;
+			}
+			
 			var hideNotPinned = false;
-
 			if (urlParams.has("pinnedonly")) {
 				hideNotPinned = true;
 				document.documentElement.style.setProperty("--pinned-queued-bg", "unset");
@@ -7535,8 +7539,11 @@
 						node.classList.add("queued");
 						updateQueueButton();
 					}
-
-					if (speech && !bot) {
+					if (ttscommand && data.chatmessage && data.chatmessage.includes("!say ") && !bot){
+						if (!node.classList.contains("hide")) {
+							speechMeta(data);
+						}
+					} else if (speech && !bot) {
 						if (!node.classList.contains("hide")) {
 							speechMeta(data);
 						}
@@ -7791,85 +7798,94 @@
 				if (doNotReadEvents && data.event) {
 					return;
 				}
+				
+				try {
+					var isCommand = false;
+					var msgPlain = document.getElementById("content_" + data.id);
 
-				var isCommand = false;
-				var msgPlain = document.getElementById("content_" + data.id);
-
-				if (msgPlain) {
-					msgPlain = (msgPlain.textContent || msgPlain.innerText || "")
-						.replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, "")
-						.replace(/_/g, " ")
-						.replace(/@/g, " ")
-						.replace(/^!/, ""); // Remove emojis, underscores, and @ symbols, and check if it starts with '!'
-
-					msgPlain = msgPlain.replace(/!+/g, " "); // Replace multiple '!' with a single space
-					msgPlain = msgPlain.replace(/catJAM/gi, ""); // Remove 'catJAM' case-insensitively
-					if (beepwords){
-						msgPlain = msgPlain.replace(/\*+/g, ' beep ');
-					} else {
-						msgPlain = msgPlain.replace(/\*/g, '');
+					if (msgPlain) {
+						msgPlain = (msgPlain.textContent || msgPlain.innerText || "") // Remove emojis, underscores, and @ symbols
+							.replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, "")
+							.replace(/_/g, " ")
+							.replace(/@/g, " ")
+							
+						if (ttscommand && msgPlain.includes("!say ")){
+							msgPlain = msgPlain.split("!say ")[1].trim();
+							allow = true;
+						}
+						
+						msgPlain = msgPlain.replace(/^!/, ""); // check if it starts with '!'
+						msgPlain = msgPlain.replace(/!+/g, " "); // Replace multiple '!' with a single space
+						msgPlain = msgPlain.replace(/catJAM/gi, ""); // Remove 'catJAM' case-insensitively
+						if (beepwords){
+							msgPlain = msgPlain.replace(/\*+/g, ' beep ');
+						} else {
+							msgPlain = msgPlain.replace(/\*/g, '');
+						}
+						msgPlain = msgPlain.trim();
 					}
-					msgPlain = msgPlain.trim();
-				}
 
-				var chatname = "";
-				if (ttsSpeakChatname && data.chatname) {
-					chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
-					chatname = chatname.replaceAll("_", " ");
-					chatname = chatname.replaceAll("@", " ");
-					chatname = chatname.replaceAll("!", " ");
-				}
+					var chatname = "";
+					if (ttsSpeakChatname && data.chatname) {
+						chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
+						chatname = chatname.replaceAll("_", " ");
+						chatname = chatname.replaceAll("@", " ");
+						chatname = chatname.replaceAll("!", " ");
+					}
 
-				if (data.hasDonation) {
-					var donoText = document.createElement("div");
-					donoText.innerHTML = data.hasDonation;
-					donoText = donoText.textContent || donoText.innerText || "";
-					donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
-					donoText = donoText.replaceAll("_", " ");
-					donoText = donoText.replaceAll("@", " ");
-					donoText = donoText.replaceAll("!", " ");
+					if (data.hasDonation) {
+						var donoText = document.createElement("div");
+						donoText.innerHTML = data.hasDonation;
+						donoText = donoText.textContent || donoText.innerText || "";
+						donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
+						donoText = donoText.replaceAll("_", " ");
+						donoText = donoText.replaceAll("@", " ");
+						donoText = donoText.replaceAll("!", " ");
 
-					if (chatname) {
-						///// NAME
-						if (English) {
-							if (msgPlain) {
-								speak(chatname + " has donated " + donoText + " and says " + msgPlain, allow);
+						if (chatname) {
+							///// NAME
+							if (English) {
+								if (msgPlain) {
+									speak(chatname + " has donated " + donoText + " and says " + msgPlain, allow);
+								} else {
+									speak(chatname + " has donated " + donoText, allow);
+								}
+							} else if (msgPlain) {
+								speak(chatname + "! ! .. " + donoText + "! ! .. " + msgPlain, allow);
 							} else {
-								speak(chatname + " has donated " + donoText, allow);
+								speak(chatname + "! ! .. " + donoText, allow);
+							}
+						} else if (English) {
+							// no name but english
+							if (msgPlain) {
+								speak("Someone has donated " + donoText + " and says " + msgPlain, allow);
+							} else {
+								speak("Someone has donated " + donoText, allow);
 							}
 						} else if (msgPlain) {
-							speak(chatname + "! ! .. " + donoText + "! ! .. " + msgPlain, allow);
+							// no name; not english
+							speak(donoText + "! ! .. " + msgPlain, allow);
 						} else {
-							speak(chatname + "! ! .. " + donoText, allow);
-						}
-					} else if (English) {
-						// no name but english
-						if (msgPlain) {
-							speak("Someone has donated " + donoText + " and says " + msgPlain, allow);
-						} else {
-							speak("Someone has donated " + donoText, allow);
+							speak(donoText, allow);
 						}
 					} else if (msgPlain) {
-						// no name; not english
-						speak(donoText + "! ! .. " + msgPlain, allow);
-					} else {
-						speak(donoText, allow);
-					}
-				} else if (msgPlain) {
-					// NO DONATION
-					if (chatname) {
-						// NAME
-						if (English) {
-							speak(chatname + " says! " + msgPlain, allow);
+						// NO DONATION
+						if (chatname) {
+							// NAME
+							if (English) {
+								speak(chatname + " says! " + msgPlain, allow);
+							} else {
+								speak(chatname + "! ! .. " + msgPlain, allow);
+							}
+						} else if (English) {
+							// NO NAME
+							speak("Someone says! " + msgPlain, allow);
 						} else {
-							speak(chatname + "! ! .. " + msgPlain, allow);
+							speak(msgPlain, allow);
 						}
-					} else if (English) {
-						// NO NAME
-						speak("Someone says! " + msgPlain, allow);
-					} else {
-						speak(msgPlain, allow);
 					}
+				} catch(e){
+					errorlog(e);
 				}
 			}
 
