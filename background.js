@@ -2055,7 +2055,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "customyoutubeaccount") {
 				pushSettingChange();
 			}
-			if (request.setting == "myname") {
+			if (request.setting == "mynameext") {
 				pushSettingChange();
 			}
 			if (request.setting == "nosubcolor") {
