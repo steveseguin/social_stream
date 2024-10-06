@@ -2976,6 +2976,8 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				return null;
 			}
 			
+			
+			
 			const StageTEN_API_URL = "https://demo.stageten.tv/apis/plugin-service/chat/message/send"
 
 			let cleaned = data.chatmessage;
@@ -2989,19 +2991,12 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				return;
 			}
 			
-			// console.error(cleaned, data,data.textonly);
-			
 			if (relayed && !verifyOriginalNewIncomingMessage(cleaned, true)){
+				if (data.bot) {
+					return null;
+				}
 				if (checkExactDuplicateAlreadySent(cleaned, true)){
 					return;
-				}
-				
-				if (settings.myname) {
-					let custombot = settings.myname.textparam1.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
-					custombot = custombot.split(",");
-					if (custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
-						return null;
-					}
 				}
 			} else if (!fakechat && checkExactDuplicateAlreadySent(cleaned, true)){
 				return null;
@@ -5494,15 +5489,8 @@ async function applyBotActions(data, tab = false) {
 				return null;
 			} // probably a reply
 
-			if (settings.myname) {
-				let custombot = settings.myname.textparam1.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
-				custombot = custombot.split(",");
-				if (custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
-					return null;
-				} // a bot or host, so we don't want to relay that
-			}
 
-			if (Date.now() - messageTimeout > 1000) {
+			if (!data.bot && (Date.now() - messageTimeout > 1000)) {
 				messageTimeout = Date.now();
 				var msg = {};
 				msg.tid = data.tid;
@@ -5517,8 +5505,7 @@ async function applyBotActions(data, tab = false) {
 					processResponse(msg, true, data); // this should be the first and only message
 				}
 			}
-		} else if (settings.s10relay && data.chatmessage && data.chatname && !data.event){
-			// console.log(data); 
+		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event){
 			sendToS10(data, false, true); // we'll handle the relay logic here instead
 		}
 
@@ -5583,7 +5570,7 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 
-		if (settings.autohi && data.chatname) {
+		if (settings.autohi && data.chatname ) {
 			if (data.chatmessage.toLowerCase() === "hi") {
 				if (Date.now() - messageTimeout > 60000) {
 					// respond to "1" with a "1" automatically; at most 1 time per minute.
