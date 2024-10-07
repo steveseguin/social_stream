@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tip Jar Overlay - Social Stream Ninja</title>
+    <link rel="icon" href="./icons/favicon.ico" />
+    <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: #0000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        #tip-jar {
+            width: 200px;
+            height: 300px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid #000;
+            border-radius: 20px 20px 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+        #tip-fill {
+            width: 100%;
+            background-color: gold;
+            position: absolute;
+            bottom: 0;
+            transition: height 0.5s ease-in-out;
+        }
+        #tip-text {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            color: #000;
+        }
+        .coin {
+            width: 20px;
+            height: 20px;
+            background-color: gold;
+            border-radius: 50%;
+            position: absolute;
+            animation: fall 1s ease-in;
+        }
+        @keyframes fall {
+            from { transform: translateY(-100vh); }
+            to { transform: translateY(0); }
+        }
+        #notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="tip-jar">
+        <div id="tip-fill"></div>
+        <div id="tip-text">$0 / $250</div>
+    </div>
+    <div id="notification"></div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let totalTips = 0;
+        const maxTips = 250;
+        const tipJar = document.getElementById('tip-jar');
+        const tipFill = document.getElementById('tip-fill');
+        const tipText = document.getElementById('tip-text');
+        const notification = document.getElementById('notification');
+
+        function updateTipJar() {
+            const fillPercentage = (totalTips / maxTips) * 100;
+            tipFill.style.height = `${Math.min(fillPercentage, 100)}%`;
+            tipText.textContent = `$${totalTips.toFixed(2)} / $${maxTips}`;
+        }
+
+        function showNotification(message) {
+            notification.textContent = message;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function addCoin() {
+            const coin = document.createElement('div');
+            coin.className = 'coin';
+            coin.style.left = `${Math.random() * 180}px`;
+            tipJar.appendChild(coin);
+            setTimeout(() => {
+                tipJar.removeChild(coin);
+            }, 1000);
+        }
+
+        function processTip(amount, currency, donator) {
+            let tipValue = 0;
+
+            if (currency.toLowerCase() === 'bits') {
+                tipValue = amount / 100;
+            } else if (currency.toLowerCase() === 'usd') {
+                tipValue = amount;
+            } else {
+                // For simplicity, treat all other currencies as 1:1 with USD
+                tipValue = amount;
+            }
+
+            totalTips += tipValue;
+            updateTipJar();
+            showNotification(`${donator} tipped ${amount} ${currency}!`);
+
+            // Add coins based on the tip value
+            const coinCount = Math.ceil(tipValue);
+            for (let i = 0; i < coinCount; i++) {
+                setTimeout(addCoin, i * 100);
+            }
+        }
+
+        function processData(data) {
+            console.log(data);
+            
+            if (data.content) {
+                data = data.content;
+            }
+
+            if (data.donation || data.hasDonation) {
+                const donationString = data.donation || data.hasDonation;
+                const [amount, currency] = donationString.split(' ');
+                processTip(parseFloat(amount), currency, data.chatname);
+            }
+        }
+
+        // IFRAME setup for Social Stream Ninja
+        const iframe = document.createElement("iframe");
+        const filename = "dock";
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label="+filename+"&cleanoutput&room=" + urlParams.get('session');
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+
+        const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+        const eventer = window[eventMethod];
+        const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+        eventer(messageEvent, function (e) {
+            if (e.source != iframe.contentWindow) return;
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
