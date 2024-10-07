@@ -3930,6 +3930,11 @@
 			} else if (urlParams.has("lightmode")) {
 				darkmode = false;
 			}
+			
+			var filterEmojiOnly = false;
+			if (urlParams.has("noemojisonly")) {
+				filterEmojiOnly = true;
+			}
 
 			var syncDocks = false;
 			if (urlParams.has("sync") || urlParams.has("synced")) {
@@ -6645,6 +6650,23 @@
 				return text;
 			  }
 			}
+			
+			function isEmojiOnly(str) {
+				function stripEmojis(text) {
+					return text
+						.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "")
+						.replace(/[\u200D\uFE0F]/g, "")
+						.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "");
+				}
+
+				let strippedStr = stripEmojis(str);
+				strippedStr = strippedStr.replace(/\s+/g, '');
+				if (strippedStr.length === 0) {
+					return true; // Contains only emojis and/or spaces
+				}
+				const textContent = strippedStr.replace(/<[^>]*>/g, '');
+				return textContent.length === 0;
+			}
 
 			function processData(data, reloaded = false) {
 				if (data.contents) {
@@ -6910,7 +6932,7 @@
 							.replace(/\s+/g, " ")
 							.trim();
 					}
-
+					
 					var chatmessage = data.chatmessage || "";
 
 					if (chatmessage) {
@@ -6935,7 +6957,13 @@
 					if (hideNumbers && data.chatmessage && !data.contentimg && !data.hasDonation && data.chatmessage === parseFloat(data.chatmessage)) {
 						return;
 					}
-
+					
+					if (filterEmojiOnly && data.chatmessage && !data.hasDonation && !(data.hasMembership || data.membership) && !data.contentimg) {
+						if (isEmojiOnly(data.chatmessage)) {
+							return; // Skip this message as it contains only emojis or empty HTML tags
+						}
+					}
+					
 					if (data.textonly) {
 						// should be legacy compatible, since textonly is new.
 						chatmessage = escapeHtml(chatmessage); // lets escape any < > ' " or other special characeters, since it would be dangerous as HTML.
