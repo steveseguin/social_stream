@@ -109,7 +109,7 @@
         function processTip(amount, currency, donator) {
             let tipValue = 0;
 
-            if (currency.toLowerCase() === 'bits') {
+            if (['bits','bit','cheer','gold',"rose","roses"].includes(currency.toLowerCase())) {
                 tipValue = amount / 100;
             } else if (currency.toLowerCase() === 'usd') {
                 tipValue = amount;
