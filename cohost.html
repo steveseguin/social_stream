@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT-4o Realtime AI Co-host</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="p-8">
+            <h1 class="text-2xl font-bold mb-4">GPT-4o Realtime AI Co-host</h1>
+            
+            <div class="mb-4">
+                <button id="startMicBtn" class="bg-blue-500 text-white px-4 py-2 rounded">Start Microphone</button>
+                <button id="stopMicBtn" class="bg-red-500 text-white px-4 py-2 rounded ml-2" disabled>Stop Microphone</button>
+            </div>
+            
+            <div class="mb-4">
+                <input type="text" id="textInput" class="border p-2 w-full" placeholder="Type your message here...">
+                <button id="sendTextBtn" class="bg-green-500 text-white px-4 py-2 rounded mt-2">Send Text</button>
+            </div>
+            
+            <div class="mb-4">
+                <button id="uploadImageBtn" class="bg-purple-500 text-white px-4 py-2 rounded">Upload Image</button>
+                <input type="file" id="imageInput" accept="image/*" class="hidden">
+            </div>
+            
+            <div id="responseArea" class="mt-4 p-4 bg-gray-200 rounded min-h-[200px]"></div>
+        </div>
+    </div>
+
+    <script>
+		const urlParams = new URLSearchParams(window.location.search);
+        const OPENAI_API_KEY = urlParams.get('openaikey');
+        let socket;
+        let audioContext;
+        let mediaStream;
+        let mediaRecorder;
+        let audioChunks = [];
+
+        function connectWebSocket() {
+            socket = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01');
+            
+            socket.onopen = () => {
+                console.log('WebSocket connected');
+                socket.send(JSON.stringify({
+                    type: 'session.update',
+                    session: {
+                        modalities: ['text', 'audio'],
+                        instructions: "You are an AI co-host. Assist the user in content creation. Be concise, witty, and engaging.",
+                    }
+                }));
+            };
+
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleServerEvent(data);
+            };
+
+            socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            socket.onclose = () => {
+                console.log('WebSocket closed');
+            };
+        }
+
+        function handleServerEvent(event) {
+            switch(event.type) {
+                case 'response.text.delta':
+                    appendToResponseArea(event.delta);
+                    break;
+                case 'response.audio.delta':
+                    playAudio(event.delta);
+                    break;
+                // Handle other event types as needed
+            }
+        }
+
+        function appendToResponseArea(text) {
+            const responseArea = document.getElementById('responseArea');
+            responseArea.innerHTML += text;
+        }
+
+        function playAudio(base64Audio) {
+            const audio = new Audio('data:audio/mp3;base64,' + base64Audio);
+            audio.play();
+        }
+
+        function startMicrophone() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaStream = stream;
+                    audioContext = new AudioContext();
+                    const source = audioContext.createMediaStreamSource(stream);
+                    
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+                    
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        sendAudioToServer(audioBlob);
+                        audioChunks = [];
+                    };
+                    
+                    mediaRecorder.start(1000); // Capture in 1-second intervals
+                })
+                .catch(error => console.error('Error accessing microphone:', error));
+        }
+
+        function stopMicrophone() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        function sendAudioToServer(audioBlob) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64Audio = reader.result.split(',')[1];
+                socket.send(JSON.stringify({
+                    type: 'conversation.item.create',
+                    item: {
+                        type: 'message',
+                        role: 'user',
+                        content: [{
+                            type: 'input_audio',
+                            audio: base64Audio
+                        }]
+                    }
+                }));
+                socket.send(JSON.stringify({ type: 'response.create' }));
+            };
+            reader.readAsDataURL(audioBlob);
+        }
+
+        function sendTextToServer(text) {
+            socket.send(JSON.stringify({
+                type: 'conversation.item.create',
+                item: {
+                    type: 'message',
+                    role: 'user',
+                    content: [{
+                        type: 'input_text',
+                        text: text
+                    }]
+                }
+            }));
+            socket.send(JSON.stringify({ type: 'response.create' }));
+        }
+
+        // Event Listeners
+        document.getElementById('startMicBtn').addEventListener('click', () => {
+            startMicrophone();
+            document.getElementById('startMicBtn').disabled = true;
+            document.getElementById('stopMicBtn').disabled = false;
+        });
+
+        document.getElementById('stopMicBtn').addEventListener('click', () => {
+            stopMicrophone();
+            document.getElementById('startMicBtn').disabled = false;
+            document.getElementById('stopMicBtn').disabled = true;
+        });
+
+        document.getElementById('sendTextBtn').addEventListener('click', () => {
+            const textInput = document.getElementById('textInput');
+            sendTextToServer(textInput.value);
+            textInput.value = '';
+        });
+
+        document.getElementById('uploadImageBtn').addEventListener('click', () => {
+            document.getElementById('imageInput').click();
+        });
+
+        document.getElementById('imageInput').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64Image = reader.result.split(',')[1];
+                    // Placeholder: Send image to server
+                    console.log('Image uploaded:', base64Image);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Initialize
+        connectWebSocket();
+    </script>
+</body>
+</html>
