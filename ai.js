@@ -34,6 +34,10 @@ function getFirstAvailableModel() {
                 reject(new Error('Failed to fetch models'));
             }
         };
+		xhr.timeout = 10000; // 10 seconds timeout
+		xhr.ontimeout = function() {
+			reject(new Error('Request timed out'));
+		};
         xhr.onerror = function() {
             reject(new Error('Network error while fetching models'));
         };
@@ -79,6 +83,7 @@ async function rebuildIndex() {
 
     globalLunrIndex = initLunrIndex(documents);
 }
+
 const activeChatBotSessions = {};
 
 async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null) {
@@ -115,6 +120,11 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
             });
             
             if (!response.ok) {
+                if (response.status === 404) {
+                    return { error: 404, message: `Model ${currentModel} not found` };
+                } else if (response.status){
+					return { error: response.status, message: `HTTP error! status: ${response.status}` };
+				}
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
@@ -171,31 +181,30 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
         }
     }
     
-    try {
-        const result = await makeRequest(ollamamodel);
-        if (result.aborted) {
-            return result.response + "💥";
-        } else if (result.error) {
-            return;
-        }
-        return result.complete ? result.response : result.response + "💥";
-    } catch (error) {
-        console.warn(`Failed to use model ${ollamamodel}. Attempting to get first available model.`);
-        try {
-            const availableModel = await getFirstAvailableModel();
-            console.log(`Attempting with available model: ${availableModel}`);
-            const result = await makeRequest(availableModel);
-            if (result.aborted) {
-                return result.response + "💥";
-            } else if (result.error) {
-                return;
-            }
-            return result.complete ? result.response : result.response + "💥";
-        } catch (fallbackError) {
-            console.warn("Error in callOllamaAPI even with fallback:", fallbackError);
-            return;
-        }
-    }
+	const result = await makeRequest(ollamamodel);
+	if (result.aborted) {
+		return result.response + "💥";
+	} else if (result.error==404) { // if 404, I want to look for a different Model, if not 404, then just 
+		console.warn(`Failed to use model ${ollamamodel}. Attempting to get first available model.`);
+		try {
+			const availableModel = await getFirstAvailableModel();
+			console.log(`Attempting with available model: ${availableModel}`);
+			const result = await makeRequest(availableModel);
+			if (result.aborted) {
+				return result.response + "💥";
+			} else if (result.error) {
+				return;
+			}
+			return result.complete ? result.response : result.response + "💥";
+		} catch (fallbackError) {
+			console.warn("Error in callOllamaAPI even with fallback:", fallbackError);
+			return;
+		}
+	} else if (result.error){
+		return;
+	} else {
+		return result.complete ? result.response : result.response + "💥";
+	}
 }
 
 // strip emotes

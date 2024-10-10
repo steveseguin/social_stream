@@ -4259,16 +4259,13 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 		} else if (request.value && ("target" in request) && UUID && request.action === "chatbot"){ // target is the callback ID
 			if (isExtensionOn && settings.allowChatBot){
 				try {
-				  let model = "vanilj/llama-3.1-70b-instruct-lorablated-iq2_xs:latest"
-				  let prompt = request.value;
+				  //    let model = "vanilj/llama-3.1-70b-instruct-lorablated-iq2_xs:latest"
+				  let prompt = request.value || "";
 				  if (request.turbo) {
-					model = "rolandroland/llama3.1-uncensored";
-					prompt = "You're an AI assistant. Keep responses limited to a few sentences.\n" + prompt;
+				  //	model = "rolandroland/llama3.1-uncensored";
+						prompt = "You're an AI assistant. Keep responses limited to a few sentences.\n" + prompt;
 				  }
-				  if (request.model) {
-					model = request.model;
-				  }
-				  model = settings.ollamamodel?.textsetting || model;
+				  let model = request.model || settings.ollamamodel?.textsetting || null;
 				  const controller = new AbortController();
 				  
 				  callOllamaAPI(prompt, model, (chunk) => {
