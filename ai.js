@@ -83,7 +83,7 @@ const activeChatBotSessions = {};
 
 async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null) {
     const ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
-    let ollamamodel = model || settings.ollamamodel?.textsetting || "llama2:latest";
+    let ollamamodel = model || settings.ollamamodel?.textsetting || "llama3.2:latest";
     
     async function makeRequest(currentModel) {
         const isStreaming = callback !== null;
