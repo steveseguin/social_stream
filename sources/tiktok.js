@@ -608,7 +608,7 @@
                                 }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 
                                 });
-                            }, 1000 * 60 * 60);
+                            }, 1000 * 60 * 57);
                         } else if (document.querySelector("[contenteditable][placeholder]")) {
 
                             document.querySelector("[contenteditable][placeholder]").focus();
@@ -625,7 +625,7 @@
                                 }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 
                                 });
-                            }, 1000 * 60 * 60);
+                            }, 1000 * 60 * 57);
                         } else {
                             sendResponse(false);
                         }

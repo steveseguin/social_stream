@@ -79,140 +79,125 @@ async function rebuildIndex() {
 
     globalLunrIndex = initLunrIndex(documents);
 }
+const activeChatBotSessions = {};
 
-async function callOllamaAPI(prompt, model = null, callback = null) {
+async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null) {
     const ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
-    let ollamamodel = model || settings.ollamamodel?.textsetting || "llama3.2:latest";
+    let ollamamodel = model || settings.ollamamodel?.textsetting || "llama2:latest";
     
     async function makeRequest(currentModel) {
         const isStreaming = callback !== null;
+        let fullResponse = '';
+        let responseComplete = false;
         
         try {
-            if (postNode) {
-                let body = {
+            if (UUID) {
+                if (activeChatBotSessions[UUID]) {
+                    activeChatBotSessions[UUID].abort();
+                }
+                if (!abortController) {
+                    abortController = new AbortController();
+                }
+                activeChatBotSessions[UUID] = abortController;
+            }
+            
+            const response = await fetch(`${ollamaendpoint}/api/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
                     model: currentModel,
                     prompt: prompt,
                     stream: isStreaming
-                };
+                }),
+                signal: abortController ? abortController.signal : undefined,
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            if (isStreaming) {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
                 
-                if (isStreaming) {
-                    // Implement streaming for postNode (you may need to adjust this based on postNode's capabilities)
-                    return await new Promise((resolve, reject) => {
-                        let fullResponse = '';
-                        postNode(`${ollamaendpoint}/api/generate`, body, 
-                            { "Content-Type": 'application/json' },
-                            (chunk) => {
-                                try {
-                                    const data = JSON.parse(chunk);
-                                    if (data.response) {
-                                        fullResponse += data.response;
-                                        callback(data.response);
-                                    }
-                                    if (data.done) {
-                                        resolve(fullResponse);
-                                    }
-                                } catch (e) {
-                                    console.error("Error parsing chunk:", e);
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        responseComplete = true;
+                        break;
+                    }
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    for (const line of lines) {
+                        if (line.trim() !== '') {
+                            try {
+                                const data = JSON.parse(line);
+                                if (data.response) {
+                                    fullResponse += data.response;
+                                    callback(data.response);
                                 }
-                            }
-                        ).catch(reject);
-                    });
-                } else {
-                    let data = await postNode(`${ollamaendpoint}/api/generate`, body, { "Content-Type": 'application/json' });
-                    try {
-                        data = JSON.parse(data);
-                    } catch(e) {
-                        console.log(data);
-                    }
-                    if (data && data.response) {
-                        return data.response;
-                    } else {
-                        throw new Error("Failed to call Ollama API..");
-                    }
-                }
-            } else {
-                if (isStreaming) {
-                    const response = await fetch(`${ollamaendpoint}/api/generate`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            model: currentModel,
-                            prompt: prompt,
-                            stream: true
-                        }),
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    let fullResponse = '';
-                    
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        
-                        const chunk = decoder.decode(value);
-                        const lines = chunk.split('\n');
-                        for (const line of lines) {
-                            if (line.trim() !== '') {
-                                try {
-                                    const data = JSON.parse(line);
-                                    if (data.response) {
-                                        fullResponse += data.response;
-                                        callback(data.response);
-                                    }
-                                } catch (e) {
-                                    console.error("Error parsing line:", e);
+                                if (data.done) {
+                                    responseComplete = true;
+                                    break;
                                 }
+                            } catch (e) {
+                                console.warn("Error parsing line:", e);
                             }
                         }
                     }
-                    
-                    return fullResponse;
-                } else {
-                    const response = await fetch(`${ollamaendpoint}/api/generate`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            model: currentModel,
-                            prompt: prompt,
-                            stream: false
-                        }),
-                    });
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    const data = await response.json();
-                    return data.response;
+                    if (responseComplete) break;
                 }
+            } else {
+                const data = await response.json();
+                fullResponse = data.response;
+                responseComplete = true;
             }
+            
+            return { success: true, response: fullResponse, complete: responseComplete };
         } catch (error) {
-            console.error(`Error in callOllamaAPI with model ${currentModel}:`, error);
-            throw error;
+            if (error.name === 'AbortError') {
+                return { aborted: true, response: fullResponse };
+            } else {
+                console.warn(`Error in callOllamaAPI with model ${currentModel}:`, error);
+                return { error: true, message: error.message };
+            }
+        } finally {
+            if (UUID && activeChatBotSessions[UUID] === abortController) {
+                delete activeChatBotSessions[UUID];
+            }
         }
     }
     
     try {
-        return await makeRequest(ollamamodel);
+        const result = await makeRequest(ollamamodel);
+        if (result.aborted) {
+            return result.response + "💥";
+        } else if (result.error) {
+            return;
+        }
+        return result.complete ? result.response : result.response + "💥";
     } catch (error) {
         console.warn(`Failed to use model ${ollamamodel}. Attempting to get first available model.`);
         try {
             const availableModel = await getFirstAvailableModel();
             console.log(`Attempting with available model: ${availableModel}`);
-            return await makeRequest(availableModel);
+            const result = await makeRequest(availableModel);
+            if (result.aborted) {
+                return result.response + "💥";
+            } else if (result.error) {
+                return;
+            }
+            return result.complete ? result.response : result.response + "💥";
         } catch (fallbackError) {
-            console.error("Error in callOllamaAPI even with fallback:", fallbackError);
-            throw new Error("Failed to call Ollama API with any available model: " + fallbackError.message);
+            console.warn("Error in callOllamaAPI even with fallback:", fallbackError);
+            return;
         }
     }
 }
+
 // strip emotes
 // if longer than 32-character, check it with AI
 
@@ -282,7 +267,7 @@ function addSafePhrase(cleanedText, score=-1) {
 	//} else {
 	//	safePhrasesObject[cleanedText] = 1;
 	//}
-	//console.log("Added ("+score+"): "+cleanedText);
+	//log("Added ("+score+"): "+cleanedText);
 }
 
 
@@ -319,17 +304,17 @@ async function censorMessageWithOllama(data) {
 		
 		censorProcessingSlots[availableSlot] = false;
 		
-        //console.log(llmOutput);
+        //log(llmOutput);
         let match = llmOutput.match(/\d+/);
         let score = match ? parseInt(match[0]) : 0;
-        //console.log(score);
+        //log(score);
 
         if (score > 3 || llmOutput.length > 1) {
-			//console.log("Bad phrase: "+data.chatname +" said " +cleanedText);
+			//log("Bad phrase: "+data.chatname +" said " +cleanedText);
             if (settings.ollamaCensorBotBlockMode) {
                 return false;
             } else if (isExtensionOn) {
-                //console.log("sending a delete out");
+                //log("sending a delete out");
                 sendToDestinations({ delete: data });
             }
 			return false;
@@ -339,7 +324,7 @@ async function censorMessageWithOllama(data) {
             return true;
         }
     } catch (error) {
-        console.error("Error processing message:", error);
+        console.warn("Error processing message:", error);
     } finally {
         censorProcessingSlots[availableSlot] = false;
     }
@@ -366,9 +351,6 @@ async function censorMessageWithHistory(data) {
 	if (!data.textonly) {
 		cleanedText = decodeAndCleanHtml(cleanedText);
 	}
-	console.log(cleanedText);
-	
-	console.log("censorMessageWithHistory");
 	
     const availableSlot = censorProcessingSlots.findIndex(slot => !slot);
     if (availableSlot === -1) {
@@ -387,7 +369,7 @@ Latest message:
 ${data.chatname} says: ${cleanedText}`;
 
         let llmOutput = await callOllamaAPI(censorInstructions);
-        console.log(llmOutput);
+        log(llmOutput);
 		
         censorProcessingSlots[availableSlot] = false;
         
@@ -407,7 +389,7 @@ ${data.chatname} says: ${cleanedText}`;
             return true;
         }
     } catch (error) {
-        console.error("Error processing message history:", error);
+        console.warn("Error processing message history:", error);
     } finally {
         censorProcessingSlots[availableSlot] = false;
     }
@@ -522,7 +504,7 @@ async function processMessageWithOllama(data) {
 			}
 		}
     } catch (error) {
-        console.error("Error processing message:", error);
+        console.warn("Error processing message:", error);
     } finally {
         isProcessing = false;
     }
@@ -733,7 +715,7 @@ Do not include any other text or explanations outside these sections.`;
 			// Log the processed chunk for debugging
 			logProcessedChunk(parsedData, index);
 		} catch (error) {
-			console.error(`Error processing chunk ${index + 1}:`, error);
+			console.warn(`Error processing chunk ${index + 1}:`, error);
 		}
 
         // Add a small delay between chunks, to let things breath a bit.
@@ -749,7 +731,7 @@ ${processedChunks.map(chunk => chunk.summary).join('\n')}`;
     try {
         overallSummary = await callOllamaAPI(overallSummaryPrompt);
     } catch (error) {
-        console.error("Error generating overall summary:", error);
+        console.warn("Error generating overall summary:", error);
         overallSummary = "Failed to generate overall summary";
     }
 
@@ -852,9 +834,9 @@ Do not include any other text or explanations outside these sections.`;
             const decision = parseDecision(llmOutput);
             
             if (decision.needsSearch) {
-                //console.log("Performing search with query:", decision.searchQuery);
+                //log("Performing search with query:", decision.searchQuery);
                 const searchResults = await performSearch(decision.searchQuery);
-                //console.log("Search results:", searchResults);
+                //log("Search results:", searchResults);
                 return await generateResponseWithSearchResults(userInput, searchResults, data.chatname || 'user', additionalInstructions);
             } else {
                 return decision.response;
@@ -874,7 +856,7 @@ Your response:`;
 			return response;
         }
     } catch (error) {
-        console.error("Error processing user input:", error);
+        console.warn("Error processing user input:", error);
         return "I'm sorry, I encountered an error while processing your request.";
     }
 }
@@ -938,7 +920,7 @@ async function clearDatabase() {
         
         log("Database cleared successfully");
     } catch (error) {
-        console.error("Error clearing database:", error);
+        console.warn("Error clearing database:", error);
     }
 }
 
@@ -950,7 +932,7 @@ async function performSearch(query) {
     const searchQuery = keywords.map(keyword => `+${keyword}`).join(' ');
     const results = globalLunrIndex.search(query);
     if (results.length === 0) {
-        //console.log("No results found for query:", query);
+        //log("No results found for query:", query);
         // Perform a more lenient search
         return globalLunrIndex.search(keywords.map(word => `${word}~1`).join(' ')).map(result => ({
             ref: result.ref,
@@ -967,7 +949,7 @@ async function generateResponseWithSearchResults(userInput, searchResults, chatn
     try {
         const relevantDocs = await getDocumentsFromSearchResults(searchResults);
         
-        //console.log("Relevant docs:", relevantDocs);
+        //log("Relevant docs:", relevantDocs);
 
         const validDocs = relevantDocs.filter(doc => doc !== null && doc.content);
         
@@ -987,7 +969,7 @@ async function generateResponseWithSearchResults(userInput, searchResults, chatn
             usedChunks++;
         }
 
-        console.log("Combined content:", combinedContent);
+        log("Combined content:", combinedContent);
 
         const prompt = `You are an AI assistant. ${additionalInstructions || ''}
 
@@ -1003,7 +985,7 @@ Provide a concise and informative response based on the above information. Your 
 
         return await callOllamaAPI(prompt);
     } catch (error) {
-        console.error("Error in generateResponseWithSearchResults:", error);
+        console.warn("Error in generateResponseWithSearchResults:", error);
         return "I'm sorry, I encountered an error while processing your request. Please try again later.";
     }
 }
@@ -1030,7 +1012,7 @@ async function getDocumentsFromSearchResults(searchResults) {
                 request.onsuccess = () => resolve(request.result);
             });
             
-            //console.log(`Retrieved document for id ${docId}:`, doc); // Add this line for debugging
+            //log(`Retrieved document for id ${docId}:`, doc); // Add this line for debugging
 
             if (!doc) {
                 //console.warn(`Document not found for id: ${docId}`);
@@ -1039,7 +1021,7 @@ async function getDocumentsFromSearchResults(searchResults) {
             
             if (doc.chunks && chunkIndex) {
                 const chunk = doc.chunks[parseInt(chunkIndex)];
-                //console.log(`Retrieved chunk for index ${chunkIndex}:`, chunk); // Add this line for debugging
+                //log(`Retrieved chunk for index ${chunkIndex}:`, chunk); // Add this line for debugging
                 return chunk ? { 
                     content: chunk.content, 
                     tags: chunk.tags, 
@@ -1055,7 +1037,7 @@ async function getDocumentsFromSearchResults(searchResults) {
                 summary: doc.overallSummary
             };
         } catch (error) {
-            console.error(`Error retrieving document ${docId}:`, error);
+            console.warn(`Error retrieving document ${docId}:`, error);
             return null;
         }
     }));
@@ -1146,7 +1128,7 @@ function sanitizeAndParseJSON(jsonString) {
     if (parsedJSON) return ensureCorrectStructure(parsedJSON);
 
     //console.warn("Failed to parse JSON even after sanitization");
-    //console.log("Problematic JSON string:", jsonString);
+    //log("Problematic JSON string:", jsonString);
     return false;
 }
 
@@ -1223,7 +1205,7 @@ async function addToLunrIndex(doc) {
         globalLunrIndex.add(doc);
         log(`Added document to Lunr index: ${doc.id}`);
     } catch (error) {
-        console.error(`Error adding document to Lunr index: ${doc.id}`, error);
+        console.warn(`Error adding document to Lunr index: ${doc.id}`, error);
     }
 }
 
@@ -1295,7 +1277,7 @@ async function inspectDatabase() {
         request.onsuccess = () => resolve(request.result);
     });
 
-    console.log('Database Contents:');
+    log('Database Contents:');
     docs.forEach((doc, index) => {
         log(`Document ${index + 1}:`);
         log(`  ID: ${doc.id}`);
@@ -1308,7 +1290,7 @@ async function inspectDatabase() {
                 logProcessedChunk(chunk, c);
             });
         } else {
-           // console.log('  Content:', doc.content ? doc.content.substring(0, 200) + '...' : 'N/A');
+           // log('  Content:', doc.content ? doc.content.substring(0, 200) + '...' : 'N/A');
         }
         log('');
     });
@@ -1329,7 +1311,7 @@ async function loadLunrIndex() {
             request.onsuccess = () => resolve(request.result);
         });
 
-       // console.log('Retrieved documents:', allDocs);
+       // log('Retrieved documents:', allDocs);
 
         const documents = [];
         allDocs.forEach(doc => {
@@ -1356,14 +1338,14 @@ async function loadLunrIndex() {
             }
         });
 
-       // console.log('Prepared documents for Lunr:', documents);
+       // log('Prepared documents for Lunr:', documents);
 
         globalLunrIndex = initLunrIndex(documents);
         log('Lunr index initialized');
 
         return globalLunrIndex;
     } catch (error) {
-        console.error("Error loading Lunr index:", error);
+        console.warn("Error loading Lunr index:", error);
         return initLunrIndex([]); // Return an empty index if there's an error
     }
 }
@@ -1393,7 +1375,7 @@ function initLunrIndex(documents) {
 
 async function saveLunrIndex() {
     if (!globalLunrIndex) {
-        console.error("Attempting to save undefined Lunr index");
+        console.warn("Attempting to save undefined Lunr index");
         return;
     }
     try {
@@ -1404,7 +1386,7 @@ async function saveLunrIndex() {
         await store.put(serializedIndex, 'currentIndex');
         log("Lunr index saved successfully");
     } catch (error) {
-        console.error("Error saving Lunr index:", error);
+        console.warn("Error saving Lunr index:", error);
     }
 }
 
@@ -1463,7 +1445,7 @@ async function indexProcessedDocument(docId, processedDoc, title) {
         // Send updated documentsRAG to popup
         messagePopup({documents: documentsRAG});
     } catch (error) {
-        console.error("Error indexing document:", error);
+        console.warn("Error indexing document:", error);
     }
 }
 
@@ -1595,7 +1577,7 @@ async function deleteDocument(docId) {
         await saveLunrIndex();
         await updateDatabaseDescriptor();
     } catch (error) {
-        console.error("Error deleting document:", error);
+        console.warn("Error deleting document:", error);
         if (docIndex !== -1) {
             documentsRAG[docIndex].status = 'Delete Failed';
         }
@@ -1633,7 +1615,7 @@ Focus on key topics, themes, and types of information available.`;
 			localStorage.setItem('databaseDescriptor', descriptor.trim());
 		}
     } catch (error) {
-        console.error("Error updating database descriptor:", error);
+        console.warn("Error updating database descriptor:", error);
         localStorage.setItem('databaseDescriptor', 'Error generating database description.');
     }
 }
@@ -1691,7 +1673,7 @@ async function processUploadQueue() {
 			documentsRAG = documentsRAG.filter(doc => doc.id !== docId);
 		}
     } catch (error) {
-        console.error("Error processing document:", error);
+        console.warn("Error processing document:", error);
         updateDocumentProgress(docId, 0, 'Failed');
     }
     messagePopup({documents: documentsRAG});
@@ -1714,7 +1696,7 @@ async function importSettingsLLM(usePreprocessing = true) {
         
         log("Import completed successfully");
     } catch (e) {
-        console.error("Error in importSettings:", e);
+        console.warn("Error in importSettings:", e);
         alert("Error processing file: " + e.message);
     }
 }
@@ -1770,18 +1752,18 @@ async function someTestFunction() {
 document.addEventListener('DOMContentLoaded', async function() {
     try {
 		loadDocumentsFromDB().then(() => {
-			//console.log("Documents loaded from DB:", documentsRAG);
+			//log("Documents loaded from DB:", documentsRAG);
 		}).catch(error => {
-			console.error("Error loading documents from DB:", error);
+			console.warn("Error loading documents from DB:", error);
 		});
         loadLunrIndex().then(index => {
-			//console.log("Lunr index loaded:", index);
+			//log("Lunr index loaded:", index);
 			
-			//console.log("Number of documents in index:", Object.keys(index.fieldVectors).length / index.fields.length);
+			//log("Number of documents in index:", Object.keys(index.fieldVectors).length / index.fields.length);
 		}).catch(error => {
-			console.error("Error loading index:", error);
+			console.warn("Error loading index:", error);
 		});
     } catch (error) {
-        console.error("Error initializing Lunr index:", error);
+        console.warn("Error initializing Lunr index:", error);
     }
 });

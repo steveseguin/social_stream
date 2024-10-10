@@ -4259,37 +4259,33 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 		} else if (request.value && ("target" in request) && UUID && request.action === "chatbot"){ // target is the callback ID
 			if (isExtensionOn && settings.allowChatBot){
 				try {
-					let model = "vanilj/llama-3.1-70b-instruct-lorablated-iq2_xs:latest"
-					let prompt = request.value;
-					if (request.turbo){
-						model = "rolandroland/llama3.1-uncensored"; // a faster model
-						prompt = "You're an AI assistant. Keep responses limited to a few sentences.\n"+prompt;
-					}
-					if (request.model){
-						model = request.model; // a faster model
-					}
-					model = settings.ollamamodel?.textsetting || model; // if you manually set it via the settings
-					callOllamaAPI(prompt, model, (chunk) => {
-						//console.log("Received chunk:", chunk);
-						sendDataP2P({ chatbotChunk: {value: chunk, target: request.target}}, UUID);
-						
-						// Process the chunk as needed
-					}).then((fullResponse) => {
-						//console.log("Full response:", fullResponse);
-						sendDataP2P({ chatbotResponse: {value: fullResponse, target: request.target}}, UUID);
-					}).catch((error) => {
-						console.error("Error:", error);
-					});
-					//let resp = await callOllamaAPI(prompt, model); // will default to first available model if not found.
-					// console.log({ chatbotResponse: {value: resp, target: request.target}}, UUID);
-					
-				} catch(e){
-					console.error(e);
+				  let model = "vanilj/llama-3.1-70b-instruct-lorablated-iq2_xs:latest"
+				  let prompt = request.value;
+				  if (request.turbo) {
+					model = "rolandroland/llama3.1-uncensored";
+					prompt = "You're an AI assistant. Keep responses limited to a few sentences.\n" + prompt;
+				  }
+				  if (request.model) {
+					model = request.model;
+				  }
+				  model = settings.ollamamodel?.textsetting || model;
+				  const controller = new AbortController();
+				  
+				  callOllamaAPI(prompt, model, (chunk) => {
+					sendDataP2P({ chatbotChunk: {value: chunk, target: request.target}}, UUID);
+				  }, controller, UUID).then((fullResponse) => {
+					sendDataP2P({ chatbotResponse: {value: fullResponse, target: request.target}}, UUID);
+				  }).catch((error) => {
+					console.error('Error in callOllamaAPI:', error);
+					sendDataP2P({ chatbotResponse: {value: "🚧", target: request.target}}, UUID);
+				  });
+				} catch(e) {
+				  console.error('Unexpected error:', e);
+				  sendDataP2P({ chatbotResponse: {value: "🚧", target: request.target}}, UUID);
 				}
 			}
 		}
 	}
-	console.log(request);
 }
 
 function fowardOBSCommand(data){
