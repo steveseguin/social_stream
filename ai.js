@@ -181,11 +181,12 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
         }
     }
     
-	const result = await makeRequest(ollamamodel);
+	const result = await makeRequest(ollamamodel); 
 	if (result.aborted) {
 		return result.response + "💥";
 	} else if (result.error==404) { // if 404, I want to look for a different Model, if not 404, then just 
 		console.warn(`Failed to use model ${ollamamodel}. Attempting to get first available model.`);
+		alert("404 model not found");
 		try {
 			const availableModel = await getFirstAvailableModel();
 			console.log(`Attempting with available model: ${availableModel}`);
@@ -197,15 +198,18 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 			}
 			return result.complete ? result.response : result.response + "💥";
 		} catch (fallbackError) {
+			alert("fallback error");
 			console.warn("Error in callOllamaAPI even with fallback:", fallbackError);
 			return;
 		}
 	} else if (result.error){
+		alert("error: "+result.error);
 		return;
 	} else {
 		return result.complete ? result.response : result.response + "💥";
 	}
 }
+
 
 // strip emotes
 // if longer than 32-character, check it with AI
