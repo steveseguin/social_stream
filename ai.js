@@ -220,7 +220,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 						stream: false
                     });
 
-					console.log(response);
+					// console.log(response);
 					
                     if (response.status === 404) {
                         return { error: 404, message: `Model ${currentModel} not found` };
