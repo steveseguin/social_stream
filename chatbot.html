@@ -16,6 +16,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
+			max-height: 100vh;
+			overflow: hidden;
         }
         .container {
             width: 90%;
@@ -34,7 +36,7 @@
             font-size: min(200%, 10vh);
         }
         #chat-container {
-            height: 400px;
+            height: max(400px, 70vh);
             border: 1px solid #4a4a4a;
             border-radius: 15px;
             overflow-y: auto;
@@ -132,7 +134,7 @@
             }
             .container {
                 width: 100%;
-                height: calc(100vh - 40px);
+                height: calc(100vh - 50px);
                 border-radius: 0;
                 padding: 20px;
                 display: flex;

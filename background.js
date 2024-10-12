@@ -235,10 +235,12 @@ if (typeof chrome.runtime == "undefined") {
 		});
 	});
 
-	fetchNode = async function (URL, headers = {}) {
-		return await ipcRenderer.sendSync("nodepost", {
+	fetchNode = function (URL, headers = {}, method = 'GET', body = null) {
+		return ipcRenderer.sendSync("nodefetch", {
 			url: URL,
-			headers: headers
+			headers: headers,
+			method: method,
+			body: body
 		});
 	};
 

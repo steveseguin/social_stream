@@ -12,39 +12,6 @@ let lunrIndexPromise;
 const maxContextSize = 31000;
 const maxContextSizeFull = 32000;
 
-function getFirstAvailableModel() {
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-		
-		let ollamaendpoint = "http://localhost:11434";
-		if (settings.ollamaendpoint && settings.ollamaendpoint.textsetting){
-			ollamaendpoint = settings.ollamaendpoint.textsetting;
-		}
-		
-        xhr.open('GET', ollamaendpoint+'/api/tags', true);
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                const datar = JSON.parse(xhr.responseText);
-                if (datar && datar.models && datar.models.length > 0) {
-                    resolve(datar.models[0].name);
-                } else {
-                    reject(new Error('No models available'));
-                }
-            } else {
-                reject(new Error('Failed to fetch models'));
-            }
-        };
-		xhr.timeout = 10000; // 10 seconds timeout
-		xhr.ontimeout = function() {
-			reject(new Error('Request timed out'));
-		};
-        xhr.onerror = function() {
-            reject(new Error('Network error while fetching models'));
-        };
-        xhr.send();
-    });
-}
-
 async function rebuildIndex() {
     const db = await openDatabase();
     const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readonly');
@@ -84,17 +51,116 @@ async function rebuildIndex() {
     globalLunrIndex = initLunrIndex(documents);
 }
 
-const activeChatBotSessions = {};
-
-async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null) {
-    const ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
-    let ollamamodel = model || settings.ollamamodel?.textsetting || "llama3.2:latest";
+async function getFirstAvailableModel() {
+    let ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
     
+    if (typeof ipcRenderer !== 'undefined') {
+        // Electron environment
+        return new Promise( async (resolve, reject) =>  {
+			let ccc = setTimeout(()=>{
+				reject(new Error('Request timed out'));
+			},10000);
+			let xhr;
+			try {
+				xhr = await fetchNode(`${ollamaendpoint}/api/tags`);
+			} catch(e){
+				clearTimeout(ccc);
+				reject(new Error('General fetch error'));
+				return;
+			}
+			
+		    const datar = JSON.parse(xhr.data);
+			if (datar && datar.models && datar.models.length > 0) {
+				resolve(datar.models[0].name);
+				return;
+			} else {
+				reject(new Error('No models available'));
+				return;
+			}
+        });
+		
+    } else {
+        // Web environment
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `${ollamaendpoint}/api/tags`, true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const datar = JSON.parse(xhr.responseText);
+                    if (datar && datar.models && datar.models.length > 0) {
+                        resolve(datar.models[0].name);
+                    } else {
+                        reject(new Error('No models available'));
+                    }
+                } else {
+                    reject(new Error('Failed to fetch models'));
+                }
+            };
+            xhr.timeout = 10000; // 10 seconds timeout
+            xhr.ontimeout = function() {
+                reject(new Error('Request timed out'));
+            };
+            xhr.onerror = function() {
+                reject(new Error('Network error while fetching models'));
+            };
+            xhr.send();
+        });
+    }
+}
+
+
+const streamingPostNode = async function (URL, body, headers = {}, onChunk = null, signal = null) {
+	if (ipcRenderer){
+		return new Promise((resolve, reject) => {
+			const channelId = `stream-${Date.now()}-${Math.random()}`;
+			
+			let fullResponse = '';
+			
+			const cleanup = () => {
+				ipcRenderer.removeAllListeners(channelId);
+				ipcRenderer.send(`${channelId}-close`);
+			};
+			
+			ipcRenderer.on(channelId, (event, chunk) => {
+				if (chunk === null) {
+					// Stream ended
+					cleanup();
+					resolve(fullResponse);
+				} else {
+					fullResponse += chunk;
+					if (onChunk) onChunk(chunk);
+				}
+			});
+			
+			ipcRenderer.send("streaming-nodepost", {
+				channelId,
+				url: URL,
+				body: body,
+				headers: headers
+			});
+			
+			if (signal) {
+				signal.addEventListener('abort', () => {
+					cleanup();
+					ipcRenderer.send(`${channelId}-abort`);
+					reject(new DOMException('Aborted', 'AbortError'));
+				});
+			}
+		});
+	}
+};
+
+const activeChatBotSessions = {};
+let tmpModelFallback = "";
+async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null) {
+    let ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
+    let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || "llama3.2:latest";
+
     async function makeRequest(currentModel) {
         const isStreaming = callback !== null;
         let fullResponse = '';
         let responseComplete = false;
-        
+
         try {
             if (UUID) {
                 if (activeChatBotSessions[UUID]) {
@@ -105,68 +171,117 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                 }
                 activeChatBotSessions[UUID] = abortController;
             }
-            
-            const response = await fetch(`${ollamaendpoint}/api/generate`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    model: currentModel,
-                    prompt: prompt,
-                    stream: isStreaming
-                }),
-                signal: abortController ? abortController.signal : undefined,
-            });
-            
-            if (!response.ok) {
-                if (response.status === 404) {
-                    return { error: 404, message: `Model ${currentModel} not found` };
-                } else if (response.status){
-					return { error: response.status, message: `HTTP error! status: ${response.status}` };
-				}
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            if (isStreaming) {
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) {
+
+            let response;
+            if (typeof ipcRenderer !== 'undefined') {
+                // Electron environment
+				
+				if (isStreaming) {
+					response = await new Promise((resolve, reject) => {
+						const channelId = `streaming-nodepost-${Date.now()}`;
+						
+						ipcRenderer.on(channelId, (event, chunk) => {
+							if (chunk === null) {
+								responseComplete = true;
+								resolve({ ok: true });
+							} else if (typeof chunk === 'object' && chunk.error) {
+								// This is the error response
+								resolve(chunk);
+							} else {
+								handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
+							}
+						});
+
+						ipcRenderer.send('streaming-nodepost', {
+							channelId,
+							url: `${ollamaendpoint}/api/generate`,
+							body: {
+								model: currentModel,
+								prompt: prompt,
+								stream: true
+							},
+							headers: { 'Content-Type': 'application/json' }
+						});
+
+						abortController.signal.addEventListener('abort', () => {
+							ipcRenderer.send(`${channelId}-abort`);
+						});
+					});
+
+					if (response.error) {
+						return response;
+					}
+				} else {
+					response = fetchNode(`${ollamaendpoint}/api/generate`, {
+                        'Content-Type': 'application/json',
+                    }, 'POST', {
+                        model: currentModel,
+                        prompt: prompt,
+						stream: false
+                    });
+
+					console.log(response);
+					
+                    if (response.status === 404) {
+                        return { error: 404, message: `Model ${currentModel} not found` };
+                    } else if (response.status !== 200) {
+                        return { error: response.status, message: `HTTP error! status: ${response.status}` };
+                    }
+
+                    try {
+                        const data = JSON.parse(response.data);
+                        fullResponse = data.response;
                         responseComplete = true;
-                        break;
+                    } catch (e) {
+                        console.error("Error parsing JSON:", e);
+                        return { error: true, message: "Error parsing response" };
                     }
-                    
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n');
-                    for (const line of lines) {
-                        if (line.trim() !== '') {
-                            try {
-                                const data = JSON.parse(line);
-                                if (data.response) {
-                                    fullResponse += data.response;
-                                    callback(data.response);
-                                }
-                                if (data.done) {
-                                    responseComplete = true;
-                                    break;
-                                }
-                            } catch (e) {
-                                console.warn("Error parsing line:", e);
-                            }
-                        }
-                    }
-                    if (responseComplete) break;
-                }
+				}
             } else {
-                const data = await response.json();
-                fullResponse = data.response;
-                responseComplete = true;
+                // Web environment
+                response = await fetch(`${ollamaendpoint}/api/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: currentModel,
+                        prompt: prompt,
+                        stream: isStreaming
+                    }),
+                    signal: abortController ? abortController.signal : undefined,
+                });
+
+				if (!response.ok) {
+					if (response.status === 404) {
+						return { error: 404,  message: `Model ${currentModel} not found` };
+					} else if (response.status){
+						return { error: response.status, message: `HTTP error! status: ${response.status}` };
+					}
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+
+                if (isStreaming) {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            responseComplete = true;
+                            break;
+                        }
+                        const chunk = decoder.decode(value);
+                        handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
+                    }
+                } else {
+                    const data = await response.json();
+                    fullResponse = data.response;
+                    responseComplete = true;
+                }
             }
-            
-            return { success: true, response: fullResponse, complete: responseComplete };
+			
+			return { success: true, response: fullResponse, complete: responseComplete };
         } catch (error) {
             if (error.name === 'AbortError') {
                 return { aborted: true, response: fullResponse };
@@ -180,36 +295,69 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
             }
         }
     }
-    
-	const result = await makeRequest(ollamamodel); 
-	if (result.aborted) {
-		return result.response + "💥";
-	} else if (result.error==404) { // if 404, I want to look for a different Model, if not 404, then just 
-		console.warn(`Failed to use model ${ollamamodel}. Attempting to get first available model.`);
-		//alert("404 model not found");
-		try {
-			const availableModel = await getFirstAvailableModel();
-			console.log(`Attempting with available model: ${availableModel}`);
-			const result = await makeRequest(availableModel);
-			if (result.aborted) {
-				return result.response + "💥";
-			} else if (result.error) {
-				return;
-			}
-			return result.complete ? result.response : result.response + "💥";
-		} catch (fallbackError) {
-			//alert("fallback error");
-			console.warn("Error in callOllamaAPI even with fallback:", fallbackError);
-			return;
-		}
-	} else if (result.error){
-		//alert("error: "+result.error);
-		return;
-	} else {
-		return result.complete ? result.response : result.response + "💥";
-	}
-}
 
+   function handleChunk(chunk, callback, appendToFull) {
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+            if (line.trim() !== '') {
+                try {
+                    // Attempt to parse the JSON
+                    const data = JSON.parse(line);
+                    if (data.response) {
+                        appendToFull(data.response);
+                        if (callback) callback(data.response);
+                    }
+                    if (data.done) {
+                        responseComplete = true;
+						break;
+                    }
+                } catch (e) {
+                    // If parsing fails, log the error and the problematic line
+                    
+                    // Attempt to extract any text content from the line
+                    const match = line.match(/"response":"(.*?)"/);
+                    if (match && match[1]) {
+                        const extractedResponse = match[1];
+                        appendToFull(extractedResponse);
+                        if (callback) callback(extractedResponse);
+                    }
+                }
+            }
+        }
+    }
+
+
+    const result = await makeRequest(ollamamodel);
+    if (result.aborted) {
+        return result.response + "💥";
+    } else if (result.error && result.error === 404) {
+        console.warn(`Failed to use model ${ollamamodel}. Attempting to get first available model.`);
+        try {
+            const availableModel = await getFirstAvailableModel();
+            if (availableModel) {
+                tmpModelFallback = availableModel;
+                setTimeout(() => {
+                    tmpModelFallback = ""; // allow for trying the original model again.
+                }, 60000);
+                const fallbackResult = await makeRequest(availableModel);
+                if (fallbackResult.aborted) {
+                    return fallbackResult.response + "💥";
+                } else if (fallbackResult.error) {
+                    throw new Error(fallbackResult.message);
+                }
+                return fallbackResult.complete ? fallbackResult.response : fallbackResult.response + "💥";
+            }
+            return;
+        } catch (fallbackError) {
+            console.warn("Error in callOllamaAPI even with fallback:", fallbackError);
+            throw fallbackError;
+        }
+    } else if (result.error) {
+        return;
+    } else {
+        return result.complete ? result.response : result.response + "💥";
+    }
+}
 
 // strip emotes
 // if longer than 32-character, check it with AI
@@ -382,7 +530,6 @@ Latest message:
 ${data.chatname} says: ${cleanedText}`;
 
         let llmOutput = await callOllamaAPI(censorInstructions);
-        log(llmOutput);
 		
         censorProcessingSlots[availableSlot] = false;
         
