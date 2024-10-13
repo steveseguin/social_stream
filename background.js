@@ -8535,145 +8535,83 @@ var jokes = [
 		punchline: "I had to draw my own conclusions."
 	}
 ];
+
 let db;
 const dbName = "chatMessagesDB";
 const storeName = "messages";
 
-async function initDatabase() {
-    if (window.electronApi) {
-        try {
-            const result = await window.electronApi.open(dbName, 1);
-            if (result.success) {
-                console.log('Database initialized successfully');
-                db = { electronApi: true }; // Set a flag to indicate we're using the Electron API
-            } else {
-                console.error('Failed to initialize database:', result.error);
-            }
-        } catch (error) {
-            console.error('Error initializing database:', error);
-        }
-    } else {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(dbName, 1);
-            request.onupgradeneeded = event => {
-                db = event.target.result;
-                if (!db.objectStoreNames.contains(storeName)) {
-                    const objStore = db.createObjectStore(storeName, { autoIncrement: true });
-                    objStore.createIndex("unique_user", ["chatname", "type"], { unique: false });
-                    objStore.createIndex("timestamp", "timestamp", { unique: false });
-                }
-            };
-            request.onsuccess = event => {
-                db = event.target.result;
-                resolve();
-            };
-            request.onerror = event => {
-                console.error("Database error: ", event.target.error);
-                reject(event.target.error);
-            };
-        });
-    }
+// Initialize the database
+function initDatabase() {
+	const request = indexedDB.open(dbName, 1);
+
+	request.onupgradeneeded = event => {
+		db = event.target.result;
+		if (!db.objectStoreNames.contains(storeName)) {
+			const objStore = db.createObjectStore(storeName, { autoIncrement: true });
+			objStore.createIndex("unique_user", ["chatname", "type"], { unique: false });
+			objStore.createIndex("timestamp", "timestamp", { unique: false });
+		}
+	};
+
+	request.onsuccess = event => {
+		db = event.target.result;
+	};
+
+	request.onerror = event => {
+		console.error("Database error: ", event.target.errorCode);
+	};
 }
 
-async function addMessageDB(message) {
-    if (settings.disableDB) {
-        return;
-    }
-    
-    if (db.electronApi) {
-        try {
-            const result = await window.electronApi.transaction(dbName, storeName, 'readwrite', [
-                { type: 'put', value: { ...message, timestamp: new Date() } }
-            ]);
-            if (result.success) {
-                console.log('Message added successfully');
-            } else {
-                console.error('Failed to add message:', result.error);
-            }
-        } catch (error) {
-            console.error('Error adding message:', error);
-        }
-    } else {
-        return new Promise((resolve, reject) => {
-            try {
-                const transaction = db.transaction([storeName], "readwrite");
-                const store = transaction.objectStore(storeName);
-                const request = store.add({ ...message, timestamp: new Date() });
-                request.onsuccess = () => {
-                    console.log('Message added to the database.');
-                    resolve();
-                };
-                request.onerror = e => {
-                    console.error('Error adding message to the database: ', e.target.error);
-                    reject(e.target.error);
-                };
-            } catch (e) {
-                console.error('Error in transaction:', e);
-                reject(e);
-            }
-        });
-    }
+function addMessageDB(message) {
+	if (settings.disableDB) {
+		return;
+	}
+	try {
+		const transaction = db.transaction([storeName], "readwrite");
+		const store = transaction.objectStore(storeName);
+		const request = store.add({ ...message, timestamp: new Date() });
+	} catch (e) {}
+	// request.onsuccess = () => log('Message added to the database.');
+	// request.onerror = e => console.error('Error adding message to the database: ', e.target.error);
 }
 
-async function getMessagesDB(chatname, type, page = 0, pageSize = 100) {
-    if (settings.disableDB) {
-        return [];
-    }
-    
-    if (db.electronApi) {
-        try {
-            const result = await window.electronApi.transaction(dbName, storeName, 'readonly', [
-                { type: 'getAll', query: { chatname, type }, page, pageSize }
-            ]);
-            if (result.success) {
-                return result.results[0].reverse();
-            } else {
-                console.error('Failed to get messages:', result.error);
-                return [];
-            }
-        } catch (error) {
-            console.error('Error getting messages:', error);
-            return [];
-        }
-    } else {
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction([storeName], "readonly");
-            const store = transaction.objectStore(storeName);
-            const index = store.index("unique_user");
-            const range = IDBKeyRange.only([chatname, type]);
-            const request = index.openCursor(range);
-            const results = [];
-            let count = 0;
-            const skip = page * pageSize;
-            request.onsuccess = event => {
-                const cursor = event.target.result;
-                if (cursor) {
-                    if (count >= skip && count < skip + pageSize) {
-                        results.push(cursor.value);
-                    }
-                    count++;
-                    cursor.continue();
-                } else {
-                    resolve(results.reverse());
-                }
-            };
-            request.onerror = e => {
-                console.error("Error fetching messages: ", e.target.error);
-                reject(e.target.error);
-            };
-        });
-    }
+function getMessagesDB(chatname, type, page = 0, pageSize = 100, callback) {
+	if (settings.disableDB) {
+		return;
+	}
+
+	const transaction = db.transaction([storeName], "readonly");
+	const store = transaction.objectStore(storeName);
+	const index = store.index("unique_user");
+
+	const range = IDBKeyRange.only([chatname, type]);
+	const request = index.openCursor(range);
+	const results = [];
+
+	let count = 0;
+	const skip = page * pageSize;
+
+	request.onsuccess = event => {
+		const cursor = event.target.result;
+		if (cursor) {
+			if (count >= skip && count < skip + pageSize) {
+				results.push(cursor.value);
+			}
+			count++;
+			cursor.continue();
+		} else if (callback) {
+			callback(results.reverse()); // Execute callback function with the results
+		}
+	};
+
+	request.onerror = e => {
+		console.error("Error fetching messages: ", e.target.error);
+	};
 }
 
 // Initialize the database
-window.addEventListener('load', async () => {
-    try {
-        await initDatabase();
-        console.log('Database initialized');
-    } catch (error) {
-        console.error('Failed to initialize database:', error);
-    }
-});
+initDatabase();
+
 //
 
 let fileHandleTicker;
