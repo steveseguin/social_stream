@@ -11,53 +11,88 @@ const searchInput = document.getElementById('search-input');
 const messagesContainer = document.getElementById('messages-container');
 const exportButton = document.getElementById('export-button');
 const exportFormat = document.getElementById('export-format');
-function initDatabase() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 1);
-        request.onerror = event => reject(event.target.error);
-        request.onsuccess = event => {
-            db = event.target.result;
-            resolve(db);
-        };
-        request.onupgradeneeded = event => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                const objStore = db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
-                objStore.createIndex("timestamp", "timestamp", { unique: false });
-                objStore.createIndex("unique_user", ["chatname", "type"], { unique: false });
+
+async function initDatabase() {
+    if (window.electronApi) {
+        try {
+            const result = await window.electronApi.open(DB_NAME, 1);
+            if (result.success) {
+                console.log('Database initialized successfully');
+                db = { electronApi: true };
+                return db;
+            } else {
+                throw new Error(result.error);
             }
-        };
-    });
+        } catch (error) {
+            console.error('Error initializing database:', error);
+            throw error;
+        }
+    } else {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onerror = event => reject(event.target.error);
+            request.onsuccess = event => {
+                db = event.target.result;
+                resolve(db);
+            };
+            request.onupgradeneeded = event => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    const objStore = db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+                    objStore.createIndex("timestamp", "timestamp", { unique: false });
+                    objStore.createIndex("unique_user", ["chatname", "type"], { unique: false });
+                }
+            };
+        });
+    }
 }
-function loadMessages(page = 0, direction = 'down') {
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction([STORE_NAME], "readonly");
-        const store = transaction.objectStore(STORE_NAME);
-        const index = store.index("timestamp");
-        const loadedMessages = [];
-        const skipCount = page * PAGE_SIZE;
-        const cursorDirection = direction === 'down' ? 'prev' : 'next';
-        const cursorRequest = index.openCursor(null, cursorDirection);
-        let count = 0;
-        cursorRequest.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor) {
-                if (count < skipCount) {
-                    count++;
-                    cursor.continue();
-                } else if (loadedMessages.length < PAGE_SIZE) {
-                    loadedMessages.push(cursor.value);
-                    cursor.continue();
+
+async function loadMessages(page = 0, direction = 'down') {
+    if (db.electronApi) {
+        try {
+            const result = await window.electronApi.transaction(DB_NAME, STORE_NAME, 'readonly', [
+                { type: 'getAll', query: {}, page, pageSize: PAGE_SIZE, direction }
+            ]);
+            if (result.success) {
+                return result.results[0];
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('Error loading messages:', error);
+            throw error;
+        }
+    } else {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], "readonly");
+            const store = transaction.objectStore(STORE_NAME);
+            const index = store.index("timestamp");
+            const loadedMessages = [];
+            const skipCount = page * PAGE_SIZE;
+            const cursorDirection = direction === 'down' ? 'prev' : 'next';
+            const cursorRequest = index.openCursor(null, cursorDirection);
+            let count = 0;
+            cursorRequest.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    if (count < skipCount) {
+                        count++;
+                        cursor.continue();
+                    } else if (loadedMessages.length < PAGE_SIZE) {
+                        loadedMessages.push(cursor.value);
+                        cursor.continue();
+                    } else {
+                        resolve(loadedMessages);
+                    }
                 } else {
                     resolve(loadedMessages);
                 }
-            } else {
-                resolve(loadedMessages);
-            }
-        };
-        cursorRequest.onerror = (event) => reject(event.target.error);
-    });
+            };
+            cursorRequest.onerror = (event) => reject(event.target.error);
+        });
+    }
 }
+
 function loadMoreMessages(direction) {
     if (isLoading) {
         return;
@@ -181,13 +216,34 @@ function checkAndLoadMore() {
     } else {
     }
 }
-function exportMessages(format) {
+
+async function exportMessages(format) {
+    let allMessages;
+    if (db.electronApi) {
+        try {
+            const result = await window.electronApi.transaction(DB_NAME, STORE_NAME, 'readonly', [
+                { type: 'getAll', query: {} }
+            ]);
+            if (result.success) {
+                allMessages = result.results[0];
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('Error exporting messages:', error);
+            return;
+        }
+    } else {
+        allMessages = await loadAllMessages();
+    }
+
     const searchTerm = searchInput.value.toLowerCase();
-    const filteredMessages = messages.filter(message =>
+    const filteredMessages = allMessages.filter(message =>
         message.chatname.toLowerCase().includes(searchTerm) ||
         message.type.toLowerCase().includes(searchTerm) ||
         message.chatmessage.toLowerCase().includes(searchTerm)
     );
+	
     let content = '';
     let filename = `chat_export_${new Date().toISOString()}.${format}`;
     switch (format) {
@@ -236,24 +292,42 @@ document.getElementById('export-button').addEventListener('click', () => {
     const format = document.getElementById('export-format').value;
     exportMessages(format);
 });
-function loadAllMessages() {
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction([STORE_NAME], "readonly");
-        const store = transaction.objectStore(STORE_NAME);
-        const request = store.getAll();
-        request.onerror = event => reject(event.target.error);
-        request.onsuccess = event => resolve(event.target.result);
-    });
+
+async function loadAllMessages() {
+    if (db.electronApi) {
+        try {
+            const result = await window.electronApi.transaction(DB_NAME, STORE_NAME, 'readonly', [
+                { type: 'getAll', query: {} }
+            ]);
+            if (result.success) {
+                return result.results[0];
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('Error loading all messages:', error);
+            throw error;
+        }
+    } else {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], "readonly");
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+            request.onerror = event => reject(event.target.error);
+            request.onsuccess = event => resolve(event.target.result);
+        });
+    }
 }
-initDatabase()
-    .then(result => {
-        db = result;
-        return loadMessages();
-    })
-    .then(loadedMessages => {
+
+(async function() {
+    try {
+        await initDatabase();
+        const loadedMessages = await loadMessages();
         messages = loadedMessages;
         totalPages = 1;
         renderMessages();
         checkAndLoadMore();
-    })
-    .catch(error => console.error("Error initializing app:", error));
+    } catch (error) {
+        console.error("Error initializing app:", error);
+    }
+})();
