@@ -20,6 +20,8 @@ To install the model, lets open Command Prompt (or Terminal)
 
 ![image](https://github.com/user-attachments/assets/4852506e-7761-47d1-99ce-8b2b01f34bac)
 
+Once it finishes install the model, you should have the model installed, and the option to list available installed models should confirm it.
+
 ![image](https://github.com/user-attachments/assets/b7eee74f-b2f4-47c0-8f55-80d239a3c3b2)
 
 
