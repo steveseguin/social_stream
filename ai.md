@@ -20,6 +20,9 @@ To install the model, lets open Command Prompt (or Terminal)
 
 ![image](https://github.com/user-attachments/assets/4852506e-7761-47d1-99ce-8b2b01f34bac)
 
+![image](https://github.com/user-attachments/assets/b7eee74f-b2f4-47c0-8f55-80d239a3c3b2)
+
+
 If you need to remove it, you can run `ollama rm llama3`. 
 
 ![image](https://github.com/user-attachments/assets/235ec0fb-aa70-4206-8b8d-98dbe173a096)
