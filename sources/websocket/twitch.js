@@ -213,12 +213,16 @@ async function connect() {
             showAuthButton();
             return;
         }
-		
-		channel = channel || username;
+        
+        channel = channel || username;
         
         websocket.send(`PASS oauth:${token}`);
         websocket.send(`NICK ${username}`);
         websocket.send(`JOIN #${channel}`);
+        
+        // Add these lines to request additional capabilities
+        websocket.send('CAP REQ :twitch.tv/commands');
+        websocket.send('CAP REQ :twitch.tv/tags');
         
         const textarea = document.querySelector("#textarea");
         if (textarea) {
@@ -236,21 +240,36 @@ async function connect() {
     websocket.onclose = handleWebSocketClose;
 }
 
-function handleWebSocketMessage(event, badges) {
-    const messages = event.data.split(/\r?\n/);
-    messages.forEach((rawMessage) => {
-        if (rawMessage) {
-            const parsedMessage = parseMessage(rawMessage);
-            if (parsedMessage.command === 'PING') {
-                websocket.send('PONG :tmi.twitch.tv');
-				return;
-            } else if (parsedMessage.command === 'PRIVMSG') {
-                processMessage(parsedMessage, badges);
-            } 
-			console.log(parsedMessage);
-        }
-    });
+function handleWebSocketMessage(event) {
+  const messages = event.data.split('\r\n');
+  messages.forEach((rawMessage) => {
+    if (rawMessage) {
+      console.log('Raw message:', rawMessage);
+      const parsedMessage = parseMessage(rawMessage);
+      console.log('Parsed message:', parsedMessage);
+
+      if (parsedMessage.command === 'PING') {
+        websocket.send('PONG :tmi.twitch.tv');
+      } else if (parsedMessage.command === 'PRIVMSG') {
+        processMessage(parsedMessage);
+      } else {
+        console.log('Unhandled command:', parsedMessage.command);
+      }
+    }
+  });
 }
+
+function checkAuthStatus() {
+    const token = getStoredToken();
+    if (!token) {
+        console.error('No authentication token found');
+        showAuthButton();
+        return false;
+    }
+    return true;
+}
+
+
 function handleWebSocketClose(event) {
     console.log('Disconnected:', event);
     console.log('Attempting to reconnect...');
@@ -409,44 +428,61 @@ function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
 
 
 function parseMessage(rawMessage) {
-  const parsedMessage = {
-	prefix: null,
-	command: null,
-	params: [],
-	trailing: null
+  let parsedMessage = {
+    tags: {},
+    prefix: null,
+    command: null,
+    params: [],
+    trailing: null
   };
 
-  // Split the message into prefix, command/params, and trailing parts
-  const match = rawMessage.match(/^:([^ ]+) +([^ :]+)(?: +([^ :]+))*(?: +:(.*))?$/);
-  
-  if (match) {
-	parsedMessage.prefix = match[1];
-	parsedMessage.command = match[2];
-	if (match[3]) {
-	  parsedMessage.params = match[3].split(' ');
-	} 
-	if (match[4]){
-		parsedMessage.trailing = match[4];
-	}
-  } else if (rawMessage == "PING :tmi.twitch.tv"){
-	 parsedMessage.command = "PING";
-  } else {
-	// If the regex does not match, the message might be a simple command or malformed.
-	console.error('Failed to parse message:', rawMessage);
+  // Parse tags
+  if (rawMessage.startsWith('@')) {
+    const tagsEnd = rawMessage.indexOf(' ');
+    const tagsPart = rawMessage.slice(1, tagsEnd);
+    rawMessage = rawMessage.slice(tagsEnd + 1);
+    
+    tagsPart.split(';').forEach(tag => {
+      const [key, value] = tag.split('=');
+      parsedMessage.tags[key] = value || true;
+    });
   }
+
+  // Parse prefix
+  if (rawMessage.startsWith(':')) {
+    const prefixEnd = rawMessage.indexOf(' ');
+    parsedMessage.prefix = rawMessage.slice(1, prefixEnd);
+    rawMessage = rawMessage.slice(prefixEnd + 1);
+  }
+
+  // Parse command and params
+  const parts = rawMessage.split(' ');
+  parsedMessage.command = parts.shift().toUpperCase();
+
+  // Parse trailing
+  const trailingStart = rawMessage.indexOf(' :');
+  if (trailingStart !== -1) {
+    parsedMessage.trailing = rawMessage.slice(trailingStart + 2);
+    parts.pop(); // Remove trailing from parts
+  }
+
+  parsedMessage.params = parts;
 
   return parsedMessage;
 }
 
-
 function sendMessage(message) {
-    if (websocket.readyState === WebSocket.OPEN) {
-        websocket.send(`PRIVMSG #${channel} :${message}`);
-		return true;
-    } else {
-        console.error('WebSocket is not open.');
-    }
-	return false;
+	if (checkAuthStatus()){
+		if (websocket.readyState === WebSocket.OPEN) {
+			const command = `PRIVMSG #${channel} :${message}`;
+			console.log('Sending message:', command);
+			websocket.send(command);
+			return true;
+		} else {
+			console.error('WebSocket is not open.');
+		}
+	}
+    return false;
 }
 
 const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
@@ -560,7 +596,7 @@ async function fetchWithTimeout(URL, timeout = 8000, headers=false) {
 var channels = {};
 function getTwitchAvatarImage(usernome) {
 	if (!usernome || channels[usernome]){return;}
-	fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username=" + encodeURIComponent(usernome)).then(response => {
+	fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username=" + encodeURIComponent(usernome.replace("@",""))).then(response => {
 		response.text().then(function(text) {
 			if (text.startsWith("https://")) {
 				channels[usernome] = text;
@@ -571,22 +607,20 @@ function getTwitchAvatarImage(usernome) {
 	});
 }
 
-async function processMessage(parsedMessage, badges) {
-    var chan = parsedMessage.params[0];
-    getTwitchAvatarImage(chan);
+async function processMessage(parsedMessage) {
+	const user = parsedMessage.prefix.split('!')[0];
+	const message = parsedMessage.trailing;
+	const channel = parsedMessage.params[0];
+	const userInfo = await getUserInfo(user);
+	console.log(`${user} in ${channel}: ${message}`);
 
-    const message = parsedMessage.trailing;
-    const user = parsedMessage.prefix.split('!')[0];
-
-    // Fetch user info
-    const userInfo = await getUserInfo(user);
-
-    var span = document.createElement("div");
-    span.innerText += (userInfo ? userInfo.display_name : user) + ": " + message;
-    document.querySelector("#textarea").appendChild(span);
-    if (document.querySelector("#textarea").childNodes.length > 10) {
-        document.querySelector("#textarea").childNodes[0].remove();
-    }
+	// Add the message to the UI
+	var span = document.createElement("div");
+	span.innerText = `${(userInfo ? userInfo.display_name : user)}: ${message}`;
+	document.querySelector("#textarea").appendChild(span);
+	if (document.querySelector("#textarea").childNodes.length > 10) {
+		document.querySelector("#textarea").childNodes[0].remove();
+	}
 
     var data = {};
     data.chatname = userInfo ? userInfo.display_name : user;
