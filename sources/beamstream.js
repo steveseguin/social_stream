@@ -107,6 +107,7 @@
 		msg = msg.trim();
 		if (!msg){return;}
 		
+		var source = ele.querySelector('[property="sender.platform"][value]');
 		
 		var chatimg = '';
 		try {
@@ -133,6 +134,14 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "beamstream";
 		//console.log(data);
+		
+		if (source){
+			if (settings.ignorealternatives){
+				return;
+			}
+			data.sourceImg =  "./sources/images/"+source+".png";
+		}
+		
 		pushMessage(data);
 		
 	}

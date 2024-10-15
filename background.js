@@ -1986,6 +1986,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "textonlymode") {
 				pushSettingChange();
 			}
+			if (request.setting == "ignorealternatives") {
+				pushSettingChange();
+			}
+			
 			if (request.setting == "ticker") {
 				try {
 					await loadFileTicker();

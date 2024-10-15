@@ -157,7 +157,14 @@
 		var sourceImg = "./sources/images/restream.png";
 		try {
 			sourceImg = ele.querySelector("img:last-child[src^='https://restream.io/img/api/platforms/']").src;
+			
+			if (settings.ignorealternatives && sourceImg!=="restream"){
+				return;
+			}
+			
 		} catch(e){}
+		
+		
 		
 
 		var data = {};
