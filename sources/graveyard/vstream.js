@@ -54,7 +54,7 @@
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
-						node.src = node.src+"";
+						node.src.startsWith('http') || (node.src = node.src + "");
 					}
 					resp += node.outerHTML;
 				}
@@ -139,7 +139,7 @@
 		
 		var chatbadges = [];
 		ele.childNodes[0].childNodes[0].querySelectorAll("img[src]").forEach(img=>{
-			img.src = img.src+"";
+			img.src.startsWith('http') || (img.src = img.src + "");
 			chatbadges.push(img.src);
 		});
 		

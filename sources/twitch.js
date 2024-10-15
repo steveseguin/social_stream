@@ -128,7 +128,7 @@
 			if (emote) {
 				const escapedMatch = escapeHtml(emoteMatch);
 				const isZeroWidth = typeof emote !== "string" && emote.zw;
-				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
+				return `<img src="${typeof emote === 'string' ? emote : (emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
 			}
 			return match;
 		});
@@ -202,6 +202,18 @@
 				}
 			}
 		}
+		
+		const baseUrl = `${window.location.protocol}//${window.location.host}`;
+		
+		function getAbsoluteSrc(imgNode) {
+		  if (imgNode.src.startsWith('http')) {
+			return imgNode.src;
+		  } else if (imgNode.src.startsWith('/')) {
+			return baseUrl + imgNode.src;
+		  } else {
+			return `${baseUrl}/${imgNode.src}`;
+		  }
+		}
 
 		function processEmote(emoteNode) {
 			if (settings.textonlymode){
@@ -232,7 +244,9 @@
 				
 				let newImgAttributes = 'class="regular-emote"';
 				if (emoteNode.src) {
-					newImgAttributes += ` src="${emoteNode.src.replace('/1.0', '/2.0')}"`;
+					
+					const newImageURL = getAbsoluteSrc(emoteNode);
+					newImgAttributes += ` src="${newImageURL.replace('/1.0', '/2.0')}"`;
 				}
 				if (emoteNode.srcset) {
 					let newSrcset = emoteNode.srcset.replace(/^[^,]+,\s*/, ''); // remove first low-res srcset.

@@ -57,7 +57,7 @@ function getAllContentNodes(element) { // takes an element.
 		} else if (node.nodeType === 1){
 			if (!settings.textonlymode){
 				if ((node.nodeName == "IMG") && node.src){
-					node.src = node.src+"";
+					node.src.startsWith('http') || (node.src = node.src + "");
 				}
 				resp += node.outerHTML;
 			}

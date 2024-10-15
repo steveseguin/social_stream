@@ -11,7 +11,7 @@
 		}
 	} catch(e){}
 
-	function getTranslation(key, value = false) {
+/* 	function getTranslation(key, value = false) {
 		if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
 			// these are the proper translations
 			return settings.translation.innerHTML[key];
@@ -22,7 +22,26 @@
 		} else {
 			return key.replaceAll("-", " "); //
 		}
-	}
+	} */
+	
+	const getTranslation = (() => {
+	  const cache = new Map();
+	  return (key, value = false) => {
+		if (cache.has(key)) return cache.get(key);
+		let result;
+		if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
+		  result = settings.translation.innerHTML[key];
+		} else if (settings.translation && settings.translation.miscellaneous && key in settings.translation.miscellaneous) {
+		  result = settings.translation.miscellaneous[key];
+		} else if (value !== false) {
+		  result = value;
+		} else {
+		  result = key.replaceAll("-", " ");
+		}
+		cache.set(key, result);
+		return result;
+	  };
+	})();
 
 	function escapeHtml(unsafe) {
 		try {
@@ -945,7 +964,7 @@
 						ele4.skip = true;
 						cleared = true;
 						if (ele4.id) {
-							messageHistory.push(ele4.id);
+							messageHistory.add(ele4.id);
 						}
 					});
 				} catch (e) {}
