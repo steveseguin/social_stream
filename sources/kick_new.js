@@ -90,9 +90,20 @@
 		});
 	}
 	
+	function sleep(ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	}
+	
 	async function processMessage(ele){	// twitch
 	
+	  if (settings.delaykick){
+		  await sleep(3000);
+	  }
+	
 	  if (!ele){return;}
+	  
+	  if (!ele.isConnected){return;}
+	  
 	  
 	  if (settings.customkickstate) {
 		return;
@@ -242,7 +253,7 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+					for (var i = 0; i < mutation.addedNodes.length; i++) {
 						try {
 							if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
 								if (pastMessages.includes(mutation.addedNodes[i].dataset.index)){continue;}

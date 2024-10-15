@@ -2034,6 +2034,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "delayyoutube") {
 				pushSettingChange();
 			}
+			if (request.setting == "delaykick") {
+				pushSettingChange();
+			}
 			if (request.setting == "customtwitchaccount") {
 				pushSettingChange();
 			}
