@@ -128,7 +128,7 @@
 			if (emote) {
 				const escapedMatch = escapeHtml(emoteMatch);
 				const isZeroWidth = typeof emote !== "string" && emote.zw;
-				return `<img src="${typeof emote === 'string' ? emote : (emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
+				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
 			}
 			return match;
 		});
