@@ -1105,14 +1105,15 @@ function update(response, sync=true){
 								}
 							}
 							if ("textparam1" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam1='"+key+"']");
+								var ele = document.querySelector("input[data-textparam1='"+key+"'],textarea[data-textparam1='"+key+"']");
+								console.log(ele);
 								if (ele){
 									ele.value = response.settings[key].textparam1;
 									updateSettings(ele, sync);
 								}
 							}
 							if ("textparam2" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam2='"+key+"']");
+								var ele = document.querySelector("input[data-textparam2='"+key+"'],textarea[data-textparam2='"+key+"']");
 								if (ele){
 									ele.value = response.settings[key].textparam2;
 									updateSettings(ele, sync);
@@ -1217,7 +1218,7 @@ function update(response, sync=true){
 								ele.checked = response.settings[key];
 								updateSettings(ele, sync);
 							}
-							var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"'], textarea[data-textsetting='"+key+"']");
+							var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"'], textarea[data-textsetting='"+key+"'], textarea[data-textparam1='"+key+"'],");
 							if (ele){
 								ele.value = response.settings[key];
 								updateSettings(ele, sync);
@@ -1527,7 +1528,9 @@ function updateSettings(ele, sync=true, value=null){
 		
 		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.textparam1);
 		
-		if (ele.value){
+		if (ele.value && ele.dataset.textparam1 == "cssb64"){
+			document.getElementById("dock").raw = updateURL(ele.dataset.textparam1+"="+btoa(encodeURIComponent(ele.value)), document.getElementById("dock").raw);
+		} else if (ele.value){
 			document.getElementById("dock").raw = updateURL(ele.dataset.textparam1+"="+encodeURIComponent(ele.value), document.getElementById("dock").raw);
 		}
 		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
@@ -1538,7 +1541,9 @@ function updateSettings(ele, sync=true, value=null){
 	} else if (ele.dataset.textparam2){
 		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.textparam2);
 		
-		if (ele.value){
+		if (ele.value && ele.dataset.textparam2 == "cssb64"){
+			document.getElementById("overlay").raw = updateURL(ele.dataset.textparam2+"="+btoa(encodeURIComponent(ele.value)), document.getElementById("overlay").raw);
+		} else if (ele.value){
 			document.getElementById("overlay").raw = updateURL(ele.dataset.textparam2+"="+encodeURIComponent(ele.value), document.getElementById("overlay").raw);
 		}
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
