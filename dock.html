@@ -2398,6 +2398,8 @@
 			var autoTimeoutEnabled = true;
 			var autoScrollCatch = 200;
 
+			var doubleLimit = false;
+			
 			var encode = false;
 
 			try {
@@ -4039,12 +4041,14 @@
 
 			var hideNotMembers = false;
 			var hideNotDonos = false;
-
+			
 			if (urlParams.has("showonlydonos")) {
+				doubleLimit = true;
 				donos();
 			}
 
 			if (urlParams.has("showonlymembers")) {
+				doubleLimit = true;
 				members();
 			}
 			var eventsOnly = false;
@@ -4055,6 +4059,7 @@
 				} else {
 					eventsOnly = true;
 				}
+				doubleLimit = true;
 			}
 			
 			
@@ -6325,7 +6330,7 @@
 			function cleanUpOldNodes() {
 				var nodes = document.querySelectorAll("#output>div:not(.queued)");
 				var total2Remove = 0;
-				if (isOBSBrowserSource) {
+				if (isOBSBrowserSource && !doubleLimit) {
 					// This is an OBS browser source, so lets go light on it.
 					if (customNodeLimit) {
 						total2Remove = nodes.length - customNodeLimit;
