@@ -7582,7 +7582,7 @@
 						node.children[0].dataset.qid = selectedQueue.length;
 						node.classList.add("queued");
 						updateQueueButton();
-					} else if (selfQueue && data.chatmessage && selfQueue.includes(data.chatmessage.split(" ")[0])) {
+					} else if (selfQueue && data.chatmessage && (selfQueue.some(item => data.chatmessage.split(" ").includes(item)))) {
 						selectedQueue.push(node);
 						node.children[0].dataset.qid = selectedQueue.length;
 						node.classList.add("queued");
