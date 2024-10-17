@@ -1558,6 +1558,21 @@
 			if (urlParams.has("voice")) {
 				voiceName = urlParams.get("voice") || "google";
 			}
+			
+			var voiceNameGoogle = false;
+			if (urlParams.has("voicegoogle")) {
+				voiceNameGoogle = urlParams.get("voicegoogle");
+			}
+			
+			var voiceNameElevenlabs = false;
+			if (urlParams.has("voice11")) {
+				voiceNameElevenlabs = urlParams.get("voice11");
+			}
+			
+			var voiceNameSpeechify = false;
+			if (urlParams.has("voicespeechify")) {
+				voiceNameSpeechify = urlParams.get("voicespeechify");
+			}
 
 			var voiceGender = false;
 			if (urlParams.has("gender")) {
@@ -1724,7 +1739,7 @@
 					let model = English ? "simba-english" : "simba-multilingual";
 					const data = {
 						input: "<speak>" + tts + "</speak>",
-						voice_id: voiceName || "henry",
+						voice_id: voiceNameSpeechify || voiceName || "henry",
 						model: model,
 						audio_format: "mp3"
 					};
@@ -1799,8 +1814,8 @@
 					}
 				};
 
-				if (voiceName) {
-					data.voice.name = voiceName;
+				if (voiceName || voiceNameGoogle) {
+					data.voice.name = voiceNameGoogle || voiceName;
 				}
 				if (voiceGender) {
 					data.voice.ssmlGender = voiceGender.toUpperCase();
@@ -1833,7 +1848,7 @@
 					});
 			}
 			function ElevenLabsTTS(tts) {
-				const voiceid = voiceName || "VR6AewLTigWG4xSOukaG";
+				const voiceid = voiceNameElevenlabs || voiceName || "VR6AewLTigWG4xSOukaG";
 				const url = "https://api.elevenlabs.io/v1/text-to-speech/" + voiceid + "/stream?optimize_streaming_latency=" + voiceLatency;
 
 				var data = {

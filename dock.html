@@ -3453,6 +3453,21 @@
 			if (urlParams.has("voice")) {
 				voiceName = urlParams.get("voice") || "google";
 			}
+			
+			var voiceNameGoogle = false;
+			if (urlParams.has("voicegoogle")) {
+				voiceNameGoogle = urlParams.get("voicegoogle");
+			}
+			
+			var voiceNameElevenlabs = false;
+			if (urlParams.has("voice11")) {
+				voiceNameElevenlabs = urlParams.get("voice11");
+			}
+			
+			var voiceNameSpeechify = false;
+			if (urlParams.has("voicespeechify")) {
+				voiceNameSpeechify = urlParams.get("voicespeechify");
+			}
 
 			function speak(text, allow = false) {
 				if (!speech && !allow) {
@@ -3624,6 +3639,7 @@
 			var selfQueue = false;
 			if (urlParams.has("selfqueue")) {
 				selfQueue = urlParams.get("selfqueue") || "!queue";
+				selfQueue = selfQueue.split(',').map(item => item.trim());
 			}
 
 			var saveimg = false;
@@ -7566,7 +7582,7 @@
 						node.children[0].dataset.qid = selectedQueue.length;
 						node.classList.add("queued");
 						updateQueueButton();
-					} else if (selfQueue && data.chatmessage && data.chatmessage.split(" ")[0] == selfQueue) {
+					} else if (selfQueue && data.chatmessage && selfQueue.includes(data.chatmessage.split(" ")[0])) {
 						selectedQueue.push(node);
 						node.children[0].dataset.qid = selectedQueue.length;
 						node.classList.add("queued");
@@ -7653,8 +7669,8 @@
 						}
 					};
 
-					if (voiceName) {
-						data.voice.name = voiceName;
+					if (voiceNameGoogle || voiceName) {
+						data.voice.name = voiceNameGoogle || voiceName;
 					}
 					if (voiceGender) {
 						data.voice.ssmlGender = voiceGender.toUpperCase();
@@ -7705,7 +7721,7 @@
 					let model = English ? "simba-english" : "simba-multilingual";
 					const data = {
 						input: "<speak>" + tts + "</speak>",
-						voice_id: voiceName || "henry",
+						voice_id: voiceNameSpeechify || voiceName || "henry",
 						model: model,
 						audio_format: "mp3"
 					};
@@ -7766,7 +7782,7 @@
 			function ElevenLabsTTS(tts) {
 				try {
 					premiumQueueActive = true;
-					const voiceid = voiceName || "VR6AewLTigWG4xSOukaG";
+					const voiceid = voiceNameElevenlabs || voiceName || "VR6AewLTigWG4xSOukaG";
 					const url = "https://api.elevenlabs.io/v1/text-to-speech/" + voiceid + "/stream?optimize_streaming_latency=" + voiceLatency;
 
 					var data = {
