@@ -369,11 +369,13 @@
             pollTimer: urlParams.get('pollTimer') || 60,
             pollEnabled: urlParams.get('pollEnabled') || false,
             styleType: urlParams.get('style') || 'default',
+			pollSpam: urlParams.has('pollSpam') || false,
 			pollClosed: false 
         };
 
         let results = {};
         let totalVotes = 0;
+		let alreadyVoted = {}
 
         function initializePoll() {
             const pollContainer = document.getElementById('poll-container');
@@ -457,9 +459,10 @@
 				pollOptionsContainer.appendChild(optionElement);
 			});
 		}
-
-        function processVote(vote) {
+		
+        function processVote(vote, name, source) {
 			if (settings.pollClosed) return;
+			if (!settings.pollSpam && alreadyVoted[name+":"+source]){return;} // already voted
 			
             vote = vote.trim();
             
@@ -482,6 +485,9 @@
                 if (matchedOption) {
                     results[matchedOption] = (results[matchedOption] || 0) + 1;
                     totalVotes++;
+					if (settings.pollSpam){
+						alreadyVoted[name+":"+source] = true;
+					}
                 }
             } else if (settings.pollType === 'freeform') {
                 let hashtag = vote.match(/^#(\w+)$/);
@@ -489,6 +495,9 @@
                     hashtag = hashtag[1].toUpperCase();
                     results[hashtag] = (results[hashtag] || 0) + 1;
                     totalVotes++;
+					if (settings.pollSpam){
+						alreadyVoted[name+":"+source] = true;
+					}
                 } else {
                     // Check for numerical selection
                     let numericVote = parseInt(vote, 10);
@@ -496,6 +505,9 @@
                         let selectedOption = Object.keys(results)[numericVote - 1];
                         results[selectedOption]++;
                         totalVotes++;
+						if (settings.pollSpam){
+							alreadyVoted[name+":"+source] = true;
+						}
                     }
                 }
             }
@@ -550,13 +562,14 @@
 			   
 				results = {};
 				totalVotes = 0;
+				alreadyVoted = {};
 				settings.pollClosed = false; // Reset closed state when settings change
 				initializePoll();
 				
 				updatePollVisibility();
 				
 			} else if (data.chatmessage) {
-				processVote(data.chatmessage);
+				processVote(data.chatmessage, data.chatname, data.type);
 			} else if (data.cmd) {
 				if (data.cmd === "closepoll") {
 					closePoll();
@@ -577,6 +590,7 @@
 			settings.pollClosed = false;
 			results = {};
 			totalVotes = 0;
+			alreadyVoted = {};
 			initializePoll();
 		}
 
