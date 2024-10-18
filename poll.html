@@ -485,7 +485,7 @@
                 if (matchedOption) {
                     results[matchedOption] = (results[matchedOption] || 0) + 1;
                     totalVotes++;
-					if (settings.pollSpam){
+					if (!settings.pollSpam){
 						alreadyVoted[name+":"+source] = true;
 					}
                 }
@@ -495,7 +495,7 @@
                     hashtag = hashtag[1].toUpperCase();
                     results[hashtag] = (results[hashtag] || 0) + 1;
                     totalVotes++;
-					if (settings.pollSpam){
+					if (!settings.pollSpam){
 						alreadyVoted[name+":"+source] = true;
 					}
                 } else {
@@ -505,7 +505,7 @@
                         let selectedOption = Object.keys(results)[numericVote - 1];
                         results[selectedOption]++;
                         totalVotes++;
-						if (settings.pollSpam){
+						if (!settings.pollSpam){
 							alreadyVoted[name+":"+source] = true;
 						}
                     }
