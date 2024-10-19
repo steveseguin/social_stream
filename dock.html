@@ -3630,6 +3630,12 @@
 			if (urlParams.has("notobs")) {
 				window.obsstudio = false;
 			}
+			
+			
+			var stripDonationData = false;
+			if (urlParams.has("stripdonations")) {
+				stripDonationData = true;
+			}
 
 			var clock24hr = false;
 			if (urlParams.has("24hr")) {
@@ -6830,6 +6836,10 @@
 					} else {
 						data.type = data.type.toString();
 						showType = data.type;
+					}
+					
+					if (stripDonationData){
+						data.hasDonation = "";
 					}
 
 					if (data.hasDonation) {
