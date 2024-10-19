@@ -286,6 +286,8 @@
 	function processMessage(ele, event=false) {
 		// twitch
 		
+		console.log(ele);
+		
 		if (ele.classList.contains("chat-line__unpublished-message-body") || ele.querySelector(".chat-line__unpublished-message-body")){
 			return;
 		}
