@@ -309,9 +309,6 @@
 					if (BTTV.globalEmotes) {
 						EMOTELIST = deepMerge(BTTV.globalEmotes, EMOTELIST);
 					}
-					// for testing.
-					// EMOTELIST = deepMerge({"ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/1x.webp","zw":true}}, EMOTELIST);
-					
 				} catch (e) {}
 			}
 		}
@@ -330,6 +327,28 @@
 				} catch (e) {}
 			}
 		}
+		if (FFZ) {
+			//console.log(FFZ);
+			if (settings.ffz) {
+				try {
+					if (FFZ.channelEmotes) {
+						EMOTELIST = deepMerge(FFZ.channelEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+				try {
+					if (FFZ.globalEmotes) {
+						EMOTELIST = deepMerge(FFZ.globalEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+			}
+		}
+		
+		// for testing.
+ 		//EMOTELIST = deepMerge({
+		//	 "ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true},
+		//	 "oEDM": {url:"https://cdn.7tv.app/emote/62127910041f77b2480365f4/2x.webp","zw":true},
+		//	 "widepeepoHappy": "https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp"
+		// }, EMOTELIST);
 		//console.log(EMOTELIST);
 	}
 
@@ -751,6 +770,7 @@
 	var BTTV = false;
 	var videosMuted = false;
 	var SEVENTV = false;
+	var FFZ = false;
 	
 	function containsShorts(url) {
 		const urlObj = new URL(url);
@@ -782,6 +802,9 @@
 					if (settings.seventv) {
 						chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {});
 					}
+					if (settings.ffz) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true }, function (response) {});
+					}
 					if (settings.delayyoutube){
 						captureDelay = 3200;
 						//console.log(captureDelay);
@@ -801,6 +824,13 @@
 				if ("BTTV" in request) {
 					BTTV = request.BTTV;
 					//console.log(BTTV);
+					sendResponse(true);
+					mergeEmotes();
+					return;
+				}
+				if ("FFZ" in request) {
+					FFZ = request.FFZ;
+					//console.log(FFZ);
 					sendResponse(true);
 					mergeEmotes();
 					return;
@@ -847,11 +877,23 @@
 		// {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response) {
 			settings = response.settings;
-			if (settings.bttv && !BTTV) {
-				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {});
-			}
-			if (settings.seventv && !SEVENTV) {
-				chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {});
+			if ("settings" in response) {
+				settings = response.settings;
+				if (settings.bttv && !BTTV) {
+					chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
+						//	console.log(response);
+					});
+				}
+				if (settings.seventv && !SEVENTV) {
+					chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {
+						//	console.log(response);
+					});
+				}
+				if (settings.ffz && !FFZ) {
+					chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true }, function (response) {
+						//	console.log(response);
+					});
+				}
 			}
 			if (settings.delayyoutube){
 				captureDelay = 2000;

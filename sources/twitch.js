@@ -630,6 +630,7 @@
 	var settings = {};
 	var BTTV = false;
 	var SEVENTV = false;
+	var FFZ = false;
 	// settings.textonlymode
 	// settings.captureevents
 
@@ -661,6 +662,9 @@
 						if (settings.seventv) {
 							chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {});
 						}
+						if (settings.ffz) {
+							chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true }, function (response) {});
+						}
 						return;
 					}
 					if ("SEVENTV" in request) {
@@ -673,6 +677,13 @@
 					if ("BTTV" in request) {
 						BTTV = request.BTTV;
 						//console.log(BTTV);
+						sendResponse(true);
+						mergeEmotes();
+						return;
+					}
+					if ("FFZ" in request) {
+						FFZ = request.FFZ;
+						//console.log(FFZ);
 						sendResponse(true);
 						mergeEmotes();
 						return;
@@ -701,6 +712,11 @@
 					}
 					if (settings.seventv && !SEVENTV) {
 						chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {
+							//	console.log(response);
+						});
+					}
+					if (settings.ffz && !FFZ) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true }, function (response) {
 							//	console.log(response);
 						});
 					}
@@ -758,6 +774,21 @@
 				try {
 					if (SEVENTV.globalEmotes) {
 						EMOTELIST = deepMerge(SEVENTV.globalEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+			}
+		}
+		if (FFZ) {
+			//console.log(FFZ);
+			if (settings.ffz) {
+				try {
+					if (FFZ.channelEmotes) {
+						EMOTELIST = deepMerge(FFZ.channelEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+				try {
+					if (FFZ.globalEmotes) {
+						EMOTELIST = deepMerge(FFZ.globalEmotes, EMOTELIST);
 					}
 				} catch (e) {}
 			}

@@ -1338,6 +1338,7 @@ async function getPronounsNames(username = "") {
 
 var Globalbttv = false;
 var Globalseventv = false;
+var Globalffz = false;
 
 async function getBTTVEmotes(url = false) {
 	var type = "";
@@ -1706,6 +1707,143 @@ async function getSEVENTVEmotes(url = false) {
 		console.error(e);
 	}
 	return seventv;
+}
+
+async function getFFZEmotes(url = false) {
+	var type = "";
+	var ffz = {};
+	var userID = false;
+
+	try {
+		if (url && url.includes("youtube.com/")) {
+			type = "youtube";
+		} else if (url && url.includes("twitch.tv/")) {
+			type = "twitch";
+		}
+
+		if (type == "youtube") {
+			// YouTube functionality remains largely the same
+			var vid = false;
+			if (url) {
+				vid = YouTubeGetID(url);
+			}
+
+			if (vid) {
+				userID = localStorage.getItem("vid2uid:" + vid);
+
+				if (!userID) {
+					userID = await fetch("https://api.socialstream.ninja/youtube/user?video=" + vid)
+						.then(result => result.text())
+						.catch(err => {
+							console.error(err);
+						});
+					if (userID) {
+						localStorage.setItem("vid2uid:" + vid, userID);
+					} else {
+						return false;
+					}
+				}
+				if (userID) {
+					ffz = getItemWithExpiry("uid2ffz.youtube:" + userID);
+					if (!ffz) {
+						// Use FFZ API to get user's emotes
+						ffz = await fetch(`https://api.frankerfacez.com/v1/room/yt/${userID}`)
+							.then(result => result.json())
+							.catch(err => {
+								console.error(err);
+							});
+
+						if (ffz && ffz.sets) {
+							ffz.channelEmotes = Object.values(ffz.sets).flatMap(set => 
+								set.emoticons.map(emote => ({
+									[emote.name]: {
+										url: emote.urls["1"], // Use 1x size as default
+										zw: emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
+									}
+								}))
+							).reduce((acc, curr) => Object.assign(acc, curr), {});
+
+							setItemWithExpiry("uid2ffz.youtube:" + userID, ffz);
+						}
+					}
+				}
+			}
+		} else if (type == "twitch") {
+			var username = url.split("popout/");
+
+			if (username.length > 1) {
+				username = username[1].split("/")[0];
+				log("username: " + username);
+				if (username) {
+					ffz = getItemWithExpiry("uid2ffz.twitch:" + username.toLowerCase());
+					log("FFZ2", ffz);
+					if (!ffz || ffz.message) {
+						// Use FFZ API to get user's emotes
+						ffz = await fetch(`https://api.frankerfacez.com/v1/room/${username}`)
+							.then(result => result.json())
+							.catch(err => {
+								console.error(err);
+							});
+
+						if (ffz && ffz.sets) {
+							ffz.channelEmotes = Object.values(ffz.sets).flatMap(set => 
+								set.emoticons.map(emote => ({
+									[emote.name]: {
+										url: emote.urls["3"] || emote.urls["2"] || emote.urls["1"], // Use 1x size as default
+										zw: emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
+									}
+								}))
+							).reduce((acc, curr) => Object.assign(acc, curr), {});
+
+							setItemWithExpiry("uid2ffz.twitch:" + username.toLowerCase(), ffz);
+						} else {
+							ffz = {};
+						}
+						log("FFZ", ffz);
+					} else {
+						log("ffz recovered from storage");
+					}
+				}
+			}
+		}
+
+		if (!Globalffz) {
+			Globalffz = getItemWithExpiry("globalffz");
+
+			if (!Globalffz) {
+				// Use FFZ API to get global emotes
+				Globalffz = await fetch("https://api.frankerfacez.com/v1/set/global")
+					.then(result => result.json())
+					.catch(err => {
+						console.error(err);
+					});
+				if (Globalffz && Globalffz.sets) {
+					Globalffz = Object.values(Globalffz.sets).flatMap(set => 
+						set.emoticons.map(emote => ({
+							[emote.name]: {
+								url: emote.urls["1"], // Use 1x size as default
+								zw: emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
+							}
+						}))
+					).reduce((acc, curr) => Object.assign(acc, curr), {});
+					setItemWithExpiry("globalffz", Globalffz);
+				} else {
+					Globalffz = {};
+				}
+			} else {
+				log("Globalffz recovered from storage");
+			}
+		}
+		if (Globalffz){
+			ffz.globalEmotes = Globalffz;
+		}
+		ffz.url = url;
+		ffz.type = type;
+		ffz.user = userID;
+	} catch (e) {
+		console.error(e);
+	}
+	return ffz;
 }
 
 const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
@@ -2092,6 +2230,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				}
 				pushSettingChange();
 			}
+			if (request.setting == "ffz") {
+				if (settings.ffz) {
+					clearAllWithPrefix("uid2ffz.twitch:");
+					clearAllWithPrefix("uid2ffz.youtube:");
+					await getFFZEmotes();
+				}
+				pushSettingChange();
+			}
 			if (request.setting == "pronouns") {
 				if (settings.pronouns) {
 					clearAllWithPrefix("Pronouns");
@@ -2328,6 +2474,20 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					//	console.log(sender);
 					//	console.log(SEVENTV2);
 					chrome.tabs.sendMessage(sender.tab.id, { SEVENTV: SEVENTV2 }, function (response = false) {
+						chrome.runtime.lastError;
+					});
+				}
+			}
+		} else if ("getFFZ" in request) {
+			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+			//console.log("getFFZ");
+			sendResponse({ state: isExtensionOn });
+			if (sender.tab.url) {
+				var FFZ2 = await getFFZEmotes(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
+				if (FFZ2) {
+					//	console.log(sender);
+					//	console.log(FFZ2);
+					chrome.tabs.sendMessage(sender.tab.id, { FFZ: FFZ2 }, function (response = false) {
 						chrome.runtime.lastError;
 					});
 				}
@@ -2787,6 +2947,14 @@ async function sendToDestinations(message) {
 					}
 					if (Globalseventv) {
 						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalseventv, true);
+					}
+				}
+				if (settings.ffz) {
+					if (!Globalffz) {
+						await getFFZEmotes();
+					}
+					if (Globalffz) {
+						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalffz, true);
 					}
 				}
 				message.chatmessage = filterXSS(message.chatmessage);
