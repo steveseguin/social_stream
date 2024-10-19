@@ -1019,6 +1019,40 @@ function update(response, sync=true){
 									updateSettings(ele, sync);
 								}
 							}
+							if ("param9" in response.settings[key]){
+								var ele = document.querySelector("input[data-param9='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param9;
+									if (!key.includes("=")){
+										if ("numbersetting9" in response.settings[key]){
+											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting9));
+										} else if (document.querySelector("input[data-numbersetting9='"+key+"']")){
+											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting9='"+key+"']").value));
+										} else {
+											updateSettings(ele, sync); 
+										}
+									} else {
+										updateSettings(ele, sync);
+									}
+								} else if (key.includes("=")){
+									var keys = key.split('=');
+									ele = document.querySelector("input[data-param9='"+keys[0]+"']");
+									log(keys);
+									log(response.settings);
+									if (ele){
+										ele.checked = response.settings[key].param9;
+										if (keys[1]){
+											var ele2 = document.querySelector("input[data-numbersetting9='"+keys[0]+"']");
+											if (ele2){
+												ele2.value = parseFloat(keys[1], keys[1]);
+											}
+											updateSettings(ele, sync, parseFloat(keys[1]));
+										} else{
+											updateSettings(ele, sync);
+										}
+									}
+								}
+							}
 							if ("both" in response.settings[key]){
 								var ele = document.querySelector("input[data-both='"+key+"']");
 								if (ele){
@@ -1101,6 +1135,18 @@ function update(response, sync=true){
 									var ele = document.querySelector("input[data-param2='"+key+"']");
 									if (ele && ele.checked){
 										updateSettings(ele, false, parseFloat(response.settings[key].numbersetting2));
+									}
+								}
+							}
+							if ("numbersetting9" in response.settings[key]){
+								var ele = document.querySelector("input[data-numbersetting9='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].numbersetting9;
+									updateSettings(ele, sync);
+									
+									var ele = document.querySelector("input[data-param9='"+key+"']");
+									if (ele && ele.checked){
+										updateSettings(ele, false, parseFloat(response.settings[key].numbersetting9));
 									}
 								}
 							}
@@ -1760,6 +1806,34 @@ function updateSettings(ele, sync=true, value=null){
 				updateSettings(ele1, sync);
 			}
 		});
+	} else if (ele.dataset.param9){
+		if (ele.checked){
+			if (value!==null){
+				document.getElementById("custom-gif-commands").raw = updateURL(ele.dataset.param9+"="+value, document.getElementById("custom-gif-commands").raw);
+			} else if (document.querySelector("input[data-numbersetting9='"+ele.dataset.param9+"']")){
+				value = document.querySelector("input[data-numbersetting9='"+ele.dataset.param9+"']").value;
+				
+				document.getElementById("custom-gif-commands").raw = removeQueryParamWithValue(document.getElementById("custom-gif-commands").raw, ele.dataset.param9);
+				document.getElementById("custom-gif-commands").raw = updateURL(ele.dataset.param9+"="+value, document.getElementById("custom-gif-commands").raw);
+			} else {
+				document.getElementById("custom-gif-commands").raw = updateURL(ele.dataset.param9, document.getElementById("custom-gif-commands").raw);
+			}
+		}  else {
+			document.getElementById("custom-gif-commands").raw = removeQueryParamWithValue(document.getElementById("custom-gif-commands").raw, ele.dataset.param9);
+		}
+			
+		document.getElementById("custom-gif-commands").raw = document.getElementById("custom-gif-commands").raw.replace("&&", "&");
+		document.getElementById("custom-gif-commands").raw = document.getElementById("custom-gif-commands").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param9",  target:target, setting: ele.dataset.param9, "value": ele.checked}, function (response) {});
+		}
+		
+		document.querySelectorAll("input[data-param9^='"+ele.dataset.param9.split("=")[0]+"']:not([data-param9='"+ele.dataset.param9+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
 		
 	} else if (ele.dataset.param5){
 		
@@ -1915,7 +1989,18 @@ function updateSettings(ele, sync=true, value=null){
 		} else {
 			return;
 		}
-			
+	} else if (ele.dataset.numbersetting9){ 
+		
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting9",  target:target, setting: ele.dataset.numbersetting9, "value": ele.value}, function (response) {});
+		}
+		
+		if (document.querySelector("input[data-param9='"+ele.dataset.numbersetting9+"']") && document.querySelector("input[data-param9='"+ele.dataset.numbersetting9+"']").checked){
+			document.getElementById("custom-gif-commands").raw = removeQueryParamWithValue(document.getElementById("custom-gif-commands").raw,ele.dataset.numbersetting9);
+			document.getElementById("custom-gif-commands").raw = updateURL(ele.dataset.numbersetting9+"="+ ele.value, document.getElementById("custom-gif-commands").raw);
+		} else {
+			return;
+		}		
 	} else if (ele.dataset.special){
 		
 		if (ele.dataset.special==="session"){

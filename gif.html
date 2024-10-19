@@ -51,9 +51,9 @@
         const mediaContent = document.getElementById('mediaContent');
         let mediaQueue = [];
         let isPlaying = false;
-        const minDisplayTime = parseInt(urlParams.get('showtime')) || 5000; 
-		
+        
 		const fadeoutTime = 300
+		const minDisplayTime = parseInt(urlParams.get('showtime')) || (fadeoutTime+1); 
 
         function processData(data) {
            //console.log(data);

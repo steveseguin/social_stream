@@ -3257,12 +3257,23 @@ input:checked + .slider:before {
 									<span data-translate="enable-custom-gif-commands">🚦 Enable Custom GIF Commands</span>
 								</div>
 								
+								<div>
+									<label class="switch" title="Loop clips continuously or show images until at least minimum playout time is reached. Default is sub-second.">
+										<input type="checkbox" data-param9="showtime" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="minimum-playout-time">
+										⏲️ Minimum default playout time <input type="number" style="max-width: 8ch;" max="999999" min="1" value="3000" size="6" data-numbersetting9="showtime" />ms
+									</span>
+								</div>
+								
 								<div id="customGifCommandsList"></div>
 								
 								<button class="glowingButton" id="addCustomGifCommand" style="margin-top: 10px; width: 200px;">
 									<span data-translate="add-new-command">+ Add New Command</span>
 								</button>
 							</div>
+							
 						</div>
 					</div>
 				</div>
