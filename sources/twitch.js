@@ -965,10 +965,16 @@
 	var checkReady = setInterval(function () {
 		counter += 1;
 
-		if (counter > 3) {
-			checkElement = ".chat-room__content";
+		if (counter == 5) {
+			checkElement = ".chat-list--default, .chat-room__content .chat-line__message";
 			console.log("checkElement wasn't found; trying alternative");
 		}
+		
+		if (counter == 10) {
+			checkElement = ".chat-list--default, .chat-room__content .chat-line__message, #root .chat-line__message";
+			console.log("falling back to detecting the root also");
+		}
+		
 		if (document.querySelector(checkElement)) {
 			// just in case
 			console.log("Social Stream Start");
