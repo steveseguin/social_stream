@@ -877,24 +877,23 @@
 		// {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response) {
 			settings = response.settings;
-			if ("settings" in response) {
-				settings = response.settings;
-				if (settings.bttv && !BTTV) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
-						//	console.log(response);
-					});
-				}
-				if (settings.seventv && !SEVENTV) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {
-						//	console.log(response);
-					});
-				}
-				if (settings.ffz && !FFZ) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true }, function (response) {
-						//	console.log(response);
-					});
-				}
+			
+			if (settings.bttv && !BTTV) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
+					//	console.log(response);
+				});
 			}
+			if (settings.seventv && !SEVENTV) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {
+					//	console.log(response);
+				});
+			}
+			if (settings.ffz && !FFZ) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true }, function (response) {
+					//	console.log(response);
+				});
+			}
+			
 			if (settings.delayyoutube){
 				captureDelay = 2000;
 				//console.log(captureDelay);

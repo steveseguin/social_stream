@@ -1583,7 +1583,7 @@ async function getSEVENTVEmotes(url = false) {
 							if (seventv.emote_set && seventv.emote_set.emotes) {
 								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
 									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
-									if (emote.flags) {
+									if ((emote.data && emote.data.flags) || emote.flags) {
 										acc[emote.name] = { url: imageUrl, zw: true };
 									} else {
 										acc[emote.name] = imageUrl;
@@ -1642,7 +1642,7 @@ async function getSEVENTVEmotes(url = false) {
 								if (seventv.emote_set && seventv.emote_set.emotes) {
 									seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
 										const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
-										if (emote.flags) {
+										if ((emote.data && emote.data.flags) || emote.flags) {
 											acc[emote.name] = { url: imageUrl, zw: true };
 										} else {
 											acc[emote.name] = imageUrl;
