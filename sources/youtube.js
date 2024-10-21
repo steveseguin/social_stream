@@ -417,8 +417,6 @@
 			deleteThis(ele)
 			return;
 		}
-	
-
 		if (settings.customyoutubestate) {
 			return;
 		}
@@ -428,10 +426,28 @@
 			} else if (ele.id) {
 				if (messageHistory.has(ele.id)) return;
 				messageHistory.add(ele.id);
-				if (messageHistory.size > 255) { // 250 seems to be Youtube's max?
-				  const iterator = messageHistory.values();
-				  messageHistory.delete(iterator.next().value);
+				if (messageHistory.size > 502) { // 250 seems to be Youtube's max?
+				    const iterator = messageHistory.values();
+				    messageHistory.delete(iterator.next().value);	  
 				}
+				if (ele.id.length<40){
+					setTimeout(()=>{
+						if (ele.id.length<40){
+							setTimeout(()=>{
+								if (ele.id.length<40){
+									setTimeout(()=>{
+										messageHistory.add(ele.id);
+									},2000);
+								} else {
+									messageHistory.add(ele.id);
+								}
+							},2000);
+						} else {
+							messageHistory.add(ele.id);
+						}
+					},2000);
+				}
+				//console.log(messageHistory);
 		    } else {
 				return; // no id.
 		    }
@@ -442,7 +458,7 @@
 		} catch (e) {}
 
 		ele.skip = true;
-
+		
 		//if (channelName && settings.customyoutubestate){
 		//if (settings.customyoutubeaccount && settings.customyoutubeaccount.textsetting && (settings.customyoutubeaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
 		//	return;
@@ -947,6 +963,15 @@
 	  if (ele && !ele.skip) {
 		ele.skip = true;
 		setupDeletionObserver(ele);
+		try {
+			ele.querySelectorAll("yt-live-chat-text-message-renderer").forEach(ele4 => {
+				ele4.skip = true;
+				cleared = true;
+				if (ele4.id) {
+					messageHistory.add(ele4.id);
+				}
+			});
+		} catch (e) {}
 		onElementInserted(ele, function (ele2) {
 			setTimeout(() => processMessage(ele2, false), captureDelay);
 		});
