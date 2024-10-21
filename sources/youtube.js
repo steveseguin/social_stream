@@ -426,7 +426,7 @@
 			} else if (ele.id) {
 				if (messageHistory.has(ele.id)) return;
 				messageHistory.add(ele.id);
-				if (messageHistory.size > 502) { // 250 seems to be Youtube's max?
+				if (messageHistory.size > 300) { // 250 seems to be Youtube's max?
 				    const iterator = messageHistory.values();
 				    messageHistory.delete(iterator.next().value);	  
 				}
