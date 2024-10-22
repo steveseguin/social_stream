@@ -675,4 +675,4 @@ chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(
 
 
 
-console.log("INJECTED");
+console.log("INJECTED WEBSOCKETS");

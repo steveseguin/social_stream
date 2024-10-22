@@ -290,6 +290,20 @@
 			}
 		} catch (e) {}
 	}
+	
+	function deepMerge(target, source) {
+	  for (let key in source) {
+		if (source.hasOwnProperty(key)) {
+		  if (typeof source[key] === 'object' && source[key] !== null) {
+			target[key] = target[key] || {};
+			deepMerge(target[key], source[key]);
+		  } else {
+			target[key] = source[key];
+		  }
+		}
+	  }
+	  return target;
+	}
 
 	var EMOTELIST = false;
 	function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
@@ -309,7 +323,7 @@
 					if (BTTV.globalEmotes) {
 						EMOTELIST = deepMerge(BTTV.globalEmotes, EMOTELIST);
 					}
-				} catch (e) {}
+				} catch (e) {console.warn(e);}
 			}
 		}
 		if (SEVENTV) {

@@ -1394,14 +1394,14 @@ async function getBTTVEmotes(url = false) {
 						if (bttv) {
 							if (bttv.channelEmotes) {
 								bttv.channelEmotes = bttv.channelEmotes.reduce((acc, emote) => {
-									const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/1x`;
+									const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
 									acc[emote.code] = imageUrl;
 									return acc;
 								}, {});
 							}
 							if (bttv.sharedEmotes) {
 								bttv.sharedEmotes = bttv.sharedEmotes.reduce((acc, emote) => {
-									const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/1x`;
+									const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
 									acc[emote.code] = imageUrl;
 									return acc;
 								}, {});
