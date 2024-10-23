@@ -2128,6 +2128,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				pushSettingChange();
 			}
 			
+			if (request.setting == "twichadmute") {
+				pushSettingChange();
+			}
+			if (request.setting == "twichadannounce") {
+				pushSettingChange();
+			}
+			
 			if (request.setting == "ticker") {
 				try {
 					await loadFileTicker();
