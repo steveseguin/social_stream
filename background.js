@@ -6405,41 +6405,48 @@ async function fetchData(url) {
 	}
 }
 
-window.onload = async function() {
-  let programmedSettings = await fetchData("settings.json");
-  if (programmedSettings && typeof programmedSettings === "object") {
-    log("Loading override settings via settings.json");
-    loadSettings(programmedSettings, true);
-  } else {
-    log("Loading settings from storage");
-    chrome.storage.sync.get(properties, function(item) {
-      if (isSSAPP && item) {
-        loadSettings(item, false);
-      } else if (item && item.settings) {
-        chrome.storage.sync.remove(["settings"], function() {
-          log("upgrading from sync to local storage");
-        });
-        chrome.storage.local.set({
-          settings: item.settings,
-          lastStateUpdate: Date.now()
-        });
-        loadSettings(item, false);
-      } else {
-        chrome.storage.local.get(["settings"], function(item2) {
-          if (item) {
-            if (item2 && item2.settings) {
-              item.settings = item2.settings;
-            }
-            loadSettings(item, false);
-          } else if (item2) {
-            loadSettings(item2, false);
-          }
-          // Verify state after loading
-          verifyExtensionState();
-        });
-      }
-    });
-  }
+window.onload = async function () {
+	let programmedSettings = await fetchData("settings.json"); // allows you to load the settings from a file.
+	if (programmedSettings && typeof programmedSettings === "object") {
+		log("Loading override settings via settongs.json");
+		loadSettings(programmedSettings, true);
+	} else {
+		log("Loading settings from the main file into the background.js");
+		chrome.storage.sync.get(properties, function (item) {
+			// we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
+			log("properties", item);
+			if (isSSAPP && item) {
+				loadSettings(item, false);
+			} else if (item && item.settings) {
+				// ssapp
+				chrome.storage.sync.remove(["settings"], function (Items) {
+					// ignored
+					log("upgrading from sync to local storage");
+				});
+				chrome.storage.local.set({
+					// oh well; harmless
+					settings: item.settings
+				});
+				loadSettings(item, false);
+			} else {
+				chrome.storage.local.get(["settings"], function (item2) {
+					log("item2", item2);
+					if (item) {
+						if (item2 && item2.settings) {
+							if (item) {
+								item.settings = item2.settings;
+							} else {
+								item = item2;
+							}
+						}
+						loadSettings(item, false);
+					} else if (item2) {
+						loadSettings(item2, false);
+					}
+				});
+			}
+		});
+	}
 };
 
 var jokes = [
