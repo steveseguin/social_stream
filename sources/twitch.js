@@ -285,9 +285,6 @@
 
 	function processMessage(ele, event=false) {
 		// twitch
-		
-		console.log(ele);
-		
 		if (ele.classList.contains("chat-line__unpublished-message-body") || ele.querySelector(".chat-line__unpublished-message-body")){
 			return;
 		}
@@ -807,8 +804,6 @@
 
 	function processEvent(ele) {
 		
-		console.log(ele);
-		
 		try {
 			ele = ele.childNodes[0];
 		} catch (e) {
@@ -1010,7 +1005,6 @@
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
 				}
 				console.log("Social Stream ready to go");
-				console.log(checkElement);
 				onElementInsertedTwitch(document.querySelector(checkElement), function (element) {
 					setTimeout(
 						function (element) {
