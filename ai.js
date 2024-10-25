@@ -152,7 +152,7 @@ const streamingPostNode = async function (URL, body, headers = {}, onChunk = nul
 
 const activeChatBotSessions = {};
 let tmpModelFallback = "";
-async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null) {
+async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images=null) {
     let ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
     let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || "llama3.2:latest";
 
@@ -191,15 +191,21 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 								handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
 							}
 						});
+						
+						const message = {
+								model: currentModel,
+								prompt: prompt,
+								stream: true
+							};
+						
+						if (images){
+							message.images = images;
+						}
 
 						ipcRenderer.send('streaming-nodepost', {
 							channelId,
 							url: `${ollamaendpoint}/api/generate`,
-							body: {
-								model: currentModel,
-								prompt: prompt,
-								stream: true
-							},
+							body: message,
 							headers: { 'Content-Type': 'application/json' }
 						});
 
@@ -212,13 +218,20 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 						return response;
 					}
 				} else {
+					
+					const message = {
+						model: currentModel,
+						prompt: prompt,
+						stream: false
+					};
+					
+					if (images){
+						message.images = images;
+					}
+					
 					response = fetchNode(`${ollamaendpoint}/api/generate`, {
                         'Content-Type': 'application/json',
-                    }, 'POST', {
-                        model: currentModel,
-                        prompt: prompt,
-						stream: false
-                    });
+                    }, 'POST', message);
 
 					// console.log(response);
 					
@@ -239,18 +252,29 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 				}
             } else {
                 // Web environment
+				
+				const message = {
+					model: currentModel,
+					prompt: prompt,
+					stream: isStreaming
+				};
+				
+				if (images){
+					message.images = images;
+				}
+				
+				//console.log(message);
+				
                 response = await fetch(`${ollamaendpoint}/api/generate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        model: currentModel,
-                        prompt: prompt,
-                        stream: isStreaming
-                    }),
+                    body: JSON.stringify(message),
                     signal: abortController ? abortController.signal : undefined,
                 });
+				
+				//console.log(response);
 
 				if (!response.ok) {
 					if (response.status === 404) {
@@ -267,11 +291,13 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 
                     while (true) {
                         const { done, value } = await reader.read();
+						//console.log(done,value);
                         if (done) {
                             responseComplete = true;
                             break;
                         }
                         const chunk = decoder.decode(value);
+						//console.log(chunk);
                         handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
                     }
                 } else {

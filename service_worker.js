@@ -143,13 +143,6 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
     backgroundPageTabId = null;
     backgroundPageTabIdLoaded = false;
     await updateIconToOff();
-    
-    // Optional: Attempt to reopen after a delay if extension is still on
-    if (isExtensionOn) {
-      setTimeout(() => {
-        ensureBackgroundPageIsOpen();
-      }, BACKGROUND_PAGE_COOLDOWN);
-    }
   }
 });
 

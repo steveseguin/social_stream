@@ -183,6 +183,75 @@
         #mic-button.active #mic-icon {
             fill: #ff0000;
         }
+		.image-preview-container {
+            position: relative;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        
+        .image-preview {
+            max-height: 100px;
+            border-radius: 10px;
+            border: 2px solid rgba(74, 74, 74, 1);
+        }
+        
+        .remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4444;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            padding: 0;
+            line-height: 1;
+        }
+        
+        .remove-image:hover {
+            background: #ff0000;
+        }
+        
+        .image-upload-button {
+            background: rgba(60, 60, 60, 0.8);
+            border: none;
+            border-radius: 25px;
+            padding: 8px 15px;
+            color: #f0f0f0;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .image-upload-button:hover {
+            background: rgba(80, 80, 80, 0.8);
+        }
+        
+        #image-input {
+            display: none;
+        }
+        
+        /* Update existing input container styles */
+        #input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -202,17 +271,13 @@
     </div>
 
     <script>
-        const chatContainer = document.getElementById('chat-container');
-		const userInput = document.getElementById('user-input');
-		userInput.focus(); 
-		window.onload = ()=> {
-			userInput.focus();
-		};
+
 		var iframe = null;
 		var urlParams = new URLSearchParams(window.location.search);
 		var roomID = false;
 		var password = "false";
 		var conversationHistory = [];
+		let currentImage = null;
 
 		if (urlParams.has("session")) {
 			roomID = urlParams.get("session");
@@ -226,11 +291,65 @@
 		if (urlParams.has("password")) {
 			password = urlParams.get("password");
 		}
-		let currentID = 0;
+		let currentID = 0
+		
+		const inputContainer = document.getElementById('input-container');
+		const chatContainer = document.getElementById('chat-container');
+		const userInput = document.getElementById('user-input');
+		userInput.focus(); 
+		window.onload = ()=> {
+			userInput.focus();
+		};
+		// Create new elements
+		const imageInput = document.createElement('input');
+		imageInput.type = 'file';
+		imageInput.id = 'image-input';
+		imageInput.accept = 'image/*';
+		
+		const imagePreviewContainer = document.createElement('div');
+		imagePreviewContainer.className = 'image-preview-container';
+		imagePreviewContainer.style.display = 'none';
+		
+		const imagePreview = document.createElement('img');
+		imagePreview.className = 'image-preview';
+		
+		const removeButton = document.createElement('button');
+		removeButton.className = 'remove-image';
+		removeButton.innerHTML = '×';
+		
+		const uploadButton = document.createElement('button');
+		uploadButton.className = 'image-upload-button';
+		uploadButton.innerHTML = `
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+				<circle cx="12" cy="13" r="4"/>
+			</svg>
+			Attach Image
+		`;
+		
+		// Restructure the input container
+		const inputRow = document.createElement('div');
+		inputRow.className = 'input-row';
+		
+		// Move existing elements to the new structure
+		inputContainer.insertBefore(imageInput, inputContainer.firstChild);
+		imagePreviewContainer.appendChild(imagePreview);
+		imagePreviewContainer.appendChild(removeButton);
+		inputContainer.insertBefore(imagePreviewContainer, inputContainer.firstChild);
+		
+		// Rearrange elements
+		inputRow.appendChild(uploadButton);
+		const existingButtons = Array.from(inputContainer.children).filter(
+			child => child.tagName === 'BUTTON'
+		);
+		existingButtons.forEach(button => inputRow.appendChild(button));
+		
+		// Insert the input row after the user input
+		userInput.parentNode.insertBefore(inputRow, userInput.nextSibling);
 		
 		function sendMessage() {
 			const message = finalTranscript || userInput.value.trim();
-			if (message === '') return;
+			if (!message && !currentImage) return;
 			finalTranscript = '';
 			let messageID = parseInt(Math.random()*99999999);
 			addMessageToChat('user', message, messageID);
@@ -245,7 +364,16 @@
 			data.target = messageID;
 			data.action = "chatbot";
 			data.turbo = false; // true to use a faster model with shorter responses; useful if you have a slow/limited computer/gpu
-
+			
+			if (currentImage) {
+                data.images = [currentImage];
+                // Clear the image after sending
+                imagePreviewContainer.style.display = 'none';
+                imageInput.value = '';
+                currentImage = null;
+            }
+			data.model = "x/llama3.2-vision:latest"; // I doubt most peeps can run this, but w/e.
+			console.log(data);
 			iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs" }, "*");
 		}
 
@@ -336,6 +464,29 @@
 					updateWaitingMessage(response.target, response.value || "");
 				}
 			});
+			
+			// Event Listeners
+			uploadButton.addEventListener('click', () => imageInput.click());
+			
+			imageInput.addEventListener('change', function(event) {
+				const file = event.target.files[0];
+				if (file && file.type.startsWith('image/')) {
+					const reader = new FileReader();
+					reader.onloadend = function() {
+						imagePreview.src = reader.result;
+						imagePreviewContainer.style.display = 'inline-block';
+						currentImage = reader.result.split(',')[1]; // Store base64 without prefix
+					};
+					reader.readAsDataURL(file);
+				}
+			});
+			
+			removeButton.addEventListener('click', function() {
+				imagePreviewContainer.style.display = 'none';
+				imageInput.value = '';
+				currentImage = null;
+			});
+			
 		});
 		
 		let recognition;

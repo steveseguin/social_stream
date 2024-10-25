@@ -4457,7 +4457,7 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 				  
 				  callOllamaAPI(prompt, model, (chunk) => {
 					sendDataP2P({ chatbotChunk: {value: chunk, target: request.target}}, UUID);
-				  }, controller, UUID).then((fullResponse) => {
+				  }, controller, UUID, (request.images || null)).then((fullResponse) => {
 					sendDataP2P({ chatbotResponse: {value: fullResponse, target: request.target}}, UUID);
 				  }).catch((error) => {
 					console.error('Error in callOllamaAPI:', error);
