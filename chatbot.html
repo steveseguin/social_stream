@@ -241,6 +241,7 @@
         }
         
         /* Update existing input container styles */
+		/*
         #input-container {
             display: flex;
             flex-direction: column;
@@ -252,6 +253,7 @@
             gap: 10px;
             align-items: center;
         }
+		 */
     </style>
 </head>
 <body>
@@ -302,50 +304,50 @@
 		};
 		// Create new elements
 		const imageInput = document.createElement('input');
-		imageInput.type = 'file';
-		imageInput.id = 'image-input';
-		imageInput.accept = 'image/*';
+		//imageInput.type = 'file';
+		//imageInput.id = 'image-input';
+		//imageInput.accept = 'image/*';
 		
 		const imagePreviewContainer = document.createElement('div');
-		imagePreviewContainer.className = 'image-preview-container';
-		imagePreviewContainer.style.display = 'none';
+		//imagePreviewContainer.className = 'image-preview-container';
+		//imagePreviewContainer.style.display = 'none';
 		
-		const imagePreview = document.createElement('img');
-		imagePreview.className = 'image-preview';
+		//const imagePreview = document.createElement('img');
+		//imagePreview.className = 'image-preview';
 		
-		const removeButton = document.createElement('button');
-		removeButton.className = 'remove-image';
-		removeButton.innerHTML = '×';
+		//const removeButton = document.createElement('button');
+		//removeButton.className = 'remove-image';
+		//removeButton.innerHTML = '×';
 		
-		const uploadButton = document.createElement('button');
-		uploadButton.className = 'image-upload-button';
-		uploadButton.innerHTML = `
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-				<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-				<circle cx="12" cy="13" r="4"/>
-			</svg>
-			Attach Image
-		`;
+		//const uploadButton = document.createElement('button');
+		//uploadButton.className = 'image-upload-button';
+		//uploadButton.innerHTML = `
+		//	<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+		//		<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+		//		<circle cx="12" cy="13" r="4"/>
+		//	</svg>
+		//	Attach Image
+		//`;
 		
-		// Restructure the input container
-		const inputRow = document.createElement('div');
-		inputRow.className = 'input-row';
+		// Restructure the input container for image input
+		//const inputRow = document.createElement('div');
+		//inputRow.className = 'input-row';
 		
 		// Move existing elements to the new structure
-		inputContainer.insertBefore(imageInput, inputContainer.firstChild);
-		imagePreviewContainer.appendChild(imagePreview);
-		imagePreviewContainer.appendChild(removeButton);
-		inputContainer.insertBefore(imagePreviewContainer, inputContainer.firstChild);
+		//inputContainer.insertBefore(imageInput, inputContainer.firstChild);
+		//imagePreviewContainer.appendChild(imagePreview);
+		//imagePreviewContainer.appendChild(removeButton);
+		//inputContainer.insertBefore(imagePreviewContainer, inputContainer.firstChild);
 		
 		// Rearrange elements
-		inputRow.appendChild(uploadButton);
-		const existingButtons = Array.from(inputContainer.children).filter(
-			child => child.tagName === 'BUTTON'
-		);
-		existingButtons.forEach(button => inputRow.appendChild(button));
+		//inputRow.appendChild(uploadButton);
+		//const existingButtons = Array.from(inputContainer.children).filter(
+		//	child => child.tagName === 'BUTTON'
+		//);
+		//existingButtons.forEach(button => inputRow.appendChild(button));
 		
 		// Insert the input row after the user input
-		userInput.parentNode.insertBefore(inputRow, userInput.nextSibling);
+		//userInput.parentNode.insertBefore(inputRow, userInput.nextSibling);
 		
 		function sendMessage() {
 			const message = finalTranscript || userInput.value.trim();
