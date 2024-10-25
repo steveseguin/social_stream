@@ -154,7 +154,7 @@ const activeChatBotSessions = {};
 let tmpModelFallback = "";
 async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images=null) {
     let ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
-    let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || "llama3.2:latest";
+    let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
 
     async function makeRequest(currentModel) {
         const isStreaming = callback !== null;
@@ -352,8 +352,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
         }
     }
 
-
-    const result = await makeRequest(ollamamodel);
+    const result = await makeRequest(ollamamodel); 
     if (result.aborted) {
         return result.response + "💥";
     } else if (result.error && result.error === 404) {
