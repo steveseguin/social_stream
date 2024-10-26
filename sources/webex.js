@@ -1,4 +1,8 @@
 (function () {
+	const messageHistory = new Set();
+	var lastName = "";
+	var lastchatimg = "";
+	var newest = 0;
 	
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
@@ -71,39 +75,59 @@
 	}
 
 	function processMessage(ele){
-
-	  if (ele && ele.marked){
-		  return;
-	  } else {
-		  ele.marked = true;
-	  }
+	  
+	  
+	    if (messageHistory.has(ele.id)) return;
+		messageHistory.add(ele.id);
+		if (messageHistory.size > 300) { // 250 seems to be Youtube's max?
+			const iterator = messageHistory.values();
+			messageHistory.delete(iterator.next().value);	  
+		}
+		
+		ele.dataset.old = newest++;
 	  
 	  var chatimg = "";
-	 // try{
-		//   chatimg = ele.querySelector("img.presence-entity__image.avatar").src;
-		//   if (chatimg.startsWith("data:image/gif;base64")){
-		//	   chatimg="";
-		//   }
-	 // } catch(e){ }
+	  try{
+		   chatimg = ele.querySelector(".md-avatar-wrapper img[src]").src;
+		   if (chatimg.startsWith("data:image/gif;base64")){
+			   chatimg="";
+		   }
+	  } catch(e){ console.error(e);}
 	 
-	  var name = ele.querySelector("[class^='style-chat-label-']").innerText;
-	  if (name){
+	  var name = ele.querySelector(".sender-name")
+	  if (name && name.innerText){
+		  name = name.innerText ;
 		if (name.startsWith("from ")){
 			name = name.replace("from ","");
 			name = name.replace(" to Everyone","");
+		} else if (name == "You"){
+			try {
+				name = document.querySelector('[data-type="body-secondary"]').textContent.split(" ")[0];
+			} catch(e){console.error(e);}
 		}
 		name = name.trim();
 		name = escapeHtml(name);
+	  } else {
+		  name = "";
 	  }
+	if (name){
+		lastName = name;
+		lastchatimg = chatimg;
+	} else {
+		name = lastName;
+		chatimg = lastchatimg;
+	}
 	  
 	  var msg = "";
 	  try {
-		msg = ele.querySelector('[class^="style-chat-msg-"]').innerText;
+		msg = ele.querySelector('.activity-item-message').innerText;
 		msg = msg.trim();
 		msg = escapeHtml(msg);
 	  } catch(e){
-		
+		console.error(e);
 	  }
+	  
+	  if (!msg){return;}
 	  var data = {};
 	  data.chatname = name;
 	  data.chatbadges = "";
@@ -117,19 +141,8 @@
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "webex";
 	  
-	   if (data.contentimg){
-		  toDataURL(contentimg, function(dataUrl) {
-			  data.contentimg = dataUrl;
-			  if (data.chatimg){
-					toDataURL(data.chatimg, function(dataUrl) {
-						data.chatimg = dataUrl;
-						pushMessage(data);
-					});
-			  } else {
-				   pushMessage(data);
-			  }
-		  });
-		} else if (data.chatimg){
+	console.log(data);
+	  if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
 				data.chatimg = dataUrl;
 				pushMessage(data);
@@ -143,7 +156,7 @@
 	function pushMessage(data){
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
-		} catch(e){}
+		} catch(e){console.error(e);}
 	}
 	
 	var settings = {};
@@ -172,69 +185,50 @@
 						return;
 					}
 				}
-			} catch(e){}
+			} catch(e){console.error(e);}
 			sendResponse(false);
 		}
 	);
 
 	function onElementInserted(target, callback) {
-		var onMutationsObserved = function(mutations) {
-			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					var xxx = mutation.addedNodes;
-					for (var i = 0; i< xxx.length; i++) {
-						try {
-							var ele = xxx[i];
-							if (ele.NodeType==8){
-								continue;
-							}
-							console.log(ele);
-							if (ele && ele.className && ele.className.includes("style-item-not-first")) {
-								callback(ele);
-							} else if (ele && ele.tagName=="SECTION"){
-								callback(ele);
-							} 
-						} catch(e){}
-					}
-				}
+		const onMutationsObserved = function(mutations) {
+			target.querySelectorAll(`
+				li[tabindex]:not([data-old]):not([id^='act-web-client']), 
+				li[tabindex]:not([id^='act-web-client'])[data-old="${newest - 1}"]
+			`).forEach(ele => {
+				callback(ele);
 			});
 		};
-		if (!target){return;}
-		var config = { childList: true, subtree: true };
-		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		var observer = new MutationObserver(onMutationsObserved);
+
+		if (!target || !callback) {
+			return;
+		}
+
+		const config = { 
+			childList: true, 
+			subtree: true 
+		};
+
+		const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		const observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
+
+		return () => observer.disconnect();
 	}
 	console.log("social stream injected");
 	
-	document.querySelectorAll('iframe').forEach( item =>{
-		try{
-			if (item.contentWindow.document.body.querySelectorAll("#chat-panel").length){
-				var ele = item.contentWindow.document.body.querySelector("#chat-panel");
-				if (!ele.marked){
-					ele.marked=true;
-					onElementInserted(ele, function(element){
-					   processMessage(element);
-					});
-				}
-			}
-		} catch(e){}
-	});
-	
+
 	setInterval(function(){
-		document.querySelectorAll('iframe').forEach( item =>{
-			try{
-				if (item.contentWindow.document.body.querySelectorAll("#chat-panel").length){
-					var ele = item.contentWindow.document.body.querySelector("#chat-panel");
-					if (!ele.marked){
-						ele.marked=true;
-						onElementInserted(ele, function(element){
-						   processMessage(element);
-						});
-					}
-				}
-			} catch(e){}
-		});
+		let ele = document.querySelector('#meeting-panel-container');
+		if (ele && !ele.marked){
+			ele.marked=true;
+			console.log("activating");
+			onElementInserted(ele, function(element){
+			   processMessage(element);
+			});
+		} else {
+			console.log("not found");
+		}
 	},3000);
 
 })();
