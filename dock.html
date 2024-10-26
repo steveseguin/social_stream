@@ -7344,6 +7344,10 @@
 						node.classList.add(classtype);
 					});
 					
+					if (beep) {
+						playtone();
+					}
+					
 					
 					if (waitToReveal){
 						node.classList.add("hidden");
@@ -7457,10 +7461,6 @@
 							} catch (e) {}
 						}.bind(data, node);
 						twitchImage.src = data.chatimg;
-					}
-
-					if (beep) {
-						playtone();
 					}
 
 					if (timeoutDelay) {
