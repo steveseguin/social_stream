@@ -7569,6 +7569,9 @@
 							imageElements[i].srcBackup = imageElements[i].src;
 							imageElements[i].src = imageElements[i].src.replaceAll("/light/", "/dark/");
 						}
+						
+						imageElements[i].removeAttribute("width");
+						imageElements[i].removeAttribute("height");
 
 						imageElements[i].onerror = function () {
 							if (this.srcBackup) {
