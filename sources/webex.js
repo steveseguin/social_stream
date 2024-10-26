@@ -92,7 +92,7 @@
 		   if (chatimg.startsWith("data:image/gif;base64")){
 			   chatimg="";
 		   }
-	  } catch(e){ console.error(e);}
+	  } catch(e){ }
 	 
 	  var name = ele.querySelector(".sender-name")
 	  if (name && name.innerText){
@@ -103,7 +103,7 @@
 		} else if (name == "You"){
 			try {
 				name = document.querySelector('[data-type="body-secondary"]').textContent.split(" ")[0];
-			} catch(e){console.error(e);}
+			} catch(e){}
 		}
 		name = name.trim();
 		name = escapeHtml(name);
@@ -124,7 +124,7 @@
 		msg = msg.trim();
 		msg = escapeHtml(msg);
 	  } catch(e){
-		console.error(e);
+		
 	  }
 	  
 	  if (!msg){return;}
@@ -141,7 +141,6 @@
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "webex";
 	  
-	console.log(data);
 	  if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
 				data.chatimg = dataUrl;
@@ -156,7 +155,7 @@
 	function pushMessage(data){
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(){});
-		} catch(e){console.error(e);}
+		} catch(e){}
 	}
 	
 	var settings = {};
@@ -185,7 +184,7 @@
 						return;
 					}
 				}
-			} catch(e){console.error(e);}
+			} catch(e){}
 			sendResponse(false);
 		}
 	);
@@ -226,8 +225,6 @@
 			onElementInserted(ele, function(element){
 			   processMessage(element);
 			});
-		} else {
-			console.log("not found");
 		}
 	},3000);
 
