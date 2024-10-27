@@ -11,7 +11,7 @@ var isExtensionOn = false;
 var iframe = null;
 
 var settings = {};
-var messageTimeout = 0;
+var messageTimeout = {};
 var lastSentMessage = "";
 var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
@@ -582,10 +582,11 @@ function checkIntervalState(i) {
 					if (!settings["timemessageevent" + i]) {
 						return;
 					} // failsafe
-					messageTimeout = Date.now();
+					//messageTimeout = Date.now();
 					var msg = {};
 					msg.response = settings["timemessagecommand" + i].textsetting;
-					processResponse(msg, false, null, false, antispam);
+					//processResponse(msg, false, null, false, antispam);
+					processResponse(msg, false, null, false, antispam, false);
 					
 				} else if (settings["timemessageinterval" + i].numbersetting) {
 					intervalMessages[i] = setInterval(
@@ -599,10 +600,11 @@ function checkIntervalState(i) {
 							if (!settings["timemessageevent" + i]) {
 								return;
 							} // failsafe
-							messageTimeout = Date.now();
+							//messageTimeout = Date.now();
 							var msg = {};
 							msg.response = settings["timemessagecommand" + i].textsetting;
-							processResponse(msg, false, null, false, antispam);
+							//processResponse(msg, false, null, false, antispam);
+							processResponse(msg, false, null, false, antispam, false);
 						},
 						settings["timemessageinterval" + i].numbersetting * 60000,
 						i
@@ -620,10 +622,10 @@ function checkIntervalState(i) {
 						if (!settings["timemessageevent" + i]) {
 							return;
 						} // failsafe
-						messageTimeout = Date.now();
+						//messageTimeout = Date.now();
 						var msg = {};
 						msg.response = settings["timemessagecommand" + i].textsetting;
-						processResponse(msg, false, null, false, antispam);
+						processResponse(msg, false, null, false, antispam, false);
 					},
 					15 * 60000,
 					i
@@ -2519,7 +2521,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			var action = {};
 			action.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
 			action.response = ""; // empty response, as we just want to keep alive
-			processResponse(action);
+			//processResponse(action);
+			processResponse(action, false, null, false, false, false);
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "tellajoke") {
 			tellAJoke();
@@ -2873,7 +2876,7 @@ function checkExactDuplicateAlreadySent(msg) {
 	previousMessages.push(cleanText);
 	setTimeout(function () {
 		previousMessages.shift();
-	}, 60000);
+	}, 45000); // was 60s.  this still seems more than enough
 	return ret;
 }
 
@@ -3433,14 +3436,14 @@ function setupSocket() {
 				if (data.target) {
 					msg.destination = data.target;
 				}
-				resp = processResponse(msg);
+				resp = processResponse(msg, false, null, false, false, false);
 			} else if (data.action && data.action === "sendEncodedChat" && data.value) {
 				var msg = {};
 				msg.response = decodeURIComponent(data.value);
 				if (data.target) {
 					msg.destination = decodeURIComponent(data.target);
 				}
-				resp = processResponse(msg);
+				resp = processResponse(msg, false, null, false, false, false);
 			} else if (data.action && data.action === "blockUser" && data.value) {
 				var msg = {};
 				let source = data.target.trim().toLowerCase() || "*";
@@ -4348,7 +4351,8 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 
 	if ("response" in request) {
 		// we receieved a response from the dock
-		processResponse(request);
+		//processResponse(request);
+		processResponse(request, false, null, false, false, false);
 	} else if ("action" in request) {
 		if (request.action === "openChat") {
 			openchat(request.value || null);
@@ -4773,8 +4777,6 @@ function pokeSite(url = false, tabid = false) {
 				// if (!checkIfAllowed((tabs[i].url))){continue;}
 
 				published[tabs[i].url] = true;
-				//messageTimeout = Date.now();
-				// log(tabs[i].url);
 				if (tabid && tabid == tabs[i].id) {
 					if (!debuggerEnabled[tabs[i].id]) {
 						debuggerEnabled[tabs[i].id] = false;
@@ -4865,7 +4867,7 @@ function generalFakePoke(tabid) {
 	}
 }
 
-function processResponse(data, reverse = false, metadata = null, relay=false, antispam=false) {
+function processResponse(data, reverse = false, metadata = null, relay=false, antispam=false, overrideTimeout=3500) {
 	if (!chrome.debugger) {
 		return false;
 	}
@@ -4881,11 +4883,22 @@ function processResponse(data, reverse = false, metadata = null, relay=false, an
 			return;
 		}
 	}
-	lastAntiSpam = messageCounter;
 	
+	if (!overrideTimeout && ("tid" in data)){
+		if (data["tid"] in messageTimeout){
+			if (Date.now() - messageTimeout[tid] < overrideTimeout) {
+				// not enough time has passed yet.
+				console.warn("not enough time has passed yet to send to :"+data["tid"]);
+				return;
+			}
+		}
+	}
+	
+	lastAntiSpam = messageCounter;
 	checkExactDuplicateAlreadySent(data.response);
 	
-	chrome.tabs.query({}, function (tabs) {
+	
+	chrome.tabs.query({}, (tabs) => {
 		if (chrome.runtime.lastError) {
 			//console.warn(chrome.runtime.lastError.message);
 		}
@@ -4939,7 +4952,6 @@ function processResponse(data, reverse = false, metadata = null, relay=false, an
 				}
 
 				published[tabs[i].url] = true;
-				//messageTimeout = Date.now();
 				if (tabs[i].url.includes(".stageten.tv") && settings.s10apikey && settings.s10){
 					if (!data.response){continue;}
 					// we will not send fake chat as we're likely sending it via POST instead directly
@@ -4956,34 +4968,34 @@ function processResponse(data, reverse = false, metadata = null, relay=false, an
 					// twitch, but there's also cases for youtube/facebook
 					if (!debuggerEnabled[tabs[i].id]) {
 						debuggerEnabled[tabs[i].id] = false;
-						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false)); // enable the debugger to let us fake a user
+						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false, false, overrideTimeout)); // enable the debugger to let us fake a user
 					} else {
-						generalFakeChat(tabs[i].id, data.response, false, true, false);
+						generalFakeChat(tabs[i].id, data.response, false, true, false, false,overrideTimeout);
 					}
 				} else if (tabs[i].url.startsWith("https://boltplus.tv/")) {
 					// twitch, but there's also cases for youtube/facebook
 
 					if (!debuggerEnabled[tabs[i].id]) {
 						debuggerEnabled[tabs[i].id] = false;
-						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true, true)); // enable the debugger to let us fake a user
+						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true, true, overrideTimeout)); // enable the debugger to let us fake a user
 					} else {
-						generalFakeChat(tabs[i].id, data.response, false, true, true, true);
+						generalFakeChat(tabs[i].id, data.response, false, true, true, true, overrideTimeout);
 					}
 				} else if (tabs[i].url.startsWith("https://app.chime.aws/meetings/")) {
 					// twitch, but there's also cases for youtube/facebook
 					if (!debuggerEnabled[tabs[i].id]) {
 						debuggerEnabled[tabs[i].id] = false;
-						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true)); // enable the debugger to let us fake a user
+						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true, false, overrideTimeout)); // enable the debugger to let us fake a user
 					} else {
-						generalFakeChat(tabs[i].id, data.response, false, true, true); // middle=true, keypress=true, backspace=false
+						generalFakeChat(tabs[i].id, data.response, false, true, true, false, overrideTimeout); // middle=true, keypress=true, backspace=false
 					}
 				} else if (tabs[i].url.startsWith("https://app.slack.com")) {
 					// twitch, but there's also cases for youtube/facebook
 					if (!debuggerEnabled[tabs[i].id]) {
 						debuggerEnabled[tabs[i].id] = false;
-						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true)); // enable the debugger to let us fake a user
+						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true, false, overrideTimeout)); // enable the debugger to let us fake a user
 					} else {
-						generalFakeChat(tabs[i].id, data.response, false, false, false); // middle=true, keypress=true, backspace=false
+						generalFakeChat(tabs[i].id, data.response, false, false, false, false, overrideTimeout); // middle=true, keypress=true, backspace=false
 					}
 				} else if (metadata && settings.fancystageten && tabs[i].url.includes(".stageten.tv/channel")) {
 					// twitch, but there's also cases for youtube/facebook
@@ -5017,9 +5029,9 @@ function processResponse(data, reverse = false, metadata = null, relay=false, an
 
 					if (!debuggerEnabled[tabs[i].id]) {
 						debuggerEnabled[tabs[i].id] = false;
-						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, true, true, false)); // enable the debugger to let us fake a user
+						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, true, true, false, false, overrideTimeout)); // enable the debugger to let us fake a user
 					} else {
-						generalFakeChat(tabs[i].id, data.response, true, true, false);
+						generalFakeChat(tabs[i].id, data.response, true, true, false, false, overrideTimeout);
 					}
 				}
 			} catch (e) {
@@ -5086,9 +5098,22 @@ function limitString(string, maxLength) {
 	return result;
 }
 
-function generalFakeChat(tabid, message, middle = true, keypress = true, backspace = false, delayedPress = false) {
+function generalFakeChat(tabid, message, middle = true, keypress = true, backspace = false, delayedPress = false, overrideTimeout = false) {
 	// fake a user input
 	try {
+		
+		
+		if (!overrideTimeout){
+			if (tabid in messageTimeout){
+				if (Date.now() - messageTimeout[tabid] < overrideTimeout) {
+					// not enough time has passed yet.
+					console.warn("not enough time has passed yet to send to :"+tabid);
+					return;
+				}
+			}
+		}
+		
+		
 		chrome.tabs.sendMessage(tabid, "focusChat", function (response = false) {
 			chrome.runtime.lastError;
 			if (!response) {
@@ -5102,6 +5127,8 @@ function generalFakeChat(tabid, message, middle = true, keypress = true, backspa
 			lastSentMessage = lastSentMessage.replace(/\s\s+/g, " ");
 			lastSentTimestamp = Date.now();
 			lastMessageCounter = 0;
+			
+			messageTimeout[tabid] = Date.now();
 
 			if (settings.limitcharactersstate) {
 				if (settings.limitcharacters) {
@@ -5670,8 +5697,8 @@ async function applyBotActions(data, tab = false) {
 			} // probably a reply
 
 
-			if (!data.bot && (Date.now() - messageTimeout > 1000)) {
-				messageTimeout = Date.now();
+			if (!data.bot) {
+				//messageTimeout = Date.now();
 				var msg = {};
 				msg.tid = data.tid;
 				// this should be ideall HTML stripped
@@ -5680,9 +5707,10 @@ async function applyBotActions(data, tab = false) {
 				}
 
 				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
-				if (tmpmsg) { 
+				if (tmpmsg) {  
 					msg.response = sanitizeRelay(data.chatname, true, "Someone") + " said: " + tmpmsg;
-					processResponse(msg, true, data); // this should be the first and only message
+					// processResponse(data, false, null, false, false, 1000)
+					processResponse(msg, true, data, false, false, 1000); // this should be the first and only message
 				}
 			}
 		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event){
@@ -5709,16 +5737,15 @@ async function applyBotActions(data, tab = false) {
 						if (settings["botReplyMessageTimeout" + i]) {
 							timeoutBot = settings["botReplyMessageTimeout" + i].numbersetting || 0;
 						}
-						if (Date.now() - messageTimeout > timeoutBot) {
 							// respond to "1" with a "1" automatically; at most 1 time per minute.
-							messageTimeout = Date.now();
-							var msg = {};
-							if (!settings["botReplyAll" + i]){
-								msg.tid = data.tid;
-							}
-							msg.response = settings["botReplyMessageValue" + i].textsetting;
-							processResponse(msg);
+						//messageTimeout = Date.now();
+						var msg = {};
+						if (!settings["botReplyAll" + i]){
+							msg.tid = data.tid;
 						}
+						msg.response = settings["botReplyMessageValue" + i].textsetting;
+						processResponse(msg, false, null, false, false, timeoutBot)
+						
 						break;
 					}
 				}
@@ -5752,27 +5779,25 @@ async function applyBotActions(data, tab = false) {
 
 		if (settings.autohi && data.chatname ) {
 			if (data.chatmessage.toLowerCase() === "hi") {
-				if (Date.now() - messageTimeout > 60000) {
-					// respond to "1" with a "1" automatically; at most 1 time per minute.
-					messageTimeout = Date.now();
-					var msg = {};
-					msg.tid = data.tid;
-					msg.response = "Hi, @" + data.chatname + " !";
-					processResponse(msg);
-				}
+				// respond to "1" with a "1" automatically; at most 1 time per minute.
+				var msg = {};
+				msg.tid = data.tid;
+				msg.response = "Hi, @" + data.chatname + " !";
+				//processResponse(msg);
+				processResponse(msg, false, null, false, false, 60000);
 			}
 		}
 
 		if (settings.autohi && data.chatname) {
 			if (data.chatmessage.toLowerCase() === "hi") {
-				if (Date.now() - messageTimeout > 60000) {
+				//if (Date.now() - messageTimeout > 60000) {
 					// respond to "1" with a "1" automatically; at most 1 time per minute.
-					messageTimeout = Date.now();
+					//messageTimeout = Date.now();
 					var msg = {};
 					msg.tid = data.tid;
 					msg.response = "Hi, @" + data.chatname + " !";
-					processResponse(msg);
-				}
+					processResponse(msg, false, null, false, false, 60000);
+				//}
 			}
 		}
 
@@ -5788,14 +5813,14 @@ async function applyBotActions(data, tab = false) {
 		// applyBotActions nor applyCustomActions ; I'm going to allow for copy/paste here I think instead.
 
 		if (settings.relaydonos && data.hasDonation && data.chatname && data.type) {
-			if (Date.now() - messageTimeout > 100) {
+			//if (Date.now() - messageTimeout > 100) {
 				// respond to "1" with a "1" automatically; at most 1 time per 100ms.
 
 				if (data.chatmessage.includes(". Thank you") && data.chatmessage.includes(" donated ")) {
 					return null;
 				} // probably a reply
 
-				messageTimeout = Date.now();
+				//messageTimeout = Date.now();
 				var msg = {};
 				msg.tid = data.tid;
 				if (tab) {
@@ -5803,8 +5828,8 @@ async function applyBotActions(data, tab = false) {
 				}
 
 				msg.response = sanitizeRelay(data.chatname, true, "Someone") + " on " + data.type + " donated " + sanitizeRelay(data.hasDonation, true) + ". Thank you";
-				processResponse(msg, true);
-			}
+				processResponse(msg, true, null, false, false, 100);
+			//}
 		}
 		
 
@@ -6059,29 +6084,30 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (settings.joke && data.chatmessage.toLowerCase() === "!joke") {
-			if (Date.now() - messageTimeout > 5100) {
+			//if (Date.now() - messageTimeout > 5100) {
 				var score = parseInt(Math.random() * 378);
 				var joke = jokes[score];
 
-				messageTimeout = Date.now();
+				//messageTimeout = Date.now();
 				var msg = {};
 				msg.tid = data.tid;
 				msg.response = "@" + data.chatname + ", " + joke["setup"];
-				processResponse(msg);
+				processResponse(msg, false, null, false, false, 5100);
 				setTimeout(
 					function (msg, punch) {
 						msg.response = punch;
-						processResponse(msg);
+						processResponse(msg, false, null, false, false, false);
 					},
 					5000,
 					data,
 					"@" + data.chatname + ".. " + joke["punchline"]
 				);
-			}
+			//}
 		}
 		
 		if (settings.dice && (data.chatmessage.toLowerCase().startsWith("!dice ") || data.chatmessage.toLowerCase() === "!dice")) {
-			if (Date.now() - messageTimeout > 5100) {
+				console.log("dice detected");
+			//if (Date.now() - messageTimeout > 5100) {
 				
 				let maxRoll = data.chatmessage.toLowerCase().split(" ");
 				if (maxRoll.length == 1) {
@@ -6092,12 +6118,12 @@ async function applyBotActions(data, tab = false) {
 				
 				let roll = Math.floor(Math.random() * maxRoll) + 1;
 
-				messageTimeout = Date.now();
+				//messageTimeout = Date.now();
 				var msg = {};
 				msg.tid = data.tid;
 				msg.response = "@" + data.chatname + ", the bot rolled you a " + roll +".";
-				processResponse(msg);
-			}
+				processResponse(msg, false, null, false, false, 5100);
+			//}
 		}
 
 	} catch (e) {
@@ -6153,8 +6179,9 @@ async function applyBotActions(data, tab = false) {
 					matches=true;
 				}
 				if (matches){
-					if (Date.now() - messageTimeout > 1000) {
-						messageTimeout = Date.now();
+					// processResponse(msg, false, null, false, false, 60000);
+					//if (Date.now() - messageTimeout > 1000) {
+					//	messageTimeout = Date.now();
 						let URL = settings["chatwebhook" + i].textsetting;
 						if (settings.chatwebhookpost) {
 							if (!URL.startsWith("http")) {
@@ -6175,7 +6202,7 @@ async function applyBotActions(data, tab = false) {
 								fetch(URL).catch(console.error);
 							}
 						}
-					}
+					//}
 				}
 			}
 		}
@@ -6366,24 +6393,26 @@ function midiHotkeysCommand(number, value) {
 	}
 }
 
-function respondToAll(msg) {
-	messageTimeout = Date.now();
+function respondToAll(msg, timeout=false) {
+	//messageTimeout = Date.now();
 	var data = {};
 	data.response = msg;
-	processResponse(data);
+	processResponse(data, false, null, false, false, timeout);
+	//processResponse(data);
 }
 
 function midiHotkeysNote(note, velocity) {
 	// In case you want to use NOTES instead of Control Change commands; like if you have a MIDI piano
 }
 
-function tellAJoke() {
+function tellAJoke() { 
 	var score = parseInt(Math.random() * 378);
 	var joke = jokes[score];
-	messageTimeout = Date.now();
+	//messageTimeout = Date.now();
 	var data = {};
 	data.response = joke["setup"] + "..  " + joke["punchline"] + " LUL";
-	processResponse(data);
+	//processResponse(data);
+	processResponse(data, false, null, false, false, false);
 }
 
 if (chrome.browserAction && chrome.browserAction.setIcon){

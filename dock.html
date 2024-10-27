@@ -3008,7 +3008,13 @@
 				ele.title = "Main — 🔕 Stop beeping when there is a new message";
 				playtone();
 			}
-
+			
+			
+			var nobeepbot = false;
+			if (urlParams.has("nobeepbot")) {
+				nobeepbot = true;
+			}
+			
 			var stylizeEmoji = false;
 			if (urlParams.has("emoji") || urlParams.has("emojis")) {
 				stylizeEmoji = urlParams.get("emoji") || urlParams.get("emojis") || "140%";
@@ -7344,8 +7350,10 @@
 						node.classList.add(classtype);
 					});
 					
-					if (beep && !bot) { 
-						playtone();
+					if (beep) { 
+						if (!(nobeepbot && bot)){
+							playtone();
+						}
 					}
 					
 					
