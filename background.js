@@ -2864,7 +2864,7 @@ function _min(d0, d1, d2, bx, ay) {
 ////////////////////////////
 
 var previousMessages = [];
-function checkExactDuplicateAlreadySent(msg) {
+function checkExactDuplicateAlreadyRelayed(msg) { // FOR RELAY PURPOSES ONLY.
 	// just in case the " said: " filter doesn't work, maybe due to a missing space or HTML
 	
 	var cleanText = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
@@ -2875,7 +2875,11 @@ function checkExactDuplicateAlreadySent(msg) {
 	
 	if (previousMessages.includes(cleanText)) {
 		// console.error(cleanText, previousMessages);
-		var ret = true;
+		if (!cleanText.includes("!")){ // relayed messages dont have a ! in it, so this is a duplicate command being sent?
+			var ret = true;
+		} else {
+			var ret = false;
+		}
 	} else {
 		// console.warn(cleanText, previousMessages);
 		var ret = false;
@@ -2883,7 +2887,7 @@ function checkExactDuplicateAlreadySent(msg) {
 	previousMessages.push(cleanText);
 	setTimeout(function () {
 		previousMessages.shift();
-	}, 45000); // was 60s.  this still seems more than enough
+	}, 60000);
 	return ret;
 }
 
@@ -3192,13 +3196,13 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				if (data.bot) {
 					return null;
 				}
-				if (checkExactDuplicateAlreadySent(cleaned, true)){
+				if (checkExactDuplicateAlreadyRelayed(cleaned, true)){
 					return;
 				}
-			} else if (!fakechat && checkExactDuplicateAlreadySent(cleaned, true)){
+			} else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, true)){
 				return null;
 			} else {
-				checkExactDuplicateAlreadySent(cleaned, true)
+				checkExactDuplicateAlreadyRelayed(cleaned, true)
 			}
 			
 			if (fakechat){
@@ -4902,7 +4906,7 @@ function processResponse(data, reverse = false, metadata = null, relay=false, an
 	}
 	
 	lastAntiSpam = messageCounter;
-	checkExactDuplicateAlreadySent(data.response);
+	checkExactDuplicateAlreadyRelayed(data.response);
 	
 	
 	chrome.tabs.query({}, (tabs) => {
@@ -5694,8 +5698,7 @@ async function applyBotActions(data, tab = false) {
 		
 		if (settings.relayall && data.chatmessage && data.chatname && !data.event) {
 			// don't relay events
-			if (checkExactDuplicateAlreadySent(data.chatmessage)) {  
-				// not matching exactly
+			if (checkExactDuplicateAlreadyRelayed(data.chatmessage)) {   
 				return null;
 			}
 
