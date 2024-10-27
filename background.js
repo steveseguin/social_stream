@@ -695,6 +695,9 @@ async function overwriteFile(data = false) {
 			]
 		};
 
+		if (!window.showSaveFilePicker) {
+			console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
+		}
 		newFileHandle = await window.showSaveFilePicker(opts);
 	} else if (newFileHandle && data) {
 		if (typeof newFileHandle == "string") {
@@ -721,7 +724,9 @@ async function overwriteSavedNames(data = false) {
 				}
 			]
 		};
-
+		if (!window.showSaveFilePicker) {
+			console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
+		}
 		newSavedNamesFileHandle = await window.showSaveFilePicker(opts);
 	} else if (data == "clear") {
 		uniqueNameSet = [];
@@ -775,7 +780,9 @@ async function overwriteFileExcel(data = false) {
 				}
 			]
 		};
-
+		if (!window.showSaveFilePicker) {
+			console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
+		}
 		newFileHandleExcel = await window.showSaveFilePicker(opts);
 		workbook = XLSX.utils.book_new();
 
@@ -4888,7 +4895,7 @@ function processResponse(data, reverse = false, metadata = null, relay=false, an
 		if (data["tid"] in messageTimeout){
 			if (Date.now() - messageTimeout[tid] < overrideTimeout) {
 				// not enough time has passed yet.
-				console.warn("not enough time has passed yet to send to :"+data["tid"]);
+				//console.warn("not enough time has passed yet to send to :"+data["tid"]);
 				return;
 			}
 		}
@@ -5107,7 +5114,7 @@ function generalFakeChat(tabid, message, middle = true, keypress = true, backspa
 			if (tabid in messageTimeout){
 				if (Date.now() - messageTimeout[tabid] < overrideTimeout) {
 					// not enough time has passed yet.
-					console.warn("not enough time has passed yet to send to :"+tabid);
+					//console.warn("not enough time has passed yet to send to :"+tabid);
 					return;
 				}
 			}
@@ -6106,7 +6113,7 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		if (settings.dice && (data.chatmessage.toLowerCase().startsWith("!dice ") || data.chatmessage.toLowerCase() === "!dice")) {
-				console.log("dice detected");
+			//	console.log("dice detected");
 			//if (Date.now() - messageTimeout > 5100) {
 				
 				let maxRoll = data.chatmessage.toLowerCase().split(" ");

@@ -8245,6 +8245,9 @@
 
 			async function overwriteFile(data = false) {
 				if (data == "setup") {
+					if (!window.showSaveFilePicker) {
+						console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
+					}
 					newFileHandle = await window.showSaveFilePicker();
 				} else if (newFileHandle && data) {
 					try {
