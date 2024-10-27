@@ -285,6 +285,9 @@
 
 	function processMessage(ele, event=false) {
 		// twitch
+		
+		console.log(ele);
+		
 		if (ele.classList.contains("chat-line__unpublished-message-body") || ele.querySelector(".chat-line__unpublished-message-body")){
 			return;
 		}
@@ -881,75 +884,52 @@
 			if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
 				return;
 			}
-			mutations.forEach(function(mutation) {
-				if (mutation.target === target) return;
-
-				// Handle attribute mutations
-				if (mutation.type === "attributes") {
-					if ((mutation.attributeName === "class" && mutation.target.classList.contains("deleted")) ||
-						(mutation.attributeName === "data-a-target" && mutation.target.dataset?.aTarget === "chat-deleted-message-placeholder")) {
+			mutations.forEach(function (mutation) {
+				if (mutation.target === target) {
+					return;
+				} else if (mutation.type === "attributes") {
+					if (mutation.attributeName == "class" && mutation.target.classList.contains("deleted")) {
+						deleteThis(mutation.target);
+					} else if (mutation.attributeName == "data-a-target" && mutation && mutation.target && mutation.target.data && mutation.target.data.aTarget && mutation.target.data.aTarget == "chat-deleted-message-placeholder") {
 						deleteThis(mutation.target);
 					}
-					return;
-				}
-
-				// Handle childList mutations
-				if (mutation.type === "childList" && mutation.addedNodes.length) {
-					for (const node of mutation.addedNodes) {
+				} else if (mutation.type === "childList" && mutation.addedNodes.length) {
+					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (node.ignore) continue;
-							node.ignore = true;
-
-							// Get direct child if it exists
-							const directChild = node.firstElementChild;
-							
-							// Check for deleted messages
-							if (node.dataset?.aTarget === "chat-deleted-message-placeholder" || 
-								(directChild?.dataset?.aTarget === "chat-deleted-message-placeholder")) {
-								deleteThis(node);
+							if (mutation.addedNodes[i].dataset.aTarget == "chat-deleted-message-placeholder") {
+								deleteThis(mutation.addedNodes[i]);
+								continue;
+							} else if (mutation.addedNodes[i].querySelector('[data-a-target="chat-deleted-message-placeholder"]')) {
+								deleteThis(mutation.addedNodes[i]);
 								continue;
 							}
 
-							// Handle events if enabled
-							if (settings.captureevents) {
-								const isUserNoticeLine = 
-									node.dataset?.testSelector === "user-notice-line" ||
-									node.classList?.contains("user-notice-line") ||
-									directChild?.dataset?.testSelector === "user-notice-line" ||
-									directChild?.classList?.contains("user-notice-line");
+							if (mutation.addedNodes[i].ignore) {
+								continue;
+							}
 
-								if (isUserNoticeLine) {
-									processEvent(directChild?.dataset?.testSelector === "user-notice-line" ? 
-										directChild : node);
+							mutation.addedNodes[i].ignore = true;
+							
+							if (settings.captureevents && mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.testSelector == "user-notice-line") {
+								processEvent(mutation.addedNodes[i]);
+							} else if (settings.captureevents && mutation.addedNodes[i].className && mutation.addedNodes[i].classList.contains("user-notice-line")) {
+								processEvent(mutation.addedNodes[i]);
+							}
+							
+							if (mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message") || (mutation.addedNodes[i].querySelector && mutation.addedNodes[i].querySelector(".paid-pinned-chat-message-content-wrapper")))) {
+								callback(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].querySelector(".chat-line__message")) {
+								var ele = mutation.addedNodes[i].querySelector(".chat-line__message");
+								
+								if (ele.ignore) { 
+									continue;
+								} else {
+									ele.ignore = true;
+									callback(ele);
 								}
 							}
-
-							// Handle chat messages
-							const isDirectMessage = 
-								node.classList?.contains("seventv-message") ||
-								node.classList?.contains("chat-line__message") ||
-								directChild?.classList?.contains("seventv-message") ||
-								directChild?.classList?.contains("chat-line__message");
-
-							const hasPinnedMessage = 
-								node.classList?.contains("paid-pinned-chat-message-content-wrapper") ||
-								directChild?.classList?.contains("paid-pinned-chat-message-content-wrapper");
-
-							if (isDirectMessage || hasPinnedMessage) {
-								callback(directChild?.classList?.contains("chat-line__message") ? 
-									directChild : node);
-								continue;
-							}
-
-							// Check for nested chat message as direct child
-							if (directChild?.classList?.contains("chat-line__message") && !directChild.ignore) {
-								directChild.ignore = true;
-								callback(directChild);
-							}
-
-						} catch (e) {
-							// Silent error handling
-						}
+							
+						} catch (e) {}
 					}
 				}
 			});
@@ -961,7 +941,7 @@
 				subtree: true, // Observe the target node and its descendants
 				attributes: true, // Observe attributes changes
 				attributeOldValue: true, // Optionally capture the old value of the attribute
-				attributeFilter: ["data-a-target", "class", "data-test-selector"] // Only observe changes to 'is-deleted' attribute
+				attributeFilter: ["data-a-target", "class"] // Only observe changes to 'is-deleted' attribute
 			};
 		} else {
 			var config = {
@@ -969,7 +949,7 @@
 				subtree: true, // Observe the target node and its descendants
 				attributes: true, // Observe attributes changes
 				attributeOldValue: true, // Optionally capture the old value of the attribute
-				attributeFilter: ["data-a-target", "data-test-selector"] // Only observe changes to 'is-deleted' attribute
+				attributeFilter: ["data-a-target"] // Only observe changes to 'is-deleted' attribute
 			};
 		}
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
