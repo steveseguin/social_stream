@@ -613,18 +613,28 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		ragFileManagement.style.display = this.checked ? 'block' : 'none';
 	});
 
+	let initialSetup = setInterval(()=>{
+		log("pop up asking main for settings yet again..");
+		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
+			chrome.runtime.lastError;
+			log("getSettings response",response);
+			if ((response == undefined) || (!response.streamID)){
+				
+			} else {
+				clearInterval(initialSetup);
+				update(response, false); // we dont want to sync things
+			}
+		});
+	}, 500);
+	
 	log("pop up asking main for settings");
-	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
+	chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
 		chrome.runtime.lastError;
 		log("getSettings response",response);
 		if ((response == undefined) || (!response.streamID)){
-			log("WOO");
-			setTimeout(function(){
-				chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
-					update(response, false);
-				});
-			},200);
+			
 		} else {
+			clearInterval(initialSetup);
 			update(response, false); // we dont want to sync things
 		}
 	});
