@@ -959,7 +959,7 @@
 								continue;
 							}
 							
-							let nextElement = mutation.addedNodes[i].querySelector('.user-notice-line, [data-test-selector="user-notice-line"]')
+							let nextElement = mutation.addedNodes[i].querySelector('.user-notice-line, [data-test-selector="user-notice-line"]');
 							if (nextElement){
 								if (!nextElement.ignore){
 									nextElement.ignore = true;
@@ -968,7 +968,7 @@
 								continue;
 							}
 							
-							nextElement = mutation.addedNodes[i].querySelector(".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper")
+							nextElement = mutation.addedNodes[i].querySelector(".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper");
 							if (nextElement){
 								if (!nextElement.ignore){
 									nextElement.ignore = true;
@@ -1011,19 +1011,13 @@
 	console.log("Social Stream injected");
 
 	var counter = 0;
-	var checkElement = ".chat-list--default";
+	var checkElement = ".chat-list--default, .chat-room__content";
 
 	var checkReady = setInterval(function () {
 		counter += 1;
-
-		if (counter == 5) {
-			checkElement = ".chat-list--default, .chat-room__content .chat-line__message";
-			console.log("checkElement wasn't found; trying alternative");
-		}
 		
 		if (counter == 10) {
-			checkElement = ".chat-list--default, .chat-room__content .chat-line__message, #root .chat-line__message";
-			console.log("falling back to detecting the root also");
+			checkElement = ".chat-list--default, .chat-room__content, #root";
 		}
 		
 		if (document.querySelector(checkElement)) {
