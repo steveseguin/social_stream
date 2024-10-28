@@ -807,12 +807,6 @@
 
 	function processEvent(ele) {
 		
-		try {
-			ele = ele.childNodes[0];
-		} catch (e) {
-			//
-		}
-		
 		var data = {};
 		data.chatname = "";
 		data.chatbadges = "";
@@ -895,11 +889,10 @@
 					}
 				} else if (mutation.type === "childList" && mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+						
+						
 						try {
-							if (mutation.addedNodes[i].dataset.aTarget == "chat-deleted-message-placeholder") {
-								deleteThis(mutation.addedNodes[i]);
-								continue;
-							} else if (mutation.addedNodes[i].querySelector('[data-a-target="chat-deleted-message-placeholder"]')) {
+							if ((mutation.addedNodes[i].dataset.aTarget == "chat-deleted-message-placeholder") || mutation.addedNodes[i].querySelector('[data-a-target="chat-deleted-message-placeholder"]')){
 								deleteThis(mutation.addedNodes[i]);
 								continue;
 							}
@@ -907,29 +900,46 @@
 							if (mutation.addedNodes[i].ignore) {
 								continue;
 							}
-
 							mutation.addedNodes[i].ignore = true;
 							
-							if (settings.captureevents && mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.testSelector == "user-notice-line") {
-								processEvent(mutation.addedNodes[i]);
-							} else if (settings.captureevents && mutation.addedNodes[i].className && mutation.addedNodes[i].classList.contains("user-notice-line")) {
-								processEvent(mutation.addedNodes[i]);
-							}
 							
-							if (mutation.addedNodes[i].className && (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message") || (mutation.addedNodes[i].querySelector && mutation.addedNodes[i].querySelector(".paid-pinned-chat-message-content-wrapper")))) {
-								callback(mutation.addedNodes[i]);
-							} else if (mutation.addedNodes[i].querySelector(".chat-line__message")) {
-								var ele = mutation.addedNodes[i].querySelector(".chat-line__message");
-								
-								if (ele.ignore) { 
+							if (settings.captureevents){
+								if (mutation.addedNodes[i].dataset.testSelector == "user-notice-line") {
+									processEvent(mutation.addedNodes[i]);
 									continue;
-								} else {
-									ele.ignore = true;
-									callback(ele);
+								} else if (mutation.addedNodes[i].classList.contains("user-notice-line")) {
+									processEvent(mutation.addedNodes[i]);
+									continue;
 								}
 							}
 							
-						} catch (e) {}
+							if (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message") || mutation.addedNodes[i].classList.contains("paid-pinned-chat-message-content-wrapper")){
+								callback(mutation.addedNodes[i]);
+								continue;
+							}
+							
+							let nextElement = mutation.addedNodes[i].querySelector('.user-notice-line, [data-test-selector="user-notice-line"]')
+							if (nextElement){
+								if (!nextElement.ignore){
+									nextElement.ignore = true;
+									processEvent(nextElement);
+								}
+								continue;
+							}
+							
+							nextElement = mutation.addedNodes[i].querySelector(".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper")
+							if (nextElement){
+								if (!nextElement.ignore){
+									nextElement.ignore = true;
+									callback(nextElement);
+								}
+								continue
+							}
+							
+						} catch (e) {
+							console.log(e);
+							
+						}
 					}
 				}
 			});
