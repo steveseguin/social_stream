@@ -282,11 +282,28 @@
 	var lastUser = "";
 	var lastEle = null;
 	//var midList = [];
+	
+	function sleep(ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	}
 
-	function processMessage(ele, event=false) {
+	async function processMessage(ele, event=false) {
 		// twitch
 		
 		//console.log(ele);
+		
+		if (!ele){return;}
+		
+		if (settings.delaytwitch){
+		  await sleep(3000);
+		  if (!ele){return;}
+		  if (ele.querySelector(".deleted, [data-a-target='chat-deleted-message-placeholder']")) {
+			  // already deleted.
+			  return;  
+		  }
+	    }
+	  
+	    if (!ele.isConnected){return;}
 		
 		if (ele.classList.contains("chat-line__unpublished-message-body") || ele.querySelector(".chat-line__unpublished-message-body")){
 			return;

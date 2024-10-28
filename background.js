@@ -2194,6 +2194,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "delaykick") {
 				pushSettingChange();
 			}
+			if (request.setting == "delaytwitch") {
+				pushSettingChange();
+			}
 			if (request.setting == "customtwitchaccount") {
 				pushSettingChange();
 			}
