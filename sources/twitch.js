@@ -852,7 +852,7 @@
 				return;
 			}
 			ele.deleted = true;
-
+			
 			var chatname = ele.querySelector(".chat-author__display-name, .chatter-name, .seventv-chat-user-username");
 			if (chatname) {
 				var data = {};
@@ -869,6 +869,30 @@
 				} catch (e) {
 					//
 				}
+				return;
+			}
+			chatname = ele.parentNode.querySelector(".chat-author__display-name, .chatter-name, .seventv-chat-user-username");
+			if (chatname) {
+				ele.parentNode.ignore = true;
+				if (ele.parentNode.deleted) {
+					return;
+				}
+				ele.parentNode.deleted = true;
+				var data = {};
+				data.chatname = escapeHtml(chatname.innerText);
+				data.type = "twitch";
+				try {
+					chrome.runtime.sendMessage(
+						chrome.runtime.id,
+						{
+							delete: data
+						},
+						function (e) {}
+					);
+				} catch (e) {
+					//
+				}
+				return;
 			}
 		} catch (e) {}
 	}
