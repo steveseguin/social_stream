@@ -3180,8 +3180,6 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				return null;
 			}
 			
-			
-			
 			const StageTEN_API_URL = "https://demo.stageten.tv/apis/plugin-service/chat/message/send"
 
 			let cleaned = data.chatmessage;
@@ -3230,7 +3228,7 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			var msg = {};
 			msg.sourceName = data.type || "stageten";
 			msg.sourceIconUrl = "https://socialstream.ninja/sources/images/"+msg.sourceName+".png";
-			msg.displayName = data.chatname || data.userid || username || "Host⚡";
+			msg.displayName = username || data.chatname || data.userid || "Host⚡";
 			msg.userId = "socialstream";
 			msg.messageBody = cleaned;
 			

@@ -155,6 +155,16 @@ let tmpModelFallback = "";
 async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images=null) {
     let ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
     let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
+	
+	if (!ollamamodel){
+		const availableModel0 = await getFirstAvailableModel();
+		if (availableModel0) {
+			tmpModelFallback = availableModel0;
+		} else {
+			console.error("No Ollama model found");
+			return;
+		}
+	}
 
     async function makeRequest(currentModel) {
         const isStreaming = callback !== null;
