@@ -3443,6 +3443,10 @@ function setupSocket() {
 				console.error(e);
 				return;
 			}
+			
+			if (data.target && (data.target==='null')){
+				data.target = "";
+			}
 
 			if (data.action && data.action === "sendChat" && data.value) {
 				var msg = {};
