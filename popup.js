@@ -417,6 +417,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	populateFontDropdown();
 	
+	
 	// populate language drop down
 	if (speechSynthesis){
 		function populateVoices() {
@@ -463,6 +464,13 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					voicesDropdown.appendChild(option);
 				}
 			});
+			
+			try {
+				TTSManager.init(voices)
+			} catch(e){
+				console.error(e);
+			}
+			
 		}
 		speechSynthesis.onvoiceschanged = populateVoices;
 		
@@ -516,7 +524,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				});
 			}
 		});
-	}	
+	}
 	
 	
 	document.getElementById('searchIcon').addEventListener('click', function() {
@@ -830,6 +838,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	if (hideLinks){
 		document.body.classList.add("hidelinks");
 	} 
+	
+
 });
 var streamID = false;
 function update(response, sync=true){
@@ -2291,3 +2301,234 @@ function deleteBadwordsFile() {
   }
 }
 
+// TTS Module for direct integration with settings menu
+const TTSManager = {
+    audio: null,
+    speech: false,
+    voice: null,
+    voices: null,
+    premiumQueueTTS: [],
+    premiumQueueActive: false,
+    
+    // Initialize the TTS system
+    init(voices) {
+        this.audio = document.createElement("audio");
+        this.audio.onended = () => this.finishedAudio();
+        
+        this.voices = voices;
+        
+        // Add test button to the menu
+        const testButton = document.createElement('button');
+        testButton.textContent = "Test";
+        testButton.className = "tts-test-button";
+        testButton.onclick = () => this.testTTS();
+        
+        // Insert at the top of the TTS menu
+        const menuWrapper = document.querySelector('#ttsButton');
+        menuWrapper.replaceWith(testButton);
+    },
+    
+    // Get current settings from the menu
+    getSettings() {
+        return {
+            speech: document.querySelector('[data-param1="speech"]').checked,
+            lang: document.getElementById('languageSelect1').selectedOptions[0].dataset.lang || document.getElementById('languageSelect1').value || 'en-US',
+			name: document.getElementById('languageSelect1').selectedOptions[0].dataset.name || '',
+            rate: parseFloat(document.querySelector('[data-numbersetting="rate"]').value) || 1.0,
+            volume: document.getElementById('volumeSlider')?.value / 100 || 1.0,
+            
+            // API Keys
+            googleKey: document.getElementById('googleAPIKey').value,
+            elevenLabsKey: document.getElementById('elevenLabsKey').value,
+            speechifyKey: document.getElementById('speechifyAPIKey').value,
+            
+            // Voice settings
+            googleVoice: document.getElementById('googleVoiceName').value,
+            elevenLabsVoice: document.getElementById('elevenLabsVoiceID').value,
+            speechifyVoice: document.getElementById('speechifyVoiceID').value,
+            
+            // Other options
+            latency: parseInt(document.querySelector('[data-numbersetting="latency"]')?.value) || 0
+        };
+    },
+    
+    // Test TTS functionality
+    testTTS() {
+        const testPhrase = "The quick brown fox jumps over the lazy dog";
+        this.speak(testPhrase, true);
+    },
+    
+    // Main speak function
+    speak(text, allow = false) {
+		console.log("speak: "+text);
+        const settings = this.getSettings();
+		console.log("settings: "+settings);
+        if (!settings.speech && !allow) return;
+        if (!text) return;
+		console.log("GOOD!?");
+        
+        // Handle different TTS services based on available API keys
+        if (settings.googleKey) {
+            if (!this.premiumQueueActive) {
+                this.googleTTS(text, settings);
+            } else {
+                this.premiumQueueTTS.push(text);
+            }
+        } else if (settings.elevenLabsKey) {
+            if (!this.premiumQueueActive) {
+                this.elevenLabsTTS(text, settings);
+            } else {
+                this.premiumQueueTTS.push(text);
+            }
+        } else if (settings.speechifyKey) {
+            if (!this.premiumQueueActive) {
+                this.speechifyTTS(text, settings);
+            } else {
+                this.premiumQueueTTS.push(text);
+            }
+        } else {
+            this.systemTTS(text, settings);
+        }
+    },
+    
+    // Built-in system TTS
+    systemTTS(text, settings) {
+        if (!window.speechSynthesis) return;
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = settings.lang;
+        utterance.rate = settings.rate;
+        utterance.volume = settings.volume;
+        
+        // Find the specific voice based on both name and language
+        if (this.voices && settings.name) {
+            const matchingVoice = this.voices.find(v => 
+                v.name === settings.name && v.lang === settings.lang
+            );
+            if (matchingVoice) {
+                utterance.voice = matchingVoice;
+            }
+        }
+        
+        window.speechSynthesis.speak(utterance);
+    },
+    
+    // Google Cloud TTS
+    googleTTS(text, settings) {
+        this.premiumQueueActive = true;
+        const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${settings.googleKey}`;
+        
+        const data = {
+            input: { text },
+            voice: {
+                languageCode: settings.lang.toLowerCase(),
+                name: settings.googleVoice || "en-GB-Standard-A"
+            },
+            audioConfig: {
+                audioEncoding: "MP3",
+                speakingRate: settings.rate
+            }
+        };
+        
+        this.fetchAudioContent(url, {
+            method: "POST",
+            headers: { "content-type": "application/json; charset=UTF-8" },
+            body: JSON.stringify(data)
+        }, 'base64');
+    },
+    
+    // ElevenLabs TTS
+    elevenLabsTTS(text, settings) {
+        this.premiumQueueActive = true;
+        const voiceId = settings.elevenLabsVoice || "VR6AewLTigWG4xSOukaG";
+        const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?optimize_streaming_latency=${settings.latency}`;
+        
+        const data = {
+            text,
+            model_id: "eleven_monolingual_v1",
+            voice_settings: {
+                stability: 0,
+                similarity_boost: 0,
+                style: 0.5,
+                use_speaker_boost: false
+            }
+        };
+        
+        this.fetchAudioContent(url, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                "xi-api-key": settings.elevenLabsKey
+            },
+            body: JSON.stringify(data)
+        }, 'blob');
+    },
+    
+    // Speechify TTS
+    speechifyTTS(text, settings) {
+        this.premiumQueueActive = true;
+        const url = "https://api.sws.speechify.com/v1/audio/speech";
+        
+        const data = {
+            input: `<speak>${text}</speak>`,
+            voice_id: settings.speechifyVoice || "henry",
+            model: settings.lang.startsWith('en') ? "simba-english" : "simba-multilingual",
+            audio_format: "mp3"
+        };
+        
+        this.fetchAudioContent(url, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${settings.speechifyKey}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        }, 'base64');
+    },
+    
+    // Helper function for fetching and playing audio
+    async fetchAudioContent(url, options, type) {
+        try {
+            const response = await fetch(url, options);
+            let audioData;
+            
+            if (type === 'base64') {
+                const json = await response.json();
+                this.playAudio(`data:audio/mp3;base64,${json.audioContent || json.audio_data}`);
+            } else if (type === 'blob') {
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                this.playAudio(blobUrl);
+            }
+        } catch (error) {
+            console.error("Error fetching audio:", error);
+            this.finishedAudio();
+        }
+    },
+    
+    // Play audio helper
+    playAudio(src) {
+        if (!this.audio) {
+            this.audio = document.createElement("audio");
+            this.audio.onended = () => this.finishedAudio();
+        }
+        
+        this.audio.src = src;
+        this.audio.volume = this.getSettings().volume;
+        
+        try {
+            this.audio.play();
+        } catch (e) {
+            console.error("Audio playback failed:", e);
+            this.finishedAudio();
+        }
+    },
+    
+    // Queue management
+    finishedAudio() {
+        this.premiumQueueActive = false;
+        if (this.premiumQueueTTS.length) {
+            this.speak(this.premiumQueueTTS.shift());
+        }
+    }
+};

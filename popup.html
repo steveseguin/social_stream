@@ -176,7 +176,19 @@
     display: block;
     height: 0;
 }
-
+.tts-test-button {
+	display: inline-block;
+    margin: 0 9px;
+    padding: 3px 8px 2px 6px;
+	background-color: #007bff;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+.tts-test-button:hover {
+	background-color: #0056b3;
+}
 .copy-link-btn {
     background: none;
     border: none;
@@ -1305,13 +1317,12 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
-
                                 <div title="Tip: You can use &amp;myname=name1,name2 to list names to exclude from TTS.">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="speech" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="text-to-speech-incoming-messages">🚦🗣️ Text-to-speech incoming messages </span>
+                                    <span data-translate="text-to-speech-incoming-messages">🚦🗣️ Text-to-speech incoming messages </span> <div id="ttsButton" class="hidden"></div>
                                 </div>
 								<br />
 								<i>note: the free built-in TTS plays out via the default audio device.</i>
