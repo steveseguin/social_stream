@@ -1,4 +1,8 @@
 (function () {
+
+setInterval(() => {
+    lastMessage = {}
+}, 3000)
 	
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
