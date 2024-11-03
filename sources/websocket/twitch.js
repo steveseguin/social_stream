@@ -201,11 +201,18 @@ async function getChatBadges(channelId) {
 
 // function to handle EventSub WebSocket connection
 async function connectEventSub() {
+	console.log("connectEventSub start");
     const token = getStoredToken();
-    if (!token) return;
+    if (!token) {
+		console.log("no token");
+		return;
+	}
 
     const channelInfo = await getUserInfo(channel);
-    if (!channelInfo) return;
+    if (!channelInfo) {
+		console.log("no channel info");
+		return;
+	}
 
     try {
         // Get EventSub WebSocket URL
@@ -230,6 +237,7 @@ async function connectEventSub() {
 
         eventsSocket.onmessage = (event) => {
             const message = JSON.parse(event.data);
+			console.log(event);
             
             if (message.metadata.message_type === 'notification') {
                 handleEventSubNotification(message.payload);
