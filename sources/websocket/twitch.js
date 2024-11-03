@@ -10,7 +10,11 @@ var BTTV = false;
 var SEVENTV = false;
 var EMOTELIST = false;
 var settings = {};
-
+let eventsSocket;
+let followersCount = 0;
+let viewerCount = 0;
+let lastUpdateTime = 0;
+const UPDATE_INTERVAL = 60000;
 
 // At the beginning of the script, add:
 function getStoredToken() {
@@ -94,12 +98,15 @@ function verifyAndUseToken(token) {
         }
     })
     .then(response => response.json())
-    .then(data => {
+    .then(async data => {
         if (data.login) {
             setStoredToken(token);
             username = data.login;
             localStorage.setItem("twitchChannel", channel);
-            connect();
+            await connect();
+			await connectEventSub();
+			updateStreamStats();
+			setInterval(updateStreamStats, UPDATE_INTERVAL);
             showSocketInterface();
         } else {
             clearStoredToken();
@@ -191,6 +198,191 @@ async function getChatBadges(channelId) {
         return null;
     }
 }
+
+// function to handle EventSub WebSocket connection
+async function connectEventSub() {
+    const token = getStoredToken();
+    if (!token) return;
+
+    const channelInfo = await getUserInfo(channel);
+    if (!channelInfo) return;
+
+    try {
+        // Get EventSub WebSocket URL
+        const response = await fetch('https://api.twitch.tv/helix/eventsub/websockets', {
+            method: 'POST',
+            headers: {
+                'Client-ID': clientId,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        const wsUrl = data.data[0].connection.url;
+
+        eventsSocket = new WebSocket(wsUrl);
+        
+        eventsSocket.onopen = () => {
+            // Subscribe to follow events
+            subscribeToEvent('channel.follow', channelInfo.id);
+        };
+
+        eventsSocket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            
+            if (message.metadata.message_type === 'notification') {
+                handleEventSubNotification(message.payload);
+            }
+        };
+
+        eventsSocket.onerror = (error) => {
+            console.error('EventSub WebSocket error:', error);
+        };
+
+        eventsSocket.onclose = () => {
+            setTimeout(connectEventSub, 10000); // Reconnect after 10 seconds
+        };
+    } catch (error) {
+        console.error('Error connecting to EventSub:', error);
+    }
+}
+
+// Function to subscribe to specific events
+async function subscribeToEvent(type, broadcasterId) {
+    const token = getStoredToken();
+    if (!token) return;
+
+    try {
+        await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
+            method: 'POST',
+            headers: {
+                'Client-ID': clientId,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                type,
+                version: '1',
+                condition: {
+                    broadcaster_user_id: broadcasterId
+                },
+                transport: {
+                    method: 'websocket',
+                    session_id: eventsSocket.sessionId
+                }
+            })
+        });
+    } catch (error) {
+        console.error(`Error subscribing to ${type}:`, error);
+    }
+}
+
+// Function to handle EventSub notifications
+function handleEventSubNotification(payload) {
+    switch (payload.subscription.type) {
+        case 'channel.follow':
+            const follower = payload.event.user_name;
+            const messageData = {
+                type: 'follow',
+                username: follower,
+                message: `${follower} just followed!`
+            };
+            displayNotification(messageData);
+            updateFollowerCount();
+            break;
+    }
+}
+
+// Function to update stream stats
+async function updateStreamStats() {
+    const now = Date.now();
+    if (now - lastUpdateTime < UPDATE_INTERVAL) return;
+    lastUpdateTime = now;
+
+    const token = getStoredToken();
+    if (!token) return;
+
+    const channelInfo = await getUserInfo(channel);
+    if (!channelInfo) return;
+
+    try {
+        // Get stream information
+        const streamResponse = await fetch(
+            `https://api.twitch.tv/helix/streams?user_id=${channelInfo.id}`,
+            {
+                headers: {
+                    'Client-ID': clientId,
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
+        const streamData = await streamResponse.json();
+        
+        if (streamData.data.length > 0) {
+            viewerCount = streamData.data[0].viewer_count;
+            updateStatsDisplay();
+        }
+
+        // Get follower count
+        const followersResponse = await fetch(
+            `https://api.twitch.tv/helix/users/follows?to_id=${channelInfo.id}`,
+            {
+                headers: {
+                    'Client-ID': clientId,
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
+        const followersData = await followersResponse.json();
+        followersCount = followersData.total;
+        updateStatsDisplay();
+    } catch (error) {
+        console.error('Error updating stream stats:', error);
+    }
+}
+
+// Function to update the stats display
+function updateStatsDisplay() {
+    const statsContainer = document.getElementById('stream-stats');
+    if (!statsContainer) {
+        createStatsContainer();
+        return;
+    }
+
+    statsContainer.innerHTML = `
+        <div class="stat-item">
+            <span class="stat-label">Viewers:</span>
+            <span class="stat-value">${viewerCount}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Followers:</span>
+            <span class="stat-value">${followersCount}</span>
+        </div>
+    `;
+}
+
+// Function to create the stats container
+function createStatsContainer() {
+    const container = document.createElement('div');
+    container.id = 'stream-stats';
+    container.className = 'stats-container';
+    document.querySelector('.socket').appendChild(container);
+    updateStatsDisplay();
+}
+
+// Function to display notifications
+function displayNotification(data) {
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.innerHTML = data.message;
+    document.querySelector('#textarea').appendChild(notification);
+    
+    // Remove notification after 5 seconds
+    setTimeout(() => notification.remove(), 5000);
+}
+
+
 
 async function connect() {
     const channelInfo = await getUserInfo(channel);
@@ -663,12 +855,12 @@ function pushMessage(data){
 	}
 }
 
-chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response={}){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 	if ("settings" in response){
 		settings = response.settings;
 	}
 	if (settings && settings.bttv && !BTTV){
-		chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
+		chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response={}){});
 	}
 	initializePage();
 });
