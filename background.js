@@ -3109,6 +3109,7 @@ async function sendToDestinations(message) {
 	sendToDisk(message);
 	sendToH2R(message);
 	sendToPost(message);
+	sendToDiscord(message);
 	addMessageDB(message);
 	return true;
 }
@@ -3325,6 +3326,150 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			console.warn(e);
 		}
 	}
+}
+
+function sendToDiscord(data) {
+    if (!settings.postdiscord || !settings.postserverdiscord) {
+        return;
+    }
+	if (!data.hasDonation && !data.donation){
+		return;
+	}
+
+    try {
+        let postServerDiscord = normalizeWebhookUrl(settings.postserverdiscord.textsetting);
+        
+        const avatarUrl = validateImageUrl(data.chatimg);
+        
+        const payload = {
+            username: "Donation Alert", // Custom webhook name
+            avatar_url: "https://socialstream.ninja/icons/bot.png", 
+            embeds: [{
+                title: formatTitle(data),
+                description: formatDescription(data),
+                color: 0x00ff00, // Green color for donations
+                timestamp: new Date().toISOString(),
+                thumbnail: {
+                    url: data.type ? `https://socialstream.ninja/sources/images/${data.type}.png` : null
+                },
+                author: {
+                    name: data.chatname,
+                    icon_url: avatarUrl || undefined
+                },
+                fields: buildFields(data)
+            }]
+        };
+        fetch(postServerDiscord, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        }).catch(error => console.warn('Discord webhook error:', error));
+
+    } catch (e) {
+        console.warn('Error sending Discord webhook:', e);
+    }
+}
+function normalizeWebhookUrl(url) {
+    if (!url) return null;
+    
+    if (url.startsWith("http")) {
+        return url;
+    } else if (url.startsWith("127.0.0.1")) {
+        return "http://" + url;
+    }
+    return "https://" + url;
+}
+
+function validateImageUrl(url) {
+    if (!url) return null;
+    
+    // Reject data URLs
+    if (url.startsWith('data:')) return null;
+    
+    // Allowed image domains
+    const allowedDomains = [
+        // Original domains
+        'cdn.discordapp.com',
+        'i.imgur.com',
+        'socialstream.ninja',
+        'static-cdn.jtvnw.net', // Twitch CDN
+        
+        // YouTube domains
+        'yt3.ggpht.com',        // YouTube profile pictures
+        'i.ytimg.com',          // YouTube thumbnails
+        'img.youtube.com',
+        
+        // Facebook domains
+        'scontent.xx.fbcdn.net',    // Facebook CDN
+        'platform-lookaside.fbsbx.com',
+        'graph.facebook.com',
+        
+        // Google domains
+        'lh3.googleusercontent.com', // Google user content (including profile pictures)
+        'storage.googleapis.com',
+        
+        // Kick domains
+        'files.kick.com',
+        'images.kick.com',
+        'stream.kick.com'
+    ];
+    
+    try {
+        const urlObj = new URL(url);
+        if (allowedDomains.some(domain => urlObj.hostname.endsWith(domain))) {
+            return url;
+        }
+    } catch (e) {
+        return null;
+    }
+    
+    return null;
+}
+function formatTitle(data) {
+    if (data.title) {
+        return data.title;
+    }
+    return `New donation from ${(data.type.charAt(0).toUpperCase() + data.type.slice(1)) || 'unknown'}!`;
+}
+function formatDescription(data) {
+    let description = '';
+    
+    if (data.chatmessage) {
+        description += `>>> ${data.chatmessage}\n\n`;
+    }
+    
+    return description || undefined;
+}
+function buildFields(data) {
+    const fields = [];
+    
+    if (data.hasDonation || data.donation) {
+        fields.push({
+            name: '💰 Donation Amount',
+            value: data.hasDonation || data.donation,
+            inline: true
+        });
+    }
+    
+    if (data.membership) {
+        fields.push({
+            name: '🌟 Membership',
+            value: data.membership,
+            inline: true
+        });
+    }
+    
+    if (data.subtitle) {
+        fields.push({
+            name: '📝 Details',
+            value: data.subtitle,
+            inline: true
+        });
+    }
+    
+    return fields;
 }
 
 function sendToPost(data) {
