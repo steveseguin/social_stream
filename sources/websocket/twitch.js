@@ -153,9 +153,7 @@ async function getUserInfo(username) {
         return null;
     }
 	
-	if (username){
-		console.log("username: "+username);
-	} else {
+	if (!username){
 		return null;
 	}
 
@@ -1244,15 +1242,47 @@ function handleEventSubNotification(payload) {
             break;
 
         case 'channel.cheer':
-            //pushMessage({
-            //    type: "twitch",
-            //    event: 'cheer',
-           //     chatname: event.user_name || 'Anonymous',
-            //    userid: event.user_id,
-           //     bits: event.bits,
-           //     chatmessage: event.message,
-           //     hasDonation: event.bits + " bits"
-           // });
+            pushMessage({
+                type: "twitch", 
+                event: 'cheer',
+                chatname: event.user_name || 'Anonymous',
+                userid: event.user_id,
+                bits: event.bits,
+                chatmessage: event.message,
+                hasDonation: event.bits + " bits"
+            });
+            break;
+		case 'channel.channel_points_custom_reward_redemption.add':
+            const rewardTitle = data.reward.title;
+            const rewardCost = data.reward.cost;
+            const userInput = data.user_input || '';
+            
+            let rewardMessage = `${data.user_name} redeemed ${rewardTitle} (${rewardCost} points)`;
+            if (userInput) {
+                rewardMessage += `: ${userInput}`;
+            }
+
+            pushMessage({
+                type: "twitch",
+                event: 'channel_points',
+                chatname: data.user_name,
+                userid: data.user_id,
+                chatmessage: rewardMessage,
+                reward: {
+                    id: data.reward.id,
+                    title: rewardTitle,
+                    cost: rewardCost,
+                    prompt: data.reward.prompt,
+                    userInput: userInput,
+                    backgroundColor: data.reward.background_color,
+                    redemptionId: data.id,
+                    status: data.status
+                },
+                timestamp: data.redeemed_at
+            });
+            
+            // Add to recent events
+            addEvent(`Channel Points: ${data.user_name} redeemed ${rewardTitle}`);
             break;
     }
 }
