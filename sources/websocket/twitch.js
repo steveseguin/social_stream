@@ -270,7 +270,7 @@ async function connect() {
                 var span = document.createElement("div");
                 span.innerText = `Joined the channel: ${channel}`;
                 textarea.appendChild(span);
-                if (textarea.childNodes.length > 10) {
+                if (textarea.childNodes.length > 20) {
                     textarea.childNodes[0].remove();
                 }
             }
