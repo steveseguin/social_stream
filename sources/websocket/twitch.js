@@ -92,6 +92,7 @@ function initializePage() {
         showAuthButton();
     }
 }
+
 function verifyAndUseToken(token) {
     fetch('https://id.twitch.tv/oauth2/validate', {
         headers: {
@@ -100,11 +101,12 @@ function verifyAndUseToken(token) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log("Token validation data:", data); // Add this line
+        console.log("Token validation data:", data);
         if (data.login) {
             setStoredToken(token);
             username = data.login;
             localStorage.setItem("twitchChannel", channel);
+            updateHeaderInfo(data.login, channel);
             connect();
             showSocketInterface();
         } else {
@@ -118,7 +120,6 @@ function verifyAndUseToken(token) {
         showAuthButton();
     });
 }
-
 function parseFragment(hash) {
     var hashMatch = function(expr) {
         var match = hash.match(expr);
@@ -203,73 +204,110 @@ let getViewerCountInterval = null;
 let getFollowersInterval = null;
 let badges = null;
 
+async function validateToken(token) {
+    try {
+        const response = await fetch('https://id.twitch.tv/oauth2/validate', {
+            headers: {
+                'Authorization': `OAuth ${token}`
+            }
+        });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        console.error('Token validation error:', error);
+        return null;
+    }
+}
 async function connect() {
+    const token = getStoredToken();
+    if (!token) {
+        console.error('No token available');
+        showAuthButton();
+        return;
+    }
+    
+    // Clean the channel name - remove # if present
+    channel = channel.replace(/^#/, '');
+    
+    const channelInfo = await getUserInfo(channel);
+    if (!channelInfo) {
+        console.error('Failed to get channel info');
+        return;
+    }
+    
+    const authUser = await validateToken(token);
+    if (!authUser) {
+        clearStoredToken();
+        showAuthButton();
+        return;
+    }
+    
+    // Update header with current user and channel info
+    updateHeaderInfo(authUser.login, channel);
+    
+    const permissions = await checkUserPermissions(channelInfo.id, authUser.user_id);
+    updateUIBasedOnPermissions(permissions);
 
-	const token = getStoredToken();
-	if (!token) {
-		console.error('No token available');
-		showAuthButton();
-		return;
-	}
-	
-	const channelInfo = await getUserInfo(channel);
-	if (!channelInfo) {
-		console.error('Failed to get channel info');
-		return;
-	}
-	
-	clearInterval(getFollowersInterval);
-    getFollowersInterval = setInterval(() => getFollowers(channelInfo.id), 60000); // Every minute
-	
-	const channelId = channelInfo.id;
-	badges = await getChatBadges(channelId);
+    // Close existing EventSub connection if it exists
+    if (eventSocket && eventSocket.readyState === WebSocket.OPEN) {
+        eventSocket.close();
+    }
+
+    // Start new EventSub connection
+    await connectEventSub();
+    
+    getFollowers(channelInfo.id)
+    clearInterval(getFollowersInterval);
+    getFollowersInterval = setInterval(() => getFollowers(channelInfo.id), 60000);
+    
+    const channelId = channelInfo.id;
+    badges = await getChatBadges(channelId);
+    
+    // Connect to chat WebSocket
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+        websocket.close();
+    }
 
     websocket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
 
+    // Rest of your existing connect function...
     websocket.onopen = async () => {
         console.log('Connected');
-
-        
-        channel = channel || username;
         
         websocket.send(`PASS oauth:${token}`);
         websocket.send(`NICK ${username}`);
         websocket.send(`JOIN #${channel}`);
         websocket.send('CAP REQ :twitch.tv/commands');
         websocket.send('CAP REQ :twitch.tv/tags');
-		
-		connectEventSub();
-		
-		clearInterval(getViewerCountInterval);
-		getViewerCountInterval = setInterval(() => getViewerCount(channelInfo.login), 30000);
-		
         
         const textarea = document.querySelector("#textarea");
         if (textarea) {
             var span = document.createElement("div");
             span.innerText = `Joined the channel: ${channel}`;
             textarea.appendChild(span);
-            if (textarea.childNodes.length > 10){
+            if (textarea.childNodes.length > 10) {
                 textarea.childNodes[0].remove();
             }
         }
-		if (channel){
-			if (settings.bttv) {
-				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, type:"twitch", channel:channel }, function (response) {});
-			}
-			if (settings.seventv) {
-				chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, type:"twitch", channel:channel }, function (response) {});
-			}
-			if (settings.ffz) {
-				chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, type:"twitch", channel:channel }, function (response) {});
-			}
-		}
+        
+        if (channel) {
+            if (settings.bttv) {
+                chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, type:"twitch", channel:channel }, function (response) {});
+            }
+            if (settings.seventv) {
+                chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, type:"twitch", channel:channel }, function (response) {});
+            }
+            if (settings.ffz) {
+                chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, type:"twitch", channel:channel }, function (response) {});
+            }
+        }
     };
 
     websocket.onmessage = (event) => handleWebSocketMessage(event, badges);
-    websocket.onerror = (event) => console.error('WebSocket error:', event);
+    websocket.onerror = (error) => console.error('WebSocket error:', error);
     websocket.onclose = handleWebSocketClose;
 }
+
 
 function handleWebSocketMessage(event) {
   const messages = event.data.split('\r\n');
@@ -301,11 +339,61 @@ function handleWebSocketMessage(event) {
           if (parsedMessage.type) {
             handleEventSubNotification(parsedMessage);
           } else {
-            console.log('Unhandled command:', parsedMessage.command);
+           // console.log('Unhandled command:', parsedMessage.command);
           }
       }
     }
   });
+}
+
+async function checkChannelPermissions(token, userId, channelId) {
+    try {
+        // Check if user is broadcaster
+        const isBroadcaster = userId === channelId;
+        
+        // Check if user is moderator
+        const modResponse = await fetch(
+            `https://api.twitch.tv/helix/moderation/moderators?broadcaster_id=${channelId}&user_id=${userId}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Client-ID': clientId
+                }
+            }
+        );
+        const modData = await modResponse.json();
+        const isModerator = modData.data.length > 0;
+        
+        // Check if channel has subscriber program
+        const channelResponse = await fetch(
+            `https://api.twitch.tv/helix/channels?broadcaster_id=${channelId}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Client-ID': clientId
+                }
+            }
+        );
+        const channelData = await channelResponse.json();
+        const hasSubscriptionProgram = channelData.data[0]?.partner || channelData.data[0]?.affiliate;
+
+        return {
+            canViewSubscribers: isBroadcaster || isModerator,
+            canViewFollowers: isBroadcaster || isModerator,
+            canViewViewerCount: true, // Public information
+            canSendMessages: true, // Basic chat permission
+            hasSubscriptionProgram: hasSubscriptionProgram
+        };
+    } catch (error) {
+        console.error('Error checking permissions:', error);
+        return {
+            canViewSubscribers: false,
+            canViewFollowers: false,
+            canViewViewerCount: true,
+            canSendMessages: true,
+            hasSubscriptionProgram: false
+        };
+    }
 }
 
 function checkAuthStatus() {
@@ -324,21 +412,26 @@ function handleWebSocketClose(event) {
     console.log('Attempting to reconnect...');
     setTimeout(connect, 10000); // Reconnect after 10 seconds
 }
+
 function signOut() {
-    clearStoredToken();
+    localStorage.removeItem('twitchOAuthToken');
+    localStorage.removeItem('twitchChannel');
+    localStorage.removeItem('twitchUserAlias');
     sessionStorage.removeItem('twitchOAuthState');
+    sessionStorage.removeItem('twitchOAuthToken');
     
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
+    if (typeof websocket !== 'undefined' && websocket && websocket.readyState === WebSocket.OPEN) {
         websocket.close();
     }
 
-    showAuthButton();
-
-    const textarea = document.querySelector('#textarea');
-    if (textarea) textarea.innerHTML = '';
+    updateHeaderInfo(null, null);
+    document.querySelector('.socket').classList.add('hidden');
+    document.querySelector('.auth').classList.remove('hidden');
+    document.querySelector('#textarea').innerHTML = '';
 
     console.log('Signed out successfully');
 }
+
 function handleSendMessage(event) {
     event.preventDefault();
     const inputElement = document.querySelector('#input-text');
@@ -383,7 +476,7 @@ function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
 	EMOTELIST = {};
 	
 	if (BTTV) {
-		console.log(BTTV);
+		//console.log(BTTV);
 		if (settings.bttv) {
 			try {
 				if (BTTV.channelEmotes) {
@@ -399,7 +492,7 @@ function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
 		}
 	}
 	if (SEVENTV) {
-		console.log(SEVENTV);
+		//console.log(SEVENTV);
 		if (settings.seventv) {
 			try {
 				if (SEVENTV.channelEmotes) {
@@ -414,7 +507,7 @@ function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
 		}
 	}
 	if (FFZ) {
-		console.log(FFZ);
+		//console.log(FFZ);
 		if (settings.ffz) {
 			try {
 				if (FFZ.channelEmotes) {
@@ -696,20 +789,23 @@ async function processMessage(parsedMessage) {
 function updateStats(type, data) {
 	switch(type) {
 		case 'viewer_update':
-			document.getElementById('viewer-count').textContent = data.viewers;
+			document.getElementById('viewer-count').textContent = data.meta;
 			break;
 		case 'follower_update':
-			document.getElementById('follower-count').textContent = data.followerCount;
-			addEvent(`New Follower: ${data.latestFollower.user_name}`);
+			document.getElementById('follower-count').textContent = data.meta;
+			//addEvent(`New Follower: ${data.latestFollower.chatname}`);
+			break;
+		case 'new_follower':
+			addEvent(`New Follower: ${data.chatname}`);
 			break;
 		case 'new_subscriber':
-			addEvent(`New Subscriber: ${data.user}`);
+			addEvent(`New Subscriber: ${data.chatname}`);
 			break;
 		case 'subscription_gift':
-			addEvent(`${data.user} gifted ${data.total} subs!`);
+			addEvent(`${data.chatname} gifted ${data.total} subs!`);
 			break;
 		case 'cheer':
-			addEvent(`${data.user} cheered ${data.bits} bits!`);
+			addEvent(`${data.chatname} cheered ${data.hasDonation}!`);
 			break;
 	}
 }
@@ -727,16 +823,20 @@ function addEvent(text) {
 	}
 }
 
-// Add channel connection handling
-document.getElementById('connect-button').addEventListener('click', function() {
-	const channelInput = document.getElementById('channel-input');
-	const channelName = channelInput.value.trim();
-	if (channelName) {
-		// Store the channel name
-		localStorage.setItem('twitchChannel', channelName);
-		// Reconnect with new channel
-		connect();
-	}
+document.getElementById('connect-button').addEventListener('click', async function() {
+    const channelInput = document.getElementById('channel-input');
+    const channelName = channelInput.value.trim().replace(/^#/, ''); // Remove # if present
+    if (channelName) {
+        // Store the channel name
+        localStorage.setItem('twitchChannel', channelName);
+        channel = channelName;
+        
+        // Reconnect with new channel
+        await connect();
+        
+        // Clear the input
+        channelInput.value = '';
+    }
 });
 
 function parseBadges(parsedMessage, badges) {
@@ -753,8 +853,8 @@ var settings = {};
 function pushMessage(data) {
     try {
 		
-		if (data.type && data.type !== 'twitch') {
-			updateStats(data.type, data);
+		if (data.type && data.event) {
+			updateStats(data.event, data);
 		}
 				
         // Send message to Chrome extension
@@ -842,6 +942,7 @@ async function getViewerCount(channelName) {
 // Function to fetch followers
 async function getFollowers(broadcasterId) {
     const token = getStoredToken();
+	
     if (!token) return;
     
     try {
@@ -858,12 +959,12 @@ async function getFollowers(broadcasterId) {
         if (data.total !== lastKnownFollowers) {
             lastKnownFollowers = data.total;
             if (data.data && data.data[0]) {
-               // pushMessage({
-				//	type: 'twitch',
-              //      event: 'follower_update',
-              //      meta: data.total,
-              //      chatmessage: data.data[0] + " has started following"
-              //  });
+                pushMessage({
+					type: 'twitch',
+                    event: 'follower_update',
+                    meta: data.total
+                    //chatmessage: data.data[0] + " has started following"
+                });
             }
         }
     } catch (error) {
@@ -899,15 +1000,23 @@ async function connectEventSub() {
                 break;
                 
             case 'notification':
-                handleEventSubNotification(message.payload.event);
+                handleEventSubNotification(message.payload);
                 break;
                 
             case 'session_keepalive':
-                // Optional: Log or handle keepalive
+                // Optional: Handle keepalive
+                break;
+                
+            case 'session_reconnect':
+                // Handle reconnect messages
+                const reconnectUrl = message.payload.session.reconnect_url;
+                eventSocket.close();
+                eventSocket = new WebSocket(reconnectUrl);
                 break;
                 
             case 'revocation':
                 console.log('Subscription revoked:', message.payload);
+                // Potentially try to resubscribe if needed
                 break;
         }
     };
@@ -923,115 +1032,280 @@ async function connectEventSub() {
 }
 
 
-// Separate function to create all subscriptions
 async function createEventSubSubscriptions(broadcasterId) {
     const token = getStoredToken();
     if (!token || !eventSessionId) {
         console.error("Missing token or session ID");
         return;
     }
-    
-    console.log("Creating subscriptions for broadcaster:", broadcasterId);
-    console.log("Using session ID:", eventSessionId);
-    
-    // Let's try just one subscription first to debug
-    const subscription = {
+
+    // Get user permissions for the channel
+    const authUser = await validateToken(token);
+    if (!authUser) return;
+
+    const permissions = await checkUserPermissions(broadcasterId, authUser.user_id);
+
+    // Only subscribe to events the user has permission to receive
+    const subscriptionTypes = [];
+
+    // Follows are public info
+    subscriptionTypes.push({
         type: 'channel.follow',
         version: '2',
         condition: {
             broadcaster_user_id: broadcasterId,
             moderator_user_id: broadcasterId
-        },
-        transport: {
-            method: 'websocket',
-            session_id: eventSessionId
         }
-    };
-    
-    try {
-        console.log("Sending subscription request:", subscription);
-        
-        const response = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
-            method: 'POST',
-            headers: {
-                'Client-ID': clientId,
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(subscription)
+    });
+
+    // Only add subscriber events if user has permission
+    if (permissions.canViewSubscribers && permissions.hasSubscriptionProgram) {
+        subscriptionTypes.push({
+            type: 'channel.subscribe',
+            version: '1',
+            condition: {
+                broadcaster_user_id: broadcasterId
+            }
         });
-        
-        const data = await response.json();
-        console.log("Subscription response:", data);
-        
-        if (!response.ok) {
-            throw new Error(JSON.stringify(data));
-        }
-    } catch (error) {
-        console.error(`Error creating subscription:`, error);
-        
-        // Let's check the token scopes
+
+        subscriptionTypes.push({
+            type: 'channel.subscription.gift',
+            version: '1',
+            condition: {
+                broadcaster_user_id: broadcasterId
+            }
+        });
+    }
+
+    // Only add cheer events if user has appropriate permissions
+    if (permissions.isBroadcaster || permissions.isModerator) {
+        subscriptionTypes.push({
+            type: 'channel.cheer',
+            version: '1',
+            condition: {
+                broadcaster_user_id: broadcasterId
+            }
+        });
+    }
+
+    // Create each subscription
+    for (const subscription of subscriptionTypes) {
         try {
-            const validateResponse = await fetch('https://id.twitch.tv/oauth2/validate', {
+            const response = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
+                method: 'POST',
                 headers: {
-                    'Authorization': `OAuth ${token}`
-                }
+                    'Client-ID': clientId,
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ...subscription,
+                    transport: {
+                        method: 'websocket',
+                        session_id: eventSessionId
+                    }
+                })
             });
-            const validateData = await validateResponse.json();
-            console.log("Token validation data:", validateData);
-        } catch (e) {
-            console.error("Error validating token:", e);
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error(`Error creating ${subscription.type} subscription:`, errorData);
+                continue; // Skip to next subscription if this one fails
+            }
+            
+            console.log(`Successfully subscribed to ${subscription.type}`);
+        } catch (error) {
+            console.error(`Error creating subscription for ${subscription.type}:`, error);
         }
     }
 }
 
-// Function to handle EventSub notifications
-function handleEventSubNotification(event) {
-    switch (event.subscription.type) {
+function handleEventSubNotification(payload) {
+    const event = payload.event;
+    const subscription = payload.subscription;
+
+    switch (subscription.type) {
         case 'channel.follow':
             pushMessage({
-				type: "twitch",
+                type: "twitch",
                 event: 'new_follower',
-				chatmessage: event.user_name + " has starting following",
+                chatmessage: `${event.user_name} has started following`,
                 chatname: event.user_name,
                 userid: event.user_id,
                 timestamp: event.followed_at
             });
             break;
-            
+
         case 'channel.subscribe':
             pushMessage({
-				type: "twitch",
+                type: "twitch",
                 event: 'new_subscriber',
-				chatmessage: event.user_name + " has subscribed at tier " +event.tier,
+                chatmessage: `${event.user_name} has subscribed at tier ${event.tier}`,
                 chatname: event.user_name,
                 userid: event.user_id,
                 tier: event.tier,
                 isGift: event.is_gift
             });
             break;
-            
+
         case 'channel.subscription.gift':
             pushMessage({
-				type: "twitch",
+                type: "twitch",
                 event: 'subscription_gift',
                 chatname: event.user_name,
-				chatmessage: event.user_name + " has gifted "+event.total+" tier "+event.tier+" subs!",
+                chatmessage: `${event.user_name} has gifted ${event.total} tier ${event.tier} subs!`,
                 userid: event.user_id,
                 total: event.total,
                 tier: event.tier
             });
             break;
-            
-        //case 'channel.cheer':
-       //     pushMessage({
-		//		type: "twitch",
-       //         chatname: event.user_name,
-        //        userid: event.user_id,
-        //        bits: event.bits,
-        //        chatmessage: event.message,
-		//		hasDonation: event.bits+" bits"
-        //    });
-        //    break;
+
+        case 'channel.cheer':
+            //pushMessage({
+            //    type: "twitch",
+            //    event: 'cheer',
+           //     chatname: event.user_name || 'Anonymous',
+            //    userid: event.user_id,
+           //     bits: event.bits,
+           //     chatmessage: event.message,
+           //     hasDonation: event.bits + " bits"
+           // });
+            break;
+    }
+}
+
+
+async function getModeratorStatus(broadcasterId, userId) {
+    const token = getStoredToken();
+    if (!token) return false;
+    
+    try {
+        const response = await fetch(
+            `https://api.twitch.tv/helix/moderation/moderators?broadcaster_id=${broadcasterId}&user_id=${userId}`,
+            {
+                headers: {
+                    'Client-ID': clientId,
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
+        
+        if (!response.ok) return false;
+        const data = await response.json();
+        return data.data.length > 0;
+    } catch (error) {
+        console.error('Error checking moderator status:', error);
+        return false;
+    }
+}
+
+async function getBroadcasterStatus(broadcasterId) {
+    const token = getStoredToken();
+    if (!token) return null;
+    
+    try {
+        const response = await fetch(
+            `https://api.twitch.tv/helix/channels?broadcaster_id=${broadcasterId}`,
+            {
+                headers: {
+                    'Client-ID': clientId,
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
+        
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data.data[0];
+    } catch (error) {
+        console.error('Error checking broadcaster status:', error);
+        return null;
+    }
+}
+
+async function checkUserPermissions(channelId, userId) {
+    const isBroadcaster = channelId === userId;
+    const isModerator = await getModeratorStatus(channelId, userId);
+    const broadcasterInfo = await getBroadcasterStatus(channelId);
+    
+    return {
+        isBroadcaster,
+        isModerator,
+        canViewFollowers: true, // Followers are public info
+        canManageChat: isBroadcaster || isModerator,
+        canBanUsers: isBroadcaster || isModerator,
+        canDeleteMessages: isBroadcaster || isModerator,
+        canViewSubscribers: isBroadcaster || isModerator,
+        hasSubscriptionProgram: broadcasterInfo?.partner || broadcasterInfo?.broadcaster_type === 'affiliate',
+        canModerate: isBroadcaster || isModerator,
+        broadcasterType: broadcasterInfo?.broadcaster_type || 'none'
+    };
+}
+
+function updateUIBasedOnPermissions(permissions) {
+    // Update UI elements based on permissions
+    const elements = {
+        subscriberCount: document.getElementById('subscriber-count')?.parentElement,
+        followerCount: document.getElementById('follower-count')?.parentElement,
+        chatInput: document.querySelector('.chat-input'),
+        moderationControls: document.querySelector('.moderation-controls'),
+        permissionsInfo: document.getElementById('permissions-info') || createPermissionsInfo()
+    };
+
+    // Update subscriber count visibility
+    if (elements.subscriberCount) {
+        elements.subscriberCount.style.display = 
+            (permissions.canViewSubscribers && permissions.hasSubscriptionProgram) ? 'block' : 'none';
+    }
+
+    // Update moderation controls visibility
+    if (elements.moderationControls) {
+        elements.moderationControls.style.display = permissions.canModerate ? 'block' : 'none';
+    }
+
+    // Update permissions info display
+    updatePermissionsDisplay(permissions, elements.permissionsInfo);
+}
+
+function createPermissionsInfo() {
+    const container = document.createElement('div');
+    container.id = 'permissions-info';
+    container.className = 'permissions-container';
+    document.querySelector('.stats-container').appendChild(container);
+    return container;
+}
+
+function updatePermissionsDisplay(permissions, container) {
+    const permissionsList = [
+        { name: 'Channel Role', value: permissions.isBroadcaster ? 'Broadcaster' : permissions.isModerator ? 'Moderator' : 'Viewer' },
+        { name: 'Can Moderate Chat', value: permissions.canModerate ? '✓' : '✗' },
+        { name: 'Can Ban Users', value: permissions.canBanUsers ? '✓' : '✗' },
+        { name: 'Can Delete Messages', value: permissions.canDeleteMessages ? '✓' : '✗' },
+        { name: 'Can View Subscribers', value: permissions.canViewSubscribers ? '✓' : '✗' },
+        { name: 'Channel Type', value: permissions.broadcasterType === 'none' ? 'Regular' : permissions.broadcasterType }
+    ];
+
+    container.innerHTML = `
+        <div class="permissions-header">Channel Permissions</div>
+        <div class="permissions-grid">
+            ${permissionsList.map(perm => `
+                <div class="permission-item">
+                    <span class="permission-name">${perm.name}:</span>
+                    <span class="permission-value ${perm.value === '✓' ? 'yes' : perm.value === '✗' ? 'no' : ''}">${perm.value}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function updateHeaderInfo(username, channelName) {
+    const currentUserElement = document.getElementById('current-user');
+    const currentChannelElement = document.getElementById('current-channel');
+    
+    if (currentUserElement) {
+        currentUserElement.textContent = username || 'Not signed in';
+    }
+    if (currentChannelElement) {
+        currentChannelElement.textContent = channelName || 'No channel';
     }
 }
