@@ -2360,12 +2360,12 @@ const TTSManager = {
     
     // Main speak function
     speak(text, allow = false) {
-		console.log("speak: "+text);
+		//console.log("speak: "+text);
         const settings = this.getSettings();
-		console.log("settings: "+settings);
+		//console.log("settings: "+settings);
         if (!settings.speech && !allow) return;
         if (!text) return;
-		console.log("GOOD!?");
+		//console.log("GOOD!?");
         
         // Handle different TTS services based on available API keys
         if (settings.googleKey) {

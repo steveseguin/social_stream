@@ -186,11 +186,11 @@
 		.image-preview-container {
             position: relative;
             display: inline-block;
-            margin: 10px 0;
+            margin: 0;
         }
         
         .image-preview {
-            max-height: 100px;
+            max-height: 30px;
             border-radius: 10px;
             border: 2px solid rgba(74, 74, 74, 1);
         }
@@ -240,20 +240,11 @@
             display: none;
         }
         
-        /* Update existing input container styles */
-		/*
-        #input-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
         .input-row {
             display: flex;
-            gap: 10px;
+            gap: 2px;
             align-items: center;
         }
-		 */
     </style>
 </head>
 <body>
@@ -280,6 +271,10 @@
 		var password = "false";
 		var conversationHistory = [];
 		let currentImage = null;
+		let imageSupport = false;
+		if (urlParams.has("img")){
+			imageSupport = true;
+		}
 
 		if (urlParams.has("session")) {
 			roomID = urlParams.get("session");
@@ -304,79 +299,101 @@
 		};
 		// Create new elements
 		const imageInput = document.createElement('input');
-		//imageInput.type = 'file';
-		//imageInput.id = 'image-input';
-		//imageInput.accept = 'image/*';
+		imageInput.type = 'file';
+		imageInput.id = 'image-input';
+		imageInput.accept = 'image/*';
 		
 		const imagePreviewContainer = document.createElement('div');
-		//imagePreviewContainer.className = 'image-preview-container';
-		//imagePreviewContainer.style.display = 'none';
+		imagePreviewContainer.className = 'image-preview-container';
+		imagePreviewContainer.style.display = 'none';
 		
-		//const imagePreview = document.createElement('img');
-		//imagePreview.className = 'image-preview';
+		const imagePreview = document.createElement('img');
+		imagePreview.className = 'image-preview';
 		
-		//const removeButton = document.createElement('button');
-		//removeButton.className = 'remove-image';
-		//removeButton.innerHTML = '×';
+		const removeButton = document.createElement('button');
+		removeButton.className = 'remove-image';
+		removeButton.innerHTML = '×';
 		
-		//const uploadButton = document.createElement('button');
-		//uploadButton.className = 'image-upload-button';
-		//uploadButton.innerHTML = `
-		//	<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-		//		<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-		//		<circle cx="12" cy="13" r="4"/>
-		//	</svg>
-		//	Attach Image
-		//`;
+		const uploadButton = document.createElement('button');
+		uploadButton.className = 'image-upload-button';
+		uploadButton.innerHTML = `
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+				<circle cx="12" cy="13" r="4"/>
+			</svg>
+		`;
+		uploadButton.title = "Requires an LLM model that supports images; llama3.2-vision, for example";
 		
-		// Restructure the input container for image input
-		//const inputRow = document.createElement('div');
-		//inputRow.className = 'input-row';
+		if (!imageSupport){
+			uploadButton.style.display = "none";
+		}
 		
-		// Move existing elements to the new structure
-		//inputContainer.insertBefore(imageInput, inputContainer.firstChild);
-		//imagePreviewContainer.appendChild(imagePreview);
-		//imagePreviewContainer.appendChild(removeButton);
-		//inputContainer.insertBefore(imagePreviewContainer, inputContainer.firstChild);
+		//Restructure the input container for image input
+		const inputRow = document.createElement('div');
+		inputRow.className = 'input-row';
 		
-		// Rearrange elements
-		//inputRow.appendChild(uploadButton);
-		//const existingButtons = Array.from(inputContainer.children).filter(
-		//	child => child.tagName === 'BUTTON'
-		//);
-		//existingButtons.forEach(button => inputRow.appendChild(button));
+		//Move existing elements to the new structure
+		inputContainer.insertBefore(imageInput, inputContainer.firstChild);
+		imagePreviewContainer.appendChild(imagePreview);
+		imagePreviewContainer.appendChild(removeButton);
+		inputContainer.insertBefore(imagePreviewContainer, inputContainer.firstChild);
 		
-		// Insert the input row after the user input
-		//userInput.parentNode.insertBefore(inputRow, userInput.nextSibling);
+		//Rearrange elements
+		inputRow.appendChild(uploadButton);
+		const existingButtons = Array.from(inputContainer.children).filter(
+			child => child.tagName === 'BUTTON'
+		);
+		existingButtons.forEach(button => inputRow.appendChild(button));
 		
-		function sendMessage() {
+		//Insert the input row after the user input
+		userInput.parentNode.insertBefore(inputRow, userInput.nextSibling);
+		
+		async function sendMessage() {
 			const message = finalTranscript || userInput.value.trim();
-			if (!message && !currentImage) return;
-			finalTranscript = '';
-			let messageID = parseInt(Math.random()*99999999);
-			addMessageToChat('user', message, messageID);
-			addWaitingMessage(messageID);
-			userInput.value = '';
-
-			// Add the user's message to the conversation history
-			conversationHistory.push({ role: 'user', content: message });
-
-			var data = {};
-			data.value = formatConversationForLlama(conversationHistory);
-			data.target = messageID;
-			data.action = "chatbot";
-			data.turbo = false; // true to use a faster model with shorter responses; useful if you have a slow/limited computer/gpu
+			if (!message && !currentImageFile) return;
 			
-			if (currentImage) {
-                data.images = [currentImage];
-                // Clear the image after sending
-                imagePreviewContainer.style.display = 'none';
-                imageInput.value = '';
-                currentImage = null;
-				data.model = "x/llama3.2-vision:latest"; // I doubt most peeps can run this, but w/e.
-            }
-			
-			iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs" }, "*");
+			try {
+				let messageID = parseInt(Math.random()*99999999);
+				
+				// Process image if one is selected
+				if (currentImageFile) {
+					try {
+						currentImage = await processImageForWebRTC(currentImageFile, 262144, 1120, message);
+					} catch (error) {
+						alert('Error processing image. The image may be too large with the current message. Try a smaller image or shorter message.');
+						return;
+					}
+				}
+
+				finalTranscript = '';
+				addMessageToChat('user', message, messageID);
+				addWaitingMessage(messageID);
+				userInput.value = '';
+
+				// Add the user's message to the conversation history
+				conversationHistory.push({ role: 'user', content: message });
+
+				var data = {};
+				data.value = formatConversationForLlama(conversationHistory);
+				data.target = messageID;
+				data.action = "chatbot";
+				data.turbo = false;
+				
+				if (currentImage) {
+					data.images = [currentImage];
+					// Clear the image after sending
+					imagePreviewContainer.style.display = 'none';
+					imageInput.value = '';
+					currentImageFile = null;
+					currentImage = null;
+					// data.model = "x/llama3.2-vision:latest";
+				}
+				
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs" }, "*");
+			} catch (error) {
+				console.error('Error sending message:', error);
+				alert('Error sending message. Please try again.');
+			}
 		}
 
 		function formatConversationForLlama(history) {
@@ -473,11 +490,11 @@
 			imageInput.addEventListener('change', function(event) {
 				const file = event.target.files[0];
 				if (file && file.type.startsWith('image/')) {
+					currentImageFile = file;
 					const reader = new FileReader();
 					reader.onloadend = function() {
 						imagePreview.src = reader.result;
 						imagePreviewContainer.style.display = 'inline-block';
-						currentImage = reader.result.split(',')[1]; // Store base64 without prefix
 					};
 					reader.readAsDataURL(file);
 				}
@@ -490,6 +507,93 @@
 			});
 			
 		});
+		
+		// Helper function to estimate final message size including base64 overhead
+		function estimateMessageSize(base64Image, userMessage = '') {
+			// base64 encoding increases size by roughly 4/3
+			const base64Overhead = Math.ceil(base64Image.length * (4/3));
+			// Account for the rest of the message structure
+			return base64Overhead + (userMessage?.length || 0) + 100; // 100 bytes buffer for json structure
+		}
+
+		async function processImageForWebRTC(file, maxMessageSize = 262144, maxDimension = 1120, userMessage = '') {
+			return new Promise((resolve, reject) => {
+				const img = new Image();
+				const reader = new FileReader();
+
+				reader.onload = function(e) {
+					img.src = e.target.result;
+				};
+
+				img.onload = async function() {
+					let quality = 0.9; // Start with high quality
+					let width = img.width;
+					let height = img.height;
+
+					// Scale dimensions while maintaining aspect ratio
+					if (width > maxDimension || height > maxDimension) {
+						const ratio = Math.min(maxDimension / width, maxDimension / height);
+						width = Math.floor(width * ratio);
+						height = Math.floor(height * ratio);
+					}
+
+					const canvas = document.createElement('canvas');
+					canvas.width = width;
+					canvas.height = height;
+					const ctx = canvas.getContext('2d');
+					ctx.drawImage(img, 0, 0, width, height);
+
+					// Binary search for optimal quality
+					let minQuality = 0.1;
+					let maxQuality = 0.9;
+					let bestResult = null;
+					let attempts = 0;
+					const maxAttempts = 8; // Prevent infinite loops
+
+					while (attempts < maxAttempts) {
+						try {
+							const blob = await new Promise(resolve => {
+								canvas.toBlob(resolve, 'image/jpeg', quality);
+							});
+
+							const base64 = await new Promise((resolve) => {
+								const reader = new FileReader();
+								reader.onloadend = () => resolve(reader.result.split(',')[1]);
+								reader.readAsDataURL(blob);
+							});
+
+							const totalSize = estimateMessageSize(base64, userMessage);
+
+							if (totalSize <= maxMessageSize) {
+								bestResult = base64;
+								if (maxQuality - minQuality < 0.05) break; // Sufficient precision reached
+								minQuality = quality;
+							} else {
+								maxQuality = quality;
+							}
+
+							quality = (minQuality + maxQuality) / 2;
+						} catch (error) {
+							reject(error);
+							return;
+						}
+						attempts++;
+					}
+
+					if (bestResult) {
+						resolve(bestResult);
+					} else {
+						reject(new Error('Could not compress image to target size'));
+					}
+				};
+
+				img.onerror = () => reject(new Error('Failed to load image'));
+				reader.readAsDataURL(file);
+			});
+		}
+
+		// Store the original image file for later processing
+		let currentImageFile = null;
 		
 		let recognition;
 		const micButton = document.getElementById('mic-button');

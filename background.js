@@ -4465,6 +4465,7 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 			}
 		} else if (request.value && ("target" in request) && UUID && request.action === "chatbot"){ // target is the callback ID
 			if (isExtensionOn && settings.allowChatBot){
+				
 				try {
 				  //    let model = "vanilj/llama-3.1-70b-instruct-lorablated-iq2_xs:latest"
 				  let prompt = request.value || "";
