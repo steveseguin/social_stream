@@ -1,6 +1,6 @@
 var clientId = 'sjjsgy1sgzxmy346tdkghbyz4gtx0k'; 
-var redirectURI = 'https://socialstream.ninja/sources/websocket/twitch.html';
-var scope = 'chat%3Aread+chat%3Aedit';
+var redirectURI = window.location.href.split("/twitch.html")[0]+"/twitch.html"; //  'https://socialstream.ninja/sources/websocket/twitch.html';
+var scope = 'chat:read+chat:edit+channel:read:subscriptions+bits:read+moderator:read:followers+moderator:read:chatters';
 var ws;
 var token = "";
 var channel = '';
@@ -8,14 +8,15 @@ var username = "SocialStreamNinja"; // Not supported at the moment
 let websocket;
 var BTTV = false;
 var SEVENTV = false;
+var FFZ = false;
 var EMOTELIST = false;
 var settings = {};
-let eventsSocket;
-let followersCount = 0;
-let viewerCount = 0;
-let lastUpdateTime = 0;
-const UPDATE_INTERVAL = 60000;
 
+var urlParams = new URLSearchParams(window.location.search);
+var hashParams = new URLSearchParams(window.location.hash.slice(1));
+channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || "";
+	
+	
 // At the beginning of the script, add:
 function getStoredToken() {
     return localStorage.getItem('twitchOAuthToken');
@@ -40,9 +41,9 @@ function showSocketInterface() {
     if (authElement) authElement.classList.add("hidden");
 }
 function initializePage() {
-    var urlParams = new URLSearchParams(window.location.search);
-    var hashParams = new URLSearchParams(window.location.hash.slice(1));
-    channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || '';
+    urlParams = new URLSearchParams(window.location.search);
+    hashParams = new URLSearchParams(window.location.hash.slice(1));
+    channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || channel;
 	
     // Set up event listeners
     const signOutButton = document.getElementById('sign-out-button');
@@ -98,15 +99,13 @@ function verifyAndUseToken(token) {
         }
     })
     .then(response => response.json())
-    .then(async data => {
+    .then(data => {
+        console.log("Token validation data:", data); // Add this line
         if (data.login) {
             setStoredToken(token);
             username = data.login;
             localStorage.setItem("twitchChannel", channel);
-            await connect();
-			await connectEventSub();
-			updateStreamStats();
-			setInterval(updateStreamStats, UPDATE_INTERVAL);
+            connect();
             showSocketInterface();
         } else {
             clearStoredToken();
@@ -119,6 +118,7 @@ function verifyAndUseToken(token) {
         showAuthButton();
     });
 }
+
 function parseFragment(hash) {
     var hashMatch = function(expr) {
         var match = hash.match(expr);
@@ -126,9 +126,9 @@ function parseFragment(hash) {
     };
     var state = hashMatch(/state=(\w+)/);
     if (hashMatch(/@(\w+)/)){
-        channel = hashMatch(/@(\w+)/);
+        channel = hashMatch(/@(\w+)/) || channel;
     } else if (hashMatch(/%40(\w+)/)){
-        channel = hashMatch(/%40(\w+)/);
+        channel = hashMatch(/%40(\w+)/) || channel;
     }
     token = hashMatch(/access_token=(\w+)/);
     if (sessionStorage.twitchOAuthState == state) {
@@ -199,230 +199,50 @@ async function getChatBadges(channelId) {
     }
 }
 
-// function to handle EventSub WebSocket connection
-async function connectEventSub() {
-	console.log("connectEventSub start");
-    const token = getStoredToken();
-    if (!token) {
-		console.log("no token");
-		return;
-	}
-
-    const channelInfo = await getUserInfo(channel);
-    if (!channelInfo) {
-		console.log("no channel info");
-		return;
-	}
-
-    try {
-        // Get EventSub WebSocket URL
-        const response = await fetch('https://api.twitch.tv/helix/eventsub/websockets', {
-            method: 'POST',
-            headers: {
-                'Client-ID': clientId,
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        const wsUrl = data.data[0].connection.url;
-
-        eventsSocket = new WebSocket(wsUrl);
-        
-        eventsSocket.onopen = () => {
-            // Subscribe to follow events
-            subscribeToEvent('channel.follow', channelInfo.id);
-        };
-
-        eventsSocket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-			console.log(event);
-            
-            if (message.metadata.message_type === 'notification') {
-                handleEventSubNotification(message.payload);
-            }
-        };
-
-        eventsSocket.onerror = (error) => {
-            console.error('EventSub WebSocket error:', error);
-        };
-
-        eventsSocket.onclose = () => {
-            setTimeout(connectEventSub, 10000); // Reconnect after 10 seconds
-        };
-    } catch (error) {
-        console.error('Error connecting to EventSub:', error);
-    }
-}
-
-// Function to subscribe to specific events
-async function subscribeToEvent(type, broadcasterId) {
-    const token = getStoredToken();
-    if (!token) return;
-
-    try {
-        await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
-            method: 'POST',
-            headers: {
-                'Client-ID': clientId,
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                type,
-                version: '1',
-                condition: {
-                    broadcaster_user_id: broadcasterId
-                },
-                transport: {
-                    method: 'websocket',
-                    session_id: eventsSocket.sessionId
-                }
-            })
-        });
-    } catch (error) {
-        console.error(`Error subscribing to ${type}:`, error);
-    }
-}
-
-// Function to handle EventSub notifications
-function handleEventSubNotification(payload) {
-    switch (payload.subscription.type) {
-        case 'channel.follow':
-            const follower = payload.event.user_name;
-            const messageData = {
-                type: 'follow',
-                username: follower,
-                message: `${follower} just followed!`
-            };
-            displayNotification(messageData);
-            updateFollowerCount();
-            break;
-    }
-}
-
-// Function to update stream stats
-async function updateStreamStats() {
-    const now = Date.now();
-    if (now - lastUpdateTime < UPDATE_INTERVAL) return;
-    lastUpdateTime = now;
-
-    const token = getStoredToken();
-    if (!token) return;
-
-    const channelInfo = await getUserInfo(channel);
-    if (!channelInfo) return;
-
-    try {
-        // Get stream information
-        const streamResponse = await fetch(
-            `https://api.twitch.tv/helix/streams?user_id=${channelInfo.id}`,
-            {
-                headers: {
-                    'Client-ID': clientId,
-                    'Authorization': `Bearer ${token}`
-                }
-            }
-        );
-        const streamData = await streamResponse.json();
-        
-        if (streamData.data.length > 0) {
-            viewerCount = streamData.data[0].viewer_count;
-            updateStatsDisplay();
-        }
-
-        // Get follower count
-        const followersResponse = await fetch(
-            `https://api.twitch.tv/helix/users/follows?to_id=${channelInfo.id}`,
-            {
-                headers: {
-                    'Client-ID': clientId,
-                    'Authorization': `Bearer ${token}`
-                }
-            }
-        );
-        const followersData = await followersResponse.json();
-        followersCount = followersData.total;
-        updateStatsDisplay();
-    } catch (error) {
-        console.error('Error updating stream stats:', error);
-    }
-}
-
-// Function to update the stats display
-function updateStatsDisplay() {
-    const statsContainer = document.getElementById('stream-stats');
-    if (!statsContainer) {
-        createStatsContainer();
-        return;
-    }
-
-    statsContainer.innerHTML = `
-        <div class="stat-item">
-            <span class="stat-label">Viewers:</span>
-            <span class="stat-value">${viewerCount}</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">Followers:</span>
-            <span class="stat-value">${followersCount}</span>
-        </div>
-    `;
-}
-
-// Function to create the stats container
-function createStatsContainer() {
-    const container = document.createElement('div');
-    container.id = 'stream-stats';
-    container.className = 'stats-container';
-    document.querySelector('.socket').appendChild(container);
-    updateStatsDisplay();
-}
-
-// Function to display notifications
-function displayNotification(data) {
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.innerHTML = data.message;
-    document.querySelector('#textarea').appendChild(notification);
-    
-    // Remove notification after 5 seconds
-    setTimeout(() => notification.remove(), 5000);
-}
-
-
+let getViewerCountInterval = null;
+let getFollowersInterval = null;
+let badges = null;
 
 async function connect() {
-    const channelInfo = await getUserInfo(channel);
-    if (!channelInfo) {
-        console.error('Failed to get channel info');
-        return;
-    }
 
-    const channelId = channelInfo.id;
-    const badges = await getChatBadges(channelId);
-	console.log(badges);
+	const token = getStoredToken();
+	if (!token) {
+		console.error('No token available');
+		showAuthButton();
+		return;
+	}
+	
+	const channelInfo = await getUserInfo(channel);
+	if (!channelInfo) {
+		console.error('Failed to get channel info');
+		return;
+	}
+	
+	clearInterval(getFollowersInterval);
+    getFollowersInterval = setInterval(() => getFollowers(channelInfo.id), 60000); // Every minute
+	
+	const channelId = channelInfo.id;
+	badges = await getChatBadges(channelId);
 
     websocket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
 
-    websocket.onopen = () => {
+    websocket.onopen = async () => {
         console.log('Connected');
-        const token = getStoredToken();
-        if (!token) {
-            console.error('No token available');
-            showAuthButton();
-            return;
-        }
+
         
         channel = channel || username;
         
         websocket.send(`PASS oauth:${token}`);
         websocket.send(`NICK ${username}`);
         websocket.send(`JOIN #${channel}`);
-        
-        // Add these lines to request additional capabilities
         websocket.send('CAP REQ :twitch.tv/commands');
         websocket.send('CAP REQ :twitch.tv/tags');
+		
+		connectEventSub();
+		
+		clearInterval(getViewerCountInterval);
+		getViewerCountInterval = setInterval(() => getViewerCount(channelInfo.login), 30000);
+		
         
         const textarea = document.querySelector("#textarea");
         if (textarea) {
@@ -433,6 +253,17 @@ async function connect() {
                 textarea.childNodes[0].remove();
             }
         }
+		if (channel){
+			if (settings.bttv) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, type:"twitch", channel:channel }, function (response) {});
+			}
+			if (settings.seventv) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, type:"twitch", channel:channel }, function (response) {});
+			}
+			if (settings.ffz) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, type:"twitch", channel:channel }, function (response) {});
+			}
+		}
     };
 
     websocket.onmessage = (event) => handleWebSocketMessage(event, badges);
@@ -444,16 +275,34 @@ function handleWebSocketMessage(event) {
   const messages = event.data.split('\r\n');
   messages.forEach((rawMessage) => {
     if (rawMessage) {
-      console.log('Raw message:', rawMessage);
+      //console.log('Raw message:', rawMessage);
       const parsedMessage = parseMessage(rawMessage);
-      console.log('Parsed message:', parsedMessage);
+     // console.log('Parsed message:', parsedMessage);
 
-      if (parsedMessage.command === 'PING') {
-        websocket.send('PONG :tmi.twitch.tv');
-      } else if (parsedMessage.command === 'PRIVMSG') {
-        processMessage(parsedMessage);
-      } else {
-        console.log('Unhandled command:', parsedMessage.command);
+      switch (parsedMessage.command) {
+        case 'PING':
+          websocket.send('PONG :tmi.twitch.tv');
+          break;
+        case 'PRIVMSG':
+          processMessage(parsedMessage);
+          break;
+        case '366': // End of NAMES list
+        case 'CAP': // Capability acknowledgment
+        case '001': // Welcome message
+        case '002': // Your host
+        case '003': // Server info
+        case '004': // Server version
+        case '375': // MOTD start
+        case '372': // MOTD
+        case '376': // MOTD end
+          // These are normal connection messages, we can safely ignore them
+          break;
+        default:
+          if (parsedMessage.type) {
+            handleEventSubNotification(parsedMessage);
+          } else {
+            console.log('Unhandled command:', parsedMessage.command);
+          }
       }
     }
   });
@@ -471,7 +320,7 @@ function checkAuthStatus() {
 
 
 function handleWebSocketClose(event) {
-    console.log('Disconnected:', event);
+   // console.log('Disconnected:', event);
     console.log('Attempting to reconnect...');
     setTimeout(connect, 10000); // Reconnect after 10 seconds
 }
@@ -513,80 +362,24 @@ function handleEnterKey(event) {
 		handleSendMessage(event);
     }
 }
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    try {
-        if ("focusChat" == request) {
-            sendResponse(true);
-            return;
-        } 
-        if (typeof request === "object") {
-            if ("settings" in request) {
-                settings = request.settings;
-                sendResponse(true);
-                if (settings.bttv && !BTTV) {
-                    chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response){});
-                }
-                if (settings.seventv && !SEVENTV) {
-                    chrome.runtime.sendMessage(chrome.runtime.id, { "getSEVENTV": true }, function(response){});
-                }
-                return;
-            } 
-            if ("SEVENTV" in request) {
-                SEVENTV = request.SEVENTV;
-                sendResponse(true);
-                mergeEmotes();
-                return;
-            }
-            if ("BTTV" in request) {
-                BTTV = request.BTTV;
-                sendResponse(true);
-                mergeEmotes();
-                return;
-            }
-        }
-    } catch(e) {
-        console.error('Error handling Chrome message:', e);
-    }
-    sendResponse(false);
-});
-
-function authUrl() {
-    sessionStorage.twitchOAuthState = nonce(15);
-    var url = 'https://id.twitch.tv/oauth2/authorize' +
-        '?response_type=token' +
-        '&client_id=' + clientId + 
-        '&redirect_uri=' + redirectURI +
-        '&scope=' + scope +
-        '&state=' + sessionStorage.twitchOAuthState + "@" + (username || "");
-    
-    return url;
-}
 
 function deepMerge(target, source) {
-    for (const key in source) {
-        if (source.hasOwnProperty(key)) {
-            if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
-                target[key] = deepMerge(target[key] || {}, source[key]);
-            } else {
-                target[key] = source[key];
-            }
-        }
-    }
-    return target;
-}
-
-// Source: https://www.thepolyglotdeveloper.com/2015/03/create-a-random-nonce-string-using-javascript/
-function nonce(length) {
-	var text = "";
-	var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	for (var i = 0; i < length; i++) {
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
+  for (let key in source) {
+	if (source.hasOwnProperty(key)) {
+	  if (typeof source[key] === 'object' && source[key] !== null) {
+		target[key] = target[key] || {};
+		deepMerge(target[key], source[key]);
+	  } else {
+		target[key] = source[key];
+	  }
 	}
-	return text;
+  }
+  return target;
 }
-
-function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
 	
+var EMOTELIST = false;
+function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
+
 	EMOTELIST = {};
 	
 	if (BTTV) {
@@ -602,9 +395,6 @@ function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
 				if (BTTV.globalEmotes) {
 					EMOTELIST = deepMerge(BTTV.globalEmotes, EMOTELIST);
 				}
-				// for testing.
-				EMOTELIST = deepMerge({"ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true}}, EMOTELIST);
-				
 			} catch (e) {}
 		}
 	}
@@ -623,7 +413,107 @@ function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
 			} catch (e) {}
 		}
 	}
-	console.log(EMOTELIST);
+	if (FFZ) {
+		console.log(FFZ);
+		if (settings.ffz) {
+			try {
+				if (FFZ.channelEmotes) {
+					EMOTELIST = deepMerge(FFZ.channelEmotes, EMOTELIST);
+				}
+			} catch (e) {}
+			try {
+				if (FFZ.globalEmotes) {
+					EMOTELIST = deepMerge(FFZ.globalEmotes, EMOTELIST);
+				}
+			} catch (e) {}
+		}
+	}
+	
+	// for testing.
+	//EMOTELIST = deepMerge({
+	//	 "ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true},
+	//	 "oEDM": {url:"https://cdn.7tv.app/emote/62127910041f77b2480365f4/2x.webp","zw":true},
+	//	 "widepeepoHappy": "https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp"
+	// }, EMOTELIST);
+	//console.log(EMOTELIST);
+}
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    try {
+        if ("focusChat" == request) {
+            sendResponse(true);
+            return;
+        } 
+        if (typeof request === "object") {
+			if ("state" in request) {
+				isExtensionOn = request.state;
+			}
+			if ("settings" in request) {
+				settings = request.settings;
+				sendResponse(true);
+				
+				if (channel){
+					if (settings.bttv) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, type:"twitch", channel:channel }, function (response) {});
+					}
+					if (settings.seventv) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, type:"twitch", channel:channel }, function (response) {});
+					}
+					if (settings.ffz) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, type:"twitch", channel:channel }, function (response) {});
+					}
+				}
+				return;
+			}
+			if ("SEVENTV" in request) {
+				SEVENTV = request.SEVENTV;
+				//console.log(SEVENTV);
+				sendResponse(true);
+				mergeEmotes();
+				return;
+			}
+			if ("BTTV" in request) {
+				BTTV = request.BTTV;
+				//console.log(BTTV);
+				sendResponse(true);
+				mergeEmotes();
+				return;
+			}
+			if ("FFZ" in request) {
+				FFZ = request.FFZ;
+				//console.log(FFZ);
+				sendResponse(true);
+				mergeEmotes();
+				return;
+			}
+		}
+    } catch(e) {
+        console.error('Error handling Chrome message:', e);
+    }
+    sendResponse(false);
+});
+
+function authUrl() {
+    sessionStorage.twitchOAuthState = nonce(15);
+    var url = 'https://id.twitch.tv/oauth2/authorize' +
+        '?response_type=token' +
+        '&client_id=' + clientId + 
+        '&redirect_uri=' + redirectURI +
+        '&scope=' + scope +
+        '&state=' + sessionStorage.twitchOAuthState + "@" + (username || "");
+    
+    return url;
+}
+
+
+// Source: https://www.thepolyglotdeveloper.com/2015/03/create-a-random-nonce-string-using-javascript/
+function nonce(length) {
+	var text = "";
+	var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	for (var i = 0; i < length; i++) {
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+	}
+	return text;
 }
 
 
@@ -675,7 +565,7 @@ function sendMessage(message) {
 	if (checkAuthStatus()){
 		if (websocket.readyState === WebSocket.OPEN) {
 			const command = `PRIVMSG #${channel} :${message}`;
-			console.log('Sending message:', command);
+			//console.log('Sending message:', command);
 			websocket.send(command);
 			return true;
 		} else {
@@ -684,63 +574,20 @@ function sendMessage(message) {
 	}
     return false;
 }
-
-const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
-function replaceEmotesWithImages(message) {
-  if (!EMOTELIST) {
-	return message;
-  }
-  
-  let result = '';
-  let lastIndex = 0;
-  let pendingRegularEmote = null;
-  
-  message.replace(emoteRegex, (match, emoteMatch, offset) => {
-	// Add any text before this emote
-	result += message.slice(lastIndex, offset);
-	lastIndex = offset + match.length;
-	
-	const emote = EMOTELIST[emoteMatch];
-	if (emote) {
-	  const escapedMatch = escapeHtml(match);
-	  const isZeroWidth = typeof emote !== "string" && emote.zw;
-	  
-	  if (!isZeroWidth) {
-		// Regular emote
-		if (pendingRegularEmote) {
-		  // If there's a pending regular emote, add it to the result
-		  result += pendingRegularEmote;
-		}
-		pendingRegularEmote = `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
-	  } else {
-		// Zero-width emote
-		if (pendingRegularEmote) {
-		  // If there's a pending regular emote, create a container with both
-		  result += `<span class="emote-container">${pendingRegularEmote}<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/></span>`;
-		  pendingRegularEmote = null;
-		} else {
-		  // Zero-width emote without a preceding emote
-		  result += `<img src="${emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="zero-width-emote-centered"/>`;
-		}
-	  }
-	} else {
-	  if (pendingRegularEmote) {
-		result += pendingRegularEmote;
-		pendingRegularEmote = null;
-	  }
-	  result += match;
+function replaceEmotesWithImages(text) {
+	if (!EMOTELIST) {
+		return text;
 	}
-  });
-  
-  // Add any remaining text after the last emote
-  result += message.slice(lastIndex);
-  
-  // Add any pending regular emote
-  if (pendingRegularEmote) {
-	result += pendingRegularEmote;
-  }
-  
-  return result;
+	
+	return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+		const emote = EMOTELIST[emoteMatch];
+		if (emote) {
+			const escapedMatch = escapeHtml(emoteMatch);
+			const isZeroWidth = typeof emote !== "string" && emote.zw;
+			return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
+		}
+		return match;
+	});
 }
 
 function escapeHtml(unsafe) {
@@ -807,12 +654,13 @@ function getTwitchAvatarImage(usernome) {
 	});
 }
 
+
 async function processMessage(parsedMessage) {
 	const user = parsedMessage.prefix.split('!')[0];
 	const message = parsedMessage.trailing;
-	const channel = parsedMessage.params[0];
+	channel = parsedMessage.params[0] || channel;
 	const userInfo = await getUserInfo(user);
-	console.log(`${user} in ${channel}: ${message}`);
+	//console.log(`${user} in ${channel}: ${message}`);
 
 	// Add the message to the UI
 	var span = document.createElement("div");
@@ -836,8 +684,8 @@ async function processMessage(parsedMessage) {
     }
     data.hasDonation = "";
     data.membership = "";
-    if (chan && channels[chan]) {
-        data.sourceImg = channels[chan];
+    if (channel) {
+        data.sourceImg = getTwitchAvatarImage(channel);
     }
     data.textonly = settings.textonlymode || false;
     data.type = "twitch";
@@ -845,8 +693,54 @@ async function processMessage(parsedMessage) {
     pushMessage(data);
 }
 
+function updateStats(type, data) {
+	switch(type) {
+		case 'viewer_update':
+			document.getElementById('viewer-count').textContent = data.viewers;
+			break;
+		case 'follower_update':
+			document.getElementById('follower-count').textContent = data.followerCount;
+			addEvent(`New Follower: ${data.latestFollower.user_name}`);
+			break;
+		case 'new_subscriber':
+			addEvent(`New Subscriber: ${data.user}`);
+			break;
+		case 'subscription_gift':
+			addEvent(`${data.user} gifted ${data.total} subs!`);
+			break;
+		case 'cheer':
+			addEvent(`${data.user} cheered ${data.bits} bits!`);
+			break;
+	}
+}
+
+function addEvent(text) {
+	const eventslist = document.getElementById('events-list');
+	const event = document.createElement('div');
+	event.className = 'event-item';
+	event.textContent = text;
+	eventslist.insertBefore(event, eventslist.firstChild);
+	
+	// Keep only last 10 events
+	while (eventslist.children.length > 10) {
+		eventslist.removeChild(eventslist.lastChild);
+	}
+}
+
+// Add channel connection handling
+document.getElementById('connect-button').addEventListener('click', function() {
+	const channelInput = document.getElementById('channel-input');
+	const channelName = channelInput.value.trim();
+	if (channelName) {
+		// Store the channel name
+		localStorage.setItem('twitchChannel', channelName);
+		// Reconnect with new channel
+		connect();
+	}
+});
+
 function parseBadges(parsedMessage, badges) {
-	console.log(parsedMessage, badges);
+	//console.log(parsedMessage, badges);
 	
     // This function needs to be implemented to parse the badges from the message
     // and match them with the badge info fetched earlier
@@ -856,23 +750,288 @@ function parseBadges(parsedMessage, badges) {
 
 var settings = {};
 
-function pushMessage(data){
-	try{
-		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
-	} catch(e){
-	}
+function pushMessage(data) {
+    try {
+		
+		if (data.type && data.type !== 'twitch') {
+			updateStats(data.type, data);
+		}
+				
+        // Send message to Chrome extension
+        chrome.runtime.sendMessage(chrome.runtime.id, { 
+            "message": data 
+        }, function(response) {
+            // Handle response if needed
+        });
+    } catch(e) {
+        console.error('Error sending message to socialstream:', e);
+    }
 }
 
-chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response={}){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-	if ("settings" in response){
+chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+	if ("settings" in response) {
 		settings = response.settings;
+		
+		if (channel){
+			if (settings.bttv && !BTTV) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, type:"twitch", channel:channel  }, function (response) {
+					//	console.log(response);
+				});
+			}
+			if (settings.seventv && !SEVENTV) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, type:"twitch", channel:channel  }, function (response) {
+					//	console.log(response);
+				});
+			}
+			if (settings.ffz && !FFZ) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, type:"twitch", channel:channel  }, function (response) {
+					//	console.log(response);
+				});
+			}
+		}
 	}
-	if (settings && settings.bttv && !BTTV){
-		chrome.runtime.sendMessage(chrome.runtime.id, { "getBTTV": true }, function(response={}){});
+	if ("state" in response) {
+		isExtensionOn = response.state;
 	}
 	initializePage();
 });
 
-
-
 console.log("INJECTED WEBSOCKETS");
+
+
+//////////////
+
+// FOLLOWER EVENT STUFF
+
+// Store the last known values
+let lastKnownViewers = 0;
+let lastKnownFollowers = 0;
+
+// Function to fetch current viewer count
+async function getViewerCount(channelName) {
+    const token = getStoredToken();
+    if (!token) return;
+    
+    try {
+        const response = await fetchWithTimeout(
+            `https://api.twitch.tv/helix/streams?user_login=${channelName}`,
+            5000,
+            {
+                'Client-ID': clientId,
+                'Authorization': `Bearer ${token}`
+            }
+        );
+        
+        const data = await response.json();
+        if (data.data && data.data[0]) {
+            const currentViewers = data.data[0].viewer_count;
+            if (currentViewers !== lastKnownViewers) {
+                lastKnownViewers = currentViewers;
+                pushMessage({
+					type: 'twitch',
+                    event: 'viewer_update',
+                    meta: currentViewers
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching viewer count:', error);
+    }
+}
+
+// Function to fetch followers
+async function getFollowers(broadcasterId) {
+    const token = getStoredToken();
+    if (!token) return;
+    
+    try {
+        const response = await fetchWithTimeout(
+            `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${broadcasterId}`,
+            5000,
+            {
+                'Client-ID': clientId,
+                'Authorization': `Bearer ${token}`
+            }
+        );
+        
+        const data = await response.json();
+        if (data.total !== lastKnownFollowers) {
+            lastKnownFollowers = data.total;
+            if (data.data && data.data[0]) {
+               // pushMessage({
+				//	type: 'twitch',
+              //      event: 'follower_update',
+              //      meta: data.total,
+              //      chatmessage: data.data[0] + " has started following"
+              //  });
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching followers:', error);
+    }
+}
+
+let eventSocket;
+let eventSessionId;
+
+async function connectEventSub() {
+    // Connect to Twitch EventSub WebSocket
+    eventSocket = new WebSocket('wss://eventsub.wss.twitch.tv/ws');
+    
+    eventSocket.onopen = () => {
+        console.log('EventSub WebSocket Connected');
+    };
+    
+    eventSocket.onmessage = async (event) => {
+        const message = JSON.parse(event.data);
+        
+        switch (message.metadata.message_type) {
+            case 'session_welcome':
+                // Save the session ID - we need this for subscriptions
+                eventSessionId = message.payload.session.id;
+                console.log('EventSub session established:', eventSessionId);
+                
+                // Now that we have a session, create our subscriptions
+                const channelInfo = await getUserInfo(channel);
+                if (channelInfo) {
+                    await createEventSubSubscriptions(channelInfo.id);
+                }
+                break;
+                
+            case 'notification':
+                handleEventSubNotification(message.payload.event);
+                break;
+                
+            case 'session_keepalive':
+                // Optional: Log or handle keepalive
+                break;
+                
+            case 'revocation':
+                console.log('Subscription revoked:', message.payload);
+                break;
+        }
+    };
+    
+    eventSocket.onerror = (error) => {
+        console.error('EventSub WebSocket Error:', error);
+    };
+    
+    eventSocket.onclose = () => {
+        console.log('EventSub WebSocket Closed - Reconnecting in 5s...');
+        setTimeout(connectEventSub, 5000);
+    };
+}
+
+
+// Separate function to create all subscriptions
+async function createEventSubSubscriptions(broadcasterId) {
+    const token = getStoredToken();
+    if (!token || !eventSessionId) {
+        console.error("Missing token or session ID");
+        return;
+    }
+    
+    console.log("Creating subscriptions for broadcaster:", broadcasterId);
+    console.log("Using session ID:", eventSessionId);
+    
+    // Let's try just one subscription first to debug
+    const subscription = {
+        type: 'channel.follow',
+        version: '2',
+        condition: {
+            broadcaster_user_id: broadcasterId,
+            moderator_user_id: broadcasterId
+        },
+        transport: {
+            method: 'websocket',
+            session_id: eventSessionId
+        }
+    };
+    
+    try {
+        console.log("Sending subscription request:", subscription);
+        
+        const response = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
+            method: 'POST',
+            headers: {
+                'Client-ID': clientId,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(subscription)
+        });
+        
+        const data = await response.json();
+        console.log("Subscription response:", data);
+        
+        if (!response.ok) {
+            throw new Error(JSON.stringify(data));
+        }
+    } catch (error) {
+        console.error(`Error creating subscription:`, error);
+        
+        // Let's check the token scopes
+        try {
+            const validateResponse = await fetch('https://id.twitch.tv/oauth2/validate', {
+                headers: {
+                    'Authorization': `OAuth ${token}`
+                }
+            });
+            const validateData = await validateResponse.json();
+            console.log("Token validation data:", validateData);
+        } catch (e) {
+            console.error("Error validating token:", e);
+        }
+    }
+}
+
+// Function to handle EventSub notifications
+function handleEventSubNotification(event) {
+    switch (event.subscription.type) {
+        case 'channel.follow':
+            pushMessage({
+				type: "twitch",
+                event: 'new_follower',
+				chatmessage: event.user_name + " has starting following",
+                chatname: event.user_name,
+                userid: event.user_id,
+                timestamp: event.followed_at
+            });
+            break;
+            
+        case 'channel.subscribe':
+            pushMessage({
+				type: "twitch",
+                event: 'new_subscriber',
+				chatmessage: event.user_name + " has subscribed at tier " +event.tier,
+                chatname: event.user_name,
+                userid: event.user_id,
+                tier: event.tier,
+                isGift: event.is_gift
+            });
+            break;
+            
+        case 'channel.subscription.gift':
+            pushMessage({
+				type: "twitch",
+                event: 'subscription_gift',
+                chatname: event.user_name,
+				chatmessage: event.user_name + " has gifted "+event.total+" tier "+event.tier+" subs!",
+                userid: event.user_id,
+                total: event.total,
+                tier: event.tier
+            });
+            break;
+            
+        //case 'channel.cheer':
+       //     pushMessage({
+		//		type: "twitch",
+       //         chatname: event.user_name,
+        //        userid: event.user_id,
+        //        bits: event.bits,
+        //        chatmessage: event.message,
+		//		hasDonation: event.bits+" bits"
+        //    });
+        //    break;
+    }
+}

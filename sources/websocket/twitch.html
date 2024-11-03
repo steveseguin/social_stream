@@ -8,14 +8,15 @@
     <meta name="title" content="Social Stream - Overlay" />
     <link rel="icon" href="../../icons/favicon.ico" />
     <link rel="preload" href="../../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
-    <style>
+ <style>
         .hidden {
             display: none;
         }
         body {
             background-color: #ddd;
+            font-size: 14px;
         }
-        .auth-button, .sign-out-button {
+        .auth-button, .sign-out-button, .connect-button {
             background-color: #9146FF;
             color: white;
             padding: 10px 15px;
@@ -28,7 +29,7 @@
             margin: 10px 0;
             transition: background-color 0.3s;
         }
-        .auth-button:hover {
+        .auth-button:hover, .connect-button:hover {
             background-color: #7D3CD0;
         }
         .sign-out-button {
@@ -46,47 +47,149 @@
         .text-center {
             text-align: center;
         }
-		#textarea {
-			margin-bottom: 10px;
-		}
-		#textarea > div {
-			padding: 2px 0;
-		}
-		.stats-container {
-            margin-top: 10px;
+        #textarea {
+            margin-bottom: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
             padding: 10px;
-            background-color: rgba(0, 0, 0, 0.1);
             border-radius: 4px;
         }
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin: 5px 0;
+        #textarea > div {
+            padding: 2px 0;
+        }
+        .stats-container {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #9146FF;
         }
         .stat-label {
-            font-weight: bold;
+            color: #666;
+            margin-top: 5px;
+        }
+        .recent-events {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .event-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .event-item:last-child {
+            border-bottom: none;
+        }
+        .channel-input-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .channel-input {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            width: 200px;
+        }
+        .chat-container {
+            background: white;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .chat-input input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .chat-input button {
+            padding: 10px 20px;
+            background: #9146FF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="row">
-            <div class="auth text-center">
-                <a id="auth-link" class="auth-button">Sign in to Twitch</a>
+        <div class="auth text-center">
+            <a id="auth-link" class="auth-button">Sign in to Twitch</a>
+        </div>
+        
+        <div class="hidden socket">
+            <button id="sign-out-button" class="sign-out-button">Sign Out</button>
+            
+            <div class="channel-input-container">
+                <input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
+                <button id="connect-button" class="connect-button">Connect</button>
             </div>
-            <div class="hidden socket">
-                <button id="sign-out-button" class="sign-out-button">Sign Out</button>
-                <div id="textarea" class="ws-output" rows="20" style="font-family:Courier;width:100%"></div>
-                <form id="topic-form" class="text-right form-inline">
-                    <label id="topic-label" for="topic-text"></label>
+            
+            <div class="stats-container">
+                <h3>Channel Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="follower-count">0</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="viewer-count">0</div>
+                        <div class="stat-label">Current Viewers</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="subscriber-count">0</div>
+                        <div class="stat-label">Subscribers</div>
+                    </div>
+                </div>
+                
+                <div class="recent-events">
+                    <h4>Recent Events</h4>
+                    <div id="events-list">
+                        <!-- Events will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-container">
+                <h3>Chat Messages</h3>
+                <div id="textarea" class="ws-output"></div>
+                <div class="chat-input">
                     <input type="text" id="input-text" placeholder="Send Message">
-                    <button id="sendmessage" type="submit" class="btn">SEND</button>
-                </form>
+                    <button id="sendmessage">Send</button>
+                </div>
             </div>
         </div>
     </div>
     <script>
-        console.log(".");
+        //console.log(".");
 
         function signOut() {
             localStorage.removeItem('twitchOAuthToken');

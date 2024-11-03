@@ -1349,13 +1349,14 @@ var Globalbttv = false;
 var Globalseventv = false;
 var Globalffz = false;
 
-async function getBTTVEmotes(url = false) {
-	var type = "";
+async function getBTTVEmotes(url = false, type=null, channel=null) {
 	var bttv = {};
 	var userID = false;
-
+	// console.log(url, type, channel);
 	try {
-		if (url && url.includes("youtube.com/")) {
+		if (type){
+			type = type.toLowerCase();
+		} else if (url && url.includes("youtube.com/")) {
 			type = "youtube";
 		} else if (url && url.includes("twitch.tv/")) {
 			type = "twitch";
@@ -1425,70 +1426,81 @@ async function getBTTVEmotes(url = false) {
 				}
 			}
 		} else if (type == "twitch") {
-			var username = url.split("popout/");
+			try {
+			var username = "";
+			if (channel){
+				username = channel;
+			} else if (url && url.startsWith("https://dashboard.twitch.tv/popout/u/")){
+				username = url.replace("https://dashboard.twitch.tv/popout/u/","").split("/")[0];
+			} else if (url){
+				username =  url.split("popout/");
+				if (username.length > 1) {
+					username = username[1].split("/")[0];
+				} else {
+					username = "";
+				}
+			}
+			} catch(e){errorlog(e);}
 
-			if (username.length > 1) {
-				username = username[1].split("/")[0];
-				log("username: " + username);
-				if (username) {
-					bttv = getItemWithExpiry("uid2bttv2.twitch:" + username.toLowerCase());
-					log("BTTV2", bttv);
-					if (!bttv || bttv.message) {
-						userID = localStorage.getItem("twitch2uid." + username.toLowerCase());
-						if (!userID) {
-							const response = await fetch("https://api.socialstream.ninja/twitch/user?username=" + username);
+			if (username) {
+				bttv = getItemWithExpiry("uid2bttv2.twitch:" + username.toLowerCase());
+				log("BTTV2", bttv);
+				if (!bttv || bttv.message) {
+					bttv = {};
+					userID = localStorage.getItem("twitch2uid." + username.toLowerCase());
+					if (!userID) {
+						const response = await fetch("https://api.socialstream.ninja/twitch/user?username=" + username);
 
-							if (!response.ok) {
-								return {};
-							}
-							const data = await response.json();
-
-							//log(data);
-							if (data && data.data && data.data[0] && data.data[0].id) {
-								userID = data.data[0].id;
-
-								if (userID) {
-									localStorage.setItem("twitch2uid." + username.toLowerCase(), userID);
-								}
-							} else {
-								userID = false;
-							}
+						if (!response.ok) {
+							return {};
 						}
-						if (userID) {
-							bttv = await fetch("https://api.betterttv.net/3/cached/users/twitch/" + userID)
-								.then(result => {
-									return result.json();
-								})
-								.then(result => {
-									return result;
-								})
-								.catch(err => {
-									console.error(err);
-								});
-							if (bttv) {
-								if (bttv.channelEmotes) {
-									bttv.channelEmotes = bttv.channelEmotes.reduce((acc, emote) => {
-										const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
-										acc[emote.code] = imageUrl;
-										return acc;
-									}, {});
-								}
-								if (bttv.sharedEmotes) {
-									bttv.sharedEmotes = bttv.sharedEmotes.reduce((acc, emote) => {
-										const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
-										acc[emote.code] = imageUrl;
-										return acc;
-									}, {});
-								}
-								setItemWithExpiry("uid2bttv2.twitch:" + username.toLowerCase(), bttv);
-							} else {
-								bttv = {};
+						const data = await response.json();
+
+						//log(data);
+						if (data && data.data && data.data[0] && data.data[0].id) {
+							userID = data.data[0].id;
+
+							if (userID) {
+								localStorage.setItem("twitch2uid." + username.toLowerCase(), userID);
 							}
-							log("BTTV", bttv);
+						} else {
+							userID = false;
 						}
-					} else {
-						log("bttv recovererd from storage");
 					}
+					if (userID) {
+						bttv = await fetch("https://api.betterttv.net/3/cached/users/twitch/" + userID)
+							.then(result => {
+								return result.json();
+							})
+							.then(result => {
+								return result;
+							})
+							.catch(err => {
+								console.error(err);
+							});
+						if (bttv) {
+							if (bttv.channelEmotes) {
+								bttv.channelEmotes = bttv.channelEmotes.reduce((acc, emote) => {
+									const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
+									acc[emote.code] = imageUrl;
+									return acc;
+								}, {});
+							}
+							if (bttv.sharedEmotes) {
+								bttv.sharedEmotes = bttv.sharedEmotes.reduce((acc, emote) => {
+									const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
+									acc[emote.code] = imageUrl;
+									return acc;
+								}, {});
+							}
+							setItemWithExpiry("uid2bttv2.twitch:" + username.toLowerCase(), bttv);
+						} else {
+							bttv = {};
+						}
+						log("BTTV", bttv);
+					}
+				} else {
+					log("bttv recovererd from storage");
 				}
 			}
 		}
@@ -1524,6 +1536,7 @@ async function getBTTVEmotes(url = false) {
 		}
 		
 		if (Globalbttv){
+			if (!bttv){bttv = {};}
 			bttv.globalEmotes = Globalbttv;
 		}
 		bttv.url = url;
@@ -1531,18 +1544,20 @@ async function getBTTVEmotes(url = false) {
 		bttv.user = userID;
 		//log(Globalbttv);
 	} catch (e) {
-		console.error(err);
+		console.error(e);
 	}
 	return bttv;
 }
 
-async function getSEVENTVEmotes(url = false) {
-	var type = "";
+
+async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 	var seventv = {};
 	var userID = false;
 
 	try {
-		if (url && url.includes("youtube.com/")) {
+		if (type){
+			type = type.toLowerCase();
+		} else if (url && url.includes("youtube.com/")) {
 			type = "youtube";
 		} else if (url && url.includes("twitch.tv/")) {
 			type = "twitch";
@@ -1607,68 +1622,79 @@ async function getSEVENTVEmotes(url = false) {
 				}
 			}
 		} else if (type == "twitch") {
-			var username = url.split("popout/");
+			
+			var username = "";
+			if (channel){
+				username = channel;
+			} else if (url && url.startsWith("https://dashboard.twitch.tv/popout/u/")){
+				username = url.replace("https://dashboard.twitch.tv/popout/u/","").split("/")[0];
+			} else if (url){
+				username =  url.split("popout/");
+				if (username.length > 1) {
+					username = username[1].split("/")[0];
+				} else {
+					username = "";
+				}
+			}
 
-			if (username.length > 1) {
-				username = username[1].split("/")[0];
-				log("username: " + username);
-				if (username) {
-					seventv = getItemWithExpiry("uid2seventv.twitch:" + username.toLowerCase());
-					log("SEVENTV2", seventv);
-					if (!seventv || seventv.message) {
-						userID = localStorage.getItem("twitch2uid." + username.toLowerCase());
-						if (!userID) {
-							const response = await fetch("https://api.socialstream.ninja/twitch/user?username=" + username);
+			log("username: " + username);
+			if (username) {
+				seventv = getItemWithExpiry("uid2seventv.twitch:" + username.toLowerCase());
+				log("SEVENTV2", seventv);
+				if (!seventv || seventv.message) {
+					seventv = {};
+					userID = localStorage.getItem("twitch2uid." + username.toLowerCase());
+					if (!userID) {
+						const response = await fetch("https://api.socialstream.ninja/twitch/user?username=" + username);
 
-							if (!response.ok) {
-								return {};
-							}
-							const data = await response.json();
-
-							//log(data);
-							if (data && data.data && data.data[0] && data.data[0].id) {
-								userID = data.data[0].id;
-
-								if (userID) {
-									localStorage.setItem("twitch2uid." + username.toLowerCase(), userID);
-								}
-							} else {
-								userID = false;
-							}
+						if (!response.ok) {
+							return {};
 						}
-						if (userID) {
-							seventv = await fetch("https://7tv.io/v3/users/twitch/" + userID)
-								.then(result => {
-									return result.json();
-								})
-								.then(result => {
-									return result;
-								})
-								.catch(err => {
-									console.error(err);
-								});
-							if (seventv) {
-								if (seventv.emote_set && seventv.emote_set.emotes) {
-									seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
-										const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
-										if ((emote.data && emote.data.flags) || emote.flags) {
-											acc[emote.name] = { url: imageUrl, zw: true };
-										} else {
-											acc[emote.name] = imageUrl;
-										}
-										return acc;
-									}, {});
-								}
+						const data = await response.json();
 
-								setItemWithExpiry("uid2seventv.twitch:" + username.toLowerCase(), seventv);
-							} else {
-								seventv = {};
+						//log(data);
+						if (data && data.data && data.data[0] && data.data[0].id) {
+							userID = data.data[0].id;
+
+							if (userID) {
+								localStorage.setItem("twitch2uid." + username.toLowerCase(), userID);
 							}
-							log("SEVENTV", seventv);
+						} else {
+							userID = false;
 						}
-					} else {
-						log("seventv recovererd from storage");
 					}
+					if (userID) {
+						seventv = await fetch("https://7tv.io/v3/users/twitch/" + userID)
+							.then(result => {
+								return result.json();
+							})
+							.then(result => {
+								return result;
+							})
+							.catch(err => {
+								console.error(err);
+							});
+						if (seventv) {
+							if (seventv.emote_set && seventv.emote_set.emotes) {
+								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
+									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
+									if ((emote.data && emote.data.flags) || emote.flags) {
+										acc[emote.name] = { url: imageUrl, zw: true };
+									} else {
+										acc[emote.name] = imageUrl;
+									}
+									return acc;
+								}, {});
+							}
+
+							setItemWithExpiry("uid2seventv.twitch:" + username.toLowerCase(), seventv);
+						} else {
+							seventv = {};
+						}
+						log("SEVENTV", seventv);
+					}
+				} else {
+					log("seventv recovererd from storage");
 				}
 			}
 		}
@@ -1706,6 +1732,7 @@ async function getSEVENTVEmotes(url = false) {
 			}
 		}
 		if (Globalseventv){
+			if (!seventv){seventv = {};}
 			seventv.globalEmotes = Globalseventv;
 		}
 		seventv.url = url;
@@ -1718,13 +1745,14 @@ async function getSEVENTVEmotes(url = false) {
 	return seventv;
 }
 
-async function getFFZEmotes(url = false) {
-	var type = "";
+async function getFFZEmotes(url = false, type=null, channel=null) {
 	var ffz = {};
 	var userID = false;
 
 	try {
-		if (url && url.includes("youtube.com/")) {
+		if (type){
+			type = type.toLowerCase();
+		} else if (url && url.includes("youtube.com/")) {
 			type = "youtube";
 		} else if (url && url.includes("twitch.tv/")) {
 			type = "twitch";
@@ -1778,40 +1806,50 @@ async function getFFZEmotes(url = false) {
 				}
 			}
 		} else if (type == "twitch") {
-			var username = url.split("popout/");
+			
+			var username = "";
+			if (channel){
+				username = channel;
+			} else if (url && url.startsWith("https://dashboard.twitch.tv/popout/u/")){
+				username = url.replace("https://dashboard.twitch.tv/popout/u/","").split("/")[0];
+			} else if (url){
+				username =  url.split("popout/");
+				if (username.length > 1) {
+					username = username[1].split("/")[0];
+				} else {
+					username = "";
+				}
+			}
 
-			if (username.length > 1) {
-				username = username[1].split("/")[0];
-				log("username: " + username);
-				if (username) {
-					ffz = getItemWithExpiry("uid2ffz.twitch:" + username.toLowerCase());
-					log("FFZ2", ffz);
-					if (!ffz || ffz.message) {
-						// Use FFZ API to get user's emotes
-						ffz = await fetch(`https://api.frankerfacez.com/v1/room/${username}`)
-							.then(result => result.json())
-							.catch(err => {
-								console.error(err);
-							});
+			log("username: " + username);
+			if (username) {
+				ffz = getItemWithExpiry("uid2ffz.twitch:" + username.toLowerCase());
+				log("FFZ2", ffz);
+				if (!ffz || ffz.message) {
+					// Use FFZ API to get user's emotes
+					ffz = await fetch(`https://api.frankerfacez.com/v1/room/${username}`)
+						.then(result => result.json())
+						.catch(err => {
+							console.error(err);
+						});
 
-						if (ffz && ffz.sets) {
-							ffz.channelEmotes = Object.values(ffz.sets).flatMap(set => 
-								set.emoticons.map(emote => ({
-									[emote.name]: {
-										url: emote.urls["3"] || emote.urls["2"] || emote.urls["1"], // Use 1x size as default
-										zw: emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
-									}
-								}))
-							).reduce((acc, curr) => Object.assign(acc, curr), {});
+					if (ffz && ffz.sets) {
+						ffz.channelEmotes = Object.values(ffz.sets).flatMap(set => 
+							set.emoticons.map(emote => ({
+								[emote.name]: {
+									url: emote.urls["3"] || emote.urls["2"] || emote.urls["1"], // Use 1x size as default
+									zw: emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
+								}
+							}))
+						).reduce((acc, curr) => Object.assign(acc, curr), {});
 
-							setItemWithExpiry("uid2ffz.twitch:" + username.toLowerCase(), ffz);
-						} else {
-							ffz = {};
-						}
-						log("FFZ", ffz);
+						setItemWithExpiry("uid2ffz.twitch:" + username.toLowerCase(), ffz);
 					} else {
-						log("ffz recovered from storage");
+						ffz = {};
 					}
+					log("FFZ", ffz);
+				} else {
+					log("ffz recovered from storage");
 				}
 			}
 		}
@@ -1844,6 +1882,7 @@ async function getFFZEmotes(url = false) {
 			}
 		}
 		if (Globalffz){
+			if (!ffz){ffz = {};}
 			ffz.globalEmotes = Globalffz;
 		}
 		ffz.url = url;
@@ -2474,10 +2513,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 		} else if ("getBTTV" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-			//console.log("GETBTTV");
+			//console.log(JSON.stringify(request));
 			sendResponse({ state: isExtensionOn });
 			if (sender.tab.url) {
-				var BTTV2 = await getBTTVEmotes(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
+				var BTTV2 = await getBTTVEmotes(sender.tab.url, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (BTTV2) {
 					//console.log(sender);
 					//console.log(BTTV2);
@@ -2491,7 +2530,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			//console.log("getSEVENTV");
 			sendResponse({ state: isExtensionOn });
 			if (sender.tab.url) {
-				var SEVENTV2 = await getSEVENTVEmotes(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
+				var SEVENTV2 = await getSEVENTVEmotes(sender.tab.url, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (SEVENTV2) {
 					//	console.log(sender);
 					//	console.log(SEVENTV2);
@@ -2505,7 +2544,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			//console.log("getFFZ");
 			sendResponse({ state: isExtensionOn });
 			if (sender.tab.url) {
-				var FFZ2 = await getFFZEmotes(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
+				var FFZ2 = await getFFZEmotes(sender.tab.url, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (FFZ2) {
 					//	console.log(sender);
 					//	console.log(FFZ2);
