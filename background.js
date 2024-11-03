@@ -561,6 +561,9 @@ function checkIntervalState(i) {
 	if (!isExtensionOn) {
 		return;
 	}
+	if (!i){
+		return;
+	}
 
 	var offset = 0;
 	if (settings["timemessageoffset" + i]) {
@@ -589,6 +592,7 @@ function checkIntervalState(i) {
 					processResponse(msg, false, null, false, antispam, false);
 					
 				} else if (settings["timemessageinterval" + i].numbersetting) {
+					clearInterval(intervalMessages[i]);
 					intervalMessages[i] = setInterval(
 						function (i) {
 							if (!isExtensionOn) {
@@ -611,6 +615,7 @@ function checkIntervalState(i) {
 					);
 				}
 			} else {
+				clearInterval(intervalMessages[i]);
 				intervalMessages[i] = setInterval(
 					function (i) {
 						if (!isExtensionOn) {
@@ -2346,14 +2351,16 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting.startsWith("timemessage")) {
 				if (request.setting.startsWith("timemessageevent")) {
 					var i = parseInt(request.setting.split("timemessageevent")[1]);
-					if (!request.value) {
-						// turn off
-						if (intervalMessages[i]) {
-							clearInterval(intervalMessages[i]);
-							delete intervalMessages[i];
+					if (i){
+						if (!request.value) {
+							// turn off
+							if (intervalMessages[i]) {
+								clearInterval(intervalMessages[i]);
+								delete intervalMessages[i];
+							}
+						} else {
+							checkIntervalState(i);
 						}
-					} else {
-						checkIntervalState(i);
 					}
 				} else {
 					var i = 0;

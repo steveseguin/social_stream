@@ -676,7 +676,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			</label>\
 			<div style="display:inline-block">\
 				<div class="textInputContainer" style="width: 235px">\
-					<input type="text" id="timemessagecommand'+ i +'" class="textInput" autocomplete="off" placeholder="Message to send to chat at an interval" data-textsetting="timemessagecommand'+ i +'">\
+					<input type="text" id="timemessagecommand'+ i +'" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to send to chat at an interval" data-textsetting="timemessagecommand'+ i +'">\
 					<label for="timemessagecommand'+ i +'">&gt; Message to broadcast</label>\
 				</div>\
 				<div class="textInputContainer" style="width: 235px">\
@@ -699,11 +699,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			</label>\
 			<div style="display:inline-block">\
 				<div class="textInputContainer" style="width: 235px">\
-					<input type="text" id="botReplyMessageCommand'+ i +'" class="textInput" autocomplete="off" placeholder="Message to send to chat" data-textsetting="botReplyMessageCommand'+ i +'">\
+					<input type="text" id="botReplyMessageCommand'+ i +'" maxlength="200" class="textInput" autocomplete="off" placeholder="Triggering command" data-textsetting="botReplyMessageCommand'+ i +'">\
 					<label for="botReplyMessageCommand'+ i +'">&gt; Triggering command. eg: !discord</label>\
 				</div>\
 				<div class="textInputContainer" style="width: 235px">\
-					<input type="text" id="botReplyMessageValue'+ i +'" class="textInput" autocomplete="off" placeholder="Message to respond with" data-textsetting="botReplyMessageValue'+ i +'">\
+					<input type="text" id="botReplyMessageValue'+ i +'" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to respond with" data-textsetting="botReplyMessageValue'+ i +'">\
 					<label for="botReplyMessageValue'+ i +'">&gt; Message to respond with.</label>\
 				</div>\
 				<div class="textInputContainer" style="width: 235px">\

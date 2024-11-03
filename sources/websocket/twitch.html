@@ -5,28 +5,23 @@
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
     <meta content="utf-8" http-equiv="encoding" />
     <title>Social Stream - Twitch</title>
-    <meta name="title" content="Social Stream - Overlay" />
-    <link rel="icon" href="../../icons/favicon.ico" />
-    <link rel="preload" href="../../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
     <style>
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none; }
         body {
             background-color: #ddd;
             font-size: 14px;
+            margin: 0;
+            padding: 20px;
         }
         .auth-button, .sign-out-button, .connect-button {
             background-color: #9146FF;
             color: white;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 10px 0;
+            font-size: 14px;
             transition: background-color 0.3s;
         }
         .auth-button:hover, .connect-button:hover {
@@ -34,247 +29,233 @@
         }
         .sign-out-button {
             background-color: #f44336;
-            float: right;
         }
         .sign-out-button:hover {
             background-color: #d32f2f;
         }
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
         }
-        .text-center {
-            text-align: center;
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
-        /* New header styles */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .text-center { text-align: center; }
+        
+        /* Header styles */
         .channel-header {
             background: white;
-            padding: 15px;
+            padding: 12px;
             border-radius: 4px;
-            margin-bottom: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
         .header-info {
             display: flex;
             align-items: center;
-            gap: 20px;
-            margin-bottom: 15px;
+            gap: 15px;
+            flex-grow: 1;
         }
         .header-item {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
         .header-item span:first-child {
             font-weight: bold;
             color: #9146FF;
         }
-        .header-item span:last-child {
-            color: #333;
+        
+        /* Channel input */
+        .channel-input-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        /* Existing styles continue... */
-        #textarea {
-            margin-bottom: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-            background: white;
-            padding: 10px;
+        .channel-input {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
             border-radius: 4px;
+            width: 150px;
         }
-        #textarea > div {
-            padding: 2px 0;
-        }
+        
+        /* Stats grid */
         .stats-container {
-            margin: 20px 0;
-            padding: 15px;
-            background-color: white;
+            background: white;
+            padding: 12px;
             border-radius: 4px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        .stats-container h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
         }
         .stat-box {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 8px;
             border-radius: 4px;
             text-align: center;
         }
         .stat-value {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: bold;
             color: #9146FF;
         }
         .stat-label {
+            font-size: 12px;
             color: #666;
-            margin-top: 5px;
+            margin-top: 2px;
         }
-       .recent-events {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 15px;
-        }
-        .event-item {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-        }
-        .event-item:last-child {
-            border-bottom: none;
-        }
-        .channel-input-container {
-            margin: 20px 0;
-            text-align: center;
-        }
-        .channel-input {
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-right: 10px;
-            width: 200px;
-        }
+        
+        /* Chat container */
         .chat-container {
             background: white;
             border-radius: 4px;
-            padding: 15px;
-            margin-top: 20px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-container h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        #textarea {
+            flex-grow: 1;
+            min-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 10px;
         }
         .chat-input {
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 8px;
         }
         .chat-input input {
             flex-grow: 1;
-            padding: 10px;
+            padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
         }
-        .chat-input button {
-            padding: 10px 20px;
-            background: #9146FF;
-            color: white;
-            border: none;
+        
+        /* Sidebar components */
+        .permissions-container,
+        .recent-events {
+            background: white;
+            padding: 12px;
             border-radius: 4px;
-            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-		.permissions-container {
-			background: #f8f9fa;
-			border-radius: 4px;
-			padding: 15px;
-			margin-top: 15px;
+		#permissions-info:empty {
+			display: none!important;
 		}
-
-		.permissions-header {
-			font-weight: bold;
-			font-size: 16px;
-			margin-bottom: 10px;
-			color: #9146FF;
-		}
-
-		.permissions-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-			gap: 10px;
-		}
-
-		.permission-item {
-			padding: 5px;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
-
-		.permission-name {
-			color: #666;
-		}
-
-		.permission-value {
-			font-weight: bold;
-		}
-
-		.permission-value.yes {
-			color: #00b341;
-		}
-
-		.permission-value.no {
-			color: #dc3545;
-		}
-
-		.moderation-controls {
-			display: none;
-			margin-top: 15px;
-			padding: 15px;
-			background: #f8f9fa;
-			border-radius: 4px;
-		}
+        .permissions-header {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #9146FF;
+        }
+        .permission-item {
+            padding: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+        .recent-events h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+        }
+        .event-item {
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="auth text-center">
-            <a id="auth-link" class="auth-button">Sign in to Twitch</a>
+        <div class="main-content">
+            <div class="auth text-center">
+                <a id="auth-link" class="auth-button">Sign in to Twitch</a>
+            </div>
+            
+            <div class="hidden socket">
+                <!-- Header with channel input -->
+                <div class="channel-header">
+                    <div class="header-info">
+                        <div class="header-item">
+                            <span>User:</span>
+                            <span id="current-user">Not signed in</span>
+                        </div>
+                        <div class="header-item">
+                            <span>Channel:</span>
+                            <span id="current-channel">No channel</span>
+                        </div>
+                        <div class="channel-input-container">
+                            <input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
+                            <button id="connect-button" class="connect-button">Connect</button>
+                        </div>
+                    </div>
+                    <button id="sign-out-button" class="sign-out-button">Sign Out</button>
+                </div>
+
+                <!-- Stats section -->
+                <div class="stats-container">
+                    <h3>Channel Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value" id="follower-count">-</div>
+                            <div class="stat-label">Followers</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="viewer-count">-</div>
+                            <div class="stat-label">Viewers</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="subscriber-count">-</div>
+                            <div class="stat-label">Subscribers</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat section -->
+                <div class="chat-container">
+                    <h3>Chat Messages</h3>
+                    <div id="textarea" class="ws-output"></div>
+                    <div class="chat-input">
+                        <input type="text" id="input-text" placeholder="Send Message">
+                        <button id="sendmessage" class="auth-button">Send</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="hidden socket">
-            <button id="sign-out-button" class="sign-out-button">Sign Out</button>
-            
-            <!-- New header section -->
-            <div class="channel-header">
-                <div class="header-info">
-                    <div class="header-item">
-                        <span>Current User:</span>
-                        <span id="current-user">Not signed in</span>
-                    </div>
-                    <div class="header-item">
-                        <span>Current Channel:</span>
-                        <span id="current-channel">No channel</span>
-                    </div>
-                </div>
-                <div class="channel-input-container">
-                    <input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
-                    <button id="connect-button" class="connect-button">Connect</button>
-                </div>
-            </div>
-            
-            <div class="stats-container">
-                <h3>Channel Statistics</h3>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-value" id="follower-count">-</div>
-                        <div class="stat-label">Followers</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-value" id="viewer-count">-</div>
-                        <div class="stat-label">Current Viewers</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-value" id="subscriber-count">-</div>
-                        <div class="stat-label">Subscribers</div>
-                    </div>
-                </div>
-                
-                <div class="recent-events">
-                    <h4>Recent Events</h4>
-                    <div id="events-list">
-                        <!-- Events will be added here dynamically -->
-                    </div>
-                </div>
-            </div>
-            
-            <div class="chat-container">
-                <h3>Chat Messages</h3>
-                <div id="textarea" class="ws-output"></div>
-                <div class="chat-input">
-                    <input type="text" id="input-text" placeholder="Send Message">
-                    <button id="sendmessage">Send</button>
-                </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar hidden socket">
+            <div class="permissions-container" id="permissions-info"></div>
+            <div class="recent-events">
+                <h4>Recent Events</h4>
+                <div id="events-list"></div>
             </div>
         </div>
     </div>

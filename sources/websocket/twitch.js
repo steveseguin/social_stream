@@ -2,7 +2,6 @@ var clientId = 'sjjsgy1sgzxmy346tdkghbyz4gtx0k';
 var redirectURI = window.location.href.split("/twitch.html")[0]+"/twitch.html"; //  'https://socialstream.ninja/sources/websocket/twitch.html';
 var scope = 'chat:read+chat:edit+channel:read:subscriptions+bits:read+moderator:read:followers+moderator:read:chatters';
 var ws;
-var token = "";
 var channel = '';
 var username = "SocialStreamNinja"; // Not supported at the moment
 let websocket;
@@ -225,13 +224,16 @@ async function connect() {
         showAuthButton();
         return;
     }
+
+    // Clean up existing connections
+    await cleanupCurrentConnection();
     
-    // Clean the channel name - remove # if present
+    // Clean the channel name
     channel = channel.replace(/^#/, '');
     
     const channelInfo = await getUserInfo(channel);
     if (!channelInfo) {
-        console.error('Failed to get channel info');
+        console.log('Failed to get channel info');
         return;
     }
     
@@ -241,73 +243,56 @@ async function connect() {
         showAuthButton();
         return;
     }
+
+    // Set current channel ID
+    currentChannelId = channelInfo.id;
     
-    // Update header with current user and channel info
+    // Update header
     updateHeaderInfo(authUser.login, channel);
-    
-    const permissions = await checkUserPermissions(channelInfo.id, authUser.user_id);
-    updateUIBasedOnPermissions(permissions);
 
-    // Close existing EventSub connection if it exists
-    if (eventSocket && eventSocket.readyState === WebSocket.OPEN) {
-        eventSocket.close();
-    }
+    try {
+        const permissions = await checkUserPermissions(channelInfo.id, authUser.user_id);
+        updateUIBasedOnPermissions(permissions);
 
-    // Start new EventSub connection
-    await connectEventSub();
-    
-    getFollowers(channelInfo.id)
-    clearInterval(getFollowersInterval);
-    getFollowersInterval = setInterval(() => getFollowers(channelInfo.id), 60000);
-    
-    const channelId = channelInfo.id;
-    badges = await getChatBadges(channelId);
-    
-    // Connect to chat WebSocket
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.close();
-    }
-
-    websocket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
-
-    // Rest of your existing connect function...
-    websocket.onopen = async () => {
-        console.log('Connected');
+        // Set up chat connection
+        websocket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
         
-        websocket.send(`PASS oauth:${token}`);
-        websocket.send(`NICK ${username}`);
-        websocket.send(`JOIN #${channel}`);
-        websocket.send('CAP REQ :twitch.tv/commands');
-        websocket.send('CAP REQ :twitch.tv/tags');
+        websocket.onopen = () => {
+            console.log('Chat Connected');
+            websocket.send(`PASS oauth:${token}`);
+            websocket.send(`NICK ${username}`);
+            websocket.send(`JOIN #${channel}`);
+            websocket.send('CAP REQ :twitch.tv/commands');
+            websocket.send('CAP REQ :twitch.tv/tags');
+            
+            const textarea = document.querySelector("#textarea");
+            if (textarea) {
+                var span = document.createElement("div");
+                span.innerText = `Joined the channel: ${channel}`;
+                textarea.appendChild(span);
+                if (textarea.childNodes.length > 10) {
+                    textarea.childNodes[0].remove();
+                }
+            }
+        };
         
-        const textarea = document.querySelector("#textarea");
-        if (textarea) {
-            var span = document.createElement("div");
-            span.innerText = `Joined the channel: ${channel}`;
-            textarea.appendChild(span);
-            if (textarea.childNodes.length > 10) {
-                textarea.childNodes[0].remove();
+        websocket.onmessage = (event) => handleWebSocketMessage(event, badges);
+        websocket.onerror = (error) => !isDisconnecting && console.error('WebSocket error:', error);
+        websocket.onclose = (event) => !isDisconnecting && handleWebSocketClose(event);
+
+        // Only set up EventSub if we have permissions
+        if (permissions.canViewFollowers || permissions.isBroadcaster || permissions.isModerator) {
+            await connectEventSub();
+            
+            if (permissions.canViewFollowers) {
+                getFollowers(channelInfo.id);
+                getFollowersInterval = setInterval(() => getFollowers(channelInfo.id), 60000);
             }
         }
-        
-        if (channel) {
-            if (settings.bttv) {
-                chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, type:"twitch", channel:channel }, function (response) {});
-            }
-            if (settings.seventv) {
-                chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, type:"twitch", channel:channel }, function (response) {});
-            }
-            if (settings.ffz) {
-                chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, type:"twitch", channel:channel }, function (response) {});
-            }
-        }
-    };
-
-    websocket.onmessage = (event) => handleWebSocketMessage(event, badges);
-    websocket.onerror = (error) => console.error('WebSocket error:', error);
-    websocket.onclose = handleWebSocketClose;
+    } catch (error) {
+        console.log('Error during connection setup:', error);
+    }
 }
-
 
 function handleWebSocketMessage(event) {
   const messages = event.data.split('\r\n');
@@ -825,17 +810,26 @@ function addEvent(text) {
 
 document.getElementById('connect-button').addEventListener('click', async function() {
     const channelInput = document.getElementById('channel-input');
-    const channelName = channelInput.value.trim().replace(/^#/, ''); // Remove # if present
+    const channelName = channelInput.value.trim().replace(/^#/, '');
     if (channelName) {
-        // Store the channel name
         localStorage.setItem('twitchChannel', channelName);
         channel = channelName;
-        
-        // Reconnect with new channel
+		channelInput.value = '';
         await connect();
-        
-        // Clear the input
-        channelInput.value = '';
+    }
+});
+
+document.getElementById('channel-input').addEventListener('keypress', async function(event) {
+    // Check if the pressed key is Enter (key code 13)
+    if (event.key === 'Enter' || event.keyCode === 13) {
+        const channelInput = document.getElementById('channel-input');
+        const channelName = channelInput.value.trim().replace(/^#/, '');
+        if (channelName) {
+            localStorage.setItem('twitchChannel', channelName);
+            channel = channelName;
+			channelInput.value = '';
+            await connect();
+        }
     }
 });
 
@@ -974,28 +968,88 @@ async function getFollowers(broadcasterId) {
 
 let eventSocket;
 let eventSessionId;
+let isDisconnecting = false;
+let reconnectTimeout = null;
+let currentChannelId = null;
+let activeSubscriptions = new Set();
+let eventSubRetryCount = 0;
+let MAX_RETRY_ATTEMPTS = 2;
+let hasPermissionError = [];
+
+async function cleanupCurrentConnection() {
+    isDisconnecting = true;
+    
+    // Clear any existing timeouts
+    if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+        reconnectTimeout = null;
+    }
+
+    // Clear intervals
+    if (getViewerCountInterval) {
+        clearInterval(getViewerCountInterval);
+        getViewerCountInterval = null;
+    }
+    if (getFollowersInterval) {
+        clearInterval(getFollowersInterval);
+        getFollowersInterval = null;
+    }
+
+    // Close WebSocket connections
+    if (websocket) {
+        if (websocket.readyState === WebSocket.OPEN || websocket.readyState === WebSocket.CONNECTING) {
+            websocket.close();
+        }
+        websocket = null;
+    }
+    
+    if (eventSocket) {
+        if (eventSocket.readyState === WebSocket.OPEN || eventSocket.readyState === WebSocket.CONNECTING) {
+            eventSocket.close();
+        }
+        eventSocket = null;
+    }
+
+    // Reset states
+    eventSubRetryCount = 0;
+    hasPermissionError = [];
+    activeSubscriptions.clear();
+    currentChannelId = null;
+	
+	document.getElementById('viewer-count').textContent = "-";
+	document.getElementById('follower-count').textContent = "-";
+	document.getElementById('permissions-info').innerHTML = "";
+    
+    // Wait a moment for connections to fully close
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    isDisconnecting = false;
+}
 
 async function connectEventSub() {
-    // Connect to Twitch EventSub WebSocket
+    if (isDisconnecting || hasPermissionError.length) return;
+    
+    if (eventSocket && (eventSocket.readyState === WebSocket.OPEN || eventSocket.readyState === WebSocket.CONNECTING)) {
+        return;
+    }
+
     eventSocket = new WebSocket('wss://eventsub.wss.twitch.tv/ws');
     
     eventSocket.onopen = () => {
         console.log('EventSub WebSocket Connected');
-    };
+    }; 
     
     eventSocket.onmessage = async (event) => {
+        if (isDisconnecting) return;
+        
         const message = JSON.parse(event.data);
         
         switch (message.metadata.message_type) {
             case 'session_welcome':
-                // Save the session ID - we need this for subscriptions
                 eventSessionId = message.payload.session.id;
                 console.log('EventSub session established:', eventSessionId);
                 
-                // Now that we have a session, create our subscriptions
-                const channelInfo = await getUserInfo(channel);
-                if (channelInfo) {
-                    await createEventSubSubscriptions(channelInfo.id);
+                if (currentChannelId) {
+                    await createEventSubSubscriptions(currentChannelId);
                 }
                 break;
                 
@@ -1004,119 +1058,148 @@ async function connectEventSub() {
                 break;
                 
             case 'session_keepalive':
-                // Optional: Handle keepalive
                 break;
                 
             case 'session_reconnect':
-                // Handle reconnect messages
-                const reconnectUrl = message.payload.session.reconnect_url;
-                eventSocket.close();
-                eventSocket = new WebSocket(reconnectUrl);
-                break;
-                
-            case 'revocation':
-                console.log('Subscription revoked:', message.payload);
-                // Potentially try to resubscribe if needed
+                if (!isDisconnecting) {
+                    const reconnectUrl = message.payload.session.reconnect_url;
+                    await cleanupCurrentConnection();
+                    eventSocket = new WebSocket(reconnectUrl);
+                }
                 break;
         }
     };
     
     eventSocket.onerror = (error) => {
-        console.error('EventSub WebSocket Error:', error);
+        if (!isDisconnecting) {
+            console.error('EventSub WebSocket Error:', error);
+        }
     };
     
     eventSocket.onclose = () => {
-        console.log('EventSub WebSocket Closed - Reconnecting in 5s...');
-        setTimeout(connectEventSub, 5000);
+        if (isDisconnecting) return;
+        
+        if (!hasPermissionError.length && eventSubRetryCount < MAX_RETRY_ATTEMPTS) {
+            console.log(`EventSub WebSocket Closed - Retry attempt ${eventSubRetryCount + 1} of ${MAX_RETRY_ATTEMPTS}`);
+            eventSubRetryCount++;
+            reconnectTimeout = setTimeout(connectEventSub, 5000);
+        } else if (hasPermissionError.length) {
+            console.log('EventSub connection stopped: Permission errors detected');
+        }
     };
 }
 
-
 async function createEventSubSubscriptions(broadcasterId) {
+    if (broadcasterId !== currentChannelId) {
+        console.log('Channel changed, skipping subscription creation');
+        return;
+    }
+
     const token = getStoredToken();
     if (!token || !eventSessionId) {
         console.error("Missing token or session ID");
         return;
     }
 
-    // Get user permissions for the channel
-    const authUser = await validateToken(token);
-    if (!authUser) return;
+    try {
+        // Get user permissions for the channel
+        const authUser = await validateToken(token);
+        if (!authUser) return;
 
-    const permissions = await checkUserPermissions(broadcasterId, authUser.user_id);
-
-    // Only subscribe to events the user has permission to receive
-    const subscriptionTypes = [];
-
-    // Follows are public info
-    subscriptionTypes.push({
-        type: 'channel.follow',
-        version: '2',
-        condition: {
-            broadcaster_user_id: broadcasterId,
-            moderator_user_id: broadcasterId
-        }
-    });
-
-    // Only add subscriber events if user has permission
-    if (permissions.canViewSubscribers && permissions.hasSubscriptionProgram) {
-        subscriptionTypes.push({
-            type: 'channel.subscribe',
-            version: '1',
-            condition: {
-                broadcaster_user_id: broadcasterId
-            }
-        });
-
-        subscriptionTypes.push({
-            type: 'channel.subscription.gift',
-            version: '1',
-            condition: {
-                broadcaster_user_id: broadcasterId
-            }
-        });
-    }
-
-    // Only add cheer events if user has appropriate permissions
-    if (permissions.isBroadcaster || permissions.isModerator) {
-        subscriptionTypes.push({
-            type: 'channel.cheer',
-            version: '1',
-            condition: {
-                broadcaster_user_id: broadcasterId
-            }
-        });
-    }
-
-    // Create each subscription
-    for (const subscription of subscriptionTypes) {
-        try {
-            const response = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
-                method: 'POST',
-                headers: {
-                    'Client-ID': clientId,
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    ...subscription,
-                    transport: {
-                        method: 'websocket',
-                        session_id: eventSessionId
-                    }
-                })
+        const permissions = await checkUserPermissions(broadcasterId, authUser.user_id);
+        
+        // Define subscriptions based on permissions
+        const subscriptionTypes = [];
+        
+        if (permissions.canViewFollowers && !activeSubscriptions.has('channel.follow')) {
+            subscriptionTypes.push({
+                type: 'channel.follow',
+                version: '2',
+                condition: {
+                    broadcaster_user_id: broadcasterId,
+                    moderator_user_id: broadcasterId
+                }
             });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error(`Error creating ${subscription.type} subscription:`, errorData);
-                continue; // Skip to next subscription if this one fails
-            }
-            
-            console.log(`Successfully subscribed to ${subscription.type}`);
-        } catch (error) {
-            console.error(`Error creating subscription for ${subscription.type}:`, error);
         }
+
+        if (permissions.canViewSubscribers && permissions.hasSubscriptionProgram) {
+            if (!activeSubscriptions.has('channel.subscribe')) {
+                subscriptionTypes.push({
+                    type: 'channel.subscribe',
+                    version: '1',
+                    condition: {
+                        broadcaster_user_id: broadcasterId
+                    }
+                });
+            }
+            if (!activeSubscriptions.has('channel.subscription.gift')) {
+                subscriptionTypes.push({
+                    type: 'channel.subscription.gift',
+                    version: '1',
+                    condition: {
+                        broadcaster_user_id: broadcasterId
+                    }
+                });
+            }
+        }
+
+        if ((permissions.isBroadcaster || permissions.isModerator) && !activeSubscriptions.has('channel.cheer')) {
+            subscriptionTypes.push({
+                type: 'channel.cheer',
+                version: '1',
+                condition: {
+                    broadcaster_user_id: broadcasterId
+                }
+            });
+        }
+
+        // Create each subscription
+        for (const subscription of subscriptionTypes) {
+			if (hasPermissionError.includes(subscription)) { // previously failed permissions that got us kicked
+				console.log("Skipping "+subscription);
+				continue;
+			}
+            try {
+                const response = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
+                    method: 'POST',
+                    headers: {
+                        'Client-ID': clientId,
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ...subscription,
+                        transport: {
+                            method: 'websocket',
+                            session_id: eventSessionId
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.status === 409) {
+                    // Subscription already exists, mark it as active
+                    activeSubscriptions.add(subscription.type);
+                    continue;
+                }
+                
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        hasPermissionError.push(subscription);
+                    }
+                    console.log(`Subscription failed for ${subscription.type}: ${data.message}`);
+                    continue;
+                }
+                
+                activeSubscriptions.add(subscription.type);
+                console.log(`Successfully subscribed to ${subscription.type}`);
+            } catch (error) {
+                console.error(`Error creating subscription for ${subscription.type}:`, error);
+            }
+        }
+    } catch (error) {
+        console.error('Error in createEventSubSubscriptions:', error);
     }
 }
 
