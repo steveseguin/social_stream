@@ -2183,7 +2183,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "ignorealternatives") {
 				pushSettingChange();
 			}
-			
+			if (request.setting == "tiktokdonations") {
+				pushSettingChange();
+			}
 			if (request.setting == "twichadmute") {
 				pushSettingChange();
 			}
