@@ -123,7 +123,7 @@
 	  createHTML: (string) => string
 	});
 
-	function getAllContentNodes3(element) {
+	function getAllContentNodes(element) {
 		let result = '';
 		let pendingRegularEmote = null;
 		let pendingSpace = "";
@@ -361,7 +361,7 @@
 		}
 	}
 
-	function getAllContentNodes(element) {
+	function getAllContentNodes2(element) {
 		var resp = "";
 		element.childNodes.forEach(node => {
 			if (node.childNodes.length) {
