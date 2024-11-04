@@ -123,7 +123,7 @@
 	  createHTML: (string) => string
 	});
 
-	function getAllContentNodes(element) {
+	function getAllContentNodes3(element) {
 		let result = '';
 		let pendingRegularEmote = null;
 		let pendingSpace = "";
@@ -183,7 +183,7 @@
 					result += resolvedSvg.outerHTML;
 				} else if (node.childNodes.length) {
 					Array.from(node.childNodes).forEach(processNode);
-				} else if (!settings.textonlymode){
+				} else if (!settings.textonlymode && (node.nodeName.toLowerCase() === "svg")){
 					result += node.outerHTML;
 				}
 			}
@@ -361,7 +361,7 @@
 		}
 	}
 
-	function getAllContentNodes2(element) {
+	function getAllContentNodes(element) {
 		var resp = "";
 		element.childNodes.forEach(node => {
 			if (node.childNodes.length) {
