@@ -311,6 +311,15 @@
 			#obsControlModal .close-btn:hover {
 			  background-color: #c9302c;
 			}
+			
+			.viewerIcons {
+				background-position: center;
+				background-repeat: no-repeat;
+				background-size: contain;
+				padding: 5px;
+				margin: 0 5px 0 0;
+				cursor: help;
+			}
 
 			@media (max-width: 600px) {
 			  .modal .modal-content {
@@ -2055,18 +2064,14 @@
 				text-overflow: ellipsis;
 			}
 			
-			#meta {
+			#currentScene {
 				background-color:#0000;
-				position:fixed;
-				top: 0;
-				right: 0;
-				z-index: 999;
 				border:3px solid white;
 				padding:2px 5px;
 				cursor: pointer;
 			}
 			
-			#meta:empty {
+			#currentScene:empty {
 				display: none;
 			}
 			
@@ -2099,11 +2104,21 @@
 		.zero-width-emote-centered {
 		  vertical-align: top;
 		}
-			
+		#topbar {
+			display: block;
+			margin: 0 auto;
+			text-align: center;
+			position: absolute;
+			right: 0;
+			z-index: 999;
+		}
+		#topbar:empty {
+			display:none;
+		}
 		</style>
 	</head>
 	<body id="main" class="vanilla notcompactmode">
-		<div id="meta" class="hidden"></div>
+		<div id="topbar"></div>
 		<div id="pinned" class="output"></div>
 		<div id="output" class="output"></div>
 		<div id="menu" class="electronDraggable">
@@ -2644,6 +2659,11 @@
 			var bubble = false;
 			if (urlParams.has("bubble")) {
 				bubble = true;
+			}
+			
+			var showviewercount = false;
+			if (urlParams.has("showviewercount")) {
+				showviewercount = true;
 			}
 
 			if (urlParams.has("session")) {
@@ -4711,6 +4731,46 @@
 			function add32(a, b) {
 				return (a + b) & 0xFFFFFFFF;
 			}
+			
+			var viewers = {};
+			var followers = {};
+			
+			var topBarElement = getById("topbar");
+			
+			function updateMeta(data){
+				if (data && data.event && data.type && ("meta" in data)){
+					if (data.event == "follower_update"){
+						followers[data.type] = parseInt(data.meta) || 0;
+						return true;
+					} else if (data.event == "viewer_update"){
+						viewers[data.type] = parseInt(data.meta) || 0;
+						
+						if (showviewercount){
+							let ele = topBarElement.querySelector("[data-type='"+data.type+"']");
+							if (ele){
+								ele.innerText = viewers[data.type];
+							} else {
+								ele = document.createElement("div");
+								ele.dataset.type = data.type;
+								ele.classList.add("viewerIcons");
+								ele.title = "Viewer count for "+data.type;
+								ele.innerText = viewers[data.type];
+								ele.style.backgroundImage = "url(./sources/images/"+data.type+".png)";
+								topBarElement.prepend(ele);
+								
+							}
+							clearTimeout(ele.timeout);
+							ele.timeout = setTimeout(function(ele){
+								if (ele){
+									delete ele;
+								}
+							},130000,ele)
+						}
+						return true;
+					}
+				}
+				return false;
+			}
 					
 			function getColorFromString(str) {
 				
@@ -5559,8 +5619,18 @@
 					}
 					return true;
 				} else if (!pauseState) {
+					if (data && ("meta" in data)){
+						if (updateMeta(data)){
+							return true;
+						}
+					}
 					return processData({ contents: data });
 				} else {
+					if (data && ("meta" in data)){
+						if (updateMeta(data)){
+							return true;
+						}
+					}
 					queue.push({ contents: data });
 					if (queue.length > 100) {
 						// keep the queue from exploding in size
@@ -5570,7 +5640,7 @@
 				}
 				return false;
 			}
-
+			
 			function RecvDataWindow(room) {
 				var iframe = document.createElement("iframe");
 				iframe.connectedPeers = {};
@@ -5635,11 +5705,17 @@
 							delete iframe.connectedPeers[e.data.UUID];
 						}
 					} else if (obsremote && "action" in e.data && "value" in e.data && e.data.action == "obs-state") { 
-						document.getElementById("meta").classList.remove("hidden");
 						if (e.data.value.details && e.data.value.details.currentScene && e.data.value.details.currentScene.name){
-							document.getElementById("meta").style.backgroundColor = getColorFromString( e.data.value.details.currentScene.name);
-							//console.log(document.getElementById("meta").style.backgroundColor);
-							document.getElementById("meta").innerHTML =  e.data.value.details.currentScene.name;
+						
+							let ele = topBarElement.querySelector("#currentScene");
+							if (!ele){
+								ele = document.createElement("div");
+								ele.id = "currentScene";
+								topBarElement.append(ele);
+								ele.addEventListener('click', openOBSControlModal);
+							}
+							ele.style.backgroundColor = getColorFromString( e.data.value.details.currentScene.name);
+							ele.innerText = e.data.value.details.currentScene.name;
 						}
 						//console.log(e.data);
 						updateOBSState(e.data);
@@ -5774,13 +5850,6 @@
 			 // modal.style.display = "block";
 			}
 
-			// Add this function to your button that opens the modal
-			document.getElementById('meta').addEventListener('click', openOBSControlModal);
-			
-			//////////////////////////////////
-			
-			
-			
 			roomID.split(",").forEach(roomz => {
 				RecvDataWindow(roomz.trim());
 			});

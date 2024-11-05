@@ -3076,37 +3076,45 @@ async function sendToDestinations(message) {
 		}
 		
 		if (message.event && message.tid && ("meta" in message)) {
-			let tabData = metaDataStore.get(message.tid);
-			if (!tabData) {
-				tabData = {};
-				metaDataStore.set(message.tid, tabData);
-			}
-			
-			tabData[message.event] = message;
-			
-			if (settings.hypemode){
-				sendTargetP2P(message, "hype");
-				//console.log("sending");
-			}
+			if (["viewer_update", "follower_update"].includes(message.event)){
+				let tabData = metaDataStore.get(message.tid);
+				if (!tabData) {
+					tabData = {};
+					metaDataStore.set(message.tid, tabData);
+				}
+				
+				tabData[message.event] = message;
+				
+				if (!cleanUpLastTabs) {
+					cleanUpLastTabs = setTimeout(() => {
+						cleanUpLastTabs = null;
+						chrome.tabs.query({}, (tabs) => {
+							const activeTabIds = new Set(
+								tabs
+									.map(tab => tab.id)
+									.filter(Boolean)
+							);
 
-			if (!cleanUpLastTabs) {
-				cleanUpLastTabs = setTimeout(() => {
-					cleanUpLastTabs = null;
-					chrome.tabs.query({}, (tabs) => {
-						const activeTabIds = new Set(
-							tabs
-								.map(tab => tab.id)
-								.filter(Boolean)
-						);
-
-						// Cleanup closed tabs
-						for (const [tabId] of metaDataStore) {
-							if (!activeTabIds.has(tabId)) {
-								metaDataStore.delete(tabId);
+							// Cleanup closed tabs
+							for (const [tabId] of metaDataStore) {
+								if (!activeTabIds.has(tabId)) {
+									metaDataStore.delete(tabId);
+								}
 							}
-						}
-					});
-				}, 600000); 
+						});
+					}, 600000); 
+				}
+				
+				if (settings.hypemode){
+					sendTargetP2P(message, "hype");
+				}
+			
+				try {
+					sendDataP2P(message); 
+				} catch (e) {
+					console.error(e);
+				}
+				return true;
 			}
 		}
 	}

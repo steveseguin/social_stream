@@ -70,7 +70,7 @@
 		if (chatname) {
 		  const data = {
 			chatname: escapeHtml(chatname.innerText),
-			type: "youtube"
+			type: (youtubeShorts ? "youtubeshorts" : "youtube")
 		  };
 		  chrome.runtime.sendMessage(chrome.runtime.id, { "delete": data }, function(e) {});
 		}
@@ -263,7 +263,7 @@
 			if (chatname) {
 				var data = {};
 				data.chatname = escapeHtml(chatname.innerText);
-				data.type = "youtube";
+				data.type = (youtubeShorts ? "youtubeshorts" : "youtube");
 				try {
 					chrome.runtime.sendMessage(chrome.runtime.id, {
 						"delete": data
@@ -1073,11 +1073,11 @@
 			  .then(response => response.json())
 			  .then(data => {
 				try {
-					if (data && data.viewers){
+					if (data && ("viewers" in data)){
 						chrome.runtime.sendMessage(
 							chrome.runtime.id,
 							({message:{
-									type: 'youtube',
+									type: (youtubeShorts ? "youtubeshorts" : "youtube"),
 									event: 'viewer_update',
 									meta: parseInt(data.viewers)
 									//chatmessage: data.data[0] + " has started following"
