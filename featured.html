@@ -2054,6 +2054,10 @@
 						return false;
 					}
 					
+					if (!data.contents.chatmessage && !data.contents.chatname && !data.contents.contentimg && !data.contents.donation && !data.contents.hasDonation && !data.contents.memebership && !data.contents.hasMembership){
+						return;
+					}
+					
 					if (hideDonations){
 						data.contents.hasDonation = ""; // kiss
 						if (!data.contents.chatmessage && !data.contents.contentimg && !data.contents.subtitle && !data.contents.membership){
