@@ -18,6 +18,67 @@
 		}
 	}
 	
+	// 
+	
+	function extractKickUsername(url) {
+		const pattern = /kick\.com\/(?:popout\/)?([^/]+)(?:\/chat)?$/i;
+		const match = url.match(pattern);
+		if (match) {
+			return  match[1]
+		}
+		return false;
+	}
+	
+	try {
+		var kickUsername = extractKickUsername(window.location.href);
+	} catch(e){}
+
+	var isExtensionOn = true;
+	
+	async function getKickViewerCount(username) {
+		try {
+			const response = await fetch(`https://kick.com/api/v2/channels/${username}`);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			const data = await response.json();
+			
+			if (data.livestream) {
+				return data.livestream.viewer_count || 0;
+			}
+
+			return 0;
+
+		} catch (error) {
+			console.log(error);
+			return 0;
+		}
+	}
+	
+	async function checkViewers(){
+		if (kickUsername && isExtensionOn){
+			try {
+				var viewers = await getKickViewerCount(kickUsername) || 0;
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					({message:{
+							type: "kick",
+							event: 'viewer_update',
+							meta: viewers
+						}
+					}),
+					function (e) {}
+				);
+			} catch (e) {
+				console.log(e);
+			}
+		}
+	}
+	
+	setTimeout(function(){checkViewers();},2500);
+	setInterval(function(){checkViewers()},65000);
+	
 	
 	function getAllContentNodes(element) {
 		var resp = "";
@@ -227,11 +288,14 @@
 					return;
 				}
 				if (typeof request === "object"){
+					if ("state" in request){
+						isExtensionOn = request.state;
+					}
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
 						return;
-					}
+					} 
 				}
 				// twitch doesn't capture avatars already.
 			} catch(e){}
@@ -244,8 +308,13 @@
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if ("settings" in response){
-			settings = response.settings;
+		if (response){
+			if ("state" in response){
+				isExtensionOn = response.state;
+			}
+			if ("settings" in response){
+				settings = response.settings;
+			}
 		}
 	});
 

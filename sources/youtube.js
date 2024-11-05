@@ -807,6 +807,11 @@
 				return;
 			}
 			if (typeof request === "object") {
+				
+				if ("state" in request) {
+					isExtensionOn = request.state;
+				}
+				
 				if ("settings" in request) {
 					settings = request.settings;
 					sendResponse(true);
@@ -1067,7 +1072,7 @@
 	}
 	
 	
-	function checkFollowers(){
+	function checkViewers(){
 		if (videoId && isExtensionOn){
 			fetch('https://api.socialstream.ninja/youtube/viewers?video='+videoId)
 			  .then(response => response.json())
@@ -1093,8 +1098,8 @@
 		}
 	}
 	
-	setTimeout(function(){checkFollowers();},2500);
-	setInterval(function(){checkFollowers()},65000);
+	setTimeout(function(){checkViewers();},2500);
+	setInterval(function(){checkViewers()},65000);
 	
 
 	try {
