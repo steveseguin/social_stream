@@ -67,6 +67,7 @@
 			}
 
 			#output {
+				width:100%;
 				transform: translateY(30px);
 				transition: 0.5s all cubic-bezier(0.25, 0.25, 0.105, 1.2);
 				margin: 0 0 0 15px;
@@ -659,6 +660,47 @@
 		.zero-width-emote-centered {
 		  vertical-align: top;
 		}
+		
+
+		.hl-c-cont.highlight-chat.stacked {
+			width: fit-content;  /* Allow container to shrink to content */
+			max-width: 100%;    /* Prevent overflow */
+			margin-left: 15px;  /* Match the original left margin */
+			position: relative; /* Ensure proper stacking context */
+			clear: both;        /* Prevent floating issues */
+			padding:30px;
+		}
+
+		.hl-c-cont.highlight-chat.stacked .hl-message {
+			width: fit-content !important;  /* Force message to fit content */
+			max-width: calc(100vw - 160px); /* Prevent overflow, accounting for avatar and padding */
+			min-width: 200px;   /* Minimum width to maintain layout */
+			display: inline-block; /* Allow block to shrink to content */
+		}
+
+		/* Ensure avatar and badges maintain position */
+		.hl-c-cont.highlight-chat.stacked .hl-img {
+			position: absolute;
+			left: calc(-0.5 * var(--author-avatar-border-size));
+		}
+
+		.hl-c-cont.highlight-chat.stacked .sourcetype {
+			position: absolute;
+		}
+
+		/* Keep donations/membership badges properly positioned */
+		.hl-c-cont.highlight-chat.stacked .donation,
+		.hl-c-cont.highlight-chat.stacked .membership {
+			position: absolute;
+			z-index: 3;
+		}
+
+		/* Handle right alignment option if needed */
+		.alignright .hl-c-cont.highlight-chat.stacked {
+			margin-left: auto;
+			margin-right: 15px;
+		}
+
 		</style>
 	</head>
 	<body>
@@ -921,10 +963,15 @@
 			if (urlParams.has("branded")) {
 				customSource = true;
 			}
-
+			
 			var fontfit = false;
 			if (urlParams.has("fontfit")) {
 				fontfit = true;
+			}
+			
+			let MAX_MESSAGES = 10; 
+			if (urlParams.get("limit")) {
+				MAX_MESSAGES = parseInt(urlParams.get("limit")) || 10;
 			}
 			
 			var filterfeaturedusers = false;
@@ -1256,6 +1303,24 @@
 					document.head.appendChild(script);
 				}
 			} catch (e) {}
+			
+			function cleanupOldMessages() {
+				const messages = document.querySelectorAll('.hl-c-cont.highlight-chat.stacked');
+				if (messages.length > MAX_MESSAGES) {
+					const messagesToRemove = messages.length - MAX_MESSAGES;
+					for (let i = 0; i < messagesToRemove; i++) {
+						const oldestMessage = messages[i];
+						oldestMessage.classList.add(transitionType);
+						setTimeout(() => {
+							if (oldestMessage && oldestMessage.parentNode) {
+								oldestMessage.parentNode.removeChild(oldestMessage);
+							}
+						}, 500); // Match transition time
+					}
+				}
+			}
+
+
 
 			function realign(eventtype = false) {
 				if (centering) {
@@ -2117,9 +2182,8 @@
 				}
 			}
 			
-			function showmessage(contents){
+			function showmessage(contents) {
 				try {
-				
 					clearTimeout(timeoutTimer);
 					
 					if (!stacking) {
@@ -2133,9 +2197,9 @@
 							parent.postMessage({ resizeWindow: { height: "220px" } }, "*");
 						}, 300);
 					}
-				
-					if (queuetime){
-						queueTimer = setTimeout(checkqueue,queuetime);
+
+					if (queuetime) {
+						queueTimer = setTimeout(checkqueue, queuetime);
 					}
 				
 					nextComment = setTimeout(
@@ -2357,23 +2421,76 @@
 									document.getElementById("newmessage").id = "";
 								} catch (e) {}
 
-								document.getElementById("output").innerHTML += '<div class="hl-c-cont highlight-chat stacked" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + data.chatmessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
+								const messageId = 'msg_' + Date.now(); // Unique ID for the message
+								
+								// Create new elements
+								const messageContainer = document.createElement('div');
+								messageContainer.className = 'hl-c-cont highlight-chat stacked';
+								messageContainer.id = messageId;
+								messageContainer.setAttribute('data-source-type', data.type);
 
+								// Create name div
+								const nameDiv = document.createElement('div');
+								nameDiv.className = 'hl-name';
+								nameDiv.id = 'nameDIV_' + messageId;
+								if (styleOverrideName) {
+									nameDiv.setAttribute('style', styleOverrideName.replace(/style="/i, '').replace(/"$/,''));
+								}
+								nameDiv.innerHTML = data.chatname + chatbadges;
+								messageContainer.appendChild(nameDiv);
+
+								// Create message div
+								const messageDiv = document.createElement('div');
+								messageDiv.className = 'hl-message';
+								messageDiv.id = 'message_' + messageId;
+								if (styleOverride) {
+									messageDiv.setAttribute('style', styleOverride.replace(/style="/i, '').replace(/"$/,''));
+								}
+								messageDiv.setAttribute('dir', textDirection);
+								messageDiv.innerHTML = data.chatmessage;
+								messageContainer.appendChild(messageDiv);
+
+								// Add the remaining elements
+								const remainingContent = document.createElement('div');
+								remainingContent.innerHTML = avatarImg + showType + addImage + (donationHTML || memebershipHTML);
+								while (remainingContent.firstChild) {
+									messageContainer.appendChild(remainingContent.firstChild);
+								}
+
+								// Add the new message to output
+								document.getElementById("output").appendChild(messageContainer);
+
+								cleanupOldMessages();
+								
 								if (data.hasDonation || memebershipHTML) {
-									document.getElementById("newmessage").classList.add("dono");
-								} else {
-									document.getElementById("newmessage").classList.remove("dono");
+									messageContainer.classList.add("dono");
+								}
+
+								// Individual timeout for this message
+								if (timeoutDelay) {
+									setTimeout(() => {
+										if (messageContainer && messageContainer.parentNode) {
+											messageContainer.classList.add(transitionType);
+											// Remove the element after transition completes
+											setTimeout(() => {
+												if (messageContainer && messageContainer.parentNode) {
+													messageContainer.parentNode.removeChild(messageContainer);
+												}
+											}, 500); // Matches the CSS transition time
+										}
+									}, timeoutDelay);
 								}
 							} else {
-								document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + data.chatmessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
+								// Original non-stacking behavior remains unchanged
+								document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="' + data.type + '">' +
+									'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" +
+									'<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + data.chatmessage + "</div>" +
+									avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
 
 								if (data.hasDonation || memebershipHTML) {
 									document.getElementById("newmessage").classList.add("dono");
-								} else {
-									document.getElementById("newmessage").classList.remove("dono");
 								}
 							}
-
 							if (!data.chatname && !data.chatbadges) {
 								document.getElementById("nameDIV").style.display = "none";
 							}

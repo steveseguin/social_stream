@@ -1056,6 +1056,37 @@
 		}, 3000);
 	}
 	
+	
+	function checkFollowers(){
+		if (videoId && isExtensionOn){
+			fetch('https://api.socialstream.ninja/youtube/viewers?video='+videoId)
+			  .then(response => response.text())
+			  .then(count => {
+				try {
+					if (count == parseInt(count)){
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							({message:{
+									type: 'youtube',
+									event: 'viewer_update',
+									meta: parseInt(count)
+									//chatmessage: data.data[0] + " has started following"
+								}
+							}),
+							function (e) {}
+						);
+					}
+				} catch (e) {
+					console.log(e);
+				}				
+				  //console.log('Viewer count:', count);
+			  });
+		}
+	}
+	
+	setTimeout(function(){checkFollowers();},2500);
+	setInterval(function(){checkFollowers()},65000);
+	
 
 	try {
 		var receiveChannelCallback = function (e) {
