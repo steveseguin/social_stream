@@ -277,7 +277,7 @@
 
 		return result;
 	}
-
+	
 	var lastMessage = "";
 	var lastUser = "";
 	var lastEle = null;
@@ -926,10 +926,10 @@
 					}
 				} else if (mutation.type === "childList" && mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						
-						
+						if (!mutation.addedNodes[i]){continue;}
+						if (mutation.addedNodes[i].nodeType === 3){continue;}
 						try {
-							if ((mutation.addedNodes[i].dataset.aTarget == "chat-deleted-message-placeholder") || mutation.addedNodes[i].querySelector('[data-a-target="chat-deleted-message-placeholder"]')){
+							if ((mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.aTarget == "chat-deleted-message-placeholder") || mutation.addedNodes[i].querySelector('[data-a-target="chat-deleted-message-placeholder"]')){
 								deleteThis(mutation.addedNodes[i]);
 								continue;
 							}
@@ -974,7 +974,7 @@
 							}
 							
 						} catch (e) {
-							console.log(e);
+							console.log(e, mutation.addedNodes[i]);
 							
 						}
 					}
@@ -1007,13 +1007,13 @@
 	console.log("Social Stream injected");
 
 	var counter = 0;
-	var checkElement = ".chat-list--default, .chat-room__content";
+	var checkElement = ".chat-list--other, .chat-list--default, .chat-room__content";
 
 	var checkReady = setInterval(function () {
 		counter += 1;
 		
 		if (counter == 10) {
-			checkElement = ".chat-list--default, .chat-room__content, #root";
+			checkElement = ".chat-list--other, .chat-list--default, .chat-room__content, #root";
 		}
 		
 		if (document.querySelector(checkElement)) {
@@ -1054,6 +1054,36 @@
 			}
 		}
 	}, 500);
+	
+	function checkFollowers(){
+		if (channelName && isExtensionOn){
+			fetch('https://api.socialstream.ninja/twitch/viewers?username='+channelName)
+			  .then(response => response.text())
+			  .then(count => {
+				try {
+					if (count == parseInt(count)){
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							({message:{
+									type: 'twitch',
+									event: 'viewer_update',
+									meta: parseInt(count)
+									//chatmessage: data.data[0] + " has started following"
+								}
+							}),
+							function (e) {}
+						);
+					}
+				} catch (e) {
+					console.log(e);
+				}				
+				  //console.log('Viewer count:', count);
+			  });
+		}
+	}
+	
+	setTimeout(function(){checkFollowers();},2500);
+	setInterval(function(){checkFollowers()},65000);
 
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
 	try {

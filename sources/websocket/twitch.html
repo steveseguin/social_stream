@@ -6,7 +6,7 @@
     <meta content="utf-8" http-equiv="encoding" />
     <title>Social Stream - Twitch</title>
     <style>
-        .hidden { display: none; }
+        .hidden { display: none!important; }
         body {
             background-color: #ddd;
             font-size: 14px;
@@ -271,10 +271,9 @@
 			localStorage.removeItem('twitchUserAlias');
 			sessionStorage.removeItem('twitchOAuthState');
 			sessionStorage.removeItem('twitchOAuthToken');
-		
 
 			updateHeaderInfo(null, null);
-			document.querySelector('.socket').classList.add('hidden');
+			document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'))
 			document.querySelector('.auth').classList.remove('hidden');
 			document.querySelector('#textarea').innerHTML = '';
 

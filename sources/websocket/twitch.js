@@ -29,14 +29,12 @@ function clearStoredToken() {
 }
 function showAuthButton() {
     const authElement = document.querySelector('.auth');
-    const socketElement = document.querySelector('.socket');
     if (authElement) authElement.classList.remove("hidden");
-    if (socketElement) socketElement.classList.add("hidden");
+	//document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'))
 }
 function showSocketInterface() {
     const authElement = document.querySelector('.auth');
-    const socketElement = document.querySelector('.socket');
-    if (socketElement) socketElement.classList.remove("hidden");
+	document.querySelectorAll('.socket').forEach(ele=>ele.classList.remove('hidden'))
     if (authElement) authElement.classList.add("hidden");
 }
 function initializePage() {
@@ -119,6 +117,7 @@ function verifyAndUseToken(token) {
         showAuthButton();
     });
 }
+
 function parseFragment(hash) {
     var hashMatch = function(expr) {
         var match = hash.match(expr);
@@ -279,7 +278,7 @@ async function connect() {
         websocket.onclose = (event) => !isDisconnecting && handleWebSocketClose(event);
 
         // Only set up EventSub if we have permissions
-        if (permissions.canViewFollowers || permissions.isBroadcaster || permissions.isModerator) {
+        if (permissions && (permissions.canViewFollowers || permissions.isBroadcaster || permissions.isModerator)) {
             await connectEventSub();
             
             if (permissions.canViewFollowers) {
@@ -287,6 +286,11 @@ async function connect() {
                 getFollowersInterval = setInterval(() => getFollowers(channelInfo.id), 60000);
             }
         }
+		console.log(channel);
+		getViewerCount(channel);
+		clearInterval(getFollowersInterval);
+		getFollowersInterval = setInterval(() => getViewerCount(channel), 60000);
+		
     } catch (error) {
         console.log('Error during connection setup:', error);
     }
@@ -408,7 +412,7 @@ function signOut() {
     }
 
     updateHeaderInfo(null, null);
-    document.querySelector('.socket').classList.add('hidden');
+	document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'))
     document.querySelector('.auth').classList.remove('hidden');
     document.querySelector('#textarea').innerHTML = '';
 
@@ -861,6 +865,8 @@ function pushMessage(data) {
 }
 
 chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+	if (!response){return;}
+	
 	if ("settings" in response) {
 		settings = response.settings;
 		
@@ -896,8 +902,8 @@ console.log("INJECTED WEBSOCKETS");
 // FOLLOWER EVENT STUFF
 
 // Store the last known values
-let lastKnownViewers = 0;
-let lastKnownFollowers = 0;
+let lastKnownViewers = null;
+let lastKnownFollowers = null;
 
 // Function to fetch current viewer count
 async function getViewerCount(channelName) {
@@ -915,14 +921,20 @@ async function getViewerCount(channelName) {
         );
         
         const data = await response.json();
+		console.log(data);
         if (data.data && data.data[0]) {
             const currentViewers = data.data[0].viewer_count;
             if (currentViewers !== lastKnownViewers) {
                 lastKnownViewers = currentViewers;
+				console.log({
+					type: 'twitch',
+                    event: 'viewer_update',
+                    meta: lastKnownViewers
+                });
                 pushMessage({
 					type: 'twitch',
                     event: 'viewer_update',
-                    meta: currentViewers
+                    meta: lastKnownViewers
                 });
             }
         }
@@ -1013,6 +1025,8 @@ async function cleanupCurrentConnection() {
     hasPermissionError = [];
     activeSubscriptions.clear();
     currentChannelId = null;
+	lastKnownViewers = null;
+	lastKnownFollowers = null;
 	
 	document.getElementById('viewer-count').textContent = "-";
 	document.getElementById('follower-count').textContent = "-";
