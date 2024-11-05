@@ -104,6 +104,9 @@
 			text-shadow: var(--outline);
 			scrollbar-color:#666 #201c29;
 		}
+		.sourceicons {
+			border-radius:100px;
+		}
 
 		.el { 
 		  width: var(--width);
@@ -589,7 +592,7 @@
 				if (ele){
 					ele.innerText = viewers[data.type];
 				} else {
-					document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><span data-viewers='true' data-type='"+data.type+"'>"+viewers[data.type]+"</span><img src='./sources/images/"+data.type+".png'>-</div>";
+					document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><span data-viewers='true' data-type='"+data.type+"'>"+viewers[data.type]+"</span><img class='sourceicons' src='./sources/images/"+data.type+".png'>-</div>";
 				}
 			}
 		} 
