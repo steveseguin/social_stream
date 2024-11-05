@@ -3822,6 +3822,73 @@ async function openchat(target = null, force=false) {
 			}
 		}
 	}
+	
+	
+	async function openYouTubeLiveChats(settings) {
+		// Ensure username starts with @
+		if (!settings.youtube_username.textsetting.startsWith("@")) {
+			settings.youtube_username.textsetting = "@" + settings.youtube_username.textsetting;
+		}
+
+		try {
+			// Try our API first
+			const response = await fetch(`https://api.socialstream.ninja/youtube/streams?username=${encodeURIComponent(settings.youtube_username.textsetting)}`);
+			const data = await response.json();
+
+			if (response.ok && Array.isArray(data) && data.length > 0) {
+				// We found live streams, open chat for each one
+				data.forEach(stream => {
+					if (stream.videoId) {
+						let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + stream.videoId;
+						if (stream.isShort) {
+							url += "&shorts";
+						}
+						openURL(url, true);
+					}
+				});
+				return; // Successfully handled via API
+			}
+
+			// If API returns error or no streams, fall back to old method
+			await fallbackYouTubeLiveChat(settings);
+
+		} catch (error) {
+			console.error("API Error:", error);
+			// API failed, fall back to old method
+			await fallbackYouTubeLiveChat(settings);
+		}
+	}
+
+	async function fallbackYouTubeLiveChat(settings) {
+		try {
+			// Try first URL format
+			const response1 = await fetch("https://www.youtube.com/c/" + settings.youtube_username.textsetting + "/live");
+			const data1 = await response1.text();
+			const videoID = data1.split('{"videoId":"')[1].split('"')[0];
+			
+			if (videoID) {
+				let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + videoID;
+				openURL(url, true);
+				return;
+			}
+		} catch (e) {
+			try {
+				// Try second URL format
+				const response2 = await fetch("https://www.youtube.com/" + settings.youtube_username.textsetting + "/live");
+				const data2 = await response2.text();
+				const videoID = data2.split('{"videoId":"')[1].split('"')[0];
+				
+				if (videoID) {
+					let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + videoID;
+					openURL(url, true);
+					return;
+				}
+			} catch (e) {
+				console.log("No live streams found");
+			}
+		}
+	}
+
 
 	if ((target == "twitch" || !target) && settings.twitch_username) {
 		let url = "https://www.twitch.tv/popout/" + settings.twitch_username.textsetting + "/chat?popout=";
@@ -3861,52 +3928,7 @@ async function openchat(target = null, force=false) {
 	// Opened in new window
 
 	if (((target == "youtube") || (target == "youtubeshorts") || !target) && settings.youtube_username) {
-		if (!settings.youtube_username.textsetting.startsWith("@")) {
-			settings.youtube_username.textsetting = "@" + settings.youtube_username.textsetting;
-		}
-		fetch("https://www.youtube.com/c/" + settings.youtube_username.textsetting + "/live")
-			.then(response => response.text())
-			.then(data => {
-				try {
-					let videoID = data.split('{"videoId":"')[1].split('"')[0];
-					log(videoID);
-					let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + videoID;
-					openURL(url, true);
-				} catch (e) {
-					fetch("https://www.youtube.com/" + settings.youtube_username.textsetting + "/live")
-						.then(response => response.text())
-						.then(data => {
-							try {
-								let videoID = data.split('{"videoId":"')[1].split('"')[0];
-								log(videoID);
-								let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + videoID;
-								openURL(url, true);
-							} catch (e) {
-								// not live?
-							}
-						})
-						.catch(error => {
-							// not live?
-						});
-				}
-			})
-			.catch(error => {
-				fetch("https://www.youtube.com/" + settings.youtube_username.textsetting + "/live")
-					.then(response => response.text())
-					.then(data => {
-						try {
-							let videoID = data.split('{"videoId":"')[1].split('"')[0];
-							log(videoID);
-							let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + videoID;
-							openURL(url, true);
-						} catch (e) {
-							// not live?
-						}
-					})
-					.catch(error => {
-						// not live?
-					});
-			});
+		await openYouTubeLiveChats(settings);
 	}
 
 	if ((target == "tiktok" || !target) && settings.tiktok_username) {

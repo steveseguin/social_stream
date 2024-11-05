@@ -1,13 +1,16 @@
 (function () {
 
-
+	var urlParams = new URLSearchParams(window.location.search);
 	//var channelName = "";
-	var videoId = false;
+	var isExtensionOn = true;
+	var videoId = urlParams.get("v") || false;
 	try {
-		const parentUrl = window.top.location.href;
-		const parentStudioMatch = parentUrl.match(/\/video\/([^\/]+)/);
-		if (parentStudioMatch) {
-			videoId = parentStudioMatch[1];
+		if (!videoId){
+			const parentUrl = window.top.location.href;
+			const parentStudioMatch = parentUrl.match(/\/video\/([^\/]+)/);
+			if (parentStudioMatch) {
+				videoId = parentStudioMatch[1];
+			}
 		}
 	} catch(e){}
 
@@ -886,6 +889,13 @@
 
 	chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
 		// {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		
+		if (!response){return;}
+		
+		if ("state" in response){
+			isExtensionOn = response.state;
+		}
+		
 		if ("settings" in response) {
 			settings = response.settings;
 			
@@ -1060,16 +1070,16 @@
 	function checkFollowers(){
 		if (videoId && isExtensionOn){
 			fetch('https://api.socialstream.ninja/youtube/viewers?video='+videoId)
-			  .then(response => response.text())
-			  .then(count => {
+			  .then(response => response.json())
+			  .then(data => {
 				try {
-					if (count == parseInt(count)){
+					if (data && data.viewers){
 						chrome.runtime.sendMessage(
 							chrome.runtime.id,
 							({message:{
 									type: 'youtube',
 									event: 'viewer_update',
-									meta: parseInt(count)
+									meta: parseInt(data.viewers)
 									//chatmessage: data.data[0] + " has started following"
 								}
 							}),
@@ -1078,8 +1088,7 @@
 					}
 				} catch (e) {
 					console.log(e);
-				}				
-				  //console.log('Viewer count:', count);
+				}
 			  });
 		}
 	}
