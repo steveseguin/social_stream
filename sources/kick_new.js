@@ -57,7 +57,7 @@
 	}
 	
 	async function checkViewers(){
-		if (kickUsername && isExtensionOn){
+		if (kickUsername && isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			try {
 				var viewers = await getKickViewerCount(kickUsername) || 0;
 				chrome.runtime.sendMessage(

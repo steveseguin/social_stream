@@ -1073,7 +1073,7 @@
 	
 	
 	function checkViewers(){
-		if (videoId && isExtensionOn){
+		if (videoId && isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			fetch('https://api.socialstream.ninja/youtube/viewers?video='+videoId)
 			  .then(response => response.json())
 			  .then(data => {

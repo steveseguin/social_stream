@@ -2325,7 +2325,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				if (!request.value) {
 					processHype2(); // stop hype and clear old hype
 				}
+				pushSettingChange();
+			} 
+			
+			if (request.setting == "showviewercount") {
+				pushSettingChange();
 			}
+			
 			if (request.setting == "waitlistmode") {
 				initializeWaitlist();
 			}

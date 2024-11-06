@@ -1056,7 +1056,7 @@
 	}, 500);
 	
 	function checkFollowers(){
-		if (channelName && isExtensionOn){
+		if (channelName && isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			fetch('https://api.socialstream.ninja/twitch/viewers?username='+channelName)
 			  .then(response => response.text())
 			  .then(count => {
