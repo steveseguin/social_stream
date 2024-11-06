@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stream Credits</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@900&display=swap" rel="stylesheet" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
+            animation: stars 30s linear infinite;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 2s;
+        }
+
+        body.visible {
+            opacity: 1;
+        }
+
+        /* Your existing CSS styles here */
+        @keyframes stars {
+            0% { background-position: 0 0; }
+            100% { background-position: 798px -798px; }
+        }
+		
+		.footer-text {
+			color: white;
+			font-size: 500%;
+			text-align: center;
+			padding-top:20%;
+		}
+
+		@keyframes translateText {
+			0% {
+				/* Starting position closer to view */
+				transform: rotateX(25deg) scale(0.7, 0.5) translateY(90vh);
+			}
+			100% {
+				transform: rotateX(30deg) scale(0.65, 0.5) translateY(-250vh);
+			}
+		}
+
+		/* Rest of the styles remain the same */
+		.text {
+			font-size: 4.5vh;
+			line-height: 1.4;
+			color: #ebbc3c;
+			text-align: center;
+			text-shadow: 0 0 16px #ffeb3b60, 0 0 3px #3bbeff88, 0 0 10px #ffffff83;
+			width: 80%;
+			margin: 0 auto;
+			transform: translateZ(0);
+		}
+
+		.category-header {
+			font-size: 5.5vh;
+			color: #ebbc3c;
+			margin: 2.5em 0 0.8em;
+			text-shadow: 0 0 16px #ffeb3b60, 0 0 3px #3bbeff88, 0 0 10px #ffffff83;
+			text-transform: uppercase;
+		}
+
+        #app {
+            width: 100vw;
+            height: 100vh;
+            font-family: "Nunito Sans", sans-serif;
+            perspective: 400px;
+            perspective-origin: center 50%;
+            overflow: hidden;
+            display: none;
+        }
+
+
+        #app.visible {
+            display: block;
+        }
+
+        .logo-container img {
+            max-width: 200px;
+            height: auto;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.9));
+        }
+
+        .logo-container {
+            text-align: center;
+            padding-top: 120px;
+            position: absolute;
+            top: 0;
+            width: 100%;
+            z-index: 20;
+        }
+
+        .background {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: #0a123630;
+            background-size: cover;
+        }
+
+        .fade {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 50vh;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 1), rgba(0, 0, 0, 1));
+            z-index: 10;
+        }
+		
+		.text-container {
+			position: relative;
+			width: 100%;
+			height: 100%;
+			padding-top: 120px;
+			/* Reduced translateY to start closer to visible area */
+			transform: rotateX(25deg) scale(0.7, 0.5) translateY(50vh);
+		}
+
+		.text-container.animate {
+			animation: 45s linear translateText forwards;
+		}
+
+
+        /* Enhanced stars styling */
+        .stars {
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .stars:nth-child(1) {
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 50px 160px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            animation: twinkle 4s infinite;
+            opacity: 0.5;
+            transform: scale(0.6) rotate(20deg);
+        }
+
+        .stars:nth-child(2) {
+            background-image: 
+                radial-gradient(1px 1px at 25px 35px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 45px 75px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 55px 165px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 95px 45px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 135px 85px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 300px 300px;
+            animation: twinkle 6s infinite;
+            opacity: 0.4;
+            transform: scale(1) rotate(60deg);
+        }
+
+        .stars:nth-child(3) {
+            background-image: 
+                radial-gradient(1px 1px at 30px 40px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 50px 80px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 60px 170px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1.5px 1.5px at 100px 50px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1.5px 1.5px at 140px 90px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 400px 400px;
+            animation: twinkle 8s infinite;
+            opacity: 0.3;
+            transform: scale(2) rotate(120deg);
+        }
+
+        .stars:nth-child(4) {
+            background-image: 
+                radial-gradient(1px 1px at 35px 45px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 55px 85px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 65px 175px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 105px 55px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 145px 95px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 250px 250px;
+            animation: twinkle 5s infinite;
+            opacity: 0.35;
+            transform: scale(1.5) rotate(170deg);
+        }
+
+        .stars:nth-child(5) {
+            background-image: 
+                radial-gradient(1px 1px at 15px 25px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 35px 65px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 45px 155px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 85px 35px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 125px 75px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 150px 150px;
+            animation: twinkle 7s infinite;
+            opacity: 0.45;
+            transform: scale(0.8) rotate(230deg);
+        }
+
+        @keyframes twinkle {
+            0% {
+                opacity: 0.3;
+                animation-timing-function: ease-in;
+            }
+            50% {
+                opacity: 0.8;
+                animation-timing-function: linear;
+            }
+            100% {
+                opacity: 0.3;
+            }
+        }
+
+        /* Added star movement animation */
+        .stars {
+            animation: starMove 120s linear infinite;
+        }
+
+        .stars:nth-child(1) { animation-delay: 0s; }
+        .stars:nth-child(2) { animation-delay: -24s; }
+        .stars:nth-child(3) { animation-delay: -48s; }
+        .stars:nth-child(4) { animation-delay: -72s; }
+        .stars:nth-child(5) { animation-delay: -96s; }
+
+        @keyframes starMove {
+            from { transform: translateY(0%); }
+            to { transform: translateY(100%); }
+        }
+    </style>
+</head>
+<body>
+   <div id="app">
+        <div class="background"></div>
+        <div class="fade"></div>
+        <div class="text-container">
+            <div class="text" id="credits-content">
+                <!-- Content will be inserted here -->
+            </div>
+            <div class="footer-text">
+                Thank you all for being part of the stream! ❤️
+            </div>
+        </div>
+    </div>
+    
+    <div id="space">
+        <div class="stars"></div>
+        <div class="stars"></div>
+        <div class="stars"></div>
+        <div class="stars"></div>
+        <div class="stars"></div>
+    </div>
+
+    <script>
+        // User tracking
+        const users = new Map();
+
+        class User {
+            constructor(name, type) {
+                this.name = name;
+                this.type = type;
+                this.messageCount = 0;
+                this.donations = 0;
+                this.isMember = false;
+            }
+
+            get score() {
+                return (
+                    this.messageCount * 1 +
+                    this.donations * 100 +
+                    (this.isMember ? 50 : 0)
+                );
+            }
+
+            get displayName() {
+                let badges = [];
+                if (this.isMember) badges.push('👑');
+                if (this.donations > 0) badges.push('💝');
+                if (this.messageCount > 10) badges.push('💬');
+                
+                return `${this.name} ${badges.join(' ')} [${this.type}]`;
+            }
+        }
+
+        function getOrCreateUser(name, type) {
+            const key = `${name}-${type}`;
+            if (!users.has(key)) {
+                users.set(key, new User(name, type));
+            }
+            return users.get(key);
+        }
+
+        function processData(data) {
+            console.log(data);
+            
+            if (data.content) {
+                data = data.content;
+            }
+
+            if (!data.chatname || !data.type) return;
+
+            const user = getOrCreateUser(data.chatname, data.type);
+            user.messageCount++;
+
+            if (data.membership) {
+                user.isMember = true;
+            }
+
+            if (data.hasDonation) {
+                const [amount] = data.hasDonation.split(' ');
+                user.donations += parseFloat(amount);
+            }
+        }
+
+        function generateCreditsContent() {
+            const sortedUsers = Array.from(users.values())
+                .sort((a, b) => b.score - a.score);
+
+            const vips = sortedUsers.filter(u => u.score >= 150);
+            const regulars = sortedUsers.filter(u => u.score >= 50 && u.score < 150);
+            const participants = sortedUsers.filter(u => u.score < 50);
+
+            let content = '';
+
+            if (vips.length > 0) {
+                content += '<div class="category-header">VIP Supporters</div>';
+                content += vips.map(u => u.displayName).join('<br>') + '<br><br>';
+            }
+
+            if (regulars.length > 0) {
+                content += '<div class="category-header">Regular Supporters</div>';
+                content += regulars.map(u => u.displayName).join('<br>') + '<br><br>';
+            }
+
+            if (participants.length > 0) {
+                content += '<div class="category-header">Stream Participants</div>';
+                content += participants.map(u => u.displayName).join('<br>');
+            }
+
+            return content;
+        }
+
+        // IFRAME setup for Social Stream Ninja
+        const iframe = document.createElement("iframe");
+        const filename = "dock";
+        const urlParams = new URLSearchParams(window.location.search);
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + 
+            urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+
+        const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+        const eventer = window[eventMethod];
+        const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+        eventer(messageEvent, function (e) {
+            if (e.source != iframe.contentWindow) return;
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+
+        // Visibility handling
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                document.body.classList.add('visible');
+                document.getElementById('app').classList.add('visible');
+                
+                // Generate and insert credits content
+                const creditsContent = document.getElementById('credits-content');
+                creditsContent.innerHTML = generateCreditsContent();
+                
+                // Start the animation
+                document.querySelector('.text-container').classList.add('animate');
+            }
+        });
+    </script>
+</body>
+</html>

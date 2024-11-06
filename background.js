@@ -2690,7 +2690,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			data.chatimg = "";
 			data.type = "youtube";
 			if (Math.random() > 0.9) {
-				data.hasDonation = "100 gold";
+				data.hasDonation = "2500 gold";
 				data.membership = "";
 				data.chatname = "Bob";
 				data.chatbadges = [];
