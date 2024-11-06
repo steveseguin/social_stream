@@ -625,63 +625,61 @@ function getRecentMessages(chatname, limit, timeWindow) {
 let isProcessing = false;
 const lastResponseTime = {};
 async function processMessageWithOllama(data) {
+	
     const currentTime = Date.now();
 	if (isProcessing) { // nice.
         return;
     }
 	isProcessing = true;
-	
-	let ollamaRateLimitPerTab = 5000;
-	if (settings.ollamaRateLimitPerTab){
-		ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting)||0);
-	}
-	
-	if (!settings.ollamaoverlayonly){
-		if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
-			isProcessing = false;
-			return; // Skip this message if we've responded recently
+	try {
+		let ollamaRateLimitPerTab = 5000;
+		if (settings.ollamaRateLimitPerTab){
+			ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting)||0);
 		}
-	}
-    
-	let botname = "🤖💬";
-	if (settings.ollamabotname && settings.ollamabotname.textsetting){
-		botname = settings.ollamabotname.textsetting.trim();
-	}
-	
-    if (!data.chatmessage || data.chatmessage.startsWith(botname+":")) {
-		isProcessing = false;
-        return;
-    }
-    var cleanedText = data.chatmessage;
-            
-    if (!data.textonly) {
-        cleanedText = decodeAndCleanHtml(cleanedText);
-    }
-	
-	cleanedText = cleanedText.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "").replace(/[\u200D\uFE0F]/g, ""); // Remove zero-width joiner and variation selector
-	cleanedText = cleanedText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, ""); // fail safe?
-	cleanedText = cleanedText.replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim();
-	
-	if (!cleanedText) {
-		isProcessing = false;
-        return;
-    }
-    
-    var score = levenshtein(cleanedText, lastSentMessage);
-    if (score < 7) { // make sure bot doesn't respond to itself or to the host.
-		isProcessing = false;
-        return;
-    }
-	
-    try {
-		let additionalInstructions = "";
-		if (settings.ollamaprompt){
-			additionalInstructions = settings.ollamaprompt.textsetting;
+		
+		if (!settings.ollamaoverlayonly && data.tid && lastResponseTime[data.tid]){
+			if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
+				isProcessing = false;
+				return; // Skip this message if we've responded recently
+			}
 		}
+		
 		let botname = "🤖💬";
 		if (settings.ollamabotname && settings.ollamabotname.textsetting){
 			botname = settings.ollamabotname.textsetting.trim();
 		}
+		
+		if (!data.chatmessage || data.chatmessage.startsWith(botname+":")) {
+			isProcessing = false;
+			return;
+		}
+		var cleanedText = data.chatmessage;
+				
+		if (!data.textonly) {
+			cleanedText = decodeAndCleanHtml(cleanedText);
+		}
+		
+		cleanedText = cleanedText.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "").replace(/[\u200D\uFE0F]/g, ""); // Remove zero-width joiner and variation selector
+		cleanedText = cleanedText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, ""); // fail safe?
+		cleanedText = cleanedText.replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim();
+		
+		if (!cleanedText) {
+			isProcessing = false;
+			return;
+		}
+		
+		var score = levenshtein(cleanedText, lastSentMessage);
+		if (score < 7) { // make sure bot doesn't respond to itself or to the host.
+			isProcessing = false;
+			return;
+		}
+	
+    
+		let additionalInstructions = "";
+		if (settings.ollamaprompt){
+			additionalInstructions = settings.ollamaprompt.textsetting;
+		}
+		
         const response = await processUserInput(cleanedText, data, additionalInstructions);
 		
 		if (response && !(response.toLowerCase().startsWith("not available"))){
