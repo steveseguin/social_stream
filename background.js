@@ -3490,8 +3490,15 @@ function formatTitle(data) {
 function formatDescription(data) {
     let description = '';
     
-    if (data.chatmessage) {
-        description += `>>> ${data.chatmessage}\n\n`;
+    if (data.chatmessage) { 
+		if (!data.textonly){
+			// convert to text from html if not text only mode
+			var textArea = document.createElement('textarea');
+			textArea.innerHTML = data.chatmessage;
+			description += `>>> ${textArea.value.trim()}\n\n`;
+		} else {
+			description += `>>> ${data.chatmessage.trim()}\n\n`;
+		}
     }
     
     return description || undefined;
