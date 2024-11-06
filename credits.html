@@ -40,7 +40,7 @@
 		@keyframes translateText {
 			0% {
 				/* Starting position closer to view */
-				transform: rotateX(25deg) scale(0.7, 0.5) translateY(90vh);
+				transform: rotateX(25deg) scale(0.7, 0.5) translateY(100vh);
 			}
 			100% {
 				transform: rotateX(30deg) scale(0.65, 0.5) translateY(-250vh);
@@ -379,20 +379,47 @@
             }
         });
 
-        // Visibility handling
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden) {
-                document.body.classList.add('visible');
-                document.getElementById('app').classList.add('visible');
-                
-                // Generate and insert credits content
-                const creditsContent = document.getElementById('credits-content');
-                creditsContent.innerHTML = generateCreditsContent();
-                
-                // Start the animation
-                document.querySelector('.text-container').classList.add('animate');
-            }
-        });
+		document.addEventListener('visibilitychange', function() {
+			const appElement = document.getElementById('app');
+			const textContainer = document.querySelector('.text-container');
+			
+			if (!document.hidden) {
+				// Page becomes visible
+				document.body.classList.add('visible');
+				appElement.classList.add('visible');
+				
+				// Generate and insert credits content
+				const creditsContent = document.getElementById('credits-content');
+				creditsContent.innerHTML = generateCreditsContent();
+				
+				// Force a reflow before starting animation
+				void textContainer.offsetWidth;
+				
+				// Small delay before adding animation class
+				setTimeout(() => {
+					textContainer.classList.add('animate');
+				}, 50);
+			} else {
+				// Page becomes hidden
+				document.body.classList.remove('visible');
+				appElement.classList.remove('visible');
+				
+				// Remove animation class to reset position
+				textContainer.classList.remove('animate');
+			}
+		});
+		
+		document.querySelector('.text-container').addEventListener('animationend', function() {
+			// Clear collected names when animation completes
+			users.clear();
+			
+			// Remove the animation class to reset position
+			this.classList.remove('animate');
+			
+			// Hide the app
+			document.getElementById('app').classList.remove('visible');
+			document.body.classList.remove('visible');
+		});
     </script>
 </body>
 </html>
