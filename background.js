@@ -6546,7 +6546,14 @@ async function applyBotActions(data, tab = false) {
 		if (settings.ollama){
 			if (Date.now() - lastSentTimestamp > 5000) {
 				try{
-					processMessageWithOllama(data);
+					if (data.type && data.type == "stageten"){
+						if (data && data.chatmessage && (data.chatmessage.toLowerCase().includes("stage") || data.chatmessage.toLowerCase().includes("manager"))){
+							console.log(data);
+							processMessageWithOllama(data);
+						}
+					} else {
+						processMessageWithOllama(data);
+					}
 				} catch(e){
 					console.log(e); // ai.js file missing?
 				}

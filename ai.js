@@ -621,6 +621,111 @@ function getRecentMessages(chatname, limit, timeWindow) {
     });
 }
 
+function checkTriggerWords(triggerString, sentence) {
+    // Split triggers by comma and trim
+    const triggers = triggerString.split(',').map(t => t.trim()).filter(t => t);
+    
+    // Separate required, excluded and normal triggers
+    const required = [];
+    const excluded = [];
+    const normal = [];
+    
+    triggers.forEach(trigger => {
+        // Handle the different types of triggers
+        if (trigger.startsWith('+')) {
+            required.push(processTrigger(trigger.slice(1)));
+        } else if (trigger.startsWith('-')) {
+            excluded.push(processTrigger(trigger.slice(1)));
+        } else {
+            normal.push(processTrigger(trigger));
+        }
+    });
+    
+    // Helper function to process each trigger word
+    function processTrigger(trigger) {
+        const isQuoted = trigger.startsWith('"') && trigger.endsWith('"');
+        let word = trigger;
+        let startBoundary = false;
+        let endBoundary = false;
+        
+        // Handle quotes
+        if (isQuoted) {
+            word = trigger.slice(1, -1);
+        }
+        
+        // Handle spaces
+        if (word.startsWith(' ')) {
+            startBoundary = true;
+            word = word.trimStart();
+        }
+        if (word.endsWith(' ')) {
+            endBoundary = true;
+            word = word.trimEnd();
+        }
+        
+        return {
+            word,
+            isQuoted,
+            startBoundary,
+            endBoundary
+        };
+    }
+    
+    // Helper function to check if a word matches in the sentence
+    function checkWord(triggerObj, sentence) {
+        const { word, isQuoted, startBoundary, endBoundary } = triggerObj;
+        
+        // For quoted strings, do exact match
+        if (isQuoted) {
+            return sentence.includes(word);
+        }
+        
+        // Convert to lowercase for case-insensitive matching if not quoted
+        const lcWord = word.toLowerCase();
+        const lcSentence = sentence.toLowerCase();
+        
+        // Split sentence into tokens, treating special characters at start of words as part of the word
+        const matches = lcSentence.match(/[!/@#$%^&*]?\w+(?:'\w+)*|[.,;]|\s+/g) || [];
+        
+        for (let i = 0; i < matches.length; i++) {
+            const current = matches[i];
+            
+            // Skip pure punctuation and spaces
+            if (!/\w/.test(current)) continue;
+            
+            if (current === lcWord) {
+                // Check boundaries if required
+                if (startBoundary && i > 0 && /\w/.test(matches[i - 1])) continue;
+                if (endBoundary && i < matches.length - 1 && /\w/.test(matches[i + 1])) continue;
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    // Check excluded words first - if any match, return false
+    for (const trigger of excluded) {
+        if (checkWord(trigger, sentence)) {
+            return false;
+        }
+    }
+    
+    // Check required words - all must match
+    for (const trigger of required) {
+        if (!checkWord(trigger, sentence)) {
+            return false;
+        }
+    }
+    
+    // If there are normal triggers, at least one must match
+    if (normal.length > 0) {
+        return normal.some(trigger => checkWord(trigger, sentence));
+    }
+    
+    // If no normal triggers and all required/excluded checks passed, return true
+    return true;
+}
 
 let isProcessing = false;
 const lastResponseTime = {};
@@ -644,6 +749,8 @@ async function processMessageWithOllama(data) {
 			}
 		}
 		
+
+		
 		let botname = "🤖💬";
 		if (settings.ollamabotname && settings.ollamabotname.textsetting){
 			botname = settings.ollamabotname.textsetting.trim();
@@ -653,6 +760,14 @@ async function processMessageWithOllama(data) {
 			isProcessing = false;
 			return;
 		}
+		
+		if (settings.bottriggerwords && settings.bottriggerwords.textsetting.trim()){
+			if (!checkTriggerWords(settings.bottriggerwords.textsetting, data.chatmessage)){
+				isProcessing = false;
+				return;
+			}
+		}
+		
 		var cleanedText = data.chatmessage;
 				
 		if (!data.textonly) {
