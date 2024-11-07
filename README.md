@@ -271,7 +271,7 @@ There is an upcoming standalone version of Social Stream Ninja, which installs a
 To try out the preview test version of the app, you can download it below, but keep in mind that the bugs are still being worked out:
 
 [https://github.com/steveseguin/social_stream/releases/](https://github.com/steveseguin/social_stream/releases)
-Mac and PC are supported currently, with Linux support coming later on.
+MacOS and Windows 10/11 (x64) are supported currently, with limited Linux support now available via an AppImage.
 
 Please note:  If using the same session ID in both the browser extension and the standalone version, you will only be able to use one at a time. 
 
