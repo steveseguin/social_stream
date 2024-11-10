@@ -2678,6 +2678,7 @@
 				roomID = urlParams.get("id");
 			} else if (window.location.protocol == "file:") {
 				roomID = prompt("Enter your session ID here, or add it to the URL.");
+				roomID = validateRoomId(roomID)
 				if (roomID) {
 					var href = window.location.href;
 					var arr = href.split("?");
@@ -2690,11 +2691,19 @@
 					window.history.pushState({ path: newurl.toString() }, "", newurl.toString());
 				} else {
 					document.write("You need to provide your extension's session ID for this page to work");
+					alert("Invalid session ID");
+					throw new Error('Invalid session ID');
 				}
 			} else {
 				window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
 			}
-
+			
+			roomID = validateRoomId(roomID)
+			if (!roomID) {
+				document.write("Invalid session ID");
+				throw new Error('Invalid session ID');
+			}
+			
 			var password = "false";
 			if (urlParams.has("password")) {
 				password = urlParams.get("password") || "false";
@@ -2963,6 +2972,48 @@
 					transitionType.push("animate__animated");
 				}
 				animateout = "animate__" + urlParams.get("animateout");
+			}
+
+			function validateRoomId(roomId) {
+				if (roomId == null || roomId === '') {
+					return false;
+				}
+				let sanitizedId = String(roomId).trim();
+
+				if (sanitizedId.length < 1) {
+					return false;
+				}
+				const reservedValues = [
+					'undefined',
+					'null',
+					'false',
+					'true',
+					'NaN',
+					'default',
+					'room',
+					'lobby',
+					'test',
+					'nothing',
+					'0',
+					'1',
+					'none'
+				];
+				if (reservedValues.includes(sanitizedId.toLowerCase())) {
+					return false;
+				}
+				sanitizedId = sanitizedId.replace(/[^a-zA-Z0-9]/g, '_');
+				if (/^_+$/.test(sanitizedId)) {
+					return false;
+				}
+				if (sanitizedId.length < 2) {
+					return false;
+				}
+				const MAX_LENGTH = 80;
+				if (sanitizedId.length > MAX_LENGTH) {
+					return false;
+				}
+
+				return sanitizedId;
 			}
 
 			function updateAudioSource(newUrl) {
@@ -6774,6 +6825,28 @@
 				const textContent = strippedStr.replace(/<[^>]*>/g, '');
 				return textContent.length === 0;
 			}
+			
+			function wrapEmojis(text) {
+				let flagCounter = 0;
+				let flags = [];
+				
+				text = text.replace(/(\uD83C[\uDDE6-\uDDFF]){2}/g, (match) => {
+					flags.push(match);
+					return `###FLAG${flagCounter++}###`;
+				});
+				
+				text = text.replace(
+					/([\u2011-\u26FF]|[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDD10-\uDDFF])/g,
+					"<span class='emoji'>$1</span>"
+				);
+				flags.forEach((flag, index) => {
+					text = text.replace(
+						`###FLAG${index}###`,
+						`<span class='emoji'>${flag}</span>`
+					);
+				});
+				return text;
+			}
 
 			function processData(data, reloaded = false) {
 				if (data.contents) {
@@ -7048,7 +7121,8 @@
 
 					if (chatmessage) {
 						if (stylizeEmoji && !reloaded) {
-							chatmessage = chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "<span class='emoji'>$1</span>");
+							//chatmessage = chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "<span class='emoji'>$1</span>");
+							chatmessage = wrapEmojis(chatmessage);
 						}
 						if (!stripHTML) {
 							// we want to reuse this, but only if HTML is allowed

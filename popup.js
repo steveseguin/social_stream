@@ -2024,12 +2024,19 @@ function updateSettings(ele, sync=true, value=null){
 	} else if (ele.dataset.special){
 		
 		if (ele.dataset.special==="session"){
-			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
-				chrome.storage.sync.set({
-					streamID: ele.value
-				});
+			
+			let xsx = validateRoomId(ele.value);
+			if (!xsx){
+				alert("Invalid session ID.");
+			} else {
+				ele.value = xsx;
+				if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
+					chrome.storage.sync.set({
+						streamID: xsx
+					});
+				}
+				chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, streamID: xsx}, function (response) {log("streamID updated");});
 			}
-			chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, streamID: ele.value}, function (response) {log("streamID updated");});
 			
 		} else if (ele.dataset.special==="password"){
 			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
@@ -2051,6 +2058,48 @@ function updateSettings(ele, sync=true, value=null){
 	} 
 	
 	refreshLinks();
+}
+
+function validateRoomId(roomId) {
+	if (roomId == null || roomId === '') {
+		return false;
+	}
+	let sanitizedId = String(roomId).trim();
+
+	if (sanitizedId.length < 1) {
+		return false;
+	}
+	const reservedValues = [
+		'undefined',
+		'null',
+		'false',
+		'true',
+		'NaN',
+		'default',
+		'room',
+		'lobby',
+		'test',
+		'nothing',
+		'0',
+		'1',
+		'none'
+	];
+	if (reservedValues.includes(sanitizedId.toLowerCase())) {
+		return false;
+	}
+	sanitizedId = sanitizedId.replace(/[^a-zA-Z0-9]/g, '_');
+	if (/^_+$/.test(sanitizedId)) {
+		return false;
+	}
+	if (sanitizedId.length < 2) {
+		return false;
+	}
+	const MAX_LENGTH = 80;
+	if (sanitizedId.length > MAX_LENGTH) {
+		return false;
+	}
+	// throw new Error('Invalid room ID');
+	return sanitizedId;
 }
 
 function refreshLinks(){

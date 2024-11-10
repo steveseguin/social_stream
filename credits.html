@@ -32,24 +32,27 @@
 		
 		.footer-text {
 			color: white;
-			font-size: 500%;
+			font-size: 14vh;
 			text-align: center;
 			padding-top:20%;
 		}
 
 		@keyframes translateText {
 			0% {
-				/* Starting position closer to view */
-				transform: rotateX(25deg) scale(0.7, 0.5) translateY(100vh);
+				transform: rotateX(15deg) scale(1.0, 1.0) translateY(66vh);
 			}
+			
+			10% {
+				transform: rotateX(20deg) scale(0.965, .95) translateY(-315.6vh);
+			}
+			
 			100% {
-				transform: rotateX(30deg) scale(0.65, 0.5) translateY(-250vh);
+				transform: rotateX(25deg) scale(0.65, 0.5) translateY(-3750vh);
 			}
 		}
 
-		/* Rest of the styles remain the same */
 		.text {
-			font-size: 4.5vh;
+			font-size: 9vh;
 			line-height: 1.4;
 			color: #ebbc3c;
 			text-align: center;
@@ -60,7 +63,7 @@
 		}
 
 		.category-header {
-			font-size: 5.5vh;
+			font-size: 11vh;
 			color: #ebbc3c;
 			margin: 2.5em 0 0.8em;
 			text-shadow: 0 0 16px #ffeb3b60, 0 0 3px #3bbeff88, 0 0 10px #ffffff83;
@@ -72,7 +75,7 @@
             height: 100vh;
             font-family: "Nunito Sans", sans-serif;
             perspective: 400px;
-            perspective-origin: center 50%;
+            perspective-origin: center 100%;
             overflow: hidden;
             display: none;
         }
@@ -113,7 +116,7 @@
             right: 0;
             left: 0;
             height: 50vh;
-            background: linear-gradient(0deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 1), rgba(0, 0, 0, 1));
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0),  rgba(0, 0, 0, .1), rgba(0, 0, 0, .3), rgba(0, 0, 0, .8));
             z-index: 10;
         }
 		
@@ -123,93 +126,98 @@
 			height: 100%;
 			padding-top: 120px;
 			/* Reduced translateY to start closer to visible area */
-			transform: rotateX(25deg) scale(0.7, 0.5) translateY(50vh);
+			transform: rotateX(25deg) scale(0.4, 0.6) translateY(50vh);
 		}
 
 		.text-container.animate {
-			animation: 45s linear translateText forwards;
+			animation: 600s linear translateText forwards;
 		}
 
 
-        /* Enhanced stars styling */
         .stars {
-            overflow: hidden;
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
-        }
+			overflow: visible;
+			position: fixed; /* Changed from absolute to fixed */
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			pointer-events: none;
+		}
 
-        .stars:nth-child(1) {
-            background-image: 
-                radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 50px 160px, #fff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0));
-            background-repeat: repeat;
-            background-size: 200px 200px;
-            animation: twinkle 4s infinite;
-            opacity: 0.5;
-            transform: scale(0.6) rotate(20deg);
-        }
+		.stars:nth-child(1) {
+			background-image: 
+				radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 50px 160px, #fff, rgba(0,0,0,0)),
+				radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+				radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0));
+			background-repeat: repeat;
+			background-size: 200px 200px;
+			animation: twinkle 4s infinite, starMove 1200s linear infinite;
+			opacity: 0.5;
+		}
 
-        .stars:nth-child(2) {
-            background-image: 
-                radial-gradient(1px 1px at 25px 35px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 45px 75px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 55px 165px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 95px 45px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 135px 85px, #fff, rgba(0,0,0,0));
-            background-repeat: repeat;
-            background-size: 300px 300px;
-            animation: twinkle 6s infinite;
-            opacity: 0.4;
-            transform: scale(1) rotate(60deg);
-        }
+		.stars:nth-child(2) {
+			background-image: 
+				radial-gradient(1px 1px at 25px 35px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 45px 75px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 55px 165px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 95px 45px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 135px 85px, #fff, rgba(0,0,0,0));
+			background-repeat: repeat;
+			background-size: 300px 300px;
+			animation: twinkle 6s infinite, starMove 1200s linear infinite;
+			opacity: 0.4;
+		}
 
-        .stars:nth-child(3) {
-            background-image: 
-                radial-gradient(1px 1px at 30px 40px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 50px 80px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 60px 170px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1.5px 1.5px at 100px 50px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1.5px 1.5px at 140px 90px, #fff, rgba(0,0,0,0));
-            background-repeat: repeat;
-            background-size: 400px 400px;
-            animation: twinkle 8s infinite;
-            opacity: 0.3;
-            transform: scale(2) rotate(120deg);
-        }
+		.stars:nth-child(3) {
+			background-image: 
+				radial-gradient(1px 1px at 30px 40px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 50px 80px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 60px 170px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1.5px 1.5px at 100px 50px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1.5px 1.5px at 140px 90px, #fff, rgba(0,0,0,0));
+			background-repeat: repeat;
+			background-size: 400px 400px;
+			animation: twinkle 8s infinite, starMove 1200s linear infinite;
+			opacity: 0.3;
+		}
 
-        .stars:nth-child(4) {
-            background-image: 
-                radial-gradient(1px 1px at 35px 45px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 55px 85px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 65px 175px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 105px 55px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 145px 95px, #fff, rgba(0,0,0,0));
-            background-repeat: repeat;
-            background-size: 250px 250px;
-            animation: twinkle 5s infinite;
-            opacity: 0.35;
-            transform: scale(1.5) rotate(170deg);
-        }
+		.stars:nth-child(4) {
+			background-image: 
+				radial-gradient(1px 1px at 35px 45px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 55px 85px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 65px 175px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 105px 55px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 145px 95px, #fff, rgba(0,0,0,0));
+			background-repeat: repeat;
+			background-size: 250px 250px;
+			animation: twinkle 5s infinite, starMove 1200s linear infinite;
+			opacity: 0.35;
+		}
 
-        .stars:nth-child(5) {
-            background-image: 
-                radial-gradient(1px 1px at 15px 25px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 35px 65px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 45px 155px, #fff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 85px 35px, #fff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 125px 75px, #fff, rgba(0,0,0,0));
-            background-repeat: repeat;
-            background-size: 150px 150px;
-            animation: twinkle 7s infinite;
-            opacity: 0.45;
-            transform: scale(0.8) rotate(230deg);
-        }
+		.stars:nth-child(5) {
+			background-image: 
+				radial-gradient(1px 1px at 15px 25px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 35px 65px, #fff, rgba(0,0,0,0)),
+				radial-gradient(1px 1px at 45px 155px, #fff, rgba(0,0,0,0)),
+				radial-gradient(2px 2px at 85px 35px, #fff, rgba(0,0,0,0)),
+				radial-gradient(2px 2px at 125px 75px, #fff, rgba(0,0,0,0));
+			background-repeat: repeat;
+			background-size: 150px 150px;
+			animation: twinkle 7s infinite, starMove 1200s linear infinite;
+			opacity: 0.45;
+		}
+
+
+		@keyframes starMove {
+			from {
+				transform: translateY(-100%);
+			}
+			to {
+				transform: translateY(100%);
+			}
+		}
 
         @keyframes twinkle {
             0% {
@@ -225,22 +233,16 @@
             }
         }
 
-        /* Added star movement animation */
         .stars {
             animation: starMove 120s linear infinite;
         }
+		
+		.fadeout {
+			opacity: 0;
+			transition: opacity 2s ease-out;
+		}
 
-        .stars:nth-child(1) { animation-delay: 0s; }
-        .stars:nth-child(2) { animation-delay: -24s; }
-        .stars:nth-child(3) { animation-delay: -48s; }
-        .stars:nth-child(4) { animation-delay: -72s; }
-        .stars:nth-child(5) { animation-delay: -96s; }
-
-        @keyframes starMove {
-            from { transform: translateY(0%); }
-            to { transform: translateY(100%); }
-        }
-    </style>
+	</style>
 </head>
 <body>
    <div id="app">
@@ -403,6 +405,7 @@
 				// Page becomes hidden
 				document.body.classList.remove('visible');
 				appElement.classList.remove('visible');
+				textContainer.classList.remove('fadeout');
 				
 				// Remove animation class to reset position
 				textContainer.classList.remove('animate');
@@ -414,7 +417,7 @@
 			users.clear();
 			
 			// Remove the animation class to reset position
-			this.classList.remove('animate');
+			this.classList.add('fadeout');
 			
 			// Hide the app
 			document.getElementById('app').classList.remove('visible');
