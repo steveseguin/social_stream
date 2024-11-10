@@ -39,11 +39,15 @@
 
 		@keyframes translateText {
 			0% {
-				transform: rotateX(25deg) scale(1.0, 1.0) translateY(60vh);
+				transform: rotateX(15deg) scale(1.0, 1.0) translateY(60vh);
+			}
+			
+			10% {
+				transform: rotateX(20deg) scale(0.965, .95) translateY(-315.6vh);
 			}
 			
 			100% {
-				transform: rotateX(70deg) scale(0.65, 0.5) translateY(-3750vh);
+				transform: rotateX(25deg) scale(0.65, 0.5) translateY(-3750vh);
 			}
 		}
 
@@ -232,6 +236,12 @@
         .stars {
             animation: starMove 120s linear infinite;
         }
+		
+		.fadeout {
+			opacity: 0;
+			transition: opacity 2s ease-out;
+		}
+
 	</style>
 </head>
 <body>
@@ -395,6 +405,7 @@
 				// Page becomes hidden
 				document.body.classList.remove('visible');
 				appElement.classList.remove('visible');
+				textContainer.classList.remove('fadeout');
 				
 				// Remove animation class to reset position
 				textContainer.classList.remove('animate');
@@ -406,7 +417,7 @@
 			users.clear();
 			
 			// Remove the animation class to reset position
-			this.classList.remove('animate');
+			this.classList.add('fadeout');
 			
 			// Hide the app
 			document.getElementById('app').classList.remove('visible');
