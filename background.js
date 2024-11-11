@@ -2784,7 +2784,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						}
 					}
 				}
-				console.log("bot actions..");
+				//onsole.log("bot actions..");
 				try {
 					request.message = await applyBotActions(request.message, sender.tab, reflection); // perform any immediate actions
 				} catch (e) {
@@ -2795,7 +2795,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					return response; // don't forward if action blocks it
 				}
 				
-				console.log("Sending");
+				//console.log("Sending");
 				
 				sendToDestinations(request.message); // send the data to the dock
 			} else {
@@ -6224,7 +6224,7 @@ async function applyBotActions(data, tab = false, reflection = false) {
 		
 		
 		if (settings.joke && data.chatmessage && data.chatmessage.toLowerCase() === "!joke") {
-			console.log(".");
+			//console.log(".");
 			//if (Date.now() - messageTimeout > 5100) {
 				var score = parseInt(Math.random() * 378);
 				var joke = jokes[score];
@@ -6415,6 +6415,8 @@ async function applyBotActions(data, tab = false, reflection = false) {
 				sendToDestinations(data);
 				return null;
 			}
+		} else if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(" said: ")){
+			return null;
 		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event){
 			sendToS10(data, false, true); // we'll handle the relay logic here instead
 		}

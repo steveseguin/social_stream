@@ -916,7 +916,6 @@
 
 	function start() {
 		if (!isExtensionOn) {
-			observerManager.cleanup();
 			return;
 		}
 

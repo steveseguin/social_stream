@@ -2361,20 +2361,21 @@ const TTSManager = {
     
     // Initialize the TTS system
     init(voices) {
-        this.audio = document.createElement("audio");
-        this.audio.onended = () => this.finishedAudio();
-        
-        this.voices = voices;
-        
-        // Add test button to the menu
-        const testButton = document.createElement('button');
-        testButton.textContent = "Test";
-        testButton.className = "tts-test-button";
-        testButton.onclick = () => this.testTTS();
-        
-        // Insert at the top of the TTS menu
-        const menuWrapper = document.querySelector('#ttsButton');
-        menuWrapper.replaceWith(testButton);
+		this.voices = voices;
+		if (!this.audio){
+			this.audio = document.createElement("audio");
+			this.audio.onended = () => this.finishedAudio();
+		}
+		const menuWrapper = document.querySelector('#ttsButton');
+        if (menuWrapper){
+			// Add test button to the menu
+			const testButton = document.createElement('button');
+			testButton.textContent = "Test";
+			testButton.className = "tts-test-button";
+			testButton.onclick = () => this.testTTS();
+			
+			menuWrapper.replaceWith(testButton);
+		}
     },
     
     // Get current settings from the menu
