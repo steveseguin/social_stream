@@ -6383,17 +6383,15 @@ async function applyBotActions(data, tab = false, reflection = false) {
 			//}
 		}
 		
-		
-		if (settings.relayall && !reflection &&  !skipRelay && data.chatmessage && data.chatname && !data.event && tab) {
+		if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(" said: ")){
+			return null;
+			
+		} else if (settings.relayall && !reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab) {
 			
 			if (checkExactDuplicateAlreadyRelayed(data.chatmessage, data.textonly, tab.id, false)) { 
 				return null;
 			}
-			if (data.chatmessage.includes(" said: ")) {
-				return null; // kill this message
-			} // probably a reply
-
-
+			
 			if (!data.bot) {
 				//messageTimeout = Date.now();
 				var msg = {};
@@ -6415,8 +6413,6 @@ async function applyBotActions(data, tab = false, reflection = false) {
 				sendToDestinations(data);
 				return null;
 			}
-		} else if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(" said: ")){
-			return null;
 		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event){
 			sendToS10(data, false, true); // we'll handle the relay logic here instead
 		}

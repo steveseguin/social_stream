@@ -1133,6 +1133,39 @@ function update(response, sync=true){
 									ele.value = response.settings[key].optionsetting;
 									updateSettings(ele, sync);
 								}
+								
+								if (key == "aiProvider"){
+									if (ele.value == "ollama"){
+										document.getElementById("ollamamodel").classList.remove("hidden");
+										document.getElementById("ollamaendpoint").classList.remove("hidden");
+										document.getElementById("chatgptApiKey").classList.add("hidden");
+										document.getElementById("geminiApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.add("hidden");
+										document.getElementById("chatgptmodel").classList.add("hidden");
+									} else if (ele.value == "chatgpt"){
+										document.getElementById("chatgptApiKey").classList.remove("hidden");
+										document.getElementById("ollamamodel").classList.add("hidden");
+										document.getElementById("ollamaendpoint").classList.add("hidden");
+										document.getElementById("geminiApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.add("hidden");
+										document.getElementById("chatgptmodel").classList.remove("hidden");
+									} else if (ele.value == "gemini"){
+										document.getElementById("geminiApiKey").classList.remove("hidden");
+										document.getElementById("ollamamodel").classList.add("hidden");
+										document.getElementById("ollamaendpoint").classList.add("hidden");
+										document.getElementById("chatgptApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.remove("hidden");
+										document.getElementById("chatgptmodel").classList.add("hidden");
+									} else {
+										document.getElementById("ollamamodel").classList.add("hidden");
+										document.getElementById("ollamaendpoint").classList.add("hidden");
+										document.getElementById("chatgptApiKey").classList.add("hidden");
+										document.getElementById("geminiApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.add("hidden");
+										document.getElementById("chatgptmodel").classList.add("hidden");
+									}
+								}
+								
 							}
 							if ("numbersetting" in response.settings[key]){
 								var ele = document.querySelector("input[data-numbersetting='"+key+"']");
@@ -1972,6 +2005,37 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("multipleChoiceOptions").classList.remove("hidden");
 			} else {
 				document.getElementById("multipleChoiceOptions").classList.add("hidden");
+			}
+		}
+		if (ele.dataset.optionsetting == "aiProvider"){
+			if (ele.value == "ollama"){
+				document.getElementById("ollamamodel").classList.remove("hidden");
+				document.getElementById("ollamaendpoint").classList.remove("hidden");
+				document.getElementById("chatgptApiKey").classList.add("hidden");
+				document.getElementById("geminiApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.add("hidden");
+				document.getElementById("chatgptmodel").classList.add("hidden");
+			} else if (ele.value == "chatgpt"){
+				document.getElementById("chatgptApiKey").classList.remove("hidden");
+				document.getElementById("ollamamodel").classList.add("hidden");
+				document.getElementById("ollamaendpoint").classList.add("hidden");
+				document.getElementById("geminiApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.add("hidden");
+				document.getElementById("chatgptmodel").classList.remove("hidden");
+			} else if (ele.value == "gemini"){
+				document.getElementById("geminiApiKey").classList.remove("hidden");
+				document.getElementById("ollamamodel").classList.add("hidden");
+				document.getElementById("ollamaendpoint").classList.add("hidden");
+				document.getElementById("chatgptApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.remove("hidden");
+				document.getElementById("chatgptmodel").classList.add("hidden");
+			} else {
+				document.getElementById("ollamamodel").classList.add("hidden");
+				document.getElementById("ollamaendpoint").classList.add("hidden");
+				document.getElementById("chatgptApiKey").classList.add("hidden");
+				document.getElementById("geminiApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.add("hidden");
+				document.getElementById("chatgptmodel").classList.add("hidden");
 			}
 		}
 		
