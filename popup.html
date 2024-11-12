@@ -4246,18 +4246,50 @@ input:checked + .slider:before {
 								<p>You can install one for free with Ollama: <a href="https://github.com/steveseguin/social_stream/blob/main/ai.md" style="color:lightblue" target="_blank">Installation Guide Here</a></p>
 
 								<h3>Configure LLM API 🦙</h3>
+								
 								<div>
+									<select id="aiProvider" data-optionsetting="aiProvider" class="textInput">
+										<option selected value="ollama">Ollama (Local)</option>
+										<option value="chatgpt">ChatGPT API</option>
+										<option value="gemini">Gemini API</option>
+									</select>
+								<div>
+								</div>	
+									<div id="ollamaendpoint" class="hidden textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
+										<label for="ollamaendpoint"><span data-translate="ollama-API-endpoint">&gt; Ollama API endpoint</span></label>
+									</div>
+									
+									<div id="chatgptApiKey" class="textInputContainer hidden" style="width: 95%;">
+										<input type="password" class="textInput" autocomplete="off" placeholder="Your OpenAI API key" data-textsetting="chatgptApiKey" />
+										<label for="chatgptApiKey">&gt; OpenAI API Key</label>
+									</div>
+									
+									<div id="geminiApiKey" class="textInputContainer hidden" style="width: 95%;">
+										<input type="password"  class="textInput" autocomplete="off" placeholder="Your Google API key" data-textsetting="geminiApiKey" />
+										<label for="geminiApiKey">&gt; Google API Key</label>
+									</div>
+								</div>
+								
+								<div id="ollamamodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="ollamamodel" class="textInput" autocomplete="off" placeholder="eg: llama3.1" data-textsetting="ollamamodel" />
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: llama3.2" data-textsetting="ollamamodel" />
 										<label for="ollamamodel"><span data-translate="ollama-model">&gt; Ollama Model to use</span></label>
 									</div>
 								</div>
-								<div>
+								<div id="geminimodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="ollamaendpoint" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
-										<label for="ollamaendpoint"><span data-translate="ollama-API-endpoint">&gt; Ollama API endpoint</span></label>
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-1.5-flash" data-textsetting="geminimodel" />
+										<label for="geminimodel"><span data-translate="geminimodel">&gt; Gemini Model to use</span></label>
 									</div>
 								</div>
+								<div id="chatgptmodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gpt-4o-mini" data-textsetting="chatgptmodel" />
+										<label for="chatgptmodel"><span data-translate="chatgptmodel">&gt; ChatGPT Model to use</span></label>
+									</div>
+								</div>
+								
 								
 								<h3><span data-translate="local-censor-bot">Censor bot options 🤖🚫🤬</span></h3>
 								<div>
@@ -4279,12 +4311,12 @@ input:checked + .slider:before {
 									</div>
 								</div>
 								<h3 title="Chat bots can reply to the chat"><span data-translate="local-chat-bot">Chat bot 🤖💬</span></h3>
-								<div style="display: inline-block;" title="Enable the Ollama AI Bot responder; requires Ollama to be installed locally.">
+								<div style="display: inline-block;" title="Enable the LLM AI Bot responder.">
 									<label class="switch">
 										<input type="checkbox" id="ollama" data-setting="ollama" />
 										<span class="slider round"></span>
 									</label>
-									🚦 <span data-translate="enable-ollama-bot">Enable the Ollama AI chat bot</span>
+									🚦 <span data-translate="enable-ollama-bot">Enable the LLM AI chat bot</span>
 								</div>
 								<div>
 									<div class="textInputContainer" style="width: 95%;">

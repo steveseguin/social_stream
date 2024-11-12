@@ -152,19 +152,166 @@ const streamingPostNode = async function (URL, body, headers = {}, onChunk = nul
 
 const activeChatBotSessions = {};
 let tmpModelFallback = "";
-async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images=null) {
-    let ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
-    let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
-	
-	if (!ollamamodel){
-		const availableModel0 = await getFirstAvailableModel();
-		if (availableModel0) {
-			tmpModelFallback = availableModel0;
-		} else {
-			console.error("No Ollama model found");
-			return;
+async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null) {
+    const provider = settings.aiProvider?.optionsetting || "ollama";
+    const endpoint = provider === "ollama" 
+        ? (settings.ollamaendpoint?.textsetting || "http://localhost:11434")
+        : (provider === "chatgpt" ? "https://api.openai.com/v1/chat/completions" : "https://generativelanguage.googleapis.com/v1beta/chat/completions");
+    
+	function handleChunk(chunk, callback, appendToFull) {
+		const lines = chunk.split('\n');
+		for (const line of lines) {
+			if (line.trim() === 'data: [DONE]') {
+				responseComplete = true;
+				break;
+			}
+			if (line.trim() !== '') {
+				try {
+					// Remove 'data: ' prefix if it exists
+					const jsonStr = line.startsWith('data: ') ? line.slice(6) : line;
+					const data = JSON.parse(jsonStr);
+					
+					if (data.response) { // Ollama format
+						appendToFull(data.response);
+						if (callback) callback(data.response);
+					} else if (data.choices?.[0]?.delta?.content) { // ChatGPT/Gemini format
+						const content = data.choices[0].delta.content;
+						if (content) { // Only append if there's actual content
+							appendToFull(content);
+							if (callback) callback(content);
+						}
+					} else if (data.candidates?.[0]?.content?.parts?.[0]?.text) { // Legacy Gemini format
+						appendToFull(data.candidates[0].content.parts[0].text);
+						if (callback) callback(data.candidates[0].content.parts[0].text);
+					}
+					if (data.choices?.[0]?.finish_reason === "stop" || data.done) {
+						responseComplete = true;
+						break;
+					}
+				} catch (e) {
+					// console.warn("Parse error:", e, line);
+					const match = line.match(/"response":"(.*?)"/);
+					if (match && match[1]) {
+						const extractedResponse = match[1];
+						appendToFull(extractedResponse);
+						if (callback) callback(extractedResponse);
+					}
+				}
+			}
 		}
 	}
+    if (provider === "ollama") {
+		
+        let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
+        if (!ollamamodel) {
+            const availableModel0 = await getFirstAvailableModel();
+            if (availableModel0) {
+                tmpModelFallback = availableModel0;
+            } else {
+                console.error("No Ollama model found");
+                return;
+            }
+        }
+        const result = await makeRequest(ollamamodel);
+        if (result.aborted) {
+            return result.response + "💥";
+        } else if (result.error && result.error === 404) {
+            try {
+                const availableModel = await getFirstAvailableModel();
+                if (availableModel) {
+                    tmpModelFallback = availableModel;
+                    setTimeout(() => {
+                        tmpModelFallback = ""; 
+                    }, 60000);
+                    const fallbackResult = await makeRequest(availableModel);
+                    if (fallbackResult.aborted) {
+                        return fallbackResult.response + "💥";
+                    } else if (fallbackResult.error) {
+                        throw new Error(fallbackResult.message);
+                    }
+                    return fallbackResult.complete ? fallbackResult.response : fallbackResult.response + "💥";
+                }
+            } catch (fallbackError) {
+                console.warn("Error in callOllamaAPI even with fallback:", fallbackError);
+                throw fallbackError;
+            }
+        } else if (result.error) {
+            return;
+        }
+        return result.complete ? result.response : result.response + "💥";
+    } else {
+        const apiKey = provider === "chatgpt" ? settings.chatgptApiKey?.textsetting : settings.geminiApiKey?.textsetting;
+        if (!apiKey) return;
+
+        // Now both ChatGPT and Gemini use the same message format
+		// let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
+        const message = {
+            model: provider === "chatgpt" ? (settings.chatgptmodel?.textsetting || "gpt-4o-mini") : (settings.geminimodel?.textsetting || "gemini-1.5-flash"),
+            messages: [{
+                role: "user",
+                content: prompt
+            }],
+            stream: callback !== null
+        };
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        };
+
+        try {
+            if (callback) {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(message),
+                    signal: abortController?.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+                let responseComplete = false;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        responseComplete = true;
+                        break;
+                    }
+                    const chunk = decoder.decode(value);
+                    handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
+                }
+				//console.log(fullResponse);
+                return fullResponse;
+            } else {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(message),
+                    signal: abortController?.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                // Both APIs now return the same format
+				//console.log(data);
+                return data.choices[0].message.content;
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                return { aborted: true };
+            }
+            throw error;
+        }
+    }
 
     async function makeRequest(currentModel) {
         const isStreaming = callback !== null;
@@ -184,67 +331,63 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 
             let response;
             if (typeof ipcRenderer !== 'undefined') {
-                // Electron environment
-				
-				if (isStreaming) {
-					response = await new Promise((resolve, reject) => {
-						const channelId = `streaming-nodepost-${Date.now()}`;
-						
-						ipcRenderer.on(channelId, (event, chunk) => {
-							if (chunk === null) {
-								responseComplete = true;
-								resolve({ ok: true });
-							} else if (typeof chunk === 'object' && chunk.error) {
-								// This is the error response
-								resolve(chunk);
-							} else {
-								handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
-							}
-						});
-						
-						const message = {
-								model: currentModel,
-								prompt: prompt,
-								stream: true
-							};
-						
-						if (images){
-							message.images = images;
-						}
+                // Your existing Electron implementation
+                if (isStreaming) {
+                    response = await new Promise((resolve, reject) => {
+                        const channelId = `streaming-nodepost-${Date.now()}`;
+                        
+                        ipcRenderer.on(channelId, (event, chunk) => {
+                            if (chunk === null) {
+                                responseComplete = true;
+                                resolve({ ok: true });
+                            } else if (typeof chunk === 'object' && chunk.error) {
+                                resolve(chunk);
+                            } else {
+                                handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
+                            }
+                        });
+                        
+                        const message = {
+                            model: currentModel,
+                            prompt: prompt,
+                            stream: true
+                        };
+                        
+                        if (images){
+                            message.images = images;
+                        }
 
-						ipcRenderer.send('streaming-nodepost', {
-							channelId,
-							url: `${ollamaendpoint}/api/generate`,
-							body: message,
-							headers: { 'Content-Type': 'application/json' }
-						});
+                        ipcRenderer.send('streaming-nodepost', {
+                            channelId,
+                            url: `${endpoint}/api/generate`,
+                            body: message,
+                            headers: { 'Content-Type': 'application/json' }
+                        });
 
-						abortController.signal.addEventListener('abort', () => {
-							ipcRenderer.send(`${channelId}-abort`);
-						});
-					});
+                        abortController.signal.addEventListener('abort', () => {
+                            ipcRenderer.send(`${channelId}-abort`);
+                        });
+                    });
 
-					if (response.error) {
-						return response;
-					}
-				} else {
-					
-					const message = {
-						model: currentModel,
-						prompt: prompt,
-						stream: false
-					};
-					
-					if (images){
-						message.images = images;
-					}
-					
-					response = fetchNode(`${ollamaendpoint}/api/generate`, {
+                    if (response.error) {
+                        return response;
+                    }
+                } else {
+                    // Your existing non-streaming Electron implementation
+                    const message = {
+                        model: currentModel,
+                        prompt: prompt,
+                        stream: false
+                    };
+                    
+                    if (images){
+                        message.images = images;
+                    }
+                    
+                    response = fetchNode(`${endpoint}/api/generate`, {
                         'Content-Type': 'application/json',
                     }, 'POST', message);
-
-					// console.log(response);
-					
+                    
                     if (response.status === 404) {
                         return { error: 404, message: `Model ${currentModel} not found` };
                     } else if (response.status !== 200) {
@@ -259,23 +402,20 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                         console.error("Error parsing JSON:", e);
                         return { error: true, message: "Error parsing response" };
                     }
-				}
+                }
             } else {
-                // Web environment
-				
-				const message = {
-					model: currentModel,
-					prompt: prompt,
-					stream: isStreaming
-				};
-				
-				if (images){
-					message.images = images;
-				}
-				
-				//console.log(message);
-				
-                response = await fetch(`${ollamaendpoint}/api/generate`, {
+                // Your existing Web implementation
+                const message = {
+                    model: currentModel,
+                    prompt: prompt,
+                    stream: isStreaming
+                };
+                
+                if (images){
+                    message.images = images;
+                }
+                
+                response = await fetch(`${endpoint}/api/generate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -283,17 +423,15 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                     body: JSON.stringify(message),
                     signal: abortController ? abortController.signal : undefined,
                 });
-				
-				//console.log(response);
 
-				if (!response.ok) {
-					if (response.status === 404) {
-						return { error: 404,  message: `Model ${currentModel} not found` };
-					} else if (response.status){
-						return { error: response.status, message: `HTTP error! status: ${response.status}` };
-					}
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        return { error: 404, message: `Model ${currentModel} not found` };
+                    } else if (response.status) {
+                        return { error: response.status, message: `HTTP error! status: ${response.status}` };
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 if (isStreaming) {
                     const reader = response.body.getReader();
@@ -301,13 +439,11 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 
                     while (true) {
                         const { done, value } = await reader.read();
-						//console.log(done,value);
                         if (done) {
                             responseComplete = true;
                             break;
                         }
                         const chunk = decoder.decode(value);
-						//console.log(chunk);
                         handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
                     }
                 } else {
@@ -316,8 +452,8 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                     responseComplete = true;
                 }
             }
-			
-			return { success: true, response: fullResponse, complete: responseComplete };
+            
+            return { success: true, response: fullResponse, complete: responseComplete };
         } catch (error) {
             if (error.name === 'AbortError') {
                 return { aborted: true, response: fullResponse };
@@ -330,67 +466,6 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                 delete activeChatBotSessions[UUID];
             }
         }
-    }
-
-   function handleChunk(chunk, callback, appendToFull) {
-        const lines = chunk.split('\n');
-        for (const line of lines) {
-            if (line.trim() !== '') {
-                try {
-                    // Attempt to parse the JSON
-                    const data = JSON.parse(line);
-                    if (data.response) {
-                        appendToFull(data.response);
-                        if (callback) callback(data.response);
-                    }
-                    if (data.done) {
-                        responseComplete = true;
-						break;
-                    }
-                } catch (e) {
-                    // If parsing fails, log the error and the problematic line
-                    
-                    // Attempt to extract any text content from the line
-                    const match = line.match(/"response":"(.*?)"/);
-                    if (match && match[1]) {
-                        const extractedResponse = match[1];
-                        appendToFull(extractedResponse);
-                        if (callback) callback(extractedResponse);
-                    }
-                }
-            }
-        }
-    }
-
-    const result = await makeRequest(ollamamodel); 
-    if (result.aborted) {
-        return result.response + "💥";
-    } else if (result.error && result.error === 404) {
-        console.warn(`Failed to use model ${ollamamodel}. Attempting to get first available model.`);
-        try {
-            const availableModel = await getFirstAvailableModel();
-            if (availableModel) {
-                tmpModelFallback = availableModel;
-                setTimeout(() => {
-                    tmpModelFallback = ""; // allow for trying the original model again.
-                }, 60000);
-                const fallbackResult = await makeRequest(availableModel);
-                if (fallbackResult.aborted) {
-                    return fallbackResult.response + "💥";
-                } else if (fallbackResult.error) {
-                    throw new Error(fallbackResult.message);
-                }
-                return fallbackResult.complete ? fallbackResult.response : fallbackResult.response + "💥";
-            }
-            return;
-        } catch (fallbackError) {
-            console.warn("Error in callOllamaAPI even with fallback:", fallbackError);
-            throw fallbackError;
-        }
-    } else if (result.error) {
-        return;
-    } else {
-        return result.complete ? result.response : result.response + "💥";
     }
 }
 
@@ -622,16 +697,22 @@ function getRecentMessages(chatname, limit, timeWindow) {
 }
 
 function checkTriggerWords(triggerString, sentence) {
-    // Split triggers by comma and trim
-    const triggers = triggerString.split(',').map(t => t.trim()).filter(t => t);
+    // For phrase matching, first check if it's a simple space-separated phrase (no commas or modifiers)
+    if (!triggerString.includes(',') && !triggerString.includes('+') && !triggerString.includes('-') && !triggerString.includes('"')) {
+        const phrase = triggerString.toLowerCase().trim();
+        return sentence.toLowerCase().includes(phrase);
+    }
+
+    // Rest of the function for comma-separated and modified triggers
+    const triggers = triggerString.match(/(?:[^,\s"]+|"[^"]*")+/g)
+        .map(t => t.trim())
+        .filter(t => t);
     
-    // Separate required, excluded and normal triggers
     const required = [];
     const excluded = [];
     const normal = [];
     
     triggers.forEach(trigger => {
-        // Handle the different types of triggers
         if (trigger.startsWith('+')) {
             required.push(processTrigger(trigger.slice(1)));
         } else if (trigger.startsWith('-')) {
@@ -641,19 +722,16 @@ function checkTriggerWords(triggerString, sentence) {
         }
     });
     
-    // Helper function to process each trigger word
     function processTrigger(trigger) {
         const isQuoted = trigger.startsWith('"') && trigger.endsWith('"');
         let word = trigger;
         let startBoundary = false;
         let endBoundary = false;
         
-        // Handle quotes
         if (isQuoted) {
             word = trigger.slice(1, -1);
         }
         
-        // Handle spaces
         if (word.startsWith(' ')) {
             startBoundary = true;
             word = word.trimStart();
@@ -671,30 +749,24 @@ function checkTriggerWords(triggerString, sentence) {
         };
     }
     
-    // Helper function to check if a word matches in the sentence
     function checkWord(triggerObj, sentence) {
         const { word, isQuoted, startBoundary, endBoundary } = triggerObj;
         
-        // For quoted strings, do exact match
         if (isQuoted) {
             return sentence.includes(word);
         }
         
-        // Convert to lowercase for case-insensitive matching if not quoted
         const lcWord = word.toLowerCase();
         const lcSentence = sentence.toLowerCase();
         
-        // Split sentence into tokens, treating special characters at start of words as part of the word
         const matches = lcSentence.match(/[!/@#$%^&*]?\w+(?:'\w+)*|[.,;]|\s+/g) || [];
         
         for (let i = 0; i < matches.length; i++) {
             const current = matches[i];
             
-            // Skip pure punctuation and spaces
             if (!/\w/.test(current)) continue;
             
             if (current === lcWord) {
-                // Check boundaries if required
                 if (startBoundary && i > 0 && /\w/.test(matches[i - 1])) continue;
                 if (endBoundary && i < matches.length - 1 && /\w/.test(matches[i + 1])) continue;
                 return true;
@@ -704,33 +776,31 @@ function checkTriggerWords(triggerString, sentence) {
         return false;
     }
     
-    // Check excluded words first - if any match, return false
     for (const trigger of excluded) {
         if (checkWord(trigger, sentence)) {
             return false;
         }
     }
     
-    // Check required words - all must match
     for (const trigger of required) {
         if (!checkWord(trigger, sentence)) {
             return false;
         }
     }
     
-    // If there are normal triggers, at least one must match
     if (normal.length > 0) {
         return normal.some(trigger => checkWord(trigger, sentence));
     }
     
-    // If no normal triggers and all required/excluded checks passed, return true
     return true;
 }
 
 let isProcessing = false;
 const lastResponseTime = {};
 async function processMessageWithOllama(data) {
-	
+	if (!data.tid){
+		return;
+	}
     const currentTime = Date.now();
 	if (isProcessing) { // nice.
         return;
@@ -749,8 +819,6 @@ async function processMessageWithOllama(data) {
 			}
 		}
 		
-
-		
 		let botname = "🤖💬";
 		if (settings.ollamabotname && settings.ollamabotname.textsetting){
 			botname = settings.ollamabotname.textsetting.trim();
@@ -767,7 +835,6 @@ async function processMessageWithOllama(data) {
 				return;
 			}
 		}
-		
 		var cleanedText = data.chatmessage;
 				
 		if (!data.textonly) {
@@ -799,14 +866,22 @@ async function processMessageWithOllama(data) {
 		
 		if (response && !(response.toLowerCase().startsWith("not available"))){
 			
-			sendTargetP2P({"chatmessage":response,"chatname":botname, "chatimg":"./icons/bot.png", "type":"socialstream", "request": data, "tts": (settings.ollamatts ? true : false)}, "bot");
+			sendTargetP2P(
+				{"chatmessage":response,
+					"chatname":botname, "chatimg":"./icons/bot.png", 
+					"type":"socialstream", 
+					"request": data, 
+					"tts": (settings.ollamatts ? true : false)
+				}, 
+				"bot");
 			
 			if (!settings.ollamaoverlayonly){
 				const msg = {
 					tid: data.tid,
-					response: botname+": " + response.trim()
+					response: botname+": " + response.trim(),
+					bot: true
 				};
-				processResponse(msg);
+				sendMessageToTabs(msg);
 			
 				lastResponseTime[data.tid] = Date.now();
 			}
@@ -1158,7 +1233,7 @@ User ${data.chatname || 'user'} says: ${userInput}
 Your response:`;
 			log(userInput);
             let response =  await callOllamaAPI(prompt);
-			if (!response || response.includes("NO_RESPONSE") || response.startsWith("No ") || response.startsWith("NO ")){
+			if (!response || response.includes("RESPONSE") || response.startsWith("No ") || response.startsWith("NO ") || response.includes("NO_")  || response.includes("No_") || response.includes("NO-")){
 				return false;
 			}
 			return response;

@@ -304,6 +304,12 @@ String.prototype.replaceAllCase = function (strReplace, strWith) {
 	return this.replace(reg, strWith);
 };
 
+const validTLDs = new Set(["a","aaa","aarp","abb","abbott","abbvie","abc","able","abogado","abudhabi","ac","academy","accenture","accountant","accountants","aco","actor","ad","ads","adult","ae","aeg","aero","aetna","af","afl","africa","ag","agakhan","agency","ai","aig","airbus","airforce","airtel","akdn","al","alibaba","alipay","allfinanz","allstate","ally","alsace","alstom","am","amazon","americanexpress","americanfamily","amex","amfam","amica","amsterdam","analytics","android","anquan","anz","ao","aol","apartments","app","apple","aq","aquarelle","ar","arab","aramco","archi","army","arpa","art","arte","as","asda","asia","associates","at","athleta","attorney","au","auction","audi","audible","audio","auspost","author","auto","autos","aw","aws","ax","axa","az","azure","b","ba","baby","baidu","banamex","band","bank","bar","barcelona","barclaycard","barclays","barefoot","bargains","baseball","basketball","bauhaus","bayern","bb","bbc","bbt","bbva","bcg","bcn","bd","be","beats","beauty","beer","bentley","berlin","best","bestbuy","bet","bf","bg","bh","bharti","bi","bible","bid","bike","bing","bingo","bio","biz","bj","black","blackfriday","blockbuster","blog","bloomberg","blue","bm","bms","bmw","bn","bnpparibas","bo","boats","boehringer","bofa","bom","bond","boo","book","booking","bosch","bostik","boston","bot","boutique","box","br","bradesco","bridgestone","broadway","broker","brother","brussels","bs","bt","build","builders","business","buy","buzz","bv","bw","by","bz","bzh","c","ca","cab","cafe","cal","call","calvinklein","cam","camera","camp","canon","capetown","capital","capitalone","car","caravan","cards","care","career","careers","cars","casa","case","cash","casino","cat","catering","catholic","cba","cbn","cbre","cc","cd","center","ceo","cern","cf","cfa","cfd","cg","ch","chanel","channel","charity","chase","chat","cheap","chintai","christmas","chrome","church","ci","cipriani","circle","cisco","citadel","citi","citic","city","ck","cl","claims","cleaning","click","clinic","clinique","clothing","cloud","club","clubmed","cm","cn","co","coach","codes","coffee","college","cologne","com","commbank","community","company","compare","computer","comsec","condos","construction","consulting","contact","contractors","cooking","cool","coop","corsica","country","coupon","coupons","courses","cpa","cr","credit","creditcard","creditunion","cricket","crown","crs","cruise","cruises","cu","cuisinella","cv","cw","cx","cy","cymru","cyou","cz","d","dabur","dad","dance","data","date","dating","datsun","day","dclk","dds","de","deal","dealer","deals","degree","delivery","dell","deloitte","delta","democrat","dental","dentist","desi","design","dev","dhl","diamonds","diet","digital","direct","directory","discount","discover","dish","diy","dj","dk","dm","dnp","do","docs","doctor","dog","domains","dot","download","drive","dtv","dubai","dunlop","dupont","durban","dvag","dvr","dz","e","earth","eat","ec","eco","edeka","edu","education","ee","eg","email","emerck","energy","engineer","engineering","enterprises","epson","equipment","er","ericsson","erni","es","esq","estate","et","eu","eurovision","eus","events","exchange","expert","exposed","express","extraspace","f","fage","fail","fairwinds","faith","family","fan","fans","farm","farmers","fashion","fast","fedex","feedback","ferrari","ferrero","fi","fidelity","fido","film","final","finance","financial","fire","firestone","firmdale","fish","fishing","fit","fitness","fj","fk","flickr","flights","flir","florist","flowers","fly","fm","fo","foo","food","football","ford","forex","forsale","forum","foundation","fox","fr","free","fresenius","frl","frogans","frontier","ftr","fujitsu","fun","fund","furniture","futbol","fyi","g","ga","gal","gallery","gallo","gallup","game","games","gap","garden","gay","gb","gbiz","gd","gdn","ge","gea","gent","genting","george","gf","gg","ggee","gh","gi","gift","gifts","gives","giving","gl","glass","gle","global","globo","gm","gmail","gmbh","gmo","gmx","gn","godaddy","gold","goldpoint","golf","goo","goodyear","goog","google","gop","got","gov","gp","gq","gr","grainger","graphics","gratis","green","gripe","grocery","group","gs","gt","gu","gucci","guge","guide","guitars","guru","gw","gy","h","hair","hamburg","hangout","haus","hbo","hdfc","hdfcbank","health","healthcare","help","helsinki","here","hermes","hiphop","hisamitsu","hitachi","hiv","hk","hkt","hm","hn","hockey","holdings","holiday","homedepot","homegoods","homes","homesense","honda","horse","hospital","host","hosting","hot","hotels","hotmail","house","how","hr","hsbc","ht","hu","hughes","hyatt","hyundai","i","ibm","icbc","ice","icu","id","ie","ieee","ifm","ikano","il","im","imamat","imdb","immo","immobilien","in","inc","industries","infiniti","info","ing","ink","institute","insurance","insure","int","international","intuit","investments","io","ipiranga","iq","ir","irish","is","ismaili","ist","istanbul","it","itau","itv","j","jaguar","java","jcb","je","jeep","jetzt","jewelry","jio","jll","jm","jmp","jnj","jo","jobs","joburg","jot","joy","jp","jpmorgan","jprs","juegos","juniper","k","kaufen","kddi","ke","kerryhotels","kerrylogistics","kerryproperties","kfh","kg","kh","ki","kia","kids","kim","kindle","kitchen","kiwi","km","kn","koeln","komatsu","kosher","kp","kpmg","kpn","kr","krd","kred","kuokgroup","kw","ky","kyoto","kz","l","la","lacaixa","lamborghini","lamer","lancaster","land","landrover","lanxess","lasalle","lat","latino","latrobe","law","lawyer","lb","lc","lds","lease","leclerc","lefrak","legal","lego","lexus","lgbt","li","lidl","life","lifeinsurance","lifestyle","lighting","like","lilly","limited","limo","lincoln","link","lipsy","live","living","lk","llc","llp","loan","loans","locker","locus","lol","london","lotte","lotto","love","lpl","lplfinancial","lr","ls","lt","ltd","ltda","lu","lundbeck","luxe","luxury","lv","ly","m","ma","madrid","maif","maison","makeup","man","management","mango","map","market","marketing","markets","marriott","marshalls","mattel","mba","mc","mckinsey","md","me","med","media","meet","melbourne","meme","memorial","men","menu","merckmsd","mg","mh","miami","microsoft","mil","mini","mint","mit","mitsubishi","mk","ml","mlb","mls","mm","mma","mn","mo","mobi","mobile","moda","moe","moi","mom","monash","money","monster","mormon","mortgage","moscow","moto","motorcycles","mov","movie","mp","mq","mr","ms","msd","mt","mtn","mtr","mu","museum","music","mv","mw","mx","my","mz","n","na","nab","nagoya","name","navy","nba","nc","ne","nec","net","netbank","netflix","network","neustar","new","news","next","nextdirect","nexus","nf","nfl","ng","ngo","nhk","ni","nico","nike","nikon","ninja","nissan","nissay","nl","no","nokia","norton","now","nowruz","nowtv","np","nr","nra","nrw","ntt","nu","nyc","nz","o","obi","observer","office","okinawa","olayan","olayangroup","ollo","om","omega","one","ong","onl","online","ooo","open","oracle","orange","org","organic","origins","osaka","otsuka","ott","ovh","p","pa","page","panasonic","paris","pars","partners","parts","party","pay","pccw","pe","pet","pf","pfizer","pg","ph","pharmacy","phd","philips","phone","photo","photography","photos","physio","pics","pictet","pictures","pid","pin","ping","pink","pioneer","pizza","pk","pl","place","play","playstation","plumbing","plus","pm","pn","pnc","pohl","poker","politie","porn","post","pr","pramerica","praxi","press","prime","pro","prod","productions","prof","progressive","promo","properties","property","protection","pru","prudential","ps","pt","pub","pw","pwc","py","q","qa","qpon","quebec","quest","r","racing","radio","re","read","realestate","realtor","realty","recipes","red","redstone","redumbrella","rehab","reise","reisen","reit","reliance","ren","rent","rentals","repair","report","republican","rest","restaurant","review","reviews","rexroth","rich","richardli","ricoh","ril","rio","rip","ro","rocks","rodeo","rogers","room","rs","rsvp","ru","rugby","ruhr","run","rw","rwe","ryukyu","s","sa","saarland","safe","safety","sakura","sale","salon","samsclub","samsung","sandvik","sandvikcoromant","sanofi","sap","sarl","sas","save","saxo","sb","sbi","sbs","sc","scb","schaeffler","schmidt","scholarships","school","schule","schwarz","science","scot","sd","se","search","seat","secure","security","seek","select","sener","services","seven","sew","sex","sexy","sfr","sg","sh","shangrila","sharp","shell","shia","shiksha","shoes","shop","shopping","shouji","show","si","silk","sina","singles","site","sj","sk","ski","skin","sky","skype","sl","sling","sm","smart","smile","sn","sncf","so","soccer","social","softbank","software","sohu","solar","solutions","song","sony","soy","spa","space","sport","spot","sr","srl","ss","st","stada","staples","star","statebank","statefarm","stc","stcgroup","stockholm","storage","store","stream","studio","study","style","su","sucks","supplies","supply","support","surf","surgery","suzuki","sv","swatch","swiss","sx","sy","sydney","systems","sz","t","tab","taipei","talk","taobao","target","tatamotors","tatar","tattoo","tax","taxi","tc","tci","td","tdk","team","tech","technology","tel","temasek","tennis","teva","tf","tg","th","thd","theater","theatre","tiaa","tickets","tienda","tips","tires","tirol","tj","tjmaxx","tjx","tk","tkmaxx","tl","tm","tmall","tn","to","today","tokyo","tools","top","toray","toshiba","total","tours","town","toyota","toys","tr","trade","trading","training","travel","travelers","travelersinsurance","trust","trv","tt","tube","tui","tunes","tushu","tv","tvs","tw","tz","u","ua","ubank","ubs","ug","uk","unicom","university","uno","uol","ups","us","uy","uz","v","va","vacations","vana","vanguard","vc","ve","vegas","ventures","verisign","vermögensberater","vermögensberatung","versicherung","vet","vg","vi","viajes","video","vig","viking","villas","vin","vip","virgin","visa","vision","viva","vivo","vlaanderen","vn","vodka","volvo","vote","voting","voto","voyage","vu","w","wales","walmart","walter","wang","wanggou","watch","watches","weather","weatherchannel","webcam","weber","website","wed","wedding","weibo","weir","wf","whoswho","wien","wiki","williamhill","win","windows","wine","winners","wme","wolterskluwer","woodside","work","works","world","wow","ws","wtc","wtf","x","xbox","xerox","xihuan","xin","xxx","xyz","y","yachts","yahoo","yamaxun","yandex","ye","yodobashi","yoga","yokohama","you","youtube","yt","yun","z","za","zappos","zara","zero","zip","zm","zone","zuerich","zw","IDNs","ελ","ευ","бг","бел","дети","ею","католик","ком","мкд","мон","москва","онлайн","орг","рус","рф","сайт","срб","укр","қаз","հայ","ישראל","קום","ابوظبي","ارامكو","الاردن","البحرين","الجزائر","السعودية","العليان","المغرب","امارات","ایران","بارت","بازار","بيتك","بھارت","تونس","سودان","سورية","شبكة","عراق","عرب","عمان","فلسطين","قطر","كاثوليك","كوم","مصر","مليسيا","موريتانيا","موقع","همراه","پاكستان","پاکستان","ڀارت","कॉम","नेट","भारत","भारतम्","भारोत","संगठन","বাংলা","ভারত","ভাৰত","ਭਾਰਤ","ભારત","ଭାରତ","இந்தியா","இலங்கை","சிங்கப்பூர்","భారత్","ಭಾರತ","ഭാരതം","ලංකා","คอม","ไทย","ລາວ","გე","みんな","アマゾン","クラウド","グーグル","コム","ストア","セール","ファッション","ポイント","世界","中信","中国","中國","中文网","亚马逊","企业","佛山","信息","健康","八卦","公司","公益","台湾","台灣","商城","商店","商标","嘉里","嘉里大酒店","在线","大拿","天主教","娱乐","家電","广东","微博","慈善","我爱你","手机","招聘","政务","政府","新加坡","新闻","时尚","書籍","机构","淡马锡","游戏","澳門","点看","移动","组织机构","网址","网店","网站","网络","联通","谷歌","购物","通販","集团","電訊盈科","飞利浦","食品","餐厅","香格里拉","香港","닷넷","닷컴","삼성","한국"]);
+			
+function isValidTLD(tld) {
+  return validTLDs.has(tld.toLowerCase());
+}
+
 function filterXSS(unsafe) {
 	// this is not foolproof, but it might catch some basic probe attacks that sneak in
 	try {
@@ -408,6 +414,233 @@ function filterXSS(unsafe) {
 	}
 }
 
+
+/////////////// bad word filter
+// I welcome updates/additions. The raw list can be found here: https://gist.github.com/steveseguin/da09a700e4fccd7ff82e68f32e384c9d
+var badWords = ["fuck","shit","cunt","bitch","nigger","fag","retard","rape","pussy","cock","asshole","whore","slut","gay","lesbian","transgender","transsexual","tranny","chink","spic","kike","jap","wop","redneck","hillbilly","white trash","douche","dick","bastard","fucker","motherfucker","ass","anus","vagina","penis","testicles","masturbate","orgasm","ejaculate","clitoris","pubic","genital","erect","erotic","porn","xxx","dildo","butt plug","anal","sodomy","pedophile","bestiality","necrophilia","incest","suicide","murder","terrorism","drugs","alcohol","smoking","weed","meth","crack","heroin","cocaine","opiate","opium","benzodiazepine","xanax","adderall","ritalin","steroids","viagra","cialis","prostitution","escort"];
+
+const alternativeChars = {
+	a: ["@", "4"],
+	e: ["3"],
+	i: ["1", "!"],
+	o: ["0"],
+	s: ["$", "5"],
+	t: ["7"],
+	c: ["<"]
+};
+function generateVariations(word) {
+	const variations = [word];
+	for (let i = 0; i < word.length; i++) {
+		const char = word[i].toLowerCase();
+		if (alternativeChars.hasOwnProperty(char)) {
+			const charVariations = alternativeChars[char];
+			const newVariations = [];
+			for (const variation of variations) {
+				for (const altChar of charVariations) {
+					const newWord = variation.slice(0, i) + altChar + variation.slice(i + 1);
+					newVariations.push(newWord);
+				}
+			}
+			variations.push(...newVariations);
+		}
+	}
+	return variations;
+}
+
+function generateVariationsList(words) {
+	const variationsList = [];
+	for (const word of words) {
+		variationsList.push(...generateVariations(word));
+	}
+	return variationsList.filter(word => !word.match(/[A-Z]/));
+}
+
+function createProfanityHashTable(profanityVariationsList) {
+	const hashTable = {};
+	for (let i = 0; i < profanityVariationsList.length; i++) {
+		const word = profanityVariationsList[i].toLowerCase();
+		for (let j = 0; j < word.length; j++) {
+			const character = word[j];
+			if (!hashTable[character]) {
+				hashTable[character] = {};
+			}
+			hashTable[character][word] = true;
+		}
+	}
+	return hashTable;
+}
+
+function isProfanity(word) {
+	if (!profanityHashTable) {
+		return false;
+	}
+	const wordLower = word.toLowerCase();
+	const firstChar = wordLower[0];
+	const words = profanityHashTable[firstChar];
+	if (!words) {
+		return false;
+	}
+	return Boolean(words[wordLower]);
+}
+function filterProfanity(sentence) {
+	let words = sentence.toLowerCase().split(/[\s\.\-_!?,]+/);
+	const uniqueWords = new Set(words);
+	for (let word of uniqueWords) {
+		if (isProfanity(word)) {
+			sentence = sentence.replace(new RegExp("\\b" + word + "\\b", "gi"), "*".repeat(word.length));
+		}
+	}
+	return sentence;
+}
+var profanityHashTable = false;
+
+function initialLoadBadWords(){
+	try {
+		// use a custom file named badwords.txt to replace the badWords that are hard-coded. one per line.
+		fetch("./badwords.txt")
+			.then(response => response.text())
+			.then(text => {
+				let customBadWords = text.split(/\r?\n|\r|\n/g);
+				customBadWords = generateVariationsList(customBadWords);
+				profanityHashTable = createProfanityHashTable(customBadWords);
+			})
+			.catch(error => {
+				try {
+					  const customBadwords = localStorage.getItem('customBadwords');
+					  if (customBadwords) {
+						let customBadWordsList = customBadwords.split(/\r?\n|\r|\n/g);
+						customBadWordsList = generateVariationsList(customBadWordsList);
+						profanityHashTable = createProfanityHashTable(customBadWordsList);
+					  } else {
+						// Use default badwords if no custom file is present
+						badWords = generateVariationsList(badWords);
+						profanityHashTable = createProfanityHashTable(badWords);
+					  }
+				} catch (e) {
+				  badWords = generateVariationsList(badWords);
+				  profanityHashTable = createProfanityHashTable(badWords);
+				}
+
+			});
+	} catch (e) {
+		badWords = generateVariationsList(badWords);
+		profanityHashTable = createProfanityHashTable(badWords);
+	}
+}
+initialLoadBadWords();
+
+/////// end of bad word filter
+
+
+var goodWordsHashTable = false;
+function isGoodWord(word) {
+	const wordLower = word.toLowerCase();
+	const firstChar = wordLower[0];
+	const words = goodWordsHashTable[firstChar];
+	if (!words) {
+		return false;
+	}
+	return Boolean(words[wordLower]);
+}
+function passGoodWords(sentence) {
+	let words = sentence.toLowerCase().split(/[\s\.\-_!?,]+/);
+	const uniqueWords = new Set(words);
+	for (let word of uniqueWords) {
+		if (!isGoodWord(word)) {
+			sentence = sentence.replace(new RegExp("\\b" + word + "\\b", "gi"), "*".repeat(word.length));
+		}
+	}
+	return sentence;
+}
+try {
+	// use a custom file named goodwords.txt to replace the badWords that are hard-coded. one per line.
+	fetch("./goodwords.txt")
+		.then(response => response.text())
+		.then(text => {
+			let customGoodWords = text.split(/\r?\n|\r|\n/g);
+			goodWordsHashTable = createProfanityHashTable(customGoodWords);
+		})
+		.catch(error => {
+			// no file found or error
+		});
+} catch (e) {}
+
+
+function replaceURLsWithSubstring(text, replacement = "[Link]") {
+  if (typeof text !== "string") {
+	return text;
+  }
+
+  try {
+	// This pattern matches potential URLs more strictly
+	const urlPattern = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g;
+
+	return text.replace(urlPattern, (match) => {
+	  // Split the match by dots to check the TLD
+	  const parts = match.split('.');
+	  const potentialTLD = parts[parts.length - 1].split(/[/?#]/)[0];
+
+	  // If it doesn't contain a slash, only replace if it starts with http:// or https://
+	  if (match.startsWith('http://') || match.startsWith('https://')) {
+		return replacement;
+	  }
+	  
+	  // Check if it's a valid TLD and contains a slash (indicating it's likely a URL)
+	  if (match.includes('/') || isValidTLD(potentialTLD)) {
+		return replacement;
+	  }
+
+	  // Otherwise, return the original match
+	  return match;
+	});
+  } catch (e) {
+	console.error(e);
+	return text;
+  }
+}
+
+function validateRoomId(roomId) {
+	if (roomId == null || roomId === '') {
+		return false;
+	}
+	let sanitizedId = String(roomId).trim();
+
+	if (sanitizedId.length < 1) {
+		return false;
+	}
+	const reservedValues = [
+		'undefined',
+		'null',
+		'false',
+		'true',
+		'NaN',
+		'default',
+		'room',
+		'lobby',
+		'test',
+		'nothing',
+		'0',
+		'1',
+		'none'
+	];
+	if (reservedValues.includes(sanitizedId.toLowerCase())) {
+		return false;
+	}
+	sanitizedId = sanitizedId.replace(/[^a-zA-Z0-9]/g, '_');
+	if (/^_+$/.test(sanitizedId)) {
+		return false;
+	}
+	if (sanitizedId.length < 2) {
+		return false;
+	}
+	const MAX_LENGTH = 80;
+	if (sanitizedId.length > MAX_LENGTH) {
+		return false;
+	}
+	// throw new Error('Invalid room ID');
+	return sanitizedId;
+}
+
 function loadSettings(item, resave = false) {
 	log("loadSettings (or saving new settings)", item);
 
@@ -416,11 +649,47 @@ function loadSettings(item, resave = false) {
 	if (item && item.streamID) {
 		if (streamID != item.streamID) {
 			streamID = item.streamID;
+			streamID = validateRoomId(streamID);
+			if (!streamID){
+				try {
+					chrome.notifications.create({
+						type: "basic",
+						iconUrl: "./icons/icon-128.png",
+						title: "Invalid session ID",
+						message: "Your session ID is invalid.\n\nPlease correct it to continue"
+					});
+					throw new Error('Invalid session ID');
+				} catch (e) {
+					console.error(e);
+					throw new Error('Invalid session ID');
+				}
+			}
 			reloadNeeded = true;
 		}
 	} else if (!streamID) {
 		reloadNeeded = true;
 		streamID = generateStreamID(); // not stream ID, so lets generate one; then lets save it.
+		streamID = validateRoomId(streamID);
+		if (!streamID){
+			streamID = generateStreamID();
+		}
+		
+		streamID = validateRoomId(streamID);
+		if (!streamID){
+			try {
+				chrome.notifications.create({
+					type: "basic",
+					iconUrl: "./icons/icon-128.png",
+					title: "Invalid session ID",
+					message: "Your session ID is invalid.\n\nPlease correct it to continue"
+				});
+				throw new Error('Invalid session ID');
+			} catch (e) {
+				console.error(e);
+				throw new Error('Invalid session ID');
+			}
+		}
+		
 		if (!isSSAPP) {
 			resave = true;
 			if (item) {
@@ -588,8 +857,8 @@ function checkIntervalState(i) {
 					//messageTimeout = Date.now();
 					var msg = {};
 					msg.response = settings["timemessagecommand" + i].textsetting;
-					//processResponse(msg, false, null, false, antispam);
-					processResponse(msg, false, null, false, antispam, false);
+					//sendMessageToTabs(msg, false, null, false, antispam);
+					sendMessageToTabs(msg, false, null, false, antispam, false);
 					
 				} else if (settings["timemessageinterval" + i].numbersetting) {
 					clearInterval(intervalMessages[i]);
@@ -607,8 +876,8 @@ function checkIntervalState(i) {
 							//messageTimeout = Date.now();
 							var msg = {};
 							msg.response = settings["timemessagecommand" + i].textsetting;
-							//processResponse(msg, false, null, false, antispam);
-							processResponse(msg, false, null, false, antispam, false);
+							//sendMessageToTabs(msg, false, null, false, antispam);
+							sendMessageToTabs(msg, false, null, false, antispam, false);
 						},
 						settings["timemessageinterval" + i].numbersetting * 60000,
 						i
@@ -630,7 +899,7 @@ function checkIntervalState(i) {
 						//messageTimeout = Date.now();
 						var msg = {};
 						msg.response = settings["timemessagecommand" + i].textsetting;
-						processResponse(msg, false, null, false, antispam, false);
+						sendMessageToTabs(msg, false, null, false, antispam, false);
 					},
 					15 * 60000,
 					i
@@ -680,7 +949,7 @@ async function loadmidi() {
 	} catch (e) {
 		settings.midiConfig = false;
 		log(e);
-		alert("File does not contain a valid JSON structure");
+		messagePopup({alert: "File does not contain a valid JSON structure"});
 	}
 	chrome.storage.local.set({
 		settings: settings
@@ -920,7 +1189,7 @@ async function importSettings(item = false) {
 	try {
 		loadSettings(JSON.parse(importFile), true);
 	} catch (e) {
-		alert("File does not contain a valid JSON structure");
+		messagePopup({alert: "File does not contain a valid JSON structure"});
 	}
 }
 
@@ -1298,7 +1567,7 @@ async function getPronouns() {
 					Pronouns = {};
 				}
 			} else {
-				console.log("Pronouns recovered from storage");
+				log("Pronouns recovered from storage");
 			}
 		} catch(e){
 			Pronouns = {};
@@ -2446,12 +2715,18 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						return response;
 					}
 				}
-
-				if (settings.firstsourceonly || settings.hideallreplies) {
-					if (!verifyOriginalNewIncomingMessage(request.message.chatmessage.replace(/\s\s+/g, " "), request.message.textonly)) { 
+				
+				let reflection = false;
+				
+				if (settings.relayall || (settings.firstsourceonly || settings.hideallreplies)){
+					reflection = checkExactDuplicateAlreadyReceived(request.message.chatmessage,request.message.textonly, request.message.tid);
+					if (reflection && (settings.firstsourceonly || settings.hideallreplies)){
 						sendResponse({ state: isExtensionOn });
 						return response;
 					}
+				}
+				if (reflection===null){
+					reflection = true;
 				}
 				
 				if (settings.noduplicates && // filters echos if same TYPE, USERID, and MESSAGE 
@@ -2477,12 +2752,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						}
 					}
 					try {
-						//console.log("Sender:", sender);
-						//console.log("Message:", request.message);
 						const shouldAllowMessage = shouldAllowYouTubeMessage(sender.tab.id, sender.tab.url, request.message, sender.frameId);
-						//console.log("Should allow message:", shouldAllowMessage);
 						if (!shouldAllowMessage) {
-						 // console.log("Blocking message from:", sender.tab.url, "Frame ID:", sender.frameId);
 						  return;
 						}
 					  } catch(e) {
@@ -2513,15 +2784,19 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						}
 					}
 				}
-
+				//onsole.log("bot actions..");
 				try {
-					request.message = await applyBotActions(request.message, sender.tab); // perform any immediate actions
+					request.message = await applyBotActions(request.message, sender.tab, reflection); // perform any immediate actions
 				} catch (e) {
-					log(e);
+					console.warn(e);
 				}
 				if (!request.message) {
+					console.log("no message");
 					return response; // don't forward if action blocks it
 				}
+				
+				//console.log("Sending");
+				
 				sendToDestinations(request.message); // send the data to the dock
 			} else {
 				sendResponse({ state: isExtensionOn });
@@ -2585,8 +2860,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			var action = {};
 			action.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
 			action.response = ""; // empty response, as we just want to keep alive
-			//processResponse(action);
-			processResponse(action, false, null, false, false, false);
+			//sendMessageToTabs(action);
+			sendMessageToTabs(action, false, null, false, false, false);
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "tellajoke") {
 			tellAJoke();
@@ -2774,6 +3049,23 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "sidUpdated") {
 			if (request.streamID) {
 				streamID = request.streamID;
+				
+				streamID = validateRoomId(streamID);
+				if (!streamID){
+					try {
+						chrome.notifications.create({
+							type: "basic",
+							iconUrl: "./icons/icon-128.png",
+							title: "Invalid session ID",
+							message: "Your session ID is invalid.\n\nPlease correct it to continue"
+						});
+						throw new Error('Invalid session ID');
+					} catch (e) {
+						console.error(e);
+						throw new Error('Invalid session ID');
+					}
+				}
+				
 				if (isSSAPP) {
 					if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
 						chrome.storage.sync.set({
@@ -2919,34 +3211,6 @@ function _min(d0, d1, d2, bx, ay) {
 }
 //// End of levenshtein code
 ////////////////////////////
-
-var previousMessages = [];
-function checkExactDuplicateAlreadyRelayed(msg) { // FOR RELAY PURPOSES ONLY.
-	// just in case the " said: " filter doesn't work, maybe due to a missing space or HTML
-	
-	var cleanText = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
-	cleanText = cleanText.replace(/\s\s+/g, " ").trim();
-	if (!cleanText) {
-		return false;
-	}
-	
-	if (previousMessages.includes(cleanText)) {
-		// console.error(cleanText, previousMessages);
-		if (!cleanText.includes("!")){ // relayed messages dont have a ! in it, so this is a duplicate command being sent?
-			var ret = true;
-		} else {
-			var ret = false;
-		}
-	} else {
-		// console.warn(cleanText, previousMessages);
-		var ret = false;
-	}
-	previousMessages.push(cleanText);
-	setTimeout(function () {
-		previousMessages.shift();
-	}, 60000);
-	return ret;
-}
 
 function verifyOriginalNewIncomingMessage(msg, cleaned=false) {
 	
@@ -3263,6 +3527,121 @@ function sendToH2R(data) {
 		}
 	}
 }
+
+
+function sanitizeRelay(text, textonly=false, alt = false) {
+	if (!text.trim()) {
+		return text;
+	}
+	if (!textonly){
+		// convert to text from html if not text only mode
+		var textArea = document.createElement('textarea');
+		textArea.innerHTML = text;
+		text = textArea.value;
+	}
+	
+	text = text.replace(/(<([^>]+)>)/gi, "");
+	text = text.replace(/[!#@]/g, "");
+	text = text.replace(/cheer\d+/gi, " ");
+	text = text.replace(/\.(?=\S(?!$))/g, " ");
+	
+	if (!text.trim() && alt) {
+		return alt;
+	}
+	return text;
+}
+
+const messageStore = {};
+function checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, save=true) { // FOR RELAY PURPOSES ONLY.
+
+	const now = Date.now();
+	if (!save){
+		if (now - lastSentTimestamp > 10000) { // 10 seconds has passed; assume good.
+			return false;
+		}
+	}
+	
+	if (!sanitized){
+		var textArea = document.createElement('textarea');
+		textArea.innerHTML = msg;
+		msg = textArea.value.replace(/\s\s+/g, " ").trim();
+	} else {
+		msg = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
+		msg = msg.replace(/\s\s+/g, " ").trim();
+	}
+	
+	if (save){
+		return msg;
+	}
+	
+	if (!msg || !tabid) {
+		return false;
+	}
+	
+	if (!messageStore[tabid]){
+		return false;
+	}
+	
+    while (messageStore[tabid].length > 0 && now - messageStore[tabid][0].timestamp > 10000) {
+        messageStore[tabid].shift();
+    }
+	
+	return messageStore[tabid].some(entry => entry.message === msg && entry.relayMode);
+}
+
+// settings.firstsourceonly || settings.hideallreplies
+
+
+var alreadyCaptured = [];
+function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false) { // FOR RELAY PURPOSES ONLY.
+	const now = Date.now();
+	if (now - lastSentTimestamp > 10000) {// 10 seconds has passed; assume good.
+		return false;
+	}
+
+	if (!sanitized){
+		var textArea = document.createElement('textarea');
+		textArea.innerHTML = msg;
+		msg = textArea.value.replace(/\s\s+/g, " ").trim();
+	} else {
+		msg = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
+		msg = msg.replace(/\s\s+/g, " ").trim();
+	}
+	
+	if (!msg || !tabid) {
+		return false;
+	}
+	
+	if (!messageStore[tabid]){
+		return false;
+	}
+	
+	if (settings.firstsourceonly && !settings.hideallreplies){
+		for (var mm in alreadyCaptured){
+			if (now - alreadyCaptured[mm] > 10000){
+				delete alreadyCaptured[mm];
+			}
+		}
+		while (messageStore[tabid].length > 0 && (now - messageStore[tabid][0].timestamp > 10000)) {
+			messageStore[tabid].shift();
+		}
+		if (messageStore[tabid].some(entry => entry.message === msg)){
+			if (alreadyCaptured[msg]){
+				return true;
+			}
+			alreadyCaptured[msg] = now;
+			return null; // null !== false
+		} else {
+			return false;
+		}
+	}
+	
+    while (messageStore[tabid].length > 0 && now - messageStore[tabid][0].timestamp > 10000) {
+        messageStore[tabid].shift();
+    }
+	return messageStore[tabid].some(entry => entry.message === msg);
+}
+
 function sendToS10(data, fakechat=false, relayed=false) {
 	if (settings.s10 && settings.s10apikey && settings.s10apikey.textsetting) {
 		try {
@@ -3286,7 +3665,7 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			let cleaned = data.chatmessage;
 			if (data.textonly){
 				cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
-				cleaned = cleaned.replace(/\s\s+/g, " ");
+				cleaned = cleaned.replace(/\s\s+/g, " "); 
 			} else {
 				cleaned = decodeAndCleanHtml(cleaned);
 			}
@@ -3298,13 +3677,13 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				if (data.bot) {
 					return null;
 				}
-				if (checkExactDuplicateAlreadyRelayed(cleaned, true)){
+				console.log(".");
+				if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid)){
+					console.log("--");
 					return;
 				}
-			} else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, true)){
+			} else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid)){
 				return null;
-			} else {
-				checkExactDuplicateAlreadyRelayed(cleaned, true)
 			}
 			
 			if (fakechat){
@@ -3704,14 +4083,14 @@ function setupSocket() {
 				if (data.target) {
 					msg.destination = data.target;
 				}
-				resp = processResponse(msg, false, null, false, false, false);
+				resp = sendMessageToTabs(msg, false, null, false, false, false);
 			} else if (data.action && data.action === "sendEncodedChat" && data.value) {
 				var msg = {};
 				msg.response = decodeURIComponent(data.value);
 				if (data.target) {
 					msg.destination = decodeURIComponent(data.target);
 				}
-				resp = processResponse(msg, false, null, false, false, false);
+				resp = sendMessageToTabs(msg, false, null, false, false, false);
 			} else if (data.action && data.action === "blockUser" && data.value) {
 				var msg = {};
 				let source = data.target.trim().toLowerCase() || "*";
@@ -3796,7 +4175,7 @@ async function openchat(target = null, force=false) {
 	chrome.tabs.query({}, function (tabs) {
 		// tabs[i].url
 		if (chrome.runtime.lastError) {
-			console.warn(chrome.runtime.lastError.message);
+			//console.warn(chrome.runtime.lastError.message);
 		}
 		let urls = [];
 		tabs.forEach(tab => {
@@ -4219,7 +4598,7 @@ function processWaitlist(data) {
 		}
 		var trigger = "!join";
 		if (settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim()) {
-			trigger = settings.customwaitlistcommand.textsetting.trim();
+			trigger = settings.customwaitlistcommand.textsetting.trim() || trigger;
 		}
 		if (!data.chatmessage || !data.chatmessage.trim().toLowerCase().startsWith(trigger.toLowerCase())) {
 			return;
@@ -4293,12 +4672,12 @@ function initializeWaitlist() {
 			sendWaitlistConfig(false, true);
 			return;
 		}
-		console.log("initializeWaitlist");
+		//log("initializeWaitlist");
 		sendWaitlistConfig(waitlist, true);
 	} catch (e) {}
 }
 function removeWaitlist(n = 0) {
-	console.log("removeWaitlist");
+	log("removeWaitlist");
 	try {
 		var cc = 1;
 		for (var i = 0; i < waitlist.length; i++) {
@@ -4319,7 +4698,7 @@ function removeWaitlist(n = 0) {
 	} catch (e) {}
 }
 function highlightWaitlist(n = 0) {
-	console.log("highlightWaitlist");
+	log("highlightWaitlist");
 	try {
 		var cc = 1;
 		for (var i = 0; i < waitlist.length; i++) {
@@ -4354,7 +4733,7 @@ function shuffle(array) {
 	return array;
 }
 function selectRandomWaitlist(n = 1) {
-	console.log("selectRandomWaitlist: "+n);
+	log("selectRandomWaitlist: "+n);
 	try {
 		var cc = 1;
 		var selectable = [];
@@ -4604,35 +4983,66 @@ function loadIframe(streamID, pass = false) {
 var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent"; // lets us listen to the VDO.Ninja IFRAME API; ie: lets us talk to the dock
 var eventer = window[eventMethod];
 var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-var debuggerEnabled = {};
 var commandCounter = 0;
 
-function onDetach(debuggeeId) {
-	// for faking user input
-	debuggerEnabled[debuggeeId.tabId] = false;
+const debuggerState = {
+  attachments: {}, // Track active debugger attachments
+  timeouts: {}    // Track detach timeouts
+};
+
+
+function safeDebuggerAttach(tabId, version, callback) {
+  if (debuggerState.attachments[tabId]) {
+    // Already attached, just call the callback
+    callback();
+    return;
+  }
+
+  // Clear any pending detach timeout
+  if (debuggerState.timeouts[tabId]) {
+    clearTimeout(debuggerState.timeouts[tabId]);
+    delete debuggerState.timeouts[tabId];
+  }
+
+  try {
+    chrome.debugger.attach({ tabId: tabId }, version, () => {
+      if (chrome.runtime.lastError) {
+        console.warn('Debugger attach error:', chrome.runtime.lastError);
+        callback(chrome.runtime.lastError);
+        return;
+      }
+      debuggerState.attachments[tabId] = true;
+      callback();
+    });
+  } catch(e) {
+    console.error('Debugger attach exception:', e);
+    callback(e);
+  }
 }
+
+function onDetach(debuggeeId) {
+    try {
+        chrome.runtime.lastError;
+    } catch(e) {}
+
+    if (debuggeeId.tabId) {
+        // Clear any existing timeout
+        if (debuggerState.timeouts[debuggeeId.tabId]) {
+            clearTimeout(debuggerState.timeouts[debuggeeId.tabId]);
+            delete debuggerState.timeouts[debuggeeId.tabId];
+        }
+        
+        // Clear the attachment state
+        debuggerState.attachments[debuggeeId.tabId] = false;
+	}
+}
+
 try {
 	chrome.debugger.onDetach.addListener(onDetach);
 } catch (e) {
 	log("'chrome.debugger' not supported by this browser");
 }
-function onAttach(debuggeeId, callback, message, a = null, b = null, c = null) {
-	// for faking user input
-	if (chrome.runtime.lastError) {
-		//log(chrome.runtime.lastError.message);
-		return;
-	}
-	debuggerEnabled[debuggeeId.tabId] = true;
-	if (c !== null) {
-		callback(debuggeeId.tabId, message, a, b, c);
-	} else if (b !== null) {
-		callback(debuggeeId.tabId, message, a, b);
-	} else if (a !== null) {
-		callback(debuggeeId.tabId, message, a);
-	} else {
-		callback(debuggeeId.tabId, message);
-	}
-}
+
 
 async function processIncomingRequest(request, UUID = false) { // from the dock or chat bot, etc.
 	if (settings.disablehost) {
@@ -4641,8 +5051,8 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 
 	if ("response" in request) {
 		// we receieved a response from the dock
-		//processResponse(request);
-		processResponse(request, false, null, false, false, false);
+		//sendMessageToTabs(request);
+		sendMessageToTabs(request, false, null, false, false, false);
 	} else if ("action" in request) {
 		if (request.action === "openChat") {
 			openchat(request.value || null);
@@ -5038,59 +5448,58 @@ function messagePopup(data) {
     });
     return true;
 }
+
 function pokeSite(url = false, tabid = false) {
-	if (!chrome.debugger) {
-		return false;
-	}
-	if (!isExtensionOn) {
-		return false;
-	} // extension not active, so don't let responder happen. Probably safer this way.
+    if (!chrome.debugger) {
+        return false;
+    }
+    if (!isExtensionOn) {
+        return false;
+    }
 
-	chrome.tabs.query({}, function (tabs) {
-		if (chrome.runtime.lastError) {
-			//console.warn(chrome.runtime.lastError.message);
-		}
-		var published = {};
-		for (var i = 0; i < tabs.length; i++) {
-			try {
-				if (!tabs[i].url) {
-					continue;
-				}
-				if (tabs[i].url in published) {
-					continue;
-				} // skip. we already published to this tab.
-				if (tabs[i].url.startsWith("https://socialstream.ninja/")) {
-					continue;
-				}
-				if (tabs[i].url.startsWith("chrome-extension")) {
-					continue;
-				}
-				// if (!checkIfAllowed((tabs[i].url))){continue;}
-
-				published[tabs[i].url] = true;
-				if (tabid && tabid == tabs[i].id) {
-					if (!debuggerEnabled[tabs[i].id]) {
-						debuggerEnabled[tabs[i].id] = false;
-						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakePoke)); // enable the debugger to let us fake a user
-					} else {
-						generalFakePoke(tabs[i].id);
-					}
-				} else if (url) {
-					if (tabs[i].url.startsWith(url)) {
-						if (!debuggerEnabled[tabs[i].id]) {
-							debuggerEnabled[tabs[i].id] = false;
-							chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakePoke)); // enable the debugger to let us fake a user
-						} else {
-							generalFakePoke(tabs[i].id);
-						}
-					}
-				}
-			} catch (e) {
-				chrome.runtime.lastError;
-			}
-		}
-	});
-	return true;
+    chrome.tabs.query({}, function (tabs) {
+        if (chrome.runtime.lastError) {
+            //console.warn(chrome.runtime.lastError.message);
+        }
+        var published = {};
+        for (var i = 0; i < tabs.length; i++) {
+            try {
+                const currentTab = tabs[i];
+                
+                if (!currentTab.url) continue;
+                if (currentTab.url.startsWith("chrome://")) continue;  // Add this line
+                if (currentTab.url in published) continue;
+                if (currentTab.url.startsWith("https://socialstream.ninja/")) continue;
+                if (currentTab.url.startsWith("chrome-extension")) continue;
+                // if (!checkIfAllowed((currentTab.url))){continue;}
+                
+                published[currentTab.url] = true;
+                
+                if (tabid && tabid == currentTab.id) {
+                    safeDebuggerAttach(currentTab.id, "1.3", (error) => {
+                        if (error) {
+                            console.warn(`Failed to attach debugger to tab ${currentTab.id}:`, error);
+                            return;
+                        }
+                        generalFakePoke(currentTab.id);
+                    });
+                } else if (url) {
+                    if (currentTab.url.startsWith(url)) {
+                        safeDebuggerAttach(currentTab.id, "1.3", (error) => {
+                            if (error) {
+                                console.warn(`Failed to attach debugger to tab ${currentTab.id}:`, error);
+                                return;
+                            }
+                            generalFakePoke(currentTab.id);
+                        });
+                    }
+                }
+            } catch (e) {
+                chrome.runtime.lastError;
+            }
+        }
+    });
+    return true;
 }
 
 function generalFakePoke(tabid) {
@@ -5139,10 +5548,8 @@ function generalFakePoke(tabid) {
 										button: "left",
 										clickCount: 1
 									},
-									function (e) {
-										if (debuggerEnabled[tabid]) {
-											chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-										}
+									(e) => {
+										delayedDetach(tabid);
 									}
 								);
 							}
@@ -5152,217 +5559,263 @@ function generalFakePoke(tabid) {
 			}
 		);
 	} catch (e) {
-		if (debuggerEnabled[tabid]) {
-			chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-		}
+		console.log(e);
+		delayedDetach(tabid);
 	}
 }
 
-function processResponse(data, reverse = false, metadata = null, relay=false, antispam=false, overrideTimeout=3500) {
-	if (!chrome.debugger) {
-		return false;
-	}
-	if (!isExtensionOn) {
-		return false;
-	} // extension not active, so don't let responder happen. Probably safer this way.
-	if (settings.disablehost) {
-		return;
-	}
-	
-	if (antispam && settings["dynamictiming"]){
-		if (lastAntiSpam + 10 > messageCounter){
-			return;
-		}
-	}
-	
-	if (!overrideTimeout && ("tid" in data)){
-		if (data["tid"] in messageTimeout){
-			if (Date.now() - messageTimeout[tid] < overrideTimeout) {
-				// not enough time has passed yet.
-				//console.warn("not enough time has passed yet to send to :"+data["tid"]);
-				return;
-			}
-		}
-	}
-	
-	lastAntiSpam = messageCounter;
-	checkExactDuplicateAlreadyRelayed(data.response);
-	
-	
-	chrome.tabs.query({}, (tabs) => {
-		if (chrome.runtime.lastError) {
-			//console.warn(chrome.runtime.lastError.message);
-		}
-		var published = {};
-		for (var i = 0; i < tabs.length; i++) {
-			try {
-				if ("tid" in data && data.tid !== false && data.tid !== null) {
-					// if an action-response, we want to only respond to the tab that originated it
-
-					if (typeof data.tid == "object") {
-						// if a list of tabs
-
-						if (reverse) {
-							if (data.tid.includes(tabs[i].id.toString())) {
-								continue;
-							}
-						} else if (!data.tid.includes(tabs[i].id.toString())) {
-							continue;
-						}
-					} else {
-						if (reverse) {
-							if (data.tid === tabs[i].id) {
-								continue;
-							} else if (data.url && tabs[i].url && data.url === tabs[i].url) {
-								// don't send to the exact same URL; not just the same tab, incase the tab is open twice accidentally.
-								continue;
-							}
-						} else if (data.tid !== tabs[i].id) {
-							continue;
-						}
-					}
-				}
-				if (!tabs[i].url) {
-					continue;
-				}
-				if (tabs[i].url in published) {
-					continue;
-				} // skip. we already published to this tab.
-				if (tabs[i].url.startsWith("https://socialstream.ninja/")) {
-					continue;
-				}
-				if (tabs[i].url.startsWith("chrome-extension")) {
-					continue;
-				}
-				if (!checkIfAllowed(tabs[i].url)) {
-					continue;
-				}
-
-				if (data.destination && !tabs[i].url.includes(data.destination)) {
-					continue;
-				}
-
-				published[tabs[i].url] = true;
-				if (tabs[i].url.includes(".stageten.tv") && settings.s10apikey && settings.s10){
-					if (!data.response){continue;}
-					// we will not send fake chat as we're likely sending it via POST instead directly
-					if (metadata){
-						sendToS10(metadata, true);
-					} else {
-						var msg = {};
-						msg.chatmessage = data.response;
-						msg.type = "socialstream";
-						msg.chatimg = "https://socialstream.ninja/icons/icon-128.png"; 
-						sendToS10(msg, true); // contains the original message 
-					}
-				} else if (tabs[i].url.startsWith("https://www.twitch.tv/popout/")) {
-					// twitch, but there's also cases for youtube/facebook
-					if (!debuggerEnabled[tabs[i].id]) {
-						debuggerEnabled[tabs[i].id] = false;
-						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, false, false, overrideTimeout)); // enable the debugger to let us fake a user
-					} else {
-						generalFakeChat(tabs[i].id, data.response, false, true, false, false,overrideTimeout);
-					}
-				} else if (tabs[i].url.startsWith("https://boltplus.tv/")) {
-					// twitch, but there's also cases for youtube/facebook
-
-					if (!debuggerEnabled[tabs[i].id]) {
-						debuggerEnabled[tabs[i].id] = false;
-						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true, true, overrideTimeout)); // enable the debugger to let us fake a user
-					} else {
-						generalFakeChat(tabs[i].id, data.response, false, true, true, true, overrideTimeout);
-					}
-				} else if (tabs[i].url.startsWith("https://app.chime.aws/meetings/")) {
-					// twitch, but there's also cases for youtube/facebook
-					if (!debuggerEnabled[tabs[i].id]) {
-						debuggerEnabled[tabs[i].id] = false;
-						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true, false, overrideTimeout)); // enable the debugger to let us fake a user
-					} else {
-						generalFakeChat(tabs[i].id, data.response, false, true, true, false, overrideTimeout); // middle=true, keypress=true, backspace=false
-					}
-				} else if (tabs[i].url.startsWith("https://app.slack.com")) {
-					// twitch, but there's also cases for youtube/facebook
-					if (!debuggerEnabled[tabs[i].id]) {
-						debuggerEnabled[tabs[i].id] = false;
-						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, false, true, true, false, overrideTimeout)); // enable the debugger to let us fake a user
-					} else {
-						generalFakeChat(tabs[i].id, data.response, false, false, false, false, overrideTimeout); // middle=true, keypress=true, backspace=false
-					}
-				} else if (metadata && settings.fancystageten && tabs[i].url.includes(".stageten.tv/channel")) {
-					// twitch, but there's also cases for youtube/facebook
-
-					try {
-						log("SENDING ORIGINAL RAW DATA TO S10");
-						chrome.tabs.sendMessage(tabs[i].id, { metadata: metadata }, function (response = false) {
-							chrome.runtime.lastError;
-						});
-					} catch (e) {
-						console.error(e);
-					}
-				} else if (tabs[i].url.startsWith("https://app.zoom.us/")) { // I was getting double messages sent, so this I hope fixes that.
-					if (!debuggerEnabled[tabs[i].id]) {
-						debuggerEnabled[tabs[i].id] = false;
-						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, zoomFakeChat, data.response, false, true, false));
-					} else {
-						zoomFakeChat(tabs[i].id, data.response, false, true, false);
-					}
-					continue; // Skip the rest of the loop after handling Zoom
-				} else {
-					// all other destinations. ; generic
-					
-					if (tabs[i].url.includes("youtube.com/live_chat")) {
-						getYoutubeAvatarImage(tabs[i].url, true); // see if I can pre-cache the channel image, if not loaded.
-					}
-					
-					if (settings.notiktoklinks && tabs[i].url.includes("tiktok.com")) {
-						data.response = replaceURLsWithSubstring(data.response,"");
-					}
-
-					if (!debuggerEnabled[tabs[i].id]) {
-						debuggerEnabled[tabs[i].id] = false;
-						chrome.debugger.attach({ tabId: tabs[i].id }, "1.3", onAttach.bind(null, { tabId: tabs[i].id }, generalFakeChat, data.response, true, true, false, false, overrideTimeout)); // enable the debugger to let us fake a user
-					} else {
-						generalFakeChat(tabs[i].id, data.response, true, true, false, false, overrideTimeout);
-					}
-				}
-			} catch (e) {
-				chrome.runtime.lastError;
-				//log(e);
-			}
-		}
-	});
-	return true;
+function delayedDetach(tabid) {
+  try {
+    chrome.runtime.lastError;
+  } catch(e) {}
+  
+  // Clear any existing timeout
+  if (debuggerState.timeouts[tabid]) {
+    clearTimeout(debuggerState.timeouts[tabid]);
+  }
+  
+  // Set new timeout
+  debuggerState.timeouts[tabid] = setTimeout(function(tabid) {
+    try {
+      debuggerState.attachments[tabid] = false;
+      chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
+    } catch(e) {
+      errorlog(e);
+    }
+  }, 1000, tabid);
 }
 
-function zoomFakeChat(tabid, message, middle = false, keypress = true, backspace = false) {
-    chrome.tabs.sendMessage(tabid, "focusChat", function (response = false) {
-        if (!response) {
-            if (debuggerEnabled[tabid]) {
-                chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-            }
+async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 3500) {
+    if (!chrome.debugger || !isExtensionOn || settings.disablehost) {
+        return false;
+    }
+
+    if (antispam && settings["dynamictiming"] && lastAntiSpam + 10 > messageCounter) {
+        return false;
+    }
+    
+    if (antispam && settings["dynamictiming"]) {
+        if (lastAntiSpam + 10 > messageCounter) {
             return;
         }
-
-        chrome.debugger.sendCommand({ tabId: tabid }, "Input.insertText", { text: message }, function (e) {
-            chrome.debugger.sendCommand(
-                { tabId: tabid },
-                "Input.dispatchKeyEvent",
-                {
-                    type: "keyDown",
-                    key: "Enter",
-                    code: "Enter",
-                    nativeVirtualKeyCode: 13,
-                    windowsVirtualKeyCode: 13
-                },
-                function (e) {
-                    if (debuggerEnabled[tabid]) {
-                        chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-                    }
+    }
+    const now = Date.now();
+    
+    if (!reverse && !overrideTimeout && data.tid) { // we do this early to avoid the blue bar if not needed
+        if (data.tid in messageTimeout) {
+            if (now - messageTimeout[data.tid] < overrideTimeout) {
+                return;
+            }
+        }
+    }
+    
+    lastAntiSpam = messageCounter;
+    
+    var msg2Save = checkExactDuplicateAlreadyRelayed(data.response, false, false, true); 
+    
+    try {
+        const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
+        var published = {};
+        
+        for (const tab of tabs) {
+            try {
+                // Skip invalid tabs
+                if (!isValidTab(tab, data, reverse, published, now, overrideTimeout)) {
+                    continue;
                 }
-            );
+
+                // Handle message store
+                if (msg2Save) {
+                    handleMessageStore(tab.id, msg2Save, now, relayMode);
+                }
+
+                published[tab.url] = true;
+                
+                // Handle different site types
+                if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
+                    handleStageTen(tab, data, metadata);
+                } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
+                    await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout);
+                } else if (tab.url.startsWith("https://boltplus.tv/")) {
+                    await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout);
+                } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
+                    await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout);
+                } else if (tab.url.startsWith("https://app.slack.com")) {
+                    await attachAndChat(tab.id, data.response, false, false, false, false, overrideTimeout);
+                } else if (metadata && settings.fancystageten && tab.url.includes(".stageten.tv/channel")) {
+                    handleFancyStageTen(tab.id, metadata);
+                } else if (tab.url.startsWith("https://app.zoom.us/")) {
+                    await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat);
+                    continue;
+                } else {
+                    // Generic handler
+                    if (tab.url.includes("youtube.com/live_chat")) {
+                        getYoutubeAvatarImage(tab.url, true);
+                    }
+                    
+                    if (settings.notiktoklinks && tab.url.includes("tiktok.com")) {
+                        data.response = replaceURLsWithSubstring(data.response, "");
+                    }
+
+                    await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);
+                }
+            } catch (e) {
+                chrome.runtime.lastError;
+                console.error(e);
+            }
+        }
+    } catch (error) {
+        console.error('Error in sendMessageToTabs:', error);
+        return false;
+    }
+    
+    return true;
+}
+
+// Helper function to check if a tab is valid for processing
+function isValidTab(tab, data, reverse, published, now, overrideTimeout) {
+    // First check URLs that we can't or shouldn't process
+    if (!tab.url) return false;
+    if (tab.url.startsWith("chrome://")) return false;  // Add this line
+    if (tab.url.startsWith("chrome-extension")) return false;
+    if (tab.url.startsWith("https://socialstream.ninja/")) return false;
+    if (tab.url in published) return false;
+    if (!checkIfAllowed(tab.url)) return false;
+    
+    // Check TID conditions
+    if ("tid" in data && data.tid !== false && data.tid !== null) {
+        if (typeof data.tid == "object") {
+            if (reverse && data.tid.includes(tab.id.toString())) return false;
+            if (!reverse && !data.tid.includes(tab.id.toString())) return false;
+        } else {
+            if (reverse) {
+                if (data.tid === tab.id) return false;
+                if (data.url && tab.url && data.url === tab.url) return false;
+            } else if (data.tid !== tab.id) return false;
+        }
+    }
+    
+    // Check destination and timeout conditions
+    if (data.destination && !tab.url.includes(data.destination)) return false;
+    if (reverse && !overrideTimeout && tab.id) {
+        if (tab.id in messageTimeout && now - messageTimeout[tab.id] < overrideTimeout) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// Helper function to handle message store
+function handleMessageStore(tabId, msg2Save, now, relayMode) {
+    try {
+        if (!messageStore[tabId]) {
+            messageStore[tabId] = [];
+        } else {
+            while (messageStore[tabId].length > 0 && now - messageStore[tabId][0].timestamp > 10000) {
+                messageStore[tabId].shift();
+            }
+        }
+        messageStore[tabId].push({
+            message: msg2Save,
+            timestamp: now,
+            relayMode: relayMode
+        });
+    } catch(e) {
+        errorlog(e);
+    }
+}
+
+// Helper function to handle StageTen
+function handleStageTen(tab, data, metadata) {
+    if (!data.response) return;
+    if (metadata) {
+        sendToS10(metadata, true);
+    } else {
+        var msg = {
+            chatmessage: data.response,
+            type: "socialstream",
+            chatimg: "https://socialstream.ninja/icons/icon-128.png"
+        };
+        sendToS10(msg, true);
+    }
+}
+
+// Helper function to handle fancy StageTen
+function handleFancyStageTen(tabId, metadata) {
+    try {
+        log("SENDING ORIGINAL RAW DATA TO S10");
+        chrome.tabs.sendMessage(tabId, { metadata: metadata }, function (response = false) {
+            chrome.runtime.lastError;
+        });
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+// Helper function to attach debugger and send chat
+async function attachAndChat(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout, chatFunction = generalFakeChat) {
+    return new Promise((resolve, reject) => {
+        safeDebuggerAttach(tabId, "1.3", (error) => {
+            if (error) {
+                console.warn(`Failed to attach debugger to tab ${tabId}:`, error);
+                reject(error);
+                return;
+            }
+            chatFunction(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout);
+            resolve();
         });
     });
 }
+ 
+function zoomFakeChat(tabid, message, middle = false, keypress = true, backspace = false) {
+    chrome.tabs.sendMessage(tabid, "focusChat", function (response = false) {
+        try {
+            chrome.runtime.lastError; // Clear any runtime errors
+            
+            if (!response) {
+                delayedDetach(tabid);
+                return;
+            }
+
+            // Check if debugger is still attached before sending commands
+            if (!debuggerState.attachments[tabid]) {
+                console.warn(`Debugger not attached for tab ${tabid}`);
+                return;
+            }
+
+            chrome.debugger.sendCommand({ tabId: tabid }, "Input.insertText", { text: message }, function (e) {
+                if (chrome.runtime.lastError) {
+                    console.warn(`Error inserting text for tab ${tabid}:`, chrome.runtime.lastError);
+                    delayedDetach(tabid);
+                    return;
+                }
+
+                chrome.debugger.sendCommand(
+                    { tabId: tabid },
+                    "Input.dispatchKeyEvent",
+                    {
+                        type: "keyDown",
+                        key: "Enter",
+                        code: "Enter",
+                        nativeVirtualKeyCode: 13,
+                        windowsVirtualKeyCode: 13
+                    },
+                    (e) => {
+                        if (chrome.runtime.lastError) {
+                            console.warn(`Error sending keyDown for tab ${tabid}:`, chrome.runtime.lastError);
+                        }
+                        delayedDetach(tabid);
+                    }
+                );
+            });
+        } catch (e) {
+            console.error(`Error in zoomFakeChat for tab ${tabid}:`, e);
+            delayedDetach(tabid);
+        }
+    });
+}
+
 function limitString(string, maxLength) {
 	let count = 0;
 	let result = "";
@@ -5390,9 +5843,9 @@ function limitString(string, maxLength) {
 }
 
 function generalFakeChat(tabid, message, middle = true, keypress = true, backspace = false, delayedPress = false, overrideTimeout = false) {
+
 	// fake a user input
 	try {
-		
 		
 		if (!overrideTimeout){
 			if (tabid in messageTimeout){
@@ -5404,13 +5857,10 @@ function generalFakeChat(tabid, message, middle = true, keypress = true, backspa
 			}
 		}
 		
-		
-		chrome.tabs.sendMessage(tabid, "focusChat", function (response = false) {
+		chrome.tabs.sendMessage(tabid, "focusChat", (response = false) => {
 			chrome.runtime.lastError;
 			if (!response) {
-				if (debuggerEnabled[tabid]) {
-					chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-				}
+				delayedDetach(tabid);
 				return;
 			} // make sure the response is valid, else don't inject text
 
@@ -5471,11 +5921,9 @@ function generalFakeChat(tabid, message, middle = true, keypress = true, backspa
 										nativeVirtualKeyCode: 13,
 										windowsVirtualKeyCode: 13
 									},
-									function (e) {
+									 (e) => {
 										if (!keypress) {
-											if (debuggerEnabled[tabid]) {
-												chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-											}
+											delayedDetach(tabid);
 										}
 									}
 								);
@@ -5519,10 +5967,8 @@ function generalFakeChat(tabid, message, middle = true, keypress = true, backspa
 															nativeVirtualKeyCode: 13,
 															windowsVirtualKeyCode: 13
 														},
-														function (e) {
-															if (debuggerEnabled[tabid]) {
-																chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-															}
+														(e) => {
+															delayedDetach(tabid);
 														}
 													);
 												},
@@ -5530,9 +5976,7 @@ function generalFakeChat(tabid, message, middle = true, keypress = true, backspa
 												tabid
 											);
 										} else {
-											if (debuggerEnabled[tabid]) {
-												chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-											}
+											delayedDetach(tabid);
 										}
 									}
 								);
@@ -5569,11 +6013,9 @@ function generalFakeChat(tabid, message, middle = true, keypress = true, backspa
 								nativeVirtualKeyCode: 13,
 								windowsVirtualKeyCode: 13
 							},
-							function (e) {
+							(e) => {
 								if (!keypress) {
-									if (debuggerEnabled[tabid]) {
-										chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-									}
+									delayedDetach(tabid);
 								}
 							}
 						);
@@ -5618,10 +6060,8 @@ function generalFakeChat(tabid, message, middle = true, keypress = true, backspa
 													nativeVirtualKeyCode: 13,
 													windowsVirtualKeyCode: 13
 												},
-												function (e) {
-													if (debuggerEnabled[tabid]) {
-														chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-													}
+												(e) =>  {
+													delayedDetach(tabid);
 												}
 											);
 										},
@@ -5629,9 +6069,7 @@ function generalFakeChat(tabid, message, middle = true, keypress = true, backspa
 										tabid
 									);
 								} else {
-									if (debuggerEnabled[tabid]) {
-										chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-									}
+									delayedDetach(tabid);
 								}
 							}
 						);
@@ -5640,10 +6078,9 @@ function generalFakeChat(tabid, message, middle = true, keypress = true, backspa
 			}
 		});
 	} catch (e) {
+		chrome.runtime.lastError;
 		log(e);
-		if (debuggerEnabled[tabid]) {
-			chrome.debugger.detach({ tabId: tabid }, onDetach.bind(null, { tabId: tabid }));
-		}
+		delayedDetach(tabid);
 	}
 }
 
@@ -5658,198 +6095,9 @@ function createTab(url) {
 					}
 				});
 			}
+	 					  
 		});
 	});
-}
-
-/////////////// bad word filter
-// I welcome updates/additions. The raw list can be found here: https://gist.github.com/steveseguin/da09a700e4fccd7ff82e68f32e384c9d
-var badWords = ["fuck","shit","cunt","bitch","nigger","fag","retard","rape","pussy","cock","asshole","whore","slut","gay","lesbian","transgender","transsexual","tranny","chink","spic","kike","jap","wop","redneck","hillbilly","white trash","douche","dick","bastard","fucker","motherfucker","ass","anus","vagina","penis","testicles","masturbate","orgasm","ejaculate","clitoris","pubic","genital","erect","erotic","porn","xxx","dildo","butt plug","anal","sodomy","pedophile","bestiality","necrophilia","incest","suicide","murder","terrorism","drugs","alcohol","smoking","weed","meth","crack","heroin","cocaine","opiate","opium","benzodiazepine","xanax","adderall","ritalin","steroids","viagra","cialis","prostitution","escort"];
-
-const alternativeChars = {
-	a: ["@", "4"],
-	e: ["3"],
-	i: ["1", "!"],
-	o: ["0"],
-	s: ["$", "5"],
-	t: ["7"],
-	c: ["<"]
-};
-function generateVariations(word) {
-	const variations = [word];
-	for (let i = 0; i < word.length; i++) {
-		const char = word[i].toLowerCase();
-		if (alternativeChars.hasOwnProperty(char)) {
-			const charVariations = alternativeChars[char];
-			const newVariations = [];
-			for (const variation of variations) {
-				for (const altChar of charVariations) {
-					const newWord = variation.slice(0, i) + altChar + variation.slice(i + 1);
-					newVariations.push(newWord);
-				}
-			}
-			variations.push(...newVariations);
-		}
-	}
-	return variations;
-}
-
-function generateVariationsList(words) {
-	const variationsList = [];
-	for (const word of words) {
-		variationsList.push(...generateVariations(word));
-	}
-	return variationsList.filter(word => !word.match(/[A-Z]/));
-}
-
-function createProfanityHashTable(profanityVariationsList) {
-	const hashTable = {};
-	for (let i = 0; i < profanityVariationsList.length; i++) {
-		const word = profanityVariationsList[i].toLowerCase();
-		for (let j = 0; j < word.length; j++) {
-			const character = word[j];
-			if (!hashTable[character]) {
-				hashTable[character] = {};
-			}
-			hashTable[character][word] = true;
-		}
-	}
-	return hashTable;
-}
-
-function isProfanity(word) {
-	if (!profanityHashTable) {
-		return false;
-	}
-	const wordLower = word.toLowerCase();
-	const firstChar = wordLower[0];
-	const words = profanityHashTable[firstChar];
-	if (!words) {
-		return false;
-	}
-	return Boolean(words[wordLower]);
-}
-function filterProfanity(sentence) {
-	let words = sentence.toLowerCase().split(/[\s\.\-_!?,]+/);
-	const uniqueWords = new Set(words);
-	for (let word of uniqueWords) {
-		if (isProfanity(word)) {
-			sentence = sentence.replace(new RegExp("\\b" + word + "\\b", "gi"), "*".repeat(word.length));
-		}
-	}
-	return sentence;
-}
-var profanityHashTable = false;
-
-function initialLoadBadWords(){
-	try {
-		// use a custom file named badwords.txt to replace the badWords that are hard-coded. one per line.
-		fetch("./badwords.txt")
-			.then(response => response.text())
-			.then(text => {
-				let customBadWords = text.split(/\r?\n|\r|\n/g);
-				customBadWords = generateVariationsList(customBadWords);
-				profanityHashTable = createProfanityHashTable(customBadWords);
-			})
-			.catch(error => {
-				try {
-					  const customBadwords = localStorage.getItem('customBadwords');
-					  if (customBadwords) {
-						let customBadWordsList = customBadwords.split(/\r?\n|\r|\n/g);
-						customBadWordsList = generateVariationsList(customBadWordsList);
-						profanityHashTable = createProfanityHashTable(customBadWordsList);
-					  } else {
-						// Use default badwords if no custom file is present
-						badWords = generateVariationsList(badWords);
-						profanityHashTable = createProfanityHashTable(badWords);
-					  }
-				} catch (e) {
-				  badWords = generateVariationsList(badWords);
-				  profanityHashTable = createProfanityHashTable(badWords);
-				}
-
-			});
-	} catch (e) {
-		badWords = generateVariationsList(badWords);
-		profanityHashTable = createProfanityHashTable(badWords);
-	}
-}
-initialLoadBadWords();
-
-/////// end of bad word filter
-
-
-var goodWordsHashTable = false;
-function isGoodWord(word) {
-	const wordLower = word.toLowerCase();
-	const firstChar = wordLower[0];
-	const words = goodWordsHashTable[firstChar];
-	if (!words) {
-		return false;
-	}
-	return Boolean(words[wordLower]);
-}
-function passGoodWords(sentence) {
-	let words = sentence.toLowerCase().split(/[\s\.\-_!?,]+/);
-	const uniqueWords = new Set(words);
-	for (let word of uniqueWords) {
-		if (!isGoodWord(word)) {
-			sentence = sentence.replace(new RegExp("\\b" + word + "\\b", "gi"), "*".repeat(word.length));
-		}
-	}
-	return sentence;
-}
-try {
-	// use a custom file named goodwords.txt to replace the badWords that are hard-coded. one per line.
-	fetch("./goodwords.txt")
-		.then(response => response.text())
-		.then(text => {
-			let customGoodWords = text.split(/\r?\n|\r|\n/g);
-			goodWordsHashTable = createProfanityHashTable(customGoodWords);
-		})
-		.catch(error => {
-			// no file found or error
-		});
-} catch (e) {}
-
-
-const validTLDs = new Set(["a","aaa","aarp","abb","abbott","abbvie","abc","able","abogado","abudhabi","ac","academy","accenture","accountant","accountants","aco","actor","ad","ads","adult","ae","aeg","aero","aetna","af","afl","africa","ag","agakhan","agency","ai","aig","airbus","airforce","airtel","akdn","al","alibaba","alipay","allfinanz","allstate","ally","alsace","alstom","am","amazon","americanexpress","americanfamily","amex","amfam","amica","amsterdam","analytics","android","anquan","anz","ao","aol","apartments","app","apple","aq","aquarelle","ar","arab","aramco","archi","army","arpa","art","arte","as","asda","asia","associates","at","athleta","attorney","au","auction","audi","audible","audio","auspost","author","auto","autos","aw","aws","ax","axa","az","azure","b","ba","baby","baidu","banamex","band","bank","bar","barcelona","barclaycard","barclays","barefoot","bargains","baseball","basketball","bauhaus","bayern","bb","bbc","bbt","bbva","bcg","bcn","bd","be","beats","beauty","beer","bentley","berlin","best","bestbuy","bet","bf","bg","bh","bharti","bi","bible","bid","bike","bing","bingo","bio","biz","bj","black","blackfriday","blockbuster","blog","bloomberg","blue","bm","bms","bmw","bn","bnpparibas","bo","boats","boehringer","bofa","bom","bond","boo","book","booking","bosch","bostik","boston","bot","boutique","box","br","bradesco","bridgestone","broadway","broker","brother","brussels","bs","bt","build","builders","business","buy","buzz","bv","bw","by","bz","bzh","c","ca","cab","cafe","cal","call","calvinklein","cam","camera","camp","canon","capetown","capital","capitalone","car","caravan","cards","care","career","careers","cars","casa","case","cash","casino","cat","catering","catholic","cba","cbn","cbre","cc","cd","center","ceo","cern","cf","cfa","cfd","cg","ch","chanel","channel","charity","chase","chat","cheap","chintai","christmas","chrome","church","ci","cipriani","circle","cisco","citadel","citi","citic","city","ck","cl","claims","cleaning","click","clinic","clinique","clothing","cloud","club","clubmed","cm","cn","co","coach","codes","coffee","college","cologne","com","commbank","community","company","compare","computer","comsec","condos","construction","consulting","contact","contractors","cooking","cool","coop","corsica","country","coupon","coupons","courses","cpa","cr","credit","creditcard","creditunion","cricket","crown","crs","cruise","cruises","cu","cuisinella","cv","cw","cx","cy","cymru","cyou","cz","d","dabur","dad","dance","data","date","dating","datsun","day","dclk","dds","de","deal","dealer","deals","degree","delivery","dell","deloitte","delta","democrat","dental","dentist","desi","design","dev","dhl","diamonds","diet","digital","direct","directory","discount","discover","dish","diy","dj","dk","dm","dnp","do","docs","doctor","dog","domains","dot","download","drive","dtv","dubai","dunlop","dupont","durban","dvag","dvr","dz","e","earth","eat","ec","eco","edeka","edu","education","ee","eg","email","emerck","energy","engineer","engineering","enterprises","epson","equipment","er","ericsson","erni","es","esq","estate","et","eu","eurovision","eus","events","exchange","expert","exposed","express","extraspace","f","fage","fail","fairwinds","faith","family","fan","fans","farm","farmers","fashion","fast","fedex","feedback","ferrari","ferrero","fi","fidelity","fido","film","final","finance","financial","fire","firestone","firmdale","fish","fishing","fit","fitness","fj","fk","flickr","flights","flir","florist","flowers","fly","fm","fo","foo","food","football","ford","forex","forsale","forum","foundation","fox","fr","free","fresenius","frl","frogans","frontier","ftr","fujitsu","fun","fund","furniture","futbol","fyi","g","ga","gal","gallery","gallo","gallup","game","games","gap","garden","gay","gb","gbiz","gd","gdn","ge","gea","gent","genting","george","gf","gg","ggee","gh","gi","gift","gifts","gives","giving","gl","glass","gle","global","globo","gm","gmail","gmbh","gmo","gmx","gn","godaddy","gold","goldpoint","golf","goo","goodyear","goog","google","gop","got","gov","gp","gq","gr","grainger","graphics","gratis","green","gripe","grocery","group","gs","gt","gu","gucci","guge","guide","guitars","guru","gw","gy","h","hair","hamburg","hangout","haus","hbo","hdfc","hdfcbank","health","healthcare","help","helsinki","here","hermes","hiphop","hisamitsu","hitachi","hiv","hk","hkt","hm","hn","hockey","holdings","holiday","homedepot","homegoods","homes","homesense","honda","horse","hospital","host","hosting","hot","hotels","hotmail","house","how","hr","hsbc","ht","hu","hughes","hyatt","hyundai","i","ibm","icbc","ice","icu","id","ie","ieee","ifm","ikano","il","im","imamat","imdb","immo","immobilien","in","inc","industries","infiniti","info","ing","ink","institute","insurance","insure","int","international","intuit","investments","io","ipiranga","iq","ir","irish","is","ismaili","ist","istanbul","it","itau","itv","j","jaguar","java","jcb","je","jeep","jetzt","jewelry","jio","jll","jm","jmp","jnj","jo","jobs","joburg","jot","joy","jp","jpmorgan","jprs","juegos","juniper","k","kaufen","kddi","ke","kerryhotels","kerrylogistics","kerryproperties","kfh","kg","kh","ki","kia","kids","kim","kindle","kitchen","kiwi","km","kn","koeln","komatsu","kosher","kp","kpmg","kpn","kr","krd","kred","kuokgroup","kw","ky","kyoto","kz","l","la","lacaixa","lamborghini","lamer","lancaster","land","landrover","lanxess","lasalle","lat","latino","latrobe","law","lawyer","lb","lc","lds","lease","leclerc","lefrak","legal","lego","lexus","lgbt","li","lidl","life","lifeinsurance","lifestyle","lighting","like","lilly","limited","limo","lincoln","link","lipsy","live","living","lk","llc","llp","loan","loans","locker","locus","lol","london","lotte","lotto","love","lpl","lplfinancial","lr","ls","lt","ltd","ltda","lu","lundbeck","luxe","luxury","lv","ly","m","ma","madrid","maif","maison","makeup","man","management","mango","map","market","marketing","markets","marriott","marshalls","mattel","mba","mc","mckinsey","md","me","med","media","meet","melbourne","meme","memorial","men","menu","merckmsd","mg","mh","miami","microsoft","mil","mini","mint","mit","mitsubishi","mk","ml","mlb","mls","mm","mma","mn","mo","mobi","mobile","moda","moe","moi","mom","monash","money","monster","mormon","mortgage","moscow","moto","motorcycles","mov","movie","mp","mq","mr","ms","msd","mt","mtn","mtr","mu","museum","music","mv","mw","mx","my","mz","n","na","nab","nagoya","name","navy","nba","nc","ne","nec","net","netbank","netflix","network","neustar","new","news","next","nextdirect","nexus","nf","nfl","ng","ngo","nhk","ni","nico","nike","nikon","ninja","nissan","nissay","nl","no","nokia","norton","now","nowruz","nowtv","np","nr","nra","nrw","ntt","nu","nyc","nz","o","obi","observer","office","okinawa","olayan","olayangroup","ollo","om","omega","one","ong","onl","online","ooo","open","oracle","orange","org","organic","origins","osaka","otsuka","ott","ovh","p","pa","page","panasonic","paris","pars","partners","parts","party","pay","pccw","pe","pet","pf","pfizer","pg","ph","pharmacy","phd","philips","phone","photo","photography","photos","physio","pics","pictet","pictures","pid","pin","ping","pink","pioneer","pizza","pk","pl","place","play","playstation","plumbing","plus","pm","pn","pnc","pohl","poker","politie","porn","post","pr","pramerica","praxi","press","prime","pro","prod","productions","prof","progressive","promo","properties","property","protection","pru","prudential","ps","pt","pub","pw","pwc","py","q","qa","qpon","quebec","quest","r","racing","radio","re","read","realestate","realtor","realty","recipes","red","redstone","redumbrella","rehab","reise","reisen","reit","reliance","ren","rent","rentals","repair","report","republican","rest","restaurant","review","reviews","rexroth","rich","richardli","ricoh","ril","rio","rip","ro","rocks","rodeo","rogers","room","rs","rsvp","ru","rugby","ruhr","run","rw","rwe","ryukyu","s","sa","saarland","safe","safety","sakura","sale","salon","samsclub","samsung","sandvik","sandvikcoromant","sanofi","sap","sarl","sas","save","saxo","sb","sbi","sbs","sc","scb","schaeffler","schmidt","scholarships","school","schule","schwarz","science","scot","sd","se","search","seat","secure","security","seek","select","sener","services","seven","sew","sex","sexy","sfr","sg","sh","shangrila","sharp","shell","shia","shiksha","shoes","shop","shopping","shouji","show","si","silk","sina","singles","site","sj","sk","ski","skin","sky","skype","sl","sling","sm","smart","smile","sn","sncf","so","soccer","social","softbank","software","sohu","solar","solutions","song","sony","soy","spa","space","sport","spot","sr","srl","ss","st","stada","staples","star","statebank","statefarm","stc","stcgroup","stockholm","storage","store","stream","studio","study","style","su","sucks","supplies","supply","support","surf","surgery","suzuki","sv","swatch","swiss","sx","sy","sydney","systems","sz","t","tab","taipei","talk","taobao","target","tatamotors","tatar","tattoo","tax","taxi","tc","tci","td","tdk","team","tech","technology","tel","temasek","tennis","teva","tf","tg","th","thd","theater","theatre","tiaa","tickets","tienda","tips","tires","tirol","tj","tjmaxx","tjx","tk","tkmaxx","tl","tm","tmall","tn","to","today","tokyo","tools","top","toray","toshiba","total","tours","town","toyota","toys","tr","trade","trading","training","travel","travelers","travelersinsurance","trust","trv","tt","tube","tui","tunes","tushu","tv","tvs","tw","tz","u","ua","ubank","ubs","ug","uk","unicom","university","uno","uol","ups","us","uy","uz","v","va","vacations","vana","vanguard","vc","ve","vegas","ventures","verisign","vermögensberater","vermögensberatung","versicherung","vet","vg","vi","viajes","video","vig","viking","villas","vin","vip","virgin","visa","vision","viva","vivo","vlaanderen","vn","vodka","volvo","vote","voting","voto","voyage","vu","w","wales","walmart","walter","wang","wanggou","watch","watches","weather","weatherchannel","webcam","weber","website","wed","wedding","weibo","weir","wf","whoswho","wien","wiki","williamhill","win","windows","wine","winners","wme","wolterskluwer","woodside","work","works","world","wow","ws","wtc","wtf","x","xbox","xerox","xihuan","xin","xxx","xyz","y","yachts","yahoo","yamaxun","yandex","ye","yodobashi","yoga","yokohama","you","youtube","yt","yun","z","za","zappos","zara","zero","zip","zm","zone","zuerich","zw","IDNs","ελ","ευ","бг","бел","дети","ею","католик","ком","мкд","мон","москва","онлайн","орг","рус","рф","сайт","срб","укр","қаз","հայ","ישראל","קום","ابوظبي","ارامكو","الاردن","البحرين","الجزائر","السعودية","العليان","المغرب","امارات","ایران","بارت","بازار","بيتك","بھارت","تونس","سودان","سورية","شبكة","عراق","عرب","عمان","فلسطين","قطر","كاثوليك","كوم","مصر","مليسيا","موريتانيا","موقع","همراه","پاكستان","پاکستان","ڀارت","कॉम","नेट","भारत","भारतम्","भारोत","संगठन","বাংলা","ভারত","ভাৰত","ਭਾਰਤ","ભારત","ଭାରତ","இந்தியா","இலங்கை","சிங்கப்பூர்","భారత్","ಭಾರತ","ഭാരതം","ලංකා","คอม","ไทย","ລາວ","გე","みんな","アマゾン","クラウド","グーグル","コム","ストア","セール","ファッション","ポイント","世界","中信","中国","中國","中文网","亚马逊","企业","佛山","信息","健康","八卦","公司","公益","台湾","台灣","商城","商店","商标","嘉里","嘉里大酒店","在线","大拿","天主教","娱乐","家電","广东","微博","慈善","我爱你","手机","招聘","政务","政府","新加坡","新闻","时尚","書籍","机构","淡马锡","游戏","澳門","点看","移动","组织机构","网址","网店","网站","网络","联通","谷歌","购物","通販","集团","電訊盈科","飞利浦","食品","餐厅","香格里拉","香港","닷넷","닷컴","삼성","한국"]);
-			
-function isValidTLD(tld) {
-  return validTLDs.has(tld.toLowerCase());
-}
-
-function replaceURLsWithSubstring(text, replacement = "[Link]") {
-  if (typeof text !== "string") {
-	return text;
-  }
-
-  try {
-	// This pattern matches potential URLs more strictly
-	const urlPattern = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g;
-
-	return text.replace(urlPattern, (match) => {
-	  // Split the match by dots to check the TLD
-	  const parts = match.split('.');
-	  const potentialTLD = parts[parts.length - 1].split(/[/?#]/)[0];
-
-	  // If it doesn't contain a slash, only replace if it starts with http:// or https://
-	  if (match.startsWith('http://') || match.startsWith('https://')) {
-		return replacement;
-	  }
-	  
-	  // Check if it's a valid TLD and contains a slash (indicating it's likely a URL)
-	  if (match.includes('/') || isValidTLD(potentialTLD)) {
-		return replacement;
-	  }
-
-	  // Otherwise, return the original match
-	  return match;
-	});
-  } catch (e) {
-	console.error(e);
-	return text;
-  }
 }
 
 
@@ -5876,9 +6124,7 @@ function sanitizeRelay(text, textonly=false, alt = false) {
 }
 
 // expects an object; not False/Null/undefined
-async function applyBotActions(data, tab = false) {
-	// this can be customized to create bot-like auto-responses/actions.
-	// data.tid,, => processResponse({tid:N, response:xx})
+async function applyBotActions(data, tab = false, reflection = false) {
 	
 	if (!data.id) {
 		messageCounter += 1;
@@ -5902,10 +6148,7 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 		
-		if (settings.whitelistuserstoggle && settings.whitelistusers) {
-			if (!data.chatname) {
-				return null; // no name, so won't allow
-			}
+		if (settings.whitelistuserstoggle && settings.whitelistusers && data.chatname) {
 			const whitelist = settings.whitelistusers.textsetting.split(",").map(user => {
 				const parts = user
 					.toLowerCase()
@@ -5976,21 +6219,186 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 		
-		if (settings.relayall && data.chatmessage && data.chatname && !data.event) {
-			// don't relay events
-			if (checkExactDuplicateAlreadyRelayed(data.chatmessage)) {   
+		//
+		var skipRelay = false;
+		
+		
+		if (settings.joke && data.chatmessage && data.chatmessage.toLowerCase() === "!joke") {
+			//console.log(".");
+			//if (Date.now() - messageTimeout > 5100) {
+				var score = parseInt(Math.random() * 378);
+				var joke = jokes[score];
+
+				//messageTimeout = Date.now();
+				var msg = {};
+				
+				if (reflection){
+					msg.response = joke["setup"];
+					sendMessageToTabs(msg, false, null, true, false, 5100);
+					
+					var dashboardMsg = {
+						chatname: data.chatname,
+						chatmessage: joke["setup"],
+						chatimg: data.chatimg,
+						type: data.type,
+						tid: data.tid
+					};
+					setTimeout(
+						function (dashboardMsg) {
+							sendToDestinations(dashboardMsg);
+						},
+						100,
+						dashboardMsg
+					);
+					
+				} else {
+					if (data.tid){
+						msg.tid = data.tid;
+					}
+					msg.response = "@" + data.chatname + ", " + joke["setup"];
+					sendMessageToTabs(msg, false, null, false, false, 5100);
+				}
+				
+				skipRelay= true; // lets not relay "!joke"
+				
+				let punch = "@" + data.chatname + ".. " + joke["punchline"];
+				
+				
+				if (reflection){
+					punch =  ".. " + joke["punchline"];
+					var dashboardMsg = {
+						chatname: data.chatname,
+						chatmessage: punch,
+						chatimg: data.chatimg,
+						type: data.type,
+						tid: data.tid
+					};
+					setTimeout(
+						function (dashboardMsg) {
+							sendToDestinations(dashboardMsg);
+						},
+						5000,
+						dashboardMsg
+					);
+				}
+				
+				setTimeout(
+					function (tId, punchline, reflection) {
+						var message = {};
+						if (tId && !reflection){
+							message.tid = tId;
+						}
+						message.response = punchline;
+						sendMessageToTabs(message, false, null, reflection, false, false);
+					},
+					5000,
+					data.tid,
+					punch,
+					reflection
+				);
+			//}
+		}
+		
+		if (settings.autohi && data.chatname && data.chatmessage && !reflection) {
+			if (data.chatmessage.toLowerCase() === "hi") {
+				// respond to "1" with a "1" automatically; at most 1 time per minute.
+				var msg = {};
+				if (data.tid){
+					msg.tid = data.tid;
+				}
+				msg.response = "Hi, @" + data.chatname + " !";
+				//sendMessageToTabs(msg); 
+				// checkExactDuplicateAlreadyRelayed
+				
+				sendMessageToTabs(msg, false, null, false, false, 60000); 
+			}
+		}
+		
+		if (settings.queuecommand && data.chatmessage && data.chatmessage.startsWith("!queue ")) {
+			try {
+				data.chatmessage = data.chatmessage.split("!queue ")[1].trim();
+				data.queueme = true;
+			} catch (e) {
+				errorlog(e);
+			}
+		}
+		
+		if (settings.dice && data.chatname && data.chatmessage && (data.chatmessage.toLowerCase().startsWith("!dice ") || data.chatmessage.toLowerCase() === "!dice")) {
+			//	console.log("dice detected");
+			//if (Date.now() - messageTimeout > 5100) {
+				
+			let maxRoll = data.chatmessage.toLowerCase().split(" ");
+			if (maxRoll.length == 1) {
+				maxRoll = 6;
+			} else {
+				maxRoll = parseInt(maxRoll[1]) || 6;
+			}
+			
+			let roll = Math.floor(Math.random() * maxRoll) + 1;
+
+			//messageTimeout = Date.now();
+			var msg = {};
+			
+			
+			/* try {
+				if (!messageStore[tabs[i].id]){
+					messageStore[tabs[i].id] = []; 
+				} else {
+					while (messageStore[tabs[i].id].length > 0 && now - messageStore[tabs[i].id][0].timestamp > 10000) {
+						messageStore[tabs[i].id].shift();
+					}
+				}
+				messageStore[tabs[i].id].push({
+					message: msg2Save,
+					timestamp: now
+				});
+			} catch(e){errorlog(e);} */
+			
+			if (data.tid){
+				msg.tid = data.tid;
+				msg.response = "@" + data.chatname + ", the bot rolled you a " + roll +".";
+				sendMessageToTabs(msg, false, null, true, false, 5100); 
+			}
+			
+			var msg2 = {};
+			if (data.tid){
+				msg2.tid = data.tid;
+			}
+			msg2.response = data.chatname +" was rolled a "+roll+" (out of "+maxRoll+")";
+			sendMessageToTabs(msg2, true, null, true, false, 5100);  
+			skipRelay = true;
+			
+			if (reflection){
+				setTimeout(()=>{
+					let diceBotMessage = {};
+					diceBotMessage.chatmessage = data.chatname +" was rolled a "+roll+" (out of "+maxRoll+")";
+					diceBotMessage.chatimg = "https://socialstream.ninja/icons/bot.png";
+					diceBotMessage.bot = "dice";
+					diceBotMessage.type = "socialstream";
+					diceBotMessage.chatname = "🎲 Dice Roll";
+					sendToDestinations(diceBotMessage);
+				},50);
+			}
+			// if we send the normal messages, it will screw things up.
+			//}
+		}
+		
+		if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(" said: ")){
+			return null;
+			
+		} else if (settings.relayall && !reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab) {
+			
+			if (checkExactDuplicateAlreadyRelayed(data.chatmessage, data.textonly, tab.id, false)) { 
 				return null;
 			}
-
-			if (data.chatmessage.includes(" said: ")) {
-				return null;
-			} // probably a reply
-
-
+			
 			if (!data.bot) {
 				//messageTimeout = Date.now();
 				var msg = {};
-				msg.tid = data.tid;
+				
+				if (data.tid){
+					msg.tid = data.tid;
+				}
 				// this should be ideall HTML stripped
 				if (tab) {
 					msg.url = tab.url;
@@ -5999,9 +6407,11 @@ async function applyBotActions(data, tab = false) {
 				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
 				if (tmpmsg) {  
 					msg.response = sanitizeRelay(data.chatname, true, "Someone") + " said: " + tmpmsg;
-					// processResponse(data, false, null, false, false, 1000)
-					processResponse(msg, true, data, false, false, 1000); // this should be the first and only message
+					sendMessageToTabs(msg, true, data, true, false, 1000); // this should be the first and only message
 				}
+			} else {
+				sendToDestinations(data);
+				return null;
 			}
 		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event){
 			sendToS10(data, false, true); // we'll handle the relay logic here instead
@@ -6017,7 +6427,7 @@ async function applyBotActions(data, tab = false) {
 
 						settings["botReplyMessageSource" + i].textsetting.split(",").forEach(xx => {
 							//log(xx,data.type);
-							if (xx.trim().toLowerCase() == data.type.trim().toLowerCase()) {
+							if (xx && data.type && (xx.trim().toLowerCase() == data.type.trim().toLowerCase())) {
 								matched = true;
 							}
 						});
@@ -6030,11 +6440,11 @@ async function applyBotActions(data, tab = false) {
 							// respond to "1" with a "1" automatically; at most 1 time per minute.
 						//messageTimeout = Date.now();
 						var msg = {};
-						if (!settings["botReplyAll" + i]){
+						if (data.tid && !settings["botReplyAll" + i]){
 							msg.tid = data.tid;
 						}
 						msg.response = settings["botReplyMessageValue" + i].textsetting;
-						processResponse(msg, false, null, false, false, timeoutBot)
+						sendMessageToTabs(msg, false, null, false, false, timeoutBot)
 						
 						break;
 					}
@@ -6067,39 +6477,6 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 
-		if (settings.autohi && data.chatname ) {
-			if (data.chatmessage.toLowerCase() === "hi") {
-				// respond to "1" with a "1" automatically; at most 1 time per minute.
-				var msg = {};
-				msg.tid = data.tid;
-				msg.response = "Hi, @" + data.chatname + " !";
-				//processResponse(msg);
-				processResponse(msg, false, null, false, false, 60000);
-			}
-		}
-
-		if (settings.autohi && data.chatname) {
-			if (data.chatmessage.toLowerCase() === "hi") {
-				//if (Date.now() - messageTimeout > 60000) {
-					// respond to "1" with a "1" automatically; at most 1 time per minute.
-					//messageTimeout = Date.now();
-					var msg = {};
-					msg.tid = data.tid;
-					msg.response = "Hi, @" + data.chatname + " !";
-					processResponse(msg, false, null, false, false, 60000);
-				//}
-			}
-		}
-
-		if (settings.queuecommand && data.chatmessage && data.chatmessage.startsWith("!queue ")) {
-			try {
-				data.chatmessage = data.chatmessage.split("!queue ")[1].trim();
-				data.queueme = true;
-			} catch (e) {
-				errorlog(e);
-			}
-		}
-
 		// applyBotActions nor applyCustomActions ; I'm going to allow for copy/paste here I think instead.
 
 		if (settings.relaydonos && data.hasDonation && data.chatname && data.type) {
@@ -6112,13 +6489,15 @@ async function applyBotActions(data, tab = false) {
 
 				//messageTimeout = Date.now();
 				var msg = {};
-				msg.tid = data.tid;
+				if (data.tid){
+					msg.tid = data.tid;
+				}
 				if (tab) {
 					msg.url = tab.url;
 				}
 
 				msg.response = sanitizeRelay(data.chatname, true, "Someone") + " on " + data.type + " donated " + sanitizeRelay(data.hasDonation, true) + ". Thank you";
-				processResponse(msg, true, null, false, false, 100);
+				sendMessageToTabs(msg, true, null, false, false, 100);
 			//}
 		}
 		
@@ -6373,48 +6752,6 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 
-		if (settings.joke && data.chatmessage.toLowerCase() === "!joke") {
-			//if (Date.now() - messageTimeout > 5100) {
-				var score = parseInt(Math.random() * 378);
-				var joke = jokes[score];
-
-				//messageTimeout = Date.now();
-				var msg = {};
-				msg.tid = data.tid;
-				msg.response = "@" + data.chatname + ", " + joke["setup"];
-				processResponse(msg, false, null, false, false, 5100);
-				setTimeout(
-					function (msg, punch) {
-						msg.response = punch;
-						processResponse(msg, false, null, false, false, false);
-					},
-					5000,
-					data,
-					"@" + data.chatname + ".. " + joke["punchline"]
-				);
-			//}
-		}
-		
-		if (settings.dice && (data.chatmessage.toLowerCase().startsWith("!dice ") || data.chatmessage.toLowerCase() === "!dice")) {
-			//	console.log("dice detected");
-			//if (Date.now() - messageTimeout > 5100) {
-				
-				let maxRoll = data.chatmessage.toLowerCase().split(" ");
-				if (maxRoll.length == 1) {
-					maxRoll = 6;
-				} else {
-					maxRoll = parseInt(maxRoll[1]) || 6;
-				}
-				
-				let roll = Math.floor(Math.random() * maxRoll) + 1;
-
-				//messageTimeout = Date.now();
-				var msg = {};
-				msg.tid = data.tid;
-				msg.response = "@" + data.chatname + ", the bot rolled you a " + roll +".";
-				processResponse(msg, false, null, false, false, 5100);
-			//}
-		}
 
 	} catch (e) {
 		console.error(e);
@@ -6469,7 +6806,7 @@ async function applyBotActions(data, tab = false) {
 					matches=true;
 				}
 				if (matches){
-					// processResponse(msg, false, null, false, false, 60000);
+					// sendMessageToTabs(msg, false, null, false, false, 60000);
 					//if (Date.now() - messageTimeout > 1000) {
 					//	messageTimeout = Date.now();
 						let URL = settings["chatwebhook" + i].textsetting;
@@ -6544,19 +6881,10 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		if (settings.ollama){
-			if (Date.now() - lastSentTimestamp > 5000) {
-				try{
-					if (data.type && data.type == "stageten"){
-						if (data && data.chatmessage && (data.chatmessage.toLowerCase().includes("stage") || data.chatmessage.toLowerCase().includes("manager"))){
-							console.log(data);
-							processMessageWithOllama(data);
-						}
-					} else {
-						processMessageWithOllama(data);
-					}
-				} catch(e){
-					console.log(e); // ai.js file missing?
-				}
+			try{
+				processMessageWithOllama(data);
+			} catch(e){
+				console.log(e); // ai.js file missing?
 			}
 		}
 	} catch (e) {
@@ -6694,8 +7022,8 @@ function respondToAll(msg, timeout=false) {
 	//messageTimeout = Date.now();
 	var data = {};
 	data.response = msg;
-	processResponse(data, false, null, false, false, timeout);
-	//processResponse(data);
+	sendMessageToTabs(data, false, null, false, false, timeout);
+	//sendMessageToTabs(data);
 }
 
 function midiHotkeysNote(note, velocity) {
@@ -6708,8 +7036,8 @@ function tellAJoke() {
 	//messageTimeout = Date.now();
 	var data = {};
 	data.response = joke["setup"] + "..  " + joke["punchline"] + " LUL";
-	//processResponse(data);
-	processResponse(data, false, null, false, false, false);
+	//sendMessageToTabs(data);
+	sendMessageToTabs(data, false, null, false, false, false);
 }
 
 if (chrome.browserAction && chrome.browserAction.setIcon){

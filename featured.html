@@ -920,6 +920,48 @@
 					};
 			})(window);
 			var urlParams = new URLSearchParams(window.location.search);
+			
+			function validateRoomId(roomId) {
+				if (roomId == null || roomId === '') {
+					return false;
+				}
+				let sanitizedId = String(roomId).trim();
+
+				if (sanitizedId.length < 1) {
+					return false;
+				}
+				const reservedValues = [
+					'undefined',
+					'null',
+					'false',
+					'true',
+					'NaN',
+					'default',
+					'room',
+					'lobby',
+					'test',
+					'nothing',
+					'0',
+					'1',
+					'none'
+				];
+				if (reservedValues.includes(sanitizedId.toLowerCase())) {
+					return false;
+				}
+				sanitizedId = sanitizedId.replace(/[^a-zA-Z0-9]/g, '_');
+				if (/^_+$/.test(sanitizedId)) {
+					return false;
+				}
+				if (sanitizedId.length < 2) {
+					return false;
+				}
+				const MAX_LENGTH = 80;
+				if (sanitizedId.length > MAX_LENGTH) {
+					return false;
+				}
+
+				return sanitizedId;
+			}
 
 			var nextComment = null;
 			var roomID = "test";
@@ -935,6 +977,13 @@
 				roomID = prompt("Enter your session ID here, or add it to the URL.");
 			} else {
 				window.location.href = "https://socialstream.ninja/landing";
+			}
+			
+			roomID = validateRoomId(roomID)
+			if (!roomID) {
+				document.write("Invalid session ID");
+				alert("Invalid session ID");
+				throw new Error('Invalid session ID');
 			}
 
 			var password = "false";

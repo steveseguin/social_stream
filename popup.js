@@ -1133,6 +1133,39 @@ function update(response, sync=true){
 									ele.value = response.settings[key].optionsetting;
 									updateSettings(ele, sync);
 								}
+								
+								if (key == "aiProvider"){
+									if (ele.value == "ollama"){
+										document.getElementById("ollamamodel").classList.remove("hidden");
+										document.getElementById("ollamaendpoint").classList.remove("hidden");
+										document.getElementById("chatgptApiKey").classList.add("hidden");
+										document.getElementById("geminiApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.add("hidden");
+										document.getElementById("chatgptmodel").classList.add("hidden");
+									} else if (ele.value == "chatgpt"){
+										document.getElementById("chatgptApiKey").classList.remove("hidden");
+										document.getElementById("ollamamodel").classList.add("hidden");
+										document.getElementById("ollamaendpoint").classList.add("hidden");
+										document.getElementById("geminiApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.add("hidden");
+										document.getElementById("chatgptmodel").classList.remove("hidden");
+									} else if (ele.value == "gemini"){
+										document.getElementById("geminiApiKey").classList.remove("hidden");
+										document.getElementById("ollamamodel").classList.add("hidden");
+										document.getElementById("ollamaendpoint").classList.add("hidden");
+										document.getElementById("chatgptApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.remove("hidden");
+										document.getElementById("chatgptmodel").classList.add("hidden");
+									} else {
+										document.getElementById("ollamamodel").classList.add("hidden");
+										document.getElementById("ollamaendpoint").classList.add("hidden");
+										document.getElementById("chatgptApiKey").classList.add("hidden");
+										document.getElementById("geminiApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.add("hidden");
+										document.getElementById("chatgptmodel").classList.add("hidden");
+									}
+								}
+								
 							}
 							if ("numbersetting" in response.settings[key]){
 								var ele = document.querySelector("input[data-numbersetting='"+key+"']");
@@ -1974,6 +2007,37 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("multipleChoiceOptions").classList.add("hidden");
 			}
 		}
+		if (ele.dataset.optionsetting == "aiProvider"){
+			if (ele.value == "ollama"){
+				document.getElementById("ollamamodel").classList.remove("hidden");
+				document.getElementById("ollamaendpoint").classList.remove("hidden");
+				document.getElementById("chatgptApiKey").classList.add("hidden");
+				document.getElementById("geminiApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.add("hidden");
+				document.getElementById("chatgptmodel").classList.add("hidden");
+			} else if (ele.value == "chatgpt"){
+				document.getElementById("chatgptApiKey").classList.remove("hidden");
+				document.getElementById("ollamamodel").classList.add("hidden");
+				document.getElementById("ollamaendpoint").classList.add("hidden");
+				document.getElementById("geminiApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.add("hidden");
+				document.getElementById("chatgptmodel").classList.remove("hidden");
+			} else if (ele.value == "gemini"){
+				document.getElementById("geminiApiKey").classList.remove("hidden");
+				document.getElementById("ollamamodel").classList.add("hidden");
+				document.getElementById("ollamaendpoint").classList.add("hidden");
+				document.getElementById("chatgptApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.remove("hidden");
+				document.getElementById("chatgptmodel").classList.add("hidden");
+			} else {
+				document.getElementById("ollamamodel").classList.add("hidden");
+				document.getElementById("ollamaendpoint").classList.add("hidden");
+				document.getElementById("chatgptApiKey").classList.add("hidden");
+				document.getElementById("geminiApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.add("hidden");
+				document.getElementById("chatgptmodel").classList.add("hidden");
+			}
+		}
 		
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "optionsetting", target:target,  setting: ele.dataset.optionsetting, "value": ele.value}, function (response) {});
@@ -2024,12 +2088,19 @@ function updateSettings(ele, sync=true, value=null){
 	} else if (ele.dataset.special){
 		
 		if (ele.dataset.special==="session"){
-			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
-				chrome.storage.sync.set({
-					streamID: ele.value
-				});
+			
+			let xsx = validateRoomId(ele.value);
+			if (!xsx){
+				alert("Invalid session ID.");
+			} else {
+				ele.value = xsx;
+				if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
+					chrome.storage.sync.set({
+						streamID: xsx
+					});
+				}
+				chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, streamID: xsx}, function (response) {log("streamID updated");});
 			}
-			chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, streamID: ele.value}, function (response) {log("streamID updated");});
 			
 		} else if (ele.dataset.special==="password"){
 			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
@@ -2051,6 +2122,48 @@ function updateSettings(ele, sync=true, value=null){
 	} 
 	
 	refreshLinks();
+}
+
+function validateRoomId(roomId) {
+	if (roomId == null || roomId === '') {
+		return false;
+	}
+	let sanitizedId = String(roomId).trim();
+
+	if (sanitizedId.length < 1) {
+		return false;
+	}
+	const reservedValues = [
+		'undefined',
+		'null',
+		'false',
+		'true',
+		'NaN',
+		'default',
+		'room',
+		'lobby',
+		'test',
+		'nothing',
+		'0',
+		'1',
+		'none'
+	];
+	if (reservedValues.includes(sanitizedId.toLowerCase())) {
+		return false;
+	}
+	sanitizedId = sanitizedId.replace(/[^a-zA-Z0-9]/g, '_');
+	if (/^_+$/.test(sanitizedId)) {
+		return false;
+	}
+	if (sanitizedId.length < 2) {
+		return false;
+	}
+	const MAX_LENGTH = 80;
+	if (sanitizedId.length > MAX_LENGTH) {
+		return false;
+	}
+	// throw new Error('Invalid room ID');
+	return sanitizedId;
 }
 
 function refreshLinks(){
@@ -2312,20 +2425,21 @@ const TTSManager = {
     
     // Initialize the TTS system
     init(voices) {
-        this.audio = document.createElement("audio");
-        this.audio.onended = () => this.finishedAudio();
-        
-        this.voices = voices;
-        
-        // Add test button to the menu
-        const testButton = document.createElement('button');
-        testButton.textContent = "Test";
-        testButton.className = "tts-test-button";
-        testButton.onclick = () => this.testTTS();
-        
-        // Insert at the top of the TTS menu
-        const menuWrapper = document.querySelector('#ttsButton');
-        menuWrapper.replaceWith(testButton);
+		this.voices = voices;
+		if (!this.audio){
+			this.audio = document.createElement("audio");
+			this.audio.onended = () => this.finishedAudio();
+		}
+		const menuWrapper = document.querySelector('#ttsButton');
+        if (menuWrapper){
+			// Add test button to the menu
+			const testButton = document.createElement('button');
+			testButton.textContent = "Test";
+			testButton.className = "tts-test-button";
+			testButton.onclick = () => this.testTTS();
+			
+			menuWrapper.replaceWith(testButton);
+		}
     },
     
     // Get current settings from the menu
