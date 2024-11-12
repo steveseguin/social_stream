@@ -286,7 +286,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                     const chunk = decoder.decode(value);
                     handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
                 }
-				console.log(fullResponse);
+				//console.log(fullResponse);
                 return fullResponse;
             } else {
                 const response = await fetch(endpoint, {
@@ -302,7 +302,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 
                 const data = await response.json();
                 // Both APIs now return the same format
-				console.log(data);
+				//console.log(data);
                 return data.choices[0].message.content;
             }
         } catch (error) {
