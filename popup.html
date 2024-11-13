@@ -3104,10 +3104,25 @@ input:checked + .slider:before {
 									Timer (seconds): <input type="number" style="max-width: 5ch;" max="999999" min="1" value="60" size="4" data-numbersetting="pollTimer" />
 								</span>
 								<br>
-								<div>
-									<button class="glowingButton" data-action="closepoll" data-target="poll"><span>End Poll</span></button>
-									<button class="glowingButton" data-action="resetpoll" data-target="poll"><span>Reset Poll</span></button>
+								<div style="display:flex">
+									<button class="glowingButton" style="flex:2" data-action="closepoll" data-target="poll"><span>End Poll</span></button>
+									<button class="glowingButton" style="flex:2" data-action="resetpoll" data-target="poll"><span>Reset Poll</span></button>
 								</div>
+								
+								<h3>Poll Presets</h3>
+								<div  style="display:flex">
+									<button class="glowingButton" style="flex:2" data-action="savePoll">
+										<span data-translate="save-current-poll">Save Current Poll</span>
+									</button>
+									<button class="glowingButton" style="flex:2" data-action="createNewPoll">
+										<span data-translate="create-new-poll">Create New Poll</span>
+									</button>
+								</div>
+								<div id="savedPollsList" style="max-height: 200px; overflow-y: auto; margin-top: 10px;">
+									<!-- Saved polls will be listed here -->
+								</div>
+								
+								
 							</div>
 						</div>
 					</div>
