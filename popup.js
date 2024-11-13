@@ -417,6 +417,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	populateFontDropdown();
 	
+	PollManager.init();
 	
 	// populate language drop down
 	if (speechSynthesis){
@@ -615,7 +616,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
 	const ragFileManagement = document.getElementById('ragFileManagement');
-	const uploadButton = document.querySelector('[data-action="uploadRAGfile"]');
 
 	ragEnabledCheckbox.addEventListener('change', function() {
 		ragFileManagement.style.display = this.checked ? 'block' : 'none';
@@ -776,6 +776,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			} else if (msg.cmd == "uploadRAGfile"){
 				chrome.runtime.sendMessage({cmd: "uploadRAGfile", enhancedProcessing: document.getElementById('enhancedProcessing').checked}, function (response) {
 				});
+			} else if (msg.cmd == "savePoll"){
+				
+				PollManager.saveCurrentPoll();
+			} else if (msg.cmd == "createNewPoll"){
+				
+				PollManager.createNewPoll();
 			} else if (msg.cmd == "bigwipe"){
 				var confirmit = confirm("Are you sure you want to reset all your settings?");
 				if (confirmit){
@@ -838,8 +844,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	if (hideLinks){
 		document.body.classList.add("hidelinks");
 	} 
-	
-
 });
 var streamID = false;
 function update(response, sync=true){
@@ -1310,6 +1314,10 @@ function update(response, sync=true){
 									commandsList.appendChild(createCommandEntry(cmd.command, cmd.url));
 								});
 							}
+							if (('savedPolls' in response.settings) && response.settings.savedPolls.json) {
+								PollManager.savedPolls = JSON.parse(response.settings.savedPolls.json || '[]');
+								PollManager.updatePollsList();
+							}
 
 						} else { // obsolete method
 							var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
@@ -1332,7 +1340,7 @@ function update(response, sync=true){
 					miniTranslate(document.body);
 				}
 			}
-		
+			
 			
 			if (hideLinks){
 				document.body.classList.add("hidelinks");
@@ -1539,6 +1547,9 @@ function updateSettings(ele, sync=true, value=null){
             chrome.runtime.sendMessage({cmd: "saveSetting", type: "json", setting: "customGifCommands", value: JSON.stringify(commands)}, function (response) {});
         }
     }
+	if (sync && ele.closest('.options_group.poll') && PollManager.currentPollId) {
+        PollManager.savePollsToStorage();
+	}
 	
 	if (ele.dataset.param1){
 		if (ele.checked){
@@ -2644,5 +2655,165 @@ const TTSManager = {
         if (this.premiumQueueTTS.length) {
             this.speak(this.premiumQueueTTS.shift());
         }
+    }
+};
+
+const PollManager = {
+    savedPolls: [],
+    currentPollId: null,
+
+    init() {
+        // Add event delegation for the savedPollsList
+        document.getElementById('savedPollsList').addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.classList.contains('delete-poll')) {
+                const pollItem = target.closest('.saved-poll-item');
+                const pollId = parseInt(pollItem.dataset.pollId);
+                if (confirm('Are you sure you want to delete this preset?')) {
+                    this.savedPolls = this.savedPolls.filter(p => p.id !== pollId);
+                    if (this.currentPollId === pollId) {
+                        this.currentPollId = null;
+                    }
+                    this.updatePollsList();
+                    this.savePollsToStorage();
+                }
+            } else {
+                const pollItem = target.closest('.saved-poll-item');
+                if (!pollItem) return;
+                const pollId = parseInt(pollItem.dataset.pollId);
+                this.loadPoll(pollId);
+            }
+        });
+    },
+
+    getCurrentSettings() {
+        return {
+            pollType: document.querySelector('[data-optionsetting="pollType"]').value,
+            pollQuestion: document.querySelector('[data-textsetting="pollQuestion"]').value,
+            multipleChoiceOptions: document.querySelector('[data-textsetting="multipleChoiceOptions"]').value,
+            pollStyle: document.querySelector('[data-optionsetting="pollStyle"]').value,
+            pollTimer: document.querySelector('[data-numbersetting="pollTimer"]').value,
+            pollTimerState: document.querySelector('[data-setting="pollTimerState"]').checked,
+            pollTally: document.querySelector('[data-setting="pollTally"]').checked,
+            pollSpam: document.querySelector('[data-setting="pollSpam"]').checked
+        };
+    },
+
+    saveCurrentPoll() {
+        const pollName = prompt("Enter a name for this poll preset:", document.querySelector('[data-textsetting="pollQuestion"]').value.trim());
+        if (!pollName) return;
+
+        const newPoll = {
+            id: Date.now(),
+            name: pollName,
+            settings: this.getCurrentSettings()
+        };
+
+        this.savedPolls.push(newPoll);
+        this.currentPollId = newPoll.id;
+        this.updatePollsList();
+        this.savePollsToStorage();
+    },
+
+    createNewPoll() {
+        const defaultSettings = {
+            pollType: 'freeform',
+            pollQuestion: '',
+            multipleChoiceOptions: '',
+            pollStyle: 'default',
+            pollTimer: 60,
+            pollTimerState: false,
+            pollTally: false,
+            pollSpam: false
+        };
+
+        const elements = {
+            '[data-optionsetting="pollType"]': defaultSettings.pollType,
+            '[data-textsetting="pollQuestion"]': defaultSettings.pollQuestion,
+            '[data-textsetting="multipleChoiceOptions"]': defaultSettings.multipleChoiceOptions,
+            '[data-optionsetting="pollStyle"]': defaultSettings.pollStyle,
+            '[data-numbersetting="pollTimer"]': defaultSettings.pollTimer,
+            '[data-setting="pollTimerState"]': defaultSettings.pollTimerState,
+            '[data-setting="pollTally"]': defaultSettings.pollTally,
+            '[data-setting="pollSpam"]': defaultSettings.pollSpam
+        };
+
+        for (const [selector, value] of Object.entries(elements)) {
+            const element = document.querySelector(selector);
+            if (element) {
+                if (element.type === 'checkbox') {
+                    element.checked = value;
+                } else {
+                    element.value = value;
+                }
+                updateSettings(element, true);
+            }
+        }
+
+        this.currentPollId = null;
+        this.updatePollsList();
+    },
+
+    loadPoll(pollId) {
+        const poll = this.savedPolls.find(p => p.id === pollId);
+        if (!poll) return;
+
+        // Update all form elements with the poll's settings
+        const elements = {
+            '[data-optionsetting="pollType"]': poll.settings.pollType,
+            '[data-textsetting="pollQuestion"]': poll.settings.pollQuestion,
+            '[data-textsetting="multipleChoiceOptions"]': poll.settings.multipleChoiceOptions,
+            '[data-optionsetting="pollStyle"]': poll.settings.pollStyle,
+            '[data-numbersetting="pollTimer"]': poll.settings.pollTimer,
+            '[data-setting="pollTimerState"]': poll.settings.pollTimerState,
+            '[data-setting="pollTally"]': poll.settings.pollTally,
+            '[data-setting="pollSpam"]': poll.settings.pollSpam
+        };
+
+        for (const [selector, value] of Object.entries(elements)) {
+            const element = document.querySelector(selector);
+            if (element) {
+                if (element.type === 'checkbox') {
+                    element.checked = value;
+                } else {
+                    element.value = value;
+                }
+                updateSettings(element, true);
+            }
+        }
+
+        this.currentPollId = pollId;
+        this.updatePollsList();
+    },
+
+    updatePollsList() {
+        const container = document.getElementById('savedPollsList');
+        container.innerHTML = '';
+
+        this.savedPolls.forEach(poll => {
+            const pollElement = document.createElement('div');
+            pollElement.className = 'saved-poll-item';
+            pollElement.dataset.pollId = poll.id;
+            pollElement.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 5px; margin: 5px 0; background: rgba(0,0,0,0.1); border-radius: 4px; cursor: pointer;';
+            
+            if (this.currentPollId === poll.id) {
+                pollElement.style.background = 'rgba(0,255,0,0.1)';
+            }
+
+            pollElement.innerHTML = `
+                <div class="poll-name" style="flex-grow: 1;">${poll.name}</div>
+                <button class="delete-poll" style="background: none; border: none; color: #ff4444; cursor: pointer; padding: 0 5px;">×</button>
+            `;
+            container.appendChild(pollElement);
+        });
+    },
+
+    savePollsToStorage() {
+        chrome.runtime.sendMessage({
+            cmd: "saveSetting",
+            type: "json",
+            setting: "savedPolls",
+            value: JSON.stringify(this.savedPolls)
+        });
     }
 };

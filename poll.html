@@ -58,6 +58,11 @@
             margin-left: 10px;
             z-index: 2;
         }
+		
+		.option-tally { 
+			z-index: 2;
+			margin-left: 10px;
+		}
 
         .poll-bar {
             position: absolute;
@@ -339,6 +344,10 @@
             color: #f0f;
         }
 		
+		.style-cyberpunk .option-tally {
+            color: #f0f;
+        }
+		
 		.hidden {
             display: none;
         }
@@ -370,7 +379,8 @@
             pollEnabled: urlParams.get('pollEnabled') || false,
             styleType: urlParams.get('style') || 'default',
 			pollSpam: urlParams.has('pollSpam') || false,
-			pollClosed: false 
+			pollClosed: false,
+			pollTally: urlParams.has('pollTally') || false, 
         };
 
         let results = {};
@@ -413,52 +423,54 @@
         }
 
         function updatePollResults() {
-			const pollOptionsContainer = document.getElementById('poll-options');
-			pollOptionsContainer.innerHTML = '';
+            const pollOptionsContainer = document.getElementById('poll-options');
+            pollOptionsContainer.innerHTML = '';
 
-			if (settings.pollType === 'freeform' && !settings.pollClosed) {
-				const instructionElement = document.createElement('div');
-				instructionElement.className = 'poll-instruction';
-				instructionElement.textContent = 'Enter a hashtagged #word into chat to vote for it!';
-				pollOptionsContainer.appendChild(instructionElement);
-			}
+            if (settings.pollType === 'freeform' && !settings.pollClosed) {
+                const instructionElement = document.createElement('div');
+                instructionElement.className = 'poll-instruction';
+                instructionElement.textContent = 'Enter a hashtagged #word into chat to vote for it!';
+                pollOptionsContainer.appendChild(instructionElement);
+            }
 
-			let displayOptions = [];
+            let displayOptions = [];
 
-			if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
-				displayOptions = settings.pollOptions.map(option => [option, results[option] || 0]);
-			} else if (settings.pollType === 'freeform') {
-				displayOptions = Object.entries(results).sort((a, b) => b[1] - a[1]).slice(0, 10);
-			}
+            if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+                displayOptions = settings.pollOptions.map(option => [option, results[option] || 0]);
+            } else if (settings.pollType === 'freeform') {
+                displayOptions = Object.entries(results).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            }
 
-			const maxVotes = Math.max(...displayOptions.map(([_, votes]) => votes));
+            const maxVotes = Math.max(...displayOptions.map(([_, votes]) => votes));
 
-			displayOptions.forEach(([option, votes], index) => {
-				const percentage = totalVotes > 0 ? (votes / totalVotes * 100).toFixed(1) : 0;
+            displayOptions.forEach(([option, votes], index) => {
+                const percentage = totalVotes > 0 ? (votes / totalVotes * 100).toFixed(1) : 0;
 
-				const optionElement = document.createElement('div');
-				optionElement.className = 'poll-option';
-				
-				if (votes === maxVotes && settings.pollClosed) {
-					optionElement.style.fontWeight = 'bold';
-					optionElement.style.fontSize = '1.1em';
-				}
+                const optionElement = document.createElement('div');
+                optionElement.className = 'poll-option';
+                
+                if (votes === maxVotes && settings.pollClosed) {
+                    optionElement.style.fontWeight = 'bold';
+                    optionElement.style.fontSize = '1.1em';
+                }
 
-				optionElement.innerHTML = `
-					${!settings.pollClosed ? `<span class="option-number">${index + 1}</span>` : ''}
-					<span class="option-text">${option}</span>
-					<span class="option-percentage">${percentage}%</span>
-					<div class="poll-bar" style="width: ${percentage}%;"></div>
-				`;
+                optionElement.innerHTML = `
+                    ${!settings.pollClosed ? `<span class="option-number">${index + 1}</span>` : ''}
+                    <span class="option-text">${option}</span>
+                    ${settings.pollTally ? 
+                        `<span class="option-percentage">${votes} votes</span>` : 
+                        `<span class="option-percentage">${percentage}%</span>`}
+                    <div class="poll-bar" style="width: ${percentage}%;"></div>
+                `;
 
-				if (parseFloat(percentage) > 90) {
-					optionElement.style.color = '#fff';
-					optionElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
-				}
+                if (parseFloat(percentage) > 90) {
+                    optionElement.style.color = '#fff';
+                    optionElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
+                }
 
-				pollOptionsContainer.appendChild(optionElement);
-			});
-		}
+                pollOptionsContainer.appendChild(optionElement);
+            });
+        }
 		
         function processVote(vote, name, source) {
 			if (settings.pollClosed) return;
@@ -545,7 +557,10 @@
 					settings.pollType = data.settings.pollType.optionsetting || 'multiple';
 				}
 				if (data.settings.pollQuestion) {
-					settings.pollQuestion = data.settings.pollQuestion.textsetting || 'What\'s your favorite genre?';
+					settings.pollQuestion = data.settings.pollQuestion.textsetting || 'Loading poll...';
+				}
+				if (data.settings.pollTally) {
+					settings.pollTally = data.settings.pollTally.setting;
 				}
 				if (data.settings.pollStyle) {
 					settings.styleType = data.settings.pollStyle.optionsetting || 'default';

@@ -2853,6 +2853,10 @@ input:checked + .slider:before {
                 <span id="queuemode" class="submenubuttons">
                     <button class="glowingButton" data-action="stopentries" title="Stop new entries from being submitted"><span data-translate="trigger-stop-entries-queue">🛑 Stop entries</span></button>
                     <button class="glowingButton" data-action="selectwinner"><span data-translate="trigger-new-selection-queue">✅ Select a name</span></button>
+					
+					<button class="glowingButton" data-action="removefromwaitlist"><span data-translate="removefromwaitlist">🔝 Remove top entry</span></button>
+					<button class="glowingButton" data-action="highlightwaitlist"><span data-translate="highlightwaitlist">🔦 Highlight top entry</span></button>
+					
                     <button class="glowingButton" data-action="resetwaitlist"><span data-translate="trigger-waitlist-reset-queue">🧹 Reset queue</span></button>
                     <button class="glowingButton" data-action="downloadwaitlist" title="Download the queue list as a TSV file"><span data-translate="download-waitlist">⬇️ Download list</span></button>
                 </span>
@@ -3060,6 +3064,13 @@ input:checked + .slider:before {
 									</label>
 									<span>🗳️ Allow multiple votes per user</span>
 								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-target="poll" data-setting="pollTally" />
+										<span class="slider round"></span>
+									</label>
+									<span> ✌️ Show number of votes instead of perecent</span>
+								</div>
 								<br>
 								<div>
 									<label>🎨 Poll Style/Theme:</label>
@@ -3093,10 +3104,25 @@ input:checked + .slider:before {
 									Timer (seconds): <input type="number" style="max-width: 5ch;" max="999999" min="1" value="60" size="4" data-numbersetting="pollTimer" />
 								</span>
 								<br>
-								<div>
-									<button class="glowingButton" data-action="closepoll" data-target="poll"><span>End Poll</span></button>
-									<button class="glowingButton" data-action="resetpoll" data-target="poll"><span>Reset Poll</span></button>
+								<div style="display:flex">
+									<button class="glowingButton" style="flex:2" data-action="closepoll" data-target="poll"><span>End Poll</span></button>
+									<button class="glowingButton" style="flex:2" data-action="resetpoll" data-target="poll"><span>Reset Poll</span></button>
 								</div>
+								
+								<h3>Poll Presets</h3>
+								<div  style="display:flex">
+									<button class="glowingButton" style="flex:2" data-action="savePoll">
+										<span data-translate="save-current-poll">Save Current Poll</span>
+									</button>
+									<button class="glowingButton" style="flex:2" data-action="createNewPoll">
+										<span data-translate="create-new-poll">Create New Poll</span>
+									</button>
+								</div>
+								<div id="savedPollsList" style="max-height: 200px; overflow-y: auto; margin-top: 10px;">
+									<!-- Saved polls will be listed here -->
+								</div>
+								
+								
 							</div>
 						</div>
 					</div>
