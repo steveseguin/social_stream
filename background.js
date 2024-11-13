@@ -2913,7 +2913,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 			newFileHandle = false;
 		} else if (request.cmd && request.cmd === "selectwinner") {
-			selectRandomWaitlist();
+			if ("value" in request) {
+				resp = selectRandomWaitlist(parseInt(request.value) || 0);
+			} else {
+				resp = selectRandomWaitlist();
+			}
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "resetwaitlist") {
 			resetWaitlist();
@@ -2921,9 +2925,16 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "stopentries") {
 			toggleEntries(false);
 			sendResponse({ state: isExtensionOn });	
+		} else if (request.cmd && request.cmd === "removefromwaitlist") {
+			removeWaitlist(parseInt(request.value) || 0);
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "highlightwaitlist") {
+			highlightWaitlist(parseInt(request.value) || 0);
+			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "downloadwaitlist") {
 			downloadWaitlist();
 			sendResponse({ state: isExtensionOn });
+			
 		} else if (request.cmd && request.cmd === "cleardock") {
 			sendResponse({ state: isExtensionOn });
 			var data = {};
