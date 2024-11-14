@@ -674,7 +674,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				</div>\
 				<div class="textInputContainer" style="width: 235px">\
 					<input type="number" id="chatcommandtimeout'+ i +'" class="textInput" min="0" autocomplete="off" placeholder="Timeout between triggers" data-numbersetting="chatcommandtimeout'+ i +'">\
-					<label for="chatcommandtimeout'+ i +'">&gt; Trigger timeout (ms)</label></div>\
+					<label for="chatcommandtimeout'+ i +'">&gt; Trigger Timeout (ms)</label></div>\
 				</div>\
 			</div>';
 		document.getElementById("chatCommands").appendChild(chat);
