@@ -101,6 +101,15 @@ if (typeof(chrome.runtime)=='undefined'){
 		return false; // I'll need to add version info eventually
 	}
 	
+	try {
+		window.prompt = function(title, val, message=""){
+			log("window.prompt");
+			return ipcRenderer.sendSync('prompt', {title, val, message}); // call if needed in the future
+		};
+	} catch(err) {
+		console.error(err);
+	}
+	
 	new Promise((resolve, reject) => {
 	   try {
 		  `+text+`
@@ -2700,7 +2709,7 @@ const PollManager = {
     },
 
     saveCurrentPoll() {
-        const pollName = prompt("Enter a name for this poll preset:", document.querySelector('[data-textsetting="pollQuestion"]').value.trim());
+		const pollName = prompt("Enter a name for this poll preset:", document.querySelector('[data-textsetting="pollQuestion"]').value.trim());
         if (!pollName) return;
 
         const newPoll = {
