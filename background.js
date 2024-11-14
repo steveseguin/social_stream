@@ -6134,6 +6134,8 @@ function sanitizeRelay(text, textonly=false, alt = false) {
 	return text;
 }
 
+const commandLastExecuted = {};
+
 // expects an object; not False/Null/undefined
 async function applyBotActions(data, tab = false, reflection = false) {
 	
@@ -6810,16 +6812,22 @@ async function applyBotActions(data, tab = false, reflection = false) {
 		// webhook for configured custom chat commands
 		for (var i = 1; i <= 20; i++) {
 			if (data.chatmessage && settings["chatevent" + i] && settings["chatcommand" + i] && settings["chatwebhook" + i]) {
-				let matches = false; 
+				let matches = false;
 				if (settings.chatwebhookstrict && (data.chatmessage === settings["chatcommand" + i].textsetting)) {
-					matches=true;
-				} else if (!settings.chatwebhookstrict && (data.chatmessage.toLowerCase().startsWith(settings["chatcommand" + i].textsetting.toLowerCase()))){
-					matches=true;
+					matches = true;
+				} else if (!settings.chatwebhookstrict && (data.chatmessage.toLowerCase().startsWith(settings["chatcommand" + i].textsetting.toLowerCase()))) {
+					matches = true;
 				}
-				if (matches){
-					// sendMessageToTabs(msg, false, null, false, false, 60000);
-					//if (Date.now() - messageTimeout > 1000) {
-					//	messageTimeout = Date.now();
+				
+				if (matches) {
+					const now = Date.now();
+					const commandTimeout = settings["chatcommandtimeout" + i] ? parseInt(settings["chatcommandtimeout" + i].numbersetting) : 0; 
+					
+					// Check if enough time has passed since last execution
+					if (!commandLastExecuted[i] || (now - commandLastExecuted[i] >= commandTimeout)) {
+						// Update last execution time
+						commandLastExecuted[i] = now;
+						
 						let URL = settings["chatwebhook" + i].textsetting;
 						if (settings.chatwebhookpost) {
 							if (!URL.startsWith("http")) {
@@ -6840,7 +6848,7 @@ async function applyBotActions(data, tab = false, reflection = false) {
 								fetch(URL).catch(console.error);
 							}
 						}
-					//}
+					}
 				}
 			}
 		}
