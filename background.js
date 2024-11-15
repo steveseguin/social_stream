@@ -5649,7 +5649,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout);
                 } else if (tab.url.startsWith("https://boltplus.tv/")) {
                     await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout);
-                } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
+                } else if (tab.url.startsWith("https://app.chime.aws/meetings/") || tab.url.startsWith("https://kick.com/")) {
                     await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout);
                 } else if (tab.url.startsWith("https://app.slack.com")) {
                     await attachAndChat(tab.id, data.response, false, false, false, false, overrideTimeout);

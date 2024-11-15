@@ -289,7 +289,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector('#message-input').focus();
+					document.querySelector('[data-input="true"]').focus();
 					sendResponse(true);
 					return;
 				}
