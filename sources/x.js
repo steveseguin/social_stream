@@ -211,8 +211,8 @@
 	
 	window.addEventListener('beforeunload', (e) => {
 		if (isExtensionOn) {
-			e.preventDefault();
-			e.returnValue = '';
+			//e.preventDefault();
+			//e.returnValue = '';
 			localStorage.setItem('messageHistory', JSON.stringify(messageHistory));
 			localStorage.setItem('messageHistoryTimestamp', Date.now());
 		}
