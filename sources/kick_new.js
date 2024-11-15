@@ -218,6 +218,12 @@
 			}
 		  }
 	  }
+	  if (chatNodes.length){
+		for (var i=0;i<chatNodes.length;i++){
+			chatmessage += getAllContentNodes(chatNodes[i])+" ";
+		}
+		chatmessage = chatmessage.trim();
+	  }
 	  
 	  if (!chatmessage){return;}
 	  
