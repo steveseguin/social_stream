@@ -868,7 +868,8 @@ img {
         <p>Join our community for free support on <a href="https://discord.socialstream.ninja" target="_blank">Discord</a>.</p>
     </footer>
 	<script>
-		function scrollToAnchor(hash) {
+		// Function to handle smooth scrolling to anchor with retry logic
+		function scrollToAnchor(hash, retryCount = 0, maxRetries = 3) {
 		    // Remove the # from the hash
 		    const targetId = hash.replace('#', '');
 		    
@@ -892,12 +893,36 @@ img {
 		    }
 		    
 		    if (targetElement) {
-		        setTimeout(() => {
-		            targetElement.scrollIntoView({
-		                behavior: 'smooth',
-		                block: 'start'
+		        // Wait for images to load in the markdown container
+		        const images = document.querySelectorAll('#markdown img');
+		        const imagePromises = Array.from(images).map(img => {
+		            if (img.complete) return Promise.resolve();
+		            return new Promise(resolve => {
+		                img.onload = resolve;
+		                img.onerror = resolve; // Handle failed image loads
 		            });
-		        }, 100); // Small delay to ensure content is rendered
+		        });
+		
+		        // After images load (or fail), scroll to target
+		        Promise.all(imagePromises).then(() => {
+		            // Additional small delay to ensure final layout
+		            setTimeout(() => {
+		                const offset = targetElement.getBoundingClientRect().top + window.scrollY - 20; // 20px padding
+		                window.scrollTo({
+		                    top: offset,
+		                    behavior: 'smooth'
+		                });
+		                
+		                // Verify scroll position after a short delay
+		                setTimeout(() => {
+		                    const elementPosition = targetElement.getBoundingClientRect().top;
+		                    // If element is not close to top of viewport and we haven't exceeded max retries
+		                    if (Math.abs(elementPosition) > 50 && retryCount < maxRetries) {
+		                        scrollToAnchor(hash, retryCount + 1, maxRetries);
+		                    }
+		                }, 500);
+		            }, 100);
+		        });
 		    }
 		}
 
