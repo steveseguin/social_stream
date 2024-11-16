@@ -868,6 +868,39 @@ img {
         <p>Join our community for free support on <a href="https://discord.socialstream.ninja" target="_blank">Discord</a>.</p>
     </footer>
 	<script>
+		function scrollToAnchor(hash) {
+		    // Remove the # from the hash
+		    const targetId = hash.replace('#', '');
+		    
+		    // Look for either the ID or a heading with matching text
+		    let targetElement = document.getElementById(targetId);
+		    
+		    if (!targetElement) {
+		        // If no direct ID match, try to find a heading that matches
+		        const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+		        for (const heading of headings) {
+		            // Convert heading text to kebab case for comparison
+		            const headingId = heading.textContent.toLowerCase()
+		                .replace(/[^\w\s-]/g, '')
+		                .replace(/\s+/g, '-');
+		            
+		            if (headingId === targetId) {
+		                targetElement = heading;
+		                break;
+		            }
+		        }
+		    }
+		    
+		    if (targetElement) {
+		        setTimeout(() => {
+		            targetElement.scrollIntoView({
+		                behavior: 'smooth',
+		                block: 'start'
+		            });
+		        }, 100); // Small delay to ensure content is rendered
+		    }
+		}
+
 		function smoothScroll(target) {
 			  const element = document.getElementById(target);
 			  if (element) {
@@ -879,20 +912,31 @@ img {
 			}
 		if (location.protocol.startsWith('http')) {
 			document.addEventListener("DOMContentLoaded", function() {
-				marked.use(markedGfmHeadingId.gfmHeadingId({})); // fml
-					// update to the newest readme, but keep a local copy for seo and such.
-					fetch('./README.md')
-						.then(response => response.text())
-						.then(text => {
-							const html = marked.parse(text);
-							document.getElementById('markdown').innerHTML = html;
-						})
-						.catch(error => console.error('Error loading the README:', error));
-				
+			    if (location.protocol.startsWith('http')) {
+			        marked.use(markedGfmHeadingId.gfmHeadingId({}));
+			        
+			        fetch('./README.md')
+			            .then(response => response.text())
+			            .then(text => {
+			                const html = marked.parse(text);
+			                document.getElementById('markdown').innerHTML = html;
+			                
+			                // After content is updated, check for hash and scroll if needed
+			                if (window.location.hash) {
+			                    scrollToAnchor(window.location.hash);
+			                }
+			            })
+			            .catch(error => console.error('Error loading the README:', error));
+			    }
 			});
 		} else {
 			console.warn('Skipping fetch call since the page is loaded locally.');
 		}
+		window.addEventListener('hashchange', function() {
+		    if (window.location.hash) {
+		        scrollToAnchor(window.location.hash);
+		    }
+		});
 	</script>
 </body>
 </html>
