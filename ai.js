@@ -812,7 +812,9 @@ async function processMessageWithOllama(data) {
 			ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting)||0);
 		}
 		
-		if (!settings.ollamaoverlayonly && data.tid && lastResponseTime[data.tid]){
+		if (data.type == "stageten"){
+			// bypass throttling limit
+		} else if (!settings.ollamaoverlayonly && data.tid && lastResponseTime[data.tid]){
 			if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
 				isProcessing = false;
 				return; // Skip this message if we've responded recently
@@ -824,7 +826,10 @@ async function processMessageWithOllama(data) {
 			botname = settings.ollamabotname.textsetting.trim();
 		}
 		
-		if (!data.chatmessage || data.chatmessage.startsWith(botname+":")) {
+		if (data.type == "stageten" && (botname == data.chatname)){ // stageten (via api) uses the bot's name
+			isProcessing = false;
+			return;
+		} else if (!data.chatmessage || data.chatmessage.startsWith(botname+":")) { // other sites don't use the bots name, but prefaces with it instead
 			isProcessing = false;
 			return;
 		}
@@ -835,6 +840,9 @@ async function processMessageWithOllama(data) {
 				return;
 			}
 		}
+		
+		console.log(data);
+		
 		var cleanedText = data.chatmessage;
 				
 		if (!data.textonly) {
@@ -1182,7 +1190,7 @@ async function processUserInput(userInput, data={}, additionalInstructions) {
         if (await isRAGConfigured()) {
             const databaseDescriptor = localStorage.getItem('databaseDescriptor') || 'Database description not available.';
             
-            const prompt = `You are an AI assistant with access to a database of information. ${additionalInstructions || ''}
+            const promptllm = `You are an AI assistant with access to a database of information. ${additionalInstructions || ''}
 
 Given the following user input, user name, and a description of the database contents, determine if a database search is necessary to respond appropriately. If a search is needed, provide relevant search keywords.
 
@@ -1213,7 +1221,7 @@ Your direct response here if no search is needed, otherwise leave this blank
 Ensure that if [NEEDS_SEARCH] is 'yes', [SEARCH_QUERY] is filled with keywords and [RESPONSE] is empty, and vice versa.
 Do not include any other text or explanations outside these sections.`;
 
-            const llmOutput = await callOllamaAPI(prompt);
+            const llmOutput = await callOllamaAPI(promptllm);
             const decision = parseDecision(llmOutput);
             
             if (decision.needsSearch) {
@@ -1225,14 +1233,14 @@ Do not include any other text or explanations outside these sections.`;
                 return decision.response;
             }
         }  else {// If RAG is not configured, use the original instructions
-            const prompt = `${additionalInstructions || 'You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it\'s directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response.'}
+            const promptllm = `${additionalInstructions || 'You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it\'s directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response.'}
 
 Respond to the following message:
 User ${data.chatname || 'user'} says: ${userInput}
 
 Your response:`;
 			log(userInput);
-            let response =  await callOllamaAPI(prompt);
+            let response =  await callOllamaAPI(promptllm);
 			if (!response || response.includes("RESPONSE") || response.startsWith("No ") || response.startsWith("NO ") || response.includes("NO_")  || response.includes("No_") || response.includes("NO-")){
 				return false;
 			}

@@ -3654,6 +3654,7 @@ function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false) { 
 }
 
 function sendToS10(data, fakechat=false, relayed=false) {
+	
 	if (settings.s10 && settings.s10apikey && settings.s10apikey.textsetting) {
 		try {
 			// msg =  '{
@@ -3663,6 +3664,7 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				// "sourceName": "twitch",
 				// "sourceIconUrl": "https://cdn.shopify.com/app-store/listing_images/715abff73d9178aa7f665d7feadf7edf/icon/CPTw1Y2Mp4UDEAE=.png"
 			// }';
+			
 			if (data.type && data.type === "stageten") {
 				return;
 			}
@@ -3689,11 +3691,12 @@ function sendToS10(data, fakechat=false, relayed=false) {
 					return null;
 				}
 				console.log(".");
-				if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid)){
+				// checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, save=true) 
+				if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)){
 					console.log("--");
 					return;
 				}
-			} else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid)){
+			} else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)){
 				return null;
 			}
 			
@@ -6395,6 +6398,7 @@ async function applyBotActions(data, tab = false, reflection = false) {
 			// if we send the normal messages, it will screw things up.
 			//}
 		}
+		
 		
 		if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(" said: ")){
 			return null;
