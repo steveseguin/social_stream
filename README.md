@@ -905,6 +905,8 @@ This project is licensed under the GPLv3.0 License - see the [LICENSE](LICENSE) 
 
 For the Terms of Service, please see: [Terms of Service](https://socialstream.ninja/TOS)
 
+For YouTube's Terms of Service, please see:  [YouTube's Terms of Service](https://www.youtube.com/t/terms) 
+
 ##  Donations
 
 I condemn Russia's brutal invasion of Ukraine. 💙💛 Please consider supporting or donating to Ukraine instead: https://war.ukraine.ua/support-ukraine/
