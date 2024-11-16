@@ -907,6 +907,10 @@ For the Terms of Service, please see: [Terms of Service](https://socialstream.ni
 
 For YouTube's Terms of Service, please see:  [YouTube's Terms of Service](https://www.youtube.com/t/terms) 
 
+## Privacy Policy
+
+For the privacy policy, please see: [Privacy Policy](https://socialstream.ninja/privacy)
+
 ##  Donations
 
 I condemn Russia's brutal invasion of Ukraine. 💙💛 Please consider supporting or donating to Ukraine instead: https://war.ukraine.ua/support-ukraine/
