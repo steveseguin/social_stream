@@ -175,7 +175,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - meetme
 - music.gala.com (no pop out)
 - WebinarGeek (no pop out ; chat only)
-
+- live.fc2.com (no pop out)
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   
 [More on request](#requesting-a-site)
