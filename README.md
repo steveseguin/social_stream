@@ -903,7 +903,7 @@ This project is licensed under the GPLv3.0 License - see the [LICENSE](LICENSE) 
 
 ## Terms of Service
 
-For the Terms of Service, please see: [Terms of Service](https://github.com/steveseguin/social_stream/blob/main/TOS.md)
+For the Terms of Service, please see: [Terms of Service](https://socialstream.ninja/TOS)
 
 ##  Donations
 
