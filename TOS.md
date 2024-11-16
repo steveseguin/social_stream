@@ -30,6 +30,5 @@ The maintainers reserve the right to modify these terms of service at any time. 
 ### Contact Information
 For terms of service-related inquiries, please contact:
 
-Steve Seguin
-
+Steve Seguin  
 Email: `steve@seguin.email`
