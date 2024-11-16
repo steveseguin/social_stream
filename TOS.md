@@ -26,3 +26,9 @@ This software is provided "as-is," without any express or implied warranties, in
 
 ### Changes to Terms
 The maintainers reserve the right to modify these terms of service at any time. Users are encouraged to review the terms periodically for any changes. Continued use of the software and services after any changes constitutes acceptance of those changes.
+
+### Contact Information
+For terms of service-related inquiries, please contact:
+
+Steve Seguin
+Email: `steve@seguin.email`
