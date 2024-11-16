@@ -257,6 +257,10 @@
                     <label for="nameColor">Name Color:</label>
                     <input type="color" class="form-control" id="nameColor">
                 </div>
+				 <div class="form-group">
+                    <label for="eventType">Event Type:</label>
+                    <input type="color" class="form-control" id="eventType">
+                </div>
                 <div class="form-group">
                     <label for="contentimg">Content Image URL:</label>
                     <input type="text" class="form-control" id="contentimg" placeholder="Enter content image URL (optional)">
@@ -425,6 +429,7 @@
                 membership: document.getElementById('membership').value,
                 chatimg: document.getElementById('chatimg').value,
                 nameColor: document.getElementById('nameColor').value,
+				eventType: document.getElementById('eventType').value || false,
                 contentimg: document.getElementById('contentimg').value,
                 question: document.getElementById('isQuestion').checked
             };
@@ -440,6 +445,7 @@
 				membership: Math.random() > 0.8 ? "Premium Member" : "",
 				chatimg: "https://picsum.photos/50/50?random=" + Math.random(),
 				nameColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+				event: false,
 				contentimg: Math.random() > 0.9 ? "https://picsum.photos/200/200?random=" + Math.random() : "",
 				question: Math.random() > 0.8
 			};
