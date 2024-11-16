@@ -9401,80 +9401,117 @@ var jokes = [
 let db;
 const dbName = "chatMessagesDB";
 const storeName = "messages";
+const DAYS_TO_KEEP = 30; // YouTube's API policy is max 30-days.
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-// Initialize the database
 function initDatabase() {
-	const request = indexedDB.open(dbName, 1);
-
-	request.onupgradeneeded = event => {
-		db = event.target.result;
-		if (!db.objectStoreNames.contains(storeName)) {
-			const objStore = db.createObjectStore(storeName, { autoIncrement: true });
-			objStore.createIndex("unique_user", ["chatname", "type"], { unique: false });
-			objStore.createIndex("timestamp", "timestamp", { unique: false });
-		}
-	};
-
-	request.onsuccess = event => {
-		db = event.target.result;
-	};
-
-	request.onerror = event => {
-		console.error("Database error: ", event.target.errorCode);
-	};
+    const request = indexedDB.open(dbName, 2); // Increment version for schema update
+    
+    request.onupgradeneeded = event => {
+        db = event.target.result;
+        if (!db.objectStoreNames.contains(storeName)) {
+            const objStore = db.createObjectStore(storeName, { autoIncrement: true });
+            objStore.createIndex("unique_user", ["chatname", "type"], { unique: false });
+            objStore.createIndex("timestamp", "timestamp", { unique: false });
+        }
+    };
+    
+    request.onsuccess = event => {
+        db = event.target.result;
+        // Run initial cleanup and schedule periodic cleanups
+        cleanupExpiredMessages();
+        setInterval(cleanupExpiredMessages, MS_PER_DAY); // Check daily
+    };
+    
+    request.onerror = event => {
+        console.error("Database error: ", event.target.errorCode);
+    };
 }
 
 function addMessageDB(message) {
-	if (settings.disableDB) {
-		return;
-	}
-	try {
-		const transaction = db.transaction([storeName], "readwrite");
-		const store = transaction.objectStore(storeName);
-		const request = store.add({ ...message, timestamp: new Date() });
-	} catch (e) {}
-	// request.onsuccess = () => log('Message added to the database.');
-	// request.onerror = e => console.error('Error adding message to the database: ', e.target.error);
+    if (settings.disableDB) {
+        return;
+    }
+    try {
+        const transaction = db.transaction([storeName], "readwrite");
+        const store = transaction.objectStore(storeName);
+        const messageWithTimestamp = {
+            ...message,
+            timestamp: new Date(),
+            expiresAt: new Date(Date.now() + (DAYS_TO_KEEP * MS_PER_DAY))
+        };
+        const request = store.add(messageWithTimestamp);
+        
+        request.onerror = e => {
+            console.error('Error adding message:', e.target.error);
+        };
+    } catch (e) {
+        console.error('Transaction error:', e);
+    }
+}
+
+function cleanupExpiredMessages() {
+    const transaction = db.transaction([storeName], "readwrite");
+    const store = transaction.objectStore(storeName);
+    const index = store.index("timestamp");
+    const now = new Date();
+    
+    const request = index.openCursor();
+    
+    request.onsuccess = event => {
+        const cursor = event.target.result;
+        if (cursor) {
+            const message = cursor.value;
+            if (message.expiresAt && new Date(message.expiresAt) < now) {
+                store.delete(cursor.primaryKey);
+            }
+            cursor.continue();
+        }
+    };
+    
+    request.onerror = e => {
+        console.error('Cleanup error:', e.target.error);
+    };
 }
 
 function getMessagesDB(chatname, type, page = 0, pageSize = 100, callback) {
-	if (settings.disableDB) {
-		return;
-	}
-
-	const transaction = db.transaction([storeName], "readonly");
-	const store = transaction.objectStore(storeName);
-	const index = store.index("unique_user");
-
-	const range = IDBKeyRange.only([chatname, type]);
-	const request = index.openCursor(range);
-	const results = [];
-
-	let count = 0;
-	const skip = page * pageSize;
-
-	request.onsuccess = event => {
-		const cursor = event.target.result;
-		if (cursor) {
-			if (count >= skip && count < skip + pageSize) {
-				results.push(cursor.value);
-			}
-			count++;
-			cursor.continue();
-		} else if (callback) {
-			callback(results.reverse()); // Execute callback function with the results
-		}
-	};
-
-	request.onerror = e => {
-		console.error("Error fetching messages: ", e.target.error);
-	};
+    if (settings.disableDB) {
+        return;
+    }
+    const transaction = db.transaction([storeName], "readonly");
+    const store = transaction.objectStore(storeName);
+    const index = store.index("unique_user");
+    const range = IDBKeyRange.only([chatname, type]);
+    const request = index.openCursor(range);
+    const results = [];
+    let count = 0;
+    const skip = page * pageSize;
+    const now = new Date();
+    
+    request.onsuccess = event => {
+        const cursor = event.target.result;
+        if (cursor) {
+            const message = cursor.value;
+            // Only include messages that haven't expired
+            if (!message.expiresAt || new Date(message.expiresAt) > now) {
+                if (count >= skip && count < skip + pageSize) {
+                    results.push(message);
+                }
+                count++;
+            }
+            cursor.continue();
+        } else if (callback) {
+            callback(results.reverse());
+        }
+    };
+    
+    request.onerror = e => {
+        console.error("Error fetching messages: ", e.target.error);
+    };
 }
 
 // Initialize the database
 initDatabase();
-
-//
 
 let fileHandleTicker;
 let fileContentTicker = "";
