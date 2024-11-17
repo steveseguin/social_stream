@@ -102,7 +102,7 @@
 		}
 		var chatimg = "";
 		try {
-			chatimg = ele.querySelector("picture[class^='_profile-image'][src]").src;
+			chatimg = ele.querySelector("picture[class^='_picture-wrapper'] img[src]").src;
 		} catch(e){
 		}
 		var data = {};
