@@ -2913,8 +2913,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 			newFileHandle = false;
 		} else if (request.cmd && request.cmd === "selectwinner") {
+			//console.log(request);
 			if ("value" in request) {
-				resp = selectRandomWaitlist(parseInt(request.value) || 0);
+				resp = selectRandomWaitlist(parseInt(request.value) || 1);
 			} else {
 				resp = selectRandomWaitlist();
 			}
@@ -3690,10 +3691,10 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				if (data.bot) {
 					return null;
 				}
-				console.log(".");
+				//console.log(".");
 				// checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, save=true) 
 				if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)){
-					console.log("--");
+					//console.log("--");
 					return;
 				}
 			} else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)){
@@ -4144,8 +4145,9 @@ function setupSocket() {
 			} else if (data.action && data.action === "downloadwaitlist") {
 				downloadWaitlist();
 			} else if (data.action && data.action === "selectwinner") {
+				//console.log(data);
 				if ("value" in data) {
-					resp = selectRandomWaitlist(parseInt(data.value) || 0);
+					resp = selectRandomWaitlist(parseInt(data.value) || 1);
 				} else {
 					resp = selectRandomWaitlist();
 				}
@@ -4778,7 +4780,7 @@ function selectRandomWaitlist(n = 1) {
 			}
 		}
 		//console.log("SENDING WINNDERS");
-		//console.log(winners);
+		console.log(winners);
 		
 		drawListCount = selectable.length - count;
 		sendWaitlistConfig(winners, true);

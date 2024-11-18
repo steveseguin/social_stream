@@ -841,7 +841,7 @@ async function processMessageWithOllama(data) {
 			}
 		}
 		
-		console.log(data);
+		//console.log(data);
 		
 		var cleanedText = data.chatmessage;
 				
