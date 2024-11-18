@@ -2583,7 +2583,7 @@ const TTSManager = {
         
         const data = {
             text,
-            model_id: "eleven_monolingual_v1",
+            model_id: "eleven_monolingual_v2",
             voice_settings: {
                 stability: 0,
                 similarity_boost: 0,
