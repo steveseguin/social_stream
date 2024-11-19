@@ -3504,6 +3504,13 @@
 			if (urlParams.has("readevents")) {
 				doNotReadEvents = false;
 			}
+			
+			var bottts = false;
+			if (urlParams.has("bottts")) {
+				bottts = true;
+			}
+			
+			
 
 			var pitch = 1;
 			if (urlParams.has("pitch")) {
@@ -3558,7 +3565,9 @@
 				if (!text) {
 					return;
 				}
-
+				
+				if (!data.bot && bottts){return;}
+				
 				if (text.startsWith("!")) {
 					return;
 				} // do not TTS commands.
@@ -8012,6 +8021,7 @@
 						return;
 					}
 				}
+				if (!data.bot && bottts){return;}
 
 				if (doNotReadEvents && data.event) {
 					return;
