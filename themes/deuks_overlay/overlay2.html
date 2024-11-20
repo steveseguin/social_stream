@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Overlay</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@300..800&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Prevent external scrollbars in OBS */
+            background-color: rgba(10, 22, 40, 0);
+            font-family: 'Host Grotesk', sans-serif;
+        }
+
+        #chat-container {
+            padding: 25px;
+            max-width: 350px;
+            height: 100%;
+            overflow-y: auto; /* Allow internal scrolling */
+            scrollbar-width: none; /* Hide scrollbar for Firefox */
+            -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
+            margin: auto;
+            scroll-behavior: smooth; /* Optional for smooth scrolling */
+        }
+
+        #chat-container::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for WebKit browsers */
+        }
+        
+        /* Overlay size adjustments */
+        .small-overlay #chat-container {
+            transform: scale(0.6);
+        }
+        .large-overlay #chat-container {
+            transform: scale(1.2);
+        }
+
+        .message-container {
+            position: relative;
+            margin-bottom: 5px;
+        }
+
+        .event-message {
+            background: rgba(50, 50, 70, 1); /* Different background for events */
+            padding: 10px;
+            border-radius: 10px;
+            color: #ffd700; /* Gold color for events */
+            font-weight: bold;
+            margin-bottom: 10px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideFadeInEvent 0.6s ease forwards;
+        }
+
+        .username-box {
+            display: inline-flex; /* Use inline-flex for consistent sizing */
+            align-items: center; /* Vertically align username and badges */
+            gap: 5px; /* Space between username and badges */
+            position: absolute;
+            top: -19px;
+            left: 0px;
+            padding: 8px 10px;
+            color: #17191c;
+            font-weight: 600;
+            background: rgba(240, 240, 240, 1);
+            z-index: 2;
+            white-space: nowrap; /* Prevent wrapping */
+            max-width: 300px; /* Ensure it does not overflow the container */
+        }
+
+        .badges, .badge {
+            display: inline-flex; /* Ensure badges are laid out horizontally */
+            align-items: center;
+            gap: 5px; /* Space between badges */
+        }
+
+        .badge {
+            height: 0.9em;
+            width: auto; /* Auto width to maintain aspect ratio */
+            vertical-align: middle;
+            margin-top: -2px; /* Move each badge up slightly */
+        }
+
+        .source-icon {
+            height: 1em;
+            margin-right: 0px; /* Space between icon and username */
+            vertical-align: middle;
+        }
+
+        .message {
+            display: inline-block;
+            max-height: 120px;
+            max-width: 100%;
+            background: rgba(23, 25, 28, 0.9);
+            padding: 24px 8px 8px 8px;
+            margin-top: 22px;
+            margin-left: 15px;
+            color: rgba(240, 240, 240, 1);
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideFadeIn 0.5s ease forwards;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .text {
+            font-size: clamp(0.85em, 2.5vw, 1em);
+            line-height: 1.4;
+        }
+        
+        @keyframes slideFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateX(-30px); /* Start further to the left */
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0); /* Slide to the original position */
+            }
+        }
+
+        @keyframes slideFadeInEvent {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .text img {
+            max-width: 1.5em; /* Adjust size as needed */
+            max-height: 1.5em;
+            vertical-align: middle; /* Align emotes with text */
+         }
+    </style>
+</head>
+<body>
+    <div id="chat-container"></div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        let lastSender = null;
+        let lastMessageDiv = null;
+
+        // Parameters for Social Stream Ninja
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomID = urlParams.get("session") || "7RUWtGBfz2";
+        const password = "false";
+        const featuredMode = false;
+
+        // Function to apply overlay size based on URL parameter
+        function applyOverlaySize() {
+            const size = urlParams.get('size'); // Get the 'size' parameter
+            document.body.classList.remove("small-overlay", "large-overlay"); // Reset any existing classes
+            if (size === "small") {
+                document.body.classList.add("small-overlay");
+            } else if (size === "large") {
+                document.body.classList.add("large-overlay");
+            }
+        }
+
+        function isFullyVisible(element) {
+            const containerRect = chatContainer.getBoundingClientRect();
+            const elementRect = element.getBoundingClientRect();
+            return elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
+        }
+
+        function removeCutOffMessages() {
+            let firstMessage = chatContainer.firstElementChild;
+            while (firstMessage && !isFullyVisible(firstMessage)) {
+                chatContainer.removeChild(firstMessage);
+                firstMessage = chatContainer.firstElementChild;
+            }
+        }
+
+        function autoScroll() {
+            const lastMessage = chatContainer.lastElementChild;
+            if (lastMessage) {
+                lastMessage.scrollIntoView({ behavior: "instant", block: "end" });
+                setTimeout(() => {
+                    lastMessage.scrollIntoView({ behavior: "instant", block: "end" });
+                    removeCutOffMessages();
+                }, 50);
+            }
+        }
+
+        const observer = new MutationObserver(() => {
+            autoScroll();
+        });
+        observer.observe(chatContainer, { childList: true, subtree: true });
+
+        function addEventToOverlay(data) {
+            const eventDiv = document.createElement('div');
+            eventDiv.classList.add('event-message');
+            let eventText = '';
+
+            if (data.type === 'follow') {
+                eventText = `${data.chatname} just followed!`;
+            } else if (data.type === 'subscription') {
+                eventText = `${data.chatname} subscribed!`;
+            } else if (data.type === 'donation') {
+                eventText = `${data.chatname} donated ${data.amount || ''}!`;
+            }
+
+            eventDiv.innerHTML = `<div>${eventText}</div>`;
+            chatContainer.appendChild(eventDiv);
+        }
+
+        function addMessageToOverlay(data) {
+            if (!data || !data.chatname || !data.chatmessage) {
+                console.error("Invalid message data", data);
+                return;
+            }
+
+            if (['follow', 'subscription', 'donation'].includes(data.type)) {
+                addEventToOverlay(data);
+                return;
+            }
+
+            if (lastSender === data.chatname && lastMessageDiv) {
+                // Append new message to the existing message container
+                const textDiv = document.createElement('div');
+                textDiv.classList.add('text');
+                textDiv.innerHTML = data.chatmessage || '';
+                lastMessageDiv.querySelector('.message').appendChild(textDiv);
+            } else {
+                // Create a new message container
+                const messageContainer = document.createElement('div');
+                messageContainer.classList.add('message-container');
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+
+                let sourceIcon = '';
+                if (data.type === 'twitch') {
+                //    sourceIcon = `<img src="https://img.icons8.com/?size=100&id=S5wxXL23AVBm&format=png&color=000000" alt="Twitch" class="source-icon">`;
+					  sourceIcon = "https://socialstream.ninja/sources/images/twitch.png"; // modded by steve, since direct linking isn't approprioate
+                } else if (data.type === 'tiktok') {
+					  sourceIcon = "https://socialstream.ninja/sources/images/tiktok.png"; // modded by steve, since direct linking isn't approprioate
+                //    sourceIcon = `<img src="https://w7.pngwing.com/pngs/483/249/png-transparent-tiktok-icon-thumbnail.png" alt="TikTok" class="source-icon" style="transform: scale(1.25)" >`;
+                }
+
+                let chatbadges = "";
+                if (data.chatbadges) {
+                    data.chatbadges.slice(0, 1).forEach(badge => {
+                        if (typeof badge === "object" && badge.type === "img" && badge.src) {
+                            chatbadges += `<img class='badge' src='${badge.src}' />`;
+                        } else if (badge.type === "svg" && badge.html) {
+                            chatbadges += `<span class='badge svg'>${badge.html}</span>`;
+                        }
+                    });
+                }
+
+                messageDiv.innerHTML = `
+                    <div class="username-box">
+                        ${sourceIcon}
+                        <span>${data.chatname}</span>
+                        <span class="badges">${chatbadges}</span>
+                    </div>
+                    <div class="text">${data.chatmessage || ''}</div>
+                    ${(data.donation || data.hasDonation) ? `<div class="donation">${(data.donation || data.hasDonation)}</div>` : ''}
+                `;
+
+                messageContainer.appendChild(messageDiv);
+                chatContainer.appendChild(messageContainer);
+
+                lastSender = data.chatname;
+                lastMessageDiv = messageContainer;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyOverlaySize(); // Apply overlay size based on URL parameter
+
+            const iframe = document.createElement("iframe");
+            iframe.src = featuredMode
+                ? `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`
+                : `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${roomID}`;
+
+            iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+            document.body.appendChild(iframe);
+
+            window.addEventListener("message", (event) => {
+                if (event.source !== iframe.contentWindow) return;
+                if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+                    addMessageToOverlay(event.data.dataReceived.overlayNinja);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

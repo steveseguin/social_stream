@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Overlay</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@300..800&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(10, 22, 40, 0.8);
+            font-family: 'Host Grotesk', sans-serif;
+            background-color: #0000;
+        }
+
+        #chat-container {
+            padding: 25px;
+            max-width: 350px;
+            margin: auto;
+        }
+
+        .message-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+		
+		.badges:empty, span:empty, .text:empty, .donation:empty {
+			display:none;
+		}
+
+        .username-box {
+            display: inline-block;
+            position: absolute;
+            top: -19px;
+            left: 0px;
+            background: linear-gradient(145deg, #d12b4f, #e02c53);
+            padding: 8px 15px;
+            border-radius: 8px;
+            color: #181611;
+            font-weight: 600;
+            z-index: 2;
+        }
+		
+		.username-box span {
+			display:inline-block;
+		}
+		
+		.donation {
+			padding: 7px 18px 5px 18px;
+			color: white;
+		}
+
+        .badge {
+            height: 1em;
+            vertical-align: middle;
+            margin-left: 0px;
+        }
+
+        .message {
+            display: inline-block;
+            max-height: 120px;
+            max-width: 100%;
+            background: linear-gradient(90deg, #191817, #1b1c20);
+            padding: 24px 18px 18px 18px;
+            margin-top: 22px;
+            margin-left: 15px;
+            border-radius: 10px;
+            color: #e02c53;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: slideFadeIn 0.5s ease forwards;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .text {
+            font-size: clamp(0.85em, 2.5vw, 1em);
+            line-height: 1.4;
+        }
+		.badges svg, .badges img, .text svg, .text img {
+			max-width:64px;
+			max-height:24px;
+		}
+
+        @keyframes slideFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container"></div>
+
+    <script>
+    // Parameters for Social Stream Ninja
+    var urlParams = new URLSearchParams(window.location.search);
+    var roomID = "4DP7Stjuew"; // Default Room ID
+
+    if (urlParams.has("session")) {
+        roomID = urlParams.get("session");
+    }
+    var password = "false"; // Set password if needed
+    var featuredMode = false; // Set to true if you only want to display featured messages
+
+    const chatContainer = document.getElementById('chat-container');
+
+    // Function to add a dynamic message to the overlay
+    function addMessageToOverlay(data) {
+        const messageContainer = document.createElement('div');
+        messageContainer.classList.add('message-container');
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        if (data.mid) messageDiv.id = data.mid;
+        data.sourceicon = `https://socialstream.ninja/sources/images/${data.type}.png`;
+
+        // Build the badges HTML
+        let chatbadges = "";
+        if (data.chatbadges) {
+            data.chatbadges.slice(0, 2).forEach(badge => {
+                if (typeof badge === "object") {
+                    if (badge.type === "img" && badge.src) {
+                        chatbadges += `<img class='badge' src='${badge.src}' />`;
+                    } else if (badge.type === "svg" && badge.html) {
+                        chatbadges += `<span class='badge svg'>${badge.html}</span>`;
+                    }
+                } else {
+                    chatbadges += `<img class='badge' src='${badge}' />`;
+                }
+            });
+        }
+
+        // Construct the HTML for each message
+        messageDiv.innerHTML = `
+            ${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : ''}
+            <div class="username-box">
+                <span>${data.chatname}</span>
+                <span class="badges">${chatbadges}</span>
+            </div>
+            <div class="text">${data.chatmessage || ''}</div>
+            ${(data.donation||data.hasDonation) ? `<div class="donation">${(data.donation||data.hasDonation)}</div>` : ''}
+        `;
+
+        messageContainer.appendChild(messageDiv);
+        chatContainer.appendChild(messageContainer);
+
+        // Auto-scroll to the latest message
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        // Remove oldest messages if over limit
+        if (chatContainer.children.length > 20) {
+            chatContainer.removeChild(chatContainer.firstChild);
+        }
+    }
+
+    // Initialize iframe for Social Stream Ninja
+    document.addEventListener('DOMContentLoaded', () => {
+        const iframe = document.createElement("iframe");
+        iframe.src = featuredMode
+            ? `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`
+            : `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${roomID}`;
+
+        // Hide the iframe (it's just for listening to chat)
+        iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+        document.body.appendChild(iframe);
+
+        // Listen for incoming chat messages from Social Stream Ninja
+        window.addEventListener("message", (event) => {
+            if (event.source !== iframe.contentWindow) return;
+            if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+                addMessageToOverlay(event.data.dataReceived.overlayNinja);
+            }
+        });
+    });
+</script>
+</body>
+</html>
