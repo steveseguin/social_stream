@@ -2447,6 +2447,11 @@
 				timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
 			}
 			
+			var readDonos = false;
+			if (urlParams.has("ttsdonos")) {
+				readDonos = urlParams.get("ttsdonos") || "en-US";
+			}
+			
 			var waitToReveal = 0;
 			if (urlParams.has("delaytime")) {
 				waitToReveal = parseInt(urlParams.get("delaytime")) || 10000;
@@ -8020,6 +8025,7 @@
 					}
 				}
 				if (!data.bot && bottts){return;}
+				if (readDonos && !(data.hasDonation || data.donation)){return;}
 
 				if (doNotReadEvents && data.event) {
 					return;
