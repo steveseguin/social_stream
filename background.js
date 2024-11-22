@@ -5651,7 +5651,11 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
                     handleStageTen(tab, data, metadata);
                 } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
-                    await attachAndChat(tab.id, [...data.response].reverse().join(''), false, true, false, false, overrideTimeout);
+					if (isSSAPP){
+						await attachAndChat(tab.id, [...data.response].reverse().join(''), false, true, false, false, overrideTimeout);
+					} else {
+						await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout);
+					}
                 } else if (tab.url.startsWith("https://boltplus.tv/")) {
                     await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout);
                 } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
