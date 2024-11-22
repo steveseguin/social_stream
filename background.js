@@ -6147,12 +6147,71 @@ function sanitizeRelay(text, textonly=false, alt = false) {
 
 const commandLastExecuted = {};
 
+function extractBskyUsername(text) {
+	if (!text || typeof text !== 'string') {
+		return false;
+	}
+
+	// Regular expression to match different Bluesky username formats
+	const patterns = [
+		// Match @username.bsky.social
+		/@([a-zA-Z0-9-_]+\.bsky\.social)\b/,
+		// Match username.bsky.social without @
+		/\b([a-zA-Z0-9-_]+\.bsky\.social)\b/,
+		// Match username@bsky.social format
+		/\b([a-zA-Z0-9-_]+@bsky\.social)\b/
+	];
+
+	for (const pattern of patterns) {
+		const match = text.match(pattern);
+		if (match) {
+			// Get the matched username
+			let username = match[1];
+			
+			// If it's in username@bsky.social format, convert to username.bsky.social
+			if (username.includes('@bsky.social')) {
+				username = username.replace('@', '.');
+			}
+			
+			// Clean and sanitize the username
+			username = username.toLowerCase()
+				.trim()
+				.replace(/[^\w.-]/g, ''); // Remove any invalid characters
+				
+			// Verify the final format
+			if (/^[a-z0-9-_]+\.bsky\.social$/.test(username)) {
+				return username;
+			}
+		}
+	}
+
+	return false;
+}
+
+var BSky = {};
+try {
+	BSky = localStorage.getItem("x2bsky")
+	if (BSky){
+		BSky = JSON.parse(BSky);
+		BSky = JSON.parse(BSky);
+	}
+} catch(e){}
+
 // expects an object; not False/Null/undefined
 async function applyBotActions(data, tab = false, reflection = false) {
 	
 	if (!data.id) {
 		messageCounter += 1;
 		data.id = messageCounter;
+	}
+	if (settings.storeBSky && data.userid && ((data.type == "x") || (data.type == "twitter"))){
+		var matchedBSky = extractBskyUsername(data.chatname) || extractBskyUsername(data.chatmessage);
+		if (matchedBSky){
+			BSky[data.userid] = matchedBSky;
+			if (!(Object.keys(BSky)%10)){
+				localStorage.setItem("x2bsky",JSON.stringify(BSky));
+			}
+		}
 	}
 
 	try {

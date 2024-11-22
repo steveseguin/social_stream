@@ -656,13 +656,12 @@
 	if (chrome && chrome.runtime) {
 		chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			try {
-				//console.log("REQUEST");
-				//console.log(request);
+				console.log("REQUEST", request);
 				if ("focusChat" == request) {
 					if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
 						return;
 					}
-
+		
 					document.querySelector('[data-a-target="chat-input"]').focus();
 					sendResponse(true);
 					return;
@@ -710,7 +709,7 @@
 				}
 
 				// twitch doesn't capture avatars already.
-			} catch (e) {}
+			} catch (e) {console.error(e);}
 			sendResponse(false);
 		});
 
@@ -1123,72 +1122,192 @@
 		console.log(e);
 	}
 
-	try {
-		window.onblur = null;
-		window.blurred = false;
-		document.hidden = false;
-		document.visibilityState = "visible";
-		document.mozHidden = false;
-		document.webkitHidden = false;
-	} catch (e) {}
+})();
 
-	try {
-		document.hasFocus = function () {
-			return true;
-		};
-		window.onFocus = function () {
-			return true;
-		};
+(function() {
+    // Store original methods we'll need to reference
+    const originalAddEventListener = EventTarget.prototype.addEventListener;
+    const originalDispatchEvent = EventTarget.prototype.dispatchEvent;
+    
+    // Override addEventListener to intercept focus-related events
+    EventTarget.prototype.addEventListener = function(type, listener, options) {
+        if (['blur', 'focusout', 'visibilitychange', 'webkitvisibilitychange', 'mozvisibilitychange'].includes(type)) {
+            // Don't actually add these listeners
+            return;
+        }
+        return originalAddEventListener.call(this, type, listener, options);
+    };
 
-		Object.defineProperty(document, "mozHidden", { value: false });
-		Object.defineProperty(document, "msHidden", { value: false });
-		Object.defineProperty(document, "webkitHidden", { value: false });
-		Object.defineProperty(document, "visibilityState", {
-			get: function () {
-				return "visible";
-			},
-			value: "visible",
-			writable: true
-		});
-		Object.defineProperty(document, "hidden", { value: false, writable: true });
+    // Override dispatchEvent to prevent certain events
+    EventTarget.prototype.dispatchEvent = function(event) {
+        if (event.type === 'visibilitychange' || event.type === 'blur' || event.type === 'focusout') {
+            return true; // Pretend the event was handled
+        }
+        return originalDispatchEvent.call(this, event);
+    };
 
-		setInterval(function () {
-			window.onblur = null;
-			window.blurred = false;
-			document.hidden = false;
-			document.visibilityState = "visible";
-			document.mozHidden = false;
-			document.webkitHidden = false;
-			document.dispatchEvent(new Event("visibilitychange"));
-		}, 200);
-	} catch (e) {}
+    // Define non-configurable properties
+    const defineNonConfigurable = (obj, prop, value) => {
+        try {
+            Object.defineProperty(obj, prop, {
+                value: value,
+                configurable: false,
+                writable: false,
+                enumerable: true
+            });
+        } catch (e) {
+            console.debug(`Failed to define ${prop}`, e);
+        }
+    };
 
-	try {
-		document.onvisibilitychange = function () {
-			window.onFocus = function () {
-				return true;
-			};
-		};
-	} catch (e) {}
+    // Define getter-based properties
+    const defineGetter = (obj, prop, getter) => {
+        try {
+            Object.defineProperty(obj, prop, {
+                get: getter,
+                configurable: false,
+                enumerable: true
+            });
+        } catch (e) {
+            console.debug(`Failed to define getter ${prop}`, e);
+        }
+    };
 
-	try {
-		for (event_name of [
-			"visibilitychange",
-			"webkitvisibilitychange",
-			"blur", // may cause issues on some websites
-			"mozvisibilitychange",
-			"msvisibilitychange"
-		]) {
-			try {
-				window.addEventListener(
-					event_name,
-					function (event) {
-						event.stopImmediatePropagation();
-						event.preventDefault();
-					},
-					true
-				);
-			} catch (e) {}
-		}
-	} catch (e) {}
+    // Override focus-related properties
+    const overrides = {
+        // Document overrides
+        document: {
+            hidden: false,
+            webkitHidden: false,
+            mozHidden: false,
+            msHidden: false,
+            visibilityState: 'visible',
+            webkitVisibilityState: 'visible',
+            mozVisibilityState: 'visible',
+            msVisibilityState: 'visible',
+            hasFocus: () => true,
+            activeElement: document.body
+        },
+        // Window overrides
+        window: {
+            onblur: null,
+            onfocus: null,
+            onvisibilitychange: null,
+            blurred: false
+        }
+    };
+
+    // Apply document overrides
+    for (const [key, value] of Object.entries(overrides.document)) {
+        if (typeof value === 'function') {
+            defineNonConfigurable(Document.prototype, key, value);
+        } else {
+            defineGetter(document, key, () => value);
+        }
+    }
+
+    // Apply window overrides
+    for (const [key, value] of Object.entries(overrides.window)) {
+        defineGetter(window, key, () => value);
+    }
+
+    // Override focus/blur methods
+    const noopFunc = () => undefined;
+    window.focus = noopFunc;
+    window.blur = noopFunc;
+
+    // Handle active element tracking
+    let lastActiveElement = document.activeElement;
+    defineGetter(Document.prototype, 'activeElement', () => lastActiveElement || document.body);
+
+    // Track focus events without allowing them to change state
+    const focusHandler = (e) => {
+        if (e.target && e.target.nodeType === 1) { // Element node
+            lastActiveElement = e.target;
+        }
+    };
+
+    // Use the original addEventListener to add our focus tracker
+    originalAddEventListener.call(document, 'focus', focusHandler, true);
+
+    // Create MutationObserver to handle dynamically added elements
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1) { // Element node
+                        // Remove any blur/focus/visibility listeners
+                        const events = ['blur', 'focusout', 'visibilitychange'];
+                        events.forEach(event => {
+                            node.removeEventListener(event, null, true);
+                            node.removeEventListener(event, null, false);
+                        });
+                    }
+                });
+            }
+        }
+    });
+
+    // Start observing document for dynamic changes
+    observer.observe(document, {
+        childList: true,
+        subtree: true
+    });
+
+    // Periodically reinforce overrides (some sites try to reset them)
+    const reinforceInterval = setInterval(() => {
+        // Reinforce document properties
+        document.hidden = false;
+        document.visibilityState = 'visible';
+        
+        // Dispatch fake focus event if needed
+        if (!document.hasFocus()) {
+            const focusEvent = new Event('focus', { bubbles: true });
+            if (lastActiveElement) {
+                lastActiveElement.dispatchEvent(focusEvent);
+            }
+        }
+    }, 100);
+
+    // Cleanup function (if needed)
+    window.__cleanupFocusOverride = () => {
+        clearInterval(reinforceInterval);
+        observer.disconnect();
+        // Restore original prototypes if needed
+        EventTarget.prototype.addEventListener = originalAddEventListener;
+        EventTarget.prototype.dispatchEvent = originalDispatchEvent;
+    };
+
+    // Handle iframe contents if they exist
+    const handleIframes = () => {
+        document.querySelectorAll('iframe').forEach(iframe => {
+            try {
+                if (iframe.contentWindow && iframe.contentDocument) {
+                    // Recursively apply overrides to iframe content
+                    iframe.contentWindow.eval(`(${arguments.callee.toString()})()`);
+                }
+            } catch (e) {
+                console.debug('Failed to override iframe focus', e);
+            }
+        });
+    };
+
+    // Initial iframe handling
+    handleIframes();
+
+    // Watch for new iframes
+    const iframeObserver = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+                if (node.tagName === 'IFRAME') {
+                    handleIframes();
+                }
+            });
+        });
+    });
+
+    iframeObserver.observe(document, {
+        childList: true,
+        subtree: true
+    });
 })();
