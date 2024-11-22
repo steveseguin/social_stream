@@ -5651,7 +5651,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
                     handleStageTen(tab, data, metadata);
                 } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
-                    await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout);
+                    await attachAndChat(tab.id, [...data.response].reverse().join(''), false, true, false, false, overrideTimeout);
                 } else if (tab.url.startsWith("https://boltplus.tv/")) {
                     await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout);
                 } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
@@ -6148,44 +6148,63 @@ function sanitizeRelay(text, textonly=false, alt = false) {
 const commandLastExecuted = {};
 
 function extractBskyUsername(text) {
-	if (!text || typeof text !== 'string') {
-		return false;
-	}
+  if (!text || typeof text !== 'string') {
+    return false;
+  }
 
-	// Regular expression to match different Bluesky username formats
-	const patterns = [
-		// Match @username.bsky.social
-		/@([a-zA-Z0-9-_]+\.bsky\.social)\b/,
-		// Match username.bsky.social without @
-		/\b([a-zA-Z0-9-_]+\.bsky\.social)\b/,
-		// Match username@bsky.social format
-		/\b([a-zA-Z0-9-_]+@bsky\.social)\b/
-	];
+  // Clean up the input text but preserve case for pattern matching
+  const cleanText = text.trim();
 
-	for (const pattern of patterns) {
-		const match = text.match(pattern);
-		if (match) {
-			// Get the matched username
-			let username = match[1];
-			
-			// If it's in username@bsky.social format, convert to username.bsky.social
-			if (username.includes('@bsky.social')) {
-				username = username.replace('@', '.');
-			}
-			
-			// Clean and sanitize the username
-			username = username.toLowerCase()
-				.trim()
-				.replace(/[^\w.-]/g, ''); // Remove any invalid characters
-				
-			// Verify the final format
-			if (/^[a-z0-9-_]+\.bsky\.social$/.test(username)) {
-				return username;
-			}
-		}
-	}
+  // Handle various URL patterns
+  const patterns = [
+    // bsky.app/profile/username.domain format
+    {
+      pattern: /(?:https?:\/\/)?(?:www\.)?bsky\.app\/profile\/([a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]+)*)/i,
+      transform: (match) => match[1].includes('.') ? match[1] : `${match[1]}.bsky.social`
+    },
+    // bsky.app/username.domain format (without /profile/)
+    {
+      pattern: /(?:https?:\/\/)?(?:www\.)?bsky\.app\/([a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]+)*)/i,
+      transform: (match) => match[1].includes('.') ? match[1] : `${match[1]}.bsky.social`
+    },
+    // username.bsky.app format
+    {
+      pattern: /\b([a-zA-Z0-9-_]+)\.bsky\.app\b/i,
+      transform: (match) => `${match[1]}.bsky.social`
+    },
+    // Just "Bsky.app" text (common in descriptions)
+    {
+      pattern: /\b(?:on\s+)?bsky\.app\b/i,
+      transform: () => false
+    },
+    // @username format (matches even within text)
+    {
+      pattern: /\B@([a-zA-Z0-9-_]+)\b/i,
+      transform: (match) => `${match[1].toLowerCase()}.bsky.social`
+    },
+    // username@bsky.social format
+    {
+      pattern: /\b([a-zA-Z0-9-_]+)@bsky\.social\b/i,
+      transform: (match) => `${match[1].toLowerCase()}.bsky.social`
+    }
+  ];
 
-	return false;
+  // Try each pattern in order
+  for (const { pattern, transform } of patterns) {
+    const match = cleanText.match(pattern);
+    if (match) {
+      const result = transform(match);
+      // Skip if transform returned false (for ignored patterns)
+      if (result === false) continue;
+      
+      // Validate the final result
+      if (/^[a-z0-9-_]+(?:\.[a-z0-9-_]+)+$/.test(result.toLowerCase())) {
+        return result.toLowerCase();
+      }
+    }
+  }
+
+  return false;
 }
 
 var BSky = {};
