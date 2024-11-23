@@ -102,16 +102,6 @@
 		
 		var chatimg = "";
 		try {
-<<<<<<< HEAD
-			chatimg = ele.querySelector("img.q-img__image[src]").src;
-		} catch(e){}
-		//data.sourceImg = brandedImageURL;
-		
-
-		var data = {};
-		data.chatname = name;
-		data.chatbadges = "";
-=======
 			chatimg = ele.querySelector("img.q-img__image[src]:not([src^='data:image/svg'])").src;
 		} catch(e){}
 		//data.sourceImg = brandedImageURL;
@@ -127,7 +117,6 @@
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = chatbadge;
->>>>>>> fd82fb0 (twitch focus hack try 33)
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.nameColor = nameColor;
@@ -210,8 +199,6 @@
 			if (document.querySelector('#q-app main > div > div[class]')){
 				if (!document.querySelector('#q-app main > div > div[class]').marked){
 					document.querySelector('#q-app main > div > div[class]').marked=true;
-<<<<<<< HEAD
-=======
 					document.querySelectorAll('#q-app main > div > div[class]>div').forEach(ele=>{
 						try {
 							//processMessage(ele);
@@ -219,7 +206,6 @@
 						} catch(e){}
 					});
 					
->>>>>>> fd82fb0 (twitch focus hack try 33)
 					onElementInserted(document.querySelector('#q-app main > div > div[class]'));
 				}
 			}
