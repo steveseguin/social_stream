@@ -1,93 +1,99 @@
-# Custom Themes Documentation
+# Custom Themes
 
-A guide to creating and using custom themes for your chat stream overlay.
+For anyone who wants to create a custom theme/style/template for their chat stream, you can share them via adding them to this repository (in this folder) as a Pull Request.
 
 ## Quick Start
 
-To use a pre-made theme like `pretty.html`, simply add your session ID to the URL:
+To use a pre-made theme, you have two hosting options:
 
+### 1. Official Hosted Themes
+Use themes hosted on the official domain:
 ```
 https://socialstream.ninja/themes/pretty.html?session=YOUR_SESSION_ID
 ```
 
+### 2. Local Hosting
+Run themes from your local file system:
+```
+file:///C:/path/to/your/theme.html?session=YOUR_SESSION_ID
+```
+
+> **Important**: Always append the session parameter correctly, regardless of hosting method.
+
 ## Theme Development Approaches
 
-There are three main ways to create custom themes:
+### Recommended: Modifying the Sample Overlay
+- Start with [sampleoverlay.html](https://socialstream.ninja/sampleoverlay.html)
+- Benefits:
+  - Compact, focused codebase
+  - Compatible with AI language models for assistance
+  - Contains instructional comments
+  - Single-purpose functionality
+  - Easier to maintain and debug
+  - Clear documentation of available options
 
-### 1. IFRAME Overlay Method
-- Uses IFRAMES and URL parameters to inject styles into the existing `dock.html` page
-- Adds overlay images on top of the base layout
-- Example: `pretty.html` theme
-- Benefits: Separates custom code from base functionality
+### Types of Themed Overlays
 
-### 2. Built-in Style Options
-- Use the app's menu settings
-- Apply CSS directly in OBS stylesheet section
-- Simplest approach for basic customization
+1. **IFRAME Overlay Method**
+   - Uses IFRAMES and URL parameters to inject styles into the existing dock.html page
+   - Example: The `pretty.html` style adds overlay images on top
+   - Good for maintaining separation from core code
 
-### 3. Direct HTML Modification
-- Modify `dock.html` directly
-- Create a custom copy of the base template
-- Use the [simple boiler-plate overlay](https://socialstream.ninja/sampleoverlay.html)
-- Recommended for complex customization
+2. **Built-in Style Options**
+   - Use the app's menu settings or OBS stylesheet section
+   - Outside the scope of this document
 
-## Development Guide
+3. **Sample Overlay Modification**
+   - Modify the [simple boiler-plate overlay](https://socialstream.ninja/sampleoverlay.html)
+   - Best for custom themes with AI assistance
+   - For message structure details, see: [Message Structure Documentation](https://socialstream.ninja/landing#message-structure)
 
-### Using IFRAMES and CSS Injection
+> **Warning**: Direct modification of `dock.html` is not recommended due to its complexity and size.
 
-Key features when working with the IFRAME method:
-
-1. Use `&cssb64` parameter to pass custom stylesheets
-2. Leverage transparent overlay images for complex framing
-3. Reference `pretty.html` code for implementation examples
-
-### Custom Overlay Development
-
-When creating a custom overlay:
-
-1. Start with the [Sample Theme - code](https://github.com/socialstream.ninja/social_stream/blob/main/sampleoverlay.html)
-2. Maintain IFRAME messaging logic
-3. Review the [message structure documentation](https://socialstream.ninja/landing#message-structure)
-
-## Testing Your Theme
+## Testing Themes
 
 ### Basic Testing
 - Use the "Trigger a test message" button in the app menu
-- Sufficient for most style testing needs
 
 ### Advanced Testing
-1. Visit the [sample API sandbox page](https://socialstream.ninja/sampleapi.html)
-2. Enable API support in the app menu
-3. Create custom test messages with specific parameters:
-   - Custom donation amounts
-   - Different message types
-   - Various user roles
+- Visit the [sample API sandbox page](https://socialstream.ninja/sampleapi.html)
+- Enable API support via app menu
+- Create custom test messages near the bottom of the page
 
 ## Available Themes
 
-### Full Theme Packages
-Complete themes with additional resources:
+### Themed Packages (with documentation)
+These themes include readme files, sample photos, and guides:
 
-1. [Deuk's Theme](https://socialstream.ninja/themes/deuks_overlay)
-2. [Windows3.1 Theme](https://socialstream.ninja/themes/Windows3.1)
-3. [Neutron Theme](https://socialstream.ninja/themes/Neutron)
+- [Deuk's Theme](https://socialstream.ninja/themes/deuks_overlay)
+- [Windows3.1 Theme](https://socialstream.ninja/themes/Windows3.1)
+- [Neutron Theme](https://socialstream.ninja/themes/Neutron)
 
-### Simple Themes
-Basic drop-in replacements (add `?session=YOUR_SESSION_ID` to use):
+### Simple Drop-in Themes
+Add `?session=XXXXXXX` to these URLs, replacing XXXXXXX with your session ID:
 
-1. [Sample Theme](https://socialstream.ninja/sampleoverlay.html)
-2. [Pretty Theme](https://socialstream.ninja/pretty.html)
+- [Sample Theme](https://socialstream.ninja/sampleoverlay.html)
+- [Pretty Theme](https://socialstream.ninja/themes/pretty.html)
 
 ## Contributing
 
-Contributions for new themes and styles are welcome! Please ensure your theme:
-- Has clear documentation
-- Maintains core functionality
-- Follows existing message structure
-- Is tested across different scenarios
+When submitting themes:
+1. Include clear documentation
+2. Provide setup instructions
+3. Add sample screenshots if possible
+4. Test thoroughly
+5. Maintain core functionality
+6. Follow existing message structure
 
-For theme folders, consider including:
-- README file
-- Sample screenshots
-- Setup guide
-- Any required assets
+Benefits of contributing to the official repository:
+- Automatic hosting on socialstream.ninja domain
+- Included in official theme collection
+- SSL/HTTPS support
+- Consistent availability
+- Included in any granted access permissions
+
+Alternatively, you can self-host using local files, just ensure proper session parameter usage.
+
+For support or questions, check the [official documentation](https://socialstream.ninja/landing).
+
+Contributions for more themes and styles are welcome!
