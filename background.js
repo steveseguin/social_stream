@@ -6231,9 +6231,7 @@ async function applyBotActions(data, tab = false, reflection = false) {
 		var matchedBSky = extractBskyUsername(data.chatname) || extractBskyUsername(data.chatmessage);
 		if (matchedBSky){
 			BSky[data.userid] = matchedBSky;
-			if (!(Object.keys(BSky)%10)){
-				localStorage.setItem("x2bsky",JSON.stringify(BSky));
-			}
+			localStorage.setItem("x2bsky",JSON.stringify(BSky));
 		}
 	}
 

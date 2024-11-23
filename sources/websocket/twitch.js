@@ -521,7 +521,8 @@ try{
 
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		try {
-			if ("focusChat" == request) {
+			if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+				document.querySelector('#sendmessage').focus();
 				sendResponse(true);
 				return;
 			} 
