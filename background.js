@@ -2461,7 +2461,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "twichadannounce") {
 				pushSettingChange();
 			}
-			
+			if (request.setting == "autoLiveYoutube") {
+				pushSettingChange();
+			}
 			if (request.setting == "ticker") {
 				try {
 					await loadFileTicker();

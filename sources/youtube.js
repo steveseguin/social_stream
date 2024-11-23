@@ -532,14 +532,14 @@
 		try {
 			chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
 			if (chatimg.startsWith("data:image/gif;base64")) { 
-				await delay(500);console.log(ele);
+				await delay(500);//console.log(ele);
 				chatimg = document.querySelector("#"+ele.id+" #author-photo img[src]:not([src^='data:image/gif;base64'])") || "";
 				if (chatimg){
 					chatimg = chatimg.src;
 				}
 			}
 		} catch (e) {
-			console.log(e);
+			//console.log(e);
 			chatimg = "";
 		}
 		
@@ -967,7 +967,7 @@
 	}
 
 	console.log("Social stream inserted");
-
+	var marked = false;
 	const checkTimer = setInterval(function () {
 	  const ele = document.querySelector("yt-live-chat-app #items.yt-live-chat-item-list-renderer");
 	  if (ele && !ele.skip) {
@@ -1021,6 +1021,21 @@
 	  }
 	  // style-scope yt-live-chat-message-renderer
 	  
+	  if (settings.autoLiveYoutube && document.querySelector("#trigger") && !marked){
+			marked = true;
+			document.querySelector("#trigger").click()
+			document.querySelector('[slot="dropdown-content"] [tabindex="0"]').click()
+			var waitTilClear = setInterval(function(){
+				if (document.querySelectorAll('#menu > a').length==2){
+					clearInterval(waitTilClear);
+					document.querySelectorAll('#menu > a')[1].click()
+					document.querySelector("yt-live-chat-header-renderer").style.display = "none";
+				}
+			},100)
+	  } else if (document.querySelector("#trigger") && !settings.autoLiveYoutube && marked){
+		  document.querySelector("yt-live-chat-header-renderer").style.display = "unset";
+		  marked = false;
+	  }
 	}, 1000);
 
 	if (window.location.href.includes("youtube.com/watch")) {
@@ -1092,7 +1107,7 @@
 						);
 					}
 				} catch (e) {
-					console.log(e);
+					//console.log(e);
 				}
 			  });
 		}
