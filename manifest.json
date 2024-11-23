@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.4.11",
+  "version": "3.4.12",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -51,6 +51,7 @@
     "https://chat.castr.io/*",
     "https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*",
     "https://www.x.com/*",
+	"https://parti.com/popout-chat*",
     "https://x.com/*",
     "https://www.twitter.com/*",
     "https://twitter.com/*",
@@ -198,6 +199,10 @@
     {
       "js": [ "./sources/chzzk.js" ],
       "matches": [ "https://chzzk.naver.com/live/*/chat" ]
+    },
+	 {
+      "js": [ "./sources/parti.js" ],
+      "matches": [ "https://parti.com/popout-chat?id=*" ]
     },
     {
       "js": [ "./sources/wavevideo.js" ],

@@ -656,14 +656,15 @@
 	if (chrome && chrome.runtime) {
 		chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			try {
-				//console.log("REQUEST");
-				//console.log(request);
+				console.log("REQUEST", request);
 				if ("focusChat" == request) {
 					if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
 						return;
 					}
-
+						
 					document.querySelector('[data-a-target="chat-input"]').focus();
+					simulateFocus(document.querySelector('[data-a-target="chat-input"]'));
+					
 					sendResponse(true);
 					return;
 				}
@@ -710,7 +711,7 @@
 				}
 
 				// twitch doesn't capture avatars already.
-			} catch (e) {}
+			} catch (e) {console.error(e);}
 			sendResponse(false);
 		});
 
@@ -1122,73 +1123,44 @@
 	} catch (e) {
 		console.log(e);
 	}
-
-	try {
-		window.onblur = null;
-		window.blurred = false;
-		document.hidden = false;
-		document.visibilityState = "visible";
-		document.mozHidden = false;
-		document.webkitHidden = false;
-	} catch (e) {}
-
-	try {
-		document.hasFocus = function () {
-			return true;
-		};
-		window.onFocus = function () {
-			return true;
-		};
-
-		Object.defineProperty(document, "mozHidden", { value: false });
-		Object.defineProperty(document, "msHidden", { value: false });
-		Object.defineProperty(document, "webkitHidden", { value: false });
-		Object.defineProperty(document, "visibilityState", {
-			get: function () {
-				return "visible";
-			},
-			value: "visible",
-			writable: true
+	
+	function simulateFocus(element) {
+		// Create and dispatch focusin event
+		const focusInEvent = new FocusEvent('focusin', {
+			view: window,
+			bubbles: true,
+			cancelable: true
 		});
-		Object.defineProperty(document, "hidden", { value: false, writable: true });
+		element.dispatchEvent(focusInEvent);
 
-		setInterval(function () {
-			window.onblur = null;
-			window.blurred = false;
-			document.hidden = false;
-			document.visibilityState = "visible";
-			document.mozHidden = false;
-			document.webkitHidden = false;
-			document.dispatchEvent(new Event("visibilitychange"));
-		}, 200);
-	} catch (e) {}
+		// Create and dispatch focus event
+		const focusEvent = new FocusEvent('focus', {
+			view: window,
+			bubbles: false,
+			cancelable: true
+		});
+		element.dispatchEvent(focusEvent);
+	}
 
-	try {
-		document.onvisibilitychange = function () {
-			window.onFocus = function () {
-				return true;
-			};
-		};
-	} catch (e) {}
-
-	try {
-		for (event_name of [
-			"visibilitychange",
-			"webkitvisibilitychange",
-			"blur", // may cause issues on some websites
-			"mozvisibilitychange",
-			"msvisibilitychange"
-		]) {
+/* 
+	try{
+		const defineGetter = (obj, prop, getter) => {
 			try {
-				window.addEventListener(
-					event_name,
-					function (event) {
-						event.stopImmediatePropagation();
-						event.preventDefault();
-					},
-					true
-				);
-			} catch (e) {}
-		}
-	} catch (e) {}
+				Object.defineProperty(obj, prop, {
+					get: getter,
+					configurable: false,
+					enumerable: true
+				});
+			} catch (e) {
+				console.debug(`Failed to define getter ${prop}`, e);
+			}
+		};
+		
+		defineGetter(window, "onvisibilitychange", () => null);
+		defineGetter(Document.prototype, 'activeElement', () => document.body);
+		
+	} catch(e){
+		console.error(e);
+	} */
+	
 })();
