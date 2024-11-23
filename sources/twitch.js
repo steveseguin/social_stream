@@ -656,7 +656,7 @@
 	if (chrome && chrome.runtime) {
 		chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			try {
-				console.log("REQUEST", request);
+				//console.log("REQUEST", request);
 				if ("focusChat" == request) {
 					if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
 						return;
