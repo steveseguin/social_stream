@@ -173,6 +173,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - WebinarGeek (no pop out ; chat only)
 - live.fc2.com (no pop out)
 - noice.com (main video chat)
+- parti.com (pop out chat)
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   
 [More on request](#requesting-a-site)
