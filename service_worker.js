@@ -192,7 +192,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     });
     return true; // Indicates that the response will be sent asynchronously
-  }
+  }// else if (request.type === 'getAuthToken') {
+  //  chrome.storage.local.get(['authToken'], function(result) {
+  //    sendResponse({token: result.authToken});
+  //  });
+  //  return true; // Important! Keeps the message channel open for async response
+ // }
 });
 
 // Ensure the background page is opened when the extension starts
@@ -238,3 +243,16 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     ensureBackgroundPageIsOpen();
   }
 });
+
+/* chrome.webRequest.onSendHeaders.addListener(
+  function(details) {
+    const authHeader = details.requestHeaders.find(
+      header => header.name.toLowerCase() === 'authorization'
+    );
+    if (authHeader) {
+      chrome.storage.local.set({'authToken': authHeader.value });
+    }
+  },
+  {urls: ["https://*.host.bsky.network/*"]},["requestHeaders"]
+);
+ */

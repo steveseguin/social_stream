@@ -871,6 +871,10 @@
                 return;
             }
         }
+		
+		if (ital && chatmessage && chatmessage.includes("shared")) { // no sharing events
+             return;
+        }
 
         if (settings.customtiktokstate) {
             var channel = window.location.pathname.split("/@");
