@@ -2727,6 +2727,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						return response;
 					}
 				}
+				
+				
 				if (reflection===null){
 					reflection = true;
 				}
@@ -5643,7 +5645,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 }
 
                 // Handle message store
-                if (msg2Save) {
+                if (msg2Save) { 
                     handleMessageStore(tab.id, msg2Save, now, relayMode);
                 }
 
@@ -5662,6 +5664,9 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout);
                 } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
                     await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout);
+				//} else if (tab.url.startsWith("https://parti.com/")) {
+					//  middle, keypress, backspace, delayedPress, overrideTimeout
+               //     await attachAndChat(tab.id, data.response, true, true, true, true, overrideTimeout);
 				} else if (tab.url.startsWith("https://kick.com/")) {
 					if (isSSAPP){
 						await attachAndChat(tab.id, " "+data.response, false, true, true, false, overrideTimeout);
@@ -5753,6 +5758,26 @@ function handleMessageStore(tabId, msg2Save, now, relayMode) {
         errorlog(e);
     }
 }
+function messageExistsInTimeWindow(tabId, messageToFind, timeWindowMs = 1000) {
+    try {
+        if (!messageStore[tabId]) {
+            return false;
+        }
+
+        const now = Date.now();
+        
+        return messageStore[tabId].some(entry => {
+            const isWithinTimeWindow = (now - entry.timestamp) <= timeWindowMs;
+            const messageMatches = entry.message === messageToFind;
+            
+            return isWithinTimeWindow && messageMatches;
+        });
+    } catch(e) {
+        errorlog(e);
+        return false;
+    }
+}
+
 
 // Helper function to handle StageTen
 function handleStageTen(tab, data, metadata) {
@@ -6522,6 +6547,39 @@ async function applyBotActions(data, tab = false, reflection = false) {
 			}
 		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event){
 			sendToS10(data, false, true); // we'll handle the relay logic here instead
+		}
+		
+		if (settings.forwardcommands2twitch && data.type && (data.type !== "twitch") && !reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab && data.tid) {
+			if (!data.bot && data.chatmessage.startsWith("!")) {
+				//messageTimeout = Date.now();
+				var msg = {};
+				
+				msg.tid = data.tid;
+				msg.url = tab.url;
+				
+				msg.destination = "twitch.tv"; // sent to twitch tabs only
+
+				msg.response =  data.chatmessage;
+				
+				if (!data.textonly){
+					var textArea = document.createElement('textarea');
+					textArea.innerHTML = msg.response;
+					msg.response = textArea.value;
+				}
+				msg.response = msg.response.replace(/(<([^>]+)>)/gi, "");
+				msg.response = msg.response.replace(/[#@]/g, "");
+				msg.response = msg.response.replace(/\.(?=\S(?!$))/g, " ");
+				msg.response = msg.response.trim();
+				
+				if (msg.response){
+					sendMessageToTabs(msg, true, data, true, false, 1000);
+				}
+				
+			} 
+		} else if (settings.forwardcommands2twitch && data.type && (data.type === "twitch") && reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab && data.tid) {
+			if (!data.bot && data.chatmessage.startsWith("!")) {
+				return null;
+			}
 		}
 
 		if (data.chatmessage) {

@@ -146,7 +146,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request) {
-                        document.querySelector('input[placeholder][type="text"]').focus();
+                        document.querySelector('.chat-input input[placeholder][type="text"]').focus();
                         sendResponse(true);
                         return;
                     }
