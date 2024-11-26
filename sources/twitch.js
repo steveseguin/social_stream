@@ -1084,7 +1084,7 @@
 	}
 	
 	setTimeout(function(){checkFollowers();},2500);
-	setInterval(function(){checkFollowers()},65000);
+	setInterval(function(){checkFollowers()},60000);
 
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
 	try {

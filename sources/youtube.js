@@ -1114,7 +1114,7 @@
 	}
 	
 	setTimeout(function(){checkViewers();},2500);
-	setInterval(function(){checkViewers()},65000);
+	setInterval(function(){checkViewers()},10000);
 	
 
 	try {
