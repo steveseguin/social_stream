@@ -997,6 +997,7 @@
 		});
 	}
 
+	var counter = 0;
 	// The second observer for events
 	function start2() {
 		if (!isExtensionOn || !settings.captureevents) {
@@ -1014,6 +1015,35 @@
 			  window.location.pathname.includes("live"))) {
 			return;
 		}
+		
+		
+		if ((settings.showviewercount || settings.hypemode)){
+			
+			if (!counter%5){
+				try {
+					
+					var viewerCount = document.querySelector("[data-e2e='live-people-count']");
+					
+					if (viewerCount && viewerCount.textContent){
+						if (viewerCount.textContent == parseInt(viewerCount.textContent)){
+							
+							chrome.runtime.sendMessage(
+								chrome.runtime.id,
+								({message:{
+										type: 'tiktok',
+										event: 'viewer_update',
+										meta: parseInt(viewerCount.textContent)
+									}
+								}),
+								function (e) {}
+							);
+						}
+					}
+				} catch(e){}
+			}
+			counter+=1;
+		}
+		
 		
 		if (target2.hasObserver) {
 			return;
