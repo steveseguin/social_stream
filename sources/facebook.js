@@ -138,7 +138,10 @@
 				await sleep(100);
 			}catch(e){}
 		}
-		if (!ele.isConnected){console.log("1");return;}
+		if (!ele.isConnected){
+			delete ele.dataset.set123;
+			console.log("1");
+			return;}
 		try {
 			var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
 			imgele.skip = true;
@@ -147,12 +150,21 @@
 			if (chatimg.includes("32x32")) {
 				try {
 					let isGeneric = await getImageInfo(chatimg);
-					if (!ele.isConnected){console.log("2");return;}
+					if (!ele.isConnected){
+						delete ele.dataset.set123;
+						console.log("2");
+						return;}
 					if (isGeneric){
 						await sleep(200);
-						if (!ele.isConnected){console.log("3");return;}
+						if (!ele.isConnected){
+							console.log("3");
+							delete ele.dataset.set123;
+							return;}
 						await sleep(200);
-						if (!ele.isConnected){console.log("4");return;}
+						if (!ele.isConnected){
+							console.log("4");
+							delete ele.dataset.set123;
+							return;}
 						var imgele = ele.childNodes[0].querySelector("image");
 						chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
 					}
