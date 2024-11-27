@@ -71,36 +71,41 @@
 	
 	function processMessage(ele){
 		
+		try {
+			if (settings.customlivespacestate){
+				channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
+			}
+		} catch(e){
+			channelName = window.location.href.split("/").pop();
+		}
+		
+	
+		if (channelName && settings.customlivespacestate){
+		  //
+		if (settings.customlivespaceaccount && settings.customlivespaceaccount.textsetting && (settings.customlivespaceaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
+			return;
+		} else if (!settings.customlivespaceaccount){
+			return;
+		}
+		}
+
+
 		var chatimg = ""
 
 		try {
-			//chatimg = ele.querySelector("[class^='vkuiLink Link-module__link--V7bkY vkuiTappable vkuiInternalTappable vkuiTappable--hasActive vkui-focus-visible']").src;
+			chatimg = ele.querySelector("[class^='vkuiLink Link-module__link--V7bkY vkuiTappable vkuiInternalTappable vkuiTappable--hasActive vkui-focus-visible']").src;
 		} catch(e){
 		}
 		
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector("[class^='ChatMessageAuthorPanel_name']").textContent.trim());
-		} catch(e){
-		}
-		
-		var namecolor="";
-		try {
-			namecolor = ele.querySelector("[class^='ChatMessageAuthorPanel_name']").style.color;
-		} catch(e){
-		}
-		
-		var badges=[];
-		try {
-			ele.querySelectorAll("img[class^='ChatBadge_image_'][src]").forEach(badge=>{
-				badges.push(badge.src);
-			});
+			name = escapeHtml(ele.querySelector(".VideoChat-module__ownerName--AGC7x").textContent.trim());
 		} catch(e){
 		}
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector("[data-role='messageMainContent']")).trim();
+			msg = getAllContentNodes(ele.querySelector(".VideoChat-module__messageText--SHnPZ")).trim();
 		} catch(e){
 		}
 		
@@ -111,10 +116,10 @@
 		
 		var data = {};
 		data.chatname = name;
-		data.chatbadges = badges;
+		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
-		data.nameColor = namecolor;
+		data.nameColor = "";
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
@@ -147,6 +152,25 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+				
+					try {
+						if (settings.customlivespacestate){
+							channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
+						}
+					} catch(e){
+						channelName = window.location.href.split("/").pop();
+					}
+		
+					if (channelName && settings.customlivespacestate){
+					  //
+					if (settings.customlivespaceaccount && settings.customlivespaceaccount.textsetting && (settings.customlivespaceaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
+						sendResponse(false);
+						return;
+					} else if (!settings.customlivespaceaccount){
+						sendResponse(false);
+						return;
+					}
+				  }
 				
 					document.querySelector('#type-a-message').focus();
 					sendResponse(true);
@@ -199,16 +223,29 @@
 
 	setInterval(function(){
 		try {
-			var container = document.querySelector("[class^='Chat_root']");
-			if (!container.marked){
-				container.marked=true;
+			channelName = document.querySelector(".main-content h3").childNodes[0].textContent;
+		} catch(e){
+			channelName = window.location.href.split("/").pop();
+		}
+		
+		try {
+			document.querySelectorAll('#react_rootVideoChat').forEach(container=>{ // more than one #message .. tsk ;)
+				if (!container.marked){
+					container.marked=true;
 
-				console.log("CONNECTED chat detected");
+					console.log("CONNECTED chat detected");
 
-				setTimeout(function(){
-					onElementInserted(container);
-				},2000);
-			}
+					setTimeout(function(){
+
+						container.querySelectorAll("[class^='VideoChat-module__message--da28x']").forEach(ele=>{
+							ele.skip=true;
+							processMessage(ele);  // maybe comment
+						});
+						onElementInserted(container);
+
+					},1000);
+				}
+			});
 		} catch(e){}
 	},2000);
 
