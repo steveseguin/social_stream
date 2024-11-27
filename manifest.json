@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.4.15",
+  "version": "3.4.16",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -166,6 +166,7 @@
     "https://vk.com/*",
     "https://wave.video/*",
 	"https://www.sooplive.com/chat/*",
+	"https://play.sooplive.co.kr/*?vtype=chat",
 	"https://*.on24.com/view/*",
     "https://*.meetme.com/*",
     "https://meetme.com/*",
@@ -310,6 +311,10 @@
 	{
       "js": [ "./sources/sooplive.js" ],
       "matches": [ "https://www.sooplive.com/chat/*" ]
+    },
+	{
+      "js": [ "./sources/soopliveco.js" ],
+      "matches": ["https://play.sooplive.co.kr/*?vtype=chat" ]
     },
     {
       "js": [ "./sources/bandlab.js" ],
