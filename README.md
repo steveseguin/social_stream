@@ -167,6 +167,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - bigo.tv (no pop out)
 - circle.so
 - sooplive.com (pop out the chat to use)
+- sooplive.co.ko (pop out the chat to use)
 - on24.com ( Q&A - questions supported)
 - meetme
 - music.gala.com (no pop out)
