@@ -452,7 +452,7 @@
 		
 		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			
-			if (!counter%10){
+			if (counter%10==0){
 				try {
 					
 					var viewerCount = document.querySelector("[data-instancekey] [role='img'][aria-label]>span[dir='auto']:not([hidden]):not(:has([hidden])):not(:is([hidden] *))");

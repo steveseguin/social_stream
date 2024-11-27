@@ -1017,16 +1017,14 @@
 		}
 		
 		
-		if ((settings.showviewercount || settings.hypemode)){
+		if (settings.showviewercount || settings.hypemode){
 			try {
-				if (!counter%5){
+				if (counter%5==0){
 					try {
-						
 						var viewerCount = document.querySelector("[data-e2e='live-people-count']");
 						
 						if (viewerCount && viewerCount.textContent){
 							if (viewerCount.textContent == parseInt(viewerCount.textContent)){
-								
 								chrome.runtime.sendMessage(
 									chrome.runtime.id,
 									({message:{
@@ -1041,8 +1039,11 @@
 						}
 					} catch(e){}
 				}
-				counter+=1;
-			} catch(e){}
+				
+			} catch(e){
+				//console.error(e);
+			}
+			counter+=1;
 		}
 		
 		
