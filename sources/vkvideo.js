@@ -80,7 +80,7 @@
 		
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector("[class^='ChatMessageAuthorPanel_name']").textContent.trim());
+			name = escapeHtml(ele.querySelector("[class^='ChatMessageAuthorPanel_name']").textContent.split(":")[0].trim());
 		} catch(e){
 		}
 		
@@ -133,9 +133,6 @@
 		} catch(e){
 		}
 	}
-	
-	
-	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){

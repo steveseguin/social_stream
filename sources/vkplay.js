@@ -116,7 +116,7 @@
 		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
-		data.type = "vklive";
+		data.type = "vkplay";
 		
 		//console.log(data);
 		pushMessage(data);
