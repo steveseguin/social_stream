@@ -4180,68 +4180,91 @@ function enableYouTube() {
 	}
 }
 
-async function openchat(target = null, force=false) {
-	
-	if (!settings.openchat && !target && !force){
-		console.log("Open Chat is toggled off - no auto open all");
-		return;
-	}
-	
-	var res;
-	var promise = new Promise((resolve, reject) => {
-		res = resolve;
-	});
+const pendingRequests = new Map();
 
-	chrome.tabs.query({}, function (tabs) {
-		// tabs[i].url
-		if (chrome.runtime.lastError) {
-			//console.warn(chrome.runtime.lastError.message);
-		}
-		let urls = [];
-		tabs.forEach(tab => {
-			if (tab.url) {
-				urls.push(tab.url);
-			}
-		});
-		res(urls);
-	});
+// Helper to clean up old pending requests
+function cleanupPendingRequests() {
+    const now = Date.now();
+    for (const [url, timestamp] of pendingRequests.entries()) {
+        if (now - timestamp > 10000) { // 10 seconds timeout
+            pendingRequests.delete(url);
+        }
+    }
+}
 
-	var activeurls = await promise;
-	log(activeurls);
+async function openchat(target = null, force = false) {
+    if (!settings.openchat && !target && !force) {
+        console.log("Open Chat is toggled off - no auto open all");
+        return;
+    }
 
-	function openURL(input, newWindow = false, poke = false) {
-		var matched = false;
-		activeurls.forEach(url2 => {
-			if (url2.startsWith(input)) {
-				matched = true;
-			}
-		});
-		if (!matched) {
-			if (newWindow) {
-				var popup = window.open(input, "_blank", "toolbar=0,location=0,menubar=0,fullscreen=0"); // fullscreen param is for IE 11
-				popup.moveTo(0, 0); // Reset position
-				popup.resizeTo(100, 100);
-			} else {
-				window.open(input, "_blank");
-			}
-			if (poke) {
-				setTimeout(
-					function () {
-						pokeSite(input);
-					},
-					3000,
-					input
-				);
-				setTimeout(
-					function () {
-						pokeSite(input);
-					},
-					6000,
-					input
-				);
-			}
-		}
-	}
+    // Clean up old pending requests first
+    cleanupPendingRequests();
+
+    var res;
+    var promise = new Promise((resolve, reject) => {
+        res = resolve;
+    });
+
+    chrome.tabs.query({}, function(tabs) {
+        if (chrome.runtime.lastError) {
+            //console.warn(chrome.runtime.lastError.message);
+        }
+        let urls = [];
+        tabs.forEach(tab => {
+            if (tab.url) {
+                urls.push(tab.url);
+            }
+        });
+        res(urls);
+    });
+
+    var activeurls = await promise;
+    log(activeurls);
+
+    function openURL(input, newWindow = false, poke = false) {
+        // Check if URL is already pending or active
+        if (pendingRequests.has(input)) {
+            console.log(`Request for ${input} is already pending`);
+            return;
+        }
+
+        var matched = false;
+        activeurls.forEach(url2 => {
+            if (url2.startsWith(input)) {
+                matched = true;
+            }
+        });
+
+        if (!matched) {
+            // Add to pending requests before opening
+            pendingRequests.set(input, Date.now());
+
+            try {
+                if (newWindow) {
+                    var popup = window.open(input, "_blank", "toolbar=0,location=0,menubar=0,fullscreen=0");
+                    popup.moveTo(0, 0);
+                    popup.resizeTo(100, 100);
+                } else {
+                    window.open(input, "_blank");
+                }
+
+                if (poke) {
+                    setTimeout(() => pokeSite(input), 3000);
+                    setTimeout(() => pokeSite(input), 6000);
+                }
+
+                // Remove from pending after a short delay to ensure window is opened
+                setTimeout(() => {
+                    pendingRequests.delete(input);
+                }, 2000);
+            } catch (error) {
+                // Remove from pending if there's an error
+                pendingRequests.delete(input);
+                console.error(`Error opening ${input}:`, error);
+            }
+        }
+    }
 	
 	
 	async function openYouTubeLiveChats(settings) {
