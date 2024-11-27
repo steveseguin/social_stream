@@ -4353,8 +4353,6 @@ input:checked + .slider:before {
 										<label for="chatgptmodel"><span data-translate="chatgptmodel">&gt; ChatGPT Model to use</span></label>
 									</div>
 								</div>
-								
-								
 								<h3><span data-translate="local-censor-bot">Censor bot options 🤖🚫🤬</span></h3>
 								<div>
 									<div style="display: inline-block;" title="Use the bot to moderate messages, deleting messages that it thinks aren't fit. It will skip messages if it can't keep up.">
@@ -4400,7 +4398,14 @@ input:checked + .slider:before {
 										<input type="number" style="max-width: 7ch;" step="1000" max="9999999" min="5000" value="5000" size="6" data-numbersetting="ollamaRateLimitPerTab" />ms
 									</span>
 								</div>
-								
+								<div>
+									<select id="contextLevel " data-optionsetting="contextLevel" class="textInput">
+										<option selected value="basic">Just recent messages</option>
+										<option value="user">Track per-user history</option>
+										<option value="summary">Periodic chat summaries</option>
+										<option value="comprehensive">Everything combined</option>
+									</select>
+								<div>
 								<div style="display: inline-block;" title="Text to speech bot messages">
 									<label class="switch">
 										<input type="checkbox" id="ollamatts" data-setting="ollamatts" />

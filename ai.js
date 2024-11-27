@@ -795,111 +795,147 @@ function checkTriggerWords(triggerString, sentence) {
     return true;
 }
 
-let isProcessing = false;
-const lastResponseTime = {};
+
 async function processMessageWithOllama(data) {
-	if (!data.tid){
-		return;
-	}
-    const currentTime = Date.now();
-	if (isProcessing) { // nice.
+    if (!data.tid) {
         return;
     }
-	isProcessing = true;
-	try {
-		let ollamaRateLimitPerTab = 5000;
-		if (settings.ollamaRateLimitPerTab){
-			ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting)||0);
-		}
-		
-		if (data.type == "stageten"){
-			// bypass throttling limit
-		} else if (!settings.ollamaoverlayonly && data.tid && lastResponseTime[data.tid]){
-			if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
-				isProcessing = false;
-				return; // Skip this message if we've responded recently
-			}
-		}
-		
-		let botname = "🤖💬";
-		if (settings.ollamabotname && settings.ollamabotname.textsetting){
-			botname = settings.ollamabotname.textsetting.trim();
-		}
-		
-		if (data.type == "stageten" && (botname == data.chatname)){ // stageten (via api) uses the bot's name
-			isProcessing = false;
-			return;
-		} else if (!data.chatmessage || data.chatmessage.startsWith(botname+":")) { // other sites don't use the bots name, but prefaces with it instead
-			isProcessing = false;
-			return;
-		}
-		
-		if (settings.bottriggerwords && settings.bottriggerwords.textsetting.trim()){
-			if (!checkTriggerWords(settings.bottriggerwords.textsetting, data.chatmessage)){
-				isProcessing = false;
-				return;
-			}
-		}
-		
-		//console.log(data);
-		
-		var cleanedText = data.chatmessage;
-				
-		if (!data.textonly) {
-			cleanedText = decodeAndCleanHtml(cleanedText);
-		}
-		
-		cleanedText = cleanedText.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "").replace(/[\u200D\uFE0F]/g, ""); // Remove zero-width joiner and variation selector
-		cleanedText = cleanedText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, ""); // fail safe?
-		cleanedText = cleanedText.replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim();
-		
-		if (!cleanedText) {
-			isProcessing = false;
-			return;
-		}
-		
-		var score = levenshtein(cleanedText, lastSentMessage);
-		if (score < 7) { // make sure bot doesn't respond to itself or to the host.
-			isProcessing = false;
-			return;
-		}
-	
+    const currentTime = Date.now();
+    if (isProcessing) {
+        return;
+    }
+    isProcessing = true;
     
-		let additionalInstructions = "";
-		if (settings.ollamaprompt){
-			additionalInstructions = settings.ollamaprompt.textsetting;
-		}
-		
+    try {
+        // Rate limiting check
+        let ollamaRateLimitPerTab = 5000;
+        if (settings.ollamaRateLimitPerTab) {
+            ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting) || 0);
+        }
+        
+        if (data.type == "stageten") {
+            // bypass throttling limit
+        } else if (!settings.ollamaoverlayonly && data.tid && lastResponseTime[data.tid]) {
+            if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
+                isProcessing = false;
+                return; // Skip this message if we've responded recently
+            }
+        }
+        
+        // Bot name handling
+        let botname = "🤖💬";
+        if (settings.ollamabotname && settings.ollamabotname.textsetting) {
+            botname = settings.ollamabotname.textsetting.trim();
+        }
+        
+        // Bot message checks
+        if (data.type == "stageten" && (botname == data.chatname)) {
+            isProcessing = false;
+            return;
+        } else if (!data.chatmessage || data.chatmessage.startsWith(botname + ":")) {
+            isProcessing = false;
+            return;
+        }
+        
+        // Trigger word check
+        if (settings.bottriggerwords && settings.bottriggerwords.textsetting.trim()) {
+            if (!checkTriggerWords(settings.bottriggerwords.textsetting, data.chatmessage)) {
+                isProcessing = false;
+                return;
+            }
+        }
+        
+        // Message cleaning
+        var cleanedText = data.chatmessage;
+        if (!data.textonly) {
+            cleanedText = decodeAndCleanHtml(cleanedText);
+        }
+        
+        cleanedText = cleanedText.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "").replace(/[\u200D\uFE0F]/g, "");
+        cleanedText = cleanedText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "");
+        cleanedText = cleanedText.replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim();
+        
+        if (!cleanedText) {
+            isProcessing = false;
+            return;
+        }
+        
+        // Levenshtein check
+        var score = levenshtein(cleanedText, lastSentMessage);
+        if (score < 7) {
+            isProcessing = false;
+            return;
+        }
+        
+        // Get context if enabled
+        const messageContext = await getMessageContext(data, db);
+        messageCounterAI++;
+        
+        // Prepare instructions
+        let additionalInstructions = "";
+        if (settings.ollamaprompt) {
+            additionalInstructions = settings.ollamaprompt.textsetting;
+        }
+        
+        // Add context to instructions if available
+        if (messageContext) {
+            additionalInstructions = `${additionalInstructions}\n\nChat Context:`;
+            
+            if (messageContext.recentMessages.length > 0) {
+                additionalInstructions += `\nRecent messages:\n${
+                    messageContext.recentMessages
+                        .map(m => `${m.chatname}: ${m.chatmessage}`)
+                        .join('\n')
+                }`;
+            }
+            
+            if (messageContext.userHistory) {
+                additionalInstructions += `\n\nUser ${data.chatname}'s history summary:
+                    - Total messages: ${messageContext.userHistory.length}
+                    - First message: ${messageContext.userHistory[messageContext.userHistory.length - 1]?.timestamp}
+                    - Last message: ${messageContext.userHistory[0]?.timestamp}`;
+            }
+            
+            if (messageContext.chatSummary) {
+                additionalInstructions += `\n\nChat summary:\n${messageContext.chatSummary.data}`;
+            }
+        }
+        
+        // Process message
         const response = await processUserInput(cleanedText, data, additionalInstructions);
-		
-		if (response && !(response.toLowerCase().startsWith("not available"))){
-			
-			sendTargetP2P(
-				{"chatmessage":response,
-					"chatname":botname, "chatimg":"./icons/bot.png", 
-					"type":"socialstream", 
-					"request": data, 
-					"tts": (settings.ollamatts ? true : false)
-				}, 
-				"bot");
-			
-			if (!settings.ollamaoverlayonly){
-				const msg = {
-					tid: data.tid,
-					response: botname+": " + response.trim(),
-					bot: true
-				};
-				sendMessageToTabs(msg);
-			
-				lastResponseTime[data.tid] = Date.now();
-			}
-		}
+        
+        if (response && !(response.toLowerCase().startsWith("not available"))) {
+            // Send response
+            sendTargetP2P(
+                {
+                    "chatmessage": response,
+                    "chatname": botname,
+                    "chatimg": "./icons/bot.png",
+                    "type": "socialstream",
+                    "request": data,
+                    "tts": (settings.ollamatts ? true : false)
+                },
+                "bot"
+            );
+            
+            if (!settings.ollamaoverlayonly) {
+                const msg = {
+                    tid: data.tid,
+                    response: botname + ": " + response.trim(),
+                    bot: true
+                };
+                sendMessageToTabs(msg);
+                
+                lastResponseTime[data.tid] = Date.now();
+            }
+        }
     } catch (error) {
         console.warn("Error processing message:", error);
     } finally {
         isProcessing = false;
     }
 }
+
 
 function preprocessMarkdown(content) {
     // Remove HTML comments
@@ -2158,3 +2194,116 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.warn("Error initializing Lunr index:", error);
     }
 });
+
+
+
+
+/////////////
+
+// Context levels and settings
+const ContextLevels = {
+  BASIC: 'basic',         // Just recent messages
+  USER_FOCUSED: 'user',   // Track per-user history
+  SUMMARY: 'summary',     // Periodic chat summaries
+  COMPREHENSIVE: 'comprehensive' // Everything combined
+};
+
+// Add to your existing settings schema
+const contextSettings = {
+  contextLevel: {
+    type: 'select',
+    options: Object.values(ContextLevels),
+    default: ContextLevels.BASIC
+  },
+  maxRecentMessages: {
+    type: 'number',
+    default: 5,
+    min: 1,
+    max: 20
+  },
+  summaryInterval: {
+    type: 'number',
+    default: 100,
+    min: 50,
+    max: 500
+  },
+  userHistoryDays: {
+    type: 'number',
+    default: 7,
+    min: 1,
+    max: 30
+  }
+};
+
+// Cache and counter for context management
+let messageCounterAI = 0;
+const contextCache = {
+  summaries: new Map(),
+  userHistories: new Map(),
+  lastSummaryTimestamp: Date.now()
+};
+
+let isProcessing = false;
+const lastResponseTime = {};
+
+async function getMessageContext(message, db) {
+    if (!settings.contextLevel || settings.contextLevel.optionsetting === ContextLevels.BASIC) {
+        return null;
+    }
+
+    const context = {
+        recentMessages: [],
+        userHistory: null,
+        chatSummary: null
+    };
+
+    try {
+        // Get recent messages
+        await new Promise((resolve) => {
+            getMessagesDB(null, null, 0, settings.maxRecentMessages?.numbersetting || 5, (messages) => {
+                context.recentMessages = messages;
+                resolve();
+            });
+        });
+
+        if (settings.contextLevel.optionsetting === ContextLevels.USER_FOCUSED || 
+            settings.contextLevel.optionsetting === ContextLevels.COMPREHENSIVE) {
+            await new Promise((resolve) => {
+                getMessagesDB(message.chatname, null, 0, 1000, (messages) => {
+                    const days = settings.userHistoryDays?.numbersetting || 7;
+                    const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+                    context.userHistory = messages.filter(msg => new Date(msg.timestamp) > cutoff);
+                    resolve();
+                });
+            });
+        }
+
+        if (settings.contextLevel.optionsetting === ContextLevels.SUMMARY || 
+            settings.contextLevel.optionsetting === ContextLevels.COMPREHENSIVE) {
+            if (messageCounterAI >= (settings.summaryInterval?.numbersetting || 100)) {
+                const summary = await generateChatSummary(context.recentMessages);
+                contextCache.summaries.set('latest', {
+                    timestamp: Date.now(),
+                    data: summary,
+                    messageCount: messageCounterAI
+                });
+                messageCounterAI = 0;
+            }
+            context.chatSummary = contextCache.summaries.get('latest');
+        }
+
+        return context;
+    } catch (error) {
+        console.warn("Error getting message context:", error);
+        return null;
+    }
+}
+
+
+async function generateChatSummary(messages) {
+    const promptllm = `Summarize the key themes, topics, and important points from this chat conversation. 
+        Focus on recurring themes and significant interactions. Keep the summary concise but informative.
+        Chat messages: ${JSON.stringify(messages)}`;
+        
+    return await callOllamaAPI(promptllm);
+}

@@ -133,32 +133,35 @@
 		
 		var test = ele.querySelectorAll("div[dir='auto'] > div[role='button'][tabindex='0']")
 		if (test.length ===1){
-			test[0].click();
-			await sleep(100);
-		}
-		if (!ele.isConnected){return;}
-		
-		var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
-		imgele.skip = true;
-		
-		chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
-		if (chatimg.includes("32x32")) {
 			try {
-				let isGeneric = await getImageInfo(chatimg);
-				if (!ele.isConnected){return;}
-				if (isGeneric){
-					await sleep(200);
-					if (!ele.isConnected){return;}
-					await sleep(200);
-					if (!ele.isConnected){return;}
-					var imgele = ele.childNodes[0].querySelector("image");
-					chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
-				}
-			} catch(e){
-				console.log(e);
-			}
+				test[0].click();
+				await sleep(100);
+			}catch(e){}
 		}
-		
+		if (!ele.isConnected){console.log("1");return;}
+		try {
+			var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+			imgele.skip = true;
+			
+			chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			if (chatimg.includes("32x32")) {
+				try {
+					let isGeneric = await getImageInfo(chatimg);
+					if (!ele.isConnected){console.log("2");return;}
+					if (isGeneric){
+						await sleep(200);
+						if (!ele.isConnected){console.log("3");return;}
+						await sleep(200);
+						if (!ele.isConnected){console.log("4");return;}
+						var imgele = ele.childNodes[0].querySelector("image");
+						chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+					}
+				} catch(e){
+					console.log(e);
+				}
+			}
+		} catch (e) {
+		}
 		var name = "";
 		try {
 			var nameElement = ele.childNodes[1].childNodes[0].querySelectorAll('span[dir="auto"]')[0];
@@ -232,6 +235,7 @@
 				contentimg = ele.querySelector('div>div>div>div>div>div>div>img[draggable="false"][width][height][class][src]').src;
 				//msg = "<img src='"+msg+"' />";
 			} catch(e){
+				console.log("5");
 				return;
 			}
 		}
