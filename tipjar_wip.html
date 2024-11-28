@@ -9,88 +9,94 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     
     <style>
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-        }
-        
-        body, html { 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            background-color: transparent; 
-        }
-        
-        #canvas-container { 
-            position: relative; 
-            width: 400px; 
-            height: 600px; 
-        }
-        
-        canvas { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            z-index: 1; 
-        }
-        
-        #tip-text { 
-            position: absolute; 
-            top: 10px; 
-            width: 100%; 
-            text-align: center; 
-            color: #0A1236; 
-            font-family: 'Arial', sans-serif; 
-            font-weight: bold; 
-            font-size: 24px; 
-            z-index: 4;
-            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
-        }
-        
-        #cup-overlay { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 400px; 
-            height: 600px; 
-            z-index: 0; 
-            pointer-events: none; 
-        }
-        
-        #notification { 
-            position: fixed; 
-            top: 20px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            background-color: rgba(0, 0, 0, 0.7); 
-            color: white; 
-            padding: 10px 20px; 
-            border-radius: 5px; 
-            display: none;
-            z-index: 5;
-            font-family: 'Arial', sans-serif;
-        }
+	* { 
+		margin: 0; 
+		padding: 0; 
+		box-sizing: border-box; 
+	}
+
+	body, html { 
+		width: 100%; 
+		height: 100%; 
+		overflow: hidden; 
+		display: flex; 
+		justify-content: center; 
+		align-items: center; 
+		background-color: transparent; 
+	}
+
+	#canvas-container { 
+		position: relative;
+		width: 400px;  /* Match canvas width */
+		height: 600px;
+		max-height: 100vh;
+		margin: 0 auto;
+	}
+
+	canvas { 
+		position: absolute; 
+		top: 0; 
+		left: 0; 
+		width: 100%;
+		height: 100%;
+		z-index: 1; 
+	}
+
+	#tip-text { 
+		position: absolute; 
+		top: 10px; 
+		left: 0;
+		width: 100%; 
+		text-align: center; 
+		color: #0A1236; 
+		font-family: 'Arial', sans-serif; 
+		font-weight: bold; 
+		font-size: 24px; 
+		z-index: 4;
+		text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+	}
+
+	#cup-overlay { 
+		position: absolute; 
+		top: 0; 
+		left: 0; 
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		z-index: 0; 
+		pointer-events: none; 
+	}
+
+	#notification { 
+		position: fixed; 
+		top: 20px; 
+		left: 50%; 
+		transform: translateX(-50%); 
+		background-color: rgba(0, 0, 0, 0.7); 
+		color: white; 
+		padding: 10px 20px; 
+		border-radius: 5px; 
+		display: none;
+		z-index: 5;
+		font-family: 'Arial', sans-serif;
+	}
     </style>
 </head>
 <body>
     <div id="canvas-container">
         <canvas id="canvas"></canvas>
-        <img id="cup-overlay" src="400x600_cup.png" alt="Cup Overlay">
+        <img id="cup-overlay" src="./media/tipsjar.png" alt="Cup Overlay">
         <div id="tip-text">$0 / $250</div>
     </div>
     <div id="notification"></div>
 
     <script>
-        const { Engine, Render, Runner, World, Bodies, Composite } = Matter;
+        const { Engine, Render, Runner, World, Bodies, Composite, Body } = Matter;
         
         // Setup Matter.js engine
         const engine = Engine.create();
         const world = engine.world;
-        engine.world.gravity.y = 1;
+        engine.world.gravity.y = 0.6;  // Reduced from 1
 
         // Canvas setup
         const canvas = document.getElementById('canvas');
@@ -141,33 +147,51 @@
         let currentAmount = 0;
         const goalAmount = 250;
 
-        function addHeart(amount) {
-            const heartSize = Math.min(20 + (amount / 10), 50);
-            const xPosition = 110 + Math.random() * 180;
-            
-            const heart = Bodies.circle(xPosition, 50, heartSize / 2, {
-                restitution: 0.3,
-                friction: 0.8,
-                density: 0.002,
-                frictionAir: 0.02,
-                render: {
-                    sprite: {
-                        texture: "50x50_heart.png",
-                        xScale: heartSize / 50,
-                        yScale: heartSize / 50
-                    }
-                }
-            });
+        
 
-            World.add(world, heart);
-            
-            // Remove hearts that go off-screen
-            setTimeout(() => {
-                World.remove(world, heart);
-            }, 10000);
+		function addHeart(amount) {
+			const heartSize = Math.min(20 + (amount / 10), 50);
+			const xPosition = 110 + Math.random() * 180;
+			
+			const heart = Bodies.circle(xPosition, 50, heartSize / 2, {
+				restitution: 0.4,      // Increased bounce
+				friction: 0.9,         // Increased friction
+				density: 0.004,        // Increased density
+				frictionAir: 0.03,     // Increased air friction
+				torque: (Math.random() - 0.5) * 0.002, // Add slight rotation
+				render: {
+					sprite: {
+						texture: "./media/goldenheart.png",
+						xScale: heartSize / 50,
+						yScale: heartSize / 50
+					}
+				}
+			});
 
-            updateAmount(amount);
-        }
+			// Add random initial velocity
+			const velocityY = 2 + Math.random() * 2;
+			Body.setVelocity(heart, { 
+				x: (Math.random() - 0.5) * 2,
+				y: velocityY 
+			});
+
+			World.add(world, heart);
+			
+			// Increased timeout for hearts to stay longer
+			setTimeout(() => {
+				// Fade out effect before removal
+				const fadeInterval = setInterval(() => {
+					if (heart.render.opacity > 0) {
+						heart.render.opacity -= 0.05;
+					} else {
+						clearInterval(fadeInterval);
+						World.remove(world, heart);
+					}
+				}, 100);
+			}, 15000);  // Hearts stay for 15 seconds now
+
+			updateAmount(amount);
+		}
 
         function updateAmount(amount) {
             currentAmount += amount;
@@ -185,26 +209,26 @@
         }
 
         function processTip(amount, currency, donator) {
-            let tipValue = 0;
+			let tipValue = 0;
 
-            if (['bits', 'bit', 'cheer', 'gold', 'rose', 'roses'].includes(currency.toLowerCase())) {
-                tipValue = amount / 100;
-            } else if (currency.toLowerCase() === 'usd') {
-                tipValue = amount;
-            } else {
-                tipValue = amount;
-            }
+			if (['bits', 'bit', 'cheer', 'gold', 'rose', 'roses'].includes(currency.toLowerCase())) {
+				tipValue = amount / 100;
+			} else if (currency.toLowerCase() === 'usd') {
+				tipValue = amount;
+			} else {
+				tipValue = amount;
+			}
 
-            // Add multiple hearts for larger donations
-            const heartCount = Math.min(Math.ceil(tipValue / 5), 10); // Limit max hearts
-            for (let i = 0; i < heartCount; i++) {
-                setTimeout(() => {
-                    addHeart(tipValue / heartCount);
-                }, i * 300);
-            }
+			// Add multiple hearts with varying delays and positions
+			const heartCount = Math.min(Math.ceil(tipValue / 5), 10);
+			for (let i = 0; i < heartCount; i++) {
+				setTimeout(() => {
+					addHeart(tipValue / heartCount);
+				}, i * 200 + Math.random() * 300); // Randomized delay between hearts
+			}
 
-            showNotification(`${donator} tipped ${amount} ${currency}!`);
-        }
+			showNotification(`${donator} tipped ${amount} ${currency}!`);
+		}
 
         function processData(data) {
             console.log(data);
