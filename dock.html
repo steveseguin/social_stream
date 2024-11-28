@@ -3522,7 +3522,10 @@
 				bottts = true;
 			}
 			
-			
+			var allowbottss = false;
+			if (urlParams.has("allowbottss")) {
+				allowbottss = true;
+			}
 
 			var pitch = 1;
 			if (urlParams.has("pitch")) {
@@ -7776,15 +7779,16 @@
 						node.classList.add("queued");
 						updateQueueButton();
 					}
-					if (ttscommand && data.chatmessage && data.chatmessage.includes("!say ") && !bot){
+					
+					if (ttscommand && data.chatmessage && data.chatmessage.includes("!say ")){
 						if (!node.classList.contains("hide")) {
 							speechMeta(data);
 						}
-					} else if (speech && !bot) {
+					} else if (speech) {
 						if (!node.classList.contains("hide")) {
 							speechMeta(data);
 						}
-					}
+					} 
 					return node;
 				}
 				return false;
@@ -8031,7 +8035,10 @@
 						return;
 					}
 				}
-				if (!data.bot && bottts){return;}
+				
+				if (!data.bot && bottts){return;} // only allow bot messages
+				else if (data.bot && !(allowbottss || bottts)){return;} // do not read out bot messages
+				
 				if (readDonos && !(data.hasDonation || data.donation)){return;}
 
 				if (doNotReadEvents && data.event) {
