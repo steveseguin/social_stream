@@ -5689,7 +5689,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout);
 				//} else if (tab.url.startsWith("https://parti.com/")) {
 					//  middle, keypress, backspace, delayedPress, overrideTimeout
-               //     await attachAndChat(tab.id, data.response, true, true, true, true, overrideTimeout);
+               //     await attachAndChat(tab.id, data.response, true, true, true, true, overrideTimeout); 
 				} else if (tab.url.startsWith("https://kick.com/")) {
 					if (isSSAPP){
 						await attachAndChat(tab.id, " "+data.response, false, true, true, false, overrideTimeout);
@@ -5697,7 +5697,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 						await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout);
 					}
                 } else if (tab.url.startsWith("https://app.slack.com")) {
-                    await attachAndChat(tab.id, data.response, false, false, false, false, overrideTimeout);
+                    await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout); 
                 } else if (metadata && settings.fancystageten && tab.url.includes(".stageten.tv/channel")) {
                     handleFancyStageTen(tab.id, metadata);
                 } else if (tab.url.startsWith("https://app.zoom.us/")) {
@@ -5917,247 +5917,107 @@ function limitString(string, maxLength) {
 	}
 	return result;
 }
+const KEY_EVENTS = {
+  ENTER: {
+    key: "Enter",
+    code: "Enter",
+    nativeVirtualKeyCode: 13,
+    windowsVirtualKeyCode: 13
+  },
+  BACKSPACE: {
+    key: "Backspace",
+    code: "Backspace", 
+    nativeVirtualKeyCode: 8,
+    windowsVirtualKeyCode: 8,
+    text: "",
+    unmodifiedText: ""
+  }
+};
 
-function generalFakeChat(tabid, message, middle = true, keypress = true, backspace = false, delayedPress = false, overrideTimeout = false) {
+async function sendKeyEvent(tabId, type, keyConfig) {
+  await chrome.debugger.sendCommand(
+    { tabId },
+    "Input.dispatchKeyEvent",
+    { type, ...keyConfig }
+  );
+}
 
-	// fake a user input
-	try {
-		
-		if (!overrideTimeout){
-			if (tabid in messageTimeout){
-				if (Date.now() - messageTimeout[tabid] < overrideTimeout) {
-					// not enough time has passed yet.
-					//console.warn("not enough time has passed yet to send to :"+tabid);
-					return;
-				}
-			}
-		}
-		
-		chrome.tabs.sendMessage(tabid, "focusChat", (response = false) => {
-			chrome.runtime.lastError;
-			if (!response) {
-				delayedDetach(tabid);
-				return;
-			} // make sure the response is valid, else don't inject text
+async function insertText(tabId, text) {
+  await chrome.debugger.sendCommand(
+    { tabId },
+    "Input.insertText",
+    { text }
+  );
+}
 
-			lastSentMessage = message.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
-			lastSentMessage = lastSentMessage.replace(/\s\s+/g, " ");
-			lastSentTimestamp = Date.now();
-			lastMessageCounter = 0;
-			
-			messageTimeout[tabid] = Date.now();
+async function focusChat(tabId) {
+  return new Promise((resolve) => {
+    chrome.tabs.sendMessage(tabId, "focusChat", (response = false) => {
+      chrome.runtime.lastError;
+      resolve(response);
+    });
+  });
+}
 
-			if (settings.limitcharactersstate) {
-				if (settings.limitcharacters) {
-					message = limitString(message, settings.limitcharacters.numbersetting); // limit lenght of characeters to output
-				} else {
-					message = limitString(message, 200); // default
-				}
-			}
+async function generalFakeChat(tabId, message, middle = true, keypress = true, backspace = false, delayedPress = false, overrideTimeout = false) {
+  try {
+    if (!overrideTimeout && messageTimeout[tabId]) {
+      if (Date.now() - messageTimeout[tabId] < overrideTimeout) {
+        return;
+      }
+    }
 
-			if (backspace) {
-				chrome.debugger.sendCommand(
-					{ tabId: tabid },
-					"Input.dispatchKeyEvent",
-					{
-						key: "Backspace",
-						modifiers: 0,
-						nativeVirtualKeyCode: 8,
-						text: "",
-						type: "rawKeyDown",
-						unmodifiedText: "",
-						windowsVirtualKeyCode: 8
-					},
-					function (e) {
-						chrome.debugger.sendCommand({ tabId: tabid }, "Input.insertText", { text: message }, function (e) {
-							if (keypress) {
-								chrome.debugger.sendCommand(
-									{ tabId: tabid },
-									"Input.dispatchKeyEvent",
-									{
-										type: "keyDown",
-										key: "Enter",
-										code: "Enter",
-										nativeVirtualKeyCode: 13,
-										windowsVirtualKeyCode: 13
-									},
-									function (e) {}
-								);
-							}
+    const isFocused = await focusChat(tabId);
+    if (!isFocused) {
+      await delayedDetach(tabId);
+      return;
+    }
 
-							if (middle) {
-								chrome.debugger.sendCommand(
-									{ tabId: tabid },
-									"Input.dispatchKeyEvent",
-									{
-										type: "char",
-										key: "Enter",
-										text: "\r",
-										code: "Enter",
-										nativeVirtualKeyCode: 13,
-										windowsVirtualKeyCode: 13
-									},
-									 (e) => {
-										if (!keypress) {
-											delayedDetach(tabid);
-										}
-									}
-								);
-							}
+    lastSentMessage = message.replace(/<\/?[^>]+(>|$)/g, "").replace(/\s\s+/g, " ");
+    lastSentTimestamp = Date.now();
+    lastMessageCounter = 0;
+    messageTimeout[tabId] = Date.now();
 
-							if (keypress) {
-								chrome.debugger.sendCommand(
-									{ tabId: tabid },
-									"Input.dispatchKeyEvent",
-									{
-										type: "keyUp",
-										key: "Enter",
-										code: "Enter",
-										nativeVirtualKeyCode: 13,
-										windowsVirtualKeyCode: 13
-									},
-									function (e) {
-										if (delayedPress) {
-											chrome.debugger.sendCommand(
-												{ tabId: tabid },
-												"Input.dispatchKeyEvent",
-												{
-													type: "keyDown",
-													key: "Enter",
-													code: "Enter",
-													nativeVirtualKeyCode: 13,
-													windowsVirtualKeyCode: 13
-												},
-												function (e) {}
-											);
-											//chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {});
-											setTimeout(
-												function (tabid) {
-													chrome.debugger.sendCommand(
-														{ tabId: tabid },
-														"Input.dispatchKeyEvent",
-														{
-															type: "keyDown",
-															key: "Enter",
-															code: "Enter",
-															nativeVirtualKeyCode: 13,
-															windowsVirtualKeyCode: 13
-														},
-														(e) => {
-															delayedDetach(tabid);
-														}
-													);
-												},
-												500,
-												tabid
-											);
-										} else {
-											delayedDetach(tabid);
-										}
-									}
-								);
-							}
-						});
-					}
-				);
-			} else {
-				chrome.debugger.sendCommand({ tabId: tabid }, "Input.insertText", { text: message }, function (e) {
-					if (keypress) {
-						chrome.debugger.sendCommand(
-							{ tabId: tabid },
-							"Input.dispatchKeyEvent",
-							{
-								type: "keyDown",
-								key: "Enter",
-								code: "Enter",
-								nativeVirtualKeyCode: 13,
-								windowsVirtualKeyCode: 13
-							},
-							function (e) {}
-						);
-					}
+    if (settings.limitcharactersstate) {
+      const limit = settings.limitcharacters?.numbersetting || 200;
+      message = limitString(message, limit);
+    }
 
-					if (middle) {
-						chrome.debugger.sendCommand(
-							{ tabId: tabid },
-							"Input.dispatchKeyEvent",
-							{
-								type: "char",
-								key: "Enter",
-								text: "\r",
-								code: "Enter",
-								nativeVirtualKeyCode: 13,
-								windowsVirtualKeyCode: 13
-							},
-							(e) => {
-								if (!keypress) {
-									delayedDetach(tabid);
-								}
-							}
-						);
-					}
+    if (backspace) {
+      await sendKeyEvent(tabId, "rawKeyDown", KEY_EVENTS.BACKSPACE);
+    }
 
-					if (keypress) {
-						chrome.debugger.sendCommand(
-							{ tabId: tabid },
-							"Input.dispatchKeyEvent",
-							{
-								type: "keyUp",
-								key: "Enter",
-								code: "Enter",
-								nativeVirtualKeyCode: 13,
-								windowsVirtualKeyCode: 13
-							},
-							function (e) {
-								if (delayedPress) {
-									chrome.debugger.sendCommand(
-										{ tabId: tabid },
-										"Input.dispatchKeyEvent",
-										{
-											type: "keyDown",
-											key: "Enter",
-											code: "Enter",
-											nativeVirtualKeyCode: 13,
-											windowsVirtualKeyCode: 13
-										},
-										function (e) {}
-									);
+    await insertText(tabId, message);
 
-									//chrome.tabs.sendMessage(tabid, "focusChat", function(response=false) {});
-									setTimeout(
-										function (tabid) {
-											chrome.debugger.sendCommand(
-												{ tabId: tabid },
-												"Input.dispatchKeyEvent",
-												{
-													type: "keyDown",
-													key: "Enter",
-													code: "Enter",
-													nativeVirtualKeyCode: 13,
-													windowsVirtualKeyCode: 13
-												},
-												(e) =>  {
-													delayedDetach(tabid);
-												}
-											);
-										},
-										500,
-										tabid
-									);
-								} else {
-									delayedDetach(tabid);
-								}
-							}
-						);
-					}
-				});
-			}
-		});
-	} catch (e) {
-		chrome.runtime.lastError;
-		log(e);
-		delayedDetach(tabid);
-	}
+    if (keypress) {
+      await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
+    }
+
+    if (middle) {
+      await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
+    }
+
+    if (keypress) {
+      await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
+      
+      if (delayedPress) {
+        await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
+      }
+    }
+	
+	if (backspace) {
+      await sendKeyEvent(tabId, "rawKeyDown", KEY_EVENTS.BACKSPACE);
+    }
+
+    await delayedDetach(tabId);
+
+  } catch (e) {
+    chrome.runtime.lastError;
+    log(e);
+    await delayedDetach(tabId);
+  }
 }
 
 function createTab(url) {
