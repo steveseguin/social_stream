@@ -141,7 +141,7 @@
 		let pendingSpace = "";
 
 		function processNode(node) {
-			if (node.nodeType === 3 && node.textContent.length > 0) {
+			if (node.nodeType === 3 && node.textContent.length > 0) { // text node
 				// Text node
 				if (settings.textonlymode){
 					result += node.textContent;
@@ -195,10 +195,29 @@
 					const resolvedSvg = cloneSvgWithResolvedUse(node);
 					resolvedSvg.style = "";
 					result += resolvedSvg.outerHTML;
+				} else if (node.nodeName.toLowerCase() === "svg"){
+					if (settings.textonlymode){
+						if (pendingSpace){
+							result += pendingSpace;
+							pendingSpace = null;
+						} 
+						pendingSpace = " ";
+						return;
+					}
+					if (pendingSpace){
+						result += pendingSpace;
+						pendingSpace = null;
+					}
+					const resolvedSvg = cloneSvgWithResolvedUse(node);
+					resolvedSvg.style="width:24px;height:24px"
+					resolvedSvg.removeAttribute("width");
+					resolvedSvg.removeAttribute("height");
+					
+					console.log('After:', resolvedSvg.outerHTML); // Debug
+					
+					pendingSpace = " " + resolvedSvg.outerHTML + " " ;
 				} else if (node.childNodes.length) {
 					Array.from(node.childNodes).forEach(processNode);
-				} else if (!settings.textonlymode && (node.nodeName.toLowerCase() === "svg")){
-					result += node.outerHTML;
 				}
 			}
 		}
