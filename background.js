@@ -5678,11 +5678,8 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
                     handleStageTen(tab, data, metadata);
                 } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
-					//if (isSSAPP){
-					//	await attachAndChat(tab.id, [...data.response].reverse().join(''), false, true, false, false, overrideTimeout);
-					//} else {
-						await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout);
-					//}
+					let restxt = data.response.length > 500 ? data.response.substring(0, 500) : data.response;
+					await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout);
                 } else if (tab.url.startsWith("https://boltplus.tv/")) {
                     await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout);
                 } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
@@ -5691,10 +5688,11 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 					//  middle, keypress, backspace, delayedPress, overrideTimeout
                //     await attachAndChat(tab.id, data.response, true, true, true, true, overrideTimeout); 
 				} else if (tab.url.startsWith("https://kick.com/")) {
+					let restxt = data.response.length > 500 ? data.response.substring(0, 500) : data.response;
 					if (isSSAPP){
-						await attachAndChat(tab.id, " "+data.response, false, true, true, false, overrideTimeout);
+						await attachAndChat(tab.id, " "+restxt, false, true, true, false, overrideTimeout);
 					} else {
-						await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout);
+						await attachAndChat(tab.id, restxt, false, true, true, false, overrideTimeout);
 					}
                 } else if (tab.url.startsWith("https://app.slack.com")) {
                     await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout); 
@@ -5707,10 +5705,18 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     // Generic handler
                     if (tab.url.includes("youtube.com/live_chat")) {
                         getYoutubeAvatarImage(tab.url, true);
+						let restxt = data.response.length > 200 ? data.response.substring(0, 200) : data.response;
+						await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
+						continue;
                     }
                     
-                    if (settings.notiktoklinks && tab.url.includes("tiktok.com")) {
-                        data.response = replaceURLsWithSubstring(data.response, "");
+                    if (tab.url.includes("tiktok.com")) {
+						if (settings.notiktoklinks){
+							data.response = replaceURLsWithSubstring(data.response, "");
+						}
+						let restxt = data.response.length > 150 ? data.response.substring(0, 150) : data.response;
+						await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
+						continue;
                     }
 
                     await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);

@@ -212,9 +212,6 @@
 					resolvedSvg.style="width:24px;height:24px"
 					resolvedSvg.removeAttribute("width");
 					resolvedSvg.removeAttribute("height");
-					
-					console.log('After:', resolvedSvg.outerHTML); // Debug
-					
 					pendingSpace = " " + resolvedSvg.outerHTML + " " ;
 				} else if (node.childNodes.length) {
 					Array.from(node.childNodes).forEach(processNode);
@@ -994,7 +991,6 @@
 							}
 							
 						} catch (e) {
-							console.log(e, mutation.addedNodes[i]);
 							
 						}
 					}
@@ -1095,7 +1091,7 @@
 						);
 					}
 				} catch (e) {
-					console.log(e);
+					//console.log(e);
 				}				
 				  //console.log('Viewer count:', count);
 			  });
