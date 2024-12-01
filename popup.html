@@ -286,6 +286,7 @@ body {
     font-family: var(--font-family);
     background-color: var(--body-background-disabled);
     font-size: 12px;
+	overflow-x: hidden;
 }
 
 ::-webkit-scrollbar {
@@ -4392,6 +4393,15 @@ input:checked + .slider:before {
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" id="ollamabotname" class="textInput" autocomplete="off" placeholder="The default bot name is '🤖💬'" data-textsetting="ollamabotname" />
 										<label for="ollamabotname"><span data-translate="ollama-bot-name">&gt; Customize bot name</span></label>
+									</div>
+								</div>
+								<div>
+									<div class="textInputContainer" style="width: 95%;">
+										<label class="switch">
+											<input type="checkbox" id="noollamabotname" data-setting="noollamabotname" />
+											<span class="slider round"></span>
+										</label>
+										📛 <span data-translate="no-ollama-bot-name">Do not include the bot's name when responding</span>
 									</div>
 								</div>
 								<div>

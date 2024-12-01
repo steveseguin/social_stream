@@ -1644,6 +1644,7 @@ async function getBTTVEmotes(url = false, type=null, channel=null) {
 
 			if (vid) {
 				userID = localStorage.getItem("vid2uid:" + vid);
+				
 				if (!userID) {
 					userID = await fetch("https://api.socialstream.ninja/youtube/user?video=" + vid)
 						.then(result => {
@@ -3718,7 +3719,7 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			
 			let username = "";
 			let isBot = false;
-			if (cleaned.startsWith(botname+":")){
+			if (!settings.noollamabotname && cleaned.startsWith(botname+":")){
 				cleaned = cleaned.replace(botname+":","").trim();
 				username = botname;
 				isBot = true;

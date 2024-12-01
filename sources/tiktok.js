@@ -1102,7 +1102,8 @@
 
     try {
         chrome.runtime.sendMessage(chrome.runtime.id, {
-            "getSettings": true
+            "getSettings": true,
+			"tabId": chrome.runtime.id
         }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
             if (response) {
                 if ("settings" in response) {
@@ -1152,7 +1153,6 @@
 								return;
 							}
 						}
-						
 						
                         if (document.querySelector('.public-DraftEditorPlaceholder-inner')) {
                             document.querySelector(".public-DraftEditorPlaceholder-inner").focus();

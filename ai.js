@@ -829,7 +829,7 @@ async function processMessageWithOllama(data) {
 		if (data.type == "stageten" && (botname == data.chatname)){ // stageten (via api) uses the bot's name
 			isProcessing = false;
 			return;
-		} else if (!data.chatmessage || data.chatmessage.startsWith(botname+":")) { // other sites don't use the bots name, but prefaces with it instead
+		} else if (!data.chatmessage || (!settings.noollamabotname && data.chatmessage.startsWith(botname+":"))) { // other sites don't use the bots name, but prefaces with it instead
 			isProcessing = false;
 			return;
 		}
@@ -876,7 +876,8 @@ async function processMessageWithOllama(data) {
 			
 			sendTargetP2P(
 				{"chatmessage":response,
-					"chatname":botname, "chatimg":"./icons/bot.png", 
+					"chatname":botname, 
+					"chatimg":"./icons/bot.png", 
 					"type":"socialstream", 
 					"request": data, 
 					"tts": (settings.ollamatts ? true : false)
@@ -886,7 +887,7 @@ async function processMessageWithOllama(data) {
 			if (!settings.ollamaoverlayonly){
 				const msg = {
 					tid: data.tid,
-					response: botname+": " + response.trim(),
+					response: (settings.noollamabotname ? response.trim() : (botname+": " + response.trim())),
 					bot: true
 				};
 				sendMessageToTabs(msg);
