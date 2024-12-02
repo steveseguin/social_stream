@@ -4132,8 +4132,10 @@
 				document.documentElement.style.setProperty("--bgcolor-bubble-odd", getComputedStyle(document.documentElement).getPropertyValue("--bgcolor-bubble"));
 			}
 
-			if (urlParams.has("nooutline")) {
+			if (urlParams.has("nooutline") && !darkmode) {
 				document.body.style.textShadow = "0 0 black";
+				document.getElementById("topbar").style.color = "white";
+				document.getElementById("topbar").style.fontWeight = "700";
 			}
 
 			if (urlParams.has("transparent") || urlParams.has("transparency")) {
@@ -4337,8 +4339,8 @@
 					return;
 				}
 
-				if (autoShowQueue.length > 20) {
-					while (autoShowQueue[0].rawContents && !autoShowQueue[0].rawContents.hasDonation && autoShowQueue.length > 10) {
+				if (autoShowQueue.length > 10) {
+					while (autoShowQueue[0].rawContents && !autoShowQueue[0].rawContents.hasDonation && autoShowQueue.length > 4) {
 						autoShowQueue.shift(); // skip oldest, since too many are queued up
 					}
 					if (activeDonation) {
@@ -4357,7 +4359,7 @@
 						checkTimeout = false;
 						checkAutoShow();
 					}, waitTime);
-				} else if (autoShowQueue.length > 3) {
+				} else if (autoShowQueue.length > 1) {
 					checkTimeout = setTimeout(function () {
 						checkTimeout = false;
 						checkAutoShow();
