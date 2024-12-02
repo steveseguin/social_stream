@@ -83,11 +83,11 @@
 		var chatimg = "";
 		
 		var name="";
-		/* try {
-			name = ele.querySelector(".type-name").innerText.trim();
+		 try {
+			name = ele.querySelector(".user-name-content").innerText.trim();
 			name = escapeHtml(name);
 		} catch(e){
-		} */
+		} 
 		
 		var msg = "";
 		try {
