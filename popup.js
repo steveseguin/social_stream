@@ -1771,6 +1771,23 @@ function updateSettings(ele, sync=true, value=null){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2", target:target,  setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
 		}
+	} else if (ele.dataset.optionparam4){
+		document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.optionparam4);
+		
+		if (ele.value){
+			ele.value.split("&").forEach(rem=>{
+				if (rem.includes("=")){
+					document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, rem.split("=")[0]);
+				}
+			});
+			document.getElementById("hypemeter").raw = updateURL(ele.dataset.optionparam4+"="+encodeURIComponent(ele.value).replace(/%26/g, '&').replace(/%3D/g, '='), document.getElementById("hypemeter").raw);
+		}
+		
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", target:target,  setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
+		}
 	} else if (ele.dataset.optionparam6){
 		document.getElementById("ticker").raw = removeQueryParamWithValue(document.getElementById("ticker").raw, ele.dataset.optionparam6);
 		

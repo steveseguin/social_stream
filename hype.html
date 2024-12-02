@@ -283,6 +283,132 @@
 			animation-iteration-count: 1;
 			animation-fill-mode: forwards;
 		}
+		
+		/* Default views text */
+		[data-viewers]::before {
+		  content: "views: ";
+		}
+
+		/* Compact Style */
+		.style-compact .sourceStatHolder {
+		  background-color: #0005;
+		  margin: 1px;
+		  padding: 3px 5px;
+		  border-radius: 8px;
+		  display: inline-flex;
+		  align-items: center;
+		  gap: 3px;
+		  height: 24px;
+		  font-size: 30%;
+		}
+
+		.style-compact [data-viewers] {
+		  font-size: 100%;
+		  margin: 0;
+		  line-height: 1;
+		  order: -1;
+		  min-width: 40px;
+		  text-align: left;
+		}
+
+		.style-compact [data-viewers]::before {
+		  content: "👁️ ";
+		}
+		
+
+		.style-compact img {
+		  padding: 0;
+		  margin: 0;
+		  height: 16px;
+		  width: 16px;
+		}
+
+		/* Modern Style */
+		.style-modern .sourceStatHolder {
+		  background-color: #2225;
+		  backdrop-filter: blur(4px);
+		  border: 1px solid #fff3;
+		  box-shadow: 0 2px 8px #0004;
+		  margin: 2px;
+		  padding: 4px 8px;
+		  border-radius: 12px;
+		  display: inline-flex;
+		  align-items: center;
+		  gap: 4px;
+		  height: 32px;
+		  font-size: 35%;
+		}
+		
+		.style-modern [data-viewers]::before {
+		  content: "👁️ ";
+		}
+
+		.style-modern [data-viewers] {
+		  font-size: 100%;
+		  margin: 0;
+		  line-height: 1;
+		  order: -1;
+		  min-width: 45px;
+		  text-align: left;
+		}
+
+		.style-modern img {
+		  padding: 0;
+		  margin: 0;
+		  height: 20px;
+		  width: 20px;
+		  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+		}
+
+		/* Minimal Style */
+		.style-minimal .sourceStatHolder {
+		  background: none;
+		  margin: 1px;
+		  padding: 2px 4px;
+		  display: inline-flex;
+		  align-items: center;
+		  gap: 2px;
+		  height: 20px;
+		  font-size: 25%;
+		}
+
+		.style-minimal [data-viewers] {
+		  font-size: 100%;
+		  margin: 0;
+		  line-height: 1;
+		  order: -1;
+		  min-width: 35px;
+		  text-align: left;
+		  opacity: 0.9;
+		}
+
+		.style-minimal [data-viewers]::before {
+		  content: "👁️ ";
+		}
+
+		.style-minimal img {
+		  padding: 0;
+		  margin: 0;
+		  height: 14px;
+		  width: 14px;
+		  opacity: 0.8;
+		}
+
+		/* Title styles for all */
+		.style-compact #hypetitle,
+		.style-modern #hypetitle,
+		.style-minimal #hypetitle {
+		  font-size: 80%;
+		  padding: 3px;
+		}
+
+		.style-compact #hype,
+		.style-modern #hype,
+		.style-minimal #hype {
+		  gap: 2px;
+		  display: inline-flex;
+		  align-items: center;
+		}
 	</style>
 </head>
 <body class="electronDraggable" id="output">
@@ -542,6 +668,53 @@
 		document.documentElement.style.setProperty("--outline", "0px");
 	}
 	
+	var showViewers = true;
+	var showChatters = true;
+
+	if (urlParams.has("viewersonly")) {
+		showViewers = true;
+		showChatters = false;
+	}
+	if (urlParams.has("chattersonly")) {
+		showViewers = false;
+		showChatters = true;
+	}
+	
+	var titleText = "";
+	if (showViewers && showChatters) {
+		titleText = "Active chatters and viewers in the last 5-minutes";
+	} else if (showViewers) {
+		titleText = "Current viewer count";
+	} else {
+		titleText = "Active chatters in the last 5-minutes";
+	}
+	document.getElementById("hypetitle").textContent = titleText;
+	
+		
+	var overlayStyle = "default";
+	if (urlParams.has("style")) {
+		overlayStyle = urlParams.get("style");
+		document.getElementById("parentHolder").classList.add("style-" + overlayStyle);
+	}
+
+	// Add this to the existing CSS variable settings section
+	if (urlParams.has("style")) {
+		switch(urlParams.get("style")) {
+			case "compact":
+				document.documentElement.style.setProperty("--padding", "8px");
+				document.documentElement.style.setProperty("--width", "24px");
+				break;
+			case "modern":
+				document.documentElement.style.setProperty("--padding", "10px");
+				document.documentElement.style.setProperty("--width", "32px");
+				break;
+			case "minimal":
+				document.documentElement.style.setProperty("--padding", "6px");
+				document.documentElement.style.setProperty("--width", "20px");
+				break;
+		}
+	}
+	
 	var followers = [];
 	var viewers = [];
 
@@ -553,46 +726,35 @@
 			if (!keys.length){
 				document.getElementById("parentHolder").classList.add("hidden");
 			} else {
-				document.getElementById("parentHolder").classList.remove("hidden");
-				for (var i = 0; i<keys.length;i++){
-					if (keys[i]){
-						document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><span data-viewers='true' data-type='"+keys[i]+"'></span><img src='./sources/images/"+keys[i]+".png'>"+data.hype[keys[i]]+"</div>"
+				if (showChatters){
+					document.getElementById("parentHolder").classList.remove("hidden");
+					for (var i = 0; i<keys.length;i++){
+						if (keys[i]){
+							document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><span data-viewers='true' data-type='"+keys[i]+"'></span><img src='./sources/images/"+keys[i]+".png'>"+data.hype[keys[i]]+"</div>"
+						}
 					}
 				}
 			}
-			for (var type in followers){
-				<!-- var ele = document.querySelector("[data-follower][data-type='"+type+"']"); -->
-				<!-- if (ele){ -->
-					<!-- ele.innerText = followers[type]; -->
-				<!-- } else { -->
-					<!-- document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><span data-follower='true' data-type='"+type+"'>"+followers[type]+"</span><img src='./sources/images/"+type+".png'>-</div>"; -->
-				<!-- } -->
-			}
-			for (var type in viewers){
-				var ele = document.querySelector("[data-viewers][data-type='"+type+"']");
-				if (ele){
-					ele.innerText = viewers[type];
-				} else {
-					document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><span data-viewers='true' data-type='"+type+"'>"+viewers[type]+"</span><img src='./sources/images/"+type+".png'>-</div>";
+			if (showViewers){
+				document.getElementById("parentHolder").classList.remove("hidden");
+				for (var type in viewers){
+					var ele = document.querySelector("[data-viewers][data-type='"+type+"']");
+					if (ele){
+						ele.innerText = viewers[type];
+					} else {
+						document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><span data-viewers='true' data-type='"+type+"'>"+viewers[type]+"</span><img src='./sources/images/"+type+".png'></div>";
+					}
+					
 				}
-				
 			}
 		} else if (data && data.event && data.type && ("meta" in data)){
-			if (data.event == "follower_update"){
-				<!-- followers[data.type] = parseInt(data.meta) || 0; -->
-				<!-- var ele = document.querySelector("[data-follower][data-type='"+data.type+"']"); -->
-				<!-- if (ele){ -->
-					<!-- ele.innerText = followers[data.type]; -->
-				<!-- } else { -->
-					<!-- document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><span data-follower='true' data-type='"+data.type+"'>"+followers[data.type]+"</span><img src='./sources/images/"+data.type+".png'>-</div>"; -->
-				<!-- } -->
-			} else if (data.event == "viewer_update"){
+			if (showViewers && data.event == "viewer_update"){
 				viewers[data.type] = parseInt(data.meta) || 0;
 				var ele = document.querySelector("[data-viewers][data-type='"+data.type+"']");
 				if (ele){
 					ele.innerText = viewers[data.type];
 				} else {
-					document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><span data-viewers='true' data-type='"+data.type+"'>"+viewers[data.type]+"</span><img class='sourceicons' src='./sources/images/"+data.type+".png'>-</div>";
+					document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><span data-viewers='true' data-type='"+data.type+"'>"+viewers[data.type]+"</span><img class='sourceicons' src='./sources/images/"+data.type+".png'></div>";
 				}
 			}
 		} 
