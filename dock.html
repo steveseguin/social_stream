@@ -4132,10 +4132,12 @@
 				document.documentElement.style.setProperty("--bgcolor-bubble-odd", getComputedStyle(document.documentElement).getPropertyValue("--bgcolor-bubble"));
 			}
 
-			if (urlParams.has("nooutline") && !darkmode) {
+			if (urlParams.has("nooutline")) {
 				document.body.style.textShadow = "0 0 black";
-				document.getElementById("topbar").style.color = "white";
-				document.getElementById("topbar").style.fontWeight = "700";
+				if (!darkmode){
+					document.getElementById("topbar").style.color = "white";
+					document.getElementById("topbar").style.fontWeight = "700";
+				}
 			}
 
 			if (urlParams.has("transparent") || urlParams.has("transparency")) {
