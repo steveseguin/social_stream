@@ -6474,7 +6474,7 @@ async function applyBotActions(data, tab = false, reflection = false) {
 
 		if (data.chatmessage) {
 			for (var i = 1; i <= 10; i++) {
-				if (settings["botReplyMessageEvent" + i] && settings["botReplyMessageCommand" + i] && settings["botReplyMessageCommand" + i].textsetting && settings["botReplyMessageValue" + i] && settings["botReplyMessageValue" + i].textsetting && data.chatmessage.indexOf(settings["botReplyMessageCommand" + i].textsetting) != -1) {
+				if (settings["botReplyMessageEvent" + i] && settings["botReplyMessageCommand" + i] && settings["botReplyMessageCommand" + i].textsetting && settings["botReplyMessageValue" + i] && settings["botReplyMessageValue" + i].textsetting && ((!settings.botReplyMessageFull && data.chatmessage.indexOf(settings["botReplyMessageCommand" + i].textsetting) != -1) || (settings.botReplyMessageFull && data.chatmessage && data.chatmessage == (settings["botReplyMessageCommand" + i].textsetting)))){
 					var matched = true;
 					//log(settings['botReplyMessageSource'+i]);
 					if (settings["botReplyMessageSource" + i] && settings["botReplyMessageSource" + i].textsetting.trim()) {
