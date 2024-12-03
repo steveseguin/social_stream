@@ -474,58 +474,79 @@
 		
         function processVote(vote, name, source) {
 			if (settings.pollClosed) return;
-			if (!settings.pollSpam && alreadyVoted[name+":"+source]){return;} // already voted
+			if (!settings.pollSpam && alreadyVoted[name+":"+source]) return;
 			
-            vote = vote.trim();
-            
-            if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
-                let matchedOption = settings.pollOptions.find((option, index) => 
-                    option.toLowerCase() === vote.toLowerCase() ||
-                    option.toLowerCase().includes(vote.toLowerCase()) ||
-                    vote.toLowerCase().includes(option.toLowerCase()) ||
-                    vote === (index + 1).toString()
-                );
-
-                if (settings.pollType === 'yesno') {
-                    if (['yes', 'y', '1', 'true'].includes(vote.toLowerCase())) {
-                        matchedOption = 'Yes';
-                    } else if (['no', 'n', '0', '2', 'false'].includes(vote.toLowerCase())) {
-                        matchedOption = 'No';
-                    }
-                }
-
-                if (matchedOption) {
-                    results[matchedOption] = (results[matchedOption] || 0) + 1;
-                    totalVotes++;
-					if (!settings.pollSpam){
-						alreadyVoted[name+":"+source] = true;
+			// Clean the vote: lowercase and remove common punctuation
+			vote = vote.trim().toLowerCase().replace(/[!.,?]+$/, '');
+			
+			if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+				// Handle numeric votes first
+				const numericVote = parseInt(vote);
+				if (!isNaN(numericVote)) {
+					const option = settings.pollOptions[numericVote - 1];
+					if (option) {
+						results[option] = (results[option] || 0) + 1;
+						totalVotes++;
+						if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
+						updatePollResults();
+						return;
 					}
-                }
-            } else if (settings.pollType === 'freeform') {
-                let hashtag = vote.match(/^#(\w+)$/);
-                if (hashtag) {
-                    hashtag = hashtag[1].toUpperCase();
-                    results[hashtag] = (results[hashtag] || 0) + 1;
-                    totalVotes++;
-					if (!settings.pollSpam){
-						alreadyVoted[name+":"+source] = true;
-					}
-                } else {
-                    // Check for numerical selection
-                    let numericVote = parseInt(vote, 10);
-                    if (!isNaN(numericVote) && numericVote > 0 && numericVote <= Object.keys(results).length) {
-                        let selectedOption = Object.keys(results)[numericVote - 1];
-                        results[selectedOption]++;
-                        totalVotes++;
-						if (!settings.pollSpam){
-							alreadyVoted[name+":"+source] = true;
-						}
-                    }
-                }
-            }
+				}
 
-            updatePollResults();
-        }
+				// Special handling for yes/no polls
+				if (settings.pollType === 'yesno') {
+					const yesMatches = ['yes', 'y'];
+					const noMatches = ['no', 'n'];
+					
+					if (yesMatches.includes(vote)) {
+						results['Yes'] = (results['Yes'] || 0) + 1;
+						totalVotes++;
+						if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
+						updatePollResults();
+						return;
+					}
+					if (noMatches.includes(vote)) {
+						results['No'] = (results['No'] || 0) + 1;
+						totalVotes++;
+						if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
+						updatePollResults();
+						return;
+					}
+				}
+
+				// For multiple choice, require either exact match or the vote must be the complete option name
+				let matchedOption = settings.pollOptions.find(option => {
+					const normalizedOption = option.toLowerCase();
+					return vote === normalizedOption || 
+						   normalizedOption === vote + 's' || // Handle singular/plural
+						   vote === normalizedOption + 's';
+				});
+
+				if (matchedOption) {
+					results[matchedOption] = (results[matchedOption] || 0) + 1;
+					totalVotes++;
+					if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
+				}
+			} else if (settings.pollType === 'freeform') {
+				let hashtag = vote.match(/^#(\w+)$/);
+				if (hashtag) {
+					hashtag = hashtag[1].toUpperCase();
+					results[hashtag] = (results[hashtag] || 0) + 1;
+					totalVotes++;
+					if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
+				} else {
+					let numericVote = parseInt(vote, 10);
+					if (!isNaN(numericVote) && numericVote > 0 && numericVote <= Object.keys(results).length) {
+						let selectedOption = Object.keys(results)[numericVote - 1];
+						results[selectedOption]++;
+						totalVotes++;
+						if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
+					}
+				}
+			}
+
+			updatePollResults();
+		}
 		
 		function updatePollVisibility() {
             const pollContainer = document.getElementById('poll-container');
