@@ -2940,7 +2940,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "downloadwaitlist") {
 			downloadWaitlist();
 			sendResponse({ state: isExtensionOn });
-			
 		} else if (request.cmd && request.cmd === "cleardock") {
 			sendResponse({ state: isExtensionOn });
 			var data = {};
@@ -4144,6 +4143,10 @@ function setupSocket() {
 				highlightWaitlist(parseInt(data.value) || 0);
 			} else if (data.action && data.action === "resetwaitlist") {
 				resetWaitlist();
+			} else if (data.action && data.action === "resetpoll") {
+				sendTargetP2P({cmd:"resetpoll"},"poll");
+			} else if (data.action && data.action === "closepoll") {
+				sendTargetP2P({cmd:"closepoll"},"poll");
 			} else if (data.action && data.action === "stopentries") {
 				toggleEntries(false);
 				sendResponse({ state: isExtensionOn });
