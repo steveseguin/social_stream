@@ -4139,19 +4139,26 @@ function setupSocket() {
 				}
 			} else if (data.action && data.action === "removefromwaitlist") {
 				removeWaitlist(parseInt(data.value) || 0);
+				resp = true;
 			} else if (data.action && data.action === "highlightwaitlist") {
 				highlightWaitlist(parseInt(data.value) || 0);
+				resp = true;
 			} else if (data.action && data.action === "resetwaitlist") {
 				resetWaitlist();
+				resp = true;
 			} else if (data.action && data.action === "resetpoll") {
 				sendTargetP2P({cmd:"resetpoll"},"poll");
+				resp = true;
 			} else if (data.action && data.action === "closepoll") {
 				sendTargetP2P({cmd:"closepoll"},"poll");
+				resp = true;
 			} else if (data.action && data.action === "stopentries") {
 				toggleEntries(false);
-				sendResponse({ state: isExtensionOn });
+				resp = true;
+				//sendResponse({ state: isExtensionOn });
 			} else if (data.action && data.action === "downloadwaitlist") {
 				downloadWaitlist();
+				resp = true;
 			} else if (data.action && data.action === "selectwinner") {
 				//console.log(data);
 				if ("value" in data) {
