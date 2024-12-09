@@ -706,7 +706,7 @@
 				};
 				socketserver.onopen = function () {
 					conCon = 1;
-					socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 2, in: 1 }));
+					socketserver.send(JSON.stringify({ join: urlParams.get('session').split(",")[0], out: 2, in: 1 }));
 					console.log("output channel: 2, input channel: 1");
 				};
 
@@ -772,7 +772,7 @@
 				};
 				socketserverExtension.onopen = function () {
 					conConExtension = 1;
-					socketserverExtension.send(JSON.stringify({ join: roomID.split(",")[0], out: 3, in: 4 }));
+					socketserverExtension.send(JSON.stringify({ join: urlParams.get('session').split(",")[0], out: 3, in: 4 }));
 					console.log("output channel: 3, input channel: 4");
 				};
 
