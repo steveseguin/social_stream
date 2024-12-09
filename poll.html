@@ -614,8 +614,10 @@
 					closePoll();
 				} else if (data.cmd === "resetpoll") {
 					resetPoll();
+				} else if (data.cmd === "startpoll") {
+					startPoll();
 				}
-			}
+			} 
 		}
 		
 		function closePoll() {
@@ -624,6 +626,17 @@
 			pollTitle.innerText = settings.pollQuestion + " (Closed)";
 			updatePollResults();
 		}
+		
+		function startPoll() {
+			console.log("start poll");
+			settings.pollEnabled = true;
+			settings.pollClosed = false;
+			alreadyVoted = {};
+			totalVotes = 0;
+			results = {};
+			initializePoll();
+			updatePollVisibility();
+		}
 
 		function resetPoll() {
 			settings.pollClosed = false;
@@ -631,6 +644,25 @@
 			totalVotes = 0;
 			alreadyVoted = {};
 			initializePoll();
+		}
+		
+		function processInput(data){
+			if (!data){return false;}
+			if ("action" in data){
+				if (data.action === "closepoll") {
+					closePoll();
+				} else if (data.action === "resetpoll") {
+					resetPoll();
+				} else if (data.action === "startpoll") {
+					startPoll();
+				}
+				return true;
+			} else if (data.chatmessage) {
+				processVote(data.chatmessage, data.chatname, data.type);
+				return true;
+			} else {
+				return false;
+			}
 		}
 
         // Initialize iframe for communication
@@ -645,6 +677,135 @@
                 processData(event.data.dataReceived.overlayNinja);
             }
         });
+		
+		
+		
+			var conCon = 1;
+			var socketserver = false;
+			var serverURL = "wss://io.socialstream.ninja/api";
+			var reconnectionTimeout = null;
+			function setupSocket() {
+				// Clear any existing reconnection timeout
+				if (reconnectionTimeout) {
+					clearTimeout(reconnectionTimeout);
+					reconnectionTimeout = null;
+				}
+
+				if (socketserver) {
+					socketserver.onclose = null;
+					socketserver.close();
+					socketserver = null;
+				}
+				socketserver = new WebSocket(serverURL);
+
+				socketserver.onclose = function () {
+					reconnectionTimeout = setTimeout(function () {
+						conCon += 1;
+						setupSocket();
+					}, 100 * conCon);
+				};
+				socketserver.onopen = function () {
+					conCon = 1;
+					socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 2, in: 1 }));
+					console.log("output channel: 2, input channel: 1");
+				};
+
+				socketserver.onerror = function (error) {
+					console.error("WebSocket error:", error);
+					socketserver.close();
+				};
+
+				socketserver.addEventListener("message", function (event) {
+					var resp = false;
+					if (event.data) {
+						try {
+							var data = JSON.parse(event.data);
+						} catch (e) {
+							return;
+						}
+						resp = processInput(data);
+						console.log(resp);
+						if (resp !== null) {
+							if (data.get) {
+								var ret = {};
+								ret.callback = {};
+								ret.callback.get = data.get;
+								ret.callback.result = resp;
+								socketserver.send(JSON.stringify(ret));
+							}
+						}
+					}
+				});
+			}
+
+			if (urlParams.has("server")) {
+				serverURL = urlParams.get("server") || serverURL;
+				setupSocket();
+			}
+			
+			var conConExtension = 1;
+			var socketserverExtension = false;
+			var serverURLExtension = "wss://io.socialstream.ninja/extension";
+			var server2 = false;
+			var server3 = false;
+			var reconnectionTimeoutExtension = null;
+
+			function setupSocketExtension() {
+				if (reconnectionTimeoutExtension) {
+					clearTimeout(reconnectionTimeoutExtension);
+					reconnectionTimeoutExtension = null;
+				}
+
+				if (socketserverExtension) {
+					socketserverExtension.onclose = null;
+					socketserverExtension.close();
+					socketserverExtension = null;
+				}
+
+				socketserverExtension = new WebSocket(serverURLExtension);
+
+				socketserverExtension.onclose = function () {
+					reconnectionTimeoutExtension = setTimeout(function () {
+						conConExtension += 1;
+						setupSocketExtension();
+					}, 100 * conConExtension);
+				};
+				socketserverExtension.onopen = function () {
+					conConExtension = 1;
+					socketserverExtension.send(JSON.stringify({ join: roomID.split(",")[0], out: 3, in: 4 }));
+					console.log("output channel: 3, input channel: 4");
+				};
+
+				socketserverExtension.onerror = function (error) {
+					console.error("WebSocket error:", error);
+					socketserverExtension.close();
+				};
+
+				socketserverExtension.addEventListener("message", function (event) {
+					var resp = false;
+					if (event.data && server2) {
+						try {
+							var data = JSON.parse(event.data);
+							processInput(data);
+						} catch (e) {
+							console.error(e);
+						}
+					}
+				});
+			}
+
+			if (urlParams.has("server2")) {
+				server2 = true;
+				if (urlParams.has("server3")) {
+					server3 = true;
+				}
+				serverURLExtension = urlParams.get("server2") || serverURLExtension;
+				setupSocketExtension();
+			} else if (urlParams.has("server3")) {
+				server3 = true;
+				serverURLExtension = urlParams.get("server3") || serverURLExtension;
+				setupSocketExtension();
+			}
 
         initializePoll();
     </script>
