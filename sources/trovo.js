@@ -98,7 +98,19 @@
 	  var chatdonation = "";
 	  var chatmembership = "";
 	  var chatsticker = "";
-	  var chatbadges = "";
+	  var chatbadges = [];
+	  
+	  ele.querySelectorAll(".badge img[src]").forEach(badge=>{
+		try {
+			if (badge && badge.nodeName == "IMG"){
+				var tmp = {};
+				tmp.src = badge.src;
+				tmp.type = "img";
+				chatbadges.push(tmp);
+			}
+		} catch(e){  }
+	  });
+	  
 	  var hasDonation = '';
 	  var backgroundColor = "";
 	  var textColor = "";

@@ -4221,6 +4221,11 @@
 				ttscommand = urlParams.get("ttscommand") || "!say";
 			}
 			
+			var ttscommandmembersonly = false;
+			if (urlParams.has("ttscommandmembersonly")) {
+				ttscommandmembersonly = true;
+			}
+			
 			var hideNotPinned = false;
 			if (urlParams.has("pinnedonly")) {
 				hideNotPinned = true;
@@ -7784,7 +7789,7 @@
 						updateQueueButton();
 					}
 					
-					if (ttscommand && data.chatmessage && data.chatmessage.includes(ttscommand+" ")){
+					if (ttscommand && data.chatmessage && data.chatmessage.includes(ttscommand+" ") && (!ttscommandmembersonly || (ttscommandmembersonly && data.membership))){
 						if (!node.classList.contains("hide")) {
 							speechMeta(data);
 						}
