@@ -797,6 +797,61 @@ function checkTriggerWords(triggerString, sentence) {
 let isProcessing = false;
 const lastResponseTime = {};
 
+async function processSummary(data){
+	console.log(data);
+	if (!data.tid) return data;
+	const currentTime = Date.now();
+	if (isProcessing) return data;
+	isProcessing = true;
+	
+	let ollamaRateLimitPerTab = 5000;
+	if (settings.ollamaRateLimitPerTab) {
+	  ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting) || 0);
+	}
+	
+	if (data.type !== "stageten" && !settings.ollamaoverlayonly && data.tid && 
+		lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
+		isProcessing = false;
+		return data;
+	}
+
+	try {
+		var summary = await ChatContextManager.getSummary();
+	} catch(e){
+		isProcessing = false;
+		return data;
+	}
+	isProcessing = false;
+	console.log(summary);
+	if (summary){
+		let botname = "🤖💬";
+		if (settings.ollamabotname?.textsetting) {
+		  botname = settings.ollamabotname.textsetting.trim();
+		}
+		
+		sendTargetP2P({
+			chatmessage: summary,
+			chatname: botname,
+			chatimg: "./icons/bot.png",
+			type: "socialstream",
+			request: data,
+			tts: settings.ollamatts ? true : false
+		  }, "bot");
+
+		  // Send to tabs if not overlay-only
+		if (!settings.ollamaoverlayonly) {
+			const msg = {
+			  tid: data.tid,
+			  response: settings.noollamabotname ? summary.trim() : (botname + ": " + summary.trim()),
+			  bot: true
+			};
+			sendMessageToTabs(msg);
+			lastResponseTime[data.tid] = Date.now();
+		}
+	}
+	return data
+}
+
 async function processMessageWithOllama(data) {
   if (!data.tid) return;
   
@@ -944,7 +999,6 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 			context.userHistory.map(m => m.message).join('\n');
 		}
 		promptBase += `\n\nCurrent message from ${data.chatname}: ${userInput}`;
-		
 	} else {
 		promptBase += `\n\nCurrent group chat message from ${data.chatname}: ${userInput}`;
 	}
@@ -2226,6 +2280,15 @@ const ChatContextManager = {
     }
 
     return this.trimContextToFit(context);
+  },
+  
+  async getSummary() {
+	  const recentMessages = await this.getRecentMessages(); 
+      let chatSummary = await this.generateChatSummary(recentMessages);
+      this.cache.chatSummary = chatSummary;
+      this.cache.lastSummaryTime = Date.now();
+      this.cache.messageCount = 0;
+      return chatSummary;
   },
 
   async getRecentMessages() {

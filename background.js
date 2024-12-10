@@ -6923,6 +6923,10 @@ async function applyBotActions(data, tab = false, reflection = false) {
 	}
 	try {
 		
+		if (settings.allowLLMSummary && data.chatmessage && data.chatmessage.startsWith("!summary")){
+			return await processSummary(data);
+		}
+		
 		if (settings.ollamaCensorBot){
 			try{
 				if (settings.ollamaCensorBotBlockMode){

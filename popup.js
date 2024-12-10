@@ -86,7 +86,6 @@ if (typeof(chrome.runtime)=='undefined'){
 			}
 		});
 		
-		
 	} catch(e){
 		console.error(e);
 	}
@@ -443,7 +442,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				}
 			});
 			
-			var voicesDropdown = document.getElementById('languageSelect1');
+			var voicesDropdown = document.getElementById('systemLanguageSelect');
 			var existingOptions = Array.from(voicesDropdown.options).map(option => option.textContent);
 
 			voices.forEach(voice => {
@@ -957,6 +956,10 @@ function update(response, sync=true){
 											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting));
 										} else if (document.querySelector("input[data-numbersetting='"+key+"']")){
 											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting='"+key+"']").value));
+										} else if ("optionparam1" in response.settings[key]){
+											updateSettings(ele, sync, response.settings[key].optionparam1);
+										} else if (document.querySelector("input[data-optionparam1='"+key+"']")){
+											updateSettings(ele, sync, document.querySelector("input[data-optionparam1='"+key+"']").value);
 										} else {
 											updateSettings(ele, sync); 
 										}
@@ -972,6 +975,11 @@ function update(response, sync=true){
 											var ele2 = document.querySelector("input[data-numbersetting='"+keys[0]+"']");
 											if (ele2){
 												ele2.value = parseFloat(keys[1], keys[1]);
+											} else {
+												ele2 = document.querySelector("input[data-optionparam1='"+keys[0]+"']");
+												if (ele2){
+													ele2.value = keys[1], keys[1];
+												}
 											}
 											updateSettings(ele, sync, parseFloat(keys[1]));
 										} else{
@@ -989,6 +997,10 @@ function update(response, sync=true){
 											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting2));
 										} else if (document.querySelector("input[data-numbersetting2='"+key+"']")){
 											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting2='"+key+"']").value));
+										} else if ("optionparam2" in response.settings[key]){
+											updateSettings(ele, sync, response.settings[key].optionparam2);
+										} else if (document.querySelector("input[data-optionparam2='"+key+"']")){
+											updateSettings(ele, sync, document.querySelector("input[data-optionparam2='"+key+"']").value);
 										} else {
 											updateSettings(ele, sync); 
 										}
@@ -1006,6 +1018,11 @@ function update(response, sync=true){
 											var ele2 = document.querySelector("input[data-numbersetting2='"+keys[0]+"']");
 											if (ele2){
 												ele2.value = parseFloat(keys[1], keys[1]);
+											} else {
+												var ele2 = document.querySelector("input[data-optionparam2='"+keys[0]+"']");
+												if (ele2){
+													ele2.value = keys[1], keys[1];
+												}
 											}
 											updateSettings(ele, sync, parseFloat(keys[1]));
 										} else{
@@ -1276,12 +1293,22 @@ function update(response, sync=true){
 									ele.value = response.settings[key].optionparam1;
 									updateSettings(ele, sync);
 								}
+								
+								var ele = document.querySelector("input[data-param1='"+key+"']");
+								if (ele && ele.checked){
+									updateSettings(ele, false, response.settings[key].optionparam1);
+								}
 							}
 							if ("optionparam2" in response.settings[key]){
 								var ele = document.querySelector("select[data-optionparam2='"+key+"']");
 								if (ele){
 									ele.value = response.settings[key].optionparam2;
 									updateSettings(ele, sync);
+								}
+								
+								var ele = document.querySelector("input[data-param2='"+key+"']");
+								if (ele && ele.checked){
+									updateSettings(ele, false, response.settings[key].optionparam2);
 								}
 							}
 							if ("optionparam3" in response.settings[key]){
@@ -1464,6 +1491,15 @@ function compareVersions(a, b) { // https://stackoverflow.com/a/6832706
 }
 			
 function checkVersion(){
+	
+	const WEBSTORE_ID = "cppibjhfemifednoimlblfcmjgfhfjeg"; // our webstore ID
+	
+	if (chrome.runtime.id === WEBSTORE_ID) { // don't show version info if the webstore version
+		document.getElementById("newVersion").classList.remove('show');
+		document.getElementById("newVersion").innerHTML = "";
+		return;
+	}
+	
 	try {
 		fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/manifest.json').then(response => response.json()).then(data => {
 			var manifestData = chrome.runtime.getManifest();
@@ -1564,6 +1600,16 @@ function updateSettings(ele, sync=true, value=null){
         PollManager.savePollsToStorage();
 	}
 	
+	if (ele.dataset.del1){
+		ele.dataset.del1.split(",").forEach(target=>{
+			document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, target.trim());
+		});
+	} else if (ele.dataset.del2){
+		ele.dataset.del2.split(",").forEach(target=>{
+			document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, target.trim());
+		});
+	}
+	
 	if (ele.dataset.param1){
 		if (ele.checked){
 			
@@ -1572,6 +1618,12 @@ function updateSettings(ele, sync=true, value=null){
 			} else if (document.querySelector("input[data-numbersetting='"+ele.dataset.param1+"']")){
 				
 				value = document.querySelector("input[data-numbersetting='"+ele.dataset.param1+"']").value;
+				
+				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
+				document.getElementById("dock").raw = updateURL(ele.dataset.param1+"="+value, document.getElementById("dock").raw);
+			} else if (document.querySelector("[data-optionparam1='"+ele.dataset.param1+"']")){ 
+				console.log(".......");
+				value = document.querySelector("[data-optionparam1='"+ele.dataset.param1+"']").value;
 				
 				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
 				document.getElementById("dock").raw = updateURL(ele.dataset.param1+"="+value, document.getElementById("dock").raw);
@@ -1739,8 +1791,9 @@ function updateSettings(ele, sync=true, value=null){
 	} else if (ele.dataset.optionparam1){
 		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.optionparam1);
 		
-		
-		if (ele.value){
+		let preele = document.querySelector("[data-param1='"+ele.dataset.optionparam1+"']");
+			
+		if (ele.value && (!preele || preele.checked)){
 			ele.value.split("&").forEach(rem=>{
 				if (rem.includes("=")){ // this isn't covering all cases, but good enough for the existing values
 					document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, rem.split("=")[0]);
@@ -1757,7 +1810,9 @@ function updateSettings(ele, sync=true, value=null){
 	} else if (ele.dataset.optionparam2){
 		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.optionparam2);
 		
-		if (ele.value){
+		let preele = document.querySelector("[data-param2='"+ele.dataset.optionparam2+"']");
+		
+		if (ele.value && (!preele || preele.checked)){
 			ele.value.split("&").forEach(rem=>{
 				if (rem.includes("=")){
 					document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, rem.split("=")[0]);
@@ -1818,6 +1873,11 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
 			} else if (document.querySelector("input[data-numbersetting2='"+ele.dataset.param2+"']")){
 				value = document.querySelector("input[data-numbersetting2='"+ele.dataset.param2+"']").value;
+				
+				document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.param2);
+				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
+			} else if (document.querySelector("[data-optionparam2='"+ele.dataset.param2+"']")){
+				value = document.querySelector("[data-optionparam2='"+ele.dataset.param2+"']").value;
 				
 				document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.param2);
 				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
@@ -2455,7 +2515,6 @@ function deleteBadwordsFile() {
   }
 }
 
-// TTS Module for direct integration with settings menu
 const TTSManager = {
     audio: null,
     speech: false,
@@ -2463,103 +2522,237 @@ const TTSManager = {
     voices: null,
     premiumQueueTTS: [],
     premiumQueueActive: false,
+    feedbackTimeout: null,
     
-    // Initialize the TTS system
     init(voices) {
-		this.voices = voices;
-		if (!this.audio){
-			this.audio = document.createElement("audio");
-			this.audio.onended = () => this.finishedAudio();
-		}
-		const menuWrapper = document.querySelector('#ttsButton');
-        if (menuWrapper){
-			// Add test button to the menu
-			const testButton = document.createElement('button');
-			testButton.textContent = "Test";
-			testButton.className = "tts-test-button";
-			testButton.onclick = () => this.testTTS();
-			
-			menuWrapper.replaceWith(testButton);
-		}
-    },
-    
-    // Get current settings from the menu
-    getSettings() {
-        return {
-            speech: document.querySelector('[data-param1="speech"]').checked,
-            lang: document.getElementById('languageSelect1').selectedOptions[0].dataset.lang || document.getElementById('languageSelect1').value || 'en-US',
-			name: document.getElementById('languageSelect1').selectedOptions[0].dataset.name || '',
-            rate: parseFloat(document.querySelector('[data-numbersetting="rate"]').value) || 1.0,
-            volume: document.getElementById('volumeSlider')?.value / 100 || 1.0,
+        this.voices = voices;
+        if (!this.audio) {
+            this.audio = document.createElement("audio");
+            this.audio.onended = () => this.finishedAudio();
+        }
+        const menuWrapper = document.querySelector('#ttsButton');
+        if (menuWrapper) {
+            const container = document.createElement('div');
+            container.className = 'tts-test-container';
             
-            // API Keys
-            googleKey: document.getElementById('googleAPIKey').value,
-            elevenLabsKey: document.getElementById('elevenLabsKey').value,
-            speechifyKey: document.getElementById('speechifyAPIKey').value,
+            const testButton = document.createElement('button');
+            testButton.textContent = "Test";
+            testButton.className = "tts-test-button";
+            testButton.onclick = () => this.testTTS();
             
-            // Voice settings
-            googleVoice: document.getElementById('googleVoiceName').value,
-            elevenLabsVoice: document.getElementById('elevenLabsVoiceID').value,
-            speechifyVoice: document.getElementById('speechifyVoiceID').value,
+            const feedback = document.createElement('div');
+            feedback.className = 'tts-feedback hidden';
+            feedback.id = 'ttsFeedback';
             
-            // Other options
-            latency: parseInt(document.querySelector('[data-numbersetting="latency"]')?.value) || 0
-        };
-    },
-    
-    // Test TTS functionality
-    testTTS() {
-        const testPhrase = "The quick brown fox jumps over the lazy dog";
-        this.speak(testPhrase, true);
-    },
-    
-    // Main speak function
-    speak(text, allow = false) {
-		//console.log("speak: "+text);
-        const settings = this.getSettings();
-		//console.log("settings: "+settings);
-        if (!settings.speech && !allow) return;
-        if (!text) return;
-		//console.log("GOOD!?");
-        
-        // Handle different TTS services based on available API keys
-        if (settings.googleKey) {
-            if (!this.premiumQueueActive) {
-                this.googleTTS(text, settings);
-            } else {
-                this.premiumQueueTTS.push(text);
+            container.appendChild(testButton);
+            container.appendChild(feedback);
+            menuWrapper.replaceWith(container);
+            
+            // Add styles if they don't exist
+            if (!document.getElementById('ttsFeedbackStyles')) {
+                const style = document.createElement('style');
+                style.id = 'ttsFeedbackStyles';
+                style.textContent = `
+                    .tts-test-container {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                        margin: 10px 0;
+                    }
+                    .tts-feedback {
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        font-size: 14px;
+                        transition: opacity 0.3s ease;
+                    }
+                    .tts-feedback.hidden {
+                        display: none;
+                        opacity: 0;
+                    }
+                    .tts-feedback.info {
+                        background: #fff3cd;
+                        border: 1px solid #ffeeba;
+                        color: #856404;
+                    }
+                    .tts-feedback.error {
+                        background: #f8d7da;
+                        border: 1px solid #f5c6cb;
+                        color: #721c24;
+                    }
+                    .tts-feedback.success {
+                        background: #d4edda;
+                        border: 1px solid #c3e6cb;
+                        color: #155724;
+                    }
+                `;
+                document.head.appendChild(style);
             }
-        } else if (settings.elevenLabsKey) {
-            if (!this.premiumQueueActive) {
-                this.elevenLabsTTS(text, settings);
-            } else {
-                this.premiumQueueTTS.push(text);
-            }
-        } else if (settings.speechifyKey) {
-            if (!this.premiumQueueActive) {
-                this.speechifyTTS(text, settings);
-            } else {
-                this.premiumQueueTTS.push(text);
-            }
-        } else {
-            this.systemTTS(text, settings);
         }
     },
     
-    // Built-in system TTS
+    getSettings() {
+        const settings = {
+            // Global settings
+            speech: document.querySelector('[data-param1="speech"]')?.checked,
+            volume: document.querySelector('[data-param1="volume"]').checked ?  parseFloat(document.querySelector('[data-numbersetting="volume"]')?.value) || 1.0 : 1.0,
+            
+            // System TTS settings
+            system: {
+                lang: document.getElementById('systemLanguageSelect')?.selectedOptions[0]?.dataset.lang || 'en-US',
+                voice: document.getElementById('systemLanguageSelect')?.selectedOptions[0]?.dataset.name,
+                rate: document.querySelector('[data-param1="rate"]').checked ?  parseFloat(document.querySelector('[data-numbersetting="rate"]')?.value) || 1.0 : 1.0,
+                pitch: document.querySelector('[data-param1="pitch"]').checked ? (parseFloat(document.querySelector('[data-numbersetting="pitch"]')?.value) || 1.0) : 1.0
+            },
+            
+            // Google Cloud TTS settings
+            google: {
+                key: document.getElementById('googleAPIKey')?.value,
+                voice: document.getElementById('googleVoiceName')?.value,
+                lang:  document.querySelector('[data-param1="googlelang"]').checked ?  document.querySelector('[data-optionparam1="googlelang"]')?.value || 'en-US' : "en-US",
+                rate: document.querySelector('[data-param1="googlerate"]').checked ? parseFloat(document.querySelector('[data-numbersetting="googlerate"]')?.value) || 1.0 : 1.0,
+                pitch: document.querySelector('[data-param1="googlepitch"]').checked ? parseFloat(document.querySelector('[data-numbersetting="googlepitch"]')?.value) || 0 : 0,
+                audioProfile: document.querySelector('[data-param1="googlepitch"]').checked ? document.querySelector('[data-optionparam1="googleaudioprofile"]')?.value : false
+            },
+            
+            // ElevenLabs settings
+			elevenLabs: {
+				key: document.getElementById('elevenLabsKey')?.value,
+				voice: document.getElementById('elevenLabsVoiceID')?.value,
+				model: document.querySelector('[data-param1="elevenlabsmodel"]').checked ? 
+					document.querySelector('[data-optionparam1="elevenlabsmodel"]')?.value || 'eleven_multilingual_v2' : 'eleven_multilingual_v2',
+				latency: document.querySelector('[data-param1="elevenlatency"]').checked ? 
+					parseInt(document.querySelector('[data-numbersetting="elevenlatency"]')?.value) || 0 : 4,
+				stability: document.querySelector('[data-param1="elevenstability"]').checked ? 
+					parseFloat(document.querySelector('[data-numbersetting="elevenstability"]')?.value) || 0.5 : 0.5,
+				similarityBoost: document.querySelector('[data-param1="elevensimilarity"]').checked ? 
+					parseFloat(document.querySelector('[data-numbersetting="elevensimilarity"]')?.value) || 0.75 : 0.75,
+				style: document.querySelector('[data-param1="elevenstyle"]').checked ? 
+					parseFloat(document.querySelector('[data-numbersetting="elevenstyle"]')?.value) || 0.5 : 0.5,
+				speakerBoost: document.querySelector('[data-param1="elevenspeakerboost"]')?.checked || false,
+				speakingRate: document.querySelector('[data-param1="elevenrate"]').checked ? 
+					parseFloat(document.querySelector('[data-numbersetting="elevenrate"]')?.value) || 1.0 : 1.0
+			},
+            
+            // Speechify settings
+            speechify: {
+                key: document.getElementById('speechifyAPIKey')?.value,
+                voice: document.getElementById('speechifyVoiceID')?.value,
+                lang: document.querySelector('[data-param1="speechifylang"]').checked ? document.querySelector('[data-optionparam1="speechifylang"]')?.value || 'en-US' : 'en-US',
+                speed: document.querySelector('[data-param1="speechifyspeed"]').checked ? parseFloat(document.querySelector('[data-numbersetting="speechifyspeed"]')?.value) || 1.0 : 1.0,
+                model: document.querySelector('[data-param1="speechifymodel"]').checked ? document.querySelector('[data-optionparam1="speechifymodel"]')?.value || 'simba-english' : 'simba-english'
+            }
+        };
+        
+        return settings;
+    },
+    
+    showFeedback(message, type = 'info') {
+        const feedback = document.getElementById('ttsFeedback');
+        if (feedback) {
+            feedback.textContent = message;
+            feedback.className = `tts-feedback ${type}`;
+            
+            if (this.feedbackTimeout) {
+                clearTimeout(this.feedbackTimeout);
+            }
+            
+            this.feedbackTimeout = setTimeout(() => {
+                feedback.className = 'tts-feedback hidden';
+            }, 5000);
+        }
+    },
+    
+    getServiceName() {
+        const settings = this.getSettings();
+        if (settings.google.key) return 'Google Cloud TTS';
+        if (settings.elevenLabs.key) return 'ElevenLabs TTS';
+        if (settings.speechify.key) return 'Speechify TTS';
+        return 'System TTS';
+    },
+    
+    testTTS() {
+        const testPhrase = "The quick brown fox jumps over the lazy dog";
+        const serviceName = this.getServiceName();
+        
+        this.showFeedback(`Testing ${serviceName}...`, 'info');
+        
+        const originalOnEnded = this.audio?.onended;
+        const settings = this.getSettings();
+
+        // Add success feedback after audio plays
+        if (this.audio) {
+            this.audio.onended = () => {
+                this.showFeedback(`${serviceName} test completed successfully`, 'success');
+                this.audio.onended = originalOnEnded;
+                this.finishedAudio();
+            };
+        }
+
+        try {
+            // Check for required API keys if using premium services
+            if (serviceName === 'Google Cloud TTS' && !settings.google.key) {
+                throw new Error('Google Cloud API key is required');
+            }
+            if (serviceName === 'ElevenLabs TTS' && !settings.elevenLabs.key) {
+                throw new Error('ElevenLabs API key is required');
+            }
+            if (serviceName === 'Speechify TTS' && !settings.speechify.key) {
+                throw new Error('Speechify API key is required');
+            }
+
+            this.speak(testPhrase, true);
+        } catch (error) {
+            this.showFeedback(`${serviceName} Error: ${error.message}`, 'error');
+            console.error(error);
+        }
+    },
+	
+	async speak(text, allow = false) {
+        const settings = this.getSettings();
+        
+        if (!settings.speech && !allow) return;
+        if (!text) return;
+        
+        try {
+            if (settings.google.key) {
+                if (!this.premiumQueueActive) {
+                    await this.googleTTS(text, settings);
+                } else {
+                    this.premiumQueueTTS.push(text);
+                }
+            } else if (settings.elevenLabs.key) {
+                if (!this.premiumQueueActive) {
+                    await this.elevenLabsTTS(text, settings);
+                } else {
+                    this.premiumQueueTTS.push(text);
+                }
+            } else if (settings.speechify.key) {
+                if (!this.premiumQueueActive) {
+                    await this.speechifyTTS(text, settings);
+                } else {
+                    this.premiumQueueTTS.push(text);
+                }
+            } else {
+                this.systemTTS(text, settings);
+            }
+        } catch (error) {
+            this.showFeedback(`Error: ${error.message}`, 'error');
+            this.finishedAudio();
+            console.error(error);
+        }
+    },
+    
     systemTTS(text, settings) {
         if (!window.speechSynthesis) return;
         
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = settings.lang;
-        utterance.rate = settings.rate;
+        utterance.lang = settings.system.lang;
+        utterance.rate = settings.system.rate;
         utterance.volume = settings.volume;
+        utterance.pitch = settings.system.pitch;
         
-        // Find the specific voice based on both name and language
-        if (this.voices && settings.name) {
-            const matchingVoice = this.voices.find(v => 
-                v.name === settings.name && v.lang === settings.lang
-            );
+        if (this.voices && settings.system.voice) {
+            const matchingVoice = this.voices.find(v => v.name === settings.system.voice);
             if (matchingVoice) {
                 utterance.voice = matchingVoice;
             }
@@ -2568,22 +2761,26 @@ const TTSManager = {
         window.speechSynthesis.speak(utterance);
     },
     
-    // Google Cloud TTS
     googleTTS(text, settings) {
         this.premiumQueueActive = true;
-        const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${settings.googleKey}`;
+        const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${settings.google.key}`;
         
         const data = {
             input: { text },
             voice: {
-                languageCode: settings.lang.toLowerCase(),
-                name: settings.googleVoice || "en-GB-Standard-A"
+                languageCode: settings.google.lang.toLowerCase(),
+                name: settings.google.voice || "en-GB-Standard-A"
             },
             audioConfig: {
                 audioEncoding: "MP3",
-                speakingRate: settings.rate
+                speakingRate: settings.google.rate,
+                pitch: settings.google.pitch
             }
         };
+
+        if (settings.google.audioProfile) {
+            data.audioConfig.audioProfile = settings.google.audioProfile;
+        }
         
         this.fetchAudioContent(url, {
             method: "POST",
@@ -2592,63 +2789,70 @@ const TTSManager = {
         }, 'base64');
     },
     
-    // ElevenLabs TTS
-    elevenLabsTTS(text, settings) {
-        this.premiumQueueActive = true;
-        const voiceId = settings.elevenLabsVoice || "VR6AewLTigWG4xSOukaG";
-        const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?optimize_streaming_latency=${settings.latency}`;
-        
-        const data = {
-            text,
-            model_id: "eleven_multilingual_v2",
-            voice_settings: {
-                stability: 0,
-                similarity_boost: 0,
-                style: 0.5,
-                use_speaker_boost: false
-            }
-        };
-        
-        this.fetchAudioContent(url, {
-            method: "POST",
-            headers: {
-                "content-type": "application/json",
-                "xi-api-key": settings.elevenLabsKey
-            },
-            body: JSON.stringify(data)
-        }, 'blob');
-    },
+	elevenLabsTTS(text, settings) {
+		this.premiumQueueActive = true;
+		const voiceId = settings.elevenLabs.voice || "VR6AewLTigWG4xSOukaG";
+		const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?optimize_streaming_latency=${settings.elevenLabs.latency}`;
+		
+		const data = {
+			text,
+			model_id: settings.elevenLabs.model,
+			voice_settings: {
+				stability: settings.elevenLabs.stability,
+				similarity_boost: settings.elevenLabs.similarityBoost,
+				style: settings.elevenLabs.style,
+				use_speaker_boost: settings.elevenLabs.speakerBoost,
+				speaking_rate: settings.elevenLabs.speakingRate
+			}
+		};
+		
+		this.fetchAudioContent(url, {
+			method: "POST",
+			headers: {
+				"content-type": "application/json",
+				"xi-api-key": settings.elevenLabs.key,
+				"accept": "*/*"
+			},
+			body: JSON.stringify(data)
+		}, 'blob');
+	},
     
-    // Speechify TTS
     speechifyTTS(text, settings) {
         this.premiumQueueActive = true;
         const url = "https://api.sws.speechify.com/v1/audio/speech";
         
         const data = {
             input: `<speak>${text}</speak>`,
-            voice_id: settings.speechifyVoice || "henry",
-            model: settings.lang.startsWith('en') ? "simba-english" : "simba-multilingual",
-            audio_format: "mp3"
+            voice_id: settings.speechify.voice || "henry",
+            model: settings.speechify.model,
+            audio_format: "mp3",
+            speed: settings.speechify.speed,
+            language: settings.speechify.lang
         };
         
         this.fetchAudioContent(url, {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${settings.speechifyKey}`,
+                "Authorization": `Bearer ${settings.speechify.key}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(data)
         }, 'base64');
     },
     
-    // Helper function for fetching and playing audio
     async fetchAudioContent(url, options, type) {
         try {
             const response = await fetch(url, options);
-            let audioData;
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             if (type === 'base64') {
                 const json = await response.json();
+                if (!json.audioContent && !json.audio_data) {
+                    throw new Error('No audio data received');
+                }
                 this.playAudio(`data:audio/mp3;base64,${json.audioContent || json.audio_data}`);
             } else if (type === 'blob') {
                 const blob = await response.blob();
@@ -2656,12 +2860,12 @@ const TTSManager = {
                 this.playAudio(blobUrl);
             }
         } catch (error) {
+            this.showFeedback(`Audio fetch error: ${error.message}`, 'error');
             console.error("Error fetching audio:", error);
             this.finishedAudio();
         }
     },
     
-    // Play audio helper
     playAudio(src) {
         if (!this.audio) {
             this.audio = document.createElement("audio");
@@ -2672,14 +2876,16 @@ const TTSManager = {
         this.audio.volume = this.getSettings().volume;
         
         try {
-            this.audio.play();
+            this.audio.play().catch(e => {
+                console.error("Audio playback failed:", e);
+                this.finishedAudio();
+            });
         } catch (e) {
             console.error("Audio playback failed:", e);
             this.finishedAudio();
         }
     },
     
-    // Queue management
     finishedAudio() {
         this.premiumQueueActive = false;
         if (this.premiumQueueTTS.length) {
