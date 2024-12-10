@@ -153,6 +153,9 @@ const streamingPostNode = async function (URL, body, headers = {}, onChunk = nul
 const activeChatBotSessions = {};
 let tmpModelFallback = "";
 async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null) {
+	
+	// console.log(prompt);
+	
     const provider = settings.aiProvider?.optionsetting || "ollama";
     const endpoint = provider === "ollama" 
         ? (settings.ollamaendpoint?.textsetting || "http://localhost:11434")
@@ -578,20 +581,21 @@ async function censorMessageWithOllama(data) {
         //log(llmOutput);
         let match = llmOutput.match(/\d+/);
         let score = match ? parseInt(match[0]) : 0;
-        //log(score);
+        //console.log(score);
 
         if (score > 3 || llmOutput.length > 1) {
-			//log("Bad phrase: "+data.chatname +" said " +cleanedText);
+			//console.log("Bad phrase: "+data.chatname +" said " +cleanedText);
             if (settings.ollamaCensorBotBlockMode) {
                 return false;
             } else if (isExtensionOn) {
-                //log("sending a delete out");
+            //    console.log("sending a delete out");
                 sendToDestinations({ delete: data });
             }
 			return false;
         } else {
+		//	console.log("safe word");
 			addSafePhrase(cleanedText, score);
-			addRecentMessage(cleanedText);
+			ChatContextManager.addMessage(cleanedText);
             return true;
         }
     } catch (error) {
@@ -602,27 +606,16 @@ async function censorMessageWithOllama(data) {
     return false;
 }
 
-//
-const recentMessages = [];
-const MAX_RECENT_MESSAGES = 10;
-
-function addRecentMessage(message) {
-    recentMessages.push(message);
-    if (recentMessages.length > MAX_RECENT_MESSAGES) {
-        recentMessages.shift(); // Remove the oldest message if we exceed the limit
-    }
-}
-
 async function censorMessageWithHistory(data) {
     if (!data.chatmessage) {
         return true;
     }
-	
-	let cleanedText = data.chatmessage;
-	if (!data.textonly) {
-		cleanedText = decodeAndCleanHtml(cleanedText);
-	}
-	
+    
+    let cleanedText = data.chatmessage;
+    if (!data.textonly) {
+        cleanedText = decodeAndCleanHtml(cleanedText);
+    }
+    
     const availableSlot = censorProcessingSlots.findIndex(slot => !slot);
     if (availableSlot === -1) {
         return false; // All slots are occupied
@@ -630,17 +623,19 @@ async function censorMessageWithHistory(data) {
     censorProcessingSlots[availableSlot] = true;
 
     try {
-		
+        // Get recent messages from ChatContextManager's cache
+        const recentMessages = ChatContextManager.cache.recentMessages;
+        
         let censorInstructions = `Analyze the following live text chat history and the latest message for any signs of hate, extreme negativity, foul language, swear words, bad words, profanity, racism, sexism, political messaging, civil war, violence, threats, or any content that may be offensive to a general public audience. Messages may be long or very short, such as a single letter or a collection of emoji-based characters. Pay special attention to words that might be spelled out across multiple messages. Respond ONLY with a number rating out of 5, where 0 implies no offensive content and 5 implies clearly offensive content. Any message containing profanity or curse words automatically qualifies as a 5. ONLY respond with a number between 0 and 5 and nothing else.
 
 Recent chat history:
-${recentMessages.join('\n')}
+${recentMessages.map(m => m.message).join('\n')}
 
 Latest message:
 ${data.chatname} says: ${cleanedText}`;
 
         let llmOutput = await callOllamaAPI(censorInstructions);
-		
+        
         censorProcessingSlots[availableSlot] = false;
         
         let match = llmOutput.match(/\d+/);
@@ -655,7 +650,11 @@ ${data.chatname} says: ${cleanedText}`;
             return false;
         } else {
             addSafePhrase(cleanedText, score);
-			addRecentMessage(cleanedText);
+            ChatContextManager.addMessage({
+                chatname: data.chatname,
+                message: cleanedText,
+                timestamp: Date.now()
+            });
             return true;
         }
     } catch (error) {
@@ -797,110 +796,204 @@ function checkTriggerWords(triggerString, sentence) {
 
 let isProcessing = false;
 const lastResponseTime = {};
+
 async function processMessageWithOllama(data) {
-	if (!data.tid){
-		return;
-	}
-    const currentTime = Date.now();
-	if (isProcessing) { // nice.
-        return;
+  if (!data.tid) return;
+  
+  const currentTime = Date.now();
+  if (isProcessing) return;
+  
+  //console.log("starting processing");
+  isProcessing = true;
+  try {
+    // Rate limiting logic
+    let ollamaRateLimitPerTab = 5000;
+    if (settings.ollamaRateLimitPerTab) {
+      ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting) || 0);
     }
-	isProcessing = true;
-	try {
-		let ollamaRateLimitPerTab = 5000;
-		if (settings.ollamaRateLimitPerTab){
-			ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting)||0);
-		}
-		
-		if (data.type == "stageten"){
-			// bypass throttling limit
-		} else if (!settings.ollamaoverlayonly && data.tid && lastResponseTime[data.tid]){
-			if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
-				isProcessing = false;
-				return; // Skip this message if we've responded recently
-			}
-		}
-		
-		let botname = "🤖💬";
-		if (settings.ollamabotname && settings.ollamabotname.textsetting){
-			botname = settings.ollamabotname.textsetting.trim();
-		}
-		
-		if (data.type == "stageten" && (botname == data.chatname)){ // stageten (via api) uses the bot's name
-			isProcessing = false;
-			return;
-		} else if (!data.chatmessage || (!settings.noollamabotname && data.chatmessage.startsWith(botname+":"))) { // other sites don't use the bots name, but prefaces with it instead
-			isProcessing = false;
-			return;
-		}
-		
-		if (settings.bottriggerwords && settings.bottriggerwords.textsetting.trim()){
-			if (!checkTriggerWords(settings.bottriggerwords.textsetting, data.chatmessage)){
-				isProcessing = false;
-				return;
-			}
-		}
-		
-		//console.log(data);
-		
-		var cleanedText = data.chatmessage;
-				
-		if (!data.textonly) {
-			cleanedText = decodeAndCleanHtml(cleanedText);
-		}
-		
-		cleanedText = cleanedText.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "").replace(/[\u200D\uFE0F]/g, ""); // Remove zero-width joiner and variation selector
-		cleanedText = cleanedText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, ""); // fail safe?
-		cleanedText = cleanedText.replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim();
-		
-		if (!cleanedText) {
-			isProcessing = false;
-			return;
-		}
-		
-		var score = levenshtein(cleanedText, lastSentMessage);
-		if (score < 7) { // make sure bot doesn't respond to itself or to the host.
-			isProcessing = false;
-			return;
-		}
-	
     
-		let additionalInstructions = "";
-		if (settings.ollamaprompt){
-			additionalInstructions = settings.ollamaprompt.textsetting;
-		}
-		
-        const response = await processUserInput(cleanedText, data, additionalInstructions);
-		
-		if (response && !(response.toLowerCase().startsWith("not available"))){
-			
-			sendTargetP2P(
-				{"chatmessage":response,
-					"chatname":botname, 
-					"chatimg":"./icons/bot.png", 
-					"type":"socialstream", 
-					"request": data, 
-					"tts": (settings.ollamatts ? true : false)
-				}, 
-				"bot");
-			
-			if (!settings.ollamaoverlayonly){
-				const msg = {
-					tid: data.tid,
-					response: (settings.noollamabotname ? response.trim() : (botname+": " + response.trim())),
-					bot: true
-				};
-				sendMessageToTabs(msg);
-			
-				lastResponseTime[data.tid] = Date.now();
-			}
-		}
-    } catch (error) {
-        console.warn("Error processing message:", error);
-    } finally {
-        isProcessing = false;
+    if (data.type !== "stageten" && !settings.ollamaoverlayonly && data.tid && 
+        lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
+      isProcessing = false;
+      return;
     }
+
+    // Bot name handling
+    let botname = "🤖💬";
+    if (settings.ollamabotname?.textsetting) {
+      botname = settings.ollamabotname.textsetting.trim();
+    }
+
+    // Early return conditions
+    if ((data.type === "stageten" && botname === data.chatname) || 
+        !data.chatmessage || 
+        (!settings.noollamabotname && data.chatmessage.startsWith(botname + ":"))) {
+      isProcessing = false;
+      return;
+    }
+
+    // Trigger words check
+    if (settings.bottriggerwords?.textsetting.trim()) {
+      if (!checkTriggerWords(settings.bottriggerwords.textsetting, data.chatmessage)) {
+        isProcessing = false;
+        return;
+      }
+    }
+
+    // Clean message text
+    let cleanedText = data.chatmessage;
+    if (!data.textonly) {
+      cleanedText = decodeAndCleanHtml(cleanedText);
+    }
+    cleanedText = cleanedText.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "")
+      .replace(/[\u200D\uFE0F]/g, "")
+      .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "")
+      .replace(/[\r\n]+/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!cleanedText) {
+      isProcessing = false;
+      return;
+    }
+
+    // Prevent self-replies
+    const score = levenshtein(cleanedText, lastSentMessage);
+    if (score < 7) {
+      isProcessing = false;
+      return;
+    }
+
+    // Get additional instructions
+    let additionalInstructions = "";
+    if (settings.ollamaprompt) {
+      additionalInstructions = settings.ollamaprompt.textsetting;
+    }
+
+	const response = await processUserInput(cleanedText, data, additionalInstructions, botname);
+
+    // Handle response
+    if (response && !response.toLowerCase().startsWith("not available") && 
+        !response.includes("NO_RESPONSE") && 
+        !response.startsWith("No ") && 
+        !response.startsWith("NO ")) {
+      
+      // Send to overlay if enabled
+      sendTargetP2P({
+        chatmessage: response,
+        chatname: botname,
+        chatimg: "./icons/bot.png",
+        type: "socialstream",
+        request: data,
+        tts: settings.ollamatts ? true : false
+      }, "bot");
+
+      // Send to tabs if not overlay-only
+      if (!settings.ollamaoverlayonly) {
+        const msg = {
+          tid: data.tid,
+          response: settings.noollamabotname ? response.trim() : (botname + ": " + response.trim()),
+          bot: true
+        };
+        sendMessageToTabs(msg);
+        lastResponseTime[data.tid] = Date.now();
+      }
+    }
+
+  } catch (error) {
+    console.warn("Error processing message:", error);
+  } finally {
+    isProcessing = false;
+  }
 }
+
+async function processUserInput(userInput, data, additionalInstructions, botname) {
+  try {
+    
+    
+    // Build base prompt with context
+    let promptBase = `${additionalInstructions || ''}\n\nYou are an AI chat assistant and a participant in a live group chat room.`;
+	
+	let botname = "Bot";
+    if (settings.ollamabotname?.textsetting) {
+		botname = settings.ollamabotname.textsetting.trim();
+    }
+	if (botname){
+		promptBase += `\n\nYour name in the group chat is: ${botname}.\n\nSpeak only when important or when spoken directly to by name.`;
+	} else {
+		promptBase += `\n\nSpeak only when it's exceedingly helpful to be doing so.`;
+	}
+	
+	if (!settings.nollmcontext){
+		// Get context first
+		//console.log("grabbing context");
+		const context = await ChatContextManager.getContext(data);
+		//console.log("done");
+		// Add context elements
+		if (context.chatSummary) {
+		  promptBase += `\n\nChat Overview: ${context.chatSummary}`;
+		}
+		
+		if (context.recentMessages.length > 0) {
+		  promptBase += '\n\nRecent Messages:\n' + 
+			context.recentMessages.map(m => `${m.chatname}: ${m.message}`).join('\n');
+		}
+		
+		if (context.userHistory.length > 0) {
+		  promptBase += `\n\nPrevious messages from ${data.chatname}:\n` +
+			context.userHistory.map(m => m.message).join('\n');
+		}
+		promptBase += `\n\nCurrent message from ${data.chatname}: ${userInput}`;
+		
+	} else {
+		promptBase += `\n\nCurrent group chat message from ${data.chatname}: ${userInput}`;
+	}
+
+    // Add current message
+    
+
+    // Check if RAG is needed
+    if (await isRAGConfigured()) {
+      const databaseDescriptor = localStorage.getItem('databaseDescriptor') || '';
+      
+      const ragPrompt = `${promptBase}\n\nDatabase info: ${databaseDescriptor}\n\n` +
+        'Determine if this message requires searching the database. Format response as:\n' +
+        '[NEEDS_SEARCH]\nyes/no\n[/NEEDS_SEARCH]\n\n' +
+        '[SEARCH_QUERY]\nkeywords if search needed\n[/SEARCH_QUERY]\n\n' +
+        '[RESPONSE]\nDirect response if no search needed. Use NO_RESPONSE if no response warranted.\n[/RESPONSE]';
+
+      const ragDecision = await callOllamaAPI(ragPrompt);
+      const decision = parseDecision(ragDecision);
+
+      if (decision.needsSearch) {
+        const searchResults = await performSearch(decision.searchQuery);
+        return await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions);
+      } else {
+        return decision.response;
+      }
+    } else {
+      // Regular response with context
+	  if (!settings.nollmcontext){
+		  promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE, followed by stating why no response is needed.';
+	  } else {
+		  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is neede, followed by why no response was needed.';
+	  }
+      
+      const response = await callOllamaAPI(promptBase);
+	  
+      if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
+		console.log(response);
+        return false;
+      }
+      
+      return response;
+    }
+  } catch (error) {
+    console.warn("Error in processUserInput:", error);
+    return false;
+  }
+}
+
 
 function preprocessMarkdown(content) {
     // Remove HTML comments
@@ -1186,72 +1279,6 @@ async function isRAGConfigured() {
     return (count > 0) && settings.ollamaRagEnabled;
 }
 
-async function processUserInput(userInput, data={}, additionalInstructions) {
-    try {
-        if (await isRAGConfigured()) {
-            const databaseDescriptor = localStorage.getItem('databaseDescriptor') || 'Database description not available.';
-            
-            const promptllm = `You are an AI assistant with access to a database of information. ${additionalInstructions || ''}
-
-Given the following user input, user name, and a description of the database contents, determine if a database search is necessary to respond appropriately. If a search is needed, provide relevant search keywords.
-
-User Name: ${data.chatname || 'user'}
-User Input: "${userInput}"
-
-Database Description:
-${databaseDescriptor}
-
-For simple greetings, small talk, or queries that don't require specific information from the database, you may respond directly without a search.
-
-If a search is needed, provide 3-5 relevant keywords or short phrases for the search, not a full question or sentence.
-
-Please format your response exactly as follows, including the delimiters:
-
-[NEEDS_SEARCH]
-yes or no
-[/NEEDS_SEARCH]
-
-[SEARCH_QUERY]
-keyword1 keyword2 keyword3
-[/SEARCH_QUERY]
-
-[RESPONSE]
-Your direct response here if no search is needed, otherwise leave this blank
-[/RESPONSE]
-
-Ensure that if [NEEDS_SEARCH] is 'yes', [SEARCH_QUERY] is filled with keywords and [RESPONSE] is empty, and vice versa.
-Do not include any other text or explanations outside these sections.`;
-
-            const llmOutput = await callOllamaAPI(promptllm);
-            const decision = parseDecision(llmOutput);
-            
-            if (decision.needsSearch) {
-                //log("Performing search with query:", decision.searchQuery);
-                const searchResults = await performSearch(decision.searchQuery);
-                //log("Search results:", searchResults);
-                return await generateResponseWithSearchResults(userInput, searchResults, data.chatname || 'user', additionalInstructions);
-            } else {
-                return decision.response;
-            }
-        }  else {// If RAG is not configured, use the original instructions
-            const promptllm = `${additionalInstructions || 'You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it\'s directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response.'}
-
-Respond to the following message:
-User ${data.chatname || 'user'} says: ${userInput}
-
-Your response:`;
-			log(userInput);
-            let response =  await callOllamaAPI(promptllm);
-			if (!response || response.includes("RESPONSE") || response.startsWith("No ") || response.startsWith("NO ") || response.includes("NO_")  || response.includes("No_") || response.includes("NO-")){
-				return false;
-			}
-			return response;
-        }
-    } catch (error) {
-        console.warn("Error processing user input:", error);
-        return "I'm sorry, I encountered an error while processing your request.";
-    }
-}
 
 function parseDecision(decisionText) {
     const result = {
@@ -2133,14 +2160,6 @@ async function loadDocumentsFromDB() {
     });
 }
 
-async function someTestFunction() {
-    await addDocumentDirectly('doc1', 'content', ['tag1', 'tag2'], ['syn1', 'syn2']);
-    await updateDocument('doc1', 'new content', ['new tag'], ['new syn']);
-	processUserInput("What is VDO.Ninja?");
-    await deleteDocument('doc1');
-}
-
-
 document.addEventListener('DOMContentLoaded', async function() {
     try {
 		loadDocumentsFromDB().then(() => {
@@ -2159,3 +2178,243 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.warn("Error initializing Lunr index:", error);
     }
 });
+
+const ChatContextManager = {
+  settings: {
+    maxRecentMessages: 10,
+    maxUserHistory: 20,
+    maxContextTokens: 8000,
+    summarizeThreshold: 50,
+    maxSummaryAge: 1000 * 60 * 30, // 30 minutes
+    userCacheDuration: 60000 // 1 minute
+  },
+
+  cache: {
+    chatSummary: null,
+    lastSummaryTime: 0,
+    messageCount: 0,
+    userContexts: new Map(),
+    recentMessages: [],
+    lastMessageTimestamp: null
+  },
+
+  async getContext(data) {
+    const context = {
+      recentMessages: [],
+      userHistory: [],
+      chatSummary: null,
+      totalTokens: 0
+    };
+
+    // Parallel fetch of recent messages and user history
+    const [recentMessages, userHistory] = await Promise.all([
+      this.getRecentMessages(),
+      data.chatname && data.type ? this.getUserHistory(data.chatname, data.type) : []
+    ]);
+
+    context.recentMessages = recentMessages;
+    context.userHistory = userHistory;
+
+    // Get or generate summary if enabled
+    if (settings.llmsummary && this.shouldGenerateNewSummary()) {
+      context.chatSummary = await this.generateChatSummary(context.recentMessages);
+      this.cache.chatSummary = context.chatSummary;
+      this.cache.lastSummaryTime = Date.now();
+      this.cache.messageCount = 0;
+    } else {
+      context.chatSummary = this.cache.chatSummary;
+    }
+
+    return this.trimContextToFit(context);
+  },
+
+  async getRecentMessages() {
+    // If we have cached messages, only fetch newer ones
+    if (this.cache.lastMessageTimestamp) {
+      const newMessages = await this.getNewMessagesFromDB(this.cache.lastMessageTimestamp);
+      this.cache.recentMessages.push(...newMessages);
+      
+      // Trim to max size
+      if (this.cache.recentMessages.length > this.settings.maxRecentMessages) {
+        this.cache.recentMessages = this.cache.recentMessages.slice(-this.settings.maxRecentMessages);
+      }
+    } else {
+      // Initial load
+      this.cache.recentMessages = await this.getInitialMessagesFromDB();
+    }
+
+    if (this.cache.recentMessages.length > 0) {
+      this.cache.lastMessageTimestamp = this.cache.recentMessages[this.cache.recentMessages.length - 1].timestamp;
+    }
+
+    return this.cache.recentMessages;
+  },
+
+  async getNewMessagesFromDB(since) {
+    return new Promise((resolve) => {
+      const transaction = db.transaction([storeName], "readonly");
+      const store = transaction.objectStore(storeName);
+      const index = store.index("timestamp");
+      const results = [];
+      
+      const range = IDBKeyRange.lowerBound(since, true);
+      const request = index.openCursor(range, "prev");
+      
+      request.onsuccess = event => {
+        const cursor = event.target.result;
+        if (cursor && results.length < this.settings.maxRecentMessages) {
+          results.push(this.formatMessage(cursor.value));
+          cursor.continue();
+        } else {
+          resolve(results);
+        }
+      };
+      
+      request.onerror = () => resolve([]);
+    });
+  },
+
+  async getInitialMessagesFromDB() {
+    return new Promise((resolve) => {
+      const transaction = db.transaction([storeName], "readonly");
+      const store = transaction.objectStore(storeName);
+      const index = store.index("timestamp");
+      const results = [];
+      
+      const request = index.openCursor(null, "prev");
+      
+      request.onsuccess = event => {
+        const cursor = event.target.result;
+        if (cursor && results.length < this.settings.maxRecentMessages) {
+          results.push(this.formatMessage(cursor.value));
+          cursor.continue();
+        } else {
+          resolve(results);
+        }
+      };
+      
+      request.onerror = () => resolve([]);
+    });
+  },
+
+  async getUserHistory(username, type) {
+    const cached = this.cache.userContexts.get(username);
+    if (cached && (Date.now() - cached.timestamp < this.settings.userCacheDuration)) {
+      return cached.history;
+    }
+
+    return new Promise((resolve) => {
+      const transaction = db.transaction([storeName], "readonly");
+      const store = transaction.objectStore(storeName);
+      const index = store.index("unique_user");
+      const results = [];
+      
+      const range = IDBKeyRange.bound([username, type], [username, type]);
+      const request = index.openCursor(range, "prev");
+      
+      request.onsuccess = event => {
+        const cursor = event.target.result;
+        if (cursor && results.length < this.settings.maxUserHistory) {
+          results.push(this.formatMessage(cursor.value));
+          cursor.continue();
+        } else {
+          this.cache.userContexts.set(username, {
+            history: results,
+            timestamp: Date.now()
+          });
+          resolve(results);
+        }
+      };
+      
+      request.onerror = () => resolve([]);
+    });
+  },
+
+  formatMessage(dbMessage) {
+    return {
+      chatname: dbMessage.chatname,
+      message: dbMessage.chatmessage,
+      timestamp: dbMessage.timestamp
+    };
+  },
+
+  shouldGenerateNewSummary() {
+    return !this.cache.chatSummary ||
+           this.cache.messageCount >= this.settings.summarizeThreshold ||
+           (Date.now() - this.cache.lastSummaryTime) > this.settings.maxSummaryAge;
+  },
+
+  async generateChatSummary(messages) {
+    const prompt = `Summarize the key themes and topics from this chat conversation. Keep it concise and informative:
+${JSON.stringify(messages.slice(-20))}`;
+    
+    try {
+      return await callOllamaAPI(prompt);
+    } catch (error) {
+      console.warn("Error generating chat summary:", error);
+      return null;
+    }
+  },
+
+  estimateTokens(text) {
+    return text.split(/\s+/).length * 1.5;
+  },
+
+  trimContextToFit(context) {
+    let totalTokens = 0;
+    const parts = ['chatSummary', 'userHistory', 'recentMessages'];
+    
+    for (const part of parts) {
+      if (context[part]) {
+        totalTokens += this.estimateTokens(
+          typeof context[part] === 'string' ? context[part] : JSON.stringify(context[part])
+        );
+      }
+    }
+
+    if (totalTokens <= this.settings.maxContextTokens) {
+      return context;
+    }
+
+    // Trim in order: summary -> user history -> recent messages
+    const trimOrder = [
+      { key: 'chatSummary', isArray: false },
+      { key: 'userHistory', isArray: true },
+      { key: 'recentMessages', isArray: true }
+    ];
+
+    for (const item of trimOrder) {
+      if (totalTokens <= this.settings.maxContextTokens) break;
+      
+      if (item.isArray) {
+        while (context[item.key].length > 0 && totalTokens > this.settings.maxContextTokens) {
+          const removed = context[item.key].shift();
+          totalTokens -= this.estimateTokens(JSON.stringify(removed));
+        }
+      } else if (context[item.key]) {
+        totalTokens -= this.estimateTokens(context[item.key]);
+        context[item.key] = null;
+      }
+    }
+
+    return context;
+  },
+
+  addMessage(messageData) {
+    if (!messageData) return;
+    
+    const message = this.formatMessage({
+      chatname: messageData.chatname || 'unknown',
+      chatmessage: messageData.message || messageData,
+      timestamp: messageData.timestamp || Date.now()
+    });
+    
+    this.cache.recentMessages.push(message);
+    if (this.cache.recentMessages.length > this.settings.maxRecentMessages) {
+      this.cache.recentMessages.shift();
+    }
+    
+    this.cache.lastMessageTimestamp = message.timestamp;
+    this.cache.messageCount++;
+  }
+};

@@ -2796,8 +2796,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					console.warn(e);
 				}
 				if (!request.message) {
-					console.log("no message");
-					return response; // don't forward if action blocks it
+					//console.log("no message");
+					return response; // don't forward if action blocks it. bad word maybe?
 				}
 				
 				//console.log("Sending");
@@ -4818,7 +4818,7 @@ function selectRandomWaitlist(n = 1) {
 			}
 		}
 		//console.log("SENDING WINNDERS");
-		console.log(winners);
+		//console.log(winners);
 		
 		drawListCount = selectable.length - count;
 		sendWaitlistConfig(winners, true);
@@ -9528,28 +9528,30 @@ function getMessagesDB(chatname, type, page = 0, pageSize = 100, callback) {
     }
     const transaction = db.transaction([storeName], "readonly");
     const store = transaction.objectStore(storeName);
-    const index = store.index("unique_user");
-    const range = IDBKeyRange.only([chatname, type]);
-    const request = index.openCursor(range);
+    const index = store.index("timestamp");
     const results = [];
     let count = 0;
     const skip = page * pageSize;
     const now = new Date();
     
+    const request = index.openCursor(null, "prev");
+    
     request.onsuccess = event => {
         const cursor = event.target.result;
         if (cursor) {
             const message = cursor.value;
-            // Only include messages that haven't expired
             if (!message.expiresAt || new Date(message.expiresAt) > now) {
-                if (count >= skip && count < skip + pageSize) {
-                    results.push(message);
+                if ((chatname === null || message.chatname === chatname) && 
+                    (type === null || message.type === type)) {
+                    if (count >= skip && results.length < pageSize) {
+                        results.push(message);
+                    }
+                    count++;
                 }
-                count++;
             }
             cursor.continue();
         } else if (callback) {
-            callback(results.reverse());
+            callback(results);
         }
     };
     
@@ -9557,7 +9559,6 @@ function getMessagesDB(chatname, type, page = 0, pageSize = 100, callback) {
         console.error("Error fetching messages: ", e.target.error);
     };
 }
-
 // Initialize the database
 initDatabase();
 

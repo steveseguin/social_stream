@@ -3300,7 +3300,7 @@
 							return;
 						}
 						resp = processInput(data);
-						console.log(resp);
+						//console.log(resp);
 						if (resp !== null) {
 							if (data.get) {
 								var ret = {};
@@ -5584,7 +5584,7 @@
 					if (data.target && data.target !== "null" && data.target !== thisLabel) {
 						return; // does not match, so we assume this isn't for us.
 					}
-					console.log(data);
+					//console.log(data);
 
 					if (data.action == "clear" || data.action == "clearAll") {
 						// clears all except pinned messages
@@ -5675,7 +5675,7 @@
 						} else {
 							speech = !speech;
 						}
-						console.log("TTS: "+speech);
+						//console.log("TTS: "+speech);
 						if (speech) {
 							getById("tts").dataset.state = "1";
 							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
@@ -5867,7 +5867,7 @@
 			  
 			  if (controlLevel>3 && UUID){
 				obsState.UUID = UUID;
-				console.log(UUID, controlLevel);
+				//console.log(UUID, controlLevel);
 			  }
 
 			  // Update scenes
@@ -7915,7 +7915,7 @@
 				}
 			}
 			function SpeechifyTTS(tts) {
-				console.log(tts);
+				//console.log(tts);
 				premiumQueueActive = true;
 				try {
 					const url = "https://api.sws.speechify.com/v1/audio/speech";

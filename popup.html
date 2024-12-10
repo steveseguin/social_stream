@@ -1382,7 +1382,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="ttscommandmembersonly" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="membersttscommand">🤴 Only members can use the TTS command)</span>
+                                    <span data-translate="membersttscommand">🤴 Only members can use the TTS command</span>
                                 </div>
 								<div title="Only 'bot' marked users will have messages read out.">
                                     <label class="switch">
@@ -4349,7 +4349,7 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-bots-options-ext" />
 					<label class="collapsible-label" for="wrapper-bots-options-ext">
-						<span data-translate="local-bot">🤖 Local chat bot (LLM)</span>
+						<span data-translate="local-bot">🤖 AI Chat bot (LLM)</span>
 					</label>
 					<div class="collapsible-text">
 						<div class="options">
@@ -4456,14 +4456,20 @@ input:checked + .slider:before {
 										<input type="number" style="max-width: 7ch;" step="1000" max="9999999" min="5000" value="5000" size="6" data-numbersetting="ollamaRateLimitPerTab" />ms
 									</span>
 								</div>
-								<div>
-									<select id="contextLevel " data-optionsetting="contextLevel" class="textInput">
-										<option selected value="basic">Just recent messages</option>
-										<option value="user">Track per-user history</option>
-										<option value="summary">Periodic chat summaries</option>
-										<option value="comprehensive">Everything combined</option>
-									</select>
-								<div>
+								<div style="display: inline-block;" title="Include message history as context for the bot. Will slow things down..">
+									<label class="switch">
+										<input type="checkbox" id="llmcontext" data-setting="nollmcontext" />
+										<span class="slider round"></span>
+									</label>
+									🚫🗄️ <span data-translate="nollmcontext">Do not include past message context</span>
+								</div>
+								<div style="display: inline-block;" title="Include chat summaries with past context">
+									<label class="switch">
+										<input type="checkbox" id="llmsummary" data-setting="llmsummary" />
+										<span class="slider round"></span>
+									</label>
+									📈 <span data-translate="llmsummary">Include chat summaries with past context</span>
+								</div>
 								<div style="display: inline-block;" title="Text to speech bot messages">
 									<label class="switch">
 										<input type="checkbox" id="ollamatts" data-setting="ollamatts" />
