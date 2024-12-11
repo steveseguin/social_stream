@@ -1702,6 +1702,13 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
+								<div id="colorizename">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="color" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="color-names-if-color-info-available">📛 Color names if color info available </span>
+                                </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="hidesource" />
@@ -1801,13 +1808,20 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="delete-names-entirely">🅰️ Delete names entirely </span>
                                 </div>
-                                <div id="colorizename">
+								<div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param1="color" />
+                                        <input type="checkbox" data-param1="hidenames" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="color-names-if-color-info-available">📛 Color names if color info available </span>
+                                    <span data-translate="delete-names-entirely">🅰️ Delete names entirely </span>
                                 </div>
+								<div title="Hide icon/name/badges if the proceeding messages are from the same user">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="sequence" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="sequence">🌌 Hide name/icons if sequential from same user</span>
+                                </div>                                
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="limit" />

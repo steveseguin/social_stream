@@ -2926,7 +2926,12 @@
 				forceAutoscroll = false;
 				jumptoBottom();
 			}
-
+			
+			var lastChatName = "";
+			var lastType = "";
+			if (urlParams.has("sequence")) {
+				simpleSequence = true;
+			}
 
 			var obsremote = "";
 			var remote = "";
@@ -7668,6 +7673,21 @@
 					}
 
 					var chatname = data.chatname;
+					
+					if (simpleSequence && (chatname == lastChatName) && (data.type == lastType)){
+						chatname = "";
+						//timeArrived = "";
+						chatImg = "";
+						showType = "";
+						chatbadges = "";
+						//if (datestamp) {
+						//	timeArrived = "<div class='time-arrived'></div>";
+						//}
+						
+					} else if (simpleSequence){
+						lastChatName = chatname;
+						lastType = data.type;
+					}
 
 					var afterName = ":";
 					if (twoLines) {
@@ -7676,7 +7696,7 @@
 					
 					if (trimName){
 						chatname = truncateText(chatname, trimName);
-					} 
+					}
 
 					if (largeavatar) {
 						chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + (chatname || "") + '<span class="hl-badges">' + chatbadges + "</span></div>";
@@ -7726,7 +7746,7 @@
 					if (trimChat){
 						chatmessage = truncateHTMLContent(chatmessage, trimChat);
 					}
-
+					
 					if (largeavatar) {
 						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived + "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
 					} else if (twoLines) {
