@@ -4451,6 +4451,16 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group">
+								<div><i><a href="#colorizename" style="color:lightblue">Name colors in the dock won't show without <b>&color</b></a><i></div>
+							
+								<div title="Sets the color for a name to the color of the source's branding. This does not cause a name to be displayed as colorful though- you need to enable that option.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="colorofsource" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="colorofsource">🌈🎯 Set name colors to match the source</span>
+                                </div>
+								
                                 <div title="If a name lacks color data, randomly add one. This does not cause a name to be displayed as colorful though- you need to enable that option.">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="randomcolor" />
@@ -4464,14 +4474,13 @@ input:checked + .slider:before {
 									</i>
                                 </div>
 
-                                <div title="If a name lacks color data, randomly add one.">
+                                <div title="Randomly sets the color for a name. This does not cause a name to be displayed as colorful though- you need to enable that option.">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="randomcolorall" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="override-all-name-colors-with-a-random-color">🌈🌈 Override all name colors with a random color </span>
                                 </div>
-
                                 <div class="textInputContainer" style="width: 95%;">
                                     <input type="number" id="totalcolors" class="textInput" max="167772" min="1" value="167772" placeholder="Number of colors that can be assigned" data-numbersetting="totalcolors" />
                                     <label for="totalcolors"><span data-translate="max-number-of-random-colors-to-use">🌈🔢 Max number of random colors to use</span></label>
@@ -4487,7 +4496,15 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="nosubcolor" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="do-not-color-names-based-on-sub-or-member-status">📛🔰 Do not color names based on sub/member status </span>
+                                    <span data-translate="do-not-color-names-based-on-sub-or-member-status">📛🔰 Do not color names based on member status</span>
+                                </div>
+								
+								<div title="Makes it easier to see names on darker backgrounds.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="lightencolorname" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="lightencolorname">☀️ Lighten and desaturated name colors</span>
                                 </div>
 
                                 <div class="textInputContainer" style="width: 95%;">
