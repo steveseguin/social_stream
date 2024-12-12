@@ -571,7 +571,7 @@
 					member = true;
 				} else if (ele.getAttribute("author-type") === "moderator") {
 					//chatmembership = chatmessage;
-					treatAsMemberChat = true;
+					// treatAsMemberChat = true;
 					mod = true;
 				}
 			}

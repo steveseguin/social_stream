@@ -1,7 +1,7 @@
 (function () {
 	var isExtensionOn = true;
 	
-		const TimeoutShim = {
+	const TimeoutShim = {
 		audioCtx: null,
 		currentOscillatorId: 0,
 		oscillatorActive: false,
@@ -205,6 +205,7 @@
 
 	console.log("About to initialize TimeoutShim");
 	var { setTimeout, setInterval, clearTimeout, clearInterval } = TimeoutShim.initialize();
+	
 
 	async function fetchWithTimeout(URL, timeout = 8000) {
 		// ref: https://dmitripavlutin.com/timeout-fetch-request/
