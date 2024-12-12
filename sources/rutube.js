@@ -162,7 +162,6 @@
 	function onElementInserted(target) {
 		if (!target){return;}
 		
-		
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
@@ -177,7 +176,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
