@@ -1,14 +1,14 @@
 (function () {
 	var isExtensionOn = true;
 	
-	const TimeoutShim = {
+		const TimeoutShim = {
 		audioCtx: null,
 		currentOscillatorId: 0,
 		oscillatorActive: false,
 		queue: [],
 		activeIntervals: new Set(),
 		MIN_OSCILLATOR_TIME: 200,
-		
+
 		addToQueue(item) {
 			if (item.isInterval) {
 				this.activeIntervals.add(item.id);
@@ -36,30 +36,34 @@
 			
 			try {
 				if (!this.audioCtx) {
-					this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+					const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+					this.audioCtx = new AudioContextClass();
 				}
-
-				// Check if audio context is suspended
+				
 				if (this.audioCtx.state === 'suspended') {
-					// Fall back to regular setTimeout for this execution
-					const item = this.queue[0];
-					const delay = Math.max(0, item.executeTime - performance.now());
-					this.originalSetTimeout(() => {
-						if (this.currentOscillatorId === oscillatorId) {
-							this.processQueue(item.executeTime + this.MIN_OSCILLATOR_TIME);
-						}
-					}, delay);
-					this.oscillatorActive = true;
-					return;
-				}
+					if (typeof this.audioCtx.resume === 'function'){
+						this.audioCtx.resume();
+					} else {
+						const item = this.queue[0];
+						const delay = Math.max(0, item.executeTime - performance.now());
+						this.originalSetTimeout(() => {
+							if (this.currentOscillatorId === oscillatorId) {
+								this.processQueue(item.executeTime + this.MIN_OSCILLATOR_TIME);
+							}
+						}, delay);
+						this.oscillatorActive = true;
+						return;
+					}
+				} 
 
-				const oscillator = this.audioCtx.createOscillator();
-				const silence = this.audioCtx.createGain();
+				const ctx = this.audioCtx;
+				const oscillator = ctx.createOscillator();
+				const silence = ctx.createGain();
 				silence.gain.value = 0;
 				oscillator.connect(silence);
-				silence.connect(this.audioCtx.destination);
+				silence.connect(ctx.destination);
 
-				const timeStart = this.audioCtx.currentTime;
+				const timeStart = ctx.currentTime;
 				const now = performance.now();
 				const nextExecuteTime = this.queue[0].executeTime;
 				const batchEndTime = nextExecuteTime + this.MIN_OSCILLATOR_TIME;
@@ -87,8 +91,7 @@
 				oscillator.stop(timeStart + waitTime);
 				
 			} catch (e) {
-				console.log('Error in audio timing, falling back:', e);
-				// Fall back to regular setTimeout
+				console.error('Error in audio timing, falling back:', e);
 				const item = this.queue[0];
 				const delay = Math.max(0, item.executeTime - performance.now());
 				this.originalSetTimeout(() => {
@@ -113,7 +116,7 @@
 				try {
 					item.callback();
 				} catch (e) {
-					console.log('Error in timer callback:', e);
+					console.error('Error in timer callback:', e);
 				}
 
 				if (item.isInterval && this.activeIntervals.has(item.id)) {
@@ -185,29 +188,29 @@
 		},
 
 		initialize() {
-			this.originalSetTimeout = window.setTimeout;
-			this.originalSetInterval = window.setInterval;
-			this.originalClearTimeout = window.clearTimeout;
-			this.originalClearInterval = window.clearInterval;
-
-			setTimeout = this.setTimeout.bind(this);
-			setInterval = this.setInterval.bind(this);
-			clearTimeout = this.clearTimeout.bind(this);
-			clearInterval = this.clearInterval.bind(this);
+			this.originalSetTimeout = window.setTimeout.bind(window);
+			this.originalSetInterval = window.setInterval.bind(window);
+			this.originalClearTimeout = window.clearTimeout.bind(window);
+			this.originalClearInterval = window.clearInterval.bind(window);
 			
-			return this;
+			// Return the bound timer functions
+			return {
+				setTimeout: this.setTimeout.bind(this),
+				setInterval: this.setInterval.bind(this),
+				clearTimeout: this.clearTimeout.bind(this),
+				clearInterval: this.clearInterval.bind(this)
+			};
 		}
 	};
 
 	console.log("About to initialize TimeoutShim");
-	var setTimeout, setInterval, clearTimeout, clearInterval;
-	const initializedTimeoutShim = TimeoutShim.initialize();
-	
+	var { setTimeout, setInterval, clearTimeout, clearInterval } = TimeoutShim.initialize();
+
 	async function fetchWithTimeout(URL, timeout = 8000) {
 		// ref: https://dmitripavlutin.com/timeout-fetch-request/
 		try {
 			const controller = new AbortController();
-			const timeout_id = window.setTimeout(() => controller.abort(), timeout);
+			const timeout_id = setTimeout(() => controller.abort(), timeout);
 			const response = await fetch(URL, {
 				...{
 					timeout: timeout
@@ -1227,7 +1230,7 @@
 	var counter = 0;
 	var checkElement = ".chat-list--other, .chat-list--default, .chat-room__content";
 
-	var checkReady = window.setInterval(function () {
+	var checkReady = setInterval(function () {
 		counter += 1;
 		
 		if (counter == 10) {
@@ -1301,7 +1304,7 @@
 	}
 	
 	setTimeout(function(){checkFollowers();},2500);
-	window.setInterval(function(){checkFollowers()},60000);
+	setInterval(function(){checkFollowers()},60000);
 
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
 	try {
