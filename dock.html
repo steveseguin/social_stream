@@ -482,6 +482,21 @@
 				overflow-x: hidden;
 				scrollbar-color: #666 #201c29;
 			}
+			
+			#output.faded::before {
+				content: '';
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 5vh;
+				background: linear-gradient(to bottom, 
+					rgba(0, 0, 0, 1) 0%,
+					rgba(0, 0, 0, 0) 100%
+				);
+				pointer-events: none;
+				z-index: 1000;
+			}
 
 			input[type="checkbox"] {
 				padding: 0;
@@ -4601,7 +4616,10 @@
 				getById("show_only_queue").dataset.state = "1";
 				getById("show_only_queue").classList.add("pressed");
 			}
-
+			
+			if (urlParams.has("fadedtop")) {
+				document.getElementById("output").classList.add("faded");
+			}
 			
 			var hideNotPinned = false;
 			if (urlParams.has("pinnedonly")) {
