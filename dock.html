@@ -483,21 +483,6 @@
 				scrollbar-color: #666 #201c29;
 			}
 			
-			#output.faded::before {
-				content: '';
-				position: fixed;
-				top: 0;
-				left: 0;
-				right: 0;
-				height: 5vh;
-				background: linear-gradient(to bottom, 
-					rgba(0, 0, 0, 1) 0%,
-					rgba(0, 0, 0, 0) 100%
-				);
-				pointer-events: none;
-				z-index: 1000;
-			}
-
 			input[type="checkbox"] {
 				padding: 0;
 				margin: 0 5px 0 0;
@@ -2140,6 +2125,24 @@
 		}
 		#topbar:empty {
 			display:none;
+		}
+		
+		.output-container {
+		  mask-image: linear-gradient(to top,
+			black 80%,
+			transparent 100%
+		  );
+		  -webkit-mask-image: linear-gradient(to top,
+			black 80%,
+			transparent 100%
+		  );
+		  display: block;
+		  width: 100vw;
+		  height: 100vh;
+		}
+		.output-container #output {
+			overflow-y: scroll!important;
+			height: 100%;
 		}
 		</style>
 	</head>
@@ -4378,52 +4381,12 @@
 						if (!reversed && !random) {
 							setInterval(function () {
 								if (forceAutoscroll && !isOBSBrowserSource) {
-									if (alignbottom) {
-										if (scrolltype == "instant") {
-											getById("output").scrollTop = getById("output").scrollHeight;
-										} else {
-											getById("output").scrollTo({
-												top: getById("output").scrollHeight,
-												left: 0,
-												behavior: scrolltype
-											});
-										}
-									} else {
-										if (scrolltype == "instant") {
-											document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-										} else {
-											document.scrollingElement.scrollTo({
-												top: document.scrollingElement.scrollHeight,
-												left: 0,
-												behavior: scrolltype
-											});
-										}
-									}
+									jumptoBottom2()
 								}
 							}, 2000);
 
 							window.addEventListener("resize", function (event) {
-								if (alignbottom) {
-									if (scrolltype == "instant") {
-										getById("output").scrollTop = getById("output").scrollHeight;
-									} else {
-										getById("output").scrollTo({
-											top: getById("output").scrollHeight,
-											left: 0,
-											behavior: scrolltype
-										});
-									}
-								} else {
-									if (scrolltype == "instant") {
-										document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-									} else {
-										document.scrollingElement.scrollTo({
-											top: document.scrollingElement.scrollHeight,
-											left: 0,
-											behavior: scrolltype
-										});
-									}
-								}
+								jumptoBottom2();
 							});
 						}
 
@@ -4617,8 +4580,15 @@
 				getById("show_only_queue").classList.add("pressed");
 			}
 			
+			var fadetop = false;
 			if (urlParams.has("fadedtop")) {
-				document.getElementById("output").classList.add("faded");
+				fadetop = true;
+				let oc = document.createElement("div");
+				oc.className = "output-container";
+				let oo = document.getElementById("output");
+				oo.after(oc);
+				oc.appendChild(oo);
+				
 			}
 			
 			var hideNotPinned = false;
@@ -6307,26 +6277,18 @@
 					ele.style["background-image"] = "url(./icons/scroll_to_bottom_off.png)";
 					ele.title = "Scroll to bottom";
 				}
-				if (alignbottom) {
-					if (scrolltype == "instant") {
-						getById("output").scrollTop = getById("output").scrollHeight;
-					} else {
-						getById("output").scrollTo({
-							top: getById("output").scrollHeight,
-							left: 0,
-							behavior: scrolltype
-						});
-					}
+				jumptoBottom2();
+			}
+			function jumptoBottom2() {
+				var target = alignbottom || fadetop ? getById("output") : document.scrollingElement;
+				if (scrolltype == "instant") {
+					target.scrollTop = target.scrollHeight;
 				} else {
-					if (scrolltype == "instant") {
-						document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-					} else {
-						document.scrollingElement.scrollTo({
-							top: document.scrollingElement.scrollHeight,
-							left: 0,
-							behavior: scrolltype
-						});
-					}
+					target.scrollTo({
+						top: target.scrollHeight,
+						left: 0,
+						behavior: scrolltype
+					});
 				}
 			}
 
@@ -6963,28 +6925,12 @@
 					node.remove();
 				}
 				if (!(reversed && !forceAutoscroll)) {
-					if (alignbottom) {
+					if (alignbottom || fadetop) {
 						if (getById("output").scrollHeight < getById("output").scrollTop + getById("output").clientHeight + autoScrollCatch || forceAutoscroll) {
-							if (scrolltype == "instant") {
-								getById("output").scrollTop = getById("output").scrollHeight;
-							} else {
-								getById("output").scrollTo({
-									top: getById("output").scrollHeight,
-									left: 0,
-									behavior: scrolltype
-								});
-							}
+							jumptoBottom2()
 						}
 					} else if (document.body.scrollHeight < document.body.scrollTop + document.body.clientHeight + autoScrollCatch || forceAutoscroll) {
-						if (scrolltype == "instant") {
-							document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-						} else {
-							document.scrollingElement.scrollTo({
-								top: document.scrollingElement.scrollHeight,
-								left: 0,
-								behavior: scrolltype
-							});
-						}
+						jumptoBottom2()
 					}
 				}
 			}
@@ -8165,7 +8111,7 @@
 				return false;
 			}
 
-			if (alignbottom) {
+			if (alignbottom || fadetop) {
 				const ro = new MutationObserver(mutations => {
 					if (reversed && !forceAutoscroll) {
 					} else {
@@ -8174,15 +8120,7 @@
 							delta = parseInt(getById("output").lastChild.clientHeight);
 						}
 						if (getById("output").scrollHeight < getById("output").scrollTop + getById("output").clientHeight + autoScrollCatch + delta || forceAutoscroll) {
-							if (scrolltype == "instant") {
-								getById("output").scrollTop = getById("output").scrollHeight;
-							} else {
-								getById("output").scrollTo({
-									top: getById("output").scrollHeight,
-									left: 0,
-									behavior: scrolltype
-								});
-							}
+							jumptoBottom2()
 						}
 					}
 				});
@@ -8196,15 +8134,7 @@
 							delta = parseInt(getById("output").lastChild.clientHeight);
 						}
 						if (document.body.scrollHeight < document.body.scrollTop + document.body.clientHeight + autoScrollCatch + delta || forceAutoscroll) {
-							if (scrolltype == "instant") {
-								document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-							} else {
-								document.scrollingElement.scrollTo({
-									top: document.scrollingElement.scrollHeight,
-									left: 0,
-									behavior: scrolltype
-								});
-							}
+							jumptoBottom2()
 						}
 					}
 				});
