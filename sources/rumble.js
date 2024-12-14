@@ -99,7 +99,7 @@
 		}
 		var nameColor = "";
 		try {
-			nameColor = ele.querySelector('.chat-history--username > a[style]').style.color || "";
+			nameColor = ele.querySelector('.chat-history--username[style]').style.color || "";
 		}catch(e){
 			
 		}
