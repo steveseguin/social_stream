@@ -346,6 +346,7 @@
 				vertical-align: middle;
 			}
 			#output {
+				overflow-x: hidden;
 				zoom: var(--scale-output);
 				transform: var(--scale-output);
 				transform-origin: 0 0;
@@ -2138,11 +2139,15 @@
 		  );
 		  display: block;
 		  width: 100vw;
-		  height: 100vh;
+		  height: calc(100vh - calc(46px / var(--scale-output)));
+		  overflow-x: hidden;
+		  overflow-y: scroll !important;
+		  margin-bottom: 0;
 		}
 		.output-container #output {
-			overflow-y: scroll!important;
+			overflow: hidden;
 			height: 100%;
+			margin-bottom: 0;
 		}
 		</style>
 	</head>
@@ -5160,7 +5165,6 @@
 								ele.innerText = viewers[data.type];
 								ele.style.backgroundImage = "url(./sources/images/"+data.type+".png)";
 								topBarElement.prepend(ele);
-								
 							}
 							clearTimeout(ele.timeout);
 							ele.timeout = setTimeout(function(ele){
@@ -5239,6 +5243,22 @@
 					out = rainbow(out);
 				}
 				return out;
+			}
+			
+			function getUserHistory(element) {
+				var chatName = element.dataset.chatname;
+				var type = element.dataset.sourceType;
+
+				if (chatName && type) {
+					send2Extension({ action: "getUserHistory", value: { chatname: chatName, type: type } });
+				}
+			}
+			
+			let sentBefore = false;
+			function getRecentHistory() {
+				if (sentBefore) {return;}
+				sentBefore = true;
+				send2Extension({ action: "getRecentHistory", value: 30 });
 			}
 
 			function timeSince(timestamp) {
@@ -5557,6 +5577,15 @@
 							}
 						}
 					};
+				} else if (data.recentHistory) {
+					console.log(data);
+					setTimeout(()=>{
+						data.recentHistory.reverse().forEach(async msg=>{
+							console.log({contents:msg});
+							await processData({contents:msg}); 
+						});
+						jumptoBottom();
+					},1000);
 				} else if ("userHistory" in data) {
 					//delete messages, but also block user. remote, so we won't sync,
 					//console.log(data.userHistory);
@@ -5593,7 +5622,7 @@
 						const para = document.createElement("p");
 						//console.log(timeSince(msg.timestamp));
 						//console.log(msg.timestamp);
-						para.innerHTML = msg.chatmessage + " - <small><i>Sent: " + timeSince(msg.timestamp) + "</i></small>";
+						para.innerHTML = (msg.chatmessage||msg.message) + " - <small><i>Sent: " + timeSince(msg.timestamp) + "</i></small>";
 						messagesList.appendChild(para);
 					});
 					modal.style.display = "block";
@@ -6076,7 +6105,6 @@
 					if ("action" in e.data && e.data.action == "view-stats-updated") {
 						return;
 					}
-
 					if ("action" in e.data && e.data.UUID && e.data.value && e.data.action == "push-connection-info") {
 						// flip this
 						if ("label" in e.data.value) {
@@ -6093,6 +6121,10 @@
 							if (openChatAutomatically) {
 								send2Extension({ action: "openChat", value: null }, e.data.UUID);
 							}
+						}
+						
+						if (urlParams.has("loadlast") && e.data.streamID==roomID) {
+							getRecentHistory(parseInt(urlParams.get("loadlast")) || 30);
 						}
 					}
 
@@ -6617,15 +6649,6 @@
 
 				if (chatName && type) {
 					send2Extension({ action: "toggleVIPUser", value: { chatname: chatName, type: type } });
-				}
-			}
-
-			function getUserHistory(element) {
-				var chatName = element.dataset.chatname;
-				var type = element.dataset.sourceType;
-
-				if (chatName && type) {
-					send2Extension({ action: "getUserHistory", value: { chatname: chatName, type: type } });
 				}
 			}
 
@@ -7213,6 +7236,10 @@
 						} else {
 							return;
 						}
+					}
+					
+					if (data.message && !data.chatmessage){
+						data.chatmessage = data.message;
 					}
 
 					if (filtercommands && data.chatmessage && data.chatmessage.startsWith("!")) {

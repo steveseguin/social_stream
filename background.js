@@ -154,18 +154,25 @@ if (typeof chrome.runtime == "undefined") {
 	};
 
 	chrome.debugger.sendCommand = async function (a = null, b = null, c = null, callback = null) {
-		// tabId:tabid
-		//log("SEND KEY INPUT COMMAND",c);
-		if (c) {
-			c.tab = a.tabId;
-			var response = await ipcRenderer.sendSync("sendInputToTab", c); // sendInputToTab
-			log(response);
-			if (callback) {
-				callback(response);
-			}
-		} else {
-			log("C isn't set");
-		}
+	  if (!c || !a?.tabId) {
+		log("Missing required parameters");
+		return;
+	  }
+
+	  const eventData = {
+		...c,
+		tab: a.tabId
+	  };
+
+	  // Preserve the exact Input.dispatchKeyEvent type
+	  if (b === "Input.dispatchKeyEvent") {
+		const response = await ipcRenderer.sendSync("sendInputToTab", eventData);
+		callback?.(response);
+	  } else {
+		c.tab = a.tabId;
+		const response = await ipcRenderer.sendSync("sendInputToTab", c); // sendInputToTab
+		callback?.(response);
+	  }
 	};
 
 	chrome.runtime.onMessage = {};
@@ -567,35 +574,32 @@ try {
 
 
 function replaceURLsWithSubstring(text, replacement = "[Link]") {
-  if (typeof text !== "string") {
-	return text;
-  }
-
+  if (typeof text !== "string") return text;
+  
   try {
-	// This pattern matches potential URLs more strictly
-	const urlPattern = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g;
-
-	return text.replace(urlPattern, (match) => {
-	  // Split the match by dots to check the TLD
-	  const parts = match.split('.');
-	  const potentialTLD = parts[parts.length - 1].split(/[/?#]/)[0];
-
-	  // If it doesn't contain a slash, only replace if it starts with http:// or https://
-	  if (match.startsWith('http://') || match.startsWith('https://')) {
-		return replacement;
-	  }
-	  
-	  // Check if it's a valid TLD and contains a slash (indicating it's likely a URL)
-	  if (match.includes('/') || isValidTLD(potentialTLD)) {
-		return replacement;
-	  }
-
-	  // Otherwise, return the original match
-	  return match;
-	});
+    // First pattern for traditional URLs
+    const urlPattern = /\b(?:https?:\/\/)?(?![\d.]+\b(?!\.[a-z]))[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?/g;
+    
+    // Second pattern specifically for IP addresses
+    const ipPattern = /\b(?:https?:\/\/)?(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?::\d+)?(?:\/[^\s]*)?/g;
+    
+    // Apply both replacements
+    return text
+      .replace(urlPattern, (match) => {
+        if (match.startsWith('http://') || match.startsWith('https://')) {
+          return replacement;
+        }
+        const parts = match.split('.');
+        const potentialTLD = parts[parts.length - 1].split(/[/?#]/)[0];
+        if (match.includes('/') || isValidTLD(potentialTLD)) {
+          return replacement;
+        }
+        return match;
+      })
+      .replace(ipPattern, replacement);
   } catch (e) {
-	console.error(e);
-	return text;
+    console.error(e);
+    return text;
   }
 }
 
@@ -3290,7 +3294,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "clearRag") {
 			sendResponse({ state: isExtensionOn });
 			try {
-				await clearDatabase();
+				await clearLunrDatabase();
 				messagePopup({documents: documentsRAG});
 			} catch(e){}
 		} else if (request.cmd === "deleteRAGfile") {
@@ -3324,6 +3328,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				data.chatmessage = "";
 				data.chatimg = parseInt(Math.random() * 2) ? "" : "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
 				data.chatname = "Lucy";
+				data.type = "youtubeshorts";
 			} else if (Math.random() > 0.7) {
 				data.hasDonation = "";
 				data.membership = "";
@@ -5452,6 +5457,13 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 					}
 				});
 			}
+		} else if (request.action === "getRecentHistory" && request.value) {
+			if (isExtensionOn) {
+				var res = await getLastMessagesDB(request.value);
+				if (isExtensionOn) {
+					sendDataP2P({ recentHistory: res }, UUID);
+				}
+			}
 		} else if (request.action === "toggleVIPUser" && request.value && request.value.chatname && request.value.type) {
 			// Initialize viplist settings if not present
 			if (!settings.viplistusers) {
@@ -6022,16 +6034,22 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 // Handle different site types
                 if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
                     handleStageTen(tab, data, metadata);
+					
                 } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
 					let restxt = data.response.length > 500 ? data.response.substring(0, 500) : data.response;
 					await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout);
+					
                 } else if (tab.url.startsWith("https://boltplus.tv/")) {
                     await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout);
+					
+				} else if (tab.url.startsWith("https://rumble.com/")) {
+                    await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);	
+					
                 } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
                     await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout);
-				//} else if (tab.url.startsWith("https://parti.com/")) {
 					//  middle, keypress, backspace, delayedPress, overrideTimeout
                //     await attachAndChat(tab.id, data.response, true, true, true, true, overrideTimeout); 
+			   
 				} else if (tab.url.startsWith("https://kick.com/")) {
 					let restxt = data.response.length > 500 ? data.response.substring(0, 500) : data.response;
 					if (isSSAPP){
@@ -6273,7 +6291,12 @@ const KEY_EVENTS = {
     key: "Enter",
     code: "Enter",
     nativeVirtualKeyCode: 13,
-    windowsVirtualKeyCode: 13
+    windowsVirtualKeyCode: 13,
+    isComposing: false,
+    shiftKey: false,
+    ctrlKey: false,
+    altKey: false,
+    metaKey: false
   },
   BACKSPACE: {
     key: "Backspace",
@@ -6340,22 +6363,26 @@ async function generalFakeChat(tabId, message, middle = true, keypress = true, b
 
     await insertText(tabId, message);
 
-    if (keypress) {
-      await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
-    }
+	if (keypress) {
+	  await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
+	  await new Promise(resolve => setTimeout(resolve, 10));
+	}
 
-    if (middle) {
-      await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
-    }
+	if (middle) {
+	  await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
+	}
 
-    if (keypress) {
-      await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
-      
-      if (delayedPress) {
+	if (keypress) {
+	  await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
+	}
+	
+	if (delayedPress) {
         await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
-      }
+		await new Promise(resolve => setTimeout(resolve, 500));
+		if (middle){
+			await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
+		}
+        await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
     }
 	
 	if (backspace) {
@@ -6665,16 +6692,12 @@ async function applyBotActions(data, tab = false, reflection = false) {
 		}
 		
 		if (settings.autohi && data.chatname && data.chatmessage && !reflection) {
-			if (data.chatmessage.toLowerCase() === "hi") {
-				// respond to "1" with a "1" automatically; at most 1 time per minute.
+			if (["hi", "sup", "hello", "hey", "yo", "hi!", "hey!"].includes(chatmessage.toLowerCase())) {
 				var msg = {};
 				if (data.tid){
 					msg.tid = data.tid;
 				}
 				msg.response = "Hi, @" + data.chatname + " !";
-				//sendMessageToTabs(msg); 
-				// checkExactDuplicateAlreadyRelayed
-				
 				sendMessageToTabs(msg, false, null, false, false, 60000); 
 			}
 		}
@@ -9783,122 +9806,6 @@ var jokes = [
 		punchline: "I had to draw my own conclusions."
 	}
 ];
-
-let db;
-const dbName = "chatMessagesDB";
-const storeName = "messages";
-const DAYS_TO_KEEP = 30; // YouTube's API policy is max 30-days.
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-function initDatabase() {
-    const request = indexedDB.open(dbName, 2); // Increment version for schema update
-    
-    request.onupgradeneeded = event => {
-        db = event.target.result;
-        if (!db.objectStoreNames.contains(storeName)) {
-            const objStore = db.createObjectStore(storeName, { autoIncrement: true });
-            objStore.createIndex("unique_user", ["chatname", "type"], { unique: false });
-            objStore.createIndex("timestamp", "timestamp", { unique: false });
-        }
-    };
-    
-    request.onsuccess = event => {
-        db = event.target.result;
-        // Run initial cleanup and schedule periodic cleanups
-        cleanupExpiredMessages();
-        setInterval(cleanupExpiredMessages, MS_PER_DAY); // Check daily
-    };
-    
-    request.onerror = event => {
-        console.error("Database error: ", event.target.errorCode);
-    };
-}
-
-function addMessageDB(message) {
-    if (settings.disableDB) {
-        return;
-    }
-    try {
-        const transaction = db.transaction([storeName], "readwrite");
-        const store = transaction.objectStore(storeName);
-        const messageWithTimestamp = {
-            ...message,
-            timestamp: new Date(),
-            expiresAt: new Date(Date.now() + (DAYS_TO_KEEP * MS_PER_DAY))
-        };
-        const request = store.add(messageWithTimestamp);
-        
-        request.onerror = e => {
-            console.error('Error adding message:', e.target.error);
-        };
-    } catch (e) {
-        console.error('Transaction error:', e);
-    }
-}
-
-function cleanupExpiredMessages() {
-    const transaction = db.transaction([storeName], "readwrite");
-    const store = transaction.objectStore(storeName);
-    const index = store.index("timestamp");
-    const now = new Date();
-    
-    const request = index.openCursor();
-    
-    request.onsuccess = event => {
-        const cursor = event.target.result;
-        if (cursor) {
-            const message = cursor.value;
-            if (message.expiresAt && new Date(message.expiresAt) < now) {
-                store.delete(cursor.primaryKey);
-            }
-            cursor.continue();
-        }
-    };
-    
-    request.onerror = e => {
-        console.error('Cleanup error:', e.target.error);
-    };
-}
-
-function getMessagesDB(chatname, type, page = 0, pageSize = 100, callback) {
-    if (settings.disableDB) {
-        return;
-    }
-    const transaction = db.transaction([storeName], "readonly");
-    const store = transaction.objectStore(storeName);
-    const index = store.index("timestamp");
-    const results = [];
-    let count = 0;
-    const skip = page * pageSize;
-    const now = new Date();
-    
-    const request = index.openCursor(null, "prev");
-    
-    request.onsuccess = event => {
-        const cursor = event.target.result;
-        if (cursor) {
-            const message = cursor.value;
-            if (!message.expiresAt || new Date(message.expiresAt) > now) {
-                if ((chatname === null || message.chatname === chatname) && 
-                    (type === null || message.type === type)) {
-                    if (count >= skip && results.length < pageSize) {
-                        results.push(message);
-                    }
-                    count++;
-                }
-            }
-            cursor.continue();
-        } else if (callback) {
-            callback(results);
-        }
-    };
-    
-    request.onerror = e => {
-        console.error("Error fetching messages: ", e.target.error);
-    };
-}
-// Initialize the database
-initDatabase();
 
 let fileHandleTicker;
 let fileContentTicker = "";
