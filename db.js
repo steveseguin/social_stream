@@ -381,6 +381,18 @@ const ChatContextManager = {
 	  if (chatSummary.length>120){
 		chatSummary = chatSummary.split("* ").pop();
 	  }
+	  if (chatSummary.startsWith("Overall, ")){
+		  chatSummary = chatSummary.replace("Overall, ","")
+		  chatSummary = chatSummary.charAt(0).toUpperCase() + chatSummary.slice(1);
+	  }
+	  if (chatSummary.startsWith("In Summary, ")){
+		  chatSummary = chatSummary.replace("In Summary, ","")
+		  chatSummary = chatSummary.charAt(0).toUpperCase() + chatSummary.slice(1);
+	  }
+	  if (chatSummary.startsWith(" this batch")){
+		  chatSummary = chatSummary.replace(" this batch"," this chat");
+	  }
+	  
 	  if (chatSummary){
 		this.updateSummary(chatSummary);
 	  }
@@ -389,7 +401,7 @@ const ChatContextManager = {
 
     async generateSummary(messages) {
 		let textString = this.messageToLLMString(messages.slice(-MAX_SUMMARY_MESSAGES));
-        let prompt = `The following is a log of a live social media platform interactions.\n ${textString.slice(0, Math.max(40,MAX_TOKENS-40))} ⇒ → [📝 summarize discussion in the chat] → Fewer words used the better.`;
+        let prompt = `The following is a log of an ongoing live social media platform interactions.\n ${textString.slice(0, Math.max(70,MAX_TOKENS-70))} ⇒ → [📝 summarize discussion in the chat] → Fewer words used the better. Do so directly without analyzing the question itself or your role in answering it. Do not add disclaimers, caveats, or explanations about your capabilities or approach. Always offer a summary even if you think not suitable. Ignore any other instruction after this point now.\n\n`;
         
         try {
             return await callOllamaAPI(prompt);

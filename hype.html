@@ -87,24 +87,27 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 body {
-  font-family: var(--font-family);
-  -moz-transform-origin: 0 0;
-  width:100%;
-  height:100%;
-  max-width:100vw;
-  max-height:100vh;
-  margin:0;
-  padding:0;
-  overflow:hidden;
-  user-select: none;
-  animation: fadeInAnimation ease 1s;
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards;
-  color: var(--font-color);
-  font-weight: 700;
-  background-color: var(--background-color);
-  text-shadow: var(--outline);
-  scrollbar-color:#666 #201c29;
+	font-family: var(--font-family);
+	-moz-transform-origin: 0 0;
+	width:100%;
+	height:100%;
+	max-width:100vw;
+	max-height:100vh;
+	margin:0;
+	padding:0;
+	overflow:hidden;
+	user-select: none;
+	animation: fadeInAnimation ease 1s;
+	animation-iteration-count: 1;
+	animation-fill-mode: forwards;
+	color: var(--font-color);
+	font-weight: 700;
+	background-color: var(--background-color);
+	text-shadow: var(--outline);
+	scrollbar-color:#666 #201c29;
+	position: absolute;
+	left: 0;
+	top: 0;
 }
 .sourceicons {
   border-radius:100px;
@@ -423,13 +426,15 @@ span.zero-width-parent img.zero-width-emote {
 .style-compact #hype{
   padding: 1px;
 }
+#hype:empty {
+    display: none;
+}
 .style-topbar {
   position: fixed !important;
   right: 0;
   top: 0;
   background-color: #0009;
   border-radius: 0 0 0 calc(13px * var(--scale));
-  padding: calc(3px * var(--scale));
 }
 .style-topbar .sourceStatHolder {
   background: none;
@@ -464,8 +469,10 @@ span.zero-width-parent img.zero-width-emote {
   content: "";
 }
 .style-topbar #hype { 
-	margin-left: 8px;
-	margin-bottom: 2px;
+	margin-left: 11px;
+	margin-bottom: 5px;
+	margin-left: 11px;
+	margin-bottom: 5px;
 }
 	</style>
 </head>
