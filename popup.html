@@ -1211,14 +1211,21 @@ input:checked + .slider:before {
                                     <input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-textparam1="custombeep" />
                                     <label for="custombeep"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
                                 </div>
-                                
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="reload" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="reload-the-last-50-messages-when-refreshing-the-page">🔄️ Reload the last ~50-messages when refreshing the page </span>									
+                                    <span data-translate="reload-the-last-50-messages-when-refreshing-the-page">🔄️ Reload last ~50-msgs when refreshing the page </span>									
                                 </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="loadlast" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="loadlast">🗄️ Load last ~30-msgs from the database on load </span>									
+                                </div>
+								
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="autoshow" />
@@ -3043,6 +3050,7 @@ input:checked + .slider:before {
 										<option value="compact">Compact</option>
 										<option value="modern">Modern</option>
 										<option value="minimal">Minimal</option>
+										<option value="topbar">Dock Style</option>
 									</select>
 								</div>
                                 <div>

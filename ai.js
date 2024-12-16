@@ -4,7 +4,7 @@
 let globalLunrIndex = null;
 let documentsRAG = []; // Store all documents here
 const LunrDBLLM = "LunrDBLLM";
-const DOCUMENT_STORE_NAME = 'documents';
+const LUNR_DOCUMENT_STORE_NAME = 'documents';
 const activeProcessing = {};
 const uploadQueue = [];
 let isUploading = false;
@@ -13,9 +13,9 @@ const maxContextSize = 31000;
 const maxContextSizeFull = 32000;
 
 async function rebuildIndex() {
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readonly');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     const allDocs = await new Promise((resolve, reject) => {
         const request = store.getAll();
         request.onerror = () => reject(request.error);
@@ -665,35 +665,6 @@ ${data.chatname} says: ${cleanedText}`;
     return false;
 }
 
-// Function to get recent messages from IndexedDB
-function getRecentMessages(chatname, limit, timeWindow) {
-    return new Promise((resolve, reject) => {
-        const endTime = new Date();
-        const startTime = new Date(endTime.getTime() - timeWindow);
-        
-        const transaction = db.transaction([storeName], "readonly");
-        const store = transaction.objectStore(storeName);
-        const index = store.index("unique_user");
-        const range = IDBKeyRange.bound([chatname, "user"], [chatname, "user"]);
-        
-        const request = index.openCursor(range, "prev");
-        const results = [];
-        
-        request.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor && results.length < limit && cursor.value.timestamp >= startTime) {
-                results.push(cursor.value);
-                cursor.continue();
-            } else {
-                resolve(results);
-            }
-        };
-        
-        request.onerror = (event) => {
-            reject(new Error("Error fetching recent messages: " + event.target.error));
-        };
-    });
-}
 
 function checkTriggerWords(triggerString, sentence) {
     // For phrase matching, first check if it's a simple space-separated phrase (no commas or modifiers)
@@ -964,8 +935,6 @@ async function processMessageWithOllama(data) {
 
 async function processUserInput(userInput, data, additionalInstructions, botname) {
   try {
-    
-    
     // Build base prompt with context
     let promptBase = `${additionalInstructions || ''}\n\nYou are an AI chat assistant and a participant in a live group chat room.`;
 	
@@ -981,23 +950,22 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 	
 	if (!settings.nollmcontext){
 		// Get context first
-		//console.log("grabbing context");
+		
 		const context = await ChatContextManager.getContext(data);
-		//console.log("done");
+		
 		// Add context elements
 		if (context.chatSummary) {
-		  promptBase += `\n\nChat Overview: ${context.chatSummary}`;
+		  promptBase += `\n\nChat Overview:\n ${context.chatSummary}`;
 		}
 		
-		if (context.recentMessages.length > 0) {
-		  promptBase += '\n\nRecent Messages:\n' + 
-			context.recentMessages.map(m => `${m.chatname}: ${m.message}`).join('\n');
+		if (context.recentMessages) {
+		  promptBase += `\n\nRecent Messages:\n ${context.recentMessages}`;
 		}
 		
-		if (context.userHistory.length > 0) {
-		  promptBase += `\n\nPrevious messages from ${data.chatname}:\n` +
-			context.userHistory.map(m => m.message).join('\n');
+		if (context.userHistory) {
+			promptBase += `\n\nPrevious messages from ${data.chatname} via ${data.type} chat:\n ${context.userHistory}`;
 		}
+		
 		promptBase += `\n\nCurrent message from ${data.chatname}: ${userInput}`;
 	} else {
 		promptBase += `\n\nCurrent group chat message from ${data.chatname}: ${userInput}`;
@@ -1020,18 +988,33 @@ async function processUserInput(userInput, data, additionalInstructions, botname
       const decision = parseDecision(ragDecision);
 
       if (decision.needsSearch) {
-        const searchResults = await performSearch(decision.searchQuery);
+        const searchResults = await performLunrSearch(decision.searchQuery);
         return await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions);
       } else {
         return decision.response;
       }
     } else {
       // Regular response with context
-	  if (!settings.nollmcontext){
-		  promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE, followed by stating why no response is needed.';
+	  
+	  
+		let debugmode = false;
+		if (settings.ollamabotname?.textsetting) {
+			debugmode = settings.ollamabotname?.textsetting == "Tommas" ? true : false;
+		}
+	  if (debugmode){
+		  if (!settings.nollmcontext){
+			  promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE, followed by stating why no response is needed.';
+		  } else {
+			  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is neede, followed by why no response was needed.';
+		  }
 	  } else {
-		  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is neede, followed by why no response was needed.';
+		  if (!settings.nollmcontext){
+			  promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE to state you are choosing not to respond. Respond only with NO_RESPONSE if you have no reply.';
+		  } else {
+			  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is needed. Respond only with NO_RESPONSE if you have no reply.';
+		  }
 	  }
+	  console.log(promptBase);
       
       const response = await callOllamaAPI(promptBase);
 	  
@@ -1322,9 +1305,9 @@ function updateDocumentProgress(docId, progress, status) {
 
 async function isRAGConfigured() {
     // Check if there are any documents in the database
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readonly');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     const count = await new Promise((resolve, reject) => {
         const request = store.count();
         request.onerror = () => reject(request.error);
@@ -1359,10 +1342,10 @@ function parseDecision(decisionText) {
     return result;
 }
 
-async function clearDatabase() {
-    const db = await openDatabase();
-    const transaction = db.transaction([DOCUMENT_STORE_NAME, 'lunrIndex'], 'readwrite');
-    const documentStore = transaction.objectStore(DOCUMENT_STORE_NAME);
+async function clearLunrDatabase() {
+    const db = await openLunrDatabase();
+    const transaction = db.transaction([LUNR_DOCUMENT_STORE_NAME, 'lunrIndex'], 'readwrite');
+    const documentStore = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     const indexStore = transaction.objectStore('lunrIndex');
     
     try {
@@ -1397,7 +1380,7 @@ async function clearDatabase() {
     }
 }
 
-async function performSearch(query) {
+async function performLunrSearch(query) {
     if (!globalLunrIndex) {
         await loadLunrIndex();
     }
@@ -1464,9 +1447,9 @@ Provide a concise and informative response based on the above information. Your 
 }
 
 async function getDocumentsFromSearchResults(searchResults) {
-    const db = await openDatabase();
-    const transaction = db.transaction([DOCUMENT_STORE_NAME], "readonly");
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction([LUNR_DOCUMENT_STORE_NAME], "readonly");
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     
     return Promise.all(searchResults.map(async result => {
 		log(result.ref);
@@ -1691,9 +1674,9 @@ async function addDocumentDirectly(docId, content, tags = [], synonyms = []) {
     });
 
     // Add to IndexedDB
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     
     return new Promise((resolve, reject) => {
         const request = store.put({ content, tags, synonyms }, docId);
@@ -1707,9 +1690,9 @@ async function addDocumentDirectly(docId, content, tags = [], synonyms = []) {
 
 async function clearRAG() {
     resetLunrIndex();
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     await new Promise((resolve, reject) => {
         const request = store.clear();
         request.onerror = () => reject(request.error);
@@ -1731,9 +1714,9 @@ function logProcessedChunk(chunk, index) {
 }
 
 async function inspectDatabase() {
-    const db = await openDatabase();
-    const transaction = db.transaction([DOCUMENT_STORE_NAME, 'lunrIndex'], 'readonly');
-    const docStore = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction([LUNR_DOCUMENT_STORE_NAME, 'lunrIndex'], 'readonly');
+    const docStore = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     const indexStore = transaction.objectStore('lunrIndex');
 
     // Fetch all documents
@@ -1774,9 +1757,9 @@ async function inspectDatabase() {
 
 async function loadLunrIndex() {
     try {
-        const db = await openDatabase();
-        const transaction = db.transaction([DOCUMENT_STORE_NAME], 'readonly');
-        const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+        const db = await openLunrDatabase();
+        const transaction = db.transaction([LUNR_DOCUMENT_STORE_NAME], 'readonly');
+        const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
 
         const allDocs = await new Promise((resolve, reject) => {
             const request = store.getAll();
@@ -1853,7 +1836,7 @@ async function saveLunrIndex() {
     }
     try {
         const serializedIndex = JSON.stringify(globalLunrIndex);
-        const db = await openDatabase();
+        const db = await openLunrDatabase();
         const transaction = db.transaction('lunrIndex', 'readwrite');
         const store = transaction.objectStore('lunrIndex');
         await store.put(serializedIndex, 'currentIndex');
@@ -1869,9 +1852,9 @@ async function indexProcessedDocument(docId, processedDoc, title) {
         return;
     }
     try {
-        const db = await openDatabase();
-        const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readwrite');
-        const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+        const db = await openLunrDatabase();
+        const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readwrite');
+        const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
         
 		const documentToStore = {
 			id: docId, // Add this line
@@ -1924,9 +1907,9 @@ async function indexProcessedDocument(docId, processedDoc, title) {
 
 async function addDocumentToRAG(docId, content, title, tags = [], synonyms = [], preprocessed = false) {
     // Add to IndexedDB
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
 	
 
 
@@ -2033,9 +2016,9 @@ async function deleteDocument(docId) {
         }
 
         // Remove from IndexedDB
-        const db = await openDatabase();
-        const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readwrite');
-        const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+        const db = await openLunrDatabase();
+        const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readwrite');
+        const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
         await new Promise((resolve, reject) => {
             const request = store.delete(docId);
             request.onerror = () => reject(request.error);
@@ -2060,9 +2043,9 @@ async function deleteDocument(docId) {
 }
 
 async function updateDatabaseDescriptor() {
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readonly');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     const docs = await new Promise((resolve, reject) => {
         const request = store.getAll();
         request.onerror = () => reject(request.error);
@@ -2174,7 +2157,7 @@ async function importSettingsLLM(usePreprocessing = true) {
     }
 }
 
-function openDatabase() {
+function openLunrDatabase() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(LunrDBLLM, 3); // Increment version number if needed
         
@@ -2187,17 +2170,17 @@ function openDatabase() {
             if (!db.objectStoreNames.contains('lunrIndex')) {
                 db.createObjectStore('lunrIndex');
             }
-            if (!db.objectStoreNames.contains(DOCUMENT_STORE_NAME)) {
-                db.createObjectStore(DOCUMENT_STORE_NAME); // No keyPath or autoIncrement
+            if (!db.objectStoreNames.contains(LUNR_DOCUMENT_STORE_NAME)) {
+                db.createObjectStore(LUNR_DOCUMENT_STORE_NAME); // No keyPath or autoIncrement
             }
         };
     });
 }
 
 async function loadDocumentsFromDB() {
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readonly');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     return new Promise((resolve, reject) => {
         const request = store.getAll();
         request.onerror = () => reject(request.error);
@@ -2232,252 +2215,3 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.warn("Error initializing Lunr index:", error);
     }
 });
-
-const ChatContextManager = {
-  settings: {
-    maxRecentMessages: 10,
-    maxUserHistory: 20,
-    maxContextTokens: 8000,
-    summarizeThreshold: 50,
-    maxSummaryAge: 1000 * 60 * 30, // 30 minutes
-    userCacheDuration: 60000 // 1 minute
-  },
-
-  cache: {
-    chatSummary: null,
-    lastSummaryTime: 0,
-    messageCount: 0,
-    userContexts: new Map(),
-    recentMessages: [],
-    lastMessageTimestamp: null
-  },
-
-  async getContext(data) {
-    const context = {
-      recentMessages: [],
-      userHistory: [],
-      chatSummary: null,
-      totalTokens: 0
-    };
-
-    // Parallel fetch of recent messages and user history
-    const [recentMessages, userHistory] = await Promise.all([
-      this.getRecentMessages(),
-      data.chatname && data.type ? this.getUserHistory(data.chatname, data.type) : []
-    ]);
-
-    context.recentMessages = recentMessages;
-    context.userHistory = userHistory;
-
-    // Get or generate summary if enabled
-    if (settings.llmsummary && this.shouldGenerateNewSummary()) {
-      context.chatSummary = await this.generateChatSummary(context.recentMessages);
-      this.cache.chatSummary = context.chatSummary;
-      this.cache.lastSummaryTime = Date.now();
-      this.cache.messageCount = 0;
-    } else {
-      context.chatSummary = this.cache.chatSummary;
-    }
-
-    return this.trimContextToFit(context);
-  },
-  
-  async getSummary() {
-	  const recentMessages = await this.getRecentMessages(); 
-      let chatSummary = await this.generateChatSummary(recentMessages);
-      this.cache.chatSummary = chatSummary;
-      this.cache.lastSummaryTime = Date.now();
-      this.cache.messageCount = 0;
-      return chatSummary;
-  },
-
-  async getRecentMessages() {
-    // If we have cached messages, only fetch newer ones
-    if (this.cache.lastMessageTimestamp) {
-      const newMessages = await this.getNewMessagesFromDB(this.cache.lastMessageTimestamp);
-      this.cache.recentMessages.push(...newMessages);
-      
-      // Trim to max size
-      if (this.cache.recentMessages.length > this.settings.maxRecentMessages) {
-        this.cache.recentMessages = this.cache.recentMessages.slice(-this.settings.maxRecentMessages);
-      }
-    } else {
-      // Initial load
-      this.cache.recentMessages = await this.getInitialMessagesFromDB();
-    }
-
-    if (this.cache.recentMessages.length > 0) {
-      this.cache.lastMessageTimestamp = this.cache.recentMessages[this.cache.recentMessages.length - 1].timestamp;
-    }
-
-    return this.cache.recentMessages;
-  },
-
-  async getNewMessagesFromDB(since) {
-    return new Promise((resolve) => {
-      const transaction = db.transaction([storeName], "readonly");
-      const store = transaction.objectStore(storeName);
-      const index = store.index("timestamp");
-      const results = [];
-      
-      const range = IDBKeyRange.lowerBound(since, true);
-      const request = index.openCursor(range, "prev");
-      
-      request.onsuccess = event => {
-        const cursor = event.target.result;
-        if (cursor && results.length < this.settings.maxRecentMessages) {
-          results.push(this.formatMessage(cursor.value));
-          cursor.continue();
-        } else {
-          resolve(results);
-        }
-      };
-      
-      request.onerror = () => resolve([]);
-    });
-  },
-
-  async getInitialMessagesFromDB() {
-    return new Promise((resolve) => {
-      const transaction = db.transaction([storeName], "readonly");
-      const store = transaction.objectStore(storeName);
-      const index = store.index("timestamp");
-      const results = [];
-      
-      const request = index.openCursor(null, "prev");
-      
-      request.onsuccess = event => {
-        const cursor = event.target.result;
-        if (cursor && results.length < this.settings.maxRecentMessages) {
-          results.push(this.formatMessage(cursor.value));
-          cursor.continue();
-        } else {
-          resolve(results);
-        }
-      };
-      
-      request.onerror = () => resolve([]);
-    });
-  },
-
-  async getUserHistory(username, type) {
-    const cached = this.cache.userContexts.get(username);
-    if (cached && (Date.now() - cached.timestamp < this.settings.userCacheDuration)) {
-      return cached.history;
-    }
-
-    return new Promise((resolve) => {
-      const transaction = db.transaction([storeName], "readonly");
-      const store = transaction.objectStore(storeName);
-      const index = store.index("unique_user");
-      const results = [];
-      
-      const range = IDBKeyRange.bound([username, type], [username, type]);
-      const request = index.openCursor(range, "prev");
-      
-      request.onsuccess = event => {
-        const cursor = event.target.result;
-        if (cursor && results.length < this.settings.maxUserHistory) {
-          results.push(this.formatMessage(cursor.value));
-          cursor.continue();
-        } else {
-          this.cache.userContexts.set(username, {
-            history: results,
-            timestamp: Date.now()
-          });
-          resolve(results);
-        }
-      };
-      
-      request.onerror = () => resolve([]);
-    });
-  },
-
-  formatMessage(dbMessage) {
-    return {
-      chatname: dbMessage.chatname,
-      message: dbMessage.chatmessage,
-      timestamp: dbMessage.timestamp
-    };
-  },
-
-  shouldGenerateNewSummary() {
-    return !this.cache.chatSummary ||
-           this.cache.messageCount >= this.settings.summarizeThreshold ||
-           (Date.now() - this.cache.lastSummaryTime) > this.settings.maxSummaryAge;
-  },
-
-  async generateChatSummary(messages) {
-    const prompt = `Summarize the key themes and topics from this chat conversation. Keep it concise and informative:
-${JSON.stringify(messages.slice(-20))}`;
-    
-    try {
-      return await callOllamaAPI(prompt);
-    } catch (error) {
-      console.warn("Error generating chat summary:", error);
-      return null;
-    }
-  },
-
-  estimateTokens(text) {
-    return text.split(/\s+/).length * 1.5;
-  },
-
-  trimContextToFit(context) {
-    let totalTokens = 0;
-    const parts = ['chatSummary', 'userHistory', 'recentMessages'];
-    
-    for (const part of parts) {
-      if (context[part]) {
-        totalTokens += this.estimateTokens(
-          typeof context[part] === 'string' ? context[part] : JSON.stringify(context[part])
-        );
-      }
-    }
-
-    if (totalTokens <= this.settings.maxContextTokens) {
-      return context;
-    }
-
-    // Trim in order: summary -> user history -> recent messages
-    const trimOrder = [
-      { key: 'chatSummary', isArray: false },
-      { key: 'userHistory', isArray: true },
-      { key: 'recentMessages', isArray: true }
-    ];
-
-    for (const item of trimOrder) {
-      if (totalTokens <= this.settings.maxContextTokens) break;
-      
-      if (item.isArray) {
-        while (context[item.key].length > 0 && totalTokens > this.settings.maxContextTokens) {
-          const removed = context[item.key].shift();
-          totalTokens -= this.estimateTokens(JSON.stringify(removed));
-        }
-      } else if (context[item.key]) {
-        totalTokens -= this.estimateTokens(context[item.key]);
-        context[item.key] = null;
-      }
-    }
-
-    return context;
-  },
-
-  addMessage(messageData) {
-    if (!messageData) return;
-    
-    const message = this.formatMessage({
-      chatname: messageData.chatname || 'unknown',
-      chatmessage: messageData.message || messageData,
-      timestamp: messageData.timestamp || Date.now()
-    });
-    
-    this.cache.recentMessages.push(message);
-    if (this.cache.recentMessages.length > this.settings.maxRecentMessages) {
-      this.cache.recentMessages.shift();
-    }
-    
-    this.cache.lastMessageTimestamp = message.timestamp;
-    this.cache.messageCount++;
-  }
-};

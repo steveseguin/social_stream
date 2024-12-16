@@ -99,7 +99,11 @@
 		}
 		var nameColor = "";
 		try {
+<<<<<<< HEAD
 			nameColor = ele.querySelector('.chat-history--username[style]').style.color || "";
+=======
+			nameColor = ele.querySelector('.chat-history--username[style], .chat-history--username [style]').style.color || "";
+>>>>>>> 1437dd1 (fixed styles for hype meter; added new one)
 		}catch(e){
 			
 		}
