@@ -372,13 +372,13 @@ const ChatContextManager = {
 	async getSummary() {
 	  const recentMessages = await messageStoreDB.getRecentMessages(MAX_SUMMARY_MESSAGES); 
 	  let chatSummary = await this.generateSummary(recentMessages);
-	  if (chatSummary.length>40){
+	  if (chatSummary.length>120){
 		chatSummary = chatSummary.split(":").pop();
 	  }
-	  if (chatSummary.length>40){
+	  if (chatSummary.length>120){
 		chatSummary = chatSummary.split("\n").pop();
 	  }
-	  if (chatSummary.length>40){
+	  if (chatSummary.length>120){
 		chatSummary = chatSummary.split("* ").pop();
 	  }
 	  if (chatSummary){
