@@ -156,6 +156,13 @@
     transition: width 0.5s ease;
 }
 
+@keyframes shake {
+  0%, 50%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-20deg); }
+  90% { transform: rotate(20deg); }
+}
+
+
 #searchInput.show {
     display: block;
     width: calc(100% - 29px); /* Adjust width as needed */
@@ -167,14 +174,17 @@
     right: 0px;
     z-index: 100;
     cursor: pointer;
+	font-size: 150%;
+	animation: shake 2s ease-in-out;
 }
 #activeIcon {
 	position: absolute;
     top: 54px;
-    right: 17px;
+    right: 25px;
     cursor: pointer;
     display: block;
     height: 0;
+	font-size: 150%;
 }
 .tts-test-button {
 	display: inline-block;
