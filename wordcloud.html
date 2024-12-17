@@ -83,6 +83,68 @@
     (function() {
         const urlParams = new URLSearchParams(window.location.search);
 		
+		const styles = {
+			default: {
+				fontSizes: { base: 18, maxIncrease: 16 },
+				colors: d3.schemeCategory10,
+				glow: { stdDeviation: 2.5 },
+				rotate: d => (~~(Math.random() * 6) - 3) * 10,
+				forces: {
+					collide: 1.2,  // Increased from 0.6
+					charge: -150,  // Strengthened repulsion
+					xStrength: 0.1,
+					yStrength: 0.1
+				}
+			},
+			neon: {
+				fontSizes: { base: 20, maxIncrease: 20 },
+				colors: ['#ff00ff', '#00ffff', '#ff3377', '#00ff88'],
+				glow: { stdDeviation: 5 },
+				rotate: () => 0,
+				forces: {
+					collide: 1.2,
+					charge: -180,
+					xStrength: 0.1,
+					yStrength: 0.1
+				}
+			},
+			minimal: {
+				fontSizes: { base: 16, maxIncrease: 12 },
+				colors: ['#000000'],
+				glow: { stdDeviation: 0 },
+				rotate: () => 0,
+				forces: {
+					collide: 1.2,
+					charge: -130,
+					xStrength: 0.12,
+					yStrength: 0.12
+				}
+			},
+			retro: {
+				fontSizes: { base: 18, maxIncrease: 18 },
+				colors: ['#E94F37', '#1C77C3', '#39A9DB', '#40BCD8'],
+				glow: { stdDeviation: 1 },
+				rotate: d => (~~(Math.random() * 4) - 2) * 15,
+				forces: {
+					collide: 1.2,
+					charge: -160,
+					xStrength: 0.11,
+					yStrength: 0.11
+				}
+			}
+		};
+
+		function getTextWidth(text, fontSize) {
+			const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+			const context = canvas.getContext("2d");
+			context.font = `${fontSize}px Sora`;
+			return context.measureText(text).width;
+		}
+
+		const activeStyle = styles[urlParams.get('style')] || styles.default;
+		const scale = parseFloat(urlParams.get('scale')) || 1;
+
+		
 		
 		function loadGoogleFont(fontName) {
 			const formattedFontName = fontName.replace(/\s/g, "+");
@@ -126,119 +188,142 @@
 				.append("filter")
 				.attr("id", "glow")
 				.append("feGaussianBlur")
-				.attr("stdDeviation", "2.5")
+				.attr("stdDeviation", activeStyle.glow.stdDeviation)
 				.attr("result", "coloredBlur");
 
 			wordGroup = svg.append("g")
 				.attr("transform", `translate(${width / 2},${height / 2})`);
 
 			simulation = d3.forceSimulation()
-				.force("collide", d3.forceCollide().radius(d => d.size / 2 + 10).strength(0.6)) // Increased from 0.5 to 0.6
-				.force("charge", d3.forceManyBody().strength(-50))
+				.force("collide", d3.forceCollide().radius(d => {
+					// Calculate actual text dimensions for more accurate collision
+					const textWidth = getTextWidth(d.text, d.size);
+					const textHeight = d.size;
+					return Math.max(textWidth, textHeight) / 2 + 15; // Added padding
+				}).iterations(3)) // Increased iterations for better collision detection
+				.force("charge", d3.forceManyBody().strength(activeStyle.forces.charge))
 				.force("center", d3.forceCenter(0, 0))
-				.force("x", d3.forceX(0).strength(0.05))
-				.force("y", d3.forceY(0).strength(0.05))
-				.alphaDecay(0.01)
-				.velocityDecay(0.3)
+				.force("x", d3.forceX(0).strength(activeStyle.forces.xStrength))
+				.force("y", d3.forceY(0).strength(activeStyle.forces.yStrength))
+				.alphaDecay(0.005) // Slower decay for better settling
+				.velocityDecay(0.4) // Increased for more stability
 				.on("tick", ticked);
 		}
 
         function updateWordCloud() {
-    const wordEntries = Object.entries(words)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, maxWords);
+			const wordEntries = Object.entries(words)
+				.sort((a, b) => b[1] - a[1])
+				.slice(0, maxWords);
 
-    const maxFrequency = d3.max(wordEntries, d => d[1]);
-    const minFrequency = d3.min(wordEntries, d => d[1]);
+			const maxFrequency = d3.max(wordEntries, d => d[1]);
+			const minFrequency = d3.min(wordEntries, d => d[1]);
 
-    const fontSize = d => {
-        const baseSize = 18;
-        const maxSizeIncrease = 16;
-        const normalizedFrequency = (d - minFrequency) / (maxFrequency - minFrequency || 1);
-        const sizeIncrease = Math.log1p(normalizedFrequency) / Math.log1p(1) * maxSizeIncrease;
-        return baseSize + sizeIncrease;
-    };
+			const fontSize = d => {
+				const baseSize = activeStyle.fontSizes.base * scale;
+				const maxSizeIncrease = activeStyle.fontSizes.maxIncrease * scale;
+				const normalizedFrequency = (d - minFrequency) / (maxFrequency - minFrequency || 1);
+				const sizeIncrease = Math.log1p(normalizedFrequency) / Math.log1p(1) * maxSizeIncrease;
+				return baseSize + sizeIncrease;
+			};
 
-    // Update existing nodes
-    nodes.forEach(node => {
-        const entry = wordEntries.find(([text]) => text === node.text);
-        if (entry) {
-            node.size = fontSize(entry[1]);
-            node.frequency = entry[1];
-        }
-    });
-	
-    // Add new nodes
-    const newNodes = wordEntries
-        .filter(([text]) => !nodes.some(node => node.text === text))
-        .map(([text, frequency]) => ({
-            text,
-            size: fontSize(frequency),
-            frequency,
-            rotate: (~~(Math.random() * 6) - 3) * 10,
-            x: (Math.random() - 0.5) * width * 0.8,
-            y: (Math.random() - 0.5) * height * 0.8,
-            opacity: 0 // Start with opacity 0 for fade-in effect
-        }));
-    nodes = nodes.concat(newNodes);
+			// Update collision detection for existing nodes
+			nodes.forEach(node => {
+				const entry = wordEntries.find(([text]) => text === node.text);
+				if (entry) {
+					node.size = fontSize(entry[1]);
+					node.frequency = entry[1];
+					node.width = getTextWidth(node.text, node.size);
+					node.height = node.size;
+				}
+			});
 
-    simulation.nodes(nodes);
-    simulation.alpha(1).restart();
+			// Create new nodes with proper dimensions
+			const newNodes = wordEntries
+				.filter(([text]) => !nodes.some(node => node.text === text))
+				.map(([text, frequency]) => {
+					const size = fontSize(frequency);
+					return {
+						text,
+						size,
+						frequency,
+						rotate: activeStyle.rotate(),
+						x: (Math.random() - 0.5) * width * 0.6, // Reduced spread for initial placement
+						y: (Math.random() - 0.5) * height * 0.6,
+						width: getTextWidth(text, size),
+						height: size,
+						opacity: 0
+					};
+				});
 
-    const wordElements = wordGroup.selectAll("g.word")
-        .data(nodes, d => d.text);
+			nodes = nodes.concat(newNodes);
 
-    const enter = wordElements.enter()
-        .append("g")
-        .attr("class", "word")
-        .attr("transform", d => `translate(${d.x || 0},${d.y || 0})rotate(${d.rotate || 0})`)
-        .style("opacity", d => d.opacity);
+			// Update force simulation with new collision parameters
+			simulation.force("collide").radius(d => Math.max(d.width, d.height) / 2 + 15);
+			simulation.nodes(nodes);
+			simulation.alpha(1).restart();
 
-    enter.append("text")
-        .attr("class", "word-outline")
-        .style("font-size", d => `${d.size}px`)
-        .style("font-family", "'Sora', sans-serif")
-        .attr("text-anchor", "middle")
-        .text(d => d.text);
 
-    enter.append("text")
-        .attr("class", "word-inner")
-        .style("font-size", d => `${d.size}px`)
-        .style("font-family", "'Sora', sans-serif")
-        .style("fill", (d, i) => colors[i % colors.length])
-        .attr("text-anchor", "middle")
-        .text(d => d.text);
+			const wordElements = wordGroup.selectAll("g.word")
+				.data(nodes, d => d.text);
 
-    enter.append("text")
-        .attr("class", "word-glow")
-        .style("font-size", d => `${d.size}px`)
-        .style("font-family", "'Sora', sans-serif")
-        .attr("text-anchor", "middle")
-        .text(d => d.text);
+			const enter = wordElements.enter()
+				.append("g")
+				.attr("class", "word")
+				.attr("transform", d => `translate(${d.x || 0},${d.y || 0})rotate(${d.rotate || 0})`)
+				.style("opacity", d => d.opacity);
 
-    // Merge enter and update selections
-    wordElements.merge(enter)
-        .transition()
-        .duration(500)
-        .attr("transform", d => `translate(${d.x || 0},${d.y || 0})rotate(${d.rotate || 0})`)
-        .style("opacity", 1) // Fade in to full opacity
-        .selectAll("text")
-        .style("font-size", d => `${d.size}px`);
+			enter.append("text")
+				.attr("class", "word-outline")
+				.style("font-size", d => `${d.size}px`)
+				.style("font-family", "'Sora', sans-serif")
+				.attr("text-anchor", "middle")
+				.text(d => d.text);
 
-    wordElements.exit().remove();
-}
+			enter.append("text")
+				.attr("class", "word-inner")
+				.style("font-size", d => `${d.size}px`)
+				.style("font-family", "'Sora', sans-serif")
+				.style("fill", (d, i) => activeStyle.colors[i % activeStyle.colors.length])
+				.attr("text-anchor", "middle")
+				.text(d => d.text);
 
-function ticked() {
-    const boundedNodes = nodes.map(d => {
-        d.x = Math.max(-width / 2 + d.size / 2, Math.min(width / 2 - d.size / 2, d.x || 0));
-        d.y = Math.max(-height / 2 + d.size / 2, Math.min(height / 2 - d.size / 2, d.y || 0));
-        return d;
-    });
+			enter.append("text")
+				.attr("class", "word-glow")
+				.style("font-size", d => `${d.size}px`)
+				.style("font-family", "'Sora', sans-serif")
+				.attr("text-anchor", "middle")
+				.text(d => d.text);
 
-    wordGroup.selectAll("g.word")
-        .data(boundedNodes)
-        .attr("transform", d => `translate(${d.x || 0},${d.y || 0})rotate(${d.rotate || 0})`);
-}
+			wordElements.merge(enter)
+				.transition()
+				.duration(500)
+				.attr("transform", d => `translate(${d.x || 0},${d.y || 0})rotate(${d.rotate || 0})`)
+				.style("opacity", 1)
+				.selectAll("text")
+				.style("font-size", d => `${d.size}px`);
+
+			wordElements.exit().remove();
+		}
+
+		function ticked() {
+			// Add padding to the bounds to prevent words from touching the edges
+			const padding = 20;
+			const boundedNodes = nodes.map(d => {
+				const halfWidth = d.width / 2;
+				const halfHeight = d.height / 2;
+				
+				d.x = Math.max(-width / 2 + halfWidth + padding, 
+							  Math.min(width / 2 - halfWidth - padding, d.x || 0));
+				d.y = Math.max(-height / 2 + halfHeight + padding, 
+							  Math.min(height / 2 - halfHeight - padding, d.y || 0));
+				return d;
+			});
+
+			wordGroup.selectAll("g.word")
+				.data(boundedNodes)
+				.attr("transform", d => `translate(${d.x || 0},${d.y || 0})rotate(${d.rotate || 0})`);
+		}
+		
         function handleResize() {
             width = window.innerWidth;
             height = window.innerHeight;
