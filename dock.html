@@ -6337,53 +6337,31 @@
 
 			function filterMessage(ele) {
 				if (filterAddNameAndTime) {
-					// No filter is typed; then show all
 					if (!filtering) {
 						ele.classList.remove("hide");
-
-						// Filter is typed - Found; then show them
-					} else if (!filterNamesNotMessages && ele.textContent.toLowerCase().includes(filtering)) {
-						ele.classList.remove("hide");
-					} else if (
-						filterNamesNotMessages &&
-						ele.querySelector(".hl-name") &&
-						filtering
-							.split(",")
-							.map(element => {
-								return element.toLowerCase().trim();
-							})
-							.includes(ele.querySelector(".hl-name").textContent.toLowerCase().trim())
-					) {
+					} else if (!filterNamesNotMessages && filtering.length && filtering.toLowerCase().split(',').map(term => term.trim()).some(term => term.length && ele.textContent.toLowerCase().includes(term))) {
+						ele.classList.remove('hide');
+					} else if (filterNamesNotMessages && ele.querySelector(".hl-name") && filtering.toLowerCase().split(",").map(element => element.trim()).includes(ele.querySelector(".hl-name").textContent.toLowerCase().trim())) {
 						ele.classList.remove("hide");
 					} else if (ele.dataset.sourceType && "source:" + ele.dataset.sourceType == filtering) {
-						// youtube, twitch, etc.
 						ele.classList.remove("hide");
 					} else if (ele.dataset.sourceType && "source:!" + ele.dataset.sourceType == filtering) {
-						// youtube, twitch, etc.
 						ele.classList.add("hide");
 					} else if (ele.dataset.sourceType && filtering.startsWith("source:!")) {
-						// youtube, twitch, etc.
 						ele.classList.remove("hide");
 					} else {
-						ele.classList.add("hide"); // Filter is typed - Not found; them hide them
+						ele.classList.add("hide");
 					}
-					// Message only
 				} else {
-					// No filter is typed; then show all
 					if (!filtering) {
 						ele.classList.remove("hide");
-
-						// Filter is typed - Found; then show them
-					} else if (ele.querySelector(".hl-message").innerText.toLowerCase().includes(filtering)) {
+					} else if (filtering.length && filtering.toLowerCase().split(',').map(term => term.trim()).some(term => term.length && ele.querySelector(".hl-message").innerText.toLowerCase().includes(term))) {
 						ele.classList.remove("hide");
 					} else if (ele.dataset.sourceType && "source:" + ele.dataset.sourceType == filtering) {
-						// youtube, twitch, etc.
 						ele.classList.remove("hide");
 					} else if (ele.dataset.sourceType && "source:!" + ele.dataset.sourceType == filtering) {
-						// youtube, twitch, etc.
 						ele.classList.add("hide");
 					} else if (ele.dataset.sourceType && filtering.startsWith("source:!")) {
-						// youtube, twitch, etc.
 						ele.classList.remove("hide");
 					} else {
 						ele.classList.add("hide");
