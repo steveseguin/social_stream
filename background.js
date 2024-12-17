@@ -3054,9 +3054,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				
 				let reflection = false;
 				
-				if (settings.relayall || (settings.firstsourceonly || settings.hideallreplies)){
-					reflection = checkExactDuplicateAlreadyReceived(request.message.chatmessage,request.message.textonly, request.message.tid);
-					if (reflection && (settings.firstsourceonly || settings.hideallreplies)){
+				if (settings.relayall || (settings.firstsourceonly || settings.hideallreplies || settings.thissourceonly)){
+					reflection = checkExactDuplicateAlreadyReceived(request.message.chatmessage,request.message.textonly, request.message.tid, request.message.type);
+					if (reflection && (settings.thissourceonly || settings.firstsourceonly || settings.hideallreplies)){
 						sendResponse({ state: isExtensionOn });
 						return response;
 					}
@@ -3948,7 +3948,7 @@ function checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, sav
 
 
 var alreadyCaptured = [];
-function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false) { // FOR RELAY PURPOSES ONLY.
+function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false, type=null) { // FOR RELAY PURPOSES ONLY.
 	const now = Date.now();
 	if (now - lastSentTimestamp > 10000) {// 10 seconds has passed; assume good.
 		return false;
@@ -3971,7 +3971,28 @@ function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false) { 
 		return false;
 	}
 	
-	if (settings.firstsourceonly && !settings.hideallreplies){
+	if (settings.thissourceonly && !settings.hideallreplies){
+		for (var mm in alreadyCaptured){
+			if (now - alreadyCaptured[mm] > 10000){
+				delete alreadyCaptured[mm];
+			}
+		}
+		while (messageStore[tabid].length > 0 && (now - messageStore[tabid][0].timestamp > 10000)) {
+			messageStore[tabid].shift();
+		}
+		if (messageStore[tabid].some(entry => entry.message === msg)){
+			if (alreadyCaptured[msg]){
+				return true;
+			} else if (type && (settings.thissourceonlytype && type === (settings.thissourceonlytype.optionsetting)) || (!settings.thissourceonlytype && type === "twitch")){ // twitch is the default
+				alreadyCaptured[msg] = now;
+				return null;
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	} else if (settings.firstsourceonly && !settings.hideallreplies){
 		for (var mm in alreadyCaptured){
 			if (now - alreadyCaptured[mm] > 10000){
 				delete alreadyCaptured[mm];
@@ -6086,7 +6107,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 }
             } catch (e) {
                 chrome.runtime.lastError;
-                console.error(e);
+                console.error(e, tab);
             }
         }
     } catch (error) {
