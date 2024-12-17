@@ -2292,7 +2292,7 @@
 		<div id="chatInput_parent" class="popInModal hidden">
 			<input id="chatInput" class="modalTextInput" type="text" placeholder="Send message...">
 			<button id="chatInputButton" class="imgButton imgSmallButton" style="background-image: url(./icons/send_confirm.png)" title="💬 Send this message"></button>
-			<button id="chatClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png)" title="🧹 Clear this message"></button>
+			<button id="chatClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png)" title="🗑️ Clear all messages"></button>
 
 			<button id="getChatSources" class="imgButton imgSmallButton" title="Change destination to send messages to. Default is all.">🌐</button>
 
@@ -5463,6 +5463,15 @@
 						return true;
 					} catch (e) {}
 					//}
+					return;
+				} else if ("clearAll" in data) {
+					// clear all messages
+					if (syncDocks){
+						try {
+							clearAll(false)
+							return true;
+						} catch (e) {}
+					}
 					return;
 				} else if ("tabsList" in data) {
 					//delete messages, but also block user. remote, so we won't sync,
@@ -8879,6 +8888,7 @@
 
 				chatClearButton.addEventListener("click", function (event) {
 					input.value = "";
+					clearAll(true);
 				});
 
 				chatInputCloseButton.addEventListener("click", function (event) {
@@ -8904,6 +8914,18 @@
 					document.getElementById("say_hello").addEventListener("click", toggleInput);
 				}
 			})();
+			
+			function clearAll(relay){
+				getById("output").innerHTML = "";
+				autoShowQueue = [];
+				selectedQueue = [];
+				sendDataP2P(false);
+				updateQueueButton();
+				clearTTS();
+				if (relay){
+					syncDataAny({ "clearAll": true }, false, true);
+				}
+			}
 
 			if (urlParams.has("js")) {
 				// ie: &js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js
