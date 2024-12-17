@@ -3620,17 +3620,17 @@
 				voiceName = urlParams.get("voice") || "google";
 			}
 			
-			var voiceNameGoogle = false;
+			var voiceNameGoogle = voiceName;
 			if (urlParams.has("voicegoogle")) {
 				voiceNameGoogle = urlParams.get("voicegoogle");
 			}
 			
-			var voiceNameElevenlabs = false;
+			var voiceNameElevenlabs = voiceName;
 			if (urlParams.has("voice11") || urlParams.has("elevenlabsvoice")) {
 				voiceNameElevenlabs = urlParams.get("voice11") ||  urlParams.get("elevenlabsvoice");;
 			}
 			
-			var voiceNameSpeechify = false;
+			var voiceNameSpeechify = voiceName;
 			if (urlParams.has("voicespeechify")) {
 				voiceNameSpeechify = urlParams.get("voicespeechify");
 			}
