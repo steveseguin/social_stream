@@ -3817,7 +3817,7 @@
 			function ElevenLabsTTS(tts) {
 				try {
 					premiumQueueActive = true;
-					const voiceid = voiceNameElevenlabs || voiceName || "VR6AewLTigWG4xSOukaG";
+					const voiceid = voiceNameElevenlabs  || "VR6AewLTigWG4xSOukaG";
 					const url = "https://api.elevenlabs.io/v1/text-to-speech/" + voiceid + "/stream?optimize_streaming_latency=" + elevenLabsSettings.latency;
 
 					var data = {
@@ -3938,7 +3938,7 @@
 					let model = speechifySettings.model;
 					const data = {
 						input: "<speak>" + tts + "</speak>",
-						voice_id: speechifySettings.voiceName || voiceNameSpeechify || voiceName || "henry",
+						voice_id: speechifySettings.voiceName || voiceNameSpeechify || "henry",
 						model: model,
 						audio_format: "mp3",
 						speed: speechifySettings.speed
