@@ -139,13 +139,18 @@
 .hidelinks a[href^="http"]:hover {
   filter: blur(0);
 }
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  60% { transform: rotate(-20deg); }
+  88% { transform: rotate(20deg); }
+}
 
 
 #searchInput {
     appearance: none;
     position: fixed;
-    top: 50px;
-    right: 21px;
+    top: 58px;
+    right: 26px;
     border: none;
     display: none;
     width: 0;
@@ -154,11 +159,12 @@
     cursor: text;
     z-index: 100;
     transition: width 0.5s ease;
+	border-radius: 1px;
 }
 
 #searchInput.show {
     display: block;
-    width: calc(100% - 29px); /* Adjust width as needed */
+    width: calc(100% - 35px); /* Adjust width as needed */
 }
 
 #searchIcon {
@@ -167,14 +173,17 @@
     right: 0px;
     z-index: 100;
     cursor: pointer;
+	animation: shake 2s ease-in-out;
+	    font-size: 150%;
 }
 #activeIcon {
 	position: absolute;
     top: 54px;
-    right: 17px;
+    right: 25px;
     cursor: pointer;
     display: block;
     height: 0;
+	    font-size: 150%;
 }
 .tts-test-button {
 	display: inline-block;
@@ -965,9 +974,9 @@ input:checked + .slider:before {
             </button>
         </div>
         <div id="newVersion"></div>
-        <input type="text" id="searchInput" placeholder="Search options by keyword..." />
-        <div id="searchIcon" title="Search options">🔍</div>
-		<div id="activeIcon" title="Show enabled options">🔰</div>
+        <input type="text" id="searchInput" placeholder="Search all options by keyword..." />
+        <div id="searchIcon" title="Search all options by keyword">🔍</div>
+		<div id="activeIcon" title="Show only enabled options">🔰</div>
         <div class="container">
             <div class="link" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock.">
                 <h2 class="streaming_chat_title">
