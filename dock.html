@@ -3893,7 +3893,9 @@
 					};
 
 					if (googleSettings.audioProfile) {
-						data.audioConfig.effectsProfileId = ['telephony-class-application'];
+						data.audioConfig.effectsProfileId = [googleSettings.audioProfile];
+					} else {
+						data.audioConfig.effectsProfileId = ['handset-class-device'];
 					}
 
 					const otherparam = {
