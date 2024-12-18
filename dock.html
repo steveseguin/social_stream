@@ -19,6 +19,7 @@
 				--font-color: var(--comment-color, #fff);
 				--font-color-name: var(--author-color, #ddd);
 				--background-color: #36393f;
+				--locked-chatbar: 0px;
 				--menu-background-color: #2f3136;
 				--menu-border-color: 0 0 5px #000;
 				--link-color: #5af;
@@ -1326,7 +1327,7 @@
 				margin-top: 2px;
 			}
 			
-			@media only screen and (min-width: 700.001px) {
+			@media only screen and (min-width: 700.001px) { 
 				#chatInput_parent {
 					top: unset;
 					bottom: 5px;
@@ -1521,7 +1522,7 @@
 					width: 100px;
 				}
 				#output {
-					margin-bottom: calc(41px / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
+					margin-bottom: calc((41px + var(--locked-chatbar)) / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
 				}
 			}
 			@media only screen and (min-width: 393px) {
@@ -1595,7 +1596,7 @@
 					width: 76px;
 				}
 				#output {
-					margin-bottom: calc(36px / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
+					margin-bottom: calc((36px + var(--locked-chatbar)) / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
 				}
 			}
 			@media only screen and (max-width: 255px) {
@@ -1663,7 +1664,7 @@
 					width: 70px;
 				}
 				#output {
-					margin-bottom: calc(31px / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
+					margin-bottom: calc((31px + var(--locked-chatbar))/ var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
 				}
 			}
 			@media only screen and (max-width: 220px) {
@@ -1729,7 +1730,7 @@
 					width: 48px;
 				}
 				#output {
-					margin-bottom: calc(26px / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
+					margin-bottom: calc((26px + var(--locked-chatbar)) / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
 				}
 			}
 
@@ -8883,8 +8884,10 @@
 					event.stopPropagation();
 					input.classList.toggle("locked");
 					if (input.classList.contains("locked")) {
+						document.documentElement.style.setProperty("--locked-chatbar", "30px");
 						chatInputLockButton.innerHTML = "🔒";
 					} else {
+						document.documentElement.style.setProperty("--locked-chatbar", "0px");
 						chatInputLockButton.innerHTML = "🔓";
 					}
 					return false;
