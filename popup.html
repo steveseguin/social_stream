@@ -2382,21 +2382,42 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="hidebotnames" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="delete-names-for-specified-host-or-bots">🤖🔤 Delete names for host or bots </span>
+                                    <span data-translate="delete-names-for-specified-bots">🤖🔤 Delete names for bots </span>
+                                </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="hidehostnames" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="delete-names-for-specified-host">🙍🔤 Delete names for hosts </span>
                                 </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="hidebots" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="do-not-show-host-or-bot-messages">🤖🚫 Do not show host or bot messages </span>
+                                    <span data-translate="do-not-show-bot-messages">🤖🚫 Do not show bot messages </span>
+                                </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="hidehosts" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="do-not-show-bot-messages">🙍🚫 Do not show host messages </span>
                                 </div>
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="nobeepbot" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="do-not-beep">🤖🔇 Do not trigger the beep for bot/host messages</span>
+                                    <span data-translate="do-not-beep-bot">🤖🔇 Do not trigger the beep for bot messages</span>
+                                </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="nobeephost" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="do-not-beep-host">🙍🔇 Do not trigger the beep for host messages</span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -4602,33 +4623,76 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat">
+							
 								<div
 									class="textInputContainer"
 									style="width: 95%;"
 									title="Note:
-			Host/bot name(s) to help identify them.
-			The list of names should be comma separated.
-			The first name listed may be used as the host's name in stream when their name is not otherwise known."
+			Bot name(s) to help identify them.
+			The list of names should be comma separated.."
 								>
-									<input type="text" id="botnamesext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="mynameext" />
+									<input type="text" id="botnamesext" data-was="mynameext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="mynameext" />
 									<label for="botnamesext">
-										<span data-translate="hostbot-names">&gt; Identify by name who are hosts or bots</span>
+										<span data-translate="hostbot-names">&gt; Identify by name who are bots</span>
 									</label>
 								</div>
-
+								
+								<div
+									class="textInputContainer"
+									style="width: 95%;"
+									title="Note:
+			Mod name(s) to help identify them.
+			The list of names should be comma separated.
+			This is like the previous list of names, except with its own flag/options"
+								>
+									<input type="text" id="modnamesext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="modnamesext" />
+									<label for="modnamesext">
+										<span data-translate="modnamesext">&gt; Identify by name who are mods</span>
+									</label>
+								</div>
+								
+								<div
+									class="textInputContainer"
+									style="width: 95%;"
+									title="Note:
+			Host name(s) to help identify them.
+			The list of names should be comma separated.
+			This is like the previous list of names, except with its own flag/options"
+								>
+									<input type="text" id="hostnamesext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="hostnamesext" />
+									<label for="hostnamesext">
+										<span data-translate="hostnamesext">&gt; Identify the hosts' name</span>
+									</label>
+								</div>
+								
+								<br />
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-setting="hidebotnamesext" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="delete-names-for-specified-host-or-bots">🤖🔤 Delete names for specified host or bots</span>
+									<span data-translate="delete-names-for-specified-host-or-bots">🤖🔤 Delete names for specified bots</span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-setting="hidebotsext" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="do-not-show-host-or-bot-messages">🤖🚫 Filter out messages from above hosts or bots</span>
+									<span data-translate="do-not-show-bot-messages">🤖🚫 Filter out messages for listed bots</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="hidehostsext" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="do-not-show-host-messages">🤖🚫 Filter out messages for listed hosts</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="hidemodsext" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="do-not-show-mod-messages">🤖🚫 Filter out messages for listed mods</span>
 								</div>
 								<h3><span data-translate="Privileged-users-h3">Privileged users</span></h3>
 

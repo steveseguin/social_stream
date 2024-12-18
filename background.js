@@ -2875,7 +2875,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "customyoutubeaccount") {
 				pushSettingChange();
 			}
-			if (request.setting == "mynameext") {
+			//if (request.setting == "mynameext") {
+			//	request.setting = "hostnamesext"
+			//}
+			if (request.setting == "hostnamesext") {
 				pushSettingChange();
 			}
 			if (request.setting == "nosubcolor") {
@@ -5421,7 +5424,7 @@ function safeDebuggerAttach(tabId, version, callback) {
   try {
     chrome.debugger.attach({ tabId: tabId }, version, () => {
       if (chrome.runtime.lastError) {
-        console.warn('Debugger attach error:', chrome.runtime.lastError);
+        console.log('Debugger attach error:', chrome.runtime.lastError);
         callback(chrome.runtime.lastError);
         return;
       }
@@ -5429,7 +5432,7 @@ function safeDebuggerAttach(tabId, version, callback) {
       callback();
     });
   } catch(e) {
-    console.error('Debugger attach exception:', e);
+    console.log('Debugger attach exception:', e);
     callback(e);
   }
 }
@@ -6107,11 +6110,11 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 }
             } catch (e) {
                 chrome.runtime.lastError;
-                console.error(e, tab);
+                console.log(e, tab);
             }
         }
     } catch (error) {
-        console.error('Error in sendMessageToTabs:', error);
+        console.log('Error in sendMessageToTabs:', error);
         return false;
     }
     
@@ -6594,12 +6597,31 @@ async function applyBotActions(data, tab = false, reflection = false) {
 				data.vip = true;
 			}
 		}
+		
+		if (settings.mynameext){
+			settings.botnamesext = settings.mynameext;
+			delete settings.mynameext;
+		}
 
-		if (settings.mynameext && data.chatname) {
-			let custombot = settings.mynameext.textsetting.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
+		if (settings.botnamesext && data.chatname) {
+			let custombot = settings.botnamesext.textsetting.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
 			custombot = custombot.split(",");
 			if (custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
 				data.bot = true;
+			}
+		}
+		if (settings.hostnamesext && data.chatname) {
+			let customhost = settings.hostnamesext.textsetting.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
+			customhost = customhost.split(",");
+			if (customhost.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
+				data.host = true;
+			}
+		}
+		if (settings.modnamesext && data.chatname) {
+			let custommod = settings.modnamesext.textsetting.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
+			custommod = custommod.split(",");
+			if (custommod.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
+				data.mod = true;
 			}
 		}
 		
@@ -6610,7 +6632,20 @@ async function applyBotActions(data, tab = false, reflection = false) {
 		if (data.bot && settings.hidebotsext) {
 			return false;
 		}
+		if (data.host && settings.hidehostsext) {
+			return false;
+		}
+		if (data.mod && settings.hidemodsext) {
+			return false;
+		}
+		
 		if (data.bot && data.chatname && settings.hidebotnamesext) {
+			data.chatname = "";
+		}
+		if (data.host && data.chatname && settings.hidehostnamesext) {
+			data.chatname = "";
+		}
+		if (data.mod && data.chatname && settings.hidemodnamesext) {
 			data.chatname = "";
 		}
 		if (settings.adminnames && data.chatname){

@@ -352,8 +352,15 @@
 				transform: var(--scale-output);
 				transform-origin: 0 0;
 				width: 100%;
-				margin-bottom: calc(46px / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
+				margin-bottom: calc((46px  + var(--locked-chatbar)) / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
 			}
+			
+			@media only screen and (min-width: 700.001px) { 
+				#output  {
+					margin-bottom: calc(46px / var(--scale-output));
+				}
+			}
+			
 			.hl-profile-pic {
 				border: var(--profile-pic-border);
 				min-width: 24px;
@@ -2140,7 +2147,7 @@
 		  );
 		  display: block;
 		  width: 100vw;
-		  height: calc(100vh - calc(46px / var(--scale-output)));
+		  height: calc(100vh - calc(46px / var(--scale-output))); 
 		  overflow-x: hidden;
 		  overflow-y: scroll !important;
 		  margin-bottom: 0;
@@ -3133,6 +3140,16 @@
 				nobeepbot = true;
 			}
 			
+			var nobeephost = false;
+			if (urlParams.has("nobeephost")) {
+				nobeephost = true;
+			}
+			
+			var nobeepmod = false;
+			if (urlParams.has("nobeepmod")) {
+				nobeepmod = true;
+			}
+			
 			var stylizeEmoji = false;
 			if (urlParams.has("emoji") || urlParams.has("emojis")) {
 				stylizeEmoji = urlParams.get("emoji") || urlParams.get("emojis") || "140%";
@@ -3222,7 +3239,7 @@
 			}
 
 			var custombot = false;
-			if (urlParams.has("myname") || urlParams.has("botlist")) {
+			if (urlParams.has("myname") || urlParams.has("botnames") ||  urlParams.has("botlist")) {
 				custombot = urlParams.get("myname") || urlParams.get("botlist") || false;
 				if (custombot) {
 					custombot = decodeURIComponent(custombot);
@@ -3239,6 +3256,16 @@
 			var doNotShowBotNames = false;
 			if (urlParams.has("hidebotnames")) {
 				doNotShowBotNames = true;
+			}
+			
+			var doNotShowHost = false;
+			if (urlParams.has("hidehosts")) {
+				doNotShowHost = true;
+			}
+
+			var doNotShowHostNames = false;
+			if (urlParams.has("hidehostnames")) {
+				doNotShowHostNames = true;
 			}
 
 			var autoshow = false;
@@ -3611,9 +3638,49 @@
 				bottts = true;
 			}
 			
+			var modtts = false;
+			if (urlParams.has("modtts")) {
+				modtts = true;
+			}
+			
+			var hosttts = false;
+			if (urlParams.has("hosttts")) {
+				hosttts = true;
+			}
+			
+			var admintts = false;
+			if (urlParams.has("admintts")) {
+				admintts = true;
+			}
+			
+			var viptts = false;
+			if (urlParams.has("viptts")) {
+				viptts = true;
+			}
+			
 			var allowbottss = false;
 			if (urlParams.has("allowbottss")) {
 				allowbottss = true;
+			}
+			
+			var allowhosttss = false;
+			if (urlParams.has("allowhosttss")) {
+				allowhosttss = true;
+			}
+			
+			var allowmodtss = false;
+			if (urlParams.has("allowmodtss")) {
+				allowmodtss = true;
+			}
+			
+			var allowadmintss = false;
+			if (urlParams.has("allowadmintss")) {
+				allowadmintss = true;
+			}
+			
+			var allowviptss = false;
+			if (urlParams.has("allowviptss")) {
+				allowviptss = true;
 			}
 
 			var voiceName = false;
@@ -4006,7 +4073,16 @@
 				}
 				
 				if (!data.bot && bottts){return;} // only allow bot messages
+				else if (!data.host && hosttts){return;} 
+				else if (!data.mod && modtts){return;}
+				else if (!data.vip && viptts){return;} 
+				else if (!data.admin && admintts){return;}
+				
 				else if (data.bot && !(allowbottss || bottts)){return;} // do not read out bot messages
+				else if (data.host && !(allowhosttss || hosttts)){return;} 
+				else if (data.mod && !(allowmodtss || modtts)){return;} 
+				else if (data.vip && !(allowviptss || viptts)){return;} 
+				else if (data.admin && !(allowadmintss || admintts)){return;} 
 				
 				if (readDonos && !(data.hasDonation || data.donation)){return;}
 
@@ -7565,6 +7641,16 @@
 					if (data.bot) {
 						bot = true;
 					}
+					
+					var mod = false;
+					if (data.mod) {
+						mod = true;
+					}
+					
+					var host = false;
+					if (data.host) {
+						host = true;
+					}
 
 					var nameColor = "";
 					if (data.nameColor && colorized) {
@@ -7602,13 +7688,6 @@
 					var specialMessage = false;
 
 					if (data.chatname) {
-						//if (data.chatname.toLowerCase() == "streamelements"){
-						//	bot = true;
-						//specialMessage = true;
-						//} else if (data.chatname.toLowerCase() == "nightbot"){
-						//	bot = true;
-						//specialMessage = true;
-
 						if (data.chatname.toLowerCase() == "vdoninja") {
 							// because why not. :)
 							data.chatname = "VDO.Ninja";
@@ -7644,8 +7723,17 @@
 					if (bot && doNotShowBot) {
 						return;
 					}
+					
+					if (host && doNotShowHostNames) {
+						return;
+					}
 
 					if (bot && doNotShowBotNames) {
+						specialMessage = true;
+						data.chatname = "";
+					}
+					
+					if (host && doNotShowHostNames) {
 						specialMessage = true;
 						data.chatname = "";
 					}
@@ -7756,6 +7844,10 @@
 					if (bot && !horizontal) {
 						node.classList.add("bot");
 					}
+					
+					if (host && !horizontal) {
+						node.classList.add("host");
+					}
 
 					if ("karma" in data) {
 						node.dataset.karma = data.karma;
@@ -7855,7 +7947,7 @@
 					});
 					
 					if (beep) { 
-						if (!(nobeepbot && bot)){
+						if (!(nobeepbot && bot) && !(nobeephost && host) && !(nobeepmod && mod)){
 							playtone();
 						}
 					}

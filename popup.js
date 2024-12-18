@@ -1139,6 +1139,14 @@ function update(response, sync=true){
 								
 							}
 							if ("textsetting" in response.settings[key]){
+								
+								if (key == "mynameext"){
+									if (!response.settings["botnamesext"]){
+										response.settings["botnamesext"] = response.settings["mynameext"];
+									}
+									key == "botnamesext";
+								}
+								
 								var ele = document.querySelector("input[data-textsetting='"+key+"'],textarea[data-textsetting='"+key+"']");
 								if (ele){
 									ele.value = response.settings[key].textsetting;
@@ -1155,6 +1163,11 @@ function update(response, sync=true){
 									
 									if (key == "blacklistusers"){
 										log(ele.value);
+										usernames = ele.value.split(',').map(u => u.trim()).filter(u => u);
+										updateUsernameList();
+									}
+									if (key == "mynameext"){
+										key = "botnamesext";
 										usernames = ele.value.split(',').map(u => u.trim()).filter(u => u);
 										updateUsernameList();
 									}
@@ -1622,7 +1635,6 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
 				document.getElementById("dock").raw = updateURL(ele.dataset.param1+"="+value, document.getElementById("dock").raw);
 			} else if (document.querySelector("[data-optionparam1='"+ele.dataset.param1+"']")){ 
-				console.log(".......");
 				value = document.querySelector("[data-optionparam1='"+ele.dataset.param1+"']").value;
 				
 				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
