@@ -873,11 +873,6 @@ function update(response, sync=true){
 				password = "&password="+response.password;
 			}
 			
-			var baseURL = "https://socialstream.ninja/";
-			if (devmode){
-				baseURL = "file:///C:/Users/steve/Code/social_stream/";
-			}
-			
 			let hideLinks = false;
 			document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
 				if (x.checked){
@@ -927,9 +922,9 @@ function update(response, sync=true){
 			document.getElementById("custom-gif-commands").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='custom-gif-commands-link' href='"+baseURL+"gif.html?session="+response.streamID+password+"'>"+baseURL+"gif.html?session="+response.streamID+password+"</a>";
 			document.getElementById("custom-gif-commands").raw = baseURL+"gif.html?session="+response.streamID+password;
 			
-			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID+password;
+			document.getElementById("remote_control_url").href = baseURL+"sampleapi.html?session="+response.streamID+password;
 			
-			document.getElementById("botlink").href = "https://socialstream.ninja/bot.html?session="+response.streamID+password;
+			document.getElementById("botlink").href = baseURL+"bot.html?session="+response.streamID+password;
 			
 		
 			hideLinks = false;
@@ -1546,10 +1541,21 @@ function checkVersion(){
 	};
 
 })(window);
-var urlParams = new URLSearchParams(window.location.search);
 
+var urlParams = new URLSearchParams(window.location.search);
 const devmode = urlParams.has("devmode");
 ssapp = urlParams.has("ssapp") || ssapp;
+
+var baseURL = "https://socialstream.ninja/";
+if (devmode) {
+    if (location.protocol === "file:") {
+        baseURL = location.href.substring(0, location.href.lastIndexOf('/') + 1);
+    } else {
+        baseURL = "file:///C:/Users/steve/Code/social_stream/";
+    }
+} else if (location.protocol !== "chrome-extension:") {
+    baseURL = `${location.protocol}//${location.host}/`;
+}
 
 if (ssapp){
 	const style = document.createElement('style');
