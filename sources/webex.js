@@ -28,6 +28,66 @@
 	  xhr.send();
 	}
 	
+	function getBase64FromImage(imgUrl) {
+	  return new Promise((resolve, reject) => {
+		const img = new Image();
+		
+		// Set crossOrigin before setting src
+		img.crossOrigin = 'anonymous';
+		
+		img.onload = function() {
+		  const canvas = document.createElement('canvas');
+		  canvas.width = img.width;
+		  canvas.height = img.height;
+		  
+		  const ctx = canvas.getContext('2d');
+		  ctx.drawImage(img, 0, 0);
+		  
+		  try {
+			const dataURL = canvas.toDataURL('image/png');
+			resolve(dataURL);
+		  } catch(e) {
+			// If canvas is tainted, try alternate approach
+			const tempImg = document.createElement('img');
+			tempImg.src = imgUrl;
+			tempImg.style.visibility = 'hidden';
+			document.body.appendChild(tempImg);
+			
+			// Force a new load with crossOrigin
+			tempImg.crossOrigin = 'anonymous';
+			tempImg.onload = function() {
+			  const tempCanvas = document.createElement('canvas');
+			  tempCanvas.width = this.width;
+			  tempCanvas.height = this.height;
+			  
+			  const tempCtx = tempCanvas.getContext('2d');
+			  tempCtx.drawImage(this, 0, 0);
+			  
+			  try {
+				resolve(tempCanvas.toDataURL('image/png'));
+			  } catch(e) {
+				reject('Unable to convert image: ' + e.message);
+			  }
+			  
+			  document.body.removeChild(tempImg);
+			};
+			
+			tempImg.onerror = function() {
+			  document.body.removeChild(tempImg);
+			  reject('Error loading image');
+			};
+		  }
+		};
+		
+		img.onerror = function() {
+		  reject('Error loading image');
+		};
+		
+		// Add timestamp to try to bypass cache
+		img.src = imgUrl + '?t=' + new Date().getTime();
+	  });
+	}
+	
 	function escapeHtml(unsafe){
 		try {
 			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
@@ -94,7 +154,7 @@
 		   }
 	  } catch(e){ }
 	 
-	  var name = ele.querySelector(".sender-name")
+	  var name = ele.querySelector(".sender-name");
 	  if (name && name.innerText){
 		  name = name.innerText ;
 		if (name.startsWith("from ")){
@@ -141,10 +201,13 @@
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "webex";
 	  
-	  if (data.chatimg){
-			toDataURL(data.chatimg, function(dataUrl) {
+		if (data.chatimg){
+			getBase64FromImage(data.chatimg).then(dataUrl => {
 				data.chatimg = dataUrl;
 				pushMessage(data);
+			}).catch(err => {
+				console.error("Failed to get base64:", err);
+				pushMessage(data); // Still push message even if image fails
 			});
 		} else {
 			pushMessage(data);
