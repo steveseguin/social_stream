@@ -2557,6 +2557,12 @@
 				filterNamesNotMessages = true;
 				getById("filterAddNameAndTimeButton").title = "🆔 Match only on name, source and time when filtering. Not message content.";
 			}
+			
+			var deleteOnlyLast = false;
+			if (urlParams.has("deleteonlylast")) {
+				deleteOnlyLast = true;
+			}
+			
 
 			var thisLabel = false;
 			if (urlParams.has("label")) {
@@ -5324,6 +5330,31 @@
 				return out;
 			}
 			
+			function deleteMessages(data, deleteOnlyLast=false) {
+				let selector = "";
+				if (data.delete.id) {
+					selector = `[data-mid='${data.delete.id}']`;
+				} else if (data.delete.chatname && data.delete.type) {
+					selector = `[data-chatname='${data.delete.chatname}'][data-source-type='${data.delete.type}']`;
+				} else if (data.delete.type) {
+					selector = `[data-source-type='${data.delete.type}']`;
+				} else if (data.delete.chatname) {
+					selector = `[data-chatname='${data.delete.chatname}']`;
+				}
+
+				if (deleteOnlyLast) {
+					const elements = Array.from(document.querySelectorAll(selector));
+					if (elements.length) {
+						const newest = elements.reduce((a, b) => 
+							Number(a.dataset.mid) > Number(b.dataset.mid) ? a : b
+						);
+						newest.remove();
+					}
+				} else {
+					document.querySelectorAll(selector).forEach(ele => ele.remove());
+				}
+			}
+			
 			function getUserHistory(element) {
 				var chatName = element.dataset.chatname;
 				var type = element.dataset.sourceType;
@@ -5767,23 +5798,7 @@
 				} else if ("delete" in data) {
 					// we will trigger a deleteMessage I guess after, if sync mode is needed.
 					try {
-						if (data.delete.id) {
-							document.querySelectorAll("[data-mid='"+data.delete.id+"']").forEach(ele => {
-								ele.remove();
-							});
-						} else if (data.delete.chatname && data.delete.type) {
-							document.querySelectorAll("[data-chatname='" + data.delete.chatname + "'][data-source-type='" + data.delete.type + "']").forEach(ele => {
-								ele.remove();
-							});
-						} else if (data.delete.type) {
-							document.querySelectorAll("[data-source-type='" + data.delete.type + "']").forEach(ele => {
-								ele.remove();
-							});
-						} else if (data.delete.chatname) {
-							document.querySelectorAll("[data-chatname='" + data.delete.chatname + "']").forEach(ele => {
-								ele.remove();
-							});
-						}
+						deleteMessages(data, deleteOnlyLast);
 						return true;
 					} catch (e) {
 						console.error(e);
