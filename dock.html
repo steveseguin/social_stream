@@ -2137,31 +2137,45 @@
 		}
 		
 		.output-container {
-		  mask-image: linear-gradient(to top,
-			black 80%,
-			transparent 100%
-		  );
-		  -webkit-mask-image: linear-gradient(to top,
-			black 80%,
-			transparent 100%
-		  );
-		  display: block;
-		  width: 100vw;
-		  height: calc(100vh - calc(46px / var(--scale-output))); 
-		  overflow-x: hidden;
-		  overflow-y: scroll !important;
-		  margin-bottom: 0;
+			mask-image: linear-gradient(to top,
+				black 80%,
+				transparent 100%
+			);
+			-webkit-mask-image: linear-gradient(to top,
+				black 80%,
+				transparent 100%
+			);
+			display: block;
+			width: 100vw;
+			height: calc(100vh - calc(46px / var(--scale-output))); 
+			overflow-x: hidden;
+			overflow-y: hidden !important;
+			margin-bottom: 0;
+		}
+		.electronDraggable .output-container {
+			height: calc(100vh); 
+			scrollbar-width: none; /* Firefox */
+			-ms-overflow-style: none; /* IE and Edge */
+		}
+		.electronDraggable .output-container::-webkit-scrollbar  {
+			display: none; /* Chrome, Safari, Opera */
 		}
 		.OBS .output-container {
-			overflow-y: auto !important;
+			overflow: hidden;
 		}
+		
 		.output-container #output {
 			height: 100%;
 			margin-bottom: 0;
 		}
 		.OBS .output-container #output {
-			overflow: hidden;
+			  scrollbar-width: none; /* Firefox */
+			  -ms-overflow-style: none; /* IE and Edge */
 		}
+		.OBS .output-container #output::-webkit-scrollbar {
+			 display: none; /* Chrome, Safari, Opera */
+		}
+
 		</style>
 	</head>
 	<body id="main" class="vanilla notcompactmode">
