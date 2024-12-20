@@ -1162,7 +1162,6 @@
 		window.onblur = null;
 		window.blurred = false;
 		document.hidden = false;
-		document.visibilityState = "visible";
 		document.mozHidden = false;
 		document.webkitHidden = false;
 		
@@ -1170,14 +1169,13 @@
 		window.onFocus = () => true;
 
 		Object.defineProperties(document, {
-			mozHidden: { value: false },
-			msHidden: { value: false },
-			webkitHidden: { value: false },
-			hidden: { value: false, writable: true },
-			visibilityState: {
+			mozHidden: { value: false, configurable: true },
+			msHidden: { value: false, configurable: true },
+			webkitHidden: { value: false, configurable: true },
+			hidden: { value: false, configurable: true, writable: true },
+			visibilityState: { 
 				get: () => "visible",
-				value: "visible",
-				writable: true
+				configurable: true
 			}
 		});
 	}
