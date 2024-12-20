@@ -135,7 +135,7 @@
 	}
 
 	function processMessage(ele){
-	  
+	  console.log(ele);
 	  
 	    if (messageHistory.has(ele.id)) return;
 		messageHistory.add(ele.id);
@@ -202,13 +202,17 @@
 	  data.type = "webex";
 	  
 		if (data.chatimg){
-			getBase64FromImage(data.chatimg).then(dataUrl => {
-				data.chatimg = dataUrl;
+			try {
+				getBase64FromImage(data.chatimg).then(dataUrl => {
+					data.chatimg = dataUrl;
+					pushMessage(data);
+				}).catch(err => {
+					console.error("Failed to get base64:", err);
+					pushMessage(data); // Still push message even if image fails
+				});
+			} catch(e){
 				pushMessage(data);
-			}).catch(err => {
-				console.error("Failed to get base64:", err);
-				pushMessage(data); // Still push message even if image fails
-			});
+			}
 		} else {
 			pushMessage(data);
 		}
@@ -288,6 +292,25 @@
 			onElementInserted(ele, function(element){
 			   processMessage(element);
 			});
+		} 
+		
+		if (!ele && document.querySelectorAll('iframe').length){
+			console.log("try activating 2");
+			document.querySelectorAll('iframe').forEach( item =>{
+				try {
+					if (item && item.contentWindow && item.contentWindow.document && item.contentWindow.document.body.querySelector('#meeting-panel-container')){
+						if (!item.contentWindow.document.body.querySelector('#meeting-panel-container').marked){
+							item.contentWindow.document.body.querySelector('#meeting-panel-container').marked=true;
+							console.log("activating frames");
+							onElementInserted(item.contentWindow.document.body.querySelector('#meeting-panel-container'), function(element){
+							   processMessage(element);
+							});
+						}
+					}
+				} catch(e){
+					
+				}
+			})
 		}
 	},3000);
 
