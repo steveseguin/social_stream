@@ -1157,25 +1157,46 @@
 		element.dispatchEvent(focusEvent);
 	}
 
-/* 
-	try{
-		const defineGetter = (obj, prop, getter) => {
-			try {
-				Object.defineProperty(obj, prop, {
-					get: getter,
-					configurable: false,
-					enumerable: true
-				});
-			} catch (e) {
-				console.debug(`Failed to define getter ${prop}`, e);
-			}
-		};
-		
-		defineGetter(window, "onvisibilitychange", () => null);
-		defineGetter(Document.prototype, 'activeElement', () => document.body);
-		
-	} catch(e){
-		console.error(e);
-	} */
 	
+	function preventBackgroundThrottling() {
+		window.onblur = null;
+		window.blurred = false;
+		document.hidden = false;
+		document.visibilityState = "visible";
+		document.mozHidden = false;
+		document.webkitHidden = false;
+		
+		document.hasFocus = () => true;
+		window.onFocus = () => true;
+
+		Object.defineProperties(document, {
+			mozHidden: { value: false },
+			msHidden: { value: false },
+			webkitHidden: { value: false },
+			hidden: { value: false, writable: true },
+			visibilityState: {
+				get: () => "visible",
+				value: "visible",
+				writable: true
+			}
+		});
+	}
+
+	const events = [
+		"visibilitychange",
+		"webkitvisibilitychange",
+		"blur",
+		"mozvisibilitychange",
+		"msvisibilitychange"
+	];
+
+	events.forEach(event => {
+		window.addEventListener(event, (e) => {
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}, true);
+	});
+
+	setInterval(preventBackgroundThrottling, 200);
+
 })();
