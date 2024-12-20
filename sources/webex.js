@@ -135,7 +135,6 @@
 	}
 
 	function processMessage(ele){
-	  console.log(ele);
 	  
 	    if (messageHistory.has(ele.id)) return;
 		messageHistory.add(ele.id);
