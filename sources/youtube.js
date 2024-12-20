@@ -253,27 +253,6 @@
 		return result;
 	}
 	
-	function deleteThis(ele) {
-		if (ele.deleted){
-			return;
-		}
-		ele.deleted = true;
-		try {
-			var chatname = ele.querySelector("#author-name");
-			if (chatname) {
-				var data = {};
-				data.chatname = escapeHtml(chatname.innerText);
-				data.type = (youtubeShorts ? "youtubeshorts" : "youtube");
-				try {
-					chrome.runtime.sendMessage(chrome.runtime.id, {
-						"delete": data
-					}, function(e) {});
-				} catch (e) {
-					//
-				}
-			}
-		} catch (e) {}
-	}
 	
 	function deepMerge(target, source) {
 	  for (let key in source) {
@@ -480,16 +459,25 @@
 			if (!chatname){
 				return;
 			}
+			
+			ele.querySelectorAll('.yt-live-chat-author-badge-renderer[type]').forEach(type=>{
+				if (type.getAttribute("type")=="mod"){
+					mod=true;
+				} else if (type.getAttribute("type")=="member"){
+					member=true;
+				}
+			});
 
 			if (!settings.nosubcolor) {
-				if (nameElement.classList.contains("member")) {
-					nameColor = "#107516";
-					member = true;
-				} else if (nameElement.classList.contains("moderator")) {
+				if (mod || nameElement.classList.contains("moderator")) {
 					nameColor = "#5f84f1";
 					mod = true;
-				}
+				} else if (member || nameElement.classList.contains("member")) {
+					nameColor = "#107516";
+					member = true;
+				} 
 			}
+			
 		} catch (e) {}
 
 		try {
@@ -557,27 +545,16 @@
 		} catch (e) {}
 
 		var chatmembership = "";
-
 		try {
 			chatmembership = ele.querySelector(".yt-live-chat-membership-item-renderer #header-subtext").innerHTML;
+			member = true;
 		} catch (e) {}
 		
-		//<span id="chat-badges" class="style-scope yt-live-chat-author-chip"><yt-live-chat-author-badge-renderer class="style-scope yt-live-chat-author-chip" aria-label="Moderator" type="moderator" shared-tooltip-text="Moderator"><!--css-build:shady--><!--css-build:shady--><div id="image" class="style-scope yt-live-chat-author-badge-renderer"><yt-icon class="style-scope yt-live-chat-author-badge-renderer"><!--css-build:shady--><!--css-build:shady--><span class="yt-icon-shape style-scope yt-icon yt-spec-icon-shape"><div style="width: 100%; height: 100%; display: block; fill: currentcolor;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" focusable="false" aria-hidden="true" style="pointer-events: none; display: inherit; width: 100%; height: 100%; fill: rgb(94, 132, 241);"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z"></path></svg></div></span></yt-icon></div></yt-live-chat-author-badge-renderer><yt-live-chat-author-badge-renderer class="style-scope yt-live-chat-author-chip" aria-label="New member" type="member" shared-tooltip-text="New member"><!--css-build:shady--><!--css-build:shady--><div id="image" class="style-scope yt-live-chat-author-badge-renderer"><img src="https://yt3.ggpht.com/ErvsRBtLvoswug7AUW6n1NLuC_o7_D_XOj090s0rzGViwu7VE2LeslzWPu5BnhVuTgqbfwJ_o5g=s32-c-k" class="style-scope yt-live-chat-author-badge-renderer" alt="New member"></div></yt-live-chat-author-badge-renderer></span>
-
-
-		
 		var treatAsMemberChat = false;
-		if (!chatmembership && settings.allmemberchat) {
-			if (ele.querySelector('.yt-live-chat-author-badge-renderer[type="member"]')) {
-				treatAsMemberChat = true;
-				member = true;
-			}
+		if (settings.allmemberchat && member) {
+			treatAsMemberChat = true;
 		} else if (chatmembership) {
 			treatAsMemberChat = true;
-		}
-		
-		if (!mod && ele.querySelector('.yt-live-chat-author-badge-renderer[type="mod"]')) {
-			mod = true;
 		}
 		
 		var chatsticker = "";
@@ -744,12 +721,15 @@
 		data.chatimg = chatimg;
 		data.hasDonation = hasDonation;
 		data.membership = hasMembership;
+		if (mod){
+			data.mod = mod;
+		}
 		data.subtitle = subtitle;
 		if (videoId){
 			data.videoid = videoId;
 		}
 		data.textonly = settings.textonlymode || false;
-		data.type = "youtube";
+		data.type = "youtube"; 
 		
 		if (youtubeShorts){
 			data.type = "youtubeshorts";
