@@ -5719,10 +5719,10 @@
 					console.log(data);
 					setTimeout(()=>{
 						data.recentHistory.reverse().forEach(async msg=>{
-							console.log({contents:msg});
+							//console.log({contents:msg});
 							await processData({contents:msg}); 
 						});
-						jumptoBottom();
+						jumptoBottom2();
 					},1000);
 				} else if ("userHistory" in data) {
 					//delete messages, but also block user. remote, so we won't sync,

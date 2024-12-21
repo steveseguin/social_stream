@@ -303,6 +303,7 @@
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 
+
 	async function processMessage(ele, event=false) {
 		// twitch
 		
@@ -926,6 +927,10 @@
 			}
 		} catch (e) {}
 	}
+	
+		
+	
+	//<div class="Layout-sc-1xcs6mc-0"><div data-test-selector="user-notice-line" class="InjectLayout-sc-1i43xsx-0 iwRBzz user-notice-line"><div class="Layout-sc-1xcs6mc-0 jjAyLi"><div class="ScFigure-sc-wkgzod-0 caxXaW tw-svg"><svg width="20" height="20" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11 4.5 9 2 4.8 6.9A7.48 7.48 0 0 0 3 11.77C3 15.2 5.8 18 9.23 18h1.65A6.12 6.12 0 0 0 17 11.88c0-1.86-.65-3.66-1.84-5.1L12 3l-1 1.5ZM6.32 8.2 9 5l2 2.5L12 6l1.62 2.07A5.96 5.96 0 0 1 15 11.88c0 2.08-1.55 3.8-3.56 4.08.36-.47.56-1.05.56-1.66 0-.52-.18-1.02-.5-1.43L10 11l-1.5 1.87c-.32.4-.5.91-.5 1.43 0 .6.2 1.18.54 1.64A4.23 4.23 0 0 1 5 11.77c0-1.31.47-2.58 1.32-3.57Z" clip-rule="evenodd"></path></svg></div><div class="Layout-sc-1xcs6mc-0 grvhen"><div class="Layout-sc-1xcs6mc-0 jjAyLi"><span class="chatter-name chatter-name--no-outline" role="button" tabindex="0"><span class="CoreText-sc-1txzju1-0 ffeswd"><span class="CoreText-sc-1txzju1-0 blwagE">EVARATE</span></span></span><div class="Layout-sc-1xcs6mc-0 dAPRYJ"><p class="CoreText-sc-1txzju1-0">+</p><div class="Layout-sc-1xcs6mc-0 gfgICc channel-points-icon channel-points-icon--small"><img class="channel-points-icon__image tw-image" alt="Lunas" srcset="https://static-cdn.jtvnw.net/channel-points-icons/541084545/d7f411ea-e742-471c-8262-932cd3213413/icon-1.png 1x,https://static-cdn.jtvnw.net/channel-points-icons/541084545/d7f411ea-e742-471c-8262-932cd3213413/icon-2.png 2x,https://static-cdn.jtvnw.net/channel-points-icons/541084545/d7f411ea-e742-471c-8262-932cd3213413/icon-4.png 4x" src="https://static-cdn.jtvnw.net/channel-points-icons/541084545/d7f411ea-e742-471c-8262-932cd3213413/icon-1.png"></div><p class="CoreText-sc-1txzju1-0">350</p></div></div><div class="Layout-sc-1xcs6mc-0"><p class="CoreText-sc-1txzju1-0"><span class="CoreText-sc-1txzju1-0 jkurzn">Watch Streak reached!:</span> EVARATE is currently on a 3-stream streak!</p></div></div></div><div class="Layout-sc-1xcs6mc-0 fAVISI"><div class="chat-line--inline chat-line__message" data-a-target="chat-line-message" data-a-user="evarate" tabindex="0" align-items="center"><div class="Layout-sc-1xcs6mc-0 cwtKyw"><div class="Layout-sc-1xcs6mc-0 cwtKyw chat-line__message-container"><div class="Layout-sc-1xcs6mc-0"></div><div class="Layout-sc-1xcs6mc-0"><div class="Layout-sc-1xcs6mc-0 cVmNmw chat-line__no-background"><div class="Layout-sc-1xcs6mc-0 jCLQvB"><span class="chat-line__timestamp" data-a-target="chat-timestamp" data-test-selector="chat-timestamp">1:36</span><div class="Layout-sc-1xcs6mc-0 plvaC chat-line__username-container chat-line__username-container--hoverable"><span><div class="InjectLayout-sc-1i43xsx-0 jbmPmA"><button data-a-target="chat-badge"><img alt="GLHF Pledge" aria-label="GLHF Pledge badge" class="chat-badge" src="https://static-cdn.jtvnw.net/badges/v1/3158e758-3cb4-43c5-94b3-7639810451c5/1" srcset="https://static-cdn.jtvnw.net/badges/v1/3158e758-3cb4-43c5-94b3-7639810451c5/1 1x, https://static-cdn.jtvnw.net/badges/v1/3158e758-3cb4-43c5-94b3-7639810451c5/2 2x, https://static-cdn.jtvnw.net/badges/v1/3158e758-3cb4-43c5-94b3-7639810451c5/3 4x"></button></div></span><span class="chat-line__username" role="button" tabindex="0"><span><span class="chat-author__display-name" data-a-target="chat-message-username" data-a-user="evarate" data-test-selector="message-username" style="color: rgb(97, 173, 254);">EVARATE</span></span></span></div><span aria-hidden="true">: </span><span class="" data-a-target="chat-line-message-body"><span class="text-fragment" data-a-target="chat-message-text">my hangover needs this so bad. thank you</span></span></div></div></div></div><div class="Layout-sc-1xcs6mc-0 bbwsyT chat-line__icons"></div></div></div></div></div></div>
 
 	function onElementInsertedTwitch(target, callback) {
 		var onMutationsObserved = function (mutations) {
@@ -956,42 +961,74 @@
 							}
 							mutation.addedNodes[i].ignore = true;
 							
+							console.log(mutation.addedNodes[i]);
 							
 							if (settings.captureevents){
 								if (mutation.addedNodes[i].dataset.testSelector == "user-notice-line") {
+									console.log("a");
 									processEvent(mutation.addedNodes[i]);
+									console.log("a.");
 									continue;
 								} else if (mutation.addedNodes[i].classList.contains("user-notice-line")) {
+									console.log("b");
 									processEvent(mutation.addedNodes[i]);
+									console.log("b.");
+									continue;
+								} else if (mutation.addedNodes[i].classList.contains("user-notice-line")) {
+									console.log("c");
+									processEvent(mutation.addedNodes[i]);
+									console.log("c.");
 									continue;
 								}
+								console.log(".");
 							}
 							
 							if (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message") || mutation.addedNodes[i].classList.contains("paid-pinned-chat-message-content-wrapper")){
+								console.log("1");
 								callback(mutation.addedNodes[i]);
+								console.log("1.");
 								continue;
 							}
 							
 							let nextElement = mutation.addedNodes[i].querySelector('.user-notice-line, [data-test-selector="user-notice-line"]');
 							if (nextElement){
+								console.log("2");
 								if (!nextElement.ignore){
 									nextElement.ignore = true;
 									processEvent(nextElement);
 								}
+								console.log("2,");
 								continue;
 							}
 							
 							nextElement = mutation.addedNodes[i].querySelector(".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper");
 							if (nextElement){
+								console.log("3.");
 								if (!nextElement.ignore){
 									nextElement.ignore = true;
 									callback(nextElement);
 								}
+								console.log("3");
 								continue
 							}
+							console.log(settings.captureevents);
 							
+							if (settings.captureevents && mutation.addedNodes[i].parentNode && mutation.addedNodes[i].parentNode.dataset.dataTestSelector && (mutation.addedNodes[i].parentNode.dataset.dataTestSelector == "user-notice-line")){
+								if (!mutation.addedNodes[i].parentNode.ignore){
+									mutation.addedNodes[i].parentNode.ignore = true;
+									console.log("4");
+									processEvent(mutation.addedNodes[i]);
+								}
+							} else if (settings.captureevents && mutation.addedNodes[i].parentNode && settings.captureevents && mutation.addedNodes[i].parentNode.parentNode && mutation.addedNodes[i].parentNode.parentNode.dataset.dataTestSelector && (mutation.addedNodes[i].parentNode.parentNode.dataset.dataTestSelector == "user-notice-line")){
+								if (!mutation.addedNodes[i].parentNode.ignore && !mutation.addedNodes[i].parentNode.parentNode.ignore){
+									mutation.addedNodes[i].parentNode.parentNode.ignore = true;
+									mutation.addedNodes[i].parentNode.ignore = true;
+									console.log("5");
+									processEvent(mutation.addedNodes[i]);
+								}
+							}
 						} catch (e) {
-							
+							console.error(e);
 						}
 					}
 				}
