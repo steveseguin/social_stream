@@ -5719,7 +5719,7 @@
 					console.log(data);
 					setTimeout(()=>{
 						data.recentHistory.reverse().forEach(async msg=>{
-							//console.log({contents:msg});
+							console.log({contents:msg});
 							await processData({contents:msg}); 
 						});
 						jumptoBottom2();
@@ -7224,36 +7224,39 @@
 			}
 			
 			function replaceURLsWithSubstring(text, replacement = "[Link]") {
-			  if (typeof text !== "string") {
-				return text;
-			  }
-
-			  try {
-				// This pattern matches potential URLs more strictly
-				const urlPattern = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g;
-
-				return text.replace(urlPattern, (match) => {
-				  // Split the match by dots to check the TLD
-				  const parts = match.split('.');
-				  const potentialTLD = parts[parts.length - 1].split(/[/?#]/)[0];
-
-				  // If it doesn't contain a slash, only replace if it starts with http:// or https://
-				  if (match.startsWith('http://') || match.startsWith('https://')) {
-					return replacement;
-				  }
-				  
-				  // Check if it's a valid TLD and contains a slash (indicating it's likely a URL)
-				  if (match.includes('/') || isValidTLD(potentialTLD)) {
-					return replacement;
-				  }
-
-				  // Otherwise, return the original match
-				  return match;
-				});
-			  } catch (e) {
-				console.error(e);
-				return text;
-			  }
+				if (typeof text !== "string") return text;
+				
+				try {
+					const urlPattern = /(?:(?:https?:\/\/)?(?:www\.)?)?(?!-)[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?(?=\s|$)|(?:https?:\/\/)[^\s]+/g;
+					
+					return text.replace(urlPattern, (match) => {
+						// Skip emoticons and similar patterns
+						if (/^[a-zA-Z0-9](?:\.[a-zA-Z0-9]){1,2}$/.test(match) && 
+							match.length <= 5 && 
+							!match.includes('/')) {
+							return match;
+						}
+						
+						// Always replace if it has a protocol or www
+						if (match.startsWith('http') || match.startsWith('www.')) {
+							return replacement;
+						}
+						
+						// Check TLD for bare domains
+						const parts = match.split('.');
+						const potentialTLD = parts[parts.length - 1].split(/[/?#]/)[0];
+						
+						// Replace if it has a valid TLD or contains a path
+						if (match.includes('/') || isValidTLD(potentialTLD)) {
+							return replacement;
+						}
+						
+						return match;
+					});
+				} catch (e) {
+					console.error(e);
+					return text;
+				}
 			}
 			
 			function isEmojiOnly(str) {
@@ -7649,7 +7652,7 @@
 
 					var timeArrived = "";
 					if (datestamp) {
-						var date = new Date();
+						var date = data.timestamp ? new Date(data.timestamp) : new Date();
 						var hours = date.getHours();
 						var minutes = date.getMinutes();
 						minutes = minutes < 10 ? "0" + minutes : minutes;

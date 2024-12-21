@@ -1012,14 +1012,21 @@
 								continue
 							}
 							console.log(settings.captureevents);
+							console.log(
+								settings.captureevents ,
+								mutation.addedNodes[i].parentNode, 
+								mutation.addedNodes[i].parentNode.parentNode , 
+								mutation.addedNodes[i].parentNode.parentNode.dataset.testSelector, 
+								(mutation.addedNodes[i].parentNode.parentNode.dataset.testSelector == "user-notice-line")
+							);
 							
-							if (settings.captureevents && mutation.addedNodes[i].parentNode && mutation.addedNodes[i].parentNode.dataset.dataTestSelector && (mutation.addedNodes[i].parentNode.dataset.dataTestSelector == "user-notice-line")){
+							if (settings.captureevents && mutation.addedNodes[i].parentNode && mutation.addedNodes[i].parentNode.dataset.testSelector && (mutation.addedNodes[i].parentNode.dataset.testSelector == "user-notice-line")){
 								if (!mutation.addedNodes[i].parentNode.ignore){
 									mutation.addedNodes[i].parentNode.ignore = true;
 									console.log("4");
 									processEvent(mutation.addedNodes[i]);
 								}
-							} else if (settings.captureevents && mutation.addedNodes[i].parentNode && settings.captureevents && mutation.addedNodes[i].parentNode.parentNode && mutation.addedNodes[i].parentNode.parentNode.dataset.dataTestSelector && (mutation.addedNodes[i].parentNode.parentNode.dataset.dataTestSelector == "user-notice-line")){
+							} else if (settings.captureevents && mutation.addedNodes[i].parentNode && mutation.addedNodes[i].parentNode.parentNode && mutation.addedNodes[i].parentNode.parentNode.dataset.testSelector && (mutation.addedNodes[i].parentNode.parentNode.dataset.testSelector == "user-notice-line")){
 								if (!mutation.addedNodes[i].parentNode.ignore && !mutation.addedNodes[i].parentNode.parentNode.ignore){
 									mutation.addedNodes[i].parentNode.parentNode.ignore = true;
 									mutation.addedNodes[i].parentNode.ignore = true;
