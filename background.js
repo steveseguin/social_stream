@@ -5261,6 +5261,7 @@ function sendWaitlistConfig(data = null, sendMessage = true, clear=false) {
 			if (settings.customwaitlistmessagetoggle) {
 				if (settings.customwaitlistmessage) {
 					message = settings.customwaitlistmessage.textsetting.trim();
+					message = message.replace(/{trigger}/g, trigger);
 				} else {
 					message = "";
 				}

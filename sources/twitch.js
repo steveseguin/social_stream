@@ -976,7 +976,7 @@
 				
 				for (let j = 0; j < nodesLen; j++) {
 					const node = nodes[j];
-					if (!node || node.nodeType === 3) continue;
+					if (!node || !node.dataset || node.nodeType === 3) continue;
 					
 					try {
 						if ((node.dataset?.aTarget === "chat-deleted-message-placeholder") || 

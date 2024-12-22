@@ -201,7 +201,7 @@
 					document.querySelector('#q-app main > div > div[class], .app-body > [class] > [class] > [class] > div').marked=true;
 					document.querySelectorAll('#q-app main > div > div[class]>div, .app-body > [class] > [class] > [class] > div').forEach(ele=>{
 						try {
-							//processMessage(ele);
+							processMessage(ele);
 							ele.marked = true;
 						} catch(e){}
 					});
