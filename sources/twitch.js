@@ -140,7 +140,11 @@
 		let pendingRegularEmote = null;
 		let pendingSpace = "";
 
-		function processNode(node) {
+		function processNode(node, checkIgnore=true) {
+			
+			if (checkIgnore && node.ignore){return result;}
+			node.ignore = true;
+			
 			if (node.nodeType === 3 && node.textContent.length > 0) { // text node
 				// Text node
 				if (settings.textonlymode){
@@ -185,6 +189,7 @@
 					}
 				});
 			} else if (node.nodeType === 1) {
+				
 				// Element node
 				if (node.nodeName === "IMG") {
 					processEmote(node);
@@ -282,7 +287,7 @@
 			}
 		}
 
-		processNode(element);
+		processNode(element, false);
 
 		if (pendingRegularEmote) {
 			result += pendingRegularEmote;
@@ -305,11 +310,14 @@
 
 
 	async function processMessage(ele, event=false) {
-		// twitch
-		
-		//console.log(ele);
 		
 		if (!ele){return;}
+		
+		if (ele.ignore){
+			return;
+		}
+		
+		ele.ignore = true;
 		
 		if (settings.delaytwitch){
 		  await sleep(3000);
@@ -838,11 +846,18 @@
 
 	function processEvent(ele) {
 		
+		if (ele.ignore){
+			return;
+		} 
+		ele.ignore = true;
+		
+		console.warn(ele);
+		
 		var data = {};
 		data.chatname = "";
 		data.chatbadges = "";
 		data.nameColor = "";
-		data.chatmessage = getAllContentNodes(ele);
+		data.chatmessage = getAllContentNodes(ele) || "EMPTY";
 		data.chatimg = "";
 		data.hasDonation = "";
 		data.membership = "";
@@ -959,81 +974,44 @@
 							if (mutation.addedNodes[i].ignore) {
 								continue;
 							}
-							mutation.addedNodes[i].ignore = true;
 							
-							console.log(mutation.addedNodes[i]);
-							
-							if (settings.captureevents){
-								if (mutation.addedNodes[i].dataset.testSelector == "user-notice-line") {
-									console.log("a");
-									processEvent(mutation.addedNodes[i]);
-									console.log("a.");
-									continue;
-								} else if (mutation.addedNodes[i].classList.contains("user-notice-line")) {
-									console.log("b");
-									processEvent(mutation.addedNodes[i]);
-									console.log("b.");
-									continue;
-								} else if (mutation.addedNodes[i].classList.contains("user-notice-line")) {
-									console.log("c");
-									processEvent(mutation.addedNodes[i]);
-									console.log("c.");
-									continue;
-								}
-								console.log(".");
-							}
 							
 							if (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message") || mutation.addedNodes[i].classList.contains("paid-pinned-chat-message-content-wrapper")){
 								console.log("1");
 								callback(mutation.addedNodes[i]);
 								console.log("1.");
-								continue;
-							}
-							
-							let nextElement = mutation.addedNodes[i].querySelector('.user-notice-line, [data-test-selector="user-notice-line"]');
-							if (nextElement){
-								console.log("2");
-								if (!nextElement.ignore){
-									nextElement.ignore = true;
-									processEvent(nextElement);
-								}
-								console.log("2,");
-								continue;
-							}
-							
-							nextElement = mutation.addedNodes[i].querySelector(".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper");
-							if (nextElement){
-								console.log("3.");
-								if (!nextElement.ignore){
-									nextElement.ignore = true;
+							} else {
+								let nextElement = mutation.addedNodes[i].querySelector(".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper");
+								if (nextElement){
+									console.log("3.");
 									callback(nextElement);
+									console.log("3");
 								}
-								console.log("3");
-								continue
 							}
-							console.log(settings.captureevents);
-							console.log(
-								settings.captureevents ,
-								mutation.addedNodes[i].parentNode, 
-								mutation.addedNodes[i].parentNode.parentNode , 
-								mutation.addedNodes[i].parentNode.parentNode.dataset.testSelector, 
-								(mutation.addedNodes[i].parentNode.parentNode.dataset.testSelector == "user-notice-line")
-							);
 							
-							if (settings.captureevents && mutation.addedNodes[i].parentNode && mutation.addedNodes[i].parentNode.dataset.testSelector && (mutation.addedNodes[i].parentNode.dataset.testSelector == "user-notice-line")){
-								if (!mutation.addedNodes[i].parentNode.ignore){
-									mutation.addedNodes[i].parentNode.ignore = true;
-									console.log("4");
+							if (settings.captureevents){
+								nextElement = mutation.addedNodes[i].querySelector('.user-notice-line, [data-test-selector="user-notice-line"]');
+								if (nextElement){
+									console.log("2");
+									processEvent(nextElement);
+									console.log("2,");
+								} else if ((mutation.addedNodes[i].dataset.testSelector == "user-notice-line") || mutation.addedNodes[i].classList.contains("user-notice-line")) {
+									console.log("a");
 									processEvent(mutation.addedNodes[i]);
-								}
-							} else if (settings.captureevents && mutation.addedNodes[i].parentNode && mutation.addedNodes[i].parentNode.parentNode && mutation.addedNodes[i].parentNode.parentNode.dataset.testSelector && (mutation.addedNodes[i].parentNode.parentNode.dataset.testSelector == "user-notice-line")){
-								if (!mutation.addedNodes[i].parentNode.ignore && !mutation.addedNodes[i].parentNode.parentNode.ignore){
-									mutation.addedNodes[i].parentNode.parentNode.ignore = true;
-									mutation.addedNodes[i].parentNode.ignore = true;
-									console.log("5");
+									console.log("a.");
+								} else if ((mutation.addedNodes[i].parentNode.dataset.testSelector == "user-notice-line") || mutation.addedNodes[i].parentNode.classList.contains("user-notice-line")) {
+									console.log("b");
 									processEvent(mutation.addedNodes[i]);
+									console.log("b.");
+								} else if ((mutation.addedNodes[i].parentNode.parentNode.dataset.testSelector == "user-notice-line") || mutation.addedNodes[i].parentNode.parentNode.classList.contains("user-notice-line")) {
+									console.log("c");
+									processEvent(mutation.addedNodes[i]);
+									console.log("c.");
 								}
 							}
+							
+							mutation.addedNodes[i].ignore = true;
+							
 						} catch (e) {
 							console.error(e);
 						}
