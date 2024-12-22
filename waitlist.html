@@ -419,8 +419,8 @@
 			});
 	}
 	
-	if (urlParams.has("language") || urlParams.has("lang") || urlParams.has("ln")) {
-		changeLg(urlParams.has("language") || urlParams.has("lang") || urlParams.has("ln"));
+	if (urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln")) {
+		changeLg(urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln"));
 	}
 	
 	var conCon = 1;
@@ -633,7 +633,7 @@
 
 	function processInput(data){
 	
-		// console.log(data);
+		console.log(data);
 		
 		if ("waitlistmessage" in data){
 		
