@@ -5013,6 +5013,9 @@ function processWaitlist(data) {
 		if (!allowNewEntries){
 			return;
 		}
+		if (settings.waitlistmembersonly && !(data.membership || data.hasMembership)){
+			return;
+		}
 		var trigger = "!join";
 		if (settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim()) {
 			trigger = settings.customwaitlistcommand.textsetting.trim() || trigger;
