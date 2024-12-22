@@ -784,6 +784,7 @@
 		try {
 			if ("focusChat" == request) {
 				document.querySelector("div#input").focus();
+				simulateFocus(document.querySelector("div#input"));
 				sendResponse(true);
 				return;
 			}
@@ -1098,6 +1099,7 @@
 	setInterval(function(){checkViewers()},10000);
 	
 
+	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
 	try {
 		var receiveChannelCallback = function (e) {
 			remoteConnection.datachannel = event.channel;
@@ -1105,11 +1107,8 @@
 			remoteConnection.datachannel.onopen = function (e) {};
 			remoteConnection.datachannel.onclose = function (e) {};
 			setInterval(function () {
-				if (document.hidden) {
-					// only poke ourselves if tab is hidden, to reduce cpu a tiny bit.
-					remoteConnection.datachannel.send("KEEPALIVE");
-				}
-			}, 800);
+				remoteConnection.datachannel.send("KEEPALIVE");
+			}, 1000);
 		};
 		var errorHandle = function (e) {};
 		var localConnection = new RTCPeerConnection();
@@ -1137,4 +1136,62 @@
 	} catch (e) {
 		console.log(e);
 	}
+	
+	function simulateFocus(element) {
+		// Create and dispatch focusin event
+		const focusInEvent = new FocusEvent('focusin', {
+			view: window,
+			bubbles: true,
+			cancelable: true
+		});
+		element.dispatchEvent(focusInEvent);
+
+		// Create and dispatch focus event
+		const focusEvent = new FocusEvent('focus', {
+			view: window,
+			bubbles: false,
+			cancelable: true
+		});
+		element.dispatchEvent(focusEvent);
+	}
+
+	
+	function preventBackgroundThrottling() {
+		window.onblur = null;
+		window.blurred = false;
+		document.hidden = false;
+		document.mozHidden = false;
+		document.webkitHidden = false;
+		
+		document.hasFocus = () => true;
+		window.onFocus = () => true;
+
+		Object.defineProperties(document, {
+			mozHidden: { value: false, configurable: true },
+			msHidden: { value: false, configurable: true },
+			webkitHidden: { value: false, configurable: true },
+			hidden: { value: false, configurable: true, writable: true },
+			visibilityState: { 
+				get: () => "visible",
+				configurable: true
+			}
+		});
+	}
+
+	const events = [
+		"visibilitychange",
+		"webkitvisibilitychange",
+		"blur",
+		"mozvisibilitychange",
+		"msvisibilitychange"
+	];
+
+	events.forEach(event => {
+		window.addEventListener(event, (e) => {
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}, true);
+	});
+
+	setInterval(preventBackgroundThrottling, 200);
 })();

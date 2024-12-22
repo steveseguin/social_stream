@@ -367,7 +367,7 @@ class MessageStoreMigration {
 					resolve(null);
 					return;
 				}
-				console.error('Error detecting version:', request.error);
+				console.log('Error detecting version:', request.error);
 				resolve(null);
 			};
 			
