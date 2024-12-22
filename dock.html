@@ -361,6 +361,10 @@
 				}
 			}
 			
+			.event-pill {
+				padding-right: 5px;
+			}
+			
 			.hl-profile-pic {
 				border: var(--profile-pic-border);
 				min-width: 24px;
@@ -5719,9 +5723,12 @@
 					//console.log(data);
 					setTimeout(()=>{
 						data.recentHistory.reverse().forEach(async msg=>{
-							console.log({contents:msg});
-							await processData({contents:msg}); 
+							//console.log({contents:msg});
+							if (!msg.id || !document.querySelector("[data-mid='"+msg.id+"']")){
+								await processData({contents:msg}); 
+							}
 						});
+						console.log("Loaded from remote DB storage");
 						jumptoBottom2();
 					},1000);
 				} else if ("userHistory" in data) {
@@ -9066,9 +9073,11 @@
 						if (reload) {
 							reload = JSON.parse(reload);
 							for (var i = 0; i < reload.length; i++) {
-								processData({ contents: reload[i] }, true);
+								if (!reload[i].id || !document.querySelector("[data-mid='"+reload[i].id+"']")){
+									processData({ contents: reload[i] }, true);
+								}
 							}
-							console.log("PAGE REFRESHED");
+							console.log("PAGE REFRESHED FROM LOCAL CACHE");
 						}
 					}, 0);
 

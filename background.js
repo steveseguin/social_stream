@@ -3077,15 +3077,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 							return response;
 				}
 				
-
-				if (!request.message.id) {
-					messageCounter += 1;
-					request.message.id = messageCounter;
-					sendResponse({ state: isExtensionOn, mid: request.message.id }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
-				} else {
-					sendResponse({ state: isExtensionOn });
-				}
-
 				if ((request.message.type == "youtube") || (request.message.type == "youtubeshorts")){
 					if (settings.blockpremiumshorts && (request.message.type == "youtubeshorts")){
 						if (request.message.hasDonation || (request.message.membership && request.message.event)){
@@ -3125,6 +3116,15 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						}
 					}
 				}
+				
+				if (!request.message.id) {
+					messageCounter += 1;
+					request.message.id = messageCounter;
+					sendResponse({ state: isExtensionOn, mid: request.message.id }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
+				} else {
+					sendResponse({ state: isExtensionOn });
+				}
+				
 				//onsole.log("bot actions..");
 				try {
 					request.message = await applyBotActions(request.message, sender.tab, reflection); // perform any immediate actions
@@ -5333,7 +5333,7 @@ function sendToDisk(data) {
 	if (newFileHandle) {
 		try {
 			if (typeof data == "object") {
-				data.timestamp = new Date().getTime();
+				data.timestamp = data.timestamp || (new Date().getTime());
 
 				if (data.type && data.chatimg && ((data.type == "youtube") || (data.type == "youtubeshorts"))) {
 					data.chatimg = data.chatimg.replace("=s32-", "=s512-"); // high, but meh.
@@ -5351,7 +5351,7 @@ function sendToDisk(data) {
 	if (newFileHandleExcel) {
 		try {
 			if (typeof data == "object") {
-				data.timestamp = new Date().getTime();
+				data.timestamp = data.timestamp || (new Date().getTime());
 
 				if (data.type && data.chatimg && ((data.type == "youtube") || (data.type == "youtubeshorts"))) {
 					data.chatimg = data.chatimg.replace("=s32-", "=s256-");
@@ -6539,6 +6539,11 @@ async function applyBotActions(data, tab = false, reflection = false) {
 		messageCounter += 1;
 		data.id = messageCounter;
 	}
+	
+	if (!data.timestamp) {
+		data.timestamp = Date.now();
+	}
+	
 	if (settings.storeBSky && data.userid && ((data.type == "x") || (data.type == "twitter"))){
 		var matchedBSky = extractBskyUsername(data.chatname) || extractBskyUsername(data.chatmessage);
 		if (matchedBSky){
@@ -6782,21 +6787,6 @@ async function applyBotActions(data, tab = false, reflection = false) {
 
 			//messageTimeout = Date.now();
 			var msg = {};
-			
-			
-			/* try {
-				if (!messageStore[tabs[i].id]){
-					messageStore[tabs[i].id] = []; 
-				} else {
-					while (messageStore[tabs[i].id].length > 0 && now - messageStore[tabs[i].id][0].timestamp > 10000) {
-						messageStore[tabs[i].id].shift();
-					}
-				}
-				messageStore[tabs[i].id].push({
-					message: msg2Save,
-					timestamp: now
-				});
-			} catch(e){errorlog(e);} */
 			
 			if (data.tid){
 				msg.tid = data.tid;
