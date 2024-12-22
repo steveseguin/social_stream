@@ -196,17 +196,17 @@
 
 	setInterval(function(){
 		try {
-			if (document.querySelector('#q-app main > div > div[class]')){
-				if (!document.querySelector('#q-app main > div > div[class]').marked){
-					document.querySelector('#q-app main > div > div[class]').marked=true;
-					document.querySelectorAll('#q-app main > div > div[class]>div').forEach(ele=>{
+			if (document.querySelector('#q-app main > div > div[class], .app-body > [class] > [class] > [class] > div')){
+				if (!document.querySelector('#q-app main > div > div[class], .app-body > [class] > [class] > [class] > div').marked){
+					document.querySelector('#q-app main > div > div[class], .app-body > [class] > [class] > [class] > div').marked=true;
+					document.querySelectorAll('#q-app main > div > div[class]>div, .app-body > [class] > [class] > [class] > div').forEach(ele=>{
 						try {
 							//processMessage(ele);
 							ele.marked = true;
 						} catch(e){}
 					});
 					
-					onElementInserted(document.querySelector('#q-app main > div > div[class]'));
+					onElementInserted(document.querySelector('#q-app main > div > div[class], .app-body > [class] > [class] > [class]'));
 				}
 			}
 		} catch(e){}
