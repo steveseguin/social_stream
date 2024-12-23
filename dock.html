@@ -5659,7 +5659,7 @@
 						modal.style.display = "block";
 						modal.innerHTML =
 							'<div class="modal-content">\
-								<span class="close-btn">&times;</span>\
+								<span class="close-btn" id="tabslistclose">&times;</span>\
 								<h2 id="chatDestinationsFor">Checking what chat destinations are available...</h2>\
 								<div id="chatDestinationsList"></div>\
 							  </div>\
@@ -5667,7 +5667,7 @@
 						document.body.appendChild(modal);
 					}
 
-					const span = modal.getElementsByClassName("close-btn")[0];
+					const span = modal.getElementById("tabslistclose");
 					const chatDestinationsList = getById("chatDestinationsList");
 					const messagesFor = getById("chatDestinationsFor");
 					chatDestinationsList.innerHTML = "";
@@ -5780,7 +5780,7 @@
 						modal.classList.add("modal");
 						modal.innerHTML =
 							'<div class="modal-content">\
-					<span class="close-btn">&times;</span>\
+					<span class="close-btn" id="closeButtonMessage">&times;</span>\
 					<h2 id="messagesFor">Messages</h2>\
 					<div id="messagesList"></div>\
 				  </div>\
@@ -5788,7 +5788,7 @@
 						document.body.appendChild(modal);
 					}
 
-					const span = document.getElementsByClassName("close-btn")[0];
+					const span = document.getElementById("closeButtonMessage");
 					const messagesList = getById("messagesList");
 					const messagesFor = getById("messagesFor");
 					messagesList.innerHTML = "";
@@ -6705,86 +6705,82 @@
 				}
 			}
 
-			function replyToUser(element) {
-				
-				if (isOBSBrowserSource) {
-					return;
-				}
-				
-				var chatName = element.dataset.chatname;
-				var type = element.dataset.sourceType;
-				var tid = null;
-				if (element.rawContents && element.rawContents.tid){
-					tid = element.rawContents.tid;
-				}
-				
-				if (document.getElementById("getChatSourceButton")) {
-					clearTimeout(getById("getChatSourcesButton").setTimeout);
-				}
-				var modal = document.getElementById("getReplyModule");
-				if (!modal) {
-					modal = document.createElement("div");
-					modal.id = "getReplyModule";
-					modal.classList.add("modal");
-					modal.style.display = "block";
-					modal.innerHTML =
-						'<div class="modal-content">\
-							<span class="close-btn">&times;</span>\
-							<h2 id="c">What message do you want to send '+chatName+'?</h2>\
-							<input type="textarea" style="width: calc(100% - 200px);min-width:200px;" id="getReplyModuleInput">\
-							<button id="getReplyModuleButton">SEND</button><br><br>\
-							'+(tid?"":"<div>⚠️ This message will go to all destinations, since it didn't come from a specific tab</div>")+'\
-						  </div>\
-						';
-					if (tid==null){
-						modal.innerHTML += "<div>⚠️ This message will go to all destinations, since it didn't come from a specific tab</div>";
-					}
-						
-					document.body.appendChild(modal);
-				} else {
-					modal.classList.remove("hidden");
-				}
-
-				const span = document.getElementsByClassName("close-btn")[0];
-				const getReplyModuleInput = getById("getReplyModuleInput");
-				const getReplyModuleButton = getById("getReplyModuleButton");
-				
-				getReplyModuleInput.focus();
-				
-				
-				span.onclick = () => {
-					modal.classList.add("hidden");
-					modal.remove();
-					delete modal;
-				};
-				
-				
-				getReplyModuleButton.onclick = () => {
-				
-					var response = getReplyModuleInput.value;
-					if (!response){return;}
-					response = response.trim();
-					if (!response){return;}
-					try {
-						modal.classList.add("hidden");
-						modal.remove();
-						delete modal;
-					} catch(e){
-						console.error(e);
-					}
-					
-					if (!response.startsWith("@")){
-						response =  "@"+chatName+": "+response;
-					}
-					
-					let sendBlob = {};
-					sendBlob.response = response;
-					if (tid!==null){
-						sendBlob.tid = tid
-					}
-					send2Extension(sendBlob);
-				}
+		function replyToUser(element) {
+			if (isOBSBrowserSource) {
+				return;
 			}
+			
+			var chatName = element.dataset.chatname;
+			var type = element.dataset.sourceType;
+			var tid = element.rawContents?.tid || null;
+			
+			if (document.getElementById("getChatSourceButton")) {
+				clearTimeout(getById("getChatSourcesButton").setTimeout);
+			}
+			
+			var modal = document.getElementById("getReplyModule");
+			if (!modal) {
+				modal = document.createElement("div");
+				modal.id = "getReplyModule";
+				modal.classList.add("modal");
+				modal.style.display = "block";
+				modal.innerHTML = `
+					<div class="modal-content">
+						<span class="close-btn" id="closereply">&times;</span>
+						<h2 id="c">What message do you want to send ${chatName}?</h2>
+						<input type="textarea" style="width: calc(100% - 200px);min-width:200px;" id="getReplyModuleInput">
+						<button id="getReplyModuleButton">SEND</button><br><br>
+						${!tid ? "<div>⚠️ This message will go to all destinations, since it didn't come from a specific tab</div>" : ""}
+					</div>`;
+					
+				document.body.appendChild(modal);
+			} else {
+				modal.classList.remove("hidden");
+			}
+			
+			const closeModal = () => {
+				modal.classList.add("hidden");
+				modal.remove();
+			};
+			
+			const handleSend = () => {
+				const getReplyModuleInput = getById("getReplyModuleInput");
+				let response = getReplyModuleInput.value?.trim();
+				if (!response) return;
+				
+				closeModal();
+				
+				if (!response.startsWith("@")) {
+					response = `@${chatName}: ${response}`;
+				}
+				
+				let sendBlob = { response };
+				if (tid !== null) {
+					sendBlob.tid = tid;
+				}
+				send2Extension(sendBlob);
+			};
+			
+			const span = document.getElementById("closereply");
+			const getReplyModuleInput = getById("getReplyModuleInput");
+			const getReplyModuleButton = getById("getReplyModuleButton");
+			
+			getReplyModuleInput.focus();
+			
+			span.onclick = closeModal;
+			modal.onclick = (e) => {
+				if (e.target === modal) {
+					closeModal();
+				}
+			};
+			
+			getReplyModuleButton.onclick = handleSend;
+			getReplyModuleInput.onkeyup = (e) => {
+				if (e.key === "Enter") {
+					handleSend();
+				}
+			};
+		}
 
 			function toggleVIPUser(element) {
 				var chatName = element.dataset.chatname;
