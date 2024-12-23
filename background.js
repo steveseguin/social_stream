@@ -5579,10 +5579,10 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 			if (isExtensionOn && settings.allowChatBot){
 				
 				try {
-				  //    let model = "vanilj/llama-3.1-70b-instruct-lorablated-iq2_xs:latest"
+				  // ollama run technobyte/Llama-3.3-70B-Abliterated:IQ2_XS
+				  // let model = "technobyte/Llama-3.3-70B-Abliterated:IQ2_XS"
 				  let prompt = request.value || "";
 				  if (request.turbo) {
-				  //	model = "rolandroland/llama3.1-uncensored";
 						prompt = "You're an AI assistant. Keep responses limited to a few sentences.\n" + prompt;
 				  }
 				  let model = request.model || settings.ollamamodel?.textsetting || null;

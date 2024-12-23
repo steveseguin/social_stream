@@ -162,18 +162,18 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
         : (provider === "chatgpt" ? "https://api.openai.com/v1/chat/completions" : "https://generativelanguage.googleapis.com/v1beta/chat/completions");
     
 	function handleChunk(chunk, callback, appendToFull) {
-		const lines = chunk.split('\n');
+		const lines = chunk.split('\n').filter(line => line.trim());
 		for (const line of lines) {
 			if (line.trim() === 'data: [DONE]') {
 				responseComplete = true;
 				break;
 			}
-			if (line.trim() !== '') {
+			if (line) {
 				try {
 					// Remove 'data: ' prefix if it exists
 					const jsonStr = line.startsWith('data: ') ? line.slice(6) : line;
 					const data = JSON.parse(jsonStr);
-					
+					console.log(data);
 					if (data.response) { // Ollama format
 						appendToFull(data.response);
 						if (callback) callback(data.response);
@@ -192,7 +192,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 						break;
 					}
 				} catch (e) {
-					// console.warn("Parse error:", e, line);
+					console.warn("Parse error:", e, line);
 					const match = line.match(/"response":"(.*?)"/);
 					if (match && match[1]) {
 						const extractedResponse = match[1];
