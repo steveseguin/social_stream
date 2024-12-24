@@ -6712,7 +6712,7 @@
 			
 			var chatName = element.dataset.chatname;
 			var type = element.dataset.sourceType;
-			var tid = element.rawContents?.tid || null;
+			var tid = element.rawContents ? element.rawContents.tid : null;
 			
 			if (document.getElementById("getChatSourceButton")) {
 				clearTimeout(getById("getChatSourcesButton").setTimeout);
@@ -6745,7 +6745,7 @@
 			
 			const handleSend = () => {
 				const getReplyModuleInput = getById("getReplyModuleInput");
-				let response = getReplyModuleInput.value?.trim();
+				let response = getReplyModuleInput.value ? getReplyModuleInput.value.trim() : null;
 				if (!response) return;
 				
 				closeModal();
@@ -7111,7 +7111,7 @@
 				}
 			}
 			
-			function processURLs(element, { makeClickable = false, stripLinks = false, shortenURLs = false, maxLength = 50, replaceSubstring = "[Link]" } = {}) {
+			function processURLs(element, { makeClickable = false, stripLinks = false, shortenURLs = false, maxLength = 40, replaceSubstring = "[Link]" } = {}) {
 				if (!element) return;
 				
 				const urlPattern = /(?:(?:https?:\/\/)?(?:www\.)?)?(?!-)[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?(?=\s|$)|(?:https?:\/\/)[^\s]+/g;
@@ -7135,12 +7135,65 @@
 						return url;
 					}
 				}
+				
+				function compareUrls(href, innerUrl) {
+					if (href === innerUrl) return true;
+					
+					try {
+						const hrefUrl = new URL(href.startsWith('http') ? href : 'https://' + href);
+						const innerUrlNormalized = innerUrl.startsWith('http') ? innerUrl : 'https://' + innerUrl;
+						return hrefUrl.toString().startsWith(innerUrlNormalized);
+					} catch(e) {
+						return href.includes(innerUrl);
+					}
+				}
 
 				function processTextNode(textNode) {
 					const text = textNode.textContent;
 					let lastIndex = 0;
 					const fragment = document.createDocumentFragment();
 					let match;
+					
+					if (makeClickable) {
+						const parentAnchor = textNode.parentElement ? textNode.parentElement.closest('a') : null;
+						if (parentAnchor) {
+							const href = parentAnchor.getAttribute('href');
+							
+							while ((match = urlPattern.exec(text)) !== null) {
+								const innerUrl = match[0];
+								if (href && innerUrl) {
+									if (innerUrl.endsWith('...')) {
+										shortenURLs = true;
+										if (compareUrls(href, innerUrl.slice(0, -3))) {
+											const displayText = stripLinks ? replaceSubstring : 
+															  shortenURLs ? shortenUrl(href) : href;
+											const anchor = document.createElement("a");
+											anchor.href = href.startsWith('http') ? href : 'https://' + href;
+											anchor.textContent = displayText;
+											anchor.title = "Click to open: " + href;
+											anchor.target = "_blank";
+											anchor.style.pointerEvents = "auto";
+											anchor.addEventListener("click", e => e.stopPropagation());
+											parentAnchor.parentNode.replaceChild(anchor, parentAnchor);
+											return;
+										}
+									} else if (compareUrls(href, innerUrl)) {
+										const displayText = stripLinks ? replaceSubstring : 
+														  shortenURLs ? shortenUrl(href) : href;
+										const anchor = document.createElement("a");
+										anchor.href = href.startsWith('http') ? href : 'https://' + href;
+										anchor.textContent = displayText;
+										anchor.title = "Click to open: " + href;
+										anchor.target = "_blank";
+										anchor.style.pointerEvents = "auto";
+										anchor.addEventListener("click", e => e.stopPropagation());
+										parentAnchor.parentNode.replaceChild(anchor, parentAnchor);
+										return;
+									}
+								}
+							}
+						}
+					}
 					
 					while ((match = urlPattern.exec(text)) !== null) {
 						if (/^[a-zA-Z0-9](?:\.[a-zA-Z0-9]){1,2}$/.test(match[0]) && 

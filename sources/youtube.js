@@ -177,6 +177,14 @@
 				// Element node
 				if (node.nodeName === "IMG") {
 					processEmote(node);
+				} else if (!settings.textonlymode && node.href && (node.nodeName === "A")) {
+					
+					if (pendingSpace){
+						result += pendingSpace;
+						pendingSpace = null;
+					} 
+					pendingSpace = " <a href='"+node.href+"' target='_blank'>"+escapeHtml(node.textContent)+"</a> ";
+					
 				} else if (node.nodeName.toLowerCase() === "svg" && node.classList.contains("seventv-chat-emote")) {
 					if (settings.textonlymode){
 						return;
