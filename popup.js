@@ -1617,7 +1617,7 @@ function checkVersion(){
 					document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' class='downloadLink' title="Download the latest version as a zip" href='https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip'>new version available 💾</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span><a title="See the list of recent code changes" href="https://github.com/steveseguin/social_stream/commits/main" target='_blank' style='text-decoration: underline;'>[change log]</a>`;
 				} else if (manifestData && (compareVersions(manifestData.version, data.version)==1)){ // beta
 					document.getElementById("newVersion").classList.add('show')
-					document.getElementById("newVersion").innerHTML = `You're using the BETA version. Thank you!<small><br><br>ℹ️ Note: The below links also point to their respective beta version</small>`;
+					document.getElementById("newVersion").innerHTML = `You're using a BETA version. Thank you!<small><br><br>ℹ️ Note: The below overlay links point to their newest beta versions</small>`;
 					Beta = true;
 					if (Beta){
 						if (baseURL == "https://socialstream.ninja/"){
