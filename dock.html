@@ -1962,7 +1962,7 @@
 				z-index: 10 !important;
 				padding: 12px 0 !important;
 				width: 240px !important;
-				background-color: #fff !important;
+				background-color: #f4f4f4 !important;
 				border: solid 1px #dfdfdf !important;
 				box-shadow: 1px 1px 2px #cfcfcf !important;
 			}
@@ -2238,49 +2238,55 @@
 			<ul class="context-menu__items">
 				<li class="context-menu__item" data-action="Delete">
 					<a href="#" class="context-menu__link" data-action="Delete">
-						<i class="las la-external-link"></i>
+						🗑️
 						<span>Delete Message</span>
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="Block" title="All messages from user will be deleted; user will also get added to the hide-user list">
 					<a href="#" class="context-menu__link" data-action="Block">
-						<i class="las la-external-link"></i>
-						<span>Block User</span>
+						🚫
+						<span>Block User</span> 
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="History" title="Previous 10 messages from the user will be displayed">
 					<a href="#" class="context-menu__link" data-action="History">
-						<i class="las la-external-link"></i>
+						📖
 						<span>See User History</span>
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="Queue">
 					<a href="#" class="context-menu__link" data-action="Queue">
-						<i class="las la-paperclip"></i>
+						🔢
 						<span>Toggle Queue</span>
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="Pin">
 					<a href="#" class="context-menu__link" data-action="Pin">
-						<i class="las la-pen"></i>
+						📌
 						<span>Toggle Pin</span>
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="TTS">
 					<a href="#" class="context-menu__link" data-action="TTS">
-						<i class="las la-pen"></i>
+						🗣️
 						<span>Text to Speech</span>
+					</a>
+				</li>
+				<li class="context-menu__item" data-action="VIP">
+					<a href="#" class="context-menu__link" data-action="VIP">
+						⭐
+						<span>VIP User</span>
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="Copy">
 					<a href="#" class="context-menu__link" data-action="Copy">
-						<i class="las la-copy"></i>
+						📋
 						<span>Copy Text</span>
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="Reply" title="Reply to this user; message goes to their tab only">
 					<a href="#" class="context-menu__link" data-action="Reply">
-						<i class="las la-external-link"></i>
+						💬
 						<span>Reply to User</span>
 					</a>
 				</li>
@@ -2850,6 +2856,11 @@
 				autofeaturepriv = true;
 			}
 			
+			var autofeaturevip = false;
+			if (urlParams.has("autofeaturevip")) {
+				autofeaturevip = true;
+			}
+			
 			var trimChat = false;
 			if (urlParams.has("trim")) {
 				trimChat = urlParams.get("trim") || 200;
@@ -3328,6 +3339,11 @@
 			
 			if (urlParams.has("autoyoutubememberchat")) {
 				autoyoutubememberchat = true;
+			}
+			
+			var giveVIPBadge = false;
+			if (urlParams.has("showvipbadge")) {
+				giveVIPBadge = true;
 			}
 
 			var openChatAutomatically = false;
@@ -4145,9 +4161,9 @@
 				
 				else if (data.bot && !(allowbottss || bottts)){return;} // do not read out bot messages
 				else if (data.host && !(allowhosttss || hosttts)){return;} 
-				else if (data.mod && !(allowmodtss || modtts)){return;} 
-				else if (data.vip && !(allowviptss || viptts)){return;} 
-				else if (data.admin && !(allowadmintss || admintts)){return;} 
+				//else if (data.mod && !(allowmodtss || modtts)){return;} 
+				//else if (data.vip && !(allowviptss || viptts)){return;} 
+				//else if (data.admin && !(allowadmintss || admintts)){return;} 
 				
 				if (readDonos && !(data.hasDonation || data.donation)){return;}
 
@@ -5835,6 +5851,17 @@
 							document.querySelectorAll("[data-chatname='" + data.blockUser.username + "'][data-source-type='" + data.blockUser.type + "']").forEach(ele => {
 								ele.remove();
 							});
+							
+							
+							if (data.blockUser.type=="youtube"){
+								if (!localBlockUserList[data.blockUser.username].includes("youtubeshorts")) {
+									localBlockUserList[data.blockUser.username].push("youtubeshorts");
+								}
+								document.querySelectorAll("[data-chatname='" + data.blockUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
+									ele.remove();
+								});
+							}
+							
 						} else if (data.blockUser.username) {
 							if (!localBlockUserList) {
 								localBlockUserList = {};
@@ -5857,6 +5884,28 @@
 						console.error(e);
 					}
 					return;
+				} else if ("vipUser" in data) {
+					try {
+						if (data.vipUser.username && data.vipUser.type) {
+							document.querySelectorAll("[data-chatname='" + data.vipUser.username + "'][data-source-type='" + data.vipUser.type + "']").forEach(ele => {
+								ele.classList.add("vip");
+							});
+							if (data.vipUser.type=="youtube"){
+								document.querySelectorAll("[data-chatname='" + data.vipUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
+									ele.classList.add("vip");
+								});
+							}
+						} else if (data.vipUser.username) {
+							document.querySelectorAll("[data-chatname='" + data.vipUser.username + "']").forEach(ele => {
+								ele.classList.add("vip");
+							});
+						}
+						
+						return true;
+					} catch (e) {
+						console.error(e);
+					}
+					return;	
 				} else if ("delete" in data) {
 					// we will trigger a deleteMessage I guess after, if sync mode is needed.
 					try {
@@ -7692,6 +7741,11 @@
 					if (data.host) {
 						host = true;
 					}
+					
+					var vip = false;
+					if (data.vip) {
+						vip = true;
+					}
 
 					var nameColor = "";
 					if (data.nameColor && colorized) {
@@ -7699,6 +7753,13 @@
 					}
 
 					var chatbadges = "";
+					
+					if (giveVIPBadge && vip){
+						if (!data.chatbadges){
+							data.chatbadges = [];
+						}
+						data.chatbadges.push("./icons/vip.png");
+					}
 
 					if (data.chatbadges && limitbadges !== false) {
 						try {
@@ -7888,6 +7949,10 @@
 					
 					if (host && !horizontal) {
 						node.classList.add("host");
+					}
+					
+					if (vip) {
+						node.classList.add("vip");
 					}
 
 					if ("karma" in data) {
@@ -8178,6 +8243,17 @@
 							}
 						}
 					} else if (data.admin && autofeaturepriv){
+						if (doNotAutoshowFiltered && node.classList.contains("hide")) {
+						//
+						} else {
+							if (autoTimeoutEnabled) {
+								autoShowQueue.push(node);
+								checkAutoShow();
+							} else {
+								selectedMessage(false, node);
+							}
+						}
+					} else if (data.vip && autofeaturevip){
 						if (doNotAutoshowFiltered && node.classList.contains("hide")) {
 						//
 						} else {

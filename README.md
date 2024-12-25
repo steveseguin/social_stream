@@ -929,9 +929,15 @@ I do not claim rights of all the icons or images distributed. While I (or contri
 
 Some icons used are licensed as attribution-required:
 
-<a href="https://www.flaticon.com/free-icons/communication" title="communication icons">Communication icons created by Freepik - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/communication" title="communication icons" target="_blank">Communication icons created by Freepik - Flaticon</a>
 
-<a href="https://www.flaticon.com/free-icons/announcement" title="announcement icons">Announcement icons created by Design Circle - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/announcement" title="announcement icons" target="_blank">Announcement icons created by Design Circle - Flaticon</a>
+
+<a href="https://www.freepik.com/icon/chatbot_10817282#fromView=resource_detail&position=91" target="_blank">Icon by juicy_fish</a>
+
+<a href="https://www.flaticon.com/free-icons/vip" target="_blank" title="vip icons">Vip icons created by Freepik - Flaticon</a>
+
+Icons and any additional attribution for credits can be found <a href="https://socialstream.ninja/icons/" target="_blank">here</a>
 
 If there is missing attribution or concerns over any media, please contact us.
 

@@ -3346,6 +3346,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				data.membership = "";
 				data.chatimg = "https://socialstream.ninja/sampleavatar.png";
 				data.chatname = "Steve";
+				data.vip = true;
 				var score = parseInt(Math.random() * 378);
 				data.chatmessage = '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁 🇨🇦 https://vdo.ninja/';
 			} else if (Math.random() > 0.5) {
@@ -5500,14 +5501,18 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 
 			const viplist = settings.viplistusers.textsetting.split(",").map(user => {
 				const parts = user.split(":").map(part => part.trim());
-				return { username: parts[0], type: parts[1] || "*" };
-			});
+				return { username: parts[0], type: parts[1] || "" };
+			}); 
+			
+			var altSourceType = request.value.type || "";
+			if (altSourceType == "youtubeshorts"){
+				altSourceType = "youtube";
+			}
 
-			const userToVIP = { username: request.value.chatname, type: request.value.type };
-			const isAlreadyVIP = viplist.some(({ username, type }) => userToVIP.username === username && (userToVIP.type === type || type === "*"));
+			const userToVIP = { username: (request.value.userid || request.value.chatname), type: altSourceType };
+			const isAlreadyVIP = viplist.some(({ username, type }) => userToVIP.username === username && (userToVIP.type === type || type === ""));
 
 			if (!isAlreadyVIP) {
-				// Update viplist settings
 				settings.viplistusers.textsetting += (settings.viplistusers.textsetting ? "," : "") + userToVIP.username + ":" + userToVIP.type;
 				chrome.storage.local.set({ settings: settings });
 				// Check for errors in chrome storage operations
@@ -5634,8 +5639,13 @@ function blockUser(data){
 			const parts = user.split(":").map(part => part.trim());
 			return { username: parts[0], type: parts[1] || "*" };
 		});
+		
+		var altSourceType = data.type || "";
+		if (altSourceType == "youtubeshorts"){
+			altSourceType = "youtube";
+		}
 
-		const userToBlock = { username: (data.userid || data.chatname), type: data.type };
+		const userToBlock = { username: (data.userid || data.chatname), type: altSourceType };
 		
 		if (data.chatimg && !data.chatimg.endsWith("/unknown.png")){
 			userToBlock.chatimg = data.chatimg;
@@ -6466,7 +6476,7 @@ function sanitizeRelay(text, textonly=false, alt = false) {
 }
 
 const commandLastExecuted = {};
-
+/* 
 function extractBskyUsername(text) {
   if (!text || typeof text !== 'string') {
     return false;
@@ -6526,8 +6536,8 @@ function extractBskyUsername(text) {
 
   return false;
 }
-
-var BSky = {};
+ */
+/* var BSky = {};
 try {
 	BSky = localStorage.getItem("x2bsky")
 	if (BSky){
@@ -6535,6 +6545,8 @@ try {
 		BSky = JSON.parse(BSky);
 	}
 } catch(e){}
+
+ */
 
 // expects an object; not False/Null/undefined
 async function applyBotActions(data, tab = false, reflection = false) {
@@ -6544,126 +6556,225 @@ async function applyBotActions(data, tab = false, reflection = false) {
 		data.id = messageCounter;
 	}
 	
-	if (!data.timestamp) {
-		data.timestamp = Date.now();
-	}
-	
-	if (settings.storeBSky && data.userid && ((data.type == "x") || (data.type == "twitter"))){
+/* 	if (settings.storeBSky && data.userid && ((data.type == "x") || (data.type == "twitter"))){
 		var matchedBSky = extractBskyUsername(data.chatname) || extractBskyUsername(data.chatmessage);
 		if (matchedBSky){
 			BSky[data.userid] = matchedBSky;
 			localStorage.setItem("x2bsky",JSON.stringify(BSky));
 		}
-	}
+	} */
 
 	try {
-		if (settings.blacklistuserstoggle && data.chatname && settings.blacklistusers) {
-			const blacklist = settings.blacklistusers.textsetting.split(",").map(user => {
-				const parts = user
+		
+		if (settings.memberchatonly && !(data.membership || data.hasMembership)) {
+			return false;
+		}
+		
+		var altSourceType = data.type || "";
+		if (altSourceType == "youtubeshorts"){
+			altSourceType = "youtube";
+		}
+		
+		if (settings.blacklistuserstoggle && settings.blacklistusers?.textsetting && (data.chatname || data.userid)) {
+			try {
+				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
+				if (!userIdentifier) return null;
+
+				const blacklist = settings.blacklistusers.textsetting
 					.toLowerCase()
-					.split(":")
-					.map(part => part.trim());
-				return { username: parts[0], type: parts[1] || "*" };
-			});
+					.split(",")
+					.map(entry => entry.trim())
+					.filter(entry => entry);
 
-			const isBlocked = blacklist.some(({ username, type }) => data.chatname.toLowerCase().trim() === username && (data.type === type || type === "*"));
+				const isBlocked = blacklist.some(entry => {
+					const [name, type] = entry.split(":").map(part => part.trim());
+					if (!name) return false;
+					
+					return type ? 
+						name === userIdentifier && type === altSourceType :
+						name === userIdentifier;
+				});
 
-			if (isBlocked) {
+				if (isBlocked) {
+					return null;
+				}
+			} catch(e) {
+				errorlog(e);
 				return null;
 			}
 		}
 		
-		if (settings.whitelistuserstoggle && settings.whitelistusers && data.chatname) {
-			const whitelist = settings.whitelistusers.textsetting.split(",").map(user => {
-				const parts = user
+		if (settings.whitelistuserstoggle && settings.whitelistusers?.textsetting && (data.chatname || data.userid)) {
+			try {
+				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
+				if (!userIdentifier) return null;
+
+				const whitelist = settings.whitelistusers.textsetting
 					.toLowerCase()
-					.split(":")
-					.map(part => part.trim());
-				return { username: parts[0], type: parts[1] || "*" };
-			});
+					.split(",")
+					.map(entry => entry.trim())
+					.filter(entry => entry);
 
-			const isWhitelisted = whitelist.some(({ username, type }) => data.chatname.toLowerCase().trim() === username && (data.type === type || type === "*"));
+				const isWhitelisted = whitelist.some(entry => {
+					const [name, type] = entry.split(":").map(part => part.trim());
+					if (!name) return false;
+					
+					return type ? 
+						name === userIdentifier && type === altSourceType :
+						name === userIdentifier;
+				});
 
-			if (!isWhitelisted) {
-				// not whitelisted.
+				if (!isWhitelisted) {
+					return null;
+				}
+			} catch(e) {
+				errorlog(e);
 				return null;
 			}
 		}
-		
 
-		if (settings.viplistuserstoggle && data.chatname && settings.viplistusers) {
-			const viplist = settings.viplistusers.textsetting.split(",").map(user => {
-				const parts = user
-					.toLowerCase()
-					.split(":")
-					.map(part => part.trim());
-				return { username: parts[0], type: parts[1] || "*" };
-			});
-
-			const isVIP = viplist.some(({ username, type }) => data.chatname.toLowerCase().trim() === username && (data.type === type || type === "*"));
-
-			if (isVIP) {
-				data.vip = true;
-			}
-		}
-		
 		if (settings.mynameext){
 			settings.botnamesext = settings.mynameext;
 			delete settings.mynameext;
 		}
+		if (!data.bot && settings.botnamesext?.textsetting && (data.chatname || data.userid)) {
+			try {
+				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
+				if (!userIdentifier) return;
 
-		if (settings.botnamesext && data.chatname) {
-			let custombot = settings.botnamesext.textsetting.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
-			custombot = custombot.split(",");
-			if (custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
-				data.bot = true;
+				const bots = settings.botnamesext.textsetting
+					.toLowerCase()
+					.split(",")
+					.map(entry => entry.trim())
+					.filter(entry => entry);
+
+				data.bot = bots.some(entry => {
+					const [name, type] = entry.split(":").map(part => part.trim());
+					if (!name) return false;
+					
+					return type ? 
+						name === userIdentifier && type === altSourceType :
+						name === userIdentifier;
+				});
+			} catch(e) {
+				errorlog(e);
+				data.bot = false;
 			}
 		}
-		if (settings.hostnamesext && data.chatname) {
-			let customhost = settings.hostnamesext.textsetting.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
-			customhost = customhost.split(",");
-			if (customhost.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
-				data.host = true;
-			}
-		}
-		if (settings.modnamesext && data.chatname) {
-			let custommod = settings.modnamesext.textsetting.toLowerCase().replace(/[^a-z0-9,_]+/gi, ""); // this won't work with names that are special
-			custommod = custommod.split(",");
-			if (custommod.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
-				data.mod = true;
-			}
-		}
-		
-		if (!(data.membership || data.hasMembership) && settings.memberchatonly) {
-			return false;
-		}
-		
 		if (data.bot && settings.hidebotsext) {
 			return false;
+		}
+		if (data.bot && data.chatname && settings.hidebotnamesext) {
+			data.chatname = "";
+		}
+		
+		if (!data.host && settings.hostnamesext?.textsetting && (data.chatname || data.userid)) {
+			try {
+				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
+				if (!userIdentifier) return;
+
+				const hosts = settings.hostnamesext.textsetting
+					.toLowerCase()
+					.split(",")
+					.map(entry => entry.trim())
+					.filter(entry => entry);
+
+				data.host = hosts.some(entry => {
+					const [name, type] = entry.split(":").map(part => part.trim());
+					if (!name) return false;
+					
+					return type ? 
+						name === userIdentifier && type === altSourceType :
+						name === userIdentifier;
+				});
+			} catch(e) {
+				errorlog(e);
+				data.host = false;
+			}
 		}
 		if (data.host && settings.hidehostsext) {
 			return false;
 		}
-		if (data.mod && settings.hidemodsext) {
-			return false;
-		}
-		
-		if (data.bot && data.chatname && settings.hidebotnamesext) {
-			data.chatname = "";
-		}
 		if (data.host && data.chatname && settings.hidehostnamesext) {
 			data.chatname = "";
+		}
+		
+		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
+			try {
+				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
+				if (!userIdentifier) return;
+
+				const mods = settings.modnamesext.textsetting
+					.toLowerCase()
+					.split(",")
+					.map(entry => entry.trim())
+					.filter(entry => entry);
+
+				data.mod = mods.some(entry => {
+					const [name, type] = entry.split(":").map(part => part.trim());
+					if (!name) return false;
+					
+					return type ? 
+						name === userIdentifier && type === altSourceType :
+						name === userIdentifier;
+				});
+			} catch(e) {
+				errorlog(e);
+				data.mod = false;
+			}
+		}
+		
+		if (data.mod && settings.hidemodsext) {
+			return false;
 		}
 		if (data.mod && data.chatname && settings.hidemodnamesext) {
 			data.chatname = "";
 		}
-		if (settings.adminnames && data.chatname){
+		
+		if (!data.admin && settings.adminnames?.textsetting && (data.chatname || data.userid)) {
 			try {
-				let admins = settings.adminnames.textsetting.toLowerCase().split(",");
-				if (admins.includes(data.chatname.toLowerCase())){
-					data.admin = true;
-				}
-			} catch(e){
+				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
+				if (!userIdentifier) return;
+
+				const admins = settings.adminnames.textsetting
+					.toLowerCase()
+					.split(",")
+					.map(entry => entry.trim())
+					.filter(entry => entry);
+
+				data.admin = admins.some(entry => {
+					const [name, type] = entry.split(":").map(part => part.trim());
+					if (!name) return false;
+					
+					return type ? 
+						name === userIdentifier && type === altSourceType :
+						name === userIdentifier;
+				});
+			} catch(e) {
+				errorlog(e);
+			}
+		}
+		
+		if (!data.vip && settings.viplistusers?.textsetting && (data.chatname || data.userid)) {
+			try {
+				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
+				if (!userIdentifier) return;
+
+				const vips = settings.viplistusers.textsetting
+					.toLowerCase()
+					.split(",")
+					.map(entry => entry.trim())
+					.filter(entry => entry);
+
+				data.vip = vips.some(entry => {
+					const [name, type] = entry.split(":").map(part => part.trim());
+					if (!name) return false;
+					
+					return type ? 
+						name === userIdentifier && type === altSourceType :
+						name === userIdentifier;
+				});
+			} catch(e) {
 				errorlog(e);
 			}
 		}
@@ -6678,6 +6789,10 @@ async function applyBotActions(data, tab = false, reflection = false) {
 		
 		//
 		var skipRelay = false;
+		
+		if (!data.timestamp) {
+			data.timestamp = Date.now();
+		}
 		
 		
 		if (settings.joke && data.chatmessage && data.chatmessage.toLowerCase() === "!joke") {

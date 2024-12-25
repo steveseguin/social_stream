@@ -2,7 +2,7 @@
 
 var isExtensionOn = false;
 var ssapp = false;
-var usernames = [];
+var USERNAMES = [];
 
 function log(msg,a,b){
 	console.log(msg,a,b);
@@ -372,6 +372,69 @@ function createUniqueVoiceIdentifiers(voices) {
     return voicesOutput;
 }
 
+function addUsername(username, type='blacklistusers') {
+  const input = document.querySelector(`[data-textsetting="${type}"]`);
+  if (!input) return;
+  
+  const usernames = input.value.split(',').map(u => u.trim()).filter(u => u);
+  let sourceType = document.getElementById(`new${type}Type`).value.toLowerCase().trim();
+  
+  if (sourceType == "youtubeshorts"){
+	sourceType = "youtube";
+  }
+  
+  const newEntry = sourceType ? `${username}:${sourceType}` : username;
+  
+  if (!usernames.some(entry => {
+    const [name] = entry.split(':');
+    return name === username;
+  })) {
+    usernames.push(newEntry);
+    input.value = usernames.join(', ');
+    updateUsernameList(type);
+    updateSettings(input);
+  }
+}
+
+function removeUsername(username, sourceType='', type='blacklistusers') {
+  const input = document.querySelector(`[data-textsetting="${type}"]`);
+  if (!input) return;
+  
+  const usernames = input.value.split(',').map(u => u.trim()).filter(u => u);
+  const index = usernames.findIndex(entry => {
+    const [name, type] = entry.split(':');
+    return name === username && (!sourceType || type === sourceType);
+  });
+  
+  if (index > -1) {
+    usernames.splice(index, 1);
+    input.value = usernames.join(', ');
+    updateUsernameList(type);
+    updateSettings(input);
+  }
+}
+
+function updateUsernameList(type='blacklistusers') {
+  const input = document.querySelector(`[data-textsetting="${type}"]`);
+  const list = document.getElementById(`${type}List`);
+  if (!input || !list) return;
+  
+  const usernames = input.value.split(',')
+    .map(u => u.trim())
+    .filter(u => u)
+    .map(entry => {
+      const [name, sourceType] = entry.split(':').map(part => part.trim());
+      return { name, sourceType };
+    });
+  
+  list.innerHTML = usernames.map(({ name, sourceType }) => `
+    <div class="username-tag">
+      <span>${name}${sourceType ? `<span class="source-type"><img class="icon" src="./sources/images/${sourceType}.png" /> ${sourceType} </span>` : ''}</span>
+      <button class="remove-username" data-username="${name}" data-source-type="${sourceType || ''}">×</button>
+    </div>
+  `).join('');
+}
+
 document.addEventListener("DOMContentLoaded", async function(event) {
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
@@ -404,27 +467,68 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	});
 	
 	try {
-		document.getElementById('usernameList').addEventListener('click', (e) => {
-			if (e.target.classList.contains('remove-username')) {
-				removeUsername(e.target.dataset.username);
-			}
+		
+		const textInputs = document.querySelectorAll('.textInputContainer');
+		textInputs.forEach(container => {
+		  const input = container.querySelector('.textInput');
+		  if (!input) return;
+		  
+		  const id = input.id;
+		  if (['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'].includes(id)) {
+			input.classList.add('hidden');
+			
+			const listContainer = document.createElement('div');
+			listContainer.className = 'username-list-container';
+			listContainer.id = `${id}List`;
+			
+			const addContainer = document.createElement('div');
+			addContainer.className = 'add-username-container';
+			addContainer.innerHTML = `
+			  <input type="text" id="new${id}" placeholder="Add username">
+			  <input type="text" id="new${id}Type" placeholder="Source type (optional)">
+			  <button id="add${id}">Add</button>
+			`;
+			
+			container.parentNode.classList.add("isolate");
+			container.parentNode.insertBefore(listContainer, container.nextSibling);
+			container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+		  }
 		});
+		
+		
+		const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
+		userTypes.forEach(type => {
+		  try {
+			  
+			document.getElementById(`${type}List`).addEventListener('click', (e) => {
+			  if (e.target.classList.contains('remove-username')) {
+				removeUsername(
+				  e.target.dataset.username,
+				  e.target.dataset.sourceType,
+				  type
+				);
+			  }
+			});
 
-		document.getElementById('addUsername').addEventListener('click', () => {
-			const newUsernameInput = document.getElementById('newUsername');
-			const newUsername = newUsernameInput.value.trim();
-			if (newUsername) {
-				addUsername(newUsername);
-				newUsernameInput.value = '';
-			}
+			document.getElementById(`add${type}`).addEventListener('click', () => {
+			  const input = document.getElementById(`new${type}`);
+			  const username = input.value.trim();
+			  if (username) {
+				addUsername(username, type);
+				input.value = '';
+				document.getElementById(`new${type}Type`).value = '';
+			  }
+			});
+		  } catch(e) {
+			console.error(e);
+		  }
 		});
+		
 	} catch(e){
 		console.error(e);
 	}
 	
-	
 	populateFontDropdown();
-	
 	PollManager.init();
 	
 	// populate language drop down
@@ -1156,16 +1260,7 @@ function update(response, sync=true){
 									
 									updateSettings(ele, sync);
 									
-									if (key == "blacklistusers"){
-										log(ele.value);
-										usernames = ele.value.split(',').map(u => u.trim()).filter(u => u);
-										updateUsernameList();
-									}
-									if (key == "mynameext"){
-										key = "botnamesext";
-										usernames = ele.value.split(',').map(u => u.trim()).filter(u => u);
-										updateUsernameList();
-									}
+									updateUsernameList(key); // may or may not trigger based on if it can find things
 								}
 								
 							}
@@ -2416,42 +2511,6 @@ try {
 	);
 } catch(e){
 	log(e);
-}
-
-
-function updateUsernameList(save=false) {
-	const usernameList = document.getElementById('usernameList');
-	usernameList.innerHTML = '';
-	usernames.forEach(username => {
-		const item = document.createElement('div');
-		item.className = 'username-item';
-		item.innerHTML = `
-			<span class="remove-username" data-username="${username}" title="Remove user from block-list">×</span>
-			<span>${username}</span>
-		`;
-		usernameList.appendChild(item);
-	});
-	var ele = document.querySelector("input[data-textsetting='blacklistusers'],textarea[data-textsetting='blacklistusers']");
-	if (ele){
-		ele.value = usernames.join(',');
-		log(ele.value);
-		
-		if (save){
-			updateSettings(ele);
-		}
-	}
-}
-
-function addUsername(username) {
-	if (username && !usernames.includes(username)) {
-		usernames.push(username);
-		updateUsernameList(true);
-	}
-}
-
-function removeUsername(username) {
-	usernames = usernames.filter(u => u !== username);
-	updateUsernameList(true);
 }
 
 function createCommandEntry(command = '', url = '') {

@@ -97,8 +97,6 @@
 .username-list-container {
 	max-height: 80px;
 	overflow-y: auto;
-	border: 1px solid #ccc;
-	border-radius: 4px;
 	padding: 5px;
 	font-family: Arial, sans-serif;
 	font-size: 12px;
@@ -121,6 +119,8 @@
 .add-username-container {
 	display: flex;
 	margin-top: 5px;
+	justify-content: center;
+    align-items: center;
 }
 #newUsername {
 	flex-grow: 1;
@@ -128,6 +128,34 @@
 }
 #addUsername {
 	cursor: pointer;
+}
+.isolate {
+    border-top: solid 1px #AAA;
+    border-bottom: solid 1px #AAA;
+    margin: 7px auto;
+    padding: 5px 0;
+}
+.username-tag {
+	background-color: #443;
+    border-radius: 4px;
+    padding: 0 7px;
+}
+.source-type {
+  font-size: 0.8em;
+  color: #666;
+  margin-left: 5px;
+  padding: 0 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+}
+.add-username-container input {
+  width: 150px;
+}
+.add-username-container input[id$="Type"] {
+  width: 132px;
+}
+.add-username-container > button {
+	word-break: normal;
 }
 
 .hidelinks a[href^="http"] {
@@ -339,7 +367,9 @@ body.extension-enabled {
     border-radius: 10px;
     margin-top: 10px;
 }
-
+.username-list-container:empty {
+	display:none;
+}
 #timedMessages {
     overflow-y: auto;
     max-height: 156px;
@@ -1379,13 +1409,7 @@ input:checked + .slider:before {
 										</label>
 										<span data-translate="do-not-say-says-or-someone-says-with-tts">🗣️ Do not say "says" or "someone says" with TTS </span>
 									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="readevents" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="read-tts-stream-events">🗣️ Include any stream events when using TTS </span>
-									</div>
+									
 									<div>
 										<label class="switch">
 											<input type="checkbox" data-param1="simpletts2" />
@@ -1412,6 +1436,7 @@ input:checked + .slider:before {
 												title="You need to include the ! if you want it" style="width:36px" /> will be read out 
 										</span>
 									</div>
+									
 									<div title="Only 'member' marked users will have messages read out when using the TTS chat command.">
 										<label class="switch">
 											<input type="checkbox" data-param1="ttscommandmembersonly" />
@@ -1419,19 +1444,41 @@ input:checked + .slider:before {
 										</label>
 										<span data-translate="membersttscommand">🤴 Only members can use the TTS command</span>
 									</div>
+									<h4>Read out only specific user/messages</h4>
 									<div title="Only 'bot' marked users will have messages read out.">
 										<label class="switch">
 											<input type="checkbox" data-param1="bottts" />
 											<span class="slider round"></span>
 										</label>
-										<span data-translate="bottts">🤖 Only bot marked users can have messages read out</span>
+										<span data-translate="bottts">🤖 Only bot marked users can have messages read</span>
 									</div>
-									<div title="Allow 'bot' marked users to have messages read out; default is to filter them out">
+									<div title="Only 'bot' marked users will have messages read out.">
 										<label class="switch">
-											<input type="checkbox" data-param1="allowbottss" />
+											<input type="checkbox" data-param1="modtts" />
 											<span class="slider round"></span>
 										</label>
-										<span data-translate="allowbottss">🤖✅ Allow bot messages to be read out</span>
+										<span data-translate="modtts">👩‍🏫 Only specific mods can have messages read</span>
+									</div>
+									<div title="Only 'bot' marked users will have messages read out.">
+										<label class="switch">
+											<input type="checkbox" data-param1="viptts" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="viptts">⭐ Only VIP marked users can have messages read </span>
+									</div>
+									<div title="Only 'bot' marked users will have messages read out.">
+										<label class="switch">
+											<input type="checkbox" data-param1="admintts" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="admintts">👑 Only privilleged users can have messages read</span>
+									</div>
+									<div title="Only 'bot' marked users will have messages read out.">
+										<label class="switch">
+											<input type="checkbox" data-param1="hosttts" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="bottts">🕺 Only hosts can have messages read</span>
 									</div>
 									<div>
 										<label class="switch">
@@ -1440,6 +1487,32 @@ input:checked + .slider:before {
 										</label>
 										<span data-translate="filter-text-to-speech-for-donations-only">🗣️💰 Only donations can have messages read out</span>
 									</div>
+									<h4>Bots, hosts and events are excluded from TTS</h4>
+									<div title="Allow 'bot' marked users to have messages read out; default is to filter them out">
+										<label class="switch">
+											<input type="checkbox" data-param1="allowbottss" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="allowbottss">🤖✅ Allow bot messages to be read out</span>
+									</div>
+									<div title="Allow 'bot' marked users to have messages read out; default is to filter them out">
+										<label class="switch">
+											<input type="checkbox" data-param1="allowhosttss" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="allowhosttss">🕺✅ Allow host messages to be read out</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param1="readevents" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="read-tts-stream-events">🗣️ Include any stream events when using TTS </span>
+									</div>
+									
+									
+
+									<h4>More TTS options</h4>
 									<div>
 										<label class="switch">
 											<input type="checkbox" data-param1="skipmessages=3" />
@@ -2418,6 +2491,20 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="do-not-beep-host">🙍🔇 Do not trigger the beep for host messages</span>
+                                </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="showvipbadge" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="give-vip-users-badges">⭐ Give VIP marked users a special badge</span>
+                                </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="autofeaturevip" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="auto-feature-vip-users">⭐ Auto-feature messages from VIP users </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -3904,14 +3991,6 @@ input:checked + .slider:before {
                                     </label>
                                     <img class="icon" src="./sources/images/twitter.png" style="display: inline-block;" /> <span data-translate="twitter-brand-instead-of-x">Use Twitter branding instead of X</span>
                                 </div>
-								 <div title="Extract Blusky usernames">
-                                    <label class="switch">
-                                        <input type="checkbox" data-setting="storeBSky" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <img class="icon" src="./sources/images/x.png" style="display: inline-block;" />🟦 <span data-translate="storeBSky">BSky auto linking</span>
-                                </div>
-								
                                 <div title="Experimental demo options for Stage TEN">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="fancystageten" />
@@ -4511,6 +4590,10 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="strip-html-from-messages-and-donations">📤 Strip HTML/images from messages and donations </span>
                                 </div>
+								
+								<h3><span data-translate="white-black-list">Blocked / Allowed Users:</span></h3>
+								<p>Source type can be something like 'twitch', 'kick', or 'youtube'</p> 
+								
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-setting="whitelistuserstoggle" />
@@ -4518,30 +4601,21 @@ input:checked + .slider:before {
                                     </label>
                                     <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; only values that match a username will be allowed.">
                                         <input type="text" id="whitelistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="whitelistusers" />
-                                        <label for="whitelistusers"><span data-translate="only-allow-specified-users">&gt; Show only specified users</span></label>
+										🤍 <span data-translate="only-allow-specified-users">Show only the specified users (whitelist)</span>
                                     </div>
                                 </div>
+								
+								
 								<div>
-									<label class="switch">
-										<input type="checkbox" data-setting="blacklistuserstoggle" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="hide-and-block-specified-users">🔮 Hide and block the following specified users:</span>
-									<div class="textInputContainer hidden" style="display: inline-block; width: 250px;" title="Provide comma separated values; values that match a username will be rejected.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="blacklistuserstoggle" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; only values that match a username will be allowed.">
                                         <input type="text" id="blacklistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="blacklistusers" />
+										🔮 <span data-translate="">Blocked users (blacklisted)</span>
                                     </div>
-								</div>
-								<div>
-									<div class="username-list-container" id="usernameList"></div>
-									<div class="add-username-container">
-										<input type="text" id="newUsername" placeholder="Add username to block list">
-										<button id="addUsername">Add</button>
-										
-									</div>
-									
-									
-								</div>
-                                
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4631,47 +4705,72 @@ input:checked + .slider:before {
 						<div class="options">
 							<div class="options_group streaming_chat">
 							
-								<div
-									class="textInputContainer"
-									style="width: 95%;"
-									title="Note:
-			Bot name(s) to help identify them.
-			The list of names should be comma separated.."
-								>
-									<input type="text" id="botnamesext" data-was="mynameext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="mynameext" />
-									<label for="botnamesext">
-										<span data-translate="hostbot-names">&gt; Identify by name who are bots</span>
-									</label>
+								<h3><span data-translate="special-user-types">Assign roles/classes to certain users</span></h3>
+								<p>Source type can be something like 'twitch', 'kick', or 'youtube'</p> 
+								<div>
+									<div
+										class="textInputContainer"
+										style="width: 95%;"
+										title="Note:
+				Bot name(s) to help identify them.
+				The list of names should be comma separated.."
+									>
+										
+										<input type="text" id="botnamesext" data-was="mynameext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="mynameext" />
+										🤖 <span data-translate="hostbot-names">Identify by name who are <b>bots</b></span>
+									</div>
 								</div>
-								
-								<div
-									class="textInputContainer"
-									style="width: 95%;"
-									title="Note:
-			Mod name(s) to help identify them.
-			The list of names should be comma separated.
-			This is like the previous list of names, except with its own flag/options"
-								>
-									<input type="text" id="modnamesext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="modnamesext" />
-									<label for="modnamesext">
-										<span data-translate="modnamesext">&gt; Identify by name who are mods</span>
-									</label>
+								<div>
+									<div
+										class="textInputContainer"
+										style="width: 95%;"
+										title="Note:
+				Mod name(s) to help identify them.
+				The list of names should be comma separated.
+				This is like the previous list of names, except with its own flag/options"
+									>
+										<input type="text" id="modnamesext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="modnamesext" />
+										👩‍🏫 <span data-translate="modnamesext">Identify by name who are <b>mods</b></span>
+									</div>
 								</div>
-								
-								<div
-									class="textInputContainer"
-									style="width: 95%;"
-									title="Note:
-			Host name(s) to help identify them.
-			The list of names should be comma separated.
-			This is like the previous list of names, except with its own flag/options"
-								>
-									<input type="text" id="hostnamesext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="hostnamesext" />
-									<label for="hostnamesext">
-										<span data-translate="hostnamesext">&gt; Identify the hosts' name</span>
-									</label>
+								<div>
+									<div
+										class="textInputContainer"
+										style="width: 95%;"
+										title="Note:
+				VIP name(s) to help identify them.
+				The list of names should be comma separated.
+				This is like the previous list of names, except with its own flag/options"
+									>
+										<input type="text" id="viplistusers" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="viplistusers" />
+										⭐ <span data-translate="viplistusers">Identify by name who are <b>VIPs</b></span>
+									</div>
 								</div>
-								
+								<div>
+									<div
+										class="textInputContainer"
+										style="width: 95%;"
+										title="Note:
+				Specify privileged/admin name(s) to help identify them in chat.
+				The list of names should be comma separated."
+									>
+										<input type="text" id="adminnames" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="adminnames" />
+										👑 <span data-translate="admin-names"><b>Privileged</b> (admin) users</span>
+									</div>
+								</div>
+								<div>
+									<div
+										class="textInputContainer"
+										style="width: 95%;"
+										title="Note:
+				Host name(s) to help identify them.
+				The list of names should be comma separated.
+				This is like the previous list of names, except with its own flag/options"
+									>
+										<input type="text" id="hostnamesext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="hostnamesext" />
+										🕺 <span data-translate="hostnamesext">Identify the <b>hosts'</b> name</span>
+									</div>
+								</div>
 								<br />
 								<div>
 									<label class="switch">
@@ -4701,20 +4800,7 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="do-not-show-mod-messages">🤖🚫 Filter out messages for listed mods</span>
 								</div>
-								<h3><span data-translate="Privileged-users-h3">Privileged users</span></h3>
-
-								<div
-									class="textInputContainer"
-									style="width: 95%;"
-									title="Note:
-			Specify privileged/admin name(s) to help identify them in chat.
-			The list of names should be comma separated."
-								>
-									<input type="text" id="adminnames" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="adminnames" />
-									<label for="adminnames">
-										<span data-translate="admin-names">&gt; Privileged users</span>
-									</label>
-								</div>
+								
 							</div>
 						</div>
 					</div>
