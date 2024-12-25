@@ -962,6 +962,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	} 
 });
 var streamID = false;
+var lastResponse = false;
+
 function update(response, sync=true){
 	log("update-> response: ",response);
 	if (response !== undefined){
@@ -970,7 +972,10 @@ function update(response, sync=true){
 			updateDocumentList(response.documents);
 		}
 		
-		if (response.streamID){
+		if (response.streamID){ 
+		
+			lastResponse = response;
+			
 			streamID = true;
 			var password = "";
 			if ('password' in response && response.password){
@@ -1592,7 +1597,7 @@ function compareVersions(a, b) { // https://stackoverflow.com/a/6832706
     // Otherwise they are the same.
     return 0;
 }
-			
+var Beta = false
 function checkVersion(){
 	
 	const WEBSTORE_ID = "cppibjhfemifednoimlblfcmjgfhfjeg"; // our webstore ID
@@ -1610,7 +1615,18 @@ function checkVersion(){
 				if (manifestData && (compareVersions(manifestData.version, data.version)==-1)){
 					document.getElementById("newVersion").classList.add('show')
 					document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' class='downloadLink' title="Download the latest version as a zip" href='https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip'>new version available 💾</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span><a title="See the list of recent code changes" href="https://github.com/steveseguin/social_stream/commits/main" target='_blank' style='text-decoration: underline;'>[change log]</a>`;
-					
+				} else if (manifestData && (compareVersions(manifestData.version, data.version)==1)){ // beta
+					document.getElementById("newVersion").classList.add('show')
+					document.getElementById("newVersion").innerHTML = `You're using the BETA version. Thank you!<small><br><br>ℹ️ Note: The below links also point to their respective beta version</small>`;
+					Beta = true;
+					if (Beta){
+						if (baseURL == "https://socialstream.ninja/"){
+							baseURL = "https://beta.socialstream.ninja/"
+							if (lastResponse){
+								update(lastResponse, false);
+							}
+						}
+					}
 				} else {
 					document.getElementById("newVersion").classList.remove('show')
 					document.getElementById("newVersion").innerHTML = "";
@@ -1650,6 +1666,11 @@ if (devmode) {
     }
 } else if (location.protocol !== "chrome-extension:") {
     baseURL = `${location.protocol}//${location.host}/`;
+	if (Beta){
+		if (baseURL == "https://socialstream.ninja/"){
+			baseURL = "https://beta.socialstream.ninja/"
+		}
+	}
 }
 
 if (ssapp){
