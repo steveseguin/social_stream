@@ -6634,7 +6634,9 @@ async function applyBotActions(data, tab = false, reflection = false) {
 		}
 
 		if (settings.mynameext){
-			settings.botnamesext = settings.mynameext;
+			if (!settings.botnamesext){
+				settings.botnamesext = settings.mynameext;
+			}
 			delete settings.mynameext;
 		}
 		if (!data.bot && settings.botnamesext?.textsetting && (data.chatname || data.userid)) {

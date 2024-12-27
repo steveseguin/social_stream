@@ -599,12 +599,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					var matches = 0;
 					menuItems.forEach(function(item) {
 						var text = item.textContent.toLowerCase();
+						
 						if (item.querySelector("[title]")){
 							text += " " + item.querySelector("[title]").title.toLowerCase();
 						}
-						if (item.querySelector("[title]")){
-							text += " " + item.querySelector("[title]").title.toLowerCase();
-						}
+						
 						if (item.querySelector("input")){
 							[...item.querySelector("input").attributes].forEach(att=>{
 								if (att.name.startsWith("data-")){
@@ -1247,8 +1246,10 @@ function update(response, sync=true){
 								if (key == "mynameext"){
 									if (!response.settings["botnamesext"]){
 										response.settings["botnamesext"] = response.settings["mynameext"];
+										key == "botnamesext";
+									} else {
+										continue;
 									}
-									key == "botnamesext";
 								}
 								
 								var ele = document.querySelector("input[data-textsetting='"+key+"'],textarea[data-textsetting='"+key+"']");
