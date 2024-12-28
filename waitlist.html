@@ -154,6 +154,10 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.4);
         }
+		
+		#waitlist:empty{
+			display:none;
+		}
     </style>
 </head>
 <body class="electronDraggable scrolllll" id="output">
@@ -352,6 +356,73 @@
 
 	if (urlParams.has("opacity")) {
 		getById("output").style.opacity = urlParams.get("opacity") || 0.3
+	}
+	
+	
+
+	var translation = {};
+
+	// add translations of your own below or here: https://github.com/steveseguin/social_stream/blob/beta/translations/test.json
+	// To use, eg: &lang=test
+	var miscTranslations = {
+		"winner-selected": "Winner selected",
+		"winners-selected": "Winners selected",
+		"entry-in-the-draw!": " entry in the draw!",
+		"entries-in-the-draw!": " entries in the draw!",
+		"no-entries-remain": "No entries remain",
+		"entry-remain": " entry remain",
+		"entries-remain": " entries remain",
+		"no-entries-in-draw-yet": "No entries yet in the draw!"
+	};
+	
+	
+	async function fetchWithTimeout(URL, timeout = 8000) {
+		// ref: https://dmitripavlutin.com/timeout-fetch-request/
+		try {
+			const controller = new AbortController();
+			const timeout_id = setTimeout(() => controller.abort(), timeout);
+			const response = await fetch(URL, { ...{ timeout: timeout }, signal: controller.signal });
+			clearTimeout(timeout_id);
+			return response;
+		} catch (e) {
+			return await fetch(URL);
+		}
+	}
+	async function changeLg(lang) {
+		console.log("changeLg: " + lang);
+		if (!lang) {
+			translate = false;
+			return;
+		}
+		return await fetchWithTimeout("./translations/" + lang + ".json", 2000)
+			.then(async function (response) {
+				try {
+					if (response.status !== 200) {
+						return;
+					}
+					await response
+						.json()
+						.then(function (data) {
+							if (data.miscellaneous) {
+								Object.keys(data.miscellaneous).forEach(key => {
+									miscTranslations[key] = data.miscellaneous[key];
+								});
+							}
+							data.miscellaneous = miscTranslations;
+							translation = data;
+							console.log(miscTranslations);
+						})
+						.catch(function (e) {
+						});
+				} catch (e) {
+				}
+			})
+			.catch(function (err) {
+			});
+	}
+	
+	if (urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln")) {
+		changeLg(urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln"));
 	}
 	
 	var conCon = 1;
@@ -564,7 +635,7 @@
 
 	function processInput(data){
 	
-		// console.log(data);
+		console.log(data);
 		
 		if ("waitlistmessage" in data){
 		
@@ -599,10 +670,10 @@
 				
 				if (data.winlist.length>1){
 					createConfetti(confettiFall);
-					document.getElementById("waitlisttitle").innerHTML = "Winners selected";
+					document.getElementById("waitlisttitle").innerHTML = miscTranslations["winners-selected"];
 				} else {
 					createConfetti(confettiFall);
-					document.getElementById("waitlisttitle").innerHTML = "Winner selected";
+					document.getElementById("waitlisttitle").innerHTML = miscTranslations["winner-selected"]
 				}
 				
 				winnerSelected = true;
@@ -610,11 +681,11 @@
 					let entries = parseInt(data.drawPoolSize) || 0;
 					
 					if (!entries){
-						document.getElementById("waitlistsupertitle").innerHTML = "No entries remain";
+						document.getElementById("waitlistsupertitle").innerHTML = miscTranslations["no-entries-remain"];
 					} else if (entries==1){
-						document.getElementById("waitlistsupertitle").innerHTML = entries + " entry remain";
+						document.getElementById("waitlistsupertitle").innerHTML = entries + miscTranslations["entry-remain"];
 					} else {
-						document.getElementById("waitlistsupertitle").innerHTML = entries + " entries remain";
+						document.getElementById("waitlistsupertitle").innerHTML = entries + miscTranslations["entries-remain"];
 					}
 				}
 				
@@ -626,11 +697,11 @@
 					document.getElementById("waitlistsupertitle").innerHTML =  "";
 					let entries = parseInt(data.drawPoolSize) || 0;
 					if (!entries){
-						document.getElementById("waitlist").innerHTML = "No entries yet in the draw!";
+						document.getElementById("waitlist").innerHTML = miscTranslations["no-entries-in-draw-yet"];
 					} else if (entries==1){
-						document.getElementById("waitlist").innerHTML = entries + " entry in the draw!";
+						document.getElementById("waitlist").innerHTML = entries + miscTranslations["entry-in-the-draw!"];
 					} else {
-						document.getElementById("waitlist").innerHTML = entries + " entries in the draw!";
+						document.getElementById("waitlist").innerHTML = entries + miscTranslations["entries-in-the-draw!"];
 					}
 				}
 			}
@@ -642,21 +713,21 @@
 				let entries = parseInt(data.drawPoolSize) || 0;
 				document.getElementById("waitlistsupertitle").innerHTML =  "";
 				if (!entries){
-					document.getElementById("waitlist").innerHTML = "No entries yet in the draw!";
+					document.getElementById("waitlist").innerHTML = miscTranslations["no-entries-in-draw-yet"];
 				} else if (entries==1){
-					document.getElementById("waitlist").innerHTML = entries + " entry in the draw!";
+					document.getElementById("waitlist").innerHTML = entries + miscTranslations["entry-in-the-draw!"];
 				} else {
-					document.getElementById("waitlist").innerHTML = entries + " entries in the draw!";
+					document.getElementById("waitlist").innerHTML = entries + miscTranslations["entries-in-the-draw!"];
 				}
 			} else {
 				let entries = parseInt(data.drawPoolSize) || 0;
 					
 				if (!entries){
-					document.getElementById("waitlistsupertitle").innerHTML = "No entries remain";
+					document.getElementById("waitlistsupertitle").innerHTML = miscTranslations["no-entries-remain"];
 				} else if (entries==1){
-					document.getElementById("waitlistsupertitle").innerHTML = entries + " entry remain";
+					document.getElementById("waitlistsupertitle").innerHTML = entries + miscTranslations["entry-remain"];
 				} else {
-					document.getElementById("waitlistsupertitle").innerHTML = entries + " entries remain";
+					document.getElementById("waitlistsupertitle").innerHTML = entries + miscTranslations["entries-remain"];
 				}
 			}
 		
@@ -725,18 +796,18 @@
 				if (drawmode && winnerStatus && data.waitlistmessage){
 					if (winnerStatus>1){
 						createConfetti(confettiFall);
-						document.getElementById("waitlisttitle").innerHTML = "Winners selected";
+						document.getElementById("waitlisttitle").innerHTML = miscTranslations["winners-selected"];
 					} else {
 						createConfetti(confettiFall);
-						document.getElementById("waitlisttitle").innerHTML = "Winner selected";
+						document.getElementById("waitlisttitle").innerHTML = miscTranslations["winner-selected"];
 					}
 					
 				} else if (drawmode){
 					document.getElementById("waitlistsupertitle").innerHTML =  "";
 					if (entries==1){
-						document.getElementById("waitlist").innerHTML = entries + " entry in the draw!";
+						document.getElementById("waitlist").innerHTML = entries + miscTranslations["entry-in-the-draw!"];
 					} else {
-						document.getElementById("waitlist").innerHTML = entries + " entries in the draw!";
+						document.getElementById("waitlist").innerHTML = entries + miscTranslations["entries-in-the-draw!"];
 					}
 					
 				} else if (winnerStatus && data.waitlistmessage){

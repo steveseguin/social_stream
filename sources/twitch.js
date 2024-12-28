@@ -51,30 +51,7 @@
 	var channelName = "";
 	var brandedImageURL = "";
 	var xx = window.location.pathname.split("/");
-	var index = xx.indexOf("chat");
-	if (index > -1) {
-		xx.splice(index, 1); // 2nd parameter means remove one item only
-	}
-	index = xx.indexOf("u");
-	if (index > -1) {
-		xx.splice(index, 1); // 2nd parameter means remove one item only
-	}
-	index = xx.indexOf("moderator");
-	if (index > -1) {
-		xx.splice(index, 1); // 2nd parameter means remove one item only
-	}
-	index = xx.indexOf("dashboard");
-	if (index > -1) {
-		xx.splice(index, 1); // 2nd parameter means remove one item only
-	}
-	index = xx.indexOf("");
-	if (index > -1) {
-		xx.splice(index, 1); // 2nd parameter means remove one item only
-	}
-	index = xx.indexOf("popout");
-	if (index > -1) {
-		xx.splice(index, 1); // 2nd parameter means remove one item only
-	}
+	xx = xx.filter(segment => !['chat', 'u', 'moderator', 'dashboard', '', 'popout'].includes(segment));
 	if (xx[0]) {
 		channelName = xx[0];
 		getTwitchAvatarImage(xx[0]);
@@ -118,31 +95,44 @@
 		return clonedSvg;
 	}
 	
+	const SELECTORS = {
+		displayName: ".chat-author__display-name, .chatter-name, .seventv-chat-user-username",
+		messageBody: ".seventv-chat-message-body, .seventv-message-context, [data-test-selector='chat-line-message-body'], [data-a-target='chat-line-message-body']",
+		chatBadges: "img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge, .user-pronoun",
+		messageContainer: ".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper"
+	};
+	
+	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
+	
 	function replaceEmotesWithImages(text) {
 		if (!EMOTELIST) {
 			return text;
 		}
 		
-		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+		return text.replace(emoteRegex, (match, emoteMatch) => {
 			const emote = EMOTELIST[emoteMatch];
-			if (emote) {
-				const escapedMatch = escapeHtml(emoteMatch);
-				const isZeroWidth = typeof emote !== "string" && emote.zw;
-				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
-			}
-			return match;
+			if (!emote) return match;
+			
+			const escapedMatch = escapeHtml(emoteMatch);
+			const isZeroWidth = typeof emote !== "string" && emote.zw;
+			return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
 		});
 	}
 	
 
-	function getAllContentNodes(element) {
+	function getAllContentNodes(element,type="message") {
 		let result = '';
 		let pendingRegularEmote = null;
 		let pendingSpace = "";
 
-		function processNode(node) {
-			if (node.nodeType === 3 && node.textContent.length > 0) { // text node
-				// Text node
+		function processNode(node, checkIgnore=true) {
+			if (!node) return;
+    
+			if (checkIgnore && node.dataset?.ignore) return;
+			
+			if (node.nodeType === 3) { // Text node
+				if (node.textContent.length === 0) return;
+				
 				if (settings.textonlymode){
 					result += node.textContent;
 					return;
@@ -160,7 +150,8 @@
 					pendingSpace = escapeHtml(node.textContent);
 					return;
 				}
-				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent)); 
+				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent));
+				
 				const tempDiv = document.createElement('div');
 				try {
 					tempDiv.innerHTML = processedText;
@@ -185,6 +176,12 @@
 					}
 				});
 			} else if (node.nodeType === 1) {
+				
+				if (type == "event" && (node.classList.contains("seventv-message") || node.classList.contains("chat-line__message") || node.classList.contains("paid-pinned-chat-message-content-wrapper"))){
+					return;
+				}
+				node.dataset.ignore = type;
+				
 				// Element node
 				if (node.nodeName === "IMG") {
 					processEmote(node);
@@ -282,7 +279,7 @@
 			}
 		}
 
-		processNode(element);
+		processNode(element, false);
 
 		if (pendingRegularEmote) {
 			result += pendingRegularEmote;
@@ -303,12 +300,10 @@
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 
+
 	async function processMessage(ele, event=false) {
-		// twitch
 		
-		//console.log(ele);
-		
-		if (!ele){return;}
+		ele.dataset.ignore = true;
 		
 		if (settings.delaytwitch){
 		  await sleep(3000);
@@ -319,7 +314,8 @@
 		  }
 	    }
 	  
-	    if (!ele.isConnected){return;}
+	    if (!ele.isConnected){
+			return;}
 		
 		if (ele.classList.contains("chat-line__unpublished-message-body") || ele.querySelector(".chat-line__unpublished-message-body")){
 			return;
@@ -354,7 +350,7 @@
 		var subscriber = "";
 		var subtitle = "";
 		try {
-			ele.querySelectorAll("img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge, .user-pronoun").forEach(badge => {
+			ele.querySelectorAll(SELECTORS.chatBadges).forEach(badge => {
 				if (badge.alt && badge.alt.includes("Subscriber")){
 					subscriber = "Subscriber";
 					subtitle = badge.alt.replace(/\s*\([^)]*\)/g, '');
@@ -415,7 +411,7 @@
 			if (event){
 				var eleContent = ele.childNodes[0];
 			} else {
-				var eleContent = ele.querySelector(".seventv-chat-message-body") || ele.querySelector(".seventv-message-context") || ele.querySelector('*[data-test-selector="chat-line-message-body"]') || ele.querySelector('*[data-a-target="chat-line-message-body"]');
+				var eleContent = ele.querySelector(SELECTORS.messageBody);
 			}
 
 			chatmessage = getAllContentNodes(eleContent);
@@ -471,7 +467,6 @@
 		if (chatmessage) {
 			chatmessage = chatmessage.trim();
 		}
-
 		if (lastMessage === chatmessage && lastUser === username && (!lastEle || !lastEle.isConnected)) {
 			lastMessage = "";
 			username = "";
@@ -561,12 +556,10 @@
 						replyMessage = replyMessage.split(":")[0].trim();
 					}
 				} catch (e) {
-					//console.log(e);
 					try {
 						var replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
 						replyMessage = replyMessage.split(":")[0].trim();
 					} catch (ee) {
-						//console.log(ee);
 					}
 				}
 
@@ -615,6 +608,15 @@
 				}
 			}
 		} catch (e) {}
+		
+		
+		if (ele.querySelector(".message-event-pill")){
+			if (!settings.textonlymode){
+				chatmessage = "<i class='event-pill'>"+getAllContentNodes(ele.querySelector(".message-event-pill")) + "</i> " + chatmessage;
+			} else {
+				chatmessage = getAllContentNodes(ele.querySelector(".message-event-pill")) + "  " + chatmessage;
+			}
+		}
 
 		var data = {};
 		data.chatname = displayName;
@@ -635,7 +637,6 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
 
-		// console.log(data);
 
 		if (brandedImageURL) {
 			data.sourceImg = brandedImageURL;
@@ -672,7 +673,6 @@
 	if (chrome && chrome.runtime) {
 		chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			try {
-				//console.log("REQUEST", request);
 				if ("focusChat" == request) {
 					if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
 						return;
@@ -837,11 +837,13 @@
 
 	function processEvent(ele) {
 		
+		ele.dataset.ignore = true;
+		
 		var data = {};
 		data.chatname = "";
 		data.chatbadges = "";
 		data.nameColor = "";
-		data.chatmessage = getAllContentNodes(ele);
+		data.chatmessage = getAllContentNodes(ele,"event");
 		data.chatimg = "";
 		data.hasDonation = "";
 		data.membership = "";
@@ -877,13 +879,13 @@
 
 	function deleteThis(ele) {
 		try {
-			ele.ignore = true;
+			ele.dataset.ignore = true;
 			if (ele.deleted) {
 				return;
 			}
 			ele.deleted = true;
 			
-			var chatname = ele.querySelector(".chat-author__display-name, .chatter-name, .seventv-chat-user-username");
+			var chatname = ele.querySelector(SELECTORS.displayName);
 			if (chatname) {
 				var data = {};
 				data.chatname = escapeHtml(chatname.innerText);
@@ -901,9 +903,9 @@
 				}
 				return;
 			}
-			chatname = ele.parentNode.querySelector(".chat-author__display-name, .chatter-name, .seventv-chat-user-username");
+			chatname = ele.parentNode.querySelector(SELECTORS.displayName);
 			if (chatname) {
-				ele.parentNode.ignore = true;
+				ele.parentNode.dataset.ignore = true;
 				if (ele.parentNode.deleted) {
 					return;
 				}
@@ -926,77 +928,102 @@
 			}
 		} catch (e) {}
 	}
+	
+		
+	
+	//<div class="Layout-sc-1xcs6mc-0"><div data-test-selector="user-notice-line" class="InjectLayout-sc-1i43xsx-0 iwRBzz user-notice-line"><div class="Layout-sc-1xcs6mc-0 jjAyLi"><div class="ScFigure-sc-wkgzod-0 caxXaW tw-svg"><svg width="20" height="20" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11 4.5 9 2 4.8 6.9A7.48 7.48 0 0 0 3 11.77C3 15.2 5.8 18 9.23 18h1.65A6.12 6.12 0 0 0 17 11.88c0-1.86-.65-3.66-1.84-5.1L12 3l-1 1.5ZM6.32 8.2 9 5l2 2.5L12 6l1.62 2.07A5.96 5.96 0 0 1 15 11.88c0 2.08-1.55 3.8-3.56 4.08.36-.47.56-1.05.56-1.66 0-.52-.18-1.02-.5-1.43L10 11l-1.5 1.87c-.32.4-.5.91-.5 1.43 0 .6.2 1.18.54 1.64A4.23 4.23 0 0 1 5 11.77c0-1.31.47-2.58 1.32-3.57Z" clip-rule="evenodd"></path></svg></div><div class="Layout-sc-1xcs6mc-0 grvhen"><div class="Layout-sc-1xcs6mc-0 jjAyLi"><span class="chatter-name chatter-name--no-outline" role="button" tabindex="0"><span class="CoreText-sc-1txzju1-0 ffeswd"><span class="CoreText-sc-1txzju1-0 blwagE">EVARATE</span></span></span><div class="Layout-sc-1xcs6mc-0 dAPRYJ"><p class="CoreText-sc-1txzju1-0">+</p><div class="Layout-sc-1xcs6mc-0 gfgICc channel-points-icon channel-points-icon--small"><img class="channel-points-icon__image tw-image" alt="Lunas" srcset="https://static-cdn.jtvnw.net/channel-points-icons/541084545/d7f411ea-e742-471c-8262-932cd3213413/icon-1.png 1x,https://static-cdn.jtvnw.net/channel-points-icons/541084545/d7f411ea-e742-471c-8262-932cd3213413/icon-2.png 2x,https://static-cdn.jtvnw.net/channel-points-icons/541084545/d7f411ea-e742-471c-8262-932cd3213413/icon-4.png 4x" src="https://static-cdn.jtvnw.net/channel-points-icons/541084545/d7f411ea-e742-471c-8262-932cd3213413/icon-1.png"></div><p class="CoreText-sc-1txzju1-0">350</p></div></div><div class="Layout-sc-1xcs6mc-0"><p class="CoreText-sc-1txzju1-0"><span class="CoreText-sc-1txzju1-0 jkurzn">Watch Streak reached!:</span> EVARATE is currently on a 3-stream streak!</p></div></div></div><div class="Layout-sc-1xcs6mc-0 fAVISI"><div class="chat-line--inline chat-line__message" data-a-target="chat-line-message" data-a-user="evarate" tabindex="0" align-items="center"><div class="Layout-sc-1xcs6mc-0 cwtKyw"><div class="Layout-sc-1xcs6mc-0 cwtKyw chat-line__message-container"><div class="Layout-sc-1xcs6mc-0"></div><div class="Layout-sc-1xcs6mc-0"><div class="Layout-sc-1xcs6mc-0 cVmNmw chat-line__no-background"><div class="Layout-sc-1xcs6mc-0 jCLQvB"><span class="chat-line__timestamp" data-a-target="chat-timestamp" data-test-selector="chat-timestamp">1:36</span><div class="Layout-sc-1xcs6mc-0 plvaC chat-line__username-container chat-line__username-container--hoverable"><span><div class="InjectLayout-sc-1i43xsx-0 jbmPmA"><button data-a-target="chat-badge"><img alt="GLHF Pledge" aria-label="GLHF Pledge badge" class="chat-badge" src="https://static-cdn.jtvnw.net/badges/v1/3158e758-3cb4-43c5-94b3-7639810451c5/1" srcset="https://static-cdn.jtvnw.net/badges/v1/3158e758-3cb4-43c5-94b3-7639810451c5/1 1x, https://static-cdn.jtvnw.net/badges/v1/3158e758-3cb4-43c5-94b3-7639810451c5/2 2x, https://static-cdn.jtvnw.net/badges/v1/3158e758-3cb4-43c5-94b3-7639810451c5/3 4x"></button></div></span><span class="chat-line__username" role="button" tabindex="0"><span><span class="chat-author__display-name" data-a-target="chat-message-username" data-a-user="evarate" data-test-selector="message-username" style="color: rgb(97, 173, 254);">EVARATE</span></span></span></div><span aria-hidden="true">: </span><span class="" data-a-target="chat-line-message-body"><span class="text-fragment" data-a-target="chat-message-text">test test test</span></span></div></div></div></div><div class="Layout-sc-1xcs6mc-0 bbwsyT chat-line__icons"></div></div></div></div></div></div>
 
-	function onElementInsertedTwitch(target, callback) {
-		var onMutationsObserved = function (mutations) {
+	function checkMessage(ele){
+		if (ele.classList.contains("seventv-message") || ele.classList.contains("chat-line__message") || ele.classList.contains("paid-pinned-chat-message-content-wrapper")){
+			checkList.push([processMessage,(ele)]);
+		} else {
+			let nextElement = ele.querySelector(SELECTORS.messageContainer);
+			if (nextElement){
+				if (nextElement.dataset.ignore) {
+					return;
+				}
+				checkList.push([processMessage,(nextElement)]); // good
+			}
+		}
+	}
+					
+	function onElementInsertedTwitch(target) {
+		var onMutationsObserved = function(mutations) {
 			if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
 				return;
 			}
-			mutations.forEach(function (mutation) {
-				if (mutation.target === target) {
-					return;
-				} else if (mutation.type === "attributes") {
-					if (mutation.attributeName == "class" && mutation.target.classList.contains("deleted")) {
+			
+			const len = mutations.length;
+			for (let i = 0; i < len; i++) {
+				const mutation = mutations[i];
+				
+				if (mutation.target === target) continue;
+				
+				if (mutation.type === "attributes") {
+					if (mutation.attributeName === "class" && mutation.target.classList.contains("deleted")) {
 						deleteThis(mutation.target);
-					} else if (mutation.attributeName == "data-a-target" && mutation && mutation.target && mutation.target.data && mutation.target.data.aTarget && mutation.target.data.aTarget == "chat-deleted-message-placeholder") {
+					} else if (mutation.attributeName === "data-a-target" && 
+							  mutation.target.data?.aTarget === "chat-deleted-message-placeholder") {
 						deleteThis(mutation.target);
 					}
-				} else if (mutation.type === "childList" && mutation.addedNodes.length) {
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						if (!mutation.addedNodes[i]){continue;}
-						if (mutation.addedNodes[i].nodeType === 3){continue;}
-						try {
-							if ((mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.aTarget == "chat-deleted-message-placeholder") || mutation.addedNodes[i].querySelector('[data-a-target="chat-deleted-message-placeholder"]')){
-								deleteThis(mutation.addedNodes[i]);
-								continue;
-							}
-
-							if (mutation.addedNodes[i].ignore) {
-								continue;
-							}
-							mutation.addedNodes[i].ignore = true;
-							
-							
-							if (settings.captureevents){
-								if (mutation.addedNodes[i].dataset.testSelector == "user-notice-line") {
-									processEvent(mutation.addedNodes[i]);
-									continue;
-								} else if (mutation.addedNodes[i].classList.contains("user-notice-line")) {
-									processEvent(mutation.addedNodes[i]);
-									continue;
-								}
-							}
-							
-							if (mutation.addedNodes[i].classList.contains("seventv-message") || mutation.addedNodes[i].classList.contains("chat-line__message") || mutation.addedNodes[i].classList.contains("paid-pinned-chat-message-content-wrapper")){
-								callback(mutation.addedNodes[i]);
-								continue;
-							}
-							
-							let nextElement = mutation.addedNodes[i].querySelector('.user-notice-line, [data-test-selector="user-notice-line"]');
-							if (nextElement){
-								if (!nextElement.ignore){
-									nextElement.ignore = true;
-									processEvent(nextElement);
-								}
-								continue;
-							}
-							
-							nextElement = mutation.addedNodes[i].querySelector(".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper");
-							if (nextElement){
-								if (!nextElement.ignore){
-									nextElement.ignore = true;
-									callback(nextElement);
-								}
-								continue
-							}
-							
-						} catch (e) {
-							
+					continue;
+				}
+				
+				if (mutation.type !== "childList" || !mutation.addedNodes.length) continue;
+				
+				const nodes = mutation.addedNodes;
+				const nodesLen = nodes.length;
+				
+				for (let j = 0; j < nodesLen; j++) {
+					const node = nodes[j];
+					if (!node || !node.dataset || node.nodeType === 3) continue;
+					
+					try {
+						if ((node.dataset?.aTarget === "chat-deleted-message-placeholder") || 
+							node.querySelector('[data-a-target="chat-deleted-message-placeholder"]')) {
+							deleteThis(node);
+							continue;
 						}
+
+						if (settings.captureevents) {
+							nextElement = node.querySelector('.user-notice-line, [data-test-selector="user-notice-line"]');
+							if (nextElement){
+								if (nextElement.dataset.ignore) {
+									continue;
+								}
+								checkMessage(node);
+								checkList.push([processEvent,(nextElement)]);
+								
+							} else if ((node.dataset.testSelector == "user-notice-line") || node.classList.contains("user-notice-line")) {
+								checkMessage(node);
+								checkList.push([processEvent,(node)]);
+								
+							} else if ((node.parentNode.dataset.testSelector == "user-notice-line") || node.parentNode.classList.contains("user-notice-line")) {
+								if (node.parentNode.dataset.ignore){
+									continue;
+								}
+								checkMessage(node.parentNode); 
+								checkList.push([processEvent,(node.parentNode)]);
+								
+							} else if ((node.parentNode.parentNode.dataset.testSelector == "user-notice-line") || node.parentNode.parentNode.classList.contains("user-notice-line")) {
+								if (node.parentNode.parentNode.dataset.ignore){
+									continue;
+								}
+								checkMessage(node.parentNode.parentNode);
+								checkList.push([processEvent,(node.parentNode.parentNode)]);
+							} else {
+								checkMessage(node);
+							}
+						} else {
+							checkMessage(node);
+						}
+					} catch (e) {
+						console.error(e);
 					}
 				}
-			});
-		};
+				checkNextList();
+			};
+		}
 
 		if (document.querySelector("seventv-container")) {
 			var config = {
@@ -1024,6 +1051,39 @@
 
 	var counter = 0;
 	var checkElement = ".chat-list--other, .chat-list--default, .chat-room__content";
+	
+	var checkList = [];
+	var checkListTimer = null;
+	var processingCheckList = false;
+
+	function checkNextList() {
+		if (processingCheckList) return;
+		
+		clearTimeout(checkListTimer);
+		checkListTimer = setTimeout(() => {
+			processingCheckList = true;
+			
+			try {
+				// Process one item at a time to maintain original behavior
+				while (checkList.length) {
+					const func = checkList[0];
+					if (func[1] && !func[1].dataset.ignore && func[1].isConnected) {
+						func[0](func[1]);
+						break; // Process one item then wait
+					}
+					checkList.shift();
+				}
+			} catch(e) {
+				console.error(e);
+			}
+			
+			processingCheckList = false;
+			
+			if (checkList.length) {
+				checkNextList(); // Schedule next batch after 20ms
+			}
+		}, 20);
+	}
 
 	var checkReady = setInterval(function () {
 		counter += 1;
@@ -1039,20 +1099,10 @@
 			setTimeout(function () {
 				var clear = document.querySelectorAll("seventv-container, .seventv-message, .chat-line__message, .paid-pinned-chat-message-content-wrapper");
 				for (var i = 0; i < clear.length; i++) {
-					clear[i].ignore = true; // don't let already loaded messages to re-load.
+					clear[i].dataset.ignore = true; // don't let already loaded messages to re-load.
 				}
 				console.log("Social Stream ready to go");
-				onElementInsertedTwitch(document.querySelector(checkElement), function (element) {
-					setTimeout(
-						function (element) {
-							if (element && element.isConnected) {
-								processMessage(element);
-							}
-						},
-						20,
-						element
-					); // 20ms to give it time to load the message, rather than just the container
-				});
+				onElementInsertedTwitch(document.querySelector(checkElement));
 
 				if (document.querySelector('[data-a-target="consent-banner-accept"]')) {
 					document.querySelector('[data-a-target="consent-banner-accept"]').click();
@@ -1157,25 +1207,44 @@
 		element.dispatchEvent(focusEvent);
 	}
 
-/* 
-	try{
-		const defineGetter = (obj, prop, getter) => {
-			try {
-				Object.defineProperty(obj, prop, {
-					get: getter,
-					configurable: false,
-					enumerable: true
-				});
-			} catch (e) {
-				console.debug(`Failed to define getter ${prop}`, e);
-			}
-		};
-		
-		defineGetter(window, "onvisibilitychange", () => null);
-		defineGetter(Document.prototype, 'activeElement', () => document.body);
-		
-	} catch(e){
-		console.error(e);
-	} */
 	
+	function preventBackgroundThrottling() {
+		window.onblur = null;
+		window.blurred = false;
+		document.hidden = false;
+		document.mozHidden = false;
+		document.webkitHidden = false;
+		
+		document.hasFocus = () => true;
+		window.onFocus = () => true;
+
+		Object.defineProperties(document, {
+			mozHidden: { value: false, configurable: true },
+			msHidden: { value: false, configurable: true },
+			webkitHidden: { value: false, configurable: true },
+			hidden: { value: false, configurable: true, writable: true },
+			visibilityState: { 
+				get: () => "visible",
+				configurable: true
+			}
+		});
+	}
+
+	const events = [
+		"visibilitychange",
+		"webkitvisibilitychange",
+		"blur",
+		"mozvisibilitychange",
+		"msvisibilitychange"
+	];
+
+	events.forEach(event => {
+		window.addEventListener(event, (e) => {
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}, true);
+	});
+
+	setInterval(preventBackgroundThrottling, 200);
+
 })();

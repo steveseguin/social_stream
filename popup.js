@@ -2,7 +2,7 @@
 
 var isExtensionOn = false;
 var ssapp = false;
-var usernames = [];
+var USERNAMES = [];
 
 function log(msg,a,b){
 	console.log(msg,a,b);
@@ -372,6 +372,69 @@ function createUniqueVoiceIdentifiers(voices) {
     return voicesOutput;
 }
 
+function addUsername(username, type='blacklistusers') {
+  const input = document.querySelector(`[data-textsetting="${type}"]`);
+  if (!input) return;
+  
+  const usernames = input.value.split(',').map(u => u.trim()).filter(u => u);
+  let sourceType = document.getElementById(`new${type}Type`).value.toLowerCase().trim();
+  
+  if (sourceType == "youtubeshorts"){
+	sourceType = "youtube";
+  }
+  
+  const newEntry = sourceType ? `${username}:${sourceType}` : username;
+  
+  if (!usernames.some(entry => {
+    const [name] = entry.split(':');
+    return name === username;
+  })) {
+    usernames.push(newEntry);
+    input.value = usernames.join(', ');
+    updateUsernameList(type);
+    updateSettings(input);
+  }
+}
+
+function removeUsername(username, sourceType='', type='blacklistusers') {
+  const input = document.querySelector(`[data-textsetting="${type}"]`);
+  if (!input) return;
+  
+  const usernames = input.value.split(',').map(u => u.trim()).filter(u => u);
+  const index = usernames.findIndex(entry => {
+    const [name, type] = entry.split(':');
+    return name === username && (!sourceType || type === sourceType);
+  });
+  
+  if (index > -1) {
+    usernames.splice(index, 1);
+    input.value = usernames.join(', ');
+    updateUsernameList(type);
+    updateSettings(input);
+  }
+}
+
+function updateUsernameList(type='blacklistusers') {
+  const input = document.querySelector(`[data-textsetting="${type}"]`);
+  const list = document.getElementById(`${type}List`);
+  if (!input || !list) return;
+  
+  const usernames = input.value.split(',')
+    .map(u => u.trim())
+    .filter(u => u)
+    .map(entry => {
+      const [name, sourceType] = entry.split(':').map(part => part.trim());
+      return { name, sourceType };
+    });
+  
+  list.innerHTML = usernames.map(({ name, sourceType }) => `
+    <div class="username-tag">
+      <span>${name}${sourceType ? `<span class="source-type"><img class="icon" src="./sources/images/${sourceType}.png" /> ${sourceType} </span>` : ''}</span>
+      <button class="remove-username" data-username="${name}" data-source-type="${sourceType || ''}">×</button>
+    </div>
+  `).join('');
+}
+
 document.addEventListener("DOMContentLoaded", async function(event) {
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
@@ -404,27 +467,68 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	});
 	
 	try {
-		document.getElementById('usernameList').addEventListener('click', (e) => {
-			if (e.target.classList.contains('remove-username')) {
-				removeUsername(e.target.dataset.username);
-			}
+		
+		const textInputs = document.querySelectorAll('.textInputContainer');
+		textInputs.forEach(container => {
+		  const input = container.querySelector('.textInput');
+		  if (!input) return;
+		  
+		  const id = input.id;
+		  if (['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'].includes(id)) {
+			input.classList.add('hidden');
+			
+			const listContainer = document.createElement('div');
+			listContainer.className = 'username-list-container';
+			listContainer.id = `${id}List`;
+			
+			const addContainer = document.createElement('div');
+			addContainer.className = 'add-username-container';
+			addContainer.innerHTML = `
+			  <input type="text" id="new${id}" placeholder="Add username">
+			  <input type="text" id="new${id}Type" placeholder="Source type (optional)">
+			  <button id="add${id}">Add</button>
+			`;
+			
+			container.parentNode.classList.add("isolate");
+			container.parentNode.insertBefore(listContainer, container.nextSibling);
+			container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+		  }
 		});
+		
+		
+		const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
+		userTypes.forEach(type => {
+		  try {
+			  
+			document.getElementById(`${type}List`).addEventListener('click', (e) => {
+			  if (e.target.classList.contains('remove-username')) {
+				removeUsername(
+				  e.target.dataset.username,
+				  e.target.dataset.sourceType,
+				  type
+				);
+			  }
+			});
 
-		document.getElementById('addUsername').addEventListener('click', () => {
-			const newUsernameInput = document.getElementById('newUsername');
-			const newUsername = newUsernameInput.value.trim();
-			if (newUsername) {
-				addUsername(newUsername);
-				newUsernameInput.value = '';
-			}
+			document.getElementById(`add${type}`).addEventListener('click', () => {
+			  const input = document.getElementById(`new${type}`);
+			  const username = input.value.trim();
+			  if (username) {
+				addUsername(username, type);
+				input.value = '';
+				document.getElementById(`new${type}Type`).value = '';
+			  }
+			});
+		  } catch(e) {
+			console.error(e);
+		  }
 		});
+		
 	} catch(e){
 		console.error(e);
 	}
 	
-	
 	populateFontDropdown();
-	
 	PollManager.init();
 	
 	// populate language drop down
@@ -495,12 +599,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					var matches = 0;
 					menuItems.forEach(function(item) {
 						var text = item.textContent.toLowerCase();
+						
 						if (item.querySelector("[title]")){
 							text += " " + item.querySelector("[title]").title.toLowerCase();
 						}
-						if (item.querySelector("[title]")){
-							text += " " + item.querySelector("[title]").title.toLowerCase();
-						}
+						
 						if (item.querySelector("input")){
 							[...item.querySelector("input").attributes].forEach(att=>{
 								if (att.name.startsWith("data-")){
@@ -858,6 +961,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	} 
 });
 var streamID = false;
+var lastResponse = false;
+
 function update(response, sync=true){
 	log("update-> response: ",response);
 	if (response !== undefined){
@@ -866,16 +971,14 @@ function update(response, sync=true){
 			updateDocumentList(response.documents);
 		}
 		
-		if (response.streamID){
+		if (response.streamID){ 
+		
+			lastResponse = response;
+			
 			streamID = true;
 			var password = "";
 			if ('password' in response && response.password){
 				password = "&password="+response.password;
-			}
-			
-			var baseURL = "https://socialstream.ninja/";
-			if (devmode){
-				baseURL = "file:///C:/Users/steve/Code/social_stream/";
 			}
 			
 			let hideLinks = false;
@@ -927,9 +1030,9 @@ function update(response, sync=true){
 			document.getElementById("custom-gif-commands").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='custom-gif-commands-link' href='"+baseURL+"gif.html?session="+response.streamID+password+"'>"+baseURL+"gif.html?session="+response.streamID+password+"</a>";
 			document.getElementById("custom-gif-commands").raw = baseURL+"gif.html?session="+response.streamID+password;
 			
-			document.getElementById("remote_control_url").href = "https://socialstream.ninja/sampleapi.html?session="+response.streamID+password;
+			document.getElementById("remote_control_url").href = baseURL+"sampleapi.html?session="+response.streamID+password;
 			
-			document.getElementById("botlink").href = "https://socialstream.ninja/bot.html?session="+response.streamID+password;
+			document.getElementById("botlink").href = baseURL+"bot.html?session="+response.streamID+password;
 			
 		
 			hideLinks = false;
@@ -1139,6 +1242,16 @@ function update(response, sync=true){
 								
 							}
 							if ("textsetting" in response.settings[key]){
+								
+								if (key == "mynameext"){
+									if (!response.settings["botnamesext"]){
+										response.settings["botnamesext"] = response.settings["mynameext"];
+										key == "botnamesext";
+									} else {
+										continue;
+									}
+								}
+								
 								var ele = document.querySelector("input[data-textsetting='"+key+"'],textarea[data-textsetting='"+key+"']");
 								if (ele){
 									ele.value = response.settings[key].textsetting;
@@ -1153,11 +1266,7 @@ function update(response, sync=true){
 									
 									updateSettings(ele, sync);
 									
-									if (key == "blacklistusers"){
-										log(ele.value);
-										usernames = ele.value.split(',').map(u => u.trim()).filter(u => u);
-										updateUsernameList();
-									}
+									updateUsernameList(key); // may or may not trigger based on if it can find things
 								}
 								
 							}
@@ -1489,7 +1598,7 @@ function compareVersions(a, b) { // https://stackoverflow.com/a/6832706
     // Otherwise they are the same.
     return 0;
 }
-			
+var Beta = false
 function checkVersion(){
 	
 	const WEBSTORE_ID = "cppibjhfemifednoimlblfcmjgfhfjeg"; // our webstore ID
@@ -1507,7 +1616,18 @@ function checkVersion(){
 				if (manifestData && (compareVersions(manifestData.version, data.version)==-1)){
 					document.getElementById("newVersion").classList.add('show')
 					document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' class='downloadLink' title="Download the latest version as a zip" href='https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip'>new version available 💾</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span><a title="See the list of recent code changes" href="https://github.com/steveseguin/social_stream/commits/main" target='_blank' style='text-decoration: underline;'>[change log]</a>`;
-					
+				} else if (manifestData && (compareVersions(manifestData.version, data.version)==1)){ // beta
+					document.getElementById("newVersion").classList.add('show')
+					document.getElementById("newVersion").innerHTML = `You're using a BETA version. Thank you!<small><br><br>ℹ️ Note: The below overlay links point to their newest beta versions</small>`;
+					Beta = true;
+					if (Beta){
+						if (baseURL == "https://socialstream.ninja/"){
+							baseURL = "https://beta.socialstream.ninja/"
+							if (lastResponse){
+								update(lastResponse, false);
+							}
+						}
+					}
 				} else {
 					document.getElementById("newVersion").classList.remove('show')
 					document.getElementById("newVersion").innerHTML = "";
@@ -1533,10 +1653,26 @@ function checkVersion(){
 	};
 
 })(window);
-var urlParams = new URLSearchParams(window.location.search);
 
+var urlParams = new URLSearchParams(window.location.search);
 const devmode = urlParams.has("devmode");
 ssapp = urlParams.has("ssapp") || ssapp;
+
+var baseURL = "https://socialstream.ninja/";
+if (devmode) {
+    if (location.protocol === "file:") {
+        baseURL = location.href.substring(0, location.href.lastIndexOf('/') + 1);
+    } else {
+        baseURL = "file:///C:/Users/steve/Code/social_stream/";
+    }
+} else if (location.protocol !== "chrome-extension:") {
+    baseURL = `${location.protocol}//${location.host}/`;
+	if (Beta){
+		if (baseURL == "https://socialstream.ninja/"){
+			baseURL = "https://beta.socialstream.ninja/"
+		}
+	}
+}
 
 if (ssapp){
 	const style = document.createElement('style');
@@ -1622,7 +1758,6 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
 				document.getElementById("dock").raw = updateURL(ele.dataset.param1+"="+value, document.getElementById("dock").raw);
 			} else if (document.querySelector("[data-optionparam1='"+ele.dataset.param1+"']")){ 
-				console.log(".......");
 				value = document.querySelector("[data-optionparam1='"+ele.dataset.param1+"']").value;
 				
 				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
@@ -2398,42 +2533,6 @@ try {
 	);
 } catch(e){
 	log(e);
-}
-
-
-function updateUsernameList(save=false) {
-	const usernameList = document.getElementById('usernameList');
-	usernameList.innerHTML = '';
-	usernames.forEach(username => {
-		const item = document.createElement('div');
-		item.className = 'username-item';
-		item.innerHTML = `
-			<span class="remove-username" data-username="${username}" title="Remove user from block-list">×</span>
-			<span>${username}</span>
-		`;
-		usernameList.appendChild(item);
-	});
-	var ele = document.querySelector("input[data-textsetting='blacklistusers'],textarea[data-textsetting='blacklistusers']");
-	if (ele){
-		ele.value = usernames.join(',');
-		log(ele.value);
-		
-		if (save){
-			updateSettings(ele);
-		}
-	}
-}
-
-function addUsername(username) {
-	if (username && !usernames.includes(username)) {
-		usernames.push(username);
-		updateUsernameList(true);
-	}
-}
-
-function removeUsername(username) {
-	usernames = usernames.filter(u => u !== username);
-	updateUsernameList(true);
 }
 
 function createCommandEntry(command = '', url = '') {

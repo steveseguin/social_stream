@@ -224,9 +224,14 @@
 				xxx[j].marked = true;
 				if (!newChannel){
 					var posibleName = chatname;
-					if (settings.mynameext && settings.mynameext.textparam1){
-						posibleName = settings.mynameext.textparam1.split(",")[0];
-					}
+					try {
+						if (settings.mynameext && settings.mynameext.textparam1){
+							posibleName = settings.mynameext.textparam1.split(",")[0];
+						}
+						if (settings && settings.hostnamesext && settings.hostnamesext.textsetting){
+							chatname = settings.hostnamesext.textsetting.split(",")[0].trim();
+						}
+					} catch(e){}
 					processMessage(xxx[j],chatimg, posibleName);
 					await sleep(10);
 				} 

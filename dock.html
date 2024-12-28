@@ -352,8 +352,19 @@
 				transform: var(--scale-output);
 				transform-origin: 0 0;
 				width: 100%;
-				margin-bottom: calc(46px / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
+				margin-bottom: calc((46px  + var(--locked-chatbar)) / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
 			}
+			
+			@media only screen and (min-width: 700.001px) { 
+				#output  {
+					margin-bottom: calc(46px / var(--scale-output));
+				}
+			}
+			
+			.event-pill {
+				padding-right: 5px;
+			}
+			
 			.hl-profile-pic {
 				border: var(--profile-pic-border);
 				min-width: 24px;
@@ -840,6 +851,10 @@
 			.horizontal .highlight-chat.compactmode {
 				padding-top: 3px;
 				background-color: #0000;
+			}
+			
+			.horizontal:not(.alignbottom) .highlight-chat.compactmode {
+				vertical-align: top;
 			}
 
 			.horizontal .compactmode.time-arrived {
@@ -1827,9 +1842,9 @@
 			}
 
 			.fadeout {
-				animation: fadeout 1s;
-				webkit-transition: opacity 0.5s ease-in-out;
-				transition: opacity 0.5 ease-in-out;
+				animation: fadeout 2s;
+				webkit-transition: opacity 1.5s ease-in-out;
+				transition: opacity 1.5 ease-in-out;
 				opacity: 0;
 			}
 
@@ -1837,7 +1852,7 @@
 				0% {
 					opacity: 1;
 				}
-				50% {
+				75% {
 					opacity: 0;
 				}
 				100% {
@@ -1951,7 +1966,7 @@
 				z-index: 10 !important;
 				padding: 12px 0 !important;
 				width: 240px !important;
-				background-color: #fff !important;
+				background-color: #f4f4f4 !important;
 				border: solid 1px #dfdfdf !important;
 				box-shadow: 1px 1px 2px #cfcfcf !important;
 			}
@@ -2130,26 +2145,44 @@
 		}
 		
 		.output-container {
-		  mask-image: linear-gradient(to top,
-			black 80%,
-			transparent 100%
-		  );
-		  -webkit-mask-image: linear-gradient(to top,
-			black 80%,
-			transparent 100%
-		  );
-		  display: block;
-		  width: 100vw;
-		  height: calc(100vh - calc(46px / var(--scale-output)));
-		  overflow-x: hidden;
-		  overflow-y: scroll !important;
-		  margin-bottom: 0;
-		}
-		.output-container #output {
-			overflow: hidden;
-			height: 100%;
+			mask-image: linear-gradient(to top,
+				black 80%,
+				transparent 100%
+			);
+			-webkit-mask-image: linear-gradient(to top,
+				black 80%,
+				transparent 100%
+			);
+			display: block;
+			width: 100vw;
+			height: 100vh;
+			overflow-x: hidden;
+			overflow-y: hidden !important;
 			margin-bottom: 0;
 		}
+		.electronDraggable .output-container {
+			height: calc(100vh); 
+			scrollbar-width: none; /* Firefox */
+			-ms-overflow-style: none; /* IE and Edge */
+		}
+		.electronDraggable .output-container::-webkit-scrollbar  {
+			display: none; /* Chrome, Safari, Opera */
+		}
+		.OBS .output-container {
+			overflow: hidden;
+		}
+		
+		.output-container #output:not(.alignbottom) {
+			height: 100%; /* This might not be wortwhile */
+		}
+		.OBS .output-container #output {
+			  scrollbar-width: none; /* Firefox */
+			  -ms-overflow-style: none; /* IE and Edge */
+		}
+		.OBS .output-container #output::-webkit-scrollbar {
+			 display: none; /* Chrome, Safari, Opera */
+		}
+
 		</style>
 	</head>
 	<body id="main" class="vanilla notcompactmode">
@@ -2208,49 +2241,55 @@
 			<ul class="context-menu__items">
 				<li class="context-menu__item" data-action="Delete">
 					<a href="#" class="context-menu__link" data-action="Delete">
-						<i class="las la-external-link"></i>
+						🗑️
 						<span>Delete Message</span>
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="Block" title="All messages from user will be deleted; user will also get added to the hide-user list">
 					<a href="#" class="context-menu__link" data-action="Block">
-						<i class="las la-external-link"></i>
-						<span>Block User</span>
+						🚫
+						<span>Block User</span> 
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="History" title="Previous 10 messages from the user will be displayed">
 					<a href="#" class="context-menu__link" data-action="History">
-						<i class="las la-external-link"></i>
+						📖
 						<span>See User History</span>
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="Queue">
 					<a href="#" class="context-menu__link" data-action="Queue">
-						<i class="las la-paperclip"></i>
+						🔢
 						<span>Toggle Queue</span>
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="Pin">
 					<a href="#" class="context-menu__link" data-action="Pin">
-						<i class="las la-pen"></i>
+						📌
 						<span>Toggle Pin</span>
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="TTS">
 					<a href="#" class="context-menu__link" data-action="TTS">
-						<i class="las la-pen"></i>
+						🗣️
 						<span>Text to Speech</span>
+					</a>
+				</li>
+				<li class="context-menu__item" data-action="VIP">
+					<a href="#" class="context-menu__link" data-action="VIP">
+						⭐
+						<span>VIP User</span>
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="Copy">
 					<a href="#" class="context-menu__link" data-action="Copy">
-						<i class="las la-copy"></i>
+						📋
 						<span>Copy Text</span>
 					</a>
 				</li>
 				<li class="context-menu__item" data-action="Reply" title="Reply to this user; message goes to their tab only">
 					<a href="#" class="context-menu__link" data-action="Reply">
-						<i class="las la-external-link"></i>
+						💬
 						<span>Reply to User</span>
 					</a>
 				</li>
@@ -2550,6 +2589,12 @@
 				filterNamesNotMessages = true;
 				getById("filterAddNameAndTimeButton").title = "🆔 Match only on name, source and time when filtering. Not message content.";
 			}
+			
+			var deleteOnlyLast = false;
+			if (urlParams.has("deleteonlylast")) {
+				deleteOnlyLast = true;
+			}
+			
 
 			var thisLabel = false;
 			if (urlParams.has("label")) {
@@ -2814,6 +2859,11 @@
 				autofeaturepriv = true;
 			}
 			
+			var autofeaturevip = false;
+			if (urlParams.has("autofeaturevip")) {
+				autofeaturevip = true;
+			}
+			
 			var trimChat = false;
 			if (urlParams.has("trim")) {
 				trimChat = urlParams.get("trim") || 200;
@@ -2825,8 +2875,16 @@
 				trimName = urlParams.get("trimname") || 8;
 			}
 			
-
 			var alignbottom = false;
+			var fadetop = false;
+			if (urlParams.has("fadedtop")) {
+				fadetop = true;
+				let oc = document.createElement("div");
+				oc.className = "output-container";
+				let oo = document.getElementById("output");
+				oo.after(oc);
+				oc.appendChild(oo);
+			} 
 			if (urlParams.has("alignbottom")) {
 				getById("output").classList.add("alignbottom");
 				alignbottom = true;
@@ -3133,6 +3191,16 @@
 				nobeepbot = true;
 			}
 			
+			var nobeephost = false;
+			if (urlParams.has("nobeephost")) {
+				nobeephost = true;
+			}
+			
+			var nobeepmod = false;
+			if (urlParams.has("nobeepmod")) {
+				nobeepmod = true;
+			}
+			
 			var stylizeEmoji = false;
 			if (urlParams.has("emoji") || urlParams.has("emojis")) {
 				stylizeEmoji = urlParams.get("emoji") || urlParams.get("emojis") || "140%";
@@ -3222,7 +3290,7 @@
 			}
 
 			var custombot = false;
-			if (urlParams.has("myname") || urlParams.has("botlist")) {
+			if (urlParams.has("myname") || urlParams.has("botnames") ||  urlParams.has("botlist")) {
 				custombot = urlParams.get("myname") || urlParams.get("botlist") || false;
 				if (custombot) {
 					custombot = decodeURIComponent(custombot);
@@ -3239,6 +3307,16 @@
 			var doNotShowBotNames = false;
 			if (urlParams.has("hidebotnames")) {
 				doNotShowBotNames = true;
+			}
+			
+			var doNotShowHost = false;
+			if (urlParams.has("hidehosts")) {
+				doNotShowHost = true;
+			}
+
+			var doNotShowHostNames = false;
+			if (urlParams.has("hidehostnames")) {
+				doNotShowHostNames = true;
 			}
 
 			var autoshow = false;
@@ -3272,6 +3350,11 @@
 			
 			if (urlParams.has("autoyoutubememberchat")) {
 				autoyoutubememberchat = true;
+			}
+			
+			var giveVIPBadge = false;
+			if (urlParams.has("showvipbadge")) {
+				giveVIPBadge = true;
 			}
 
 			var openChatAutomatically = false;
@@ -3611,9 +3694,49 @@
 				bottts = true;
 			}
 			
+			var modtts = false;
+			if (urlParams.has("modtts")) {
+				modtts = true;
+			}
+			
+			var hosttts = false;
+			if (urlParams.has("hosttts")) {
+				hosttts = true;
+			}
+			
+			var admintts = false;
+			if (urlParams.has("admintts")) {
+				admintts = true;
+			}
+			
+			var viptts = false;
+			if (urlParams.has("viptts")) {
+				viptts = true;
+			}
+			
 			var allowbottss = false;
 			if (urlParams.has("allowbottss")) {
 				allowbottss = true;
+			}
+			
+			var allowhosttss = false;
+			if (urlParams.has("allowhosttss")) {
+				allowhosttss = true;
+			}
+			
+			var allowmodtss = false;
+			if (urlParams.has("allowmodtss")) {
+				allowmodtss = true;
+			}
+			
+			var allowadmintss = false;
+			if (urlParams.has("allowadmintss")) {
+				allowadmintss = true;
+			}
+			
+			var allowviptss = false;
+			if (urlParams.has("allowviptss")) {
+				allowviptss = true;
 			}
 
 			var voiceName = false;
@@ -3652,6 +3775,42 @@
 			if (urlParams.has("ttscommandmembersonly")) {
 				ttscommandmembersonly = true;
 			}
+			
+			function replaceURLsWithSubstring(text, replacement = "[Link]") {
+				if (typeof text !== "string") return text;
+				
+				try {
+					const urlPattern = /(?:(?:https?:\/\/)?(?:www\.)?)?(?!-)[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?(?=\s|$)|(?:https?:\/\/)[^\s]+/g;
+					
+					return text.replace(urlPattern, (match) => {
+						// Skip emoticons and similar patterns
+						if (/^[a-zA-Z0-9](?:\.[a-zA-Z0-9]){1,2}$/.test(match) && 
+							match.length <= 5 && 
+							!match.includes('/')) {
+							return match;
+						}
+						
+						// Always replace if it has a protocol or www
+						if (match.startsWith('http') || match.startsWith('www.')) {
+							return replacement;
+						}
+						
+						// Check TLD for bare domains
+						const parts = match.split('.');
+						const potentialTLD = parts[parts.length - 1].split(/[/?#]/)[0];
+						
+						// Replace if it has a valid TLD or contains a path
+						if (match.includes('/') || isValidTLD(potentialTLD)) {
+							return replacement;
+						}
+						
+						return match;
+					});
+				} catch (e) {
+					console.error(e);
+					return text;
+				}
+			}
 
 			function speak(text, allow = false) {
 				if (!speech && !allow) {
@@ -3665,7 +3824,7 @@
 					return;
 				} // do not TTS commands.
 
-				if (replaceURLInLink) {
+				if (replaceURLInLink) { 
 					text = replaceURLsWithSubstring(text, "Link");
 					//text = text.replace(/https?:\/\/[^\s]+/g, 'Link');
 				}
@@ -4006,7 +4165,16 @@
 				}
 				
 				if (!data.bot && bottts){return;} // only allow bot messages
+				else if (!data.host && hosttts){return;} 
+				else if (!data.mod && modtts){return;}
+				else if (!data.vip && viptts){return;} 
+				else if (!data.admin && admintts){return;}
+				
 				else if (data.bot && !(allowbottss || bottts)){return;} // do not read out bot messages
+				else if (data.host && !(allowhosttss || hosttts)){return;} 
+				//else if (data.mod && !(allowmodtss || modtts)){return;} 
+				//else if (data.vip && !(allowviptss || viptts)){return;} 
+				//else if (data.admin && !(allowadmintss || admintts)){return;} 
 				
 				if (readDonos && !(data.hasDonation || data.donation)){return;}
 
@@ -4586,17 +4754,6 @@
 				hideNotQueued = true;
 				getById("show_only_queue").dataset.state = "1";
 				getById("show_only_queue").classList.add("pressed");
-			}
-			
-			var fadetop = false;
-			if (urlParams.has("fadedtop")) {
-				fadetop = true;
-				let oc = document.createElement("div");
-				oc.className = "output-container";
-				let oo = document.getElementById("output");
-				oo.after(oc);
-				oc.appendChild(oo);
-				
 			}
 			
 			var hideNotPinned = false;
@@ -5248,6 +5405,31 @@
 				return out;
 			}
 			
+			function deleteMessages(data, deleteOnlyLast=false) {
+				let selector = "";
+				if (data.delete.id) {
+					selector = `[data-mid='${data.delete.id}']`;
+				} else if (data.delete.chatname && data.delete.type) {
+					selector = `[data-chatname='${data.delete.chatname}'][data-source-type='${data.delete.type}']`;
+				} else if (data.delete.type) {
+					selector = `[data-source-type='${data.delete.type}']`;
+				} else if (data.delete.chatname) {
+					selector = `[data-chatname='${data.delete.chatname}']`;
+				}
+
+				if (deleteOnlyLast) {
+					const elements = Array.from(document.querySelectorAll(selector));
+					if (elements.length) {
+						const newest = elements.reduce((a, b) => 
+							Number(a.dataset.mid) > Number(b.dataset.mid) ? a : b
+						);
+						newest.remove();
+					}
+				} else {
+					document.querySelectorAll(selector).forEach(ele => ele.remove());
+				}
+			}
+			
 			function getUserHistory(element) {
 				var chatName = element.dataset.chatname;
 				var type = element.dataset.sourceType;
@@ -5493,7 +5675,7 @@
 						modal.style.display = "block";
 						modal.innerHTML =
 							'<div class="modal-content">\
-								<span class="close-btn">&times;</span>\
+								<span class="close-btn" id="tabslistclose">&times;</span>\
 								<h2 id="chatDestinationsFor">Checking what chat destinations are available...</h2>\
 								<div id="chatDestinationsList"></div>\
 							  </div>\
@@ -5501,7 +5683,7 @@
 						document.body.appendChild(modal);
 					}
 
-					const span = modal.getElementsByClassName("close-btn")[0];
+					const span = modal.getElementById("tabslistclose");
 					const chatDestinationsList = getById("chatDestinationsList");
 					const messagesFor = getById("chatDestinationsFor");
 					chatDestinationsList.innerHTML = "";
@@ -5590,13 +5772,16 @@
 						}
 					};
 				} else if (data.recentHistory) {
-					console.log(data);
+					//console.log(data);
 					setTimeout(()=>{
 						data.recentHistory.reverse().forEach(async msg=>{
-							console.log({contents:msg});
-							await processData({contents:msg}); 
+							//console.log({contents:msg});
+							if (!msg.id || !document.querySelector("[data-mid='"+msg.id+"']")){
+								await processData({contents:msg}); 
+							}
 						});
-						jumptoBottom();
+						console.log("Loaded from remote DB storage");
+						jumptoBottom2();
 					},1000);
 				} else if ("userHistory" in data) {
 					//delete messages, but also block user. remote, so we won't sync,
@@ -5611,7 +5796,7 @@
 						modal.classList.add("modal");
 						modal.innerHTML =
 							'<div class="modal-content">\
-					<span class="close-btn">&times;</span>\
+					<span class="close-btn" id="closeButtonMessage">&times;</span>\
 					<h2 id="messagesFor">Messages</h2>\
 					<div id="messagesList"></div>\
 				  </div>\
@@ -5619,7 +5804,7 @@
 						document.body.appendChild(modal);
 					}
 
-					const span = document.getElementsByClassName("close-btn")[0];
+					const span = document.getElementById("closeButtonMessage");
 					const messagesList = getById("messagesList");
 					const messagesFor = getById("messagesFor");
 					messagesList.innerHTML = "";
@@ -5666,6 +5851,17 @@
 							document.querySelectorAll("[data-chatname='" + data.blockUser.username + "'][data-source-type='" + data.blockUser.type + "']").forEach(ele => {
 								ele.remove();
 							});
+							
+							
+							if (data.blockUser.type=="youtube"){
+								if (!localBlockUserList[data.blockUser.username].includes("youtubeshorts")) {
+									localBlockUserList[data.blockUser.username].push("youtubeshorts");
+								}
+								document.querySelectorAll("[data-chatname='" + data.blockUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
+									ele.remove();
+								});
+							}
+							
 						} else if (data.blockUser.username) {
 							if (!localBlockUserList) {
 								localBlockUserList = {};
@@ -5688,26 +5884,32 @@
 						console.error(e);
 					}
 					return;
+				} else if ("vipUser" in data) {
+					try {
+						if (data.vipUser.username && data.vipUser.type) {
+							document.querySelectorAll("[data-chatname='" + data.vipUser.username + "'][data-source-type='" + data.vipUser.type + "']").forEach(ele => {
+								ele.classList.add("vip");
+							});
+							if (data.vipUser.type=="youtube"){
+								document.querySelectorAll("[data-chatname='" + data.vipUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
+									ele.classList.add("vip");
+								});
+							}
+						} else if (data.vipUser.username) {
+							document.querySelectorAll("[data-chatname='" + data.vipUser.username + "']").forEach(ele => {
+								ele.classList.add("vip");
+							});
+						}
+						
+						return true;
+					} catch (e) {
+						console.error(e);
+					}
+					return;	
 				} else if ("delete" in data) {
 					// we will trigger a deleteMessage I guess after, if sync mode is needed.
 					try {
-						if (data.delete.id) {
-							document.querySelectorAll("[data-mid='"+data.delete.id+"']").forEach(ele => {
-								ele.remove();
-							});
-						} else if (data.delete.chatname && data.delete.type) {
-							document.querySelectorAll("[data-chatname='" + data.delete.chatname + "'][data-source-type='" + data.delete.type + "']").forEach(ele => {
-								ele.remove();
-							});
-						} else if (data.delete.type) {
-							document.querySelectorAll("[data-source-type='" + data.delete.type + "']").forEach(ele => {
-								ele.remove();
-							});
-						} else if (data.delete.chatname) {
-							document.querySelectorAll("[data-chatname='" + data.delete.chatname + "']").forEach(ele => {
-								ele.remove();
-							});
-						}
+						deleteMessages(data, deleteOnlyLast);
 						return true;
 					} catch (e) {
 						console.error(e);
@@ -6552,86 +6754,82 @@
 				}
 			}
 
-			function replyToUser(element) {
-				
-				if (isOBSBrowserSource) {
-					return;
-				}
-				
-				var chatName = element.dataset.chatname;
-				var type = element.dataset.sourceType;
-				var tid = null;
-				if (element.rawContents && element.rawContents.tid){
-					tid = element.rawContents.tid;
-				}
-				
-				if (document.getElementById("getChatSourceButton")) {
-					clearTimeout(getById("getChatSourcesButton").setTimeout);
-				}
-				var modal = document.getElementById("getReplyModule");
-				if (!modal) {
-					modal = document.createElement("div");
-					modal.id = "getReplyModule";
-					modal.classList.add("modal");
-					modal.style.display = "block";
-					modal.innerHTML =
-						'<div class="modal-content">\
-							<span class="close-btn">&times;</span>\
-							<h2 id="c">What message do you want to send '+chatName+'?</h2>\
-							<input type="textarea" style="width: calc(100% - 200px);min-width:200px;" id="getReplyModuleInput">\
-							<button id="getReplyModuleButton">SEND</button><br><br>\
-							'+(tid?"":"<div>⚠️ This message will go to all destinations, since it didn't come from a specific tab</div>")+'\
-						  </div>\
-						';
-					if (tid==null){
-						modal.innerHTML += "<div>⚠️ This message will go to all destinations, since it didn't come from a specific tab</div>";
-					}
-						
-					document.body.appendChild(modal);
-				} else {
-					modal.classList.remove("hidden");
-				}
-
-				const span = document.getElementsByClassName("close-btn")[0];
-				const getReplyModuleInput = getById("getReplyModuleInput");
-				const getReplyModuleButton = getById("getReplyModuleButton");
-				
-				getReplyModuleInput.focus();
-				
-				
-				span.onclick = () => {
-					modal.classList.add("hidden");
-					modal.remove();
-					delete modal;
-				};
-				
-				
-				getReplyModuleButton.onclick = () => {
-				
-					var response = getReplyModuleInput.value;
-					if (!response){return;}
-					response = response.trim();
-					if (!response){return;}
-					try {
-						modal.classList.add("hidden");
-						modal.remove();
-						delete modal;
-					} catch(e){
-						console.error(e);
-					}
-					
-					if (!response.startsWith("@")){
-						response =  "@"+chatName+": "+response;
-					}
-					
-					let sendBlob = {};
-					sendBlob.response = response;
-					if (tid!==null){
-						sendBlob.tid = tid
-					}
-					send2Extension(sendBlob);
-				}
+		function replyToUser(element) {
+			if (isOBSBrowserSource) {
+				return;
 			}
+			
+			var chatName = element.dataset.chatname;
+			var type = element.dataset.sourceType;
+			var tid = element.rawContents ? element.rawContents.tid : null;
+			
+			if (document.getElementById("getChatSourceButton")) {
+				clearTimeout(getById("getChatSourcesButton").setTimeout);
+			}
+			
+			var modal = document.getElementById("getReplyModule");
+			if (!modal) {
+				modal = document.createElement("div");
+				modal.id = "getReplyModule";
+				modal.classList.add("modal");
+				modal.style.display = "block";
+				modal.innerHTML = `
+					<div class="modal-content">
+						<span class="close-btn" id="closereply">&times;</span>
+						<h2 id="c">What message do you want to send ${chatName}?</h2>
+						<input type="textarea" style="width: calc(100% - 200px);min-width:200px;" id="getReplyModuleInput">
+						<button id="getReplyModuleButton">SEND</button><br><br>
+						${!tid ? "<div>⚠️ This message will go to all destinations, since it didn't come from a specific tab</div>" : ""}
+					</div>`;
+					
+				document.body.appendChild(modal);
+			} else {
+				modal.classList.remove("hidden");
+			}
+			
+			const closeModal = () => {
+				modal.classList.add("hidden");
+				modal.remove();
+			};
+			
+			const handleSend = () => {
+				const getReplyModuleInput = getById("getReplyModuleInput");
+				let response = getReplyModuleInput.value ? getReplyModuleInput.value.trim() : null;
+				if (!response) return;
+				
+				closeModal();
+				
+				if (!response.startsWith("@")) {
+					response = `@${chatName}: ${response}`;
+				}
+				
+				let sendBlob = { response };
+				if (tid !== null) {
+					sendBlob.tid = tid;
+				}
+				send2Extension(sendBlob);
+			};
+			
+			const span = document.getElementById("closereply");
+			const getReplyModuleInput = getById("getReplyModuleInput");
+			const getReplyModuleButton = getById("getReplyModuleButton");
+			
+			getReplyModuleInput.focus();
+			
+			span.onclick = closeModal;
+			modal.onclick = (e) => {
+				if (e.target === modal) {
+					closeModal();
+				}
+			};
+			
+			getReplyModuleButton.onclick = handleSend;
+			getReplyModuleInput.onkeyup = (e) => {
+				if (e.key === "Enter") {
+					handleSend();
+				}
+			};
+		}
 
 			function toggleVIPUser(element) {
 				var chatName = element.dataset.chatname;
@@ -6904,7 +7102,7 @@
 						function (node) {
 							nodeRemove(node);
 						},
-						500,
+						1500,
 						node
 					);
 				} else if (horizontal) {
@@ -6915,7 +7113,7 @@
 						function (node) {
 							nodeRemove(node);
 						},
-						500,
+						1500,
 						node
 					);
 				} else if (scrolltype === "smooth") {
@@ -6961,151 +7159,151 @@
 					return "";
 				}
 			}
-
-			function replaceURLs(node) {
-				try {
-					if (node.nodeType === 3) {
-						// Text node
-						node.nodeValue = replaceURLsWithSubstring(node.nodeValue);
-					} else if (node.nodeType === 1) {
-						node.childNodes.forEach(replaceURLs);
-					}
-				} catch (e) {
-					console.error(e);
-				}
-			}
-
-			function shortenURLs(element) {
-				if (!element) return; // Exit if the element is null or undefined
-
-				if (element.nodeType === 1) {
-					// Element node
-					Array.from(element.childNodes).forEach(child => {
-						shortenURLs(child); // Recurse into each child node
-					});
-				} else if (element.nodeType === 3) {
-					// Text node
-					const text = element.textContent;
-					const urlRegex = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g;
-					let match;
-					let lastIndex = 0;
-
-					const fragment = document.createDocumentFragment();
-
-					while ((match = urlRegex.exec(text)) !== null) {
-						if (match.index > lastIndex) {
-							fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+			
+			function processURLs(element, { makeClickable = false, stripLinks = false, shortenURLs = false, maxLength = 40, replaceSubstring = "[Link]" } = {}) {
+				if (!element) return;
+				
+				const urlPattern = /(?:(?:https?:\/\/)?(?:www\.)?)?(?!-)[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?(?=\s|$)|(?:https?:\/\/)[^\s]+/g;
+				
+				function shortenUrl(url) {
+					try {
+						const parsedUrl = new URL(url.startsWith('http') ? url : 'https://' + url);
+						const protocol = parsedUrl.protocol;
+						const domain = parsedUrl.hostname;
+						const path = parsedUrl.pathname + parsedUrl.search;
+						
+						if (url.length <= maxLength) return url;
+						if (protocol.length + domain.length > maxLength) {
+							return protocol + "//" + domain.slice(0, maxLength - protocol.length - 3) + "...";
 						}
-
-						fragment.appendChild(document.createTextNode(shortenUrl(match[0])));
-
-						lastIndex = match.index + match[0].length;
-					}
-
-					if (lastIndex < text.length) {
-						fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
-					}
-
-					if (lastIndex > 0) {
-						element.parentNode.replaceChild(fragment, element);
+						const remainingLength = maxLength - (protocol.length + domain.length + 3);
+						return path.length > remainingLength ? 
+							protocol + "//" + domain + path.slice(0, remainingLength) + "..." :
+							protocol + "//" + domain + path;
+					} catch(e) {
+						return url;
 					}
 				}
-			}
-
-			function shortenUrl(url, maxLength = 50) {
-				try {
-					var parsedUrl = new URL(url);
-				} catch(e){
-					console.warn("INVALID URL: "+url);
-					return url;
+				
+				function compareUrls(href, innerUrl) {
+					if (href === innerUrl) return true;
+					
+					try {
+						const hrefUrl = new URL(href.startsWith('http') ? href : 'https://' + href);
+						const innerUrlNormalized = innerUrl.startsWith('http') ? innerUrl : 'https://' + innerUrl;
+						return hrefUrl.toString().startsWith(innerUrlNormalized);
+					} catch(e) {
+						return href.includes(innerUrl);
+					}
 				}
 
-				const protocol = parsedUrl.protocol;
-				const domain = parsedUrl.hostname;
-				const path = parsedUrl.pathname + parsedUrl.search;
-
-				if (url.length <= maxLength) {
-					return url;
-				}
-
-				if (protocol.length + domain.length > maxLength) {
-					return protocol + "//" + domain.slice(0, maxLength - protocol.length - 3) + "...";
-				}
-
-				const remainingLength = maxLength - (protocol.length + domain.length + 3); // 3 for "//" and "..."
-				if (path.length > remainingLength) {
-					return protocol + "//" + domain + path.slice(0, remainingLength) + "...";
-				} else {
-					return protocol + "//" + domain + path;
-				}
-			}
-
-			function activateURLs(element) {
-				if (!element) return; // Exit if the element is null or undefined
-
-				if (element.nodeType === 1) {
-					// Element node
-					Array.from(element.childNodes).forEach(child => {
-						activateURLs(child); // Recurse into each child node
-					});
-				} else if (element.nodeType === 3) {
-					// Text node
-					const text = element.textContent;
-					const urlRegex = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g;
-					let match;
+				function processTextNode(textNode) {
+					const text = textNode.textContent;
 					let lastIndex = 0;
-
 					const fragment = document.createDocumentFragment();
-
-					while ((match = urlRegex.exec(text)) !== null) {
-						if (match.index > lastIndex) {
-							fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+					let match;
+					
+					if (makeClickable) {
+						const parentAnchor = textNode.parentElement ? textNode.parentElement.closest('a') : null;
+						if (parentAnchor) {
+							const href = parentAnchor.getAttribute('href');
+							
+							while ((match = urlPattern.exec(text)) !== null) {
+								const innerUrl = match[0];
+								if (href && innerUrl) {
+									if (innerUrl.endsWith('...')) {
+										shortenURLs = true;
+										if (compareUrls(href, innerUrl.slice(0, -3))) {
+											const displayText = stripLinks ? replaceSubstring : 
+															  shortenURLs ? shortenUrl(href) : href;
+											const anchor = document.createElement("a");
+											anchor.href = href.startsWith('http') ? href : 'https://' + href;
+											anchor.textContent = displayText;
+											anchor.title = "Click to open: " + href;
+											anchor.target = "_blank";
+											anchor.style.pointerEvents = "auto";
+											anchor.addEventListener("click", e => e.stopPropagation());
+											parentAnchor.parentNode.replaceChild(anchor, parentAnchor);
+											return;
+										}
+									} else if (compareUrls(href, innerUrl)) {
+										const displayText = stripLinks ? replaceSubstring : 
+														  shortenURLs ? shortenUrl(href) : href;
+										const anchor = document.createElement("a");
+										anchor.href = href.startsWith('http') ? href : 'https://' + href;
+										anchor.textContent = displayText;
+										anchor.title = "Click to open: " + href;
+										anchor.target = "_blank";
+										anchor.style.pointerEvents = "auto";
+										anchor.addEventListener("click", e => e.stopPropagation());
+										parentAnchor.parentNode.replaceChild(anchor, parentAnchor);
+										return;
+									}
+								}
+							}
 						}
-
-						const anchor = document.createElement("a");
-						anchor.href = match[0];
-
-						if (stripLinks) {
-							anchor.textContent = "[Link]";
-						} else if (shortlink) {
-							anchor.textContent = shortenUrl(match[0]);
+					}
+					
+					while ((match = urlPattern.exec(text)) !== null) {
+						if (/^[a-zA-Z0-9](?:\.[a-zA-Z0-9]){1,2}$/.test(match[0]) && 
+							match[0].length <= 5 && 
+							!match[0].includes('/')) {
+							continue;
+						}
+						
+						let isValid = false;
+						if (match[0].startsWith('http') || match[0].startsWith('www.')) {
+							isValid = true;
 						} else {
-							anchor.textContent = match[0];
+							const parts = match[0].split('.');
+							const potentialTLD = parts[parts.length - 1].split(/[/?#]/)[0];
+							if (match[0].includes('/') || isValidTLD(potentialTLD)) {
+								isValid = true;
+							}
 						}
-						anchor.title = "Click to open: " + match[0];
-						anchor.target = "_blank";
-						anchor.style.pointerEvents = "auto";
-						fragment.appendChild(anchor);
+						if (!isValid) continue;
 
-						anchor.addEventListener("click", function (event) {
-							event.stopPropagation();
-						});
+						if (match.index > lastIndex) {
+							fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+						}
 
-						lastIndex = match.index + match[0].length;
+						const url = match[0];
+						const displayUrl = shortenURLs ? shortenUrl(url) : (stripLinks ? replaceSubstring : url);
+
+						if (makeClickable) {
+							const anchor = document.createElement("a");
+							anchor.href = url.startsWith('http') ? url : 'https://' + url;
+							anchor.textContent = displayUrl;
+							anchor.title = "Click to open: " + url;
+							anchor.target = "_blank";
+							anchor.style.pointerEvents = "auto";
+							anchor.addEventListener("click", e => e.stopPropagation());
+							fragment.appendChild(anchor);
+						} else {
+							fragment.appendChild(document.createTextNode(displayUrl));
+						}
+						
+						lastIndex = match.index + url.length;
 					}
 
 					if (lastIndex < text.length) {
 						fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
 					}
-
 					if (lastIndex > 0) {
-						element.parentNode.replaceChild(fragment, element);
+						textNode.parentNode.replaceChild(fragment, textNode);
 					}
 				}
-			}
 
-			<!-- function replaceURLsWithSubstring(text, replacement = "[Link]") { -->
-				<!-- if (typeof text !== "string") { -->
-					<!-- return text; -->
-				<!-- } -->
-				<!-- try { -->
-					<!-- const urlPattern = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g; -->
-					<!-- return text.replace(urlPattern, replacement); -->
-				<!-- } catch (e) { -->
-					<!-- console.error(e); -->
-					<!-- return text; -->
-				<!-- } -->
-			<!-- } -->
+				function traverse(node) {
+					if (node.nodeType === 1) {
+						Array.from(node.childNodes).forEach(traverse);
+					} else if (node.nodeType === 3) {
+						processTextNode(node);
+					}
+				}
+				
+				traverse(element);
+			}
 			
 			const validTLDs = new Set(["a","aaa","aarp","abb","abbott","abbvie","abc","able","abogado","abudhabi","ac","academy","accenture","accountant","accountants","aco","actor","ad","ads","adult","ae","aeg","aero","aetna","af","afl","africa","ag","agakhan","agency","ai","aig","airbus","airforce","airtel","akdn","al","alibaba","alipay","allfinanz","allstate","ally","alsace","alstom","am","amazon","americanexpress","americanfamily","amex","amfam","amica","amsterdam","analytics","android","anquan","anz","ao","aol","apartments","app","apple","aq","aquarelle","ar","arab","aramco","archi","army","arpa","art","arte","as","asda","asia","associates","at","athleta","attorney","au","auction","audi","audible","audio","auspost","author","auto","autos","aw","aws","ax","axa","az","azure","b","ba","baby","baidu","banamex","band","bank","bar","barcelona","barclaycard","barclays","barefoot","bargains","baseball","basketball","bauhaus","bayern","bb","bbc","bbt","bbva","bcg","bcn","bd","be","beats","beauty","beer","bentley","berlin","best","bestbuy","bet","bf","bg","bh","bharti","bi","bible","bid","bike","bing","bingo","bio","biz","bj","black","blackfriday","blockbuster","blog","bloomberg","blue","bm","bms","bmw","bn","bnpparibas","bo","boats","boehringer","bofa","bom","bond","boo","book","booking","bosch","bostik","boston","bot","boutique","box","br","bradesco","bridgestone","broadway","broker","brother","brussels","bs","bt","build","builders","business","buy","buzz","bv","bw","by","bz","bzh","c","ca","cab","cafe","cal","call","calvinklein","cam","camera","camp","canon","capetown","capital","capitalone","car","caravan","cards","care","career","careers","cars","casa","case","cash","casino","cat","catering","catholic","cba","cbn","cbre","cc","cd","center","ceo","cern","cf","cfa","cfd","cg","ch","chanel","channel","charity","chase","chat","cheap","chintai","christmas","chrome","church","ci","cipriani","circle","cisco","citadel","citi","citic","city","ck","cl","claims","cleaning","click","clinic","clinique","clothing","cloud","club","clubmed","cm","cn","co","coach","codes","coffee","college","cologne","com","commbank","community","company","compare","computer","comsec","condos","construction","consulting","contact","contractors","cooking","cool","coop","corsica","country","coupon","coupons","courses","cpa","cr","credit","creditcard","creditunion","cricket","crown","crs","cruise","cruises","cu","cuisinella","cv","cw","cx","cy","cymru","cyou","cz","d","dabur","dad","dance","data","date","dating","datsun","day","dclk","dds","de","deal","dealer","deals","degree","delivery","dell","deloitte","delta","democrat","dental","dentist","desi","design","dev","dhl","diamonds","diet","digital","direct","directory","discount","discover","dish","diy","dj","dk","dm","dnp","do","docs","doctor","dog","domains","dot","download","drive","dtv","dubai","dunlop","dupont","durban","dvag","dvr","dz","e","earth","eat","ec","eco","edeka","edu","education","ee","eg","email","emerck","energy","engineer","engineering","enterprises","epson","equipment","er","ericsson","erni","es","esq","estate","et","eu","eurovision","eus","events","exchange","expert","exposed","express","extraspace","f","fage","fail","fairwinds","faith","family","fan","fans","farm","farmers","fashion","fast","fedex","feedback","ferrari","ferrero","fi","fidelity","fido","film","final","finance","financial","fire","firestone","firmdale","fish","fishing","fit","fitness","fj","fk","flickr","flights","flir","florist","flowers","fly","fm","fo","foo","food","football","ford","forex","forsale","forum","foundation","fox","fr","free","fresenius","frl","frogans","frontier","ftr","fujitsu","fun","fund","furniture","futbol","fyi","g","ga","gal","gallery","gallo","gallup","game","games","gap","garden","gay","gb","gbiz","gd","gdn","ge","gea","gent","genting","george","gf","gg","ggee","gh","gi","gift","gifts","gives","giving","gl","glass","gle","global","globo","gm","gmail","gmbh","gmo","gmx","gn","godaddy","gold","goldpoint","golf","goo","goodyear","goog","google","gop","got","gov","gp","gq","gr","grainger","graphics","gratis","green","gripe","grocery","group","gs","gt","gu","gucci","guge","guide","guitars","guru","gw","gy","h","hair","hamburg","hangout","haus","hbo","hdfc","hdfcbank","health","healthcare","help","helsinki","here","hermes","hiphop","hisamitsu","hitachi","hiv","hk","hkt","hm","hn","hockey","holdings","holiday","homedepot","homegoods","homes","homesense","honda","horse","hospital","host","hosting","hot","hotels","hotmail","house","how","hr","hsbc","ht","hu","hughes","hyatt","hyundai","i","ibm","icbc","ice","icu","id","ie","ieee","ifm","ikano","il","im","imamat","imdb","immo","immobilien","in","inc","industries","infiniti","info","ing","ink","institute","insurance","insure","int","international","intuit","investments","io","ipiranga","iq","ir","irish","is","ismaili","ist","istanbul","it","itau","itv","j","jaguar","java","jcb","je","jeep","jetzt","jewelry","jio","jll","jm","jmp","jnj","jo","jobs","joburg","jot","joy","jp","jpmorgan","jprs","juegos","juniper","k","kaufen","kddi","ke","kerryhotels","kerrylogistics","kerryproperties","kfh","kg","kh","ki","kia","kids","kim","kindle","kitchen","kiwi","km","kn","koeln","komatsu","kosher","kp","kpmg","kpn","kr","krd","kred","kuokgroup","kw","ky","kyoto","kz","l","la","lacaixa","lamborghini","lamer","lancaster","land","landrover","lanxess","lasalle","lat","latino","latrobe","law","lawyer","lb","lc","lds","lease","leclerc","lefrak","legal","lego","lexus","lgbt","li","lidl","life","lifeinsurance","lifestyle","lighting","like","lilly","limited","limo","lincoln","link","lipsy","live","living","lk","llc","llp","loan","loans","locker","locus","lol","london","lotte","lotto","love","lpl","lplfinancial","lr","ls","lt","ltd","ltda","lu","lundbeck","luxe","luxury","lv","ly","m","ma","madrid","maif","maison","makeup","man","management","mango","map","market","marketing","markets","marriott","marshalls","mattel","mba","mc","mckinsey","md","me","med","media","meet","melbourne","meme","memorial","men","menu","merckmsd","mg","mh","miami","microsoft","mil","mini","mint","mit","mitsubishi","mk","ml","mlb","mls","mm","mma","mn","mo","mobi","mobile","moda","moe","moi","mom","monash","money","monster","mormon","mortgage","moscow","moto","motorcycles","mov","movie","mp","mq","mr","ms","msd","mt","mtn","mtr","mu","museum","music","mv","mw","mx","my","mz","n","na","nab","nagoya","name","navy","nba","nc","ne","nec","net","netbank","netflix","network","neustar","new","news","next","nextdirect","nexus","nf","nfl","ng","ngo","nhk","ni","nico","nike","nikon","ninja","nissan","nissay","nl","no","nokia","norton","now","nowruz","nowtv","np","nr","nra","nrw","ntt","nu","nyc","nz","o","obi","observer","office","okinawa","olayan","olayangroup","ollo","om","omega","one","ong","onl","online","ooo","open","oracle","orange","org","organic","origins","osaka","otsuka","ott","ovh","p","pa","page","panasonic","paris","pars","partners","parts","party","pay","pccw","pe","pet","pf","pfizer","pg","ph","pharmacy","phd","philips","phone","photo","photography","photos","physio","pics","pictet","pictures","pid","pin","ping","pink","pioneer","pizza","pk","pl","place","play","playstation","plumbing","plus","pm","pn","pnc","pohl","poker","politie","porn","post","pr","pramerica","praxi","press","prime","pro","prod","productions","prof","progressive","promo","properties","property","protection","pru","prudential","ps","pt","pub","pw","pwc","py","q","qa","qpon","quebec","quest","r","racing","radio","re","read","realestate","realtor","realty","recipes","red","redstone","redumbrella","rehab","reise","reisen","reit","reliance","ren","rent","rentals","repair","report","republican","rest","restaurant","review","reviews","rexroth","rich","richardli","ricoh","ril","rio","rip","ro","rocks","rodeo","rogers","room","rs","rsvp","ru","rugby","ruhr","run","rw","rwe","ryukyu","s","sa","saarland","safe","safety","sakura","sale","salon","samsclub","samsung","sandvik","sandvikcoromant","sanofi","sap","sarl","sas","save","saxo","sb","sbi","sbs","sc","scb","schaeffler","schmidt","scholarships","school","schule","schwarz","science","scot","sd","se","search","seat","secure","security","seek","select","sener","services","seven","sew","sex","sexy","sfr","sg","sh","shangrila","sharp","shell","shia","shiksha","shoes","shop","shopping","shouji","show","si","silk","sina","singles","site","sj","sk","ski","skin","sky","skype","sl","sling","sm","smart","smile","sn","sncf","so","soccer","social","softbank","software","sohu","solar","solutions","song","sony","soy","spa","space","sport","spot","sr","srl","ss","st","stada","staples","star","statebank","statefarm","stc","stcgroup","stockholm","storage","store","stream","studio","study","style","su","sucks","supplies","supply","support","surf","surgery","suzuki","sv","swatch","swiss","sx","sy","sydney","systems","sz","t","tab","taipei","talk","taobao","target","tatamotors","tatar","tattoo","tax","taxi","tc","tci","td","tdk","team","tech","technology","tel","temasek","tennis","teva","tf","tg","th","thd","theater","theatre","tiaa","tickets","tienda","tips","tires","tirol","tj","tjmaxx","tjx","tk","tkmaxx","tl","tm","tmall","tn","to","today","tokyo","tools","top","toray","toshiba","total","tours","town","toyota","toys","tr","trade","trading","training","travel","travelers","travelersinsurance","trust","trv","tt","tube","tui","tunes","tushu","tv","tvs","tw","tz","u","ua","ubank","ubs","ug","uk","unicom","university","uno","uol","ups","us","uy","uz","v","va","vacations","vana","vanguard","vc","ve","vegas","ventures","verisign","vermögensberater","vermögensberatung","versicherung","vet","vg","vi","viajes","video","vig","viking","villas","vin","vip","virgin","visa","vision","viva","vivo","vlaanderen","vn","vodka","volvo","vote","voting","voto","voyage","vu","w","wales","walmart","walter","wang","wanggou","watch","watches","weather","weatherchannel","webcam","weber","website","wed","wedding","weibo","weir","wf","whoswho","wien","wiki","williamhill","win","windows","wine","winners","wme","wolterskluwer","woodside","work","works","world","wow","ws","wtc","wtf","x","xbox","xerox","xihuan","xin","xxx","xyz","y","yachts","yahoo","yamaxun","yandex","ye","yodobashi","yoga","yokohama","you","youtube","yt","yun","z","za","zappos","zara","zero","zip","zm","zone","zuerich","zw","IDNs","ελ","ευ","бг","бел","дети","ею","католик","ком","мкд","мон","москва","онлайн","орг","рус","рф","сайт","срб","укр","қаз","հայ","ישראל","קום","ابوظبي","ارامكو","الاردن","البحرين","الجزائر","السعودية","العليان","المغرب","امارات","ایران","بارت","بازار","بيتك","بھارت","تونس","سودان","سورية","شبكة","عراق","عرب","عمان","فلسطين","قطر","كاثوليك","كوم","مصر","مليسيا","موريتانيا","موقع","همراه","پاكستان","پاکستان","ڀارت","कॉम","नेट","भारत","भारतम्","भारोत","संगठन","বাংলা","ভারত","ভাৰত","ਭਾਰਤ","ભારત","ଭାରତ","இந்தியா","இலங்கை","சிங்கப்பூர்","భారత్","ಭಾರತ","ഭാരതം","ලංකා","คอม","ไทย","ລາວ","გე","みんな","アマゾン","クラウド","グーグル","コム","ストア","セール","ファッション","ポイント","世界","中信","中国","中國","中文网","亚马逊","企业","佛山","信息","健康","八卦","公司","公益","台湾","台灣","商城","商店","商标","嘉里","嘉里大酒店","在线","大拿","天主教","娱乐","家電","广东","微博","慈善","我爱你","手机","招聘","政务","政府","新加坡","新闻","时尚","書籍","机构","淡马锡","游戏","澳門","点看","移动","组织机构","网址","网店","网站","网络","联通","谷歌","购物","通販","集团","電訊盈科","飞利浦","食品","餐厅","香格里拉","香港","닷넷","닷컴","삼성","한국"]);
 			
@@ -7113,38 +7311,6 @@
 			  return validTLDs.has(tld.toLowerCase());
 			}
 			
-			function replaceURLsWithSubstring(text, replacement = "[Link]") {
-			  if (typeof text !== "string") {
-				return text;
-			  }
-
-			  try {
-				// This pattern matches potential URLs more strictly
-				const urlPattern = /(\bhttps?:\/\/)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([/?#][^\s]*)?/g;
-
-				return text.replace(urlPattern, (match) => {
-				  // Split the match by dots to check the TLD
-				  const parts = match.split('.');
-				  const potentialTLD = parts[parts.length - 1].split(/[/?#]/)[0];
-
-				  // If it doesn't contain a slash, only replace if it starts with http:// or https://
-				  if (match.startsWith('http://') || match.startsWith('https://')) {
-					return replacement;
-				  }
-				  
-				  // Check if it's a valid TLD and contains a slash (indicating it's likely a URL)
-				  if (match.includes('/') || isValidTLD(potentialTLD)) {
-					return replacement;
-				  }
-
-				  // Otherwise, return the original match
-				  return match;
-				});
-			  } catch (e) {
-				console.error(e);
-				return text;
-			  }
-			}
 			
 			function isEmojiOnly(str) {
 				function stripEmojis(text) {
@@ -7539,7 +7705,7 @@
 
 					var timeArrived = "";
 					if (datestamp) {
-						var date = new Date();
+						var date = data.timestamp ? new Date(data.timestamp) : new Date();
 						var hours = date.getHours();
 						var minutes = date.getMinutes();
 						minutes = minutes < 10 ? "0" + minutes : minutes;
@@ -7565,6 +7731,21 @@
 					if (data.bot) {
 						bot = true;
 					}
+					
+					var mod = false;
+					if (data.mod) {
+						mod = true;
+					}
+					
+					var host = false;
+					if (data.host) {
+						host = true;
+					}
+					
+					var vip = false;
+					if (data.vip) {
+						vip = true;
+					}
 
 					var nameColor = "";
 					if (data.nameColor && colorized) {
@@ -7572,6 +7753,13 @@
 					}
 
 					var chatbadges = "";
+					
+					if (giveVIPBadge && vip){
+						if (!data.chatbadges){
+							data.chatbadges = [];
+						}
+						data.chatbadges.push("./icons/vip.png");
+					}
 
 					if (data.chatbadges && limitbadges !== false) {
 						try {
@@ -7602,13 +7790,6 @@
 					var specialMessage = false;
 
 					if (data.chatname) {
-						//if (data.chatname.toLowerCase() == "streamelements"){
-						//	bot = true;
-						//specialMessage = true;
-						//} else if (data.chatname.toLowerCase() == "nightbot"){
-						//	bot = true;
-						//specialMessage = true;
-
 						if (data.chatname.toLowerCase() == "vdoninja") {
 							// because why not. :)
 							data.chatname = "VDO.Ninja";
@@ -7644,8 +7825,17 @@
 					if (bot && doNotShowBot) {
 						return;
 					}
+					
+					if (host && doNotShowHostNames) {
+						return;
+					}
 
 					if (bot && doNotShowBotNames) {
+						specialMessage = true;
+						data.chatname = "";
+					}
+					
+					if (host && doNotShowHostNames) {
 						specialMessage = true;
 						data.chatname = "";
 					}
@@ -7756,6 +7946,14 @@
 					if (bot && !horizontal) {
 						node.classList.add("bot");
 					}
+					
+					if (host && !horizontal) {
+						node.classList.add("host");
+					}
+					
+					if (vip) {
+						node.classList.add("vip");
+					}
 
 					if ("karma" in data) {
 						node.dataset.karma = data.karma;
@@ -7855,7 +8053,7 @@
 					});
 					
 					if (beep) { 
-						if (!(nobeepbot && bot)){
+						if (!(nobeepbot && bot) && !(nobeephost && host) && !(nobeepmod && mod)){
 							playtone();
 						}
 					}
@@ -7948,18 +8146,12 @@
 						}
 					}
 
-					if (stripLinks && chatmessage && hlMessage) {
-						if (activeLinks) {
-							activateURLs(hlMessage);
-						} else {
-							replaceURLs(hlMessage);
-						}
-					} else if (activeLinks && chatmessage && hlMessage) {
-						activateURLs(hlMessage);
-					} else if (shortlink && chatmessage && hlMessage) {
-						shortenURLs(hlMessage);
-					}
 
+					
+					if (chatmessage && hlMessage && (stripLinks || activeLinks || shortlink)) {
+						processURLs(hlMessage, { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
+					} 
+					
 					if (data.type && data.type == "twitch" && avatars && data.chatimg) { 
 						var twitchImage = new Image();
 						twitchImage.onload = function () {
@@ -8051,6 +8243,17 @@
 							}
 						}
 					} else if (data.admin && autofeaturepriv){
+						if (doNotAutoshowFiltered && node.classList.contains("hide")) {
+						//
+						} else {
+							if (autoTimeoutEnabled) {
+								autoShowQueue.push(node);
+								checkAutoShow();
+							} else {
+								selectedMessage(false, node);
+							}
+						}
+					} else if (data.vip && autofeaturevip){
 						if (doNotAutoshowFiltered && node.classList.contains("hide")) {
 						//
 						} else {
@@ -8937,9 +9140,11 @@
 						if (reload) {
 							reload = JSON.parse(reload);
 							for (var i = 0; i < reload.length; i++) {
-								processData({ contents: reload[i] }, true);
+								if (!reload[i].id || !document.querySelector("[data-mid='"+reload[i].id+"']")){
+									processData({ contents: reload[i] }, true);
+								}
 							}
-							console.log("PAGE REFRESHED");
+							console.log("PAGE REFRESHED FROM LOCAL CACHE");
 						}
 					}, 0);
 
