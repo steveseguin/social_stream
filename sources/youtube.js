@@ -612,11 +612,11 @@
 
 		if (treatAsMemberChat) {
 			if (chatmessage) {
-				if (mod) {
-					hasMembership = chatmembership || getTranslation("moderator-chat", "MODERATOR");
-				} else {
-					hasMembership = chatmembership || getTranslation("member-chat", "MEMBERSHIP");
-				}
+				//if (mod) {
+				//	hasMembership = chatmembership || getTranslation("moderator-chat", "MODERATOR");
+				//} else {
+				hasMembership = chatmembership || getTranslation("member-chat", "MEMBERSHIP");
+				//}
 				var membershipLength = ele.querySelector("#header-subtext.yt-live-chat-membership-item-renderer, #header-primary-text.yt-live-chat-membership-item-renderer") || false;
 				if (membershipLength) {
 					membershipLength = getAllContentNodes(membershipLength);
