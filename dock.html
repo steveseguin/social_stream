@@ -2151,7 +2151,7 @@
 			);
 			display: block;
 			width: 100vw;
-			height: calc(100vh - calc(46px / var(--scale-output))); 
+			height: 100vh;
 			overflow-x: hidden;
 			overflow-y: hidden !important;
 			margin-bottom: 0;
@@ -2168,9 +2168,8 @@
 			overflow: hidden;
 		}
 		
-		.output-container #output {
+		.output-container #output:not(.alignbottom) {
 			height: 100%;
-			margin-bottom: 0;
 		}
 		.OBS .output-container #output {
 			  scrollbar-width: none; /* Firefox */
@@ -2872,8 +2871,16 @@
 				trimName = urlParams.get("trimname") || 8;
 			}
 			
-
 			var alignbottom = false;
+			var fadetop = false;
+			if (urlParams.has("fadedtop")) {
+				fadetop = true;
+				let oc = document.createElement("div");
+				oc.className = "output-container";
+				let oo = document.getElementById("output");
+				oo.after(oc);
+				oc.appendChild(oo);
+			} 
 			if (urlParams.has("alignbottom")) {
 				getById("output").classList.add("alignbottom");
 				alignbottom = true;
@@ -4743,17 +4750,6 @@
 				hideNotQueued = true;
 				getById("show_only_queue").dataset.state = "1";
 				getById("show_only_queue").classList.add("pressed");
-			}
-			
-			var fadetop = false;
-			if (urlParams.has("fadedtop")) {
-				fadetop = true;
-				let oc = document.createElement("div");
-				oc.className = "output-container";
-				let oo = document.getElementById("output");
-				oo.after(oc);
-				oc.appendChild(oo);
-				
 			}
 			
 			var hideNotPinned = false;
