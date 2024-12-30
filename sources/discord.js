@@ -95,7 +95,7 @@
 			return;;
 		}
 		
-		if (!settings.discord){
+		if (!settings.discord && !window.electronApi){
 			// discord isn't allowed via settings
 			return;
 		}

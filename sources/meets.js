@@ -106,8 +106,11 @@
 
 	try {
 		if (chatname === "You"){
-			if (settings && settings.myname && settings.myname.textparam1){
-				chatname = settings.myname.textparam1.split(",")[0];
+			if (settings && settings.mynameext && settings.mynameext.textparam1){
+				chatname = settings.mynameext.textparam1.split(",")[0].trim();
+			}
+			if (settings && settings.hostnamesext && settings.hostnamesext.textsetting){
+				chatname = settings.hostnamesext.textsetting.split(",")[0].trim();
 			}
 		}
 	} catch(e){}

@@ -81,6 +81,9 @@
 		
 		//console.log(ele);
 		
+		if (ele.skip){return;}
+		ele.skip = true;
+		
 		var chatname="";
 		var msg="";
 		var chatimg = "";
@@ -190,7 +193,9 @@
 		} else {
 			data.type = "x";
 		}
-		pushMessage(data);
+		if (isExtensionOn){
+			pushMessage(data);
+		}
 	}
 
 	function pushMessage(data){
@@ -204,20 +209,36 @@
 	// settings.textonlymode
 	// settings.captureevents
 	
+	window.addEventListener('beforeunload', (e) => {
+		if (isExtensionOn) {
+			//e.preventDefault();
+			//e.returnValue = '';
+			localStorage.setItem('messageHistory', JSON.stringify(messageHistory));
+			localStorage.setItem('messageHistoryTimestamp', Date.now());
+		}
+	});
+	
+	
+	var isExtensionOn = true;
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
+		}
+		if ("state" in response){
+			isExtensionOn = response.state;
 		}
 	});
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('textarea').focus();
-					sendResponse(true);
-					return;
+				if (isExtensionOn){
+					if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+						document.querySelector('textarea').focus();
+						sendResponse(true);
+						return;
+					}
 				}
 				if (typeof request === "object"){
 					if ("settings" in request){
@@ -233,7 +254,16 @@
 
 	var lastURL =  "";
 	var observer = null;
-	var messageHistory = [];
+	
+	var messageHistory = (() => {
+		const stored = localStorage.getItem('messageHistory');
+		const timestamp = localStorage.getItem('messageHistoryTimestamp');
+		if (stored && timestamp && (Date.now() - timestamp) < 10000) {
+			return JSON.parse(stored);
+		}
+		return [];
+	})();
+	
 	
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
@@ -332,48 +362,36 @@
 		}
 	} catch(e){	}
 
-
-	const pattern = new RegExp('^https://(www\\.)?x\\.com/i/broadcasts/.*$', 'i');
-	
-	const pattern2 = new RegExp('^https://(www\\.)?twitter\\.com/i/broadcasts/.*$', 'i');
-	// temporarily will support twitter, since it still works with live broadcasts for some reason.
-	
 	setInterval(function(){
 		try {
-			if (pattern.test(window.location.href) || pattern2.test(window.location.href)){
-				//console.log("pattern");
-				if (document.querySelector('[data-testid="chatContainer"]')){
-					//console.log("found it");
-					var container = document.querySelector('[data-testid="chatContainer"]');
-					if (!container.marked){
-						container.marked=true;
-						setTimeout(function(container){
-							console.log("Social Stream started");
-							if (container){
-								onElementInserted(container);
-							}
+			if (document.querySelector('[data-testid="chatContainer"]')){
+				//console.log("found it");
+				var container = document.querySelector('[data-testid="chatContainer"]');
+				if (!container.marked){
+					container.marked=true;
+					setTimeout(function(container){
+						console.log("Social Stream started");
+						if (container){
+							onElementInserted(container);
+						}
 
-						},1000, container);
-					}
-				} else {
-					var container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);
-					if (!container.marked){
-						container.marked=true;
-						setTimeout(function(container){
-							console.log("Social Stream started");
-							if (container){
-								onElementInserted(container);
-							}
-
-						},1000, container);
-					}
+					},3000, container);
 				}
 			} else {
-				//console.log("no pat");
+				var container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);
+				if (!container.marked){
+					container.marked=true;
+					setTimeout(function(container){
+						console.log("Social Stream started");
+						if (container){
+							onElementInserted(container);
+						}
+
+					},3000, container);
+				}
 			}
 		} catch(e){
 			//console.warn(e);
 		}
 	},2000);
-
 })();

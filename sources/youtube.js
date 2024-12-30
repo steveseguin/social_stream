@@ -1,17 +1,20 @@
 (function () {
 
-
+	var urlParams = new URLSearchParams(window.location.search);
 	//var channelName = "";
-	var videoId = false;
+	var isExtensionOn = true;
+	var videoId = urlParams.get("v") || false;
 	try {
-		const parentUrl = window.top.location.href;
-		const parentStudioMatch = parentUrl.match(/\/video\/([^\/]+)/);
-		if (parentStudioMatch) {
-			videoId = parentStudioMatch[1];
+		if (!videoId){
+			const parentUrl = window.top.location.href;
+			const parentStudioMatch = parentUrl.match(/\/video\/([^\/]+)/);
+			if (parentStudioMatch) {
+				videoId = parentStudioMatch[1];
+			}
 		}
 	} catch(e){}
 
-	function getTranslation(key, value = false) {
+ 	function getTranslation(key, value = false) {
 		if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
 			// these are the proper translations
 			return settings.translation.innerHTML[key];
@@ -67,7 +70,7 @@
 		if (chatname) {
 		  const data = {
 			chatname: escapeHtml(chatname.innerText),
-			type: "youtube"
+			type: (youtubeShorts ? "youtubeshorts" : "youtube")
 		  };
 		  chrome.runtime.sendMessage(chrome.runtime.id, { "delete": data }, function(e) {});
 		}
@@ -174,6 +177,14 @@
 				// Element node
 				if (node.nodeName === "IMG") {
 					processEmote(node);
+				} else if (!settings.textonlymode && node.href && (node.nodeName === "A")) {
+					
+					if (pendingSpace){
+						result += pendingSpace;
+						pendingSpace = null;
+					} 
+					pendingSpace = " <a href='"+node.href+"' target='_blank'>"+escapeHtml(node.textContent)+"</a> ";
+					
 				} else if (node.nodeName.toLowerCase() === "svg" && node.classList.contains("seventv-chat-emote")) {
 					if (settings.textonlymode){
 						return;
@@ -183,7 +194,7 @@
 					result += resolvedSvg.outerHTML;
 				} else if (node.childNodes.length) {
 					Array.from(node.childNodes).forEach(processNode);
-				} else if (!settings.textonlymode){
+				} else if (!settings.textonlymode && (node.nodeName.toLowerCase() === "svg")){
 					result += node.outerHTML;
 				}
 			}
@@ -250,26 +261,19 @@
 		return result;
 	}
 	
-	function deleteThis(ele) {
-		if (ele.deleted){
-			return;
+	
+	function deepMerge(target, source) {
+	  for (let key in source) {
+		if (source.hasOwnProperty(key)) {
+		  if (typeof source[key] === 'object' && source[key] !== null) {
+			target[key] = target[key] || {};
+			deepMerge(target[key], source[key]);
+		  } else {
+			target[key] = source[key];
+		  }
 		}
-		ele.deleted = true;
-		try {
-			var chatname = ele.querySelector("#author-name");
-			if (chatname) {
-				var data = {};
-				data.chatname = escapeHtml(chatname.innerText);
-				data.type = "youtube";
-				try {
-					chrome.runtime.sendMessage(chrome.runtime.id, {
-						"delete": data
-					}, function(e) {});
-				} catch (e) {
-					//
-				}
-			}
-		} catch (e) {}
+	  }
+	  return target;
 	}
 
 	var EMOTELIST = false;
@@ -290,10 +294,7 @@
 					if (BTTV.globalEmotes) {
 						EMOTELIST = deepMerge(BTTV.globalEmotes, EMOTELIST);
 					}
-					// for testing.
-					// EMOTELIST = deepMerge({"ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/1x.webp","zw":true}}, EMOTELIST);
-					
-				} catch (e) {}
+				} catch (e) {console.warn(e);}
 			}
 		}
 		if (SEVENTV) {
@@ -311,6 +312,28 @@
 				} catch (e) {}
 			}
 		}
+		if (FFZ) {
+			//console.log(FFZ);
+			if (settings.ffz) {
+				try {
+					if (FFZ.channelEmotes) {
+						EMOTELIST = deepMerge(FFZ.channelEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+				try {
+					if (FFZ.globalEmotes) {
+						EMOTELIST = deepMerge(FFZ.globalEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+			}
+		}
+		
+		// for testing.
+ 		//EMOTELIST = deepMerge({
+		//	 "ASSEMBLE0":{url:"https://cdn.7tv.app/emote/641f651b04bb57ba4db57e1d/2x.webp","zw":true},
+		//	 "oEDM": {url:"https://cdn.7tv.app/emote/62127910041f77b2480365f4/2x.webp","zw":true},
+		//	 "widepeepoHappy": "https://cdn.7tv.app/emote/634493ce05c2b2cd864d5f0d/2x.webp"
+		// }, EMOTELIST);
 		//console.log(EMOTELIST);
 	}
 
@@ -379,8 +402,6 @@
 			deleteThis(ele)
 			return;
 		}
-	
-
 		if (settings.customyoutubestate) {
 			return;
 		}
@@ -390,10 +411,28 @@
 			} else if (ele.id) {
 				if (messageHistory.has(ele.id)) return;
 				messageHistory.add(ele.id);
-				if (messageHistory.size > 255) { // 250 seems to be Youtube's max?
-				  const iterator = messageHistory.values();
-				  messageHistory.delete(iterator.next().value);
+				if (messageHistory.size > 300) { // 250 seems to be Youtube's max?
+				    const iterator = messageHistory.values();
+				    messageHistory.delete(iterator.next().value);	  
 				}
+				if (ele.id.length<40){
+					setTimeout(()=>{
+						if (ele.id.length<40){
+							setTimeout(()=>{
+								if (ele.id.length<40){
+									setTimeout(()=>{
+										messageHistory.add(ele.id);
+									},2000);
+								} else {
+									messageHistory.add(ele.id);
+								}
+							},2000);
+						} else {
+							messageHistory.add(ele.id);
+						}
+					},2000);
+				}
+				//console.log(messageHistory);
 		    } else {
 				return; // no id.
 		    }
@@ -404,7 +443,7 @@
 		} catch (e) {}
 
 		ele.skip = true;
-
+		
 		//if (channelName && settings.customyoutubestate){
 		//if (settings.customyoutubeaccount && settings.customyoutubeaccount.textsetting && (settings.customyoutubeaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
 		//	return;
@@ -412,6 +451,9 @@
 		//	return;
 		//}
 		//  }
+		
+		
+		//<yt-live-chat-text-message-renderer class="style-scope yt-live-chat-item-list-renderer" modern="" enable-refresh-web="" id="ChwKGkNObVM1cUhZdjRvREZRRFpGZ2tkMUxFREln" whole-message-clickable="{&quot;commandMetadata&quot;:{&quot;webCommandMetadata&quot;:{&quot;ignoreNavigation&quot;:true}},&quot;liveChatItemContextMenuEndpoint&quot;:{&quot;params&quot;:&quot;Q2g0S0hBb2FRMDV0VXpWeFNGbDJORzlFUmxGRVdrWm5hMlF4VEVWRVNXY2FLU29uQ2hoVlEwdHViMlJJU25CYVpEaFZZbE4yUVhWbVJHUXpYMmNTQzNadmVIVlNibVZLWTB0UklBSW9BVElhQ2hoVlEyMXhWaTFvTld3MFZtRXRZWE00TXpOemFqbExNVkU0QWtnQVVBRSUzRA==&quot;}}" author-type="moderator"><!--css-build:shady--><!--css-build:shady--><yt-img-shadow id="author-photo" class="no-transition style-scope yt-live-chat-text-message-renderer" height="24" width="24" style="background-color: transparent;" loaded=""><!--css-build:shady--><!--css-build:shady--><img id="img" draggable="false" class="style-scope yt-img-shadow" alt="" height="24" width="24" src="https://yt4.ggpht.com/aKvMhfJ7bDJsUN1e1x4jQzhAQwJTtyOqKurlxOEvajrzPp8sJcFrZyLnSNysNUEnaGYwR1CWtw=s32-c-k-c0x00ffffff-no-rj"></yt-img-shadow><div id="content" class="style-scope yt-live-chat-text-message-renderer"><span id="timestamp" class="style-scope yt-live-chat-text-message-renderer">12:38 AM</span><yt-live-chat-author-chip class="style-scope yt-live-chat-text-message-renderer"><!--css-build:shady--><!--css-build:shady--><span id="prepend-chat-badges" class="style-scope yt-live-chat-author-chip"></span><span id="author-name" dir="auto" class="moderator style-scope yt-live-chat-author-chip style-scope yt-live-chat-author-chip">Stephanie Warfield<span id="chip-badges" class="style-scope yt-live-chat-author-chip"></span></span><span id="chat-badges" class="style-scope yt-live-chat-author-chip"><yt-live-chat-author-badge-renderer class="style-scope yt-live-chat-author-chip" aria-label="Moderator" type="moderator" shared-tooltip-text="Moderator"><!--css-build:shady--><!--css-build:shady--><div id="image" class="style-scope yt-live-chat-author-badge-renderer"><yt-icon class="style-scope yt-live-chat-author-badge-renderer"><!--css-build:shady--><!--css-build:shady--><span class="yt-icon-shape style-scope yt-icon yt-spec-icon-shape"><div style="width: 100%; height: 100%; display: block; fill: currentcolor;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" focusable="false" aria-hidden="true" style="pointer-events: none; display: inherit; width: 100%; height: 100%; fill: rgb(94, 132, 241);"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z"></path></svg></div></span></yt-icon></div></yt-live-chat-author-badge-renderer><yt-live-chat-author-badge-renderer class="style-scope yt-live-chat-author-chip" aria-label="New member" type="member" shared-tooltip-text="New member"><!--css-build:shady--><!--css-build:shady--><div id="image" class="style-scope yt-live-chat-author-badge-renderer"><img src="https://yt3.ggpht.com/7_W1_is17mb5tlSPcOpd-t40Jqrk2tdSzCKPKE5nfmWKNaoK7lx0r7bnf2t5CVqbDgDosT3s=s32-c-k" class="style-scope yt-live-chat-author-badge-renderer" alt="New member"></div></yt-live-chat-author-badge-renderer></span></yt-live-chat-author-chip>&ZeroWidthSpace;<div id="before-content-buttons" class="style-scope yt-live-chat-text-message-renderer"></div>&ZeroWidthSpace;<span id="message" dir="auto" class="style-scope yt-live-chat-text-message-renderer">ewww <img class="small-emoji emoji yt-formatted-string style-scope yt-live-chat-text-message-renderer" src="https://fonts.gstatic.com/s/e/notoemoji/15.1/1f92e/72.png" alt="🤮" shared-tooltip-text=":face_vomiting:" id="emoji-132"><img class="small-emoji emoji yt-formatted-string style-scope yt-live-chat-text-message-renderer" src="https://fonts.gstatic.com/s/e/notoemoji/15.1/1f922/72.png" alt="🤢" shared-tooltip-text=":nauseated_face:" id="emoji-133"></span><span id="deleted-state" class="style-scope yt-live-chat-text-message-renderer"></span><a id="show-original" href="#" class="style-scope yt-live-chat-text-message-renderer"></a></div><div id="menu" class="style-scope yt-live-chat-text-message-renderer"><yt-icon-button id="menu-button" class="style-scope yt-live-chat-text-message-renderer" role="button" aria-label="yt-icon-button"><!--css-build:shady--><!--css-build:shady--><button id="button" class="style-scope yt-icon-button" aria-label="Chat actions"><yt-icon icon="more_vert" class="style-scope yt-live-chat-text-message-renderer"><!--css-build:shady--><!--css-build:shady--><span class="yt-icon-shape style-scope yt-icon yt-spec-icon-shape"><div style="width: 100%; height: 100%; display: block; fill: currentcolor;"><svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true" style="pointer-events: none; display: inherit; width: 100%; height: 100%;"><path d="M12 16.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zM10.5 12c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5-1.5.67-1.5 1.5zm0-6c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5-1.5.67-1.5 1.5z"></path></svg></div></span></yt-icon></button><yt-interaction id="interaction" class="circular style-scope yt-icon-button"><!--css-build:shady--><!--css-build:shady--><div class="stroke style-scope yt-interaction"></div><div class="fill style-scope yt-interaction"></div></yt-interaction></yt-icon-button></div><div id="inline-action-button-container" class="style-scope yt-live-chat-text-message-renderer" aria-hidden="true"><div id="inline-action-buttons" class="style-scope yt-live-chat-text-message-renderer"></div></div></yt-live-chat-text-message-renderer>
 
 		var chatmessage = "";
 		var chatname = "";
@@ -428,16 +470,25 @@
 			if (!chatname){
 				return;
 			}
+			
+			ele.querySelectorAll('yt-live-chat-author-badge-renderer[type]').forEach(type=>{
+				if (type.getAttribute("type")=="mod"){
+					mod=true;
+				} else if (type.getAttribute("type")=="member"){
+					member=true;
+				}
+			});
 
 			if (!settings.nosubcolor) {
-				if (nameElement.classList.contains("member")) {
+				if (mod || nameElement.classList.contains("moderator")) {
+					nameColor = "#5e84f1";
+					mod = true;
+				} else if (member || nameElement.classList.contains("member")) {
 					nameColor = "#107516";
 					member = true;
-				} else if (nameElement.classList.contains("moderator")) {
-					nameColor = "#5f84f1";
-					mod = true;
-				}
+				} 
 			}
+			
 		} catch (e) {}
 
 		try {
@@ -480,14 +531,14 @@
 		try {
 			chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
 			if (chatimg.startsWith("data:image/gif;base64")) { 
-				await delay(500);console.log(ele);
+				await delay(500);//console.log(ele);
 				chatimg = document.querySelector("#"+ele.id+" #author-photo img[src]:not([src^='data:image/gif;base64'])") || "";
 				if (chatimg){
 					chatimg = chatimg.src;
 				}
 			}
 		} catch (e) {
-			console.log(e);
+			//console.log(e);
 			chatimg = "";
 		}
 		
@@ -505,24 +556,14 @@
 		} catch (e) {}
 
 		var chatmembership = "";
-
 		try {
 			chatmembership = ele.querySelector(".yt-live-chat-membership-item-renderer #header-subtext").innerHTML;
+			member = true;
 		} catch (e) {}
-
+		
 		var treatAsMemberChat = false;
-		if (!chatmembership && settings.allmemberchat) {
-			if (ele.hasAttribute("author-type")) {
-				if (ele.getAttribute("author-type") === "member") {
-					//chatmembership = chatmessage;
-					treatAsMemberChat = true;
-					member = true;
-				} else if (ele.getAttribute("author-type") === "moderator") {
-					//chatmembership = chatmessage;
-					treatAsMemberChat = true;
-					mod = true;
-				}
-			}
+		if (settings.allmemberchat && member) {
+			treatAsMemberChat = true;
 		} else if (chatmembership) {
 			treatAsMemberChat = true;
 		}
@@ -571,11 +612,11 @@
 
 		if (treatAsMemberChat) {
 			if (chatmessage) {
-				if (mod) {
-					hasMembership = chatmembership || getTranslation("moderator-chat", "MODERATOR");
-				} else {
-					hasMembership = chatmembership || getTranslation("member-chat", "MEMBERSHIP");
-				}
+				//if (mod) {
+				//	hasMembership = chatmembership || getTranslation("moderator-chat", "MODERATOR");
+				//} else {
+				hasMembership = chatmembership || getTranslation("member-chat", "MEMBERSHIP");
+				//}
 				var membershipLength = ele.querySelector("#header-subtext.yt-live-chat-membership-item-renderer, #header-primary-text.yt-live-chat-membership-item-renderer") || false;
 				if (membershipLength) {
 					membershipLength = getAllContentNodes(membershipLength);
@@ -691,12 +732,15 @@
 		data.chatimg = chatimg;
 		data.hasDonation = hasDonation;
 		data.membership = hasMembership;
+		if (mod){
+			data.mod = mod;
+		}
 		data.subtitle = subtitle;
 		if (videoId){
 			data.videoid = videoId;
 		}
 		data.textonly = settings.textonlymode || false;
-		data.type = "youtube";
+		data.type = "youtube"; 
 		
 		if (youtubeShorts){
 			data.type = "youtubeshorts";
@@ -732,6 +776,7 @@
 	var BTTV = false;
 	var videosMuted = false;
 	var SEVENTV = false;
+	var FFZ = false;
 	
 	function containsShorts(url) {
 		const urlObj = new URL(url);
@@ -750,10 +795,16 @@
 		try {
 			if ("focusChat" == request) {
 				document.querySelector("div#input").focus();
+				simulateFocus(document.querySelector("div#input"));
 				sendResponse(true);
 				return;
 			}
 			if (typeof request === "object") {
+				
+				if ("state" in request) {
+					isExtensionOn = request.state;
+				}
+				
 				if ("settings" in request) {
 					settings = request.settings;
 					sendResponse(true);
@@ -762,6 +813,9 @@
 					}
 					if (settings.seventv) {
 						chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {});
+					}
+					if (settings.ffz) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true }, function (response) {});
 					}
 					if (settings.delayyoutube){
 						captureDelay = 3200;
@@ -782,6 +836,13 @@
 				if ("BTTV" in request) {
 					BTTV = request.BTTV;
 					//console.log(BTTV);
+					sendResponse(true);
+					mergeEmotes();
+					return;
+				}
+				if ("FFZ" in request) {
+					FFZ = request.FFZ;
+					//console.log(FFZ);
 					sendResponse(true);
 					mergeEmotes();
 					return;
@@ -826,14 +887,32 @@
 
 	chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
 		// {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		
+		if (!response){return;}
+		
+		if ("state" in response){
+			isExtensionOn = response.state;
+		}
+		
 		if ("settings" in response) {
 			settings = response.settings;
+			
 			if (settings.bttv && !BTTV) {
-				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {});
+				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
+					//	console.log(response);
+				});
 			}
 			if (settings.seventv && !SEVENTV) {
-				chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {});
+				chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {
+					//	console.log(response);
+				});
 			}
+			if (settings.ffz && !FFZ) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true }, function (response) {
+					//	console.log(response);
+				});
+			}
+			
 			if (settings.delayyoutube){
 				captureDelay = 2000;
 				//console.log(captureDelay);
@@ -881,12 +960,21 @@
 	}
 
 	console.log("Social stream inserted");
-
+	var marked = false;
 	const checkTimer = setInterval(function () {
 	  const ele = document.querySelector("yt-live-chat-app #items.yt-live-chat-item-list-renderer");
 	  if (ele && !ele.skip) {
 		ele.skip = true;
 		setupDeletionObserver(ele);
+		try {
+			ele.querySelectorAll("yt-live-chat-text-message-renderer").forEach(ele4 => {
+				ele4.skip = true;
+				cleared = true;
+				if (ele4.id) {
+					messageHistory.add(ele4.id);
+				}
+			});
+		} catch (e) {}
 		onElementInserted(ele, function (ele2) {
 			setTimeout(() => processMessage(ele2, false), captureDelay);
 		});
@@ -926,6 +1014,21 @@
 	  }
 	  // style-scope yt-live-chat-message-renderer
 	  
+	  if (settings.autoLiveYoutube && document.querySelector("#trigger") && !marked){
+			marked = true;
+			document.querySelector("#trigger").click()
+			document.querySelector('[slot="dropdown-content"] [tabindex="0"]').click()
+			var waitTilClear = setInterval(function(){
+				if (document.querySelectorAll('#menu > a').length==2){
+					clearInterval(waitTilClear);
+					document.querySelectorAll('#menu > a')[1].click()
+					document.querySelector("yt-live-chat-header-renderer").style.display = "none";
+				}
+			},100)
+	  } else if (document.querySelector("#trigger") && !settings.autoLiveYoutube && marked){
+		  document.querySelector("yt-live-chat-header-renderer").style.display = "unset";
+		  marked = false;
+	  }
 	}, 1000);
 
 	if (window.location.href.includes("youtube.com/watch")) {
@@ -945,7 +1048,7 @@
 						ele4.skip = true;
 						cleared = true;
 						if (ele4.id) {
-							messageHistory.push(ele4.id);
+							messageHistory.add(ele4.id);
 						}
 					});
 				} catch (e) {}
@@ -976,7 +1079,38 @@
 		}, 3000);
 	}
 	
+	
+	function checkViewers(){
+		if (videoId && isExtensionOn && (settings.showviewercount || settings.hypemode)){
+			fetch('https://api.socialstream.ninja/youtube/viewers?video='+videoId)
+			  .then(response => response.json())
+			  .then(data => {
+				try {
+					if (data && ("viewers" in data)){
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							({message:{
+									type: (youtubeShorts ? "youtubeshorts" : "youtube"),
+									event: 'viewer_update',
+									meta: parseInt(data.viewers)
+									//chatmessage: data.data[0] + " has started following"
+								}
+							}),
+							function (e) {}
+						);
+					}
+				} catch (e) {
+					//console.log(e);
+				}
+			  });
+		}
+	}
+	
+	setTimeout(function(){checkViewers();},2500);
+	setInterval(function(){checkViewers()},10000);
+	
 
+	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
 	try {
 		var receiveChannelCallback = function (e) {
 			remoteConnection.datachannel = event.channel;
@@ -984,11 +1118,8 @@
 			remoteConnection.datachannel.onopen = function (e) {};
 			remoteConnection.datachannel.onclose = function (e) {};
 			setInterval(function () {
-				if (document.hidden) {
-					// only poke ourselves if tab is hidden, to reduce cpu a tiny bit.
-					remoteConnection.datachannel.send("KEEPALIVE");
-				}
-			}, 800);
+				remoteConnection.datachannel.send("KEEPALIVE");
+			}, 1000);
 		};
 		var errorHandle = function (e) {};
 		var localConnection = new RTCPeerConnection();
@@ -1016,4 +1147,62 @@
 	} catch (e) {
 		console.log(e);
 	}
+	
+	function simulateFocus(element) {
+		// Create and dispatch focusin event
+		const focusInEvent = new FocusEvent('focusin', {
+			view: window,
+			bubbles: true,
+			cancelable: true
+		});
+		element.dispatchEvent(focusInEvent);
+
+		// Create and dispatch focus event
+		const focusEvent = new FocusEvent('focus', {
+			view: window,
+			bubbles: false,
+			cancelable: true
+		});
+		element.dispatchEvent(focusEvent);
+	}
+
+	
+	function preventBackgroundThrottling() {
+		window.onblur = null;
+		window.blurred = false;
+		document.hidden = false;
+		document.mozHidden = false;
+		document.webkitHidden = false;
+		
+		document.hasFocus = () => true;
+		window.onFocus = () => true;
+
+		Object.defineProperties(document, {
+			mozHidden: { value: false, configurable: true },
+			msHidden: { value: false, configurable: true },
+			webkitHidden: { value: false, configurable: true },
+			hidden: { value: false, configurable: true, writable: true },
+			visibilityState: { 
+				get: () => "visible",
+				configurable: true
+			}
+		});
+	}
+
+	const events = [
+		"visibilitychange",
+		"webkitvisibilitychange",
+		"blur",
+		"mozvisibilitychange",
+		"msvisibilitychange"
+	];
+
+	events.forEach(event => {
+		window.addEventListener(event, (e) => {
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}, true);
+	});
+
+	setInterval(preventBackgroundThrottling, 200);
 })();

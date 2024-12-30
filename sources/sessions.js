@@ -93,6 +93,9 @@
 			if (settings && settings.myname && settings.myname.textparam1){
 				name = settings.myname.textparam1.split(",")[0].trim();
 			}
+			if (settings && settings.hostnamesext && settings.hostnamesext.textsetting){
+				chatname = settings.hostnamesext.textsetting.split(",")[0].trim();
+			}
 		}
 		
 		msg = getAllContentNodes(ele.querySelector('[data-id="chat-message"]'));

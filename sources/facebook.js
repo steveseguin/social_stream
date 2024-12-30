@@ -119,6 +119,7 @@
 	}
 	
 	var dupCheck2 = [];
+	var isExtensionOn = true;
 	
 	function sleep(ms) {
 	  return new Promise(resolve => setTimeout(resolve, ms));
@@ -133,32 +134,47 @@
 		
 		var test = ele.querySelectorAll("div[dir='auto'] > div[role='button'][tabindex='0']")
 		if (test.length ===1){
-			test[0].click();
-			await sleep(100);
-		}
-		if (!ele.isConnected){return;}
-		
-		var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
-		imgele.skip = true;
-		
-		chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
-		if (chatimg.includes("32x32")) {
 			try {
-				let isGeneric = await getImageInfo(chatimg);
-				if (!ele.isConnected){return;}
-				if (isGeneric){
-					await sleep(200);
-					if (!ele.isConnected){return;}
-					await sleep(200);
-					if (!ele.isConnected){return;}
-					var imgele = ele.childNodes[0].querySelector("image");
-					chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
-				}
-			} catch(e){
-				console.log(e);
-			}
+				test[0].click();
+				await sleep(100);
+			}catch(e){}
 		}
-		
+		if (!ele.isConnected){
+			delete ele.dataset.set123;
+			//console.log("1");
+			return;}
+		try {
+			var imgele = ele.childNodes[0].querySelector("image");//.href.baseVal; // xlink:href
+			imgele.skip = true;
+			
+			chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+			if (chatimg.includes("32x32")) {
+				try {
+					let isGeneric = await getImageInfo(chatimg);
+					if (!ele.isConnected){
+						delete ele.dataset.set123;
+						//console.log("2");
+						return;}
+					if (isGeneric){
+						await sleep(200);
+						if (!ele.isConnected){
+							//console.log("3");
+							delete ele.dataset.set123;
+							return;}
+						await sleep(200);
+						if (!ele.isConnected){
+							//console.log("4");
+							delete ele.dataset.set123;
+							return;}
+						var imgele = ele.childNodes[0].querySelector("image");
+						chatimg = imgele.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+					}
+				} catch(e){
+					//console.log(e);
+				}
+			}
+		} catch (e) {
+		}
 		var name = "";
 		try {
 			var nameElement = ele.childNodes[1].childNodes[0].querySelectorAll('span[dir="auto"]')[0];
@@ -232,6 +248,7 @@
 				contentimg = ele.querySelector('div>div>div>div>div>div>div>img[draggable="false"][width][height][class][src]').src;
 				//msg = "<img src='"+msg+"' />";
 			} catch(e){
+				//console.log("5");
 				return;
 			}
 		}
@@ -342,7 +359,11 @@
 					sendResponse(true);
 					return;
 				}
+				
 				if (typeof request === "object"){
+					if ("state" in request) {
+						isExtensionOn = request.state;
+					}
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
@@ -372,8 +393,10 @@
 			} catch (e) {}
 			i--;
 		}
-	} 
-
+	}
+	
+	var counter=0;
+	
 	var ttt = setInterval(function() {
 		dupCheck = dupCheck.slice(-60); // facebook seems to keep around 40 messages, so this is overkill?
 		
@@ -426,6 +449,34 @@
 				}
 			}
 		} catch (e) {console.error(e);}
+		
+		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
+			
+			if (counter%10==0){
+				try {
+					
+					var viewerCount = document.querySelector("[data-instancekey] [role='img'][aria-label]>span[dir='auto']:not([hidden]):not(:has([hidden])):not(:is([hidden] *))");
+					
+					if (viewerCount && viewerCount.textContent){
+						if (viewerCount.textContent == parseInt(viewerCount.textContent)){
+							
+							chrome.runtime.sendMessage(
+								chrome.runtime.id,
+								({message:{
+										type: 'facebook',
+										event: 'viewer_update',
+										meta: parseInt(viewerCount.textContent)
+									}
+								}),
+								function (e) {}
+							);
+						}
+					}
+				} catch(e){}
+			}
+			counter+=1;
+		}
+
 	}, 800);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
