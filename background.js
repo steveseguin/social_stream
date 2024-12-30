@@ -3057,17 +3057,19 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				
 				let reflection = false;
 				
-				if (settings.relayall || (settings.firstsourceonly || settings.hideallreplies || settings.thissourceonly)){
-					reflection = checkExactDuplicateAlreadyReceived(request.message.chatmessage,request.message.textonly, request.message.tid, request.message.type);
-					if (reflection && (settings.thissourceonly || settings.firstsourceonly || settings.hideallreplies)){
-						sendResponse({ state: isExtensionOn });
-						return response;
-					}
+				// checkExactDuplicateAlreadyReceived only does work if there was a message responsein the last 10 seconds.
+				reflection = checkExactDuplicateAlreadyReceived(request.message.chatmessage,request.message.textonly, request.message.tid, request.message.type);
+				if (reflection && (settings.firstsourceonly || settings.hideallreplies || settings.thissourceonly)){
+					sendResponse({ state: isExtensionOn });
+					return response;
 				}
-				
 				
 				if (reflection===null){
 					reflection = true;
+				}
+				
+				if (reflection){
+					request.message.reflection = true;
 				}
 				
 				if (settings.noduplicates && // filters echos if same TYPE, USERID, and MESSAGE 
@@ -3127,7 +3129,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				
 				//onsole.log("bot actions..");
 				try {
-					request.message = await applyBotActions(request.message, sender.tab, reflection); // perform any immediate actions
+					request.message = await applyBotActions(request.message, sender.tab); // perform any immediate actions
 				} catch (e) {
 					console.warn(e);
 				}
@@ -6063,7 +6065,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 }
 
                 // Handle message store
-                if (msg2Save) { 
+                if (msg2Save) {  
                     handleMessageStore(tab.id, msg2Save, now, relayMode);
                 }
 
@@ -6549,7 +6551,7 @@ try {
  */
 
 // expects an object; not False/Null/undefined
-async function applyBotActions(data, tab = false, reflection = false) {
+async function applyBotActions(data, tab = false) {
 	
 	if (!data.id) {
 		messageCounter += 1;
@@ -6806,7 +6808,7 @@ async function applyBotActions(data, tab = false, reflection = false) {
 				//messageTimeout = Date.now();
 				var msg = {};
 				
-				if (reflection){
+				if (data.reflection){
 					msg.response = joke["setup"];
 					sendMessageToTabs(msg, false, null, true, false, 5100);
 					
@@ -6838,7 +6840,7 @@ async function applyBotActions(data, tab = false, reflection = false) {
 				let punch = "@" + data.chatname + ".. " + joke["punchline"];
 				
 				
-				if (reflection){
+				if (data.reflection){
 					punch =  ".. " + joke["punchline"];
 					var dashboardMsg = {
 						chatname: data.chatname,
@@ -6868,12 +6870,12 @@ async function applyBotActions(data, tab = false, reflection = false) {
 					5000,
 					data.tid,
 					punch,
-					reflection
+					data.reflection
 				);
 			//}
 		}
 		
-		if (settings.autohi && data.chatname && data.chatmessage && !reflection) {
+		if (settings.autohi && data.chatname && data.chatmessage && !data.reflection) {
 			if (["hi", "sup", "hello", "hey", "yo", "hi!", "hey!"].includes(chatmessage.toLowerCase())) {
 				var msg = {};
 				if (data.tid){
@@ -6923,7 +6925,7 @@ async function applyBotActions(data, tab = false, reflection = false) {
 			sendMessageToTabs(msg2, true, null, true, false, 5100);  
 			skipRelay = true;
 			
-			if (reflection){
+			if (data.reflection){
 				setTimeout(()=>{
 					let diceBotMessage = {};
 					diceBotMessage.chatmessage = data.chatname +" was rolled a "+roll+" (out of "+maxRoll+")";
@@ -6942,7 +6944,7 @@ async function applyBotActions(data, tab = false, reflection = false) {
 		if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(" said: ")){
 			return null;
 			
-		} else if (settings.relayall && !reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab) {
+		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab) {
 			
 			if (checkExactDuplicateAlreadyRelayed(data.chatmessage, data.textonly, tab.id, false)) { 
 				return null;
@@ -6973,7 +6975,7 @@ async function applyBotActions(data, tab = false, reflection = false) {
 			sendToS10(data, false, true); // we'll handle the relay logic here instead
 		}
 		
-		if (settings.forwardcommands2twitch && data.type && (data.type !== "twitch") && !reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab && data.tid) {
+		if (settings.forwardcommands2twitch && data.type && (data.type !== "twitch") && !data.reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab && data.tid) {
 			if (!data.bot && data.chatmessage.startsWith("!")) {
 				//messageTimeout = Date.now();
 				var msg = {};
@@ -7000,7 +7002,7 @@ async function applyBotActions(data, tab = false, reflection = false) {
 				}
 				
 			} 
-		} else if (settings.forwardcommands2twitch && data.type && (data.type === "twitch") && reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab && data.tid) {
+		} else if (settings.forwardcommands2twitch && data.type && (data.type === "twitch") && data.reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab && data.tid) {
 			if (!data.bot && data.chatmessage.startsWith("!")) {
 				return null;
 			}

@@ -1387,11 +1387,12 @@ input:checked + .slider:before {
 					<input type="checkbox" class="collapsible-input" id="wrapper-chat-message-tts-options" />
 					<label class="collapsible-label" for="wrapper-chat-message-tts-options">
 						<span data-translate="message---tts">💬 Message — 🗣️ Text to Speech</span>
-					</label>
+					</label> 
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat">
 								<!-- Main TTS Toggle -->
+								<h4>Enable Text to Speech in the Dock</h4>
 								<div title="Tip: You can use &amp;myname=name1,name2 to list names to exclude from TTS.">
 									<label class="switch">
 										<input type="checkbox" data-param1="speech" />
@@ -1399,400 +1400,414 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="text-to-speech-incoming-messages">🚦🗣️ Text-to-speech incoming messages </span>
 								</div>
-								<br>
-								<!-- Global TTS Behavior Options -->
-								<div class="options_group tts-behavior-options">
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="simpletts" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="do-not-say-says-or-someone-says-with-tts">🗣️ Do not say "says" or "someone says" with TTS </span>
-									</div>
-									
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="simpletts2" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="do-not-read-out-chatname-and-someone-says-when-using-tts">🗣️ Do not read out chatname and "someone says" when using TTS. </span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="readouturls" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="read-out-urls">🗣️ Read out URLs rather than saying "link". </span>
-									</div>
-									<!-- Command Controls -->
-									<div title="Only what is written AFTER the !say command is read out. It's read out regardless of whether tts is turned on elsewhere or not.">
-										<label class="switch">
-											<input type="checkbox" data-param1="ttscommand" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="ttscommand">🗣️ Any message containing 
-											<input type="text" id="ttscommandcustom" class="textInput instant" autocomplete="off" 
-												placeholder="!say" data-textparam1="ttscommand" value="!say" 
-												title="You need to include the ! if you want it" style="width:36px" /> will be read out 
-										</span>
-									</div>
-									
-									<div title="Only 'member' marked users will have messages read out when using the TTS chat command.">
-										<label class="switch">
-											<input type="checkbox" data-param1="ttscommandmembersonly" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="membersttscommand">🤴 Only members can use the TTS command</span>
-									</div>
-									<h4>Read out only specific user/messages</h4>
-									<div title="Only 'bot' marked users will have messages read out.">
-										<label class="switch">
-											<input type="checkbox" data-param1="bottts" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="bottts">🤖 Only bot marked users can have messages read</span>
-									</div>
-									<div title="Only 'bot' marked users will have messages read out.">
-										<label class="switch">
-											<input type="checkbox" data-param1="modtts" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="modtts">👩‍🏫 Only specific mods can have messages read</span>
-									</div>
-									<div title="Only 'bot' marked users will have messages read out.">
-										<label class="switch">
-											<input type="checkbox" data-param1="viptts" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="viptts">⭐ Only VIP marked users can have messages read </span>
-									</div>
-									<div title="Only 'bot' marked users will have messages read out.">
-										<label class="switch">
-											<input type="checkbox" data-param1="admintts" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="admintts">👑 Only privilleged users can have messages read</span>
-									</div>
-									<div title="Only 'bot' marked users will have messages read out.">
-										<label class="switch">
-											<input type="checkbox" data-param1="hosttts" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="bottts">🕺 Only hosts can have messages read</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="ttsdonos" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="filter-text-to-speech-for-donations-only">🗣️💰 Only donations can have messages read out</span>
-									</div>
-									<h4>Bots, hosts and events are excluded from TTS</h4>
-									<div title="Allow 'bot' marked users to have messages read out; default is to filter them out">
-										<label class="switch">
-											<input type="checkbox" data-param1="allowbottss" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="allowbottss">🤖✅ Allow bot messages to be read out</span>
-									</div>
-									<div title="Allow 'bot' marked users to have messages read out; default is to filter them out">
-										<label class="switch">
-											<input type="checkbox" data-param1="allowhosttss" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="allowhosttss">🕺✅ Allow host messages to be read out</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="readevents" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="read-tts-stream-events">🗣️ Include any stream events when using TTS </span>
-									</div>
-									
-									
-
-									<h4>More TTS options</h4>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="skipmessages=3" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="if-using-tts-only-announce-every-3rd-message">🗣️ If using TTS, only announce every 3rd message </span>
-									</div>
-								   
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="passtts" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="pass-tts">🔇 Next tts message control via chat "</span><b><span data-translate="pass">!pass</span></b>"												 
-									</div>
-									
-									<div title="The volume has a max of 1.0 (100%)">
-										<label class="switch">
-											<input type="checkbox" data-param1="volume" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="system-tts-volume">
-											🔉 Volume of speech
-											<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="1.0" size="5" data-numbersetting="volume" />
-										</span>
-									</div>
+							</div>
+							
+							<!-- Global TTS Behavior Options -->
+							<div class="options_group tts-behavior-options">
+								<h4>TTS Behaviors</h4>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="simpletts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="do-not-say-says-or-someone-says-with-tts">🚫🗣️ Do not say "says" or "someone says" with TTS </span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="simpletts2" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="do-not-read-out-chatname-and-someone-says-when-using-tts">🚫🗣️ Do not read out chatname and "someone says" when using TTS. </span>
 								</div>
 								
-								<div id="ttsButton" class="hidden"></div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="readouturls" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="read-out-urls">🗣️ Read out URLs rather than saying "link". </span>
+								</div>
+								<!-- Command Controls -->
+								<div title="Only what is written AFTER the !say command is read out. It's read out regardless of whether tts is turned on elsewhere or not.">
+									<label class="switch">
+										<input type="checkbox" data-param1="ttscommand" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="ttscommand">🗣️ Any message containing 
+										<input type="text" id="ttscommandcustom" class="textInput instant" autocomplete="off" 
+											placeholder="!say" data-textparam1="ttscommand" value="!say" 
+											title="You need to include the ! if you want it" style="width:36px" /> will be read out 
+									</span>
+								</div>
 								
-								<div class="tts-provider-options options_group">
-									<h4>Built-in System TTS Options</h4>
-									<i>note: the free built-in TTS plays out via the default audio device.</i>
-									<br /><br />
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="lang" data-del1="lang,voice"/>
-											<span class="slider round"></span>
-										</label>
-										<select id="systemLanguageSelect" data-optionparam1="lang" title="Select the system TTS language"></select>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="rate" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="system-tts-rate">
-											⏩ Speaking rate
-											<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" 
-												size="5" data-numbersetting="rate" />
-										</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="pitch" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="system-tts-pitch">
-											🎵 Pitch
-											<input type="number" style="max-width: 6ch;" step="0.1" max="2" min="0.1" value="1.0" 
-												size="5" data-numbersetting="pitch" />
-										</span>
-									</div>
+								<div title="Only 'member' marked users will have messages read out when using the TTS chat command.">
+									<label class="switch">
+										<input type="checkbox" data-param1="ttscommandmembersonly" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="membersttscommand">🤴 Only members can use the TTS command</span>
 								</div>
-								<br />
-								<!-- ElevenLabs TTS Options -->
-								<div class="tts-provider-option options_group">
-									<h4>ElevenLabs TTS Options</h4>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="password" id="elevenLabsKey" class="textInput instant" autocomplete="off" 
-											placeholder="Your ElevenLabs API Key" data-textparam1="elevenlabskey" />
-										<label for="elevenLabsKey">
-											<span data-translate="elevenlabs-api-key">ElevenLabs API Key</span>
-										</label>
-									</div>
-									<!-- Voice Selection -->
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="elevenLabsVoiceID" class="textInput instant" autocomplete="off" placeholder="e.g., VR6AewLTigWG4xSOukaG" data-textparam1="voice11" />
-										<label for="elevenLabsVoiceID">
-											<span data-translate="elevenlabs-voice-id">ElevenLabs Voice ID</span>
-										</label>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="elevenlabsmodel" />
-											<span class="slider round"></span>
-										</label>
-										<select id="elevenlabsmodelSelect" data-optionparam1="elevenlabsmodel">
-											<option value="eleven_multilingual_v2">eleven_multilingual_v2</option>
-											<option value="eleven_turbo_v2_5">eleven_turbo_v2_5</option>
-											<option value="eleven_turbo_v2">eleven_turbo_v2</option>
-											<option value="eleven_english_sts_v2">eleven_english_sts_v2</option>
-											<option value="eleven_multilingual_sts_v2">eleven_multilingual_sts_v2</option>
-											<option value="eleven_monolingual_v1">eleven_monolingual_v1</option>
-											<option value="eleven_multilingual_v1">eleven_multilingual_v1</option>
-										</select>
-									</div>
-									<!-- Voice Settings -->
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="elevenrate" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="elevenlabs-rate">
-											🔊 Speaking Rate
-											<input type="number" style="max-width: 6ch;" step="0.25" max="5.0" min="0.25" value="1.0" size="5" data-numbersetting="elevenrate" />
-										</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="elevenlatency" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="elevenlabs-latency">
-											🚀 ElevenLabs Latency Optimization
-											<input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="4" size="5" data-numbersetting="elevenlatency" />
-										</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="elevenstability" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="elevenlabs-stability">
-											🎯 Stability
-											<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting="elevenstability" />
-										</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="elevensimilarity" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="elevenlabs-similarity">
-											🎭 Similarity Boost
-											<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.75" size="5" data-numbersetting="elevensimilarity" />
-										</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="elevenstyle" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="elevenlabs-style">
-											🎨 Style
-											<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting="elevenstyle" />
-										</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="elevenspeakerboost" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="elevenlabs-speaker-boost">🔊 Use Speaker Boost</span>
-									</div>
+								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="norelfectionstts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="do-not-read-out-reflections">🚫➿ Do not read out reflections (your replies)</span>
 								</div>
-								<br />
-								<!-- Google Cloud TTS Options -->
-								<div class="tts-provider-options options_group">
-									<h4>Google Cloud TTS Options</h4>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="password" id="googleAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam1="ttskey" />
-										<label for="googleAPIKey"><span data-translate="google-api-key">Google API Key</span></label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="googleVoiceName" class="textInput instant" autocomplete="off" placeholder="e.g., en-GB-Standard-A" data-textparam1="voicegoogle" />
-										<label for="googleVoiceName"><span data-translate="google-voice-name">Google Voice Name</span></label>
-									</div>
-									<!-- Language Selection -->
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="googlelang" />
-											<span class="slider round"></span>
-										</label>
-										<select id="googleLanguageSelect" data-optionparam1="googlelang">
-											<option value="en-US">English (US)</option>
-											<option value="en-GB">English (UK)</option>
-											<option value="en-AU">English (Australia)</option>
-											<option value="es-ES">Spanish (Spain)</option>
-											<option value="es-US">Spanish (US)</option>
-											<option value="fr-FR">French</option>
-											<option value="de-DE">German</option>
-											<option value="it-IT">Italian</option>
-											<option value="ja-JP">Japanese</option>
-											<option value="ko-KR">Korean</option>
-											<option value="pt-BR">Portuguese (Brazil)</option>
-											<option value="hi-IN">Hindi</option>
-										</select>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="googlerate" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="google-tts-rate">
-											⏩ Speaking rate
-											<input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.25" value="1.0" 
-												size="5" data-numbersetting="googlerate" />
-										</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="googlepitch" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="google-pitch">
-											🎵 Pitch
-											<input type="number" style="max-width: 6ch;" step="0.1" max="20" min="-20" value="0" size="5" data-numbersetting="googlepitch" />
-										</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="googleaudioprofile" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="google-audio-profile">
-											🎚️ Audio Profile
-											<select data-optionparam1="googleaudioprofile">
-												<option value="handset-class-device">Handset</option>
-												<option value="wearable-class-device">Wearable</option>
-												<option value="telephony-class-application">Home Assistant</option>
-												<option value="large-automotive-class-device">Car Kit</option>
-												<option value="headphone-class-device">Headphone</option>
-												<option value="small-bluetooth-speaker-class-device">Small Speaker</option>
-												<option value="medium-bluetooth-speaker-class-device">Medium Speaker</option>
-												<option value="large-home-entertainment-class-device">Large Speaker</option>
-											</select>
-										</span>
-									</div>
-									
+							</div>
+							<div class="options_group tts-behavior-options">
+								<h4>Read out only specific user/messages</h4>
+								<div title="Only 'bot' marked users will have messages read out.">
+									<label class="switch">
+										<input type="checkbox" data-param1="bottts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="bottts">🤖 Only bot marked users can have messages read</span>
 								</div>
-								<br />
-								<!-- Speechify TTS Options -->
-								<div class="tts-provider-options options_group">
-									<h4>Speechify TTS Options</h4>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="password" id="speechifyAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam1="speechifykey" />
-										<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="speechifyVoiceID" class="textInput instant" autocomplete="off" placeholder="e.g., henry" data-textparam1="voicespeechify" />
-										<label for="speechifyVoiceID"><span data-translate="speechify-voice-id">Speechify Voice ID</span></label>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="speechifyspeed" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="speechify-speed">
-											⚡ Speed
-											<input type="number" style="max-width: 6ch;" step="0.1" max="3" min="0.1" value="1.0" size="5" data-numbersetting="speechifyspeed" />
-										</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="speechifymodel" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="speechify-model">
-											🤖 Model
-											<select data-optionparam1="speechifymodel">
-												<option value="simba-english">English</option>
-												<option value="simba-multilingual">Multilingual</option>
-											</select>
-										</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param1="speechifylang" />
-											<span class="slider round"></span>
-										</label>
-										<select id="speechifyLanguageSelect" data-optionparam1="speechifylang">
-											<option value="en-US">English (US)</option>
-											<option value="en-GB">English (UK)</option>
-											<option value="es">Spanish</option>
-											<option value="fr">French</option>
-											<option value="de">German</option>
-											<option value="it">Italian</option>
+								<div title="Only 'mod' marked users will have messages read out.">
+									<label class="switch">
+										<input type="checkbox" data-param1="modtts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="modtts">👩‍🏫 Only specific mods can have messages read</span>
+								</div>
+								<div title="Only 'vip' marked users will have messages read out.">
+									<label class="switch">
+										<input type="checkbox" data-param1="viptts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="viptts">⭐ Only VIP marked users can have messages read </span>
+								</div>
+								<div title="Only 'privilleged' marked users will have messages read out.">
+									<label class="switch">
+										<input type="checkbox" data-param1="admintts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="admintts">👑 Only privilleged users can have messages read</span>
+								</div>
+								<div title="Only 'host' marked users will have messages read out.">
+									<label class="switch">
+										<input type="checkbox" data-param1="hosttts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="bottts">🕺 Only hosts can have messages read</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="ttsdonos" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="filter-text-to-speech-for-donations-only">🗣️💰 Only donations can have messages read out</span>
+								</div>
+							</div>
+							<div class="options_group tts-behavior-options">
+								<h4>Bots, hosts and events are excluded from TTS</h4>
+								<div title="Allow 'bot' marked users to have messages read out; default is to filter them out">
+									<label class="switch">
+										<input type="checkbox" data-param1="allowbottss" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="allowbottss">🤖✅ Allow bot messages to be read out</span>
+								</div>
+								<div title="Allow 'bot' marked users to have messages read out; default is to filter them out">
+									<label class="switch">
+										<input type="checkbox" data-param1="allowhosttss" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="allowhosttss">🕺✅ Allow host messages to be read out</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="readevents" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="read-tts-stream-events">🗣️ Include any stream events when using TTS </span>
+								</div>
+							</div>
+							<div class="options_group tts-behavior-options">
+								<h4>More TTS options</h4>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="skipmessages=3" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="if-using-tts-only-announce-every-3rd-message">🗣️ If using TTS, only announce every 3rd message </span>
+								</div>
+							   
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="passtts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="pass-tts">🔇 Next tts message control via chat "</span><b><span data-translate="pass">!pass</span></b>"												 
+								</div>
+								
+								<div title="The volume has a max of 1.0 (100%)">
+									<label class="switch">
+										<input type="checkbox" data-param1="volume" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="system-tts-volume">
+										🔉 Volume of speech
+										<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="1.0" size="5" data-numbersetting="volume" />
+									</span>
+								</div>
+							</div>
+						</div>	
+						<div id="ttsButton" class="hidden"></div>
+						
+						<div class="options_group tts-behavior-options">
+							<div class="tts-provider-options options_group">
+								<h4>Built-in System TTS Options</h4>
+								<i>note: the free built-in TTS plays out via the default audio device.</i>
+								<br /><br />
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="lang" data-del1="lang,voice"/>
+										<span class="slider round"></span>
+									</label>
+									<select id="systemLanguageSelect" data-optionparam1="lang" title="Select the system TTS language"></select>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="rate" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="system-tts-rate">
+										⏩ Speaking rate
+										<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" 
+											size="5" data-numbersetting="rate" />
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="pitch" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="system-tts-pitch">
+										🎵 Pitch
+										<input type="number" style="max-width: 6ch;" step="0.1" max="2" min="0.1" value="1.0" 
+											size="5" data-numbersetting="pitch" />
+									</span>
+								</div>
+							</div>
+						</div>
+							<br />
+							<!-- ElevenLabs TTS Options -->
+							<div class="tts-provider-option options_group">
+								<h4>ElevenLabs TTS Options</h4>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="password" id="elevenLabsKey" class="textInput instant" autocomplete="off" 
+										placeholder="Your ElevenLabs API Key" data-textparam1="elevenlabskey" />
+									<label for="elevenLabsKey">
+										<span data-translate="elevenlabs-api-key">ElevenLabs API Key</span>
+									</label>
+								</div>
+								<!-- Voice Selection -->
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="elevenLabsVoiceID" class="textInput instant" autocomplete="off" placeholder="e.g., VR6AewLTigWG4xSOukaG" data-textparam1="voice11" />
+									<label for="elevenLabsVoiceID">
+										<span data-translate="elevenlabs-voice-id">ElevenLabs Voice ID</span>
+									</label>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="elevenlabsmodel" />
+										<span class="slider round"></span>
+									</label>
+									<select id="elevenlabsmodelSelect" data-optionparam1="elevenlabsmodel">
+										<option value="eleven_multilingual_v2">eleven_multilingual_v2</option>
+										<option value="eleven_turbo_v2_5">eleven_turbo_v2_5</option>
+										<option value="eleven_turbo_v2">eleven_turbo_v2</option>
+										<option value="eleven_english_sts_v2">eleven_english_sts_v2</option>
+										<option value="eleven_multilingual_sts_v2">eleven_multilingual_sts_v2</option>
+										<option value="eleven_monolingual_v1">eleven_monolingual_v1</option>
+										<option value="eleven_multilingual_v1">eleven_multilingual_v1</option>
+									</select>
+								</div>
+								<!-- Voice Settings -->
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="elevenrate" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="elevenlabs-rate">
+										🔊 Speaking Rate
+										<input type="number" style="max-width: 6ch;" step="0.25" max="5.0" min="0.25" value="1.0" size="5" data-numbersetting="elevenrate" />
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="elevenlatency" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="elevenlabs-latency">
+										🚀 ElevenLabs Latency Optimization
+										<input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="4" size="5" data-numbersetting="elevenlatency" />
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="elevenstability" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="elevenlabs-stability">
+										🎯 Stability
+										<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting="elevenstability" />
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="elevensimilarity" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="elevenlabs-similarity">
+										🎭 Similarity Boost
+										<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.75" size="5" data-numbersetting="elevensimilarity" />
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="elevenstyle" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="elevenlabs-style">
+										🎨 Style
+										<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting="elevenstyle" />
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="elevenspeakerboost" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="elevenlabs-speaker-boost">🔊 Use Speaker Boost</span>
+								</div>
+							</div>
+							<br />
+							<!-- Google Cloud TTS Options -->
+							<div class="tts-provider-options options_group">
+								<h4>Google Cloud TTS Options</h4>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="password" id="googleAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam1="ttskey" />
+									<label for="googleAPIKey"><span data-translate="google-api-key">Google API Key</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="googleVoiceName" class="textInput instant" autocomplete="off" placeholder="e.g., en-GB-Standard-A" data-textparam1="voicegoogle" />
+									<label for="googleVoiceName"><span data-translate="google-voice-name">Google Voice Name</span></label>
+								</div>
+								<!-- Language Selection -->
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="googlelang" />
+										<span class="slider round"></span>
+									</label>
+									<select id="googleLanguageSelect" data-optionparam1="googlelang">
+										<option value="en-US">English (US)</option>
+										<option value="en-GB">English (UK)</option>
+										<option value="en-AU">English (Australia)</option>
+										<option value="es-ES">Spanish (Spain)</option>
+										<option value="es-US">Spanish (US)</option>
+										<option value="fr-FR">French</option>
+										<option value="de-DE">German</option>
+										<option value="it-IT">Italian</option>
+										<option value="ja-JP">Japanese</option>
+										<option value="ko-KR">Korean</option>
+										<option value="pt-BR">Portuguese (Brazil)</option>
+										<option value="hi-IN">Hindi</option>
+									</select>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="googlerate" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="google-tts-rate">
+										⏩ Speaking rate
+										<input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.25" value="1.0" 
+											size="5" data-numbersetting="googlerate" />
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="googlepitch" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="google-pitch">
+										🎵 Pitch
+										<input type="number" style="max-width: 6ch;" step="0.1" max="20" min="-20" value="0" size="5" data-numbersetting="googlepitch" />
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="googleaudioprofile" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="google-audio-profile">
+										🎚️ Audio Profile
+										<select data-optionparam1="googleaudioprofile">
+											<option value="handset-class-device">Handset</option>
+											<option value="wearable-class-device">Wearable</option>
+											<option value="telephony-class-application">Home Assistant</option>
+											<option value="large-automotive-class-device">Car Kit</option>
+											<option value="headphone-class-device">Headphone</option>
+											<option value="small-bluetooth-speaker-class-device">Small Speaker</option>
+											<option value="medium-bluetooth-speaker-class-device">Medium Speaker</option>
+											<option value="large-home-entertainment-class-device">Large Speaker</option>
 										</select>
-									</div>
+									</span>
+								</div>
+								
+							</div>
+							<br />
+							<!-- Speechify TTS Options -->
+							<div class="tts-provider-options options_group">
+								<h4>Speechify TTS Options</h4>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="password" id="speechifyAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam1="speechifykey" />
+									<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="speechifyVoiceID" class="textInput instant" autocomplete="off" placeholder="e.g., henry" data-textparam1="voicespeechify" />
+									<label for="speechifyVoiceID"><span data-translate="speechify-voice-id">Speechify Voice ID</span></label>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="speechifyspeed" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="speechify-speed">
+										⚡ Speed
+										<input type="number" style="max-width: 6ch;" step="0.1" max="3" min="0.1" value="1.0" size="5" data-numbersetting="speechifyspeed" />
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="speechifymodel" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="speechify-model">
+										🤖 Model
+										<select data-optionparam1="speechifymodel">
+											<option value="simba-english">English</option>
+											<option value="simba-multilingual">Multilingual</option>
+										</select>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="speechifylang" />
+										<span class="slider round"></span>
+									</label>
+									<select id="speechifyLanguageSelect" data-optionparam1="speechifylang">
+										<option value="en-US">English (US)</option>
+										<option value="en-GB">English (UK)</option>
+										<option value="es">Spanish</option>
+										<option value="fr">French</option>
+										<option value="de">German</option>
+										<option value="it">Italian</option>
+									</select>
 								</div>
 							</div>
 						</div>
