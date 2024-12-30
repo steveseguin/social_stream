@@ -6876,7 +6876,7 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		if (settings.autohi && data.chatname && data.chatmessage && !data.reflection) {
-			if (["hi", "sup", "hello", "hey", "yo", "hi!", "hey!"].includes(chatmessage.toLowerCase())) {
+			if (["hi", "sup", "hello", "hey", "yo", "hi!", "hey!"].includes(data.chatmessage.toLowerCase())) {
 				var msg = {};
 				if (data.tid){
 					msg.tid = data.tid;
