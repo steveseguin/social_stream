@@ -3719,6 +3719,11 @@
 				allowbottss = true;
 			}
 			
+			var norelfectionstts = false;
+			if (urlParams.has("norelfectionstts")) {
+				norelfectionstts = true;
+			}
+			
 			var allowhosttss = false;
 			if (urlParams.has("allowhosttss")) {
 				allowhosttss = true;
@@ -4172,6 +4177,10 @@
 				
 				else if (data.bot && !(allowbottss || bottts)){return;} // do not read out bot messages
 				else if (data.host && !(allowhosttss || hosttts)){return;} 
+				
+				else if (data.reflection && norelfectionstts){return;} 
+				
+				
 				//else if (data.mod && !(allowmodtss || modtts)){return;} 
 				//else if (data.vip && !(allowviptss || viptts)){return;} 
 				//else if (data.admin && !(allowadmintss || admintts)){return;} 
