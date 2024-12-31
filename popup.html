@@ -1540,7 +1540,7 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param1="passtts" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="pass-tts">🔇 Next tts message control via chat "</span><b><span data-translate="pass">!pass</span></b>"												 
+									<span data-translate="pass-tts">🔇 Next tts message control via chat </span><b><span data-translate="pass">!pass</span></b>
 								</div>
 								
 								<div title="The volume has a max of 1.0 (100%)">
@@ -1595,223 +1595,222 @@ input:checked + .slider:before {
 						</div>
 							<br />
 							<!-- ElevenLabs TTS Options -->
-							<div class="tts-provider-option options_group">
-								<h4>ElevenLabs TTS Options</h4>
-								<div class="textInputContainer" style="width: 95%;">
-									<input type="password" id="elevenLabsKey" class="textInput instant" autocomplete="off" 
-										placeholder="Your ElevenLabs API Key" data-textparam1="elevenlabskey" />
-									<label for="elevenLabsKey">
-										<span data-translate="elevenlabs-api-key">ElevenLabs API Key</span>
-									</label>
-								</div>
-								<!-- Voice Selection -->
-								<div class="textInputContainer" style="width: 95%;">
-									<input type="text" id="elevenLabsVoiceID" class="textInput instant" autocomplete="off" placeholder="e.g., VR6AewLTigWG4xSOukaG" data-textparam1="voice11" />
-									<label for="elevenLabsVoiceID">
-										<span data-translate="elevenlabs-voice-id">ElevenLabs Voice ID</span>
-									</label>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="elevenlabsmodel" />
-										<span class="slider round"></span>
-									</label>
-									<select id="elevenlabsmodelSelect" data-optionparam1="elevenlabsmodel">
-										<option value="eleven_multilingual_v2">eleven_multilingual_v2</option>
-										<option value="eleven_turbo_v2_5">eleven_turbo_v2_5</option>
-										<option value="eleven_turbo_v2">eleven_turbo_v2</option>
-										<option value="eleven_english_sts_v2">eleven_english_sts_v2</option>
-										<option value="eleven_multilingual_sts_v2">eleven_multilingual_sts_v2</option>
-										<option value="eleven_monolingual_v1">eleven_monolingual_v1</option>
-										<option value="eleven_multilingual_v1">eleven_multilingual_v1</option>
-									</select>
-								</div>
-								<!-- Voice Settings -->
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="elevenrate" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="elevenlabs-rate">
-										🔊 Speaking Rate
-										<input type="number" style="max-width: 6ch;" step="0.25" max="5.0" min="0.25" value="1.0" size="5" data-numbersetting="elevenrate" />
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="elevenlatency" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="elevenlabs-latency">
-										🚀 ElevenLabs Latency Optimization
-										<input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="4" size="5" data-numbersetting="elevenlatency" />
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="elevenstability" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="elevenlabs-stability">
-										🎯 Stability
-										<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting="elevenstability" />
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="elevensimilarity" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="elevenlabs-similarity">
-										🎭 Similarity Boost
-										<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.75" size="5" data-numbersetting="elevensimilarity" />
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="elevenstyle" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="elevenlabs-style">
-										🎨 Style
-										<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting="elevenstyle" />
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="elevenspeakerboost" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="elevenlabs-speaker-boost">🔊 Use Speaker Boost</span>
-								</div>
+						<div class="tts-provider-option options_group">
+							<h4>ElevenLabs TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="elevenLabsKey" class="textInput instant" autocomplete="off" 
+									placeholder="Your ElevenLabs API Key" data-textparam1="elevenlabskey" />
+								<label for="elevenLabsKey">
+									<span data-translate="elevenlabs-api-key">ElevenLabs API Key</span>
+								</label>
 							</div>
-							<br />
-							<!-- Google Cloud TTS Options -->
-							<div class="tts-provider-options options_group">
-								<h4>Google Cloud TTS Options</h4>
-								<div class="textInputContainer" style="width: 95%;">
-									<input type="password" id="googleAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam1="ttskey" />
-									<label for="googleAPIKey"><span data-translate="google-api-key">Google API Key</span></label>
-								</div>
-								<div class="textInputContainer" style="width: 95%;">
-									<input type="text" id="googleVoiceName" class="textInput instant" autocomplete="off" placeholder="e.g., en-GB-Standard-A" data-textparam1="voicegoogle" />
-									<label for="googleVoiceName"><span data-translate="google-voice-name">Google Voice Name</span></label>
-								</div>
-								<!-- Language Selection -->
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="googlelang" />
-										<span class="slider round"></span>
-									</label>
-									<select id="googleLanguageSelect" data-optionparam1="googlelang">
-										<option value="en-US">English (US)</option>
-										<option value="en-GB">English (UK)</option>
-										<option value="en-AU">English (Australia)</option>
-										<option value="es-ES">Spanish (Spain)</option>
-										<option value="es-US">Spanish (US)</option>
-										<option value="fr-FR">French</option>
-										<option value="de-DE">German</option>
-										<option value="it-IT">Italian</option>
-										<option value="ja-JP">Japanese</option>
-										<option value="ko-KR">Korean</option>
-										<option value="pt-BR">Portuguese (Brazil)</option>
-										<option value="hi-IN">Hindi</option>
-									</select>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="googlerate" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="google-tts-rate">
-										⏩ Speaking rate
-										<input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.25" value="1.0" 
-											size="5" data-numbersetting="googlerate" />
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="googlepitch" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="google-pitch">
-										🎵 Pitch
-										<input type="number" style="max-width: 6ch;" step="0.1" max="20" min="-20" value="0" size="5" data-numbersetting="googlepitch" />
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="googleaudioprofile" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="google-audio-profile">
-										🎚️ Audio Profile
-										<select data-optionparam1="googleaudioprofile">
-											<option value="handset-class-device">Handset</option>
-											<option value="wearable-class-device">Wearable</option>
-											<option value="telephony-class-application">Home Assistant</option>
-											<option value="large-automotive-class-device">Car Kit</option>
-											<option value="headphone-class-device">Headphone</option>
-											<option value="small-bluetooth-speaker-class-device">Small Speaker</option>
-											<option value="medium-bluetooth-speaker-class-device">Medium Speaker</option>
-											<option value="large-home-entertainment-class-device">Large Speaker</option>
-										</select>
-									</span>
-								</div>
-								
+							<!-- Voice Selection -->
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="text" id="elevenLabsVoiceID" class="textInput instant" autocomplete="off" placeholder="e.g., VR6AewLTigWG4xSOukaG" data-textparam1="voice11" />
+								<label for="elevenLabsVoiceID">
+									<span data-translate="elevenlabs-voice-id">ElevenLabs Voice ID</span>
+								</label>
 							</div>
-							<br />
-							<!-- Speechify TTS Options -->
-							<div class="tts-provider-options options_group">
-								<h4>Speechify TTS Options</h4>
-								<div class="textInputContainer" style="width: 95%;">
-									<input type="password" id="speechifyAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam1="speechifykey" />
-									<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
-								</div>
-								<div class="textInputContainer" style="width: 95%;">
-									<input type="text" id="speechifyVoiceID" class="textInput instant" autocomplete="off" placeholder="e.g., henry" data-textparam1="voicespeechify" />
-									<label for="speechifyVoiceID"><span data-translate="speechify-voice-id">Speechify Voice ID</span></label>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="speechifyspeed" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="speechify-speed">
-										⚡ Speed
-										<input type="number" style="max-width: 6ch;" step="0.1" max="3" min="0.1" value="1.0" size="5" data-numbersetting="speechifyspeed" />
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="speechifymodel" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="speechify-model">
-										🤖 Model
-										<select data-optionparam1="speechifymodel">
-											<option value="simba-english">English</option>
-											<option value="simba-multilingual">Multilingual</option>
-										</select>
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="speechifylang" />
-										<span class="slider round"></span>
-									</label>
-									<select id="speechifyLanguageSelect" data-optionparam1="speechifylang">
-										<option value="en-US">English (US)</option>
-										<option value="en-GB">English (UK)</option>
-										<option value="es">Spanish</option>
-										<option value="fr">French</option>
-										<option value="de">German</option>
-										<option value="it">Italian</option>
-									</select>
-								</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="elevenlabsmodel" />
+									<span class="slider round"></span>
+								</label>
+								<select id="elevenlabsmodelSelect" data-optionparam1="elevenlabsmodel">
+									<option value="eleven_multilingual_v2">eleven_multilingual_v2</option>
+									<option value="eleven_turbo_v2_5">eleven_turbo_v2_5</option>
+									<option value="eleven_turbo_v2">eleven_turbo_v2</option>
+									<option value="eleven_english_sts_v2">eleven_english_sts_v2</option>
+									<option value="eleven_multilingual_sts_v2">eleven_multilingual_sts_v2</option>
+									<option value="eleven_monolingual_v1">eleven_monolingual_v1</option>
+									<option value="eleven_multilingual_v1">eleven_multilingual_v1</option>
+								</select>
+							</div>
+							<!-- Voice Settings -->
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="elevenrate" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="elevenlabs-rate">
+									🔊 Speaking Rate
+									<input type="number" style="max-width: 6ch;" step="0.25" max="5.0" min="0.25" value="1.0" size="5" data-numbersetting="elevenrate" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="elevenlatency" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="elevenlabs-latency">
+									🚀 ElevenLabs Latency Optimization
+									<input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="4" size="5" data-numbersetting="elevenlatency" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="elevenstability" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="elevenlabs-stability">
+									🎯 Stability
+									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting="elevenstability" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="elevensimilarity" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="elevenlabs-similarity">
+									🎭 Similarity Boost
+									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.75" size="5" data-numbersetting="elevensimilarity" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="elevenstyle" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="elevenlabs-style">
+									🎨 Style
+									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting="elevenstyle" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="elevenspeakerboost" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="elevenlabs-speaker-boost">🔊 Use Speaker Boost</span>
 							</div>
 						</div>
-                    </div>
+						<br />
+						<!-- Google Cloud TTS Options -->
+						<div class="tts-provider-options options_group">
+							<h4>Google Cloud TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="googleAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam1="ttskey" />
+								<label for="googleAPIKey"><span data-translate="google-api-key">Google API Key</span></label>
+							</div>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="text" id="googleVoiceName" class="textInput instant" autocomplete="off" placeholder="e.g., en-GB-Standard-A" data-textparam1="voicegoogle" />
+								<label for="googleVoiceName"><span data-translate="google-voice-name">Google Voice Name</span></label>
+							</div>
+							<!-- Language Selection -->
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="googlelang" />
+									<span class="slider round"></span>
+								</label>
+								<select id="googleLanguageSelect" data-optionparam1="googlelang">
+									<option value="en-US">English (US)</option>
+									<option value="en-GB">English (UK)</option>
+									<option value="en-AU">English (Australia)</option>
+									<option value="es-ES">Spanish (Spain)</option>
+									<option value="es-US">Spanish (US)</option>
+									<option value="fr-FR">French</option>
+									<option value="de-DE">German</option>
+									<option value="it-IT">Italian</option>
+									<option value="ja-JP">Japanese</option>
+									<option value="ko-KR">Korean</option>
+									<option value="pt-BR">Portuguese (Brazil)</option>
+									<option value="hi-IN">Hindi</option>
+								</select>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="googlerate" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="google-tts-rate">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.25" value="1.0" 
+										size="5" data-numbersetting="googlerate" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="googlepitch" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="google-pitch">
+									🎵 Pitch
+									<input type="number" style="max-width: 6ch;" step="0.1" max="20" min="-20" value="0" size="5" data-numbersetting="googlepitch" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="googleaudioprofile" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="google-audio-profile">
+									🎚️ Audio Profile
+									<select data-optionparam1="googleaudioprofile">
+										<option value="handset-class-device">Handset</option>
+										<option value="wearable-class-device">Wearable</option>
+										<option value="telephony-class-application">Home Assistant</option>
+										<option value="large-automotive-class-device">Car Kit</option>
+										<option value="headphone-class-device">Headphone</option>
+										<option value="small-bluetooth-speaker-class-device">Small Speaker</option>
+										<option value="medium-bluetooth-speaker-class-device">Medium Speaker</option>
+										<option value="large-home-entertainment-class-device">Large Speaker</option>
+									</select>
+								</span>
+							</div>
+							
+						</div>
+						<br />
+						<!-- Speechify TTS Options -->
+						<div class="tts-provider-options options_group">
+							<h4>Speechify TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="speechifyAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam1="speechifykey" />
+								<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
+							</div>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="text" id="speechifyVoiceID" class="textInput instant" autocomplete="off" placeholder="e.g., henry" data-textparam1="voicespeechify" />
+								<label for="speechifyVoiceID"><span data-translate="speechify-voice-id">Speechify Voice ID</span></label>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="speechifyspeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="speechify-speed">
+									⚡ Speed
+									<input type="number" style="max-width: 6ch;" step="0.1" max="3" min="0.1" value="1.0" size="5" data-numbersetting="speechifyspeed" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="speechifymodel" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="speechify-model">
+									🤖 Model
+									<select data-optionparam1="speechifymodel">
+										<option value="simba-english">English</option>
+										<option value="simba-multilingual">Multilingual</option>
+									</select>
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="speechifylang" />
+									<span class="slider round"></span>
+								</label>
+								<select id="speechifyLanguageSelect" data-optionparam1="speechifylang">
+									<option value="en-US">English (US)</option>
+									<option value="en-GB">English (UK)</option>
+									<option value="es">Spanish</option>
+									<option value="fr">French</option>
+									<option value="de">German</option>
+									<option value="it">Italian</option>
+								</select>
+							</div>
+						</div>
+					</div>
                 </div>
             </div>
 
@@ -2803,7 +2802,7 @@ input:checked + .slider:before {
 										</label>
 										<span data-translate="elevenlabs-latency">
 											🚀 ElevenLabs Latency Optimization
-											<input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="0" size="5" data-numbersetting="latency" />
+											<input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="0" size="5" data-numbersetting2="latency" />
 										</span>
 									</div>
 								</div>
