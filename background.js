@@ -6948,6 +6948,8 @@ async function applyBotActions(data, tab = false) {
 				if (tmpmsg) {  
 					if (data.chatnam){
 						msg.response = sanitizeRelay(data.chatname, true, "Someone") + " said: " + tmpmsg;
+					} else if (data.type){
+						msg.response = data.type": " + tmpmsg;
 					} else {
 						msg.response = "Someone said: " + tmpmsg;
 					}
