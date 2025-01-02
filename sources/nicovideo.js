@@ -110,7 +110,7 @@
 		data.membership = "";;
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
-		data.type = "nicolive";
+		data.type = "nicovideo";
 		
 		
 		pushMessage(data);
