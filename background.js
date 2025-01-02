@@ -6944,7 +6944,7 @@ async function applyBotActions(data, tab = false) {
 		if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(" said: ")){
 			return null;
 			
-		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab) {
+		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && !data.event && tab) {
 			
 			if (checkExactDuplicateAlreadyRelayed(data.chatmessage, data.textonly, tab.id, false)) { 
 				return null;
@@ -6964,7 +6964,13 @@ async function applyBotActions(data, tab = false) {
 
 				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
 				if (tmpmsg) {  
-					msg.response = sanitizeRelay(data.chatname, true, "Someone") + " said: " + tmpmsg;
+					if (data.chatname){
+						msg.response = sanitizeRelay(data.chatname, true, "Someone") + " said: " + tmpmsg;
+					} else if (data.type){
+						msg.response = data.type.replace(/\b\w/g, c => c.toUpperCase())+": " + tmpmsg;
+					} else {
+						msg.response = "Someone said: " + tmpmsg;
+					}
 					sendMessageToTabs(msg, true, data, true, false, 1000); // this should be the first and only message
 				}
 			} else {
