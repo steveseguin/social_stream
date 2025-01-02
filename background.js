@@ -6949,7 +6949,7 @@ async function applyBotActions(data, tab = false) {
 					if (data.chatnam){
 						msg.response = sanitizeRelay(data.chatname, true, "Someone") + " said: " + tmpmsg;
 					} else if (data.type){
-						msg.response = data.type": " + tmpmsg;
+						msg.response = data.typ.replace(/\b\w/g, c => c.toUpperCase())+": " + tmpmsg;
 					} else {
 						msg.response = "Someone said: " + tmpmsg;
 					}
