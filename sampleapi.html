@@ -355,7 +355,11 @@
             }
             socket = new WebSocket('wss://io.socialstream.ninja:443');
             socket.onopen = function() {
-                socket.send(JSON.stringify({"join": sessionID, "out": 1, "in": 2}));
+                  socket.send(JSON.stringify({
+					join: sessionID,
+					out: new URLSearchParams(window.location.search).get('channelout') || 1,
+					in: new URLSearchParams(window.location.search).get('channelin') || 2
+				  }));
                 updateConnectionStatus('Connected');
                 document.getElementById('connectButton').disabled = true;
                 document.getElementById('disconnectButton').disabled = false;
