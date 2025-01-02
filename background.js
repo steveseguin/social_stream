@@ -3889,65 +3889,41 @@ function sendToH2R(data) {
 	}
 }
 
-
-function sanitizeRelay(text, textonly=false, alt = false) {
-	if (!text.trim()) {
-		return text;
-	}
-	if (!textonly){
-		// convert to text from html if not text only mode
-		var textArea = document.createElement('textarea');
-		textArea.innerHTML = text;
-		text = textArea.value;
-	}
-	
-	text = text.replace(/(<([^>]+)>)/gi, "");
-	text = text.replace(/[!#@]/g, "");
-	text = text.replace(/cheer\d+/gi, " ");
-	text = text.replace(/\.(?=\S(?!$))/g, " ");
-	
-	if (!text.trim() && alt) {
-		return alt;
-	}
-	return text;
-}
-
 const messageStore = {};
 function checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, save=true) { // FOR RELAY PURPOSES ONLY.
-
-	const now = Date.now();
-	if (!save){
-		if (now - lastSentTimestamp > 10000) { // 10 seconds has passed; assume good.
-			return false;
-		}
-	}
-	
-	if (!sanitized){
-		var textArea = document.createElement('textarea');
-		textArea.innerHTML = msg;
-		msg = textArea.value.replace(/\s\s+/g, " ").trim();
-	} else {
-		msg = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
-		msg = msg.replace(/\s\s+/g, " ").trim();
-	}
-	
-	if (save){
-		return msg;
-	}
-	
-	if (!msg || !tabid) {
-		return false;
-	}
-	
-	if (!messageStore[tabid]){
-		return false;
-	}
-	
+    const now = Date.now();
+    if (!save){
+        if (now - lastSentTimestamp > 10000) { // 10 seconds has passed; assume good.
+            return false;
+        }
+    }
+    
+    if (!sanitized){
+        var textArea = document.createElement('textarea');
+        textArea.innerHTML = msg;
+        msg = textArea.value.replace(/\s\s+/g, " ").trim();
+    } else {
+        msg = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags only
+        msg = msg.replace(/\s\s+/g, " ").trim();
+    }
+    
+    if (save){
+        return msg;
+    }
+    
+    if (!msg || !tabid) {
+        return false;
+    }
+    
+    if (!messageStore[tabid]){
+        return false;
+    }
+    
     while (messageStore[tabid].length > 0 && now - messageStore[tabid][0].timestamp > 10000) {
         messageStore[tabid].shift();
     }
-	
-	return messageStore[tabid].some(entry => entry.message === msg && entry.relayMode);
+    
+    return messageStore[tabid].some(entry => entry.message === msg && entry.relayMode);
 }
 
 // settings.firstsourceonly || settings.hideallreplies
@@ -3960,14 +3936,14 @@ function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false, ty
 		return false;
 	}
 
-	if (!sanitized){
-		var textArea = document.createElement('textarea');
-		textArea.innerHTML = msg;
-		msg = textArea.value.replace(/\s\s+/g, " ").trim();
-	} else {
-		msg = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags, etc.
-		msg = msg.replace(/\s\s+/g, " ").trim();
-	}
+    if (!sanitized){
+        var textArea = document.createElement('textarea');
+        textArea.innerHTML = msg;
+        msg = textArea.value.replace(/\s\s+/g, " ").trim();
+    } else {
+        msg = msg.replace(/<\/?[^>]+(>|$)/g, ""); // clean up; remove HTML tags only
+        msg = msg.replace(/\s\s+/g, " ").trim();
+    }
 	
 	if (!msg || !tabid) {
 		return false;
@@ -6454,27 +6430,33 @@ function createTab(url) {
 	});
 }
 
-
 function sanitizeRelay(text, textonly=false, alt = false) {
-	if (!text.trim()) {
-		return text;
-	}
-	if (!textonly){
-		// convert to text from html if not text only mode
-		var textArea = document.createElement('textarea');
-		textArea.innerHTML = text;
-		text = textArea.value;
-	}
-	
-	text = text.replace(/(<([^>]+)>)/gi, "");
-	text = text.replace(/[!#@]/g, "");
-	text = text.replace(/cheer\d+/gi, " ");
-	text = text.replace(/\.(?=\S(?!$))/g, " ");
-	
-	if (!text.trim() && alt) {
-		return alt;
-	}
-	return text;
+    if (!text.trim()) {
+        return text;
+    }
+    
+    if (!textonly) {
+        var textArea = document.createElement('textarea');
+        textArea.innerHTML = text;
+        text = textArea.value;
+    }
+    
+    // Preserve text but remove HTML tags
+    text = text.replace(/(<([^>]+)>)/gi, "");
+    
+    // Only remove specific characters, not all non-Latin
+    text = text.replace(/[!#@]/g, "");
+    
+    // Handle cheer emotes
+    text = text.replace(/cheer\d+/gi, " ");
+    
+    // Add space after periods except at end of sentence
+    text = text.replace(/\.(?=\S(?!$))/g, " ");
+    
+    if (!text.trim() && alt) {
+        return alt;
+    }
+    return text;
 }
 
 const commandLastExecuted = {};
