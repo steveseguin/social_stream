@@ -2075,7 +2075,83 @@ function updateSettings(ele, sync=true, value=null){
 				updateSettings(ele1, sync);
 			}
 		});
+	} else if (ele.dataset.param5){
 		
+		
+		if (ele.checked){
+			document.getElementById("waitlist").raw = updateURL(ele.dataset.param5, document.getElementById("waitlist").raw);
+		} else {
+			//document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace(ele.dataset.param5, "");
+			document.getElementById("waitlist").raw = removeQueryParamWithValue(document.getElementById("waitlist").raw, ele.dataset.param5);
+		}
+		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
+		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5",  target:target, setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
+		}
+		
+		
+		if (ele.dataset.param5 == "alignright"){
+			var key = "aligncenter";
+			var ele1 = document.querySelector("input[data-param5='"+key+"']");
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+
+		} else if (ele.dataset.param5 == "aligncenter"){
+			var key = "alignright";
+			var ele1 = document.querySelector("input[data-param5='"+key+"']");
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		}
+		
+		document.querySelectorAll("input[data-param5^='"+ele.dataset.param5.split("=")[0]+"']:not([data-param5='"+ele.dataset.param5+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
+	} else if (ele.dataset.param6){
+		if (ele.checked){
+			document.getElementById("ticker").raw = updateURL(ele.dataset.param6, document.getElementById("ticker").raw);
+		} else {
+			//document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace(ele.dataset.param6, "");
+			document.getElementById("ticker").raw = removeQueryParamWithValue(document.getElementById("ticker").raw, ele.dataset.param6);
+		}
+		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("&&", "&");
+		document.getElementById("ticker").raw = document.getElementById("ticker").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param6",  target:target, setting: ele.dataset.param6, "value": ele.checked}, function (response) {});
+		}
+		
+		document.querySelectorAll("input[data-param6^='"+ele.dataset.param6.split("=")[0]+"']:not([data-param6='"+ele.dataset.param6+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
+	} else if (ele.dataset.param7){
+		if (ele.checked){
+			document.getElementById("wordcloud").raw = updateURL(ele.dataset.param7, document.getElementById("wordcloud").raw);
+		} else {
+			//document.getElementById("wordcloud").raw = document.getElementById("wordcloud").raw.replace(ele.dataset.param7, "");
+			document.getElementById("wordcloud").raw = removeQueryParamWithValue(document.getElementById("wordcloud").raw, ele.dataset.param7);
+		}
+		document.getElementById("wordcloud").raw = document.getElementById("wordcloud").raw.replace("&&", "&");
+		document.getElementById("wordcloud").raw = document.getElementById("wordcloud").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param7",  target:target, setting: ele.dataset.param7, "value": ele.checked}, function (response) {});
+		}
+		
+		document.querySelectorAll("input[data-param7^='"+ele.dataset.param7.split("=")[0]+"']:not([data-param7='"+ele.dataset.param7+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});	
 	} else if (ele.dataset.param8){
 		if (ele.checked){
 			document.getElementById("battle").raw = updateURL(ele.dataset.param8, document.getElementById("battle").raw);
@@ -2124,45 +2200,7 @@ function updateSettings(ele, sync=true, value=null){
 			}
 		});
 		
-	} else if (ele.dataset.param5){
-		
-		
-		if (ele.checked){
-			document.getElementById("waitlist").raw = updateURL(ele.dataset.param5, document.getElementById("waitlist").raw);
-		} else {
-			//document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace(ele.dataset.param5, "");
-			document.getElementById("waitlist").raw = removeQueryParamWithValue(document.getElementById("waitlist").raw, ele.dataset.param5);
-		}
-		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
-		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
-		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5",  target:target, setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
-		}
-		
-		
-		if (ele.dataset.param5 == "alignright"){
-			var key = "aligncenter";
-			var ele1 = document.querySelector("input[data-param5='"+key+"']");
-			if (ele1 && ele1.checked){
-				ele1.checked = false;
-				updateSettings(ele1, sync);
-			}
-
-		} else if (ele.dataset.param5 == "aligncenter"){
-			var key = "alignright";
-			var ele1 = document.querySelector("input[data-param5='"+key+"']");
-			if (ele1 && ele1.checked){
-				ele1.checked = false;
-				updateSettings(ele1, sync);
-			}
-		}
-		
-		document.querySelectorAll("input[data-param5^='"+ele.dataset.param5.split("=")[0]+"']:not([data-param5='"+ele.dataset.param5+"'])").forEach(ele1=>{
-			if (ele1 && ele1.checked){
-				ele1.checked = false;
-				updateSettings(ele1, sync);
-			}
-		});
+	
 		
 		
 	} else if (ele.dataset.both){

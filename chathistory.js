@@ -1,4 +1,5 @@
-const DB_NAME = 'chatMessagesDB';
+// chathistory.js
+const DB_NAME = 'chatMessagesDB_v3';
 const STORE_NAME = 'messages';
 const PAGE_SIZE = 100;
 const MAX_PAGES = 5;
@@ -11,9 +12,10 @@ const searchInput = document.getElementById('search-input');
 const messagesContainer = document.getElementById('messages-container');
 const exportButton = document.getElementById('export-button');
 const exportFormat = document.getElementById('export-format');
+
 function initDatabase() {
     return new Promise((resolve, reject) => {
-		const request = indexedDB.open(DB_NAME);
+        const request = indexedDB.open(DB_NAME, 3); // Add version number to match db.js
         request.onerror = event => reject(event.target.error);
         request.onsuccess = event => {
             db = event.target.result;
@@ -22,13 +24,15 @@ function initDatabase() {
         request.onupgradeneeded = event => {
             const db = event.target.result;
             if (!db.objectStoreNames.contains(STORE_NAME)) {
-                const objStore = db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
-                objStore.createIndex("timestamp", "timestamp", { unique: false });
-                objStore.createIndex("unique_user", ["chatname", "type"], { unique: false });
+                const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                store.createIndex('timestamp', 'timestamp');
+                store.createIndex('user_timestamp', ['chatname', 'timestamp']);
+                store.createIndex('user_type_timestamp', ['chatname', 'type', 'timestamp']);
             }
         };
     });
 }
+
 function loadMessages(page = 0, direction = 'down') {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], "readonly");

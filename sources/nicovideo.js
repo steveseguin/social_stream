@@ -110,7 +110,7 @@
 		data.membership = "";;
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
-		data.type = "nicolive";
+		data.type = "nicovideo";
 		
 		
 		pushMessage(data);
@@ -139,7 +139,7 @@
 		function (request, sender, sendResponse) {
 			try {
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('textarea').focus();
+					document.querySelector('textarea,input[type="text"].comment-text-box').focus();
 					sendResponse(true);
 					return;
 				}
