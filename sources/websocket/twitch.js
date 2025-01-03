@@ -91,19 +91,34 @@ try{
 		}
 	}
 
-	function verifyAndUseToken(token) {
+	async function verifyAndUseToken(token) {
 		fetch('https://id.twitch.tv/oauth2/validate', {
 			headers: {
 				'Authorization': `OAuth ${token}`
 			}
 		})
 		.then(response => response.json())
-		.then(data => {
+		.then(async data => {
 			console.log("Token validation data:", data);
 			if (data.login) {
 				setStoredToken(token);
 				username = data.login;
 				localStorage.setItem("twitchChannel", channel);
+				
+				// Fetch user badges and store them
+				const userInfo = await getUserInfo(data.login);
+				if (userInfo) {
+					console.log("userInfo");
+					console.log(userInfo);
+					// Fetch both available badges and user's specific badges
+					let userBadgeString = '';
+					if (channel.toLowerCase() === data.login.toLowerCase()) {
+						userBadgeString = 'broadcaster/1';
+					}
+					localStorage.setItem('userBadges', userBadgeString);
+					localStorage.setItem('userColor', userInfo.color || '');
+				}
+				
 				updateHeaderInfo(data.login, channel);
 				connect();
 				showSocketInterface();
@@ -118,6 +133,33 @@ try{
 			showAuthButton();
 		});
 	}
+
+	// Add new function to fetch user's specific badges
+	async function fetchUserBadges(userId, token) {
+		try {
+			const response = await fetch(`https://api.twitch.tv/helix/chat/badges/user?user_id=${userId}`, {
+				headers: {
+					'Client-ID': clientId,
+					'Authorization': `Bearer ${token}`
+				}
+			});
+
+			if (!response.ok) {
+				console.error('Failed to fetch user badges:', await response.text());
+				return null;
+			}
+
+			const data = await response.json();
+			return data.data.reduce((acc, badge) => {
+				acc[badge.set_id] = badge.version;
+				return acc;
+			}, {});
+		} catch (error) {
+			console.error('Error fetching user badges:', error);
+			return null;
+		}
+	}
+
 
 	function parseFragment(hash) {
 		var hashMatch = function(expr) {
@@ -240,6 +282,13 @@ try{
 			clearStoredToken();
 			showAuthButton();
 			return;
+		}
+
+		// Fetch badges before setting up the chat connection
+		const badges = await fetchBadges(channelInfo.id);
+		if (!badges) {
+			console.log('Failed to fetch badges');
+			// Continue anyway, just won't show badges
 		}
 
 		// Set current channel ID
@@ -426,13 +475,20 @@ try{
 		if (inputElement) {
 			var msg = inputElement.value.trim();
 			if (msg) {
-				if (sendMessage(msg)){
+				if (sendMessage(msg)) {
 					inputElement.value = "";
 					let builtmsg = {};
 					builtmsg.command = "PRIVMSG";
 					builtmsg.params = [username];
 					builtmsg.prefix = username+"!"+username+"@"+username+".tmi.twitch.tv";
 					builtmsg.trailing = msg;
+					
+					// Get user's specific badges from localStorage
+					const userBadges = localStorage.getItem('userBadges');
+					builtmsg.tags = {
+						badges: userBadges || '',
+						color: localStorage.getItem('userColor') || ''
+					};
 					processMessage(builtmsg);
 				}
 			}
@@ -694,6 +750,98 @@ try{
 			return "";
 		}
 	}
+	
+	let globalBadges = null;
+	let channelBadges = null;
+
+	async function fetchBadges(channelId) {
+		const token = getStoredToken();
+		if (!token || !channelId) {
+			//console.log('Missing token or channel ID for badge fetch');
+			return null;
+		}
+
+		try {
+			// Fetch global badges
+			const globalResponse = await fetchWithTimeout(
+				'https://api.twitch.tv/helix/chat/badges/global',
+				5000,
+				{
+					'Client-ID': clientId,
+					'Authorization': `Bearer ${token}`
+				}
+			);
+			
+			// Fetch channel-specific badges
+			const channelResponse = await fetchWithTimeout(
+				`https://api.twitch.tv/helix/chat/badges?broadcaster_id=${channelId}`,
+				5000,
+				{
+					'Client-ID': clientId,
+					'Authorization': `Bearer ${token}`
+				}
+			);
+
+			if (!globalResponse.ok) {
+				console.error('Failed to fetch global badges:', await globalResponse.text());
+				return null;
+			}
+
+			if (!channelResponse.ok) {
+				console.error('Failed to fetch channel badges:', await channelResponse.text());
+				return null;
+			}
+
+			const globalData = await globalResponse.json();
+			const channelData = await channelResponse.json();
+
+			// Process and store badges
+			globalBadges = processBadgeData(globalData.data);
+			channelBadges = processBadgeData(channelData.data);
+			
+			//console.log('Badges fetched successfully:', {
+			//	globalBadgeCount: Object.keys(globalBadges).length,
+			//	channelBadgeCount: Object.keys(channelBadges).length
+			//});
+
+			return {
+				globalBadges,
+				channelBadges
+			};
+		} catch (error) {
+			console.error('Error fetching badges:', error);
+			return null;
+		}
+	}
+
+	
+	function processBadgeData(badgeData) {
+		if (!Array.isArray(badgeData)) {
+			console.error('Invalid badge data format:', badgeData);
+			return {};
+		}
+
+		const processedBadges = {};
+		
+		badgeData.forEach(badge => {
+			if (!badge?.set_id || !Array.isArray(badge.versions)) return;
+
+			processedBadges[badge.set_id] = {};
+			badge.versions.forEach(version => {
+				if (!version?.id) return;
+
+				processedBadges[badge.set_id][version.id] = {
+					image_url_1x: version.image_url_1x || '',
+					image_url_2x: version.image_url_2x || '',
+					image_url_4x: version.image_url_4x || '',
+					title: version.title || '',
+					description: version.description || ''
+				};
+			});
+		});
+		
+		return processedBadges;
+	}
 
 	async function fetchWithTimeout(URL, timeout = 8000, headers=false) {
 		try {
@@ -738,11 +886,12 @@ try{
 
 
 	async function processMessage(parsedMessage) {
+		try {
+		//console.log("Processing message:", parsedMessage);
 		const user = parsedMessage.prefix.split('!')[0];
 		const message = parsedMessage.trailing;
 		channel = parsedMessage.params[0] || channel;
-		const userInfo = await getUserInfo(user);
-		//console.log(`${user} in ${channel}: ${message}`);
+		const userInfo = await getUserInfo(user); 
 
 		// Add the message to the UI
 		var span = document.createElement("div");
@@ -752,9 +901,12 @@ try{
 			document.querySelector("#textarea").childNodes[0].remove();
 		}
 
+		// Process badges before creating the data object
+		const badgeHTML = parseBadges(parsedMessage);
+
 		var data = {};
 		data.chatname = userInfo ? userInfo.display_name : user;
-		data.chatbadges = parseBadges(parsedMessage, badges);
+		data.chatbadges = badgeHTML || "";  // Ensure badges are included
 		data.backgroundColor = "";
 		data.textColor = userInfo ? userInfo.color : "";
 		data.chatmessage = replaceEmotesWithImages(message);
@@ -771,7 +923,11 @@ try{
 		}
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
-
+		} catch(e){
+			console.error(e);
+			
+		}
+		//console.log(data);
 		pushMessage(data);
 	}
 
@@ -838,14 +994,55 @@ try{
 			}
 		});
 	}
+	
+	function parseBadges(parsedMessage) {
+		// Early return if no valid badges data
+		if (!parsedMessage?.tags?.badges || typeof parsedMessage.tags.badges !== 'string' || !globalBadges || !channelBadges) {
+			return "";
+		}
 
-	function parseBadges(parsedMessage, badges) {
-		//console.log(parsedMessage, badges);
+		// Skip empty badge strings
+		if (parsedMessage.tags.badges.trim() === '') {
+			return "";
+		}
+
+		try {
+			const badges = parsedMessage.tags.badges.split(',');
+			let badgeList = [];
+
+			badges.forEach(badge => {
+				// Skip empty badge entries
+				if (!badge || badge.trim() === '') return;
+
+				const [badgeType, badgeVersion] = badge.split('/');
+				if (!badgeType || !badgeVersion) return;
+
+				// Check channel badges first, then fall back to global badges
+				const badgeData = (channelBadges?.[badgeType]?.[badgeVersion]) || 
+								(globalBadges?.[badgeType]?.[badgeVersion]);
+				
+				if (badgeData) {
+					badgeList.push(badgeData.image_url_2x);
+				}
+			});
+
+			return badgeList;
+		} catch (error) {
+			console.error('Error parsing badges:', error);
+			return "";
+		}
+	}
+
+	function getBadgesFromTags(tags) {
+		if (!tags || typeof tags !== 'object') return null;
 		
-		// This function needs to be implemented to parse the badges from the message
-		// and match them with the badge info fetched earlier
-		// For now, we'll return an empty string
-		return "";
+		// If badges is a string, return it directly
+		if (typeof tags.badges === 'string') return tags.badges;
+		
+		// If badges-raw exists (some IRC clients use this), use it instead
+		if (typeof tags['badges-raw'] === 'string') return tags['badges-raw'];
+		
+		return null;
 	}
 
 	var settings = {};
