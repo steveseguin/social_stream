@@ -2569,19 +2569,16 @@
 			if (urlParams.has("hidetwitch")) {
 				hideTwitch = true;
 			}
-			var onlyFrom = false;
+			var onlyFrom = [];
 			if (urlParams.get("onlyfrom")) {
-				onlyFrom = urlParams.get("onlyfrom").toLowerCase().trim();
+				onlyFrom = urlParams.get("onlyfrom").toLowerCase().trim().split(",");
 			} else if (urlParams.get("fromonly")) {
-				onlyFrom = urlParams.get("fromonly").toLowerCase().trim(); // for the dylslexic users
+				onlyFrom = urlParams.get("fromonly").toLowerCase().trim().split(","); 
 			}
 
-			var hideFrom = false;
+			var hideFrom = [];
 			if (urlParams.get("hidefrom") || urlParams.get("exclude")) {
-				hideFrom = [];
-				(urlParams.get("hidefrom") || urlParams.get("exclude")).split(",").forEach(x => {
-					hideFrom.push(x.trim().toLowerCase());
-				});
+				hideFrom = (urlParams.get("hidefrom") || urlParams.get("exclude")).toLowerCase().trim().split(",");
 			}
 
 			var filterNamesNotMessages = false;
@@ -7379,8 +7376,7 @@
 							return;
 						}
 					}
-					if (hideFrom && hideFrom.includes(data.type)) {
-						// this is an exclude source
+					if (hideFrom.length && hideFrom.includes(data.type)) {
 						if (blurred){
 							makeBlurred = true;
 						} else {
@@ -7395,7 +7391,7 @@
 							return;
 						}
 					}
-					if (onlyFrom && data.type !== onlyFrom) {
+					if (onlyFrom.length && !onlyFrom.includes(data.type)) {
 						if (blurred){
 							makeBlurred = true;
 						} else {
