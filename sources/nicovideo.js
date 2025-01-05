@@ -192,7 +192,12 @@
 		if (document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"]').children.length){
 			if (!document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"]').marked){
 				document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"]').marked=true;
-				onElementInserted(document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"][data-offset]'));
+				setTimeout(function(){
+					document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"][data-offset]').childNodes.forEach(ele=>{
+						ele.skip = true;
+					});
+					onElementInserted(document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"][data-offset]'));
+				},3000);
 			}
 		}} catch(e){}
 	},2000);

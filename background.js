@@ -765,7 +765,10 @@ function loadSettings(item, resave = false) {
 
 var miscTranslations = {
 	// we won't use after the first load
-	start: "START"
+	start: "START",
+	said: " said: ",
+	someonesaid: "Someone said: ",
+	someone: "Someone"
 };
 async function fetchWithTimeout(URL, timeout = 8000) {
 	// ref: https://dmitripavlutin.com/timeout-fetch-request/
@@ -4040,7 +4043,7 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				return;
 			}
 			
-			if (data.chatmessage.includes(" said: ")){
+			if (data.chatmessage.includes(miscTranslations.said)){
 				return null;
 			}
 			
@@ -6941,7 +6944,7 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		
-		if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(" said: ")){
+		if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(miscTranslations.said)){
 			return null;
 			
 		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && !data.event && tab) {
@@ -6965,11 +6968,11 @@ async function applyBotActions(data, tab = false) {
 				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
 				if (tmpmsg) {  
 					if (data.chatname){
-						msg.response = sanitizeRelay(data.chatname, true, "Someone") + " said: " + tmpmsg;
+						msg.response = sanitizeRelay(data.chatname, true, miscTranslations.someone) + miscTranslations.said + tmpmsg; 
 					} else if (data.type){
 						msg.response = data.type.replace(/\b\w/g, c => c.toUpperCase())+": " + tmpmsg;
 					} else {
-						msg.response = "Someone said: " + tmpmsg;
+						msg.response = miscTranslations.someonesaid + tmpmsg;
 					}
 					sendMessageToTabs(msg, true, data, true, false, 1000); // this should be the first and only message
 				}
