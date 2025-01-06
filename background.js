@@ -5548,7 +5548,7 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 				fowardOBSCommand(request);
 			}
 		} else if (request.value && ("target" in request) && UUID && request.action === "chatbot"){ // target is the callback ID
-			if (isExtensionOn && settings.allowChatBot){
+			if (isExtensionOn && settings.allowChatBot){ // private chat bot
 				
 				try {
 				  // ollama run technobyte/Llama-3.3-70B-Abliterated:IQ2_XS

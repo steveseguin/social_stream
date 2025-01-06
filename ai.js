@@ -922,7 +922,7 @@ async function processMessageWithOllama(data) {
     if (settings.ollamaprompt) {
       additionalInstructions = settings.ollamaprompt.textsetting;
     }
-	console.log(additionalInstructions);
+	console.log(additionalInstructions, cleanedText, botname, data);
 	const response = await processUserInput(cleanedText, data, additionalInstructions, botname);
 	console.log(response);
 
