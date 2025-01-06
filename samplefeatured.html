@@ -1,0 +1,602 @@
+<!-- NOTE: It's important that the IFRAME logic stay intact, as it is how we receieve messages --!>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title>Social Stream - Overlay</title>
+    <meta name="title" content="Social Stream - Overlay" />
+    <link rel="icon" href="./icons/favicon.ico" />
+    <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin />
+    <meta name="robots" content="noindex">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, rgba(46,49,146,0.9), rgba(87,37,117,0.9));
+            --chat-bg: rgba(23, 25, 35, 0.85);
+            --border-color: rgba(255,255,255,0.1);
+            --text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            --animation-timing: 0.3s ease-out;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #fff;
+            text-shadow: var(--text-shadow);
+            background-color: transparent;
+        }
+
+        .output {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: min(90vw, 600px);
+            width: 100%;
+        }
+
+        .highlight-chat {
+            background: var(--chat-bg);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            animation: slideUp var(--animation-timing);
+        }
+
+        .highlight-chat.dono {
+            background: var(--primary-gradient);
+        }
+
+        .hl-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .hl-message {
+            font-size: 1rem;
+            line-height: 1.6;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+
+        .hl-img {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            aspect-ratio: 1;
+        }
+
+        .hl-profile-pic {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            object-fit: cover;
+        }
+
+        .hl-badges {
+            display: inline-flex;
+            gap: 0.25rem;
+            margin-left: 0.5rem;
+            align-items: center;
+        }
+
+        .hl-badge {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+
+        .icon.sourcetype {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            width: 24px;
+            height: 24px;
+            opacity: 0.7;
+            transition: opacity var(--animation-timing);
+        }
+
+        .icon.sourcetype:hover {
+            opacity: 1;
+        }
+
+        .hl-imgContent {
+            margin-top: 1rem;
+            border-radius: 8px;
+            overflow: hidden;
+            max-width: 100%;
+        }
+
+        .hl-imgContent img,
+        .hl-imgContent video {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .donation {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .donation-title {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 0.25rem;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade {
+            transition: opacity var(--animation-timing);
+            opacity: 1;
+            will-change: opacity;
+        }
+
+        .fade.hidden {
+            opacity: 0;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .highlight-chat {
+                animation: none;
+            }
+            
+            .fade {
+                transition: none;
+            }
+        }
+
+        #frame1 {
+            width: 0;
+            height: 0;
+            position: fixed;
+            left: -100px;
+            top: -100px;
+            border: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="output" class="output"></div>
+    <script>
+    // URLSearchParams polyfill
+    (function(w) {
+        w.URLSearchParams = w.URLSearchParams || function(searchString) {
+            var self = this;
+            self.searchString = searchString;
+            self.get = function(name) {
+                var results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(self.searchString);
+                if (results == null) {
+                    return null;
+                } else {
+                    return decodeURI(results[1]) || 0;
+                }
+            };
+        };
+    })(window);
+
+    const App = {
+        config: {
+            serverURL: 'wss://io.socialstream.ninja',
+            maxReconnectAttempts: 10,
+            reconnectDelay: 100,
+            roomIdMaxLength: 80
+        },
+
+        state: {
+            socketserver: null,
+            reconnectionTimeout: null,
+            conCon: 1,
+            roomID: 'test',
+            password: 'false',
+            fallbackImage: null,
+            fallbackImageAnnouncement: null
+        },
+
+        init() {
+            this.setupUrlParams();
+            this.setupFallbackImages();
+            this.initializeConnection();
+        },
+
+        initializeConnection() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.has('server')) {
+                this.config.serverURL = urlParams.get('server') || this.config.serverURL;
+                this.setupSocket();
+            } else if (urlParams.has('server2')) {
+                this.config.serverURL = urlParams.get('server2') || this.config.serverURL;
+                this.setupSocket(1);
+            } else if (urlParams.has('server3')) {
+                this.config.serverURL = urlParams.get('server3') || this.config.serverURL;
+                this.setupSocket(2);
+            } else {
+                this.setupRecvDataWindow();
+            }
+        },
+
+        setupUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            this.handleRoomIdParam(urlParams);
+            this.handlePasswordParam(urlParams);
+            this.handleServerParam(urlParams);
+
+            if (urlParams.has('savetodisk')) {
+                document.body.onclick = () => this.overwriteFile('setup');
+            }
+        },
+
+        handlePasswordParam(urlParams) {
+            this.state.password = urlParams.get('password') || 'false';
+        },
+
+        handleServerParam(urlParams) {
+            if (urlParams.has('server')) {
+                this.config.serverURL = urlParams.get('server') || this.config.serverURL;
+            } else if (urlParams.has('server2')) {
+                this.config.serverURL = urlParams.get('server2') || this.config.serverURL;
+            } else if (urlParams.has('server3')) {
+                this.config.serverURL = urlParams.get('server3') || this.config.serverURL;
+            }
+        },
+
+        setupRecvDataWindow() {
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${this.state.password}&notmobile&salt=vdo.ninja&label=overlay&exclude=${this.state.roomID}&scene&novideo&noaudio&cleanoutput&room=${this.state.roomID}`;
+            iframe.id = 'frame1';
+            iframe.allow = 'midi;geolocation;microphone;';
+            document.body.appendChild(iframe);
+
+            window.addEventListener('message', (e) => {
+                if (e.source !== iframe.contentWindow) return;
+                
+				if (e.data?.dataReceived && ("overlayNinja" in e.data.dataReceived)){
+					if ( e.data.dataReceived.overlayNinja){
+						this.processData({ contents: e.data.dataReceived.overlayNinja });
+					} else {
+						 this.processData(false);
+					}
+				}
+            });
+        },
+
+        handleRoomIdParam(urlParams) {
+            let roomID = urlParams.get('session') || 
+                        urlParams.get('s') || 
+                        urlParams.get('id');
+
+            if (!roomID && window.location.protocol === 'file:') {
+                roomID = prompt('Enter your session ID here, or add it to the URL.');
+            } else if (!roomID) {
+                window.location.href = 'https://socialstream.ninja/landing';
+                return;
+            }
+
+            const validatedID = this.validateRoomId(roomID);
+            if (!validatedID) {
+                this.handleInvalidRoom();
+                return;
+            }
+
+            this.state.roomID = validatedID;
+        },
+
+        setupFallbackImages() {
+            this.state.fallbackImage = new Image();
+            this.state.fallbackImage.src = './sources/images/unknown.png';
+            this.state.fallbackImage.onerror = () => this.state.fallbackImage = null;
+
+            this.state.fallbackImageAnnouncement = new Image();
+            this.state.fallbackImageAnnouncement.src = './icons/announcement.png';
+            this.state.fallbackImageAnnouncement.onerror = () => this.state.fallbackImageAnnouncement = null;
+        },
+
+        validateRoomId(roomId) {
+            if (!roomId?.trim()) return false;
+
+            let sanitizedId = String(roomId).trim();
+            if (sanitizedId.length < 2) return false;
+
+            const reservedValues = [
+                'undefined', 'null', 'false', 'true', 'NaN',
+                'default', 'room', 'lobby', 'test', 'nothing',
+                '0', '1', 'none'
+            ];
+
+            if (reservedValues.includes(sanitizedId.toLowerCase())) return false;
+
+            sanitizedId = sanitizedId.replace(/[^a-zA-Z0-9]/g, '_');
+            if (/^_+$/.test(sanitizedId)) return false;
+            
+            return sanitizedId.length <= this.config.roomIdMaxLength ? sanitizedId : false;
+        },
+
+        handleInvalidRoom() {
+            document.write('Invalid session ID');
+            throw new Error('Invalid session ID');
+        },
+
+        setupSocket(allin = false) {
+            if (this.state.reconnectionTimeout) {
+                clearTimeout(this.state.reconnectionTimeout);
+                this.state.reconnectionTimeout = null;
+            }
+
+            if (this.state.socketserver) {
+                this.state.socketserver.onclose = null;
+                this.state.socketserver.close();
+            }
+
+            this.state.socketserver = new WebSocket(this.config.serverURL);
+            this.initializeSocketHandlers(allin);
+        },
+
+        initializeSocketHandlers(allin) {
+            const socket = this.state.socketserver;
+
+            socket.onclose = () => {
+                if (this.state.conCon <= this.config.maxReconnectAttempts) {
+                    this.state.reconnectionTimeout = setTimeout(() => {
+                        this.state.conCon++;
+                        this.setupSocket(allin);
+                    }, this.config.reconnectDelay * this.state.conCon);
+                }
+            };
+
+            socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                socket.close();
+            };
+
+            socket.onopen = () => {
+                this.state.conCon = 1;
+                const message = {
+                    join: this.state.roomID,
+                    out: 3
+                };
+
+                if (allin === 2) {
+                    message.in = 2;
+                } else if (allin === 1) {
+                    message.in = 1;
+                }
+
+                socket.send(JSON.stringify(message));
+            };
+
+            socket.onmessage = this.handleSocketMessage.bind(this);
+        },
+
+        handleSocketMessage(event) {
+            if (!event.data) return;
+
+            let data;
+            try {
+                data = typeof event.data === 'object' ? event.data : JSON.parse(event.data);
+            } catch (error) {
+                console.error('Error parsing message:', error);
+                return;
+            }
+
+            const pid = data?.get || false;
+            if (data?.overlayNinja) {
+                data = data.overlayNinja;
+            }
+
+            const resp = this.processData(data);
+            if (resp !== null) {
+                const ret = {
+                    callback: {
+                        ...data,
+                        result: resp,
+                        get: pid
+                    }
+                };
+                this.state.socketserver.send(JSON.stringify(ret));
+            }
+        },
+
+        processData(data) {
+            if (!data || data === false || (data.contents && data.contents === false) || (data.content === false)) {
+                document.getElementById('output').innerHTML = '';
+                return true;
+            }
+
+            if (data.contents) {
+                const content = data.contents;
+                if (!content.chatmessage && !content.chatname && 
+                    !content.contentimg && !content.donation && 
+                    !content.hasDonation && !content.memebership && 
+                    !content.hasMembership) {
+                    return;
+                }
+                
+                this.showMessage(content);
+                return true;
+            }
+
+            return null;
+        },
+
+        errorImage(ele) {
+            if (ele.dataset.backupImage) {
+                ele.src = ele.dataset.backupImage;
+            } else if (this.state.fallbackImage) {
+                ele.src = './sources/images/unknown.png';
+            } else {
+                ele.style.display = 'none';
+            }
+        },
+
+        showMessage(data) {
+            const messageContent = this.buildMessageContent(data);
+            document.getElementById('output').innerHTML = messageContent;
+
+            if (data.hasDonation) {
+                document.getElementById('newmessage')?.classList.add('dono');
+            }
+
+            if (!data.chatname && !data.chatbadges) {
+                document.getElementById('nameDIV').style.display = 'none';
+            }
+
+            this.handleTwitchImage(data);
+        },
+
+        buildMessageContent(data) {
+            const imgContent = this.buildImageContent(data);
+            const avatarImg = this.buildAvatarImage(data);
+            const chatbadges = this.buildChatBadges(data.chatbadges);
+            const sourceType = this.buildSourceType(data.type);
+            const styleOverride = this.getStyleOverride(data);
+
+            return `
+                <div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="${data.type || 'none'}">
+                    <div class="hl-name" ${styleOverride} id="nameDIV">
+                        ${data.chatname || ''}${chatbadges}
+                    </div>
+                    <div id="message" class="hl-message">${data.chatmessage || ''}</div>
+                    ${avatarImg}${sourceType}${imgContent}
+                </div>
+            `;
+        },
+
+        buildImageContent(data) {
+            if (!data.contentimg) return '';
+
+            const isVideo = data.contentimg.includes('.mp4') || data.contentimg.includes('.webm');
+            const mediaElement = isVideo ? 
+                `<video loop="true" autoplay="true" muted="true" src="${data.contentimg}" onerror="this.parentElement.style.display='none'" />` :
+                `<img src="${data.contentimg}" onerror="this.parentElement.style.display='none'" />`;
+
+            return `<div class="hl-imgContent">${mediaElement}</div>`;
+        },
+
+        buildAvatarImage(data) {
+            const imgSrc = data.chatimg || (!data.chatname && data.event ? 
+                './icons/announcement.png' : './sources/images/unknown.png');
+
+            const backupAttr = data.backupChatimg ? 
+                `data-backup-image="${data.backupChatimg}"` : '';
+
+            return `
+                <div class="hl-img">
+                    <img id="img_${data.id}" 
+                         src="${imgSrc}" 
+                         class="hl-profile-pic" 
+                         ${backupAttr}
+                         onerror="App.errorImage(this)" />
+                </div>`;
+        },
+
+        buildChatBadges(badges) {
+            if (!badges?.length) return '';
+
+            const badgeElements = badges.map(badge => {
+                if (typeof badge === 'object') {
+                    if (badge.type === 'img' && badge.src) {
+                        return `<img class="hl-badge" src="${badge.src}" />`;
+                    } else if (badge.type === 'svg' && badge.html) {
+                        return `<span class="hl-badge">${badge.html}</span>`;
+                    }
+                } else {
+                    return `<img class="hl-badge" src="${badge}" />`;
+                }
+                return '';
+            }).join('');
+
+            return badgeElements ? `<div class="hl-badges">${badgeElements}</div>` : '';
+        },
+
+        buildSourceType(type = 'none') {
+            return `
+                <img src="./sources/images/${type}.png" 
+                     class="icon sourcetype" 
+                     data-icon-name="${type}" 
+                     onerror="this.style.display='none'" />`;
+        },
+
+        getStyleOverride(data) {
+            const styles = [];
+            
+            if (data.backgroundColor) {
+                styles.push(data.backgroundColor.startsWith('background-color:') ? 
+                    data.backgroundColor : `background-color: ${data.backgroundColor}`);
+            }
+            
+            if (data.nameColor) {
+                styles.push(`color: ${data.nameColor}`);
+            } else if (data.textNameColor) {
+                styles.push(data.textNameColor);
+            }
+            
+            return styles.length ? `style="${styles.join('; ')}"` : '';
+        },
+
+        handleTwitchImage(data) {
+            const username = data.username || data.chatname;
+            if (data.type !== 'twitch' || !username) return;
+
+            if (!data.chatimg || data.chatimg.startsWith('https://api.socialstream.ninja')) {
+                const twitchImage = new Image();
+                const imageUrl = `https://api.socialstream.ninja/twitch/large?username=${encodeURIComponent(username)}`;
+                
+                twitchImage.onload = () => {
+                    const imgElement = document.getElementById(`img_${data.id}`);
+                    if (imgElement) {
+                        imgElement.src = imageUrl;
+                    }
+                };
+                
+                twitchImage.src = imageUrl;
+            }
+        },
+
+        overwriteFile(type) {
+            console.log('Save to disk functionality:', type);
+        }
+    };
+
+    // Initialize the application when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => App.init());
+    </script>
+</body>
+</html>
