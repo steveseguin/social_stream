@@ -64,6 +64,17 @@ There is an easy to use sandbox to play with some of the common API commands and
     - [Message Types](#message-types)
     - [API Actions](#api-actions-4)
     - [Integration with Extension](#integration-with-extension)
+- [StreamDeck Integration Guide for Social Stream Ninja](#streamdeck-integration-guide-for-social-stream-ninja)
+  - [Quick Setup Method](#quick-setup-method)
+  - [Advanced Setup with Multi Actions](#advanced-setup-with-multi-actions)
+  - [Tips for StreamDeck Setup](#tips-for-streamdeck-setup)
+  - [Testing Your Setup](#testing-your-setup)
+  - [Channel-Specific Messages](#channel-specific-messages)
+- [Using Bitfocus Companion with Social Stream Ninja](#using-bitfocus-companion-with-social-stream-ninja)
+  - [Initial Setup](#initial-setup)
+  - [Available Actions](#available-actions)
+  - [Variables](#variables)
+  - [Comparison with StreamDeck](#comparison-with-streamdeck)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
