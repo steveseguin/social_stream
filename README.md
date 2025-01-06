@@ -825,6 +825,10 @@ There is a toggle that lets you show the source of the chat messages.
 
 - Browsers may also sometimes stop tabs/windows after an hour of inactivity. Disable any option in your browser under `chrome://settings/performance` related to performance throttling or background tabs, such as "Throttle Javascript timers in background".
 
+- You can go to `chrome://discards/` and toggle off "Auto Discardable" on the chat pop-out pages.
+
+![image](https://github.com/user-attachments/assets/692fd148-798e-4cb1-9c09-b667b50a542a)
+
 - Try to keep the chat window and dock page active and if possible, even partially visible on screen. If the windows are hidden or minimized, they may stop working. This is also true if the scroll bar for the chat window is not at the bottom; sometimes messages won't load unless you are seeing the newest messages. 
 
 - Another option, if chat messages stop once put in them in background, if using Windows, is to do Win + Tab, and have two virtual Desktops on your PC.  Put the chat windows into one virtual desktop, and use OBS in the other. Win+Tab can let you switch between desktops/windows.
