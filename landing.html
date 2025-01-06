@@ -949,6 +949,7 @@ img {
 					return response.text();
 				})
 				.then(text => {
+					console.log(text);
 					document.getElementById('markdown').innerHTML = marked.parse(text);
 					if (window.location.hash) {
 						scrollToAnchor(window.location.hash);
