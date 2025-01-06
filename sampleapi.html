@@ -35,7 +35,18 @@
         h1, h2 {
             color: var(--primary-color);
             margin-bottom: 20px;
-        }
+		}
+		
+		.request-log {
+			background: rgba(0,0,0,0.3);
+			border-radius: 4px;
+			padding: 10px;
+			margin-top: 10px;
+			font-family: monospace;
+			white-space: pre-wrap;
+			display: none;
+			color: #e0e0e0;
+		}
 
         .section {
             background-color: var(--tertiary-color);
@@ -393,11 +404,24 @@
         }
 
         function sendCommand(action, value = null, channel = null) {
+			let message = {
+				action,
+				apiid: sessionID,
+				value: value !== null ? value : undefined,
+				out: channel !== null ? channel : undefined
+			};
+			
+			logRequest(event.target.closest('.btn-group'), {
+				type: 'WebSocket',
+				url: 'wss://io.socialstream.ninja:443',
+				message
+			});
+			
             if (!socket || socket.readyState !== WebSocket.OPEN) {
                 alert('Please connect first');
                 return;
             }
-            const message = {
+            message = {
                 action: action,
                 apiid: sessionID
             };
@@ -406,7 +430,8 @@
             socket.send(JSON.stringify(message));
         }
 
-        function sendCustomMessage(action, isEncodedGet = false, isPost = false) {
+        function originalSendCustomMessage(action, isEncodedGet = false, isPost = false) {
+		
             const message = document.getElementById('customMessage').value;
             if (!message) {
                 alert('Please enter a message');
@@ -416,7 +441,7 @@
                 const encodedMessage = encodeURIComponent(message);
                 fetch(`https://io.socialstream.ninja/${sessionID}/${action}/null/${encodedMessage}`)
                     .then(response => response.text())
-                    .then(data => alert('Message sent via HTTPS GET'));
+                    .then(data => console.log('Message sent via HTTPS GET'));
             } else if (isPost) {
                 fetch(`https://io.socialstream.ninja/${sessionID}`, {
                     method: 'POST',
@@ -426,11 +451,48 @@
                     body: JSON.stringify({action: action, value: message, apiid: sessionID}),
                 })
                     .then(response => response.text())
-                    .then(data => alert('Message sent via HTTPS POST'));
+                    .then(data => console.log('Message sent via HTTPS POST'));
             } else {
                 sendCommand(action, message);
             }
         }
+		
+		function sendCustomMessage(action, isEncodedGet = false, isPost = false) {
+			const message = document.getElementById('customMessage').value;
+			if (!message) {
+				alert('Please enter a message');
+				return;
+			}
+
+			const buttonGroup = event.target.closest('.btn-group');
+			
+			if (isEncodedGet) {
+				const encodedMessage = encodeURIComponent(message);
+				const url = `https://io.socialstream.ninja/${sessionID}/${action}/null/${encodedMessage}`;
+				logRequest(buttonGroup, {
+					type: 'HTTP GET',
+					url
+				});
+				fetch(url).then(response => response.text())
+					.then(data => console.log('Message sent via HTTPS GET'));
+			} else if (isPost) {
+				const url = `https://io.socialstream.ninja/${sessionID}`;
+				const body = {action, value: message, apiid: sessionID};
+				logRequest(buttonGroup, {
+					type: 'HTTP POST',
+					url,
+					body
+				});
+				fetch(url, {
+					method: 'POST',
+					headers: {'Content-Type': 'application/json'},
+					body: JSON.stringify(body)
+				}).then(response => response.text())
+					.then(data => console.log('Message sent via HTTPS POST'));
+			} else {
+				originalSendCustomMessage(action, isEncodedGet, isPost);
+			}
+		};
 
         function sendTestMessage() {
             const testMessage = {
@@ -543,6 +605,20 @@ Developer Notes:
 9. Error handling and reconnection logic is implemented for robustness
 10. Experiment with different message types and actions to understand the full capabilities of the API
 		`);
+		
+		document.querySelectorAll('.btn-group').forEach(group => {
+			const log = document.createElement('pre');
+			log.className = 'request-log';
+			group.parentNode.insertBefore(log, group.nextSibling);
+		});
+		
+		var lastLog = null;
+		function logRequest(buttonGroup, requestData) {
+			if (lastLog){lastLog.style.display = 'none';}
+			lastLog = buttonGroup.parentNode.querySelector('.request-log');
+			lastLog.textContent = JSON.stringify(requestData, null, 2);
+			lastLog.style.display = 'block';
+		}
 		</script>
 		</body>
 		</html>

@@ -190,6 +190,13 @@
 	border-radius: 1px;
 }
 
+@keyframes shake {
+  0%, 50%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-20deg); }
+  90% { transform: rotate(20deg); }
+}
+
+
 #searchInput.show {
     display: block;
     width: calc(100% - 35px); /* Adjust width as needed */
@@ -201,8 +208,8 @@
     right: 0px;
     z-index: 100;
     cursor: pointer;
+	font-size: 150%;
 	animation: shake 2s ease-in-out;
-	    font-size: 150%;
 }
 #activeIcon {
 	position: absolute;
@@ -211,7 +218,7 @@
     cursor: pointer;
     display: block;
     height: 0;
-	    font-size: 150%;
+	font-size: 150%;
 }
 .tts-test-button {
 	display: inline-block;
@@ -4832,7 +4839,7 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-bots-options-ext" />
 					<label class="collapsible-label" for="wrapper-bots-options-ext">
-						<span data-translate="local-bot">🤖 AI Chat bot (LLM)</span>
+						<span data-translate="local-bot">🤖 AI Chat Bot (LLM)</span>
 					</label>
 					<div class="collapsible-text">
 						<div class="options">
@@ -4873,6 +4880,9 @@ input:checked + .slider:before {
 										<label for="ollamamodel"><span data-translate="ollama-model">&gt; Ollama Model to use</span></label>
 									</div>
 								</div>
+								<div id="ollamaKeepAlive" class="hidden" title="Time to keep the model in memory; -1 unlimited. In minutes">
+									⏱️<span data-translate="ollama-model">Keep-alive model time (minutes)</span> <input type="number" min="-1" max="99999999" value="5" data-numbersetting="ollamaKeepAlive" />
+								</div>
 								<div id="geminimodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-1.5-flash" data-textsetting="geminimodel" />
@@ -4885,7 +4895,9 @@ input:checked + .slider:before {
 										<label for="chatgptmodel"><span data-translate="chatgptmodel">&gt; ChatGPT Model to use</span></label>
 									</div>
 								</div>
-								<h3><span data-translate="local-censor-bot">Censor bot options 🤖🚫🤬</span></h3>
+								<h2><span data-translate="local-censor-bot">Censor bot options 🤖🚫🤬</span></h2>
+								<i>Does not respond to chat, but has access to the chat. It can censor, filter, and sanitize incoming live chat message</i><br/>
+								<br>
 								<div>
 									<div style="display: inline-block;" title="Use the bot to moderate messages, deleting messages that it thinks aren't fit. It will skip messages if it can't keep up.">
 										<label class="switch">
@@ -4904,7 +4916,9 @@ input:checked + .slider:before {
 										🤚 <span data-translate="censor-bot-hold">Block messages until approved by the censor bot</span>
 									</div>
 								</div>
-								<h3 title="Chat bots can reply to the chat"><span data-translate="local-chat-bot">Chat bot 🤖💬</span></h3>
+								<h2 title="Chat bots can reply to the chat"><span data-translate="local-chat-bot">Chat bot 🤖💬</span></h2>
+								<i>This bot has access to the live streaming chat and can either respond to users in chat or respond its own special chat overlay</i><br/>
+								<br>
 								<div style="display: inline-block;" title="Enable the LLM AI Bot responder.">
 									<label class="switch">
 										<input type="checkbox" id="ollama" data-setting="ollama" />
@@ -4925,6 +4939,15 @@ input:checked + .slider:before {
 											<span class="slider round"></span>
 										</label>
 										📛 <span data-translate="no-ollama-bot-name">Do not include the bot's name when responding</span>
+									</div>
+								</div>
+								<div title="By default the bot is told not if it doesn't see value in doing so. You can disable that instruction here though">
+									<div class="textInputContainer" style="width: 95%;">
+										<label class="switch">
+											<input type="checkbox" id="alwaysRespondLLM" data-setting="alwaysRespondLLM" />
+											<span class="slider round"></span>
+										</label>
+										🗣️🗣 <span data-translate="alwaysRespondLLM">Do not screen out any of the bot's replies</span>
 									</div>
 								</div>
 								<div>
@@ -4985,12 +5008,14 @@ input:checked + .slider:before {
 										<span data-translate="ollamaprompt">&gt; Additional Bot Instructions (Optional)</span>
 									</label>
 								</div>
+								<h3>Give the above chat bot access to additional custom knowledge that you can provide</h3>
+								<br>
 								<div style="display: inline-block;" title="Enable the RAG mode, which has the LLM bot access a local database containing additional knowledge that if may reference in its responses.">
 									<label class="switch">
 										<input type="checkbox" id="ollamaRagEnabled" data-setting="ollamaRagEnabled" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="enable-ragEnabled-bot">Use a custom knowledge-base (RAG)</span> 
+									<span data-translate="enable-ragEnabled-bot">Enable the custom knowledge-base (RAG)</span> 
 								</div>
 								<br /><br />
 								<div id="ragFileManagement" style="display: none; margin-top: 10px;" title="A list of uploaded files that will populate the knowledge database, along with any progress state">
@@ -5012,7 +5037,9 @@ input:checked + .slider:before {
 									<span data-translate="works-better-when"><i>💁‍ tip: The quality of data uploaded will impact results. Too much data may be harmful.</i></span> 
 								</div>
 								
-								<div style="display:inline-block;" title="Allow for private communication with the chat bot">
+								<h2>Standalone one-on-one chat bot</h2>
+								<i>This is different than the above chat bot. It allows for private 1 on 1 conversation on a dedicated page, just in case you want to talk privately to it. It does not have access to the RAG knowledge dataset currently.</i><br/><br/>
+								<div style="display:inline-block;" title="Allow for private communication with the chat bot. Currently doesn't have access to RAG.">
 									<label class="switch">
 										<input type="checkbox" id="allowChatBot" data-setting="allowChatBot" />
 										<span class="slider round"></span>

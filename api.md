@@ -64,6 +64,17 @@ There is an easy to use sandbox to play with some of the common API commands and
     - [Message Types](#message-types)
     - [API Actions](#api-actions-4)
     - [Integration with Extension](#integration-with-extension)
+- [StreamDeck Integration Guide for Social Stream Ninja](#streamdeck-integration-guide-for-social-stream-ninja)
+  - [Quick Setup Method](#quick-setup-method)
+  - [Advanced Setup with Multi Actions](#advanced-setup-with-multi-actions)
+  - [Tips for StreamDeck Setup](#tips-for-streamdeck-setup)
+  - [Testing Your Setup](#testing-your-setup)
+  - [Channel-Specific Messages](#channel-specific-messages)
+- [Using Bitfocus Companion with Social Stream Ninja](#using-bitfocus-companion-with-social-stream-ninja)
+  - [Initial Setup](#initial-setup)
+  - [Available Actions](#available-actions)
+  - [Variables](#variables)
+  - [Comparison with StreamDeck](#comparison-with-streamdeck)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -774,3 +785,136 @@ The battle page relies on the extension for receiving data:
 1. The extension uses `sendDataP2P()` to send data to the battle page
 2. Data can be sent via WebRTC or fallback to WebSocket if available
 3. The extension can trigger game actions like starting the game
+
+I'll create a guide focused on integrating Social Stream Ninja with StreamDeck, specifically for sending custom messages.
+
+
+# StreamDeck Integration Guide for Social Stream Ninja
+
+## Quick Setup Method
+
+1. Open StreamDeck software
+2. Add a new "Website" action to your StreamDeck
+3. Configure the URL using this format:
+```
+https://io.socialstream.ninja/YOUR_SESSION_ID/sendEncodedChat/null/YOUR_MESSAGE
+```
+
+Replace:
+- `YOUR_SESSION_ID` with your Social Stream Ninja session ID
+- `YOUR_MESSAGE` with your URL-encoded message
+
+For example, to send "Hello Stream!":
+```
+https://io.socialstream.ninja/abc123/sendEncodedChat/null/Hello%20Stream!
+```
+
+## Advanced Setup with Multi Actions
+
+For more flexibility, you can use Multi Actions to send different messages:
+
+1. Create a new "Multi Action" on your StreamDeck
+2. Add "Website" actions for each command
+3. Use these URL patterns:
+
+**WebSocket (WSS)**
+```
+https://io.socialstream.ninja/YOUR_SESSION_ID/sendChat/null/YOUR_MESSAGE
+```
+
+**HTTPS POST**
+```
+https://io.socialstream.ninja/YOUR_SESSION_ID
+```
+With body:
+```json
+{
+    "action": "sendChat",
+    "value": "YOUR_MESSAGE",
+    "apiid": "YOUR_SESSION_ID"
+}
+```
+
+## Tips for StreamDeck Setup
+
+- Use URL encoding for special characters in messages
+- You can create multiple buttons for different preset messages
+- Chain commands using Multi Actions for complex sequences
+- Add a delay between actions if needed using StreamDeck's delay feature
+
+## Testing Your Setup
+
+1. Find your session ID from the Social Stream API Sandbox
+2. Create a test button with a simple message
+3. Press the button to verify the message appears in your social platforms
+4. Check the Social Stream API Sandbox's incoming messages panel to confirm delivery
+
+## Channel-Specific Messages
+
+To send to specific channels, add the channel parameter:
+
+```
+https://io.socialstream.ninja/YOUR_SESSION_ID/sendChat/null/YOUR_MESSAGE?channel=2
+```
+
+Channels:
+- 1: General communication
+- 2: Dock
+- 3: Featured content
+- 4-7: Custom channels
+
+I'll add a section about Bitfocus Companion integration with what we can confirm from the provided information:
+
+# Using Bitfocus Companion with Social Stream Ninja
+
+Bitfocus Companion enables the reasonably priced Elgato Streamdeck to be a professional shotbox surface for a huge amount of different presentation switchers, video playback software and broadcast equipment. It supports Social Stream Ninja and VDO.Ninja!
+
+https://bitfocus.io/companion
+https://bitfocus.io/connections/socialstream-ninja
+
+## Initial Setup
+
+1. Enable API Control:
+   - Open Social Stream Ninja
+   - Go to `Global settings and tools` > `Mechanics`
+   - Enable `Enable remote API control of extension`
+
+2. Get Your Session ID:
+   - Navigate to `Global settings and tools` > `Session Options`
+   - Copy your Session ID
+   - Alternatively, find it in your URL after `?session=`
+
+3. Configure Companion:
+   - Install the Social Stream Ninja module in Companion
+   - Paste your Session ID into the module settings
+
+## Available Actions
+
+The following commands are confirmed available in Companion:
+
+- Clear featured message
+- Clear all messages
+- Next in queue
+- Toggle auto-show
+- Feature next un-featured
+- Reset Poll
+- Close Poll
+- Waitlist Controls
+- Text to Speech (TTS) Controls
+- Send Chat Message
+
+## Variables
+
+Companion can access:
+- `queue_size`: Shows the current queue size
+
+## Comparison with StreamDeck
+
+Advantages of using Companion:
+- Native integration with Social Stream Ninja
+- No need for URL encoding or complex HTTP requests
+- Direct access to all core functionality
+- Real-time queue size monitoring through variables
+- Can be used alongside StreamDeck for more complex setups
+
+This makes Companion a simpler alternative to the StreamDeck HTTP method described above, especially for basic Social Stream Ninja control.
