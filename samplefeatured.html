@@ -1,4 +1,9 @@
-<!-- NOTE: It's important that the IFRAME logic stay intact, as it is how we receieve messages --!>
+<!--
+Development Notes:
+- It's important that the IFRAME logic stay intact, as it is how we receieve messages
+- This code is in vanilla Javascript designed for web browsers without compiling
+- Details of the incoming message structure can be found here: https://github.com/steveseguin/social_stream/blob/main/README.md#message-structure
+ --!>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,6 +82,10 @@
             right: 0.5rem;
             aspect-ratio: 1;
         }
+		
+		.hl-message img {
+			max-height:24px;
+		}
 
         .hl-profile-pic {
             width: 48px;
