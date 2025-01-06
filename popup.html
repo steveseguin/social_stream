@@ -4873,6 +4873,9 @@ input:checked + .slider:before {
 										<label for="ollamamodel"><span data-translate="ollama-model">&gt; Ollama Model to use</span></label>
 									</div>
 								</div>
+								<div id="ollamaKeepAlive" class="hidden" title="Time to keep the model in memory; -1 unlimited. In minutes">
+									⏱️<span data-translate="ollama-model">Keep-alive model time (minutes)</span> <input type="number" min="-1" max="99999999" value="5" data-numbersetting="ollamaKeepAlive" />
+								</div>
 								<div id="geminimodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-1.5-flash" data-textsetting="geminimodel" />
@@ -4925,6 +4928,15 @@ input:checked + .slider:before {
 											<span class="slider round"></span>
 										</label>
 										📛 <span data-translate="no-ollama-bot-name">Do not include the bot's name when responding</span>
+									</div>
+								</div>
+								<div>
+									<div class="textInputContainer" style="width: 95%;">
+										<label class="switch">
+											<input type="checkbox" id="alwaysRespondLLM" data-setting="alwaysRespondLLM" />
+											<span class="slider round"></span>
+										</label>
+										🗣️ <span data-translate="alwaysRespondLLM">Have the bot respond to every message</span>
 									</div>
 								</div>
 								<div>

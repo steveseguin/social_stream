@@ -3487,90 +3487,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	return response;
 });
 
-// The below "levenshtein" function is based on the follow work:
-// https://github.com/gustf/js-levenshtein
-// MIT License - Requires preservation of copyright and license notice
-// Copyright (c) 2017 Gustaf Andersson
-function levenshtein(a, b) {
-	if (a === b) {
-		return 0;
-	}
-	if (a.length > b.length) {
-		var tmp = a;
-		a = b;
-		b = tmp;
-	}
-	var la = a.length;
-	var lb = b.length;
-	while (la > 0 && a.charCodeAt(la - 1) === b.charCodeAt(lb - 1)) {
-		la--;
-		lb--;
-	}
-	var offset = 0;
-	while (offset < la && a.charCodeAt(offset) === b.charCodeAt(offset)) {
-		offset++;
-	}
-	la -= offset;
-	lb -= offset;
-	if (la === 0 || lb < 3) {
-		return lb;
-	}
-	var x = 0;
-	var y;
-	var d0;
-	var d1;
-	var d2;
-	var d3;
-	var dd;
-	var dy;
-	var ay;
-	var bx0;
-	var bx1;
-	var bx2;
-	var bx3;
-	var vector = [];
-	for (y = 0; y < la; y++) {
-		vector.push(y + 1);
-		vector.push(a.charCodeAt(offset + y));
-	}
-	var len = vector.length - 1;
-	for (; x < lb - 3; ) {
-		bx0 = b.charCodeAt(offset + (d0 = x));
-		bx1 = b.charCodeAt(offset + (d1 = x + 1));
-		bx2 = b.charCodeAt(offset + (d2 = x + 2));
-		bx3 = b.charCodeAt(offset + (d3 = x + 3));
-		dd = x += 4;
-		for (y = 0; y < len; y += 2) {
-			dy = vector[y];
-			ay = vector[y + 1];
-			d0 = _min(dy, d0, d1, bx0, ay);
-			d1 = _min(d0, d1, d2, bx1, ay);
-			d2 = _min(d1, d2, d3, bx2, ay);
-			dd = _min(d2, d3, dd, bx3, ay);
-			vector[y] = dd;
-			d3 = d2;
-			d2 = d1;
-			d1 = d0;
-			d0 = dy;
-		}
-	}
-	for (; x < lb; ) {
-		bx0 = b.charCodeAt(offset + (d0 = x));
-		dd = ++x;
-		for (y = 0; y < len; y += 2) {
-			dy = vector[y];
-			vector[y] = dd = _min(dy, d0, dd, bx0, vector[y + 1]);
-			d0 = dy;
-		}
-	}
-	return dd;
-}
-function _min(d0, d1, d2, bx, ay) {
-	return d0 < d1 || d2 < d1 ? (d0 > d2 ? d2 + 1 : d0 + 1) : bx === ay ? d1 : d1 + 1;
-}
-//// End of levenshtein code
-////////////////////////////
-
 function verifyOriginalNewIncomingMessage(msg, cleaned=false) {
 	
 	if (Date.now() - lastSentTimestamp > 5000) {
@@ -3585,9 +3501,9 @@ function verifyOriginalNewIncomingMessage(msg, cleaned=false) {
 			msg = decodeAndCleanHtml(msg);
 		}
 		
-		var score = levenshtein(msg, lastSentMessage);
+		var score = fastMessageSimilarity(msg, lastSentMessage);
 		// console.log(msg, score);
-		if (score < 7) { // same message
+		if (score > 0.5) { // same message
 			
 			lastMessageCounter += 1;
 			if (lastMessageCounter>1) {
@@ -3605,6 +3521,52 @@ function verifyOriginalNewIncomingMessage(msg, cleaned=false) {
 		
 	return true;
 	
+}
+
+function fastMessageSimilarity(a, b) {
+    if (a === b) return 1;
+    if (!a || !b) return 0;
+
+    const normalize = str => str
+        .toLowerCase()
+        .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
+        .replace(/\s+/g, '')
+        .trim();
+
+    const normA = normalize(a);
+    const normB = normalize(b);
+    
+    // Handle exact match after normalization
+    if (normA === normB) return 1;
+    
+    const maxLen = Math.max(normA.length, normB.length);
+    const minLen = Math.min(normA.length, normB.length);
+    
+    // Check if one is prefix of the other
+    const shorter = normA.length < normB.length ? normA : normB;
+    const longer = normA.length < normB.length ? normB : normA;
+    
+    // For messages > 50 chars, if one is a prefix of the other
+    // and covers at least 90% of the shorter message, consider it similar
+    if (maxLen > 50 && longer.startsWith(shorter) && minLen / maxLen > 0.9) {
+        return 0.95;
+    }
+
+    // For very short strings
+    if (maxLen < 10) {
+        const matched = [...normA].filter(char => normB.includes(char)).length;
+        return matched / maxLen;
+    }
+
+    // Compute similarity based on character matches for position-sensitive comparison
+    let matches = 0;
+    const compareLen = Math.min(normA.length, normB.length);
+    
+    for (let i = 0; i < compareLen; i++) {
+        if (normA[i] === normB[i]) matches++;
+    }
+
+    return matches / maxLen;
 }
 
 function ajax(object2send, url, ajaxType = "PUT", type = "application/json; charset=utf-8") {
@@ -7489,7 +7451,6 @@ async function applyBotActions(data, tab = false) {
 				console.log(e); // ai.js file missing?
 			}
 		}
-		
 		if (settings.ollama){
 			try{
 				processMessageWithOllama(data);

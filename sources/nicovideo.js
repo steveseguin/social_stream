@@ -139,6 +139,13 @@
 		function (request, sender, sendResponse) {
 			try {
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+				
+				    document.querySelectorAll('iframe').forEach(frame => frame.remove());
+					document.querySelectorAll('*').forEach(el => {
+						if (el.shadowRoot) {
+							el.shadowRoot.querySelectorAll('iframe').forEach(frame => frame.remove());
+						}
+					});
 					document.querySelector('textarea,input[type="text"].comment-text-box').focus();
 					sendResponse(true);
 					return;

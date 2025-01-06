@@ -1022,11 +1022,11 @@
 				if (document.querySelectorAll('#menu > a').length==2){
 					clearInterval(waitTilClear);
 					document.querySelectorAll('#menu > a')[1].click()
-					document.querySelector("yt-live-chat-header-renderer").style.display = "none";
+					document.querySelector("yt-live-chat-header-renderer").style.maxHeight = "10px";
 				}
 			},100)
 	  } else if (document.querySelector("#trigger") && !settings.autoLiveYoutube && marked){
-		  document.querySelector("yt-live-chat-header-renderer").style.display = "unset";
+		  document.querySelector("yt-live-chat-header-renderer").style.maxHeight = "unset";
 		  marked = false;
 	  }
 	}, 1000);

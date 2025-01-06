@@ -51,61 +51,85 @@ async function rebuildIndex() {
     globalLunrIndex = initLunrIndex(documents);
 }
 
-async function getFirstAvailableModel() {
+async function getFirstAvailableModel(exclude=null) {
     let ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
     
-    if (typeof ipcRenderer !== 'undefined') {
-        // Electron environment
-        return new Promise( async (resolve, reject) =>  {
-			let ccc = setTimeout(()=>{
-				reject(new Error('Request timed out'));
-			},10000);
-			let xhr;
-			try {
-				xhr = await fetchNode(`${ollamaendpoint}/api/tags`);
-			} catch(e){
-				clearTimeout(ccc);
-				reject(new Error('General fetch error'));
-				return;
-			}
-			
-		    const datar = JSON.parse(xhr.data);
-			if (datar && datar.models && datar.models.length > 0) {
-				resolve(datar.models[0].name);
-				return;
-			} else {
-				reject(new Error('No models available'));
-				return;
-			}
+    const isLLMModel = (model) => {
+        const llmFamilies = ['llama', 'qwen2'];
+        return model.details?.families?.some(family => llmFamilies.includes(family));
+    };
+    
+    const getSizeInBillions = (model) => {
+        const sizeStr = model.details?.parameter_size;
+        return parseFloat(sizeStr?.replace('B', '')) || 0;
+    };
+    
+    const findBestModel = (models) => {
+        const llmModels = models.filter(isLLMModel);
+        if (!llmModels.length) return models[0]?.name;
+        
+        const targetModels = llmModels.filter(m => {
+            const size = getSizeInBillions(m);
+            return size >= 2 && size <= 8;
         });
-		
-    } else {
-        // Web environment
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', `${ollamaendpoint}/api/tags`, true);
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    const datar = JSON.parse(xhr.responseText);
-                    if (datar && datar.models && datar.models.length > 0) {
-                        resolve(datar.models[0].name);
-                    } else {
-                        reject(new Error('No models available'));
-                    }
-                } else {
-                    reject(new Error('Failed to fetch models'));
-                }
-            };
-            xhr.timeout = 10000; // 10 seconds timeout
-            xhr.ontimeout = function() {
-                reject(new Error('Request timed out'));
-            };
-            xhr.onerror = function() {
-                reject(new Error('Network error while fetching models'));
-            };
-            xhr.send();
+        
+        if (targetModels.length) {
+            const model = targetModels[0].name !== exclude ? 
+                targetModels[0] : targetModels[1] || targetModels[0];
+            return model.name;
+        }
+        
+        const sizes = llmModels.map(m => ({
+            model: m,
+            size: getSizeInBillions(m),
+            diff: Math.min(
+                Math.abs(getSizeInBillions(m) - 2),
+                Math.abs(getSizeInBillions(m) - 8)
+            )
+        }));
+        
+        const closest = sizes.sort((a, b) => a.diff - b.diff)[0];
+        return closest.model.name;
+    };
+
+    if (typeof ipcRenderer !== 'undefined') {
+        return new Promise(async (resolve, reject) => {
+            let ccc = setTimeout(() => reject(new Error('Request timed out')), 10000);
+            try {
+                const xhr = await fetchNode(`${ollamaendpoint}/api/tags`);
+                clearTimeout(ccc);
+                const datar = JSON.parse(xhr.data);
+                if (!datar?.models?.length) throw new Error('No models available');
+                resolve(findBestModel(datar.models));
+            } catch(e) {
+                clearTimeout(ccc);
+                reject(e);
+            }
         });
     }
+    
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `${ollamaendpoint}/api/tags`, true);
+        xhr.timeout = 10000;
+        
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                const datar = JSON.parse(xhr.responseText);
+                if (!datar?.models?.length) {
+                    reject(new Error('No models available'));
+                    return;
+                }
+                resolve(findBestModel(datar.models));
+            } else {
+                reject(new Error('Failed to fetch models'));
+            }
+        };
+        
+        xhr.ontimeout = () => reject(new Error('Request timed out'));
+        xhr.onerror = () => reject(new Error('Network error while fetching models'));
+        xhr.send();
+    });
 }
 
 
@@ -207,9 +231,12 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 		
         let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
         if (!ollamamodel) {
-            const availableModel0 = await getFirstAvailableModel();
-            if (availableModel0) {
-                tmpModelFallback = availableModel0;
+            ollamamodel = await getFirstAvailableModel();
+            if (ollamamodel) {
+                tmpModelFallback = ollamamodel;
+				setTimeout(() => {
+					tmpModelFallback = ""; 
+				}, 60000);
             } else {
                 console.error("No Ollama model found");
                 return;
@@ -220,7 +247,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
             return result.response + "💥";
         } else if (result.error && result.error === 404) {
             try {
-                const availableModel = await getFirstAvailableModel();
+                const availableModel = await getFirstAvailableModel(ollamamodel);
                 if (availableModel) {
                     tmpModelFallback = availableModel;
                     setTimeout(() => {
@@ -353,7 +380,8 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                         const message = {
                             model: currentModel,
                             prompt: prompt,
-                            stream: true
+                            stream: true,
+							keep_alive: settings.ollamaKeepAlive ?  parseInt(settings.ollamaKeepAlive.numbersetting)+"m" : "5m"
                         };
                         
                         if (images){
@@ -411,7 +439,8 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                 const message = {
                     model: currentModel,
                     prompt: prompt,
-                    stream: isStreaming
+                    stream: isStreaming,
+					keep_alive: settings.ollamaKeepAlive ?  parseInt(settings.ollamaKeepAlive.numbersetting)+"m" : "5m"
                 };
                 
                 if (images){
@@ -838,8 +867,7 @@ async function processMessageWithOllama(data) {
       ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting) || 0);
     }
     
-    if (data.type !== "stageten" && !settings.ollamaoverlayonly && data.tid && 
-        lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
+    if (data.type !== "stageten" && !settings.ollamaoverlayonly && data.tid && lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
       isProcessing = false;
       return;
     }
@@ -851,9 +879,7 @@ async function processMessageWithOllama(data) {
     }
 
     // Early return conditions
-    if ((data.type === "stageten" && botname === data.chatname) || 
-        !data.chatmessage || 
-        (!settings.noollamabotname && data.chatmessage.startsWith(botname + ":"))) {
+    if ((data.type === "stageten" && botname === data.chatname) || !data.chatmessage || (!settings.noollamabotname && data.chatmessage.startsWith(botname + ":"))) {
       isProcessing = false;
       return;
     }
@@ -884,9 +910,10 @@ async function processMessageWithOllama(data) {
     }
 
     // Prevent self-replies
-    const score = levenshtein(cleanedText, lastSentMessage);
-    if (score < 7) {
+    const score = fastMessageSimilarity(cleanedText, lastSentMessage);
+    if (score > 0.5) {
       isProcessing = false;
+	  console.log("RETURN", cleanedText, lastSentMessage);
       return;
     }
 
@@ -895,14 +922,15 @@ async function processMessageWithOllama(data) {
     if (settings.ollamaprompt) {
       additionalInstructions = settings.ollamaprompt.textsetting;
     }
-
+	console.log(additionalInstructions);
 	const response = await processUserInput(cleanedText, data, additionalInstructions, botname);
+	console.log(response);
 
     // Handle response
-    if (response && !response.toLowerCase().startsWith("not available") && 
+    if (response && !response.toLowerCase().startsWith("not available") && (settings.alwaysRespondLLM || ( 
         !response.includes("NO_RESPONSE") && 
         !response.startsWith("No ") && 
-        !response.startsWith("NO ")) {
+        !response.startsWith("NO ")))) {
       
       // Send to overlay if enabled
       sendTargetP2P({
@@ -978,11 +1006,19 @@ async function processUserInput(userInput, data, additionalInstructions, botname
     if (await isRAGConfigured()) {
       const databaseDescriptor = localStorage.getItem('databaseDescriptor') || '';
       
-      const ragPrompt = `${promptBase}\n\nDatabase info: ${databaseDescriptor}\n\n` +
-        'Determine if this message requires searching the database. Format response as:\n' +
-        '[NEEDS_SEARCH]\nyes/no\n[/NEEDS_SEARCH]\n\n' +
-        '[SEARCH_QUERY]\nkeywords if search needed\n[/SEARCH_QUERY]\n\n' +
-        '[RESPONSE]\nDirect response if no search needed. Use NO_RESPONSE if no response warranted.\n[/RESPONSE]';
+	  if (settings.alwaysRespondLLM){
+		  var ragPrompt = `${promptBase}\n\nDatabase info: ${databaseDescriptor}\n\n` +
+			'Determine if this message requires searching the database. Format response as:\n' +
+			'[NEEDS_SEARCH]\nyes/no\n[/NEEDS_SEARCH]\n\n' +
+			'[SEARCH_QUERY]\nkeywords if search needed\n[/SEARCH_QUERY]\n\n' +
+			'[RESPONSE]\nDirect response if no search needed.\n[/RESPONSE]';
+	  } else {
+		  var ragPrompt = `${promptBase}\n\nDatabase info: ${databaseDescriptor}\n\n` +
+			'Determine if this message requires searching the database. Format response as:\n' +
+			'[NEEDS_SEARCH]\nyes/no\n[/NEEDS_SEARCH]\n\n' +
+			'[SEARCH_QUERY]\nkeywords if search needed\n[/SEARCH_QUERY]\n\n' +
+			'[RESPONSE]\nDirect response if no search needed. Use NO_RESPONSE if no response warranted.\n[/RESPONSE]';
+	  }
 
       const ragDecision = await callOllamaAPI(ragPrompt);
       const decision = parseDecision(ragDecision);
@@ -1007,6 +1043,13 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 		  } else {
 			  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is neede, followed by why no response was needed.';
 		  }
+	  } else if (settings.alwaysRespondLLM){
+		  if (!settings.nollmcontext){
+			  promptBase += '\n\nRespond conversationally to the current message, doing so directly and succinctly.';
+		  } else {
+			  promptBase += '\n\nRespond conversationally to the current group chat message, doing so directly and succinctly.';
+		  }
+		  
 	  } else {
 		  if (!settings.nollmcontext){
 			  promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE to state you are choosing not to respond. Respond only with NO_RESPONSE if you have no reply.';
@@ -1020,6 +1063,9 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 	  
       if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
 		console.log(response);
+		if (settings.alwaysRespondLLM && (response && !response.toLowerCase().startsWith('@@@@'))){
+			return response;
+		}
         return false;
       }
       
