@@ -810,9 +810,9 @@ For example, to send "Hello Stream!":
 https://io.socialstream.ninja/abc123/sendEncodedChat/null/Hello%20Stream!
 ```
 
-![image](https://github.com/user-attachments/assets/43df48f2-c66c-4302-84b1-17fa7bb11ee0)
-
 You can use this page to test and generate the correct URL here, if having problems doing it manually: https://socialstream.ninja/sampleapi.html. Note that we want to generate a GET request with this method.
+
+![image](https://github.com/user-attachments/assets/43df48f2-c66c-4302-84b1-17fa7bb11ee0)
 
 ## Advanced Setup with Multi Actions
 
