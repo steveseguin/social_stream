@@ -10,8 +10,6 @@
     <link rel="icon" type="image/x-icon" href="./icons/favicon.ico">
     <link rel="stylesheet" href="styles.css">
     <script async defer src="./thirdparty/buttons.js"></script>
-    <script src="./thirdparty/marked.umd.min.js"></script>
-    <script src="./thirdparty/index.umd.min.js"></script>
     <meta property="og:title" content="Social Stream Ninja | Enhance Your Live Streaming">
     <meta property="og:description" content="Easily integrate chat messages from various platforms like YouTube, Twitch, and Facebook into your live streams with Social Stream Ninja.">
     <meta property="og:url" content="https://socialstream.ninja">
@@ -934,36 +932,60 @@ img {
 		});
 	}
 
-	if (location.protocol.startsWith('http')) {
-		document.addEventListener("DOMContentLoaded", () => {
-			if (typeof marked === 'undefined' || typeof markedGfmHeadingId === 'undefined') {
-				console.error('Required libraries (marked or markedGfmHeadingId) not loaded');
-				return;
-			}
+	const REQUIRED_SCRIPTS = [
+	  './thirdparty/marked.umd.min.js',
+      './thirdparty/index.umd.min.js'
+	];
 
-			marked.use(markedGfmHeadingId.gfmHeadingId({}));
-			
-			fetch('./README.md')
-				.then(response => {
-					if (!response.ok) throw new Error('Failed to fetch README.md');
-					return response.text();
-				})
-				.then(text => {
-					console.log(text);
-					document.getElementById('markdown').innerHTML = marked.parse(text);
-					if (window.location.hash) {
-						scrollToAnchor(window.location.hash);
-					}
-				})
-				.catch(error => console.error('Error loading the README:', error));
-		});
+	function loadScripts(scripts, callback) {
+	  let loaded = 0;
+	  scripts.forEach(src => {
+		const script = document.createElement('script');
+		script.src = src;
+		script.onload = () => {
+		  loaded++;
+		  if (loaded === scripts.length) callback();
+		};
+		document.head.appendChild(script);
+	  });
 	}
 
-	window.addEventListener('hashchange', () => {
-		if (window.location.hash) {
-			scrollToAnchor(window.location.hash);
-		}
-	});
+	if (location.protocol.startsWith('http')) {
+		document.addEventListener("DOMContentLoaded", () => {
+	  loadScripts(REQUIRED_SCRIPTS, () => {
+		  const gfmHeading = markedGfmHeadingId.gfmHeadingId();
+		  gfmHeading.name = 'gfm-heading-id'; 
+		  
+		  marked.setOptions({
+			headerIds: true,
+			mangle: false
+		  });
+		  
+		  marked.use({ extensions: [gfmHeading] });
+		  
+		  fetch('./README.md')
+			.then(response => {
+			  if (!response.ok) throw new Error('Failed to fetch README.md');
+			  return response.text();
+			})
+			.then(text => {
+			  document.getElementById('markdown').innerHTML = marked.parse(text);
+			  if (window.location.hash) {
+				scrollToAnchor(window.location.hash);
+			  }
+			})
+			.catch(error => console.error('Error loading the README:', error));
+		  
+		  window.addEventListener('hashchange', () => {
+			if (window.location.hash) {
+			  scrollToAnchor(window.location.hash);
+			}
+		  });
+		});
+	  });
+	}
+
+
 	</script>
 </body>
 </html>
