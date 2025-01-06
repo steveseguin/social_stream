@@ -889,100 +889,81 @@ img {
         <p>Join our community for free support on <a href="https://discord.socialstream.ninja" target="_blank">Discord</a>.</p>
     </footer>
 	<script>
-		// Function to handle smooth scrolling to anchor with retry logic
-		function scrollToAnchor(hash, retryCount = 0, maxRetries = 3) {
-		    // Remove the # from the hash
-		    const targetId = hash.replace('#', '');
-		    
-		    // Look for either the ID or a heading with matching text
-		    let targetElement = document.getElementById(targetId);
-		    
-		    if (!targetElement) {
-		        // If no direct ID match, try to find a heading that matches
-		        const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-		        for (const heading of headings) {
-		            // Convert heading text to kebab case for comparison
-		            const headingId = heading.textContent.toLowerCase()
-		                .replace(/[^\w\s-]/g, '')
-		                .replace(/\s+/g, '-');
-		            
-		            if (headingId === targetId) {
-		                targetElement = heading;
-		                break;
-		            }
-		        }
-		    }
-		    
-		    if (targetElement) {
-		        // Wait for images to load in the markdown container
-		        const images = document.querySelectorAll('#markdown img');
-		        const imagePromises = Array.from(images).map(img => {
-		            if (img.complete) return Promise.resolve();
-		            return new Promise(resolve => {
-		                img.onload = resolve;
-		                img.onerror = resolve; // Handle failed image loads
-		            });
-		        });
+	function scrollToAnchor(hash, retryCount = 0, maxRetries = 3) {
+		const targetId = hash.replace('#', '');
+		let targetElement = document.getElementById(targetId);
 		
-		        // After images load (or fail), scroll to target
-		        Promise.all(imagePromises).then(() => {
-		            // Additional small delay to ensure final layout
-		            setTimeout(() => {
-		                const offset = targetElement.getBoundingClientRect().top + window.scrollY - 20; // 20px padding
-		                window.scrollTo({
-		                    top: offset,
-		                    behavior: 'smooth'
-		                });
-		                
-		                // Verify scroll position after a short delay
-		                setTimeout(() => {
-		                    const elementPosition = targetElement.getBoundingClientRect().top;
-		                    // If element is not close to top of viewport and we haven't exceeded max retries
-		                    if (Math.abs(elementPosition) > 50 && retryCount < maxRetries) {
-		                        scrollToAnchor(hash, retryCount + 1, maxRetries);
-		                    }
-		                }, 500);
-		            }, 100);
-		        });
-		    }
-		}
-
-		function smoothScroll(target) {
-			  const element = document.getElementById(target);
-			  if (element) {
-				window.scrollTo({
-				  top: element.offsetTop,
-				  behavior: 'smooth'
-				});
-			  }
+		if (!targetElement) {
+			const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+			for (const heading of headings) {
+				try {
+					const headingId = heading.textContent.toLowerCase()
+						.replace(/[^\w\s-]/g, '')
+						.replace(/\s+/g, '-');
+					
+					if (headingId === targetId) {
+						targetElement = heading;
+						break;
+					}
+				} catch(e) {}
 			}
-		if (location.protocol.startsWith('http')) {
-			document.addEventListener("DOMContentLoaded", function() {
-			    if (location.protocol.startsWith('http')) {
-			        marked.use(markedGfmHeadingId.gfmHeadingId({}));
-			        
-			        fetch('./README.md')
-			            .then(response => response.text())
-			            .then(text => {
-			                const html = marked.parse(text);
-			                document.getElementById('markdown').innerHTML = html;
-			                
-			                // After content is updated, check for hash and scroll if needed
-			                if (window.location.hash) {
-			                    scrollToAnchor(window.location.hash);
-			                }
-			            })
-			            .catch(error => console.error('Error loading the README:', error));
-			    }
-			});
-		} else {
-			console.warn('Skipping fetch call since the page is loaded locally.');
 		}
-		window.addEventListener('hashchange', function() {
-		    if (window.location.hash) {
-		        scrollToAnchor(window.location.hash);
-		    }
+		
+		if (!targetElement) return;
+
+		const images = document.querySelectorAll('#markdown img');
+		const imagePromises = Array.from(images).map(img => 
+			img.complete ? Promise.resolve() : 
+			new Promise(resolve => {
+				img.onload = img.onerror = resolve;
+			})
+		);
+
+		Promise.all(imagePromises).then(() => {
+			setTimeout(() => {
+				const offset = targetElement.getBoundingClientRect().top + window.scrollY - 20;
+				window.scrollTo({
+					top: offset,
+					behavior: 'smooth'
+				});
+				
+				if (Math.abs(targetElement.getBoundingClientRect().top) > 50 && retryCount < maxRetries) {
+					setTimeout(() => scrollToAnchor(hash, retryCount + 1, maxRetries), 500);
+				}
+			}, 100);
 		});
+	}
+
+	if (location.protocol.startsWith('http')) {
+		document.addEventListener("DOMContentLoaded", () => {
+			if (typeof marked === 'undefined' || typeof markedGfmHeadingId === 'undefined') {
+				console.error('Required libraries (marked or markedGfmHeadingId) not loaded');
+				return;
+			}
+
+			marked.use(markedGfmHeadingId.gfmHeadingId({}));
+			
+			fetch('./README.md')
+				.then(response => {
+					if (!response.ok) throw new Error('Failed to fetch README.md');
+					return response.text();
+				})
+				.then(text => {
+					console.log(text);
+					document.getElementById('markdown').innerHTML = marked.parse(text);
+					if (window.location.hash) {
+						scrollToAnchor(window.location.hash);
+					}
+				})
+				.catch(error => console.error('Error loading the README:', error));
+		});
+	}
+
+	window.addEventListener('hashchange', () => {
+		if (window.location.hash) {
+			scrollToAnchor(window.location.hash);
+		}
+	});
 	</script>
 </body>
 </html>
