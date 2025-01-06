@@ -92,20 +92,18 @@
 	  
 	  var chatbadges = [];
 	  var hasDonation = '';
+	  var contentimg = "";
 	  
 	  try {
-		var eleContent = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(2)");
-		chatmessage = getAllContentNodes(eleContent);
+		var eleContent = ele.querySelector("span[class]:not([role])");
+		chatmessage = getAllContentNodes(eleContent).trim();
 	  } catch(e){ // donation?
+	  }
+	  
+	  if (!chatmessage){
 		  try {
-			var eleContent = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2)");
-			chatmessage = getAllContentNodes(eleContent);
-			if (chatmessage && (chatmessage == parseInt(chatmessage))){
-				// hasDonation = parseInt(chatmessage) + " gold"; // this is way too annoying to show..
-				chatmessage = "";
-			}
+			contentimg = ele.querySelector("button>img[src][alt='stickers']").src;
 		  } catch(e){
-			  return;
 		  }
 	  }
 	  
@@ -117,7 +115,7 @@
 		  return; // I'm assuming this is a deleted message
 	  }
 	 
-	 if ((lastMessage === chatmessage) && (lastUser === chatname)){
+	 if (chatmessage && (lastMessage === chatmessage) && (lastUser === chatname)){
 		  lastMessage = "";
 		  chatname = "";
 		  return;
@@ -160,7 +158,7 @@
 
 	  
 	 
-	  if (!chatmessage && !hasDonation){
+	  if (!chatmessage && !hasDonation && !contentimg){
 		return;
 	  }
 
@@ -170,12 +168,11 @@
 	  data.nameColor = nameColor;
 	  data.chatmessage = chatmessage;
 	  data.chatimg = chatimg;
+	  data.contentimg = contentimg;
 	  data.hasDonation = hasDonation;
 	  data.membership = "";
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "loco";
-	  
-	//  console.log(data);
 	  
 	 
 	  try {
@@ -225,7 +222,6 @@
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i].nodeName.toLowerCase() !== "div"){continue;}
-							if (mutation.addedNodes[i].role){continue;}
 							if (mutation.addedNodes[i].ignore){continue;}
 							mutation.addedNodes[i].ignore=true;
 							processMessage(mutation.addedNodes[i]);
@@ -236,7 +232,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -248,15 +244,16 @@
 		
 		if (!window.location.pathname.startsWith("/streamers/")){return;}
 		
-		var mainChat = document.querySelector("body> div > div > div > div > div > div > div > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > div > div");
+		var mainChat = document.querySelector(".chat-elements-list");
 		if (mainChat){ // just in case 
 			console.log("Social Stream Start");
 			clearInterval(checkReady);
 			
 			setTimeout(function(){
-				var clear = mainChat.querySelectorAll("div");
+				var clear = mainChat.childNodes;
 				for (var i = 0;i<clear.length;i++){
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
+					//processMessage(clear[i]);
 				}
 				console.log("Social Stream ready to go");
 				onElementInserted(mainChat);

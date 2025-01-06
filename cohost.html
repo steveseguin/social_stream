@@ -4,8 +4,372 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPT-4o Realtime AI Co-host</title>
+	<style>
+	:root {
+  --puppet-primary: #333;
+  --puppet-bg: #f8f8f8;
+  --puppet-accent: #4a4a4a;
+  --puppet-highlight: #fff;
+  --puppet-shadow: rgba(0, 0, 0, 0.2);
+}
+
+.puppet {
+  width: 300px;
+  height: 300px;
+  position: relative;
+  background: radial-gradient(circle at 30% 30%, var(--puppet-bg) 0%, #e0e0e0 100%);
+  border-radius: 50%;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px var(--puppet-shadow);
+}
+
+.face {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.3s ease;
+}
+
+.eyes {
+  display: flex;
+  gap: 40px;
+  transition: all 0.3s ease;
+}
+
+.eye {
+  width: 32px;
+  height: 32px;
+  background: var(--puppet-primary);
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.eye::before {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--puppet-highlight);
+  border-radius: 50%;
+  top: 5px;
+  left: 5px;
+  transition: all 0.3s ease;
+}
+
+.eye::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: var(--puppet-bg);
+  transform: translateY(-100%);
+  transition: transform 0.15s ease;
+}
+
+.eyebrows {
+  position: absolute;
+  width: 100%;
+  top: -20px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 10px;
+}
+
+.eyebrow {
+  width: 35px;
+  height: 8px;
+  background: var(--puppet-primary);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  transform-origin: center;
+  opacity: 0;
+}
+
+.mouth {
+  width: 80px;
+  height: 40px;
+  border: 6px solid var(--puppet-primary);
+  border-radius: 0 0 40px 40px;
+  border-top: 0;
+  margin: 25px auto;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  transform-origin: center;
+}
+
+.cheeks {
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.cheek {
+  width: 25px;
+  height: 15px;
+  background: #ff9999;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: all 0.3s ease;
+}
+
+@keyframes talking {
+  0%, 100% { 
+    height: 25px; 
+    width: 60px;
+    border-radius: 30px;
+  }
+  50% { 
+    height: 45px; 
+    width: 50px;
+    border-radius: 25px;
+  }
+}
+
+@keyframes softTalking {
+  0%, 100% { 
+    height: 35px;
+    transform: scale(1);
+  }
+  50% { 
+    height: 45px;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes blink {
+  0% { transform: translateY(-100%); }
+  50% { transform: translateY(0); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translate(-50%, -50%); }
+  50% { transform: translate(-50%, -45%); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes idle {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+  25% { transform: translate(-51%, -50%) rotate(-1deg); }
+  75% { transform: translate(-49%, -50%) rotate(1deg); }
+}
+
+.puppet {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.face {
+  animation: idle 6s ease-in-out infinite;
+}
+
+.talking .mouth {
+  animation: talking 0.4s infinite;
+}
+
+.blink .eye::after {
+  animation: blink 0.15s ease forwards;
+}
+
+.happy .mouth {
+  height: 60px;
+  border-radius: 0 0 80px 80px;
+  transform: translateY(-5px) scale(1.1);
+}
+
+.happy .cheeks {
+  opacity: 1;
+}
+
+.happy .cheek {
+  transform: scale(1);
+}
+
+.happy.talking .mouth {
+  animation: softTalking 0.4s infinite;
+}
+
+.sad .mouth {
+  transform: rotate(180deg) translateY(-20px) scale(0.8);
+  width: 60px;
+  height: 30px;
+}
+
+.sad .eyebrows {
+  opacity: 1;
+}
+
+.sad .eyebrow {
+  transform: rotate(-15deg) translateY(5px);
+  opacity: 1;
+}
+
+.sad .eyebrow:last-child {
+  transform: rotate(15deg) translateY(5px);
+}
+
+.surprised .mouth {
+  height: 80px;
+  width: 60px;
+  border-radius: 50%;
+  transform: translateY(5px);
+}
+
+.surprised .eye {
+  height: 45px;
+  width: 45px;
+  transform: translateY(-5px);
+}
+
+.surprised .eyebrows {
+  opacity: 1;
+}
+
+.surprised .eyebrow {
+  transform: translateY(-5px);
+  opacity: 1;
+}
+
+.angry .eyebrows {
+  opacity: 1;
+}
+
+.angry .eyebrow {
+  transform: rotate(30deg) translateY(-2px);
+  opacity: 1;
+}
+
+.angry .eyebrow:last-child {
+  transform: rotate(-30deg) translateY(-2px);
+}
+
+.angry .mouth {
+  width: 60px;
+  height: 20px;
+  transform: rotate(-10deg) translateY(10px);
+  border-radius: 0 0 20px 20px;
+}
+
+.angry .eye::before {
+  width: 8px;
+  height: 8px;
+  top: 12px;
+  left: 12px;
+}
+
+.thinking .eye {
+  height: 12px;
+  border-radius: 6px;
+  transform: translateY(5px);
+}
+
+.thinking .mouth {
+  width: 40px;
+  height: 12px;
+  border-radius: 6px;
+  transform: rotate(-10deg) translate(20px, 10px);
+}
+
+.thinking .eyebrows {
+  opacity: 1;
+}
+
+.thinking .eyebrow:last-child {
+  transform: rotate(-15deg) translateY(-2px);
+  opacity: 1;
+}
+
+.wink .eye:first-child {
+  height: 5px;
+  margin-top: 15px;
+  border-radius: 5px;
+}
+
+.excited .face {
+  animation: bounce 0.4s infinite;
+}
+
+.excited .cheeks {
+  opacity: 1;
+}
+
+.excited .cheek {
+  transform: scale(1.2);
+  background: #ff7777;
+}
+
+.sleepy .eye {
+  height: 8px;
+  border-radius: 4px;
+  transform: translateY(12px);
+}
+
+.sleepy .mouth {
+  height: 25px;
+  width: 40px;
+  transform: translateY(10px);
+}
+
+.shadow {
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  height: 20px;
+  background: var(--puppet-shadow);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  filter: blur(5px);
+}
+
+.excited .shadow {
+  width: 85%;
+  opacity: 0.8;
+  transform: translateX(-50%) scaleX(0.95);
+}
+
+[data-theme="dark"] {
+  --puppet-primary: #fff;
+  --puppet-bg: #2a2a2a;
+  --puppet-accent: #dadada;
+  --puppet-highlight: #333;
+  --puppet-shadow: rgba(0, 0, 0, 0.4);
+}
+	</style>
 </head>
 <body class="bg-gray-100 p-8">
+
+	<div class="puppet">
+	  <div class="face">
+		<div class="eyebrows">
+		  <div class="eyebrow"></div>
+		  <div class="eyebrow"></div>
+		</div>
+		<div class="eyes">
+		  <div class="eye"></div>
+		  <div class="eye"></div>
+		</div>
+		<div class="cheeks">
+		  <div class="cheek"></div>
+		  <div class="cheek"></div>
+		</div>
+		<div class="mouth"></div>
+	  </div>
+	  <div class="shadow"></div>
+	</div>
+
     <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
         <div class="p-8">
             <h1 class="text-2xl font-bold mb-4">GPT-4o Realtime AI Co-host</h1>
@@ -195,6 +559,80 @@
 
         // Initialize
         connectWebSocket();
+		
+		/// puppet start
+		
+		const puppet = document.querySelector('.puppet');
+let currentEmotion = '';
+let isTalking = false;
+let blinkInterval;
+let idleTimeout;
+
+const BLINK_INTERVAL = 4000;
+const BLINK_DURATION = 150;
+
+function setEmotion(emotion, talking = false) {
+  currentEmotion = emotion;
+  isTalking = talking;
+  updateState();
+  
+  if (emotion === 'sleepy') {
+    stopBlinking();
+    startSlowBlinking();
+  } else {
+    startBlinking();
+  }
+}
+
+function updateState() {
+  const classes = [currentEmotion];
+  if (isTalking) classes.push('talking');
+  puppet.className = 'puppet ' + classes.join(' ');
+}
+
+function blink() {
+  puppet.classList.add('blink');
+  setTimeout(() => puppet.classList.remove('blink'), BLINK_DURATION);
+}
+
+function startBlinking() {
+  if (blinkInterval) clearInterval(blinkInterval);
+  blinkInterval = setInterval(() => {
+    blink();
+    if (Math.random() > 0.7) {
+      setTimeout(blink, 150);
+    }
+  }, BLINK_INTERVAL + Math.random() * 2000);
+}
+
+function startSlowBlinking() {
+  if (blinkInterval) clearInterval(blinkInterval);
+  blinkInterval = setInterval(() => {
+    blink();
+  }, BLINK_INTERVAL * 2);
+}
+
+function stopBlinking() {
+  if (blinkInterval) {
+    clearInterval(blinkInterval);
+    blinkInterval = null;
+  }
+}
+
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+}
+
+startBlinking();
+
+// Example usage:
+// setEmotion('happy', true);
+// setEmotion('angry');
+// setEmotion('surprised', true);
+// setEmotion('thinking');
+// setEmotion('excited', true);
+// setEmotion('sleepy');
+// setTheme('dark');
     </script>
 </body>
 </html>

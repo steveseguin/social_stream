@@ -2569,19 +2569,16 @@
 			if (urlParams.has("hidetwitch")) {
 				hideTwitch = true;
 			}
-			var onlyFrom = false;
+			var onlyFrom = [];
 			if (urlParams.get("onlyfrom")) {
-				onlyFrom = urlParams.get("onlyfrom").toLowerCase().trim();
+				onlyFrom = urlParams.get("onlyfrom").toLowerCase().trim().split(",");
 			} else if (urlParams.get("fromonly")) {
-				onlyFrom = urlParams.get("fromonly").toLowerCase().trim(); // for the dylslexic users
+				onlyFrom = urlParams.get("fromonly").toLowerCase().trim().split(","); 
 			}
 
-			var hideFrom = false;
+			var hideFrom = [];
 			if (urlParams.get("hidefrom") || urlParams.get("exclude")) {
-				hideFrom = [];
-				(urlParams.get("hidefrom") || urlParams.get("exclude")).split(",").forEach(x => {
-					hideFrom.push(x.trim().toLowerCase());
-				});
+				hideFrom = (urlParams.get("hidefrom") || urlParams.get("exclude")).toLowerCase().trim().split(",");
 			}
 
 			var filterNamesNotMessages = false;
@@ -7379,8 +7376,7 @@
 							return;
 						}
 					}
-					if (hideFrom && hideFrom.includes(data.type)) {
-						// this is an exclude source
+					if (hideFrom.length && hideFrom.includes(data.type)) {
 						if (blurred){
 							makeBlurred = true;
 						} else {
@@ -7395,7 +7391,7 @@
 							return;
 						}
 					}
-					if (onlyFrom && data.type !== onlyFrom) {
+					if (onlyFrom.length && !onlyFrom.includes(data.type)) {
 						if (blurred){
 							makeBlurred = true;
 						} else {
@@ -8381,6 +8377,15 @@
 						window.speechSynthesis.cancel();
 					}
 				}
+				
+				if (urlParams.has("cycle")){
+					if (data.chatmessage === "!cycle"){
+						if (Date.now() - messageTimeout > 10000){ // Lets someone change the scene once every 10 seconds
+							messageTimeout = Date.now();
+							cycleScenes();
+						}
+					}
+				}
 			}
 
 			function syncDockAll(UUID) {
@@ -9199,6 +9204,77 @@
 					return true;
 				}
 				return false;
+			}
+			
+			
+			// Below will cycle your OBS scenes when a user enter !cycle into chat. (assumign &cycle is added)
+			//
+			// You also need to have the dock.html in your OBS, 
+			// with your OBS set to "Advanced access" page permissions, 
+			// and have &obscontrol added to the dock.html URL
+			//
+			function getOBSDetails() {
+			  return new Promise((resolve, reject) => {
+				if (!window.obsstudio) {
+				  reject(new Error('obsstudio is not available'));
+				  return;
+				}
+
+				let details = {};
+				let readOnlyFuncs = [
+				  //"getControlLevel",
+				  //"getStatus",
+				  "getCurrentScene",
+				  "getScenes",
+				  //"getTransitions",
+				  //"getCurrentTransition",
+				  //"pluginVersion"
+				];
+
+				let promises = [];
+
+				Object.keys(window.obsstudio).forEach((key) => {
+				  if (typeof window.obsstudio[key] === 'function' && readOnlyFuncs.includes(key)) {
+					let promise = new Promise((resolveFunc) => {
+					  try {
+						window.obsstudio[key](function(out) {
+						  var shortkey = key.replace("get", "");
+						  shortkey = shortkey[0].toLowerCase() + shortkey.slice(1);
+						  details[shortkey] = out;
+						  resolveFunc();
+						});
+					  } catch (e) {
+						console.error(e);
+						resolveFunc();
+					  }
+					});
+					promises.push(promise);
+				  }
+				});
+
+				Promise.all(promises).then(() => {
+				  resolve(details);
+				}).catch((error) => {
+				  reject(error);
+				});
+			  });
+			}
+			function cycleScenes() {
+			  getOBSDetails().then((details) => {
+				if (details && details.scenes && details.currentScene && details.currentScene.name && (details.scenes.length > 1)) {
+				  let currentIndex = details.scenes.indexOf(details.currentScene.name);
+				  if (currentIndex !== -1) {
+					let nextIndex = (currentIndex + 1) % details.scenes.length;
+					let nextScene = details.scenes[nextIndex];
+					if (window.obsstudio["setCurrentScene"]) {
+					  window.obsstudio["setCurrentScene"](nextScene, function() {
+					  });
+					}
+				  }
+				}
+			  }).catch((error) => {
+				console.error(error);
+			  });
 			}
 			
 			

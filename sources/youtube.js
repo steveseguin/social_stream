@@ -647,9 +647,9 @@
 			if (!hasMembership) {
 				if (member) {
 					hasMembership = getTranslation("member-chat", "MEMBERSHIP");
-				} else if (mod) {
-					hasMembership = getTranslation("moderator-chat", "MODERATOR");
-				}
+				} //else if (mod) {
+				//	hasMembership = getTranslation("moderator-chat", "MODERATOR");
+				//}
 			}
 		} else if (!chatmessage && giftedmemembership) {
 			eventType = "sponsorship";
