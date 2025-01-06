@@ -922,9 +922,9 @@ async function processMessageWithOllama(data) {
     if (settings.ollamaprompt) {
       additionalInstructions = settings.ollamaprompt.textsetting;
     }
-	console.log(additionalInstructions, cleanedText, botname, data);
+	//console.log(additionalInstructions, cleanedText, botname, data);
 	const response = await processUserInput(cleanedText, data, additionalInstructions, botname);
-	console.log(response);
+	//console.log(response);
 
     // Handle response
     if (response && !response.toLowerCase().startsWith("not available") && (settings.alwaysRespondLLM || ( 
