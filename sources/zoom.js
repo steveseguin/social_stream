@@ -369,7 +369,7 @@
 	console.log("social stream injected");
 
 	setInterval(function(){
-		messageHistory = messageHistory.slice(-500);
+		messageHistory = messageHistory.slice(-5000);
 		
 		if (document.getElementById("chat-list-content")){
 			if (!document.getElementById("chat-list-content").marked){
