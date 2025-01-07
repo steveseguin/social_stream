@@ -15,118 +15,76 @@ Development Notes:
     <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin />
     <meta name="robots" content="noindex">
     <style>
-        :root {
-            --primary-gradient: linear-gradient(135deg, rgba(46,49,146,0.9), rgba(87,37,117,0.9));
-            --chat-bg: rgba(23, 25, 35, 0.85);
-            --border-color: rgba(255,255,255,0.1);
-            --text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            --animation-timing: 0.3s ease-out;
-        }
+		/* Variables */
+		:root {
+			--primary-gradient: linear-gradient(135deg, rgba(46,49,146,0.9), rgba(87,37,117,0.9));
+			--chat-bg: rgba(23, 25, 35, 0.85);
+			--border-color: rgba(255,255,255,0.1);
+			--text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+			--animation-timing: 0.3s ease-out;
+		}
 
-        body {
-            margin: 0;
-            overflow: hidden;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            font-size: 16px;
-            line-height: 1.5;
-            color: #fff;
-            text-shadow: var(--text-shadow);
-            background-color: transparent;
-        }
+		/* Base Styles */
+		body {
+			margin: 0;
+			overflow: hidden;
+			font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+			font-size: 16px;
+			line-height: 1.5;
+			color: #fff;
+			text-shadow: var(--text-shadow);
+			background-color: transparent;
+		}
 
-        .output {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            max-width: min(90vw, 600px);
-            width: 100%;
-        }
+		/* Layout */
+		.output {
+			position: fixed;
+			bottom: 2rem;
+			left: 50%;
+			transform: translateX(-50%);
+			max-width: min(90vw, 600px);
+			width: 100%;
+		}
 
-        .highlight-chat {
-            background: var(--chat-bg);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-radius: 12px;
-            padding: 1.2rem 1.5rem 2rem 1.5rem;
-            position: relative;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-            animation: slideUp var(--animation-timing);
-        }
+		/* Chat Container */
+		.highlight-chat {
+			background: var(--chat-bg);
+			backdrop-filter: blur(8px);
+			-webkit-backdrop-filter: blur(8px);
+			border-radius: 12px;
+			padding: 1.2rem 1.5rem 2rem 1.5rem;
+			position: relative;
+			border: 1px solid var(--border-color);
+			box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+			animation: slideUp var(--animation-timing);
+		}
 
-        .highlight-chat.dono {
-            background: var(--primary-gradient);
-        }
+		.highlight-chat.dono {
+			background: var(--primary-gradient);
+		}
 
-        .hl-message {
-            font-size: 1rem;
-            line-height: 1.6;
-            word-break: break-word;
-            overflow-wrap: break-word;
-            hyphens: auto;
-        }
+		/* Header Elements */
+		.hl-title {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: nowrap;
+			align-items: center;
+			gap: 0.75rem;
+			margin-bottom: 0.75rem;
+		}
 
 		.hl-img {
 			flex-shrink: 0;
 		}
 
 		.hl-profile-pic {
+			width: 48px;
+			height: 48px;
+			border-radius: 50%;
+			border: 2px solid var(--border-color);
+			object-fit: cover;
 			display: block;
 		}
-
-		.hl-message {
-			margin-left: calc(48px + 1.5rem);
-		}
-		
-		
-		.hl-message img {
-			max-height:24px;
-		}
-
-        .hl-profile-pic {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 2px solid var(--border-color);
-            object-fit: cover;
-        }
-
-
-        .hl-badge {
-            width: 20px;
-            height: 20px;
-            object-fit: contain;
-        }
-
-        .icon.sourcetype {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            width: 24px;
-            height: 24px;
-            opacity: 0.7;
-            transition: opacity var(--animation-timing);
-        }
-
-        .icon.sourcetype:hover {
-            opacity: 1;
-        }
-
-        .hl-imgContent {
-            margin-top: 1rem;
-            border-radius: 8px;
-            overflow: hidden;
-            max-width: 100%;
-        }
-
-        .hl-imgContent img,
-        .hl-imgContent video {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            border-radius: 8px;
-        }
 
 		.hl-name {
 			font-size: 1.125rem;
@@ -137,21 +95,45 @@ Development Notes:
 			font-size: 150%;
 		}
 
-		.hl-title {
-			display: flex;
-			flex-direction: row;
-			flex-wrap: nowrap;
-			align-content: center;
-			justify-content: flex-start;
-			align-items: center;
-			gap: 0.75rem;
-			margin-bottom: 0.75rem;
-		}
-
+		/* Badges and Icons */
 		.hl-badges {
 			display: inline-flex;
 			gap: 0.25rem;
 			align-items: center;
+		}
+
+		.hl-badge {
+			width: 20px;
+			height: 20px;
+			object-fit: contain;
+		}
+
+		.icon.sourcetype {
+			position: absolute;
+			top: 1rem;
+			right: 1rem;
+			width: 24px;
+			height: 24px;
+			opacity: 0.7;
+			transition: opacity var(--animation-timing);
+		}
+
+		.icon.sourcetype:hover {
+			opacity: 1;
+		}
+
+		/* Message Content */
+		.hl-message {
+			font-size: 1rem;
+			line-height: 1.6;
+			word-break: break-word;
+			overflow-wrap: break-word;
+			hyphens: auto;
+			margin-left: calc(48px + 1.5rem);
+		}
+
+		.hl-message img {
+			max-height: 24px;
 		}
 
 		.hl-donation {
@@ -162,68 +144,71 @@ Development Notes:
 			background: rgba(255,255,255,0.1);
 			border-radius: 1rem;
 		}
-		
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
 
-        .fade {
-            transition: opacity var(--animation-timing);
-            opacity: 1;
-            will-change: opacity;
-        }
+		/* Media Content */
+		.hl-imgContent {
+			margin-top: 1rem;
+			border-radius: 8px;
+			overflow: hidden;
+			max-width: 100%;
+		}
 
-        .fade.hidden {
-            opacity: 0;
-        }
+		.hl-imgContent img,
+		.hl-imgContent video {
+			max-width: 100%;
+			height: auto;
+			display: block;
+			border-radius: 8px;
+		}
 
-        @media (prefers-reduced-motion: reduce) {
-            .highlight-chat {
-                animation: none;
-            }
-            
-            .fade {
-                transition: none;
-            }
-        }
+		/* Animations */
+		@keyframes slideUp {
+			from {
+				opacity: 0;
+				transform: translateY(20px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
 
-        #frame1 {
-            width: 0;
-            height: 0;
-            position: fixed;
-            left: -100px;
-            top: -100px;
-            border: 0;
-            pointer-events: none;
-        }
+		.fade {
+			transition: opacity var(--animation-timing);
+			opacity: 1;
+			will-change: opacity;
+		}
+
+		.fade.hidden {
+			opacity: 0;
+		}
+
+		/* IFrame */
+		#frame1 {
+			width: 0;
+			height: 0;
+			position: fixed;
+			left: -100px;
+			top: -100px;
+			border: 0;
+			pointer-events: none;
+		}
+
+		/* Accessibility */
+		@media (prefers-reduced-motion: reduce) {
+			.highlight-chat {
+				animation: none;
+			}
+			
+			.fade {
+				transition: none;
+			}
+		}
     </style>
 </head>
 <body>
     <div id="output" class="output"></div>
     <script>
-    // URLSearchParams polyfill
-    (function(w) {
-        w.URLSearchParams = w.URLSearchParams || function(searchString) {
-            var self = this;
-            self.searchString = searchString;
-            self.get = function(name) {
-                var results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(self.searchString);
-                if (results == null) {
-                    return null;
-                } else {
-                    return decodeURI(results[1]) || 0;
-                }
-            };
-        };
-    })(window);
-
     const App = {
         config: {
             serverURL: 'wss://io.socialstream.ninja',
