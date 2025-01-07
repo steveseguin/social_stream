@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.9.3",
+  "version": "3.9.4",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -138,6 +138,9 @@
     "https://www.tradingview.com/streams/*",
     "https://app.chime.aws/meetings/*",
     "https://*.loco.gg/*",
+	"https://loco.gg/*",
+	"https://*.loco.com/*",
+	"https://loco.com/*",
     "https://joystick.tv/u/*/chat",	   
     "https://www.buzzit.ca/event/*/chat",
     "https://*.floatplane.com/popout/livechat",
@@ -361,7 +364,7 @@
     },
     {
       "js": [ "./sources/loco.js" ],
-      "matches": [ "https://*.loco.gg/*" ]
+      "matches": [ "https://*.loco.gg/*", "https://loco.gg/streamers/*", "https://*.loco.com/*", "https://loco.com/streamers/*"   ]
     },
     {
       "js": [ "./sources/joystick.js" ],

@@ -1022,8 +1022,8 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 
       const ragDecision = await callOllamaAPI(ragPrompt);
       const decision = parseDecision(ragDecision);
-
-      if (decision.needsSearch) {
+		console.log(decision);
+      if (decision.needsSearch && decision.searchQuery) {
         const searchResults = await performLunrSearch(decision.searchQuery);
         return await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions);
       } else {
@@ -1843,7 +1843,6 @@ async function loadLunrIndex() {
        // log('Prepared documents for Lunr:', documents);
 
         globalLunrIndex = initLunrIndex(documents);
-        log('Lunr index initialized');
 
         return globalLunrIndex;
     } catch (error) {
@@ -1870,7 +1869,7 @@ function initLunrIndex(documents) {
                 }
             }, this);
         } else {
-            log('No valid documents provided to initLunrIndex');
+            console.log('No valid documents provided to initLunrIndex');
         }
     });
 }
