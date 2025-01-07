@@ -3,7 +3,7 @@ Development Notes:
 - It's important that the IFRAME logic stay intact, as it is how we receieve messages
 - This code is in vanilla Javascript designed for web browsers without compiling
 - Details of the incoming message structure can be found here: https://github.com/steveseguin/social_stream/blob/main/README.md#message-structure
- --!>
+ !-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,7 +48,7 @@ Development Notes:
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: 1.2rem 1.5rem 2rem 1.5rem;
             position: relative;
             border: 1px solid var(--border-color);
             box-shadow: 0 8px 32px rgba(0,0,0,0.2);
@@ -59,15 +59,6 @@ Development Notes:
             background: var(--primary-gradient);
         }
 
-        .hl-name {
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
         .hl-message {
             font-size: 1rem;
             line-height: 1.6;
@@ -76,12 +67,18 @@ Development Notes:
             hyphens: auto;
         }
 
-        .hl-img {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            aspect-ratio: 1;
-        }
+		.hl-img {
+			flex-shrink: 0;
+		}
+
+		.hl-profile-pic {
+			display: block;
+		}
+
+		.hl-message {
+			margin-left: calc(48px + 1.5rem);
+		}
+		
 		
 		.hl-message img {
 			max-height:24px;
@@ -95,12 +92,6 @@ Development Notes:
             object-fit: cover;
         }
 
-        .hl-badges {
-            display: inline-flex;
-            gap: 0.25rem;
-            margin-left: 0.5rem;
-            align-items: center;
-        }
 
         .hl-badge {
             width: 20px;
@@ -110,7 +101,7 @@ Development Notes:
 
         .icon.sourcetype {
             position: absolute;
-            bottom: 1rem;
+            top: 1rem;
             right: 1rem;
             width: 24px;
             height: 24px;
@@ -137,29 +128,41 @@ Development Notes:
             border-radius: 8px;
         }
 
-        .donation {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border-color);
-        }
+		.hl-name {
+			font-size: 1.125rem;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			margin-left: 12px;
+			font-size: 150%;
+		}
 
-        .donation-title {
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            font-weight: 600;
-            color: rgba(255,255,255,0.7);
-            margin-bottom: 0.25rem;
-        }
+		.hl-title {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: nowrap;
+			align-content: center;
+			justify-content: flex-start;
+			align-items: center;
+			gap: 0.75rem;
+			margin-bottom: 0.75rem;
+		}
 
-        .subtitle {
-            font-size: 1.25rem;
-            font-weight: 600;
-            background: linear-gradient(90deg, #FFD700, #FFA500);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+		.hl-badges {
+			display: inline-flex;
+			gap: 0.25rem;
+			align-items: center;
+		}
 
+		.hl-donation {
+			margin-left: 20px;
+			font-weight: 700;
+			color: #FFD700;
+			padding: 0.25rem 0.75rem;
+			background: rgba(255,255,255,0.1);
+			border-radius: 1rem;
+		}
+		
         @keyframes slideUp {
             from {
                 opacity: 0;
@@ -496,14 +499,19 @@ Development Notes:
             const chatbadges = this.buildChatBadges(data.chatbadges);
             const sourceType = this.buildSourceType(data.type);
             const styleOverride = this.getStyleOverride(data);
+			const donationContent = this.buildDonation(data);
 
             return `
                 <div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="${data.type || 'none'}">
+					<div class="hl-title">
+					${avatarImg}
                     <div class="hl-name" ${styleOverride} id="nameDIV">
-                        ${data.chatname || ''}${chatbadges}
+                        ${data.chatname || ''}
                     </div>
+					${chatbadges}${donationContent}
+					</div>
                     <div id="message" class="hl-message">${data.chatmessage || ''}</div>
-                    ${avatarImg}${sourceType}${imgContent}
+                   ${sourceType}${imgContent}
                 </div>
             `;
         },
@@ -553,6 +561,13 @@ Development Notes:
             }).join('');
 
             return badgeElements ? `<div class="hl-badges">${badgeElements}</div>` : '';
+        },
+		
+		buildDonation(data) {
+            if (!(data.hasDonation || data.donation)) return '';
+
+            const donationAmount = (data.hasDonation || data.donation);
+            return `<div class="hl-donation">${donationAmount}</div>`;
         },
 
         buildSourceType(type = 'none') {

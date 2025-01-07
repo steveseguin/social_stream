@@ -3990,7 +3990,7 @@ function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false, ty
 }
 
 function sendToS10(data, fakechat=false, relayed=false) {
-	
+	console.log("sendToS10",data);
 	if (settings.s10 && settings.s10apikey && settings.s10apikey.textsetting) {
 		try {
 			// msg =  '{
@@ -6944,6 +6944,7 @@ async function applyBotActions(data, tab = false) {
 		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event){
 			sendToS10(data, false, true); // we'll handle the relay logic here instead
 		}
+		console.log(data);
 		
 		if (settings.forwardcommands2twitch && data.type && (data.type !== "twitch") && !data.reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab && data.tid) {
 			if (!data.bot && data.chatmessage.startsWith("!")) {
