@@ -4008,8 +4008,6 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			if (data.chatmessage.includes(miscTranslations.said)){
 				return null;
 			}
-			
-			const StageTEN_API_URL = "https://demo.stageten.tv/apis/plugin-service/chat/message/send"
 
 			let cleaned = data.chatmessage;
 			if (data.textonly){
@@ -4091,20 +4089,35 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			}
 			
 			// console.error(msg, fakechat);
-
-			let xhr = new XMLHttpRequest();
-			xhr.open("POST", StageTEN_API_URL);
-			xhr.setRequestHeader("content-type", "application/json");
-			xhr.setRequestHeader("x-s10-chat-api-key", settings.s10apikey.textsetting);
-			//xhr.withCredentials = true;
-			xhr.onload = function () {
-				//log(xhr.response);
-			};
-			xhr.onerror = function (e) {
-				//log("error sending to stageten");
-			};
-
-			xhr.send(JSON.stringify(msg));
+			try {
+				let xhr = new XMLHttpRequest();
+				xhr.open("POST", "https://demo.stageten.tv/apis/plugin-service/chat/message/send");
+				xhr.setRequestHeader("content-type", "application/json");
+				xhr.setRequestHeader("x-s10-chat-api-key", settings.s10apikey.textsetting);
+				//xhr.withCredentials = true;
+				xhr.onload = function () {
+					//log(xhr.response);
+				};
+				xhr.onerror = function (e) {
+					//log("error sending to stageten");
+				};
+				xhr.send(JSON.stringify(msg));
+			} catch(e){}
+			
+			try {
+				let xhr2 = new XMLHttpRequest();
+				xhr2.open("POST", "https://app.stageten.tv/apis/plugin-service/chat/message/send");
+				xhr2.setRequestHeader("content-type", "application/json");
+				xhr2.setRequestHeader("x-s10-chat-api-key", settings.s10apikey.textsetting);
+				xhr2.onload = function () {
+					//log(xhr2.response);
+				};
+				xhr2.onerror = function (e) {
+					//log("error sending to stageten");
+				};
+				xhr2.send(JSON.stringify(msg));
+			} catch(e){}
+			
 		} catch (e) {
 			console.warn(e);
 		}
@@ -6064,8 +6077,6 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 					}
                 } else if (tab.url.startsWith("https://app.slack.com")) {
                     await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout); 
-                } else if (metadata && settings.fancystageten && tab.url.includes(".stageten.tv/channel")) {
-                    handleFancyStageTen(tab.id, metadata);
                 } else if (tab.url.startsWith("https://app.zoom.us/")) {
                     await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat);
                     continue;
@@ -6188,18 +6199,6 @@ function handleStageTen(tab, data, metadata) {
             chatimg: "https://socialstream.ninja/icons/icon-128.png"
         };
         sendToS10(msg, true);
-    }
-}
-
-// Helper function to handle fancy StageTen
-function handleFancyStageTen(tabId, metadata) {
-    try {
-        log("SENDING ORIGINAL RAW DATA TO S10");
-        chrome.tabs.sendMessage(tabId, { metadata: metadata }, function (response = false) {
-            chrome.runtime.lastError;
-        });
-    } catch (e) {
-        console.error(e);
     }
 }
 

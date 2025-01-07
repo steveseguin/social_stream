@@ -131,7 +131,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - IRC (via https://webchat.quakenet.org/)
 - Tradingview.com (just the normal viewer page; no pop out)
 - rooter.gg (no pop out; just pause the video I guess)
-- loco.gg (no pop out; just pause the video I guess)
+- loco.com (no pop out; just pause the video I guess)
 - buzzit.ca (community member submitted integration)
 - afreecatv.com (pop out the chat; you can't close the main window it seems tho?)
 - nonolive.com (no pop out; partial support added so far only)
