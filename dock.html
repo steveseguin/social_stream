@@ -2507,6 +2507,16 @@
 					setTimeout(function () {
 						document.body.style.width = "100%";
 					}, 5000);
+					
+					if (!ipcRenderer) {
+						ipcRenderer = require("electron").ipcRenderer;
+						ipcRenderer.on('close-file-stream', async () => {
+							if (writer){
+								await writer.close();
+								writer = null;
+							}
+						});
+					}
 				}
 			} catch (e) {
 				//console.error(e);
@@ -5485,9 +5495,9 @@
 
 			var Currencies = { usd: { d: 2, s: "$" }, cad: { d: 2, s: "$" }, eur: { d: 2, s: "€" }, aed: { d: 2, s: "د.إ.‏" }, afn: { d: 0, s: "؋" }, all: { d: 0, s: "Lek" }, amd: { d: 0, s: "դր." }, ars: { d: 2, s: "$" }, aud: { d: 2, s: "$" }, azn: { d: 2, s: "ман." }, bam: { d: 2, s: "KM" }, bdt: { d: 2, s: "৳" }, bgn: { d: 2, s: "лв." }, bhd: { d: 3, s: "د.ب.‏" }, bif: { d: 0, s: "FBu" }, bnd: { d: 2, s: "$" }, bob: { d: 2, s: "Bs" }, brl: { d: 2, s: "R$" }, bwp: { d: 2, s: "P" }, byn: { d: 2, s: "руб." }, bzd: { d: 2, s: "$" }, cdf: { d: 2, s: "FrCD" }, chf: { d: 2, s: "CHF" }, clp: { d: 0, s: "$" }, cny: { d: 2, s: "CN¥" }, cop: { d: 0, s: "$" }, crc: { d: 0, s: "₡" }, cve: { d: 2, s: "CV$" }, czk: { d: 2, s: "Kč" }, djf: { d: 0, s: "Fdj" }, dkk: { d: 2, s: "kr" }, dop: { d: 2, s: "RD$" }, dzd: { d: 2, s: "د.ج.‏" }, eek: { d: 2, s: "kr" }, egp: { d: 2, s: "ج.م.‏" }, ern: { d: 2, s: "Nfk" }, etb: { d: 2, s: "Br" }, gbp: { d: 2, s: "£" }, gel: { d: 2, s: "GEL" }, ghs: { d: 2, s: "GH₵" }, gnf: { d: 0, s: "FG" }, gtq: { d: 2, s: "Q" }, hkd: { d: 2, s: "$" }, hnl: { d: 2, s: "L" }, hrk: { d: 2, s: "kn" }, huf: { d: 0, s: "Ft" }, idr: { d: 0, s: "Rp" }, ils: { d: 2, s: "₪" }, inr: { d: 2, s: "টকা" }, iqd: { d: 0, s: "د.ع.‏" }, irr: { d: 0, s: "﷼" }, isk: { d: 0, s: "kr" }, jmd: { d: 2, s: "$" }, jod: { d: 3, s: "د.أ.‏" }, jpy: { d: 0, s: "￥" }, kes: { d: 2, s: "Ksh" }, khr: { d: 2, s: "៛" }, kmf: { d: 0, s: "FC" }, krw: { d: 0, s: "₩" }, kwd: { d: 3, s: "د.ك.‏" }, kzt: { d: 2, s: "тңг." }, lbp: { d: 0, s: "ل.ل.‏" }, lkr: { d: 2, s: "SL Re" }, ltl: { d: 2, s: "Lt" }, lvl: { d: 2, s: "Ls" }, lyd: { d: 3, s: "د.ل.‏" }, mad: { d: 2, s: "د.م.‏" }, mdl: { d: 2, s: "MDL" }, mga: { d: 0, s: "MGA" }, mkd: { d: 2, s: "MKD" }, mmk: { d: 0, s: "K" }, mop: { d: 2, s: "MOP$" }, mur: { d: 0, s: "MURs" }, mxn: { d: 2, s: "$" }, myr: { d: 2, s: "RM" }, mzn: { d: 2, s: "MTn" }, nad: { d: 2, s: "N$" }, ngn: { d: 2, s: "₦" }, nio: { d: 2, s: "C$" }, nok: { d: 2, s: "kr" }, npr: { d: 2, s: "नेरू" }, nzd: { d: 2, s: "$" }, omr: { d: 3, s: "ر.ع.‏" }, pab: { d: 2, s: "B/." }, pen: { d: 2, s: "S/." }, php: { d: 2, s: "₱" }, pkr: { d: 0, s: "₨" }, pln: { d: 2, s: "zł" }, pyg: { d: 0, s: "₲" }, qar: { d: 2, s: "ر.ق.‏" }, ron: { d: 2, s: "RON" }, rsd: { d: 0, s: "дин." }, rub: { d: 2, s: "₽." }, rwf: { d: 0, s: "FR" }, sar: { d: 2, s: "ر.س.‏" }, sdg: { d: 2, s: "SDG" }, sek: { d: 2, s: "kr" }, sgd: { d: 2, s: "$" }, sos: { d: 0, s: "Ssh" }, syp: { d: 0, s: "ل.س.‏" }, thb: { d: 2, s: "฿" }, tnd: { d: 3, s: "د.ت.‏" }, top: { d: 2, s: "T$" }, try: { d: 2, s: "TL" }, ttd: { d: 2, s: "$" }, twd: { d: 2, s: "NT$" }, tzs: { d: 0, s: "TSh" }, uah: { d: 2, s: "₴" }, ugx: { d: 0, s: "USh" }, uyu: { d: 2, s: "$" }, uzs: { d: 0, s: "UZS" }, vef: { d: 2, s: "Bs.F." }, vnd: { d: 0, s: "₫" }, xaf: { d: 0, s: "FCFA" }, xof: { d: 0, s: "CFA" }, yer: { d: 0, s: "ر.ي.‏" }, zar: { d: 2, s: "R" }, zmk: { d: 0, s: "ZK" }, zwl: { d: 0, s: "ZWL$" } };
 
-			function processInput(data) {
+			function processInput(data, force=false) {
 				if ("mid" in data) {
-					if (data.mid && syncDocks) {
+					if (data.mid && (syncDocks || force)) {
 						if (autoTimeoutEnabled) {
 							lastPushed = Date.now();
 						}
@@ -5509,7 +5519,7 @@
 					}
 					return;
 				} else if ("pin" in data) {
-					if (data.pin && syncDocks) {
+					if (data.pin && (syncDocks || force)) {
 						if (typeof data.pin == "object") {
 							data.pin.forEach(dddd => {
 								if (typeof dddd === "object") {
@@ -5518,7 +5528,7 @@
 											pinIt(document.querySelector("[data-mid='" + dddd.id + "']"));
 											applyHiddenState(document.querySelector("[data-mid='" + dddd.id + "']"));
 										} else {
-											let ele = processInput(dddd);
+											let ele = processInput(dddd, force);
 											pinIt(ele);
 											applyHiddenState(ele);
 										}
@@ -5535,7 +5545,7 @@
 					}
 					return;
 				} else if ("unpin" in data) {
-					if (data.unpin && syncDocks) {
+					if (data.unpin && (syncDocks || force)) {
 						if (typeof data.unpin == "object") {
 							data.unpin.forEach(mid => {
 								try {
@@ -5550,7 +5560,7 @@
 					}
 					return;
 				} else if ("queueInit" in data) {
-					if (data.queueInit && syncDocks && !selectedQueue.length) {
+					if (data.queueInit && (syncDocks || force) && !selectedQueue.length) {
 						if (typeof data.queueInit == "object") {
 							var sq = [];
 							data.queueInit.forEach(dd => {
@@ -5558,10 +5568,10 @@
 									if (dd && dd.id) {
 										var ele = document.querySelector("[data-mid='" + dd.id + "']");
 										if (!ele) {
-											ele = processInput(dd);
+											ele = processInput(dd, force);
 										}
 									} else {
-										var ele = processInput(dd);
+										var ele = processInput(dd, force);
 									}
 									if (ele) {
 										sq.push(ele);
@@ -5578,7 +5588,7 @@
 					}
 					return;
 				} else if ("queue" in data) {
-					if (data.queue && syncDocks) {
+					if (data.queue && (syncDocks || force)) {
 						if (typeof data.queue == "object") {
 							selectedQueue.forEach(xx => {
 								if (xx.dataset.mid && !data.queue.includes(parseInt(xx.dataset.mid))) {
@@ -5598,7 +5608,7 @@
 													ele.classList.add("queued");
 													applyHiddenState(ele);
 												} else {
-													ele = processInput(mid);
+													ele = processInput(mid, force);
 													if (ele) {
 														sq.push(ele);
 														ele.children[0].dataset.qid = sq.length;
@@ -5645,7 +5655,7 @@
 					} catch (e) {}
 				} else if ("deleteMessage" in data) {
 					// delete by message ID; likely another dock is syncing their delete with me
-					//if (syncDocks){
+					//if ((syncDocks || force)){
 					try {
 						var ele = document.querySelector("[data-mid='" + data.deleteMessage + "']");
 						if (ele) {
@@ -5657,7 +5667,7 @@
 					return;
 				} else if ("clearAll" in data) {
 					// clear all messages
-					if (syncDocks){
+					if ((syncDocks || force)){
 						try {
 							clearAll(false)
 							return true;
@@ -8494,7 +8504,7 @@
 				});
 			}
 
-			function sendDataP2P(data) {
+			function sendDataP2P(data, force=false) {
 				if (blockMessageSelecting || blockMessageSelecting2 || blockMessageSelecting3) {
 					return;
 				}
@@ -8523,7 +8533,7 @@
 						var msg = {};
 						msg.overlayNinja = {};
 						msg.overlayNinja = data;
-						if (syncDocks) {
+						if ((syncDocks || force)) {
 							var keys = Object.keys(iframe.connectedPeers);
 							for (var i = 0; i < keys.length; i++) {
 								var UUID = keys[i];
@@ -8649,10 +8659,16 @@
 						fileStream = streamSaver.createWriteStream("chat_" + Date.now() + ".tsv" || "sample.txt");
 						writer = fileStream.getWriter();
 					}
-
+					
 					window.isSecureContext &&
-						window.addEventListener("beforeunload", evt => {
-							writer.close();
+						window.addEventListener("beforeunload", async evt => {
+							await writer.close();
+							writer = null;
+						});
+					window.isSecureContext &&
+						window.addEventListener("pagehide", async evt => {
+							await writer.close();
+							writer = null;
 						});
 				};
 				script.src = "./thirdparty/StreamSaver.js";

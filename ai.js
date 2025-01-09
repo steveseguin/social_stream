@@ -1004,32 +1004,37 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 
     // Check if RAG is needed
     if (await isRAGConfigured()) {
-      const databaseDescriptor = localStorage.getItem('databaseDescriptor') || '';
-      
-	  if (settings.alwaysRespondLLM){
-		  var ragPrompt = `${promptBase}\n\nDatabase info: ${databaseDescriptor}\n\n` +
-			'Determine if this message requires searching the database. Format response as:\n' +
-			'[NEEDS_SEARCH]\nyes/no\n[/NEEDS_SEARCH]\n\n' +
-			'[SEARCH_QUERY]\nkeywords if search needed\n[/SEARCH_QUERY]\n\n' +
-			'[RESPONSE]\nDirect response if no search needed.\n[/RESPONSE]';
-	  } else {
-		  var ragPrompt = `${promptBase}\n\nDatabase info: ${databaseDescriptor}\n\n` +
-			'Determine if this message requires searching the database. Format response as:\n' +
-			'[NEEDS_SEARCH]\nyes/no\n[/NEEDS_SEARCH]\n\n' +
-			'[SEARCH_QUERY]\nkeywords if search needed\n[/SEARCH_QUERY]\n\n' +
-			'[RESPONSE]\nDirect response if no search needed. Use NO_RESPONSE if no response warranted.\n[/RESPONSE]';
-	  }
+	  const databaseDescriptor = localStorage.getItem('databaseDescriptor') || '';
+	  
+	  const ragPrompt = `${promptBase}` + 
+		'If this message requires searching the knowledge database, respond with keywords to search. Otherwise respond with NO_RESPONSE. Keywords should be space-separated terms that will find relevant information in the database.' +
+		'\n\nDatabase info: ${databaseDescriptor}\n\n';
 
-      const ragDecision = await callOllamaAPI(ragPrompt);
-      const decision = parseDecision(ragDecision);
-		console.log(decision);
-      if (decision.needsSearch && decision.searchQuery) {
-        const searchResults = await performLunrSearch(decision.searchQuery);
-        return await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions);
-      } else {
-        return decision.response;
-      }
-    } else {
+	  const ragDecision = await callOllamaAPI(ragPrompt);
+	  
+	  if (ragDecision && !ragDecision.toLowerCase().includes('no_response')) {
+		const searchResults = await performLunrSearch(ragDecision.trim());
+		return await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions);
+	  } else {
+		// Fall through to regular response handling
+		if (settings.alwaysRespondLLM) {
+		  promptBase += '\n\nRespond conversationally to the current group chat message, doing so directly and succinctly.';
+		} else {
+		  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is needed. Respond only with NO_RESPONSE if you have no reply.';
+		}
+		
+		const response = await callOllamaAPI(promptBase);
+		
+		if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
+		  if (settings.alwaysRespondLLM && (response && !response.toLowerCase().startsWith('@@@@'))) {
+			return response;
+		  }
+		  return false;
+		}
+		
+		return response;
+	  }
+	} else {
       // Regular response with context
 	  
 	  
@@ -1372,7 +1377,7 @@ function parseDecision(decisionText) {
 
     const needsSearchMatch = decisionText.match(/\[NEEDS_SEARCH\]([\s\S]*?)\[\/NEEDS_SEARCH\]/);
     if (needsSearchMatch) {
-        result.needsSearch = needsSearchMatch[1].trim().toLowerCase() === 'yes';
+        result.needsSearch = needsSearchMatch[1].trim().toLowerCase().includes('yes');
     }
 
     const searchQueryMatch = decisionText.match(/\[SEARCH_QUERY\]([\s\S]*?)\[\/SEARCH_QUERY\]/);

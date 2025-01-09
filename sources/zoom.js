@@ -369,7 +369,7 @@
 	console.log("social stream injected");
 
 	setInterval(function(){
-		messageHistory = messageHistory.slice(-500);
+		messageHistory = messageHistory.slice(-5000);
 		
 		if (document.getElementById("chat-list-content")){
 			if (!document.getElementById("chat-list-content").marked){
@@ -377,7 +377,20 @@
 				lastName = "";
 				lastImage = "";
 				document.getElementById("chat-list-content").marked=true;
-				onElementInserted(document.querySelector("#chat-list-content"));
+					// id="chat-item-container-1"
+				setTimeout(function(){
+					try {
+						document.getElementById("chat-list-content").querySelectorAll("[id^='chat-item-container-']").forEach(x=>{
+							x.marked = true;
+							let id = x.querySelector("[id]");
+							if (id?.id){
+								id.marked = true;
+								messageHistory.push(id.id);
+							}
+						});
+					} catch(e){}
+					onElementInserted(document.querySelector("#chat-list-content"));
+				},2000);
 			}
 		} else if (document.querySelectorAll('iframe').length){
 			document.querySelectorAll('iframe').forEach( item =>{
@@ -388,6 +401,21 @@
 							lastName = "";
 							lastImage = "";
 							item.contentWindow.document.body.querySelector('#chat-list-content').marked=true;
+							
+							setTimeout(function(){
+								try {
+									item.contentWindow.document.body.querySelector('#chat-list-content').querySelectorAll("[id^='chat-item-container-']").forEach(x=>{
+										x.marked = true;
+										let id = x.querySelector("[id]");
+										if (id?.id){
+											id.marked = true;
+											messageHistory.push(id.id);
+										}
+									});
+								} catch(e){}
+								onElementInserted(document.querySelector("#chat-list-content"));
+							},2000);
+							
 							onElementInserted(item.contentWindow.document.body.querySelector('#chat-list-content'));
 						}
 					}
