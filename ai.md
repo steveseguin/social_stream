@@ -55,8 +55,7 @@ If you want to access Ollama directly via the dock.html page, with custom.js com
 
 Just make sure the toggle is on, and that you have Ollama /w Llama3 installed/running locally, and you should be good to go now.
 
-
-![image](https://github.com/user-attachments/assets/f4195658-85d4-4b6c-9481-e0fcbb9d4f05)
+![image](https://github.com/user-attachments/assets/63f1f98f-adff-4faf-8d39-206d5a76d5af)
 
 The Bot will respond automatically to chat if it thinks it's a good idea. There is a 5-second timeout per source site.
 
