@@ -694,6 +694,9 @@
 				if (ele.parentNode && ele.parentNode.classList.contains("zero-width-parent")){
 					ele.className = "zero-width-emote";
 				}
+				
+				ele.removeAttribute("width");
+				ele.removeAttribute("height");
 			
 				ele.onerror = function(){
 					if (this.srcBackup){
@@ -878,6 +881,8 @@
 				img.style.animationDelay = Math.random()*-35*speed+"s";
 			}
 			
+			svg.setAttribute("width", "100%");
+			svg.setAttribute("height", "100%");
 			
 			if (data.type){
 				node.dataset.sourceType = data.type;

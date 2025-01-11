@@ -16,8 +16,8 @@
 				--show-donos-only: flex;
 				--show-queue-only: flex;
 				--scale-output: 1;
-				--font-color: #fff;
-				--font-color-name: #ddd;
+				--font-color: var(--comment-color, #fff);
+				--font-color-name: var(--author-color, #ddd);
 				--background-color: #36393f;
 				--menu-background-color: #2f3136;
 				--menu-border-color: 0 0 5px #000;
@@ -311,6 +311,16 @@
 			#obsControlModal .close-btn:hover {
 			  background-color: #c9302c;
 			}
+			
+			.viewerIcons {
+				background-position: left;
+				background-repeat: no-repeat;
+				background-size: contain;
+				padding: 5px;
+				margin: 0 5px 0 0;
+				cursor: help;
+				padding-left: 34px;
+			}
 
 			@media (max-width: 600px) {
 			  .modal .modal-content {
@@ -336,6 +346,7 @@
 				vertical-align: middle;
 			}
 			#output {
+				overflow-x: hidden;
 				zoom: var(--scale-output);
 				transform: var(--scale-output);
 				transform-origin: 0 0;
@@ -472,7 +483,7 @@
 				overflow-x: hidden;
 				scrollbar-color: #666 #201c29;
 			}
-
+			
 			input[type="checkbox"] {
 				padding: 0;
 				margin: 0 5px 0 0;
@@ -769,6 +780,9 @@
 			.hl-badges {
 				margin-left: 4px;
 			}
+			.hl-badges:first-child {
+				margin-left: 0;
+			}
 
 			.highlight-chat {
 				display: var(--list-or-horizontal);
@@ -802,6 +816,7 @@
 			.horizontal .highlight-chat {
 				vertical-align:top;
 				animation: expand 4s, slideLeft 1s ease-in-out forwards;
+				vertical-align: bottom;
 			}
 			
 			.horizontal .highlight-chat.fadein {
@@ -977,6 +992,10 @@
 				min-height: 24px;
 				line-height: max(var(--author-font-size), var(--message-line-height));
 			}
+			
+			.hl-name:first-child {
+				margin-left: 0;
+			}
 
 			.notcompactmode .highlight-chat {
 				width: 100%;
@@ -985,7 +1004,7 @@
 				min-height: 27px;
 			}
 
-			@media only screen and (max-width: 330px) {
+			@media only screen and (max-width: 400px) {
 				.vanilla.notcompactmode .highlight-chat {
 					display: flex;
 					flex-wrap: wrap;
@@ -2054,18 +2073,14 @@
 				text-overflow: ellipsis;
 			}
 			
-			#meta {
+			#currentScene {
 				background-color:#0000;
-				position:fixed;
-				top: 0;
-				right: 0;
-				z-index: 999;
 				border:3px solid white;
 				padding:2px 5px;
 				cursor: pointer;
 			}
 			
-			#meta:empty {
+			#currentScene:empty {
 				display: none;
 			}
 			
@@ -2098,11 +2113,46 @@
 		.zero-width-emote-centered {
 		  vertical-align: top;
 		}
-			
+		#topbar {
+			display: block;
+			margin: 0 auto;
+			text-align: center;
+			position: fixed;
+			right: 0;
+			z-index: 999;
+			background-color: #0009;
+			border-radius: 0 0 0 13px;
+			padding-left: 3px;
+		}
+		#topbar:empty {
+			display:none;
+		}
+		
+		.output-container {
+		  mask-image: linear-gradient(to top,
+			black 80%,
+			transparent 100%
+		  );
+		  -webkit-mask-image: linear-gradient(to top,
+			black 80%,
+			transparent 100%
+		  );
+		  display: block;
+		  width: 100vw;
+		  height: calc(100vh - calc(46px / var(--scale-output)));
+		  overflow-x: hidden;
+		  overflow-y: scroll !important;
+		  margin-bottom: 0;
+		}
+		.output-container #output {
+			overflow: hidden;
+			height: 100%;
+			margin-bottom: 0;
+		}
 		</style>
 	</head>
 	<body id="main" class="vanilla notcompactmode">
-		<div id="meta" class="hidden"></div>
+		<div id="topbar"></div>
 		<div id="pinned" class="output"></div>
 		<div id="output" class="output"></div>
 		<div id="menu" class="electronDraggable">
@@ -2427,6 +2477,11 @@
 				timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
 			}
 			
+			var readDonos = false;
+			if (urlParams.has("ttsdonos")) {
+				readDonos = urlParams.get("ttsdonos") || "en-US";
+			}
+			
 			var waitToReveal = 0;
 			if (urlParams.has("delaytime")) {
 				waitToReveal = parseInt(urlParams.get("delaytime")) || 10000;
@@ -2644,6 +2699,11 @@
 			if (urlParams.has("bubble")) {
 				bubble = true;
 			}
+			
+			var showviewercount = false;
+			if (urlParams.has("showviewercount")) {
+				showviewercount = true;
+			}
 
 			if (urlParams.has("session")) {
 				roomID = urlParams.get("session");
@@ -2653,6 +2713,7 @@
 				roomID = urlParams.get("id");
 			} else if (window.location.protocol == "file:") {
 				roomID = prompt("Enter your session ID here, or add it to the URL.");
+				roomID = validateRoomId(roomID)
 				if (roomID) {
 					var href = window.location.href;
 					var arr = href.split("?");
@@ -2665,11 +2726,19 @@
 					window.history.pushState({ path: newurl.toString() }, "", newurl.toString());
 				} else {
 					document.write("You need to provide your extension's session ID for this page to work");
+					alert("Invalid session ID");
+					throw new Error('Invalid session ID');
 				}
 			} else {
 				window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
 			}
-
+			
+			roomID = validateRoomId(roomID)
+			if (!roomID) {
+				document.write("Invalid session ID");
+				throw new Error('Invalid session ID');
+			}
+			
 			var password = "false";
 			if (urlParams.has("password")) {
 				password = urlParams.get("password") || "false";
@@ -2880,7 +2949,13 @@
 				forceAutoscroll = false;
 				jumptoBottom();
 			}
-
+			
+			var lastChatName = "";
+			var lastType = "";
+			var simpleSequence = false;
+			if (urlParams.has("sequence")) {
+				simpleSequence = true;
+			}
 
 			var obsremote = "";
 			var remote = "";
@@ -2938,6 +3013,48 @@
 					transitionType.push("animate__animated");
 				}
 				animateout = "animate__" + urlParams.get("animateout");
+			}
+
+			function validateRoomId(roomId) {
+				if (roomId == null || roomId === '') {
+					return false;
+				}
+				let sanitizedId = String(roomId).trim();
+
+				if (sanitizedId.length < 1) {
+					return false;
+				}
+				const reservedValues = [
+					'undefined',
+					'null',
+					'false',
+					'true',
+					'NaN',
+					'default',
+					'room',
+					'lobby',
+					'test',
+					'nothing',
+					'0',
+					'1',
+					'none'
+				];
+				if (reservedValues.includes(sanitizedId.toLowerCase())) {
+					return false;
+				}
+				sanitizedId = sanitizedId.replace(/[^a-zA-Z0-9]/g, '_');
+				if (/^_+$/.test(sanitizedId)) {
+					return false;
+				}
+				if (sanitizedId.length < 2) {
+					return false;
+				}
+				const MAX_LENGTH = 80;
+				if (sanitizedId.length > MAX_LENGTH) {
+					return false;
+				}
+
+				return sanitizedId;
 			}
 
 			function updateAudioSource(newUrl) {
@@ -3008,7 +3125,13 @@
 				ele.title = "Main — 🔕 Stop beeping when there is a new message";
 				playtone();
 			}
-
+			
+			
+			var nobeepbot = false;
+			if (urlParams.has("nobeepbot")) {
+				nobeepbot = true;
+			}
+			
 			var stylizeEmoji = false;
 			if (urlParams.has("emoji") || urlParams.has("emojis")) {
 				stylizeEmoji = urlParams.get("emoji") || urlParams.get("emojis") || "140%";
@@ -3206,7 +3329,7 @@
 							return;
 						}
 						resp = processInput(data);
-						console.log(resp);
+						//console.log(resp);
 						if (resp !== null) {
 							if (data.get) {
 								var ret = {};
@@ -3291,12 +3414,31 @@
 				setupSocketExtension();
 			}
 
-			//
+			function isSafari() {
+				const userAgent = navigator.userAgent;
+				const isChrome = userAgent.indexOf("Chrome") > -1;
+				const isSafari = userAgent.indexOf("Safari") > -1;
+				const vendor = navigator.vendor;
+
+				return isSafari && !isChrome && vendor.indexOf("Apple") > -1;
+			}
+
+			var filterEvents = false;
+			if (urlParams.has("filterevents")) {
+				// &filterevents=joined,otherkeyword
+				filterEvents = urlParams.get("filterevents") || false;
+				if (filterEvents) {
+					filterEvents = filterEvents.split(",");
+				}
+			}
 
 			var customSource = false;
 			if (urlParams.has("branded")) {
 				customSource = true;
 			}
+			
+			
+			// start of tts
 
 			var speechLang = "en-US";
 			var speech = false;
@@ -3322,12 +3464,6 @@
 
 			var audio = false;
 
-			var GoogleAPIKey = false; // You can get your API key from Google Cloud ; KEEP IT PRIVATE/SECRET.  It will look like: "ahasdfuyu234hjjUASDtu1234gughasdguhaU" or somnething like that.
-			var ElevenLabsKey = false;
-			var SpeechifyAPIKey = false;
-
-
-
 			var premiumQueueTTS = [];
 			var premiumQueueActive = false;
 
@@ -3340,21 +3476,85 @@
 				}
 			}
 			
+			 // You can get your API key from Google Cloud ; KEEP IT PRIVATE/SECRET.  It will look like: "ahasdfuyu234hjjUASDtu1234gughasdguhaU" or somnething like that.
+			var GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
+			var ElevenLabsKey = urlParams.get("elevenlabskey") || false;
+			var SpeechifyAPIKey = urlParams.get("speechifykey") || false;
 			
-
-			if (urlParams.has("ttskey") || urlParams.has("googlettskey")) {
+			if (GoogleAPIKey || ElevenLabsKey || SpeechifyAPIKey) {
 				audio = document.createElement("audio");
 				audio.onended = finishedAudio;
-				GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
-			} else if (urlParams.has("elevenlabskey")) {
-				audio = document.createElement("audio");
-				audio.onended = finishedAudio;
-				ElevenLabsKey = urlParams.get("elevenlabskey") || false;
-			} else if (urlParams.has("speechifykey")) {
-				audio = document.createElement("audio");
-				audio.onended = finishedAudio;
-				SpeechifyAPIKey = urlParams.get("speechifykey") || false;
 			}
+			
+			var volume = 1;
+			if (urlParams.has("volume")) {
+				volume = urlParams.get("volume") || 1;
+				volume = parseFloat(volume);
+				document.getElementById('volumeSlider').value = volume*100;
+			}
+			
+			var pitch = 0;
+			if (urlParams.has("pitch")) {
+				pitch = urlParams.get("pitch") || 1;
+				pitch = parseFloat(pitch);
+			}
+
+			var rate = 1;
+			if (urlParams.has("rate")) {
+				rate = urlParams.get("rate") || 1;
+				rate = parseFloat(rate);
+			}
+
+			var voiceLatency = 4; // 0 slowest, but best quality; 4 is fastest, but worst quality
+			if (urlParams.has("latency")) {
+				voiceLatency = urlParams.get("latency") || 0;
+				voiceLatency = parseInt(voiceLatency) || 0;
+			}
+			
+			var googleSettings = {
+				rate: 1,
+				pitch: 0,
+				audioProfile: false,
+				voiceName: false
+			};
+
+			var elevenLabsSettings = {
+				latency: 4,
+				stability: 0.5,
+				similarity: 0.75,
+				style: 0.5,
+				speakerBoost: false,
+				voiceName: false,
+				speakingRate: 1.0,
+				model: "eleven_multilingual_v2"
+			};
+
+			var speechifySettings = {
+				speed: 1.0,
+				model: 'simba-english',
+				voiceName: false
+			};
+			
+			// Google Cloud settings
+			googleSettings.rate = urlParams.has("googlerate") ? parseFloat(urlParams.get("googlerate")) || 1 : rate;
+			googleSettings.pitch = urlParams.has("googlepitch") ? parseFloat(urlParams.get("googlepitch")) || 0 : 0;
+			googleSettings.audioProfile = urlParams.get("googleaudioprofile") || false;
+			googleSettings.voiceName = urlParams.get("voicegoogle") || false;
+
+			// ElevenLabs settings
+			elevenLabsSettings.latency = urlParams.has("elevenlatency") ? parseInt(urlParams.get("elevenlatency")) || 0 : voiceLatency;
+			elevenLabsSettings.stability = urlParams.has("elevenstability") ? parseFloat(urlParams.get("elevenstability")) || 0.5 : 0.5;
+			elevenLabsSettings.similarity = urlParams.has("elevensimilarity") ? parseFloat(urlParams.get("elevensimilarity")) || 0.75 : 0.75;
+			elevenLabsSettings.style = urlParams.has("elevenstyle") ? parseFloat(urlParams.get("elevenstyle")) || 0.5 : 0.5;
+			elevenLabsSettings.speakingRate = urlParams.has("elevenrate") ? parseFloat(urlParams.get("elevenrate")) || 1.0 : 1.0;
+			elevenLabsSettings.speakerBoost = urlParams.has("elevenspeakerboost");
+			elevenLabsSettings.voiceName = urlParams.get("voice11") || urlParams.get("elevenlabsvoice") || false;
+			elevenLabsSettings.model = urlParams.get("elevenlabsmodel") || "eleven_multilingual_v2";
+
+			// Speechify settings
+			speechifySettings.speed = urlParams.has("speechifyspeed") ? parseFloat(urlParams.get("speechifyspeed")) || 1.0 : 1.0;
+			speechifySettings.model = urlParams.get("speechifymodel") || 'simba-english';
+			speechifySettings.voiceName = urlParams.get("voicespeechify") || false;
 
 			if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
 				//  tts();
@@ -3381,24 +3581,6 @@
 				}
 			}
 
-			function isSafari() {
-				const userAgent = navigator.userAgent;
-				const isChrome = userAgent.indexOf("Chrome") > -1;
-				const isSafari = userAgent.indexOf("Safari") > -1;
-				const vendor = navigator.vendor;
-
-				return isSafari && !isChrome && vendor.indexOf("Apple") > -1;
-			}
-
-			var filterEvents = false;
-			if (urlParams.has("filterevents")) {
-				// &filterevents=joined,otherkeyword
-				filterEvents = urlParams.get("filterevents") || false;
-				if (filterEvents) {
-					filterEvents = filterEvents.split(",");
-				}
-			}
-
 			if (urlParams.has("simpletts")) {
 				English = false;
 			}
@@ -3422,31 +3604,15 @@
 			if (urlParams.has("readevents")) {
 				doNotReadEvents = false;
 			}
-
-			var pitch = 1;
-			if (urlParams.has("pitch")) {
-				pitch = urlParams.get("pitch") || 1;
-				pitch = parseFloat(pitch);
-			}
-
-			var rate = 1;
-			if (urlParams.has("rate")) {
-				rate = urlParams.get("rate") || 1;
-				rate = parseFloat(rate);
-			}
-
-			var volume = 1;
-			if (urlParams.has("volume")) {
-				volume = urlParams.get("volume") || 1;
-				volume = parseFloat(volume);
-				document.getElementById('volumeSlider').value = volume*100;
+			
+			var bottts = false;
+			if (urlParams.has("bottts")) {
+				bottts = true;
 			}
 			
-
-			var voiceLatency = 4; // 0 slowest, but best quality; 4 is fastest, but worst quality
-			if (urlParams.has("latency")) {
-				voiceLatency = urlParams.get("latency") || 0;
-				voiceLatency = parseInt(voiceLatency) || 0;
+			var allowbottss = false;
+			if (urlParams.has("allowbottss")) {
+				allowbottss = true;
 			}
 
 			var voiceName = false;
@@ -3460,13 +3626,30 @@
 			}
 			
 			var voiceNameElevenlabs = false;
-			if (urlParams.has("voice11")) {
-				voiceNameElevenlabs = urlParams.get("voice11");
+			if (urlParams.has("voice11") || urlParams.has("elevenlabsvoice")) {
+				voiceNameElevenlabs = urlParams.get("voice11") ||  urlParams.get("elevenlabsvoice");;
 			}
 			
 			var voiceNameSpeechify = false;
 			if (urlParams.has("voicespeechify")) {
 				voiceNameSpeechify = urlParams.get("voicespeechify");
+			}
+			
+			var ttsSpeakChatname = true;
+			if (urlParams.has("simpletts2")) {
+				// You don't want to hear the chatname when TTS is enabled. ＞﹏＜
+				ttsSpeakChatname = false;
+				English = false;
+			}
+			
+			var ttscommand = false;
+			if (urlParams.has("ttscommand")) {
+				ttscommand = urlParams.get("ttscommand") || "!say";
+			}
+			
+			var ttscommandmembersonly = false;
+			if (urlParams.has("ttscommandmembersonly")) {
+				ttscommandmembersonly = true;
 			}
 
 			function speak(text, allow = false) {
@@ -3476,7 +3659,7 @@
 				if (!text) {
 					return;
 				}
-
+				
 				if (text.startsWith("!")) {
 					return;
 				} // do not TTS commands.
@@ -3589,7 +3772,337 @@
 					console.error(e);
 				}
 			}
+			
+			function clearTTS() {
+				// clear but don't stop tss
+				if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
+					window.speechSynthesis.cancel();
+				} else if (premiumQueueActive) {
+					premiumQueueTTS = [];
+					try {
+						if (audio) {
+							audio.pause();
+						}
+					} catch (e) {}
+				}
+			}
+			function tts() {
+				var ele = getById("tts");
 
+				if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
+					// clear and stop tts
+					speech = false;
+					window.speechSynthesis.cancel();
+				} else if (premiumQueueActive) {
+					speech = false;
+					premiumQueueTTS = [];
+					try {
+						if (audio) {
+							audio.pause();
+						}
+					} catch (e) {}
+					premiumQueueActive = false;
+				} else {
+					speech = !speech;
+				}
+
+				if (speech) {
+					ele.style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
+					ele.title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
+				} else {
+					ele.style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
+					ele.title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
+				}
+			}
+			function ElevenLabsTTS(tts) {
+				try {
+					premiumQueueActive = true;
+					const voiceid = voiceNameElevenlabs || voiceName || "VR6AewLTigWG4xSOukaG";
+					const url = "https://api.elevenlabs.io/v1/text-to-speech/" + voiceid + "/stream?optimize_streaming_latency=" + elevenLabsSettings.latency;
+
+					var data = {
+						text: tts,
+						model_id: elevenLabsSettings.model,
+						voice_settings: {
+							stability: elevenLabsSettings.stability,
+							similarity_boost: elevenLabsSettings.similarity,
+							style: elevenLabsSettings.style,
+							use_speaker_boost: elevenLabsSettings.speakerBoost,
+							speaking_rate: elevenLabsSettings.speakingRate
+						}
+					};
+
+					const otherparam = {
+						headers: {
+							"content-type": "application/json",
+							"xi-api-key": ElevenLabsKey,
+							accept: "*/*"
+						},
+						body: JSON.stringify(data),
+						method: "POST"
+					};
+
+					fetch(url, otherparam)
+						.then(data => data.blob())
+						.then(res => {
+							const newBlob = new Blob([res]);
+							const blobUrl = window.URL.createObjectURL(newBlob);
+							if (!audio) {
+								audio = document.createElement("audio");
+								audio.onended = finishedAudio;
+							}
+							audio.src = blobUrl;
+							if (volume) {
+								audio.volume = volume;
+							}
+							try {
+								audio.play();
+							} catch (e) {
+								finishedAudio();
+								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+							}
+						})
+						.catch(error => {
+							finishedAudio();
+							console.error(error);
+						});
+				} catch (e) {
+					finishedAudio();
+				}
+			}
+
+			function googleTTS(tts) {
+				premiumQueueActive = true;
+
+				try {
+					const url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=" + GoogleAPIKey;
+					var data = {
+						input: {
+							text: tts
+						},
+						voice: {
+							languageCode: speechLang.toLowerCase(),
+							name: googleSettings.voiceName || "en-GB-Standard-A",
+							ssmlGender: voiceGender ? voiceGender.toUpperCase() : "FEMALE"
+						},
+						audioConfig: {
+							audioEncoding: "MP3",
+							speakingRate: googleSettings.rate,
+							pitch: googleSettings.pitch
+						}
+					};
+
+					if (googleSettings.audioProfile) {
+						data.audioConfig.effectsProfileId = ['telephony-class-application'];
+					}
+
+					const otherparam = {
+						headers: {
+							"content-type": "application/json; charset=UTF-8"
+						},
+						body: JSON.stringify(data),
+						method: "POST"
+					};
+
+					fetch(url, otherparam)
+						.then(data => data.json())
+						.then(res => {
+							if (!audio) {
+								audio = document.createElement("audio");
+								audio.onended = finishedAudio;
+							}
+							audio.src = "data:audio/mp3;base64," + res.audioContent;
+							if (volume) {
+								audio.volume = volume;
+							}
+							try {
+								audio.play();
+							} catch (e) {
+								finishedAudio();
+								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+							}
+						})
+						.catch(error => {
+							finishedAudio();
+							console.error(error);
+						});
+				} catch (e) {
+					finishedAudio();
+				}
+			}
+
+			function SpeechifyTTS(tts) {
+				premiumQueueActive = true;
+				try {
+					const url = "https://api.sws.speechify.com/v1/audio/speech";
+					let model = speechifySettings.model;
+					const data = {
+						input: "<speak>" + tts + "</speak>",
+						voice_id: speechifySettings.voiceName || voiceNameSpeechify || voiceName || "henry",
+						model: model,
+						audio_format: "mp3",
+						speed: speechifySettings.speed
+					};
+					
+					const otherparam = {
+						method: "POST",
+						headers: {
+							"Authorization": `Bearer ${SpeechifyAPIKey}`,
+							"Content-Type": "application/json"
+						},
+						body: JSON.stringify(data)
+					};
+					
+					fetch(url, otherparam)
+						.then(response => {
+							if (!response.ok) {
+								throw new Error(`HTTP error! status: ${response.status}`);
+							}
+							return response.json();
+						})
+						.then(json => {
+							if (!json.audio_data) {
+								finishedAudio();
+								throw new Error("No audio data in JSON response");
+							}
+							try {
+								if (!audio) {
+									audio = document.createElement("audio");
+									audio.onended = finishedAudio;
+								}
+								audio.src = "data:audio/mp3;base64," + json.audio_data;
+								if (volume) {
+									audio.volume = volume;
+								}
+							
+								audio.play().catch(err => {
+									console.error("Audio play failed, user interaction required", err);
+									finishedAudio();
+								});
+							} catch (e) {
+								console.error(e);
+								finishedAudio();
+								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+							}
+						})
+						.catch(error => {
+							finishedAudio();
+							console.error("Error with Speechify TTS:", error);
+						});
+				} catch (e) {
+					finishedAudio();
+					console.error("Error in SpeechifyTTS function:", e);
+				}
+			}
+
+			function speechMeta(data, allow = false) {
+				if (skipTTSMessages && !data.hasDonation) {
+					if (parseInt(data.id) % skipTTSMessages !== 0) {
+						return;
+					}
+				}
+				
+				if (!data.bot && bottts){return;} // only allow bot messages
+				else if (data.bot && !(allowbottss || bottts)){return;} // do not read out bot messages
+				
+				if (readDonos && !(data.hasDonation || data.donation)){return;}
+
+				if (doNotReadEvents && data.event) {
+					return;
+				}
+				
+				try {
+					var isCommand = false;
+					var msgPlain = document.getElementById("content_" + data.id);
+
+					if (msgPlain) {
+						msgPlain = (msgPlain.textContent || msgPlain.innerText || "") // Remove emojis, underscores, and @ symbols
+							.replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, "")
+							.replace(/_/g, " ")
+							.replace(/@/g, " ")
+							
+						if (ttscommand && msgPlain.includes(ttscommand+" ")){
+							msgPlain = msgPlain.split(ttscommand+" ")[1].trim();
+							allow = true;
+						}
+						
+						msgPlain = msgPlain.replace(/^!/, ""); // check if it starts with '!'
+						msgPlain = msgPlain.replace(/!+/g, " "); // Replace multiple '!' with a single space
+						msgPlain = msgPlain.replace(/catJAM/gi, ""); // Remove 'catJAM' case-insensitively
+						if (beepwords){
+							msgPlain = msgPlain.replace(/\*+/g, ' beep ');
+						} else {
+							msgPlain = msgPlain.replace(/\*/g, '');
+						}
+						msgPlain = msgPlain.trim();
+					}
+
+					var chatname = "";
+					if (ttsSpeakChatname && data.chatname) {
+						chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
+						chatname = chatname.replaceAll("_", " ");
+						chatname = chatname.replaceAll("@", " ");
+						chatname = chatname.replaceAll("!", " ");
+					}
+
+					if (data.hasDonation) {
+						var donoText = document.createElement("div");
+						donoText.innerHTML = data.hasDonation;
+						donoText = donoText.textContent || donoText.innerText || "";
+						donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
+						donoText = donoText.replaceAll("_", " ");
+						donoText = donoText.replaceAll("@", " ");
+						donoText = donoText.replaceAll("!", " ");
+
+						if (chatname) {
+							///// NAME
+							if (English) {
+								if (msgPlain) {
+									speak(chatname + " has donated " + donoText + " and says " + msgPlain, allow);
+								} else {
+									speak(chatname + " has donated " + donoText, allow);
+								}
+							} else if (msgPlain) {
+								speak(chatname + "! ! .. " + donoText + "! ! .. " + msgPlain, allow);
+							} else {
+								speak(chatname + "! ! .. " + donoText, allow);
+							}
+						} else if (English) {
+							// no name but english
+							if (msgPlain) {
+								speak("Someone has donated " + donoText + " and says " + msgPlain, allow);
+							} else {
+								speak("Someone has donated " + donoText, allow);
+							}
+						} else if (msgPlain) {
+							// no name; not english
+							speak(donoText + "! ! .. " + msgPlain, allow);
+						} else {
+							speak(donoText, allow);
+						}
+					} else if (msgPlain) {
+						// NO DONATION
+						if (chatname) {
+							// NAME
+							if (English) {
+								speak(chatname + " says! " + msgPlain, allow);
+							} else {
+								speak(chatname + "! ! .. " + msgPlain, allow);
+							}
+						} else if (English) {
+							// NO NAME
+							speak("Someone says! " + msgPlain, allow);
+						} else {
+							speak(msgPlain, allow);
+						}
+					}
+				} catch(e){
+					errorlog(e);
+				}
+			}
+
+			// end of TTS 
+			
 			if (urlParams.has("chroma")) {
 				var chroma = urlParams.get("chroma") || "0F0";
 				document.body.style.backgroundColor = "#" + chroma;
@@ -3602,7 +4115,7 @@
 			}
 
 			if (urlParams.has("padding")) {
-				document.documentElement.style.setProperty("--padding-rows", (parseInt(urlParams.has("padding")) || 5) + "px");
+				document.documentElement.style.setProperty("--padding-rows", (parseInt(urlParams.get("padding") || 5)) + "px");
 			}
 
 			if (urlParams.has("hidemenu") || urlParams.has("nomenu")) {
@@ -3629,6 +4142,12 @@
 
 			if (urlParams.has("notobs")) {
 				window.obsstudio = false;
+			}
+			
+			
+			var stripDonationData = false;
+			if (urlParams.has("stripdonations")) {
+				stripDonationData = true;
 			}
 
 			var clock24hr = false;
@@ -3867,52 +4386,12 @@
 						if (!reversed && !random) {
 							setInterval(function () {
 								if (forceAutoscroll && !isOBSBrowserSource) {
-									if (alignbottom) {
-										if (scrolltype == "instant") {
-											getById("output").scrollTop = getById("output").scrollHeight;
-										} else {
-											getById("output").scrollTo({
-												top: getById("output").scrollHeight,
-												left: 0,
-												behavior: scrolltype
-											});
-										}
-									} else {
-										if (scrolltype == "instant") {
-											document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-										} else {
-											document.scrollingElement.scrollTo({
-												top: document.scrollingElement.scrollHeight,
-												left: 0,
-												behavior: scrolltype
-											});
-										}
-									}
+									jumptoBottom2()
 								}
 							}, 2000);
 
 							window.addEventListener("resize", function (event) {
-								if (alignbottom) {
-									if (scrolltype == "instant") {
-										getById("output").scrollTop = getById("output").scrollHeight;
-									} else {
-										getById("output").scrollTo({
-											top: getById("output").scrollHeight,
-											left: 0,
-											behavior: scrolltype
-										});
-									}
-								} else {
-									if (scrolltype == "instant") {
-										document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-									} else {
-										document.scrollingElement.scrollTo({
-											top: document.scrollingElement.scrollHeight,
-											left: 0,
-											behavior: scrolltype
-										});
-									}
-								}
+								jumptoBottom2();
 							});
 						}
 
@@ -4024,6 +4503,10 @@
 
 			if (urlParams.has("nooutline")) {
 				document.body.style.textShadow = "0 0 black";
+				if (!darkmode){
+					document.getElementById("topbar").style.color = "white";
+					document.getElementById("topbar").style.fontWeight = "700";
+				}
 			}
 
 			if (urlParams.has("transparent") || urlParams.has("transparency")) {
@@ -4102,9 +4585,15 @@
 				getById("show_only_queue").classList.add("pressed");
 			}
 			
-			var ttscommand = false;
-			if (urlParams.has("ttscommand")) {
-				ttscommand = true;
+			var fadetop = false;
+			if (urlParams.has("fadedtop")) {
+				fadetop = true;
+				let oc = document.createElement("div");
+				oc.className = "output-container";
+				let oo = document.getElementById("output");
+				oo.after(oc);
+				oc.appendChild(oo);
+				
 			}
 			
 			var hideNotPinned = false;
@@ -4112,13 +4601,6 @@
 				hideNotPinned = true;
 				document.documentElement.style.setProperty("--pinned-queued-bg", "unset");
 				document.documentElement.style.setProperty("--pinned-bg", "unset");
-			}
-
-			var ttsSpeakChatname = true;
-			if (urlParams.has("simpletts2")) {
-				// You don't want to hear the chatname when TTS is enabled. ＞﹏＜
-				ttsSpeakChatname = false;
-				English = false;
 			}
 
 			if (tainted) {
@@ -4227,8 +4709,8 @@
 					return;
 				}
 
-				if (autoShowQueue.length > 20) {
-					while (autoShowQueue[0].rawContents && !autoShowQueue[0].rawContents.hasDonation && autoShowQueue.length > 10) {
+				if (autoShowQueue.length > 10) {
+					while (autoShowQueue[0].rawContents && !autoShowQueue[0].rawContents.hasDonation && autoShowQueue.length > 4) {
 						autoShowQueue.shift(); // skip oldest, since too many are queued up
 					}
 					if (activeDonation) {
@@ -4247,7 +4729,7 @@
 						checkTimeout = false;
 						checkAutoShow();
 					}, waitTime);
-				} else if (autoShowQueue.length > 3) {
+				} else if (autoShowQueue.length > 1) {
 					checkTimeout = setTimeout(function () {
 						checkTimeout = false;
 						checkAutoShow();
@@ -4467,47 +4949,6 @@
 				}
 			}
 
-			function clearTTS() {
-				// clear but don't stop tss
-				if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
-					window.speechSynthesis.cancel();
-				} else if (premiumQueueActive) {
-					premiumQueueTTS = [];
-					try {
-						if (audio) {
-							audio.pause();
-						}
-					} catch (e) {}
-				}
-			}
-			function tts() {
-				var ele = getById("tts");
-
-				if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
-					// clear and stop tts
-					speech = false;
-					window.speechSynthesis.cancel();
-				} else if (premiumQueueActive) {
-					speech = false;
-					premiumQueueTTS = [];
-					try {
-						if (audio) {
-							audio.pause();
-						}
-					} catch (e) {}
-					premiumQueueActive = false;
-				} else {
-					speech = !speech;
-				}
-
-				if (speech) {
-					ele.style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
-					ele.title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
-				} else {
-					ele.style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
-					ele.title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
-				}
-			}
 			var colours = 167772;
 			function rainbow(step) {
 				var r, g, b;
@@ -4698,6 +5139,45 @@
 			function add32(a, b) {
 				return (a + b) & 0xFFFFFFFF;
 			}
+			
+			var viewers = {};
+			var followers = {};
+			
+			var topBarElement = getById("topbar");
+			
+			function updateMeta(data){
+				if (data && data.event && data.type && ("meta" in data)){
+					if (data.event == "follower_update"){
+						followers[data.type] = parseInt(data.meta) || 0;
+						return true;
+					} else if (data.event == "viewer_update"){
+						viewers[data.type] = parseInt(data.meta) || 0;
+						
+						if (showviewercount){
+							let ele = topBarElement.querySelector("[data-type='"+data.type+"']");
+							if (ele){
+								ele.innerText = viewers[data.type];
+							} else {
+								ele = document.createElement("div");
+								ele.dataset.type = data.type;
+								ele.classList.add("viewerIcons");
+								ele.title = "Viewer count for "+data.type;
+								ele.innerText = viewers[data.type];
+								ele.style.backgroundImage = "url(./sources/images/"+data.type+".png)";
+								topBarElement.prepend(ele);
+							}
+							clearTimeout(ele.timeout);
+							ele.timeout = setTimeout(function(ele){
+								if (ele){
+									delete ele;
+								}
+							},130000,ele)
+						}
+						return true;
+					}
+				}
+				return false;
+			}
 					
 			function getColorFromString(str) {
 				
@@ -4763,6 +5243,22 @@
 					out = rainbow(out);
 				}
 				return out;
+			}
+			
+			function getUserHistory(element) {
+				var chatName = element.dataset.chatname;
+				var type = element.dataset.sourceType;
+
+				if (chatName && type) {
+					send2Extension({ action: "getUserHistory", value: { chatname: chatName, type: type } });
+				}
+			}
+			
+			let sentBefore = false;
+			function getRecentHistory() {
+				if (sentBefore) {return;}
+				sentBefore = true;
+				send2Extension({ action: "getRecentHistory", value: 30 });
 			}
 
 			function timeSince(timestamp) {
@@ -5081,6 +5577,15 @@
 							}
 						}
 					};
+				} else if (data.recentHistory) {
+					console.log(data);
+					setTimeout(()=>{
+						data.recentHistory.reverse().forEach(async msg=>{
+							console.log({contents:msg});
+							await processData({contents:msg}); 
+						});
+						jumptoBottom();
+					},1000);
 				} else if ("userHistory" in data) {
 					//delete messages, but also block user. remote, so we won't sync,
 					//console.log(data.userHistory);
@@ -5117,7 +5622,7 @@
 						const para = document.createElement("p");
 						//console.log(timeSince(msg.timestamp));
 						//console.log(msg.timestamp);
-						para.innerHTML = msg.chatmessage + " - <small><i>Sent: " + timeSince(msg.timestamp) + "</i></small>";
+						para.innerHTML = (msg.chatmessage||msg.message) + " - <small><i>Sent: " + timeSince(msg.timestamp) + "</i></small>";
 						messagesList.appendChild(para);
 					});
 					modal.style.display = "block";
@@ -5425,7 +5930,7 @@
 					if (data.target && data.target !== "null" && data.target !== thisLabel) {
 						return; // does not match, so we assume this isn't for us.
 					}
-					console.log(data);
+					//console.log(data);
 
 					if (data.action == "clear" || data.action == "clearAll") {
 						// clears all except pinned messages
@@ -5516,7 +6021,7 @@
 						} else {
 							speech = !speech;
 						}
-						console.log("TTS: "+speech);
+						//console.log("TTS: "+speech);
 						if (speech) {
 							getById("tts").dataset.state = "1";
 							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
@@ -5546,8 +6051,18 @@
 					}
 					return true;
 				} else if (!pauseState) {
+					if (data && ("meta" in data)){
+						if (updateMeta(data)){
+							return true;
+						}
+					}
 					return processData({ contents: data });
 				} else {
+					if (data && ("meta" in data)){
+						if (updateMeta(data)){
+							return true;
+						}
+					}
 					queue.push({ contents: data });
 					if (queue.length > 100) {
 						// keep the queue from exploding in size
@@ -5557,7 +6072,7 @@
 				}
 				return false;
 			}
-
+			
 			function RecvDataWindow(room) {
 				var iframe = document.createElement("iframe");
 				iframe.connectedPeers = {};
@@ -5590,7 +6105,6 @@
 					if ("action" in e.data && e.data.action == "view-stats-updated") {
 						return;
 					}
-
 					if ("action" in e.data && e.data.UUID && e.data.value && e.data.action == "push-connection-info") {
 						// flip this
 						if ("label" in e.data.value) {
@@ -5608,6 +6122,10 @@
 								send2Extension({ action: "openChat", value: null }, e.data.UUID);
 							}
 						}
+						
+						if (urlParams.has("loadlast") && e.data.streamID==roomID) {
+							getRecentHistory(parseInt(urlParams.get("loadlast")) || 30);
+						}
 					}
 
 					if ("action" in e.data && e.data.UUID && "value" in e.data && !e.data.value && e.data.action == "push-connection") {
@@ -5622,11 +6140,17 @@
 							delete iframe.connectedPeers[e.data.UUID];
 						}
 					} else if (obsremote && "action" in e.data && "value" in e.data && e.data.action == "obs-state") { 
-						document.getElementById("meta").classList.remove("hidden");
 						if (e.data.value.details && e.data.value.details.currentScene && e.data.value.details.currentScene.name){
-							document.getElementById("meta").style.backgroundColor = getColorFromString( e.data.value.details.currentScene.name);
-							//console.log(document.getElementById("meta").style.backgroundColor);
-							document.getElementById("meta").innerHTML =  e.data.value.details.currentScene.name;
+						
+							let ele = topBarElement.querySelector("#currentScene");
+							if (!ele){
+								ele = document.createElement("div");
+								ele.id = "currentScene";
+								topBarElement.append(ele);
+								ele.addEventListener('click', openOBSControlModal);
+							}
+							ele.style.backgroundColor = getColorFromString( e.data.value.details.currentScene.name);
+							ele.innerText = e.data.value.details.currentScene.name;
 						}
 						//console.log(e.data);
 						updateOBSState(e.data);
@@ -5692,7 +6216,7 @@
 			  
 			  if (controlLevel>3 && UUID){
 				obsState.UUID = UUID;
-				console.log(UUID, controlLevel);
+				//console.log(UUID, controlLevel);
 			  }
 
 			  // Update scenes
@@ -5761,13 +6285,6 @@
 			 // modal.style.display = "block";
 			}
 
-			// Add this function to your button that opens the modal
-			document.getElementById('meta').addEventListener('click', openOBSControlModal);
-			
-			//////////////////////////////////
-			
-			
-			
 			roomID.split(",").forEach(roomz => {
 				RecvDataWindow(roomz.trim());
 			});
@@ -5792,26 +6309,18 @@
 					ele.style["background-image"] = "url(./icons/scroll_to_bottom_off.png)";
 					ele.title = "Scroll to bottom";
 				}
-				if (alignbottom) {
-					if (scrolltype == "instant") {
-						getById("output").scrollTop = getById("output").scrollHeight;
-					} else {
-						getById("output").scrollTo({
-							top: getById("output").scrollHeight,
-							left: 0,
-							behavior: scrolltype
-						});
-					}
+				jumptoBottom2();
+			}
+			function jumptoBottom2() {
+				var target = alignbottom || fadetop ? getById("output") : document.scrollingElement;
+				if (scrolltype == "instant") {
+					target.scrollTop = target.scrollHeight;
 				} else {
-					if (scrolltype == "instant") {
-						document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-					} else {
-						document.scrollingElement.scrollTo({
-							top: document.scrollingElement.scrollHeight,
-							left: 0,
-							behavior: scrolltype
-						});
-					}
+					target.scrollTo({
+						top: target.scrollHeight,
+						left: 0,
+						behavior: scrolltype
+					});
 				}
 			}
 
@@ -6143,15 +6652,6 @@
 				}
 			}
 
-			function getUserHistory(element) {
-				var chatName = element.dataset.chatname;
-				var type = element.dataset.sourceType;
-
-				if (chatName && type) {
-					send2Extension({ action: "getUserHistory", value: { chatname: chatName, type: type } });
-				}
-			}
-
 			function filterQueued() {
 				// #show_only_queue
 				var ele = getById("show_only_queue");
@@ -6448,28 +6948,12 @@
 					node.remove();
 				}
 				if (!(reversed && !forceAutoscroll)) {
-					if (alignbottom) {
+					if (alignbottom || fadetop) {
 						if (getById("output").scrollHeight < getById("output").scrollTop + getById("output").clientHeight + autoScrollCatch || forceAutoscroll) {
-							if (scrolltype == "instant") {
-								getById("output").scrollTop = getById("output").scrollHeight;
-							} else {
-								getById("output").scrollTo({
-									top: getById("output").scrollHeight,
-									left: 0,
-									behavior: scrolltype
-								});
-							}
+							jumptoBottom2()
 						}
 					} else if (document.body.scrollHeight < document.body.scrollTop + document.body.clientHeight + autoScrollCatch || forceAutoscroll) {
-						if (scrolltype == "instant") {
-							document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-						} else {
-							document.scrollingElement.scrollTo({
-								top: document.scrollingElement.scrollHeight,
-								left: 0,
-								behavior: scrolltype
-							});
-						}
+						jumptoBottom2()
 					}
 				}
 			}
@@ -6688,6 +7172,28 @@
 				const textContent = strippedStr.replace(/<[^>]*>/g, '');
 				return textContent.length === 0;
 			}
+			
+			function wrapEmojis(text) {
+				let flagCounter = 0;
+				let flags = [];
+				
+				text = text.replace(/(\uD83C[\uDDE6-\uDDFF]){2}/g, (match) => {
+					flags.push(match);
+					return `###FLAG${flagCounter++}###`;
+				});
+				
+				text = text.replace(
+					/([\u2011-\u26FF]|[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDD10-\uDDFF])/g,
+					"<span class='emoji'>$1</span>"
+				);
+				flags.forEach((flag, index) => {
+					text = text.replace(
+						`###FLAG${index}###`,
+						`<span class='emoji'>${flag}</span>`
+					);
+				});
+				return text;
+			}
 
 			function processData(data, reloaded = false) {
 				if (data.contents) {
@@ -6730,6 +7236,10 @@
 						} else {
 							return;
 						}
+					}
+					
+					if (data.message && !data.chatmessage){
+						data.chatmessage = data.message;
 					}
 
 					if (filtercommands && data.chatmessage && data.chatmessage.startsWith("!")) {
@@ -6830,6 +7340,10 @@
 					} else {
 						data.type = data.type.toString();
 						showType = data.type;
+					}
+					
+					if (stripDonationData){
+						data.hasDonation = "";
 					}
 
 					if (data.hasDonation) {
@@ -6958,7 +7472,8 @@
 
 					if (chatmessage) {
 						if (stylizeEmoji && !reloaded) {
-							chatmessage = chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "<span class='emoji'>$1</span>");
+							//chatmessage = chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "<span class='emoji'>$1</span>");
+							chatmessage = wrapEmojis(chatmessage);
 						}
 						if (!stripHTML) {
 							// we want to reuse this, but only if HTML is allowed
@@ -7150,6 +7665,21 @@
 					}
 
 					var chatname = data.chatname;
+					
+					if (simpleSequence && (chatname == lastChatName) && (data.type == lastType)){
+						chatname = "";
+						//timeArrived = "";
+						chatImg = "";
+						showType = "";
+						chatbadges = "";
+						//if (datestamp) {
+						//	timeArrived = "<div class='time-arrived'></div>";
+						//}
+						
+					} else if (simpleSequence){
+						lastChatName = chatname;
+						lastType = data.type;
+					}
 
 					var afterName = ":";
 					if (twoLines) {
@@ -7158,7 +7688,7 @@
 					
 					if (trimName){
 						chatname = truncateText(chatname, trimName);
-					} 
+					}
 
 					if (largeavatar) {
 						chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + (chatname || "") + '<span class="hl-badges">' + chatbadges + "</span></div>";
@@ -7208,7 +7738,7 @@
 					if (trimChat){
 						chatmessage = truncateHTMLContent(chatmessage, trimChat);
 					}
-
+					
 					if (largeavatar) {
 						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived + "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
 					} else if (twoLines) {
@@ -7334,6 +7864,12 @@
 						node.classList.add(classtype);
 					});
 					
+					if (beep) { 
+						if (!(nobeepbot && bot)){
+							playtone();
+						}
+					}
+					
 					
 					if (waitToReveal){
 						node.classList.add("hidden");
@@ -7449,10 +7985,6 @@
 						twitchImage.src = data.chatimg;
 					}
 
-					if (beep) {
-						playtone();
-					}
-
 					if (timeoutDelay) {
 						setTimeout(
 							function (node) {
@@ -7559,6 +8091,9 @@
 							imageElements[i].srcBackup = imageElements[i].src;
 							imageElements[i].src = imageElements[i].src.replaceAll("/light/", "/dark/");
 						}
+						
+						imageElements[i].removeAttribute("width");
+						imageElements[i].removeAttribute("height");
 
 						imageElements[i].onerror = function () {
 							if (this.srcBackup) {
@@ -7588,21 +8123,22 @@
 						node.classList.add("queued");
 						updateQueueButton();
 					}
-					if (ttscommand && data.chatmessage && data.chatmessage.includes("!say ") && !bot){
+					
+					if (ttscommand && data.chatmessage && data.chatmessage.includes(ttscommand+" ") && (!ttscommandmembersonly || (ttscommandmembersonly && data.membership))){
 						if (!node.classList.contains("hide")) {
 							speechMeta(data);
 						}
-					} else if (speech && !bot) {
+					} else if (speech) {
 						if (!node.classList.contains("hide")) {
 							speechMeta(data);
 						}
-					}
+					} 
 					return node;
 				}
 				return false;
 			}
 
-			if (alignbottom) {
+			if (alignbottom || fadetop) {
 				const ro = new MutationObserver(mutations => {
 					if (reversed && !forceAutoscroll) {
 					} else {
@@ -7611,15 +8147,7 @@
 							delta = parseInt(getById("output").lastChild.clientHeight);
 						}
 						if (getById("output").scrollHeight < getById("output").scrollTop + getById("output").clientHeight + autoScrollCatch + delta || forceAutoscroll) {
-							if (scrolltype == "instant") {
-								getById("output").scrollTop = getById("output").scrollHeight;
-							} else {
-								getById("output").scrollTo({
-									top: getById("output").scrollHeight,
-									left: 0,
-									behavior: scrolltype
-								});
-							}
+							jumptoBottom2()
 						}
 					}
 				});
@@ -7633,309 +8161,11 @@
 							delta = parseInt(getById("output").lastChild.clientHeight);
 						}
 						if (document.body.scrollHeight < document.body.scrollTop + document.body.clientHeight + autoScrollCatch + delta || forceAutoscroll) {
-							if (scrolltype == "instant") {
-								document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-							} else {
-								document.scrollingElement.scrollTo({
-									top: document.scrollingElement.scrollHeight,
-									left: 0,
-									behavior: scrolltype
-								});
-							}
+							jumptoBottom2()
 						}
 					}
 				});
 				ro.observe(document.scrollingElement);
-			}
-
-			function googleTTS(tts) {
-				premiumQueueActive = true;
-
-				try {
-					const url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=" + GoogleAPIKey;
-					var data = {
-						input: {
-							text: tts
-						},
-						voice: {
-							languageCode: speechLang.toLowerCase(),
-							name: "en-GB-Standard-A",
-							ssmlGender: "FEMALE"
-						},
-						audioConfig: {
-							audioEncoding: "MP3",
-							speakingRate: rate
-							
-						}
-					};
-
-					if (voiceNameGoogle || voiceName) {
-						data.voice.name = voiceNameGoogle || voiceName;
-					}
-					if (voiceGender) {
-						data.voice.ssmlGender = voiceGender.toUpperCase();
-					}
-
-					const otherparam = {
-						headers: {
-							"content-type": "application/json; charset=UTF-8"
-						},
-						body: JSON.stringify(data),
-						method: "POST"
-					};
-
-					fetch(url, otherparam)
-						.then(data => {
-							return data.json();
-						})
-						.then(res => {
-							//console.log(res.audioContent);
-							if (!audio) {
-								audio = document.createElement("audio");
-								audio.onended = finishedAudio;
-							}
-							audio.src = "data:audio/mp3;base64," + res.audioContent;
-							if (volume) {
-								audio.volume = volume;
-							}
-							try {
-								audio.play();
-							} catch (e) {
-								finishedAudio();
-								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-							}
-						})
-						.catch(error => {
-							finishedAudio();
-							console.error(error);
-						});
-				} catch (e) {
-					finishedAudio();
-				}
-			}
-			function SpeechifyTTS(tts) {
-				console.log(tts);
-				premiumQueueActive = true;
-				try {
-					const url = "https://api.sws.speechify.com/v1/audio/speech";
-					let model = English ? "simba-english" : "simba-multilingual";
-					const data = {
-						input: "<speak>" + tts + "</speak>",
-						voice_id: voiceNameSpeechify || voiceName || "henry",
-						model: model,
-						audio_format: "mp3"
-					};
-					const otherparam = {
-						method: "POST",
-						headers: {
-							"Authorization": `Bearer ${SpeechifyAPIKey}`,
-							"Content-Type": "application/json"
-						},
-						body: JSON.stringify(data)
-					};
-					fetch(url, otherparam)
-						.then(response => {
-							//console.log(response);
-							if (!response.ok) {
-								throw new Error(`HTTP error! status: ${response.status}`);
-							}
-							return response.json();
-						})
-						.then(json => {
-							//console.log(json);
-							if (!json.audio_data) {
-								finishedAudio();
-								throw new Error("No audio data in JSON response");
-							}
-							try {
-								if (!audio) {
-									audio = document.createElement("audio");
-									audio.onended = finishedAudio;
-								}
-								audio.src = "data:audio/mp3;base64," + json.audio_data;
-								if (volume) {
-									audio.volume = volume;
-								}
-							
-								audio.play().then(() => {
-									//console.log("Audio playing successfully");
-								}).catch(err => {
-									console.error("Audio play failed, user interaction required", err);
-									finishedAudio();  // Ensure the queue is released
-								});
-							} catch (e) {
-								console.error(e);
-								finishedAudio();
-								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-							}
-						})
-						.catch(error => {
-							finishedAudio();
-							console.error("Error with Speechify TTS:", error);
-						});
-				} catch (e) {
-					finishedAudio();
-					console.error("Error in SpeechifyTTS function:", e);
-				}
-			}
-
-			function ElevenLabsTTS(tts) {
-				try {
-					premiumQueueActive = true;
-					const voiceid = voiceNameElevenlabs || voiceName || "VR6AewLTigWG4xSOukaG";
-					const url = "https://api.elevenlabs.io/v1/text-to-speech/" + voiceid + "/stream?optimize_streaming_latency=" + voiceLatency;
-
-					var data = {
-						text: tts,
-						model_id: "eleven_monolingual_v1",
-						voice_settings: {
-							stability: 0,
-							similarity_boost: 0,
-							style: 0.5,
-							use_speaker_boost: false
-						}
-					};
-
-					const otherparam = {
-						headers: {
-							"content-type": "application/json",
-							"xi-api-key": ElevenLabsKey,
-							accept: "*/*"
-						},
-						body: JSON.stringify(data),
-						method: "POST"
-					};
-
-					fetch(url, otherparam)
-						.then(data => {
-							return data.blob();
-						})
-						.then(res => {
-							const newBlob = new Blob([res]);
-							const blobUrl = window.URL.createObjectURL(newBlob);
-							if (!audio) {
-								audio = document.createElement("audio");
-								audio.onended = finishedAudio;
-							}
-							audio.src = blobUrl;
-							if (volume) {
-								audio.volume = volume;
-							}
-							try {
-								audio.play();
-							} catch (e) {
-								finishedAudio();
-								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-							}
-						})
-						.catch(error => {
-							finishedAudio();
-							console.error(error);
-						});
-				} catch (e) {
-					finishedAudio();
-				}
-			}
-
-			function speechMeta(data, allow = false) {
-				if (skipTTSMessages && !data.hasDonation) {
-					if (parseInt(data.id) % skipTTSMessages !== 0) {
-						return;
-					}
-				}
-
-				if (doNotReadEvents && data.event) {
-					return;
-				}
-				
-				try {
-					var isCommand = false;
-					var msgPlain = document.getElementById("content_" + data.id);
-
-					if (msgPlain) {
-						msgPlain = (msgPlain.textContent || msgPlain.innerText || "") // Remove emojis, underscores, and @ symbols
-							.replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, "")
-							.replace(/_/g, " ")
-							.replace(/@/g, " ")
-							
-						if (ttscommand && msgPlain.includes("!say ")){
-							msgPlain = msgPlain.split("!say ")[1].trim();
-							allow = true;
-						}
-						
-						msgPlain = msgPlain.replace(/^!/, ""); // check if it starts with '!'
-						msgPlain = msgPlain.replace(/!+/g, " "); // Replace multiple '!' with a single space
-						msgPlain = msgPlain.replace(/catJAM/gi, ""); // Remove 'catJAM' case-insensitively
-						if (beepwords){
-							msgPlain = msgPlain.replace(/\*+/g, ' beep ');
-						} else {
-							msgPlain = msgPlain.replace(/\*/g, '');
-						}
-						msgPlain = msgPlain.trim();
-					}
-
-					var chatname = "";
-					if (ttsSpeakChatname && data.chatname) {
-						chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
-						chatname = chatname.replaceAll("_", " ");
-						chatname = chatname.replaceAll("@", " ");
-						chatname = chatname.replaceAll("!", " ");
-					}
-
-					if (data.hasDonation) {
-						var donoText = document.createElement("div");
-						donoText.innerHTML = data.hasDonation;
-						donoText = donoText.textContent || donoText.innerText || "";
-						donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
-						donoText = donoText.replaceAll("_", " ");
-						donoText = donoText.replaceAll("@", " ");
-						donoText = donoText.replaceAll("!", " ");
-
-						if (chatname) {
-							///// NAME
-							if (English) {
-								if (msgPlain) {
-									speak(chatname + " has donated " + donoText + " and says " + msgPlain, allow);
-								} else {
-									speak(chatname + " has donated " + donoText, allow);
-								}
-							} else if (msgPlain) {
-								speak(chatname + "! ! .. " + donoText + "! ! .. " + msgPlain, allow);
-							} else {
-								speak(chatname + "! ! .. " + donoText, allow);
-							}
-						} else if (English) {
-							// no name but english
-							if (msgPlain) {
-								speak("Someone has donated " + donoText + " and says " + msgPlain, allow);
-							} else {
-								speak("Someone has donated " + donoText, allow);
-							}
-						} else if (msgPlain) {
-							// no name; not english
-							speak(donoText + "! ! .. " + msgPlain, allow);
-						} else {
-							speak(donoText, allow);
-						}
-					} else if (msgPlain) {
-						// NO DONATION
-						if (chatname) {
-							// NAME
-							if (English) {
-								speak(chatname + " says! " + msgPlain, allow);
-							} else {
-								speak(chatname + "! ! .. " + msgPlain, allow);
-							}
-						} else if (English) {
-							// NO NAME
-							speak("Someone says! " + msgPlain, allow);
-						} else {
-							speak(msgPlain, allow);
-						}
-					}
-				} catch(e){
-					errorlog(e);
-				}
 			}
 
 			function applyBotActions(data) {
@@ -8224,6 +8454,9 @@
 
 			async function overwriteFile(data = false) {
 				if (data == "setup") {
+					if (!window.showSaveFilePicker) {
+						console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
+					}
 					newFileHandle = await window.showSaveFilePicker();
 				} else if (newFileHandle && data) {
 					try {
@@ -8747,6 +8980,13 @@
 					return true;
 				}
 				return false;
+			}
+			
+			
+			try {
+				navigator.wakeLock.request("screen");
+			} catch (err) {
+			
 			}
 			
 		</script>

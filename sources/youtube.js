@@ -1,17 +1,20 @@
 (function () {
 
-
+	var urlParams = new URLSearchParams(window.location.search);
 	//var channelName = "";
-	var videoId = false;
+	var isExtensionOn = true;
+	var videoId = urlParams.get("v") || false;
 	try {
-		const parentUrl = window.top.location.href;
-		const parentStudioMatch = parentUrl.match(/\/video\/([^\/]+)/);
-		if (parentStudioMatch) {
-			videoId = parentStudioMatch[1];
+		if (!videoId){
+			const parentUrl = window.top.location.href;
+			const parentStudioMatch = parentUrl.match(/\/video\/([^\/]+)/);
+			if (parentStudioMatch) {
+				videoId = parentStudioMatch[1];
+			}
 		}
 	} catch(e){}
 
-/* 	function getTranslation(key, value = false) {
+ 	function getTranslation(key, value = false) {
 		if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
 			// these are the proper translations
 			return settings.translation.innerHTML[key];
@@ -22,26 +25,7 @@
 		} else {
 			return key.replaceAll("-", " "); //
 		}
-	} */
-	
-	const getTranslation = (() => {
-	  const cache = new Map();
-	  return (key, value = false) => {
-		if (cache.has(key)) return cache.get(key);
-		let result;
-		if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
-		  result = settings.translation.innerHTML[key];
-		} else if (settings.translation && settings.translation.miscellaneous && key in settings.translation.miscellaneous) {
-		  result = settings.translation.miscellaneous[key];
-		} else if (value !== false) {
-		  result = value;
-		} else {
-		  result = key.replaceAll("-", " ");
-		}
-		cache.set(key, result);
-		return result;
-	  };
-	})();
+	}
 
 	function escapeHtml(unsafe) {
 		try {
@@ -86,7 +70,7 @@
 		if (chatname) {
 		  const data = {
 			chatname: escapeHtml(chatname.innerText),
-			type: "youtube"
+			type: (youtubeShorts ? "youtubeshorts" : "youtube")
 		  };
 		  chrome.runtime.sendMessage(chrome.runtime.id, { "delete": data }, function(e) {});
 		}
@@ -202,7 +186,7 @@
 					result += resolvedSvg.outerHTML;
 				} else if (node.childNodes.length) {
 					Array.from(node.childNodes).forEach(processNode);
-				} else if (!settings.textonlymode){
+				} else if (!settings.textonlymode && (node.nodeName.toLowerCase() === "svg")){
 					result += node.outerHTML;
 				}
 			}
@@ -279,7 +263,7 @@
 			if (chatname) {
 				var data = {};
 				data.chatname = escapeHtml(chatname.innerText);
-				data.type = "youtube";
+				data.type = (youtubeShorts ? "youtubeshorts" : "youtube");
 				try {
 					chrome.runtime.sendMessage(chrome.runtime.id, {
 						"delete": data
@@ -289,6 +273,20 @@
 				}
 			}
 		} catch (e) {}
+	}
+	
+	function deepMerge(target, source) {
+	  for (let key in source) {
+		if (source.hasOwnProperty(key)) {
+		  if (typeof source[key] === 'object' && source[key] !== null) {
+			target[key] = target[key] || {};
+			deepMerge(target[key], source[key]);
+		  } else {
+			target[key] = source[key];
+		  }
+		}
+	  }
+	  return target;
 	}
 
 	var EMOTELIST = false;
@@ -309,7 +307,7 @@
 					if (BTTV.globalEmotes) {
 						EMOTELIST = deepMerge(BTTV.globalEmotes, EMOTELIST);
 					}
-				} catch (e) {}
+				} catch (e) {console.warn(e);}
 			}
 		}
 		if (SEVENTV) {
@@ -417,8 +415,6 @@
 			deleteThis(ele)
 			return;
 		}
-	
-
 		if (settings.customyoutubestate) {
 			return;
 		}
@@ -428,10 +424,28 @@
 			} else if (ele.id) {
 				if (messageHistory.has(ele.id)) return;
 				messageHistory.add(ele.id);
-				if (messageHistory.size > 255) { // 250 seems to be Youtube's max?
-				  const iterator = messageHistory.values();
-				  messageHistory.delete(iterator.next().value);
+				if (messageHistory.size > 300) { // 250 seems to be Youtube's max?
+				    const iterator = messageHistory.values();
+				    messageHistory.delete(iterator.next().value);	  
 				}
+				if (ele.id.length<40){
+					setTimeout(()=>{
+						if (ele.id.length<40){
+							setTimeout(()=>{
+								if (ele.id.length<40){
+									setTimeout(()=>{
+										messageHistory.add(ele.id);
+									},2000);
+								} else {
+									messageHistory.add(ele.id);
+								}
+							},2000);
+						} else {
+							messageHistory.add(ele.id);
+						}
+					},2000);
+				}
+				//console.log(messageHistory);
 		    } else {
 				return; // no id.
 		    }
@@ -442,7 +456,7 @@
 		} catch (e) {}
 
 		ele.skip = true;
-
+		
 		//if (channelName && settings.customyoutubestate){
 		//if (settings.customyoutubeaccount && settings.customyoutubeaccount.textsetting && (settings.customyoutubeaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
 		//	return;
@@ -518,14 +532,14 @@
 		try {
 			chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
 			if (chatimg.startsWith("data:image/gif;base64")) { 
-				await delay(500);console.log(ele);
+				await delay(500);//console.log(ele);
 				chatimg = document.querySelector("#"+ele.id+" #author-photo img[src]:not([src^='data:image/gif;base64'])") || "";
 				if (chatimg){
 					chatimg = chatimg.src;
 				}
 			}
 		} catch (e) {
-			console.log(e);
+			//console.log(e);
 			chatimg = "";
 		}
 		
@@ -557,7 +571,7 @@
 					member = true;
 				} else if (ele.getAttribute("author-type") === "moderator") {
 					//chatmembership = chatmessage;
-					treatAsMemberChat = true;
+					// treatAsMemberChat = true;
 					mod = true;
 				}
 			}
@@ -793,6 +807,11 @@
 				return;
 			}
 			if (typeof request === "object") {
+				
+				if ("state" in request) {
+					isExtensionOn = request.state;
+				}
+				
 				if ("settings" in request) {
 					settings = request.settings;
 					sendResponse(true);
@@ -875,26 +894,32 @@
 
 	chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
 		// {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		
+		if (!response){return;}
+		
+		if ("state" in response){
+			isExtensionOn = response.state;
+		}
+		
 		if ("settings" in response) {
 			settings = response.settings;
-			if ("settings" in response) {
-				settings = response.settings;
-				if (settings.bttv && !BTTV) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
-						//	console.log(response);
-					});
-				}
-				if (settings.seventv && !SEVENTV) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {
-						//	console.log(response);
-					});
-				}
-				if (settings.ffz && !FFZ) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true }, function (response) {
-						//	console.log(response);
-					});
-				}
+			
+			if (settings.bttv && !BTTV) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
+					//	console.log(response);
+				});
 			}
+			if (settings.seventv && !SEVENTV) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {
+					//	console.log(response);
+				});
+			}
+			if (settings.ffz && !FFZ) {
+				chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true }, function (response) {
+					//	console.log(response);
+				});
+			}
+			
 			if (settings.delayyoutube){
 				captureDelay = 2000;
 				//console.log(captureDelay);
@@ -942,12 +967,21 @@
 	}
 
 	console.log("Social stream inserted");
-
+	var marked = false;
 	const checkTimer = setInterval(function () {
 	  const ele = document.querySelector("yt-live-chat-app #items.yt-live-chat-item-list-renderer");
 	  if (ele && !ele.skip) {
 		ele.skip = true;
 		setupDeletionObserver(ele);
+		try {
+			ele.querySelectorAll("yt-live-chat-text-message-renderer").forEach(ele4 => {
+				ele4.skip = true;
+				cleared = true;
+				if (ele4.id) {
+					messageHistory.add(ele4.id);
+				}
+			});
+		} catch (e) {}
 		onElementInserted(ele, function (ele2) {
 			setTimeout(() => processMessage(ele2, false), captureDelay);
 		});
@@ -987,6 +1021,21 @@
 	  }
 	  // style-scope yt-live-chat-message-renderer
 	  
+	  if (settings.autoLiveYoutube && document.querySelector("#trigger") && !marked){
+			marked = true;
+			document.querySelector("#trigger").click()
+			document.querySelector('[slot="dropdown-content"] [tabindex="0"]').click()
+			var waitTilClear = setInterval(function(){
+				if (document.querySelectorAll('#menu > a').length==2){
+					clearInterval(waitTilClear);
+					document.querySelectorAll('#menu > a')[1].click()
+					document.querySelector("yt-live-chat-header-renderer").style.display = "none";
+				}
+			},100)
+	  } else if (document.querySelector("#trigger") && !settings.autoLiveYoutube && marked){
+		  document.querySelector("yt-live-chat-header-renderer").style.display = "unset";
+		  marked = false;
+	  }
 	}, 1000);
 
 	if (window.location.href.includes("youtube.com/watch")) {
@@ -1036,6 +1085,36 @@
 			}
 		}, 3000);
 	}
+	
+	
+	function checkViewers(){
+		if (videoId && isExtensionOn && (settings.showviewercount || settings.hypemode)){
+			fetch('https://api.socialstream.ninja/youtube/viewers?video='+videoId)
+			  .then(response => response.json())
+			  .then(data => {
+				try {
+					if (data && ("viewers" in data)){
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							({message:{
+									type: (youtubeShorts ? "youtubeshorts" : "youtube"),
+									event: 'viewer_update',
+									meta: parseInt(data.viewers)
+									//chatmessage: data.data[0] + " has started following"
+								}
+							}),
+							function (e) {}
+						);
+					}
+				} catch (e) {
+					//console.log(e);
+				}
+			  });
+		}
+	}
+	
+	setTimeout(function(){checkViewers();},2500);
+	setInterval(function(){checkViewers()},10000);
 	
 
 	try {

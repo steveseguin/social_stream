@@ -82,7 +82,7 @@
 			return;
 		}
 		
-		name = escapeHtml(ele.querySelector("h6, .interaction-qna-item-preview-author-name").textContent);
+		name = escapeHtml(ele.querySelector("[class^='interaction-chat-message-author-name']").textContent);
 		
 		if (name){
 			

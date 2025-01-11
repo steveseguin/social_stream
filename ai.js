@@ -4,7 +4,7 @@
 let globalLunrIndex = null;
 let documentsRAG = []; // Store all documents here
 const LunrDBLLM = "LunrDBLLM";
-const DOCUMENT_STORE_NAME = 'documents';
+const LUNR_DOCUMENT_STORE_NAME = 'documents';
 const activeProcessing = {};
 const uploadQueue = [];
 let isUploading = false;
@@ -13,9 +13,9 @@ const maxContextSize = 31000;
 const maxContextSizeFull = 32000;
 
 async function rebuildIndex() {
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readonly');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     const allDocs = await new Promise((resolve, reject) => {
         const request = store.getAll();
         request.onerror = () => reject(request.error);
@@ -152,9 +152,169 @@ const streamingPostNode = async function (URL, body, headers = {}, onChunk = nul
 
 const activeChatBotSessions = {};
 let tmpModelFallback = "";
-async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null) {
-    let ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
-    let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || "llama3.2:latest";
+async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null) {
+	
+	// console.log(prompt);
+	
+    const provider = settings.aiProvider?.optionsetting || "ollama";
+    const endpoint = provider === "ollama" 
+        ? (settings.ollamaendpoint?.textsetting || "http://localhost:11434")
+        : (provider === "chatgpt" ? "https://api.openai.com/v1/chat/completions" : "https://generativelanguage.googleapis.com/v1beta/chat/completions");
+    
+	function handleChunk(chunk, callback, appendToFull) {
+		const lines = chunk.split('\n');
+		for (const line of lines) {
+			if (line.trim() === 'data: [DONE]') {
+				responseComplete = true;
+				break;
+			}
+			if (line.trim() !== '') {
+				try {
+					// Remove 'data: ' prefix if it exists
+					const jsonStr = line.startsWith('data: ') ? line.slice(6) : line;
+					const data = JSON.parse(jsonStr);
+					
+					if (data.response) { // Ollama format
+						appendToFull(data.response);
+						if (callback) callback(data.response);
+					} else if (data.choices?.[0]?.delta?.content) { // ChatGPT/Gemini format
+						const content = data.choices[0].delta.content;
+						if (content) { // Only append if there's actual content
+							appendToFull(content);
+							if (callback) callback(content);
+						}
+					} else if (data.candidates?.[0]?.content?.parts?.[0]?.text) { // Legacy Gemini format
+						appendToFull(data.candidates[0].content.parts[0].text);
+						if (callback) callback(data.candidates[0].content.parts[0].text);
+					}
+					if (data.choices?.[0]?.finish_reason === "stop" || data.done) {
+						responseComplete = true;
+						break;
+					}
+				} catch (e) {
+					// console.warn("Parse error:", e, line);
+					const match = line.match(/"response":"(.*?)"/);
+					if (match && match[1]) {
+						const extractedResponse = match[1];
+						appendToFull(extractedResponse);
+						if (callback) callback(extractedResponse);
+					}
+				}
+			}
+		}
+	}
+    if (provider === "ollama") {
+		
+        let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
+        if (!ollamamodel) {
+            const availableModel0 = await getFirstAvailableModel();
+            if (availableModel0) {
+                tmpModelFallback = availableModel0;
+            } else {
+                console.error("No Ollama model found");
+                return;
+            }
+        }
+        const result = await makeRequest(ollamamodel);
+        if (result.aborted) {
+            return result.response + "💥";
+        } else if (result.error && result.error === 404) {
+            try {
+                const availableModel = await getFirstAvailableModel();
+                if (availableModel) {
+                    tmpModelFallback = availableModel;
+                    setTimeout(() => {
+                        tmpModelFallback = ""; 
+                    }, 60000);
+                    const fallbackResult = await makeRequest(availableModel);
+                    if (fallbackResult.aborted) {
+                        return fallbackResult.response + "💥";
+                    } else if (fallbackResult.error) {
+                        throw new Error(fallbackResult.message);
+                    }
+                    return fallbackResult.complete ? fallbackResult.response : fallbackResult.response + "💥";
+                }
+            } catch (fallbackError) {
+                console.warn("Error in callOllamaAPI even with fallback:", fallbackError);
+                throw fallbackError;
+            }
+        } else if (result.error) {
+            return;
+        }
+        return result.complete ? result.response : result.response + "💥";
+    } else {
+        const apiKey = provider === "chatgpt" ? settings.chatgptApiKey?.textsetting : settings.geminiApiKey?.textsetting;
+        if (!apiKey) return;
+
+        // Now both ChatGPT and Gemini use the same message format
+		// let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
+        const message = {
+            model: provider === "chatgpt" ? (settings.chatgptmodel?.textsetting || "gpt-4o-mini") : (settings.geminimodel?.textsetting || "gemini-1.5-flash"),
+            messages: [{
+                role: "user",
+                content: prompt
+            }],
+            stream: callback !== null
+        };
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        };
+
+        try {
+            if (callback) {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(message),
+                    signal: abortController?.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+                let responseComplete = false;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        responseComplete = true;
+                        break;
+                    }
+                    const chunk = decoder.decode(value);
+                    handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
+                }
+				//console.log(fullResponse);
+                return fullResponse;
+            } else {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(message),
+                    signal: abortController?.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                // Both APIs now return the same format
+				//console.log(data);
+                return data.choices[0].message.content;
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                return { aborted: true };
+            }
+            throw error;
+        }
+    }
 
     async function makeRequest(currentModel) {
         const isStreaming = callback !== null;
@@ -174,54 +334,63 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 
             let response;
             if (typeof ipcRenderer !== 'undefined') {
-                // Electron environment
-				
-				if (isStreaming) {
-					response = await new Promise((resolve, reject) => {
-						const channelId = `streaming-nodepost-${Date.now()}`;
-						
-						ipcRenderer.on(channelId, (event, chunk) => {
-							if (chunk === null) {
-								responseComplete = true;
-								resolve({ ok: true });
-							} else if (typeof chunk === 'object' && chunk.error) {
-								// This is the error response
-								resolve(chunk);
-							} else {
-								handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
-							}
-						});
+                // Your existing Electron implementation
+                if (isStreaming) {
+                    response = await new Promise((resolve, reject) => {
+                        const channelId = `streaming-nodepost-${Date.now()}`;
+                        
+                        ipcRenderer.on(channelId, (event, chunk) => {
+                            if (chunk === null) {
+                                responseComplete = true;
+                                resolve({ ok: true });
+                            } else if (typeof chunk === 'object' && chunk.error) {
+                                resolve(chunk);
+                            } else {
+                                handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
+                            }
+                        });
+                        
+                        const message = {
+                            model: currentModel,
+                            prompt: prompt,
+                            stream: true
+                        };
+                        
+                        if (images){
+                            message.images = images;
+                        }
 
-						ipcRenderer.send('streaming-nodepost', {
-							channelId,
-							url: `${ollamaendpoint}/api/generate`,
-							body: {
-								model: currentModel,
-								prompt: prompt,
-								stream: true
-							},
-							headers: { 'Content-Type': 'application/json' }
-						});
+                        ipcRenderer.send('streaming-nodepost', {
+                            channelId,
+                            url: `${endpoint}/api/generate`,
+                            body: message,
+                            headers: { 'Content-Type': 'application/json' }
+                        });
 
-						abortController.signal.addEventListener('abort', () => {
-							ipcRenderer.send(`${channelId}-abort`);
-						});
-					});
-
-					if (response.error) {
-						return response;
-					}
-				} else {
-					response = fetchNode(`${ollamaendpoint}/api/generate`, {
-                        'Content-Type': 'application/json',
-                    }, 'POST', {
-                        model: currentModel,
-                        prompt: prompt,
-						stream: false
+                        abortController.signal.addEventListener('abort', () => {
+                            ipcRenderer.send(`${channelId}-abort`);
+                        });
                     });
 
-					// console.log(response);
-					
+                    if (response.error) {
+                        return response;
+                    }
+                } else {
+                    // Your existing non-streaming Electron implementation
+                    const message = {
+                        model: currentModel,
+                        prompt: prompt,
+                        stream: false
+                    };
+                    
+                    if (images){
+                        message.images = images;
+                    }
+                    
+                    response = fetchNode(`${endpoint}/api/generate`, {
+                        'Content-Type': 'application/json',
+                    }, 'POST', message);
+                    
                     if (response.status === 404) {
                         return { error: 404, message: `Model ${currentModel} not found` };
                     } else if (response.status !== 200) {
@@ -236,30 +405,36 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                         console.error("Error parsing JSON:", e);
                         return { error: true, message: "Error parsing response" };
                     }
-				}
+                }
             } else {
-                // Web environment
-                response = await fetch(`${ollamaendpoint}/api/generate`, {
+                // Your existing Web implementation
+                const message = {
+                    model: currentModel,
+                    prompt: prompt,
+                    stream: isStreaming
+                };
+                
+                if (images){
+                    message.images = images;
+                }
+                
+                response = await fetch(`${endpoint}/api/generate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        model: currentModel,
-                        prompt: prompt,
-                        stream: isStreaming
-                    }),
+                    body: JSON.stringify(message),
                     signal: abortController ? abortController.signal : undefined,
                 });
 
-				if (!response.ok) {
-					if (response.status === 404) {
-						return { error: 404,  message: `Model ${currentModel} not found` };
-					} else if (response.status){
-						return { error: response.status, message: `HTTP error! status: ${response.status}` };
-					}
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        return { error: 404, message: `Model ${currentModel} not found` };
+                    } else if (response.status) {
+                        return { error: response.status, message: `HTTP error! status: ${response.status}` };
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 if (isStreaming) {
                     const reader = response.body.getReader();
@@ -280,8 +455,8 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                     responseComplete = true;
                 }
             }
-			
-			return { success: true, response: fullResponse, complete: responseComplete };
+            
+            return { success: true, response: fullResponse, complete: responseComplete };
         } catch (error) {
             if (error.name === 'AbortError') {
                 return { aborted: true, response: fullResponse };
@@ -294,68 +469,6 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                 delete activeChatBotSessions[UUID];
             }
         }
-    }
-
-   function handleChunk(chunk, callback, appendToFull) {
-        const lines = chunk.split('\n');
-        for (const line of lines) {
-            if (line.trim() !== '') {
-                try {
-                    // Attempt to parse the JSON
-                    const data = JSON.parse(line);
-                    if (data.response) {
-                        appendToFull(data.response);
-                        if (callback) callback(data.response);
-                    }
-                    if (data.done) {
-                        responseComplete = true;
-						break;
-                    }
-                } catch (e) {
-                    // If parsing fails, log the error and the problematic line
-                    
-                    // Attempt to extract any text content from the line
-                    const match = line.match(/"response":"(.*?)"/);
-                    if (match && match[1]) {
-                        const extractedResponse = match[1];
-                        appendToFull(extractedResponse);
-                        if (callback) callback(extractedResponse);
-                    }
-                }
-            }
-        }
-    }
-
-
-    const result = await makeRequest(ollamamodel);
-    if (result.aborted) {
-        return result.response + "💥";
-    } else if (result.error && result.error === 404) {
-        console.warn(`Failed to use model ${ollamamodel}. Attempting to get first available model.`);
-        try {
-            const availableModel = await getFirstAvailableModel();
-            if (availableModel) {
-                tmpModelFallback = availableModel;
-                setTimeout(() => {
-                    tmpModelFallback = ""; // allow for trying the original model again.
-                }, 60000);
-                const fallbackResult = await makeRequest(availableModel);
-                if (fallbackResult.aborted) {
-                    return fallbackResult.response + "💥";
-                } else if (fallbackResult.error) {
-                    throw new Error(fallbackResult.message);
-                }
-                return fallbackResult.complete ? fallbackResult.response : fallbackResult.response + "💥";
-            }
-            return;
-        } catch (fallbackError) {
-            console.warn("Error in callOllamaAPI even with fallback:", fallbackError);
-            throw fallbackError;
-        }
-    } else if (result.error) {
-        return;
-    } else {
-        return result.complete ? result.response : result.response + "💥";
     }
 }
 
@@ -468,20 +581,21 @@ async function censorMessageWithOllama(data) {
         //log(llmOutput);
         let match = llmOutput.match(/\d+/);
         let score = match ? parseInt(match[0]) : 0;
-        //log(score);
+        //console.log(score);
 
         if (score > 3 || llmOutput.length > 1) {
-			//log("Bad phrase: "+data.chatname +" said " +cleanedText);
+			//console.log("Bad phrase: "+data.chatname +" said " +cleanedText);
             if (settings.ollamaCensorBotBlockMode) {
                 return false;
             } else if (isExtensionOn) {
-                //log("sending a delete out");
+            //    console.log("sending a delete out");
                 sendToDestinations({ delete: data });
             }
 			return false;
         } else {
+		//	console.log("safe word");
 			addSafePhrase(cleanedText, score);
-			addRecentMessage(cleanedText);
+			ChatContextManager.addMessage(cleanedText);
             return true;
         }
     } catch (error) {
@@ -492,27 +606,16 @@ async function censorMessageWithOllama(data) {
     return false;
 }
 
-//
-const recentMessages = [];
-const MAX_RECENT_MESSAGES = 10;
-
-function addRecentMessage(message) {
-    recentMessages.push(message);
-    if (recentMessages.length > MAX_RECENT_MESSAGES) {
-        recentMessages.shift(); // Remove the oldest message if we exceed the limit
-    }
-}
-
 async function censorMessageWithHistory(data) {
     if (!data.chatmessage) {
         return true;
     }
-	
-	let cleanedText = data.chatmessage;
-	if (!data.textonly) {
-		cleanedText = decodeAndCleanHtml(cleanedText);
-	}
-	
+    
+    let cleanedText = data.chatmessage;
+    if (!data.textonly) {
+        cleanedText = decodeAndCleanHtml(cleanedText);
+    }
+    
     const availableSlot = censorProcessingSlots.findIndex(slot => !slot);
     if (availableSlot === -1) {
         return false; // All slots are occupied
@@ -520,17 +623,19 @@ async function censorMessageWithHistory(data) {
     censorProcessingSlots[availableSlot] = true;
 
     try {
-		
+        // Get recent messages from ChatContextManager's cache
+        const recentMessages = ChatContextManager.cache.recentMessages;
+        
         let censorInstructions = `Analyze the following live text chat history and the latest message for any signs of hate, extreme negativity, foul language, swear words, bad words, profanity, racism, sexism, political messaging, civil war, violence, threats, or any content that may be offensive to a general public audience. Messages may be long or very short, such as a single letter or a collection of emoji-based characters. Pay special attention to words that might be spelled out across multiple messages. Respond ONLY with a number rating out of 5, where 0 implies no offensive content and 5 implies clearly offensive content. Any message containing profanity or curse words automatically qualifies as a 5. ONLY respond with a number between 0 and 5 and nothing else.
 
 Recent chat history:
-${recentMessages.join('\n')}
+${recentMessages.map(m => m.message).join('\n')}
 
 Latest message:
 ${data.chatname} says: ${cleanedText}`;
 
         let llmOutput = await callOllamaAPI(censorInstructions);
-		
+        
         censorProcessingSlots[availableSlot] = false;
         
         let match = llmOutput.match(/\d+/);
@@ -545,7 +650,11 @@ ${data.chatname} says: ${cleanedText}`;
             return false;
         } else {
             addSafePhrase(cleanedText, score);
-			addRecentMessage(cleanedText);
+            ChatContextManager.addMessage({
+                chatname: data.chatname,
+                message: cleanedText,
+                timestamp: Date.now()
+            });
             return true;
         }
     } catch (error) {
@@ -556,119 +665,372 @@ ${data.chatname} says: ${cleanedText}`;
     return false;
 }
 
-// Function to get recent messages from IndexedDB
-function getRecentMessages(chatname, limit, timeWindow) {
-    return new Promise((resolve, reject) => {
-        const endTime = new Date();
-        const startTime = new Date(endTime.getTime() - timeWindow);
-        
-        const transaction = db.transaction([storeName], "readonly");
-        const store = transaction.objectStore(storeName);
-        const index = store.index("unique_user");
-        const range = IDBKeyRange.bound([chatname, "user"], [chatname, "user"]);
-        
-        const request = index.openCursor(range, "prev");
-        const results = [];
-        
-        request.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor && results.length < limit && cursor.value.timestamp >= startTime) {
-                results.push(cursor.value);
-                cursor.continue();
-            } else {
-                resolve(results);
-            }
-        };
-        
-        request.onerror = (event) => {
-            reject(new Error("Error fetching recent messages: " + event.target.error));
-        };
-    });
-}
 
+function checkTriggerWords(triggerString, sentence) {
+    // For phrase matching, first check if it's a simple space-separated phrase (no commas or modifiers)
+    if (!triggerString.includes(',') && !triggerString.includes('+') && !triggerString.includes('-') && !triggerString.includes('"')) {
+        const phrase = triggerString.toLowerCase().trim();
+        return sentence.toLowerCase().includes(phrase);
+    }
+
+    // Rest of the function for comma-separated and modified triggers
+    const triggers = triggerString.match(/(?:[^,\s"]+|"[^"]*")+/g)
+        .map(t => t.trim())
+        .filter(t => t);
+    
+    const required = [];
+    const excluded = [];
+    const normal = [];
+    
+    triggers.forEach(trigger => {
+        if (trigger.startsWith('+')) {
+            required.push(processTrigger(trigger.slice(1)));
+        } else if (trigger.startsWith('-')) {
+            excluded.push(processTrigger(trigger.slice(1)));
+        } else {
+            normal.push(processTrigger(trigger));
+        }
+    });
+    
+    function processTrigger(trigger) {
+        const isQuoted = trigger.startsWith('"') && trigger.endsWith('"');
+        let word = trigger;
+        let startBoundary = false;
+        let endBoundary = false;
+        
+        if (isQuoted) {
+            word = trigger.slice(1, -1);
+        }
+        
+        if (word.startsWith(' ')) {
+            startBoundary = true;
+            word = word.trimStart();
+        }
+        if (word.endsWith(' ')) {
+            endBoundary = true;
+            word = word.trimEnd();
+        }
+        
+        return {
+            word,
+            isQuoted,
+            startBoundary,
+            endBoundary
+        };
+    }
+    
+    function checkWord(triggerObj, sentence) {
+        const { word, isQuoted, startBoundary, endBoundary } = triggerObj;
+        
+        if (isQuoted) {
+            return sentence.includes(word);
+        }
+        
+        const lcWord = word.toLowerCase();
+        const lcSentence = sentence.toLowerCase();
+        
+        const matches = lcSentence.match(/[!/@#$%^&*]?\w+(?:'\w+)*|[.,;]|\s+/g) || [];
+        
+        for (let i = 0; i < matches.length; i++) {
+            const current = matches[i];
+            
+            if (!/\w/.test(current)) continue;
+            
+            if (current === lcWord) {
+                if (startBoundary && i > 0 && /\w/.test(matches[i - 1])) continue;
+                if (endBoundary && i < matches.length - 1 && /\w/.test(matches[i + 1])) continue;
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    for (const trigger of excluded) {
+        if (checkWord(trigger, sentence)) {
+            return false;
+        }
+    }
+    
+    for (const trigger of required) {
+        if (!checkWord(trigger, sentence)) {
+            return false;
+        }
+    }
+    
+    if (normal.length > 0) {
+        return normal.some(trigger => checkWord(trigger, sentence));
+    }
+    
+    return true;
+}
 
 let isProcessing = false;
 const lastResponseTime = {};
-async function processMessageWithOllama(data) {
-    const currentTime = Date.now();
-	if (isProcessing) { // nice.
-        return;
-    }
+
+async function processSummary(data){
+	console.log(data);
+	if (!data.tid) return data;
+	const currentTime = Date.now();
+	if (isProcessing) return data;
 	isProcessing = true;
 	
 	let ollamaRateLimitPerTab = 5000;
-	if (settings.ollamaRateLimitPerTab){
-		ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting)||0);
+	if (settings.ollamaRateLimitPerTab) {
+	  ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting) || 0);
 	}
 	
-	if (!settings.ollamaoverlayonly){
-		if (lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
-			isProcessing = false;
-			return; // Skip this message if we've responded recently
-		}
+	if (data.type !== "stageten" && !settings.ollamaoverlayonly && data.tid && 
+		lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
+		isProcessing = false;
+		return data;
 	}
-    
-	let botname = "🤖💬";
-	if (settings.ollamabotname && settings.ollamabotname.textsetting){
-		botname = settings.ollamabotname.textsetting.trim();
+
+	try {
+		var summary = await ChatContextManager.getSummary();
+	} catch(e){
+		isProcessing = false;
+		return data;
 	}
-	
-    if (!data.chatmessage || data.chatmessage.startsWith(botname+":")) {
-		isProcessing = false;
-        return;
-    }
-    var cleanedText = data.chatmessage;
-            
-    if (!data.textonly) {
-        cleanedText = decodeAndCleanHtml(cleanedText);
-    }
-	
-	cleanedText = cleanedText.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "").replace(/[\u200D\uFE0F]/g, ""); // Remove zero-width joiner and variation selector
-	cleanedText = cleanedText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, ""); // fail safe?
-	cleanedText = cleanedText.replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim();
-	
-	if (!cleanedText) {
-		isProcessing = false;
-        return;
-    }
-    
-    var score = levenshtein(cleanedText, lastSentMessage);
-    if (score < 7) { // make sure bot doesn't respond to itself or to the host.
-		isProcessing = false;
-        return;
-    }
-	
-    try {
-		let additionalInstructions = "";
-		if (settings.ollamaprompt){
-			additionalInstructions = settings.ollamaprompt.textsetting;
-		}
+	isProcessing = false;
+	console.log(summary);
+	if (summary){
 		let botname = "🤖💬";
-		if (settings.ollamabotname && settings.ollamabotname.textsetting){
-			botname = settings.ollamabotname.textsetting.trim();
+		if (settings.ollamabotname?.textsetting) {
+		  botname = settings.ollamabotname.textsetting.trim();
 		}
-        const response = await processUserInput(cleanedText, data, additionalInstructions);
 		
-		if (response && !(response.toLowerCase().startsWith("not available"))){
-			
-			sendTargetP2P({"chatmessage":response,"chatname":botname, "chatimg":"./icons/bot.png", "type":"socialstream", "request": data, "tts": (settings.ollamatts ? true : false)}, "bot");
-			
-			if (!settings.ollamaoverlayonly){
-				const msg = {
-					tid: data.tid,
-					response: botname+": " + response.trim()
-				};
-				processResponse(msg);
-			
-				lastResponseTime[data.tid] = Date.now();
-			}
+		sendTargetP2P({
+			chatmessage: summary,
+			chatname: botname,
+			chatimg: "./icons/bot.png",
+			type: "socialstream",
+			request: data,
+			tts: settings.ollamatts ? true : false
+		  }, "bot");
+
+		  // Send to tabs if not overlay-only
+		if (!settings.ollamaoverlayonly) {
+			const msg = {
+			  tid: data.tid,
+			  response: settings.noollamabotname ? summary.trim() : (botname + ": " + summary.trim()),
+			  bot: true
+			};
+			sendMessageToTabs(msg);
+			lastResponseTime[data.tid] = Date.now();
 		}
-    } catch (error) {
-        console.warn("Error processing message:", error);
-    } finally {
-        isProcessing = false;
-    }
+	}
+	return data
 }
+
+async function processMessageWithOllama(data) {
+  if (!data.tid) return;
+  
+  const currentTime = Date.now();
+  if (isProcessing) return;
+  
+  //console.log("starting processing");
+  isProcessing = true;
+  try {
+    // Rate limiting logic
+    let ollamaRateLimitPerTab = 5000;
+    if (settings.ollamaRateLimitPerTab) {
+      ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting) || 0);
+    }
+    
+    if (data.type !== "stageten" && !settings.ollamaoverlayonly && data.tid && 
+        lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
+      isProcessing = false;
+      return;
+    }
+
+    // Bot name handling
+    let botname = "🤖💬";
+    if (settings.ollamabotname?.textsetting) {
+      botname = settings.ollamabotname.textsetting.trim();
+    }
+
+    // Early return conditions
+    if ((data.type === "stageten" && botname === data.chatname) || 
+        !data.chatmessage || 
+        (!settings.noollamabotname && data.chatmessage.startsWith(botname + ":"))) {
+      isProcessing = false;
+      return;
+    }
+
+    // Trigger words check
+    if (settings.bottriggerwords?.textsetting.trim()) {
+      if (!checkTriggerWords(settings.bottriggerwords.textsetting, data.chatmessage)) {
+        isProcessing = false;
+        return;
+      }
+    }
+
+    // Clean message text
+    let cleanedText = data.chatmessage;
+    if (!data.textonly) {
+      cleanedText = decodeAndCleanHtml(cleanedText);
+    }
+    cleanedText = cleanedText.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "")
+      .replace(/[\u200D\uFE0F]/g, "")
+      .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "")
+      .replace(/[\r\n]+/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!cleanedText) {
+      isProcessing = false;
+      return;
+    }
+
+    // Prevent self-replies
+    const score = levenshtein(cleanedText, lastSentMessage);
+    if (score < 7) {
+      isProcessing = false;
+      return;
+    }
+
+    // Get additional instructions
+    let additionalInstructions = "";
+    if (settings.ollamaprompt) {
+      additionalInstructions = settings.ollamaprompt.textsetting;
+    }
+
+	const response = await processUserInput(cleanedText, data, additionalInstructions, botname);
+
+    // Handle response
+    if (response && !response.toLowerCase().startsWith("not available") && 
+        !response.includes("NO_RESPONSE") && 
+        !response.startsWith("No ") && 
+        !response.startsWith("NO ")) {
+      
+      // Send to overlay if enabled
+      sendTargetP2P({
+        chatmessage: response,
+        chatname: botname,
+        chatimg: "./icons/bot.png",
+        type: "socialstream",
+        request: data,
+        tts: settings.ollamatts ? true : false
+      }, "bot");
+
+      // Send to tabs if not overlay-only
+      if (!settings.ollamaoverlayonly) {
+        const msg = {
+          tid: data.tid,
+          response: settings.noollamabotname ? response.trim() : (botname + ": " + response.trim()),
+          bot: true
+        };
+        sendMessageToTabs(msg);
+        lastResponseTime[data.tid] = Date.now();
+      }
+    }
+
+  } catch (error) {
+    console.warn("Error processing message:", error);
+  } finally {
+    isProcessing = false;
+  }
+}
+
+async function processUserInput(userInput, data, additionalInstructions, botname) {
+  try {
+    // Build base prompt with context
+    let promptBase = `${additionalInstructions || ''}\n\nYou are an AI chat assistant and a participant in a live group chat room.`;
+	
+	let botname = "Bot";
+    if (settings.ollamabotname?.textsetting) {
+		botname = settings.ollamabotname.textsetting.trim();
+    }
+	if (botname){
+		promptBase += `\n\nYour name in the group chat is: ${botname}.\n\nSpeak only when important or when spoken directly to by name.`;
+	} else {
+		promptBase += `\n\nSpeak only when it's exceedingly helpful to be doing so.`;
+	}
+	
+	if (!settings.nollmcontext){
+		// Get context first
+		
+		const context = await ChatContextManager.getContext(data);
+		
+		// Add context elements
+		if (context.chatSummary) {
+		  promptBase += `\n\nChat Overview:\n ${context.chatSummary}`;
+		}
+		
+		if (context.recentMessages) {
+		  promptBase += `\n\nRecent Messages:\n ${context.recentMessages}`;
+		}
+		
+		if (context.userHistory) {
+			promptBase += `\n\nPrevious messages from ${data.chatname} via ${data.type} chat:\n ${context.userHistory}`;
+		}
+		
+		promptBase += `\n\nCurrent message from ${data.chatname}: ${userInput}`;
+	} else {
+		promptBase += `\n\nCurrent group chat message from ${data.chatname}: ${userInput}`;
+	}
+
+    // Add current message
+    
+
+    // Check if RAG is needed
+    if (await isRAGConfigured()) {
+      const databaseDescriptor = localStorage.getItem('databaseDescriptor') || '';
+      
+      const ragPrompt = `${promptBase}\n\nDatabase info: ${databaseDescriptor}\n\n` +
+        'Determine if this message requires searching the database. Format response as:\n' +
+        '[NEEDS_SEARCH]\nyes/no\n[/NEEDS_SEARCH]\n\n' +
+        '[SEARCH_QUERY]\nkeywords if search needed\n[/SEARCH_QUERY]\n\n' +
+        '[RESPONSE]\nDirect response if no search needed. Use NO_RESPONSE if no response warranted.\n[/RESPONSE]';
+
+      const ragDecision = await callOllamaAPI(ragPrompt);
+      const decision = parseDecision(ragDecision);
+
+      if (decision.needsSearch) {
+        const searchResults = await performLunrSearch(decision.searchQuery);
+        return await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions);
+      } else {
+        return decision.response;
+      }
+    } else {
+      // Regular response with context
+	  
+	  
+		let debugmode = false;
+		if (settings.ollamabotname?.textsetting) {
+			debugmode = settings.ollamabotname?.textsetting == "Tommas" ? true : false;
+		}
+	  if (debugmode){
+		  if (!settings.nollmcontext){
+			  promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE, followed by stating why no response is needed.';
+		  } else {
+			  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is neede, followed by why no response was needed.';
+		  }
+	  } else {
+		  if (!settings.nollmcontext){
+			  promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE to state you are choosing not to respond. Respond only with NO_RESPONSE if you have no reply.';
+		  } else {
+			  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is needed. Respond only with NO_RESPONSE if you have no reply.';
+		  }
+	  }
+	  console.log(promptBase);
+      
+      const response = await callOllamaAPI(promptBase);
+	  
+      if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
+		console.log(response);
+        return false;
+      }
+      
+      return response;
+    }
+  } catch (error) {
+    console.warn("Error in processUserInput:", error);
+    return false;
+  }
+}
+
 
 function preprocessMarkdown(content) {
     // Remove HTML comments
@@ -943,9 +1305,9 @@ function updateDocumentProgress(docId, progress, status) {
 
 async function isRAGConfigured() {
     // Check if there are any documents in the database
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readonly');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     const count = await new Promise((resolve, reject) => {
         const request = store.count();
         request.onerror = () => reject(request.error);
@@ -954,72 +1316,6 @@ async function isRAGConfigured() {
     return (count > 0) && settings.ollamaRagEnabled;
 }
 
-async function processUserInput(userInput, data={}, additionalInstructions) {
-    try {
-        if (await isRAGConfigured()) {
-            const databaseDescriptor = localStorage.getItem('databaseDescriptor') || 'Database description not available.';
-            
-            const prompt = `You are an AI assistant with access to a database of information. ${additionalInstructions || ''}
-
-Given the following user input, user name, and a description of the database contents, determine if a database search is necessary to respond appropriately. If a search is needed, provide relevant search keywords.
-
-User Name: ${data.chatname || 'user'}
-User Input: "${userInput}"
-
-Database Description:
-${databaseDescriptor}
-
-For simple greetings, small talk, or queries that don't require specific information from the database, you may respond directly without a search.
-
-If a search is needed, provide 3-5 relevant keywords or short phrases for the search, not a full question or sentence.
-
-Please format your response exactly as follows, including the delimiters:
-
-[NEEDS_SEARCH]
-yes or no
-[/NEEDS_SEARCH]
-
-[SEARCH_QUERY]
-keyword1 keyword2 keyword3
-[/SEARCH_QUERY]
-
-[RESPONSE]
-Your direct response here if no search is needed, otherwise leave this blank
-[/RESPONSE]
-
-Ensure that if [NEEDS_SEARCH] is 'yes', [SEARCH_QUERY] is filled with keywords and [RESPONSE] is empty, and vice versa.
-Do not include any other text or explanations outside these sections.`;
-
-            const llmOutput = await callOllamaAPI(prompt);
-            const decision = parseDecision(llmOutput);
-            
-            if (decision.needsSearch) {
-                //log("Performing search with query:", decision.searchQuery);
-                const searchResults = await performSearch(decision.searchQuery);
-                //log("Search results:", searchResults);
-                return await generateResponseWithSearchResults(userInput, searchResults, data.chatname || 'user', additionalInstructions);
-            } else {
-                return decision.response;
-            }
-        }  else {// If RAG is not configured, use the original instructions
-            const prompt = `${additionalInstructions || 'You are an AI in a family-friendly public chat room. Your responses must follow these rules: If the message warrants a response (e.g., it\'s directed at you or you have a relevant comment), provide ONLY the exact text of your reply. No explanations, context, or meta-commentary. Keep responses brief and engaging, suitable for a fast-paced chat environment. If no response is needed or appropriate, output only "NO_RESPONSE". Never use quotation marks or any formatting around your response. Never indicate that you are an AI or that this is your response.'}
-
-Respond to the following message:
-User ${data.chatname || 'user'} says: ${userInput}
-
-Your response:`;
-			log(userInput);
-            let response =  await callOllamaAPI(prompt);
-			if (!response || response.includes("NO_RESPONSE") || response.startsWith("No ") || response.startsWith("NO ")){
-				return false;
-			}
-			return response;
-        }
-    } catch (error) {
-        console.warn("Error processing user input:", error);
-        return "I'm sorry, I encountered an error while processing your request.";
-    }
-}
 
 function parseDecision(decisionText) {
     const result = {
@@ -1046,10 +1342,10 @@ function parseDecision(decisionText) {
     return result;
 }
 
-async function clearDatabase() {
-    const db = await openDatabase();
-    const transaction = db.transaction([DOCUMENT_STORE_NAME, 'lunrIndex'], 'readwrite');
-    const documentStore = transaction.objectStore(DOCUMENT_STORE_NAME);
+async function clearLunrDatabase() {
+    const db = await openLunrDatabase();
+    const transaction = db.transaction([LUNR_DOCUMENT_STORE_NAME, 'lunrIndex'], 'readwrite');
+    const documentStore = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     const indexStore = transaction.objectStore('lunrIndex');
     
     try {
@@ -1084,7 +1380,7 @@ async function clearDatabase() {
     }
 }
 
-async function performSearch(query) {
+async function performLunrSearch(query) {
     if (!globalLunrIndex) {
         await loadLunrIndex();
     }
@@ -1151,9 +1447,9 @@ Provide a concise and informative response based on the above information. Your 
 }
 
 async function getDocumentsFromSearchResults(searchResults) {
-    const db = await openDatabase();
-    const transaction = db.transaction([DOCUMENT_STORE_NAME], "readonly");
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction([LUNR_DOCUMENT_STORE_NAME], "readonly");
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     
     return Promise.all(searchResults.map(async result => {
 		log(result.ref);
@@ -1378,9 +1674,9 @@ async function addDocumentDirectly(docId, content, tags = [], synonyms = []) {
     });
 
     // Add to IndexedDB
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     
     return new Promise((resolve, reject) => {
         const request = store.put({ content, tags, synonyms }, docId);
@@ -1394,9 +1690,9 @@ async function addDocumentDirectly(docId, content, tags = [], synonyms = []) {
 
 async function clearRAG() {
     resetLunrIndex();
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     await new Promise((resolve, reject) => {
         const request = store.clear();
         request.onerror = () => reject(request.error);
@@ -1418,9 +1714,9 @@ function logProcessedChunk(chunk, index) {
 }
 
 async function inspectDatabase() {
-    const db = await openDatabase();
-    const transaction = db.transaction([DOCUMENT_STORE_NAME, 'lunrIndex'], 'readonly');
-    const docStore = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction([LUNR_DOCUMENT_STORE_NAME, 'lunrIndex'], 'readonly');
+    const docStore = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     const indexStore = transaction.objectStore('lunrIndex');
 
     // Fetch all documents
@@ -1461,9 +1757,9 @@ async function inspectDatabase() {
 
 async function loadLunrIndex() {
     try {
-        const db = await openDatabase();
-        const transaction = db.transaction([DOCUMENT_STORE_NAME], 'readonly');
-        const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+        const db = await openLunrDatabase();
+        const transaction = db.transaction([LUNR_DOCUMENT_STORE_NAME], 'readonly');
+        const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
 
         const allDocs = await new Promise((resolve, reject) => {
             const request = store.getAll();
@@ -1540,7 +1836,7 @@ async function saveLunrIndex() {
     }
     try {
         const serializedIndex = JSON.stringify(globalLunrIndex);
-        const db = await openDatabase();
+        const db = await openLunrDatabase();
         const transaction = db.transaction('lunrIndex', 'readwrite');
         const store = transaction.objectStore('lunrIndex');
         await store.put(serializedIndex, 'currentIndex');
@@ -1556,9 +1852,9 @@ async function indexProcessedDocument(docId, processedDoc, title) {
         return;
     }
     try {
-        const db = await openDatabase();
-        const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readwrite');
-        const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+        const db = await openLunrDatabase();
+        const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readwrite');
+        const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
         
 		const documentToStore = {
 			id: docId, // Add this line
@@ -1611,9 +1907,9 @@ async function indexProcessedDocument(docId, processedDoc, title) {
 
 async function addDocumentToRAG(docId, content, title, tags = [], synonyms = [], preprocessed = false) {
     // Add to IndexedDB
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
 	
 
 
@@ -1720,9 +2016,9 @@ async function deleteDocument(docId) {
         }
 
         // Remove from IndexedDB
-        const db = await openDatabase();
-        const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readwrite');
-        const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+        const db = await openLunrDatabase();
+        const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readwrite');
+        const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
         await new Promise((resolve, reject) => {
             const request = store.delete(docId);
             request.onerror = () => reject(request.error);
@@ -1747,9 +2043,9 @@ async function deleteDocument(docId) {
 }
 
 async function updateDatabaseDescriptor() {
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readonly');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     const docs = await new Promise((resolve, reject) => {
         const request = store.getAll();
         request.onerror = () => reject(request.error);
@@ -1861,7 +2157,7 @@ async function importSettingsLLM(usePreprocessing = true) {
     }
 }
 
-function openDatabase() {
+function openLunrDatabase() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(LunrDBLLM, 3); // Increment version number if needed
         
@@ -1874,17 +2170,17 @@ function openDatabase() {
             if (!db.objectStoreNames.contains('lunrIndex')) {
                 db.createObjectStore('lunrIndex');
             }
-            if (!db.objectStoreNames.contains(DOCUMENT_STORE_NAME)) {
-                db.createObjectStore(DOCUMENT_STORE_NAME); // No keyPath or autoIncrement
+            if (!db.objectStoreNames.contains(LUNR_DOCUMENT_STORE_NAME)) {
+                db.createObjectStore(LUNR_DOCUMENT_STORE_NAME); // No keyPath or autoIncrement
             }
         };
     });
 }
 
 async function loadDocumentsFromDB() {
-    const db = await openDatabase();
-    const transaction = db.transaction(DOCUMENT_STORE_NAME, 'readonly');
-    const store = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const db = await openLunrDatabase();
+    const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
+    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     return new Promise((resolve, reject) => {
         const request = store.getAll();
         request.onerror = () => reject(request.error);
@@ -1900,14 +2196,6 @@ async function loadDocumentsFromDB() {
         };
     });
 }
-
-async function someTestFunction() {
-    await addDocumentDirectly('doc1', 'content', ['tag1', 'tag2'], ['syn1', 'syn2']);
-    await updateDocument('doc1', 'new content', ['new tag'], ['new syn']);
-	processUserInput("What is VDO.Ninja?");
-    await deleteDocument('doc1');
-}
-
 
 document.addEventListener('DOMContentLoaded', async function() {
     try {

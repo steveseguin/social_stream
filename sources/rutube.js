@@ -76,7 +76,7 @@
 		
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".bull-message-module__authorName").nextSibling);
+			msg = getAllContentNodes(ele.querySelector(".bull-message-module__authorName").nextElementSibling);
 		} catch(e){
 		//	console.warn(e);
 		}
@@ -88,7 +88,7 @@
 		
 		
 		try {
-			nameColor = ele.querySelector(".bull-message-module__authorName").style.color;
+			c
 		} catch(e){
 		//	console.warn(e);
 		}
@@ -162,7 +162,6 @@
 	function onElementInserted(target) {
 		if (!target){return;}
 		
-		
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
@@ -177,7 +176,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -188,13 +187,15 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector("iframe").contentWindow.document.body.querySelector('.bull-chat-module__messages')){
-			if (!document.querySelector("iframe").contentWindow.document.body.querySelector('.bull-chat-module__messages').marked){
-				document.querySelector("iframe").contentWindow.document.body.querySelector('.bull-chat-module__messages').marked=true;
-				console.log("CONNECTED chat detected");
-				onElementInserted(document.querySelector("iframe").contentWindow.document.body.querySelector('.bull-chat-module__messages'));
+			let mm = document.querySelector('.bull-chat-module__messages') || document.querySelector("iframe").contentWindow.document.body.querySelector('.bull-chat-module__messages');
+			if (mm){
+				if (!mm.marked){
+					mm.marked=true;
+					console.log("CONNECTED chat detected");
+					onElementInserted(mm);
+				}
 			}
-		}} catch(e){}
+		} catch(e){}
 	},2000);
 
 })();

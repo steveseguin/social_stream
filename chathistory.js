@@ -13,7 +13,7 @@ const exportButton = document.getElementById('export-button');
 const exportFormat = document.getElementById('export-format');
 function initDatabase() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 1);
+		const request = indexedDB.open(DB_NAME);
         request.onerror = event => reject(event.target.error);
         request.onsuccess = event => {
             db = event.target.result;

@@ -86,7 +86,6 @@ if (typeof(chrome.runtime)=='undefined'){
 			}
 		});
 		
-		
 	} catch(e){
 		console.error(e);
 	}
@@ -99,6 +98,15 @@ if (typeof(chrome.runtime)=='undefined'){
 	};
 	chrome.runtime.getManifest = function(){
 		return false; // I'll need to add version info eventually
+	}
+	
+	try {
+		window.prompt = function(title, val, message=""){
+			log("window.prompt");
+			return ipcRenderer.sendSync('prompt', {title, val, message}); // call if needed in the future
+		};
+	} catch(err) {
+		console.error(err);
 	}
 	
 	new Promise((resolve, reject) => {
@@ -417,6 +425,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	populateFontDropdown();
 	
+	PollManager.init();
+	
 	// populate language drop down
 	if (speechSynthesis){
 		function populateVoices() {
@@ -432,7 +442,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				}
 			});
 			
-			var voicesDropdown = document.getElementById('languageSelect1');
+			var voicesDropdown = document.getElementById('systemLanguageSelect');
 			var existingOptions = Array.from(voicesDropdown.options).map(option => option.textContent);
 
 			voices.forEach(voice => {
@@ -463,6 +473,13 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					voicesDropdown.appendChild(option);
 				}
 			});
+			
+			try {
+				TTSManager.init(voices)
+			} catch(e){
+				console.error(e);
+			}
+			
 		}
 		speechSynthesis.onvoiceschanged = populateVoices;
 		
@@ -516,7 +533,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				});
 			}
 		});
-	}	
+	}
 	
 	
 	document.getElementById('searchIcon').addEventListener('click', function() {
@@ -607,24 +624,33 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
 	const ragFileManagement = document.getElementById('ragFileManagement');
-	const uploadButton = document.querySelector('[data-action="uploadRAGfile"]');
 
 	ragEnabledCheckbox.addEventListener('change', function() {
 		ragFileManagement.style.display = this.checked ? 'block' : 'none';
 	});
 
+	let initialSetup = setInterval(()=>{
+		log("pop up asking main for settings yet again..");
+		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
+			chrome.runtime.lastError;
+			log("getSettings response",response);
+			if ((response == undefined) || (!response.streamID)){
+				
+			} else {
+				clearInterval(initialSetup);
+				update(response, false); // we dont want to sync things
+			}
+		});
+	}, 500);
+	
 	log("pop up asking main for settings");
-	chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
+	chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
 		chrome.runtime.lastError;
 		log("getSettings response",response);
 		if ((response == undefined) || (!response.streamID)){
-			log("WOO");
-			setTimeout(function(){
-				chrome.runtime.sendMessage({cmd: "getSettings"}, function (response) {
-					update(response, false);
-				});
-			},200);
+			
 		} else {
+			clearInterval(initialSetup);
 			update(response, false); // we dont want to sync things
 		}
 	});
@@ -645,6 +671,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					<input type="text" id="chatwebhook'+ i +'" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook'+ i +'">\
 					<label for="chatwebhook'+ i +'">&gt; Webhook URL</label>\
 				</div>\
+				<div class="textInputContainer" style="width: 235px">\
+					<input type="number" id="chatcommandtimeout'+ i +'" class="textInput" min="0" autocomplete="off" placeholder="Timeout between triggers" data-numbersetting="chatcommandtimeout'+ i +'">\
+					<label for="chatcommandtimeout'+ i +'">&gt; Trigger Timeout (ms)</label></div>\
+				</div>\
 			</div>';
 		document.getElementById("chatCommands").appendChild(chat);
 	}
@@ -658,7 +688,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			</label>\
 			<div style="display:inline-block">\
 				<div class="textInputContainer" style="width: 235px">\
-					<input type="text" id="timemessagecommand'+ i +'" class="textInput" autocomplete="off" placeholder="Message to send to chat at an interval" data-textsetting="timemessagecommand'+ i +'">\
+					<input type="text" id="timemessagecommand'+ i +'" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to send to chat at an interval" data-textsetting="timemessagecommand'+ i +'">\
 					<label for="timemessagecommand'+ i +'">&gt; Message to broadcast</label>\
 				</div>\
 				<div class="textInputContainer" style="width: 235px">\
@@ -681,11 +711,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			</label>\
 			<div style="display:inline-block">\
 				<div class="textInputContainer" style="width: 235px">\
-					<input type="text" id="botReplyMessageCommand'+ i +'" class="textInput" autocomplete="off" placeholder="Message to send to chat" data-textsetting="botReplyMessageCommand'+ i +'">\
+					<input type="text" id="botReplyMessageCommand'+ i +'" maxlength="200" class="textInput" autocomplete="off" placeholder="Triggering command" data-textsetting="botReplyMessageCommand'+ i +'">\
 					<label for="botReplyMessageCommand'+ i +'">&gt; Triggering command. eg: !discord</label>\
 				</div>\
 				<div class="textInputContainer" style="width: 235px">\
-					<input type="text" id="botReplyMessageValue'+ i +'" class="textInput" autocomplete="off" placeholder="Message to respond with" data-textsetting="botReplyMessageValue'+ i +'">\
+					<input type="text" id="botReplyMessageValue'+ i +'" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to respond with" data-textsetting="botReplyMessageValue'+ i +'">\
 					<label for="botReplyMessageValue'+ i +'">&gt; Message to respond with.</label>\
 				</div>\
 				<div class="textInputContainer" style="width: 235px">\
@@ -758,6 +788,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			} else if (msg.cmd == "uploadRAGfile"){
 				chrome.runtime.sendMessage({cmd: "uploadRAGfile", enhancedProcessing: document.getElementById('enhancedProcessing').checked}, function (response) {
 				});
+			} else if (msg.cmd == "savePoll"){
+				
+				PollManager.saveCurrentPoll();
+			} else if (msg.cmd == "createNewPoll"){
+				
+				PollManager.createNewPoll();
 			} else if (msg.cmd == "bigwipe"){
 				var confirmit = confirm("Are you sure you want to reset all your settings?");
 				if (confirmit){
@@ -920,6 +956,10 @@ function update(response, sync=true){
 											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting));
 										} else if (document.querySelector("input[data-numbersetting='"+key+"']")){
 											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting='"+key+"']").value));
+										} else if ("optionparam1" in response.settings[key]){
+											updateSettings(ele, sync, response.settings[key].optionparam1);
+										} else if (document.querySelector("input[data-optionparam1='"+key+"']")){
+											updateSettings(ele, sync, document.querySelector("input[data-optionparam1='"+key+"']").value);
 										} else {
 											updateSettings(ele, sync); 
 										}
@@ -935,6 +975,11 @@ function update(response, sync=true){
 											var ele2 = document.querySelector("input[data-numbersetting='"+keys[0]+"']");
 											if (ele2){
 												ele2.value = parseFloat(keys[1], keys[1]);
+											} else {
+												ele2 = document.querySelector("input[data-optionparam1='"+keys[0]+"']");
+												if (ele2){
+													ele2.value = keys[1], keys[1];
+												}
 											}
 											updateSettings(ele, sync, parseFloat(keys[1]));
 										} else{
@@ -952,6 +997,10 @@ function update(response, sync=true){
 											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting2));
 										} else if (document.querySelector("input[data-numbersetting2='"+key+"']")){
 											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting2='"+key+"']").value));
+										} else if ("optionparam2" in response.settings[key]){
+											updateSettings(ele, sync, response.settings[key].optionparam2);
+										} else if (document.querySelector("input[data-optionparam2='"+key+"']")){
+											updateSettings(ele, sync, document.querySelector("input[data-optionparam2='"+key+"']").value);
 										} else {
 											updateSettings(ele, sync); 
 										}
@@ -969,6 +1018,11 @@ function update(response, sync=true){
 											var ele2 = document.querySelector("input[data-numbersetting2='"+keys[0]+"']");
 											if (ele2){
 												ele2.value = parseFloat(keys[1], keys[1]);
+											} else {
+												var ele2 = document.querySelector("input[data-optionparam2='"+keys[0]+"']");
+												if (ele2){
+													ele2.value = keys[1], keys[1];
+												}
 											}
 											updateSettings(ele, sync, parseFloat(keys[1]));
 										} else{
@@ -1017,6 +1071,40 @@ function update(response, sync=true){
 								if (ele){
 									ele.checked = response.settings[key].param8;
 									updateSettings(ele, sync);
+								}
+							}
+							if ("param9" in response.settings[key]){
+								var ele = document.querySelector("input[data-param9='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param9;
+									if (!key.includes("=")){
+										if ("numbersetting9" in response.settings[key]){
+											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting9));
+										} else if (document.querySelector("input[data-numbersetting9='"+key+"']")){
+											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting9='"+key+"']").value));
+										} else {
+											updateSettings(ele, sync); 
+										}
+									} else {
+										updateSettings(ele, sync);
+									}
+								} else if (key.includes("=")){
+									var keys = key.split('=');
+									ele = document.querySelector("input[data-param9='"+keys[0]+"']");
+									log(keys);
+									log(response.settings);
+									if (ele){
+										ele.checked = response.settings[key].param9;
+										if (keys[1]){
+											var ele2 = document.querySelector("input[data-numbersetting9='"+keys[0]+"']");
+											if (ele2){
+												ele2.value = parseFloat(keys[1], keys[1]);
+											}
+											updateSettings(ele, sync, parseFloat(keys[1]));
+										} else{
+											updateSettings(ele, sync);
+										}
+									}
 								}
 							}
 							if ("both" in response.settings[key]){
@@ -1079,6 +1167,39 @@ function update(response, sync=true){
 									ele.value = response.settings[key].optionsetting;
 									updateSettings(ele, sync);
 								}
+								
+								if (key == "aiProvider"){
+									if (ele.value == "ollama"){
+										document.getElementById("ollamamodel").classList.remove("hidden");
+										document.getElementById("ollamaendpoint").classList.remove("hidden");
+										document.getElementById("chatgptApiKey").classList.add("hidden");
+										document.getElementById("geminiApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.add("hidden");
+										document.getElementById("chatgptmodel").classList.add("hidden");
+									} else if (ele.value == "chatgpt"){
+										document.getElementById("chatgptApiKey").classList.remove("hidden");
+										document.getElementById("ollamamodel").classList.add("hidden");
+										document.getElementById("ollamaendpoint").classList.add("hidden");
+										document.getElementById("geminiApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.add("hidden");
+										document.getElementById("chatgptmodel").classList.remove("hidden");
+									} else if (ele.value == "gemini"){
+										document.getElementById("geminiApiKey").classList.remove("hidden");
+										document.getElementById("ollamamodel").classList.add("hidden");
+										document.getElementById("ollamaendpoint").classList.add("hidden");
+										document.getElementById("chatgptApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.remove("hidden");
+										document.getElementById("chatgptmodel").classList.add("hidden");
+									} else {
+										document.getElementById("ollamamodel").classList.add("hidden");
+										document.getElementById("ollamaendpoint").classList.add("hidden");
+										document.getElementById("chatgptApiKey").classList.add("hidden");
+										document.getElementById("geminiApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.add("hidden");
+										document.getElementById("chatgptmodel").classList.add("hidden");
+									}
+								}
+								
 							}
 							if ("numbersetting" in response.settings[key]){
 								var ele = document.querySelector("input[data-numbersetting='"+key+"']");
@@ -1101,6 +1222,18 @@ function update(response, sync=true){
 									var ele = document.querySelector("input[data-param2='"+key+"']");
 									if (ele && ele.checked){
 										updateSettings(ele, false, parseFloat(response.settings[key].numbersetting2));
+									}
+								}
+							}
+							if ("numbersetting9" in response.settings[key]){
+								var ele = document.querySelector("input[data-numbersetting9='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].numbersetting9;
+									updateSettings(ele, sync);
+									
+									var ele = document.querySelector("input[data-param9='"+key+"']");
+									if (ele && ele.checked){
+										updateSettings(ele, false, parseFloat(response.settings[key].numbersetting9));
 									}
 								}
 							}
@@ -1160,12 +1293,22 @@ function update(response, sync=true){
 									ele.value = response.settings[key].optionparam1;
 									updateSettings(ele, sync);
 								}
+								
+								var ele = document.querySelector("input[data-param1='"+key+"']");
+								if (ele && ele.checked){
+									updateSettings(ele, false, response.settings[key].optionparam1);
+								}
 							}
 							if ("optionparam2" in response.settings[key]){
 								var ele = document.querySelector("select[data-optionparam2='"+key+"']");
 								if (ele){
 									ele.value = response.settings[key].optionparam2;
 									updateSettings(ele, sync);
+								}
+								
+								var ele = document.querySelector("input[data-param2='"+key+"']");
+								if (ele && ele.checked){
+									updateSettings(ele, false, response.settings[key].optionparam2);
 								}
 							}
 							if ("optionparam3" in response.settings[key]){
@@ -1211,6 +1354,10 @@ function update(response, sync=true){
 									commandsList.appendChild(createCommandEntry(cmd.command, cmd.url));
 								});
 							}
+							if (('savedPolls' in response.settings) && response.settings.savedPolls.json) {
+								PollManager.savedPolls = JSON.parse(response.settings.savedPolls.json || '[]');
+								PollManager.updatePollsList();
+							}
 
 						} else { // obsolete method
 							var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
@@ -1233,7 +1380,7 @@ function update(response, sync=true){
 					miniTranslate(document.body);
 				}
 			}
-		
+			
 			
 			if (hideLinks){
 				document.body.classList.add("hidelinks");
@@ -1344,6 +1491,15 @@ function compareVersions(a, b) { // https://stackoverflow.com/a/6832706
 }
 			
 function checkVersion(){
+	
+	const WEBSTORE_ID = "cppibjhfemifednoimlblfcmjgfhfjeg"; // our webstore ID
+	
+	if (chrome.runtime.id === WEBSTORE_ID) { // don't show version info if the webstore version
+		document.getElementById("newVersion").classList.remove('show');
+		document.getElementById("newVersion").innerHTML = "";
+		return;
+	}
+	
 	try {
 		fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/manifest.json').then(response => response.json()).then(data => {
 			var manifestData = chrome.runtime.getManifest();
@@ -1440,6 +1596,19 @@ function updateSettings(ele, sync=true, value=null){
             chrome.runtime.sendMessage({cmd: "saveSetting", type: "json", setting: "customGifCommands", value: JSON.stringify(commands)}, function (response) {});
         }
     }
+	if (sync && ele.closest('.options_group.poll') && PollManager.currentPollId) {
+        PollManager.savePollsToStorage();
+	}
+	
+	if (ele.dataset.del1){
+		ele.dataset.del1.split(",").forEach(target=>{
+			document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, target.trim());
+		});
+	} else if (ele.dataset.del2){
+		ele.dataset.del2.split(",").forEach(target=>{
+			document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, target.trim());
+		});
+	}
 	
 	if (ele.dataset.param1){
 		if (ele.checked){
@@ -1449,6 +1618,12 @@ function updateSettings(ele, sync=true, value=null){
 			} else if (document.querySelector("input[data-numbersetting='"+ele.dataset.param1+"']")){
 				
 				value = document.querySelector("input[data-numbersetting='"+ele.dataset.param1+"']").value;
+				
+				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
+				document.getElementById("dock").raw = updateURL(ele.dataset.param1+"="+value, document.getElementById("dock").raw);
+			} else if (document.querySelector("[data-optionparam1='"+ele.dataset.param1+"']")){ 
+				console.log(".......");
+				value = document.querySelector("[data-optionparam1='"+ele.dataset.param1+"']").value;
 				
 				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
 				document.getElementById("dock").raw = updateURL(ele.dataset.param1+"="+value, document.getElementById("dock").raw);
@@ -1616,8 +1791,9 @@ function updateSettings(ele, sync=true, value=null){
 	} else if (ele.dataset.optionparam1){
 		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.optionparam1);
 		
-		
-		if (ele.value){
+		let preele = document.querySelector("[data-param1='"+ele.dataset.optionparam1+"']");
+			
+		if (ele.value && (!preele || preele.checked)){
 			ele.value.split("&").forEach(rem=>{
 				if (rem.includes("=")){ // this isn't covering all cases, but good enough for the existing values
 					document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, rem.split("=")[0]);
@@ -1634,7 +1810,9 @@ function updateSettings(ele, sync=true, value=null){
 	} else if (ele.dataset.optionparam2){
 		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.optionparam2);
 		
-		if (ele.value){
+		let preele = document.querySelector("[data-param2='"+ele.dataset.optionparam2+"']");
+		
+		if (ele.value && (!preele || preele.checked)){
 			ele.value.split("&").forEach(rem=>{
 				if (rem.includes("=")){
 					document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, rem.split("=")[0]);
@@ -1647,6 +1825,23 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam2", target:target,  setting: ele.dataset.optionparam2, "value": ele.value}, function (response) {});
+		}
+	} else if (ele.dataset.optionparam4){
+		document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.optionparam4);
+		
+		if (ele.value){
+			ele.value.split("&").forEach(rem=>{
+				if (rem.includes("=")){
+					document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, rem.split("=")[0]);
+				}
+			});
+			document.getElementById("hypemeter").raw = updateURL(ele.dataset.optionparam4+"="+encodeURIComponent(ele.value).replace(/%26/g, '&').replace(/%3D/g, '='), document.getElementById("hypemeter").raw);
+		}
+		
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
+		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", target:target,  setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.optionparam6){
 		document.getElementById("ticker").raw = removeQueryParamWithValue(document.getElementById("ticker").raw, ele.dataset.optionparam6);
@@ -1678,6 +1873,11 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
 			} else if (document.querySelector("input[data-numbersetting2='"+ele.dataset.param2+"']")){
 				value = document.querySelector("input[data-numbersetting2='"+ele.dataset.param2+"']").value;
+				
+				document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.param2);
+				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
+			} else if (document.querySelector("[data-optionparam2='"+ele.dataset.param2+"']")){
+				value = document.querySelector("[data-optionparam2='"+ele.dataset.param2+"']").value;
 				
 				document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.param2);
 				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
@@ -1755,6 +1955,34 @@ function updateSettings(ele, sync=true, value=null){
 		}
 		
 		document.querySelectorAll("input[data-param8^='"+ele.dataset.param8.split("=")[0]+"']:not([data-param8='"+ele.dataset.param8+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});
+	} else if (ele.dataset.param9){
+		if (ele.checked){
+			if (value!==null){
+				document.getElementById("custom-gif-commands").raw = updateURL(ele.dataset.param9+"="+value, document.getElementById("custom-gif-commands").raw);
+			} else if (document.querySelector("input[data-numbersetting9='"+ele.dataset.param9+"']")){
+				value = document.querySelector("input[data-numbersetting9='"+ele.dataset.param9+"']").value;
+				
+				document.getElementById("custom-gif-commands").raw = removeQueryParamWithValue(document.getElementById("custom-gif-commands").raw, ele.dataset.param9);
+				document.getElementById("custom-gif-commands").raw = updateURL(ele.dataset.param9+"="+value, document.getElementById("custom-gif-commands").raw);
+			} else {
+				document.getElementById("custom-gif-commands").raw = updateURL(ele.dataset.param9, document.getElementById("custom-gif-commands").raw);
+			}
+		}  else {
+			document.getElementById("custom-gif-commands").raw = removeQueryParamWithValue(document.getElementById("custom-gif-commands").raw, ele.dataset.param9);
+		}
+			
+		document.getElementById("custom-gif-commands").raw = document.getElementById("custom-gif-commands").raw.replace("&&", "&");
+		document.getElementById("custom-gif-commands").raw = document.getElementById("custom-gif-commands").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param9",  target:target, setting: ele.dataset.param9, "value": ele.checked}, function (response) {});
+		}
+		
+		document.querySelectorAll("input[data-param9^='"+ele.dataset.param9.split("=")[0]+"']:not([data-param9='"+ele.dataset.param9+"'])").forEach(ele1=>{
 			if (ele1 && ele1.checked){
 				ele1.checked = false;
 				updateSettings(ele1, sync);
@@ -1880,6 +2108,37 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("multipleChoiceOptions").classList.add("hidden");
 			}
 		}
+		if (ele.dataset.optionsetting == "aiProvider"){
+			if (ele.value == "ollama"){
+				document.getElementById("ollamamodel").classList.remove("hidden");
+				document.getElementById("ollamaendpoint").classList.remove("hidden");
+				document.getElementById("chatgptApiKey").classList.add("hidden");
+				document.getElementById("geminiApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.add("hidden");
+				document.getElementById("chatgptmodel").classList.add("hidden");
+			} else if (ele.value == "chatgpt"){
+				document.getElementById("chatgptApiKey").classList.remove("hidden");
+				document.getElementById("ollamamodel").classList.add("hidden");
+				document.getElementById("ollamaendpoint").classList.add("hidden");
+				document.getElementById("geminiApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.add("hidden");
+				document.getElementById("chatgptmodel").classList.remove("hidden");
+			} else if (ele.value == "gemini"){
+				document.getElementById("geminiApiKey").classList.remove("hidden");
+				document.getElementById("ollamamodel").classList.add("hidden");
+				document.getElementById("ollamaendpoint").classList.add("hidden");
+				document.getElementById("chatgptApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.remove("hidden");
+				document.getElementById("chatgptmodel").classList.add("hidden");
+			} else {
+				document.getElementById("ollamamodel").classList.add("hidden");
+				document.getElementById("ollamaendpoint").classList.add("hidden");
+				document.getElementById("chatgptApiKey").classList.add("hidden");
+				document.getElementById("geminiApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.add("hidden");
+				document.getElementById("chatgptmodel").classList.add("hidden");
+			}
+		}
 		
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "optionsetting", target:target,  setting: ele.dataset.optionsetting, "value": ele.value}, function (response) {});
@@ -1915,16 +2174,34 @@ function updateSettings(ele, sync=true, value=null){
 		} else {
 			return;
 		}
-			
+	} else if (ele.dataset.numbersetting9){ 
+		
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting9",  target:target, setting: ele.dataset.numbersetting9, "value": ele.value}, function (response) {});
+		}
+		
+		if (document.querySelector("input[data-param9='"+ele.dataset.numbersetting9+"']") && document.querySelector("input[data-param9='"+ele.dataset.numbersetting9+"']").checked){
+			document.getElementById("custom-gif-commands").raw = removeQueryParamWithValue(document.getElementById("custom-gif-commands").raw,ele.dataset.numbersetting9);
+			document.getElementById("custom-gif-commands").raw = updateURL(ele.dataset.numbersetting9+"="+ ele.value, document.getElementById("custom-gif-commands").raw);
+		} else {
+			return;
+		}		
 	} else if (ele.dataset.special){
 		
 		if (ele.dataset.special==="session"){
-			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
-				chrome.storage.sync.set({
-					streamID: ele.value
-				});
+			
+			let xsx = validateRoomId(ele.value);
+			if (!xsx){
+				alert("Invalid session ID.");
+			} else {
+				ele.value = xsx;
+				if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
+					chrome.storage.sync.set({
+						streamID: xsx
+					});
+				}
+				chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, streamID: xsx}, function (response) {log("streamID updated");});
 			}
-			chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, streamID: ele.value}, function (response) {log("streamID updated");});
 			
 		} else if (ele.dataset.special==="password"){
 			if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set){
@@ -1946,6 +2223,48 @@ function updateSettings(ele, sync=true, value=null){
 	} 
 	
 	refreshLinks();
+}
+
+function validateRoomId(roomId) {
+	if (roomId == null || roomId === '') {
+		return false;
+	}
+	let sanitizedId = String(roomId).trim();
+
+	if (sanitizedId.length < 1) {
+		return false;
+	}
+	const reservedValues = [
+		'undefined',
+		'null',
+		'false',
+		'true',
+		'NaN',
+		'default',
+		'room',
+		'lobby',
+		'test',
+		'nothing',
+		'0',
+		'1',
+		'none'
+	];
+	if (reservedValues.includes(sanitizedId.toLowerCase())) {
+		return false;
+	}
+	sanitizedId = sanitizedId.replace(/[^a-zA-Z0-9]/g, '_');
+	if (/^_+$/.test(sanitizedId)) {
+		return false;
+	}
+	if (sanitizedId.length < 2) {
+		return false;
+	}
+	const MAX_LENGTH = 80;
+	if (sanitizedId.length > MAX_LENGTH) {
+		return false;
+	}
+	// throw new Error('Invalid room ID');
+	return sanitizedId;
 }
 
 function refreshLinks(){
@@ -2196,3 +2515,541 @@ function deleteBadwordsFile() {
   }
 }
 
+const TTSManager = {
+    audio: null,
+    speech: false,
+    voice: null,
+    voices: null,
+    premiumQueueTTS: [],
+    premiumQueueActive: false,
+    feedbackTimeout: null,
+    
+    init(voices) {
+        this.voices = voices;
+        if (!this.audio) {
+            this.audio = document.createElement("audio");
+            this.audio.onended = () => this.finishedAudio();
+        }
+        const menuWrapper = document.querySelector('#ttsButton');
+        if (menuWrapper) {
+            const container = document.createElement('div');
+            container.className = 'tts-test-container';
+            
+            const testButton = document.createElement('button');
+            testButton.textContent = "Test";
+            testButton.className = "tts-test-button";
+            testButton.onclick = () => this.testTTS();
+            
+            const feedback = document.createElement('div');
+            feedback.className = 'tts-feedback hidden';
+            feedback.id = 'ttsFeedback';
+            
+            container.appendChild(testButton);
+            container.appendChild(feedback);
+            menuWrapper.replaceWith(container);
+            
+            // Add styles if they don't exist
+            if (!document.getElementById('ttsFeedbackStyles')) {
+                const style = document.createElement('style');
+                style.id = 'ttsFeedbackStyles';
+                style.textContent = `
+                    .tts-test-container {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                        margin: 10px 0;
+                    }
+                    .tts-feedback {
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        font-size: 14px;
+                        transition: opacity 0.3s ease;
+                    }
+                    .tts-feedback.hidden {
+                        display: none;
+                        opacity: 0;
+                    }
+                    .tts-feedback.info {
+                        background: #fff3cd;
+                        border: 1px solid #ffeeba;
+                        color: #856404;
+                    }
+                    .tts-feedback.error {
+                        background: #f8d7da;
+                        border: 1px solid #f5c6cb;
+                        color: #721c24;
+                    }
+                    .tts-feedback.success {
+                        background: #d4edda;
+                        border: 1px solid #c3e6cb;
+                        color: #155724;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+    },
+    
+    getSettings() {
+        const settings = {
+            // Global settings
+            speech: document.querySelector('[data-param1="speech"]')?.checked,
+            volume: document.querySelector('[data-param1="volume"]').checked ?  parseFloat(document.querySelector('[data-numbersetting="volume"]')?.value) || 1.0 : 1.0,
+            
+            // System TTS settings
+            system: {
+                lang: document.getElementById('systemLanguageSelect')?.selectedOptions[0]?.dataset.lang || 'en-US',
+                voice: document.getElementById('systemLanguageSelect')?.selectedOptions[0]?.dataset.name,
+                rate: document.querySelector('[data-param1="rate"]').checked ?  parseFloat(document.querySelector('[data-numbersetting="rate"]')?.value) || 1.0 : 1.0,
+                pitch: document.querySelector('[data-param1="pitch"]').checked ? (parseFloat(document.querySelector('[data-numbersetting="pitch"]')?.value) || 1.0) : 1.0
+            },
+            
+            // Google Cloud TTS settings
+            google: {
+                key: document.getElementById('googleAPIKey')?.value,
+                voice: document.getElementById('googleVoiceName')?.value,
+                lang:  document.querySelector('[data-param1="googlelang"]').checked ?  document.querySelector('[data-optionparam1="googlelang"]')?.value || 'en-US' : "en-US",
+                rate: document.querySelector('[data-param1="googlerate"]').checked ? parseFloat(document.querySelector('[data-numbersetting="googlerate"]')?.value) || 1.0 : 1.0,
+                pitch: document.querySelector('[data-param1="googlepitch"]').checked ? parseFloat(document.querySelector('[data-numbersetting="googlepitch"]')?.value) || 0 : 0,
+                audioProfile: document.querySelector('[data-param1="googlepitch"]').checked ? document.querySelector('[data-optionparam1="googleaudioprofile"]')?.value : false
+            },
+            
+            // ElevenLabs settings
+			elevenLabs: {
+				key: document.getElementById('elevenLabsKey')?.value,
+				voice: document.getElementById('elevenLabsVoiceID')?.value,
+				model: document.querySelector('[data-param1="elevenlabsmodel"]').checked ? 
+					document.querySelector('[data-optionparam1="elevenlabsmodel"]')?.value || 'eleven_multilingual_v2' : 'eleven_multilingual_v2',
+				latency: document.querySelector('[data-param1="elevenlatency"]').checked ? 
+					parseInt(document.querySelector('[data-numbersetting="elevenlatency"]')?.value) || 0 : 4,
+				stability: document.querySelector('[data-param1="elevenstability"]').checked ? 
+					parseFloat(document.querySelector('[data-numbersetting="elevenstability"]')?.value) || 0.5 : 0.5,
+				similarityBoost: document.querySelector('[data-param1="elevensimilarity"]').checked ? 
+					parseFloat(document.querySelector('[data-numbersetting="elevensimilarity"]')?.value) || 0.75 : 0.75,
+				style: document.querySelector('[data-param1="elevenstyle"]').checked ? 
+					parseFloat(document.querySelector('[data-numbersetting="elevenstyle"]')?.value) || 0.5 : 0.5,
+				speakerBoost: document.querySelector('[data-param1="elevenspeakerboost"]')?.checked || false,
+				speakingRate: document.querySelector('[data-param1="elevenrate"]').checked ? 
+					parseFloat(document.querySelector('[data-numbersetting="elevenrate"]')?.value) || 1.0 : 1.0
+			},
+            
+            // Speechify settings
+            speechify: {
+                key: document.getElementById('speechifyAPIKey')?.value,
+                voice: document.getElementById('speechifyVoiceID')?.value,
+                lang: document.querySelector('[data-param1="speechifylang"]').checked ? document.querySelector('[data-optionparam1="speechifylang"]')?.value || 'en-US' : 'en-US',
+                speed: document.querySelector('[data-param1="speechifyspeed"]').checked ? parseFloat(document.querySelector('[data-numbersetting="speechifyspeed"]')?.value) || 1.0 : 1.0,
+                model: document.querySelector('[data-param1="speechifymodel"]').checked ? document.querySelector('[data-optionparam1="speechifymodel"]')?.value || 'simba-english' : 'simba-english'
+            }
+        };
+        
+        return settings;
+    },
+    
+    showFeedback(message, type = 'info') {
+        const feedback = document.getElementById('ttsFeedback');
+        if (feedback) {
+            feedback.textContent = message;
+            feedback.className = `tts-feedback ${type}`;
+            
+            if (this.feedbackTimeout) {
+                clearTimeout(this.feedbackTimeout);
+            }
+            
+            this.feedbackTimeout = setTimeout(() => {
+                feedback.className = 'tts-feedback hidden';
+            }, 5000);
+        }
+    },
+    
+    getServiceName() {
+        const settings = this.getSettings();
+        if (settings.google.key) return 'Google Cloud TTS';
+        if (settings.elevenLabs.key) return 'ElevenLabs TTS';
+        if (settings.speechify.key) return 'Speechify TTS';
+        return 'System TTS';
+    },
+    
+    testTTS() {
+        const testPhrase = "The quick brown fox jumps over the lazy dog";
+        const serviceName = this.getServiceName();
+        
+        this.showFeedback(`Testing ${serviceName}...`, 'info');
+        
+        const originalOnEnded = this.audio?.onended;
+        const settings = this.getSettings();
+
+        // Add success feedback after audio plays
+        if (this.audio) {
+            this.audio.onended = () => {
+                this.showFeedback(`${serviceName} test completed successfully`, 'success');
+                this.audio.onended = originalOnEnded;
+                this.finishedAudio();
+            };
+        }
+
+        try {
+            // Check for required API keys if using premium services
+            if (serviceName === 'Google Cloud TTS' && !settings.google.key) {
+                throw new Error('Google Cloud API key is required');
+            }
+            if (serviceName === 'ElevenLabs TTS' && !settings.elevenLabs.key) {
+                throw new Error('ElevenLabs API key is required');
+            }
+            if (serviceName === 'Speechify TTS' && !settings.speechify.key) {
+                throw new Error('Speechify API key is required');
+            }
+
+            this.speak(testPhrase, true);
+        } catch (error) {
+            this.showFeedback(`${serviceName} Error: ${error.message}`, 'error');
+            console.error(error);
+        }
+    },
+	
+	async speak(text, allow = false) {
+        const settings = this.getSettings();
+        
+        if (!settings.speech && !allow) return;
+        if (!text) return;
+        
+        try {
+            if (settings.google.key) {
+                if (!this.premiumQueueActive) {
+                    await this.googleTTS(text, settings);
+                } else {
+                    this.premiumQueueTTS.push(text);
+                }
+            } else if (settings.elevenLabs.key) {
+                if (!this.premiumQueueActive) {
+                    await this.elevenLabsTTS(text, settings);
+                } else {
+                    this.premiumQueueTTS.push(text);
+                }
+            } else if (settings.speechify.key) {
+                if (!this.premiumQueueActive) {
+                    await this.speechifyTTS(text, settings);
+                } else {
+                    this.premiumQueueTTS.push(text);
+                }
+            } else {
+                this.systemTTS(text, settings);
+            }
+        } catch (error) {
+            this.showFeedback(`Error: ${error.message}`, 'error');
+            this.finishedAudio();
+            console.error(error);
+        }
+    },
+    
+    systemTTS(text, settings) {
+        if (!window.speechSynthesis) return;
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = settings.system.lang;
+        utterance.rate = settings.system.rate;
+        utterance.volume = settings.volume;
+        utterance.pitch = settings.system.pitch;
+        
+        if (this.voices && settings.system.voice) {
+            const matchingVoice = this.voices.find(v => v.name === settings.system.voice);
+            if (matchingVoice) {
+                utterance.voice = matchingVoice;
+            }
+        }
+        
+        window.speechSynthesis.speak(utterance);
+    },
+    
+    googleTTS(text, settings) {
+        this.premiumQueueActive = true;
+        const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${settings.google.key}`;
+        
+        const data = {
+            input: { text },
+            voice: {
+                languageCode: settings.google.lang.toLowerCase(),
+                name: settings.google.voice || "en-GB-Standard-A"
+            },
+            audioConfig: {
+                audioEncoding: "MP3",
+                speakingRate: settings.google.rate,
+                pitch: settings.google.pitch
+            }
+        };
+
+        if (settings.google.audioProfile) {
+            data.audioConfig.audioProfile = settings.google.audioProfile;
+        }
+        
+        this.fetchAudioContent(url, {
+            method: "POST",
+            headers: { "content-type": "application/json; charset=UTF-8" },
+            body: JSON.stringify(data)
+        }, 'base64');
+    },
+    
+	elevenLabsTTS(text, settings) {
+		this.premiumQueueActive = true;
+		const voiceId = settings.elevenLabs.voice || "VR6AewLTigWG4xSOukaG";
+		const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?optimize_streaming_latency=${settings.elevenLabs.latency}`;
+		
+		const data = {
+			text,
+			model_id: settings.elevenLabs.model,
+			voice_settings: {
+				stability: settings.elevenLabs.stability,
+				similarity_boost: settings.elevenLabs.similarityBoost,
+				style: settings.elevenLabs.style,
+				use_speaker_boost: settings.elevenLabs.speakerBoost,
+				speaking_rate: settings.elevenLabs.speakingRate
+			}
+		};
+		
+		this.fetchAudioContent(url, {
+			method: "POST",
+			headers: {
+				"content-type": "application/json",
+				"xi-api-key": settings.elevenLabs.key,
+				"accept": "*/*"
+			},
+			body: JSON.stringify(data)
+		}, 'blob');
+	},
+    
+    speechifyTTS(text, settings) {
+        this.premiumQueueActive = true;
+        const url = "https://api.sws.speechify.com/v1/audio/speech";
+        
+        const data = {
+            input: `<speak>${text}</speak>`,
+            voice_id: settings.speechify.voice || "henry",
+            model: settings.speechify.model,
+            audio_format: "mp3",
+            speed: settings.speechify.speed,
+            language: settings.speechify.lang
+        };
+        
+        this.fetchAudioContent(url, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${settings.speechify.key}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        }, 'base64');
+    },
+    
+    async fetchAudioContent(url, options, type) {
+        try {
+            const response = await fetch(url, options);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            if (type === 'base64') {
+                const json = await response.json();
+                if (!json.audioContent && !json.audio_data) {
+                    throw new Error('No audio data received');
+                }
+                this.playAudio(`data:audio/mp3;base64,${json.audioContent || json.audio_data}`);
+            } else if (type === 'blob') {
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                this.playAudio(blobUrl);
+            }
+        } catch (error) {
+            this.showFeedback(`Audio fetch error: ${error.message}`, 'error');
+            console.error("Error fetching audio:", error);
+            this.finishedAudio();
+        }
+    },
+    
+    playAudio(src) {
+        if (!this.audio) {
+            this.audio = document.createElement("audio");
+            this.audio.onended = () => this.finishedAudio();
+        }
+        
+        this.audio.src = src;
+        this.audio.volume = this.getSettings().volume;
+        
+        try {
+            this.audio.play().catch(e => {
+                console.error("Audio playback failed:", e);
+                this.finishedAudio();
+            });
+        } catch (e) {
+            console.error("Audio playback failed:", e);
+            this.finishedAudio();
+        }
+    },
+    
+    finishedAudio() {
+        this.premiumQueueActive = false;
+        if (this.premiumQueueTTS.length) {
+            this.speak(this.premiumQueueTTS.shift());
+        }
+    }
+};
+
+const PollManager = {
+    savedPolls: [],
+    currentPollId: null,
+
+    init() {
+        // Add event delegation for the savedPollsList
+        document.getElementById('savedPollsList').addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.classList.contains('delete-poll')) {
+                const pollItem = target.closest('.saved-poll-item');
+                const pollId = parseInt(pollItem.dataset.pollId);
+                if (confirm('Are you sure you want to delete this preset?')) {
+                    this.savedPolls = this.savedPolls.filter(p => p.id !== pollId);
+                    if (this.currentPollId === pollId) {
+                        this.currentPollId = null;
+                    }
+                    this.updatePollsList();
+                    this.savePollsToStorage();
+                }
+            } else {
+                const pollItem = target.closest('.saved-poll-item');
+                if (!pollItem) return;
+                const pollId = parseInt(pollItem.dataset.pollId);
+                this.loadPoll(pollId);
+            }
+        });
+    },
+
+    getCurrentSettings() {
+        return {
+            pollType: document.querySelector('[data-optionsetting="pollType"]').value,
+            pollQuestion: document.querySelector('[data-textsetting="pollQuestion"]').value,
+            multipleChoiceOptions: document.querySelector('[data-textsetting="multipleChoiceOptions"]').value,
+            pollStyle: document.querySelector('[data-optionsetting="pollStyle"]').value,
+            pollTimer: document.querySelector('[data-numbersetting="pollTimer"]').value,
+            pollTimerState: document.querySelector('[data-setting="pollTimerState"]').checked,
+            pollTally: document.querySelector('[data-setting="pollTally"]').checked,
+            pollSpam: document.querySelector('[data-setting="pollSpam"]').checked
+        };
+    },
+
+    saveCurrentPoll() {
+		const pollName = prompt("Enter a name for this poll preset:", document.querySelector('[data-textsetting="pollQuestion"]').value.trim());
+        if (!pollName) return;
+
+        const newPoll = {
+            id: Date.now(),
+            name: pollName,
+            settings: this.getCurrentSettings()
+        };
+
+        this.savedPolls.push(newPoll);
+        this.currentPollId = newPoll.id;
+        this.updatePollsList();
+        this.savePollsToStorage();
+    },
+
+    createNewPoll() {
+        const defaultSettings = {
+            pollType: 'freeform',
+            pollQuestion: '',
+            multipleChoiceOptions: '',
+            pollStyle: 'default',
+            pollTimer: 60,
+            pollTimerState: false,
+            pollTally: false,
+            pollSpam: false
+        };
+
+        const elements = {
+            '[data-optionsetting="pollType"]': defaultSettings.pollType,
+            '[data-textsetting="pollQuestion"]': defaultSettings.pollQuestion,
+            '[data-textsetting="multipleChoiceOptions"]': defaultSettings.multipleChoiceOptions,
+            '[data-optionsetting="pollStyle"]': defaultSettings.pollStyle,
+            '[data-numbersetting="pollTimer"]': defaultSettings.pollTimer,
+            '[data-setting="pollTimerState"]': defaultSettings.pollTimerState,
+            '[data-setting="pollTally"]': defaultSettings.pollTally,
+            '[data-setting="pollSpam"]': defaultSettings.pollSpam
+        };
+
+        for (const [selector, value] of Object.entries(elements)) {
+            const element = document.querySelector(selector);
+            if (element) {
+                if (element.type === 'checkbox') {
+                    element.checked = value;
+                } else {
+                    element.value = value;
+                }
+                updateSettings(element, true);
+            }
+        }
+
+        this.currentPollId = null;
+        this.updatePollsList();
+    },
+
+    loadPoll(pollId) {
+        const poll = this.savedPolls.find(p => p.id === pollId);
+        if (!poll) return;
+
+        // Update all form elements with the poll's settings
+        const elements = {
+            '[data-optionsetting="pollType"]': poll.settings.pollType,
+            '[data-textsetting="pollQuestion"]': poll.settings.pollQuestion,
+            '[data-textsetting="multipleChoiceOptions"]': poll.settings.multipleChoiceOptions,
+            '[data-optionsetting="pollStyle"]': poll.settings.pollStyle,
+            '[data-numbersetting="pollTimer"]': poll.settings.pollTimer,
+            '[data-setting="pollTimerState"]': poll.settings.pollTimerState,
+            '[data-setting="pollTally"]': poll.settings.pollTally,
+            '[data-setting="pollSpam"]': poll.settings.pollSpam
+        };
+
+        for (const [selector, value] of Object.entries(elements)) {
+            const element = document.querySelector(selector);
+            if (element) {
+                if (element.type === 'checkbox') {
+                    element.checked = value;
+                } else {
+                    element.value = value;
+                }
+                updateSettings(element, true);
+            }
+        }
+
+        this.currentPollId = pollId;
+        this.updatePollsList();
+    },
+
+    updatePollsList() {
+        const container = document.getElementById('savedPollsList');
+        container.innerHTML = '';
+
+        this.savedPolls.forEach(poll => {
+            const pollElement = document.createElement('div');
+            pollElement.className = 'saved-poll-item';
+            pollElement.dataset.pollId = poll.id;
+            pollElement.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 5px; margin: 5px 0; background: rgba(0,0,0,0.1); border-radius: 4px; cursor: pointer;';
+            
+            if (this.currentPollId === poll.id) {
+                pollElement.style.background = 'rgba(0,255,0,0.1)';
+            }
+
+            pollElement.innerHTML = `
+                <div class="poll-name" style="flex-grow: 1;">${poll.name}</div>
+                <button class="delete-poll" style="background: none; border: none; color: #ff4444; cursor: pointer; padding: 0 5px;">×</button>
+            `;
+            container.appendChild(pollElement);
+        });
+    },
+
+    savePollsToStorage() {
+        chrome.runtime.sendMessage({
+            cmd: "saveSetting",
+            type: "json",
+            setting: "savedPolls",
+            value: JSON.stringify(this.savedPolls)
+        });
+    }
+};
