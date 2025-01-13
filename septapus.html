@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Overlay - Septapus CSS Compatible</title>
+	<meta name="title" content="Social Stream - Septapus compatible overlay" />
+	<link rel="icon" href="./icons/favicon.ico" />
+    <style>
+	
+	yt-live-chat-renderer {
+		height: 100%;
+		display: block;
+		outline: 1px #999 dashed;
+		overflow: hidden; /* Add this */
+	}
+
+	yt-live-chat-item-list-renderer {
+		overflow-y: auto;
+		height: calc(100% - 32px); /* Change from max-height: 100vh */
+		display: flex;
+		flex-direction: column-reverse;
+	}
+
+	body, html {
+		height: 100%;
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+	}
+
+	yt-live-chat-text-message-renderer {
+		position: relative;
+		display: -ms-flexbox;
+		display: -webkit-flex;
+		display: flex;
+		-ms-flex-direction: row;
+		-webkit-flex-direction: row;
+		flex-direction: row;
+		-ms-flex-align: start;
+		-webkit-align-items: flex-start;
+		align-items: flex-start;
+		padding: 4px 24px;
+	}
+
+	yt-live-chat-text-message-renderer #content {
+		-ms-align-self: center;
+		-webkit-align-self: center;
+		align-self: center;
+		overflow: hidden;
+	}
+
+	yt-live-chat-text-message-renderer #timestamp {
+		display: none;
+		margin-right: 8px;
+	}
+
+	yt-live-chat-text-message-renderer #author-name {
+		margin-right: 8px;
+		font-weight: 500;
+	}
+
+	yt-live-chat-text-message-renderer #author-photo {
+		display: inline-block;
+		background-color: red;
+		-ms-flex: none;
+		-webkit-flex: none;
+		flex: none;
+	}
+
+	yt-live-chat-text-message-renderer #author-badges {
+		vertical-align: text-bottom;
+		display: -ms-inline-flexbox;
+		display: -webkit-inline-flex;
+		display: inline-flex;
+	}
+
+	yt-live-chat-text-message-renderer #message {
+		color: #fff;
+		font-size: 12px;
+		line-height: 16px;
+		word-wrap: break-word;
+	}
+
+	yt-live-chat-author-badge-renderer {
+		display: block;
+		width: 16px;
+		height: 16px;
+		background-color: currentColor;
+		margin-right: 4px;
+		border-radius: 16px;
+	}
+
+	yt-live-chat-legacy-paid-message-renderer {
+		position: relative;
+		overflow: hidden;
+		margin: 8px 24px;
+		padding: 8px 16px;
+		background-color: #0f9d58;
+		border-radius: 4px;
+		color: #fff;
+		font-size: 14px;
+		min-height: 40px;
+		display: -ms-flexbox;
+		display: -webkit-flex;
+		display: flex;
+		-ms-flex-direction: row;
+		-webkit-flex-direction: row;
+		flex-direction: row;
+		-ms-flex-align: center;
+		-webkit-align-items: center;
+		align-items: center;
+		box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+	}
+
+	yt-live-chat-moderation-message-renderer {
+		display: none;
+	}
+
+	yt-live-chat-legacy-paid-message-renderer #author-photo {
+		background-color: red;
+		margin-right: 16px;
+		overflow: hidden;
+		-ms-flex: none;
+		-webkit-flex: none;
+		flex: none;
+		-ms-align-self: flex-start;
+		-webkit-align-self: flex-start;
+		align-self: flex-start;
+	}
+
+	yt-live-chat-legacy-paid-message-renderer #content {
+		-ms-flex: 1 1 0.000000001px;
+		-webkit-flex: 1;
+		flex: 1;
+		-webkit-flex-basis: 0.000000001px;
+		flex-basis: 0.000000001px;
+	}
+
+	yt-live-chat-legacy-paid-message-renderer #event-text {
+		font-weight: 500;
+	}
+
+	yt-live-chat-legacy-paid-message-renderer #detail-text {
+		word-wrap: break-word;
+	}
+
+	yt-live-chat-paid-message-renderer {
+		position: relative;
+		border-radius: 4px;
+		margin: 8px 24px;
+		font-size: 15px;
+		display: -ms-flexbox;
+		display: -webkit-flex;
+		display: flex;
+		-ms-flex-direction: column;
+		-webkit-flex-direction: column;
+		flex-direction: column;
+		box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+	}
+
+	yt-live-chat-paid-message-renderer #header {
+		position: relative;
+		font-weight: 500;
+		padding: 8px 16px;
+		min-height: 20px;
+		display: -ms-flexbox;
+		display: -webkit-flex;
+		display: flex;
+		-ms-flex-direction: row;
+		-webkit-flex-direction: row;
+		flex-direction: row;
+		-ms-flex-align: center;
+		-webkit-align-items: center;
+		align-items: center;
+		border-top-left-radius: 4px;
+		border-top-right-radius: 4px;
+	}
+
+	yt-live-chat-paid-message-renderer #header-content {
+		display: -ms-flexbox;
+		display: -webkit-flex;
+		display: flex;
+		-ms-flex-direction: column;
+		-webkit-flex-direction: column;
+		flex-direction: column;
+		-ms-flex-pack: justify;
+		-webkit-justify-content: space-between;
+		justify-content: space-between;
+		-ms-flex: 1 1 0.000000001px;
+		-webkit-flex: 1;
+		flex: 1;
+		-webkit-flex-basis: 0.000000001px;
+		flex-basis: 0.000000001px;
+	}
+
+	yt-live-chat-paid-message-renderer #author-photo {
+		background-color: red;
+		-ms-flex: none;
+		-webkit-flex: none;
+		flex: none;
+	}
+
+	yt-live-chat-paid-message-renderer #author-name {
+		font-size: 14px;
+	}
+
+	yt-live-chat-paid-message-renderer #content {
+		padding: 4px 16px 8px 16px;
+		word-wrap: break-word;
+		word-break: break-word;
+		border-bottom-left-radius: 4px;
+		border-bottom-right-radius: 4px;
+	}
+
+	yt-live-chat-ticker-paid-message-item-renderer {
+		display: inline-block;
+		height: 24px;
+		border-radius: 200px;
+		padding: 4px;
+	}
+
+	yt-live-chat-ticker-paid-message-item-renderer #content {
+		display: -ms-flexbox;
+		display: -webkit-flex;
+		display: flex;
+		-ms-flex-direction: row;
+		-webkit-flex-direction: row;
+		flex-direction: row;
+		-ms-flex-align: center;
+		-webkit-align-items: center;
+		align-items: center;
+		margin-right: 4px;
+		opacity: 1;
+		transition: opacity 0.5s ease-out;
+	}
+
+	img,
+	svg {
+		max-height: 1em;
+		width: auto;
+		vertical-align: text-bottom;
+	}
+	.setup-container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        font-family: 'Roboto', sans-serif;
+    }
+    .setup-container input, .setup-container textarea {
+        width: 100%;
+        margin: 8px 0;
+        padding: 8px;
+    }
+    .setup-container textarea {
+        height: 200px;
+        font-family: monospace;
+    }
+    .setup-container button {
+        padding: 10px 20px;
+        background: #0f9d58;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .setup-container button:hover {
+        background: #0b8043;
+    }
+    .setup-container h2 {
+        margin-top: 20px;
+    }
+	</style>
+</head>
+<yt-live-chat-renderer>
+    <yt-live-chat-ticker-renderer></yt-live-chat-ticker-renderer>
+    <yt-live-chat-item-list-renderer></yt-live-chat-item-list-renderer>
+  </yt-live-chat-renderer>
+  <script>
+  
+	
+	function applySettings() {
+		const sessionId = document.getElementById('sessionId').value.trim();
+		const password = document.getElementById('password').value.trim();
+		const css = document.getElementById('customCss').value.trim();
+		
+		if (!sessionId) {
+			alert('Please enter a Session ID');
+			return;
+		}
+		
+		let url = '?' + new URLSearchParams({session: sessionId}).toString();
+		
+		if (password) {
+			url += '&password=' + encodeURIComponent(password);
+		}
+		
+		if (css) {
+			const base64Css = btoa(encodeURIComponent(css));
+			url += '&base64css=' + base64Css;
+		}
+		
+		window.location.href = url;
+	}
+	
+	var urlParams = new URLSearchParams(window.location.search);
+	const hasSession = urlParams.has("session");
+
+	if (!hasSession) {
+    document.body.innerHTML = `
+        <div class="setup-container">
+            <h1>Chat Overlay Setup</h1>
+            <p>Need help creating custom CSS? Visit: 
+                <a href="https://chatv2.septapus.com/" target="_blank">https://chatv2.septapus.com/</a>
+            </p>
+            
+            <h2>Configuration</h2>
+            <input type="text" id="sessionId" placeholder="Enter Session ID" />
+            <input type="text" id="password" placeholder="Password (optional)" />
+            
+            <h2>Custom CSS</h2>
+            <textarea id="customCss" placeholder="Paste your CSS here"></textarea>
+            
+            <br><br>
+            <button onclick="applySettings()">Load Overlay</button>
+        </div>`;
+	} else {
+		var roomID = "iWWnKL28tQ";
+		if (urlParams.has("session")) {
+		  roomID = urlParams.get("session");
+		}
+		var password = "false";
+		var featuredMode = false;
+
+		const chatList = document.querySelector('yt-live-chat-item-list-renderer');
+		const tickerList = document.querySelector('yt-live-chat-ticker-renderer');
+
+		const MAX_VISIBLE_TICKERS = 6;
+		const BASE_DISPLAY_DURATION = 10000; // 10 seconds base duration
+		const DURATION_PER_DOLLAR = 1000; // Additional 1 second per dollar
+		
+		if (urlParams.has("css")) {
+			var cssURL = urlParams.get("css");
+			try {
+				cssURL = decodeURI(cssURL);
+			} catch (e) {}
+			if (cssURL.startsWith("http")) {
+				var cssStylesheet = document.createElement("link");
+				cssStylesheet.rel = "stylesheet";
+				cssStylesheet.type = "text/css";
+				cssStylesheet.media = "screen";
+				cssStylesheet.href = cssURL;
+				document.getElementsByTagName("head")[0].appendChild(cssStylesheet);
+			} else {
+				var cssStylesheet = document.createElement("style");
+				cssStylesheet.innerHTML = cssURL;
+				document.getElementsByTagName("head")[0].appendChild(cssStylesheet);
+			}
+		}
+
+		if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
+			try {
+				var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
+				try {
+					base64Css = atob(base64Css); // window.btoa(encodeURIComponent("#mainmenu{background-color: pink;}" ));
+				} catch (e) {}
+				try {
+					base64Css = decodeURIComponent(base64Css); // window.btoa(encodeURIComponent("#mainmenu{background-color: pink; ❤" ));
+				} catch (e) {}
+				var cssStyleSheet = document.createElement("style");
+				cssStyleSheet.innerText = base64Css;
+				document.querySelector("head").appendChild(cssStyleSheet);
+			} catch (e) {
+				console.error(e);
+			}
+		}
+
+		// Modified addMessageToOverlay function, focusing on the ticker part
+		function addMessageToOverlay(data) {
+		  let messageElement;
+		  
+		  if (data.hasDonation) {
+			const amount = parseFloat(data.hasDonation.replace(/[^0-9.]/g, ""));
+			
+			if (amount >= 5) {
+			  const tickerItem = document.createElement('yt-live-chat-ticker-paid-message-item-renderer');
+			  tickerItem.style.backgroundColor = amount >= 100 ? 'rgba(208,0,0,1)' : 'rgba(0,184,212,1)';
+			  tickerItem.innerHTML = `
+				<div id="content">
+				  <span id="fake-avatar"></span>
+				  <span>${data.hasDonation}</span>
+				</div>`;
+			  
+			  // Add transition for smooth fade out
+			  tickerItem.style.transition = 'opacity 0.5s ease-out';
+			  
+			  // Calculate display duration based on donation amount
+			  const displayDuration = BASE_DISPLAY_DURATION + (amount * DURATION_PER_DOLLAR);
+			  
+			  tickerList.appendChild(tickerItem);
+			  
+			  // Remove excess tickers
+			  const tickers = Array.from(tickerList.children);
+			  if (tickers.length > MAX_VISIBLE_TICKERS) {
+				tickers.slice(MAX_VISIBLE_TICKERS).forEach(ticker => {
+				  ticker.style.opacity = '0';
+				  setTimeout(() => ticker.remove(), 500);
+				});
+			  }
+			  
+			  // Set auto-hide timeout
+			  setTimeout(() => {
+				tickerItem.style.opacity = '0';
+				setTimeout(() => tickerItem.remove(), 500);
+			  }, displayDuration);
+			}
+			
+			messageElement = document.createElement('yt-live-chat-paid-message-renderer');
+			const color = amount >= 100 ? 'rgba(208,0,0,1)' : 'rgba(0,184,212,1)';
+			const contentColor = amount >= 100 ? 'rgba(230,33,23,1)' : 'rgba(0,229,255,1)';
+			
+			messageElement.innerHTML = `
+			  <div id="header" style="background-color: ${color};">
+				<div id="author-photo" ${data.chatimg ? `style="background-image: url('${data.chatimg}')"` : ''}></div>
+				<div id="header-content">
+				  <div id="author-name" ${data.nameColor ? `style="color: ${data.nameColor}"` : ''}>${data.chatname}</div>
+				  <div id="purchase-amount">${data.hasDonation}</div>
+				</div>
+			  </div>
+			  <div id="content" style="background-color: ${contentColor};">
+				<div id="message" dir="auto">${data.chatmessage || ''}</div>
+			  </div>`;
+		  } else if (data.membership) {
+			messageElement = document.createElement('yt-live-chat-legacy-paid-message-renderer');
+			messageElement.innerHTML = `
+			  <div id="author-photo" ${data.chatimg ? `style="background-image: url('${data.chatimg}')"` : ''}></div>
+			  <div id="content">
+				<div id="event-text">NEW SPONSOR!</div>
+				<div id="detail-text">Welcome <span class="mention">${data.chatname}</span>!</div>
+			  </div>`;
+		  } else {
+			messageElement = document.createElement('yt-live-chat-text-message-renderer');
+			let authorType = '';
+			
+			if (data.moderator) authorType = 'moderator';
+			else if (data.admin) authorType = 'owner';
+			else if (data.membership) authorType = 'member';
+			
+			if (authorType) messageElement.setAttribute('author-type', authorType);
+			
+			messageElement.innerHTML = `
+			  <div id="author-photo" ${data.chatimg ? `style="background-image: url('${data.chatimg}')"` : ''}></div>
+			  <div id="content">
+				<span id="timestamp">12:00</span>
+				${authorType ? `<span id="author-badges"><yt-live-chat-author-badge-renderer type="${authorType}"></yt-live-chat-author-badge-renderer></span>` : ''}
+				${data.chatbadges ? data.chatbadges.map(badge => {
+				  if (typeof badge === "object") {
+					if (badge.type === "img" && badge.src) {
+					  return `<img class='badge' src='${badge.src}' />`;
+					} else if (badge.type === "svg" && badge.html) {
+					  return `<span class='badge svg'>${badge.html}</span>`;
+					}
+				  } else {
+					return `<img class='badge' src='${badge}' />`;
+				  }
+				  return '';
+				}).join('') : ''}
+				<span id="author-name" ${authorType ? `type="${authorType}"` : ''} ${data.nameColor ? `style="color: ${data.nameColor}"` : ''}>${data.chatname}</span>
+				<span id="message" ${data.textColor ? `style="color: ${data.textColor}"` : ''}>${data.chatmessage || ''}</span>
+			  </div>`;
+		  }
+
+		  if (data.mid) {
+			messageElement.id = data.mid;
+		  }
+
+		  chatList.prepend(messageElement);
+		  
+		  while (chatList.children.length > 20) {
+			chatList.removeChild(chatList.lastChild);
+		  }
+		}
+
+		document.addEventListener('DOMContentLoaded', () => {
+		  var iframe = document.createElement("iframe");
+		  if (featuredMode) {
+			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+		  } else {
+			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
+		  }
+		  
+		  iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+		  document.body.appendChild(iframe);
+		  window.addEventListener("message", function (e) {
+			if (e.source != iframe.contentWindow) return;
+			if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+			  addMessageToOverlay(e.data.dataReceived.overlayNinja);
+			}
+		  });
+		});
+	}
+  </script>
+</html>
