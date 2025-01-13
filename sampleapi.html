@@ -528,7 +528,48 @@
 				contentimg: document.getElementById('contentimg').value,
 				question: document.getElementById('isQuestion').checked
 			};
-			sendCommand('extContent', JSON.stringify(testMessage), null, event.target);
+
+			const container = event.target.closest('.section');
+			
+			// WebSocket request
+			logRequest(container, {
+				type: 'WebSocket',
+				url: 'wss://io.socialstream.ninja:443',
+				message: {
+					action: 'extContent',
+					apiid: sessionID,
+					value: JSON.stringify(testMessage)
+				}
+			});
+
+			// GET request
+			const encodedMessage = encodeURIComponent(JSON.stringify(testMessage));
+			logRequest(container, {
+				type: 'HTTP GET',
+				url: `https://io.socialstream.ninja/${sessionID}/extContent/null/${encodedMessage}`
+			});
+
+			// POST request
+			logRequest(container, {
+				type: 'HTTP POST',
+				url: `https://io.socialstream.ninja/${sessionID}`,
+				body: {
+					action: 'extContent',
+					value: JSON.stringify(testMessage),
+					apiid: sessionID
+				}
+			});
+
+			// Actually send via WebSocket
+			if (socket && socket.readyState === WebSocket.OPEN) {
+				socket.send(JSON.stringify({
+					action: 'extContent',
+					apiid: sessionID,
+					value: JSON.stringify(testMessage)
+				}));
+			} else {
+				alert('WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
+			}
 		}
 
         function generateRandomMessage() {
