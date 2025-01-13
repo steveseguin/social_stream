@@ -246,6 +246,9 @@
         margin: 20px auto;
         padding: 20px;
         font-family: 'Roboto', sans-serif;
+		overflow-y: auto;
+		height: 100%;
+		margin-bottom: 40px;
     }
     .setup-container input, .setup-container textarea {
         width: 100%;
@@ -256,20 +259,89 @@
         height: 200px;
         font-family: monospace;
     }
-    .setup-container button {
-        padding: 10px 20px;
-        background: #0f9d58;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-    .setup-container button:hover {
+	.setup-container button:hover {
         background: #0b8043;
     }
     .setup-container h2 {
         margin-top: 20px;
     }
+    .setup-container .notes {
+        margin-top: 30px;
+        padding: 15px;
+        background: #f5f5f5;
+        border-left: 4px solid #0f9d58;
+        font-size: 14px;
+        line-height: 1.4;
+		margin-bottom: 100px;
+    }
+    .setup-container .notes p {
+        margin: 8px 0;
+    }
+    .setup-container .notes strong {
+        color: #0f9d58;
+    }
+	.notes {
+		font-family: 'YouTube Noto', Roboto, Arial, sans-serif;
+		max-width: 800px;
+		margin: 20px auto;
+		padding: 20px;
+		background: rgba(0, 0, 0, 0.05);
+		border-radius: 8px;
+		color: #0f0f0f;
+	}
+
+	.notes h2 {
+		font-size: 18px;
+		margin-bottom: 16px;
+		color: #0f0f0f;
+		font-weight: 500;
+	}
+
+	.notes ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	.notes li {
+		margin-bottom: 12px;
+		line-height: 1.4;
+		padding-left: 24px;
+		position: relative;
+	}
+
+	.notes li::before {
+		content: "•";
+		position: absolute;
+		left: 8px;
+		color: #065fd4;
+	}
+
+	.notes .sub-list {
+		margin: 8px 0 12px 24px;
+	}
+
+	.notes .sub-list li::before {
+		content: "–";
+	}
+
+	.notes a {
+		color: #065fd4;
+		text-decoration: none;
+		font-weight: 500;
+		transition: color 0.2s;
+	}
+
+	.notes a:hover {
+		color: #0143a3;
+		text-decoration: underline;
+	}
+
+	.notes .highlight {
+		background: #ffd70020;
+		padding: 2px 4px;
+		border-radius: 3px;
+	}
 	</style>
 </head>
 <yt-live-chat-renderer>
@@ -309,7 +381,7 @@
 	if (!hasSession) {
     document.body.innerHTML = `
         <div class="setup-container">
-            <h1>Chat Overlay Setup</h1>
+            <h1>YouTube Structured Chat Overlay</h1>
             <p>Need help creating custom CSS? Visit: 
                 <a href="https://chatv2.septapus.com/" target="_blank">https://chatv2.septapus.com/</a>
             </p>
@@ -323,6 +395,24 @@
             
             <br><br>
             <button onclick="applySettings()">Load Overlay</button>
+
+			<div class="notes">
+				<h2>Important Notes</h2>
+				<ul>
+					<li>This overlay renders messages in a YouTube-style format, allowing YouTube CSS to be applied directly.</li>
+					<li>Messages come from <a href="https://socialstream.ninja" target="_blank" rel="noopener noreferrer">SocialStream.Ninja</a> - visit the website to get started.</li>
+					<li>This overlay differs from the standard SocialStream.Ninja dock.html, using YouTube's structure for enhanced style compatibility.</li>
+					<li>URL parameters commonly used with dock.html are <span class="highlight">not compatible</span> with this overlay. Custom functionality requires direct source code modifications.</li>
+					<li>Message formatting may not exactly match YouTube's structure due to SocialStream.Ninja consolidating content from multiple platforms.</li>
+					<li>Some features have limited support:
+						<ul class="sub-list">
+							<li>7TV zero-width emotes may not display correctly</li>
+							<li>Membership displays may be inconsistent</li>
+							<li>Platform-specific features might not translate perfectly</li>
+						</ul>
+					</li>
+				</ul>
+			</div>
         </div>`;
 	} else {
 		var roomID = "iWWnKL28tQ";
