@@ -27,6 +27,7 @@
 		margin: 0;
 		padding: 0;
 		overflow: hidden;
+		font-family: 'Arial', sans;
 	}
 
 	yt-live-chat-text-message-renderer {
@@ -350,6 +351,18 @@
   </yt-live-chat-renderer>
   <script>
   
+	function minifyCSS(css) {
+	  return css
+		.replace(/\/\*[\s\S]*?\*\//g, '') // Remove comments
+		.replace(/([^0-9a-zA-Z\.#])\s+/g, '$1') // Remove space after special chars
+		.replace(/\s+([^0-9a-zA-Z\.#])/g, '$1') // Remove space before special chars
+		.replace(/\s+/g, ' ') // Convert multiple spaces to single space
+		.replace(/\s*([\{\}\:\;\,])\s*/g, '$1') // Remove space around brackets/semicolons
+		.replace(/;\}/g, '}') // Remove last semicolon in block
+		.trim();
+	}
+
+  
 	
 	function applySettings() {
 		const sessionId = document.getElementById('sessionId').value.trim();
@@ -368,7 +381,7 @@
 		}
 		
 		if (css) {
-			const base64Css = btoa(encodeURIComponent(css));
+			const base64Css = btoa(encodeURIComponent(minifyCSS(css)));
 			url += '&base64css=' + base64Css;
 		}
 		
@@ -434,32 +447,38 @@
 			try {
 				cssURL = decodeURI(cssURL);
 			} catch (e) {}
-			if (cssURL.startsWith("http")) {
-				var cssStylesheet = document.createElement("link");
-				cssStylesheet.rel = "stylesheet";
-				cssStylesheet.type = "text/css";
-				cssStylesheet.media = "screen";
-				cssStylesheet.href = cssURL;
-				document.getElementsByTagName("head")[0].appendChild(cssStylesheet);
-			} else {
-				var cssStylesheet = document.createElement("style");
-				cssStylesheet.innerHTML = cssURL;
-				document.getElementsByTagName("head")[0].appendChild(cssStylesheet);
-			}
+			
+			document.addEventListener('DOMContentLoaded', () => {
+				if (cssURL.startsWith("http")) {
+					var cssStylesheet = document.createElement("link");
+					cssStylesheet.rel = "stylesheet";
+					cssStylesheet.type = "text/css";
+					cssStylesheet.media = "screen";
+					cssStylesheet.href = cssURL;
+					document.body.appendChild(cssStylesheet);
+				} else {
+					var cssStylesheet = document.createElement("style");
+					cssStylesheet.innerHTML = cssURL;
+					document.body.appendChild(cssStylesheet);
+				}
+			});
 		}
 
 		if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
 			try {
 				var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
 				try {
-					base64Css = atob(base64Css); // window.btoa(encodeURIComponent("#mainmenu{background-color: pink;}" ));
+					base64Css = atob(base64Css);
 				} catch (e) {}
 				try {
-					base64Css = decodeURIComponent(base64Css); // window.btoa(encodeURIComponent("#mainmenu{background-color: pink; ❤" ));
+					base64Css = decodeURIComponent(base64Css);
 				} catch (e) {}
-				var cssStyleSheet = document.createElement("style");
-				cssStyleSheet.innerText = base64Css;
-				document.querySelector("head").appendChild(cssStyleSheet);
+				
+				document.addEventListener('DOMContentLoaded', () => {
+					var cssStyleSheet = document.createElement("style");
+					cssStyleSheet.innerText = base64Css;
+					document.body.appendChild(cssStyleSheet);
+				});
 			} catch (e) {
 				console.error(e);
 			}
