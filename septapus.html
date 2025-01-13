@@ -6,6 +6,10 @@
     <title>Chat Overlay - Septapus CSS Compatible</title>
 	<meta name="title" content="Social Stream - Septapus compatible overlay" />
 	<link rel="icon" href="./icons/favicon.ico" />
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&family=Imprima&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <style>
 	
 	yt-live-chat-renderer {
@@ -343,6 +347,8 @@
 		padding: 2px 4px;
 		border-radius: 3px;
 	}
+	
+	
 	</style>
 </head>
 <yt-live-chat-renderer>
@@ -352,17 +358,46 @@
   <script>
   
 	function minifyCSS(css) {
-	  return css
-		.replace(/\/\*[\s\S]*?\*\//g, '') // Remove comments
-		.replace(/([^0-9a-zA-Z\.#])\s+/g, '$1') // Remove space after special chars
-		.replace(/\s+([^0-9a-zA-Z\.#])/g, '$1') // Remove space before special chars
-		.replace(/\s+/g, ' ') // Convert multiple spaces to single space
-		.replace(/\s*([\{\}\:\;\,])\s*/g, '$1') // Remove space around brackets/semicolons
-		.replace(/;\}/g, '}') // Remove last semicolon in block
-		.trim();
-	}
+	  if (typeof css !== 'string') {
+		return '';
+	  }
 
-  
+	  const preserveTokens = {
+		mediaQueries: /@media[^{]+\{([\s\S]+?\})\s*\}/g,
+		keyframes: /@(?:-webkit-)?keyframes[^{]+\{([\s\S]+?\})\s*\}/g,
+		urls: /url\([^\)]+\)/g,
+		imports: /@import[^;]+;/g
+	  };
+
+	  let preserved = [];
+	  let cssString = css;
+
+	  // Preserve special blocks by replacing them with placeholders
+	  Object.entries(preserveTokens).forEach(([key, regex]) => {
+		cssString = cssString.replace(regex, match => {
+		  preserved.push(match);
+		  return `___${preserved.length - 1}___`;
+		});
+	  });
+
+	  // Main minification
+	  cssString = cssString
+		.replace(/\/\*(?!\*\/)[\s\S]*?\*\//g, '') // Remove comments safely
+		.replace(/\s*([\{\}\:\;\,])\s*/g, '$1') // Remove spaces around special characters
+		.replace(/\s+/g, ' ') // Consolidate spaces
+		.replace(/\s*([>+~])\s*/g, '$1') // Clean combinators
+		.replace(/;(?=\s*})/g, '') // Remove last semicolons
+		.replace(/\s*(!important)/g, '$1') // Clean important
+		.replace(/\s*([{:;,])\s*/g, '$1') // Clean special chars
+		.replace(/^\s+|\s+$/g, ''); // Trim
+
+	  // Restore preserved blocks
+	  preserved.forEach((block, i) => {
+		cssString = cssString.replace(`___${i}___`, block);
+	  });
+
+	  return cssString.trim();
+	}
 	
 	function applySettings() {
 		const sessionId = document.getElementById('sessionId').value.trim();
