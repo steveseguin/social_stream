@@ -542,6 +542,11 @@
 		}
 
 		function sendTestMessage() {
+			const currentSessionID = document.getElementById('sessionID').value;
+			if (!currentSessionID) {
+				alert('Please enter a session ID');
+				return;
+			}
 			const testMessage = {
 				chatname: document.getElementById('chatname').value,
 				chatmessage: document.getElementById('chatmessage').value,
@@ -558,13 +563,14 @@
 			const selectedChannel = parseInt(document.getElementById('messageChannel').value);
 			const container = event.target.closest('.section');
 			const action = selectedChannel ? 'content' : 'extContent';
+			
 			// WebSocket request
 			const wsMessage = {
 				action: action,
-				apiid: sessionID,
+				apiid: currentSessionID,
 				value: JSON.stringify(testMessage)
 			};
-			if (selectedChannel){
+			if (selectedChannel) {
 				wsMessage.out = selectedChannel;
 			}
 			logRequest(container, {
@@ -575,7 +581,7 @@
 
 			// GET request with channel parameter
 			const encodedMessage = encodeURIComponent(JSON.stringify(testMessage));
-			const getUrl = `https://io.socialstream.ninja/${sessionID}/${action}/null/${encodedMessage}${selectedChannel ? `?channel=${selectedChannel}` : ''}`;
+			const getUrl = `https://io.socialstream.ninja/${currentSessionID}/${action}/null/${encodedMessage}${selectedChannel ? `?channel=${selectedChannel}` : ''}`;
 			logRequest(container, {
 				type: 'HTTP GET',
 				url: getUrl
@@ -584,7 +590,7 @@
 			// POST request
 			logRequest(container, {
 				type: 'HTTP POST',
-				url: `https://io.socialstream.ninja/${sessionID}${selectedChannel ? `?channel=${selectedChannel}` : ''}`,
+				url: `https://io.socialstream.ninja/${currentSessionID}${selectedChannel ? `?channel=${selectedChannel}` : ''}`,
 				body: wsMessage
 			});
 
