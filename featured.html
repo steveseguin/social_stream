@@ -1569,7 +1569,11 @@
 							} else {
 								data = false;
 							}
-							resp = processData(data);
+							if (data && "chatmessage" in data){
+								resp = processData({ contents: data });
+							} else {
+								resp = processData(data);
+							}
 						} else if (!("action" in data) && ("chatmessage" in data)) {
 							resp = processData({ contents: data });
 						} else {
