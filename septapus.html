@@ -393,7 +393,7 @@
 	  preserved.forEach((block, i) => {
 		cssString = cssString.replace(`___${i}___`, block);
 	  });
-
+	  
 	  return cssString.trim();
 	}
 	
@@ -430,6 +430,10 @@
 			url += '&base64css=' + base64Css;
 		}
 		
+		if (url.length>2000){
+			url = url.slice(0, 2000); // trim
+			alert("URL is too long; trimming it down to fit..\n\nConsider inserting the style via OBS browser's style section instead or shortening the CSS injected.");
+		}
 		window.location.href = url;
 	}
 	
