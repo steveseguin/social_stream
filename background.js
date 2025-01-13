@@ -2637,11 +2637,116 @@ function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
 
 const checkDuplicateSources = new CheckDuplicateSources();
 
+async function processIncomingMessage(message, sender=null){
+	try {
+		if (sender?.tab){
+			message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
+		}
+	} catch (e) {}
+
+	if (isExtensionOn && message?.type) {
+		if (!checkIfAllowed(message.type)) {
+			return;
+		}
+
+		if (settings.filtercommands && message.chatmessage && message.chatmessage.startsWith("!")) {
+			return;
+		}
+
+		if (settings.filtercommandscustomtoggle && message.chatmessage && settings.filtercommandscustomwords && settings.filtercommandscustomwords.textsetting) {
+			if (settings.filtercommandscustomwords.textsetting.split(",").some(v => v.trim() && message.chatmessage.startsWith(v.trim()))) {
+				return;
+			}
+		}
+		
+		let reflection = false;
+		
+		// checkExactDuplicateAlreadyReceived only does work if there was a message responsein the last 10 seconds.
+		reflection = checkExactDuplicateAlreadyReceived(message.chatmessage,message.textonly, message.tid, message.type);
+		if (reflection && (settings.firstsourceonly || settings.hideallreplies || settings.thissourceonly)){
+			return;
+		}
+		
+		if (reflection===null){
+			reflection = true;
+		}
+		
+		if (reflection){
+			message.reflection = true;
+		}
+		
+		if (settings.noduplicates && // filters echos if same TYPE, USERID, and MESSAGE 
+			checkDuplicateSources.isDuplicate(message.type, (message.userid || message.chatname), 
+				(message.chatmessage || message.hasDonation || (message.membership && message.event)))) {
+					return;
+		}
+		
+		if ((message.type == "youtube") || (message.type == "youtubeshorts")){
+			if (settings.blockpremiumshorts && (message.type == "youtubeshorts")){
+				if (message.hasDonation || (message.membership && message.event)){
+					return;
+				}
+			}
+			try {
+				if (sender?.tab){
+					const shouldAllowMessage = shouldAllowYouTubeMessage(sender.tab.id, sender.tab.url, message, sender.frameId);
+					if (!shouldAllowMessage) {
+					  return;
+					}
+				}
+			  } catch(e) {
+				//console.warn("Error in shouldAllowYouTubeMessage:", e);
+			  }
+			
+			if (sender?.tab?.url) {
+				var brandURL = getYoutubeAvatarImage(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
+				if (brandURL) {
+					message.sourceImg = brandURL;
+				}
+			}
+		} 
+
+		if (message.type == "facebook") {
+			// since Facebook dupes are a common issue
+			if (sender?.tab?.url) {
+				if (message.chatname && message.chatmessage) {
+					clearInterval(FacebookDupesTime);
+					if (FacebookDupes == message.chatname + ":" + message.chatmessage) {
+						return;
+					} else {
+						FacebookDupes = message.chatname + ":" + message.chatmessage;
+						FacebookDupesTime = setTimeout(function () {
+							FacebookDupes = "";
+						}, 15000);
+					}
+				}
+			}
+		}
+		
+		if (!message.id) {
+			messageCounter += 1;
+			message.id = messageCounter;
+		}
+		
+		try {
+			message = await applyBotActions(message, sender?.tab); // perform any immediate actions
+		} catch (e) {
+			console.warn(e);
+		}
+		if (!message) {
+			return message;
+		}
+		
+		sendToDestinations(message); // send the data to the dock
+	}
+	return message;
+}
+
 chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
 	var response = {};
 	var alreadySet = false;
 		
-	  function sendResponse(msg) {
+	function sendResponse(msg) {
 		if (alreadySet) {
 		  console.error("Shouldn't run sendResponse twice");
 		} else if (sendResponseReal) {
@@ -2651,7 +2756,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		  sendResponseReal(msg);
 		}
 		response = msg;
-	  }
+	}
 	
 	try {
 		if (typeof request !== "object") {
@@ -3035,117 +3140,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 		} else if ("message" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-			try {
-				request.message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
-			} catch (e) {}
-
-			if (isExtensionOn && request.message.type) {
-				if (!checkIfAllowed(request.message.type)) {
-					// toggled is not enabled for this site
-					sendResponse({ state: isExtensionOn });
-					return response;
-				}
-
-				if (settings.filtercommands && request.message.chatmessage && request.message.chatmessage.startsWith("!")) {
-					sendResponse({ state: isExtensionOn });
-					return response;
-				}
-
-				if (settings.filtercommandscustomtoggle && request.message.chatmessage && settings.filtercommandscustomwords && settings.filtercommandscustomwords.textsetting) {
-					if (settings.filtercommandscustomwords.textsetting.split(",").some(v => v.trim() && request.message.chatmessage.startsWith(v.trim()))) {
-						sendResponse({ state: isExtensionOn });
-						return response;
-					}
-				}
-				
-				let reflection = false;
-				
-				// checkExactDuplicateAlreadyReceived only does work if there was a message responsein the last 10 seconds.
-				reflection = checkExactDuplicateAlreadyReceived(request.message.chatmessage,request.message.textonly, request.message.tid, request.message.type);
-				if (reflection && (settings.firstsourceonly || settings.hideallreplies || settings.thissourceonly)){
-					sendResponse({ state: isExtensionOn });
-					return response;
-				}
-				
-				if (reflection===null){
-					reflection = true;
-				}
-				
-				if (reflection){
-					request.message.reflection = true;
-				}
-				
-				if (settings.noduplicates && // filters echos if same TYPE, USERID, and MESSAGE 
-					checkDuplicateSources.isDuplicate(request.message.type, (request.message.userid || request.message.chatname), 
-						(request.message.chatmessage || request.message.hasDonation || (request.message.membership && request.message.event)))) {
-							sendResponse({ state: isExtensionOn });
-							return response;
-				}
-				
-				if ((request.message.type == "youtube") || (request.message.type == "youtubeshorts")){
-					if (settings.blockpremiumshorts && (request.message.type == "youtubeshorts")){
-						if (request.message.hasDonation || (request.message.membership && request.message.event)){
-							return;
-						}
-					}
-					try {
-						const shouldAllowMessage = shouldAllowYouTubeMessage(sender.tab.id, sender.tab.url, request.message, sender.frameId);
-						if (!shouldAllowMessage) {
-						  return;
-						}
-					  } catch(e) {
-						//console.warn("Error in shouldAllowYouTubeMessage:", e);
-					  }
-					
-					if (sender.tab.url) {
-						var brandURL = getYoutubeAvatarImage(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
-						if (brandURL) {
-							request.message.sourceImg = brandURL;
-						}
-					}
-				} 
-
-				if (request.message.type == "facebook") {
-					// since Facebook dupes are a common issue
-					if (sender.tab.url) {
-						if (request.message.chatname && request.message.chatmessage) {
-							clearInterval(FacebookDupesTime);
-							if (FacebookDupes == request.message.chatname + ":" + request.message.chatmessage) {
-								return response;
-							} else {
-								FacebookDupes = request.message.chatname + ":" + request.message.chatmessage;
-								FacebookDupesTime = setTimeout(function () {
-									FacebookDupes = "";
-								}, 15000);
-							}
-						}
-					}
-				}
-				
-				if (!request.message.id) {
-					messageCounter += 1;
-					request.message.id = messageCounter;
-					sendResponse({ state: isExtensionOn, mid: request.message.id }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
-				} else {
-					sendResponse({ state: isExtensionOn });
-				}
-				
-				//onsole.log("bot actions..");
-				try {
-					request.message = await applyBotActions(request.message, sender.tab); // perform any immediate actions
-				} catch (e) {
-					console.warn(e);
-				}
-				if (!request.message) {
-					//console.log("no message");
-					return response; // don't forward if action blocks it. bad word maybe?
-				}
-				
-				//console.log("Sending");
-				
-				sendToDestinations(request.message); // send the data to the dock
+			var letsGo = await processIncomingMessage(request.message, sender);
+			if (letsGo && letsGo.mid){
+				sendResponse({ state: isExtensionOn, mid: letsGo.mid });
 			} else {
-				sendResponse({ state: isExtensionOn });
+				sendResponse({ state: isExtensionOn});
 			}
 		} else if ("getBTTV" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
@@ -4459,16 +4458,21 @@ function setupSocket() {
 				let source = data.target.trim().toLowerCase() || "*";
 				let username = data.value.trim();
 				resp = blockUser({chatname:username, type:source});
-			} else if (!data.action && data.extContent) {
-				// Not flattened
+			} else if (!data.action && data?.extContent) {
 				try {
-					var msg = await applyBotActions(data.extContent); // perform any immediate actions, including modifying the message before sending it out
-					if (msg) {
-						// we won't return, since we need to do a response later to the socket
-						resp = await sendToDestinations(msg);
+					if (!data.extContent.type){
+						resp  = ({ state: isExtensionOn, error: "Must include message type"});
+					} else {
+						var letsGo = await processIncomingMessage(data.extContent, false);
+						if (letsGo && letsGo.mid){
+							resp  = ({ state: isExtensionOn, mid: letsGo.mid });
+						} else{
+							resp  = ({ state: isExtensionOn});
+						}
 					}
 				} catch (e) {
 					console.error(e);
+					resp  = ({ state: isExtensionOn, error:"exception"});
 				}
 			} else if (data.action && data.action === "extContent" && data.value) {
 				// flattened

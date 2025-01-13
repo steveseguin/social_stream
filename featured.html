@@ -1569,6 +1569,7 @@
 							} else {
 								data = false;
 							}
+							resp = processData(data);
 						} else if (!("action" in data) && ("chatmessage" in data)) {
 							resp = processData({ contents: data });
 						} else {
