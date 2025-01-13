@@ -114,11 +114,32 @@
             border-color: var(--info-color);
         }
 
-        .form-control {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            color: var(--text-color);
-        }
+		.form-control {
+			background-color: rgba(255, 255, 255, 0.1);
+			border-color: rgba(255, 255, 255, 0.2);
+			color: var(--text-color);
+		}
+
+		select.form-control {
+			background-color: var(--tertiary-color);
+			color: var(--text-color);
+			border: 1px solid rgba(255, 255, 255, 0.2);
+			padding-right: 1.75rem;
+		}
+
+		/* Style the options in the dropdown */
+		select.form-control option {
+			background-color: var(--bg-color);
+			color: var(--text-color);
+		}
+
+		/* Style the select when focused */
+		select.form-control:focus {
+			background-color: var(--tertiary-color);
+			border-color: var(--primary-color);
+			box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+			color: var(--text-color);
+		}
 
         .form-control:focus {
             background-color: rgba(255, 255, 255, 0.15);
@@ -403,7 +424,7 @@
             }
         }
 
-        function sendCommand(action, value = null, channel = null) {
+		function sendCommand(action, value = null, channel = null, element = null) {
 			let message = {
 				action,
 				apiid: sessionID,
@@ -411,24 +432,24 @@
 				out: channel !== null ? channel : undefined
 			};
 			
-			logRequest(event.target.closest('.btn-group'), {
+			logRequest(element || event.target.closest('.btn-group'), {
 				type: 'WebSocket',
 				url: 'wss://io.socialstream.ninja:443',
 				message
 			});
 			
-            if (!socket || socket.readyState !== WebSocket.OPEN) {
-                alert('Please connect first');
-                return;
-            }
-            message = {
-                action: action,
-                apiid: sessionID
-            };
-            if (value !== null) message.value = value;
-            if (channel !== null) message.out = channel;
-            socket.send(JSON.stringify(message));
-        }
+			if (!socket || socket.readyState !== WebSocket.OPEN) {
+				alert('Please connect first');
+				return;
+			}
+			message = {
+				action: action,
+				apiid: sessionID
+			};
+			if (value !== null) message.value = value;
+			if (channel !== null) message.out = channel;
+			socket.send(JSON.stringify(message));
+		}
 
         function originalSendCustomMessage(action, isEncodedGet = false, isPost = false) {
 		
@@ -494,21 +515,21 @@
 			}
 		};
 
-        function sendTestMessage() {
-            const testMessage = {
-                chatname: document.getElementById('chatname').value,
-                chatmessage: document.getElementById('chatmessage').value,
-                type: document.getElementById('type').value,
-                hasDonation: document.getElementById('hasDonation').value,
-                membership: document.getElementById('membership').value,
-                chatimg: document.getElementById('chatimg').value,
-                nameColor: document.getElementById('nameColor').value,
+		function sendTestMessage() {
+			const testMessage = {
+				chatname: document.getElementById('chatname').value,
+				chatmessage: document.getElementById('chatmessage').value,
+				type: document.getElementById('type').value,
+				hasDonation: document.getElementById('hasDonation').value,
+				membership: document.getElementById('membership').value,
+				chatimg: document.getElementById('chatimg').value,
+				nameColor: document.getElementById('nameColor').value,
 				eventType: document.getElementById('eventType').value || false,
-                contentimg: document.getElementById('contentimg').value,
-                question: document.getElementById('isQuestion').checked
-            };
-            sendCommand('extContent', JSON.stringify(testMessage));
-        }
+				contentimg: document.getElementById('contentimg').value,
+				question: document.getElementById('isQuestion').checked
+			};
+			sendCommand('extContent', JSON.stringify(testMessage), null, event.target);
+		}
 
         function generateRandomMessage() {
 			const randomData = {
@@ -613,11 +634,32 @@ Developer Notes:
 		});
 		
 		var lastLog = null;
-		function logRequest(buttonGroup, requestData) {
-			if (lastLog){lastLog.style.display = 'none';}
-			lastLog = buttonGroup.parentNode.querySelector('.request-log');
-			lastLog.textContent = JSON.stringify(requestData, null, 2);
-			lastLog.style.display = 'block';
+		
+		function logRequest(element, requestData) {
+			try {
+				if (lastLog) { 
+					lastLog.style.display = 'none';
+				}
+				
+				let container = element;
+				if (element.classList.contains('btn')) {
+					container = element.closest('.section');
+				} else if (element.classList.contains('btn-group')) {
+					container = element.parentNode;
+				}
+
+				if (!container.querySelector('.request-log')) {
+					const log = document.createElement('pre');
+					log.className = 'request-log';
+					container.appendChild(log);
+				}
+
+				lastLog = container.querySelector('.request-log');
+				lastLog.textContent = JSON.stringify(requestData, null, 2);
+				lastLog.style.display = 'block';
+			} catch(e){
+				console.warn(e);
+			}
 		}
 		</script>
 		</body>

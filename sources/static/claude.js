@@ -14,43 +14,46 @@
         xhr.send();
     }
 
+	console.log("Socialstream injected");
 
+	let observer = null;
 
 	var isExtensionOn = false;
 	var stored = "";
 	const desiredValue = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
-	console.log("Socialstream injected");
-
-	let observer = null;
-
 	function configure() {
-	   if (isExtensionOn) {
-		   if (!stored) {
-			   stored = getComputedStyle(document.documentElement).getPropertyValue('--font-claude-message');
-		   }
-		   
-		   console.log("enable custom font");
-		   document.documentElement.style.setProperty('--font-claude-message', desiredValue);
-		   if (!observer){
-			   observer = new MutationObserver(() => {
-				   const currentValue = getComputedStyle(document.documentElement)
-					   .getPropertyValue('--font-claude-message');
-				   
-				   if (isExtensionOn && currentValue !== desiredValue) {
-					   configure();
-				   }
-			   });
-			   observer.observe(document.documentElement, {
-				   attributes: true,
-				   attributeFilter: ['style']
-			   });
-		   }
-	   } else if (stored) {
-		   observer.disconnect();
-		   document.documentElement.style.setProperty('--font-claude-message', stored);
-		   observer = null;
-	   }
+		if (isExtensionOn) {
+			if (!stored) {
+				stored = getComputedStyle(document.documentElement).getPropertyValue('--font-claude-message');
+				console.log(stored);
+			}
+			document.documentElement.style.setProperty('--font-claude-message', desiredValue);
+			
+			if (!observer) {
+				observer = new MutationObserver(() => {
+					const currentValue = getComputedStyle(document.documentElement)
+						.getPropertyValue('--font-claude-message');
+					
+					if (isExtensionOn && currentValue !== desiredValue) {
+						document.documentElement.style.setProperty('--font-claude-message', desiredValue);
+					}
+				});
+				observer.observe(document.documentElement, {
+					attributes: true,
+					attributeFilter: ['style']
+				});
+			}
+		} else {
+			if (observer) {
+				observer.disconnect();
+				observer = null;
+			}
+			if (stored) {
+				document.documentElement.style.setProperty('--font-claude-message', stored);
+				stored = ""; // Reset stored value after using it
+			}
+		}
 	}
 
     function pushMessage(data) {
@@ -85,7 +88,6 @@
                 if (typeof request === "object") {
                     if ("settings" in request) {
                         settings = request.settings;
-                        deTweet();
                     }
                     if ("state" in request) {
                         isExtensionOn = request.state;
