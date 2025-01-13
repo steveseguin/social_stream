@@ -829,19 +829,16 @@ input:checked + .slider:before {
     border-radius: 4px;
 }
 
-/* Glowing button */
-
 .glowingButton {
     position: relative;
-    width: 100px;
-    height: 16px;
+    min-width: 100px;
+    height: 24px;
     display: inline-block;
-    background: #fff;
     margin: 2px;
-    padding: 4px;
+    padding: 0;
     border: none;
     cursor: pointer;
-	contain: content;
+    background: transparent;
 }
 
 .glowingButton:before,
@@ -849,40 +846,56 @@ input:checked + .slider:before {
     content: "";
     position: absolute;
     inset: 0;
-    /* background: #ff0000; */
-    transition: 0.2s;
-    background: linear-gradient(45deg, #00ccff, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0), #ff075b);
+    background: linear-gradient(45deg, #00ccff, transparent 40%, transparent 60%, #ff075b);
+    transition: all 0.3s ease;
+    opacity: 0;
 }
 
 .glowingButton:hover:before {
+    opacity: 1;
     inset: -2px;
 }
 
 .glowingButton:hover:after {
+    opacity: 1;
     inset: -2px;
-    filter: blur(10px);
+    filter: blur(8px);
+}
+
+.glowingButton:active {
+    transform: scale(0.98);
+}
+
+.glowingButton:active:before,
+.glowingButton:active:after {
+    background: linear-gradient(45deg, #0099ff, transparent 40%, transparent 60%, #cc0033);
+    opacity: 1;
+    inset: -1px;
+}
+
+.glowingButton:active span {
+    background: color-mix(in srgb, var(--button-background) 85%, #000);
 }
 
 .glowingButton span {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    position: relative;
     display: flex;
     background: var(--button-background);
-    z-index: 10;
+    z-index: 1;
     font-size: clamp(12px, 1em, 16px);
     font-weight: 600;
     letter-spacing: 1px;
     color: var(--default-text-color);
     justify-content: center;
     align-items: center;
-	white-space: nowrap;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    height: 100%;
+    border-radius: 2px;
+    padding: 4px 8px;
+    box-sizing: border-box;
 }
-
 
 .textInputContainer {
     position: relative;
