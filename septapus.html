@@ -6,8 +6,6 @@
     <title>Chat Overlay - Septapus CSS Compatible</title>
 	<meta name="title" content="Social Stream - Septapus compatible overlay" />
 	<link rel="icon" href="./icons/favicon.ico" />
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&family=Imprima&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <style>
@@ -399,6 +397,18 @@
 	  return cssString.trim();
 	}
 	
+	function loadGoogleFont(fontName) {
+		const formattedFontName = fontName.replace(/\s/g, "+");
+
+		const link = document.createElement("link");
+		link.href = `https://fonts.googleapis.com/css2?family=${formattedFontName}&display=swap`;
+		link.rel = "stylesheet";
+
+		document.head.appendChild(link);
+		var currentFont = getComputedStyle(document.documentElement).getPropertyValue("--font-family").trim();
+		document.documentElement.style.setProperty("--font-family", "'" + fontName.replaceAll("+", " ") + "', " + currentFont);
+	}
+	
 	function applySettings() {
 		const sessionId = document.getElementById('sessionId').value.trim();
 		const password = document.getElementById('password').value.trim();
@@ -476,6 +486,14 @@
 		const MAX_VISIBLE_TICKERS = 6;
 		const BASE_DISPLAY_DURATION = 10000; // 10 seconds base duration
 		const DURATION_PER_DOLLAR = 1000; // Additional 1 second per dollar
+		
+		if (urlParams.get("font")) {
+			document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif");
+		}
+
+		if (urlParams.get("googlefont")) {
+			loadGoogleFont(urlParams.get("googlefont"));
+		}
 		
 		if (urlParams.has("css")) {
 			var cssURL = urlParams.get("css");
