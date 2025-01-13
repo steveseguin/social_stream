@@ -175,6 +175,18 @@
         #testMessageForm label {
             color: var(--text-color);
         }
+		
+		.request-log {
+			margin-bottom: 10px;
+		}
+
+		.request-log:before {
+			content: attr(data-type);
+			display: block;
+			font-weight: bold;
+			margin-bottom: 5px;
+			color: var(--primary-color);
+		}
     </style>
 </head>
 <body>
@@ -678,30 +690,26 @@ Developer Notes:
 		var lastLog = null;
 		
 		function logRequest(element, requestData) {
-			try {
-				if (lastLog) { 
-					lastLog.style.display = 'none';
-				}
-				
-				let container = element;
-				if (element.classList.contains('btn')) {
-					container = element.closest('.section');
-				} else if (element.classList.contains('btn-group')) {
-					container = element.parentNode;
-				}
-
-				if (!container.querySelector('.request-log')) {
-					const log = document.createElement('pre');
-					log.className = 'request-log';
-					container.appendChild(log);
-				}
-
-				lastLog = container.querySelector('.request-log');
-				lastLog.textContent = JSON.stringify(requestData, null, 2);
-				lastLog.style.display = 'block';
-			} catch(e){
-				console.warn(e);
+			let container = element;
+			if (element.classList.contains('btn')) {
+				container = element.closest('.section');
+			} else if (element.classList.contains('btn-group')) {
+				container = element.parentNode;
 			}
+
+			const logId = `log-${requestData.type.replace(/\s+/g, '-').toLowerCase()}`;
+			let log = container.querySelector(`#${logId}`);
+			
+			if (!log) {
+				log = document.createElement('pre');
+				log.className = 'request-log';
+				log.id = logId;
+				container.appendChild(log);
+			}
+
+			log.setAttribute('data-type', requestData.type);
+			log.textContent = JSON.stringify(requestData, null, 2);
+			log.style.display = 'block';
 		}
 		</script>
 		</body>
