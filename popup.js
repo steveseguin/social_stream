@@ -2968,30 +2968,39 @@ const TTSManager = {
     },
     
     async fetchAudioContent(url, options, type) {
-        try {
-            const response = await fetch(url, options);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            if (type === 'base64') {
-                const json = await response.json();
-                if (!json.audioContent && !json.audio_data) {
-                    throw new Error('No audio data received');
-                }
-                this.playAudio(`data:audio/mp3;base64,${json.audioContent || json.audio_data}`);
-            } else if (type === 'blob') {
-                const blob = await response.blob();
-                const blobUrl = URL.createObjectURL(blob);
-                this.playAudio(blobUrl);
-            }
-        } catch (error) {
-            this.showFeedback(`Audio fetch error: ${error.message}`, 'error');
-            console.error("Error fetching audio:", error);
-            this.finishedAudio();
-        }
-    },
+		try {
+			const response = await fetch(url, options);
+			
+			if (!response.ok) {
+				console.log(response);
+				// Try to get detailed error message from response
+				const contentType = response.headers.get("content-type");
+				console.log(contentType);
+				if (contentType && contentType.includes("application/json")) {
+					const errorData = await response.json();
+					console.log(errorData);
+					throw new Error(errorData?.message || errorData?.detail?.message || errorData?.error || `HTTP error! status: ${response.status}`);
+				}
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			
+			if (type === 'base64') {
+				const json = await response.json();
+				if (!json.audioContent && !json.audio_data) {
+					throw new Error('No audio data received');
+				}
+				this.playAudio(`data:audio/mp3;base64,${json.audioContent || json.audio_data}`);
+			} else if (type === 'blob') {
+				const blob = await response.blob();
+				const blobUrl = URL.createObjectURL(blob);
+				this.playAudio(blobUrl);
+			}
+		} catch (error) {
+			this.showFeedback(`Audio fetch error: ${error.message}`, 'error');
+			console.error("Error fetching audio:", error);
+			this.finishedAudio();
+		}
+	},
     
     playAudio(src) {
         if (!this.audio) {

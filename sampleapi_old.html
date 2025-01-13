@@ -6,7 +6,6 @@
     <title>Social Stream API Sandbox</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjNGE5MGUyIiByeD0iNCIvPjxwYXRoIGQ9Ik0xNCA4QzExIDggOSA5IDggMTJjMyAwIDUgMCA3IDBjMCAwIDMgMCAzIDNzLTMgMy0zIDNjLTUgMC04IDAtMTEgMGMxIDMgMyA0IDYgNGg2YzMgMCA1LTEgNi00YzEtMyAwLTUtMi03cy00LTMtNi0zeiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg=="/>
 	<meta name="robots" content="noindex">
     <style>
         :root {
@@ -36,18 +35,7 @@
         h1, h2 {
             color: var(--primary-color);
             margin-bottom: 20px;
-		}
-		
-		.request-log {
-			background: rgba(0,0,0,0.3);
-			border-radius: 4px;
-			padding: 10px;
-			margin-top: 10px;
-			font-family: monospace;
-			white-space: pre-wrap;
-			display: none;
-			color: #e0e0e0;
-		}
+        }
 
         .section {
             background-color: var(--tertiary-color);
@@ -115,32 +103,11 @@
             border-color: var(--info-color);
         }
 
-		.form-control {
-			background-color: rgba(255, 255, 255, 0.1);
-			border-color: rgba(255, 255, 255, 0.2);
-			color: var(--text-color);
-		}
-
-		select.form-control {
-			background-color: var(--tertiary-color);
-			color: var(--text-color);
-			border: 1px solid rgba(255, 255, 255, 0.2);
-			padding-right: 1.75rem;
-		}
-
-		/* Style the options in the dropdown */
-		select.form-control option {
-			background-color: var(--bg-color);
-			color: var(--text-color);
-		}
-
-		/* Style the select when focused */
-		select.form-control:focus {
-			background-color: var(--tertiary-color);
-			border-color: var(--primary-color);
-			box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
-			color: var(--text-color);
-		}
+        .form-control {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+        }
 
         .form-control:focus {
             background-color: rgba(255, 255, 255, 0.15);
@@ -175,18 +142,6 @@
         #testMessageForm label {
             color: var(--text-color);
         }
-		
-		.request-log {
-			margin-bottom: 10px;
-		}
-
-		.request-log:before {
-			content: attr(data-type);
-			display: block;
-			font-weight: bold;
-			margin-bottom: 5px;
-			color: var(--primary-color);
-		}
     </style>
 </head>
 <body>
@@ -196,8 +151,6 @@
 		<div class="container mt-3">
 			<p class="lead">
 				This Social Stream API Sandbox is a comprehensive tool for developers to test and interact with the Social Stream Ninja API. It provides a user-friendly interface to experiment with various API features, including message generation, user management, and channel-specific communications. For full API documentation, please visit <a href="https://socialstream.ninja/api" target="_blank">socialstream.ninja/api</a>.
-				<br/><br/>
-				Please note that you may need to add <b><i>&server</i></b> to the dock.html or featured.html pages if you wish to send messages to them via the API. By default the extension, nor any dock/overlay page, will connect to the API server by default; they must be configured to work with the API server via menu toggle or URL parameter.
 			</p>
 		</div>
 
@@ -316,18 +269,10 @@
                     <input type="checkbox" class="form-check-input" id="isQuestion">
                     <label class="form-check-label" for="isQuestion">Mark as Question</label>
                 </div>
-				
-				<button type="button" class="btn btn-primary" onclick="sendTestMessage()">Send as a Test Message</button>
+                <button type="button" class="btn btn-primary" onclick="sendTestMessage()">Send Test Message</button>
                 <button type="button" class="btn btn-secondary" onclick="generateRandomMessage()">Generate Random Message</button>
-				<div class="form-group" style="display:inline-block;width:unset;">
-					<select class="form-control" id="messageChannel">
-						<option value="">Default (to Extension as normal)</option>
-						<option value="2">Channel 2 (direct to Featured /w &server)</option>
-						<option value="4">Channel 4 (direct to Dock /w &server2)</option>
-					</select>
-				</div>
             </form>
-            <p class="note">Generate custom test messages to simulate different platforms and scenarios. This uses the `extContent` message type..</p>
+            <p class="note">Generate custom test messages to simulate different platforms and scenarios.</p>
         </div>
         <div class="section">
             <h2>Channel-Specific Messaging</h2>
@@ -359,14 +304,6 @@
                 <button class="btn btn-warning" onclick="sendCommand('waitlistmessage', 'Custom waitlist message')">Set Waitlist Message</button>
             </div>
             <p class="note">These commands manage the waitlist functionality, useful for giveaways or queue management.</p>
-        </div>
-		
-		<div class="section">
-            <h2>Poll Commands</h2>
-            <div class="btn-group" role="group">
-                <button class="btn btn-warning" onclick="sendCommand('resetpoll')">Reset Poll</button>
-                <button class="btn btn-warning" onclick="sendCommand('closepoll')">Close Poll</button>
-            </div>
         </div>
 
         <div class="section">
@@ -410,11 +347,7 @@
             }
             socket = new WebSocket('wss://io.socialstream.ninja:443');
             socket.onopen = function() {
-                  socket.send(JSON.stringify({
-					join: sessionID,
-					out: parseInt(new URLSearchParams(window.location.search).get('channelout')) || 1,
-					in: parseInt(new URLSearchParams(window.location.search).get('channelin')) || 2
-				  }));
+                socket.send(JSON.stringify({"join": sessionID, "out": 1, "in": 2}));
                 updateConnectionStatus('Connected');
                 document.getElementById('connectButton').disabled = true;
                 document.getElementById('disconnectButton').disabled = false;
@@ -447,29 +380,21 @@
             }
         }
 
-		function sendCommand(action, value = null, channel = null, element = null) {
-			let message = {
-				action,
-				apiid: sessionID,
-				value: value !== null ? value : undefined,
-				out: channel !== null ? parseInt(channel) : undefined
-			};
-			
-			logRequest(element || event.target.closest('.btn-group'), {
-				type: 'WebSocket',
-				url: 'wss://io.socialstream.ninja:443',
-				message
-			});
-			
-			if (!socket || socket.readyState !== WebSocket.OPEN) {
-				alert('Please connect first');
-				return;
-			}
-			socket.send(JSON.stringify(message));
-		}
+        function sendCommand(action, value = null, channel = null) {
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                alert('Please connect first');
+                return;
+            }
+            const message = {
+                action: action,
+                apiid: sessionID
+            };
+            if (value !== null) message.value = value;
+            if (channel !== null) message.out = channel;
+            socket.send(JSON.stringify(message));
+        }
 
-        function originalSendCustomMessage(action, isEncodedGet = false, isPost = false) {
-		
+        function sendCustomMessage(action, isEncodedGet = false, isPost = false) {
             const message = document.getElementById('customMessage').value;
             if (!message) {
                 alert('Please enter a message');
@@ -479,7 +404,7 @@
                 const encodedMessage = encodeURIComponent(message);
                 fetch(`https://io.socialstream.ninja/${sessionID}/${action}/null/${encodedMessage}`)
                     .then(response => response.text())
-                    .then(data => console.log('Message sent via HTTPS GET'));
+                    .then(data => alert('Message sent via HTTPS GET'));
             } else if (isPost) {
                 fetch(`https://io.socialstream.ninja/${sessionID}`, {
                     method: 'POST',
@@ -489,112 +414,27 @@
                     body: JSON.stringify({action: action, value: message, apiid: sessionID}),
                 })
                     .then(response => response.text())
-                    .then(data => console.log('Message sent via HTTPS POST'));
+                    .then(data => alert('Message sent via HTTPS POST'));
             } else {
                 sendCommand(action, message);
             }
         }
-		
-		function sendCustomMessage(action, isEncodedGet = false, isPost = false) {
-			const message = document.getElementById('customMessage').value;
-			const selectedChannel = parseInt(document.getElementById('channelSelect').value);
-			
-			if (!message) {
-				alert('Please enter a message');
-				return;
-			}
 
-			const buttonGroup = event.target.closest('.btn-group');
-			
-			if (isEncodedGet) {
-				const encodedMessage = encodeURIComponent(message);
-				const url = `https://io.socialstream.ninja/${sessionID}/${action}/null/${encodedMessage}${selectedChannel ? `?channel=${selectedChannel}` : ''}`;
-				logRequest(buttonGroup, {
-					type: 'HTTP GET',
-					url
-				});
-				fetch(url).then(response => response.text())
-					.then(data => console.log('Message sent via HTTPS GET'));
-			} else if (isPost) {
-				const url = `https://io.socialstream.ninja/${sessionID}${selectedChannel ? `?channel=${selectedChannel}` : ''}`;
-				const body = {
-					action, 
-					value: message, 
-					apiid: sessionID
-				};
-				if (selectedChannel){
-					body.out = selectedChannel;
-				}
-				logRequest(buttonGroup, {
-					type: 'HTTP POST',
-					url,
-					body
-				});
-				fetch(url, {
-					method: 'POST',
-					headers: {'Content-Type': 'application/json'},
-					body: JSON.stringify(body)
-				}).then(response => response.text())
-					.then(data => console.log('Message sent via HTTPS POST'));
-			} else {
-				sendCommand(action, message, selectedChannel);
-			}
-		}
-
-		function sendTestMessage() {
-			const testMessage = {
-				chatname: document.getElementById('chatname').value,
-				chatmessage: document.getElementById('chatmessage').value,
-				type: document.getElementById('type').value,
-				hasDonation: document.getElementById('hasDonation').value,
-				membership: document.getElementById('membership').value,
-				chatimg: document.getElementById('chatimg').value,
-				nameColor: document.getElementById('nameColor').value,
+        function sendTestMessage() {
+            const testMessage = {
+                chatname: document.getElementById('chatname').value,
+                chatmessage: document.getElementById('chatmessage').value,
+                type: document.getElementById('type').value,
+                hasDonation: document.getElementById('hasDonation').value,
+                membership: document.getElementById('membership').value,
+                chatimg: document.getElementById('chatimg').value,
+                nameColor: document.getElementById('nameColor').value,
 				eventType: document.getElementById('eventType').value || false,
-				contentimg: document.getElementById('contentimg').value,
-				question: document.getElementById('isQuestion').checked
-			};
-			
-			const selectedChannel = parseInt(document.getElementById('messageChannel').value);
-			const container = event.target.closest('.section');
-			const action = selectedChannel ? 'content' : 'extContent';
-			// WebSocket request
-			const wsMessage = {
-				action: action,
-				apiid: sessionID,
-				value: JSON.stringify(testMessage)
-			};
-			if (selectedChannel){
-				wsMessage.out = selectedChannel;
-			}
-			logRequest(container, {
-				type: 'WebSocket',
-				url: 'wss://io.socialstream.ninja:443',
-				message: wsMessage
-			});
-
-			// GET request with channel parameter
-			const encodedMessage = encodeURIComponent(JSON.stringify(testMessage));
-			const getUrl = `https://io.socialstream.ninja/${sessionID}/${action}/null/${encodedMessage}${selectedChannel ? `?channel=${selectedChannel}` : ''}`;
-			logRequest(container, {
-				type: 'HTTP GET',
-				url: getUrl
-			});
-
-			// POST request
-			logRequest(container, {
-				type: 'HTTP POST',
-				url: `https://io.socialstream.ninja/${sessionID}${selectedChannel ? `?channel=${selectedChannel}` : ''}`,
-				body: wsMessage
-			});
-
-			// Actually send via WebSocket
-			if (socket && socket.readyState === WebSocket.OPEN) {
-				socket.send(JSON.stringify(wsMessage));
-			} else {
-				alert('WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
-			}
-		}
+                contentimg: document.getElementById('contentimg').value,
+                question: document.getElementById('isQuestion').checked
+            };
+            sendCommand('extContent', JSON.stringify(testMessage));
+        }
 
         function generateRandomMessage() {
 			const randomData = {
@@ -656,52 +496,12 @@
 
 		function sendChannelMessage() {
 			const message = document.getElementById('channelMessage').value;
-			const channel = parseInt(document.getElementById('channelSelect').value);
-			
+			const channel = document.getElementById('channelSelect').value;
 			if (!message) {
 				alert('Please enter a message');
 				return;
 			}
-
-			const buttonGroup = event.target.closest('.btn-group');
-			
-			// WebSocket request
-			const wsMessage = {
-				action: 'content',
-				apiid: sessionID,
-				value: message
-			};
-			
-			if (channel){
-				wsMessage.out = channel;
-			}
-
-			// Log and send WebSocket request
-			logRequest(buttonGroup, {
-				type: 'WebSocket',
-				url: 'wss://io.socialstream.ninja:443',
-				message: wsMessage
-			});
-
-			// Log GET request format
-			logRequest(buttonGroup, {
-				type: 'HTTP GET',
-				url: `https://io.socialstream.ninja/${sessionID}/content/null/${encodeURIComponent(message)}?channel=${channel}`
-			});
-
-			// Log POST request format
-			logRequest(buttonGroup, {
-				type: 'HTTP POST',
-				url: `https://io.socialstream.ninja/${sessionID}?channel=${channel}`,
-				body: wsMessage
-			});
-
-			// Send via WebSocket
-			if (socket && socket.readyState === WebSocket.OPEN) {
-				socket.send(JSON.stringify(wsMessage));
-			} else {
-				alert('WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
-			}
+			sendCommand('content' + channel, message);
 		}
 
 		// Event listeners
@@ -731,39 +531,6 @@ Developer Notes:
 9. Error handling and reconnection logic is implemented for robustness
 10. Experiment with different message types and actions to understand the full capabilities of the API
 		`);
-		
-		document.querySelectorAll('.btn-group').forEach(group => {
-			const log = document.createElement('pre');
-			log.className = 'request-log';
-			group.parentNode.insertBefore(log, group.nextSibling);
-		});
-		
-		var lastLog = null;
-		
-		function logRequest(element, requestData) {
-			if (!element) return; // Guard against null element
-			let container = element;
-			if (element?.classList.contains('btn')) {
-				container = element.closest('.section');
-			} else if (element?.classList.contains('btn-group')) {
-				container = element.parentNode;
-			}
-			if (!container){return;}
-
-			const logId = `log-${requestData.type.replace(/\s+/g, '-').toLowerCase()}`;
-			let log = container.querySelector(`#${logId}`);
-			
-			if (!log) {
-				log = document.createElement('pre');
-				log.className = 'request-log';
-				log.id = logId;
-				container.appendChild(log);
-			}
-
-			log.setAttribute('data-type', requestData.type);
-			log.textContent = JSON.stringify(requestData, null, 2);
-			log.style.display = 'block';
-		}
 		</script>
 		</body>
 		</html>

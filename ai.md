@@ -53,14 +53,17 @@ If you want to access Ollama directly via the dock.html page, with custom.js com
 
 ## Using
 
-Just make sure the toggle is on, and that you have Ollama /w Llama3 installed/running locally, and you should be good to go now.
+To use the AI Chat bot mode, just make sure the toggle is on, and that you have Ollama /w Llama3 installed/running locally, and you should be good to go now.
 
-
-![image](https://github.com/user-attachments/assets/f4195658-85d4-4b6c-9481-e0fcbb9d4f05)
+![image](https://github.com/user-attachments/assets/63f1f98f-adff-4faf-8d39-206d5a76d5af)
 
 The Bot will respond automatically to chat if it thinks it's a good idea. There is a 5-second timeout per source site.
 
 ![image](https://github.com/user-attachments/assets/ed5d417e-4b1e-4f69-a81b-0a6380b8c2f3)
+
+The features and menu for the AI bot options are evolving weekly, so the instructions may not always mirror the current menu/options.
+
+There's already a lot of options beyond just a chat bot, including censorship options, summary options, RAG search, and far more.
 
 - Steve
  ps. BLARGH!

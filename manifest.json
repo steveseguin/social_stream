@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.9.6",
+  "version": "3.9.9",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -25,6 +25,7 @@
     "http://127.0.0.1:11434/api/generate",
     "https://zap.stream/*",
     "https://www.bigo.tv/*",
+	"https://claude.ai/*",
 	"https://*.webinargeek.com/webinar/*",
     "https://chaturbate.com/*/",
     "https://cherry.tv/*",				  
@@ -377,6 +378,10 @@
     {
       "js": ["./sources/static/x.js" ],
       "matches": [ "https://www.x.com/*", "https://x.com/*"]
+    },
+	{
+      "js": ["./sources/static/claude.js" ],
+      "matches": ["https://claude.ai/*"]
     },
 	{
       "js": [ "./sources/x.js" ],

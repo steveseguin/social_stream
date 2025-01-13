@@ -1571,44 +1571,41 @@ input:checked + .slider:before {
 						</div>	
 						<div id="ttsButton" class="hidden"></div>
 						
-						<div class="options_group tts-behavior-options">
-							<div class="tts-provider-options options_group">
-								<h4>Built-in System TTS Options</h4>
-								<i>note: the free built-in TTS plays out via the default audio device. <a style="color:lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
-								<br /><br />
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="lang" data-del1="lang,voice"/>
-										<span class="slider round"></span>
-									</label>
-									<select id="systemLanguageSelect" data-optionparam1="lang" title="Select the system TTS language"></select>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="rate" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="system-tts-rate">
-										⏩ Speaking rate
-										<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" 
-											size="5" data-numbersetting="rate" />
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param1="pitch" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="system-tts-pitch">
-										🎵 Pitch
-										<input type="number" style="max-width: 6ch;" step="0.1" max="2" min="0.1" value="1.0" 
-											size="5" data-numbersetting="pitch" />
-									</span>
-								</div>
+						<div class="tts-provider-options options_group">
+							<h4>Built-in System TTS Options</h4>
+							<i>note: the free built-in TTS plays out via the default audio device. <a style="color:lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
+							<br /><br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="lang" data-del1="lang,voice"/>
+									<span class="slider round"></span>
+								</label>
+								<select id="systemLanguageSelect" data-optionparam1="lang" title="Select the system TTS language"></select>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="rate" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="system-tts-rate">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" 
+										size="5" data-numbersetting="rate" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="pitch" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="system-tts-pitch">
+									🎵 Pitch
+									<input type="number" style="max-width: 6ch;" step="0.1" max="2" min="0.1" value="1.0" 
+										size="5" data-numbersetting="pitch" />
+								</span>
 							</div>
 						</div>
-							<br />
-							<!-- ElevenLabs TTS Options -->
+						<!-- ElevenLabs TTS Options -->
 						<div class="tts-provider-option options_group">
 							<h4>ElevenLabs TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">

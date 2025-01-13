@@ -795,9 +795,10 @@ I'll create a guide focused on integrating Social Stream Ninja with StreamDeck, 
 
 1. Open StreamDeck software
 2. Add a new "Website" action to your StreamDeck
-3. Configure the URL using this format:
+3. Check GET request in background
+4. Configure the URL using this format:
 ```
-https://io.socialstream.ninja/YOUR_SESSION_ID/sendEncodedChat/null/YOUR_MESSAGE
+https://io.socialstream.ninja/YOUR_SESSION_ID/sendEncodedChat/null/YOUR_URL_ENCODED_MESSAGE_HERE
 ```
 
 Replace:
@@ -808,6 +809,10 @@ For example, to send "Hello Stream!":
 ```
 https://io.socialstream.ninja/abc123/sendEncodedChat/null/Hello%20Stream!
 ```
+
+You can use this page to test and generate the correct URL here, if having problems doing it manually: https://socialstream.ninja/sampleapi.html. Note that we want to generate a GET request with this method.
+
+![image](https://github.com/user-attachments/assets/43df48f2-c66c-4302-84b1-17fa7bb11ee0)
 
 ## Advanced Setup with Multi Actions
 
