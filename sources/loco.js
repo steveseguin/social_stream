@@ -150,8 +150,8 @@
 			  }
 	  
 			
-			if (chatimg && !chatimg.startsWith("https://loco.gg/")){
-				chatimg = "https://loco.gg" + chatimg;
+			if (chatimg && !chatimg.startsWith("https://loco.com/")){
+				chatimg = "https://loco.com" + chatimg;
 			}
 			chatimg = chatimg.replace(".jpg&w=48&q=25", ".jpg&w=128&q=80");
 	  } catch(e){}
@@ -186,7 +186,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector('div>div>input[placeholder][type="text"]').focus();
+					document.querySelector('input[placeholder][maxlength="200"]').focus();
 					sendResponse(true);
 					return;
 				}
@@ -221,7 +221,7 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].nodeName.toLowerCase() !== "div"){continue;}
+							//if (mutation.addedNodes[i].nodeName.toLowerCase() !== "div"){continue;}
 							if (mutation.addedNodes[i].ignore){continue;}
 							mutation.addedNodes[i].ignore=true;
 							processMessage(mutation.addedNodes[i]);
@@ -247,16 +247,19 @@
 		var mainChat = document.querySelector(".chat-elements-list");
 		if (mainChat){ // just in case 
 			console.log("Social Stream Start");
-			clearInterval(checkReady);
+			if (mainChat.set){
+				return;
+			}
+			mainChat.set = true;
 			
-			setTimeout(function(){
-				var clear = mainChat.childNodes;
+			setTimeout(()=>{
+				var clear = document.querySelector(".chat-elements-list").childNodes;
 				for (var i = 0;i<clear.length;i++){
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
 					//processMessage(clear[i]);
 				}
 				console.log("Social Stream ready to go");
-				onElementInserted(mainChat);
+				onElementInserted(document.querySelector(".chat-elements-list"));
 			},1000);
 		} 
 	},500);

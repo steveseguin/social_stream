@@ -2491,6 +2491,8 @@
 			var doubleLimit = false;
 			
 			var encode = false;
+			
+			var localServer = urlParams.has("localserver") || false;
 
 			try {
 				if (electronApi) {
@@ -3378,7 +3380,7 @@
 
 			var conCon = 1;
 			var socketserver = false;
-			var serverURL = "wss://io.socialstream.ninja/api";
+			var serverURL = localServer ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api";
 			var reconnectionTimeout = null;
 			function setupSocket() {
 				// Clear any existing reconnection timeout
@@ -3443,7 +3445,7 @@
 
 			var conConExtension = 1;
 			var socketserverExtension = false;
-			var serverURLExtension = "wss://io.socialstream.ninja/extension";
+			var serverURLExtension = localServer ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension";
 			var server2 = false;
 			var server3 = false;
 			var reconnectionTimeoutExtension = null;

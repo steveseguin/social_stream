@@ -25,7 +25,8 @@ var isSSAPP = false;
 
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
-
+var localServer = urlParams.has("localserver") || false;
+localServer = true;
 var FacebookDupes = "";
 var FacebookDupesTime = null;
 
@@ -4332,8 +4333,8 @@ function sendToPost(data) {
 	}
 }
 var socketserverDock = false;
-var serverURLDock = "wss://io.socialstream.ninja/dock";
-var conConDock = 0;
+var serverURLDock = localServer ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/dock";
+var conConDock = 0; 
 var reconnectionTimeoutDock = null;
 
 function setupSocketDock() {
@@ -4400,7 +4401,7 @@ function setupSocketDock() {
 //
 
 var socketserver = false;
-var serverURL = "wss://io.socialstream.ninja/api";
+var serverURL = localServer ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api";
 var conCon = 0;
 var reconnectionTimeout = null;
 
