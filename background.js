@@ -463,18 +463,18 @@ function generateVariationsList(words) {
 }
 
 function createProfanityHashTable(profanityVariationsList) {
-	const hashTable = {};
-	for (let i = 0; i < profanityVariationsList.length; i++) {
-		const word = profanityVariationsList[i].toLowerCase();
-		for (let j = 0; j < word.length; j++) {
-			const character = word[j];
-			if (!hashTable[character]) {
-				hashTable[character] = {};
-			}
-			hashTable[character][word] = true;
-		}
-	}
-	return hashTable;
+    const hashTable = {};
+    for (let word of profanityVariationsList) {
+        word = word.trim().toLowerCase();
+        if (!word) continue;
+        
+        const firstChar = word.charAt(0);
+        if (!hashTable[firstChar]) {
+            hashTable[firstChar] = {};
+        }
+        hashTable[firstChar][word] = true;
+    }
+    return hashTable;
 }
 
 function isProfanity(word) {
@@ -489,16 +489,39 @@ function isProfanity(word) {
 	}
 	return Boolean(words[wordLower]);
 }
+
 function filterProfanity(sentence) {
-	let words = sentence.toLowerCase().split(/[\s\.\-_!?,]+/);
-	const uniqueWords = new Set(words);
-	for (let word of uniqueWords) {
-		if (isProfanity(word)) {
-			sentence = sentence.replace(new RegExp("\\b" + word + "\\b", "gi"), "*".repeat(word.length));
-		}
-	}
-	return sentence;
+    let filteredSentence = sentence;
+    
+    // Handle multi-word phrases first
+    if (profanityHashTable) {
+        Object.values(profanityHashTable)
+            .flatMap(obj => Object.keys(obj))
+            .filter(word => word.includes(' '))
+            .sort((a, b) => b.length - a.length)
+            .forEach(phrase => {
+                const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const phraseRegex = new RegExp(escapedPhrase, 'gi');
+                filteredSentence = filteredSentence.replace(phraseRegex, match => '*'.repeat(match.length));
+            });
+    }
+    
+    // Handle single words
+    const words = filteredSentence.split(/[\s\.\-_!?,]+/);
+    const uniqueWords = [...new Set(words)];
+    
+    for (let word of uniqueWords) {
+        if (word && isProfanity(word)) {
+            const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // Updated regex to handle punctuation
+            const wordRegex = new RegExp(`(?<!\\w)(${escapedWord}(?:${escapedWord})*?)(?:[\\s\\.,!\\?]|$)`, 'gi');
+            filteredSentence = filteredSentence.replace(wordRegex, match => '*'.repeat(match.length));
+        }
+    }
+    
+    return filteredSentence;
 }
+
 var profanityHashTable = false;
 
 function initialLoadBadWords(){
