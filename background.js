@@ -26,7 +26,7 @@ var isSSAPP = false;
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
 var localServer = urlParams.has("localserver") || false;
-localServer = true;
+//localServer = true;
 var FacebookDupes = "";
 var FacebookDupesTime = null;
 
