@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.9.14",
+  "version": "3.9.15",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -109,6 +109,7 @@
     "https://www.youtube.com/*",
     "https://studio.youtube.com/*",
     "https://*.twitch.tv/*",
+	"https://www.bitchute.com/video/*",
     "https://www.instagram.com/*",
     "https://livecenter.tiktok.com/*",
     "https://www.tiktok.com/*live*",
@@ -495,6 +496,10 @@
       "matches": [
 		"https://live.bilibili.com/*"
       ]
+    },
+	{
+      "js": [ "./sources/bitchute.js" ],
+      "matches": [ "https://www.bitchute.com/video/*" ]
     },
     {
       "js": [ "./sources/piczel.js" ],
