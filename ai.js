@@ -1757,10 +1757,10 @@ function logProcessedChunk(chunk, index) {
     log(`  Title: ${chunk.title}`);
     log(`  Level: ${chunk.level}`);
     log(`  Summary: ${chunk.summary}`);
-    log(`  Tags: ${chunk.tags.join(', ')}`);
-    log(`  Synonyms: ${chunk.synonyms.join(', ')}`);
-    log(`  Content length: ${chunk.content.length} characters`);
-    log(`  Content (first 200 chars): ${chunk.content.substring(0, 200)}...`);
+    log(`  Tags: ${chunk?.tags.join(', ')}`);
+    log(`  Synonyms: ${chunk?.synonyms.join(', ')}`);
+    log(`  Content length: ${chunk?.content.length} characters`);
+    log(`  Content (first 200 chars): ${chunk?.content.substring(0, 200)}...`);
     log('---');
 }
 
@@ -2030,8 +2030,8 @@ async function addDocumentToRAG(docId, content, title, tags = [], synonyms = [],
                 title: chunk.title,
                 content: chunk.content,
                 summary: chunk.summary,
-                tags: chunk.tags.join(' '),
-                synonyms: chunk.synonyms.join(' ')
+                tags: chunk?.tags.join(' '),
+                synonyms: chunk?.synonyms.join(' ')
             });
         });
     } else {

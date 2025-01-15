@@ -2492,7 +2492,7 @@
 			
 			var encode = false;
 			
-			var localServer = urlParams.has("localserver") || false;
+			
 
 			try {
 				if (electronApi) {
@@ -3377,10 +3377,11 @@
 				document.documentElement.style.setProperty("--scale-output", scale);
 				autoScrollCatch *= scale;
 			}
-
+			
+			
 			var conCon = 1;
 			var socketserver = false;
-			var serverURL = localServer ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api";
+			var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api";
 			var reconnectionTimeout = null;
 			function setupSocket() {
 				// Clear any existing reconnection timeout
@@ -3445,7 +3446,7 @@
 
 			var conConExtension = 1;
 			var socketserverExtension = false;
-			var serverURLExtension = localServer ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension";
+			var serverURLExtension = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension";
 			var server2 = false;
 			var server3 = false;
 			var reconnectionTimeoutExtension = null;
@@ -3825,11 +3826,29 @@
 					return text;
 				}
 			}
+			
+			function cleanPunctuation(text) {
+				if (!text) return text;
+				
+				return text
+					.replace(/[.]{2,}/g, '.')
+					.replace(/[?]{2,}/g, '?')
+					.replace(/[!]{2,}/g, '!')
+					.replace(/[,]{2,}/g, ',')
+					.replace(/[:]{2,}/g, ':')
+					.replace(/[;]{2,}/g, ';')
+					.replace(/[-]{2,}/g, '-')
+					.replace(/^[\s.!?,;:-]+$/, '')
+					.trim();
+			}
 
 			function speak(text, allow = false) {
 				if (!speech && !allow) {
 					return;
 				}
+				
+				text = cleanPunctuation(text);
+				
 				if (!text) {
 					return;
 				}

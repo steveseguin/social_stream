@@ -25,8 +25,7 @@ var isSSAPP = false;
 
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
-var localServer = urlParams.has("localserver") || false;
-//localServer = true;
+
 var FacebookDupes = "";
 var FacebookDupesTime = null;
 
@@ -103,7 +102,6 @@ if (typeof chrome.runtime == "undefined") {
 	chrome.storage = {};
 	chrome.storage.sync = {};
 	chrome.storage.sync.set = function (data) {
-		log("SYNC SET", data);
 		ipcRenderer.sendSync("storageSave", data);
 		log("ipcRenderer.sendSync('storageSave',data);");
 	};
@@ -118,6 +116,7 @@ if (typeof chrome.runtime == "undefined") {
 
 	chrome.storage.local = {};
 	chrome.storage.local.get = async function (arg, callback) {
+		log("LOCAL SYNC GET");
 		var response = await ipcRenderer.sendSync("storageGet", arg);
 		callback(response);
 	};
@@ -669,9 +668,9 @@ function validateRoomId(roomId) {
 	return sanitizedId;
 }
 
+var loadedFirst = false;
 function loadSettings(item, resave = false) {
 	log("loadSettings (or saving new settings)", item);
-
 	let reloadNeeded = false;
 
 	if (item && item.streamID) {
@@ -693,15 +692,16 @@ function loadSettings(item, resave = false) {
 				}
 			}
 			reloadNeeded = true;
+			chrome.storage.sync.set({ streamID});
+			chrome.runtime.lastError;
 		}
 	} else if (!streamID) {
-		reloadNeeded = true;
+		
 		streamID = generateStreamID(); // not stream ID, so lets generate one; then lets save it.
 		streamID = validateRoomId(streamID);
 		if (!streamID){
 			streamID = generateStreamID();
 		}
-		
 		streamID = validateRoomId(streamID);
 		if (!streamID){
 			try {
@@ -718,21 +718,25 @@ function loadSettings(item, resave = false) {
 			}
 		}
 		
-		if (!isSSAPP) {
-			resave = true;
-			if (item) {
-				item.streamID = streamID;
-			} else {
-				item = {};
-				item.streamID = streamID;
-			}
+		if (item) {
+			item.streamID = streamID;
+		} else {
+			item = {};
+			item.streamID = streamID;
 		}
+		
+		reloadNeeded = true;
+		chrome.storage.sync.set({ streamID});
+		chrome.runtime.lastError;
 	}
 
 	if (item && "password" in item) {
 		if (password != item.password) {
 			password = item.password;
+			
 			reloadNeeded = true;
+			chrome.storage.sync.set({ password});
+			chrome.runtime.lastError;
 		}
 	}
 
@@ -751,15 +755,15 @@ function loadSettings(item, resave = false) {
 		updateExtensionState(false);
 	}
 
-	if (resave) {
-		chrome.storage.sync.set(item);
-		chrome.runtime.lastError;
-	}
 
 	try {
 		if (isSSAPP && ipcRenderer) {
-			ipcRenderer.sendSync("fromBackground", { streamID, password, settings, state: isExtensionOn });
+			ipcRenderer.sendSync("fromBackground", { streamID, password, settings, state: isExtensionOn }); 
 			//ipcRenderer.send('backgroundLoaded');
+			if (resave && settings){
+				chrome.storage.sync.set({ settings});
+				chrome.runtime.lastError;
+			}
 		}
 	} catch (e) {
 		console.error(e);
@@ -784,6 +788,8 @@ function loadSettings(item, resave = false) {
 	if (settings.translationlanguage) {
 		changeLg(settings.translationlanguage.optionsetting);
 	}
+	
+	loadedFirst = true;
 }
 ////////////
 
@@ -1166,6 +1172,7 @@ async function overwriteFileExcel(data = false) {
 
 async function resetSettings(item = false) {
 	log("reset settings");
+	//alert("Settings reset");
 	chrome.storage.sync.get(properties, async function (item) {
 		if (!item) {
 			item = {};
@@ -2769,7 +2776,7 @@ async function processIncomingMessage(message, sender=null){
 chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
 	var response = {};
 	var alreadySet = false;
-		
+	
 	function sendResponse(msg) {
 		if (alreadySet) {
 		  console.error("Shouldn't run sendResponse twice");
@@ -2780,6 +2787,19 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		  sendResponseReal(msg);
 		}
 		response = msg;
+	}
+	
+	if (!loadedFirst){
+		for (var i = 0 ;i < 100;i++){
+			await sleep(100);
+			if (loadedFirst){
+				break;
+			}
+		}
+		// add a stall here instead if this actually happens
+		if (!loadedFirst){
+			return sendResponse({"tryAgain":true});
+		}
 	}
 	
 	try {
@@ -2797,7 +2817,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "getOnOffState") {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
 		} else if (request.cmd && request.cmd === "getSettings") {
-			try {
+			try { 
 				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG});
 			} catch(e){
 				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings});
@@ -3191,8 +3211,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (sender.tab.url) {
 				var SEVENTV2 = await getSEVENTVEmotes(sender.tab.url, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (SEVENTV2) {
-					//	console.log(sender);
-					//	console.log(SEVENTV2);
+					//	//console.logsender);
+					//	//console.logSEVENTV2);
 					chrome.tabs.sendMessage(sender.tab.id, { SEVENTV: SEVENTV2 }, function (response = false) {
 						chrome.runtime.lastError;
 					});
@@ -3200,13 +3220,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 		} else if ("getFFZ" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-			//console.log("getFFZ");
+			////console.log"getFFZ");
 			sendResponse({ state: isExtensionOn });
 			if (sender.tab.url) {
 				var FFZ2 = await getFFZEmotes(sender.tab.url, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (FFZ2) {
-					//	console.log(sender);
-					//	console.log(FFZ2);
+					//	//console.logsender);
+					//	//console.logFFZ2);
 					chrome.tabs.sendMessage(sender.tab.id, { FFZ: FFZ2 }, function (response = false) {
 						chrome.runtime.lastError;
 					});
@@ -3282,7 +3302,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 			newFileHandle = false;
 		} else if (request.cmd && request.cmd === "selectwinner") {
-			//console.log(request);
+			////console.logrequest);
 			if ("value" in request) {
 				resp = selectRandomWaitlist(parseInt(request.value) || 1);
 			} else {
@@ -3517,7 +3537,7 @@ function verifyOriginalNewIncomingMessage(msg, cleaned=false) {
 		return true;
 	}
 	
-	// console.log(msg,lastSentMessage);
+	// //console.logmsg,lastSentMessage);
 	
 	try {
 		if (!cleaned){
@@ -3525,16 +3545,16 @@ function verifyOriginalNewIncomingMessage(msg, cleaned=false) {
 		}
 		
 		var score = fastMessageSimilarity(msg, lastSentMessage);
-		// console.log(msg, score);
+		// //console.logmsg, score);
 		if (score > 0.5) { // same message
 			
 			lastMessageCounter += 1;
 			if (lastMessageCounter>1) {
-				// console.log("1");
+				// //console.log"1");
 				return false;
 			}
 			if (settings.hideallreplies){
-				// console.log("2");
+				// //console.log"2");
 				return false;
 			}
 		}
@@ -4013,7 +4033,7 @@ function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false, ty
 }
 
 function sendToS10(data, fakechat=false, relayed=false) {
-	console.log("sendToS10",data);
+	//console.log"sendToS10",data);
 	if (settings.s10 && settings.s10apikey && settings.s10apikey.textsetting) {
 		try {
 			// msg =  '{
@@ -4047,10 +4067,10 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				if (data.bot) {
 					return null;
 				}
-				//console.log(".");
+				////console.log".");
 				// checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, save=true) 
 				if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)){
-					//console.log("--");
+					////console.log"--");
 					return;
 				}
 			} else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)){
@@ -4332,8 +4352,9 @@ function sendToPost(data) {
 		}
 	}
 }
+
 var socketserverDock = false;
-var serverURLDock = localServer ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/dock";
+var serverURLDock = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/dock";
 var conConDock = 0; 
 var reconnectionTimeoutDock = null;
 
@@ -4401,7 +4422,7 @@ function setupSocketDock() {
 //
 
 var socketserver = false;
-var serverURL = localServer ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api";
+var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api";
 var conCon = 0;
 var reconnectionTimeout = null;
 
@@ -4532,7 +4553,7 @@ function setupSocket() {
 				downloadWaitlist();
 				resp = true;
 			} else if (data.action && data.action === "selectwinner") {
-				//console.log(data);
+				////console.logdata);
 				if ("value" in data) {
 					resp = selectRandomWaitlist(parseInt(data.value) || 1);
 				} else {
@@ -5437,7 +5458,7 @@ function safeDebuggerAttach(tabId, version, callback) {
   try {
     chrome.debugger.attach({ tabId: tabId }, version, () => {
       if (chrome.runtime.lastError) {
-        console.log('Debugger attach error:', chrome.runtime.lastError);
+        //console.log'Debugger attach error:', chrome.runtime.lastError);
         callback(chrome.runtime.lastError);
         return;
       }
@@ -5445,7 +5466,7 @@ function safeDebuggerAttach(tabId, version, callback) {
       callback();
     });
   } catch(e) {
-    console.log('Debugger attach exception:', e);
+    //console.log'Debugger attach exception:', e);
     callback(e);
   }
 }
@@ -5889,7 +5910,7 @@ function messagePopup(data) {
         if (chrome.runtime.lastError) {
             // console.warn("Error sending message:", chrome.runtime.lastError.message);
         } else {
-            // console.log("Message sent successfully:", response);
+            // //console.log"Message sent successfully:", response);
         }
     });
     return true;
@@ -6005,7 +6026,7 @@ function generalFakePoke(tabid) {
 			}
 		);
 	} catch (e) {
-		console.log(e);
+		//console.loge);
 		delayedDetach(tabid);
 	}
 }
@@ -6130,11 +6151,11 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 }
             } catch (e) {
                 chrome.runtime.lastError;
-                console.log(e, tab);
+                //console.loge, tab);
             }
         }
     } catch (error) {
-        console.log('Error in sendMessageToTabs:', error);
+        //console.log'Error in sendMessageToTabs:', error);
         return false;
     }
     
@@ -6792,7 +6813,7 @@ async function applyBotActions(data, tab = false) {
 		
 		
 		if (settings.joke && data.chatmessage && data.chatmessage.toLowerCase() === "!joke") {
-			//console.log(".");
+			////console.log".");
 			//if (Date.now() - messageTimeout > 5100) {
 				var score = parseInt(Math.random() * 378);
 				var joke = jokes[score];
@@ -6888,7 +6909,7 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		if (settings.dice && data.chatname && data.chatmessage && (data.chatmessage.toLowerCase().startsWith("!dice ") || data.chatmessage.toLowerCase() === "!dice")) {
-			//	console.log("dice detected");
+			//	//console.log"dice detected");
 			//if (Date.now() - messageTimeout > 5100) {
 				
 			let maxRoll = data.chatmessage.toLowerCase().split(" ");
@@ -6972,7 +6993,7 @@ async function applyBotActions(data, tab = false) {
 		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event){
 			sendToS10(data, false, true); // we'll handle the relay logic here instead
 		}
-		console.log(data);
+		//console.logdata);
 		
 		if (settings.forwardcommands2twitch && data.type && (data.type !== "twitch") && !data.reflection && !skipRelay && data.chatmessage && data.chatname && !data.event && tab && data.tid) {
 			if (!data.bot && data.chatmessage.startsWith("!")) {
@@ -7665,35 +7686,43 @@ window.onload = async function () {
 		loadSettings(programmedSettings, true);
 	} else {
 		log("Loading settings from the main file into the background.js");
-		chrome.storage.sync.get(properties, function (item) {
+		chrome.storage.sync.get(properties, function (item) { // sync shouldn't have our settings ; just stream ID and current extension state
 			// we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
-			log("properties", item);
+			
+			//console.warn(item);
+			
+			//log("properties", item);
 			if (isSSAPP && item) {
-				loadSettings(item, false);
-			} else if (item && item.settings) {
+				loadSettings(item, false); 
+				return;
+			}
+			
+			if (item?.settings) {
 				// ssapp
+				alert("upgrading from old storage structure format to new...");
 				chrome.storage.sync.remove(["settings"], function (Items) {
 					// ignored
 					log("upgrading from sync to local storage");
 				});
-				chrome.storage.local.set({
-					// oh well; harmless
-					settings: item.settings
-				});
-				loadSettings(item, false);
-			} else {
 				chrome.storage.local.get(["settings"], function (item2) {
-					log("item2", item2);
-					if (item) {
-						if (item2 && item2.settings) {
-							if (item) {
-								item.settings = item2.settings;
-							} else {
-								item = item2;
-							}
-						}
+					if (item2?.settings){
+						item = [...item, ...item2];
+					}
+					if (item?.settings){
+						chrome.storage.local.set({
+							settings: item.settings
+						});
+					}
+					if (item){
 						loadSettings(item, false);
-					} else if (item2) {
+					}
+				});
+				
+			} else {
+				loadSettings(item, false);
+				chrome.storage.local.get(["settings"], function (item2) {
+					if (item2){
+						//console.warn(item2);
 						loadSettings(item2, false);
 					}
 				});

@@ -390,9 +390,10 @@
         let socket;
         let sessionID;
         let quick = true;
+		
+		const urlParams = new URLSearchParams(window.location.search);
 
         function getSessionIdFromURL() {
-            const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('session');
         }
 
@@ -408,7 +409,7 @@
                 alert('Please enter a session ID');
                 return;
             }
-            socket = new WebSocket('wss://io.socialstream.ninja:443');
+            socket = new WebSocket(urlParams.has("localserver") ? "ws://127.0.0.1:3000" : 'wss://io.socialstream.ninja:443');
             socket.onopen = function() {
                   socket.send(JSON.stringify({
 					join: sessionID,

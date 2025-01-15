@@ -49,8 +49,7 @@
 			console.log(event.data);
 		});
 	}
-	
-	var serverURL = "wss://io.socialstream.ninja";
+	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
 	socketserver = new WebSocket(serverURL); 
 	setupSocket();
 	
