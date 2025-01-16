@@ -4859,10 +4859,12 @@ input:checked + .slider:before {
 										<option selected value="ollama">Ollama (Local)</option>
 										<option value="chatgpt">ChatGPT API</option>
 										<option value="gemini">Gemini API</option>
+										<option value="deepseek">DeepSeek API</option>
+										<option value="custom">Custom API</option>
 									</select>
 								<div>
 								</div>	
-									<div id="ollamaendpoint" class="hidden textInputContainer" style="width: 95%;">
+									<div id="ollamaendpoint" class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
 										<label for="ollamaendpoint"><span data-translate="ollama-API-endpoint">&gt; Ollama API endpoint</span></label>
 									</div>
@@ -4876,17 +4878,28 @@ input:checked + .slider:before {
 										<input type="password"  class="textInput" autocomplete="off" placeholder="Your Google API key" data-textsetting="geminiApiKey" />
 										<label for="geminiApiKey">&gt; Google API Key</label>
 									</div>
+									
+									<div id="deepseekApiKey" class="textInputContainer hidden" style="width: 95%;">
+										<input type="password" class="textInput" autocomplete="off" placeholder="Your DeepSeek API key" data-textsetting="deepseekApiKey" />
+										<label for="deepseekApiKey">&gt; DeepSeek API Key</label>
+									</div>
+									
+									<div id="customAIEndpoint" class="hidden textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="customAIEndpoint" />
+										<label for="customAIEndpoint"><span data-translate="custom-API-endpoint">&gt; Custom OpenAI-compatible endpoint</span></label>
+									</div>
 								</div>
 								
-								<div id="ollamamodel" class="hidden">
+								<div id="ollamamodel">
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: llama3.2" data-textsetting="ollamamodel" />
 										<label for="ollamamodel"><span data-translate="ollama-model">&gt; Ollama Model to use</span></label>
 									</div>
 								</div>
-								<div id="ollamaKeepAlive" class="hidden" title="Time to keep the model in memory; -1 unlimited. In minutes">
+								<div id="ollamaKeepAlive" title="Time to keep the model in memory; -1 unlimited. In minutes">
 									⏱️<span data-translate="ollama-model">Keep-alive model time (minutes)</span> <input type="number" min="-1" max="99999999" value="5" data-numbersetting="ollamaKeepAlive" />
 								</div>
+								
 								<div id="geminimodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-1.5-flash" data-textsetting="geminimodel" />
@@ -4897,6 +4910,18 @@ input:checked + .slider:before {
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gpt-4o-mini" data-textsetting="chatgptmodel" />
 										<label for="chatgptmodel"><span data-translate="chatgptmodel">&gt; ChatGPT Model to use</span></label>
+									</div>
+								</div>
+								<div id="deepseekmodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: deepseek-chat" data-textsetting="deepseekmodel" />
+										<label for="deepseekmodel"><span data-translate="deepseekmodel">&gt; DeepSeek Model to use</span></label>
+									</div>
+								</div>
+								<div id="customAIModel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: fine-tuned-v1" data-textsetting="customAIModel" />
+										<label for="customAIModel"><span data-translate="customAIModel">&gt; Model to use</span></label>
 									</div>
 								</div>
 								<h2><span data-translate="local-censor-bot">Censor bot options 🤖🚫🤬</span></h2>
