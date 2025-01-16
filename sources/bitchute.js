@@ -211,7 +211,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector('.public-DraftEditor-content[ contenteditable="true"]').focus();
+					document.querySelector('textarea[tabindex="0"], textarea').focus();
 					
 					sendResponse(true);
 					return;
