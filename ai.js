@@ -180,11 +180,17 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 	
 	// console.log(prompt);
 	
-    const provider = settings.aiProvider?.optionsetting || "ollama";
-    const endpoint = provider === "ollama" 
-        ? (settings.ollamaendpoint?.textsetting || "http://localhost:11434")
-        : (provider === "chatgpt" ? "https://api.openai.com/v1/chat/completions" : "https://generativelanguage.googleapis.com/v1beta/chat/completions");
-    
+	const provider = settings.aiProvider?.optionsetting || "ollama";
+	const endpoint = provider === "ollama" 
+		? (settings.ollamaendpoint?.textsetting || "http://localhost:11434")
+		: provider === "chatgpt" 
+			? "https://api.openai.com/v1/chat/completions" 
+			: provider === "deepseek"
+				? "https://api.deepseek.com/v1/chat/completions"
+				: provider === "custom"
+					? (settings.aiProviderCustom?.textsetting || "")
+					: "https://generativelanguage.googleapis.com/v1beta/chat/completions";
+	
 	function handleChunk(chunk, callback, appendToFull) {
 		const lines = chunk.split('\n').filter(line => line.trim());
 		for (const line of lines) {
@@ -1757,10 +1763,10 @@ function logProcessedChunk(chunk, index) {
     log(`  Title: ${chunk.title}`);
     log(`  Level: ${chunk.level}`);
     log(`  Summary: ${chunk.summary}`);
-    log(`  Tags: ${chunk.tags.join(', ')}`);
-    log(`  Synonyms: ${chunk.synonyms.join(', ')}`);
-    log(`  Content length: ${chunk.content.length} characters`);
-    log(`  Content (first 200 chars): ${chunk.content.substring(0, 200)}...`);
+    log(`  Tags: ${chunk?.tags.join(', ')}`);
+    log(`  Synonyms: ${chunk?.synonyms.join(', ')}`);
+    log(`  Content length: ${chunk?.content.length} characters`);
+    log(`  Content (first 200 chars): ${chunk?.content.substring(0, 200)}...`);
     log('---');
 }
 
@@ -2030,8 +2036,8 @@ async function addDocumentToRAG(docId, content, title, tags = [], synonyms = [],
                 title: chunk.title,
                 content: chunk.content,
                 summary: chunk.summary,
-                tags: chunk.tags.join(' '),
-                synonyms: chunk.synonyms.join(' ')
+                tags: chunk?.tags.join(' '),
+                synonyms: chunk?.synonyms.join(' ')
             });
         });
     } else {

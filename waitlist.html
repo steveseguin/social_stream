@@ -427,7 +427,7 @@
 	
 	var conCon = 1;
 	var socketserver = false;
-	var serverURL = "wss://io.socialstream.ninja/extension";
+	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension";
 
 	function setupSocket(){
 		socketserver.onclose = function (){

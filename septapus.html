@@ -609,9 +609,10 @@
 			messageElement = document.createElement('yt-live-chat-text-message-renderer');
 			let authorType = '';
 			
-			if (data.moderator) authorType = 'moderator';
-			else if (data.admin) authorType = 'owner';
-			else if (data.membership) authorType = 'member';
+			if (data.moderator || data.mod) authorType = 'moderator';
+			else if (data.admin || data.host || data.owner) authorType = 'owner';
+			else if (data.membership || data.hasMembership || data.member) authorType = 'member';
+			else if (data.bot ) authorType = 'bot';
 			
 			if (authorType) messageElement.setAttribute('author-type', authorType);
 			

@@ -122,11 +122,11 @@ if (typeof(chrome.runtime)=='undefined'){
 
 
 function copyToClipboard(event) {
-	console.log(event);
+	//console.log(event);
    
 	if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){
 		navigator.clipboard.writeText(event.target.parentNode.querySelector("[data-raw] a[href]").href).then(function() {
-			console.log('Link copied to clipboard!');
+			//console.log('Link copied to clipboard!');
 			event.target.classList.add("flashing");
 			setTimeout(()=>{
 				event.target.classList.remove("flashing");
@@ -136,7 +136,7 @@ function copyToClipboard(event) {
 		});
 	} else if (event.target.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){
 		navigator.clipboard.writeText(event.target.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]").href).then(function() {
-			console.log('Link copied to clipboard!');
+			//console.log('Link copied to clipboard!');
 			event.target.classList.add("flashing");
 			setTimeout(()=>{
 				event.target.classList.remove("flashing");
@@ -146,7 +146,7 @@ function copyToClipboard(event) {
 		});
 	} else if (event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){
 		navigator.clipboard.writeText(event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]").href).then(function() {
-			console.log('Link copied to clipboard!');
+			//console.log('Link copied to clipboard!');
 			event.target.classList.add("flashing");
 			setTimeout(()=>{
 				event.target.classList.remove("flashing");
@@ -907,7 +907,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					});
 				}
 			} else {
-				console.log(msg);
+				//console.log(msg);
 				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
 					log("ignore callback for this action");
 					// update(response);  
@@ -975,11 +975,18 @@ function update(response, sync=true){
 		
 			lastResponse = response;
 			
+			
+			
 			streamID = true;
+			
 			var password = "";
 			if ('password' in response && response.password){
 				password = "&password="+response.password;
 			}
+			
+			var localServer = urlParams.has("localserver") ? "&localserver" : "";
+			
+			password += localServer;
 			
 			let hideLinks = false;
 			document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
@@ -993,6 +1000,8 @@ function update(response, sync=true){
 			} else {
 				document.body.classList.remove("hidelinks");
 			}
+			
+			
 			
 			
 			document.getElementById("sessionid").value = response.streamID;
@@ -1338,7 +1347,7 @@ function update(response, sync=true){
 							}
 							if ("textparam1" in response.settings[key]){
 								var ele = document.querySelector("input[data-textparam1='"+key+"'],textarea[data-textparam1='"+key+"']");
-								console.log(ele);
+								//console.log(ele);
 								if (ele){
 									ele.value = response.settings[key].textparam1;
 									updateSettings(ele, sync);
@@ -2492,7 +2501,7 @@ if (!chrome.browserAction){
 		  reject(new Error('Response timeout'));
 		}, timeout);
 
-		chrome.runtime.sendMessage({type: 'toBackground', data: message}, response => {
+		chrome.runtime.sendMessage({type: 'toBackground', data: message}, response => { 
 		  clearTimeout(timeoutId);
 		  if (chrome.runtime.lastError) {
 			reject(chrome.runtime.lastError);
@@ -2614,9 +2623,9 @@ function uploadBadwordsFile() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const contents = e.target.result;
-		console.log({cmd: 'uploadBadwords', data: contents});
+		//console.log({cmd: 'uploadBadwords', data: contents});
         chrome.runtime.sendMessage({cmd: 'uploadBadwords', data: contents}, (response) => {
-		  console.log(response);
+		  //console.log(response);
           if (response.success) {
             alert('Badwords file uploaded successfully.');
           } else {
@@ -2972,13 +2981,13 @@ const TTSManager = {
 			const response = await fetch(url, options);
 			
 			if (!response.ok) {
-				console.log(response);
+				//console.log(response);
 				// Try to get detailed error message from response
 				const contentType = response.headers.get("content-type");
-				console.log(contentType);
+				//console.log(contentType);
 				if (contentType && contentType.includes("application/json")) {
 					const errorData = await response.json();
-					console.log(errorData);
+					//console.log(errorData);
 					throw new Error(errorData?.message || errorData?.detail?.message || errorData?.error || `HTTP error! status: ${response.status}`);
 				}
 				throw new Error(`HTTP error! status: ${response.status}`);

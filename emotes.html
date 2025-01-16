@@ -349,10 +349,10 @@
 		let fontsize = parseInt(240 * scale);
 		document.documentElement.style.setProperty("--font-size", fontsize+"%");
 	}
-
+	
 	var conCon = 1;
 	var socketserver = false;
-	var serverURL = "wss://io.socialstream.ninja";
+	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
 
 	function setupSocket(){
 		socketserver.onclose = function (){

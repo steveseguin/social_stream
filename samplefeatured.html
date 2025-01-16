@@ -209,9 +209,11 @@ Development Notes:
 <body>
     <div id="output" class="output"></div>
     <script>
+	const urlParams = new URLSearchParams(window.location.search);
+	
     const App = {
         config: {
-            serverURL: 'wss://io.socialstream.ninja',
+            serverURL: (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : 'wss://io.socialstream.ninja'),
             maxReconnectAttempts: 10,
             reconnectDelay: 100,
             roomIdMaxLength: 80
@@ -234,8 +236,6 @@ Development Notes:
         },
 
         initializeConnection() {
-            const urlParams = new URLSearchParams(window.location.search);
-            
             if (urlParams.has('server')) {
                 this.config.serverURL = urlParams.get('server') || this.config.serverURL;
                 this.setupSocket();
