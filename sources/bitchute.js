@@ -69,6 +69,49 @@
 		}
 	}
 	
+	const IframeManager = {
+		disabledIframes: new Map(),
+		
+		init() {
+			this.handleExistingIframes();
+			this.startObserver();
+		},
+
+		handleExistingIframes() {
+			document.querySelectorAll('iframe').forEach(iframe => this.disable(iframe));
+		},
+
+		startObserver() {
+			const observer = new MutationObserver(mutations => {
+				mutations.forEach(mutation => {
+					mutation.addedNodes.forEach(node => {
+						if (node.nodeName === 'IFRAME') {
+							this.disable(node);
+						}
+						if (node.querySelectorAll) {
+							node.querySelectorAll('iframe').forEach(iframe => this.disable(iframe));
+						}
+					});
+				});
+			});
+
+			observer.observe(document.body, {
+				childList: true,
+				subtree: true
+			});
+		},
+
+		disable(iframe) {
+			if (!iframe) return;
+			
+			if (!iframe.src.startsWith("https://www.bitchute.com/api")){
+				iframe.remove();
+				delete iframe;
+			} 
+		},
+
+	};
+
 	var cachedUserProfiles = {};
 	var lastImage = "";
 	
@@ -137,8 +180,6 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "bitchute";
 		
-	
-
 		
 		pushMessage(data);
 	}
@@ -154,10 +195,15 @@
 	// settings.textonlymode
 	// settings.captureevents
 	
+	var isExtensionOn = true;
+	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
+		}
+		if ("state" in request) {
+			isExtensionOn = request.state;
 		}
 	});
 
@@ -171,6 +217,9 @@
 					return;
 				}
 				if (typeof request === "object"){
+					if ("state" in request) {
+						isExtensionOn = request.state;
+					}
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
@@ -209,13 +258,14 @@
 		observer.observe(target, config);
 	}
 	
+	IframeManager.init();
 	
 	setInterval(function(){
 		try {
 		if (document.querySelector("#right_column .q-list")){
 			if (!document.querySelector("#right_column .q-list").marked){
 				document.querySelector("#right_column .q-list").marked=true;
-
+				
 				console.log("CONNECTED chat detected");
 
 				setTimeout(function(){
@@ -238,5 +288,8 @@
 			//console.error(e);
 		}
 	},2000);
+	
+	
+	
 
 })();
