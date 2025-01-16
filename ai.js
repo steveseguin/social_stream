@@ -178,18 +178,40 @@ const activeChatBotSessions = {};
 let tmpModelFallback = "";
 async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null) {
 	
-	// console.log(prompt);
-	
 	const provider = settings.aiProvider?.optionsetting || "ollama";
-	const endpoint = provider === "ollama" 
-		? (settings.ollamaendpoint?.textsetting || "http://localhost:11434")
-		: provider === "chatgpt" 
-			? "https://api.openai.com/v1/chat/completions" 
-			: provider === "deepseek"
-				? "https://api.deepseek.com/v1/chat/completions"
-				: provider === "custom"
-					? (settings.aiProviderCustom?.textsetting || "")
-					: "https://generativelanguage.googleapis.com/v1beta/chat/completions";
+	let endpoint, apiKey;
+
+	switch (provider) {
+		case "ollama":
+			endpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
+			model = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
+			break;
+		case "chatgpt":
+			endpoint = "https://api.openai.com/v1/chat/completions";
+			model = model || settings.chatgptmodel?.textsetting || "gpt-4o-mini";
+			apiKey = settings.chatgptApiKey?.textsetting;
+			break;
+		case "deepseek":
+			endpoint = "https://api.deepseek.com/v1/chat/completions";
+			model = model || settings.deepseekmodel?.textsetting || "deepseek-chat";
+			apiKey = settings.deepseekApiKey?.textsetting;
+			break;
+		case "gemini":
+			endpoint = "https://generativelanguage.googleapis.com/v1beta/chat/completions";
+			model = model || settings.geminimodel?.textsetting || "gemini-1.5-flash";
+			apiKey = settings.geminiApiKey?.textsetting;
+			break;
+		case "custom":
+			endpoint = settings.customAIEndpoint?.textsetting || "http://localhost:11434";
+			model = model || settings.customAIModel?.textsetting || "";
+			apiKey = settings.customAIApiKey?.textsetting;
+			break;
+		case "default":
+			endpoint = "http://localhost:11434";
+			apiKey = "";
+			model = model || "";
+			break;
+	}
 	
 	function handleChunk(chunk, callback, appendToFull) {
 		const lines = chunk.split('\n').filter(line => line.trim());
@@ -235,7 +257,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 	}
     if (provider === "ollama") {
 		
-        let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
+        let ollamamodel = model;
         if (!ollamamodel) {
             ollamamodel = await getFirstAvailableModel();
             if (ollamamodel) {
@@ -276,13 +298,14 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
         }
         return result.complete ? result.response : result.response + "💥";
     } else {
-        const apiKey = provider === "chatgpt" ? settings.chatgptApiKey?.textsetting : settings.geminiApiKey?.textsetting;
-        if (!apiKey) return;
 
         // Now both ChatGPT and Gemini use the same message format
 		// let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
+		
+		// deepseek-chat
+		
         const message = {
-            model: provider === "chatgpt" ? (settings.chatgptmodel?.textsetting || "gpt-4o-mini") : (settings.geminimodel?.textsetting || "gemini-1.5-flash"),
+            model: model,
             messages: [{
                 role: "user",
                 content: prompt
@@ -366,6 +389,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
             }
 
             let response;
+			let responseComplete;
             if (typeof ipcRenderer !== 'undefined') {
                 // Your existing Electron implementation
                 if (isStreaming) {
