@@ -180,11 +180,17 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 	
 	// console.log(prompt);
 	
-    const provider = settings.aiProvider?.optionsetting || "ollama";
-    const endpoint = provider === "ollama" 
-        ? (settings.ollamaendpoint?.textsetting || "http://localhost:11434")
-        : (provider === "chatgpt" ? "https://api.openai.com/v1/chat/completions" : "https://generativelanguage.googleapis.com/v1beta/chat/completions");
-    
+	const provider = settings.aiProvider?.optionsetting || "ollama";
+	const endpoint = provider === "ollama" 
+		? (settings.ollamaendpoint?.textsetting || "http://localhost:11434")
+		: provider === "chatgpt" 
+			? "https://api.openai.com/v1/chat/completions" 
+			: provider === "deepseek"
+				? "https://api.deepseek.com/v1/chat/completions"
+				: provider === "custom"
+					? (settings.aiProviderCustom?.textsetting || "")
+					: "https://generativelanguage.googleapis.com/v1beta/chat/completions";
+	
 	function handleChunk(chunk, callback, appendToFull) {
 		const lines = chunk.split('\n').filter(line => line.trim());
 		for (const line of lines) {
