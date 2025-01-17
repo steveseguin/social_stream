@@ -1179,52 +1179,66 @@ class GoogleLivePublisher {
 
 class AudioPlayer {
     constructor() {
-        this.context = new AudioContext({sampleRate: 24000}); // They think I'm slow, eh?
+        this.context = new AudioContext({sampleRate: 24000});
         
-        // Create a compressor to smooth out volume variations
+        // Enhanced compressor settings for smoother audio
         this.compressor = this.context.createDynamicsCompressor();
-        this.compressor.threshold.value = -24;
-        this.compressor.knee.value = 30;
-        this.compressor.ratio.value = 12;
-        this.compressor.attack.value = 0.003;
-        this.compressor.release.value = 0.25;
+        this.compressor.threshold.value = -20;
+        this.compressor.knee.value = 25;
+        this.compressor.ratio.value = 10;
+        this.compressor.attack.value = 0.002;
+        this.compressor.release.value = 0.2;
+        
+        // Add a limiter to prevent clipping
+        this.limiter = this.context.createDynamicsCompressor();
+        this.limiter.threshold.value = -0.5;
+        this.limiter.knee.value = 0;
+        this.limiter.ratio.value = 20;
+        this.limiter.attack.value = 0.001;
+        this.limiter.release.value = 0.1;
         
         this.gainNode = this.context.createGain();
         this.gainNode.connect(this.compressor);
-        this.compressor.connect(this.context.destination);
+        this.compressor.connect(this.limiter);
+        this.limiter.connect(this.context.destination);
         this.gainNode.gain.value = 1;
         
-        this.bufferSize = 8192 * 4;
+        this.bufferSize = 16384;
+        this.minBufferSize = 8192;
+        this.maxBufferSize = 32768;
         this.sampleRate = 24000;
         this.processingBuffer = new Float32Array(0);
         this.audioQueue = [];
         this.isPlaying = false;
         this.scheduledTime = 0;
         this.currentSource = null;
-        this.silencePadding = 0.02; // Increased padding
-        this.startDelay = 0.1; // Increased initial delay
-        this.bufferTarget = 3;
-        this.scheduleAheadTime = 0.3; // Increased scheduling window
-        this.minimumBufferSize = this.bufferSize;
-        this.maxBufferSize = this.bufferSize * 8;
+        this.silencePadding = 0.03;
+        this.startDelay = 0.15;
+        this.scheduleAheadTime = 0.4;
         this.isPaused = false;
         this.lastPlaybackTime = 0;
         this.initialChunk = true;
+        this.fadeDuration = 0.015;
+        this.underrunPadding = 0.1;
     }
 
     addPCM16(chunk) {
         const float32Array = new Float32Array(chunk.length / 2);
         const dataView = new DataView(chunk.buffer);
+        
+        // Improved sample conversion with soft clipping
         for (let i = 0; i < chunk.length / 2; i++) {
-            float32Array[i] = dataView.getInt16(i * 2, true) / 32768;
+            const sample = dataView.getInt16(i * 2, true) / 32768;
+            float32Array[i] = Math.tanh(sample); // Soft clipping
         }
 
+        // Dynamic buffer sizing based on network conditions
         const newBuffer = new Float32Array(this.processingBuffer.length + float32Array.length);
         newBuffer.set(this.processingBuffer);
         newBuffer.set(float32Array, this.processingBuffer.length);
         this.processingBuffer = newBuffer;
 
-        if (this.processingBuffer.length >= this.minimumBufferSize) {
+        if (this.processingBuffer.length >= this.minBufferSize) {
             const paddedBuffer = this.addSilencePadding(this.processingBuffer);
             this.audioQueue.push(paddedBuffer);
             this.processingBuffer = new Float32Array(0);
@@ -1240,21 +1254,21 @@ class AudioPlayer {
 
     addSilencePadding(audioData) {
         const paddingSamples = Math.floor(this.silencePadding * this.sampleRate);
-        const crossfadeSamples = Math.min(paddingSamples, Math.floor(this.sampleRate * 0.005));
+        const crossfadeSamples = Math.floor(this.fadeDuration * this.sampleRate);
         const paddedBuffer = new Float32Array(audioData.length + (paddingSamples * 2));
         
-        // Add input audio with padding on both sides
+        // Add silence padding
         paddedBuffer.set(audioData, paddingSamples);
         
-        // Apply fade-in
+        // Improved crossfade using equal power curve
         for (let i = 0; i < crossfadeSamples; i++) {
-            const fadeIn = 0.5 * (1 - Math.cos((i / crossfadeSamples) * Math.PI));
+            const fadeIn = Math.sin((i / crossfadeSamples) * Math.PI / 2);
+            const fadeOut = Math.cos((i / crossfadeSamples) * Math.PI / 2);
+            
+            // Apply fade-in
             paddedBuffer[paddingSamples + i] *= fadeIn;
-        }
-        
-        // Apply fade-out
-        for (let i = 0; i < crossfadeSamples; i++) {
-            const fadeOut = 0.5 * (1 + Math.cos((i / crossfadeSamples) * Math.PI));
+            
+            // Apply fade-out
             paddedBuffer[paddingSamples + audioData.length - crossfadeSamples + i] *= fadeOut;
         }
         
@@ -1263,16 +1277,16 @@ class AudioPlayer {
 
     scheduleNextBuffer() {
         if (!this.isPlaying || this.isPaused) {
-			avatar.setEmotion('happy', false);
-			return;
-		}
+            avatar.setEmotion('happy', false);
+            return;
+        }
 
         const now = this.context.currentTime;
-
-        if (this.audioQueue.length === 0) {
-            this.isPaused = true;
-            this.lastPlaybackTime = this.scheduledTime;
-            return;
+        
+        // Add additional silence if buffer is running low
+        if (this.audioQueue.length === 0 && this.scheduledTime - now < this.underrunPadding) {
+            const silenceBuffer = new Float32Array(Math.floor(this.underrunPadding * this.sampleRate));
+            this.audioQueue.push(silenceBuffer);
         }
 
         while (this.audioQueue.length > 0 && this.scheduledTime < now + this.scheduleAheadTime) {
@@ -1283,10 +1297,16 @@ class AudioPlayer {
             
             const startTime = Math.max(this.scheduledTime, now);
             source.connect(this.gainNode);
-            source.start(startTime);
             
+            // Prevent scheduling too far ahead
+            if (startTime - now > this.scheduleAheadTime * 1.5) {
+                this.audioQueue.unshift(audioData);
+                break;
+            }
+            
+            source.start(startTime);
             this.currentSource = source;
-            this.scheduledTime = startTime + audioBuffer.duration - this.silencePadding * 2;
+            this.scheduledTime = startTime + audioBuffer.duration - (this.silencePadding * 2);
             
             source.onended = () => {
                 if (this.audioQueue.length > 0) {
@@ -1298,10 +1318,10 @@ class AudioPlayer {
         if (this.isPlaying && !this.isPaused) {
             const nextCheckDelay = Math.max(10, (this.scheduledTime - now) * 500);
             setTimeout(() => this.scheduleNextBuffer(), nextCheckDelay);
-			avatar.setEmotion("happy", true);
-		} else {
-			avatar.setEmotion('happy', false);
-		}
+            avatar.setEmotion("happy", true);
+        } else {
+            avatar.setEmotion('happy', false);
+        }
     }
 
     createAudioBuffer(audioData) {
@@ -1313,15 +1333,19 @@ class AudioPlayer {
     stop() {
         this.isPlaying = false;
         this.isPaused = false;
-		avatar.setEmotion('happy', false);
+        avatar.setEmotion('happy', false);
         
         if (this.currentSource) {
-            try {
-                this.currentSource.stop();
-            } catch (e) {
-                console.warn('Error stopping current source:', e);
-            }
-            this.currentSource = null;
+            const currentTime = this.context.currentTime;
+            this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, currentTime);
+            this.gainNode.gain.linearRampToValueAtTime(0, currentTime + 0.1);
+            
+            setTimeout(() => {
+                try {
+                    this.currentSource.stop();
+                } catch (e) {}
+                this.currentSource = null;
+            }, 150);
         }
 
         this.audioQueue = [];
@@ -1329,15 +1353,11 @@ class AudioPlayer {
         this.initialChunk = true;
         this.lastPlaybackTime = 0;
         
-        const currentTime = this.context.currentTime;
-        this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, currentTime);
-        this.gainNode.gain.linearRampToValueAtTime(0, currentTime + 0.2);
-        
         setTimeout(() => {
             this.gainNode.disconnect();
             this.gainNode = this.context.createGain();
-            this.gainNode.connect(this.context.destination);
-        }, 300);
+            this.gainNode.connect(this.compressor);
+        }, 200);
     }
 
     async resume() {
@@ -1347,12 +1367,13 @@ class AudioPlayer {
         
         if (this.isPaused && this.audioQueue.length > 0) {
             this.isPaused = false;
-            this.scheduledTime = this.context.currentTime;
+            this.scheduledTime = Math.max(this.context.currentTime, this.lastPlaybackTime);
             this.scheduleNextBuffer();
         }
         
-        this.gainNode.gain.setValueAtTime(0, this.context.currentTime);
-        this.gainNode.gain.linearRampToValueAtTime(1, this.context.currentTime + 0.1);
+        const currentTime = this.context.currentTime;
+        this.gainNode.gain.setValueAtTime(0, currentTime);
+        this.gainNode.gain.linearRampToValueAtTime(1, currentTime + 0.1);
     }
 
     complete() {
@@ -1362,15 +1383,15 @@ class AudioPlayer {
             this.processingBuffer = new Float32Array(0);
         }
 
-        if (this.isPlaying) {
-            this.scheduleNextBuffer();
-        } else if (this.audioQueue.length > 0) {
-            this.isPlaying = true;
-            this.scheduledTime = this.context.currentTime + 0.05;
+        if (this.audioQueue.length > 0) {
+            if (!this.isPlaying) {
+                this.isPlaying = true;
+                this.scheduledTime = this.context.currentTime + 0.05;
+            }
             this.scheduleNextBuffer();
         } else {
-			avatar.setEmotion('happy', false);
-		}
+            avatar.setEmotion('happy', false);
+        }
     }
 }
 
