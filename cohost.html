@@ -198,10 +198,7 @@ button:disabled {
 }
 
 
-#puppet-container {
-    position: fixed;
-    z-index: 1000;
-}
+
 
 :root {
   --puppet-primary: #333;
@@ -210,7 +207,10 @@ button:disabled {
   --puppet-highlight: #fff;
   --puppet-shadow: rgba(0, 0, 0, 0.2);
 }
-
+#puppet-container {
+    position: fixed;
+    z-index: 1000;
+}
 .puppet {
   width: 300px;
   height: 300px;
@@ -296,6 +296,7 @@ button:disabled {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   transform-origin: center;
+  margin-top: 32px;
 }
 
 .cheeks {
@@ -307,7 +308,7 @@ button:disabled {
   padding: 0 20px;
   opacity: 0;
   transition: all 0.3s ease;
-  left: -17%;
+  left: -19%;
 }
 
 .cheek {
@@ -317,29 +318,30 @@ button:disabled {
   border-radius: 50%;
   transform: scale(0);
   transition: all 0.3s ease;
+  
 }
 
 @keyframes talking {
   0%, 100% { 
-    height: 25px; 
-    width: 60px;
-    border-radius: 30px;
+    height: 30px; 
+    width: 65px;
+    border-radius: 32.5px;
   }
   50% { 
-    height: 45px; 
-    width: 50px;
-    border-radius: 25px;
+    height: 50px; 
+    width: 55px;
+    border-radius: 27.5px;
   }
 }
 
 @keyframes softTalking {
   0%, 100% { 
-    height: 35px;
+    height: 40px;
     transform: scale(1);
   }
   50% { 
-    height: 45px;
-    transform: scale(0.95);
+    height: 50px;
+    transform: scale(0.98);
   }
 }
 
@@ -351,7 +353,7 @@ button:disabled {
 
 @keyframes bounce {
   0%, 100% { transform: translate(-50%, -50%); }
-  50% { transform: translate(-50%, -45%); }
+  50% { transform: translate(-50%, -47%); }
 }
 
 @keyframes breathe {
@@ -361,8 +363,8 @@ button:disabled {
 
 @keyframes idle {
   0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-  25% { transform: translate(-51%, -50%) rotate(-1deg); }
-  75% { transform: translate(-49%, -50%) rotate(1deg); }
+  25% { transform: translate(-51%, -50%) rotate(-0.5deg); }
+  75% { transform: translate(-49%, -50%) rotate(0.5deg); }
 }
 
 .puppet {
@@ -384,7 +386,7 @@ button:disabled {
 .happy .mouth {
   height: 60px;
   border-radius: 0 0 80px 80px;
-  transform: translateY(-5px) scale(1.1);
+  transform: translateY(0px) scale(0.9);
 }
 
 .happy .cheeks {
@@ -546,6 +548,11 @@ button:disabled {
   --puppet-highlight: #333;
   --puppet-shadow: rgba(0, 0, 0, 0.4);
 }
+
+.puppet * {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+	
 </style>
 </head>
 <body>
@@ -1176,226 +1183,104 @@ class GoogleLivePublisher {
         this.canvasContext = null;
     }
 }
-
 class AudioPlayer {
     constructor() {
         this.context = new AudioContext({sampleRate: 24000});
-        
-        // Enhanced compressor settings for smoother audio
-        this.compressor = this.context.createDynamicsCompressor();
-        this.compressor.threshold.value = -20;
-        this.compressor.knee.value = 25;
-        this.compressor.ratio.value = 10;
-        this.compressor.attack.value = 0.002;
-        this.compressor.release.value = 0.2;
-        
-        // Add a limiter to prevent clipping
-        this.limiter = this.context.createDynamicsCompressor();
-        this.limiter.threshold.value = -0.5;
-        this.limiter.knee.value = 0;
-        this.limiter.ratio.value = 20;
-        this.limiter.attack.value = 0.001;
-        this.limiter.release.value = 0.1;
-        
         this.gainNode = this.context.createGain();
-        this.gainNode.connect(this.compressor);
-        this.compressor.connect(this.limiter);
-        this.limiter.connect(this.context.destination);
-        this.gainNode.gain.value = 1;
+        this.gainNode.connect(this.context.destination);
         
-        this.bufferSize = 16384;
-        this.minBufferSize = 8192;
-        this.maxBufferSize = 32768;
-        this.sampleRate = 24000;
-        this.processingBuffer = new Float32Array(0);
-        this.audioQueue = [];
+        this.samples = new Float32Array(0);
         this.isPlaying = false;
-        this.scheduledTime = 0;
-        this.currentSource = null;
-        this.silencePadding = 0.03;
-        this.startDelay = 0.15;
-        this.scheduleAheadTime = 0.4;
-        this.isPaused = false;
-        this.lastPlaybackTime = 0;
-        this.initialChunk = true;
-        this.fadeDuration = 0.015;
-        this.underrunPadding = 0.1;
+        this.nextTime = 0;
+        this.completeCalled = false;
+		
+		this.timeout = null;
     }
 
     addPCM16(chunk) {
+        // Convert to float32
         const float32Array = new Float32Array(chunk.length / 2);
         const dataView = new DataView(chunk.buffer);
-        
-        // Improved sample conversion with soft clipping
         for (let i = 0; i < chunk.length / 2; i++) {
-            const sample = dataView.getInt16(i * 2, true) / 32768;
-            float32Array[i] = Math.tanh(sample); // Soft clipping
+            float32Array[i] = dataView.getInt16(i * 2, true) / 32768;
         }
 
-        // Dynamic buffer sizing based on network conditions
-        const newBuffer = new Float32Array(this.processingBuffer.length + float32Array.length);
-        newBuffer.set(this.processingBuffer);
-        newBuffer.set(float32Array, this.processingBuffer.length);
-        this.processingBuffer = newBuffer;
+        // Add to existing samples
+        const newSamples = new Float32Array(this.samples.length + float32Array.length);
+        newSamples.set(this.samples);
+        newSamples.set(float32Array, this.samples.length);
+        this.samples = newSamples;
 
-        if (this.processingBuffer.length >= this.minBufferSize) {
-            const paddedBuffer = this.addSilencePadding(this.processingBuffer);
-            this.audioQueue.push(paddedBuffer);
-            this.processingBuffer = new Float32Array(0);
-
-            if (!this.isPlaying) {
-                this.isPlaying = true;
-                this.scheduledTime = this.context.currentTime + (this.initialChunk ? this.startDelay : 0);
-                this.initialChunk = false;
-                this.scheduleNextBuffer();
-            }
+        // Start playing if not already
+        if (!this.isPlaying) {
+            this.play();
         }
     }
 
-    addSilencePadding(audioData) {
-        const paddingSamples = Math.floor(this.silencePadding * this.sampleRate);
-        const crossfadeSamples = Math.floor(this.fadeDuration * this.sampleRate);
-        const paddedBuffer = new Float32Array(audioData.length + (paddingSamples * 2));
+    play() {
+        if (this.samples.length === 0) return;
+        this.isPlaying = true;
+
+        // Create buffer for current samples
+        const buffer = this.context.createBuffer(1, this.samples.length, this.context.sampleRate);
+        buffer.getChannelData(0).set(this.samples);
         
-        // Add silence padding
-        paddedBuffer.set(audioData, paddingSamples);
+        const source = this.context.createBufferSource();
+        source.buffer = buffer;
+        source.connect(this.gainNode);
         
-        // Improved crossfade using equal power curve
-        for (let i = 0; i < crossfadeSamples; i++) {
-            const fadeIn = Math.sin((i / crossfadeSamples) * Math.PI / 2);
-            const fadeOut = Math.cos((i / crossfadeSamples) * Math.PI / 2);
-            
-            // Apply fade-in
-            paddedBuffer[paddingSamples + i] *= fadeIn;
-            
-            // Apply fade-out
-            paddedBuffer[paddingSamples + audioData.length - crossfadeSamples + i] *= fadeOut;
-        }
+        // Calculate start time
+        const startTime = Math.max(this.context.currentTime, this.nextTime);
+        source.start(startTime);
+        this.nextTime = startTime + buffer.duration;
         
-        return paddedBuffer;
-    }
-
-    scheduleNextBuffer() {
-        if (!this.isPlaying || this.isPaused) {
-            avatar.setEmotion('happy', false);
-            return;
-        }
-
-        const now = this.context.currentTime;
+        // Reset samples buffer
+        this.samples = new Float32Array(0);
         
-        // Add additional silence if buffer is running low
-        if (this.audioQueue.length === 0 && this.scheduledTime - now < this.underrunPadding) {
-            const silenceBuffer = new Float32Array(Math.floor(this.underrunPadding * this.sampleRate));
-            this.audioQueue.push(silenceBuffer);
-        }
-
-        while (this.audioQueue.length > 0 && this.scheduledTime < now + this.scheduleAheadTime) {
-            const audioData = this.audioQueue.shift();
-            const audioBuffer = this.createAudioBuffer(audioData);
-            const source = this.context.createBufferSource();
-            source.buffer = audioBuffer;
-            
-            const startTime = Math.max(this.scheduledTime, now);
-            source.connect(this.gainNode);
-            
-            // Prevent scheduling too far ahead
-            if (startTime - now > this.scheduleAheadTime * 1.5) {
-                this.audioQueue.unshift(audioData);
-                break;
-            }
-            
-            source.start(startTime);
-            this.currentSource = source;
-            this.scheduledTime = startTime + audioBuffer.duration - (this.silencePadding * 2);
-            
-            source.onended = () => {
-                if (this.audioQueue.length > 0) {
-                    requestAnimationFrame(() => this.scheduleNextBuffer());
-                }
-            };
-        }
-
-        if (this.isPlaying && !this.isPaused) {
-            const nextCheckDelay = Math.max(10, (this.scheduledTime - now) * 500);
-            setTimeout(() => this.scheduleNextBuffer(), nextCheckDelay);
-            avatar.setEmotion("happy", true);
-        } else {
-            avatar.setEmotion('happy', false);
-        }
-    }
-
-    createAudioBuffer(audioData) {
-        const audioBuffer = this.context.createBuffer(1, audioData.length, this.sampleRate);
-        audioBuffer.getChannelData(0).set(audioData);
-        return audioBuffer;
-    }
-
-    stop() {
-        this.isPlaying = false;
-        this.isPaused = false;
-        avatar.setEmotion('happy', false);
-        
-        if (this.currentSource) {
-            const currentTime = this.context.currentTime;
-            this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, currentTime);
-            this.gainNode.gain.linearRampToValueAtTime(0, currentTime + 0.1);
-            
-            setTimeout(() => {
-                try {
-                    this.currentSource.stop();
-                } catch (e) {}
-                this.currentSource = null;
-            }, 150);
-        }
-
-        this.audioQueue = [];
-        this.processingBuffer = new Float32Array(0);
-        this.initialChunk = true;
-        this.lastPlaybackTime = 0;
-        
-        setTimeout(() => {
-            this.gainNode.disconnect();
-            this.gainNode = this.context.createGain();
-            this.gainNode.connect(this.compressor);
-        }, 200);
+        source.onended = () => {
+            this.isPlaying = false;
+            if (this.samples.length > 0) {
+                this.play();
+            } else if (this.completeCalled) {
+                avatar.setEmotion('happy', false);
+            } else {
+				clearInterval(this.timeout);
+				this.timeout = setTimeout(()=>{
+					avatar.setEmotion('happy', false);
+				},20);
+			}
+        };
+		clearInterval(this.timeout);
+        avatar.setEmotion("happy", true);
     }
 
     async resume() {
         if (this.context.state === "suspended") {
             await this.context.resume();
         }
+    }
+
+    stop() {
+        this.samples = new Float32Array(0);
+        this.isPlaying = false;
+        this.nextTime = 0;
+        this.completeCalled = false;
         
-        if (this.isPaused && this.audioQueue.length > 0) {
-            this.isPaused = false;
-            this.scheduledTime = Math.max(this.context.currentTime, this.lastPlaybackTime);
-            this.scheduleNextBuffer();
-        }
-        
-        const currentTime = this.context.currentTime;
-        this.gainNode.gain.setValueAtTime(0, currentTime);
-        this.gainNode.gain.linearRampToValueAtTime(1, currentTime + 0.1);
+        this.gainNode.disconnect();
+        this.gainNode = this.context.createGain();
+        this.gainNode.connect(this.context.destination);
+        clearInterval(this.timeout);
+        avatar.setEmotion('happy', false);
     }
 
     complete() {
-        if (this.processingBuffer.length > 0) {
-            const paddedBuffer = this.addSilencePadding(this.processingBuffer);
-            this.audioQueue.push(paddedBuffer);
-            this.processingBuffer = new Float32Array(0);
+        this.completeCalled = true;
+        if (!this.isPlaying && this.samples.length > 0) {
+            this.play();
         }
-
-        if (this.audioQueue.length > 0) {
-            if (!this.isPlaying) {
-                this.isPlaying = true;
-                this.scheduledTime = this.context.currentTime + 0.05;
-            }
-            this.scheduleNextBuffer();
-        } else {
-            avatar.setEmotion('happy', false);
-        }
+		
     }
 }
-
-
 function base64ToArrayBuffer(base64) {
     const binaryString = atob(base64);
     const bytes = new Uint8Array(binaryString.length);
