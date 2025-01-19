@@ -369,7 +369,6 @@ body.extension-enabled {
 
 #chatCommands {
     overflow-y: auto;
-    max-height: 156px;
     box-shadow: inset 0px 0px 5px #0000002e;
     border-radius: 10px;
     margin-top: 10px;
@@ -379,14 +378,12 @@ body.extension-enabled {
 }
 #timedMessages {
     overflow-y: auto;
-    max-height: 156px;
     box-shadow: inset 0px 0px 5px #0000002e;
     border-radius: 10px;
     margin-top: 10px;
 }
 #botReplyMessages {
     overflow-y: auto;
-    max-height: 156px;
     box-shadow: inset 0px 0px 5px #0000002e;
     border-radius: 10px;
     margin-top: 10px;
@@ -555,6 +552,11 @@ h2 {
 
 .options_group {
     word-break: break-word;
+}
+@media (prefers-color-scheme: dark) {
+	.options_group > a {
+		color: lightblue;
+	}
 }
 
 /* Alert */
@@ -995,6 +997,70 @@ input:checked + .slider:before {
 
 .removeCustomGifCommand:hover {
     background-color: #cc0000;
+}
+
+.tab-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.tab-header {
+  display: flex;
+  overflow: auto;
+  scrollbar-width: thin;
+  border-bottom: 1px solid var(--collapsible-border-color);
+  padding-bottom: 4px;
+  flex-wrap: wrap;
+  max-height: 113px;
+}
+
+.tab-button {
+  padding: 0 6px;
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--collapsible-border-color);
+  border-radius: 4px 4px 0 0;
+  margin: 0;
+  margin-right: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.tab-button.active {
+  background: var(--color-accent);
+  color: white;
+}
+
+.tab-content {
+  display: none;
+  padding: 12px;
+  background: var(--options-group-background-color);
+  border: 1px solid var(--collapsible-border-color);
+  border-top: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.add-new-tab {
+  background: var(--button-background);
+  border: 1px solid var(--collapsible-border-color);
+  border-radius: 4px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.delete-tab {
+  margin-left: 8px;
+  color: #ff4444;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.event-container {
+  margin-bottom: 12px;
 }
 
         </style>
@@ -4487,6 +4553,10 @@ input:checked + .slider:before {
                                 </div>
 
                                 <div id="botReplyMessages"></div>
+                                <br />
+								
+                                <h3><span data-translate="trigger-midi-note">Trigger MIDI note on command</span></h3>
+                                <div id="midiCommands"></div>
                             </div>
                         </div>
                     </div>

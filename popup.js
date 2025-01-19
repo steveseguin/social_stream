@@ -435,6 +435,323 @@ function updateUsernameList(type='blacklistusers') {
   `).join('');
 }
 
+
+// Templates for different event types
+const eventTemplates = {
+  botReply: (id) => `
+    <div class="event-container">
+      <label class="switch" style="vertical-align: top; margin: 26px 0 0 0">
+        <input type="checkbox" data-setting="botReplyMessageEvent${id}">
+        <span class="slider round"></span>
+      </label>
+      <div style="display:inline-block">
+        <div class="textInputContainer" style="width: 235px">
+          <input type="text" id="botReplyMessageCommand${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="Triggering command" data-textsetting="botReplyMessageCommand${id}">
+          <label for="botReplyMessageCommand${id}">&gt; Triggering command. eg: !discord</label>
+        </div>
+        <div class="textInputContainer" style="width: 235px">
+          <input type="text" id="botReplyMessageValue${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to respond with" data-textsetting="botReplyMessageValue${id}">
+          <label for="botReplyMessageValue${id}">&gt; Message to respond with.</label>
+        </div>
+        <div class="textInputContainer" style="width: 235px">
+          <input type="number" id="botReplyMessageTimeout${id}" class="textInput" min="0" autocomplete="off" placeholder="Timeout needed between responses" data-numbersetting="botReplyMessageTimeout${id}">
+          <label for="botReplyMessageTimeout${id}">&gt; Trigger timeout (ms)</label>
+        </div>
+        <div class="textInputContainer" style="width: 235px" title="If a source is provided, limit the response to this source. Comma-separated">
+          <input type="text" id="botReplyMessageSource${id}" class="textInput" min="0" autocomplete="off" placeholder="ie: youtube,twitch (comma separated)" data-textsetting="botReplyMessageSource${id}">
+          <label for="botReplyMessageSource${id}">&gt; Limit to specific sites</label>
+        </div>
+        <span data-translate="reply-to-all">Reply to all instead of just the source</span>
+        <label class="switch">
+          <input type="checkbox" data-setting="botReplyAll${id}">
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+  `,
+  
+  chatCommand: (id) => `
+    <div class="event-container">
+      <label class="switch" style="vertical-align: top; margin: 26px 0 0 0">
+        <input type="checkbox" data-setting="chatevent${id}">
+        <span class="slider round"></span>
+      </label>
+      <div style="display:inline-block">
+        <div class="textInputContainer" style="width: 235px">
+          <input type="text" id="chatcommand${id}" class="textInput" autocomplete="off" placeholder="!someevent${id}" data-textsetting="chatcommand${id}">
+          <label for="chatcommand${id}">&gt; Chat Command</label>
+        </div>
+        <div class="textInputContainer" style="width: 235px">
+          <input type="text" id="chatwebhook${id}" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook${id}">
+          <label for="chatwebhook${id}">&gt; Webhook URL</label>
+        </div>
+        <div class="textInputContainer" style="width: 235px">
+          <input type="number" id="chatcommandtimeout${id}" class="textInput" min="0" autocomplete="off" placeholder="Timeout between triggers" data-numbersetting="chatcommandtimeout${id}">
+          <label for="chatcommandtimeout${id}">&gt; Trigger Timeout (ms)</label>
+        </div>
+      </div>
+    </div>
+  `,
+  
+  timedMessage: (id) => `
+    <div class="event-container">
+      <label class="switch" style="vertical-align: top; margin: 26px 0 0 0">
+        <input type="checkbox" data-setting="timemessageevent${id}">
+        <span class="slider round"></span>
+      </label>
+      <div style="display:inline-block">
+        <div class="textInputContainer" style="width: 235px">
+          <input type="text" id="timemessagecommand${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to send to chat at an interval" data-textsetting="timemessagecommand${id}">
+          <label for="timemessagecommand${id}">&gt; Message to broadcast</label>
+        </div>
+        <div class="textInputContainer" style="width: 235px">
+          <input type="number" id="timemessageinterval${id}" class="textInput" value="15" min="0" autocomplete="off" title="Interval offset in minutes; 0 to issue just once." data-numbersetting="timemessageinterval${id}">
+          <label for="timemessageinterval${id}">&gt; Interval between broadcasts in minutes</label>
+        </div>
+        <div class="textInputContainer" style="width: 235px">
+          <input type="number" min="0" max="127" id="timemessageoffset${id}" value="0" min="0" class="textInput" autocomplete="off" title="Starting offset in minutes" data-numbersetting="timemessageoffset${id}">
+          <label for="timemessageoffset${id}">&gt; Starting time offset</label>
+        </div>
+      </div>
+    </div>
+  `,
+  
+  midiCommand: (id) => `
+    <div class="event-container">
+      <label class="switch" style="vertical-align: top; margin: 26px 0 0 0">
+        <input type="checkbox" data-setting="midievent${id}">
+        <span class="slider round"></span>
+      </label>
+      <div style="display:inline-block">
+        <div class="textInputContainer" style="width: 235px">
+          <input type="text" id="midicommand${id}" class="textInput" autocomplete="off" placeholder="!someevent${id}" data-textsetting="midicommand${id}">
+          <label for="midicommand${id}">&gt; Triggering !command</label>
+        </div>
+        <div class="textInputContainer" style="width: 235px">
+          <input type="number" id="midinote${id}" class="textInput" autocomplete="off" placeholder="MIDI Note that will be triggered; 127-velocity" data-numbersetting="midinote${id}">
+          <label for="midinote${id}">MIDI Note to Trigger</label>
+        </div>
+      </div>
+    </div>
+  `,
+};
+
+
+function initializeInputHandlers(container) {
+  container.querySelectorAll('input[type="checkbox"]').forEach(input => {
+    input.onchange = updateSettings;
+  });
+
+  container.querySelectorAll('input[type="text"], input[type="number"], input[type="password"], select').forEach(input => {
+    input.onchange = updateSettings;
+  });
+
+  container.querySelectorAll('input[type="text"][class*="instant"]').forEach(input => {
+    input.oninput = updateSettings;
+  });
+}
+
+  const patterns = {
+	botReply: {
+	  prefixes: ['botReplyMessageEvent', 'botReplyMessageCommand', 'botReplyMessageValue', 'botReplyMessageTimeout', 'botReplyMessageSource', 'botReplyAll'],
+	  type: 'botReply'
+	},
+	chatCommand: {
+	  prefixes: ['chatevent', 'chatcommand', 'chatwebhook', 'chatcommandtimeout'],
+	  type: 'chatCommand'
+	},
+	timedMessage: {
+	  prefixes: ['timemessageevent', 'timemessagecommand', 'timemessageinterval', 'timemessageoffset'],
+	  type: 'timedMessage'
+	},
+	midiCommand: {
+	  prefixes: ['midievent', 'midicommand', 'midinote'],
+	  type: 'midiCommand'
+	},
+  };
+  
+function findExistingEvents(eventType, response) {
+  const events = new Set();
+  const settings = response?.settings || {};
+  const pattern = patterns[eventType];
+  if (!pattern) return [];
+
+  // Check all possible settings for this event type
+  Object.keys(settings).forEach(key => {
+	pattern.prefixes.forEach(prefix => {
+	  if (key.startsWith(prefix)) {
+		const id = key.replace(prefix, '');
+		if (settings[key]?.setting !== undefined || 
+			settings[key]?.textsetting !== undefined || 
+			settings[key]?.numbersetting !== undefined) {
+		  events.add(parseInt(id));
+		}
+	  }
+	});
+  });
+
+  return Array.from(events).sort((a, b) => a - b);
+}
+
+function initializeTabSystem(containerId, eventType, existingEventIds = [], response = null) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  // Create tab container structure
+  const tabSystem = document.createElement('div');
+  tabSystem.className = 'tab-container';
+  tabSystem.innerHTML = `
+    <div class="tab-header">
+      <button class="add-new-tab">+ Add New</button>
+    </div>
+    <div class="tab-content-container"></div>
+  `;
+  
+  container.innerHTML = '';
+  container.appendChild(tabSystem);
+
+  const tabHeader = tabSystem.querySelector('.tab-header');
+  const contentContainer = tabSystem.querySelector('.tab-content-container');
+  
+  // Find all existing events from settings
+  const activeEvents = findExistingEvents(eventType, response);
+  const deletedIds = new Set();
+  let tabCount = activeEvents.length > 0 ? Math.max(...activeEvents) : 0;
+
+	function createNewTab(tabId) {
+	  const tabButton = document.createElement('div');
+	  tabButton.className = 'tab-button';
+	  tabButton.setAttribute('data-tab', tabId);
+	  tabButton.innerHTML = `Event ${tabId}<span class="delete-tab">&times;</span>`;
+	  tabHeader.insertBefore(tabButton, tabHeader.lastChild);
+
+	  const tabContent = document.createElement('div');
+	  tabContent.className = 'tab-content';
+	  tabContent.setAttribute('data-tab', tabId);
+	  tabContent.innerHTML = eventTemplates[eventType](tabId);
+
+	  // Only initialize with settings if it's an existing tab being restored
+	  if (response?.settings && activeEvents.includes(tabId)) {
+		tabContent.querySelectorAll('input').forEach(input => {
+		  const settingKey = input.getAttribute('data-setting') || 
+							input.getAttribute('data-textsetting') || 
+							input.getAttribute('data-numbersetting');
+		  
+		  if (settingKey && response.settings[settingKey]) {
+			if (input.type === 'checkbox') {
+			  input.checked = response.settings[settingKey].setting || false;
+			} else if (input.type === 'text' || input.type === 'number') {
+			  input.value = response.settings[settingKey].textsetting || 
+						   response.settings[settingKey].numbersetting || '';
+			}
+		  }
+		});
+	  }
+
+	  contentContainer.appendChild(tabContent);
+	  initializeInputHandlers(tabContent);
+	  return { button: tabButton, content: tabContent };
+	}
+
+  tabSystem.querySelector('.add-new-tab').addEventListener('click', () => {
+    // Reuse the lowest available deleted ID, or increment tabCount
+    let newTabId;
+    if (deletedIds.size > 0) {
+      newTabId = Math.min(...deletedIds);
+      deletedIds.delete(newTabId);
+    } else {
+      newTabId = ++tabCount;
+    }
+    const { button, content } = createNewTab(newTabId);
+    activateTab(newTabId);
+  });
+
+  tabSystem.addEventListener('click', (e) => {
+    const tabButton = e.target.closest('.tab-button');
+    if (tabButton) {
+      const deleteBtn = e.target.closest('.delete-tab');
+      if (deleteBtn) {
+        const tabId = tabButton.getAttribute('data-tab');
+        deleteTab(tabId);
+      } else {
+        const tabId = tabButton.getAttribute('data-tab');
+        activateTab(tabId);
+      }
+    }
+  });
+
+  function activateTab(tabId) {
+    tabSystem.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    tabSystem.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    tabSystem.querySelector(`.tab-button[data-tab="${tabId}"]`)?.classList.add('active');
+    tabSystem.querySelector(`.tab-content[data-tab="${tabId}"]`)?.classList.add('active');
+  }
+
+	function deleteTab(tabId) {
+	  const button = tabSystem.querySelector(`.tab-button[data-tab="${tabId}"]`);
+	  const content = tabSystem.querySelector(`.tab-content[data-tab="${tabId}"]`);
+	  
+	  deletedIds.add(parseInt(tabId));
+	  
+	  if (button.classList.contains('active')) {
+		const nextTab = button.nextElementSibling;
+		const prevTab = button.previousElementSibling;
+		if (nextTab && !nextTab.classList.contains('add-new-tab')) {
+		  activateTab(nextTab.getAttribute('data-tab'));
+		} else if (prevTab) {
+		  activateTab(prevTab.getAttribute('data-tab'));
+		}
+	  }
+
+	  // Clear all associated settings for this tab ID
+	  const settingsToDelete = [];
+	  const prefixes = patterns[eventType].prefixes;
+	  
+	  content.querySelectorAll('input').forEach(input => {
+		const settingKey = input.getAttribute('data-setting') || 
+						  input.getAttribute('data-textsetting') || 
+						  input.getAttribute('data-numbersetting');
+		
+		if (settingKey) {
+		  // Remove from response settings if they exist
+		  if (response?.settings?.[settingKey]) {
+			delete response.settings[settingKey];
+		  }
+		  
+		  // Clear the input value
+		  if (input.type === 'checkbox') {
+			input.checked = false;
+		  } else {
+			input.value = '';
+		  }
+		  
+		  // Trigger change event to update settings
+		  input.dispatchEvent(new Event('change'));
+		}
+	  });
+
+	  button.remove();
+	  content.remove();
+	}
+  
+ if (activeEvents.length > 0) {
+    activeEvents.forEach((eventId, index) => {
+      const newTab = createNewTab(eventId);
+      if (index === 0) {
+        newTab.button.classList.add('active');
+        newTab.content.classList.add('active');
+      }
+    });
+  } else {
+    // Create initial tab if no existing events
+    const newTab = createNewTab(1);
+    newTab.button.classList.add('active');
+    newTab.content.classList.add('active');
+    tabCount = 1;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async function(event) {
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
@@ -758,87 +1075,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	});
 
-	
-	for (var i=1;i<=20;i++){
-		var chat = document.createElement("div");
-		chat.innerHTML = '<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">\
-				<input type="checkbox" data-setting="chatevent'+ i +'">\
-				<span class="slider round"></span>\
-			</label>\
-			<div style="display:inline-block">\
-				<div class="textInputContainer" style="width: 235px">\
-					<input type="text" id="chatcommand'+ i +'" class="textInput" autocomplete="off" placeholder="!someevent'+ i +'" data-textsetting="chatcommand'+ i +'">\
-					<label for="chatcommand'+ i +'">&gt; Chat Command</label>\
-				</div>\
-				<div class="textInputContainer" style="width: 235px">\
-					<input type="text" id="chatwebhook'+ i +'" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook'+ i +'">\
-					<label for="chatwebhook'+ i +'">&gt; Webhook URL</label>\
-				</div>\
-				<div class="textInputContainer" style="width: 235px">\
-					<input type="number" id="chatcommandtimeout'+ i +'" class="textInput" min="0" autocomplete="off" placeholder="Timeout between triggers" data-numbersetting="chatcommandtimeout'+ i +'">\
-					<label for="chatcommandtimeout'+ i +'">&gt; Trigger Timeout (ms)</label></div>\
-				</div>\
-			</div>';
-		document.getElementById("chatCommands").appendChild(chat);
-	}
-	
-
-	for (var i=1;i<=10;i++){
-		var chat = document.createElement("div");
-		chat.innerHTML = '<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">\
-				<input type="checkbox" data-setting="timemessageevent'+ i +'">\
-				<span class="slider round"></span>\
-			</label>\
-			<div style="display:inline-block">\
-				<div class="textInputContainer" style="width: 235px">\
-					<input type="text" id="timemessagecommand'+ i +'" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to send to chat at an interval" data-textsetting="timemessagecommand'+ i +'">\
-					<label for="timemessagecommand'+ i +'">&gt; Message to broadcast</label>\
-				</div>\
-				<div class="textInputContainer" style="width: 235px">\
-					<input type="number" id="timemessageinterval'+ i +'" class="textInput" value="15" min="0"  autocomplete="off" title="Interval offset in minutes; 0 to issue just once." data-numbersetting="timemessageinterval'+ i +'">\
-					<label for="timemessageinterval'+ i +'">&gt; Interval between broadcasts in minutes</label>\
-				</div>\
-				<div class="textInputContainer" style="width: 235px">\
-					<input type="number" id="timemessageoffset'+ i +'" value="0" min="0" class="textInput" autocomplete="off" title="Starting offset in minutes" data-numbersetting="timemessageoffset'+ i +'">\
-					<label for="timemessageoffset'+ i +'">&gt; Starting time offset</label>\
-				</div>\
-			</div>';
-		document.getElementById("timedMessages").appendChild(chat);
-	}
-	
-	for (var i=1;i<=10;i++){
-		var chat = document.createElement("div");
-		chat.innerHTML = '<label class="switch" style="vertical-align: top; margin: 26px 0 0 0">\
-				<input type="checkbox" data-setting="botReplyMessageEvent'+ i +'">\
-				<span class="slider round"></span>\
-			</label>\
-			<div style="display:inline-block">\
-				<div class="textInputContainer" style="width: 235px">\
-					<input type="text" id="botReplyMessageCommand'+ i +'" maxlength="200" class="textInput" autocomplete="off" placeholder="Triggering command" data-textsetting="botReplyMessageCommand'+ i +'">\
-					<label for="botReplyMessageCommand'+ i +'">&gt; Triggering command. eg: !discord</label>\
-				</div>\
-				<div class="textInputContainer" style="width: 235px">\
-					<input type="text" id="botReplyMessageValue'+ i +'" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to respond with" data-textsetting="botReplyMessageValue'+ i +'">\
-					<label for="botReplyMessageValue'+ i +'">&gt; Message to respond with.</label>\
-				</div>\
-				<div class="textInputContainer" style="width: 235px">\
-					<input type="number" id="botReplyMessageTimeout'+ i +'" class="textInput" min="0" autocomplete="off" placeholder="Timeout needed between responses" data-numbersetting="botReplyMessageTimeout'+ i +'">\
-					<label for="botReplyMessageTimeout'+ i +'">&gt; Trigger timeout (ms)</label>\
-				</div>\
-				<div class="textInputContainer" style="width: 235px" title="If a source is provided, limit the response to this source. Comma-separated" >\
-					<input type="text" id="botReplyMessageSource'+ i +'" class="textInput" min="0" autocomplete="off" placeholder="ie: youtube,twitch (comma separated)" data-textsetting="botReplyMessageSource'+ i +'">\
-					<label for="botReplyMessageSource'+ i +'">&gt; Limit to specific sites</label>\
-				</div>\
-				<span data-translate="reply-to-all">\
-					Reply to all instead of just the source\
-				</span>\
-				<label class="switch">\
-					<input type="checkbox" data-setting="botReplyAll'+ i +'">\
-					<span class="slider round"></span>\
-				</label>\
-			</div>';
-		document.getElementById("botReplyMessages").appendChild(chat);
-	}
 	//botReplyAll
 	var iii = document.querySelectorAll("input[type='checkbox']");
 	for (var i=0;i<iii.length;i++){
@@ -960,6 +1196,90 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		document.body.classList.add("hidelinks");
 	} 
 });
+
+let tabsInitialized = false;
+
+function createTabsFromSettings(response) {
+  if (!response || !response.settings) return;
+
+  // Clear existing tabs first
+  const containers = ['botReplyMessages', 'chatCommands', 'timedMessages', 'midiCommands'];
+  containers.forEach(containerId => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = ''; // Clear existing content
+  });
+
+  // Track existing events for each type
+  const existingEvents = {
+    botReply: new Set(),
+    chatCommand: new Set(),
+    timedMessage: new Set(),
+	midiCommand: new Set()
+  };
+
+  // Scan settings for event configurations
+  Object.keys(response.settings).forEach(key => {
+    // Bot Reply Messages
+    if (key.startsWith('botReplyMessageEvent')) {
+      const id = key.replace('botReplyMessageEvent', '');
+      if (response.settings[key].setting || 
+          response.settings[`botReplyMessageCommand${id}`]?.textsetting ||
+          response.settings[`botReplyMessageValue${id}`]?.textsetting) {
+        existingEvents.botReply.add(parseInt(id));
+      }
+    }
+    // Chat Commands
+    else if (key.startsWith('chatevent')) {
+      const id = key.replace('chatevent', '');
+      if (response.settings[key].setting || 
+          response.settings[`chatcommand${id}`]?.textsetting ||
+          response.settings[`chatwebhook${id}`]?.textsetting) {
+        existingEvents.chatCommand.add(parseInt(id));
+      }
+    }
+    // Timed Messages
+    else if (key.startsWith('timemessageevent')) {
+      const id = key.replace('timemessageevent', '');
+      if (response.settings[key].setting || response.settings[`timemessagecommand${id}`]?.textsetting) {
+        existingEvents.timedMessage.add(parseInt(id));
+      }
+    }
+	// MIDI Messages
+	else if (key.startsWith('midicommandevent')) {
+      const id = key.replace('midicommandevent', '');
+      if (response.settings[key].setting || response.settings[`midicommand${id}`]?.textsetting || response.settings[`midinote${id}`]?.numbersetting){ 
+        existingEvents.midiCommand.add(parseInt(id));
+      }
+    }
+  });
+
+  // Initialize tab systems with found events
+  if (existingEvents.botReply.size > 0) {
+    initializeTabSystem('botReplyMessages', 'botReply', Array.from(existingEvents.botReply), response);
+  } else {
+    initializeTabSystem('botReplyMessages', 'botReply', [1], response);
+  }
+
+  if (existingEvents.chatCommand.size > 0) {
+    initializeTabSystem('chatCommands', 'chatCommand', Array.from(existingEvents.chatCommand), response);
+  } else {
+    initializeTabSystem('chatCommands', 'chatCommand', [1], response);
+  }
+  
+  if (existingEvents.timedMessage.size > 0) {
+    initializeTabSystem('timedMessages', 'timedMessage', Array.from(existingEvents.timedMessage), response);
+  } else {
+    initializeTabSystem('timedMessages', 'timedMessage', [1], response);
+  }
+  
+  if (existingEvents.midiCommand.size > 0) {
+    initializeTabSystem('midiCommands', 'midiCommand', Array.from(existingEvents.midiCommand), response);
+  } else {
+    initializeTabSystem('midiCommands', 'midiCommand', [1], response);
+  }
+}
+
 var streamID = false;
 var lastResponse = false;
 
@@ -974,8 +1294,6 @@ function update(response, sync=true){
 		if (response.streamID){ 
 		
 			lastResponse = response;
-			
-			
 			
 			streamID = true;
 			
@@ -1000,9 +1318,6 @@ function update(response, sync=true){
 			} else {
 				document.body.classList.remove("hidelinks");
 			}
-			
-			
-			
 			
 			document.getElementById("sessionid").value = response.streamID;
 			document.getElementById("sessionpassword").value = response.password || "";
@@ -1045,6 +1360,7 @@ function update(response, sync=true){
 			
 		
 			hideLinks = false;
+			
 			
 			if ('settings' in response){
 				for (var key in response.settings){
@@ -1500,6 +1816,7 @@ function update(response, sync=true){
 				}
 			}
 			
+			createTabsFromSettings(response);
 			
 			if (hideLinks){
 				document.body.classList.add("hidelinks");

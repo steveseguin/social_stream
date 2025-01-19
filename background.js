@@ -742,6 +742,10 @@ function loadSettings(item, resave = false) {
 
 	if (item && item.settings) {
 		settings = item.settings;
+		
+		Object.keys(patterns).forEach(pattern=>{
+			settings[pattern] = findExistingEvents(pattern,{ settings });
+		})
 	}
 
 	if (item && "state" in item) {
@@ -777,7 +781,8 @@ function loadSettings(item, resave = false) {
 		}
 	}
 
-	for (var i = 1; i <= 10; i++) {
+	const timedMessage = settings['timedMessage'] || [];
+	for (const i of timedMessage) {
 		if (settings["timemessageevent" + i]) {
 			if (settings["timemessagecommand" + i]) {
 				checkIntervalState(i);
@@ -2847,6 +2852,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} else {
 				settings[request.setting] = request.value;
 			}
+			
+			Object.keys(patterns).forEach(pattern=>{
+				settings[pattern] = findExistingEvents(pattern,{ settings });
+			})
 
 			chrome.storage.local.set({
 				settings: settings
@@ -6562,6 +6571,46 @@ try {
 } catch(e){}
 
  */
+const patterns = {
+	botReply: {
+	  prefixes: ['botReplyMessageEvent', 'botReplyMessageCommand', 'botReplyMessageValue', 'botReplyMessageTimeout', 'botReplyMessageSource', 'botReplyAll'],
+	  type: 'botReply'
+	},
+	chatCommand: {
+	  prefixes: ['chatevent', 'chatcommand', 'chatwebhook', 'chatcommandtimeout'],
+	  type: 'chatCommand'
+	},
+	timedMessage: {
+	  prefixes: ['timemessageevent', 'timemessagecommand', 'timemessageinterval', 'timemessageoffset'],
+	  type: 'timedMessage'
+	},
+	midiCommand: {
+	  prefixes: ['midievent', 'midicommand', 'midinote'],
+	  type: 'midiCommand'
+	},
+};
+function findExistingEvents(eventType, response) {
+  const events = new Set();
+  const settings = response?.settings || {};
+  const pattern = patterns[eventType];
+  if (!pattern) return [];
+
+  // Check all possible settings for this event type
+  Object.keys(settings).forEach(key => {
+	pattern.prefixes.forEach(prefix => {
+	  if (key.startsWith(prefix)) {
+		const id = key.replace(prefix, '');
+		if (settings[key]?.setting !== undefined || 
+			settings[key]?.textsetting !== undefined || 
+			settings[key]?.numbersetting !== undefined) {
+		  events.add(parseInt(id));
+		}
+	  }
+	});
+  });
+
+  return Array.from(events).sort((a, b) => a - b);
+}
 
 // expects an object; not False/Null/undefined
 async function applyBotActions(data, tab = false) {
@@ -7029,36 +7078,53 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (data.chatmessage) {
-			for (var i = 1; i <= 10; i++) {
-				if (settings["botReplyMessageEvent" + i] && settings["botReplyMessageCommand" + i] && settings["botReplyMessageCommand" + i].textsetting && settings["botReplyMessageValue" + i] && settings["botReplyMessageValue" + i].textsetting && ((!settings.botReplyMessageFull && data.chatmessage.indexOf(settings["botReplyMessageCommand" + i].textsetting) != -1) || (settings.botReplyMessageFull && data.chatmessage && data.chatmessage == (settings["botReplyMessageCommand" + i].textsetting)))){
-					var matched = true;
-					//log(settings['botReplyMessageSource'+i]);
-					if (settings["botReplyMessageSource" + i] && settings["botReplyMessageSource" + i].textsetting.trim()) {
-						matched = false;
-
-						settings["botReplyMessageSource" + i].textsetting.split(",").forEach(xx => {
-							//log(xx,data.type);
-							if (xx && data.type && (xx.trim().toLowerCase() == data.type.trim().toLowerCase())) {
-								matched = true;
-							}
-						});
-					}
-					if (matched) {
-						var timeoutBot = 0;
-						if (settings["botReplyMessageTimeout" + i]) {
-							timeoutBot = settings["botReplyMessageTimeout" + i].numbersetting || 0;
-						}
-							// respond to "1" with a "1" automatically; at most 1 time per minute.
-						//messageTimeout = Date.now();
-						var msg = {};
-						if (data.tid && !settings["botReplyAll" + i]){
-							msg.tid = data.tid;
-						}
-						msg.response = settings["botReplyMessageValue" + i].textsetting;
-						sendMessageToTabs(msg, false, null, false, false, timeoutBot)
-						
-						break;
-					}
+			const botReplyEvents = settings['botReply'] || [];
+			for (const id of botReplyEvents) {
+				const event = settings[`botReplyMessageEvent${id}`];
+				const command = settings[`botReplyMessageCommand${id}`]?.textsetting;
+				const response = settings[`botReplyMessageValue${id}`]?.textsetting;
+				
+				if (!event?.setting || !command || !response) continue;
+				
+				const isFullMatch = settings.botReplyMessageFull;
+				const messageMatches = isFullMatch ? 
+				  data.chatmessage === command :
+				  data.chatmessage.includes(command);
+				  
+				if (!messageMatches) continue;
+				
+				// Check source restrictions
+				const sources = settings[`botReplyMessageSource${id}`]?.textsetting;
+				if (sources?.trim()) {
+				  const sourceList = sources.split(',').map(s => s.trim().toLowerCase());
+				  if (!sourceList.includes(data.type?.trim().toLowerCase())) {
+					continue;
+				  }
+				}
+				
+				// Send response
+				const timeout = settings[`botReplyMessageTimeout${id}`]?.numbersetting || 0;
+				const msg = {
+				  response,
+				  ...(data.tid && !settings[`botReplyAll${id}`] && { tid: data.tid })
+				};
+				
+				sendMessageToTabs(msg, false, null, false, false, timeout);
+				break; // Stop after first match
+			}
+			  
+			  // Process MIDI commands
+			const midiEvents = settings['midiCommand'] || [];
+			for (const id of midiEvents) {
+				const event = settings[`midievent${id}`];
+				const command = settings[`midicommand${id}`]?.textsetting;
+				const note = settings[`midinote${id}`]?.textsetting;
+				
+				if (!event?.setting || !command || !note) continue;
+				
+				if (data.chatmessage.includes(command)) {
+				  triggerMidiNote(parseInt(note));
+				  break;
 				}
 			}
 		}
@@ -7408,7 +7474,9 @@ async function applyBotActions(data, tab = false) {
 
 	try {
 		// webhook for configured custom chat commands
-		for (var i = 1; i <= 20; i++) {
+		// 'chatevent', 'chatcommand', 'chatwebhook', 'chatcommandtimeout'
+		const chatCommand = settings['chatCommand'] || [];
+		for (const i of chatCommand) {
 			if (data.chatmessage && settings["chatevent" + i] && settings["chatcommand" + i] && settings["chatwebhook" + i]) {
 				let matches = false;
 				if (settings.chatwebhookstrict && (data.chatmessage === settings["chatcommand" + i].textsetting)) {
@@ -7600,6 +7668,7 @@ try {
 						setupMIDI(e.target._midiInput);
 					});
 					WebMidi.addListener("disconnected", function (e) {});
+					// Your MIDI outputs are now ready for triggering
 				});
 			} else {
 				try {
@@ -7614,6 +7683,24 @@ try {
 	}
 } catch (e) {
 	log(e);
+}
+
+function triggerMidiNote(note = 64) {
+    if (!WebMidi.enabled) {
+		try {
+			WebMidi.enable();
+			console.log("Midi enabled");
+		} catch (e) {
+			console.warn(e);
+		}
+	}
+    try {
+		WebMidi.outputs.forEach(output => {
+			output.playNote(note, {duration:100});
+		});
+	} catch(e){
+		console.warn(e);
+	}
 }
 
 function midiHotkeysCommand(number, value) {
