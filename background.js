@@ -7696,7 +7696,9 @@ function triggerMidiNote(note = 64) {
 	}
     try {
 		WebMidi.outputs.forEach(output => {
-			output.playNote(note, {duration:100});
+			//output.playNote(note);
+			output.send([0x90, note, 127]);  // Note On
+			output.send([0x80, note, 0]);    // Note Off
 		});
 	} catch(e){
 		console.warn(e);
