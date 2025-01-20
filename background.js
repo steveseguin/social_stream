@@ -6142,20 +6142,39 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     // Generic handler
                     if (tab.url.includes("youtube.com/live_chat")) {
                         getYoutubeAvatarImage(tab.url, true);
-						let restxt = data.response.length > 200 ? data.response.substring(0, 200) : data.response;
+						let restxt = data.response;
+						
+						if (restxt.length > 200){
+							restxt = restxt.substring(0, 200);
+							var msg2Save = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
+							if (msg2Save) {  
+								handleMessageStore(tab.id, msg2Save, now, relayMode);
+							}
+						}
+						
 						await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
 						continue;
                     }
                     
                     if (tab.url.includes("tiktok.com")) {
+						let tiktokMessage = data.response;
+						
 						if (settings.notiktoklinks){
-							data.response = replaceURLsWithSubstring(data.response, "");
+							tiktokMessage = replaceURLsWithSubstring(tiktokMessage, "");
 						}
-						let restxt = data.response.length > 150 ? data.response.substring(0, 150) : data.response;
+						let restxt = tiktokMessage.length > 150 ? tiktokMessage.substring(0, 150) : tiktokMessage;
+						
+						if (restxt!==data.response){
+							var msg2Save = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
+							if (msg2Save) {  
+								handleMessageStore(tab.id, msg2Save, now, relayMode);
+							}
+						}
+						
 						await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
 						continue;
                     }
-
+					
                     await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);
                 }
             } catch (e) {
