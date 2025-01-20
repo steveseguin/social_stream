@@ -1363,6 +1363,21 @@ function update(response, sync=true){
 			
 			
 			if ('settings' in response){
+				
+				if (!response.settings?.ttsProvider?.optionsetting){
+					let ttsService = "system";
+					if (response.settings?.ttskey?.textparam1){	ttsService = "google";}
+					else if (response.settings?.elevenlabskey?.textparam1){ttsService = "elevenlabs";}
+					else if (response.settings?.speechifykey?.textparam1){ttsService = "speechifykey";}
+					if (!response.settings.ttsProvider){
+						response.settings.ttsProvider = {}
+					}
+					response.settings.ttsProvider.optionsetting = ttsService;
+					//console.log("ttsService: "+ttsService);
+					//console.log(response);
+				}
+					
+					
 				for (var key in response.settings){
 					try {
 						if (key === "midiConfig"){
@@ -1633,6 +1648,21 @@ function update(response, sync=true){
 									} else if (ele.value == "custom"){
 										document.getElementById("customAIEndpoint").classList.remove("hidden");
 										document.getElementById("customAIModel").classList.remove("hidden");
+									}
+								} else if (key == "ttsProvider") {
+									document.getElementById('systemTTS').classList.add('hidden');
+									document.getElementById('elevenlabsTTS').classList.add('hidden');
+									document.getElementById('googleTTS').classList.add('hidden');
+									document.getElementById('speechifyTTS').classList.add('hidden');
+									
+									if (ele.value == "system") {
+										document.getElementById('systemTTS').classList.remove('hidden');
+									} else if (ele.value == "elevenlabs") {
+										document.getElementById('elevenlabsTTS').classList.remove('hidden');
+									} else if (ele.value == "google") {
+										document.getElementById('googleTTS').classList.remove('hidden');
+									} else if (ele.value == "speechify") {
+										document.getElementById('speechifyTTS').classList.remove('hidden');
 									}
 								}
 							}
@@ -2683,6 +2713,29 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("ollamaKeepAlive").classList.add("hidden");
 			}
 		}
+		if (ele.dataset.optionsetting == "ttsProvider"){
+			document.getElementById('systemTTS').classList.add('hidden');
+			document.getElementById('elevenlabsTTS').classList.add('hidden');
+			document.getElementById('googleTTS').classList.add('hidden');
+			document.getElementById('speechifyTTS').classList.add('hidden');
+			switch(ele.value) {
+				case 'system':
+					document.getElementById('systemTTS').classList.remove('hidden');
+					break;
+				case 'elevenlabs':
+					document.getElementById('elevenlabsTTS').classList.remove('hidden');
+					break;
+				case 'google':
+					document.getElementById('googleTTS').classList.remove('hidden');
+					break;
+				case 'speechify':
+					document.getElementById('speechifyTTS').classList.remove('hidden');
+					break;
+				default:
+					document.getElementById('systemTTS').classList.remove('hidden');
+					break;
+			}
+		}
 		
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "optionsetting", target:target,  setting: ele.dataset.optionsetting, "value": ele.value}, function (response) {});
@@ -3097,12 +3150,14 @@ const TTSManager = {
             }
         }
     },
-    
+	
+
     getSettings() {
         const settings = {
             // Global settings
             speech: document.querySelector('[data-param1="speech"]')?.checked,
             volume: document.querySelector('[data-param1="volume"]').checked ?  parseFloat(document.querySelector('[data-numbersetting="volume"]')?.value) || 1.0 : 1.0,
+			service: document.getElementById('ttsProvider').value || "system",
             
             // System TTS settings
             system: {
@@ -3169,9 +3224,10 @@ const TTSManager = {
             }, 5000);
         }
     },
-    
+	
     getServiceName() {
         const settings = this.getSettings();
+		if (settings.service) return document.getElementById('ttsProvider').options[document.getElementById('ttsProvider').selectedIndex].innerText;
         if (settings.google.key) return 'Google Cloud TTS';
         if (settings.elevenLabs.key) return 'ElevenLabs TTS';
         if (settings.speechify.key) return 'Speechify TTS';
@@ -3222,25 +3278,25 @@ const TTSManager = {
         if (!text) return;
         
         try {
-            if (settings.google.key) {
+            if ((settings.service == "google") && settings.google.key) {
                 if (!this.premiumQueueActive) {
                     await this.googleTTS(text, settings);
                 } else {
                     this.premiumQueueTTS.push(text);
                 }
-            } else if (settings.elevenLabs.key) {
+            } else if ((settings.service == "elevenlabs") && settings.elevenLabs.key) {
                 if (!this.premiumQueueActive) {
                     await this.elevenLabsTTS(text, settings);
                 } else {
                     this.premiumQueueTTS.push(text);
                 }
-            } else if (settings.speechify.key) {
+            } else if ((settings.service == "speechify") && settings.speechify.key) {
                 if (!this.premiumQueueActive) {
                     await this.speechifyTTS(text, settings);
                 } else {
                     this.premiumQueueTTS.push(text);
                 }
-            } else {
+            } else if (!settings.service || (settings.service == "system")) {
                 this.systemTTS(text, settings);
             }
         } catch (error) {

@@ -1648,9 +1648,21 @@ input:checked + .slider:before {
 								</div>
 							</div>
 						</div>	
+						
+						
+						<div class="tts-provider-selection" style="margin:0 10px 10px 10px">
+							<h3>Text-to-Speech Service Provider</h3>
+							<select id="ttsProvider" data-optionsetting="ttsProvider" class="textInput">
+								<option selected value="system">System TTS</option>
+								<option value="elevenlabs">ElevenLabs</option>
+								<option value="google">Google Cloud</option>
+								<option value="speechify">Speechify</option>
+							</select>
+						</div>
+						
 						<div id="ttsButton" class="hidden"></div>
 						
-						<div class="tts-provider-options options_group">
+						<div class="tts-provider-options options_group" id="systemTTS">
 							<h4>Built-in System TTS Options</h4>
 							<i>note: the free built-in TTS plays out via the default audio device. <a style="color:lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
 							<br /><br />
@@ -1685,7 +1697,7 @@ input:checked + .slider:before {
 							</div>
 						</div>
 						<!-- ElevenLabs TTS Options -->
-						<div class="tts-provider-option options_group">
+						<div class="tts-provider-options options_group hidden" id="elevenlabsTTS">
 							<h4>ElevenLabs TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="elevenLabsKey" class="textInput instant" autocomplete="off" 
@@ -1775,9 +1787,8 @@ input:checked + .slider:before {
 								<span data-translate="elevenlabs-speaker-boost">🔊 Use Speaker Boost</span>
 							</div>
 						</div>
-						<br />
 						<!-- Google Cloud TTS Options -->
-						<div class="tts-provider-options options_group">
+						<div class="tts-provider-options options_group hidden"  id="googleTTS">
 							<h4>Google Cloud TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="googleAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam1="ttskey" />
@@ -1850,9 +1861,8 @@ input:checked + .slider:before {
 							</div>
 							
 						</div>
-						<br />
 						<!-- Speechify TTS Options -->
-						<div class="tts-provider-options options_group">
+						<div class="tts-provider-options options_group hidden" id="speechifyTTS">
 							<h4>Speechify TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="speechifyAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam1="speechifykey" />
