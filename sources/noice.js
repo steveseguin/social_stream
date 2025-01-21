@@ -66,15 +66,23 @@
 		});
 		return resp;
 	}
+	
+	var historySet = new Set();
 
 	function processMessage(ele){
 		
+		if (!ele || !ele.isConnected){return;}
 		console.log(ele);
 		if (ele && ele.marked){
 		  return;
 		} else {
 		  ele.marked = true;
 		}
+		
+		const id = ele.querySelector("[id]")?.id;
+		if (!id || id.includes("-")) return;
+		if (historySet.has(id)) return;
+		historySet.add(id);
 		
 		//console.log(ele);
 
