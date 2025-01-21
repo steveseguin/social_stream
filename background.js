@@ -6087,7 +6087,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
     
     lastAntiSpam = messageCounter;
     
-    var msg2Save = checkExactDuplicateAlreadyRelayed(data.response, false, false, true); 
+    var msg2Save = checkExactDuplicateAlreadyRelayed(data.response, false, false, true);  // this might be more efficient if I do it after, rather than before
     
     try {
         const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
@@ -6146,9 +6146,9 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 						
 						if (restxt.length > 200){
 							restxt = restxt.substring(0, 200);
-							var msg2Save = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
-							if (msg2Save) {  
-								handleMessageStore(tab.id, msg2Save, now, relayMode);
+							var ignore = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
+							if (ignore) {  
+								handleMessageStore(tab.id, ignore, now, relayMode);
 							}
 						}
 						
@@ -6165,9 +6165,9 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 						let restxt = tiktokMessage.length > 150 ? tiktokMessage.substring(0, 150) : tiktokMessage;
 						
 						if (restxt!==data.response){
-							var msg2Save = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
-							if (msg2Save) {  
-								handleMessageStore(tab.id, msg2Save, now, relayMode);
+							var ignore = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
+							if (ignore) {  
+								handleMessageStore(tab.id, ignore, now, relayMode);
 							}
 						}
 						
