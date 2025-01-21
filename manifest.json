@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.9.17",
+  "version": "3.9.20",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -71,6 +71,7 @@
     "https://chatroll.com/embed/chat/*",
     "https://www.nimo.tv/popout/chat/*",
 	"https://noice.com/*",
+	"https://studio.noice.com/popout/*",
     "https://dashboard.nimo.tv/popout/chat/*",
     "https://demo.openstreamingplatform.com/view/*chatOnly=True*",
     "https://*.locals.com/post/*",
@@ -238,8 +239,8 @@
       "matches": [ "https://pilled.net/*" ]
     },
 	{
-      "js": [ "./sources/noice.js" ],
-      "matches": [ "https://noice.com/*" ]
+      "js": [ "./sources/noice.js"],
+      "matches": [ "https://noice.com/*", "https://studio.noice.com/popout/*"]
     },
 	{
       "js": [ "./sources/nicovideo.js" ],

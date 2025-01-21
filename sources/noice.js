@@ -82,7 +82,7 @@
         var name = "";
 		
 		try {
-			name = escapeHtml(ele.querySelector('button[class^="_message-username_"]').innerText);
+			name = escapeHtml(ele.querySelector('[class^="_message-username_"]').innerText);
 			name = name.trim();
 			nameColor = ele.querySelector('button[class^="_message-username_"]').style.color;
 		} catch(e){
