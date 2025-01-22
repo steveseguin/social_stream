@@ -47,6 +47,7 @@
 
 				--font-family: Sora, Avenir Next, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif;
 
+				--donation-amount: #ffe60073;
 				--donation-bgcolor: #feffad33;
 				--donation-bgcolor-odd: #fdff6533;
 				--donation-bgcolor-bubble: #171703e0;
@@ -1208,7 +1209,7 @@
 			}
 
 			.donationAmount {
-				text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ffe60073, 0 0 40px #ffe60073, 0 0 50px #ffe60073, 0 0 60px #ffe60073, 0 0 70px #ffe60073;
+				text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px var(--donation-amount), 0 0 40px var(--donation-amount), 0 0 50px var(--donation-amount), 0 0 60px var(--donation-amount), 0 0 70px var(--donation-amount);
 				padding-left: 5px;
 				margin: auto;
 				white-space: nowrap;
@@ -3304,51 +3305,75 @@
 				let tiers = [];
 				// ! I would def be okay with a blue, purple, and gold outline on gifts 500 - 10k 10k-20k and then 20k+.
 				if (urlParams.has("t1")){
-					let [threshold, color] = [urlParams.get("t1") || 0, urlParams.get("t1c") || "#00F3" ];
+					let [threshold, color] = [urlParams.get("t1") || 0, urlParams.get("t1c") || "#00F" ];
+					color = color.replace("#","");
 					if (colors.includes(colors)){
 						// color name
 					} else if (color.length === 3){
-						color="#"+color+"3";
+						if (highlightDonos){
+							color="#"+color+"3";
+						} else {
+							color="#"+color;
+						}
 					} else if (color.length === 4){
 						color="#"+color;
 					} else if (color.length === 6){
-						color="#"+color+"33";
+						if (highlightDonos){
+							color="#"+color+"33";
+						} else {
+							color="#"+color;
+						}
 					} else if (color.length === 8){
 						color="#"+color;
 					}
-					color = color.replace("##","#");
 					tiers.push([parseFloat(threshold)||0, color]);
 				}
 				if (urlParams.has("t2")){
-					let [threshold, color] = [urlParams.get("t2") || 0,urlParams.get("t2c") || "#F0F3" ];
+					let [threshold, color] = [urlParams.get("t2") || 0,urlParams.get("t2c") || "#F0F" ];
+					color = color.replace("#","");
 					if (colors.includes(colors)){
 						// color name
 					} else if (color.length === 3){
-						color="#"+color+"3";
+						if (highlightDonos){
+							color="#"+color+"3";
+						} else {
+							color="#"+color;
+						}
 					} else if (color.length === 4){
 						color="#"+color;
 					} else if (color.length === 6){
-						color="#"+color+"33"
+						if (highlightDonos){
+							color="#"+color+"33";
+						} else {
+							color="#"+color;
+						}
 					} else if (color.length === 8){
 						color="#"+color;
 					}
-					color = color.replace("##","#");
 					tiers.push([parseFloat(threshold)||0, color]);
 				}
 				if (urlParams.has("t3")){
-					let [threshold, color] = [urlParams.get("t3") || 0,urlParams.get("t3c") || "#FDD03533" ];
+					let [threshold, color] = [urlParams.get("t3") || 0,urlParams.get("t3c") || "#FDD035" ];
+					color = color.replace("#","");
 					if (colors.includes(colors)){
 						// color name
 					} else if (color.length === 3){
-						color="#"+color+"3";
+						if (highlightDonos){
+							color="#"+color+"3";
+						} else {
+							color="#"+color;
+						}
 					} else if (color.length === 4){
 						color="#"+color;
 					} else if (color.length === 6){
-						color="#"+color+"33";
+						if (highlightDonos){
+							color="#"+color+"33";
+						} else {
+							color="#"+color;
+						}
 					} else if (color.length === 8){
 						color="#"+color;
 					}
-					color = color.replace("##","#");
 					tiers.push([parseFloat(threshold)||0, color]);
 				}
 				
@@ -8159,7 +8184,11 @@
 						if (tiers){
 							let color = getColorForAmount(data);
 							if (color){
-								node.style.backgroundColor = color;
+								if (highlightDonos){
+									node.style.backgroundColor = color;
+								} else {
+									node.style.setProperty("--donation-amount", color);
+								}
 							}
 						}
 					} else {
