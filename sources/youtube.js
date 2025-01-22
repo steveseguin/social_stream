@@ -461,6 +461,8 @@
 		var nameColor = "";
 		var member = false;
 		var mod = false;
+		
+		var donoValue = "";
 
 		var srcImg = ""; // what shows up as the source image; blank is default (dock decides).
 
@@ -666,11 +668,13 @@
 				const match = giftedmemembership.innerText.match(/\b\d+\b/);
 				hasDonation = match ? parseInt(match[0], 10) : null;
 				if (hasDonation) {
+					donoValue = 5*hasDonation;
 					if (hasDonation==1){
 						hasDonation += " " + getTranslation("gifted-membership", "Gifted");
 					} else {
 						hasDonation += " " + getTranslation("gifted-memberships", "Gifted");
 					}
+					
 				}
 			} catch (e) {
 				hasDonation = "";
@@ -731,6 +735,9 @@
 		data.chatmessage = chatmessage;
 		data.chatimg = chatimg;
 		data.hasDonation = hasDonation;
+		if (donoValue){
+			data.donoValue = donoValue;
+		}
 		data.membership = hasMembership;
 		if (mod){
 			data.mod = mod;

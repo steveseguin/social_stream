@@ -2194,6 +2194,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="no-text-outlining">〰️ No text outlining </span>
                                 </div>
+								<h3>Background Shading for Messages</h3>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="hideshadow" />
@@ -2207,13 +2208,6 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="no-background-shading-for-members">⭕👤 No background shading for members </span>
-                                </div>
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-param1="nodonohighlight" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="no-background-shading-for-donations">⭕💰 No background shading for donations </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -2236,6 +2230,45 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="trivial-shading-events">🤏🕶️ Allow background shading for trivial events </span>
                                 </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="nodonohighlight" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="no-background-shading-for-donations">⭕💰 No background shading for donations </span>
+                                </div>
+								<div>
+									<h3>Customize Donation Colors by Threshold 🌈💰</h3>
+									<div style="width: 100%; display:inline-block;">
+										<label class="switch">
+											<input type="checkbox" data-param1="t1" />
+											<span class="slider round"></span>
+										</label>
+										Threshold: $<input type="number" min="0" step="0.01" value="0"  style="width: 45px;" id="dono_1_threshold" class="textInput" autocomplete="off" data-numbersetting="t1" />USD, Color:
+										<input type="text" style="width: 50px;" data-palette="dono_1_color_palette" id="dono_1_color" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam1="t1c" />
+										<input type="color" data-color="dono_1_color" id="dono_1_color_palette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+									</div>
+									<div style="width: 100%; display:inline-block;">
+										<label class="switch">
+											<input type="checkbox" data-param1="t2" />
+											<span class="slider round"></span>
+										</label>
+										Threshold: $<input type="number" min="0" step="0.01" value="5" style="width: 45px;" id="dono_2_threshold" class="textInput" autocomplete="off" data-numbersetting="t2" />USD, Color:
+										<input type="text" style="width: 50px;"  data-palette="dono_2_color_palette" id="dono_2_color" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam1="t2c" />
+										<input type="color" data-color="dono_2_color" id="dono_2_color_palette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+									</div>
+									<div style="width: 100%; display:inline-block;">
+										<label class="switch">
+											<input type="checkbox" data-param1="t3" />
+											<span class="slider round"></span>
+										</label>
+										Threshold: $<input type="number" min="0" step="0.01" value="50"  style="width: 45px;" id="dono_3_threshold" class="textInput" autocomplete="off"  data-numbersetting="t3" />USD, Color:
+										<input type="text" style="width: 50px;" data-palette="dono_3_color_palette" id="dono_3_color" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam1="t3c" />
+										<input type="color" data-color="dono_3_color" id="dono_3_color_palette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+									</div>
+									<br />
+								</div>
+								
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="largeavatar" />
@@ -2310,7 +2343,7 @@ input:checked + .slider:before {
 								
 								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
 									<textarea id="customCSS" class="textInput" rows="4" data-textparam1="cssb64" placeholder="Enter your custom CSS here"></textarea>
-									<label for="customCSS">&gt; Custom CSS</label>
+									<label for="customCSS">&gt; Custom CSS for custom styles. eg) .hl-name { color: red!important; }</label>
 								</div>
 								
                                 <div>
@@ -3055,29 +3088,29 @@ input:checked + .slider:before {
                                 <h3><span data-translate="colors">Colors</span></h3>
 
                                 <div class="textInputContainer" style="width: 70%; display:inline-block;margin-right:5px;">
-                                    <input type="text" data-palette="comment_color_pallette" id="comment_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_color" />
+                                    <input type="text" data-palette="comment_color_palette" id="comment_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_color" />
 									
                                     <label for="comment_color"><span data-translate="comment-font-color">&gt; Comment font color</span></label>
                                 </div>
-								<input type="color" data-color="comment_color" id="comment_color_pallette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+								<input type="color" data-color="comment_color" id="comment_color_palette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 
                                 <div class="textInputContainer" style="width: 70%; display:inline-block;margin-right:5px;">
-                                    <input type="text" data-palette="comment_background_pallette" id="comment_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_background" />
+                                    <input type="text" data-palette="comment_background_palette" id="comment_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_background" />
                                     <label for="comment_background"><span data-translate="comment-background-color">&gt; Comment background color</span></label>
                                 </div>
-								<input type="color" data-color="comment_background" id="comment_background_pallette"  class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+								<input type="color" data-color="comment_background" id="comment_background_palette"  class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 								
                                 <div class="textInputContainer" style="width: 70%; display:inline-block;margin-right:5px;">
-                                    <input type="text" data-palette="name_color_pallette" id="name_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_color" />
+                                    <input type="text" data-palette="name_color_palette" id="name_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_color" />
                                     <label for="name_color"><span data-translate="default-name-font-color">&gt; Default name font color</span></label>
                                 </div>
-								<input type="color" data-color="name_color" id="name_color_pallette"  class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+								<input type="color" data-color="name_color" id="name_color_palette"  class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 
                                 <div class="textInputContainer" style="width: 70%; display:inline-block;margin-right:5px;">
-                                    <input type="text" data-palette="name_background_pallette" id="name_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_background" />
+                                    <input type="text" data-palette="name_background_palette" id="name_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_background" />
                                     <label for="name_background"><span data-translate="name-background-color">&gt; Name background color</span></label>
                                 </div>
-								<input type="color" data-color="name_background" id="name_background_pallette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+								<input type="color" data-color="name_background" id="name_background_palette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 								
 								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
 									<textarea id="customCSS2" class="textInput" rows="4" data-textparam2="cssb64" placeholder="Enter your custom CSS here"></textarea>

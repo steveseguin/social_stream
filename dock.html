@@ -564,6 +564,11 @@
 				margin-top: 8px;
 			}
 			
+			#context-menu {
+			  transform-origin: bottom left;
+			  transform: scale(var(--menu-scale, 1));
+			}
+			
 			.allowfat .hl-message{
 				max-width: 300px;
 				word-break: keep-all;
@@ -3271,6 +3276,149 @@
 			if (urlParams.has("noavatar") || urlParams.has("noavatars")) {
 				avatars = false;
 			}
+			
+			const colors = [
+			  'aliceblue', 'antiquewhite', 'aqua', 'aquamarine', 'azure',
+			  'beige', 'bisque', 'black', 'blanchedalmond', 'blue', 'blueviolet', 'brown', 'burlywood',
+			  'cadetblue', 'chartreuse', 'chocolate', 'coral', 'cornflowerblue', 'cornsilk', 'crimson', 'cyan',
+			  'darkblue', 'darkcyan', 'darkgoldenrod', 'darkgray', 'darkgreen', 'darkgrey', 'darkkhaki', 'darkmagenta', 'darkolivegreen', 'darkorange', 'darkorchid', 'darkred', 'darksalmon', 'darkseagreen', 'darkslateblue', 'darkslategray', 'darkslategrey', 'darkturquoise', 'darkviolet', 'deeppink', 'deepskyblue', 'dimgray', 'dimgrey', 'dodgerblue',
+			  'firebrick', 'floralwhite', 'forestgreen', 'fuchsia',
+			  'gainsboro', 'ghostwhite', 'gold', 'goldenrod', 'gray', 'green', 'greenyellow', 'grey',
+			  'honeydew', 'hotpink',
+			  'indianred', 'indigo', 'ivory',
+			  'khaki',
+			  'lavender', 'lavenderblush', 'lawngreen', 'lemonchiffon', 'lightblue', 'lightcoral', 'lightcyan', 'lightgoldenrodyellow', 'lightgray', 'lightgreen', 'lightgrey', 'lightpink', 'lightsalmon', 'lightseagreen', 'lightskyblue', 'lightslategray', 'lightslategrey', 'lightsteelblue', 'lightyellow', 'lime', 'limegreen', 'linen',
+			  'magenta', 'maroon', 'mediumaquamarine', 'mediumblue', 'mediumorchid', 'mediumpurple', 'mediumseagreen', 'mediumslateblue', 'mediumspringgreen', 'mediumturquoise', 'mediumvioletred', 'midnightblue', 'mintcream', 'mistyrose', 'moccasin',
+			  'navajowhite', 'navy',
+			  'oldlace', 'olive', 'olivedrab', 'orange', 'orangered', 'orchid',
+			  'palegoldenrod', 'palegreen', 'paleturquoise', 'palevioletred', 'papayawhip', 'peachpuff', 'peru', 'pink', 'plum', 'powderblue', 'purple',
+			  'rebeccapurple', 'red', 'rosybrown', 'royalblue',
+			  'saddlebrown', 'salmon', 'sandybrown', 'seagreen', 'seashell', 'sienna', 'silver', 'skyblue', 'slateblue', 'slategray', 'slategrey', 'snow', 'springgreen', 'steelblue',
+			  'tan', 'teal', 'thistle', 'tomato', 'turquoise',
+			  'violet',
+			  'wheat', 'white', 'whitesmoke',
+			  'yellow', 'yellowgreen'
+			];
+			
+			function processTierParam(urlParams) {
+				let tiers = [];
+				// ! I would def be okay with a blue, purple, and gold outline on gifts 500 - 10k 10k-20k and then 20k+.
+				if (urlParams.has("t1")){
+					let [threshold, color] = [urlParams.get("t1") || 0, urlParams.get("t1c") || "#00F3" ];
+					if (colors.includes(colors)){
+						// color name
+					} else if (color.length === 3){
+						color="#"+color+"3";
+					} else if (color.length === 4){
+						color="#"+color;
+					} else if (color.length === 6){
+						color="#"+color+"33";
+					} else if (color.length === 8){
+						color="#"+color;
+					}
+					color = color.replace("##","#");
+					tiers.push([parseFloat(threshold)||0, color]);
+				}
+				if (urlParams.has("t2")){
+					let [threshold, color] = [urlParams.get("t2") || 0,urlParams.get("t2c") || "#F0F3" ];
+					if (colors.includes(colors)){
+						// color name
+					} else if (color.length === 3){
+						color="#"+color+"3";
+					} else if (color.length === 4){
+						color="#"+color;
+					} else if (color.length === 6){
+						color="#"+color+"33"
+					} else if (color.length === 8){
+						color="#"+color;
+					}
+					color = color.replace("##","#");
+					tiers.push([parseFloat(threshold)||0, color]);
+				}
+				if (urlParams.has("t3")){
+					let [threshold, color] = [urlParams.get("t3") || 0,urlParams.get("t3c") || "#FDD03533" ];
+					if (colors.includes(colors)){
+						// color name
+					} else if (color.length === 3){
+						color="#"+color+"3";
+					} else if (color.length === 4){
+						color="#"+color;
+					} else if (color.length === 6){
+						color="#"+color+"33";
+					} else if (color.length === 8){
+						color="#"+color;
+					}
+					color = color.replace("##","#");
+					tiers.push([parseFloat(threshold)||0, color]);
+				}
+				
+				tiers.sort((a, b) => b[0] - a[0]); // Sort descending
+				
+				return tiers?.length ? tiers : null;
+			}
+
+			function getColorForAmount(data) {
+				
+				let amount = data.donoValue || toUSD(data.donation || data.hasDonation);
+				
+				for (const [threshold, color] of tiers) {
+					if (amount >= threshold) return color;
+				}
+				return null;
+			}
+			
+			function toUSD(value) {
+			  const rates = {
+				EUR: 1.08,
+				GBP: 1.26,
+				JPY: 0.0067,
+				CHF: 1.12,
+				AUD: 0.66,
+				CAD: 0.74,
+				CNY: 0.14,
+				HKD: 0.13,
+				NZD: 0.61,
+				KRW: 0.00075
+			  };
+
+			  const items = {
+				diamond: 0.005,
+				gold: 0.01,
+				coin: 0.01,
+				rose: 0.01,
+				gift: 0.02 // this is just a guess
+			  };
+
+			  if (typeof value !== 'string') value = String(value);
+			  value = value.trim().toLowerCase();
+			  
+			  const numericValue = value.replace(/[^\d.-]/g, '');
+			  const amount = parseFloat(numericValue);
+			  
+			  if (isNaN(amount)) return 0;
+
+			  // Handle items like "3 coins" or "2 roses"
+			  for (const [item, rate] of Object.entries(items)) {
+				if (value.includes(item) || value.includes(item + 's')) {
+				  return amount * rate;
+				}
+			  }
+			  
+			  // Strip common currency symbols for better detection
+			  const cleanValue = value.replace(/[$€£¥]/g, '').trim();
+			  
+			  // Handle currency codes with symbols like "$1 CAD"
+			  for (const [currency, rate] of Object.entries(rates)) {
+				if (cleanValue.includes(currency.toLowerCase())) {
+				  return amount * rate;
+				}
+			  }
+			  
+			  // Default to USD if no other currency found
+			  return amount;
+			}
+			
+			const tiers = processTierParam(urlParams);
 
 			if (urlParams.has("limit")) {
 				customNodeLimit = parseInt(urlParams.get("limit")) || 200;
@@ -8001,12 +8149,19 @@
 							node.style.backgroundColor = data.highlightColor;
 						}
 					}
-
+					
 					if (data.hasDonation) {
 						if (highlightDonos && !bubble) {
 							node.classList.add("dono-highlight");
 						}
 						node.classList.add("donation");
+						
+						if (tiers){
+							let color = getColorForAmount(data);
+							if (color){
+								node.style.backgroundColor = color;
+							}
+						}
 					} else {
 						node.classList.add("noDono");
 					}
@@ -8820,6 +8975,12 @@
 							menuState = 1;
 							menu.classList.add("context-menu--active");
 							document.addEventListener("click", menuClickListener);
+							
+							const scale = Math.min(1, window.innerHeight / menu.scrollHeight);
+							if (scale){
+								menu.style.setProperty('--menu-scale', scale);
+							}
+							  
 						}
 					}
 
