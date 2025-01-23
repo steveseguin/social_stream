@@ -1358,9 +1358,7 @@ function update(response, sync=true){
 			
 			document.getElementById("botlink").href = baseURL+"bot.html?session="+response.streamID+password;
 			
-		
 			hideLinks = false;
-			
 			
 			if ('settings' in response){
 				
@@ -2808,15 +2806,22 @@ function updateSettings(ele, sync=true, value=null){
 			}
 			chrome.runtime.sendMessage({cmd: "sidUpdated",  target:target, password: ele.value || ""}, function (response) {log("Password updated");});
 		}
-	} else if (ele.dataset.color){
-		
+	}
+	
+	if (ele.dataset.color){	
 		var ele2 = document.getElementById(ele.dataset.color);
 		if (ele2){
 			ele2.value = ele.value
 			updateSettings(ele2, sync);
 			return;
 		}
-		
+	} else if (ele.dataset.palette){
+		var ele2 = document.getElementById(ele.dataset.palette);
+		if (ele2){
+			ele2.value = ele.value
+			// updateSettings(ele2, sync); // the pallete in this case is just the picker; not the value holder.
+			return;
+		}
 	} 
 	
 	refreshLinks();
