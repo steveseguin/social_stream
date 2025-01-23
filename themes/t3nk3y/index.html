@@ -123,7 +123,7 @@
             }
         }
     </style>
-    <script type="text/javascript" src="chroma.min.cjs"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
 </head>
 <body>
     <div id="chat-container"></div>
@@ -140,6 +140,21 @@
     var featuredMode = false; // Set to true if you only want to display featured messages
 
     const chatContainer = document.getElementById('chat-container');
+	
+	const MAX_MESSAGES = 20;
+	const ANIMATION_DURATION = 500;
+
+	function cleanupOldMessages() {
+		const messages = Array.from(chatContainer.children);
+		if (messages.length > MAX_MESSAGES) {
+			const toRemove = messages.slice(MAX_MESSAGES);
+			toRemove.forEach(msg => {
+				msg.style.opacity = '0';
+				msg.style.transform = 'translateY(20px)';
+				setTimeout(() => msg.remove(), ANIMATION_DURATION);
+			});
+		}
+	}
 
     // Function to add a dynamic message to the overlay
     function addMessageToOverlay(data) {
@@ -192,9 +207,7 @@
         chatContainer.scrollTop = chatContainer.scrollHeight;
 
         // Remove oldest messages if over limit
-        if (chatContainer.children.length > 20) {
-            chatContainer.removeChild(chatContainer.lastChild);
-        }
+        cleanupOldMessages();
 			
         setTimeout(() => {
             Array.from(chatContainer.children).forEach(child => {
@@ -203,26 +216,22 @@
         }, 500); 
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-			
-			var iframe = document.createElement("iframe");
-			if (featuredMode){
-				iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
-			} else {
-				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
-			}
-			
-			iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px; overflow: hidden;";
-			document.body.appendChild(iframe);
+    var iframe = document.createElement("iframe");
+	if (featuredMode){
+		iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+	} else {
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+	}
+	
+	iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px; overflow: hidden;";
+	document.body.appendChild(iframe);
 
-			window.addEventListener("message", function (e) {
-				if (e.source != iframe.contentWindow) return;
-				if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
-					addMessageToOverlay(e.data.dataReceived.overlayNinja);
-				}
-			});
-
-		});
+	window.addEventListener("message", function (e) {
+		if (e.source != iframe.contentWindow) return;
+		if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+			addMessageToOverlay(e.data.dataReceived.overlayNinja);
+		}
+	});
 </script>
 </body>
 </html>
