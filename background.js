@@ -7137,7 +7137,7 @@ async function applyBotActions(data, tab = false) {
 			for (const id of midiEvents) {
 				const event = settings[`midievent${id}`];
 				const command = settings[`midicommand${id}`]?.textsetting;
-				const note = settings[`midinote${id}`]?.textsetting;
+				const note = settings[`midinote${id}`]?.numbersetting;
 				
 				if (!event?.setting || !command || !note) continue;
 				

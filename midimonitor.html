@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MIDI Monitor</title>
+    <script src="./thirdparty/webmidi3.js"></script>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            padding: 20px; 
+            background: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        #midiDisplay {
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 8px;
+            background: #242424;
+            min-width: 300px;
+            text-align: center;
+        }
+        #midiDisplay > div {
+            margin: 15px 0;
+            font-size: 1.2em;
+        }
+        .active { 
+            background: #2d5d2d;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .inactive { 
+            background: #5d2d2d;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        @keyframes flash {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .flash {
+            animation: flash 0.2s ease;
+        }
+        #lastEvent {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div id="midiDisplay">
+        <div>Device: <span id="deviceName">No device</span></div>
+        <div>Last Event: <span id="lastEvent">None</span></div>
+        <div>Note Status: <span id="noteStatus" class="inactive">OFF</span></div>
+    </div>
+
+    <script>
+    WebMidi.enable(function (err) {
+        if (err) {
+            console.log("WebMidi could not be enabled.", err);
+            return;
+        }
+
+        const deviceName = document.getElementById("deviceName");
+        const lastEvent = document.getElementById("lastEvent");
+        const noteStatus = document.getElementById("noteStatus");
+        
+        let activeNotes = new Set();
+
+        function flashElement(element) {
+            element.classList.add('flash');
+            setTimeout(() => element.classList.remove('flash'), 200);
+        }
+
+        function updateNoteStatus() {
+            if (activeNotes.size > 0) {
+                noteStatus.textContent = "ON";
+                noteStatus.className = "active";
+            } else {
+                noteStatus.textContent = "OFF";
+                noteStatus.className = "inactive";
+            }
+        }
+
+        WebMidi.inputs.forEach((input, index) => {
+            deviceName.textContent = input.name || `MIDI Device #${index + 1}`;
+
+            input.addListener('noteon', "all", e => {
+                activeNotes.add(`${e.note.name}${e.note.octave}`);
+                lastEvent.textContent = `Note ON: ${e.note.name}${e.note.octave} (${e.note.number})`;
+                flashElement(lastEvent);
+                updateNoteStatus();
+            });
+
+            input.addListener('noteoff', "all", e => {
+                activeNotes.delete(`${e.note.name}${e.note.octave}`);
+                lastEvent.textContent = `Note OFF: ${e.note.name}${e.note.octave} (${e.note.number})`;
+                flashElement(lastEvent);
+                updateNoteStatus();
+            });
+
+            input.addListener('controlchange', "all", e => {
+                lastEvent.textContent = `CC: ${e.controller.number} = ${e.value}`;
+                flashElement(lastEvent);
+            });
+
+            input.addListener('pitchbend', "all", e => {
+                lastEvent.textContent = `Pitch Bend: ${e.value}`;
+                flashElement(lastEvent);
+            });
+        });
+
+        WebMidi.addListener("connected", e => {
+            deviceName.textContent = e.port.name || `MIDI Device #${WebMidi.inputs.indexOf(e.port) + 1}`;
+        });
+
+        WebMidi.addListener("disconnected", e => {
+            if (WebMidi.inputs.length === 0) {
+                deviceName.textContent = "No device";
+                lastEvent.textContent = "None";
+                activeNotes.clear();
+                updateNoteStatus();
+            }
+        });
+    });
+    </script>
+</body>
+</html>
