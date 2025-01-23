@@ -62,6 +62,25 @@ file:///C:/path/to/your/theme.html?session=YOUR_SESSION_ID
 - Enable API support via app menu
 - Create custom test messages near the bottom of the page
 
+## OBS Compatibility Notes
+### OBS v31 and Iframe Limitations
+Starting with OBS v31, there are important considerations for custom themes:
+
+- Cross-origin iframes will not load as browser sources in OBS v31 on PC and Linux (this was already the case for Mac)
+- Custom themes using webRTC via VDO.Ninja iframes (hosted on vdo.socialstream.ninja) may be affected
+
+### Solutions and Workarounds
+1. **Official Theme Hosting**
+   - Submit your custom themes via PR to be hosted on socialstream.ninja
+   - Themes hosted on the official domain will work properly with OBS v31
+   - Approved PRs to main branch are automatically deployed and available via the website
+
+2. **WebSocket API Alternative**
+   - For cases where iframes aren't suitable, use the WebSocket API
+   - Enable with the `&server` parameter or such, as the code requires to trigger. You may need to enable it in the extension/menu as well.
+   - When using the Standalone app with local server option, use `&localserver&server` to utilize the local WebSocket server
+   - May require additional setup if the websocket listening code is not already configured in sample code to be used; see dock.html for reference in that case.
+
 ## Available Themes
 
 ### Themed Packages (with documentation)
