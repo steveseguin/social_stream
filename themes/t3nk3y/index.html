@@ -123,7 +123,7 @@
             }
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
+    <script src="./chroma.min.cjs"></script>
 </head>
 <body>
     <div id="chat-container"></div>
@@ -163,9 +163,9 @@
         
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
-        //const { h, s, l } = rgbToHsl(data.nameColor);
-        //messageDiv.style.background = `linear-gradient(90deg, ${hslToRgb(h, 50, l)}, ${data.nameColor})`;
-        messageDiv.style.background = `linear-gradient(90deg, ${chroma(data.nameColor).desaturate(4).darken(1).alpha(0.8)}, ${chroma(data.nameColor).desaturate(3).darken(1).alpha(0.8)})`;
+        //const { h, s, l } = rgbToHsl(data.nameColor || "#555");
+        //messageDiv.style.background = `linear-gradient(90deg, ${hslToRgb(h, 50, l)}, ${data.nameColor || "#555"})`;
+        messageDiv.style.background = `linear-gradient(90deg, ${chroma(data.nameColor || "#555").desaturate(4).darken(1).alpha(0.8)}, ${chroma(data.nameColor || "#555").desaturate(3).darken(1).alpha(0.8)})`;
         if (data.mid) messageDiv.id = data.mid;
         data.sourceicon = `https://socialstream.ninja/sources/images/${data.type}.png`;
 
@@ -190,7 +190,7 @@
 
         // Construct the HTML for each message
         messageDiv.innerHTML = `
-            <div class="username-box" style="background: linear-gradient(90deg, ${chroma(data.nameColor).desaturate(1).alpha(0.9)}, ${chroma(data.nameColor).desaturate(2).alpha(0.9)});">
+            <div class="username-box" style="background: linear-gradient(90deg, ${chroma(data.nameColor || "#555").desaturate(1).alpha(0.9)}, ${chroma(data.nameColor || "#555").desaturate(2).alpha(0.9)});">
                 ${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : ''}
                 <span>${data.chatname}</span>
                 <div class="badges">${chatbadges}</div>
