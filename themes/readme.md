@@ -76,6 +76,9 @@ Add `?session=XXXXXXX` to these URLs, replacing XXXXXXX with your session ID:
 
 - [Sample Theme](https://socialstream.ninja/sampleoverlay.html)
 - [Pretty Theme](https://socialstream.ninja/themes/pretty.html)
+- [t3nk3y's Theme](https://socialstream.ninja/themes/t3nk3y/)
+
+
 
 ## Contributing
 
