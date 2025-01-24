@@ -2,8 +2,7 @@
 
 For anyone who wants to create a custom theme/style/template for their chat stream, you can share them via adding them to this repository (in this folder) as a Pull Request.
 
-<img src="https://github.com/user-attachments/assets/68b7075f-8205-41e6-9c2d-34863cd3dffe" style="width:300px;">
-<img src="https://user-images.githubusercontent.com/2575698/193437666-0f00ef2d-2932-41c4-95b4-9e132f06da83.png" style="width:300px;">
+<img src="https://github.com/user-attachments/assets/68b7075f-8205-41e6-9c2d-34863cd3dffe" style="width:250px;"><img src="https://user-images.githubusercontent.com/2575698/193437666-0f00ef2d-2932-41c4-95b4-9e132f06da83.png" style="width:250px;">
 
 ## Quick Start
 
