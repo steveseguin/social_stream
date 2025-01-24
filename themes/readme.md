@@ -97,7 +97,11 @@ Add `?session=XXXXXXX` to these URLs, replacing XXXXXXX with your session ID:
 - [Pretty Theme](https://socialstream.ninja/themes/pretty.html)
 - [t3nk3y's Theme](https://socialstream.ninja/themes/t3nk3y/)
 
+### YouTube-CSS compatible Theme Template:
+You can use a CSS designed for YouTube with our YouTube-structured overlay page:
 
+- [YouTube-CSS friendly Overlay here](https://socialstream.ninja/septapus)
+- [Create a custom style for it with Septapus](https://chatv2.septapus.com/)
 
 ## Contributing
 
