@@ -94,7 +94,6 @@
 
         .message {
             display: inline-block;
-            max-height: 120px;
             max-width: 100%;
             background: rgba(23, 25, 28, 0.9);
             padding: 24px 8px 8px 8px;
@@ -240,11 +239,9 @@
 
 			let sourceIcon = '';
 			if (data.type === 'twitch') {
-			//    sourceIcon = `<img src="https://img.icons8.com/?size=100&id=S5wxXL23AVBm&format=png&color=000000" alt="Twitch" class="source-icon">`;
-				  sourceIcon = "https://socialstream.ninja/sources/images/twitch.png"; // modded by steve, since direct linking isn't approprioate
+			    sourceIcon = `<img src="https://img.icons8.com/?size=100&id=S5wxXL23AVBm&format=png&color=000000" alt="Twitch" class="source-icon">`;
 			} else if (data.type === 'tiktok') {
-				  sourceIcon = "https://socialstream.ninja/sources/images/tiktok.png"; // modded by steve, since direct linking isn't approprioate
-			//    sourceIcon = `<img src="https://w7.pngwing.com/pngs/483/249/png-transparent-tiktok-icon-thumbnail.png" alt="TikTok" class="source-icon" style="transform: scale(1.25)" >`;
+			    sourceIcon = `<img src="https://w7.pngwing.com/pngs/483/249/png-transparent-tiktok-icon-thumbnail.png" alt="TikTok" class="source-icon" style="transform: scale(1.25)" >`;
 			}
 
 			let chatbadges = "";
@@ -275,24 +272,24 @@
 			lastMessageDiv = messageContainer;
 		}
 	}
+	
+	const iframe = document.createElement("iframe");
+	iframe.src = featuredMode
+		? `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`
+		: `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${roomID}`;
+
+	iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+	document.body.appendChild(iframe);
+
+	window.addEventListener("message", (event) => {
+		if (event.source !== iframe.contentWindow) return;
+		if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+			addMessageToOverlay(event.data.dataReceived.overlayNinja);
+		}
+	});
 
 	document.addEventListener('DOMContentLoaded', () => {
 		applyOverlaySize(); // Apply overlay size based on URL parameter
-
-		const iframe = document.createElement("iframe");
-		iframe.src = featuredMode
-			? `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`
-			: `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${roomID}`;
-
-		iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
-		document.body.appendChild(iframe);
-
-		window.addEventListener("message", (event) => {
-			if (event.source !== iframe.contentWindow) return;
-			if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
-				addMessageToOverlay(event.data.dataReceived.overlayNinja);
-			}
-		});
 	});
 		
 			
