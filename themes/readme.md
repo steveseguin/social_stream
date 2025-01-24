@@ -20,7 +20,7 @@ Run themes from your local file system:
 file:///C:/path/to/your/theme.html?session=YOUR_SESSION_ID
 ```
 
-> **Important**: 
+> **Important**:
  - Always append the session parameter correctly, regardless of hosting method.
  - If Local Hosting, you may need to use &server mode if using this with OBS +v31
 
@@ -51,6 +51,10 @@ file:///C:/path/to/your/theme.html?session=YOUR_SESSION_ID
    - Modify the [simple boiler-plate overlay](https://socialstream.ninja/sampleoverlay.html)
    - Best for custom themes with AI assistance
    - For message structure details, see: [Message Structure Documentation](https://socialstream.ninja/landing#message-structure)
+
+4. **YouTube-structured CSS-only mods**
+   - You can use a CSS designed for YouTube with our YouTube-structured overlay page
+   - The [YouTube-CSS friendly Overlay is here](https://socialstream.ninja/septapus), which contains more information.
 
 > **Warning**: Direct modification of `dock.html` is not recommended due to its complexity and size.
 
@@ -98,6 +102,12 @@ Add `?session=XXXXXXX` to these URLs, replacing XXXXXXX with your session ID:
 - [Sample Theme](https://socialstream.ninja/sampleoverlay.html)
 - [Pretty Theme](https://socialstream.ninja/themes/pretty.html)
 - [t3nk3y's Theme](https://socialstream.ninja/themes/t3nk3y/)
+
+### YouTube-CSS compatible Theme Template:
+You can use a CSS designed for YouTube with our YouTube-structured overlay page:
+
+- [YouTube-CSS friendly Overlay here](https://socialstream.ninja/septapus)
+- [Create a custom style for it with Septapus](https://chatv2.septapus.com/)
 
 ## Contributing
 
