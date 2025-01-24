@@ -2,7 +2,7 @@
 
 For anyone who wants to create a custom theme/style/template for their chat stream, you can share them via adding them to this repository (in this folder) as a Pull Request.
 
-![image](https://user-images.githubusercontent.com/2575698/193437666-0f00ef2d-2932-41c4-95b4-9e132f06da83.png)
+<img src="https://github.com/user-attachments/assets/68b7075f-8205-41e6-9c2d-34863cd3dffe" style="width:250px;"><img src="https://user-images.githubusercontent.com/2575698/193437666-0f00ef2d-2932-41c4-95b4-9e132f06da83.png" style="width:250px;">
 
 ## Quick Start
 
@@ -20,7 +20,9 @@ Run themes from your local file system:
 file:///C:/path/to/your/theme.html?session=YOUR_SESSION_ID
 ```
 
-> **Important**: Always append the session parameter correctly, regardless of hosting method.
+> **Important**:
+ - Always append the session parameter correctly, regardless of hosting method.
+ - If Local Hosting, you may need to use &server mode if using this with OBS +v31
 
 ## Theme Development Approaches
 
@@ -123,6 +125,7 @@ Benefits of contributing to the official repository:
 - SSL/HTTPS support
 - Consistent availability
 - Included in any granted access permissions
+- The P2P IFRAMES mode will work in OBS v31
 
 Alternatively, you can self-host using local files, just ensure proper session parameter usage.
 
