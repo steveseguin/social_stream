@@ -5716,6 +5716,10 @@
 							); // if delayed, we will try again.
 						}
 						return true;
+					} else if (syncDocks || force) {
+						document.querySelectorAll("." + lastMessageClass).forEach(ele => {
+							ele.classList.remove(lastMessageClass); // no overlay is now active.
+						});
 					}
 					return;
 				} else if ("pin" in data) {
