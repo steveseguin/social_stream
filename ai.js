@@ -225,7 +225,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 					// Remove 'data: ' prefix if it exists
 					const jsonStr = line.startsWith('data: ') ? line.slice(6) : line;
 					const data = JSON.parse(jsonStr);
-					console.log(data);
+					//console.log(data);
 					if (data.response) { // Ollama format
 						appendToFull(data.response);
 						if (callback) callback(data.response);
@@ -349,19 +349,48 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                 return fullResponse;
             } else {
                 const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify(message),
-                    signal: abortController?.signal
-                });
+					method: 'POST',
+					headers,
+					body: JSON.stringify(message),
+					signal: abortController?.signal
+				});
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+				if (!response.ok) {
+					let errorMessage = '';
+					try {
+						const errorData = await response.json();
+						console.log("API Error Response:", errorData); // Log full error object
+						
+						if (errorData.error) {
+							const error = errorData.error;
+							errorMessage = error.message || error.code || error.status || error.error;
+						} else {
+							errorMessage = errorData.message || errorData.code || errorData.status;
+						}
+					} catch(e) {
+						errorMessage = `HTTP error! status: ${response.status}`;
+					}
 
-                const data = await response.json();
-                // Both APIs now return the same format
-				//console.log(data);
+					const debugOutput = document.getElementById('debugOutput');
+					const errorDiv = document.createElement('div');
+					errorDiv.className = 'error-message';
+					errorDiv.innerHTML = errorMessage;
+					errorDiv.style.opacity = '1';
+					debugOutput.appendChild(errorDiv);
+
+					setTimeout(() => {
+						errorDiv.style.transition = 'opacity 1s';
+						errorDiv.style.opacity = '0';
+						setTimeout(() => {
+							errorDiv.remove();
+						}, 1000); // Remove after fade completes
+					}, 60000);
+
+					throw new Error(errorMessage);
+				}
+
+				const data = await response.json();
+				return data.choices[0].message.content;
                 return data.choices[0].message.content;
             }
         } catch (error) {
@@ -828,7 +857,7 @@ let isProcessing = false;
 const lastResponseTime = {};
 
 async function processSummary(data){
-	console.log(data);
+	//console.log(data);
 	if (!data.tid) return data;
 	const currentTime = Date.now();
 	if (isProcessing) return data;
@@ -852,7 +881,7 @@ async function processSummary(data){
 		return data;
 	}
 	isProcessing = false;
-	console.log(summary);
+	//console.log(summary);
 	if (summary){
 		let botname = "🤖💬";
 		if (settings.ollamabotname?.textsetting) {
@@ -957,7 +986,7 @@ async function processMessageWithOllama(data) {
 	//console.log(response);
 
     // Handle response
-    if (response && !response.toLowerCase().startsWith("not available") && (settings.alwaysRespondLLM || ( 
+    if (response && !response.includes("@@@@@") && !response.toLowerCase().startsWith("not available") && (settings.alwaysRespondLLM || ( 
         !response.includes("NO_RESPONSE") && 
         !response.startsWith("No ") && 
         !response.startsWith("NO ")))) {
@@ -1053,7 +1082,11 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 		  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is needed. Respond only with NO_RESPONSE if you have no reply.';
 		}
 		
-		const response = await callOllamaAPI(promptBase);
+		let response = await callOllamaAPI(promptBase);
+		
+		if (botname && response.startsWith(botname+":")){
+			response = response.replace(botname+":","").trim();
+		}
 		
 		if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
 		  if (settings.alwaysRespondLLM && (response && !response.toLowerCase().startsWith('@@@@'))) {
@@ -1092,12 +1125,15 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 			  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is needed. Respond only with NO_RESPONSE if you have no reply.';
 		  }
 	  }
-	  console.log(promptBase);
+	  //console.log(promptBase);
       
-      const response = await callOllamaAPI(promptBase);
+      let response = await callOllamaAPI(promptBase);
+	  
+	  if (botname && response.startsWith(botname+":")){
+		response = response.replace(botname+":","").trim();
+	  }
 	  
       if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
-		console.log(response);
 		if (settings.alwaysRespondLLM && (response && !response.toLowerCase().startsWith('@@@@'))){
 			return response;
 		}
