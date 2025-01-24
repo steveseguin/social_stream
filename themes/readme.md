@@ -51,8 +51,8 @@ file:///C:/path/to/your/theme.html?session=YOUR_SESSION_ID
    - For message structure details, see: [Message Structure Documentation](https://socialstream.ninja/landing#message-structure)
 
 4. **YouTube-structured CSS-only mods**
-- You can use a CSS designed for YouTube with our YouTube-structured overlay page
-- The [YouTube-CSS friendly Overlay is here](https://socialstream.ninja/septapus), which contains more information.
+   - You can use a CSS designed for YouTube with our YouTube-structured overlay page
+   - The [YouTube-CSS friendly Overlay is here](https://socialstream.ninja/septapus), which contains more information.
 
 > **Warning**: Direct modification of `dock.html` is not recommended due to its complexity and size.
 
