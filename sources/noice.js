@@ -72,7 +72,7 @@
 	function processMessage(ele){
 		
 		if (!ele || !ele.isConnected){return;}
-		console.log(ele);
+		//console.log(ele);
 		if (ele && ele.marked){
 		  return;
 		} else {
