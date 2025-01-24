@@ -17,12 +17,6 @@
             background-color: #0000;
         }
 
-        #chat-container {
-            padding: 25px;
-            max-width: 350px;
-            margin: auto;
-        }
-
         .message-container {
             position: relative;
             margin-bottom: 20px;
@@ -70,12 +64,12 @@
             margin-left: 15px;
             border-radius: 10px;
             color: #e02c53;
-            opacity: 0;
-            transform: translateY(-20px);
-            animation: slideFadeIn 0.5s ease forwards;
             position: relative;
             word-wrap: break-word;
-        }
+			opacity: 0;
+			transform: translateY(20px);
+			animation: slideFadeIn 0.3s ease forwards;
+		}
 
         .text {
             font-size: clamp(0.85em, 2.5vw, 1em);
@@ -85,13 +79,27 @@
 			max-width:64px;
 			max-height:24px;
 		}
+		
+		#chat-container {
+			padding: 0;
+			max-width: 350px;
+			margin: auto;
+			max-height: 100vh;
+			overflow-y: auto;
+			scrollbar-width: none;  /* Firefox */
+			-ms-overflow-style: none;  /* IE and Edge */
+		}
 
-        @keyframes slideFadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+		#chat-container::-webkit-scrollbar {
+			display: none;  /* Chrome, Safari, Opera */
+		}
+
+		@keyframes slideFadeIn {
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
     </style>
 </head>
 <body>
@@ -110,54 +118,55 @@
 
     const chatContainer = document.getElementById('chat-container');
 
-    // Function to add a dynamic message to the overlay
-    function addMessageToOverlay(data) {
-        const messageContainer = document.createElement('div');
-        messageContainer.classList.add('message-container');
-        
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message');
-        if (data.mid) messageDiv.id = data.mid;
-        data.sourceicon = `https://socialstream.ninja/sources/images/${data.type}.png`;
+	function addMessageToOverlay(data) {
+		const messageContainer = document.createElement('div');
+		messageContainer.classList.add('message-container');
+		
+		const messageDiv = document.createElement('div');
+		messageDiv.classList.add('message');
+		if (data.mid) messageDiv.id = data.mid;
+		data.sourceicon = `https://socialstream.ninja/sources/images/${data.type}.png`;
 
-        // Build the badges HTML
-        let chatbadges = "";
-        if (data.chatbadges) {
-            data.chatbadges.slice(0, 2).forEach(badge => {
-                if (typeof badge === "object") {
-                    if (badge.type === "img" && badge.src) {
-                        chatbadges += `<img class='badge' src='${badge.src}' />`;
-                    } else if (badge.type === "svg" && badge.html) {
-                        chatbadges += `<span class='badge svg'>${badge.html}</span>`;
-                    }
-                } else {
-                    chatbadges += `<img class='badge' src='${badge}' />`;
-                }
-            });
-        }
+		let chatbadges = "";
+		if (data.chatbadges) {
+			data.chatbadges.slice(0, 2).forEach(badge => {
+				if (typeof badge === "object") {
+					if (badge.type === "img" && badge.src) {
+						chatbadges += `<img class='badge' src='${badge.src}' />`;
+					} else if (badge.type === "svg" && badge.html) {
+						chatbadges += `<span class='badge svg'>${badge.html}</span>`;
+					}
+				} else {
+					chatbadges += `<img class='badge' src='${badge}' />`;
+				}
+			});
+		}
 
-        // Construct the HTML for each message
-        messageDiv.innerHTML = `
-            ${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : ''}
-            <div class="username-box">
-                <span>${data.chatname}</span>
-                <span class="badges">${chatbadges}</span>
-            </div>
-            <div class="text">${data.chatmessage || ''}</div>
-            ${(data.donation||data.hasDonation) ? `<div class="donation">${(data.donation||data.hasDonation)}</div>` : ''}
-        `;
+		messageDiv.innerHTML = `
+			${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : ''}
+			<div class="username-box">
+				<span>${data.chatname}</span>
+				<span class="badges">${chatbadges}</span>
+			</div>
+			<div class="text">${data.chatmessage || ''}</div>
+			${(data.donation||data.hasDonation) ? `<div class="donation">${(data.donation||data.hasDonation)}</div>` : ''}
+		`;
 
-        messageContainer.appendChild(messageDiv);
-        chatContainer.appendChild(messageContainer);
+		messageContainer.appendChild(messageDiv);
+		
+		const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop <= chatContainer.clientHeight + 1;
+		
+		if (chatContainer.children.length >= 20) {
+			chatContainer.firstChild.style.opacity = 0;
+			setTimeout(() => chatContainer.removeChild(chatContainer.firstChild), 300);
+		}
+		
+		chatContainer.appendChild(messageContainer);
 
-        // Auto-scroll to the latest message
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-
-        // Remove oldest messages if over limit
-        if (chatContainer.children.length > 20) {
-            chatContainer.removeChild(chatContainer.firstChild);
-        }
-    }
+		if (isAtBottom) {
+			chatContainer.scrollTop = chatContainer.scrollHeight;
+		}
+	}
 
     // Initialize iframe for Social Stream Ninja
     document.addEventListener('DOMContentLoaded', () => {
@@ -178,6 +187,46 @@
             }
         });
     });
+	
+	// The Websocket mode is an alternative to using p2p mode; useful if your OBS or system refuses to use IFrames/P2P.
+	var conCon = 1;
+	var socketserver = false;
+	// localserver mode can be used via the stand-alone app; file-> enable local server, or use the publicly hosted one.
+	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+	function setupSocket(){
+		socketserver.onclose = function (){
+			setTimeout(function(){
+				conCon+=1;
+				socketserver = new WebSocket(serverURL);
+				setupSocket();
+			},100*conCon);
+		};
+		socketserver.onopen = function (){
+			conCon = 1;
+			socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+		};
+		socketserver.addEventListener('message', function (event) {
+			var resp = false
+			if (event.data){
+				var data = JSON.parse(event.data);
+				addMessageToOverlay(data);
+				if (data.get){
+					var ret = {};
+					ret.callback = {};
+					ret.callback.get = data.get
+					ret.callback.result = true;
+					socketserver.send(JSON.stringify(ret));
+				}
+			}
+		});
+	}
+	
+	if (urlParams.has("server") || urlParams.has("server2")){ // opt-in to use. Must also be enabled in the menu as well.
+		serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+		socketserver = new WebSocket(serverURL);
+		setupSocket();
+	}
 </script>
 </body>
 </html>

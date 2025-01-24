@@ -1,3 +1,9 @@
+<!--
+Development Notes:
+- It's important that the IFRAME logic stay intact, as it is how we receieve messages
+- This code is in vanilla Javascript designed for web browsers without compiling
+- Details of the incoming message structure can be found here: https://github.com/steveseguin/social_stream/blob/main/README.md#message-structure
+ !-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,8 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Overlay</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
-    <style>
-	
+<style>
 @import url('https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap');
 
 body, html {
@@ -74,23 +79,17 @@ body, html {
     font-weight: 600;
 }
 
-
-/* Clear float */
 .message:after {
     content: "";
     display: table;
     clear: both;
 }
 
-/* Stylish separator line */
 .separator {
     height: 2px;
     background: linear-gradient(to right, #4ab8f9, #4cd137);
     margin: 20px 0;
 }
-
-
-
 
 .name-bg {
     background-color: #4a6fa5;
@@ -158,98 +157,134 @@ body, html {
     margin-left: 5px;
 	vertical-align: middle;
 }
-
-
-	</style>
+</style>
 </head>
 <body>
-     <div id="chat-container">
-       
-    </div>
-    <script>
-	
-		var urlParams = new URLSearchParams(window.location.search);
-		var roomID = "iWWnKL28tQ";
-		
-		if (urlParams.has("session")){
-			roomID = urlParams.get("session");
-		}
-		var password = "false";
-		var featuredMode = false; // featured == selected messages only.  not featured == all messages.
-		
-		const chatContainer = document.getElementById('chat-container');
-		
-		function addMessageToOverlay(data) {
-			
-			const messageDiv = document.createElement('div');
-			messageDiv.classList.add('message');
-			if (data.mid){messageDiv.id = data.mid;}
-			data.sourceicon = "https://socialstream.ninja/sources/images/"+data.type+".png";
-			console.log(data.chatbadges);
-			
-			var chatbadges = "";
-			if (data.chatbadges) {
-				data.chatbadges.forEach(badge => {
-					if (typeof badge === "object") {
-						if (badge.type === "img" && badge.src) {
-							chatbadges += `<img class='badge' src='${badge.src}' />`;
-						} else if (badge.type === "svg" && badge.html) {
-							chatbadges += `<span class='badge svg'>${badge.html}</span>`;
-						}
-					} else {
-						chatbadges += `<img class='badge' src='${badge}' />`;
-					}
-				});
-			}
-			
-			messageDiv.innerHTML = `
-				${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : ''}
-				${data.chatname ? `<div class="name-bg"><div class="name">${data.chatname}</div></div>` : ''}
-				${data.membership ? `<div class="membership-status">${data.membership}</div>` : ''}
-				${data.sourceicon ? `<img src="${data.sourceicon}" alt="Channel Source" class="source-icon">` : ''}
-				${chatbadges}
-				<div class="text">${data.chatmessage ? data.chatmessage : ''}</div>
-				${data.donation ? `<div class="donation">${data.donation}</div>` : ''}
-				${data.contentimg ? `<img src="${data.contentimg}" alt="Large Content" class="large-image" onerror="this.style.display='none';">` : ''}
-			`;
-			
-			 Array.from(chatContainer.children).forEach(child => {
-				child.style.transform = 'translateY(' + messageDiv.offsetHeight + 'px)';
-			});
-			
-			chatContainer.prepend(messageDiv);
-			
-			while (chatContainer.children.length > 20) {
-				chatContainer.removeChild(chatContainer.lastChild);
-			}
-			
-			setTimeout(() => {
-				Array.from(chatContainer.children).forEach(child => {
-					child.style.transform = '';
-				});
-			}, 500); 
-		}
-		
-		document.addEventListener('DOMContentLoaded', () => {
-			
-			var iframe = document.createElement("iframe");
-			if (featuredMode){
-				iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
-			} else {
-				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
-			}
-			
-			iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
-			document.body.appendChild(iframe);
+<div id="chat-container"></div>
+<script>
 
-			window.addEventListener("message", function (e) {
-				if (e.source != iframe.contentWindow) return;
-				if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
-					addMessageToOverlay(e.data.dataReceived.overlayNinja);
+	var urlParams = new URLSearchParams(window.location.search);
+	var roomID = "iWWnKL28tQ";
+	
+	if (urlParams.has("session")){
+		roomID = urlParams.get("session");
+	}
+	var password = "false";
+	var featuredMode = false; // featured == selected messages only.  not featured == all messages.
+	
+	const chatContainer = document.getElementById('chat-container');
+	
+	function addMessageToOverlay(data) {
+		
+		const messageDiv = document.createElement('div');
+		messageDiv.classList.add('message');
+		if (data.mid){messageDiv.id = data.mid;}
+		data.sourceicon = "https://socialstream.ninja/sources/images/"+data.type+".png";
+		console.log(data.chatbadges);
+		
+		var chatbadges = "";
+		if (data.chatbadges) {
+			data.chatbadges.forEach(badge => {
+				if (typeof badge === "object") {
+					if (badge.type === "img" && badge.src) {
+						chatbadges += `<img class='badge' src='${badge.src}' />`;
+					} else if (badge.type === "svg" && badge.html) {
+						chatbadges += `<span class='badge svg'>${badge.html}</span>`;
+					}
+				} else {
+					chatbadges += `<img class='badge' src='${badge}' />`;
 				}
 			});
-
+		}
+		
+		messageDiv.innerHTML = `
+			${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : ''}
+			${data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : ''}
+			${data.sourceicon ? `<img src="${data.sourceicon}" alt="Channel Source" class="source-icon">` : ''}
+			${chatbadges}
+			${data.membership ? `<div class="membership-status">${data.membership}</div>` : ''}
+			<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>
+			${data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : ''}
+			${data.contentimg ? `<img src="${data.contentimg}" alt="Large Content" class="large-image" onerror="this.style.display='none';">` : ''}
+		`;
+		
+		Array.from(chatContainer.children).forEach(child => {
+			child.style.transform = 'translateY(' + messageDiv.offsetHeight + 'px)';
 		});
-	</script>
+		
+		chatContainer.prepend(messageDiv);
+		
+		// Auto-scroll to the latest message
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+		
+		while (chatContainer.children.length > 20) {
+			chatContainer.removeChild(chatContainer.lastChild);
+		}
+		
+		setTimeout(() => {
+			Array.from(chatContainer.children).forEach(child => {
+				child.style.transform = '';
+			});
+		}, 500); 
+	}
+	
+	// The IFrame allows for peer to peer mode; used by default.  It may have issues if self-hosting this page though while using OBS v31 due to same-origin strict policies in CEF
+	var iframe = document.createElement("iframe");
+	if (featuredMode){
+		iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+	} else {
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+	}
+	iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+	document.body.appendChild(iframe);
+	window.addEventListener("message", function (e) {
+		if (e.source != iframe.contentWindow) return;
+		if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+			addMessageToOverlay(e.data.dataReceived.overlayNinja);
+		}
+	});
+	
+	
+	// The Websocket mode is an alternative to using p2p mode; useful if your OBS or system refuses to use IFrames/P2P.
+	var conCon = 1;
+	var socketserver = false;
+	// localserver mode can be used via the stand-alone app; file-> enable local server, or use the publicly hosted one.
+	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+	function setupSocket(){
+		socketserver.onclose = function (){
+			setTimeout(function(){
+				conCon+=1;
+				socketserver = new WebSocket(serverURL);
+				setupSocket();
+			},100*conCon);
+		};
+		socketserver.onopen = function (){
+			conCon = 1;
+			socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+		};
+		socketserver.addEventListener('message', function (event) {
+			var resp = false
+			if (event.data){
+				var data = JSON.parse(event.data);
+				addMessageToOverlay(data);
+				if (data.get){
+					var ret = {};
+					ret.callback = {};
+					ret.callback.get = data.get
+					ret.callback.result = true;
+					socketserver.send(JSON.stringify(ret));
+				}
+			}
+		});
+	}
+	
+	if (urlParams.has("server") || urlParams.has("server2")){ // opt-in to use. Must also be enabled in the menu as well.
+		serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+		socketserver = new WebSocket(serverURL);
+		setupSocket();
+	}
+	
+</script>
 </body>
 </html>
