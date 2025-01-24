@@ -24,7 +24,30 @@ file:///C:/path/to/your/theme.html?session=YOUR_SESSION_ID
  - Always append the session parameter correctly, regardless of hosting method.
  - If Local Hosting, you may need to use &server mode if using this with OBS +v31
 
+## Available Themes
+
+### Themed Packages (with documentation)
+These themes include readme files, sample photos, and guides:
+
+- [Deuk's Theme](https://socialstream.ninja/themes/deuks_overlay)
+- [Windows3.1 Theme](https://socialstream.ninja/themes/Windows3.1)
+- [Neutron Theme](https://socialstream.ninja/themes/Neutron)
+
+### Simple Drop-in Themes
+Add `?session=XXXXXXX` to these URLs, replacing XXXXXXX with your session ID:
+
+- [Sample Theme](https://socialstream.ninja/sampleoverlay.html)
+- [Pretty Theme](https://socialstream.ninja/themes/pretty.html)
+- [t3nk3y's Theme](https://socialstream.ninja/themes/t3nk3y/)
+
+### YouTube-CSS compatible Theme Template:
+You can use a CSS designed for YouTube with our YouTube-structured overlay page:
+
+- [YouTube-CSS friendly Overlay here](https://socialstream.ninja/septapus)
+- [Create a custom style for it with Septapus](https://chatv2.septapus.com/)
+
 ## Theme Development Approaches
+Make your own custom theme. It's super easy when using an LLM AI service like Claude.ai 🤖
 
 ### Recommended: Modifying the Sample Overlay
 - Start with [sampleoverlay.html](https://socialstream.ninja/sampleoverlay.html)
@@ -86,28 +109,6 @@ Starting with OBS v31, there are important considerations for custom themes:
    - Enable with the `&server` parameter or such, as the code requires to trigger. You may need to enable it in the extension/menu as well.
    - When using the Standalone app with local server option, use `&localserver&server` to utilize the local WebSocket server
    - May require additional setup if the websocket listening code is not already configured in sample code to be used; see dock.html for reference in that case.
-
-## Available Themes
-
-### Themed Packages (with documentation)
-These themes include readme files, sample photos, and guides:
-
-- [Deuk's Theme](https://socialstream.ninja/themes/deuks_overlay)
-- [Windows3.1 Theme](https://socialstream.ninja/themes/Windows3.1)
-- [Neutron Theme](https://socialstream.ninja/themes/Neutron)
-
-### Simple Drop-in Themes
-Add `?session=XXXXXXX` to these URLs, replacing XXXXXXX with your session ID:
-
-- [Sample Theme](https://socialstream.ninja/sampleoverlay.html)
-- [Pretty Theme](https://socialstream.ninja/themes/pretty.html)
-- [t3nk3y's Theme](https://socialstream.ninja/themes/t3nk3y/)
-
-### YouTube-CSS compatible Theme Template:
-You can use a CSS designed for YouTube with our YouTube-structured overlay page:
-
-- [YouTube-CSS friendly Overlay here](https://socialstream.ninja/septapus)
-- [Create a custom style for it with Septapus](https://chatv2.septapus.com/)
 
 ## Contributing
 
