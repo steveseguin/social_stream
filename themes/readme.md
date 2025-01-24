@@ -20,7 +20,9 @@ Run themes from your local file system:
 file:///C:/path/to/your/theme.html?session=YOUR_SESSION_ID
 ```
 
-> **Important**: Always append the session parameter correctly, regardless of hosting method.
+> **Important**: 
+ - Always append the session parameter correctly, regardless of hosting method.
+ - If Local Hosting, you may need to use &server mode if using this with OBS +v31
 
 ## Theme Development Approaches
 
@@ -97,8 +99,6 @@ Add `?session=XXXXXXX` to these URLs, replacing XXXXXXX with your session ID:
 - [Pretty Theme](https://socialstream.ninja/themes/pretty.html)
 - [t3nk3y's Theme](https://socialstream.ninja/themes/t3nk3y/)
 
-
-
 ## Contributing
 
 When submitting themes:
@@ -115,6 +115,7 @@ Benefits of contributing to the official repository:
 - SSL/HTTPS support
 - Consistent availability
 - Included in any granted access permissions
+- The P2P IFRAMES mode will work in OBS v31
 
 Alternatively, you can self-host using local files, just ensure proper session parameter usage.
 
