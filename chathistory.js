@@ -140,12 +140,11 @@ function renderMessages() {
         return `
             <div class="message-wrapper" id="message-${message.id}">
                 <div class="message">
-					<img src="${message.type ? 'https://socialstream.ninja/sources/images/'+message.type+'.png' : 'https://socialstream.ninja/sources/images/unknown.png'}" alt="Source" class="avatar" data-error-hide="message">
                     <img src="${message.chatimg || 'https://socialstream.ninja/unknown.png'}" alt="Avatar" class="avatar" data-error-hide="message">
                     <div class="message-content">
                         <div class="message-header">
                             <span class="user-name">${message.chatname || 'Anonymous'}</span>
-                            ${message.type ? `<img src="./sources/images/${message.type}.png" alt="${message.type}" class="type-image" data-error-hide="self">` : ''}
+                            ${message.type ? `<img src="https://socialstream.ninja/sources/images/${message.type}.png" alt="${message.type}" class="type-image" data-error-hide="self">` : ''}
                             <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
                         </div>
                         <p class="message-text">${message.chatmessage || ''}</p>
