@@ -755,6 +755,11 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 document.addEventListener("DOMContentLoaded", async function(event) {
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
+		
+		const basePath = decodeURIComponent(urlParams.get('basePath') || '');
+		if (basePath){
+			document.getElementById("chathistory").href = basePath  + "chathistory.html";
+		}
 	} else {
 		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
 	}
