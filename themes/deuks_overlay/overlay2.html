@@ -144,157 +144,197 @@
 </head>
 <body>
     <div id="chat-container"></div>
+<script>
+	const chatContainer = document.getElementById('chat-container');
+	let lastSender = null;
+	let lastMessageDiv = null;
 
-    <script>
-        const chatContainer = document.getElementById('chat-container');
-        let lastSender = null;
-        let lastMessageDiv = null;
+	// Parameters for Social Stream Ninja
+	const urlParams = new URLSearchParams(window.location.search);
+	const roomID = urlParams.get("session") || "7RUWtGBfz2";
+	const password = "false";
+	const featuredMode = false;
 
-        // Parameters for Social Stream Ninja
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomID = urlParams.get("session") || "7RUWtGBfz2";
-        const password = "false";
-        const featuredMode = false;
+	// Function to apply overlay size based on URL parameter
+	function applyOverlaySize() {
+		const size = urlParams.get('size'); // Get the 'size' parameter
+		document.body.classList.remove("small-overlay", "large-overlay"); // Reset any existing classes
+		if (size === "small") {
+			document.body.classList.add("small-overlay");
+		} else if (size === "large") {
+			document.body.classList.add("large-overlay");
+		}
+	}
 
-        // Function to apply overlay size based on URL parameter
-        function applyOverlaySize() {
-            const size = urlParams.get('size'); // Get the 'size' parameter
-            document.body.classList.remove("small-overlay", "large-overlay"); // Reset any existing classes
-            if (size === "small") {
-                document.body.classList.add("small-overlay");
-            } else if (size === "large") {
-                document.body.classList.add("large-overlay");
-            }
-        }
+	function isFullyVisible(element) {
+		const containerRect = chatContainer.getBoundingClientRect();
+		const elementRect = element.getBoundingClientRect();
+		return elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
+	}
 
-        function isFullyVisible(element) {
-            const containerRect = chatContainer.getBoundingClientRect();
-            const elementRect = element.getBoundingClientRect();
-            return elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
-        }
+	function removeCutOffMessages() {
+		let firstMessage = chatContainer.firstElementChild;
+		while (firstMessage && !isFullyVisible(firstMessage)) {
+			chatContainer.removeChild(firstMessage);
+			firstMessage = chatContainer.firstElementChild;
+		}
+	}
 
-        function removeCutOffMessages() {
-            let firstMessage = chatContainer.firstElementChild;
-            while (firstMessage && !isFullyVisible(firstMessage)) {
-                chatContainer.removeChild(firstMessage);
-                firstMessage = chatContainer.firstElementChild;
-            }
-        }
+	function autoScroll() {
+		const lastMessage = chatContainer.lastElementChild;
+		if (lastMessage) {
+			lastMessage.scrollIntoView({ behavior: "instant", block: "end" });
+			setTimeout(() => {
+				lastMessage.scrollIntoView({ behavior: "instant", block: "end" });
+				removeCutOffMessages();
+			}, 50);
+		}
+	}
 
-        function autoScroll() {
-            const lastMessage = chatContainer.lastElementChild;
-            if (lastMessage) {
-                lastMessage.scrollIntoView({ behavior: "instant", block: "end" });
-                setTimeout(() => {
-                    lastMessage.scrollIntoView({ behavior: "instant", block: "end" });
-                    removeCutOffMessages();
-                }, 50);
-            }
-        }
+	const observer = new MutationObserver(() => {
+		autoScroll();
+	});
+	observer.observe(chatContainer, { childList: true, subtree: true });
 
-        const observer = new MutationObserver(() => {
-            autoScroll();
-        });
-        observer.observe(chatContainer, { childList: true, subtree: true });
+	function addEventToOverlay(data) {
+		const eventDiv = document.createElement('div');
+		eventDiv.classList.add('event-message');
+		let eventText = '';
 
-        function addEventToOverlay(data) {
-            const eventDiv = document.createElement('div');
-            eventDiv.classList.add('event-message');
-            let eventText = '';
+		if (data.type === 'follow') {
+			eventText = `${data.chatname} just followed!`;
+		} else if (data.type === 'subscription') {
+			eventText = `${data.chatname} subscribed!`;
+		} else if (data.type === 'donation') {
+			eventText = `${data.chatname} donated ${data.amount || ''}!`;
+		}
 
-            if (data.type === 'follow') {
-                eventText = `${data.chatname} just followed!`;
-            } else if (data.type === 'subscription') {
-                eventText = `${data.chatname} subscribed!`;
-            } else if (data.type === 'donation') {
-                eventText = `${data.chatname} donated ${data.amount || ''}!`;
-            }
+		eventDiv.innerHTML = `<div>${eventText}</div>`;
+		chatContainer.appendChild(eventDiv);
+	}
 
-            eventDiv.innerHTML = `<div>${eventText}</div>`;
-            chatContainer.appendChild(eventDiv);
-        }
+	function addMessageToOverlay(data) {
+		if (!data || !data.chatname || !data.chatmessage) {
+			console.error("Invalid message data", data);
+			return;
+		}
 
-        function addMessageToOverlay(data) {
-            if (!data || !data.chatname || !data.chatmessage) {
-                console.error("Invalid message data", data);
-                return;
-            }
+		if (['follow', 'subscription', 'donation'].includes(data.type)) {
+			addEventToOverlay(data);
+			return;
+		}
 
-            if (['follow', 'subscription', 'donation'].includes(data.type)) {
-                addEventToOverlay(data);
-                return;
-            }
+		if (lastSender === data.chatname && lastMessageDiv) {
+			// Append new message to the existing message container
+			const textDiv = document.createElement('div');
+			textDiv.classList.add('text');
+			textDiv.innerHTML = data.chatmessage || '';
+			lastMessageDiv.querySelector('.message').appendChild(textDiv);
+		} else {
+			// Create a new message container
+			const messageContainer = document.createElement('div');
+			messageContainer.classList.add('message-container');
+			
+			const messageDiv = document.createElement('div');
+			messageDiv.classList.add('message');
 
-            if (lastSender === data.chatname && lastMessageDiv) {
-                // Append new message to the existing message container
-                const textDiv = document.createElement('div');
-                textDiv.classList.add('text');
-                textDiv.innerHTML = data.chatmessage || '';
-                lastMessageDiv.querySelector('.message').appendChild(textDiv);
-            } else {
-                // Create a new message container
-                const messageContainer = document.createElement('div');
-                messageContainer.classList.add('message-container');
-                
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message');
+			let sourceIcon = '';
+			if (data.type === 'twitch') {
+			//    sourceIcon = `<img src="https://img.icons8.com/?size=100&id=S5wxXL23AVBm&format=png&color=000000" alt="Twitch" class="source-icon">`;
+				  sourceIcon = "https://socialstream.ninja/sources/images/twitch.png"; // modded by steve, since direct linking isn't approprioate
+			} else if (data.type === 'tiktok') {
+				  sourceIcon = "https://socialstream.ninja/sources/images/tiktok.png"; // modded by steve, since direct linking isn't approprioate
+			//    sourceIcon = `<img src="https://w7.pngwing.com/pngs/483/249/png-transparent-tiktok-icon-thumbnail.png" alt="TikTok" class="source-icon" style="transform: scale(1.25)" >`;
+			}
 
-                let sourceIcon = '';
-                if (data.type === 'twitch') {
-                //    sourceIcon = `<img src="https://img.icons8.com/?size=100&id=S5wxXL23AVBm&format=png&color=000000" alt="Twitch" class="source-icon">`;
-					  sourceIcon = "https://socialstream.ninja/sources/images/twitch.png"; // modded by steve, since direct linking isn't approprioate
-                } else if (data.type === 'tiktok') {
-					  sourceIcon = "https://socialstream.ninja/sources/images/tiktok.png"; // modded by steve, since direct linking isn't approprioate
-                //    sourceIcon = `<img src="https://w7.pngwing.com/pngs/483/249/png-transparent-tiktok-icon-thumbnail.png" alt="TikTok" class="source-icon" style="transform: scale(1.25)" >`;
-                }
+			let chatbadges = "";
+			if (data.chatbadges) {
+				data.chatbadges.slice(0, 1).forEach(badge => {
+					if (typeof badge === "object" && badge.type === "img" && badge.src) {
+						chatbadges += `<img class='badge' src='${badge.src}' />`;
+					} else if (badge.type === "svg" && badge.html) {
+						chatbadges += `<span class='badge svg'>${badge.html}</span>`;
+					}
+				});
+			}
 
-                let chatbadges = "";
-                if (data.chatbadges) {
-                    data.chatbadges.slice(0, 1).forEach(badge => {
-                        if (typeof badge === "object" && badge.type === "img" && badge.src) {
-                            chatbadges += `<img class='badge' src='${badge.src}' />`;
-                        } else if (badge.type === "svg" && badge.html) {
-                            chatbadges += `<span class='badge svg'>${badge.html}</span>`;
-                        }
-                    });
-                }
+			messageDiv.innerHTML = `
+				<div class="username-box">
+					${sourceIcon}
+					<span>${data.chatname}</span>
+					<span class="badges">${chatbadges}</span>
+				</div>
+				<div class="text">${data.chatmessage || ''}</div>
+				${(data.donation || data.hasDonation) ? `<div class="donation">${(data.donation || data.hasDonation)}</div>` : ''}
+			`;
 
-                messageDiv.innerHTML = `
-                    <div class="username-box">
-                        ${sourceIcon}
-                        <span>${data.chatname}</span>
-                        <span class="badges">${chatbadges}</span>
-                    </div>
-                    <div class="text">${data.chatmessage || ''}</div>
-                    ${(data.donation || data.hasDonation) ? `<div class="donation">${(data.donation || data.hasDonation)}</div>` : ''}
-                `;
+			messageContainer.appendChild(messageDiv);
+			chatContainer.appendChild(messageContainer);
 
-                messageContainer.appendChild(messageDiv);
-                chatContainer.appendChild(messageContainer);
+			lastSender = data.chatname;
+			lastMessageDiv = messageContainer;
+		}
+	}
 
-                lastSender = data.chatname;
-                lastMessageDiv = messageContainer;
-            }
-        }
+	document.addEventListener('DOMContentLoaded', () => {
+		applyOverlaySize(); // Apply overlay size based on URL parameter
 
-        document.addEventListener('DOMContentLoaded', () => {
-            applyOverlaySize(); // Apply overlay size based on URL parameter
+		const iframe = document.createElement("iframe");
+		iframe.src = featuredMode
+			? `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`
+			: `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${roomID}`;
 
-            const iframe = document.createElement("iframe");
-            iframe.src = featuredMode
-                ? `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`
-                : `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${roomID}`;
+		iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+		document.body.appendChild(iframe);
 
-            iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
-            document.body.appendChild(iframe);
+		window.addEventListener("message", (event) => {
+			if (event.source !== iframe.contentWindow) return;
+			if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+				addMessageToOverlay(event.data.dataReceived.overlayNinja);
+			}
+		});
+	});
+		
+			
+	// The Websocket mode is an alternative to using p2p mode; useful if your OBS or system refuses to use IFrames/P2P.
+	var conCon = 1;
+	var socketserver = false;
+	// localserver mode can be used via the stand-alone app; file-> enable local server, or use the publicly hosted one.
+	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
 
-            window.addEventListener("message", (event) => {
-                if (event.source !== iframe.contentWindow) return;
-                if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
-                    addMessageToOverlay(event.data.dataReceived.overlayNinja);
-                }
-            });
-        });
-    </script>
+	function setupSocket(){
+		socketserver.onclose = function (){
+			setTimeout(function(){
+				conCon+=1;
+				socketserver = new WebSocket(serverURL);
+				setupSocket();
+			},100*conCon);
+		};
+		socketserver.onopen = function (){
+			conCon = 1;
+			socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+		};
+		socketserver.addEventListener('message', function (event) {
+			var resp = false
+			if (event.data){
+				var data = JSON.parse(event.data);
+				addMessageToOverlay(data);
+				if (data.get){
+					var ret = {};
+					ret.callback = {};
+					ret.callback.get = data.get
+					ret.callback.result = true;
+					socketserver.send(JSON.stringify(ret));
+				}
+			}
+		});
+	}
+	
+	if (urlParams.has("server") || urlParams.has("server2")){ // opt-in to use. Must also be enabled in the menu as well.
+		serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+		socketserver = new WebSocket(serverURL);
+		setupSocket();
+	}
+</script>
 </body>
 </html>

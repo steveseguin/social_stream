@@ -139,7 +139,7 @@ function renderMessages() {
                     </div>
                     <p class="message-text">${message.chatmessage}</p>
                     ${message.contentimg ? `<img src="${message.contentimg}" alt="Content" class="content-image" data-error-hide="self">` : ''}
-                    ${message.donation ? `<p class="donation">Donation: ${message.donation}</p>` : ''}
+                    ${message.hasDonation ? `<p class="donation">Donation: ${message.hasDonation}</p>` : ''}
                 </div>
             </div>
         </div>
@@ -201,7 +201,7 @@ function exportMessages(format) {
         case 'tsv':
             content = 'ID\tTimestamp\tUsername\tType\tMessage\tDonation\n' +
                 filteredMessages.map(m =>
-                    `${m.id}\t${m.timestamp}\t${m.chatname}\t${m.type}\t${m.chatmessage}\t${m.donation || ''}`
+                    `${m.id}\t${m.timestamp}\t${m.chatname}\t${m.type}\t${m.chatmessage}\t${m.hasDonation || ''}`
                 ).join('\n');
             break;
         case 'html':
@@ -221,7 +221,7 @@ function exportMessages(format) {
                             <span class="username">${m.chatname}</span>
                             <span class="timestamp">${new Date(m.timestamp).toLocaleString()}</span>
                             <p>${m.chatmessage}</p>
-                            ${m.donation ? `<p>Donation: ${m.donation}</p>` : ''}
+                            ${m.hasDonation ? `<p>Donation: ${m.hasDonation}</p>` : ''}
                         </div>
                     `).join('')}
                 </body>
