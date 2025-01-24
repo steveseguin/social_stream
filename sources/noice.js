@@ -80,7 +80,7 @@
 		}
 		
 		const id = ele.querySelector("[id]")?.id;
-		if (!id || id.includes("-")) return;
+		if (!id || !id.includes("-")) return;
 		if (historySet.has(id)) return;
 		historySet.add(id);
 		
@@ -145,7 +145,8 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // doesn't support/have chat
-					sendResponse(false);
+					document.querySelector('[role="textbox"], [contenteditable="true"]').focus();
+					sendResponse(true);
 					return;
 				}
 				if (typeof request === "object"){
