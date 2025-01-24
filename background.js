@@ -3805,8 +3805,10 @@ async function sendToDestinations(message) {
 	sendToDisk(message);
 	sendToH2R(message);
 	sendToPost(message);
-	sendToDiscord(message);
-	addMessageDB(message);
+	sendToDiscord(message);  // donos only
+	if (message.chatmessage || message.hasDonation || message.chatname){
+		addMessageDB(message); // messages only to avoid spamming events
+	}
 	return true;
 }
 function unescapeHtml(safe) {
