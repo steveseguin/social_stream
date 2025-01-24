@@ -5697,7 +5697,13 @@
 						}
 
 						try {
-							document.querySelector("[data-mid='" + data.mid + "']").classList.add(pressedClass);
+							
+							document.querySelectorAll("." + lastMessageClass).forEach(ele => {
+								// last message sent was to clear the overlay
+								ele.classList.remove(lastMessageClass); // no overlay is now active.
+							});
+							document.querySelector("[data-mid='" + data.mid + "']").classList.add(pressedClass, lastMessageClass); // add last-message class
+							
 						} catch (e) {
 							setTimeout(
 								function (mid) {
