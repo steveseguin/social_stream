@@ -7559,9 +7559,14 @@ async function applyBotActions(data, tab = false) {
 	try {
 		
 		if (settings.allowLLMSummary && data.chatmessage && data.chatmessage.startsWith("!summary")){
-			return await processSummary(data);
+			if (settings.modLLMonly){
+				if (data.mod){
+					return await processSummary(data);
+				}
+			} else {
+				return await processSummary(data);
+			}
 		}
-		
 		if (settings.ollamaCensorBot){
 			try{
 				if (settings.ollamaCensorBotBlockMode){
@@ -7591,7 +7596,13 @@ async function applyBotActions(data, tab = false) {
 		}
 		if (settings.ollama){
 			try{
-				processMessageWithOllama(data);
+				if (settings.modLLMonly){
+					if (data.mod){
+						processMessageWithOllama(data);
+					}
+				} else {
+					processMessageWithOllama(data);
+				}
 			} catch(e){
 				console.log(e); // ai.js file missing?
 			}
