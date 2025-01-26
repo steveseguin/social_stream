@@ -274,7 +274,7 @@ function isFontAvailable(fontName) {
     return widthMonospace !== widthTest;
 }
 
-function populateFontDropdown() {
+async function populateFontDropdown() {
     const fonts = ["Roboto", "Tahoma",  "Arial", "Verdana", "Helvetica", "Serif", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New", "Brush Script MT"];
 	
     var select = document.querySelector("[data-optionparam1='font']");
@@ -850,12 +850,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		console.error(e);
 	}
 	
-	populateFontDropdown();
-	PollManager.init();
+	setTimeout(function(){
+		populateFontDropdown(); 
+		PollManager.init();
+	},1000);
 	
 	// populate language drop down
 	if (speechSynthesis){
-		function populateVoices() {
+		async function populateVoices() {
 			const voices = createUniqueVoiceIdentifiers(speechSynthesis.getVoices());
 			
 			voices.sort((a, b) => {
@@ -1188,7 +1190,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	};
 
-	checkVersion();
+	checkVersion(); 
 	
 	let hideLinks = false;
 	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
@@ -1200,6 +1202,115 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	if (hideLinks){
 		document.body.classList.add("hidelinks");
 	} 
+	
+	// Function to dynamically load the WebMidi script
+    async function loadWebMidiScript(callback) {
+        const script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "./thirdparty/webmidi3.js";
+        script.onload = callback; // Run the callback once the script loads
+        script.onerror = () => {
+            console.error("Failed to load WebMidi script.");
+        };
+        document.body.appendChild(script);
+    }
+    // Function to initialize the MIDI dropdown logic
+    async function initializeMIDIDropdown() {
+		try {
+			WebMidi.enable().then(() => {
+                console.log("WebMidi enabled!");
+
+                const midiDropdown = document.getElementById("midiDeviceSelect");
+				const currentDevice = midiDropdown.value;
+
+                // Populate the MIDI devices dropdown
+                function populateMIDIDevices() {
+                    // Clear existing options
+                    midiDropdown.innerHTML = "";
+
+                    // Add a default "Select Device" option
+                    const defaultOption = document.createElement("option");
+                    defaultOption.textContent = "Select MIDI Device";
+                    defaultOption.value = "";
+                    midiDropdown.appendChild(defaultOption);
+
+					var deviceFound = false;
+                    // Add options for available MIDI output devices
+                    WebMidi.outputs.forEach((output) => {
+                        const option = document.createElement("option");
+                        option.textContent = output.name; // Display the device name
+                        option.value = output.name; // Use the device name as the value
+                        midiDropdown.appendChild(option);
+						if (currentDevice && (currentDevice === option.value)){
+							option.selected = true;
+							deviceFound = true;
+						}
+                    });
+					if (!deviceFound && currentDevice){
+						const option = document.createElement("option");
+                        option.textContent = currentDevice;
+                        option.value = currentDevice;
+                        midiDropdown.appendChild(option);
+						option.selected = true;
+						option.style.color = "red";
+					}
+                }
+
+                // Initial population of the MIDI devices dropdown
+                populateMIDIDevices();
+
+                // Update the dropdown whenever MIDI devices are connected/disconnected
+                WebMidi.addListener("connected", populateMIDIDevices);
+                WebMidi.addListener("disconnected", populateMIDIDevices);
+
+               /*  // Trigger a MIDI note for the selected device
+                document.getElementById("triggerNoteBtn").addEventListener("click", () => {
+                        const selectedDeviceName = midiDropdown.value; // Get selected device name
+                        const note = 64; // Default note to play
+
+						if (selectedDeviceName){
+							const selectedOutput = WebMidi.outputs.find(
+								(output) => output.name === selectedDeviceName
+							);
+
+							if (selectedOutput) {
+								try {
+									// Send MIDI note to the selected device
+									selectedOutput.send([0x90, note, 127]); // Note On
+									setTimeout(() => {
+										selectedOutput.send([0x80, note, 0]); // Note Off
+									}, 200); // Duration of the note
+									console.log(
+										`Played note ${note} on device: ${selectedDeviceName}`
+									);
+								} catch (e) {
+									console.warn("Failed to send MIDI note: ", e);
+								}
+							} else {
+								console.warn("MIDI device not found: "+selectedDeviceName);
+							}
+						} else {
+							WebMidi.outputs.forEach(output => {
+								//output.playNote(note);
+								output.send([0x90, note, 127]);  // Note On
+								output.send([0x80, note, 0]);    // Note Off
+							});
+						}
+                    }); */
+            })
+            .catch((e) => {
+                console.error("Failed to enable WebMidi: ", e);
+            });
+		} catch(e){
+			console.error(e);
+		}
+    }
+    // Dynamically load the WebMidi script and initialize the dropdown logic
+	try {
+		setTimeout(function(){
+			loadWebMidiScript(initializeMIDIDropdown);
+		},3000);
+	} catch(e){ console.error(e);}
 });
 
 let tabsInitialized = false;
@@ -1613,11 +1724,22 @@ function update(response, sync=true){
 								}
 								
 							}
-							if ("optionsetting" in response.settings[key]){
+							 if ("optionsetting" in response.settings[key]){
 								var ele = document.querySelector("select[data-optionsetting='"+key+"']");
 								if (ele){
+									
+									if (key == "midiOutputDevice"){
+										if (response.settings[key]?.optionsetting && (ele.value !== response.settings[key].optionsetting)){
+											const option = document.createElement("option");
+											option.textContent = response.settings.midiOutputDevice.optionsetting;
+											option.value = response.settings.midiOutputDevice.optionsetting;
+											ele.appendChild(option);
+											option.selected = true;
+										}
+									}
+									
 									ele.value = response.settings[key].optionsetting;
-									updateSettings(ele, sync);
+									updateSettings(ele, sync); 
 								}
 								
 								if (key == "aiProvider"){
@@ -1959,7 +2081,7 @@ function compareVersions(a, b) { // https://stackoverflow.com/a/6832706
     return 0;
 }
 var Beta = false
-function checkVersion(){
+async function checkVersion(){
 	
 	const WEBSTORE_ID = "cppibjhfemifednoimlblfcmjgfhfjeg"; // our webstore ID
 	

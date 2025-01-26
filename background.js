@@ -3718,7 +3718,7 @@ async function sendToDestinations(message) {
 		}
 
 		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.chatmessage && message.event) {
-			if (settings.filterevents.textsetting.split(",").some(v => message.chatmessage.includes(v))) {
+			if (settings.filterevents.textsetting.split(",").some(v => (v.trim() && message.chatmessage.includes(v)))) {
 				return false;
 			}
 		}
@@ -7727,11 +7727,23 @@ function triggerMidiNote(note = 64) {
 		}
 	}
     try {
-		WebMidi.outputs.forEach(output => {
-			//output.playNote(note);
-			output.send([0x90, note, 127]);  // Note On
-			output.send([0x80, note, 0]);    // Note Off
-		});
+		if (settings.midiDeviceSelect?.optionsetting){
+			const selectedOutput = WebMidi.outputs.find(
+				(output) => output.name === settings.midiDeviceSelect.optionsetting
+			);
+			if (selectedOutput) {
+				selectedOutput.send([0x90, note, 127]);  // Note On
+				selectedOutput.send([0x80, note, 0]);    // Note Off
+			} else {
+				console.warn("MIDI device not found: "+settings.midiDeviceSelect.optionsetting);
+			}
+		} else {
+			WebMidi.outputs.forEach(output => {
+				//output.playNote(note);
+				output.send([0x90, note, 127]);  // Note On
+				output.send([0x80, note, 0]);    // Note Off
+			});
+		}
 	} catch(e){
 		console.warn(e);
 	}
