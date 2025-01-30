@@ -1481,7 +1481,10 @@ function update(response, sync=true){
 			document.getElementById("hypemeter").raw = baseURL+"hype.html?session="+response.streamID+password;
 			
 			document.getElementById("waitlist").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='waitlistlink' href='"+baseURL+"waitlist.html?session="+response.streamID+password+"'>"+baseURL+"waitlist.html?session="+response.streamID+password+"</a>";
-			document.getElementById("waitlist").raw = baseURL+"waitlist.html?session="+response.streamID+password;
+			document.getElementById("waitlist").raw = baseURL+"waitlist.html?session="+response.streamID+password
+			
+			document.getElementById("tipjar").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='tipjarlink' href='"+baseURL+"waitlist.html?session="+response.streamID+password+"'>"+baseURL+"tipjar.html?session="+response.streamID+password+"</a>";
+			document.getElementById("tipjar").raw = baseURL+"tipjar.html?session="+response.streamID+password;
 			
 			document.getElementById("ticker").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='tickerlink' href='"+baseURL+"ticker.html?session="+response.streamID+password+"'>"+baseURL+"ticker.html?session="+response.streamID+password+"</a>";
 			document.getElementById("ticker").raw = baseURL+"ticker.html?session="+response.streamID+password;
@@ -2178,6 +2181,9 @@ function update(response, sync=true){
 				
 				document.getElementById("waitlistlink").innerText = hideLinks ? "Click to open link" : document.getElementById("waitlist").raw;
 				document.getElementById("waitlistlink").href = document.getElementById("waitlist").raw;
+				
+				document.getElementById("tipjarlink").innerText = hideLinks ? "Click to open link" : document.getElementById("tipjar").raw;
+				document.getElementById("tipjarlink").href = document.getElementById("tipjar").raw;
 				
 				document.getElementById("tickerlink").innerText = hideLinks ? "Click to open link" : document.getElementById("ticker").raw;
 				document.getElementById("tickerlink").href = document.getElementById("ticker").raw;
