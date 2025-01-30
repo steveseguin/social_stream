@@ -3211,6 +3211,11 @@
 				nobeephost = true;
 			}
 			
+			var nobeepevent = false;
+			if (urlParams.has("nobeepevent")) {
+				nobeepevent = true;
+			}
+			
 			var nobeepmod = false;
 			if (urlParams.has("nobeepmod")) {
 				nobeepmod = true;
@@ -8289,7 +8294,7 @@
 					});
 					
 					if (beep) { 
-						if (!(nobeepbot && bot) && !(nobeephost && host) && !(nobeepmod && mod)){
+						if (!(nobeepbot && bot) && !(nobeephost && host) && !(nobeepmod && mod) && !(nobeepevent && data.event)){
 							playtone();
 						}
 					}

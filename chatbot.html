@@ -245,6 +245,12 @@
             gap: 2px;
             align-items: center;
         }
+		.thinking {
+			font-style: italic;
+		}
+		.thinking:empty{
+			display:none;
+		}
     </style>
 </head>
 <body>
@@ -436,21 +442,74 @@
 			const waitingMessage = document.querySelector(`[data-response-id="${id}"]`);
 			if (waitingMessage) {
 				waitingMessage.classList.remove('waiting');
-			
-				if (chunk){
-					if (messageChunks[id]){
+				
+				let processedContent = content;
+				
+				if (chunk) {
+					if (messageChunks[id]) {
 						messageChunks[id].push(content);
-						waitingMessage.innerHTML = messageChunks[id].join("").replaceAll("\n","<br>");
+						processedContent = messageChunks[id].join("");
 					}
 				} else {
-					if (messageChunks[id]){
+					if (messageChunks[id]) {
 						delete messageChunks[id];
 					}
-					waitingMessage.innerHTML = content.replaceAll("\n","<br>");
+					processedContent = content;
 					conversationHistory.push({ role: 'assistant', content: content });
 				}
+
+				// Function to count occurrences of a substring
+				const countOccurrences = (str, subStr) => {
+					return (str.match(new RegExp(subStr, 'g')) || []).length;
+				};
+
+				// Count tags
+				const startThinkCount = countOccurrences(processedContent, '<think>');
+				const endThinkCount = countOccurrences(processedContent, '</think>');
+				const startThinkingCount = countOccurrences(processedContent, '<thinking>');
+				const endThinkingCount = countOccurrences(processedContent, '</thinking>');
+
+				// Add missing closing tags
+				if (startThinkCount > endThinkCount) {
+					const missingTags = startThinkCount - endThinkCount;
+					processedContent = processedContent + '</think>'.repeat(missingTags);
+				}
+				if (startThinkingCount > endThinkingCount) {
+					const missingTags = startThinkingCount - endThinkingCount;
+					processedContent = processedContent + '</thinking>'.repeat(missingTags);
+				}
+
+				// Add missing opening tags (only if we have closing tags without opening ones)
+				if (endThinkCount > startThinkCount) {
+					const missingTags = endThinkCount - startThinkCount;
+					processedContent = '<think>'.repeat(missingTags) + processedContent;
+				}
+				if (endThinkingCount > startThinkingCount) {
+					const missingTags = endThinkingCount - startThinkingCount;
+					processedContent = '<thinking>'.repeat(missingTags) + processedContent;
+				}
+				
+				const processThinkingTags = (content) => {
+					let result = content;
+					while (result.match(/<think>([^\n\s][\s\S]*?)<\/think>/) || result.match(/<thinking>([^\n\s][\s\S]*?)<\/thinking>/)) {
+						result = result
+							.replace(/<think>([^\n\s][\s\S]*?)<\/think>/g, '<span class="thinking">$1</span>')
+							.replace(/<thinking>([^\n\s][\s\S]*?)<\/thinking>/g, '<span class="thinking">$1</span>');
+					}
+					// Clean up any remaining empty think tags
+					result = result
+						.replace(/<think>[\s\n]*<\/think>/g, '')
+						.replace(/<thinking>[\s\n]*<\/thinking>/g, '');
+					return result;
+				};
+
+				processedContent = processThinkingTags(processedContent);
+				
+				processedContent = processedContent.replace(/^[\n\s]+/, ''); // remove \n and white spaces from start
+				
+				waitingMessage.innerHTML = processedContent.replaceAll("\n","<br>");
 				chatContainer.scrollTop = chatContainer.scrollHeight;
-			} 
+			}
 		}
 
 		function newConversation() {

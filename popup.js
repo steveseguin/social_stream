@@ -531,6 +531,10 @@ const eventTemplates = {
           <input type="number" id="midinote${id}" class="textInput" autocomplete="off" placeholder="MIDI Note that will be triggered; 127-velocity" data-numbersetting="midinote${id}">
           <label for="midinote${id}">MIDI Note to Trigger</label>
         </div>
+		<div class="textInputContainer" style="width: 235px">
+          <select id="mididevice${id}" class="textInput" autocomplete="off" placeholder="MIDI default device used if left unspecified" data-optionsetting="mididevice${id}"></select>
+          <label for="mididevice${id}">MIDI Device</label>
+        </div>
       </div>
     </div>
   `,
@@ -565,7 +569,7 @@ function initializeInputHandlers(container) {
 	  type: 'timedMessage'
 	},
 	midiCommand: {
-	  prefixes: ['midievent', 'midicommand', 'midinote'],
+	  prefixes: ['midievent', 'midicommand', 'midinote', 'mididevice'],
 	  type: 'midiCommand'
 	},
   };
@@ -583,6 +587,7 @@ function findExistingEvents(eventType, response) {
 		const id = key.replace(prefix, '');
 		if (settings[key]?.setting !== undefined || 
 			settings[key]?.textsetting !== undefined || 
+			settings[key]?.optionsetting !== undefined || 
 			settings[key]?.numbersetting !== undefined) {
 		  events.add(parseInt(id));
 		}
@@ -632,17 +637,31 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 
 	  // Only initialize with settings if it's an existing tab being restored
 	  if (response?.settings && activeEvents.includes(tabId)) {
-		tabContent.querySelectorAll('input').forEach(input => {
+		tabContent.querySelectorAll('input,select').forEach(input => {
 		  const settingKey = input.getAttribute('data-setting') || 
 							input.getAttribute('data-textsetting') || 
+							input.getAttribute('data-optionsetting') || 
 							input.getAttribute('data-numbersetting');
 		  
 		  if (settingKey && response.settings[settingKey]) {
 			if (input.type === 'checkbox') {
-			  input.checked = response.settings[settingKey].setting || false;
+			  input.checked = response.settings[settingKey]?.setting || false;
 			} else if (input.type === 'text' || input.type === 'number') {
-			  input.value = response.settings[settingKey].textsetting || 
-						   response.settings[settingKey].numbersetting || '';
+			  input.value = response.settings[settingKey]?.textsetting || response.settings[settingKey]?.numbersetting || '';
+			} else if (input.tagName === 'SELECT') {
+			  const value = response.settings[settingKey]?.optionsetting;
+			  if (value) {
+				input.value = value;
+				// Ensure MIDI device exists in dropdown
+				if (settingKey.startsWith('mididevice') && !Array.from(input.options).some(opt => opt.value === value)) {
+				  const option = document.createElement('option');
+				  option.value = value;
+				  option.textContent = value;
+				  option.style.color = 'red';
+				  input.appendChild(option);
+				  option.selected = true;
+				}
+			  }
 			}
 		  }
 		});
@@ -711,6 +730,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 	  content.querySelectorAll('input').forEach(input => {
 		const settingKey = input.getAttribute('data-setting') || 
 						  input.getAttribute('data-textsetting') || 
+						  input.getAttribute('data-optionsetting') || 
 						  input.getAttribute('data-numbersetting');
 		
 		if (settingKey) {
@@ -886,8 +906,24 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				}
 			});
 			
-			var voicesDropdown = document.getElementById('languageSelect2');
-			var existingOptions = Array.from(voicesDropdown.options).map(option => option.textContent);
+			voicesDropdown = document.getElementById('languageSelect2');
+			existingOptions = Array.from(voicesDropdown.options).map(option => option.textContent);
+
+			voices.forEach(voice => {
+				const voiceText = voice.name + ' (' + voice.lang + ')';
+
+				if (!existingOptions.includes(voiceText)) {
+					const option = document.createElement('option');
+					option.textContent = voiceText;
+					option.value = voice.code;
+					option.setAttribute('data-lang', voice.lang);
+					option.setAttribute('data-name', voice.name);
+					voicesDropdown.appendChild(option);
+				}
+			});
+			
+			voicesDropdown = document.getElementById('systemLanguageSelect10');
+			existingOptions = Array.from(voicesDropdown.options).map(option => option.textContent);
 
 			voices.forEach(voice => {
 				const voiceText = voice.name + ' (' + voice.lang + ')';
@@ -1222,24 +1258,20 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
                 const midiDropdown = document.getElementById("midiDeviceSelect");
 				const currentDevice = midiDropdown.value;
-
-                // Populate the MIDI devices dropdown
+				
                 function populateMIDIDevices() {
-                    // Clear existing options
                     midiDropdown.innerHTML = "";
 
-                    // Add a default "Select Device" option
                     const defaultOption = document.createElement("option");
                     defaultOption.textContent = "Select MIDI Device";
                     defaultOption.value = "";
                     midiDropdown.appendChild(defaultOption);
 
-					var deviceFound = false;
-                    // Add options for available MIDI output devices
+					let deviceFound = false;
                     WebMidi.outputs.forEach((output) => {
                         const option = document.createElement("option");
-                        option.textContent = output.name; // Display the device name
-                        option.value = output.name; // Use the device name as the value
+                        option.textContent = output.name; 
+                        option.value = output.name;
                         midiDropdown.appendChild(option);
 						if (currentDevice && (currentDevice === option.value)){
 							option.selected = true;
@@ -1254,49 +1286,47 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						option.selected = true;
 						option.style.color = "red";
 					}
+					
+					document.querySelectorAll("select[data-optionsetting^='mididevice']").forEach(dropdown => {
+						const currentValue = dropdown.value;
+						const originalHTML = dropdown.innerHTML;
+						dropdown.innerHTML = "";
+
+						// Add default option
+						const defaultOption = document.createElement("option");
+						defaultOption.textContent = "Default MIDI Device";
+						defaultOption.value = "";
+						dropdown.appendChild(defaultOption);
+
+						let deviceFound = false;
+						WebMidi.outputs.forEach((output) => {
+						  const option = document.createElement("option");
+						  option.textContent = output.name;
+						  option.value = output.name;
+						  dropdown.appendChild(option);
+						  if (currentValue === option.value) {
+							option.selected = true;
+							deviceFound = true;
+						  }
+						});
+
+						// If the stored device isn't found, add it as disconnected
+						if (!deviceFound && currentValue && currentValue !== "") {
+						  const option = document.createElement("option");
+						  option.textContent = currentValue;
+						  option.value = currentValue;
+						  option.style.color = "red";
+						  option.selected = true;
+						  dropdown.appendChild(option);
+						}
+					  });
                 }
 
-                // Initial population of the MIDI devices dropdown
                 populateMIDIDevices();
 
-                // Update the dropdown whenever MIDI devices are connected/disconnected
                 WebMidi.addListener("connected", populateMIDIDevices);
                 WebMidi.addListener("disconnected", populateMIDIDevices);
 
-               /*  // Trigger a MIDI note for the selected device
-                document.getElementById("triggerNoteBtn").addEventListener("click", () => {
-                        const selectedDeviceName = midiDropdown.value; // Get selected device name
-                        const note = 64; // Default note to play
-
-						if (selectedDeviceName){
-							const selectedOutput = WebMidi.outputs.find(
-								(output) => output.name === selectedDeviceName
-							);
-
-							if (selectedOutput) {
-								try {
-									// Send MIDI note to the selected device
-									selectedOutput.send([0x90, note, 127]); // Note On
-									setTimeout(() => {
-										selectedOutput.send([0x80, note, 0]); // Note Off
-									}, 200); // Duration of the note
-									console.log(
-										`Played note ${note} on device: ${selectedDeviceName}`
-									);
-								} catch (e) {
-									console.warn("Failed to send MIDI note: ", e);
-								}
-							} else {
-								console.warn("MIDI device not found: "+selectedDeviceName);
-							}
-						} else {
-							WebMidi.outputs.forEach(output => {
-								//output.playNote(note);
-								output.send([0x90, note, 127]);  // Note On
-								output.send([0x80, note, 0]);    // Note Off
-							});
-						}
-                    }); */
             })
             .catch((e) => {
                 console.error("Failed to enable WebMidi: ", e);
@@ -1364,7 +1394,7 @@ function createTabsFromSettings(response) {
 	// MIDI Messages
 	else if (key.startsWith('midicommandevent')) {
       const id = key.replace('midicommandevent', '');
-      if (response.settings[key].setting || response.settings[`midicommand${id}`]?.textsetting || response.settings[`midinote${id}`]?.numbersetting){ 
+      if (response.settings[key].setting || response.settings[`midicommand${id}`]?.textsetting || response.settings[`midinote${id}`]?.numbersetting || response.settings[`mididevice${id}`]?.optionsetting){
         existingEvents.midiCommand.add(parseInt(id));
       }
     }
@@ -1465,14 +1495,18 @@ function update(response, sync=true){
 			document.getElementById("battle").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='battlelink' href='"+baseURL+"battle.html?session="+response.streamID+password+"'>"+baseURL+"battle.html?session="+response.streamID+password+"</a>";
 			document.getElementById("battle").raw = baseURL+"battle.html?session="+response.streamID+password;
 			
-			document.getElementById("chatbotlink").outerHTML = "<a target='_blank' style='color:lightblue;' id='chatbotlink' href='"+baseURL+"chatbot.html?session="+response.streamID+password+"'>[LINK TO CHAT BOT]</a>";
+			document.getElementById("chatbot").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='chatbotlink' href='"+baseURL+"bot.html?session="+response.streamID+password+"'>"+baseURL+"chatbot.html?session="+response.streamID+password+"</a>";
+			document.getElementById("chatbot").raw = baseURL+"bot.html?session="+response.streamID+password;
+			
+			document.getElementById("cohost").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='cohostlink' href='"+baseURL+"cohost.html?session="+response.streamID+password+"'>"+baseURL+"cohost.html?session="+response.streamID+password+"</a>";
+			document.getElementById("cohost").raw = baseURL+"cohost.html?session="+response.streamID+password;
+			
+			document.getElementById("privatechatbot").innerHTML = "<a target='_blank' style='color:lightblue;' id='privatechatbotlink' href='"+baseURL+"chatbot.html?session="+response.streamID+password+"'>[LINK TO CHAT BOT]</a>";
 			
 			document.getElementById("custom-gif-commands").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='custom-gif-commands-link' href='"+baseURL+"gif.html?session="+response.streamID+password+"'>"+baseURL+"gif.html?session="+response.streamID+password+"</a>";
 			document.getElementById("custom-gif-commands").raw = baseURL+"gif.html?session="+response.streamID+password;
 			
 			document.getElementById("remote_control_url").href = baseURL+"sampleapi.html?session="+response.streamID+password;
-			
-			document.getElementById("botlink").href = baseURL+"bot.html?session="+response.streamID+password;
 			
 			hideLinks = false;
 			
@@ -1480,13 +1514,28 @@ function update(response, sync=true){
 				
 				if (!response.settings?.ttsProvider?.optionsetting){
 					let ttsService = "system";
-					if (response.settings?.ttskey?.textparam1){	ttsService = "google";}
+					if (response.settings?.ttskey?.textparam1){ttsService = "google";}
+					else if (response.settings?.googleAPIKey?.textparam1){ttsService = "google";}
 					else if (response.settings?.elevenlabskey?.textparam1){ttsService = "elevenlabs";}
 					else if (response.settings?.speechifykey?.textparam1){ttsService = "speechifykey";}
 					if (!response.settings.ttsProvider){
 						response.settings.ttsProvider = {}
 					}
 					response.settings.ttsProvider.optionsetting = ttsService;
+					//console.log("ttsService: "+ttsService);
+					//console.log(response);
+				}
+				
+				if (!response.settings?.ttsProvider10?.optionsetting10){
+					let ttsService = "system";
+					if (response.settings?.ttskey?.textparam10){ttsService = "google";}
+					else if (response.settings?.googleAPIKey10?.textparam10){ttsService = "google";}
+					else if (response.settings?.elevenlabskey10?.textparam10){ttsService = "elevenlabs";}
+					else if (response.settings?.speechifykey10?.textparam10){ttsService = "speechifykey";}
+					if (!response.settings.ttsProvider10){
+						response.settings.ttsProvider10 = {}
+					}
+					response.settings.ttsProvider10.optionsetting10 = ttsService;
 					//console.log("ttsService: "+ttsService);
 					//console.log(response);
 				}
@@ -1664,6 +1713,63 @@ function update(response, sync=true){
 									}
 								}
 							}
+							if ("param10" in response.settings[key]){
+								var ele = document.querySelector("input[data-param10='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param10;
+									if (!key.includes("=")){
+										if ("numbersetting10" in response.settings[key]){
+											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting10));
+										} else if (document.querySelector("input[data-numbersetting10='"+key+"']")){
+											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting10='"+key+"']").value));
+										} else if ("optionparam10" in response.settings[key]){
+											updateSettings(ele, sync, response.settings[key].optionparam10);
+										} else if (document.querySelector("input[data-optionparam10='"+key+"']")){
+											updateSettings(ele, sync, document.querySelector("input[data-optionparam10='"+key+"']").value);
+										} else {
+											updateSettings(ele, sync); 
+										}
+									} else {
+										updateSettings(ele, sync);
+									}
+								} else if (key.includes("=")){
+									var keys = key.split('=');
+									ele = document.querySelector("input[data-param10='"+keys[0]+"']");
+									log(keys);
+									log(response.settings);
+									if (ele){
+										ele.checked = response.settings[key].param10;
+										if (keys[1]){
+											var ele2 = document.querySelector("input[data-numbersetting10='"+keys[0]+"']");
+											if (ele2){
+												ele2.value = parseFloat(keys[1], keys[1]);
+											} else {
+												var ele2 = document.querySelector("input[data-numbersetting10='"+keys[0]+"']");
+												if (ele2){
+													ele2.value = keys[1], keys[1];
+												}
+											}
+											updateSettings(ele, sync, parseFloat(keys[1]));
+										} else{
+											updateSettings(ele, sync);
+										}
+									}
+								}
+							}
+							if ("param11" in response.settings[key]){
+								var ele = document.querySelector("input[data-param11='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param11;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("param12" in response.settings[key]){
+								var ele = document.querySelector("input[data-param12='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param12;
+									updateSettings(ele, sync);
+								}
+							}
 							if ("both" in response.settings[key]){
 								var ele = document.querySelector("input[data-both='"+key+"']");
 								if (ele){
@@ -1727,12 +1833,11 @@ function update(response, sync=true){
 							 if ("optionsetting" in response.settings[key]){
 								var ele = document.querySelector("select[data-optionsetting='"+key+"']");
 								if (ele){
-									
-									if (key == "midiOutputDevice"){
+									if (key == "midiOutputDevice" || key.startsWith("mididevice")){
 										if (response.settings[key]?.optionsetting && (ele.value !== response.settings[key].optionsetting)){
 											const option = document.createElement("option");
-											option.textContent = response.settings.midiOutputDevice.optionsetting;
-											option.value = response.settings.midiOutputDevice.optionsetting;
+											option.textContent = response.settings[key].optionsetting;
+											option.value = response.settings[key].optionsetting;
 											ele.appendChild(option);
 											option.selected = true;
 										}
@@ -1827,6 +1932,18 @@ function update(response, sync=true){
 									}
 								}
 							}
+							if ("numbersetting10" in response.settings[key]){
+								var ele = document.querySelector("input[data-numbersetting10='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].numbersetting10;
+									updateSettings(ele, sync);
+									
+									var ele = document.querySelector("input[data-param10='"+key+"']");
+									if (ele && ele.checked){
+										updateSettings(ele, false, parseFloat(response.settings[key].numbersetting10));
+									}
+								}
+							}
 							if ("textparam1" in response.settings[key]){
 								var ele = document.querySelector("input[data-textparam1='"+key+"'],textarea[data-textparam1='"+key+"']");
 								//console.log(ele);
@@ -1877,16 +1994,32 @@ function update(response, sync=true){
 									updateSettings(ele, sync);
 								}
 							}
-							if ("optionparam1" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam1='"+key+"']");
+							if ("textparam8" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam8='"+key+"']");
 								if (ele){
-									ele.value = response.settings[key].optionparam1;
+									ele.value = response.settings[key].textparam8;
 									updateSettings(ele, sync);
 								}
-								
-								var ele = document.querySelector("input[data-param1='"+key+"']");
-								if (ele && ele.checked){
-									updateSettings(ele, false, response.settings[key].optionparam1);
+							}
+							if ("textparam9" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam9='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam9;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("textparam10" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam10='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam10;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("textparam11" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam11='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam11;
+									updateSettings(ele, sync);
 								}
 							}
 							if ("optionparam2" in response.settings[key]){
@@ -1936,6 +2069,51 @@ function update(response, sync=true){
 									updateSettings(ele, sync);
 								}
 							}
+							if ("optionparam8" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam8='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam8;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("optionparam9" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam9='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam9;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("optionparam10" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam10='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam10;
+									updateSettings(ele, sync);
+								}
+								
+								var ele = document.querySelector("input[data-param10='"+key+"']");
+								if (ele && ele.checked){
+									updateSettings(ele, false, response.settings[key].optionparam10);
+								}
+							}
+							if ("optionparam11" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam11='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam11;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("optionparam12" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam12='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam12;
+									updateSettings(ele, sync);
+								}
+								
+								var ele = document.querySelector("input[data-param12='"+key+"']");
+								if (ele && ele.checked){
+									updateSettings(ele, false, response.settings[key].optionparam12);
+								}
+							}
 							if (('customGifCommands' in response.settings) && response.settings.customGifCommands.json) {
 								const commands = JSON.parse(response.settings.customGifCommands.json || '[]');
 								const commandsList = document.getElementById('customGifCommandsList');
@@ -1982,6 +2160,12 @@ function update(response, sync=true){
 			try {
 				document.getElementById("docklink").innerText = hideLinks ? "Click to open link" : document.getElementById("dock").raw;
 				document.getElementById("docklink").href = document.getElementById("dock").raw;
+				
+				document.getElementById("cohostlink").innerText = hideLinks ? "Click to open link" : document.getElementById("cohost").raw;
+				document.getElementById("cohostlink").href = document.getElementById("cohost").raw;
+				
+				document.getElementById("chatbotlink").innerText = hideLinks ? "Click to open link" : document.getElementById("bot").raw;
+				document.getElementById("chatbotlink").href = document.getElementById("bot").raw;
 
 				document.getElementById("overlaylink").innerText = hideLinks ? "Click to open link" : document.getElementById("overlay").raw;
 				document.getElementById("overlaylink").href = document.getElementById("overlay").raw;
@@ -2226,6 +2410,10 @@ function updateSettings(ele, sync=true, value=null){
 		ele.dataset.del2.split(",").forEach(target=>{
 			document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, target.trim());
 		});
+	} else if (ele.dataset.del10){
+		ele.dataset.del10.split(",").forEach(target=>{
+			document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw, target.trim());
+		});
 	}
 	
 	if (ele.dataset.param1){
@@ -2405,6 +2593,7 @@ function updateSettings(ele, sync=true, value=null){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam7",  target:target, setting: ele.dataset.textparam7, "value": ele.value}, function (response) {});
 		}
+
 	} else if (ele.dataset.optionparam1){
 		document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.optionparam1);
 		
@@ -2460,6 +2649,7 @@ function updateSettings(ele, sync=true, value=null){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", target:target,  setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
 		}
+	
 	} else if (ele.dataset.optionparam6){
 		document.getElementById("ticker").raw = removeQueryParamWithValue(document.getElementById("ticker").raw, ele.dataset.optionparam6);
 		
@@ -2483,6 +2673,23 @@ function updateSettings(ele, sync=true, value=null){
 		document.getElementById("wordcloud").raw = document.getElementById("wordcloud").raw.replace("?&", "?");
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam7", target:target,  setting: ele.dataset.optionparam7, "value": ele.value}, function (response) {});
+		}
+	} else if (ele.dataset.optionparam10){
+		document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw, ele.dataset.optionparam10);
+		
+		if (ele.value){
+			ele.value.split("&").forEach(rem=>{
+				if (rem.includes("=")){
+					document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw, rem.split("=")[0]);
+				}
+			});
+			document.getElementById("chatbot").raw = updateURL(ele.dataset.optionparam10+"="+encodeURIComponent(ele.value).replace(/%26/g, '&').replace(/%3D/g, '='), document.getElementById("chatbot").raw);
+		}
+		
+		document.getElementById("chatbot").raw = document.getElementById("chatbot").raw.replace("&&", "&");
+		document.getElementById("chatbot").raw = document.getElementById("chatbot").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", target:target,  setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
 		}
 	} else if (ele.dataset.param2){
 		if (ele.checked){
@@ -2558,8 +2765,6 @@ function updateSettings(ele, sync=true, value=null){
 			}
 		});
 	} else if (ele.dataset.param5){
-		
-		
 		if (ele.checked){
 			document.getElementById("waitlist").raw = updateURL(ele.dataset.param5, document.getElementById("waitlist").raw);
 		} else {
@@ -2571,7 +2776,6 @@ function updateSettings(ele, sync=true, value=null){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param5",  target:target, setting: ele.dataset.param5, "value": ele.checked}, function (response) {});
 		}
-		
 		
 		if (ele.dataset.param5 == "alignright"){
 			var key = "aligncenter";
@@ -2682,34 +2886,77 @@ function updateSettings(ele, sync=true, value=null){
 			}
 		});
 		
-	
-		
-		
-	} else if (ele.dataset.both){
+	} else if (ele.dataset.param10){
 		if (ele.checked){
-			document.getElementById("overlay").raw = updateURL(ele.dataset.both, document.getElementById("overlay").raw);
-			document.getElementById("dock").raw = updateURL(ele.dataset.both, document.getElementById("dock").raw);
-			document.getElementById("emoteswall").raw = updateURL(ele.dataset.both, document.getElementById("emoteswall").raw);
-			document.getElementById("waitlist").raw = updateURL(ele.dataset.both, document.getElementById("waitlist").raw);
-			document.getElementById("hypemeter").raw = updateURL(ele.dataset.both, document.getElementById("hypemeter").raw);
+			document.getElementById("chatbot").raw = updateURL(ele.dataset.param10, document.getElementById("chatbot").raw);
 		} else {
-			document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.both);
-			document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.both);
-			document.getElementById("emoteswall").raw = removeQueryParamWithValue(document.getElementById("emoteswall").raw, ele.dataset.both);
-			document.getElementById("waitlist").raw = removeQueryParamWithValue(document.getElementById("waitlist").raw, ele.dataset.both);
-			document.getElementById("hypemeter").raw = removeQueryParamWithValue(document.getElementById("hypemeter").raw, ele.dataset.both);
+			document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw, ele.dataset.param10);
+		}
+		document.getElementById("chatbot").raw = document.getElementById("chatbot").raw.replace("&&", "&");
+		document.getElementById("chatbot").raw = document.getElementById("chatbot").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param10",  target:target, setting: ele.dataset.param10, "value": ele.checked}, function (response) {});
 		}
 		
-		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("&&", "&");
-		document.getElementById("overlay").raw = document.getElementById("overlay").raw.replace("?&", "?");
-		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("&&", "&");
-		document.getElementById("dock").raw = document.getElementById("dock").raw.replace("?&", "?");
-		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("&&", "&");
-		document.getElementById("emoteswall").raw = document.getElementById("emoteswall").raw.replace("?&", "?");
-		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("&&", "&");
-		document.getElementById("waitlist").raw = document.getElementById("waitlist").raw.replace("?&", "?");
-		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("&&", "&");
-		document.getElementById("hypemeter").raw = document.getElementById("hypemeter").raw.replace("?&", "?");
+		document.querySelectorAll("input[data-param10^='"+ele.dataset.param10.split("=")[0]+"']:not([data-param10='"+ele.dataset.param10+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});	
+		
+	} else if (ele.dataset.param11){
+		if (ele.checked){
+			document.getElementById("cohost").raw = updateURL(ele.dataset.param11, document.getElementById("cohost").raw);
+		} else {
+			document.getElementById("cohost").raw = removeQueryParamWithValue(document.getElementById("cohost").raw, ele.dataset.param11);
+		}
+		document.getElementById("cohost").raw = document.getElementById("cohost").raw.replace("&&", "&");
+		document.getElementById("cohost").raw = document.getElementById("cohost").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param11",  target:target, setting: ele.dataset.param11, "value": ele.checked}, function (response) {});
+		}
+		
+		document.querySelectorAll("input[data-param11^='"+ele.dataset.param11.split("=")[0]+"']:not([data-param11='"+ele.dataset.param11+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});	
+		
+	} else if (ele.dataset.param12){
+		if (ele.checked){
+			document.getElementById("tipjar").raw = updateURL(ele.dataset.param12, document.getElementById("tipjar").raw);
+		} else {
+			document.getElementById("tipjar").raw = removeQueryParamWithValue(document.getElementById("tipjar").raw, ele.dataset.param12);
+		}
+		document.getElementById("tipjar").raw = document.getElementById("tipjar").raw.replace("&&", "&");
+		document.getElementById("tipjar").raw = document.getElementById("tipjar").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "param12",  target:target, setting: ele.dataset.param12, "value": ele.checked}, function (response) {});
+		}
+		
+		document.querySelectorAll("input[data-param12^='"+ele.dataset.param12.split("=")[0]+"']:not([data-param12='"+ele.dataset.param12+"'])").forEach(ele1=>{
+			if (ele1 && ele1.checked){
+				ele1.checked = false;
+				updateSettings(ele1, sync);
+			}
+		});	
+		
+	} else if (ele.dataset.both){
+		
+		const elements = ['overlay', 'dock', 'emoteswall', 'waitlist', 'hypemeter', 
+                 'chatbot', 'cohost', 'privatechatbot', 'tipjar'];
+
+		elements.forEach(id => {
+			const element = document.getElementById(id);
+			element.raw = ele.checked 
+				? updateURL(ele.dataset.both, element.raw)
+				: removeQueryParamWithValue(element.raw, ele.dataset.both);
+				
+			element.raw = element.raw.replace("&&", "&").replace("?&", "?");
+		});
+
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "both",  target:target, setting: ele.dataset.both, "value": ele.checked}, function (response) {});
 		}
@@ -2866,6 +3113,36 @@ function updateSettings(ele, sync=true, value=null){
 			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "optionsetting", target:target,  setting: ele.dataset.optionsetting, "value": ele.value}, function (response) {});
 		}
 		return;
+	} else if (ele.dataset.optionsetting10){
+		
+		if (ele.dataset.optionsetting10 == "ttsProvider"){
+			document.getElementById('systemTTS10').classList.add('hidden');
+			document.getElementById('elevenlabsTTS10').classList.add('hidden');
+			document.getElementById('googleTTS10').classList.add('hidden');
+			document.getElementById('speechifyTTS10').classList.add('hidden');
+			switch(ele.value) {
+				case 'system':
+					document.getElementById('systemTTS10').classList.remove('hidden');
+					break;
+				case 'elevenlabs':
+					document.getElementById('elevenlabsTTS10').classList.remove('hidden');
+					break;
+				case 'google':
+					document.getElementById('googleTTS10').classList.remove('hidden');
+					break;
+				case 'speechify':
+					document.getElementById('speechifyTTS10').classList.remove('hidden');
+					break;
+				default:
+					document.getElementById('systemTTS10').classList.remove('hidden');
+					break;
+			}
+		}
+		
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting",  type: "optionsetting10", target:target,  setting: ele.dataset.optionsetting10, "value": ele.value}, function (response) {});
+		}
+		return;
 	} else if (ele.dataset.textsetting){
 		
 		if (sync){
@@ -2905,6 +3182,39 @@ function updateSettings(ele, sync=true, value=null){
 		if (document.querySelector("input[data-param9='"+ele.dataset.numbersetting9+"']") && document.querySelector("input[data-param9='"+ele.dataset.numbersetting9+"']").checked){
 			document.getElementById("custom-gif-commands").raw = removeQueryParamWithValue(document.getElementById("custom-gif-commands").raw,ele.dataset.numbersetting9);
 			document.getElementById("custom-gif-commands").raw = updateURL(ele.dataset.numbersetting9+"="+ ele.value, document.getElementById("custom-gif-commands").raw);
+		} else {
+			return;
+		}
+	} else if (ele.dataset.numbersetting10){ 
+		
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting10",  target:target, setting: ele.dataset.numbersetting10, "value": ele.value}, function (response) {});
+		}
+		if (document.querySelector("input[data-param10='"+ele.dataset.numbersetting10+"']") && document.querySelector("input[data-param10='"+ele.dataset.numbersetting10+"']").checked){
+			document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw,ele.dataset.numbersetting10);
+			document.getElementById("chatbot").raw = updateURL(ele.dataset.numbersetting10+"="+ ele.value, document.getElementById("chatbot").raw);
+		} else {
+			return;
+		}	
+	} else if (ele.dataset.numbersetting11){ 
+		
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting11",  target:target, setting: ele.dataset.numbersetting11, "value": ele.value}, function (response) {});
+		}
+		if (document.querySelector("input[data-param11='"+ele.dataset.numbersetting11+"']") && document.querySelector("input[data-param11='"+ele.dataset.numbersetting11+"']").checked){
+			document.getElementById("cohost").raw = removeQueryParamWithValue(document.getElementById("cohost").raw,ele.dataset.numbersetting11);
+			document.getElementById("cohost").raw = updateURL(ele.dataset.numbersetting11+"="+ ele.value, document.getElementById("cohost").raw);
+		} else {
+			return;
+		}
+	} else if (ele.dataset.numbersetting12){ 
+		
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "numbersetting12",  target:target, setting: ele.dataset.numbersetting12, "value": ele.value}, function (response) {});
+		}
+		if (document.querySelector("input[data-param12='"+ele.dataset.numbersetting12+"']") && document.querySelector("input[data-param12='"+ele.dataset.numbersetting12+"']").checked){
+			document.getElementById("tipjar").raw = removeQueryParamWithValue(document.getElementById("tipjar").raw,ele.dataset.numbersetting12);
+			document.getElementById("tipjar").raw = updateURL(ele.dataset.numbersetting12+"="+ ele.value, document.getElementById("tipjar").raw);
 		} else {
 			return;
 		}		
@@ -3040,6 +3350,18 @@ function refreshLinks(){
 		
 		document.getElementById("custom-gif-commands-link").innerText = hideLinks ? "Click to open link" : document.getElementById("custom-gif-commands").raw;
 		document.getElementById("custom-gif-commands-link").href = document.getElementById("custom-gif-commands").raw;
+		
+		document.getElementById("chatbotlink").innerText = hideLinks ? "Click to open link" : document.getElementById("chatbot").raw;
+		document.getElementById("chatbotlink").href = document.getElementById("chatbot").raw;
+		
+		document.getElementById("cohostlink").innerText = hideLinks ? "Click to open link" : document.getElementById("cohost").raw;
+		document.getElementById("cohostlink").href = document.getElementById("cohost").raw;
+		
+		document.getElementById("tipjarlink").innerText = hideLinks ? "Click to open link" : document.getElementById("tipjar").raw;
+		document.getElementById("tipjarlink").href = document.getElementById("tipjar").raw;
+		
+		document.getElementById("privatechatbotlink").innerText = hideLinks ? "Click to open link" : document.getElementById("privatechatbot").raw;
+		document.getElementById("privatechatbotlink").href = document.getElementById("privatechatbot").raw;
 	} catch(e){}
 }
 
@@ -3301,7 +3623,7 @@ const TTSManager = {
             
             // Google Cloud TTS settings
             google: {
-                key: document.getElementById('googleAPIKey')?.value,
+                key: document.getElementById('googleAPIKey')?.value || document.getElementById('ttskey')?.value,
                 voice: document.getElementById('googleVoiceName')?.value,
                 lang:  document.querySelector('[data-param1="googlelang"]').checked ?  document.querySelector('[data-optionparam1="googlelang"]')?.value || 'en-US' : "en-US",
                 rate: document.querySelector('[data-param1="googlerate"]').checked ? parseFloat(document.querySelector('[data-numbersetting="googlerate"]')?.value) || 1.0 : 1.0,

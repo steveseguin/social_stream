@@ -3,108 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Tip Jar Overlay - Social Stream Ninja</title>
+    <title>Tip Jar Overlay - Social Stream Ninja</title>
     <link rel="icon" href="./favicon.ico" />
     <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <!-- Matter.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Montserrat', Arial, sans-serif;
-            background-color: #0000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-        }
-        #tip-jar {
-            width: 200px;
-            height: 300px;
-            background-color: rgba(255, 255, 255, 0.5);
-            border: 4px solid #8B4513;
-            border-radius: 20px 20px 100px 100px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2);
-        }
-        #tip-fill {
-            width: 100%;
-            background-color: rgba(255, 215, 0, 0.6);
-            position: absolute;
-            bottom: 0;
-            transition: height 0.5s ease-in-out;
-        }
-        #tip-text {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-weight: bold;
-            color: #000;
-            text-shadow: 1px 1px 2px white;
-            z-index: 10;
-        }
-        .coin {
-            width: 30px;
-            height: 30px;
-            background-color: gold;
-            border: 2px solid #B8860B;
-            border-radius: 50%;
-            position: absolute;
-            animation: fall 2s ease-in;
-            z-index: 5;
-        }
-        .bill {
-            width: 50px;
-            height: 20px;
-            background-color: #90EE90;
-            border: 1px solid #006400;
-            position: absolute;
-            animation: fall 2.5s ease-in;
-            z-index: 5;
-        }
-        @keyframes fall {
-            0% { transform: translateY(-100vh) rotate(0deg); }
-            70% { transform: translateY(calc(100% - 50px)) rotate(180deg); }
-            85% { transform: translateY(calc(100% - 25px)) rotate(360deg); }
-            100% { transform: translateY(100%) rotate(360deg); }
-        }
-        #notification {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            display: none;
-        }
+	* { 
+		margin: 0; 
+		padding: 0; 
+		box-sizing: border-box; 
+	}
+
+	body, html { 
+		width: 100%; 
+		height: 100%; 
+		overflow: hidden; 
+		display: flex; 
+		justify-content: center; 
+		align-items: center; 
+		background-color: transparent; 
+	}
+
+	#canvas-container { 
+		position: relative;
+		width: 400px;  /* Match canvas width */
+		height: 600px;
+		max-height: 100vh;
+		margin: 0 auto;
+	}
+
+	canvas { 
+		position: absolute; 
+		top: 0; 
+		left: 0; 
+		width: 100%;
+		height: 100%;
+		z-index: 1; 
+	}
+
+	#tip-text { 
+		position: absolute; 
+		top: 10px; 
+		left: 0;
+		width: 100%; 
+		text-align: center; 
+		color: #0A1236; 
+		font-family: 'Arial', sans-serif; 
+		font-weight: bold; 
+		font-size: 24px; 
+		z-index: 4;
+		text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+	}
+
+	#cup-overlay { 
+		position: absolute; 
+		top: 0; 
+		left: 0; 
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		z-index: 0; 
+		pointer-events: none; 
+	}
+
+	#notification { 
+		position: fixed; 
+		top: 20px; 
+		left: 50%; 
+		transform: translateX(-50%); 
+		background-color: rgba(0, 0, 0, 0.7); 
+		color: white; 
+		padding: 10px 20px; 
+		border-radius: 5px; 
+		display: none;
+		z-index: 5;
+		font-family: 'Arial', sans-serif;
+	}
     </style>
 </head>
 <body>
-    <div id="tip-jar">
-        <div id="tip-fill"></div>
+    <div id="canvas-container">
+        <canvas id="canvas"></canvas>
+        <img id="cup-overlay" src="./media/tipsjar.png" alt="Cup Overlay">
         <div id="tip-text">$0 / $250</div>
     </div>
     <div id="notification"></div>
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        let totalTips = 0;
-        const maxTips = 250;
-        const tipJar = document.getElementById('tip-jar');
-        const tipFill = document.getElementById('tip-fill');
-        const tipText = document.getElementById('tip-text');
-        const notification = document.getElementById('notification');
 
-        function updateTipJar() {
-            const fillPercentage = (totalTips / maxTips) * 100;
-            tipFill.style.height = `${Math.min(fillPercentage, 100)}%`;
-            tipText.textContent = `$${totalTips.toFixed(2)} / $${maxTips}`;
+    <script>
+        const { Engine, Render, Runner, World, Bodies, Composite, Body } = Matter;
+        
+        // Setup Matter.js engine
+        const engine = Engine.create();
+        const world = engine.world;
+        engine.world.gravity.y = 0.6;  // Reduced from 1
+
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        canvas.width = 400;
+        canvas.height = 600;
+
+        // Setup renderer
+        const render = Render.create({
+            canvas: canvas,
+            engine: engine,
+            options: {
+                width: 400,
+                height: 600,
+                wireframes: false,
+                background: 'transparent'
+            }
+        });
+
+        // Start the engine and renderer
+        Runner.run(engine);
+        Render.run(render);
+
+        // Create cup container
+        const cupContainer = Composite.create();
+        const wallOptions = { 
+            isStatic: true, 
+            render: { visible: false }
+        };
+        
+        const leftWall = Bodies.rectangle(100, 300, 20, 500, wallOptions);
+        const rightWall = Bodies.rectangle(300, 300, 20, 500, wallOptions);
+        const bottomWall = Bodies.rectangle(200, 470, 200, 20, wallOptions);
+        const leftSlope = Bodies.rectangle(150, 500, 140, 20, {
+            isStatic: true,
+            angle: Math.PI * 0.15,
+            render: { visible: false }
+        });
+        const rightSlope = Bodies.rectangle(250, 500, 140, 20, {
+            isStatic: true,
+            angle: -Math.PI * 0.15,
+            render: { visible: false }
+        });
+
+        Composite.add(cupContainer, [leftWall, rightWall, bottomWall, leftSlope, rightSlope]);
+        World.add(world, cupContainer);
+
+        // Tracking variables
+        let currentAmount = 0;
+        const goalAmount = 250;
+
+        
+
+		function addHeart(amount) {
+			const heartSize = Math.min(20 + (amount / 10), 50);
+			const xPosition = 110 + Math.random() * 180;
+			
+			const heart = Bodies.circle(xPosition, 50, heartSize / 2, {
+				restitution: 0.4,      // Increased bounce
+				friction: 0.9,         // Increased friction
+				density: 0.004,        // Increased density
+				frictionAir: 0.03,     // Increased air friction
+				torque: (Math.random() - 0.5) * 0.002, // Add slight rotation
+				render: {
+					sprite: {
+						texture: "./media/goldenheart.png",
+						xScale: heartSize / 50,
+						yScale: heartSize / 50
+					}
+				}
+			});
+
+			// Add random initial velocity
+			const velocityY = 2 + Math.random() * 2;
+			Body.setVelocity(heart, { 
+				x: (Math.random() - 0.5) * 2,
+				y: velocityY 
+			});
+
+			World.add(world, heart);
+			
+			// Increased timeout for hearts to stay longer
+			setTimeout(() => {
+				// Fade out effect before removal
+				const fadeInterval = setInterval(() => {
+					if (heart.render.opacity > 0) {
+						heart.render.opacity -= 0.05;
+					} else {
+						clearInterval(fadeInterval);
+						World.remove(world, heart);
+					}
+				}, 100);
+			}, 15000);  // Hearts stay for 15 seconds now
+
+			updateAmount(amount);
+		}
+
+        function updateAmount(amount) {
+            currentAmount += amount;
+            document.getElementById('tip-text').textContent = 
+                `$${currentAmount.toFixed(2)} / $${goalAmount}`;
         }
 
         function showNotification(message) {
+            const notification = document.getElementById('notification');
             notification.textContent = message;
             notification.style.display = 'block';
             setTimeout(() => {
@@ -112,55 +209,27 @@
             }, 3000);
         }
 
-        function addCoin() {
-            const coin = document.createElement('div');
-            coin.className = 'coin';
-            coin.style.left = `${Math.random() * 170}px`;
-            tipJar.appendChild(coin);
-            setTimeout(() => {
-                tipJar.removeChild(coin);
-            }, 2000);
-        }
-
-        function addBill() {
-            const bill = document.createElement('div');
-            bill.className = 'bill';
-            bill.style.left = `${Math.random() * 150}px`;
-            bill.style.transform = `rotate(${Math.random() * 360}deg)`;
-            tipJar.appendChild(bill);
-            setTimeout(() => {
-                tipJar.removeChild(bill);
-            }, 2500);
-        }
-
         function processTip(amount, currency, donator) {
-            let tipValue = 0;
+			let tipValue = 0;
 
-            if (['bits','bit','cheer','gold',"rose","roses"].includes(currency.toLowerCase())) {
-                tipValue = amount / 100;
-            } else if (currency.toLowerCase() === 'usd') {
-                tipValue = amount;
-            } else {
-                // For simplicity, treat all other currencies as 1:1 with USD
-                tipValue = amount;
-            }
+			if (['bits', 'bit', 'cheer', 'gold', 'rose', 'roses'].includes(currency.toLowerCase())) {
+				tipValue = amount / 100;
+			} else if (currency.toLowerCase() === 'usd') {
+				tipValue = amount;
+			} else {
+				tipValue = amount;
+			}
 
-            totalTips += tipValue;
-            updateTipJar();
-            showNotification(`${donator} tipped ${amount} ${currency}!`);
+			// Add multiple hearts with varying delays and positions
+			const heartCount = Math.min(Math.ceil(tipValue / 5), 10);
+			for (let i = 0; i < heartCount; i++) {
+				setTimeout(() => {
+					addHeart(tipValue / heartCount);
+				}, i * 200 + Math.random() * 300); // Randomized delay between hearts
+			}
 
-            // Add coins and bills based on the tip value
-            const coinCount = Math.floor(tipValue);
-            const billCount = Math.floor(tipValue / 5);
-
-            for (let i = 0; i < coinCount; i++) {
-                setTimeout(addCoin, i * 300);
-            }
-
-            for (let i = 0; i < billCount; i++) {
-                setTimeout(addBill, i * 400 + 200);
-            }
-        }
+			showNotification(`${donator} tipped ${amount} ${currency}!`);
+		}
 
         function processData(data) {
             console.log(data);
@@ -179,7 +248,9 @@
         // IFRAME setup for Social Stream Ninja
         const iframe = document.createElement("iframe");
         const filename = "dock";
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label="+filename+"&cleanoutput&room=" + urlParams.get('session');
+        const urlParams = new URLSearchParams(window.location.search);
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + 
+            urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";

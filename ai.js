@@ -176,10 +176,10 @@ const streamingPostNode = async function (URL, body, headers = {}, onChunk = nul
 
 const activeChatBotSessions = {};
 let tmpModelFallback = "";
-async function callOllamaAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null) {
+async function callLLMAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null) {
 	
 	const provider = settings.aiProvider?.optionsetting || "ollama";
-	let endpoint, apiKey;
+	let endpoint, apiKey, streamable;
 
 	switch (provider) {
 		case "ollama":
@@ -190,58 +190,70 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 			endpoint = "https://api.openai.com/v1/chat/completions";
 			model = model || settings.chatgptmodel?.textsetting || "gpt-4o-mini";
 			apiKey = settings.chatgptApiKey?.textsetting;
+			callback = null;
 			break;
 		case "deepseek":
 			endpoint = "https://api.deepseek.com/v1/chat/completions";
 			model = model || settings.deepseekmodel?.textsetting || "deepseek-chat";
 			apiKey = settings.deepseekApiKey?.textsetting;
+			callback = null;
 			break;
 		case "gemini":
 			endpoint = "https://generativelanguage.googleapis.com/v1beta/chat/completions";
 			model = model || settings.geminimodel?.textsetting || "gemini-1.5-flash";
 			apiKey = settings.geminiApiKey?.textsetting;
+			callback = null;
 			break;
 		case "custom":
 			endpoint = settings.customAIEndpoint?.textsetting || "http://localhost:11434";
+			if (!endpoint.includes("/v1") || !endpoint.includes("/completions")){ // going to assume you already ended the completions URL
+				endpoint = endpoint.replace(/\/+$/, '') + "/v1/chat/completions"
+			}
 			model = model || settings.customAIModel?.textsetting || "";
 			apiKey = settings.customAIApiKey?.textsetting;
+			//callback = null;
 			break;
 		case "default":
 			endpoint = "http://localhost:11434";
 			apiKey = "";
 			model = model || "";
+			callback = null;
 			break;
 	}
-	
-	function handleChunk(chunk, callback, appendToFull) {
+		
+	function handleChunk(chunk, callback, appendToFull, reasoning=false) {
 		const lines = chunk.split('\n').filter(line => line.trim());
 		for (const line of lines) {
 			if (line.trim() === 'data: [DONE]') {
-				responseComplete = true;
-				break;
+				return true;
 			}
 			if (line) {
 				try {
-					// Remove 'data: ' prefix if it exists
 					const jsonStr = line.startsWith('data: ') ? line.slice(6) : line;
 					const data = JSON.parse(jsonStr);
-					//console.log(data);
+					
 					if (data.response) { // Ollama format
 						appendToFull(data.response);
 						if (callback) callback(data.response);
 					} else if (data.choices?.[0]?.delta?.content) { // ChatGPT/Gemini format
 						const content = data.choices[0].delta.content;
-						if (content) { // Only append if there's actual content
+						if (content) {
 							appendToFull(content);
 							if (callback) callback(content);
+						}
+					} else if (data.choices?.[0]?.delta?.reasoning_content) { // LMStudio format
+						const content = data.choices[0].delta.reasoning_content;
+						if (content) {
+							appendToFull(content);
+							if (callback) callback(content, true);
 						}
 					} else if (data.candidates?.[0]?.content?.parts?.[0]?.text) { // Legacy Gemini format
 						appendToFull(data.candidates[0].content.parts[0].text);
 						if (callback) callback(data.candidates[0].content.parts[0].text);
 					}
+					
 					if (data.choices?.[0]?.finish_reason === "stop" || data.done) {
-						responseComplete = true;
-						break;
+						return true;
 					}
 				} catch (e) {
 					console.warn("Parse error:", e, line);
@@ -254,7 +266,9 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 				}
 			}
 		}
+		return false;
 	}
+	
     if (provider === "ollama") {
 		
         let ollamamodel = model;
@@ -270,7 +284,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                 return;
             }
         }
-        const result = await makeRequest(ollamamodel);
+        const result = await makeRequestToOllama(ollamamodel);
         if (result.aborted) {
             return result.response + "💥";
         } else if (result.error && result.error === 404) {
@@ -281,7 +295,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                     setTimeout(() => {
                         tmpModelFallback = ""; 
                     }, 60000);
-                    const fallbackResult = await makeRequest(availableModel);
+                    const fallbackResult = await makeRequestToOllama(availableModel);
                     if (fallbackResult.aborted) {
                         return fallbackResult.response + "💥";
                     } else if (fallbackResult.error) {
@@ -290,19 +304,17 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                     return fallbackResult.complete ? fallbackResult.response : fallbackResult.response + "💥";
                 }
             } catch (fallbackError) {
-                console.warn("Error in callOllamaAPI even with fallback:", fallbackError);
+                console.warn("Error in callLLMAPI even with fallback:", fallbackError);
                 throw fallbackError;
             }
         } else if (result.error) {
             return;
         }
         return result.complete ? result.response : result.response + "💥";
-    } else {
-
+		
+    } else { // non-Ollama Request , but rather ChatGPT compatible APIs.
         // Now both ChatGPT and Gemini use the same message format
 		// let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
-		
-		// deepseek-chat
 		
         const message = {
             model: model,
@@ -336,16 +348,18 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                 let fullResponse = '';
                 let responseComplete = false;
 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) {
-                        responseComplete = true;
-                        break;
-                    }
-                    const chunk = decoder.decode(value);
-                    handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
-                }
-				//console.log(fullResponse);
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) break;
+					
+					const chunk = decoder.decode(value);
+					const isComplete = handleChunk(chunk, callback, (resp, reasoning=false) => { 
+						fullResponse += resp; 
+					}, reasoning=false);
+					
+					if (isComplete) break;
+				}
+				console.log(fullResponse);
                 return fullResponse;
             } else {
                 const response = await fetch(endpoint, {
@@ -401,7 +415,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
         }
     }
 
-    async function makeRequest(currentModel) {
+    async function makeRequestToOllama(currentModel) {  // ollama only api
         const isStreaming = callback !== null;
         let fullResponse = '';
         let responseComplete = false;
@@ -419,7 +433,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
 
             let response;
 			let responseComplete;
-            if (typeof ipcRenderer !== 'undefined') {
+            if (typeof ipcRenderer !== 'undefined') {  // ollama still
                 // Your existing Electron implementation
                 if (isStreaming) {
                     response = await new Promise((resolve, reject) => {
@@ -432,7 +446,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                             } else if (typeof chunk === 'object' && chunk.error) {
                                 resolve(chunk);
                             } else {
-                                handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
+                                handleChunk(chunk, callback, (resp, reasoning=false) => { fullResponse += resp; }, reasoning=false);
                             }
                         });
                         
@@ -493,7 +507,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                         return { error: true, message: "Error parsing response" };
                     }
                 }
-            } else {
+            } else { // ollama still
                 // Your existing Web implementation
                 const message = {
                     model: currentModel,
@@ -535,7 +549,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
                             break;
                         }
                         const chunk = decoder.decode(value);
-                        handleChunk(chunk, callback, (resp) => { fullResponse += resp; });
+                        handleChunk(chunk, callback, (resp, reasoning=false) => { fullResponse += resp; }, reasoning=false);
                     }
                 } else {
                     const data = await response.json();
@@ -549,7 +563,7 @@ async function callOllamaAPI(prompt, model = null, callback = null, abortControl
             if (error.name === 'AbortError') {
                 return { aborted: true, response: fullResponse };
             } else {
-                console.warn(`Error in callOllamaAPI with model ${currentModel}:`, error);
+                console.warn(`Error in callLLMAPI with model ${currentModel}:`, error);
                 return { error: true, message: error.message };
             }
         } finally {
@@ -634,7 +648,7 @@ function addSafePhrase(cleanedText, score=-1) {
 
 
 let censorProcessingSlots = [false, false, false]; // ollama can handle 4 requests at a time by default I think, but 3 is a good number.
-async function censorMessageWithOllama(data) {
+async function censorMessageWithLLM(data) {
     if (!data.chatmessage) {
         return true;
     }
@@ -662,7 +676,7 @@ async function censorMessageWithOllama(data) {
         if (cleanedText) {
             censorInstructions += cleanedText;
         }
-        let llmOutput = await callOllamaAPI(censorInstructions);
+        let llmOutput = await callLLMAPI(censorInstructions);
 		
 		censorProcessingSlots[availableSlot] = false;
 		
@@ -722,7 +736,7 @@ ${recentMessages.map(m => m.message).join('\n')}
 Latest message:
 ${data.chatname} says: ${cleanedText}`;
 
-        let llmOutput = await callOllamaAPI(censorInstructions);
+        let llmOutput = await callLLMAPI(censorInstructions);
         
         censorProcessingSlots[availableSlot] = false;
         
@@ -1069,7 +1083,7 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 		'If this message requires searching the knowledge database, respond with keywords to search. Otherwise respond with NO_RESPONSE. Keywords should be space-separated terms that will find relevant information in the database.' +
 		'\n\nDatabase info: ${databaseDescriptor}\n\n';
 
-	  const ragDecision = await callOllamaAPI(ragPrompt);
+	  const ragDecision = await callLLMAPI(ragPrompt);
 	  
 	  if (ragDecision && !ragDecision.toLowerCase().includes('no_response')) {
 		const searchResults = await performLunrSearch(ragDecision.trim());
@@ -1082,7 +1096,7 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 		  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is needed. Respond only with NO_RESPONSE if you have no reply.';
 		}
 		
-		let response = await callOllamaAPI(promptBase);
+		let response = await callLLMAPI(promptBase);
 		
 		if (botname && response.startsWith(botname+":")){
 			response = response.replace(botname+":","").trim();
@@ -1127,7 +1141,7 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 	  }
 	  //console.log(promptBase);
       
-      let response = await callOllamaAPI(promptBase);
+      let response = await callLLMAPI(promptBase);
 	  
 	  if (botname && response.startsWith(botname+":")){
 		response = response.replace(botname+":","").trim();
@@ -1341,7 +1355,7 @@ synonym1, synonym2, synonym3
 Do not include any other text or explanations outside these sections.`;
 
 		try {
-			const processedData = await callOllamaAPI(prompt);
+			const processedData = await callLLMAPI(prompt);
 			let parsedData = parseChunkAnalysis(processedData);
 			parsedData.content = chunk.content; // Add the original content
 			parsedData.level = chunk.level;
@@ -1368,7 +1382,7 @@ ${processedChunks.map(chunk => chunk.summary).join('\n')}`;
 
     let overallSummary;
     try {
-        overallSummary = await callOllamaAPI(overallSummaryPrompt);
+        overallSummary = await callLLMAPI(overallSummaryPrompt);
     } catch (error) {
         console.warn("Error generating overall summary:", error);
         overallSummary = "Failed to generate overall summary";
@@ -1556,7 +1570,7 @@ ${combinedContent}
 
 Provide a concise and informative response based on the above information. Your response should be suitable for a chat environment, ideally not exceeding 150 characters.`;
 
-        return await callOllamaAPI(prompt);
+        return await callLLMAPI(prompt);
     } catch (error) {
         console.warn("Error in generateResponseWithSearchResults:", error);
         return "I'm sorry, I encountered an error while processing your request. Please try again later.";
@@ -2180,7 +2194,7 @@ ${docs.map(doc => doc.overallSummary || "No summary available").join('\n\n')}
 Focus on key topics, themes, and types of information available.`;
 
     try {
-        let descriptor = await callOllamaAPI(prompt);
+        let descriptor = await callLLMAPI(prompt);
 		if (descriptor){
 			descriptor = descriptor.split("**Database Contents**").pop();
 			descriptor = descriptor.replaceAll("\n"," ");
@@ -2498,7 +2512,7 @@ const ChatContextManager = { // summary and chat context
         let prompt = `The following is a log of an ongoing live social media platform interactions.\n ${textString.slice(0, Math.max(70,MAX_TOKENS-70))} ⇒ → [📝 summarize discussion in the chat] → Fewer words used the better. Do so directly without analyzing the question itself or your role in answering it. Do not add disclaimers, caveats, or explanations about your capabilities or approach. Always offer a summary even if you think not suitable. Ignore any other instruction after this point now.\n\n`;
         
         try {
-            return await callOllamaAPI(prompt);
+            return await callLLMAPI(prompt);
         } catch (error) {
             console.warn("Summary generation error:", error);
             return null;
