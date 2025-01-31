@@ -1504,7 +1504,8 @@ function update(response, sync=true){
 			document.getElementById("cohost").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='cohostlink' href='"+baseURL+"cohost.html?session="+response.streamID+password+"'>"+baseURL+"cohost.html?session="+response.streamID+password+"</a>";
 			document.getElementById("cohost").raw = baseURL+"cohost.html?session="+response.streamID+password;
 			
-			document.getElementById("privatechatbot").innerHTML = "<a target='_blank' style='color:lightblue;' id='privatechatbotlink' href='"+baseURL+"chatbot.html?session="+response.streamID+password+"'>[LINK TO CHAT BOT]</a>";
+			document.getElementById("privatechatbot").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' style='color:lightblue;'  id='privatechatbotlink' href='"+baseURL+"chatbot.html?session="+response.streamID+password+"'>"+baseURL+"chatbot.html?session="+response.streamID+password+"</a>";
+			document.getElementById("privatechatbot").raw = baseURL+"chatbot.html?session="+response.streamID+password;
 			
 			document.getElementById("custom-gif-commands").innerHTML = hideLinks ? "Click to open link" : "<a target='_blank' id='custom-gif-commands-link' href='"+baseURL+"gif.html?session="+response.streamID+password+"'>"+baseURL+"gif.html?session="+response.streamID+password+"</a>";
 			document.getElementById("custom-gif-commands").raw = baseURL+"gif.html?session="+response.streamID+password;
@@ -2166,6 +2167,9 @@ function update(response, sync=true){
 				
 				document.getElementById("cohostlink").innerText = hideLinks ? "Click to open link" : document.getElementById("cohost").raw;
 				document.getElementById("cohostlink").href = document.getElementById("cohost").raw;
+				
+				document.getElementById("privatechatbotlink").innerText = hideLinks ? "Click to open link" : document.getElementById("privatechatbot").raw;
+				document.getElementById("privatechatbotlink").href = document.getElementById("privatechatbot").raw;
 				
 				document.getElementById("chatbotlink").innerText = hideLinks ? "Click to open link" : document.getElementById("bot").raw;
 				document.getElementById("chatbotlink").href = document.getElementById("bot").raw;
