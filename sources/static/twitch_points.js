@@ -80,11 +80,13 @@
                         }
                         
                         if (eventType === "play") {
+							
                             if (!settings.twichadmute) {
                                 // Still trigger callbacks even if muting is disabled
                                 if (adVideo && adCallbacks.onAdStart && settings.twichadannounce) {
                                     adCallbacks.onAdStart();
                                 }
+								
                                 return;
                             }
                             
@@ -106,6 +108,7 @@
                                 }
                             }
                         } else if (eventType === 'abort') {
+							
                             if (!settings.twichadmute) {
                                 // Still trigger callbacks even if muting is disabled
                                 if (mainVideo && adCallbacks.onAdEnd && settings.twichadannounce) {
@@ -147,6 +150,16 @@
 				} catch(e){}
 			}
 			checkReady = setInterval(function(){
+				try {
+					var ele = document.querySelectorAll(".player-controls__right-control-group button[class^='ScCoreButton'][aria-label] .tw-core-button-icon");
+						if (ele && ele.length==2){
+							ele[0].parentNode.style = "margin-left: 10px;cursor:pointer;";
+							ele[0].parentNode.title = "Clip this video";
+							document.querySelector("[data-target='channel-header-right']").appendChild(ele[0].parentNode)
+						}
+					} catch(e){
+				}
+				
 				if (settings.collecttwitchpoints){
 					var channelPoints = document.querySelectorAll('[data-test-selector="community-points-summary"] button');
 					if (channelPoints.length === 2){

@@ -34,6 +34,8 @@
     --streaming-chat-color: #00a6ff;
     --single-message-color: #ff7f00;
     --emotes-wall-color: #ffd400;
+	--tipjar-color: #35d0ff;
+	--chatbot-wall-color: #ff0000;
     --hype-meter-color: #00ff5e;
     --waitlist-color: #ff00d2;
 	--ticker-color: #ff3a3bdd;
@@ -363,7 +365,7 @@ body.extension-disabled {
 body.extension-enabled {
     background-color: var(--body-background-enabled);
 }
-#systemLanguageSelect {
+#systemLanguageSelect, #systemLanguageSelect10 {
     max-width: calc(100vw - 106px);
 }
 
@@ -619,10 +621,16 @@ h2.single_message_title {
     color: var(--single-message-color);
 }
 
+h2.tipjar_title {
+    color: var(--tipjar-color);
+}
+
 h2.emotes_wall_title {
     color: var(--emotes-wall-color);
 }
-
+h2.chatbot_wall_title {
+    color: var(--chatbot-wall-color);
+}
 h2.hype_mode_title {
     color: var(--hype-meter-color);
 }
@@ -2641,6 +2649,13 @@ input:checked + .slider:before {
                                 </div>
 								<div>
                                     <label class="switch">
+                                        <input type="checkbox" data-param1="nobeepevent" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="do-not-beep-events">🎬🔇 Do not trigger the beep for events</span>
+                                </div>
+								<div>
+                                    <label class="switch">
                                         <input type="checkbox" data-param1="showvipbadge" />
                                         <span class="slider round"></span>
                                     </label>
@@ -3139,7 +3154,6 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
-
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-featured-effects-options" />
@@ -3159,6 +3173,677 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
+			
+			 <div class="chatbot_category_title">
+                <h2 class="chatbot_wall_title"
+                    <span data-translate="chatbot-settings-and-tools">Chat Bots and AI services</span>
+                    <a class="options-link rounded_area" href="#chatbot-settings-and-tools-options" title="Jump to the chatbot settings and tools."><span data-translate="options">[options]</span></a>
+                </h2>
+                <div id="chatbotsettings" class="chatbot_settings"></div>
+            </div>
+            <a href="" id="chatbot-settings-and-tools-options"></a>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-bots-options-ext" />
+					<label class="collapsible-label" for="wrapper-bots-options-ext">
+						<span data-translate="local-bot">⚙ Configure LLM Service Provider</span>
+					</label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat">
+							
+								<p>Using this section requires a bot service to be made available.</p>
+								<p>You can install one for free with Ollama: <a href="https://socialstream.ninja/ai" style="color:lightblue" target="_blank">Installation Guide Here</a></p>
+
+								<h3>Configure LLM API 🦙</h3>
+								
+								<div>
+									<select id="aiProvider" data-optionsetting="aiProvider" class="textInput">
+										<option selected value="ollama">Ollama (Local)</option>
+										<option value="chatgpt">ChatGPT API</option>
+										<option value="gemini">Gemini API</option>
+										<option value="deepseek">DeepSeek API</option>
+										<option value="custom">Custom API</option>
+									</select>
+								<div>
+								</div>	
+									<div id="ollamaendpoint" class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
+										<label for="ollamaendpoint"><span data-translate="ollama-API-endpoint">&gt; Ollama API endpoint</span></label>
+									</div>
+									
+									<div id="chatgptApiKey" class="textInputContainer hidden" style="width: 95%;">
+										<input type="password" class="textInput" autocomplete="off" placeholder="Your OpenAI API key" data-textsetting="chatgptApiKey" />
+										<label for="chatgptApiKey">&gt; OpenAI API Key</label>
+									</div>
+									
+									<div id="geminiApiKey" class="textInputContainer hidden" style="width: 95%;">
+										<input type="password"  class="textInput" autocomplete="off" placeholder="Your Google API key" data-textsetting="geminiApiKey" />
+										<label for="geminiApiKey">&gt; Google API Key</label>
+									</div>
+									
+									<div id="deepseekApiKey" class="textInputContainer hidden" style="width: 95%;">
+										<input type="password" class="textInput" autocomplete="off" placeholder="Your DeepSeek API key" data-textsetting="deepseekApiKey" />
+										<label for="deepseekApiKey">&gt; DeepSeek API Key</label>
+									</div>
+									
+									<div id="customAIEndpoint" class="hidden textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="customAIEndpoint" />
+										<label for="customAIEndpoint"><span data-translate="custom-API-endpoint">&gt; Custom OpenAI-compatible endpoint</span></label>
+									</div>
+								</div>
+								
+								<div id="ollamamodel">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: llama3.2" data-textsetting="ollamamodel" />
+										<label for="ollamamodel"><span data-translate="ollama-model">&gt; Ollama Model to use</span></label>
+									</div>
+								</div>
+								<div id="ollamaKeepAlive" title="Time to keep the model in memory; -1 unlimited. In minutes">
+									⏱️<span data-translate="ollama-model">Keep-alive model time (minutes)</span> <input type="number" min="-1" max="99999999" value="5" data-numbersetting="ollamaKeepAlive" />
+								</div>
+								
+								<div id="geminimodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-1.5-flash" data-textsetting="geminimodel" />
+										<label for="geminimodel"><span data-translate="geminimodel">&gt; Gemini Model to use</span></label>
+									</div>
+								</div>
+								<div id="chatgptmodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gpt-4o-mini" data-textsetting="chatgptmodel" />
+										<label for="chatgptmodel"><span data-translate="chatgptmodel">&gt; ChatGPT Model to use</span></label>
+									</div>
+								</div>
+								<div id="deepseekmodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: deepseek-chat" data-textsetting="deepseekmodel" />
+										<label for="deepseekmodel"><span data-translate="deepseekmodel">&gt; DeepSeek Model to use</span></label>
+									</div>
+								</div>
+								<div id="customAIModel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: fine-tuned-v1" data-textsetting="customAIModel" />
+										<label for="customAIModel"><span data-translate="customAIModel">&gt; Model to use</span></label>
+									</div>
+								</div>
+								
+								
+								
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-public-options" />
+					<label class="collapsible-label" for="wrapper-chatbot-public-options">
+						<span data-translate="public-chatbot">🤖 Chat Bot — Primary</span>
+					</label> 
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat">
+								<h3 title="Chat bots can reply to the chat"><span data-translate="local-chat-bot">Chat bot 🤖💬</span></h3>
+								<i>This bot has access to the live streaming chat and can either respond to users in chat or respond its own special chat overlay</i><br/>
+								<br>
+								<div style="display: inline-block;" title="Enable the LLM AI Bot responder.">
+									<label class="switch">
+										<input type="checkbox" id="ollama" data-setting="ollama" />
+										<span class="slider round"></span>
+									</label>
+									🚦 <span data-translate="enable-ollama-bot">Enable the LLM AI chat bot</span>
+								</div>
+								<div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="ollamabotname" class="textInput" autocomplete="off" placeholder="The default bot name is '🤖💬'" data-textsetting="ollamabotname" />
+										<label for="ollamabotname"><span data-translate="ollama-bot-name">&gt; Customize bot name</span></label>
+									</div>
+								</div>
+								<br />
+								<div  title="Do not relay bot messages">
+									<label class="switch">
+										<input type="checkbox" id="ollamaoverlayonly" data-setting="ollamaoverlayonly" />
+										<span class="slider round"></span>
+									</label>
+									🏹 <span data-translate="ollamaoverlayonly">Bot replies ONLY go to the bot overlay page</span>
+								</div>
+								<div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" id="noollamabotname" data-setting="noollamabotname" />
+											<span class="slider round"></span>
+										</label>
+										📛 <span data-translate="no-ollama-bot-name">Do not include the bot's name when responding</span>
+									</div>
+								</div>
+								<div title="By default the bot is told not if it doesn't see value in doing so. You can disable that instruction here though">
+									<div>
+										<label class="switch">
+											<input type="checkbox" id="alwaysRespondLLM" data-setting="alwaysRespondLLM" />
+											<span class="slider round"></span>
+										</label>
+										🗣️🗣 <span data-translate="alwaysRespondLLM">Do not screen out any of the bot's replies</span>
+									</div>
+								</div>
+								<div>
+									<div class="textInputContainer" style="width: 95%;" title="Leave empty to trigger always. The bot may however still choose to not respond on its own though.">
+										<input type="text" id="bottriggerwords" class="textInput" autocomplete="off" placeholder="eg: bot, !help" data-textsetting="bottriggerwords" />
+										<label for="bottriggerwords"><span data-translate="ollama-bot-name">&gt; List of words to trigger bot</span></label>
+									</div>
+								</div>
+								<div title="There's a minimum of 5-seconds by default" style="margin:5px 0">
+									<span data-translate="custom-ollama-rate">
+										🐢 Rate limit for responses per tab / source
+										<input type="number" style="max-width: 7ch;" step="1000" max="9999999" min="5000" value="5000" size="6" data-numbersetting="ollamaRateLimitPerTab" />ms
+									</span>
+								</div>
+								<div style="display: inline-block;" title="Include message history as context for the bot. Will slow things down..">
+									<label class="switch">
+										<input type="checkbox" id="llmcontext" data-setting="nollmcontext" />
+										<span class="slider round"></span>
+									</label>
+									🚫🗄️ <span data-translate="nollmcontext">Do not include past message context</span>
+								</div>
+								<div style="display: inline-block;" title="Include chat summaries with past context">
+									<label class="switch">
+										<input type="checkbox" id="llmsummary" data-setting="llmsummary" />
+										<span class="slider round"></span>
+									</label>
+									📈 <span data-translate="llmsummary">Include chat summaries to chat bot</span>
+								</div>
+								<div style="display: inline-block;" title="Include chat summaries with past context">
+									<label class="switch">
+										<input type="checkbox" id="allowLLMSummary" data-setting="allowLLMSummary" />
+										<span class="slider round"></span>
+									</label>
+									📔 <span data-translate="allowLLMSummary">Users can trigger an AI chat <b>!summary</b></span>
+								</div>
+								<div style="display: inline-block;" title="The bot will only ever respond to mods">
+									<label class="switch">
+										<input type="checkbox" id="modLLMonly" data-setting="modLLMonly" />
+										<span class="slider round"></span>
+									</label>
+									👩‍🏫 <span data-translate="modLLMonly">Will respond to Moderators only</span>
+								</div>
+								<!-- <div style="display: inline-block;" title="Text to speech bot messages">
+									<label class="switch">
+										<input type="checkbox" id="ollamatts" data-setting="ollamatts" />
+										<span class="slider round"></span>
+									</label>
+									🗣️ <span data-translate="enable-ollamatts-bot">Enable TTS for the chat bot</span>
+									<i>This requires the bot overlay page to be opened. <a id="botlink" style="color:lightblue;" target="_blank">[BOT OVERLAY PAGE HERE]</a></i>
+								</div> -->
+								<br />
+								
+								<div class="textInputContainer" style="width: 95%;">
+									<textarea id="ollamaprompt" class="textInput" style="height:80px" autocomplete="off" placeholder="Enter additional instructions or context for the bot (e.g., 'You are a shopping assistant for a YouTube stream; only respond if you think it's important')" data-textsetting="ollamaprompt"></textarea>
+									<label for="ollamaprompt">
+										<span data-translate="ollamaprompt">&gt; Additional Bot Instructions (Optional)</span>
+									</label>
+								</div>
+								<h3>Give the above chat bot access to additional custom knowledge that you can provide</h3>
+								<br>
+								<div style="display: inline-block;" title="Enable the RAG mode, which has the LLM bot access a local database containing additional knowledge that if may reference in its responses.">
+									<label class="switch">
+										<input type="checkbox" id="ollamaRagEnabled" data-setting="ollamaRagEnabled" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="enable-ragEnabled-bot">Enable the custom knowledge-base (RAG)</span> 
+								</div>
+								<br />
+								<div id="ragFileManagement" style="display: none; margin-top: 10px;" title="A list of uploaded files that will populate the knowledge database, along with any progress state">
+									<div>
+										<button class="glowingButton" style="width: 160px; margin-left: 0px;" data-action="uploadRAGfile" title="Ideally, plain text or markdown files should be used">
+											<span data-translate="add-another-rag-file">Add a resource file</span>
+										</button>
+										<button class="glowingButton" style="width: 160px; margin-left: 0px;" data-action="clearRag" title="This will remove the local database of knowledge and delete upload files">
+											<span data-translate="clear-rag">Clear all</span>
+										</button>
+									</div>
+									<h4>Custom knowledge-base - File Management</h4>
+									<div id="ragFileList"></div>
+									<div>
+										<input type="checkbox" id="enhancedProcessing" checked>
+										<label for="enhancedProcessing">Use enhanced processing (may work better with multiple documents)</label>
+									</div>
+									<br>
+									<span data-translate="works-better-when"><i>💁‍ tip: The quality of data uploaded will impact results. Too much data may be harmful.</i></span> 
+								</div>
+							</div>
+							
+						</div>
+					</div>
+                </div>
+            </div>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-message-tts-options" />
+					<label class="collapsible-label" for="wrapper-chatbot-message-tts-options">
+						<span data-translate="message---tts">🗣️ Overlay and TTS for Chat Bot</span>
+					</label>  
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat">
+								<h3><span data-translate="local-censor-bot">Primary Chat Bot</span></h3>
+							
+								<div class="link" style="margin:0;" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
+									<div id="chatbot" data-raw="" class="single_message">
+										<a target="_blank" id="chatbotlink" href="https://beta.socialstream.ninja/bot.html">https://beta.socialstream.ninja/bot.html</a>
+									</div>
+								</div>
+								
+								<i>The overlay page for the chat bot is optional. While it can be used to show messages from the bot, and offers TTS support, you do not need it open to have the bot respond to users in chat, for example.</i>
+							</div>
+							
+							
+							<div class="options_group streaming_chat">
+								<!-- Main TTS Toggle -->
+								<h4>Enable Text to Speech</h4>
+								<div style="display: inline-block;" title="Text to speech bot messages">
+									<label class="switch">
+										<input type="checkbox" id="ollamatts" data-setting="ollamatts" />
+										<span class="slider round"></span>
+									</label>
+									🗣️ <span data-translate="enable-ollamatts-bot">Enable TTS for the chat bot</span>
+									<i>Note: Text to Speech for the chat bot requires the bot's overlay page to be opened</i>
+								</div>
+							</div>
+							
+							<!-- Global TTS Behavior Options -->
+							<div class="options_group tts-behavior-options">
+								<h4>TTS Behaviors</h4>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param10="readouturls" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="read-out-urls">🗣️ Read out URLs rather than saying "link". </span>
+								</div>
+							</div>
+							
+							<div class="options_group tts-behavior-options">
+								<h4>More TTS options</h4>
+								
+								<div title="The volume has a max of 1.0 (100%)">
+									<label class="switch">
+										<input type="checkbox" data-param10="volume" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="system-tts-volume">
+										🔉 Volume of speech
+										<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="1.0" size="5" data-numbersetting10="volume" />
+									</span>
+								</div>
+							</div>
+						</div>
+						
+						
+						<div class="tts-provider-selection" style="margin:0 10px 10px 10px">
+							<h3>Text-to-Speech Service Provider</h3>
+							<select id="ttsProvider10" data-optionsetting10="ttsProvider" class="textInput">
+								<option selected value="system">System TTS</option>
+								<option value="elevenlabs">ElevenLabs</option>
+								<option value="google">Google Cloud</option>
+								<option value="speechify">Speechify</option>
+							</select>
+						</div>
+						
+						<div id="ttsButton10" class="hidden"></div>
+						
+						<div class="tts-provider-options options_group" id="systemTTS10">
+							<h4>Built-in System TTS Options</h4>
+							<i>note: the free built-in TTS plays out via the default audio device. <a style="color:lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
+							<br /><br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="lang" data-del10="lang,voice"/>
+									<span class="slider round"></span>
+								</label>
+								<select id="systemLanguageSelect10" data-optionparam10="lang" title="Select the system TTS language"></select>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="rate" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="system-tts-rate">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" 
+										size="5" data-numbersetting10="rate" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="pitch" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="system-tts-pitch">
+									🎵 Pitch
+									<input type="number" style="max-width: 6ch;" step="0.1" max="2" min="0.1" value="1.0" 
+										size="5" data-numbersetting10="pitch" />
+								</span>
+							</div>
+						</div>
+						<!-- ElevenLabs TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="elevenlabsTTS10">
+							<h4>ElevenLabs TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="elevenLabsKey10" class="textInput instant" autocomplete="off" 
+									placeholder="Your ElevenLabs API Key" data-textparam10="elevenlabskey" />
+								<label for="elevenLabsKey">
+									<span data-translate="elevenlabs-api-key">ElevenLabs API Key</span>
+								</label>
+							</div>
+							<!-- Voice Selection -->
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="text" id="elevenLabsVoiceID10" class="textInput instant" autocomplete="off" placeholder="e.g., VR6AewLTigWG4xSOukaG" data-textparam10="voice11" />
+								<label for="elevenLabsVoiceID">
+									<span data-translate="elevenlabs-voice-id">ElevenLabs Voice ID</span>
+								</label>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="elevenlabsmodel" />
+									<span class="slider round"></span>
+								</label>
+								<select id="elevenlabsmodelSelect10" data-optionparam10="elevenlabsmodel">
+									<option value="eleven_multilingual_v2">eleven_multilingual_v2</option>
+									<option value="eleven_turbo_v2_5">eleven_turbo_v2_5</option>
+									<option value="eleven_turbo_v2">eleven_turbo_v2</option>
+									<option value="eleven_english_sts_v2">eleven_english_sts_v2</option>
+									<option value="eleven_multilingual_sts_v2">eleven_multilingual_sts_v2</option>
+									<option value="eleven_monolingual_v1">eleven_monolingual_v1</option>
+									<option value="eleven_multilingual_v1">eleven_multilingual_v1</option>
+								</select>
+							</div>
+							<!-- Voice Settings -->
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="elevenrate" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="elevenlabs-rate">
+									🔊 Speaking Rate
+									<input type="number" style="max-width: 6ch;" step="0.25" max="5.0" min="0.25" value="1.0" size="5" data-numbersetting10="elevenrate" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="elevenlatency" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="elevenlabs-latency">
+									🚀 ElevenLabs Latency Optimization
+									<input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="4" size="5" data-numbersetting10="elevenlatency" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="elevenstability" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="elevenlabs-stability">
+									🎯 Stability
+									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting10="elevenstability" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="elevensimilarity" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="elevenlabs-similarity">
+									🎭 Similarity Boost
+									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.75" size="5" data-numbersetting10="elevensimilarity" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="elevenstyle" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="elevenlabs-style">
+									🎨 Style
+									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting10="elevenstyle" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="elevenspeakerboost" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="elevenlabs-speaker-boost">🔊 Use Speaker Boost</span>
+							</div>
+						</div>
+						<!-- Google Cloud TTS Options -->
+						<div class="tts-provider-options options_group hidden"  id="googleTTS10">
+							<h4>Google Cloud TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="googleAPIKey10" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam10="ttskey" />
+								<label for="googleAPIKey"><span data-translate="google-api-key">Google API Key</span></label>
+							</div>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="text" id="googleVoiceName10" class="textInput instant" autocomplete="off" placeholder="e.g., en-GB-Standard-A" data-textparam10="voicegoogle" />
+								<label for="googleVoiceName"><span data-translate="google-voice-name">Google Voice Name</span></label>
+							</div>
+							<!-- Language Selection -->
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="googlelang" />
+									<span class="slider round"></span>
+								</label>
+								<select id="googleLanguageSelect10" data-optionparam10="googlelang">
+									<option value="en-US">English (US)</option>
+									<option value="en-GB">English (UK)</option>
+									<option value="en-AU">English (Australia)</option>
+									<option value="es-ES">Spanish (Spain)</option>
+									<option value="es-US">Spanish (US)</option>
+									<option value="fr-FR">French</option>
+									<option value="de-DE">German</option>
+									<option value="it-IT">Italian</option>
+									<option value="ja-JP">Japanese</option>
+									<option value="ko-KR">Korean</option>
+									<option value="pt-BR">Portuguese (Brazil)</option>
+									<option value="hi-IN">Hindi</option>
+								</select>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="googlerate" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="google-tts-rate">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.25" value="1.0" 
+										size="5" data-numbersetting="googlerate" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="googlepitch" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="google-pitch">
+									🎵 Pitch
+									<input type="number" style="max-width: 6ch;" step="0.1" max="20" min="-20" value="0" size="5" data-numbersetting="googlepitch" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="googleaudioprofile" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="google-audio-profile">
+									🎚️ Audio Profile
+									<select data-optionparam10="googleaudioprofile">
+										<option value="handset-class-device">Handset</option>
+										<option value="wearable-class-device">Wearable</option>
+										<option value="telephony-class-application">Home Assistant</option>
+										<option value="large-automotive-class-device">Car Kit</option>
+										<option value="headphone-class-device">Headphone</option>
+										<option value="small-bluetooth-speaker-class-device">Small Speaker</option>
+										<option value="medium-bluetooth-speaker-class-device">Medium Speaker</option>
+										<option value="large-home-entertainment-class-device">Large Speaker</option>
+									</select>
+								</span>
+							</div>
+							
+						</div>
+						<!-- Speechify TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="speechifyTTS10">
+							<h4>Speechify TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="speechifyAPIKey10" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam10="speechifykey" />
+								<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
+							</div>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="text" id="speechifyVoiceID10" class="textInput instant" autocomplete="off" placeholder="e.g., henry" data-textparam10="voicespeechify" />
+								<label for="speechifyVoiceID"><span data-translate="speechify-voice-id">Speechify Voice ID</span></label>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="speechifyspeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="speechify-speed">
+									⚡ Speed
+									<input type="number" style="max-width: 6ch;" step="0.1" max="3" min="0.1" value="1.0" size="5" data-numbersetting10="speechifyspeed" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="speechifymodel" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="speechify-model">
+									🤖 Model
+									<select data-optionparam10="speechifymodel">
+										<option value="simba-english">English</option>
+										<option value="simba-multilingual">Multilingual</option>
+									</select>
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="speechifylang" />
+									<span class="slider round"></span>
+								</label>
+								<select id="speechifyLanguageSelect10" data-optionparam10="speechifylang">
+									<option value="en-US">English (US)</option>
+									<option value="en-GB">English (UK)</option>
+									<option value="es">Spanish</option>
+									<option value="fr">French</option>
+									<option value="de">German</option>
+									<option value="it">Italian</option>
+								</select>
+							</div>
+						</div>
+					</div>
+                </div>
+            </div>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-Censor-options" />
+					<label class="collapsible-label" for="wrapper-chatbot-Censor-options">
+						<span data-translate="Censor-chatbot">🤬 Global — Censor Bot</span>
+					</label> 
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat">
+								<h2><span data-translate="local-censor-bot">Censor bot options 🤖🚫🤬</span></h2>
+								<i>Does not respond to chat, but has access to the chat. It can censor, filter, and sanitize incoming live chat message</i><br/>
+								<br>
+								<div>
+									<div style="display: inline-block;" title="Use the bot to moderate messages, deleting messages that it thinks aren't fit. It will skip messages if it can't keep up.">
+										<label class="switch">
+											<input type="checkbox" id="ollamaCensorBot" data-setting="ollamaCensorBot" />
+											<span class="slider round"></span>
+										</label>
+										🚦 <span data-translate="enable-censor-bot">Enable the censor bot. <i>(non-blocking by default)</i></span> 
+									</div>
+								</div>
+								<div>
+									<div style="display: inline-block;" title="Only approved messages get thru, but this may slow things down and messages will get skipped.">
+										<label class="switch">
+											<input type="checkbox" id="ollamaCensorBotBlockMode" data-setting="ollamaCensorBotBlockMode" />
+											<span class="slider round"></span>
+										</label>
+										🤚 <span data-translate="censor-bot-hold">Block messages until approved by the censor bot</span>
+									</div>
+								</div>
+							</div>
+							
+						</div>
+					</div>
+                </div>
+            </div>
+			
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-private-options" />
+					<label class="collapsible-label" for="wrapper-chatbot-private-options">
+						<span data-translate="private-chatbot">🐕‍🦺 Chat Bot — Private Interface</span>
+					</label> 
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat">
+								<h2 style="margin:0;">Standalone one-on-one chat bot</h2>
+								
+								
+								<div class="link" style="margin:0;" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
+									<div id="privatechatbot" data-raw="" class="single_message">
+										<a target="_blank" id="privatechatbotlink" href="https://beta.socialstream.ninja/chatbot.html">https://beta.socialstream.ninja/chatbot.html</a>
+									</div>
+								</div>
+								
+								<i>This is different than the chat bot overlay. This allows for private 1 on 1 conversation with your both on a dedicated page, just in case you want to talk privately. It does not have access to the RAG knowledge dataset currently or your other chat histories.</i><br/><br/>
+								<div style="display:inline-block;" title="Allow for private communication with the chat bot. Currently doesn't have access to RAG.">
+									<label class="switch">
+										<input type="checkbox" id="allowChatBot" data-setting="allowChatBot" />
+										<span class="slider round"></span>
+									</label>
+									💬 <span data-translate="enable-ollama-chat-bot-external">Enable private chat bot option</span>
+								</div>
+							</div>
+							
+						</div>
+					</div>
+                </div>
+            </div>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-cohost-options" />
+					<label class="collapsible-label" for="wrapper-chatbot-cohost-options">
+						<span data-translate="cohost-chatbot">🙂 Multimodal AI Co-Host</span>
+					</label> 
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat">
+								<h3>A virtual co-host that can both listen, see, and talk back</h3>
+								
+								<div class="link" style="margin:0;" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
+									<div id="cohost" data-raw="" class="single_message">
+										<a target="_blank" id="cohostlink" href="https://beta.socialstream.ninja/cohost.html">https://beta.socialstream.ninja/cohost.html</a>
+									</div>
+								</div>
+								
+								<span>
+									This is a work-in-progress virtual AI co-host. It can currently view your screen, webcam, and listen to your microphone/audio. It will respond by text or audio, as you desire.<br /><br />
+									Down the road this will be able to access your live chat, start/stop your OBS stream, change scenes in OBS, handle events and interactive games with your audience, and participate in your stream as a virtual co-host.
+									
+								</span>
+							</div>
+							
+						</div>
+					</div>
+                </div>
+            </div>
+			
+			
+			
+			
 
             <div class="link" title="This link will only show the inbound emotes, bouncing them around the full page.">
                 <h2 class="emotes_wall_title">
@@ -3386,6 +4071,43 @@ input:checked + .slider:before {
                                     <input type="text" id="googlefont4" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam4="googlefont" />
                                     <label for="googlefont4"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+			
+			
+			<div class="link" title="This link shows a tally of donations recieved">
+                <h2 class="tipjar_title">
+                    <span data-translate="tipjar">Tip Jar</span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#tipjarhref" title="Jump to the tip jar link options."><span data-translate="options">[options]</span></a>
+                </h2>
+                <h3>
+                    <span data-translate="when-enabled-a-tally-tipjar">
+                        When enabled, a tally of donations receieved is kept.
+                    </span>
+                </h3>
+                <div id="tipjar" data-raw="" class="tipjar"></div>
+            </div>
+            <a href="" id="tipjarhref"></a>
+            <div class="wrapper hidden">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-general-options" />
+                    <label class="collapsible-label" for="wrapper-tipjar-general-options"><span data-translate="enable-and-customize">📊 Customize</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group tipjar">
+                                <h3><span data-translate="other-customization-options">Other customization options</span></h3>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="alignright" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="align-overly-to-the-right-side">➡️ Align overlay to the right-side </span>
+                                </div>
+								
                             </div>
                         </div>
                     </div>
@@ -4599,9 +5321,10 @@ input:checked + .slider:before {
                                 </div>
 
                                 <div id="botReplyMessages"></div>
-                                <br />
 								
                                 <h3><span data-translate="trigger-midi-note">Trigger MIDI note on command</span></h3>
+								Default Output MIDI Device:<select id="midiDeviceSelect" style="margin: 5px;" class="textInput" data-optionsetting="midiOutputDevice"></select>
+								<button id="triggerNoteBtn" class="glowingButton hidden"><span>Play Note</span></button>
                                 <div id="midiCommands"></div>
                             </div>
                         </div>
@@ -4954,249 +5677,7 @@ input:checked + .slider:before {
 						</div>
 					</div>
 				</div>
-			</div>						
-			<div class="wrapper">
-				<div class="collapsible">
-					<input type="checkbox" class="collapsible-input" id="wrapper-bots-options-ext" />
-					<label class="collapsible-label" for="wrapper-bots-options-ext">
-						<span data-translate="local-bot">🤖 AI Chat Bot (LLM)</span>
-					</label>
-					<div class="collapsible-text">
-						<div class="options">
-							<div class="options_group streaming_chat">
-							
-								<p>Using this section requires a bot service to be made available.</p>
-								<p>You can install one for free with Ollama: <a href="https://socialstream.ninja/ai" style="color:lightblue" target="_blank">Installation Guide Here</a></p>
-
-								<h3>Configure LLM API 🦙</h3>
-								
-								<div>
-									<select id="aiProvider" data-optionsetting="aiProvider" class="textInput">
-										<option selected value="ollama">Ollama (Local)</option>
-										<option value="chatgpt">ChatGPT API</option>
-										<option value="gemini">Gemini API</option>
-										<option value="deepseek">DeepSeek API</option>
-										<option value="custom">Custom API</option>
-									</select>
-								<div>
-								</div>	
-									<div id="ollamaendpoint" class="textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
-										<label for="ollamaendpoint"><span data-translate="ollama-API-endpoint">&gt; Ollama API endpoint</span></label>
-									</div>
-									
-									<div id="chatgptApiKey" class="textInputContainer hidden" style="width: 95%;">
-										<input type="password" class="textInput" autocomplete="off" placeholder="Your OpenAI API key" data-textsetting="chatgptApiKey" />
-										<label for="chatgptApiKey">&gt; OpenAI API Key</label>
-									</div>
-									
-									<div id="geminiApiKey" class="textInputContainer hidden" style="width: 95%;">
-										<input type="password"  class="textInput" autocomplete="off" placeholder="Your Google API key" data-textsetting="geminiApiKey" />
-										<label for="geminiApiKey">&gt; Google API Key</label>
-									</div>
-									
-									<div id="deepseekApiKey" class="textInputContainer hidden" style="width: 95%;">
-										<input type="password" class="textInput" autocomplete="off" placeholder="Your DeepSeek API key" data-textsetting="deepseekApiKey" />
-										<label for="deepseekApiKey">&gt; DeepSeek API Key</label>
-									</div>
-									
-									<div id="customAIEndpoint" class="hidden textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="customAIEndpoint" />
-										<label for="customAIEndpoint"><span data-translate="custom-API-endpoint">&gt; Custom OpenAI-compatible endpoint</span></label>
-									</div>
-								</div>
-								
-								<div id="ollamamodel">
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="eg: llama3.2" data-textsetting="ollamamodel" />
-										<label for="ollamamodel"><span data-translate="ollama-model">&gt; Ollama Model to use</span></label>
-									</div>
-								</div>
-								<div id="ollamaKeepAlive" title="Time to keep the model in memory; -1 unlimited. In minutes">
-									⏱️<span data-translate="ollama-model">Keep-alive model time (minutes)</span> <input type="number" min="-1" max="99999999" value="5" data-numbersetting="ollamaKeepAlive" />
-								</div>
-								
-								<div id="geminimodel" class="hidden">
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-1.5-flash" data-textsetting="geminimodel" />
-										<label for="geminimodel"><span data-translate="geminimodel">&gt; Gemini Model to use</span></label>
-									</div>
-								</div>
-								<div id="chatgptmodel" class="hidden">
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gpt-4o-mini" data-textsetting="chatgptmodel" />
-										<label for="chatgptmodel"><span data-translate="chatgptmodel">&gt; ChatGPT Model to use</span></label>
-									</div>
-								</div>
-								<div id="deepseekmodel" class="hidden">
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="eg: deepseek-chat" data-textsetting="deepseekmodel" />
-										<label for="deepseekmodel"><span data-translate="deepseekmodel">&gt; DeepSeek Model to use</span></label>
-									</div>
-								</div>
-								<div id="customAIModel" class="hidden">
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="eg: fine-tuned-v1" data-textsetting="customAIModel" />
-										<label for="customAIModel"><span data-translate="customAIModel">&gt; Model to use</span></label>
-									</div>
-								</div>
-								<h2><span data-translate="local-censor-bot">Censor bot options 🤖🚫🤬</span></h2>
-								<i>Does not respond to chat, but has access to the chat. It can censor, filter, and sanitize incoming live chat message</i><br/>
-								<br>
-								<div>
-									<div style="display: inline-block;" title="Use the bot to moderate messages, deleting messages that it thinks aren't fit. It will skip messages if it can't keep up.">
-										<label class="switch">
-											<input type="checkbox" id="ollamaCensorBot" data-setting="ollamaCensorBot" />
-											<span class="slider round"></span>
-										</label>
-										🚦 <span data-translate="enable-censor-bot">Enable the censor bot. <i>(non-blocking by default)</i></span> 
-									</div>
-								</div>
-								<div>
-									<div style="display: inline-block;" title="Only approved messages get thru, but this may slow things down and messages will get skipped.">
-										<label class="switch">
-											<input type="checkbox" id="ollamaCensorBotBlockMode" data-setting="ollamaCensorBotBlockMode" />
-											<span class="slider round"></span>
-										</label>
-										🤚 <span data-translate="censor-bot-hold">Block messages until approved by the censor bot</span>
-									</div>
-								</div>
-								<h2 title="Chat bots can reply to the chat"><span data-translate="local-chat-bot">Chat bot 🤖💬</span></h2>
-								<i>This bot has access to the live streaming chat and can either respond to users in chat or respond its own special chat overlay</i><br/>
-								<br>
-								<div style="display: inline-block;" title="Enable the LLM AI Bot responder.">
-									<label class="switch">
-										<input type="checkbox" id="ollama" data-setting="ollama" />
-										<span class="slider round"></span>
-									</label>
-									🚦 <span data-translate="enable-ollama-bot">Enable the LLM AI chat bot</span>
-								</div>
-								<div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="ollamabotname" class="textInput" autocomplete="off" placeholder="The default bot name is '🤖💬'" data-textsetting="ollamabotname" />
-										<label for="ollamabotname"><span data-translate="ollama-bot-name">&gt; Customize bot name</span></label>
-									</div>
-								</div>
-								<div>
-									<div class="textInputContainer" style="width: 95%;">
-										<label class="switch">
-											<input type="checkbox" id="noollamabotname" data-setting="noollamabotname" />
-											<span class="slider round"></span>
-										</label>
-										📛 <span data-translate="no-ollama-bot-name">Do not include the bot's name when responding</span>
-									</div>
-								</div>
-								<div title="By default the bot is told not if it doesn't see value in doing so. You can disable that instruction here though">
-									<div class="textInputContainer" style="width: 95%;">
-										<label class="switch">
-											<input type="checkbox" id="alwaysRespondLLM" data-setting="alwaysRespondLLM" />
-											<span class="slider round"></span>
-										</label>
-										🗣️🗣 <span data-translate="alwaysRespondLLM">Do not screen out any of the bot's replies</span>
-									</div>
-								</div>
-								<div>
-									<div class="textInputContainer" style="width: 95%;" title="Leave empty to trigger always. The bot may however still choose to not respond on its own though.">
-										<input type="text" id="bottriggerwords" class="textInput" autocomplete="off" placeholder="eg: bot, !help" data-textsetting="bottriggerwords" />
-										<label for="bottriggerwords"><span data-translate="ollama-bot-name">&gt; List of words to trigger bot</span></label>
-									</div>
-								</div>
-								<div title="There's a minimum of 5-seconds by default" style="margin:5px 0">
-									<span data-translate="custom-ollama-rate">
-										🐢 Rate limit for responses per tab / source
-										<input type="number" style="max-width: 7ch;" step="1000" max="9999999" min="5000" value="5000" size="6" data-numbersetting="ollamaRateLimitPerTab" />ms
-									</span>
-								</div>
-								<div style="display: inline-block;" title="Include message history as context for the bot. Will slow things down..">
-									<label class="switch">
-										<input type="checkbox" id="llmcontext" data-setting="nollmcontext" />
-										<span class="slider round"></span>
-									</label>
-									🚫🗄️ <span data-translate="nollmcontext">Do not include past message context</span>
-								</div>
-								<div style="display: inline-block;" title="Include chat summaries with past context">
-									<label class="switch">
-										<input type="checkbox" id="llmsummary" data-setting="llmsummary" />
-										<span class="slider round"></span>
-									</label>
-									📈 <span data-translate="llmsummary">Include chat summaries to chat bot</span>
-								</div>
-								<div style="display: inline-block;" title="Include chat summaries with past context">
-									<label class="switch">
-										<input type="checkbox" id="allowLLMSummary" data-setting="allowLLMSummary" />
-										<span class="slider round"></span>
-									</label>
-									📔 <span data-translate="allowLLMSummary">Users can trigger an AI chat <b>!summary</b></span>
-								</div>
-								
-								<div style="display: inline-block;" title="Text to speech bot messages">
-									<label class="switch">
-										<input type="checkbox" id="ollamatts" data-setting="ollamatts" />
-										<span class="slider round"></span>
-									</label>
-									🗣️ <span data-translate="enable-ollamatts-bot">Enable TTS for the chat bot</span>
-									<i>This requires the bot overlay page to be opened. <a id="botlink" style="color:lightblue;" target="_blank">[BOT OVERLAY PAGE HERE]</a></i>
-								</div>
-								<br />
-								<div style="display: inline-block;" title="Do not relay bot messages">
-									<label class="switch">
-										<input type="checkbox" id="ollamaoverlayonly" data-setting="ollamaoverlayonly" />
-										<span class="slider round"></span>
-									</label>
-									🏹 <span data-translate="ollamaoverlayonly">Bot replies ONLY go to the bot overlay page</span>
-								</div>
-								<br /><br />
-								
-								<div class="textInputContainer" style="width: 95%;">
-									<textarea id="ollamaprompt" class="textInput" style="height:80px" autocomplete="off" placeholder="Enter additional instructions or context for the bot (e.g., 'You are a shopping assistant for a YouTube stream; only respond if you think it's important')" data-textsetting="ollamaprompt"></textarea>
-									<label for="ollamaprompt">
-										<span data-translate="ollamaprompt">&gt; Additional Bot Instructions (Optional)</span>
-									</label>
-								</div>
-								<h3>Give the above chat bot access to additional custom knowledge that you can provide</h3>
-								<br>
-								<div style="display: inline-block;" title="Enable the RAG mode, which has the LLM bot access a local database containing additional knowledge that if may reference in its responses.">
-									<label class="switch">
-										<input type="checkbox" id="ollamaRagEnabled" data-setting="ollamaRagEnabled" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="enable-ragEnabled-bot">Enable the custom knowledge-base (RAG)</span> 
-								</div>
-								<br /><br />
-								<div id="ragFileManagement" style="display: none; margin-top: 10px;" title="A list of uploaded files that will populate the knowledge database, along with any progress state">
-									<div>
-										<button class="glowingButton" style="width: 160px; margin-left: 0px;" data-action="uploadRAGfile" title="Ideally, plain text or markdown files should be used">
-											<span data-translate="add-another-rag-file">Add a resource file</span>
-										</button>
-										<button class="glowingButton" style="width: 160px; margin-left: 0px;" data-action="clearRag" title="This will remove the local database of knowledge and delete upload files">
-											<span data-translate="clear-rag">Clear all</span>
-										</button>
-									</div>
-									<h4>Custom knowledge-base - File Management</h4>
-									<div id="ragFileList"></div>
-									<div>
-										<input type="checkbox" id="enhancedProcessing" checked>
-										<label for="enhancedProcessing">Use enhanced processing (may work better with multiple documents)</label>
-									</div>
-									<br>
-									<span data-translate="works-better-when"><i>💁‍ tip: The quality of data uploaded will impact results. Too much data may be harmful.</i></span> 
-								</div>
-								
-								<h2>Standalone one-on-one chat bot</h2>
-								<i>This is different than the above chat bot. It allows for private 1 on 1 conversation on a dedicated page, just in case you want to talk privately to it. It does not have access to the RAG knowledge dataset currently.</i><br/><br/>
-								<div style="display:inline-block;" title="Allow for private communication with the chat bot. Currently doesn't have access to RAG.">
-									<label class="switch">
-										<input type="checkbox" id="allowChatBot" data-setting="allowChatBot" />
-										<span class="slider round"></span>
-									</label>
-									💬 <span data-translate="enable-ollama-chat-bot-external">Enable private chat bot option</span> <a href="./chatbot.html" target="_blank" id="chatbotlink">[LINK TO CHATBOT]</a>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
 			</div>
-
             <div class="wrapper ssapp">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-quick-open-chats-options" />

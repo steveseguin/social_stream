@@ -3718,7 +3718,7 @@ async function sendToDestinations(message) {
 		}
 
 		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.chatmessage && message.event) {
-			if (settings.filterevents.textsetting.split(",").some(v => message.chatmessage.includes(v))) {
+			if (settings.filterevents.textsetting.split(",").some(v => (v.trim() && message.chatmessage.includes(v)))) {
 				return false;
 			}
 		}
@@ -5630,20 +5630,20 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 				  if (request.turbo) {
 						prompt = "You're an AI assistant. Keep responses limited to a few sentences.\n" + prompt;
 				  }
-				  let model = request.model || settings.ollamamodel?.textsetting || null;
+				  let model = request.model || null;
 				  const controller = new AbortController();
 				  
-				  callOllamaAPI(prompt, model, (chunk) => {
+				  callLLMAPI(prompt, model, (chunk) => {
 					sendDataP2P({ chatbotChunk: {value: chunk, target: request.target}}, UUID);
 				  }, controller, UUID, (request.images || null)).then((fullResponse) => {
 					sendDataP2P({ chatbotResponse: {value: fullResponse, target: request.target}}, UUID);
 				  }).catch((error) => {
-					console.error('Error in callOllamaAPI:', error);
-					sendDataP2P({ chatbotResponse: {value: "🚧", target: request.target}}, UUID);
+					console.error('Error in callLLMAPI:', error);
+					sendDataP2P({ chatbotResponse: {value: JSON.stringify(error), target: request.target}}, UUID);
 				  });
 				} catch(e) {
 				  console.error('Unexpected error:', e);
-				  sendDataP2P({ chatbotResponse: {value: "🚧", target: request.target}}, UUID);
+				  sendDataP2P({ chatbotResponse: {value: JSON.stringify(e), target: request.target}}, UUID);
 				}
 			}
 		}
@@ -6606,7 +6606,7 @@ const patterns = {
 	  type: 'timedMessage'
 	},
 	midiCommand: {
-	  prefixes: ['midievent', 'midicommand', 'midinote'],
+	  prefixes: ['midievent', 'midicommand', 'midinote',  'mididevice'],
 	  type: 'midiCommand'
 	},
 };
@@ -7134,18 +7134,19 @@ async function applyBotActions(data, tab = false) {
 				break; // Stop after first match
 			}
 			  
-			  // Process MIDI commands
 			const midiEvents = settings['midiCommand'] || [];
 			for (const id of midiEvents) {
 				const event = settings[`midievent${id}`];
 				const command = settings[`midicommand${id}`]?.textsetting;
 				const note = settings[`midinote${id}`]?.numbersetting;
+				const device = settings[`mididevice${id}`]?.numbersetting || "";
 				
 				if (!event?.setting || !command || !note) continue;
 				
-				if (data.chatmessage.includes(command)) {
-				  triggerMidiNote(parseInt(note));
-				  break;
+				const regex = new RegExp(`\\b${command}\\b`, 'i');
+				if (regex.test(data.chatmessage)) {
+					triggerMidiNote(parseInt(note), device);
+					break;
 				}
 			}
 		}
@@ -7559,9 +7560,14 @@ async function applyBotActions(data, tab = false) {
 	try {
 		
 		if (settings.allowLLMSummary && data.chatmessage && data.chatmessage.startsWith("!summary")){
-			return await processSummary(data);
+			if (settings.modLLMonly){
+				if (data.mod){
+					return await processSummary(data);
+				}
+			} else {
+				return await processSummary(data);
+			}
 		}
-		
 		if (settings.ollamaCensorBot){
 			try{
 				if (settings.ollamaCensorBotBlockMode){
@@ -7569,21 +7575,21 @@ async function applyBotActions(data, tab = false) {
 					if (data.chatmessage && data.chatmessage.length <= 3) {
 						// For very short messages, use the history-aware censoring
 						//try {
-							good = await censorMessageWithOllama(data); // # TODO: IMPROVE AND FIX.
+							good = await censorMessageWithLLM(data); // # TODO: IMPROVE AND FIX.
 							//good = await censorMessageWithHistory(data);
 						//} catch(e){
-						//	good = await censorMessageWithOllama(data);
+						//	good = await censorMessageWithLLM(data);
 						//}
 					} else {
 						// For longer messages, use the existing single-message censoring
-						good = await censorMessageWithOllama(data);
+						good = await censorMessageWithLLM(data);
 					}					
 					
 					if (!good){
 						return false;
 					}
 				} else {
-					censorMessageWithOllama(data);
+					censorMessageWithLLM(data);
 				}
 			} catch(e){
 				console.log(e); // ai.js file missing?
@@ -7591,7 +7597,13 @@ async function applyBotActions(data, tab = false) {
 		}
 		if (settings.ollama){
 			try{
-				processMessageWithOllama(data);
+				if (settings.modLLMonly){
+					if (data.mod){
+						processMessageWithOllama(data);
+					}
+				} else {
+					processMessageWithOllama(data);
+				}
 			} catch(e){
 				console.log(e); // ai.js file missing?
 			}
@@ -7706,7 +7718,7 @@ try {
 	log(e);
 }
 
-function triggerMidiNote(note = 64) {
+function triggerMidiNote(note = 64, device=false) {
     if (!WebMidi.enabled) {
 		try {
 			WebMidi.enable();
@@ -7716,11 +7728,23 @@ function triggerMidiNote(note = 64) {
 		}
 	}
     try {
-		WebMidi.outputs.forEach(output => {
-			//output.playNote(note);
-			output.send([0x90, note, 127]);  // Note On
-			output.send([0x80, note, 0]);    // Note Off
-		});
+		if (settings.midiDeviceSelect?.optionsetting || device){
+			const selectedOutput = WebMidi.outputs.find(
+				(output) => output.name === (device || settings.midiDeviceSelect.optionsetting)
+			);
+			if (selectedOutput) {
+				selectedOutput.send([0x90, note, 127]);  // Note On
+				selectedOutput.send([0x80, note, 0]);    // Note Off
+			} else {
+				console.warn("MIDI device not found: "+(device || settings.midiDeviceSelect.optionsetting));
+			}
+		} else {
+			WebMidi.outputs.forEach(output => {
+				//output.playNote(note);
+				output.send([0x90, note, 127]);  // Note On
+				output.send([0x80, note, 0]);    // Note Off
+			});
+		}
 	} catch(e){
 		console.warn(e);
 	}

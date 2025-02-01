@@ -70,20 +70,20 @@
 			}
 			.closeBtn {
 				position: absolute;
-				right: -15px;
+				right:-10px;
 				width: 20px;
 				background-color: #bababa;
-				padding: 3px;
-				border-radius: 50%;
+				padding: 10px;
+				border-radius: 43%;
 				height: 19px;
-				top: -20px;
+				top: -10px;
 				text-align: center;
 				border: 2px solid black;
 				cursor: pointer;
 			}
 
 			.closeBtn:hover {
-				background-color: #9a9a9a;
+				background-color: #aa8a8a;
 			}
 
 			.closeBtn:active {
@@ -3209,6 +3209,11 @@
 			var nobeephost = false;
 			if (urlParams.has("nobeephost")) {
 				nobeephost = true;
+			}
+			
+			var nobeepevent = false;
+			if (urlParams.has("nobeepevent")) {
+				nobeepevent = true;
 			}
 			
 			var nobeepmod = false;
@@ -7768,25 +7773,31 @@
 						data.chatmessage = "";
 					}
 
-					if (writer) {
-						let date = new Date();
-						date = date.toLocaleString("en-US", { hour: "numeric", minute: "numeric", second: "numeric", hour12: true });
-						let text;
-						
-						let extra = ""
-						if (saveimg){
-							extra = "\t" +  (data.chatimg || "") ;
-						}
-						
-						if ("sentiment" in data) {
-							text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + extra + "\t" + (data.sentiment || "") + "\n");
-						} else if ("karma" in data) {
-							text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + extra + "\t" + (data.karma || "") + "\n");
-						} else {
-							text = encode((data.chatname || "") + "\t" + (data.chatmessage || "") + "\t" + (showType || "") + "\t" + (date || "") + extra + "\n");
-						}
-						if (writer) {
-							writer.write(text);
+					if (writer && isStreamSetup) {
+						try {
+							const date = new Date().toLocaleString("en-US", { 
+								hour: "numeric", 
+								minute: "numeric", 
+								second: "numeric", 
+								hour12: true 
+							});
+							
+							const extra = saveimg ? `\t${data.chatimg || ""}` : "";
+							
+							let text;
+							if ("sentiment" in data) {
+								text = `${data.chatname || ""}\t${data.chatmessage || ""}\t${showType || ""}\t${date}${extra}\t${data.sentiment || ""}\n`;
+							} else if ("karma" in data) {
+								text = `${data.chatname || ""}\t${data.chatmessage || ""}\t${showType || ""}\t${date}${extra}\t${data.karma || ""}\n`;
+							} else {
+								text = `${data.chatname || ""}\t${data.chatmessage || ""}\t${showType || ""}\t${date}${extra}\n`;
+							}
+							
+							writer.write(encode(text));
+						} catch (err) {
+							console.error("Write failed:", err);
+							resetStream();
+							setupSaveToDisk(); // Attempt to reinitialize
 						}
 					}
 
@@ -8283,7 +8294,7 @@
 					});
 					
 					if (beep) { 
-						if (!(nobeepbot && bot) && !(nobeephost && host) && !(nobeepmod && mod)){
+						if (!(nobeepbot && bot) && !(nobeephost && host) && !(nobeepmod && mod) && !(nobeepevent && data.event)){
 							playtone();
 						}
 					}
@@ -8866,28 +8877,54 @@
 				traverseAndTruncate(tempDiv, maxLength);
 				return tempDiv.innerHTML;
 			}
-
+			var isStreamSetup = false;
+			
 			function setupSaveToDisk() {
-				var script = document.createElement("script");
-				script.onload = function () {
-					if (!fileStream) {
-						fileStream = streamSaver.createWriteStream("chat_" + Date.now() + ".tsv" || "sample.txt");
-						writer = fileStream.getWriter();
-					}
-					
-					window.isSecureContext &&
-						window.addEventListener("beforeunload", async evt => {
-							await writer.close();
-							writer = null;
-						});
-					window.isSecureContext &&
-						window.addEventListener("pagehide", async evt => {
-							await writer.close();
-							writer = null;
-						});
-				};
+				if (isStreamSetup) return;
+				
+				const script = document.createElement("script");
+				script.onload = initializeStream;
+				script.onerror = () => console.error("Failed to load StreamSaver");
 				script.src = "./thirdparty/StreamSaver.js";
 				document.head.appendChild(script);
+			}
+			
+			
+			function initializeStream() {
+				try {
+					if (!fileStream) {
+						const filename = `chat_${Date.now()}.tsv`;
+						fileStream = streamSaver.createWriteStream(filename);
+						writer = fileStream.getWriter();
+					}
+
+					if (window.isSecureContext) {
+						window.addEventListener("beforeunload", closeWriter);
+						window.addEventListener("pagehide", closeWriter);
+					}
+					
+					isStreamSetup = true;
+				} catch (err) {
+					console.error("Stream initialization failed:", err);
+					resetStream();
+				}
+			}
+			
+			async function closeWriter() {
+				try {
+					if (writer) {
+						await writer.close();
+						resetStream();
+					}
+				} catch (err) {
+					console.error("Error closing writer:", err);
+				}
+			}
+			
+			function resetStream() {
+				writer = null;
+				fileStream = null;
+				isStreamSetup = false;
 			}
 
 			async function overwriteFile(data = false) {

@@ -17,17 +17,31 @@
             background-color: #0000;
         }
 
-        .message-container {
-            position: relative;
-            margin-bottom: 20px;
-        }
+		.message-container {
+			position: relative;
+			margin-bottom: 20px;
+			opacity: 0;
+			transform: translateY(20px);
+			transition: opacity 0.3s ease, transform 0.3s ease;
+		}
+
+		.message-container.visible {
+			opacity: 1;
+			transform: translateY(0);
+		}
+
+		.message-container.removing {
+			opacity: 0;
+			transform: translateY(-20px);
+			transition: opacity 0.5s ease, transform 0.5s ease;
+		}
 		
 		.badges:empty, span:empty, .text:empty, .donation:empty {
 			display:none;
 		}
 
         .username-box {
-            display: inline-block;
+            display: flex;
             position: absolute;
             top: -19px;
             left: 0px;
@@ -53,27 +67,28 @@
             vertical-align: middle;
             margin-left: 0px;
         }
+		.badges {
+			margin-left: 10px;
+        }
 
-        .message {
-            display: inline-block;
-            max-height: 120px;
-            max-width: 100%;
-            background: linear-gradient(90deg, #191817, #1b1c20);
-            padding: 24px 18px 18px 18px;
-            margin-top: 22px;
-            margin-left: 15px;
-            border-radius: 10px;
-            color: #e02c53;
-            position: relative;
-            word-wrap: break-word;
-			opacity: 0;
-			transform: translateY(20px);
-			animation: slideFadeIn 0.3s ease forwards;
+		.message {
+			display: inline-block;
+			max-height: 150px;
+			max-width: 100%;
+			background: linear-gradient(90deg, #191817, #1b1c20);
+			padding: 24px 18px 18px 18px;
+			margin-top: 22px;
+			margin-left: 15px;
+			border-radius: 10px;
+			color: #e02c53;
+			position: relative;
+			word-wrap: break-word;
 		}
 
         .text {
             font-size: clamp(0.85em, 2.5vw, 1em);
             line-height: 1.4;
+			word-break: break-word;
         }
 		.badges svg, .badges img, .text svg, .text img {
 			max-width:64px;
@@ -99,6 +114,21 @@
 				opacity: 1;
 				transform: translateY(0);
 			}
+		}
+		
+		@keyframes fadeOut {
+			from {
+				opacity: 1;
+				transform: translateY(0);
+			}
+			to {
+				opacity: 0;
+				transform: translateY(-20px);
+			}
+		}
+
+		.message.fade-out {
+			animation: fadeOut 0.5s ease forwards;
 		}
     </style>
 </head>
@@ -155,17 +185,31 @@
 		messageContainer.appendChild(messageDiv);
 		
 		const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop <= chatContainer.clientHeight + 1;
-		
-		if (chatContainer.children.length >= 20) {
-			chatContainer.firstChild.style.opacity = 0;
-			setTimeout(() => chatContainer.removeChild(chatContainer.firstChild), 300);
-		}
-		
 		chatContainer.appendChild(messageContainer);
+
+		// Force reflow to ensure the transition works
+		messageContainer.offsetHeight;
+		
+		// Add visible class after a short delay to trigger the transition
+		requestAnimationFrame(() => {
+			messageContainer.classList.add('visible');
+		});
 
 		if (isAtBottom) {
 			chatContainer.scrollTop = chatContainer.scrollHeight;
 		}
+
+		// Handle removal after 10 seconds
+		setTimeout(() => {
+			messageContainer.classList.add('removing');
+			
+			// Remove from DOM after transition completes
+			setTimeout(() => {
+				if (messageContainer.parentNode) {
+					messageContainer.parentNode.removeChild(messageContainer);
+				}
+			}, 500); // Match the transition duration
+		}, 10000);
 	}
 
     // Initialize iframe for Social Stream Ninja
