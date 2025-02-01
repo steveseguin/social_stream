@@ -1118,7 +1118,10 @@
         });
     } catch (e) {}
 
-
+	let pokeTimeout = 59;
+	if (window.electronApi){
+		pokeTimeout = 10;
+	}
     var pokeMe = setInterval(function() {
         try {
             //if (chrome.runtime.id !== 1){
@@ -1129,7 +1132,7 @@
             });
             //}
         } catch (e) {}
-    }, 1000 * 60 * 59);
+    }, 1000 * 60 * pokeTimeout);
 
     var videosMuted = false;
 
