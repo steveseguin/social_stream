@@ -312,108 +312,131 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
         }
         return result.complete ? result.response : result.response + "💥";
 		
-    } else { // non-Ollama Request , but rather ChatGPT compatible APIs.
-        // Now both ChatGPT and Gemini use the same message format
-		// let ollamamodel = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
-		
-        const message = {
-            model: model,
-            messages: [{
-                role: "user",
-                content: prompt
-            }],
-            stream: callback !== null
-        };
+    // Replace the else block in callLLMAPI with:
+	} else { // non-Ollama Request, but rather ChatGPT compatible APIs
+		const message = {
+			model: model,
+			messages: [{
+				role: "user",
+				content: prompt
+			}],
+			stream: callback !== null
+		};
 
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-        };
+		const headers = {
+			'Content-Type': 'application/json',
+			'Authorization': `Bearer ${apiKey}`
+		};
 
-        try {
-            if (callback) {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify(message),
-                    signal: abortController?.signal
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let fullResponse = '';
-                let responseComplete = false;
-
-				while (true) {
-					const { done, value } = await reader.read();
-					if (done) break;
-					
-					const chunk = decoder.decode(value);
-					const isComplete = handleChunk(chunk, callback, (resp, reasoning=false) => { 
-						fullResponse += resp; 
-					}, reasoning=false);
-					
-					if (isComplete) break;
-				}
-				console.log(fullResponse);
-                return fullResponse;
-            } else {
-                const response = await fetch(endpoint, {
-					method: 'POST',
-					headers,
-					body: JSON.stringify(message),
-					signal: abortController?.signal
-				});
-
-				if (!response.ok) {
-					let errorMessage = '';
-					try {
-						const errorData = await response.json();
-						console.log("API Error Response:", errorData); // Log full error object
+		try {
+			if (typeof ipcRenderer !== 'undefined') {
+				if (callback) {
+					return new Promise((resolve, reject) => {
+						const channelId = `streaming-nodepost-${Date.now()}`;
+						let fullResponse = '';
 						
-						if (errorData.error) {
-							const error = errorData.error;
-							errorMessage = error.message || error.code || error.status || error.error;
-						} else {
-							errorMessage = errorData.message || errorData.code || errorData.status;
+						ipcRenderer.on(channelId, (event, chunk) => {
+							if (chunk === null) {
+								resolve(fullResponse);
+							} else if (typeof chunk === 'object' && chunk.error) {
+								reject(chunk);
+							} else {
+								handleChunk(chunk, callback, (resp) => { 
+									fullResponse += resp; 
+								});
+							}
+						});
+
+						ipcRenderer.send('streaming-nodepost', {
+							channelId,
+							url: endpoint,
+							body: message,
+							headers
+						});
+
+						if (abortController) {
+							abortController.signal.addEventListener('abort', () => {
+								ipcRenderer.send(`${channelId}-abort`);
+							});
 						}
-					} catch(e) {
-						errorMessage = `HTTP error! status: ${response.status}`;
+					});
+				} else {
+					const response = await fetchNode(endpoint, headers, 'POST', message);
+					
+					if (response.status !== 200) {
+						let errorMessage = '';
+						try {
+							const errorData = JSON.parse(response.data);
+							errorMessage = errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`;
+						} catch(e) {
+							errorMessage = `HTTP error! status: ${response.status}`;
+						}
+						throw new Error(errorMessage);
 					}
 
-					const debugOutput = document.getElementById('debugOutput');
-					const errorDiv = document.createElement('div');
-					errorDiv.className = 'error-message';
-					errorDiv.innerHTML = errorMessage;
-					errorDiv.style.opacity = '1';
-					debugOutput.appendChild(errorDiv);
-
-					setTimeout(() => {
-						errorDiv.style.transition = 'opacity 1s';
-						errorDiv.style.opacity = '0';
-						setTimeout(() => {
-							errorDiv.remove();
-						}, 1000); // Remove after fade completes
-					}, 60000);
-
-					throw new Error(errorMessage);
+					const data = JSON.parse(response.data);
+					return data.choices[0].message.content;
 				}
+			} else {
+				if (callback) {
+					const response = await fetch(endpoint, {
+						method: 'POST',
+						headers,
+						body: JSON.stringify(message),
+						signal: abortController?.signal
+					});
 
-				const data = await response.json();
-				return data.choices[0].message.content;
-                return data.choices[0].message.content;
-            }
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                return { aborted: true };
-            }
-            throw error;
-        }
-    }
+					if (!response.ok) {
+						throw new Error(`HTTP error! status: ${response.status}`);
+					}
+
+					const reader = response.body.getReader();
+					const decoder = new TextDecoder();
+					let fullResponse = '';
+
+					while (true) {
+						const { done, value } = await reader.read();
+						if (done) break;
+						
+						const chunk = decoder.decode(value);
+						const isComplete = handleChunk(chunk, callback, (resp) => { 
+							fullResponse += resp; 
+						});
+						
+						if (isComplete) break;
+					}
+
+					return fullResponse;
+				} else {
+					const response = await fetch(endpoint, {
+						method: 'POST',
+						headers,
+						body: JSON.stringify(message),
+						signal: abortController?.signal
+					});
+
+					if (!response.ok) {
+						let errorMessage = '';
+						try {
+							const errorData = await response.json();
+							errorMessage = errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`;
+						} catch(e) {
+							errorMessage = `HTTP error! status: ${response.status}`;
+						}
+						throw new Error(errorMessage);
+					}
+
+					const data = await response.json();
+					return data.choices[0].message.content;
+				}
+			}
+		} catch (error) {
+			if (error.name === 'AbortError') {
+				return { aborted: true };
+			}
+			throw error;
+		}
+	}
 
     async function makeRequestToOllama(currentModel) {  // ollama only api
         const isStreaming = callback !== null;
