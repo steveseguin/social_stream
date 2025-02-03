@@ -42,6 +42,17 @@
 					document.getElementById("startupbutton").style.display = "none";
 				}
 			}
+			
+			if (settings.hidePaidPromotion){
+				var style = document.createElement("style");
+				style.innerHTML = `
+				  .ytp-paid-content-overlay {
+					  display:none!important;
+				  }
+				`;
+				document.head.appendChild(style);
+			}
+	
 		}
 	});
 	
@@ -307,6 +318,7 @@
 	}
 
 	console.log("SOCIAL STREAM STATIC INJECTED");
+	
 
 	setTimeout(function(){preStartup();},1000);
 

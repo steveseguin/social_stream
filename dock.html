@@ -9320,25 +9320,47 @@
 
 				input.addEventListener("blur", function (event) {
 					if (menu.matches(":focus-within:not(:focus)") || menu.matches(":focus-within")) {
-						// if a sibling has focus, don't close and retake focus
-						input.focus(); // re-refocus text input.
+						input.focus();
 						return;
 					}
 					if (input.classList.contains("locked")) {
 						return;
 					}
-
 					event.preventDefault();
 					event.stopPropagation();
-
-					if (document.getElementById("say_hello")){
-						document.getElementById("say_hello").addEventListener("click", toggleInput);
+					
+					if (document.getElementById("say_hello")) {
+						const element = document.getElementById("say_hello");
+						
+						const handleInput = (e) => {
+							if (e) e.preventDefault();
+							toggleInput(e);
+						};
+						
+						element.addEventListener("mouseup", function(e) {
+							if (e.button === 0 || e.button === 1) {
+								handleInput(e);
+							}
+						});
+						element.addEventListener("touchend", handleInput);
 					}
 					menu.classList.add("hidden");
+					
 					setTimeout(function () {
-						// click vs hold
-						if (document.getElementById("say_hello")){
-							document.getElementById("say_hello").addEventListener("click", toggleInput);
+						if (document.getElementById("say_hello")) {
+							const element = document.getElementById("say_hello");
+							
+							const handleInput = (e) => {
+								if (e) e.preventDefault();
+								toggleInput(e);
+							};
+							
+							element.addEventListener("mouseup", function(e) {
+								if (e.button === 0 || e.button === 1) {
+									handleInput(e);
+								}
+							});
+							element.addEventListener("touchend", handleInput);
 						}
 					}, 300);
 					return false;
@@ -9384,8 +9406,20 @@
 					return false;
 				});
 
-				if (document.getElementById("say_hello")){
-					document.getElementById("say_hello").addEventListener("click", toggleInput);
+				if (document.getElementById("say_hello")) {
+					const element = document.getElementById("say_hello");
+					
+					const handleInput = (e) => {
+						if (e) e.preventDefault();
+						toggleInput(e);
+					};
+					
+					element.addEventListener("mouseup", function(e) {
+						if (e.button === 0 || e.button === 1) {
+							handleInput(e);
+						}
+					});
+					element.addEventListener("touchend", handleInput);
 				}
 			})();
 			
