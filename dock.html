@@ -3223,10 +3223,11 @@
 			
 			var stylizeEmoji = false;
 			if (urlParams.has("emoji") || urlParams.has("emojis")) {
-				stylizeEmoji = urlParams.get("emoji") || urlParams.get("emojis") || "140%";
-				document.documentElement.style.setProperty("--stylized-emoji", stylizeEmoji);
-				document.documentElement.style.setProperty("--message-line-height", "30px");
-				document.documentElement.style.setProperty("--stylized-img", "35px");
+				stylizeEmoji = urlParams.get("emoji") || urlParams.get("emojis") || "140";
+				const scale = (parseFloat(stylizeEmoji) / 100) || 1;
+				document.documentElement.style.setProperty("--stylized-emoji", `${100 * scale}%`);
+				document.documentElement.style.setProperty("--message-line-height", `${22 * scale}px`);
+				document.documentElement.style.setProperty("--stylized-img", `${scale * 21}px`);
 			}
 
 			var flexOrNotToFlex = "flex";
