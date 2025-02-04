@@ -1,0 +1,368 @@
+<!--
+Development Notes:
+- It's important that the IFRAME logic stay intact, as it is how we receieve messages
+- This code is in vanilla Javascript designed for web browsers without compiling
+- Details of the incoming message structure can be found here: https://github.com/steveseguin/social_stream/blob/main/README.md#message-structure
+ !-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow Chat Overlay</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
+<style>
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap');
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0000;
+    overflow: hidden;
+	font-family: Roboto;
+}
+
+#chat-container {
+    padding: 0;
+    max-width: 450px;
+    margin: auto;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+#chat-container::-webkit-scrollbar {
+    display: none;
+}
+
+.message {
+    background: linear-gradient(145deg, rgba(41, 24, 84, 0.85), rgba(89, 35, 119, 0.75));
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+        0 4px 20px rgba(150, 90, 255, 0.25),
+        inset 0 0 25px rgba(255, 255, 255, 0.12);
+    color: #fff;
+    transition: all 0.3s ease-in-out;
+    opacity: 0;
+    transform: translateY(-20px);
+    animation: slideFadeIn 0.5s ease forwards;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+    word-wrap: break-word;
+    max-width: 100%;
+    flex-shrink: 0;
+}
+
+.message:first-child {
+    margin-bottom: 0;
+}
+.message::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 0%,
+        rgba(255, 0, 255, 0.12) 25%,
+        transparent 50%,
+        rgba(0, 255, 255, 0.12) 75%,
+        transparent 100%
+    );
+    animation: rainbow-shine 8s linear infinite;
+    pointer-events: none;
+}
+
+.message:hover::before {
+    animation-duration: 4s;
+}
+
+@keyframes rainbow-shine {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes slideFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.name {
+    color: #fff;
+    font-size: 1.2em;
+    font-weight: 700;
+    text-shadow: 
+        0 0 10px rgba(255, 255, 255, 0.5),
+        0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.name-bg {
+    background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96c3eb, #ff6b6b);
+    padding: 6px 12px;
+    border-radius: 12px;
+    display: inline-block;
+    vertical-align: middle;
+    animation: bg-shimmer 12s linear infinite;
+    background-size: 500% 100%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes bg-shimmer {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 500% 50%; }
+}
+
+.text {
+    font-size: 1em;
+    line-height: 1.5;
+    margin: 10px 0;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+    overflow-wrap: break-word;
+}
+
+.text img {
+    max-width: 100px;
+    max-height: 24px;
+    vertical-align: bottom;
+    border-radius: 4px;
+}
+
+.donation {
+    color: #ffd700;
+    font-weight: 600;
+    text-shadow: 
+        0 0 10px rgba(255, 215, 0, 0.5),
+        0 0 20px rgba(255, 215, 0, 0.3);
+    padding: 5px 10px;
+    border-radius: 8px;
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.separator {
+    height: 2px;
+    background: linear-gradient(to right, #ff6b6b, #4ecdc4, #45b7d1, #96c3eb);
+    margin: 20px 0;
+    border-radius: 1px;
+}
+
+.membership-status {
+    color: #ffd700;
+    font-weight: 700;
+    font-size: 0.95em;
+    margin-bottom: 8px;
+    text-shadow: 
+        0 0 8px rgba(255, 215, 0, 0.6),
+        0 0 16px rgba(255, 215, 0, 0.4);
+}
+
+.large-image {
+    max-width: 100%;
+    height: auto;
+    margin-top: 10px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 15px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96c3eb, #ff6b6b);
+    padding: 3px;
+    vertical-align: middle;
+    animation: border-rainbow 6s linear infinite;
+    background-size: 500% 500%;
+    box-shadow: 0 2px 15px rgba(150, 90, 255, 0.3);
+}
+
+@keyframes border-rainbow {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-size: cover;
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.source-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    position: relative;
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+    margin: 0 5px;
+}
+
+.badge {
+    display: inline-block;
+    height: 1.2em;
+    margin-left: 5px;
+    vertical-align: middle;
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.4));
+    transition: filter 0.3s ease;
+}
+
+.badge:hover {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.6));
+}
+</style>
+</head>
+<body>
+<div id="chat-container"></div>
+<script>
+
+	var urlParams = new URLSearchParams(window.location.search);
+	var roomID = "iWWnKL28tQ";
+	
+	if (urlParams.has("session")){
+		roomID = urlParams.get("session");
+	}
+	var password = "false";
+	var featuredMode = false; // featured == selected messages only.  not featured == all messages.
+	
+	const chatContainer = document.getElementById('chat-container');
+	
+	function addMessageToOverlay(data) {
+		
+		const messageDiv = document.createElement('div');
+		messageDiv.classList.add('message');
+		if (data.mid){messageDiv.id = data.mid;}
+		data.sourceicon = "https://socialstream.ninja/sources/images/"+data.type+".png";
+		console.log(data.chatbadges);
+		
+		var chatbadges = "";
+		if (data.chatbadges) {
+			data.chatbadges.forEach(badge => {
+				if (typeof badge === "object") {
+					if (badge.type === "img" && badge.src) {
+						chatbadges += `<img class='badge' src='${badge.src}' />`;
+					} else if (badge.type === "svg" && badge.html) {
+						chatbadges += `<span class='badge svg'>${badge.html}</span>`;
+					}
+				} else {
+					chatbadges += `<img class='badge' src='${badge}' />`;
+				}
+			});
+		}
+		
+		messageDiv.innerHTML = `
+			${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : ''}
+			${data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : ''}
+			${data.sourceicon ? `<img src="${data.sourceicon}" alt="Channel Source" class="source-icon">` : ''}
+			${chatbadges}
+			${data.membership ? `<div class="membership-status">${data.membership}</div>` : ''}
+			<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>
+			${data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : ''}
+			${data.contentimg ? `<img src="${data.contentimg}" alt="Large Content" class="large-image" onerror="this.style.display='none';">` : ''}
+		`;
+		
+		Array.from(chatContainer.children).forEach(child => {
+			child.style.transform = 'translateY(' + messageDiv.offsetHeight + 'px)';
+		});
+		
+		chatContainer.prepend(messageDiv);
+		
+		// Auto-scroll to the latest message
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+		
+		while (chatContainer.children.length > 20) {
+			chatContainer.removeChild(chatContainer.lastChild);
+		}
+		
+		setTimeout(() => {
+			Array.from(chatContainer.children).forEach(child => {
+				child.style.transform = '';
+			});
+		}, 500); 
+	}
+	
+	// The IFrame allows for peer to peer mode; used by default.  It may have issues if self-hosting this page though while using OBS v31 due to same-origin strict policies in CEF
+	var iframe = document.createElement("iframe");
+	if (featuredMode){
+		iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+	} else {
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+	}
+	iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+	document.body.appendChild(iframe);
+	window.addEventListener("message", function (e) {
+		if (e.source != iframe.contentWindow) return;
+		if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+			addMessageToOverlay(e.data.dataReceived.overlayNinja);
+		}
+	});
+	
+	
+	// The Websocket mode is an alternative to using p2p mode; useful if your OBS or system refuses to use IFrames/P2P.
+	var conCon = 1;
+	var socketserver = false;
+	// localserver mode can be used via the stand-alone app; file-> enable local server, or use the publicly hosted one.
+	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+	function setupSocket(){
+		socketserver.onclose = function (){
+			setTimeout(function(){
+				conCon+=1;
+				socketserver = new WebSocket(serverURL);
+				setupSocket();
+			},100*conCon);
+		};
+		socketserver.onopen = function (){
+			conCon = 1;
+			socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+		};
+		socketserver.addEventListener('message', function (event) {
+			var resp = false
+			if (event.data){
+				var data = JSON.parse(event.data);
+				addMessageToOverlay(data);
+				if (data.get){
+					var ret = {};
+					ret.callback = {};
+					ret.callback.get = data.get
+					ret.callback.result = true;
+					socketserver.send(JSON.stringify(ret));
+				}
+			}
+		});
+	}
+	
+	if (urlParams.has("server") || urlParams.has("server2")){ // opt-in to use. Must also be enabled in the menu as well.
+		serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+		socketserver = new WebSocket(serverURL);
+		setupSocket();
+	}
+	
+</script>
+</body>
+</html>
