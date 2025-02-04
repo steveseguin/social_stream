@@ -331,10 +331,10 @@
 					for (var i = 0; i < mutation.addedNodes.length; i++) {
 						try {
 							if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
-								if (pastMessages.includes(mutation.addedNodes[i].dataset.index)){continue;}
+								//if (pastMessages.includes(mutation.addedNodes[i].dataset.index)){continue;}
 							
-								pastMessages.push(mutation.addedNodes[i].dataset.index)
-								pastMessages = pastMessages.slice(-300);
+								//pastMessages.push(mutation.addedNodes[i].dataset.index)
+								//pastMessages = pastMessages.slice(-300);
 								
 								if (SevenTV){
 									setTimeout(function(ele){
@@ -360,7 +360,7 @@
 		observer.observe(target, config);
 	}
 	
-	var pastMessages = [];
+	//var pastMessages = [];
 	var SevenTV = false;
 	
 	console.log("Social stream injected");
@@ -372,9 +372,9 @@
 					SevenTV = true;
 				}
 				var clear = document.querySelectorAll("div[data-chat-entry]");
-				for (var i = 0;i<clear.length;i++){
-					pastMessages.push(clear[i].dataset.chatEntry);
-				}
+				//for (var i = 0;i<clear.length;i++){
+				//	pastMessages.push(clear[i].dataset.chatEntry);
+				//}
 				onElementInserted(document.querySelectorAll("#chatroom-messages > div")[0], false);
 				if (document.querySelectorAll("#chatroom-messages > div").length>1){
 					onElementInserted(document.querySelectorAll("#chatroom-messages > div")[1], true);
