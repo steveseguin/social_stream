@@ -2,7 +2,7 @@
 	
 	var cachedUserProfiles = {};
 	var processedMessages = new Set(); // Add this line
-	var maxTrackedMessages = 20;
+	var maxTrackedMessages = 40;
 
 	function escapeHtml(unsafe){
 		try {
