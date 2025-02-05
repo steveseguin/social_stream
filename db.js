@@ -50,33 +50,61 @@ class MessageStoreDB {
         return this.db;
     }
 
-    async addMessage(message) {
-        const db = await this.ensureDB();
-        const now = Date.now();
+	async addMessage(message) {
+		const db = await this.ensureDB();
+		const now = Date.now();
 		
-		delete message.id; // this will conflict with the id in the database if we include it.
-        
-        const messageData = {
-            ...message,
-            timestamp: now,
-            expiresAt: now + (this.daysToKeep * MS_PER_DAY)
-        };
+		const cloned = {...message};
+		
+		if (cloned.id){
+			cloned.mid = cloned.id;
+			delete cloned.id;   // Remove id as it will be auto-generated
+		}
+		
+		const messageData = { 
+			...cloned,
+			timestamp: now,
+			expiresAt: now + (this.daysToKeep * MS_PER_DAY)
+		};
 
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(this.storeName, 'readwrite');
-            const store = tx.objectStore(this.storeName);
-            
-            const request = store.add(messageData);
-            
-            request.onsuccess = () => {
-                this.updateCache(messageData);
-                resolve(messageData);
-            };
-            
-            request.onerror = () => reject(request.error);
-        });
-    }
+		return new Promise((resolve, reject) => {
+			const tx = db.transaction(this.storeName, 'readwrite');
+			const store = tx.objectStore(this.storeName);
+			
+			const request = store.add(messageData);
+			
+			request.onsuccess = () => {
+				// Get the auto-generated ID from the request
+				messageData.id = request.result;
+				message.idx = request.result;;
+				this.updateCache(messageData);
+				resolve(request.result); 
+			};
+			
+			request.onerror = () => reject(request.error);
+		});
+	}
 
+	async updateMessage(idx, updatedResponse) {
+		if (!idx || !updatedResponse) return null;
+		
+		const db = await this.ensureDB();
+		
+		return new Promise((resolve, reject) => {
+			const tx = db.transaction(this.storeName, 'readwrite');
+			const store = tx.objectStore(this.storeName);
+			
+			// Put the updated message back
+			const putRequest = store.put({...updatedResponse, id:idx});
+			
+			putRequest.onsuccess = () => {
+				this.updateCache(updatedResponse);
+				resolve(updatedResponse);
+			};
+			
+			putRequest.onerror = () => reject(putRequest.error);
+		});
+	}
     updateCache(message) {
         const { recent, userMessages } = this.cache;
         
@@ -210,8 +238,8 @@ async function getLastMessagesDB(limit = 10) {
 
 // Compatibility function for addMessageDB
 async function addMessageDB(message) {
-    if (settings?.disableDB) return;
-    await messageStoreDB.addMessage(message);
+    if (settings?.disableDB) return null;
+    return await messageStoreDB.addMessage(message);
 }
 
 // Compatibility function for getMessagesDB

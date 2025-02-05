@@ -948,7 +948,7 @@ async function processSummary(data){
 	return data
 }
 
-async function processMessageWithOllama(data) {
+async function processMessageWithOllama(data, idx=null) { 
   if (!data.tid) return;
   
   const currentTime = Date.now();
@@ -1048,6 +1048,20 @@ async function processMessageWithOllama(data) {
         sendMessageToTabs(msg);
         lastResponseTime[data.tid] = Date.now();
       }
+	  data.botResponse = response;
+	  
+	  // Store the bot response in the database
+      if (data.idx && response) {
+		if (typeof data.idx == "function"){
+			let idx = await Promise.resolve(data.idx);
+			delete data.idx;
+			await messageStoreDB.updateMessage(idx, data);
+		} else {
+			let idx = data.idx;
+			delete data.idx;
+			await messageStoreDB.updateMessage(idx, data);
+		}
+	  } 
     }
 
   } catch (error) {
@@ -1076,6 +1090,9 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 		// Get context first
 		
 		const context = await ChatContextManager.getContext(data);
+		
+		console.log(data);
+		console.log(context);
 		
 		// Add context elements
 		if (context.chatSummary) {
@@ -2388,6 +2405,9 @@ const ChatContextManager = { // summary and chat context
         if (settings?.llmsummary && this.needsSummary()) {
             summary = await this.getSummary();
         }
+		
+		console.log(recentMessages);
+		console.log(userHistory);
 
         const processedContext = {
             recentMessages: this.messageToLLMString(recentMessages),
@@ -2437,6 +2457,11 @@ const ChatContextManager = { // summary and chat context
 
     messageToLLMString(messages, shorten=false) {
         if (!Array.isArray(messages) || !messages.length) return '';
+		
+		let botname = "Bot (🤖💬)";
+		if (settings.ollamabotname?.textsetting) {
+		  botname = settings.ollamabotname.textsetting.trim();
+		}
         
         return messages
             .map((msg, index) => {
@@ -2445,13 +2470,14 @@ const ChatContextManager = { // summary and chat context
                 const timeAgo = this.getTimeAgo(msg.timestamp);
                 const donation = msg.hasDonation ? ` (Donated ${msg.hasDonation})` : '';
                 const message = this.sanitizeMessage(msg, index > 20);
-                
-                if (!message && !donation) return '';
-                
-				if (shorten){
-					 return `\n${message}${donation} - ${timeAgo}`;
+                const botResponse = ""; // msg.botResponse ? `\n${botname} replied: ${msg.botResponse}` : ''; // temporarily disable this.
+				
+				if (!message && !donation) return '';
+				
+				if (shorten) {
+					return `\n${message}${donation}${botResponse} - ${timeAgo}`;
 				}
-				return `\n${msg.chatname} of ${msg.type.charAt(0).toUpperCase() + msg.type.slice(1)}${donation} said ${timeAgo}: ${message}`;
+				return `\n${msg.chatname} of ${msg.type.charAt(0).toUpperCase() + msg.type.slice(1)}${donation} said ${timeAgo}: ${message}${botResponse}`;
                 
             })
             .filter(Boolean)

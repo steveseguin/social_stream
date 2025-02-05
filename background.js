@@ -2973,6 +2973,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "flipYoutube") {
 				pushSettingChange();
 			}
+			if (request.setting == "hidePaidPromotion") {
+				pushSettingChange();
+			}
 			if (request.setting == "fancystageten") {
 				pushSettingChange();
 			}
@@ -3807,7 +3810,7 @@ async function sendToDestinations(message) {
 	sendToPost(message);
 	sendToDiscord(message);  // donos only
 	if (message.chatmessage || message.hasDonation || message.chatname){
-		addMessageDB(message); // messages only to avoid spamming events
+		message.idx = await addMessageDB(message);
 	}
 	return true;
 }
