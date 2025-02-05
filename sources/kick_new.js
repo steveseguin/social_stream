@@ -1,7 +1,9 @@
 (function () {
 	
 	var cachedUserProfiles = {};
-	
+	var processedMessages = new Set(); // Add this line
+	var maxTrackedMessages = 20;
+
 	function escapeHtml(unsafe){
 		try {
 			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
@@ -151,20 +153,53 @@
 		});
 	}
 	
+	function clearMessageTracking() {
+	  processedMessages.clear();
+	}
+	
 	function sleep(ms) {
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 	
-	async function processMessage(ele){	// twitch
+	var counter = 1;
 	
+	async function processMessage(ele){	// twitch
+	  if (!ele || !ele.isConnected) return;
+	  if (ele.matched){return;}
+	  ele.matched = true;
+	  let sibling = ele.nextElementSibling;
+	  let nextCount = 0;
+	  while(sibling) {
+		nextCount++;
+		if (nextCount>5){return;}
+		if (sibling.matched){return;}
+		sibling = sibling.nextElementSibling;
+	  }
+	  
+	  let messageId = "";
+	  try {
+		  const content = ele.textContent || "";
+		  messageId = `${content.slice(0, 100)}`;
+		
+		if (processedMessages.has(messageId)) return;
+		
+		processedMessages.add(messageId);
+		
+		if (processedMessages.size > maxTrackedMessages) {
+		  const entriesToRemove = processedMessages.size - maxTrackedMessages;
+		  const entries = Array.from(processedMessages);
+		  for (let i = 0; i < entriesToRemove; i++) {
+			processedMessages.delete(entries[i]);
+		  }
+		}
+		
+	  } catch(e) {
+		return;
+	  }
+		
 	  if (settings.delaykick){
 		  await sleep(3000);
 	  }
-	
-	  if (!ele){return;}
-	  
-	  if (!ele.isConnected){return;}
-	  
 	  
 	  if (settings.customkickstate) {
 		return;
@@ -331,11 +366,6 @@
 					for (var i = 0; i < mutation.addedNodes.length; i++) {
 						try {
 							if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
-								//if (pastMessages.includes(mutation.addedNodes[i].dataset.index)){continue;}
-							
-								//pastMessages.push(mutation.addedNodes[i].dataset.index)
-								//pastMessages = pastMessages.slice(-300);
-								
 								if (SevenTV){
 									setTimeout(function(ele){
 										processMessage(ele);
@@ -368,6 +398,7 @@
 		if (document.querySelectorAll("#chatroom-messages > div").length){
 			clearInterval(xxx);
 			setTimeout(function(){
+				clearMessageTracking();
 				if (document.getElementById("seventv-extension")){
 					SevenTV = true;
 				}
