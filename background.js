@@ -10158,11 +10158,7 @@ async function selectTickerFile() {
 	if (!isSSAPP){
 		fileHandleTicker = fileHandleTicker[0];
 	}
-	
-	//try {
-	//	fileContentTicker = await fileHandleTicker[0].getFile();
-	//	fileContentTicker = await fileHandleTicker.text();
-	//} catch (e) {}
+	 
 	try {
 		await loadFileTicker();
 	} catch(e){}

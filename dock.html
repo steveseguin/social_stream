@@ -797,6 +797,7 @@
 
 			.hl-badges {
 				margin-left: 4px;
+				vertical-align: text-bottom;
 			}
 			.hl-badges:first-child {
 				margin-left: 0;
@@ -866,9 +867,7 @@
 			.horizontal .compactmode.time-arrived {
 				margin: auto 0;
 			}
-			.larger-emojis:not(.expand) .hl-message {
-				line-height: 34px !important;
-			}
+			
 
 			.horizontal .highlight-chat.larger-emojis {
 				line-height: 30px;
@@ -901,6 +900,7 @@
 				height: var(--stylized-img);
 				max-width: calc(var(--stylized-img) * 3);
 				max-height: var(--stylized-img);
+				vertical-align: middle;
 			}
 
 
@@ -953,7 +953,11 @@
 
 			.notcompactmode .larger-emojis .icon {
 				margin: 5px 2px auto 1px;
-			}
+			} 
+			
+			.notcompactmode .larger-emojis > img.icon {
+				margin: 3px 2px auto 1px;
+			} 
 			
 			.notcompactmode .larger-emojis .leftside.larger-emojis .icon{
 				margin: 0px 2px auto 1px;
@@ -3226,7 +3230,7 @@
 				stylizeEmoji = urlParams.get("emoji") || urlParams.get("emojis") || "140";
 				const scale = (parseFloat(stylizeEmoji) / 100) || 1;
 				document.documentElement.style.setProperty("--stylized-emoji", `${100 * scale}%`);
-				document.documentElement.style.setProperty("--message-line-height", `${22 * scale}px`);
+				document.documentElement.style.setProperty("--message-line-height", `${21 * scale}px`);
 				document.documentElement.style.setProperty("--stylized-img", `${scale * 21}px`);
 			}
 

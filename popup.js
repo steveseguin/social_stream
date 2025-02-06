@@ -1666,7 +1666,34 @@ function update(response, sync=true){
 								var ele = document.querySelector("input[data-param6='"+key+"']");
 								if (ele){
 									ele.checked = response.settings[key].param6;
-									updateSettings(ele, sync);
+									if (!key.includes("=")){
+										if ("numbersetting6" in response.settings[key]){
+											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting6));
+										} else if (document.querySelector("input[data-numbersetting6='"+key+"']")){
+											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting6='"+key+"']").value));
+										} else {
+											updateSettings(ele, sync); 
+										}
+									} else {
+										updateSettings(ele, sync);
+									}
+								} else if (key.includes("=")){
+									var keys = key.split('=');
+									ele = document.querySelector("input[data-param6='"+keys[0]+"']");
+									log(keys);
+									log(response.settings);
+									if (ele){
+										ele.checked = response.settings[key].param6;
+										if (keys[1]){
+											var ele2 = document.querySelector("input[data-numbersetting6='"+keys[0]+"']");
+											if (ele2){
+												ele2.value = parseFloat(keys[1], keys[1]);
+											}
+											updateSettings(ele, sync, parseFloat(keys[1]));
+										} else{
+											updateSettings(ele, sync);
+										}
+									}
 								}
 							}
 							if ("param7" in response.settings[key]){
