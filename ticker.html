@@ -51,7 +51,134 @@
             opacity: 1;
         }
 		
+		/* Modern Style - Enhanced with better gradients */
+		body.modern .ticker-container {
+			--background-color: #1a1a1a;
+			--font-color: #fff;
+			--border-top: none;
+			background: linear-gradient(90deg, #1a1a1a, #2d2d2d, #1a1a1a);
+			box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+			height: 55px;
+		}
 
+		body.modern .ticker-item {
+			text-transform: uppercase;
+			letter-spacing: 1.2px;
+			font-weight: 500;
+			text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+		}
+
+		/* Corporate Style - Refined for better contrast */
+		body.corporate .ticker-container {
+			--background-color: #002b54;
+			--font-color: #ffffff;
+			--border-top: 2px solid #0066cc;
+			height: 50px;
+			background: linear-gradient(180deg, #003366, #002b54);
+		}
+
+		body.corporate .ticker-item {
+			font-size: 20px;
+			font-weight: 400;
+		}
+
+		/* Breaking News Style - Enhanced visibility */
+		body.breaking .ticker-container {
+			--background-color: #cc0000;
+			--font-color: #ffffff;
+			--border-top: none;
+			height: 65px;
+			background: linear-gradient(90deg, #b30000, #cc0000, #b30000);
+		}
+
+		body.breaking .ticker-item::before {
+			content: "BREAKING:";
+			font-weight: 700;
+			margin-right: 15px;
+			background: #ff0000;
+			padding: 3px 8px;
+			border-radius: 3px;
+		}
+
+		/* Minimal Style - Refined spacing */
+		body.minimal .ticker-container {
+			--background-color: #ffffff;
+			--font-color: #333333;
+			--border-top: 1px solid #e0e0e0;
+			height: 45px;
+			box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+		}
+
+		body.minimal .ticker-item {
+			font-size: 18px;
+			font-weight: 300;
+			letter-spacing: 0.3px;
+		}
+
+		/* Stock Market Style - Enhanced readability */
+		body.stock .ticker-container {
+			--background-color: #000000;
+			--font-color: #33ff33;
+			--border-top: 1px solid #333;
+			font-family: "Courier New", monospace;
+			background: linear-gradient(180deg, #111, #000);
+		}
+
+		body.stock .ticker-item {
+			font-size: 22px;
+			letter-spacing: 0.5px;
+			text-shadow: 0 0 10px rgba(51, 255, 51, 0.4);
+		}
+
+		/* CNN Style */
+		body.cnn .ticker-container {
+			--background-color: #cc0000;
+			--font-color: #ffffff;
+			--border-top: none;
+			height: 60px;
+			background: linear-gradient(90deg, #b30000, #cc0000);
+			border-bottom: 4px solid #990000;
+		}
+
+		body.cnn .ticker-item {
+			font-family: "Arial", sans-serif;
+			font-size: 22px;
+			font-weight: 700;
+			letter-spacing: 0.2px;
+		}
+
+		body.cnn .ticker-item::before {
+			content: "•";
+			margin: 0 15px;
+			color: #ffffff;
+			font-size: 24px;
+		}
+
+		/* FOX News Style */
+		body.fox .ticker-container {
+			--background-color: #183a52;
+			--font-color: #ffffff;
+			--border-top: none;
+			height: 55px;
+			background: linear-gradient(180deg, #003366, #183a52);
+			border-bottom: 3px solid #cc0000;
+		}
+
+		body.fox .ticker-item {
+			font-family: "Arial", sans-serif;
+			font-size: 21px;
+			font-weight: 500;
+			text-transform: uppercase;
+		}
+
+		body.fox .ticker-wrapper::before {
+			content: "ALERT";
+			background: #cc0000;
+			padding: 5px 10px;
+			margin-right: 20px;
+			font-weight: 700;
+			letter-spacing: 1px;
+		}
 		
     </style>
 </head>
@@ -152,7 +279,12 @@
 	if (urlParams.get("googlefont")) {
 		loadGoogleFont(urlParams.get("googlefont"));
 	}
-
+	
+	var style = urlParams.get('style') || 'default';
+	if (style !== 'default') {
+		document.body.classList.add(style);
+	}
+	
 	if (urlParams.has('css')){
 		var cssURL = urlParams.get('css');
 		cssURL = decodeURI(cssURL);
@@ -266,6 +398,73 @@
 				}, 50);
 				
 			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			
 			
 			startScrolling();
 		}
@@ -276,7 +475,8 @@
 		let tickerWidth = ticker.scrollWidth / 2;
 		let containerWidth = document.querySelector('.ticker-container').clientWidth;
 		let position = 0;
-		speed = 1; // Pixels per frame
+		// Remove this line as speed is already defined globally
+		// speed = 1; // Pixels per frame
 
 		function scroll() {
 			position -= speed;
