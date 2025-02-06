@@ -276,6 +276,12 @@
 		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Sora, Roboto, Avenir Next, Helvetica, Geneva, Verdana, Arial, sans-serif");
 	}
 	
+	if (urlParams.get("fontsize")){
+		document.documentElement.style.setProperty("--font-size", (parseFloat(urlParams.get("fontsize"))*100 || 140) +"%");
+		
+	}
+	
+	
 	if (urlParams.get("googlefont")) {
 		loadGoogleFont(urlParams.get("googlefont"));
 	}
