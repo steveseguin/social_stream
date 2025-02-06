@@ -17,17 +17,16 @@
 			return "";
 		}
 	}
-	
-	
+		
 	function extractKickUsername(url) {
-		const pattern = /kick\.com\/(?:popout\/)?([^/]+)(?:\/chat)?$/i;
+		const pattern = /kick\.com\/(?:popout\/)?([^/]+)(?:\/(?:chat|chatroom))?$/i;
 		const match = url.match(pattern);
 		if (match) {
-			return  match[1]
+			return match[1];
 		}
 		return false;
 	}
-	
+
 	try {
 		var kickUsername = extractKickUsername(window.location.href);
 	} catch(e){}
