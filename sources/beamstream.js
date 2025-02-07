@@ -70,52 +70,67 @@
 		return resp;
 	}
 	
+	const getNextElement = node => {
+		let sibling = node.nextSibling;
+		while (sibling && sibling.nodeType !== 1) {
+			sibling = sibling.nextSibling;
+		}
+		return sibling;
+	}
+	
 	function processMessage(ele){
-	//	console.log(ele);
-		var name="";
-		var nameEle = false;
-		
-		var root = ele.childNodes[0];
+		if (!ele){return;}
+		if (!ele.isConnected){return;}
+		if (!ele.querySelector){return;}
 		
 		try {
-			nameEle = root.nextSibling.childNodes[0];
-			name = escapeHtml(nameEle.innerText);
+		var name="";
+		var nameEle = ele.querySelector('[property="sender.name"]');
+		
+		try {
+			name = nameEle.innerText || "";
+			name = escapeHtml(name);
 		} catch(e){
-		//	console.log(e);
 			return;
 		}
 		
 		var msg = "";
 		var contentimg = "";
 		try {
-			if (nameEle.nextSibling){
-			
-				if ((nameEle.nextSibling.nodeName == "IMG") && nameEle.nextSibling.src){
-					contentimg = nameEle.nextSibling.src;
+			let images1 = getNextElement(nameEle);
+			//console.log(images1.nodeName, images1);
+			if ((images1.nodeName == "IMG") && images1.src){
+				contentimg = images1.src;
+				
+			} else if ((images1.nodeName == "VIDEO")){
+				
+				if (images1.querySelector("source[type='video/webm'][src]")?.src.endsWith(".webm")){
+					contentimg = images1.querySelector("source[type='video/webm'][src]").src;
 				} else {
-					while (nameEle.nextSibling){
-						nameEle = nameEle.nextSibling;
-						msg += getAllContentNodes(nameEle) + " ";
-					}
+					contentimg = images1.getAttribute("poster");
 				}
-			
+			} else {
+				while (nameEle.nextSibling){
+					nameEle = nameEle.nextSibling;
+					msg += getAllContentNodes(nameEle) + " ";
+				}
 			}
+			
 		}catch(e){
 		//	console.log(e);
 			return;
 		}
-		msg = msg.trim();
-		if (!msg){return;}
 		
-		var source = ele.querySelector('[property="sender.platform"][value]');
+		//console.log(contentimg);
+		
+		msg = msg.trim();
+		if (!msg && !contentimg){return;}
+		
 		
 		var chatimg = '';
 		try {
-			if ((root.nodeName == "IMG") && root.src){
-				chatimg = root.src;
-			} else {
-				chatimg = root.querySelector("img[src]").src;
-			}
+			chatimg = ele.querySelector('[property="sender.avatar"][src]')?.src || "";
+			
 		} catch(e){
 			//console.log(e);
 			chatimg = "";
@@ -133,8 +148,9 @@
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
 		data.type = "beamstream";
-		//console.log(data);
 		
+		
+		var source = ele.querySelector('[property="service"]')?.getAttribute("value") || "";
 		if (source){
 			if (settings.ignorealternatives){
 				return;
@@ -142,8 +158,12 @@
 			data.sourceImg =  "./sources/images/"+source+".png";
 		}
 		
-		pushMessage(data);
+		//console.log(data);
 		
+		pushMessage(data);
+		} catch(e){
+		//	console.error(e);
+		}
 	}
 
 	function pushMessage(data){
@@ -230,6 +250,8 @@
 		var chatContainer = document.querySelector('body')
 		if (chatContainer){
 			if (!chatContainer.marked){
+				
+				//document.querySelector('[typeof="ChatMessage"]').parentNode.childNodes.forEach(processMessage);
 				chatContainer.marked=true;
 				setTimeout(()=>{
 					onElementInserted(chatContainer);
