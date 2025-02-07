@@ -165,7 +165,7 @@
 						ele[0].parentNode.dataset.added = true;
 						document.querySelector("[data-target='channel-header-right']").appendChild(ele[0].parentNode);
 					}
-					} catch(e){
+				} catch(e){
 				}
 				
 				if (settings.collecttwitchpoints){
