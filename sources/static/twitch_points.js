@@ -141,6 +141,7 @@
 	
 	function startCheck(){
 		if (!checkReady){
+			console.log("Socialstream static injected");
 			if (settings.collecttwitchpoints){
 				try {
 					var channelPoints = document.querySelectorAll('[data-test-selector="community-points-summary"] button');
@@ -155,7 +156,11 @@
 						if (ele && ele.length==2){
 							ele[0].parentNode.style = "margin-left: 10px;cursor:pointer;";
 							ele[0].parentNode.title = "Clip this video";
-							document.querySelector("[data-target='channel-header-right']").appendChild(ele[0].parentNode)
+							
+							if (!document.querySelector("[data-target='channel-header-right'] [data-added]")){
+								ele[0].parentNode.dataset.added = true;
+								document.querySelector("[data-target='channel-header-right']").appendChild(ele[0].parentNode);
+							}
 						}
 					} catch(e){
 				}
