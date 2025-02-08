@@ -32,11 +32,11 @@
 			 .replace(/'/g, "&#039;") || "";
 	}
 	function getAllContentNodes(element) {
-		var resp = "";
+		var resp = " ";
 		
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.nodeType===3){
-				return escapeHtml(element.textContent) || "";
+				return escapeHtml(element.textContent) || " ";
 			}
 		}
 		
@@ -46,13 +46,13 @@
 					resp += getAllContentNodes(node)
 				}
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent);
+				resp += escapeHtml(node.textContent+ " ");
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
 					}
-					resp += node.outerHTML;
+					resp += node.outerHTML+" ";
 				}
 			}
 		});
@@ -64,7 +64,7 @@
 		//console.log(ele);
 		
 		let eventType = "";
-		if (ele.className.includes("joinedText")){
+		if (ele.querySelector("[class*='joinedText']")){
 			eventType = "joined";
 		}
 		
@@ -84,7 +84,10 @@
 		var msg="";
 		try {
 			if (eventType){
-				msg = getAllContentNodes(ele);
+				msg = getAllContentNodes(ele.querySelector(".pencraft.pc-opacity-90"));
+				if (msg!="joined"){
+					msg = getAllContentNodes(ele).trim();
+				}
 			} else {
 				msg = getAllContentNodes(ele.querySelector(".pencraft.pc-opacity-90"));
 			}
@@ -112,6 +115,10 @@
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
 		data.type = "substack";
+		
+		if(eventType){
+			data.event = eventType;
+		}
 		
 		pushMessage(data);
 	}
