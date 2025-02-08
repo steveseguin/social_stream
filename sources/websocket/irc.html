@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>IRC Client</title>
+    <title>IRC Client - Social Stream Ninja compatible</title>
     <style>
         body { 
             font-family: sans-serif;
@@ -305,12 +305,6 @@
 			initializeMessaging() {
 				if (this.initialized) return;
 				
-				// Create custom event for extension communication
-				this.messageEvent = new CustomEvent('IRCMessage', {
-					detail: null,
-					bubbles: true
-				});
-				
 				// Listen for messages from the extension
 				window.addEventListener('ExtensionMessage', (e) => {
 					if (e.detail && e.detail.type === 'SEND_IRC_MESSAGE') {
@@ -324,8 +318,12 @@
 			}
 
 			broadcast(messageData) {
-				this.messageEvent.detail = messageData;
-				window.dispatchEvent(this.messageEvent);
+				// Create a new CustomEvent each time
+				const messageEvent = new CustomEvent('IRCMessage', {
+					detail: messageData,
+					bubbles: true
+				});
+				window.dispatchEvent(messageEvent);
 			}
 		}
 
