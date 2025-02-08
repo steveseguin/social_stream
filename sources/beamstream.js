@@ -189,7 +189,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('#input_3').focus();
+					document.querySelector('input[type="text"][placeholder][id]').focus();
 					sendResponse(true);
 					return;
 				}
@@ -229,7 +229,9 @@
 								}
 								previousNode = nodes[i];
 								
-								processMessage(nodes[i]);
+								setTimeout(function(ele){
+									processMessage(ele);
+								},100,nodes[i]);
 								
 							}
 						}
