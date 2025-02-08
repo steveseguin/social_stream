@@ -243,14 +243,36 @@
         }
 
         function appendMessage(message) {
-            const messageArea = document.getElementById('messageArea');
-            const div = document.createElement('div');
-            div.className = 'message';
-            const timestamp = new Date().toLocaleTimeString();
-            div.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
-            messageArea.appendChild(div);
-            messageArea.scrollTop = messageArea.scrollHeight;
-        }
+			const messageArea = document.getElementById('messageArea');
+			const div = document.createElement('div');
+			div.className = 'message';
+			const timestamp = new Date().toLocaleTimeString();
+			
+			// Parse IRC message
+			let parsedMessage = parseIRCMessage(message);
+			
+			div.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+			messageArea.appendChild(div);
+			messageArea.scrollTop = messageArea.scrollHeight;
+
+			// Broadcast to extension
+			if (parsedMessage) {
+				messageBridge.broadcast({
+					type: 'irc',
+					chatname: parsedMessage.nickname || 'System',
+					chatmessage: parsedMessage.message || message,
+					textonly: true,
+					event: parsedMessage.isEvent,
+					chatbadges: '',
+					backgroundColor: '',
+					textColor: '',
+					chatimg: '',
+					hasDonation: '',
+					membership: '',
+					contentimg: ''
+				});
+			}
+		}
 
         function updateStatus(message, isError = false) {
             const status = document.getElementById('status');
@@ -273,6 +295,78 @@
 
         // Initialize settings on load
         document.addEventListener('DOMContentLoaded', loadSettings);
+		
+		class MessageBridge {
+			constructor() {
+				this.initialized = false;
+				this.initializeMessaging();
+			}
+
+			initializeMessaging() {
+				if (this.initialized) return;
+				
+				// Create custom event for extension communication
+				this.messageEvent = new CustomEvent('IRCMessage', {
+					detail: null,
+					bubbles: true
+				});
+				
+				// Listen for messages from the extension
+				window.addEventListener('ExtensionMessage', (e) => {
+					if (e.detail && e.detail.type === 'SEND_IRC_MESSAGE') {
+						if (client) {
+							client.sendMessage(e.detail.message);
+						}
+					}
+				});
+
+				this.initialized = true;
+			}
+
+			broadcast(messageData) {
+				this.messageEvent.detail = messageData;
+				window.dispatchEvent(this.messageEvent);
+			}
+		}
+
+		function parseIRCMessage(raw) {
+			try {
+				if (raw.startsWith('PING') || raw.startsWith('ERROR')) {
+					return {
+						isEvent: true,
+						message: raw,
+						nickname: 'System'
+					};
+				}
+
+				const match = raw.match(/^:([^!]+)![^@]+@[^\s]+ PRIVMSG ([^\s]+) :(.+)$/);
+				if (match) {
+					return {
+						nickname: match[1],
+						channel: match[2],
+						message: match[3],
+						isEvent: false
+					};
+				}
+
+				// Handle JOIN/PART/QUIT messages
+				const eventMatch = raw.match(/^:([^!]+)![^@]+@[^\s]+ (JOIN|PART|QUIT)/);
+				if (eventMatch) {
+					return {
+						nickname: eventMatch[1],
+						message: raw,
+						isEvent: true
+					};
+				}
+
+				return null;
+			} catch (e) {
+				console.error('Error parsing IRC message:', e);
+				return null;
+			}
+		}
+		
+		const messageBridge = new MessageBridge();
     </script>
 </body>
 </html>
