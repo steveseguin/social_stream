@@ -8,41 +8,63 @@
             max-width: 800px;
             margin: 20px auto;
             padding: 0 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
         }
         #messageArea {
             height: 400px;
             overflow-y: auto;
-            border: 1px solid #ccc;
+            border: 1px solid #333;
             margin: 10px 0;
             padding: 10px;
-            background: #f9f9f9;
+            background: #2a2a2a;
         }
         .message { margin: 5px 0; }
-        .timestamp { color: #666; }
-        .nickname { font-weight: bold; }
+        .timestamp { color: #888; }
+        .nickname { font-weight: bold; color: #4a9eff; }
         input, select { 
             margin: 5px 0;
             padding: 5px;
             width: 100%;
+            background: #333;
+            color: #e0e0e0;
+            border: 1px solid #444;
         }
         button {
             padding: 8px 16px;
             margin: 5px 0;
             cursor: pointer;
+            background: #2a5a8a;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #3a6a9a;
+        }
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
         }
         #connectionForm {
-            border-bottom: 1px solid #ccc;
+            border-bottom: 1px solid #333;
             padding-bottom: 15px;
             margin-bottom: 15px;
         }
-        .error { color: red; }
-        .success { color: green; }
+        .error { color: #ff6b6b; }
+        .success { color: #6bff6b; }
         .status { font-style: italic; }
     </style>
 </head>
 <body>
     <div id="connectionForm">
         <h2>IRC Connection</h2>
+        <select id="serverSelect">
+            <option value="">Select a server...</option>
+            <option value="wss://web.libera.chat/webirc/websocket/">Libera Chat</option>
+            <option value="wss://irc.dal.net/websocket/">DALnet</option>
+            <option value="wss://irc.oftc.net:8443/">OFTC</option>
+        </select>
         <input type="text" id="serverUrl" placeholder="WebSocket URL (e.g., wss://webirc.example.com)" />
         <input type="text" id="channel" placeholder="Channel (e.g., #test)" />
         <input type="text" id="nickname" placeholder="Nickname" />
@@ -142,6 +164,32 @@
         }
 
         let client = null;
+        const STORAGE_KEY = 'irc_settings';
+
+        function saveSettings(isConnected = false) {
+            const settings = {
+                serverUrl: document.getElementById('serverUrl').value,
+                channel: document.getElementById('channel').value,
+                nickname: document.getElementById('nickname').value,
+                serverSelect: document.getElementById('serverSelect').value,
+                isConnected
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        }
+
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            if (settings.serverUrl) {
+                document.getElementById('serverUrl').value = settings.serverUrl;
+                document.getElementById('channel').value = settings.channel || '';
+                document.getElementById('nickname').value = settings.nickname || '';
+                document.getElementById('serverSelect').value = settings.serverSelect || '';
+                
+                if (settings.isConnected && settings.serverUrl && settings.channel && settings.nickname) {
+                    connect();
+                }
+            }
+        }
 
         function connect() {
             const serverUrl = document.getElementById('serverUrl').value;
@@ -165,6 +213,9 @@
 
             client.onStatus((status, isError) => {
                 updateStatus(status, isError);
+                if (!isError) {
+                    saveSettings(true);
+                }
             });
 
             client.connect();
@@ -180,6 +231,7 @@
             }
             document.getElementById('messageInput').disabled = true;
             document.getElementById('sendButton').disabled = true;
+            saveSettings(false);
         }
 
         function sendMessage() {
@@ -206,12 +258,21 @@
             status.className = 'status ' + (isError ? 'error' : 'success');
         }
 
-        // Allow sending messages with Enter key
+        // Event Listeners
         document.getElementById('messageInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         });
+
+        document.getElementById('serverSelect').addEventListener('change', function() {
+            const serverUrl = this.value;
+            document.getElementById('serverUrl').value = serverUrl;
+            saveSettings();
+        });
+
+        // Initialize settings on load
+        document.addEventListener('DOMContentLoaded', loadSettings);
     </script>
 </body>
 </html>
