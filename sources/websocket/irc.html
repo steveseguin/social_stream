@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IRC Client - Social Stream Ninja compatible</title>
+    <style>
+        body { 
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        #messageArea {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            margin: 10px 0;
+            padding: 10px;
+            background: #2a2a2a;
+        }
+        .message { margin: 5px 0; }
+        .timestamp { color: #888; }
+        .nickname { font-weight: bold; color: #4a9eff; }
+        input, select { 
+            margin: 5px 0;
+            padding: 5px;
+            width: 100%;
+            background: #333;
+            color: #e0e0e0;
+            border: 1px solid #444;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px 0;
+            cursor: pointer;
+            background: #2a5a8a;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #3a6a9a;
+        }
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+        }
+        #connectionForm {
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .error { color: #ff6b6b; }
+        .success { color: #6bff6b; }
+        .status { font-style: italic; }
+    </style>
+</head>
+<body>
+    <div id="connectionForm">
+        <h2>IRC Connection</h2>
+        <select id="serverSelect">
+            <option value="">Select a server...</option>
+            <option value="wss://web.libera.chat/webirc/websocket/">Libera Chat</option>
+            <option value="wss://irc.dal.net/websocket/">DALnet</option>
+            <option value="wss://irc.oftc.net:8443/">OFTC</option>
+        </select>
+        <input type="text" id="serverUrl" placeholder="WebSocket URL (e.g., wss://webirc.example.com)" />
+        <input type="text" id="channel" placeholder="Channel (e.g., #test)" />
+        <input type="text" id="nickname" placeholder="Nickname" />
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+        <div id="status" class="status"></div>
+    </div>
+
+    <div id="messageArea"></div>
+    
+    <div id="messageForm">
+        <input type="text" id="messageInput" placeholder="Type your message..." disabled />
+        <button onclick="sendMessage()" id="sendButton" disabled>Send</button>
+    </div>
+
+    <script>
+        class IRCClient {
+			constructor(wsUrl, nickname, channel) {
+				this.wsUrl = wsUrl;
+				this.nickname = nickname;
+				this.channel = channel;
+				this.ws = null;
+				this.messageCallback = null;
+				this.statusCallback = null;
+				this.reconnectAttempts = 0;
+				this.maxReconnectAttempts = 5;
+				this.reconnectDelay = 3000;
+				this.shouldReconnect = false;
+				this.wasConnected = false;
+			}
+
+			connect() {
+				if (this.ws?.readyState === WebSocket.CONNECTING) return;
+				
+				try {
+					this.shouldReconnect = true;
+					this.ws = new WebSocket(this.wsUrl);
+					
+					this.ws.onopen = () => {
+						this.reconnectAttempts = 0;
+						this.wasConnected = true;
+						this.send(`NICK ${this.nickname}`);
+						this.send(`USER ${this.nickname} 0 * :${this.nickname}`);
+						
+						setTimeout(() => {
+							this.send(`JOIN ${this.channel}`);
+							if (this.statusCallback) {
+								this.statusCallback('Connected and joined ' + this.channel);
+							}
+						}, 2000);
+					};
+
+					this.ws.onmessage = (event) => {
+						const message = event.data;
+						
+						if (message.startsWith('PING')) {
+							this.send('PONG' + message.substring(4));
+						}
+						
+						if (this.messageCallback) {
+							this.messageCallback(message);
+						}
+					};
+
+					this.ws.onerror = (error) => {
+						if (this.statusCallback) {
+							this.statusCallback('Error: ' + (error.message || 'Connection error'), true);
+						}
+					};
+
+					this.ws.onclose = () => {
+						const wasConnected = this.wasConnected;
+						this.wasConnected = false;
+						
+						if (this.statusCallback) {
+							this.statusCallback('Disconnected', true);
+						}
+
+						if (this.shouldReconnect) {
+							if (wasConnected) {
+								this.reconnect(0);
+							} else {
+								this.reconnect(this.reconnectDelay);
+							}
+						}
+					};
+				} catch (error) {
+					if (this.statusCallback) {
+						this.statusCallback('Error: ' + error.message, true);
+					}
+					if (this.shouldReconnect) {
+						this.reconnect(this.reconnectDelay);
+					}
+				}
+			}
+
+			reconnect(delay) {
+				if (!this.shouldReconnect) return;
+				
+				if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+					if (this.statusCallback) {
+						this.statusCallback('Failed to reconnect after multiple attempts. Please try manually reconnecting.', true);
+					}
+					return;
+				}
+
+				this.reconnectAttempts++;
+				if (this.statusCallback) {
+					this.statusCallback(`Reconnecting... Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`, true);
+				}
+
+				setTimeout(() => this.connect(), delay);
+			}
+
+			send(message) {
+				if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+					this.ws.send(message + '\r\n');
+				}
+			}
+
+			onMessage(callback) {
+				this.messageCallback = callback;
+			}
+
+			onStatus(callback) {
+				this.statusCallback = callback;
+			}
+
+			sendMessage(message) {
+				this.send(`PRIVMSG ${this.channel} :${message}`);
+			}
+
+			disconnect() {
+				this.shouldReconnect = false;
+				if (this.ws) {
+					this.send('QUIT :Leaving');
+					this.ws.close();
+				}
+			}
+		}
+
+        let client = null;
+        const STORAGE_KEY = 'irc_settings';
+
+        function saveSettings(isConnected = false) {
+            const settings = {
+                serverUrl: document.getElementById('serverUrl').value,
+                channel: document.getElementById('channel').value,
+                nickname: document.getElementById('nickname').value,
+                serverSelect: document.getElementById('serverSelect').value,
+                isConnected
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        }
+
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            if (settings.serverUrl) {
+                document.getElementById('serverUrl').value = settings.serverUrl;
+                document.getElementById('channel').value = settings.channel || '';
+                document.getElementById('nickname').value = settings.nickname || '';
+                document.getElementById('serverSelect').value = settings.serverSelect || '';
+                
+                if (settings.isConnected && settings.serverUrl && settings.channel && settings.nickname) {
+                    connect();
+                }
+            }
+        }
+
+        function connect() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const channel = document.getElementById('channel').value;
+            const nickname = document.getElementById('nickname').value;
+
+            if (!serverUrl || !channel || !nickname) {
+                updateStatus('Please fill in all fields', true);
+                return;
+            }
+
+            if (client) {
+                client.disconnect();
+            }
+
+            client = new IRCClient(serverUrl, nickname, channel);
+
+            client.onMessage(message => {
+                appendMessage(message);
+            });
+
+            client.onStatus((status, isError) => {
+                updateStatus(status, isError);
+                if (!isError) {
+                    saveSettings(true);
+                }
+            });
+
+            client.connect();
+
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendButton').disabled = false;
+        }
+
+        function disconnect() {
+            if (client) {
+                client.disconnect();
+                client = null;
+            }
+            document.getElementById('messageInput').disabled = true;
+            document.getElementById('sendButton').disabled = true;
+            saveSettings(false);
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            if (client && input.value) {
+                client.sendMessage(input.value);
+                input.value = '';
+            }
+        }
+
+        function appendMessage(message) {
+			const messageArea = document.getElementById('messageArea');
+			const div = document.createElement('div');
+			div.className = 'message';
+			const timestamp = new Date().toLocaleTimeString();
+			
+			// Parse IRC message
+			let parsedMessage = parseIRCMessage(message);
+			
+			div.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+			messageArea.appendChild(div);
+			
+			const messages = messageArea.children;
+			while (messages.length > 100) {
+				messageArea.removeChild(messages[0]);
+			}
+			
+			messageArea.scrollTop = messageArea.scrollHeight;
+
+			// Broadcast to extension
+			if (parsedMessage) {
+				messageBridge.broadcast({
+					type: 'irc',
+					chatname: parsedMessage.nickname || 'System',
+					chatmessage: parsedMessage.message || message,
+					textonly: true,
+					event: parsedMessage.isEvent,
+					chatbadges: '',
+					backgroundColor: '',
+					textColor: '',
+					chatimg: '',
+					hasDonation: '',
+					membership: '',
+					contentimg: ''
+				});
+			}
+		}
+
+        function updateStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + (isError ? 'error' : 'success');
+        }
+
+        // Event Listeners
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        document.getElementById('serverSelect').addEventListener('change', function() {
+            const serverUrl = this.value;
+            document.getElementById('serverUrl').value = serverUrl;
+            saveSettings();
+        });
+
+        // Initialize settings on load
+        document.addEventListener('DOMContentLoaded', loadSettings);
+		
+		class MessageBridge {
+			constructor() {
+				this.initialized = false;
+				this.initializeMessaging();
+			}
+
+			initializeMessaging() {
+				if (this.initialized) return;
+				
+				// Listen for messages from the extension
+				window.addEventListener('ExtensionMessage', (e) => {
+					if (e.detail && e.detail.type === 'SEND_IRC_MESSAGE') {
+						if (client) {
+							client.sendMessage(e.detail.message);
+						}
+					}
+				});
+
+				this.initialized = true;
+			}
+
+			broadcast(messageData) {
+				// Create a new CustomEvent each time
+				const messageEvent = new CustomEvent('IRCMessage', {
+					detail: messageData,
+					bubbles: true
+				});
+				window.dispatchEvent(messageEvent);
+			}
+		}
+
+		function parseIRCMessage(raw) {
+			try {
+				if (raw.startsWith('PING') || raw.startsWith('ERROR')) {
+					return {
+						isEvent: true,
+						message: raw,
+						nickname: 'System'
+					};
+				}
+
+				const match = raw.match(/^:([^!]+)![^@]+@[^\s]+ PRIVMSG ([^\s]+) :(.+)$/);
+				if (match) {
+					return {
+						nickname: match[1],
+						channel: match[2],
+						message: match[3],
+						isEvent: false
+					};
+				}
+
+				// Handle JOIN/PART/QUIT messages
+				const eventMatch = raw.match(/^:([^!]+)![^@]+@[^\s]+ (JOIN|PART|QUIT)/);
+				if (eventMatch) {
+					return {
+						nickname: eventMatch[1],
+						message: raw,
+						isEvent: true
+					};
+				}
+
+				return null;
+			} catch (e) {
+				console.error('Error parsing IRC message:', e);
+				return null;
+			}
+		}
+		
+		const messageBridge = new MessageBridge();
+    </script>
+</body>
+</html>
