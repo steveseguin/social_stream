@@ -59,3 +59,5 @@ chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(
         settings = response.settings;
     }
 });
+
+console.log("Social stream ninja injected");
