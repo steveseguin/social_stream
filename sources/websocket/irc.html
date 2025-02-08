@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IRC Client</title>
+    <style>
+        body { 
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        #messageArea {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        .message { margin: 5px 0; }
+        .timestamp { color: #666; }
+        .nickname { font-weight: bold; }
+        input, select { 
+            margin: 5px 0;
+            padding: 5px;
+            width: 100%;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px 0;
+            cursor: pointer;
+        }
+        #connectionForm {
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .status { font-style: italic; }
+    </style>
+</head>
+<body>
+    <div id="connectionForm">
+        <h2>IRC Connection</h2>
+        <input type="text" id="serverUrl" placeholder="WebSocket URL (e.g., wss://webirc.example.com)" />
+        <input type="text" id="channel" placeholder="Channel (e.g., #test)" />
+        <input type="text" id="nickname" placeholder="Nickname" />
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+        <div id="status" class="status"></div>
+    </div>
+
+    <div id="messageArea"></div>
+    
+    <div id="messageForm">
+        <input type="text" id="messageInput" placeholder="Type your message..." disabled />
+        <button onclick="sendMessage()" id="sendButton" disabled>Send</button>
+    </div>
+
+    <script>
+        class IRCClient {
+            constructor(wsUrl, nickname, channel) {
+                this.wsUrl = wsUrl;
+                this.nickname = nickname;
+                this.channel = channel;
+                this.ws = null;
+                this.messageCallback = null;
+                this.statusCallback = null;
+            }
+
+            connect() {
+                try {
+                    this.ws = new WebSocket(this.wsUrl);
+                    
+                    this.ws.onopen = () => {
+                        this.send(`NICK ${this.nickname}`);
+                        this.send(`USER ${this.nickname} 0 * :${this.nickname}`);
+                        
+                        setTimeout(() => {
+                            this.send(`JOIN ${this.channel}`);
+                            if (this.statusCallback) {
+                                this.statusCallback('Connected and joined ' + this.channel);
+                            }
+                        }, 2000);
+                    };
+
+                    this.ws.onmessage = (event) => {
+                        const message = event.data;
+                        
+                        if (message.startsWith('PING')) {
+                            this.send('PONG' + message.substring(4));
+                        }
+                        
+                        if (this.messageCallback) {
+                            this.messageCallback(message);
+                        }
+                    };
+
+                    this.ws.onerror = (error) => {
+                        if (this.statusCallback) {
+                            this.statusCallback('Error: ' + error.message, true);
+                        }
+                    };
+
+                    this.ws.onclose = () => {
+                        if (this.statusCallback) {
+                            this.statusCallback('Disconnected', true);
+                        }
+                    };
+                } catch (error) {
+                    if (this.statusCallback) {
+                        this.statusCallback('Error: ' + error.message, true);
+                    }
+                }
+            }
+
+            send(message) {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(message + '\r\n');
+                }
+            }
+
+            onMessage(callback) {
+                this.messageCallback = callback;
+            }
+
+            onStatus(callback) {
+                this.statusCallback = callback;
+            }
+
+            sendMessage(message) {
+                this.send(`PRIVMSG ${this.channel} :${message}`);
+            }
+
+            disconnect() {
+                if (this.ws) {
+                    this.send('QUIT :Leaving');
+                    this.ws.close();
+                }
+            }
+        }
+
+        let client = null;
+
+        function connect() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const channel = document.getElementById('channel').value;
+            const nickname = document.getElementById('nickname').value;
+
+            if (!serverUrl || !channel || !nickname) {
+                updateStatus('Please fill in all fields', true);
+                return;
+            }
+
+            if (client) {
+                client.disconnect();
+            }
+
+            client = new IRCClient(serverUrl, nickname, channel);
+
+            client.onMessage(message => {
+                appendMessage(message);
+            });
+
+            client.onStatus((status, isError) => {
+                updateStatus(status, isError);
+            });
+
+            client.connect();
+
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendButton').disabled = false;
+        }
+
+        function disconnect() {
+            if (client) {
+                client.disconnect();
+                client = null;
+            }
+            document.getElementById('messageInput').disabled = true;
+            document.getElementById('sendButton').disabled = true;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            if (client && input.value) {
+                client.sendMessage(input.value);
+                input.value = '';
+            }
+        }
+
+        function appendMessage(message) {
+            const messageArea = document.getElementById('messageArea');
+            const div = document.createElement('div');
+            div.className = 'message';
+            const timestamp = new Date().toLocaleTimeString();
+            div.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+            messageArea.appendChild(div);
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+
+        function updateStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + (isError ? 'error' : 'success');
+        }
+
+        // Allow sending messages with Enter key
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
