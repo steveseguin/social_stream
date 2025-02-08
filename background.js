@@ -7102,6 +7102,7 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (data.chatmessage) {
+			console.log("Chat true");
 			const botReplyEvents = settings['botReply'] || [];
 			for (const id of botReplyEvents) {
 				const event = settings[`botReplyMessageEvent${id}`];
@@ -7146,7 +7147,9 @@ async function applyBotActions(data, tab = false) {
 				
 				if (!event?.setting || !command || !note) continue;
 				
-				const regex = new RegExp(`\\b${command}\\b`, 'i');
+				const escapedCommand = command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+				const regex = new RegExp(`^${escapedCommand}\\b|\\s${escapedCommand}\\b`, 'i');
+				
 				if (regex.test(data.chatmessage)) {
 					triggerMidiNote(parseInt(note), device);
 					break;
