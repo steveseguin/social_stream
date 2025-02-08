@@ -113,6 +113,10 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "substack";
 		
+		if(eventType){
+			data.event = eventType;
+		}
+		
 		pushMessage(data);
 	}
 
