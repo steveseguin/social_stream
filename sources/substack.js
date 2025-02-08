@@ -84,12 +84,12 @@
 		var msg="";
 		try {
 			if (eventType){
-				msg = getAllContentNodes(ele.querySelector(".pencraft.pc-opacity-90"));
+				msg = getAllContentNodes(ele.querySelector(".pencraft.pc-opacity-90").trim());
 				if (msg!="joined"){
 					msg = getAllContentNodes(ele).trim();
 				}
 			} else {
-				msg = getAllContentNodes(ele.querySelector(".pencraft.pc-opacity-90"));
+				msg = getAllContentNodes(ele.querySelector(".pencraft.pc-opacity-90")).trim();
 			}
 		} catch(e){
 		}
