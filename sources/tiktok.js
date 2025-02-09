@@ -926,7 +926,7 @@
 		let target = null;
 		
 		// First try for chat room
-		if (window.location.href === "https://livecenter.tiktok.com/common_live_chat") {
+		if (window.location.href.startsWith("https://livecenter.tiktok.com/common_live_chat")) {
 			target = document.querySelector('[data-e2e]');
 			if (target) {
 				target = target.parentNode;
