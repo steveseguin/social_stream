@@ -342,6 +342,8 @@ To customize the featured chat overlay, the following URL parameters are availab
 - &swipe (will have featured messages swipe in from the left side)
 - &center (center featured messages)
 
+For managing multiple URLs and their parameters, for the main dock (streaming overlay) page, you can try this tool out: [https://socialstream.ninja/urleditor.html](https://socialstream.ninja/urleditor.html)
+
 To customize the color, font-size and styling, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the and using the featured.html file. See below:
 
 #### More advanced styling customizations
