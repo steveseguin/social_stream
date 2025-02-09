@@ -46,7 +46,7 @@
 			if (settings.hidePaidPromotion){
 				var style = document.createElement("style");
 				style.innerHTML = `
-				  .ytp-paid-content-overlay {
+				  .ytp-paid-content-overlay, .ytmPaidContentOverlayLink {
 					  display:none!important;
 				  }
 				`;
