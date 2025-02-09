@@ -128,7 +128,9 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - castr.io (https://chat.castr.io/room/XXXXXXXX)
 - tellonym.me
 - peertube (triggers on: https://*/plugins/livechat/*router/webchat/room/*)
-- IRC (via https://webchat.quakenet.org/)
+- IRC Quakenet (via https://webchat.quakenet.org)
+- IRC Libera Chat and custom IRC servers (via http://socialstream.ninja/sources/websocket/irc)
+- IRC KiwiIRC (via kiwiirc.com)
 - Tradingview.com (just the normal viewer page; no pop out)
 - rooter.gg (no pop out; just pause the video I guess)
 - loco.com (no pop out; just pause the video I guess)
@@ -179,7 +181,6 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - live.nicovideo.jp (no pop out chat)
 - bitchute.com (no pop out chat)
 - substack
-- IRC servers (http://socialstream.ninja/sources/websocket/irc)
 
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   
