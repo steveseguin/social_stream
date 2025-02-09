@@ -4540,6 +4540,11 @@
 			if (urlParams.has("stripdonations")) {
 				stripDonationData = true;
 			}
+			
+			var skipDonations = false;
+			if (urlParams.has("skipdonations")) {
+				skipDonations = true;
+			}
 
 			var clock24hr = false;
 			if (urlParams.has("24hr")) {
@@ -7621,6 +7626,10 @@
 						} else {
 							return;
 						}
+					}
+					
+					if (skipDonations && (data.hasDonation || data.donation)){
+						return;
 					}
 					
 					if (data.message && !data.chatmessage){
