@@ -524,11 +524,9 @@
 			}
 		}
 
-		chatmessage = chatmessage.trim();
-		chatmessage = chatmessage.replaceAll("=w16-h16-", "=w48-h48-"); // increases the resolution of emojis
-		chatmessage = chatmessage.replaceAll("=w24-h24-", "=w64-h64-");
-		chatmessage = chatmessage.replaceAll("=s16-", "=s48-");
-		chatmessage = chatmessage.replaceAll("=s24-", "=s48-");
+
+		
+		// https://yt3.ggpht.com/y0njK_GOHV6k7ZlW4qQbVxTt3z3Hs1eXBi2LeYJ-7hFT7KWXXKvcsl0FhYMWsHJh2VEoQvZrsko=w48-h48-c-k-nd
 
 		try {
 			chatimg = ele.querySelector("#img[src], #author-photo img[src]").src;
@@ -586,7 +584,14 @@
 			ele.querySelectorAll(".yt-live-chat-author-badge-renderer img, .yt-live-chat-author-badge-renderer svg").forEach(img => {
 				if (img.tagName.toLowerCase() == "img") {
 					var html = {};
-					html.src = img.src;
+					
+					let badgesrc = img.src.trim();
+					badgesrc = badgesrc.replaceAll("=w16-h16-", "=w48-h48-"); // increases the resolution of emojis
+					badgesrc = badgesrc.replaceAll("=w24-h24-", "=w64-h64-");
+					badgesrc = badgesrc.replaceAll("=s16-", "=s48-");
+					badgesrc = badgesrc.replaceAll("=s24-", "=s48-");
+					
+					html.src = badgesrc;
 					html.type = "img";
 					chatbadges.push(html);
 				} else if (img.tagName.toLowerCase() == "svg") {
@@ -659,6 +664,7 @@
 			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 		}
 		
+		
 		if (settings.memberchatonly && !hasMembership){
 			return;
 		}
@@ -717,6 +723,12 @@
 			return;
 		}
 		
+		chatmessage = chatmessage.trim();
+		chatmessage = chatmessage.replaceAll("=w16-h16-", "=w48-h48-"); // increases the resolution of emojis
+		chatmessage = chatmessage.replaceAll("=w24-h24-", "=w64-h64-");
+		chatmessage = chatmessage.replaceAll("=s16-", "=s48-");
+		chatmessage = chatmessage.replaceAll("=s24-", "=s48-");
+		
 		if (isHTMLElement(chatmessage)){
 			//console.error(chatmessage);
 			chatmessage = escapeHtml(chatmessage.textContent.trim());
@@ -724,6 +736,8 @@
 			//console.error(chatmessage);
 			chatmessage = "";
 		}
+		
+
 		
 
 		var data = {};
