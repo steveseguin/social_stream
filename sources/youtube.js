@@ -395,6 +395,7 @@
 	}
 
 	async function processMessage(ele, wss = true) {
+		
 		if (!ele || !ele.isConnected){
 			return;
 		}
@@ -1085,7 +1086,7 @@
 					});
 				} else {
 					setTimeout(function () {
-						onElementInserted(document.querySelector("iframe").contentWindow.document.body.querySelector("#chat-messages"), function (ele2) {
+						onElementInserted(document.querySelector("iframe").contentWindow.document.body.querySelector("#chat-messages #items.yt-live-chat-item-list-renderer"), function (ele2) {
 							setTimeout(
 								function (ele2) {
 									processMessage(ele2, false);
