@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Product QR Overlay</title>
+    <!-- QR Code library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background: rgba(0,0,0,0);
+        }
+
+        #overlay-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .product-card {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 8px;
+            padding: 12px;
+            color: white;
+            width: 180px;
+            animation: float-in 0.5s ease-out;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            grid-gap: 10px;
+        }
+
+        .product-card img.product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            grid-row: span 2;
+        }
+
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .product-card h3 {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+
+        .product-card .price {
+            color: #00ff00;
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .qr-container {
+            background: white;
+            padding: 5px;
+            border-radius: 4px;
+            margin-top: 8px;
+            grid-column: span 2;
+            width: 120px;
+            height: 120px;
+            justify-self: center;
+        }
+
+        .control-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 8px;
+            color: white;
+            z-index: 1000;
+        }
+
+        .panel-content {
+            padding: 15px;
+            display: none;
+        }
+
+        .control-panel.expanded .panel-content {
+            display: block;
+        }
+
+        .toggle-panel {
+            padding: 8px 12px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .product-btn {
+            margin: 5px;
+            padding: 8px 12px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+        }
+
+        @keyframes float-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float-out {
+            to {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay-container"></div>
+    
+    <div id="control-panel" class="control-panel">
+        <button class="toggle-panel">☰</button>
+        <div class="panel-content">
+            <h3>Product Controls</h3>
+            <div id="product-buttons"></div>
+        </div>
+    </div>
+
+    <script>
+        // Sample product database with placeholder images
+        const products = {
+            gaming_headset: {
+                name: 'Pro Gaming Headset X1',
+                price: '$79.99',
+                image: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="100%25" height="100%25" fill="%23333"%3E%3C/rect%3E%3Ctext x="50%25" y="50%25" font-family="Arial" font-size="10" fill="white" text-anchor="middle" dy=".3em"%3EHeadset%3C/text%3E%3C/svg%3E',
+                link: 'https://amazon.com/dp/XXXXX',
+                shortcut: 'h'
+            },
+            gaming_chair: {
+                name: 'Ergonomic Gaming Chair Pro',
+                price: '$299.99',
+                image: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="100%25" height="100%25" fill="%23444"%3E%3C/rect%3E%3Ctext x="50%25" y="50%25" font-family="Arial" font-size="10" fill="white" text-anchor="middle" dy=".3em"%3EChair%3C/text%3E%3C/svg%3E',
+                link: 'https://amazon.com/dp/YYYYY',
+                shortcut: 'c'
+            },
+            keyboard: {
+                name: 'RGB Mechanical Keyboard',
+                price: '$129.99',
+                image: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="100%25" height="100%25" fill="%23555"%3E%3C/rect%3E%3Ctext x="50%25" y="50%25" font-family="Arial" font-size="10" fill="white" text-anchor="middle" dy=".3em"%3EKeyboard%3C/text%3E%3C/svg%3E',
+                link: 'https://amazon.com/dp/ZZZZZ',
+                shortcut: 'k'
+            }
+        };
+
+        class ProductOverlay {
+            constructor() {
+                this.container = document.getElementById('overlay-container');
+                this.activeCards = new Set();
+                this.displayTime = 30000; // 30 seconds
+                this.initControlPanel();
+                this.initKeyboardShortcuts();
+            }
+
+            initControlPanel() {
+                const panel = document.querySelector('.control-panel');
+                const toggle = panel.querySelector('.toggle-panel');
+                const productButtons = document.getElementById('product-buttons');
+                
+                toggle.onclick = () => panel.classList.toggle('expanded');
+                
+                Object.entries(products).forEach(([key, product]) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'product-btn';
+                    btn.textContent = `${product.name} (${product.shortcut})`;
+                    btn.onclick = () => this.showProduct(key);
+                    productButtons.appendChild(btn);
+                });
+            }
+
+            initKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.target.tagName === 'INPUT') return;
+                    
+                    Object.entries(products).forEach(([key, product]) => {
+                        if (e.key === product.shortcut) {
+                            this.showProduct(key);
+                        }
+                    });
+
+                    if (e.key === 'Escape') {
+                        this.removeAllCards();
+                    }
+                });
+            }
+
+            createCard(product, position) {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                
+                // Create the basic card structure
+                card.innerHTML = `
+                    <img class="product-image" src="${product.image}" alt="${product.name}">
+                    <div class="product-info">
+                        <h3>${product.name}</h3>
+                        <div class="price">${product.price}</div>
+                    </div>
+                    <div class="qr-container" id="qr-${Date.now()}"></div>
+                `;
+
+                // Position the card
+                card.style.left = `${position.x}px`;
+                card.style.top = `${position.y}px`;
+
+                // Generate QR code
+                const qrContainer = card.querySelector('.qr-container');
+                new QRCode(qrContainer, {
+                    text: product.link,
+                    width: 120,
+                    height: 120,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                return card;
+            }
+
+            showProduct(productKey) {
+                const product = products[productKey];
+                if (!product) return;
+
+                // Remove existing card for same product if it exists
+                this.activeCards.forEach(card => {
+                    if (card.dataset.productKey === productKey) {
+                        this.removeCard(card);
+                    }
+                });
+
+                const position = {
+                    x: Math.random() * (window.innerWidth - 200),
+                    y: Math.random() * (window.innerHeight - 300)
+                };
+
+                const card = this.createCard(product, position);
+                card.dataset.productKey = productKey;
+                
+                this.container.appendChild(card);
+                this.activeCards.add(card);
+
+                // Auto-remove after display time
+                setTimeout(() => this.removeCard(card), this.displayTime);
+            }
+
+            removeCard(card) {
+                card.style.animation = 'float-out 0.5s ease-in';
+                setTimeout(() => {
+                    this.container.removeChild(card);
+                    this.activeCards.delete(card);
+                }, 500);
+            }
+
+            removeAllCards() {
+                this.activeCards.forEach(card => this.removeCard(card));
+            }
+        }
+
+        // Initialize overlay system
+        const overlay = new ProductOverlay();
+
+        // Chat command handler
+        window.onChatCommand = function(command, args) {
+            if (command === '!product') {
+                const productKey = args[0];
+                if (products[productKey]) {
+                    overlay.showProduct(productKey);
+                }
+            } else if (command === '!clear') {
+                overlay.removeAllCards();
+            }
+        };
+    </script>
+</body>
+</html>

@@ -8014,6 +8014,11 @@
 					var nameColor = "";
 					if (data.nameColor && colorized) {
 						nameColor = "style='color:" + data.nameColor + ";'";
+						if (largeavatar){
+							nameColor = "style='color:" + data.nameColor + ";display: flex;'";
+						}
+					} else if (largeavatar){
+						nameColor = "style='display: flex;'";
 					}
 
 					var chatbadges = "";
@@ -8454,7 +8459,7 @@
 					
 					if (splitMode && compactmode){
 						// this mode isn't compatible
-					} else if (horizontal || twoLines) {
+					} else if (horizontal || twoLines || largeavatar) {
 						// do not shrink the names to fit
 					} else if (compactmode) {
 						var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they are longer than the message's height
