@@ -89,6 +89,15 @@
 			//console.log(e);
 		}
 		
+		var chatbadge = "";
+		try {
+			if (ele.querySelector("img.q-img__image[src^='data:image/svg']")){
+				chatbadge = [];
+				chatbadge.push(ele.querySelector("img.q-img__image[src^='data:image/svg']").src);
+			}
+		} catch(e){}
+		
+		
 		var chatimg = "";
 		try {
 			chatimg = ele.querySelector("img.q-img__image[src]:not([src^='data:image/svg'])").src;
@@ -108,14 +117,14 @@
 			
 			try {
 				name = msg.split("has tipped ")[0].trim();
-				chatimg = names[name] || "";
-				
+				chatimg = names[name][0] || "";
+				chatbadge = names[name][1] || "";
 			} catch(e){
 				
 			}
 			
 		} else if (chatimg){
-			names[name] = chatimg;
+			names[name] = [chatimg,chatbadge];
 		}
 		
 		if (!name){
@@ -131,19 +140,6 @@
 			return;
 		}
 		
-		
-		
-		
-		
-		
-		
-		var chatbadge = "";
-		try {
-			if (ele.querySelector("img.q-img__image[src^='data:image/svg']")){
-				chatbadge = [];
-				chatbadge.push(ele.querySelector("img.q-img__image[src^='data:image/svg']").src);
-			}
-		} catch(e){}
 
 		var data = {};
 		data.chatname = name;
