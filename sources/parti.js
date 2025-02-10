@@ -21,6 +21,8 @@
 		xhr.send();
 	};
 	
+	var names = {};
+	
 	function escapeHtml(unsafe){
 		try {
 			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
@@ -87,24 +89,53 @@
 			//console.log(e);
 		}
 		
+		var chatimg = "";
+		try {
+			chatimg = ele.querySelector("img.q-img__image[src]:not([src^='data:image/svg'])").src;
+		} catch(e){}
+		//data.sourceImg = brandedImageURL;
+		
+		var msg = "";
+		var hasDonation = "";
+		
+		if (!name){
+			msg = ele.querySelector(".bi-coin").parentNode.nextSibling.textContent;
+			try {
+				hasDonation = msg.split("tipped")[1].split("🎉")[0].trim();
+			} catch(e){
+				
+			}
+			
+			try {
+				name = msg.split("has tipped ")[0].trim();
+				chatimg = names[name] || "";
+				
+			} catch(e){
+				
+			}
+			
+		} else if (chatimg){
+			names[name] = chatimg;
+		}
+		
 		if (!name){
 			return;
 		}
 
-		var msg = "";
 		try {
-			msg = getAllContentNodes(ele.querySelector("span.username").nextSibling);
+			if (!msg){
+				msg = getAllContentNodes(ele.querySelector("span.username").nextSibling);
+			}
 			msg = msg.trim();
 		} catch(e){
 			return;
 		}
 		
 		
-		var chatimg = "";
-		try {
-			chatimg = ele.querySelector("img.q-img__image[src]:not([src^='data:image/svg'])").src;
-		} catch(e){}
-		//data.sourceImg = brandedImageURL;
+		
+		
+		
+		
 		
 		var chatbadge = "";
 		try {
@@ -122,7 +153,7 @@
 		data.nameColor = nameColor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
-		data.hasDonation = "";
+		data.hasDonation = hasDonation;
 		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
