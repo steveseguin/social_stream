@@ -42,6 +42,7 @@
 
 				--pinned-queued-bg: #9d99cc;
 				--pinned-bg: #712a65;
+				--donation-amount-margin: auto;
 
 				--flex-direction: row;
 
@@ -492,7 +493,7 @@
 				color: var(--font-color);
 				margin: 0 0;
 				background-color: var(--background-color);
-				text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
+				text-shadow: -1.5px -1.5px #000000, -1.5px -0.75px #000000, -1.5px 0px #000000, -1.5px 0.75px #000000, -1.5px 1.5px #000000, -0.75px -1.5px #000000, -0.75px -0.75px #000000, -0.75px 0px #000000, -0.75px 0.75px #000000, -0.75px 1.5px #000000, 0px -1.5px #000000, 0px -0.75px #000000, 0px 0px #000000, 0px 0.75px #000000, 0px 1.5px #000000, 0.75px -1.5px #000000, 0.75px -0.75px #000000, 0.75px 0px #000000, 0.75px 0.75px #000000, 0.75px 1.5px #000000, 1.5px -1.5px #000000, 1.5px -0.75px #000000, 1.5px 0px #000000, 1.5px 0.75px #000000, 1.5px 1.5px #000000;
 				overflow-x: hidden;
 				scrollbar-color: #666 #201c29;
 			}
@@ -1213,9 +1214,9 @@
 			}
 
 			.donationAmount {
-				text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px var(--donation-amount), 0 0 40px var(--donation-amount), 0 0 50px var(--donation-amount), 0 0 60px var(--donation-amount), 0 0 70px var(--donation-amount);
+				text-shadow: 0 0 10px #fff, 0 0 20px var(--donation-amount), 0 0 30px var(--donation-amount);
 				padding-left: 5px;
-				margin: auto;
+				margin: var(--donation-amount-margin);
 				white-space: nowrap;
 			}
 
@@ -2743,6 +2744,10 @@
 				} else {
 					document.documentElement.style.setProperty("--pressed-color", "#" + pressedColor, "");
 				}
+			}
+			
+			if (urlParams.has("donationright")) {
+				document.documentElement.style.setProperty("--donation-amount-margin", "auto "+(urlParams.get("donationright")||30)+"px auto auto", "");
 			}
 
 			var pressedClass = "pressed";
