@@ -394,8 +394,8 @@
 	  return new Promise(resolve => setTimeout(resolve, ms));
 	}
 
-	async function processMessage(ele, wss = true) {
-		
+	async function processMessage(ele, wss = true, eventType=false) {
+		console.log(ele);
 		if (!ele || !ele.isConnected){
 			return;
 		}
@@ -615,8 +615,6 @@
 		var subtitle = "";
 
 		var giftedmemembership = ele.querySelector("#primary-text.ytd-sponsorships-live-chat-header-renderer");
-		
-		var eventType = false;
 
 		if (treatAsMemberChat) {
 			if (chatmessage) {
@@ -946,8 +944,10 @@
 	});
 
 	function onElementInserted(target, callback) {
+		console.log(target);
 		var onMutationsObserved = function (mutations) {
 			mutations.forEach(function (mutation) {
+				console.log(mutation.addedNodes);
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
@@ -961,9 +961,11 @@
 								callback(mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-sticker-renderer".toUpperCase()) {
 								callback(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].tagName == "ytd-sponsorships-live-chat-gift-redemption-announcement-renderer".toUpperCase()) {
+								callback(mutation.addedNodes[i], "giftredemption");
 							} else if (mutation.addedNodes[i].tagName == "ytd-sponsorships-live-chat-gift-purchase-announcement-renderer".toUpperCase()) {
 								// ytd-sponsorships-live-chat-gift-purchase-announcement-renderer
-								callback(mutation.addedNodes[i]);
+								callback(mutation.addedNodes[i], "giftpurchase");
 							} else {
 								//console.error("unknown: "+mutation.addedNodes[i].tagName);
 							}
@@ -1057,12 +1059,14 @@
 		var checkTimer2 = setInterval(function () {
 			try {
 				if (document.querySelector("iframe[src]") && !document.querySelector("iframe[src]").src.includes("truffle.vip")) {
-					var ele = document.querySelector("iframe").contentWindow.document.body.querySelector("#chat-messages");
+					var ele = document.querySelector("iframe").contentWindow.document.body.querySelector("#chat-messages #chat #contents > #item-scroller > #item-offset > #items.yt-live-chat-item-list-renderer");
 				} else {
 					var ele = false;
 				}
 			} catch (e) {}
+			
 			if (ele) {
+				
 				clearInterval(checkTimer2);
 				var cleared = false;
 				try {
@@ -1074,28 +1078,34 @@
 						}
 					});
 				} catch (e) {}
+				
 				if (cleared) {
-					onElementInserted(ele, function (ele2) {
+					clearInterval(checkTimer2);
+					onElementInserted(ele, function (ele2, eventType=false) {
 						setTimeout(
-							function (ele2) {
-								processMessage(ele2, false);
+							function (ele2,eventType) {
+								processMessage(ele2, false, eventType);
 							},
 							captureDelay,
-							ele2
+							ele2,
+							eventType
 						);
 					});
 				} else {
-					setTimeout(function () {
-						onElementInserted(document.querySelector("iframe").contentWindow.document.body.querySelector("#chat-messages #items.yt-live-chat-item-list-renderer"), function (ele2) {
+					setTimeout(function (ele) {
+						// style-scope yt-live-chat-item-list-renderer
+						onElementInserted(ele, function (ele2, eventType=false) {
 							setTimeout(
-								function (ele2) {
-									processMessage(ele2, false);
+								function (ele2,eventType) {
+									processMessage(ele2, false, eventType);
 								},
 								captureDelay,
-								ele2
+								ele2,
+								eventType
 							);
 						});
-					}, 1000);
+					}, 1000, ele);
+				
 				}
 			}
 		}, 3000);
