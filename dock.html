@@ -42,6 +42,7 @@
 
 				--pinned-queued-bg: #9d99cc;
 				--pinned-bg: #712a65;
+				--donation-amount-margin: auto;
 
 				--flex-direction: row;
 
@@ -492,7 +493,7 @@
 				color: var(--font-color);
 				margin: 0 0;
 				background-color: var(--background-color);
-				text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
+				text-shadow: -1.5px -1.5px #000000, -1.5px -0.75px #000000, -1.5px 0px #000000, -1.5px 0.75px #000000, -1.5px 1.5px #000000, -0.75px -1.5px #000000, -0.75px -0.75px #000000, -0.75px 0px #000000, -0.75px 0.75px #000000, -0.75px 1.5px #000000, 0px -1.5px #000000, 0px -0.75px #000000, 0px 0px #000000, 0px 0.75px #000000, 0px 1.5px #000000, 0.75px -1.5px #000000, 0.75px -0.75px #000000, 0.75px 0px #000000, 0.75px 0.75px #000000, 0.75px 1.5px #000000, 1.5px -1.5px #000000, 1.5px -0.75px #000000, 1.5px 0px #000000, 1.5px 0.75px #000000, 1.5px 1.5px #000000;
 				overflow-x: hidden;
 				scrollbar-color: #666 #201c29;
 			}
@@ -1213,9 +1214,9 @@
 			}
 
 			.donationAmount {
-				text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px var(--donation-amount), 0 0 40px var(--donation-amount), 0 0 50px var(--donation-amount), 0 0 60px var(--donation-amount), 0 0 70px var(--donation-amount);
+				text-shadow: 0 0 10px #fff, 0 0 20px var(--donation-amount), 0 0 30px var(--donation-amount);
 				padding-left: 5px;
-				margin: auto;
+				margin: var(--donation-amount-margin);
 				white-space: nowrap;
 			}
 
@@ -2743,6 +2744,10 @@
 				} else {
 					document.documentElement.style.setProperty("--pressed-color", "#" + pressedColor, "");
 				}
+			}
+			
+			if (urlParams.has("donationright")) {
+				document.documentElement.style.setProperty("--donation-amount-margin", "auto "+(urlParams.get("donationright")||30)+"px auto auto", "");
 			}
 
 			var pressedClass = "pressed";
@@ -4740,40 +4745,6 @@
 				};
 			}
 
-			function upscaleImages(data) {
-				// for third party APIs
-				let chatimg = "";
-				if (data.type && (data.type == "twitch") && data.chatname && !data.chatimg) {
-					chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
-				} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
-					chatimg = data.chatimg.replace("=s32-", "=s256-");
-					chatimg = chatimg.replace("=s64-", "=s256-");
-				} else {
-					chatimg = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
-				}
-				return chatimg;
-			}
-
-			function unescapeHtml(html) {
-				var textArea = document.createElement("textarea");
-				textArea.innerHTML = html;
-				return textArea.value;
-			}
-
-			function ajax(object2send, url, ajaxType = "PUT") {
-				var xhttp = new XMLHttpRequest();
-				xhttp.onreadystatechange = function () {
-					if (this.readyState == 4 && this.status == 200) {
-						// success
-					} else {
-						console.error("there was an error sending to the API");
-					}
-				};
-				xhttp.open(ajaxType, url, true); // async = true
-				xhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-				xhttp.send(JSON.stringify(object2send));
-			}
-
 			if (urlParams.has("showmenu")) {
 				getById("menu").style.display = "block";
 			} else {
@@ -4991,6 +4962,36 @@
 			if (tainted) {
 				document.body.classList.remove("vanilla");
 			}
+			
+			if (alignbottom || fadetop) {
+				const ro = new MutationObserver(mutations => {
+					if (reversed && !forceAutoscroll) {
+					} else {
+						var delta = 0;
+						if (getById("output").lastChild) {
+							delta = parseInt(getById("output").lastChild.clientHeight);
+						}
+						if (getById("output").scrollHeight < getById("output").scrollTop + getById("output").clientHeight + autoScrollCatch + delta || forceAutoscroll) {
+							jumptoBottom2()
+						}
+					}
+				});
+				ro.observe(getById("output"), { childList: true, attributes: false, subtree: false });
+			} else {
+				const ro = new ResizeObserver(entries => {
+					if (reversed && !forceAutoscroll) {
+					} else {
+						var delta = 0;
+						if (getById("output").lastChild) {
+							delta = parseInt(getById("output").lastChild.clientHeight);
+						}
+						if (document.body.scrollHeight < document.body.scrollTop + document.body.clientHeight + autoScrollCatch + delta || forceAutoscroll) {
+							jumptoBottom2()
+						}
+					}
+				});
+				ro.observe(document.scrollingElement);
+			}
 
 			function emoji() {
 				var ele = getById("hide_emoji");
@@ -5026,8 +5027,9 @@
 			var activeWordLength = 0;
 			var activeDonation = false;
 			var checkTimeout = null;
+			var timeoutId = null;
+
 			function checkAutoShow() {
-				
 				if (checkTimeout) {
 					return;
 				}
@@ -5035,41 +5037,42 @@
 				
 				let waitTime = activeWordLength * timePerCharacter;
 				let minimumTime = timePerCharacter * 42; // 42; the answer to life. the universe. and everything
-
 				if (waitTime < minimumTime) {
 					waitTime = minimumTime;
 				} else if (waitTime > minimumTime * 10) {
 					waitTime = minimumTime * 10;
 				}
 				
-				if (autoQueueTimeout){
+				if (autoQueueTimeout) {
 					waitTime = autoQueueTimeout;
 					timePerCharacter = 0;
 				}
 				
-				if (autoshowqueued && selectedQueue.length){
-					checkTimeout = setTimeout(function () {
-							checkTimeout = false;
-							if (autoshowqueued){
-								nextInQueue();
-							} else {
-								checkAutoShow();
-							}
-						}, lastPushed + waitTime - Date.now() );
+				if (timeoutId) {
+					clearTimeout(timeoutId);
+					timeoutId = null;
+				}
+				
+				if (autoshowqueued && selectedQueue.length) {
+					timeoutId = setTimeout(function() {
+						checkTimeout = false;
+						if (autoshowqueued) {
+							nextInQueue();
+						} else {
+							checkAutoShow();
+						}
+					}, lastPushed + waitTime - Date.now());
 					return;
 				} else if (autoShowQueue.length) {
 					if (lastPushed + waitTime > Date.now() + timePerCharacter) {
-						checkTimeout = setTimeout(function () {
+						timeoutId = setTimeout(function() {
 							checkTimeout = false;
 							checkAutoShow();
 						}, lastPushed + waitTime - Date.now() + timePerCharacter * 2);
 						return;
 					}
-
 					var post = autoShowQueue.shift();
-
 					if (doNotAutoshowFiltered && post.classList.contains("hide")) {
-						// do not show messages that are hidden; toggle option
 						if (autoShowQueue.length) {
 							checkAutoShow();
 						}
@@ -5086,7 +5089,6 @@
 						} else {
 							activeDonation = false;
 						}
-
 						selectedMessage(false, post);
 					}
 				} else {
@@ -5094,39 +5096,61 @@
 					return;
 				}
 
+				const setNextTimeout = (multiplier = 1) => {
+					timeoutId = setTimeout(function() {
+						checkTimeout = false;
+						checkAutoShow();
+					}, waitTime * multiplier);
+				};
+
 				if (autoShowQueue.length > 10) {
-					while (autoShowQueue[0].rawContents && !autoShowQueue[0].rawContents.hasDonation && autoShowQueue.length > 4) {
+					while (autoShowQueue[0]?.rawContents && !autoShowQueue[0].rawContents.hasDonation && autoShowQueue.length > 4) {
 						autoShowQueue.shift(); // skip oldest, since too many are queued up
 					}
-					if (activeDonation) {
-						checkTimeout = setTimeout(function () {
-							checkTimeout = false;
-							checkAutoShow();
-						}, waitTime);
-					} else {
-						checkTimeout = setTimeout(function () {
-							checkTimeout = false;
-							checkAutoShow();
-						}, waitTime * 0.6);
-					}
+					setNextTimeout(activeDonation ? 1 : 0.6);
 				} else if (activeDonation) {
-					checkTimeout = setTimeout(function () {
-						checkTimeout = false;
-						checkAutoShow();
-					}, waitTime);
+					setNextTimeout();
 				} else if (autoShowQueue.length > 1) {
-					checkTimeout = setTimeout(function () {
-						checkTimeout = false;
-						checkAutoShow();
-					}, waitTime * 0.8);
+					setNextTimeout(0.8);
 				} else if (autoShowQueue.length) {
-					checkTimeout = setTimeout(function () {
-						checkTimeout = false;
-						checkAutoShow();
-					}, waitTime);
+					setNextTimeout();
 				} else {
 					checkTimeout = false;
 				}
+			}
+			
+			function upscaleImages(data) {
+				// for third party APIs
+				let chatimg = "";
+				if (data.type && (data.type == "twitch") && data.chatname && !data.chatimg) {
+					chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+				} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
+					chatimg = data.chatimg.replace("=s32-", "=s256-");
+					chatimg = chatimg.replace("=s64-", "=s256-");
+				} else {
+					chatimg = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
+				}
+				return chatimg;
+			}
+
+			function unescapeHtml(html) {
+				var textArea = document.createElement("textarea");
+				textArea.innerHTML = html;
+				return textArea.value;
+			}
+
+			function ajax(object2send, url, ajaxType = "PUT") {
+				var xhttp = new XMLHttpRequest();
+				xhttp.onreadystatechange = function () {
+					if (this.readyState == 4 && this.status == 200) {
+						// success
+					} else {
+						console.error("there was an error sending to the API");
+					}
+				};
+				xhttp.open(ajaxType, url, true); // async = true
+				xhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+				xhttp.send(JSON.stringify(object2send));
 			}
 
 			function donos() {
@@ -5243,39 +5267,39 @@
 			}
 			
 			
-		function createPopoutChat() {
-			//  todo -- make broadcast channel based.
-			<!-- if (session.broadcastChannelID === false) { -->
-				<!-- session.broadcastChannelID = session.generateStreamID(8); -->
-				<!-- log(session.broadcastChannelID); -->
+			function createPopoutChat() {
+				//  todo -- make broadcast channel based.
+				<!-- if (session.broadcastChannelID === false) { -->
+					<!-- session.broadcastChannelID = session.generateStreamID(8); -->
+					<!-- log(session.broadcastChannelID); -->
 
-				<!-- session.broadcastChannel = new BroadcastChannel(session.broadcastChannelID); -->
-				<!-- session.broadcastChannel.onmessage = function (e) { -->
-					<!-- if ("loaded" in e.data) { -->
-						<!-- session.broadcastChannel.postMessage({ -->
-							<!-- messageList: messageList -->
-						<!-- }); -->
-					<!-- } else if ("msg" in e.data) { -->
-						<!-- sendChatMessage(e.data.msg, true); -->
-					<!-- } -->
-				<!-- }; -->
+					<!-- session.broadcastChannel = new BroadcastChannel(session.broadcastChannelID); -->
+					<!-- session.broadcastChannel.onmessage = function (e) { -->
+						<!-- if ("loaded" in e.data) { -->
+							<!-- session.broadcastChannel.postMessage({ -->
+								<!-- messageList: messageList -->
+							<!-- }); -->
+						<!-- } else if ("msg" in e.data) { -->
+							<!-- sendChatMessage(e.data.msg, true); -->
+						<!-- } -->
+					<!-- }; -->
 
-				<!-- session.broadcastChannel.onmessageerror = function (e) { -->
-					<!-- errorlog(e); -->
-				<!-- }; -->
-			<!-- } -->
-			let pass = "";
-			if (urlParams.has("password")) {
-				pass = "&password="+password;
+					<!-- session.broadcastChannel.onmessageerror = function (e) { -->
+						<!-- errorlog(e); -->
+					<!-- }; -->
+				<!-- } -->
+				let pass = "";
+				if (urlParams.has("password")) {
+					pass = "&password="+password;
+				}
+				const popup = window.open("./input.html?session=" + roomID+pass, "popup", "width=600,height=60,toolbar=no,menubar=no,resizable=yes");
+
+				popup.document.body.style.margin = "0";
+				popup.document.body.style.padding = "0";
+				
+				//window.open("./popout.html?id=" + session.broadcastChannelID, "popup", "width=600,height=480,toolbar=no,menubar=no,resizable=yes");
+				return false;
 			}
-			const popup = window.open("./input.html?session=" + roomID+pass, "popup", "width=600,height=60,toolbar=no,menubar=no,resizable=yes");
-
-			popup.document.body.style.margin = "0";
-			popup.document.body.style.padding = "0";
-			
-			//window.open("./popout.html?id=" + session.broadcastChannelID, "popup", "width=600,height=480,toolbar=no,menubar=no,resizable=yes");
-			return false;
-		}
 
 
 			function toggleTriggers(ele) {
@@ -6989,82 +7013,83 @@
 				}
 			}
 
-		function replyToUser(element) {
-			if (isOBSBrowserSource) {
-				return;
-			}
-			
-			var chatName = element.dataset.chatname;
-			var type = element.dataset.sourceType;
-			var tid = element.rawContents ? element.rawContents.tid : null;
-			
-			if (document.getElementById("getChatSourceButton")) {
-				clearTimeout(getById("getChatSourcesButton").setTimeout);
-			}
-			
-			var modal = document.getElementById("getReplyModule");
-			if (!modal) {
-				modal = document.createElement("div");
-				modal.id = "getReplyModule";
-				modal.classList.add("modal");
-				modal.style.display = "block";
-				modal.innerHTML = `
-					<div class="modal-content">
-						<span class="close-btn" id="closereply">&times;</span>
-						<h2 id="c">What message do you want to send ${chatName}?</h2>
-						<input type="textarea" style="width: calc(100% - 200px);min-width:200px;" id="getReplyModuleInput">
-						<button id="getReplyModuleButton">SEND</button><br><br>
-						${!tid ? "<div>⚠️ This message will go to all destinations, since it didn't come from a specific tab</div>" : ""}
-					</div>`;
+			function replyToUser(element) {
+				if (isOBSBrowserSource) {
+					return;
+				}
+				
+				var chatName = element.dataset.chatname;
+				var type = element.dataset.sourceType;
+				var tid = element.rawContents ? element.rawContents.tid : null;
+				
+				if (document.getElementById("getChatSourceButton")) {
+					clearTimeout(getById("getChatSourcesButton").setTimeout);
+				}
+				
+				var modal = document.getElementById("getReplyModule");
+				if (!modal) {
+					modal = document.createElement("div");
+					modal.id = "getReplyModule";
+					modal.classList.add("modal");
+					modal.style.display = "block";
+					modal.innerHTML = `
+						<div class="modal-content">
+							<span class="close-btn" id="closereply">&times;</span>
+							<h2 id="c">What message do you want to send ${chatName}?</h2>
+							<input type="textarea" style="width: calc(100% - 200px);min-width:200px;" id="getReplyModuleInput">
+							<button id="getReplyModuleButton">SEND</button><br><br>
+							${!tid ? "<div>⚠️ This message will go to all destinations, since it didn't come from a specific tab</div>" : ""}
+						</div>`;
+						
+					document.body.appendChild(modal);
+				} else {
+					modal.classList.remove("hidden");
+				}
+				
+				const closeModal = () => {
+					modal.classList.add("hidden");
+					modal.remove();
+				};
+				
+				const handleSend = () => {
+					const getReplyModuleInput = getById("getReplyModuleInput");
+					let response = getReplyModuleInput.value ? getReplyModuleInput.value.trim() : null;
+					if (!response) return;
 					
-				document.body.appendChild(modal);
-			} else {
-				modal.classList.remove("hidden");
-			}
-			
-			const closeModal = () => {
-				modal.classList.add("hidden");
-				modal.remove();
-			};
-			
-			const handleSend = () => {
-				const getReplyModuleInput = getById("getReplyModuleInput");
-				let response = getReplyModuleInput.value ? getReplyModuleInput.value.trim() : null;
-				if (!response) return;
-				
-				closeModal();
-				
-				if (!response.startsWith("@")) {
-					response = `@${chatName}: ${response}`;
-				}
-				
-				let sendBlob = { response };
-				if (tid !== null) {
-					sendBlob.tid = tid;
-				}
-				send2Extension(sendBlob);
-			};
-			
-			const span = document.getElementById("closereply");
-			const getReplyModuleInput = getById("getReplyModuleInput");
-			const getReplyModuleButton = getById("getReplyModuleButton");
-			
-			getReplyModuleInput.focus();
-			
-			span.onclick = closeModal;
-			modal.onclick = (e) => {
-				if (e.target === modal) {
 					closeModal();
-				}
-			};
-			
-			getReplyModuleButton.onclick = handleSend;
-			getReplyModuleInput.onkeyup = (e) => {
-				if (e.key === "Enter") {
-					handleSend();
-				}
-			};
-		}
+					
+					if (!response.startsWith("@")) {
+						response = `@${chatName}: ${response}`;
+					}
+					
+					let sendBlob = { response };
+					if (tid !== null) {
+						sendBlob.tid = tid;
+					}
+					send2Extension(sendBlob);
+				};
+				
+				const span = document.getElementById("closereply");
+				const getReplyModuleInput = getById("getReplyModuleInput");
+				const getReplyModuleButton = getById("getReplyModuleButton");
+				
+				getReplyModuleInput.focus();
+				
+				span.onclick = closeModal;
+				modal.onclick = (e) => {
+					if (e.target === modal) {
+						closeModal();
+					}
+				};
+				
+				getReplyModuleButton.onclick = handleSend;
+				getReplyModuleInput.onkeyup = (e) => {
+					if (e.key === "Enter") {
+						handleSend();
+					}
+				};
+			}
+		
 
 			function toggleVIPUser(element) {
 				var chatName = element.dataset.chatname;
@@ -7994,6 +8019,11 @@
 					var nameColor = "";
 					if (data.nameColor && colorized) {
 						nameColor = "style='color:" + data.nameColor + ";'";
+						if (largeavatar){
+							nameColor = "style='color:" + data.nameColor + ";display: flex;'";
+						}
+					} else if (largeavatar){
+						nameColor = "style='display: flex;'";
 					}
 
 					var chatbadges = "";
@@ -8434,7 +8464,7 @@
 					
 					if (splitMode && compactmode){
 						// this mode isn't compatible
-					} else if (horizontal || twoLines) {
+					} else if (horizontal || twoLines || largeavatar) {
 						// do not shrink the names to fit
 					} else if (compactmode) {
 						var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they are longer than the message's height
@@ -8584,36 +8614,6 @@
 					return node;
 				}
 				return false;
-			}
-
-			if (alignbottom || fadetop) {
-				const ro = new MutationObserver(mutations => {
-					if (reversed && !forceAutoscroll) {
-					} else {
-						var delta = 0;
-						if (getById("output").lastChild) {
-							delta = parseInt(getById("output").lastChild.clientHeight);
-						}
-						if (getById("output").scrollHeight < getById("output").scrollTop + getById("output").clientHeight + autoScrollCatch + delta || forceAutoscroll) {
-							jumptoBottom2()
-						}
-					}
-				});
-				ro.observe(getById("output"), { childList: true, attributes: false, subtree: false });
-			} else {
-				const ro = new ResizeObserver(entries => {
-					if (reversed && !forceAutoscroll) {
-					} else {
-						var delta = 0;
-						if (getById("output").lastChild) {
-							delta = parseInt(getById("output").lastChild.clientHeight);
-						}
-						if (document.body.scrollHeight < document.body.scrollTop + document.body.clientHeight + autoScrollCatch + delta || forceAutoscroll) {
-							jumptoBottom2()
-						}
-					}
-				});
-				ro.observe(document.scrollingElement);
 			}
 
 			function applyBotActions(data) {
@@ -9214,7 +9214,6 @@
 
 				var lastWidth = window.innerWidth;
 				window.addEventListener("resize", function (event) {
-				
 					if (document.getElementById("filter")){
 						var rect = document.getElementById("filter").getBoundingClientRect();
 						menu.style.left = rect.right + "px";
@@ -9270,14 +9269,14 @@
 			})();
 
 			(function userChatInputModalBox() {
-				// chat input
-				var menu = getById("chatInput_parent");
-				var input = getById("chatInput");
-				var chatInputButton = getById("chatInputButton");
-				var chatClearButton = getById("chatClearButton");
-				var getChatSourcesButton = getById("getChatSources");
-				var chatInputCloseButton = getById("chatInputCloseButton");
-				var chatInputLockButton = getById("chatInputLockButton");
+				const menu = getById("chatInput_parent");
+				const input = getById("chatInput");
+				const chatInputButton = getById("chatInputButton");
+				const chatClearButton = getById("chatClearButton");
+				const getChatSourcesButton = getById("getChatSources");
+				const chatInputCloseButton = getById("chatInputCloseButton");
+				const chatInputLockButton = getById("chatInputLockButton");
+				let chatSourcesTimeout;
 
 				function toggleInput(event) {
 					event.preventDefault();
@@ -9305,34 +9304,46 @@
 					input.value = "";
 				}
 
-				input.addEventListener("keyup", function (event) {
-					if (event.keyCode === 13) {
-						// Enter
-						sendMessage(event);
-					} else if (input.value.length > 100) {
-						if (limitStringWarning(input.value, 200)) {
-							menu.style.border = "red 1px solid";
-						} else {
-							menu.style.border = "";
-						}
-					} else {
-						menu.style.border = "";
-					}
-				});
-
-				input.addEventListener("paste", function (event) {
+				function handleInputLength() {
 					if (input.value.length > 100) {
-						if (limitStringWarning(input.value, 200)) {
-							menu.style.border = "red 1px solid";
-						} else {
-							menu.style.border = "";
-						}
+						menu.style.border = limitStringWarning(input.value, 200) ? "red 1px solid" : "";
 					} else {
 						menu.style.border = "";
 					}
+				}
+
+				function setupSayHelloListeners(element) {
+					const handleInput = (e) => {
+						if (e) e.preventDefault();
+						toggleInput(e);
+					};
+
+					const mouseupHandler = (e) => {
+						if (e.button === 0 || e.button === 1) {
+							handleInput(e);
+						}
+					};
+
+					element.addEventListener("mouseup", mouseupHandler);
+					element.addEventListener("touchend", handleInput);
+
+					return () => {
+						element.removeEventListener("mouseup", mouseupHandler);
+						element.removeEventListener("touchend", handleInput);
+					};
+				}
+
+				input.addEventListener("keyup", function(event) {
+					if (event.keyCode === 13) {
+						sendMessage(event);
+					} else {
+						handleInputLength();
+					}
 				});
 
-				input.addEventListener("blur", function (event) {
+				input.addEventListener("paste", handleInputLength);
+
+				input.addEventListener("blur", function(event) {
 					if (menu.matches(":focus-within:not(:focus)") || menu.matches(":focus-within")) {
 						input.focus();
 						return;
@@ -9343,70 +9354,34 @@
 					event.preventDefault();
 					event.stopPropagation();
 					
-					if (document.getElementById("say_hello")) {
-						const element = document.getElementById("say_hello");
-						
-						const handleInput = (e) => {
-							if (e) e.preventDefault();
-							toggleInput(e);
-						};
-						
-						element.addEventListener("mouseup", function(e) {
-							if (e.button === 0 || e.button === 1) {
-								handleInput(e);
-							}
-						});
-						element.addEventListener("touchend", handleInput);
-					}
 					menu.classList.add("hidden");
-					
-					setTimeout(function () {
-						if (document.getElementById("say_hello")) {
-							const element = document.getElementById("say_hello");
-							
-							const handleInput = (e) => {
-								if (e) e.preventDefault();
-								toggleInput(e);
-							};
-							
-							element.addEventListener("mouseup", function(e) {
-								if (e.button === 0 || e.button === 1) {
-									handleInput(e);
-								}
-							});
-							element.addEventListener("touchend", handleInput);
-						}
-					}, 300);
-					return false;
 				});
 
-				chatInputButton.addEventListener("click", function (event) {
-					sendMessage(event);
-				});
+				chatInputButton.addEventListener("click", sendMessage);
 
-				getChatSourcesButton.onclick = function (event) {
+				getChatSourcesButton.onclick = function(event) {
 					send2Extension({ action: "getChatSources" });
-					getChatSourcesButton.setTimeout = setTimeout(function () {
+					clearTimeout(chatSourcesTimeout);
+					chatSourcesTimeout = setTimeout(function() {
 						if (getById("getChatSources").classList.contains("hidden")) {
-							send2Extension({ action: "getChatSources" }); // trying some more.
-							//console.log("Trying again..");
+							send2Extension({ action: "getChatSources" });
 						}
 					}, 2000);
 				};
 
-				chatClearButton.addEventListener("click", function (event) {
+				chatClearButton.addEventListener("click", function() {
 					input.value = "";
 					clearAll(true);
 				});
 
-				chatInputCloseButton.addEventListener("click", function (event) {
+				chatInputCloseButton.addEventListener("click", function(event) {
 					event.preventDefault();
 					event.stopPropagation();
 					menu.classList.add("hidden");
 					return false;
 				});
 
-				chatInputLockButton.addEventListener("click", function (event) {
+				chatInputLockButton.addEventListener("click", function(event) {
 					event.preventDefault();
 					event.stopPropagation();
 					input.classList.toggle("locked");
@@ -9420,20 +9395,9 @@
 					return false;
 				});
 
-				if (document.getElementById("say_hello")) {
-					const element = document.getElementById("say_hello");
-					
-					const handleInput = (e) => {
-						if (e) e.preventDefault();
-						toggleInput(e);
-					};
-					
-					element.addEventListener("mouseup", function(e) {
-						if (e.button === 0 || e.button === 1) {
-							handleInput(e);
-						}
-					});
-					element.addEventListener("touchend", handleInput);
+				const sayHelloElement = document.getElementById("say_hello");
+				if (sayHelloElement) {
+					setupSayHelloListeners(sayHelloElement);
 				}
 			})();
 			

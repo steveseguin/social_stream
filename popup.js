@@ -3,6 +3,7 @@
 var isExtensionOn = false;
 var ssapp = false;
 var USERNAMES = [];
+var WebMidi = null;
 
 function log(msg,a,b){
 	console.log(msg,a,b);
@@ -597,7 +598,52 @@ function findExistingEvents(eventType, response) {
 
   return Array.from(events).sort((a, b) => a - b);
 }
-
+function updateAllMidiSelects() {
+  document.querySelectorAll("select[data-optionsetting^='mididevice']").forEach(select => {
+    const currentValue = select.value;
+    
+    // Repopulate the select
+    populateMidiDeviceSelect(select);
+    
+    // Restore previous selection if it was set
+    if (currentValue) {
+      const option = Array.from(select.options).find(opt => opt.value === currentValue);
+      if (!option && currentValue) {
+        // Device not found, add it as disconnected
+        const disconnectedOption = document.createElement('option');
+        disconnectedOption.textContent = currentValue;
+        disconnectedOption.value = currentValue;
+        disconnectedOption.style.color = 'red';
+        select.appendChild(disconnectedOption);
+        disconnectedOption.selected = true;
+      } else if (option) {
+        option.selected = true;
+      }
+    }
+  });
+}
+function populateMidiDeviceSelect(select) {
+  if (!select) return;
+  
+  // Clear existing options
+  select.innerHTML = '';
+  
+  // Add default option
+  const defaultOption = document.createElement('option');
+  defaultOption.textContent = 'Default MIDI Device';
+  defaultOption.value = '';
+  select.appendChild(defaultOption);
+  
+  // Add available devices if WebMidi is enabled
+  if (window.WebMidi?.enabled) {
+    WebMidi.outputs.forEach(output => {
+      const option = document.createElement('option');
+      option.textContent = output.name;
+      option.value = output.name;
+      select.appendChild(option);
+    });
+  }
+}
 function initializeTabSystem(containerId, eventType, existingEventIds = [], response = null) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -619,7 +665,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
   const contentContainer = tabSystem.querySelector('.tab-content-container');
   
   // Find all existing events from settings
-  const activeEvents = findExistingEvents(eventType, response);
+  const activeEvents = findExistingEvents(eventType, response); 
   const deletedIds = new Set();
   let tabCount = activeEvents.length > 0 ? Math.max(...activeEvents) : 0;
 
@@ -642,6 +688,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 							input.getAttribute('data-textsetting') || 
 							input.getAttribute('data-optionsetting') || 
 							input.getAttribute('data-numbersetting');
+							
 		  
 		  if (settingKey && response.settings[settingKey]) {
 			if (input.type === 'checkbox') {
@@ -649,11 +696,32 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 			} else if (input.type === 'text' || input.type === 'number') {
 			  input.value = response.settings[settingKey]?.textsetting || response.settings[settingKey]?.numbersetting || '';
 			} else if (input.tagName === 'SELECT') {
-			  const value = response.settings[settingKey]?.optionsetting;
+				
+				const value = response.settings[settingKey]?.optionsetting;
+				
+				var deviceFound = false;
+				if (WebMidi && (!deviceFound && settingKey.startsWith('mididevice'))){
+					const defaultOption = document.createElement("option");
+					defaultOption.textContent = "Default MIDI Device";
+					defaultOption.value = "";
+					input.appendChild(defaultOption);
+					WebMidi.outputs.forEach((output) => {
+					  const option = document.createElement("option");
+					  option.textContent = output.name;
+					  option.value = output.name;
+					  if (value === output.name){
+						  option.selected = true;
+						  deviceFound = true;
+					  }
+					  input.appendChild(option);
+					});
+				}
+				
+			  
 			  if (value) {
 				input.value = value;
 				// Ensure MIDI device exists in dropdown
-				if (settingKey.startsWith('mididevice') && !Array.from(input.options).some(opt => opt.value === value)) {
+				if (!deviceFound && settingKey.startsWith('mididevice') && !Array.from(input.options).some(opt => opt.value === value)) {
 				  const option = document.createElement('option');
 				  option.value = value;
 				  option.textContent = value;
@@ -665,6 +733,14 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 			}
 		  }
 		});
+		
+	  } else {
+		if (eventType === 'midiCommand') {
+		  const midiSelect = tabContent.querySelector(`select#mididevice${tabId}`);
+		  if (midiSelect) {
+			populateMidiDeviceSelect(midiSelect);
+		  }
+		}
 	  }
 
 	  contentContainer.appendChild(tabContent);
@@ -681,7 +757,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
     } else {
       newTabId = ++tabCount;
     }
-    const { button, content } = createNewTab(newTabId);
+    const { button, content } = createNewTab(newTabId); 
     activateTab(newTabId);
   });
 
@@ -699,13 +775,27 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
     }
   });
 
-  function activateTab(tabId) {
-    tabSystem.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-    tabSystem.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    
-    tabSystem.querySelector(`.tab-button[data-tab="${tabId}"]`)?.classList.add('active');
-    tabSystem.querySelector(`.tab-content[data-tab="${tabId}"]`)?.classList.add('active');
-  }
+	function activateTab(tabId) {
+	  const previousActive = tabSystem.querySelector('.tab-button.active');
+	  const newActive = tabSystem.querySelector(`.tab-button[data-tab="${tabId}"]`);
+	  
+	  if (previousActive === newActive) return;
+	  
+	  tabSystem.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+	  tabSystem.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+	  
+	  newActive?.classList.add('active');
+	  const newContent = tabSystem.querySelector(`.tab-content[data-tab="${tabId}"]`);
+	  newContent?.classList.add('active');
+	  
+	  // Ensure MIDI devices are populated in the newly activated tab
+	  if (eventType === 'midiCommand') {
+		const midiSelect = newContent?.querySelector(`select#mididevice${tabId}`);
+		if (midiSelect) {
+		  populateMidiDeviceSelect(midiSelect);
+		}
+	  }
+	}
 
 	function deleteTab(tabId) {
 	  const button = tabSystem.querySelector(`.tab-button[data-tab="${tabId}"]`);
@@ -755,21 +845,21 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 	  content.remove();
 	}
   
- if (activeEvents.length > 0) {
-    activeEvents.forEach((eventId, index) => {
-      const newTab = createNewTab(eventId);
-      if (index === 0) {
-        newTab.button.classList.add('active');
-        newTab.content.classList.add('active');
-      }
-    });
-  } else {
-    // Create initial tab if no existing events
-    const newTab = createNewTab(1);
-    newTab.button.classList.add('active');
-    newTab.content.classList.add('active');
-    tabCount = 1;
-  }
+	 if (activeEvents.length > 0) {
+		activeEvents.forEach((eventId, index) => {
+		  const newTab = createNewTab(eventId);
+		  if (index === 0) {
+			newTab.button.classList.add('active');
+			newTab.content.classList.add('active');
+		  }
+		});
+	  } else {
+		// Create initial tab if no existing events
+		const newTab = createNewTab(1);
+		newTab.button.classList.add('active');
+		newTab.content.classList.add('active');
+		tabCount = 1;
+	  }
 }
 
 document.addEventListener("DOMContentLoaded", async function(event) {
@@ -1252,89 +1342,21 @@ document.addEventListener("DOMContentLoaded", async function(event) {
     }
     // Function to initialize the MIDI dropdown logic
     async function initializeMIDIDropdown() {
-		try {
-			WebMidi.enable().then(() => {
-                console.log("WebMidi enabled!");
-
-                const midiDropdown = document.getElementById("midiDeviceSelect");
-				const currentDevice = midiDropdown.value;
-				
-                function populateMIDIDevices() {
-                    midiDropdown.innerHTML = "";
-
-                    const defaultOption = document.createElement("option");
-                    defaultOption.textContent = "Select MIDI Device";
-                    defaultOption.value = "";
-                    midiDropdown.appendChild(defaultOption);
-
-					let deviceFound = false;
-                    WebMidi.outputs.forEach((output) => {
-                        const option = document.createElement("option");
-                        option.textContent = output.name; 
-                        option.value = output.name;
-                        midiDropdown.appendChild(option);
-						if (currentDevice && (currentDevice === option.value)){
-							option.selected = true;
-							deviceFound = true;
-						}
-                    });
-					if (!deviceFound && currentDevice){
-						const option = document.createElement("option");
-                        option.textContent = currentDevice;
-                        option.value = currentDevice;
-                        midiDropdown.appendChild(option);
-						option.selected = true;
-						option.style.color = "red";
-					}
-					
-					document.querySelectorAll("select[data-optionsetting^='mididevice']").forEach(dropdown => {
-						const currentValue = dropdown.value;
-						const originalHTML = dropdown.innerHTML;
-						dropdown.innerHTML = "";
-
-						// Add default option
-						const defaultOption = document.createElement("option");
-						defaultOption.textContent = "Default MIDI Device";
-						defaultOption.value = "";
-						dropdown.appendChild(defaultOption);
-
-						let deviceFound = false;
-						WebMidi.outputs.forEach((output) => {
-						  const option = document.createElement("option");
-						  option.textContent = output.name;
-						  option.value = output.name;
-						  dropdown.appendChild(option);
-						  if (currentValue === option.value) {
-							option.selected = true;
-							deviceFound = true;
-						  }
-						});
-
-						// If the stored device isn't found, add it as disconnected
-						if (!deviceFound && currentValue && currentValue !== "") {
-						  const option = document.createElement("option");
-						  option.textContent = currentValue;
-						  option.value = currentValue;
-						  option.style.color = "red";
-						  option.selected = true;
-						  dropdown.appendChild(option);
-						}
-					  });
-                }
-
-                populateMIDIDevices();
-
-                WebMidi.addListener("connected", populateMIDIDevices);
-                WebMidi.addListener("disconnected", populateMIDIDevices);
-
-            })
-            .catch((e) => {
-                console.error("Failed to enable WebMidi: ", e);
-            });
-		} catch(e){
-			console.error(e);
-		}
-    }
+	  try {
+		await WebMidi.enable();
+		console.log("WebMidi enabled!");
+		
+		// Initial population of all MIDI selects
+		updateAllMidiSelects();
+		
+		// Handle device changes
+		WebMidi.addListener("connected", updateAllMidiSelects);
+		WebMidi.addListener("disconnected", updateAllMidiSelects);
+		
+	  } catch(e) {
+		console.error("Failed to initialize WebMidi:", e);
+	  }
+	}
     // Dynamically load the WebMidi script and initialize the dropdown logic
 	try {
 		setTimeout(function(){

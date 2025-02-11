@@ -21,6 +21,8 @@
 		xhr.send();
 	};
 	
+	var names = {};
+	
 	function escapeHtml(unsafe){
 		try {
 			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
@@ -87,17 +89,13 @@
 			//console.log(e);
 		}
 		
-		if (!name){
-			return;
-		}
-
-		var msg = "";
+		var chatbadge = "";
 		try {
-			msg = getAllContentNodes(ele.querySelector("span.username").nextSibling);
-			msg = msg.trim();
-		} catch(e){
-			return;
-		}
+			if (ele.querySelector("img.q-img__image[src^='data:image/svg']")){
+				chatbadge = [];
+				chatbadge.push(ele.querySelector("img.q-img__image[src^='data:image/svg']").src);
+			}
+		} catch(e){}
 		
 		
 		var chatimg = "";
@@ -106,13 +104,42 @@
 		} catch(e){}
 		//data.sourceImg = brandedImageURL;
 		
-		var chatbadge = "";
-		try {
-			if (ele.querySelector("img.q-img__image[src^='data:image/svg']")){
-				chatbadge = [];
-				chatbadge.push(ele.querySelector("img.q-img__image[src^='data:image/svg']").src);
+		var msg = "";
+		var hasDonation = "";
+		
+		if (!name){
+			msg = ele.querySelector(".bi-coin").parentNode.nextSibling.textContent;
+			try {
+				hasDonation = msg.split("tipped")[1].split("🎉")[0].trim();
+			} catch(e){
+				
 			}
-		} catch(e){}
+			
+			try {
+				name = msg.split("has tipped ")[0].trim();
+				chatimg = names[name][0] || "";
+				chatbadge = names[name][1] || "";
+			} catch(e){
+				
+			}
+			
+		} else if (chatimg){
+			names[name] = [chatimg,chatbadge];
+		}
+		
+		if (!name){
+			return;
+		}
+
+		try {
+			if (!msg){
+				msg = getAllContentNodes(ele.querySelector("span.username").nextSibling);
+			}
+			msg = msg.trim();
+		} catch(e){
+			return;
+		}
+		
 
 		var data = {};
 		data.chatname = name;
@@ -122,7 +149,7 @@
 		data.nameColor = nameColor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
-		data.hasDonation = "";
+		data.hasDonation = hasDonation;
 		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
