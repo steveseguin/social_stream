@@ -3814,6 +3814,52 @@ async function sendToDestinations(message) {
 	}
 	return true;
 }
+
+async function replayMessagesFromTimestamp(startTimestamp) {
+    const db = await messageStoreDB.ensureDB();
+    
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([messageStoreDB.storeName], "readonly");
+        const store = transaction.objectStore(messageStoreDB.storeName);
+        const index = store.index("timestamp");
+        const messages = [];
+        
+        const range = IDBKeyRange.lowerBound(startTimestamp);
+        const cursorRequest = index.openCursor(range);
+        
+        cursorRequest.onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                messages.push(cursor.value);
+                cursor.continue();
+            } else {
+                if (messages.length === 0) {
+                    resolve(0);
+                    return;
+                }
+
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+                const baseTime = messages[0].timestamp;
+
+                messages.forEach(message => {
+					
+                    const relativeDelay = message.timestamp - baseTime;
+					delete message.mid;
+					
+                    setTimeout(() => {
+                        sendDataP2P(message);
+                    }, relativeDelay);
+                });
+
+                resolve(messages.length);
+            }
+        };
+        
+        cursorRequest.onerror = (event) => reject(event.target.error);
+    });
+}
+
+
 function unescapeHtml(safe) {
 	return safe
 		.replace(/&amp;/g, "&")

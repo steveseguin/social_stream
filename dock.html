@@ -2851,23 +2851,31 @@
 			if (urlParams.has("split")) {
 				splitMode = " splitMode";
 			}
-
-			function loadGoogleFont(fontName) {
-				const formattedFontName = fontName.replace(/\s/g, "+");
-
+			
+			function loadGoogleFont(fontParam) {
 				const link = document.createElement("link");
-				link.href = `https://fonts.googleapis.com/css2?family=${formattedFontName}&display=swap`;
+				
+				// Parse font family and variants
+				let [fontName, ...variants] = fontParam.split(':');
+				fontName = decodeURIComponent(fontName);
+				
+				// Build font family CSS value, stripping any weight/style specifications
+				const cssFont = fontName.split(/\s+/)
+					.filter(part => !part.match(/^(Light|Medium|Bold|Regular|Thin|Black|Italic|\d+)$/i))
+					.join(' ');
+					
+				// Build Google Fonts URL
+				link.href = `https://fonts.googleapis.com/css2?family=${fontParam}`;
 				link.rel = "stylesheet";
-
 				document.head.appendChild(link);
+				
 				var currentFont = getComputedStyle(document.documentElement).getPropertyValue("--font-family").trim();
-				document.documentElement.style.setProperty("--font-family", "'" + fontName.replaceAll("+", " ") + "', " + currentFont);
+				document.documentElement.style.setProperty("--font-family", `'${cssFont}', ${currentFont}`);
 			}
 
 			if (urlParams.get("font")) {
 				document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif");
 			}
-
 			if (urlParams.get("googlefont")) {
 				loadGoogleFont(urlParams.get("googlefont"));
 			}
@@ -4513,8 +4521,11 @@
 			if (urlParams.has("padding")) {
 				document.documentElement.style.setProperty("--padding-rows", (parseInt(urlParams.get("padding") || 5)) + "px");
 			}
+			
+			var hardFilter = false;
 
 			if (urlParams.has("hidemenu") || urlParams.has("nomenu")) {
+				hardFilter = true;
 				document.body.classList.add("electronDraggable");
 				if (urlParams.get("hidemenu") == "2" || urlParams.get("nomenu") == "2") {
 					getById("menu").classList.add("hideMenuKeepScrollLock");
@@ -4523,6 +4534,7 @@
 					getById("menu").style.display = "none";
 					getById("output").style.marginBottom = "0";
 				}
+				
 			}
 			if (urlParams.has("chatonly")) {
 				//document.body.classList.add("electronDraggable");
@@ -4592,6 +4604,7 @@
 				compactmode = true;
 				document.body.classList.remove("notcompactmode");
 				getById("menu").style.display = "none";
+				hardFilter = true;
 				document.body.classList.add("electronDraggable");
 				// hide shadows
 				// <!-- position: absolute; -->
@@ -4747,6 +4760,7 @@
 
 			if (urlParams.has("showmenu")) {
 				getById("menu").style.display = "block";
+				hardFilter = false;
 			} else {
 				try {
 					if (window.obsstudio) {
@@ -4764,6 +4778,7 @@
 
 						window.obsstudio.getStatus(function (obsStatus) {
 							getById("menu").style.display = "none";
+							hardFilter=true;
 							getById("output").style.marginBottom = "0";
 							document.body.style.overflow = "hidden";
 							mainOutputWindow.style.overflow = "hidden";
@@ -7718,6 +7733,17 @@
 						return;
 					} else if (!data.question && onlyquestions) {
 						return;
+					}
+					
+					if (hardFilter && hideNotDonos){
+						if (!data.donation && !data.hasDonation){
+							return;
+						}
+					}
+					if (hardFilter && hideNotMembers){
+						if (!data.membership && !data.member && !data.hasMembershp){
+							return;
+						}
 					}
 
 					try {
