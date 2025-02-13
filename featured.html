@@ -1308,7 +1308,7 @@
 				document.documentElement.style.setProperty("--author-left", "20px");
 			}
 
-			var audioContext = new AudioContext();
+			var audioContext = new (window.AudioContext || window.webkitAudioContext)();
 			var timeoutTone = null;
 
 			async function playtone(tonename = "testtone") {
@@ -1898,7 +1898,7 @@
 							}
 							return response.json();
 						})
-						.then(json => {
+						.then(async json => {
 							//console.log(json);
 							if (!json.audio_data) {
 								finishedAudio();
@@ -1913,7 +1913,9 @@
 								if (volume) {
 									audio.volume = volume;
 								}
-							
+								if (audioContext.state === 'suspended') {
+									await audioContext.resume();
+								}
 								audio.play().then(() => {
 									//console.log("Audio playing successfully");
 								}).catch(err => {
@@ -1971,7 +1973,7 @@
 					.then(data => {
 						return data.json();
 					})
-					.then(res => {
+					.then(async res => {
 						//console.log(res.audioContent);
 						if (!audio) {
 							audio = document.createElement("audio");
@@ -1979,6 +1981,9 @@
 						audio.src = "data:audio/mp3;base64," + res.audioContent;
 						if (volume) {
 							audio.volume = volume;
+						}
+						if (audioContext.state === 'suspended') {
+							await audioContext.resume();
 						}
 						audio.play();
 					})
@@ -2014,7 +2019,7 @@
 					.then(data => {
 						return data.blob();
 					})
-					.then(res => {
+					.then(async res => {
 						const newBlob = new Blob([res]);
 						const blobUrl = window.URL.createObjectURL(newBlob);
 						if (!audio) {
@@ -2023,6 +2028,9 @@
 						audio.src = blobUrl;
 						if (volume) {
 							audio.volume = volume;
+						}
+						if (audioContext.state === 'suspended') {
+							await audioContext.resume();
 						}
 						try {
 							audio.play();

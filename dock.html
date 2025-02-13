@@ -2933,7 +2933,7 @@
 				stripHTML = true;
 			}
 
-			var audioContext = new AudioContext();
+			var audioContext = new (window.AudioContext || window.webkitAudioContext)();
 			var timeoutTone = null;
 
 			async function playtone(tonename = "testtone") {
@@ -4233,7 +4233,7 @@
 
 					fetch(url, otherparam)
 						.then(data => data.blob())
-						.then(res => {
+						.then(async res => {
 							const newBlob = new Blob([res]);
 							const blobUrl = window.URL.createObjectURL(newBlob);
 							if (!audio) {
@@ -4245,6 +4245,9 @@
 								audio.volume = volume;
 							}
 							try {
+								if (audioContext.state === 'suspended') {
+									await audioContext.resume();
+								}
 								audio.play();
 							} catch (e) {
 								finishedAudio();
@@ -4297,7 +4300,7 @@
 
 					fetch(url, otherparam)
 						.then(data => data.json())
-						.then(res => {
+						.then(async res => {
 							if (!audio) {
 								audio = document.createElement("audio");
 								audio.onended = finishedAudio;
@@ -4307,6 +4310,9 @@
 								audio.volume = volume;
 							}
 							try {
+								if (audioContext.state === 'suspended') {
+									await audioContext.resume();
+								}
 								audio.play();
 							} catch (e) {
 								finishedAudio();
@@ -4351,7 +4357,7 @@
 							}
 							return response.json();
 						})
-						.then(json => {
+						.then(async json => {
 							if (!json.audio_data) {
 								finishedAudio();
 								throw new Error("No audio data in JSON response");
@@ -4365,7 +4371,9 @@
 								if (volume) {
 									audio.volume = volume;
 								}
-							
+								if (audioContext.state === 'suspended') {
+									await audioContext.resume();
+								}
 								audio.play().catch(err => {
 									console.error("Audio play failed, user interaction required", err);
 									finishedAudio();
