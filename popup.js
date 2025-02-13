@@ -2022,9 +2022,17 @@ function update(response, sync=true){
 							}
 							if ("textparam2" in response.settings[key]){
 								var ele = document.querySelector("input[data-textparam2='"+key+"'],textarea[data-textparam2='"+key+"']");
+								//console.log(ele);
 								if (ele){
 									ele.value = response.settings[key].textparam2;
 									updateSettings(ele, sync);
+									
+									var ele = document.querySelector("input[data-param2='"+key+"']");
+									if (ele){
+										if (ele.checked){
+											updateSettings(ele, false, parseFloat(response.settings[key].textparam2));
+										}
+									}
 								}
 							}
 							if ("textparam3" in response.settings[key]){
@@ -2777,16 +2785,12 @@ function updateSettings(ele, sync=true, value=null){
 				
 				document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.param2);
 				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
-			} else if (document.querySelector("[data-optionparam2='"+ele.dataset.param2+"']")){
-				value = document.querySelector("[data-optionparam2='"+ele.dataset.param2+"']").value;
+			} else if (document.querySelector("[data-optionparam2='"+ele.dataset.param2+"'], [data-textparam2='"+ele.dataset.param2+"']")){
+				value = document.querySelector("[data-optionparam2='"+ele.dataset.param2+"'], [data-textparam2='"+ele.dataset.param2+"']").value;
 				
 				document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.param2);
 				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
-			} else if (document.querySelector("[data-textsetting2='"+ele.dataset.param2+"']")){
-				value = document.querySelector("[data-textsetting2='"+ele.dataset.param2+"']").value;
-				
-				document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.param2);
-				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
+			
 			} else {
 				document.getElementById("overlay").raw = updateURL(ele.dataset.param2, document.getElementById("overlay").raw);
 			}
