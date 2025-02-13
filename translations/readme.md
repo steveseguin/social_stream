@@ -4,7 +4,7 @@ woo !
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/5f5b3f89-e58c-44f4-9b09-8b798fff4c30)
 
 ### To add a new language
-To add a new langauge, copy `en-us.json` and give an appropropriate name.
+To add a new langauge, copy `blank.json` and give an appropropriate name.
 
 Update the translation file as desired, and then either submit the file here as a git pull request, or send to Steve on Discord (discord.socialstream.ninja), or email to steve at steve@seguin.email.
 
