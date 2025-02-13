@@ -1588,10 +1588,14 @@ function update(response, sync=true){
 											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting));
 										} else if (document.querySelector("input[data-numbersetting='"+key+"']")){
 											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting='"+key+"']").value));
-										} else if ("optionparam1" in response.settings[key]){
+										} else if ("optionparam1" in response.settings[key]){ 
 											updateSettings(ele, sync, response.settings[key].optionparam1);
 										} else if (document.querySelector("input[data-optionparam1='"+key+"']")){
 											updateSettings(ele, sync, document.querySelector("input[data-optionparam1='"+key+"']").value);
+										} else if ("textparam1" in response.settings[key]){ 
+											updateSettings(ele, sync, response.settings[key].textparam1);
+										} else if (document.querySelector("input[data-textparam1='"+key+"']")){
+											updateSettings(ele, sync, document.querySelector("input[data-textparam1='"+key+"']").value);
 										} else {
 											updateSettings(ele, sync); 
 										}
@@ -1606,11 +1610,11 @@ function update(response, sync=true){
 										if (keys[1]){
 											var ele2 = document.querySelector("input[data-numbersetting='"+keys[0]+"']");
 											if (ele2){
-												ele2.value = parseFloat(keys[1], keys[1]);
+												ele2.value = parseFloat(keys[1]);
 											} else {
-												ele2 = document.querySelector("input[data-optionparam1='"+keys[0]+"']");
+												ele2 = document.querySelector("input[data-optionparam1='"+keys[0]+"'], input[data-textparam1='"+keys[0]+"']");
 												if (ele2){
-													ele2.value = keys[1], keys[1];
+													ele2.value = keys[1];
 												}
 											}
 											updateSettings(ele, sync, parseFloat(keys[1]));
@@ -1633,6 +1637,10 @@ function update(response, sync=true){
 											updateSettings(ele, sync, response.settings[key].optionparam2);
 										} else if (document.querySelector("input[data-optionparam2='"+key+"']")){
 											updateSettings(ele, sync, document.querySelector("input[data-optionparam2='"+key+"']").value);
+										} else if ("textparam2" in response.settings[key]){
+											updateSettings(ele, sync, response.settings[key].textparam2);
+										} else if (document.querySelector("input[data-textparam2='"+key+"']")){
+											updateSettings(ele, sync, document.querySelector("input[data-textparam2='"+key+"']").value);
 										} else {
 											updateSettings(ele, sync); 
 										}
@@ -1649,11 +1657,11 @@ function update(response, sync=true){
 										if (keys[1]){
 											var ele2 = document.querySelector("input[data-numbersetting2='"+keys[0]+"']");
 											if (ele2){
-												ele2.value = parseFloat(keys[1], keys[1]);
+												ele2.value = parseFloat(keys[1]);
 											} else {
-												var ele2 = document.querySelector("input[data-optionparam2='"+keys[0]+"']");
+												var ele2 = document.querySelector("input[data-optionparam2='"+keys[0]+"'], input[data-textparam2='"+keys[0]+"']");
 												if (ele2){
-													ele2.value = keys[1], keys[1];
+													ele2.value = keys[1];
 												}
 											}
 											updateSettings(ele, sync, parseFloat(keys[1]));
@@ -1709,7 +1717,7 @@ function update(response, sync=true){
 										if (keys[1]){
 											var ele2 = document.querySelector("input[data-numbersetting6='"+keys[0]+"']");
 											if (ele2){
-												ele2.value = parseFloat(keys[1], keys[1]);
+												ele2.value = parseFloat(keys[1]);
 											}
 											updateSettings(ele, sync, parseFloat(keys[1]));
 										} else{
@@ -1757,7 +1765,7 @@ function update(response, sync=true){
 										if (keys[1]){
 											var ele2 = document.querySelector("input[data-numbersetting9='"+keys[0]+"']");
 											if (ele2){
-												ele2.value = parseFloat(keys[1], keys[1]);
+												ele2.value = parseFloat(keys[1]);
 											}
 											updateSettings(ele, sync, parseFloat(keys[1]));
 										} else{
@@ -1795,11 +1803,11 @@ function update(response, sync=true){
 										if (keys[1]){
 											var ele2 = document.querySelector("input[data-numbersetting10='"+keys[0]+"']");
 											if (ele2){
-												ele2.value = parseFloat(keys[1], keys[1]);
+												ele2.value = parseFloat(keys[1]);
 											} else {
 												var ele2 = document.querySelector("input[data-numbersetting10='"+keys[0]+"']");
 												if (ele2){
-													ele2.value = keys[1], keys[1];
+													ele2.value = keys[1];
 												}
 											}
 											updateSettings(ele, sync, parseFloat(keys[1]));
@@ -2003,6 +2011,13 @@ function update(response, sync=true){
 								if (ele){
 									ele.value = response.settings[key].textparam1;
 									updateSettings(ele, sync);
+									
+									var ele = document.querySelector("input[data-param1='"+key+"']");
+									if (ele){
+										if (ele.checked){
+											updateSettings(ele, false, parseFloat(response.settings[key].textparam1));
+										}
+									}
 								}
 							}
 							if ("textparam2" in response.settings[key]){
@@ -2479,18 +2494,21 @@ function updateSettings(ele, sync=true, value=null){
 		if (ele.checked){
 			
 			if (value!==null){
+				
 				document.getElementById("dock").raw = updateURL(ele.dataset.param1+"="+value, document.getElementById("dock").raw);
+				
 			} else if (document.querySelector("input[data-numbersetting='"+ele.dataset.param1+"']")){
 				
 				value = document.querySelector("input[data-numbersetting='"+ele.dataset.param1+"']").value;
-				
 				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
 				document.getElementById("dock").raw = updateURL(ele.dataset.param1+"="+value, document.getElementById("dock").raw);
-			} else if (document.querySelector("[data-optionparam1='"+ele.dataset.param1+"']")){ 
-				value = document.querySelector("[data-optionparam1='"+ele.dataset.param1+"']").value;
 				
+			} else if (document.querySelector("[data-optionparam1='"+ele.dataset.param1+"'], [data-textparam1='"+ele.dataset.param1+"']")){ 
+			
+				value = document.querySelector("[data-optionparam1='"+ele.dataset.param1+"'], [data-textparam1='"+ele.dataset.param1+"']").value;
 				document.getElementById("dock").raw = removeQueryParamWithValue(document.getElementById("dock").raw, ele.dataset.param1);
 				document.getElementById("dock").raw = updateURL(ele.dataset.param1+"="+value, document.getElementById("dock").raw);
+				
 			} else {
 				document.getElementById("dock").raw = updateURL(ele.dataset.param1, document.getElementById("dock").raw);
 			}
@@ -2761,6 +2779,11 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
 			} else if (document.querySelector("[data-optionparam2='"+ele.dataset.param2+"']")){
 				value = document.querySelector("[data-optionparam2='"+ele.dataset.param2+"']").value;
+				
+				document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.param2);
+				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
+			} else if (document.querySelector("[data-textsetting2='"+ele.dataset.param2+"']")){
+				value = document.querySelector("[data-textsetting2='"+ele.dataset.param2+"']").value;
 				
 				document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.param2);
 				document.getElementById("overlay").raw = updateURL(ele.dataset.param2+"="+value, document.getElementById("overlay").raw);
