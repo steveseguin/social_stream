@@ -71,7 +71,6 @@
         .message {
             display: inline-block;
             min-height: 1.25rem;
-            max-height: 120px;
             max-width: 90%;
             background: linear-gradient(90deg, #555, color-mix(in srgb, #555A 90%, #000A));
             padding: 14px 14px 8px 14px;
@@ -122,6 +121,12 @@
                 transform: translateY(0);
             }
         }
+		
+		.message-container.removing {
+			opacity: 0;
+			transform: translateY(20px);
+			transition: opacity 0.5s ease, transform 0.5s ease;
+		}
     </style>
     <script src="./chroma.min.cjs"></script>
 </head>
@@ -155,6 +160,7 @@
 			});
 		}
 	}
+	
 
     // Function to add a dynamic message to the overlay
     function addMessageToOverlay(data) {
@@ -214,6 +220,18 @@
                 child.style.transform = '';
             });
         }, 500); 
+		
+		// Handle removal after 10 seconds
+		setTimeout(() => {
+			messageContainer.classList.add('removing');
+			
+			// Remove from DOM after transition completes
+			setTimeout(() => {
+				if (messageContainer.parentNode) {
+					messageContainer.parentNode.removeChild(messageContainer);
+				}
+			}, 500); // Match the transition duration
+		}, 10000);
     }
 	
 	// The IFrame allows for peer to peer mode; used by default.  It may have issues if self-hosting this page though while using OBS v31 due to same-origin strict policies in CEF
