@@ -52,6 +52,8 @@
         let mediaQueue = [];
         let isPlaying = false;
         
+		var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+		
 		const fadeoutTime = 300
 		const minDisplayTime = parseInt(urlParams.get('showtime')) || (fadeoutTime+1); 
 
@@ -217,10 +219,16 @@
             const video = document.createElement('video');
             video.src = url;
             video.muted = urlParams.has('muted');
-            video.oncanplay = () => {
+            video.oncanplay = async () => {
                 mediaContent.replaceWith(video);
                 fadeIn();
-                video.play();
+				try {
+					if (audioContext.state == "suspended") {
+						await audioContext.resume();
+					}
+					video.play();
+				} catch(e){}
+                
                 const videoDuration = video.duration * 1000; 
                 const displayTime = Math.max(videoDuration, minDisplayTime);
                 setTimeout(() => {
@@ -254,8 +262,11 @@
         function playAudio(url) {
             const audio = new Audio(url);
             audio.muted = urlParams.has('muted');
-            audio.oncanplay = () => {
+            audio.oncanplay = async () => {
                 fadeIn();
+				if (audioContext.state == "suspended") {
+					await audioContext.resume();
+				}
                 audio.play();
             };
             audio.onended = () => {
