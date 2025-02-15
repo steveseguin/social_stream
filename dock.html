@@ -12,7 +12,7 @@
 		<style>
 			:root {
 				--show-emoji-only: flex;
-				--list-or-horizontal: flex;
+				--list-or-horizontal: block;
 				--show-donos-only: flex;
 				--show-queue-only: flex;
 				--scale-output: 1;
@@ -42,7 +42,7 @@
 
 				--pinned-queued-bg: #9d99cc;
 				--pinned-bg: #712a65;
-				--donation-amount-margin: auto;
+				--donation-amount-margin: 0 auto 0 0;
 
 				--flex-direction: row;
 
@@ -376,7 +376,6 @@
 			}
 			.hl-badge {
 				margin: 0px 2px 0px 0px;
-				vertical-align: top;
 				max-width: 100px;
 				max-height: 20px;
 				height: 20px;
@@ -572,7 +571,7 @@
 			}
 			
 			.allowfat .hl-message{
-				max-width: 300px;
+				max-width: 400px;
 				word-break: keep-all;
 				line-break: loose;
 				overflow-wrap: break-word;
@@ -615,6 +614,7 @@
 				overflow-wrap: anywhere;
 				line-height: max(var(--message-line-height), var(--comment-font-size));
 				font-size: var(--comment-font-size);
+				
 			}
 
 			.hl-message img,
@@ -780,7 +780,7 @@
 				margin: 0px 0px 0px 5px;
 			}
 			.hl-rightside .hl-message {
-				margin: 1px 7px;
+				margin: 2px 7px 2px 7px;
 			}
 
 			.bot > .hl-message {
@@ -798,7 +798,6 @@
 
 			.hl-badges {
 				margin-left: 4px;
-				vertical-align: text-bottom;
 			}
 			.hl-badges:first-child {
 				margin-left: 0;
@@ -863,6 +862,7 @@
 			
 			.horizontal:not(.alignbottom) .highlight-chat.compactmode {
 				vertical-align: top;
+				display:inline-flex;
 			}
 
 			.horizontal .compactmode.time-arrived {
@@ -870,8 +870,8 @@
 			}
 			
 
-			.horizontal .highlight-chat.larger-emojis {
-				line-height: 30px;
+			.horizontal .highlight-chat.larger-emojis:not(.compactmode) {
+				line-height: 30px; 
 				height: 40px;
 				max-height: 40px;
 			}
@@ -914,21 +914,15 @@
 			}
 
 			.larger-emojis img.hl-badge {
-				top: 3px;
 				height: 22px;
 				max-height: 22px;
 			}
 			.larger-emojis .icon, .larger-emojis .svg.hl-badge  {
-				top: 3px;
 				height: 24px;
 				max-height: 24px;
 				vertical-align: top;
 			}
 			
-			.larger-emojis  .time-arrived {
-				vertical-align: top;
-			}
-
 			.hl-badge.svg {
 				object-fit: contain;
 				display: inline-block;
@@ -938,14 +932,6 @@
 			.notcompactmode .highlight-chat > img.icon {
 				top: 0px;
 				margin: 1.6px 2px auto 1px;
-			}
-
-			.notcompactmode .time-arrived {
-				margin: 8px 2px auto 1px;
-			}
-
-			.notcompactmode div:not(.expand) > .time-arrived {
-				margin: 9.5px 2px auto 1px;
 			}
 
 			.notcompactmode .larger-emojis > .time-arrived {
@@ -1012,12 +998,18 @@
 			}
 
 			.notcompactmode .hl-name {
-				margin: 3.14px 5px 0 5px;
 				min-width: max(135px, 12vw);
 				max-width: max(220px, 25vw);
 				white-space: unset;
 				min-height: 24px;
 				line-height: max(var(--author-font-size), var(--message-line-height));
+			}
+			.notcompactmode .highlight-chat>div:not(.bubble) .hl-name {
+				margin: 3.14px 5px 0 5px;
+			}
+			.notcompactmode .highlight-chat>div.bubble .hl-name {
+				min-width: max(35px, 2vw);
+				line-height: unset;
 			}
 			
 			.hl-name:first-child {
@@ -1029,6 +1021,7 @@
 				padding: 2px 1px;
 				margin: 0;
 				min-height: 27px;
+				display:inline-flex;
 			}
 
 			@media only screen and (max-width: 400px) {
@@ -1142,17 +1135,14 @@
 			}
 
 			.bubble {
-				border-radius: 20px;
-				padding: 7px 10px;
+				border-radius: 13px;
+				padding: 7px 12px 7px 10px;
 				background-color: var(--bgcolor-bubble);
 				margin: 0px 0 0px 5px;
 			}
 
 			.bubble.odd {
-				border-radius: 20px;
-				padding: 7px 10px;
 				background-color: var(--bgcolor-bubble-odd);
-				margin: 0px 0 0px 5px;
 			}
 
 			.bubble.dono-highlight {
@@ -1218,6 +1208,11 @@
 				padding-left: 5px;
 				margin: var(--donation-amount-margin);
 				white-space: nowrap;
+				margin: auto 0;
+			}
+			
+			.horizontal .donationAmount {
+				vertical-align: middle;
 			}
 
 			@-webkit-keyframes glow {
@@ -1241,6 +1236,7 @@
 				left: 2px;
 				position: relative;
 				white-space: nowrap;
+				vertical-align: middle;
 			}
 
 			#menu {
@@ -2543,6 +2539,12 @@
 			var readDonos = false;
 			if (urlParams.has("ttsdonos")) {
 				readDonos = urlParams.get("ttsdonos") || "en-US";
+			}
+			
+			var ttsSources = false;
+			if (urlParams.get("ttsources")) {
+				ttsSources = ttsSources.get("ttsources");
+				ttsSources = ttsSources.toLowerCase().trim().split(",");
 			}
 			
 			var waitToReveal = 0;
@@ -4410,7 +4412,9 @@
 				else if (data.bot && !(allowbottss || bottts)){return;} // do not read out bot messages
 				else if (data.host && !(allowhosttss || hosttts)){return;} 
 				
-				else if (data.reflection && norelfectionstts){return;} 
+				else if (data.reflection && norelfectionstts){return;}
+				
+				else if (ttsSources && !ttsSources.includes(data.type)){return;}
 				
 				
 				//else if (data.mod && !(allowmodtss || modtts)){return;} 
@@ -8057,7 +8061,7 @@
 							nameColor = "style='color:" + data.nameColor + ";display: flex;'";
 						}
 					} else if (largeavatar){
-						nameColor = "style='display: flex;'";
+						//nameColor = "style='display: flex;'";
 					}
 
 					var chatbadges = "";
@@ -8228,7 +8232,7 @@
 					}
 					
 					if (largeavatar) {
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived + "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
+						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline"><div>' + timeArrived + chatname  + "<div class='queueid'></div></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
 					} else if (twoLines) {
 						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-firstline">' + "<div class='queueid'></div>" + showType + chatImg + chatname + '</div><div class="hl-message">' + timeArrived + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
 					} else if (splitMode) {

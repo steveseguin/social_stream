@@ -3414,7 +3414,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				data.nameColor = "#107516";
 				data.membership = "SPONSORSHIP";
 				data.chatimg = parseInt(Math.random() * 2) ? "" : "https://socialstream.ninja/sampleavatar.png";
-				data.chatname = "Steve_" + Math.round(Math.random() * Math.pow(10, parseInt(Math.random() * 20)));
+				data.chatname = "Steve_" + randomDigits();
 				data.type = parseInt(Math.random() * 2) ? "slack" : "facebook";
 				data.chatmessage = "!join The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
 			} else if (Math.random() > 0.45) {
@@ -3424,6 +3424,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				data.chatname = "NewGuest";
 				data.type = "twitch";
 				data.chatmessage = "hi";
+				data.chatbadges = ["https://vdo.ninja/media/icon.png","https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj","https://socialstream.ninja/icons/announcement.png"];
 			} else if (Math.random() > 0.40) {
 				data.membership = "Coffee Addiction";
 				data.hasDonation = "";
@@ -3434,6 +3435,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				data.chatname = "Sir Drinks-a-lot";
 				data.type = "youtube";
 				data.chatmessage = "☕☕☕ COFFEE!";
+				data.chatbadges = ["https://socialstream.ninja/icons/bot.png","https://socialstream.ninja/icons/announcement.png"];
 			} else if (Math.random() > 0.3) {
 				data.hasDonation = "";
 				data.membership = "";
@@ -3541,6 +3543,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	}
 	return response;
 });
+
+const randomDigits = () => {
+  const length = Math.floor(Math.random() * 21) + 5;
+  const firstDigit = Math.floor(Math.random() * 9) + 1;
+  const remainingDigits = Array(length - 1).fill().map(() => Math.floor(Math.random() * 10));
+  return parseInt([firstDigit, ...remainingDigits].join(''));
+};
 
 function verifyOriginalNewIncomingMessage(msg, cleaned=false) {
 	
