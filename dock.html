@@ -2543,8 +2543,10 @@
 			
 			var ttsSources = false;
 			if (urlParams.get("ttsources")) {
-				ttsSources = ttsSources.get("ttsources");
-				ttsSources = ttsSources.toLowerCase().trim().split(",");
+				ttsSources = ttsSources.get("ttsources").trim() || false;
+				if (ttsSources){
+					ttsSources = ttsSources.toLowerCase().split(",").map(element => element.trim());
+				}
 			}
 			
 			var waitToReveal = 0;

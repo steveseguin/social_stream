@@ -31,7 +31,7 @@ function applyCustomActions(data){
 ///////
 
 // this next example is specific for the featured chat overlay, instead of the dock
-// file:///C:/Users/XXXXXXXXXX/Downloads/social_stream/index.html?session=xxxxxxxxxx
+// file:///C:/Users/XXXXXXXXXX/Downloads/social_stream/featured.html?session=xxxxxxxxxx
 function applyCustomFeatureActions(data){
 	var tid = false;
 	if (data.tid){tid = data.tid;}
