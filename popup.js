@@ -1785,6 +1785,8 @@ function update(response, sync=true){
 											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting10='"+key+"']").value));
 										} else if ("optionparam10" in response.settings[key]){
 											updateSettings(ele, sync, response.settings[key].optionparam10);
+										} else if ("textparam10" in response.settings[key]){
+											updateSettings(ele, sync, response.settings[key].textparam10);
 										} else if (document.querySelector("input[data-optionparam10='"+key+"']")){
 											updateSettings(ele, sync, document.querySelector("input[data-optionparam10='"+key+"']").value);
 										} else {
@@ -1805,7 +1807,7 @@ function update(response, sync=true){
 											if (ele2){
 												ele2.value = parseFloat(keys[1]);
 											} else {
-												var ele2 = document.querySelector("input[data-numbersetting10='"+keys[0]+"']");
+												var ele2 = document.querySelector("input[data-numbersetting10='"+keys[0]+"'], input[data-textparam10='"+keys[0]+"']");
 												if (ele2){
 													ele2.value = keys[1];
 												}
@@ -2109,10 +2111,18 @@ function update(response, sync=true){
 								}
 							}
 							if ("textparam10" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam10='"+key+"']");
+								var ele = document.querySelector("input[data-textparam10='"+key+"'],textarea[data-textparam10='"+key+"']");
+								//console.log(ele);
 								if (ele){
 									ele.value = response.settings[key].textparam10;
 									updateSettings(ele, sync);
+									
+									var ele = document.querySelector("input[data-param10='"+key+"']");
+									if (ele){
+										if (ele.checked){
+											updateSettings(ele, false, parseFloat(response.settings[key].textparam10));
+										}
+									}
 								}
 							}
 							if ("textparam11" in response.settings[key]){
@@ -2627,6 +2637,20 @@ function updateSettings(ele, sync=true, value=null){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam1",  target:target, setting: ele.dataset.textparam1, "value": ele.value}, function (response) {});
 		}
+	} else if (ele.dataset.textparam10){
+		
+		document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw, ele.dataset.textparam10);
+		
+		if (ele.value && ele.dataset.textparam10 == "cssb64"){
+			document.getElementById("chatbot").raw = updateURL(ele.dataset.textparam10+"="+btoa(encodeURIComponent(ele.value)), document.getElementById("chatbot").raw);
+		} else if (ele.value){
+			document.getElementById("chatbot").raw = updateURL(ele.dataset.textparam10+"="+encodeURIComponent(ele.value), document.getElementById("chatbot").raw);
+		}
+		document.getElementById("chatbot").raw = document.getElementById("chatbot").raw.replace("&&", "&");
+		document.getElementById("chatbot").raw = document.getElementById("chatbot").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "textparam10",  target:target, setting: ele.dataset.textparam10, "value": ele.value}, function (response) {});
+		}
 	} else if (ele.dataset.textparam2){
 		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.textparam2);
 		
@@ -2998,10 +3022,29 @@ function updateSettings(ele, sync=true, value=null){
 		
 	} else if (ele.dataset.param10){
 		if (ele.checked){
-			document.getElementById("chatbot").raw = updateURL(ele.dataset.param10, document.getElementById("chatbot").raw);
+			if (value!==null){
+					
+				document.getElementById("chatbot").raw = updateURL(ele.dataset.param10, document.getElementById("chatbot").raw);
+				
+			} else if (document.querySelector("input[data-numbersetting='"+ele.dataset.param10+"']")){
+				
+				value = document.querySelector("input[data-numbersetting='"+ele.dataset.param10+"']").value;
+				document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw, ele.dataset.param10);
+				document.getElementById("chatbot").raw = updateURL(ele.dataset.param10+"="+value, document.getElementById("chatbot").raw);
+				
+			} else if (document.querySelector("[data-optionparam10='"+ele.dataset.param10+"'], [data-textparam10='"+ele.dataset.param10+"']")){ 
+			
+				value = document.querySelector("[data-optionparam10='"+ele.dataset.param10+"'], [data-textparam10='"+ele.dataset.param10+"']").value;
+				document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw, ele.dataset.param10);
+				document.getElementById("chatbot").raw = updateURL(ele.dataset.param10+"="+value, document.getElementById("chatbot").raw);
+				
+			} else {
+				document.getElementById("chatbot").raw = updateURL(ele.dataset.param10, document.getElementById("chatbot").raw);
+			}
 		} else {
 			document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw, ele.dataset.param10);
 		}
+		
 		document.getElementById("chatbot").raw = document.getElementById("chatbot").raw.replace("&&", "&");
 		document.getElementById("chatbot").raw = document.getElementById("chatbot").raw.replace("?&", "?");
 		if (sync){
