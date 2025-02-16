@@ -80,7 +80,7 @@
 	
 	function processMessage(ele, skipProcessing=false){
 	  
-		//// console.log(ele);
+		//console.log(ele);
 		var labels = ele.querySelectorAll("[aria-label]");
 		
 		if (ele.querySelectorAll('[data-icon="tail-in"]')){
@@ -88,14 +88,16 @@
 		}
 		
 		var chatmessage = "";
-		var chatname = "";
+		var chatname = escapeHtml(ele.querySelector("[role=''] [aria-label]")?.textContent) || "";
 		var chatimg = "";
 		
-		if (labels[0].getAttribute("role") && (labels[0].getAttribute("role")=="button")){
-			if (labels[0].querySelector("img[src]")){
+		if (labels[0] && labels[0].getAttribute("role") && (labels[0].getAttribute("role")=="button")){
+			if (labels[1] && labels[0].querySelector("img[src]")){
 				chatimg = labels[0].querySelector("img[src]").src;
-				chatname = escapeHtml(labels[1].textContent);
-			} else {
+				if (!chatname){
+					chatname = escapeHtml(labels[1].textContent);
+				}
+			} else if (!chatname){
 				chatname = escapeHtml(labels[0].textContent);
 			}
 			if (chatname){
@@ -316,10 +318,14 @@
 				if (ele){
 					document.querySelector("#main").querySelectorAll("[data-id]:not([data-set123])").forEach((xx)=>{
 						xx.dataset.set123 = true;
-						processMessage(xx, true);
+						try {
+							processMessage(xx, true);
+						} catch(e){console.log(e);}
 					});
 					onElementInserted(ele, function(element){
-						processMessage(element);
+						try {
+							processMessage(element);
+						} catch(e){console.log(e);}
 					});
 				}
 			}, 2000, ele);
