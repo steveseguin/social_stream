@@ -2746,6 +2746,23 @@ function updateSettings(ele, sync=true, value=null){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam1", target:target,  setting: ele.dataset.optionparam1, "value": ele.value}, function (response) {});
 		}
+	} else if (ele.dataset.optionparam10){
+		document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw, ele.dataset.optionparam10);
+		
+		if (ele.value){
+			ele.value.split("&").forEach(rem=>{
+				if (rem.includes("=")){
+					document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw, rem.split("=")[0]);
+				}
+			});
+			document.getElementById("chatbot").raw = updateURL(ele.dataset.optionparam10+"="+encodeURIComponent(ele.value).replace(/%26/g, '&').replace(/%3D/g, '='), document.getElementById("chatbot").raw);
+		}
+		
+		document.getElementById("chatbot").raw = document.getElementById("chatbot").raw.replace("&&", "&");
+		document.getElementById("chatbot").raw = document.getElementById("chatbot").raw.replace("?&", "?");
+		if (sync){
+			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam10", target:target,  setting: ele.dataset.optionparam10, "value": ele.value}, function (response) {});
+		}
 	} else if (ele.dataset.optionparam2){
 		document.getElementById("overlay").raw = removeQueryParamWithValue(document.getElementById("overlay").raw, ele.dataset.optionparam2);
 		
@@ -2807,23 +2824,7 @@ function updateSettings(ele, sync=true, value=null){
 		if (sync){
 			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam7", target:target,  setting: ele.dataset.optionparam7, "value": ele.value}, function (response) {});
 		}
-	} else if (ele.dataset.optionparam10){
-		document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw, ele.dataset.optionparam10);
-		
-		if (ele.value){
-			ele.value.split("&").forEach(rem=>{
-				if (rem.includes("=")){
-					document.getElementById("chatbot").raw = removeQueryParamWithValue(document.getElementById("chatbot").raw, rem.split("=")[0]);
-				}
-			});
-			document.getElementById("chatbot").raw = updateURL(ele.dataset.optionparam10+"="+encodeURIComponent(ele.value).replace(/%26/g, '&').replace(/%3D/g, '='), document.getElementById("chatbot").raw);
-		}
-		
-		document.getElementById("chatbot").raw = document.getElementById("chatbot").raw.replace("&&", "&");
-		document.getElementById("chatbot").raw = document.getElementById("chatbot").raw.replace("?&", "?");
-		if (sync){
-			chrome.runtime.sendMessage({cmd: "saveSetting", type: "optionparam4", target:target,  setting: ele.dataset.optionparam4, "value": ele.value}, function (response) {});
-		}
+
 	} else if (ele.dataset.param2){
 		if (ele.checked){
 			if (value!==null){
