@@ -102,6 +102,10 @@
 	padding: 5px;
 	font-family: Arial, sans-serif;
 	font-size: 12px;
+	display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
 }
 .username-item {
 	display: flex;
@@ -140,7 +144,8 @@
 .username-tag {
 	background-color: #443;
     border-radius: 4px;
-    padding: 0 7px;
+    padding: 2px 7px;
+    margin-bottom: 2px;
 }
 .source-type {
   font-size: 0.8em;
@@ -3485,6 +3490,21 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="read-out-urls">🗣️ Read out URLs rather than saying "link". </span>
 								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param10="simpletts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="do-not-say-says-or-someone-says-with-tts">🚫🗣️ Do not say "says" or "The bot says" with TTS </span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param10="simpletts2" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="do-not-read-out-chatname-and-someone-says-when-using-tts">🚫🗣️ Do not read out bot name or "The bot says" when using TTS. </span>
+								</div>
+								
 							</div>
 							
 							<div class="options_group tts-behavior-options">
