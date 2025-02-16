@@ -1552,16 +1552,16 @@ function update(response, sync=true){
 					//console.log(response);
 				}
 				
-				if (!response.settings?.ttsProvider10?.optionsetting10){
+				if (!response.settings?.ttsProvider?.optionsetting10){
 					let ttsService = "system";
 					if (response.settings?.ttskey?.textparam10){ttsService = "google";}
-					else if (response.settings?.googleAPIKey10?.textparam10){ttsService = "google";}
-					else if (response.settings?.elevenlabskey10?.textparam10){ttsService = "elevenlabs";}
-					else if (response.settings?.speechifykey10?.textparam10){ttsService = "speechifykey";}
-					if (!response.settings.ttsProvider10){
-						response.settings.ttsProvider10 = {}
+					else if (response.settings?.googleAPIKey?.textparam10){ttsService = "google";}
+					else if (response.settings?.elevenlabskey?.textparam10){ttsService = "elevenlabs";}
+					else if (response.settings?.speechifykey?.textparam10){ttsService = "speechifykey";}
+					if (!response.settings.ttsProvider){
+						response.settings.ttsProvider = {}
 					}
-					response.settings.ttsProvider10.optionsetting10 = ttsService;
+					response.settings.ttsProvider.optionsetting10 = ttsService;
 					//console.log("ttsService: "+ttsService);
 					//console.log(response);
 				}
@@ -1890,8 +1890,8 @@ function update(response, sync=true){
 									updateUsernameList(key); // may or may not trigger based on if it can find things
 								}
 								
-							}
-							 if ("optionsetting" in response.settings[key]){
+							} 
+							if ("optionsetting" in response.settings[key]){
 								var ele = document.querySelector("select[data-optionsetting='"+key+"']");
 								if (ele){
 									if (key == "midiOutputDevice" || key.startsWith("mididevice")){
@@ -1954,6 +1954,30 @@ function update(response, sync=true){
 										document.getElementById('googleTTS').classList.remove('hidden');
 									} else if (ele.value == "speechify") {
 										document.getElementById('speechifyTTS').classList.remove('hidden');
+									}
+								}
+							}
+							if ("optionsetting10" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionsetting10='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionsetting10;
+									updateSettings(ele, sync); 
+								}
+								
+								if (key == "ttsProvider") {
+									document.getElementById('systemTTS10').classList.add('hidden');
+									document.getElementById('elevenlabsTTS10').classList.add('hidden');
+									document.getElementById('googleTTS10').classList.add('hidden');
+									document.getElementById('speechifyTTS10').classList.add('hidden');
+									
+									if (ele.value == "system") {
+										document.getElementById('systemTTS10').classList.remove('hidden');
+									} else if (ele.value == "elevenlabs") {
+										document.getElementById('elevenlabsTTS10').classList.remove('hidden');
+									} else if (ele.value == "google") {
+										document.getElementById('googleTTS10').classList.remove('hidden');
+									} else if (ele.value == "speechify") {
+										document.getElementById('speechifyTTS10').classList.remove('hidden');
 									}
 								}
 							}
