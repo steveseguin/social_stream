@@ -80,7 +80,7 @@
 	
 	function processMessage(ele, skipProcessing=false){
 	  
-		//// console.log(ele);
+		console.log(ele);
 		var labels = ele.querySelectorAll("[aria-label]");
 		
 		if (ele.querySelectorAll('[data-icon="tail-in"]')){
@@ -91,7 +91,7 @@
 		var chatname = "";
 		var chatimg = "";
 		
-		if (labels[0].getAttribute("role") && (labels[0].getAttribute("role")=="button")){
+		if (labels[0] && labels[0].getAttribute("role") && (labels[0].getAttribute("role")=="button")){
 			if (labels[0].querySelector("img[src]")){
 				chatimg = labels[0].querySelector("img[src]").src;
 				chatname = escapeHtml(labels[1].textContent);
