@@ -571,11 +571,11 @@
 			}
 			
 			.allowfat .hl-message{
-				max-width: 400px;
+				max-width: 300px;
 				word-break: keep-all;
 				line-break: loose;
 				overflow-wrap: break-word;
-				overflow:auto;
+				overflow:visible;
 				white-space: normal;
 			}
 				
@@ -614,7 +614,10 @@
 				overflow-wrap: anywhere;
 				line-height: max(var(--message-line-height), var(--comment-font-size));
 				font-size: var(--comment-font-size);
-				
+			}
+			
+			.hl-name {
+				 overflow-wrap: normal;
 			}
 
 			.hl-message img,
@@ -750,9 +753,8 @@
 			}
 
 			.hl-righttopline {
-				max-height: 16px;
 				display: block;
-				margin: 8px 2px;
+				margin: 5px 2px;
 			}
 			.hl-righttopline .hl-source-type {
 				max-height: 11px;
@@ -781,6 +783,24 @@
 			}
 			.hl-rightside .hl-message {
 				margin: 2px 7px 2px 7px;
+				display:inilne-flex;
+			}
+			
+			
+			.hl-rightside.bubble .hl-message {
+				margin: 4px 7px 7px 7px;
+			}
+			
+			.bubble span.hl-content:empty {
+				display:none;
+			}
+			
+			.hl-message.bubble span.hl-donation {
+				margin: auto 0
+			}
+			
+			.compactmode .hl-message.bubble {
+				display:flex;
 			}
 
 			.bot > .hl-message {
@@ -806,7 +826,7 @@
 			.highlight-chat {
 				display: var(--list-or-horizontal);
 				cursor: var(--cursor-type);
-				width: fit-content;
+				width: auto;
 				background-color: var(--highlight-base);
 				min-height: 24px;
 				max-width: 100%;
@@ -955,8 +975,8 @@
 				margin: 2px 5px 0 5px;
 			}
 
-			div {
-				display: inline-block;
+			.highlight-chat {
+				display: flex;
 			}
 
 			.hide {
@@ -1014,6 +1034,10 @@
 			}
 			.notcompactmode div:not(.expand) > .time-arrived {
 				margin: 9.5px 2px auto 1px;
+			}
+			
+			.notcompactmode .hl-righttopline > div.time-arrived {
+				margin: 1.5px 2px auto 1px;
 			}
 			
 			.hl-name:first-child {
@@ -1218,6 +1242,7 @@
 			
 			.horizontal .donationAmount {
 				vertical-align: middle;
+				margin: auto 0;
 			}
 
 			@-webkit-keyframes glow {
@@ -8239,7 +8264,7 @@
 					}
 					
 					if (largeavatar) {
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline"><div>' + timeArrived + chatname  + "<div class='queueid'></div></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
+						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
 					} else if (twoLines) {
 						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-firstline">' + "<div class='queueid'></div>" + showType + chatImg + chatname + '</div><div class="hl-message">' + timeArrived + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
 					} else if (splitMode) {
