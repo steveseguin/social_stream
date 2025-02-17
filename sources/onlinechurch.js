@@ -88,7 +88,7 @@
 	async function processMessage(ele){	// twitch
 	
 	
-		console.log(ele);
+		//console.log(ele);
 		
 		try {
 			
@@ -150,7 +150,7 @@
 		  } catch(e){}
 
 	  } catch(e){
-		  console.log(e);
+		  //console.log(e);
 		 return;
 	  }
 	  var data = {};
@@ -249,10 +249,10 @@
 				if (clear){
 					for (var i = 0;i<clear.length;i++){
 						clear[i].ignore = true; // don't let already loaded messages to re-load.
-						console.log("doing what I shouldn't be doing?");
-						processMessage(clear[i]);
+						//console.log("doing what I shouldn't be doing?");
+						//processMessage(clear[i]);
 					}
-					console.log("Social Stream ready to go");
+					//console.log("Social Stream ready to go");
 					onElementInserted(document.querySelector("#publicchat [data-testid='feed-objectList']"));
 				}
 			},1000);
