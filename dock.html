@@ -993,11 +993,12 @@
 				left: 0;
 				width: fit-content;
 				color: var(--font-color-name);
-				display: inline-block;
+				display: inline-flex;
 				font-size: var(--author-font-size);
 			}
 
 			.notcompactmode .hl-name {
+				    margin: 3.14px 5px 0 5px;
 				min-width: max(135px, 12vw);
 				max-width: max(220px, 25vw);
 				white-space: unset;
@@ -1010,6 +1011,9 @@
 			.notcompactmode .highlight-chat>div.bubble .hl-name {
 				min-width: max(35px, 2vw);
 				line-height: unset;
+			}
+			.notcompactmode div:not(.expand) > .time-arrived {
+				margin: 9.5px 2px auto 1px;
 			}
 			
 			.hl-name:first-child {
@@ -1209,6 +1213,7 @@
 				margin: var(--donation-amount-margin);
 				white-space: nowrap;
 				margin: auto 0;
+				margin: auto min(2%, 31px) auto auto
 			}
 			
 			.horizontal .donationAmount {
