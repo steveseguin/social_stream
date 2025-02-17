@@ -181,6 +181,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - live.nicovideo.jp (no pop out chat)
 - bitchute.com (no pop out chat)
 - substack
+- online.church (no pop out)
 
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   
