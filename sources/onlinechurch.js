@@ -1,5 +1,5 @@
 (function () {
-	
+	try {
 	
 	async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlutin.com/timeout-fetch-request/
 		try {
@@ -292,6 +292,9 @@
 				console.log("KEEP ALIVE TRICk ENABLED");
 			})
 			.catch(errorHandle);
+	} catch(e){
+		console.log(e);
+	}
 	} catch(e){
 		console.log(e);
 	}
