@@ -552,7 +552,67 @@ button:disabled {
 .puppet * {
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
-	
+
+.desktop-capturer-selection {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	background: rgba(30,30,30,.75);
+	color: #fff;
+	z-index: 10000000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.desktop-capturer-selection__scroller {
+	width: 100%;
+	max-height: 100vh;
+	overflow-y: auto;
+}
+.desktop-capturer-selection__list {
+	max-width: calc(100% - 100px);
+	margin: 50px;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	list-style: none;
+	overflow: hidden;
+	justify-content: center;
+}
+.desktop-capturer-selection__item {
+	display: flex;
+	margin: 4px;
+}
+.desktop-capturer-selection__btn {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	width: 145px;
+	margin: 0;
+	border: 0;
+	border-radius: 3px;
+	padding: 4px;
+	background: #252626;
+	text-align: left;
+	transition: background-color .15s, box-shadow .15s;
+}
+.desktop-capturer-selection__btn:hover,
+.desktop-capturer-selection__btn:focus {
+	background: rgba(98,100,167,.8);
+}
+.desktop-capturer-selection__thumbnail {
+	width: 100%;
+	height: 81px;
+	object-fit: cover;
+}
+.desktop-capturer-selection__name {
+	margin: 6px 0 6px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
 </style>
 </head>
 <body>
@@ -1800,6 +1860,160 @@ providerSelect.addEventListener('change', function() {
 const avatar = new PuppetAvatar('#puppet-container');
 avatar.setPosition('20px', 'calc(100vh - 320px)'); // or avatar.setPosition(20, 20);
 avatar.setEmotion('happy', false);
+
+
+var ipcRenderer = false;
+var ElectronDesktopCapture = false;
+
+try {
+	ipcRenderer = require("electron").ipcRenderer;
+	window.navigator.mediaDevices.getDisplayMedia = (constraints = false) => {
+		return new Promise(async (resolve, reject) => {
+			try {
+				const sources = await ipcRenderer.sendSync("getSources", { types: ["screen", "window"] });
+				const selectionElem = document.createElement("div");
+				selectionElem.classList = "desktop-capturer-selection";
+
+				selectionElem.innerHTML = `
+				<div class="desktop-capturer-selection__scroller">
+				  <ul class="desktop-capturer-selection__list">
+					${sources
+						.map(
+							({ id, name, thumbnail, display_id, appIcon }) => `
+					  <li class="desktop-capturer-selection__item">
+						<button class="desktop-capturer-click desktop-capturer-selection__btn" data-id="${id}" title="${name}">
+						  <img class="desktop-capturer-selection__thumbnail" src="${thumbnail.toDataURL()}" />
+						  <span class="desktop-capturer-selection__name">${name}</span>
+						</button>
+					  </li>
+					`
+						)
+						.join("")}
+					<div id="alsoCaptureAudioParent1" style="text-align: center;margin: auto 5px;font-size: 120%;"><i class="las la-music" style="font-size:40px;"></i><br />Include Desktop Audio<br /><input id="alsoCaptureAudio" style="width:20px;height:20px;margin-top: 10px;" type="checkbox" checked></div>
+					<div id="alsoCaptureAudioParent2" style="text-align: center;margin: auto 5px;font-size: 120%;display:none;"><i class="las la-music" style="font-size:40px;"></i><br />Audio capture not <br />supported on macOS</div>
+					<button id="captureDesktopAudio" class="desktop-capturer-click" style="margin: 10px;"><i class="las la-music" style="font-size:40px;"></i><br />Capture ONLY<br />Desktop Audio</button>
+					<button id="cancelscreenshare" style="margin: 10px; background-color: #F88; width: 100px;"><i class="las la-window-close" style="font-size:40px;"></i><br />Cancel</button>
+				  </ul>
+				</div>
+			  `;
+				document.body.appendChild(selectionElem);
+				
+				const isMac = navigator.platform.toLowerCase().includes('mac');
+				if (isMac) {
+					document.getElementById("captureDesktopAudio").style.display = "none";
+					document.getElementById("alsoCaptureAudio").checked = false;
+					document.getElementById("alsoCaptureAudioParent1").style.display = "none";
+					document.getElementById("alsoCaptureAudioParent2").style.display = "inline-block";
+				}
+
+				document.getElementById("cancelscreenshare").addEventListener("click", async () => {
+					selectionElem.remove();
+					reject(null);
+				});
+				document.querySelectorAll(".desktop-capturer-click").forEach(button => {
+					button.addEventListener("click", async () => {
+						try {
+							if (button.id == "captureDesktopAudio") {
+								var new_constraints = {
+									audio: {
+										mandatory: {
+											chromeMediaSource: "desktop"
+										}
+									},
+									video: {
+										mandatory: {
+											chromeMediaSource: "desktop"
+										}
+									}
+								};
+								new_constraints.video.mandatory.maxFrameRate = 1;
+								
+								const stream = await window.navigator.mediaDevices.getUserMedia(new_constraints);
+								if (stream.getVideoTracks().length) {
+									var track = stream.getVideoTracks()[0];
+									stream.removeTrack(stream.getVideoTracks()[0]);
+									track.stop();
+								}
+								resolve(stream);
+								selectionElem.remove();
+							} else {
+								var audioStream = false;
+								if (getById("alsoCaptureAudio").checked) {
+									var new_constraints = {
+										audio: {
+											mandatory: {
+												chromeMediaSource: "desktop"
+											}
+										},
+										video: {
+											mandatory: {
+												chromeMediaSource: "desktop"
+											}
+										}
+									};
+									new_constraints.video.mandatory.maxFrameRate = 1;
+									audioStream = await window.navigator.mediaDevices.getUserMedia(new_constraints);
+									if (audioStream.getVideoTracks().length) {
+										var track = audioStream.getVideoTracks()[0];
+										audioStream.removeTrack(audioStream.getVideoTracks()[0]);
+										track.stop();
+									}
+								}
+
+								const id = button.getAttribute("data-id");
+								const source = sources.find(source => source.id === id);
+								if (!source) {
+									throw new Error(`Source with id ${id} does not exist`);
+								}
+								var new_constraints = {
+									audio: false,
+									video: {
+										mandatory: {
+											chromeMediaSource: "desktop",
+											chromeMediaSourceId: source.id
+										}
+									}
+								};
+								try {
+									if (constraints.video.width.ideal) {
+										new_constraints.video.mandatory.maxWidth = constraints.video.width.ideal;
+									}
+								} catch (e) {}
+								try {
+									if (constraints.video.height.ideal) {
+										new_constraints.video.mandatory.maxHeight = constraints.video.height.ideal;
+									}
+								} catch (e) {}
+								try {
+									if (constraints.video.frameRate.ideal) {
+										new_constraints.video.mandatory.maxFrameRate = constraints.video.frameRate.ideal;
+									}
+								} catch (e) {}
+								const stream = await window.navigator.mediaDevices.getUserMedia(new_constraints);
+
+								if (audioStream && audioStream.getAudioTracks().length) {
+									stream.addTrack(audioStream.getAudioTracks()[0]);
+								}
+
+								resolve(stream);
+								selectionElem.remove();
+							}
+						} catch (err) {
+							console.error("Error selecting desktop capture source:", err);
+							reject(err);
+						}
+					});
+				});
+			} catch (err) {
+				console.error("Error displaying desktop capture sources:", err);
+				reject(err);
+			}
+		});
+	};
+	ElectronDesktopCapture = true;
+} catch (e) {
+	console.warn("Couldn't load electron's screen capture. Elevate the app's permission to allow it (right-click?)");
+}
 
 </script>
 </body>
