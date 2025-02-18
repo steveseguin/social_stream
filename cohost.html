@@ -1900,10 +1900,12 @@ try {
 				
 				const isMac = navigator.platform.toLowerCase().includes('mac');
 				if (isMac) {
-					document.getElementById("captureDesktopAudio").style.display = "none";
-					document.getElementById("alsoCaptureAudio").checked = false;
-					document.getElementById("alsoCaptureAudioParent1").style.display = "none";
-					document.getElementById("alsoCaptureAudioParent2").style.display = "inline-block";
+					try {
+						document.getElementById("captureDesktopAudio")?.style.display = "none";
+						document.getElementById("alsoCaptureAudio")?.checked = false;
+						document.getElementById("alsoCaptureAudioParent1")?.style.display = "none";
+						document.getElementById("alsoCaptureAudioParent2")?.style.display = "inline-block";
+					} catch(e){}
 				}
 
 				document.getElementById("cancelscreenshare").addEventListener("click", async () => {
@@ -1938,7 +1940,7 @@ try {
 								selectionElem.remove();
 							} else {
 								var audioStream = false;
-								if (document.getElementById("alsoCaptureAudio").checked) {
+								if (document.getElementById("alsoCaptureAudio") && document.getElementById("alsoCaptureAudio").checked) {
 									var new_constraints = {
 										audio: {
 											mandatory: {
