@@ -74,14 +74,18 @@
 		if (!ele || !ele.isConnected){
 			return;
 		}
-		//console.log(ele);
+		
+		ele = ele.nodeName === 'UL' ? ele.querySelector('li') || ele : ele;
+		
 		if (ele && ele.marked){
 		  return;
 		} else {
 		  ele.marked = true;
 		}
 		
-		//console.log(ele);
+		
+		
+		console.log(ele);
 
 		var nameColor = "";
         var name = "";
@@ -205,12 +209,12 @@
 
 	setInterval(function(){
 		try {
-			if (document.getElementById("widget-sp").shadowRoot.getElementById("sidebar").querySelector("ul[class^='ChatList']")){
+			if (document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("ul[class^='ChatList']")){
 				setTimeout(function(){
-					if (!document.getElementById("widget-sp").shadowRoot.getElementById("sidebar").querySelector("ul[class^='ChatList']").marked){
-						document.getElementById("widget-sp").shadowRoot.getElementById("sidebar").querySelector("ul[class^='ChatList']").marked=true;
+					if (!document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("ul[class^='ChatList']").marked){
+						document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("ul[class^='ChatList']").marked=true;
 						console.log("starting..");
-						onElementInserted(document.getElementById("widget-sp").shadowRoot.getElementById("sidebar").querySelector("ul[class^='ChatList']"));
+						onElementInserted(document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("ul[class^='ChatList']"));
 					}
 				},1500);
 			}
