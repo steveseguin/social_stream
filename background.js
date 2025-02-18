@@ -7236,12 +7236,12 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 		
-		if (settings.highlightevent && settings.highlightevent.textsetting && data.chatmessage && data.event) {
+		if (settings.highlightevent && settings.highlightevent.textsetting.trim() && data.chatmessage && data.event) {
 			if (data.chatmessage.includes(settings.highlightevent.textsetting)){
 				data.highlightColor = "#FFFF21";
 			}
 		}
-		if (settings.highlightword && settings.highlightword.textsetting && data.chatmessage) {
+		if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
 			if (data.chatmessage.includes(settings.highlightword.textsetting)){
 				data.highlightColor = "#FFFF21";
 			}
