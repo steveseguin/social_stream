@@ -7157,7 +7157,6 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (data.chatmessage) {
-			console.log("Chat true");
 			const botReplyEvents = settings['botReply'] || [];
 			for (const id of botReplyEvents) {
 				const event = settings[`botReplyMessageEvent${id}`];
@@ -7234,6 +7233,17 @@ async function applyBotActions(data, tab = false) {
 				} catch (e) {
 					console.error(e);
 				}
+			}
+		}
+		
+		if (settings.highlightevent && settings.highlightevent.textsetting && data.chatmessage && data.event) {
+			if (data.chatmessage.includes(settings.highlightevent.textsetting)){
+				data.highlightColor = "#FFFF21";
+			}
+		}
+		if (settings.highlightword && settings.highlightword.textsetting && data.chatmessage) {
+			if (data.chatmessage.includes(settings.highlightword.textsetting)){
+				data.highlightColor = "#FFFF21";
 			}
 		}
 
