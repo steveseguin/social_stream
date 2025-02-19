@@ -150,8 +150,32 @@
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 	
-	async function processMessage(ele){	// twitch
 	
+	function deleteThis(ele){
+		if (ele.querySelector("[class^='deleted-message']")){
+		  console.log("DELETEED");
+		  try {
+				var data = {};
+				data.chatname = escapeHtml(ele.querySelector(".chat-entry-username").innerText);
+				chatname = chatname.replace("Channel Host", "");
+				chatname = chatname.replace(":", "");
+				chatname = chatname.trim();
+
+				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
+				data.type = "kick";
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					{
+						delete: data
+					},
+					function (e) {}
+				);
+			} catch (e) {
+			}
+		 }
+	}
+	
+	async function processMessage(ele){	// twitch
 	
 	  if (settings.delaykick){
 		  await sleep(3000);
@@ -163,6 +187,11 @@
 	  
 	  if (settings.customkickstate) {
 		return;
+	  }
+	  
+	   if (ele.querySelector("[class^='deleted-message']")){
+		  console.log("DELETEED");
+		  return;
 	  }
 		
 	  var chatsticker = false;
@@ -261,7 +290,9 @@
 	  //}
 	  
 	  try {
-		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
+			ele.dataset.mid = e.id;
+		});
 	  } catch(e){
 		  //
 	  }

@@ -652,10 +652,7 @@
 					message: data
 				},
 				function (e) {
-					if ("mid" in e) {
-						ele.dataset.mid = e.mid;
-						//midList.push(e.mid);
-					}
+					ele.dataset.mid = e.id;
 				}
 			);
 		} catch (e) {
@@ -890,6 +887,8 @@
 				var data = {};
 				data.chatname = escapeHtml(chatname.innerText);
 				data.type = "twitch";
+				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
+				
 				try {
 					chrome.runtime.sendMessage(
 						chrome.runtime.id,

@@ -4,131 +4,146 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Overlay</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@300..800&display=swap');
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@300..800&display=swap');
 
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(10, 22, 40, 0.8);
-            font-family: 'Host Grotesk', sans-serif;
-            background-color: #0000;
-        }
+body,
+html {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(10, 22, 40, 0.8);
+	font-family: 'Host Grotesk', sans-serif;
+	background-color: #0000;
+}
 
-        #chat-container {
-            padding-top: 25px;
-            margin: 0px;
-            display: flex;
-            flex-flow: column wrap;
-            overflow: hidden;
-            max-height: 100%;
-            width: 400px;
-            min-width: 400px;
-        }
+#chat-container {
+	padding-top: 25px;
+	margin: 0px;
+	display: block;
+	overflow: visible;
+	width: 400px;
+	min-width: 400px;
+	position: fixed;
+	top: 0;
+	left: 0;
+}
 
-        .message-container {
-            position: relative;
-            margin-bottom: 20px;
-            min-width: 400px;
-        }
-		
-		.badges:empty, span:empty, .text:empty, .donation:empty {
-			display:none;
-		}
 
-        .username-box {
-            display: flex;
-            position: absolute;
-            max-height: 1.6rem;
-            top: -19px;
-            left: -8px;
-            padding: 4px 8px;
-            border-radius: 8px;
-            color: #ffffff;
-            font-weight: 600;
-            z-index: 2;
-            font-size: clamp(0.85em, 2.5vw, 1.1em);
-            min-width: 1.9em;
-        }
-		
-		.username-box span {
-			display:inline-block;
-		}
-		
-		.donation {
-			padding: 7px 18px 5px 18px;
-			color: white;
-		}
+.message-container {
+	position: relative;
+	margin-bottom: 20px;
+	min-width: 400px;
+	padding-top: 15px;
+	opacity: 0;
+	transform: translateY(-20px);
+	animation: slideFadeIn 0.5s ease forwards;
+}
 
-        .badge {
-            height: 1em;
-            vertical-align: middle;
-            margin-left: 4px;
-        }
+.badges:empty,
+span:empty,
+.text:empty,
+.donation:empty {
+	display: none;
+}
 
-        .message {
-            display: inline-block;
-            min-height: 1.25rem;
-            max-width: 90%;
-            background: linear-gradient(90deg, #555, color-mix(in srgb, #555A 90%, #000A));
-            padding: 14px 14px 8px 14px;
-            margin-top: 6px;
-            margin-left: 15px;
-            margin-right: 15px;
-            border-radius: 10px;
-            color: #ffffff;
-            opacity: 0;
-            transform: translateY(-20px);
-            animation: slideFadeIn 0.5s ease forwards;
-            position: relative;
-            word-wrap: break-word;
-        }
+.username-box {
+	display: inline-flex;
+	position: absolute;
+	max-height: 1.6rem;
+	top: 0;
+	left: 15px;
+	padding: 4px 8px;
+	border-radius: 8px;
+	color: #ffffff;
+	font-weight: 600;
+	z-index: 2;
+	font-size: clamp(0.85em, 2.5vw, 1.1em);
+	min-width: 1.9em;
+	width: auto;
+}
 
-        .text {
-            font-size: clamp(0.85em, 2.5vw, 1em);
-            line-height: 1.4;
-        }
-        .badges {
-            display: flex;
-            align-items: center;
-        }
-		.badges svg, .badges img, .text svg, .text img {
-			max-width:64px;
-			max-height:24px;
-		}
-        .badges .textbadge {
-            border-radius: 6px;
-            padding: 0 5px;
-            font-size: 50%;
-            width: max-content;
-            background: rgba(0, 0, 0, 0.15);
-            width: max-content;
-            padding: 1px 3px 3px 3px;
-        }
+.username-box span {
+	display: inline-block;
+}
 
-        .avatar {
-            padding: 0.7em;
-            margin-right: 4px;
-            background-size: contain;
-            border-radius: 1em;
-        }
+.donation {
+	padding: 7px 18px 5px 18px;
+	color: white;
+	font-weight: 700;
+}
 
-        @keyframes slideFadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-		
-		.message-container.removing {
-			opacity: 0;
-			transform: translateY(20px);
-			transition: opacity 0.5s ease, transform 0.5s ease;
-		}
-    </style>
-    <script src="./chroma.min.cjs"></script>
+.badge {
+	height: 1em;
+	vertical-align: middle;
+	margin-left: 4px;
+}
+
+.message {
+	display: inline-block;
+	min-height: 1.25rem;
+	max-width: 90%;
+	padding: 14px 14px 8px 14px;
+	margin-top: 6px;
+	margin-left: 15px;
+	margin-right: 15px;
+	border-radius: 10px;
+	color: #ffffff;
+	position: relative;
+	word-wrap: break-word;
+	inline-size: max-content;
+}
+
+.text {
+	font-size: clamp(0.85em, 2.5vw, 1em);
+	line-height: 1.4;
+}
+
+.badges {
+	display: flex;
+	align-items: center;
+}
+
+.badges svg,
+.badges img,
+.text svg,
+.text img {
+	max-width: 64px;
+	max-height: 24px;
+}
+
+.badges .textbadge {
+	border-radius: 6px;
+	padding: 0 5px;
+	font-size: 50%;
+	width: max-content;
+	background: rgba(0, 0, 0, 0.15);
+	width: max-content;
+	padding: 1px 3px 3px 3px;
+}
+
+.avatar {
+	padding: 0.7em;
+	margin-right: 4px;
+	background-size: contain;
+	border-radius: 1em;
+}
+
+@keyframes slideFadeIn {
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.message-container.removing {
+	opacity: 0;
+	transform: translateY(20px);
+	transition: opacity 0.5s ease, transform 0.5s ease;
+}
+</style>
+<script src="./chroma.min.cjs"></script>
 </head>
 <body>
     <div id="chat-container"></div>
@@ -168,14 +183,9 @@
         messageContainer.classList.add('message-container');
         
         const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message');
-        //const { h, s, l } = rgbToHsl(data.nameColor || "#555");
-        //messageDiv.style.background = `linear-gradient(90deg, ${hslToRgb(h, 50, l)}, ${data.nameColor || "#555"})`;
-        messageDiv.style.background = `linear-gradient(90deg, ${chroma(data.nameColor || "#555").desaturate(4).darken(1).alpha(0.8)}, ${chroma(data.nameColor || "#555").desaturate(3).darken(1).alpha(0.8)})`;
         if (data.mid) messageDiv.id = data.mid;
         data.sourceicon = `https://socialstream.ninja/sources/images/${data.type}.png`;
 
-        // Build the badges HTML
         let chatbadges = "";
         if (data.chatbadges) {
             console.log(data.chatbadges);
@@ -201,14 +211,14 @@
                 <span>${data.chatname}</span>
                 <div class="badges">${chatbadges}</div>
             </div>
-            <div class="text">${data.chatmessage || ''}</div>
-            ${(data.donation||data.hasDonation) ? `<div class="donation">${(data.donation||data.hasDonation)}</div>` : ''}
+			<div class="message" style="background: linear-gradient(90deg, ${chroma(data.nameColor || "#555").desaturate(4).darken(1).alpha(0.8)}, ${chroma(data.nameColor || "#555").desaturate(3).darken(1).alpha(0.8)})">
+				<div class="text">${data.chatmessage || ''}${(data.donation||data.hasDonation) ? `<div class="donation">${(data.donation||data.hasDonation)}</div>` : ''}
+			</div>
         `;
 
         messageContainer.appendChild(messageDiv);
         chatContainer.prepend(messageContainer);
         
-
         // Auto-scroll to the latest message
         chatContainer.scrollTop = chatContainer.scrollHeight;
 

@@ -3197,8 +3197,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if ("message" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			var letsGo = await processIncomingMessage(request.message, sender);
-			if (letsGo && letsGo.mid){
-				sendResponse({ state: isExtensionOn, mid: letsGo.mid });
+			if (letsGo && letsGo.id){
+				sendResponse({ state: isExtensionOn, id: letsGo.id });
 			} else {
 				sendResponse({ state: isExtensionOn});
 			}
@@ -3853,7 +3853,7 @@ async function replayMessagesFromTimestamp(startTimestamp) {
                 messages.forEach(message => {
 					
                     const relativeDelay = message.timestamp - baseTime;
-					delete message.mid;
+					delete message.mid; // only found in messages restored from db.
 					
                     setTimeout(() => {
                         sendDataP2P(message);
@@ -4578,8 +4578,8 @@ function setupSocket() {
 						resp  = ({ state: isExtensionOn, error: "Must include message type"});
 					} else {
 						var letsGo = await processIncomingMessage(data.extContent, false);
-						if (letsGo && letsGo.mid){
-							resp  = ({ state: isExtensionOn, mid: letsGo.mid });
+						if (letsGo && letsGo.id){
+							resp  = ({ state: isExtensionOn, id: letsGo.id });
 						} else{
 							resp  = ({ state: isExtensionOn});
 						}

@@ -72,6 +72,7 @@
 			chatname: escapeHtml(chatname.innerText),
 			type: (youtubeShorts ? "youtubeshorts" : "youtube")
 		  };
+		  ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
 		  chrome.runtime.sendMessage(chrome.runtime.id, { "delete": data }, function(e) {});
 		}
 	  } catch (e) {
@@ -786,7 +787,10 @@
 				{
 					message: data
 				},
-				function () {}
+				(e)=> {
+					//console.log(e);
+					e.id ? (ele.dataset.mid = e.id) : "";
+				}
 			);
 		} catch (e) {}
 	}
