@@ -162,31 +162,31 @@
 	}
 	
 	
-	
 	var counter = 1;
 	
-	async function processMessage(ele, deleted=false){	// twitch
+	async function processMessage(ele){	// twitch
 	
 	  if (!ele || !ele.isConnected) return;
 	  
-	  if (deleted && ele.querySelector(".line-through")){
-		console.log("DELETEED");
-	  try {
-			var data = {};
-			data.chatname = escapeHtml(ele.querySelector("button[title]").innerText);
-			data.chatname = data.chatname.replace("Channel Host", "");
-			data.chatname = data.chatname.replace(":", "");
-			data.chatname = data.chatname.trim();
-			data.type = "kick";
-			chrome.runtime.sendMessage(
-				chrome.runtime.id,
-				{
-					delete: data
-				},
-				function (e) {}
-			);
-		} catch (e) {
-		}
+	  if (ele.querySelector(".line-through")){
+		  console.log("DELETEED");
+		  try {
+				var data = {};
+				data.chatname = escapeHtml(ele.querySelector("button[title]").innerText);
+				data.chatname = data.chatname.replace("Channel Host", "");
+				data.chatname = data.chatname.replace(":", "");
+				data.chatname = data.chatname.trim();
+				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
+				data.type = "kick";
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					{
+						delete: data
+					},
+					function (e) {}
+				);
+			} catch (e) {
+			}
 		return;
 	  }
 	  
@@ -339,8 +339,9 @@
 	  //}
 	  
 	  try {
-		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){
-			//console.log(e); // I should figure out why MID isn't returning, as I need that to be selective with deleting.
+		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
+			ele.dataset.mid = e.id;
+			
 		});
 	  } catch(e){
 		  //
@@ -391,7 +392,7 @@
 			mutations.forEach(function(mutation) {
 				if (mutation.removedNodes.length) {
 					if (mutation.target.parentNode && mutation.target.parentNode.dataset.index){
-						processMessage(mutation.target.parentNode, true);
+						processMessage(mutation.target.parentNode);
 					}
 				} else if (mutation.target == target || subtree){
 					if (mutation.addedNodes.length) {
