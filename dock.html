@@ -12,7 +12,7 @@
 		<style>
 			:root {
 				--show-emoji-only: flex;
-				--list-or-horizontal: flex;
+				--list-or-horizontal: block;
 				--show-donos-only: flex;
 				--show-queue-only: flex;
 				--scale-output: 1;
@@ -42,7 +42,7 @@
 
 				--pinned-queued-bg: #9d99cc;
 				--pinned-bg: #712a65;
-				--donation-amount-margin: auto;
+				--donation-amount-margin: 0 auto 0 0;
 
 				--flex-direction: row;
 
@@ -68,6 +68,9 @@
 
 				--scrollbar-visible: inherit;
 				--padding-rows: 3px;
+				
+				--text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
+				
 			}
 			.closeBtn {
 				position: absolute;
@@ -376,7 +379,6 @@
 			}
 			.hl-badge {
 				margin: 0px 2px 0px 0px;
-				vertical-align: top;
 				max-width: 100px;
 				max-height: 20px;
 				height: 20px;
@@ -493,7 +495,8 @@
 				color: var(--font-color);
 				margin: 0 0;
 				background-color: var(--background-color);
-				text-shadow: -1.5px -1.5px #000000, -1.5px -0.75px #000000, -1.5px 0px #000000, -1.5px 0.75px #000000, -1.5px 1.5px #000000, -0.75px -1.5px #000000, -0.75px -0.75px #000000, -0.75px 0px #000000, -0.75px 0.75px #000000, -0.75px 1.5px #000000, 0px -1.5px #000000, 0px -0.75px #000000, 0px 0px #000000, 0px 0.75px #000000, 0px 1.5px #000000, 0.75px -1.5px #000000, 0.75px -0.75px #000000, 0.75px 0px #000000, 0.75px 0.75px #000000, 0.75px 1.5px #000000, 1.5px -1.5px #000000, 1.5px -0.75px #000000, 1.5px 0px #000000, 1.5px 0.75px #000000, 1.5px 1.5px #000000;
+				
+				text-shadow: var(--text-shadow);
 				overflow-x: hidden;
 				scrollbar-color: #666 #201c29;
 			}
@@ -576,7 +579,7 @@
 				word-break: keep-all;
 				line-break: loose;
 				overflow-wrap: break-word;
-				overflow:auto;
+				overflow:visible;
 				white-space: normal;
 			}
 				
@@ -615,6 +618,10 @@
 				overflow-wrap: anywhere;
 				line-height: max(var(--message-line-height), var(--comment-font-size));
 				font-size: var(--comment-font-size);
+			}
+			
+			.hl-name {
+				 overflow-wrap: normal;
 			}
 
 			.hl-message img,
@@ -750,9 +757,8 @@
 			}
 
 			.hl-righttopline {
-				max-height: 16px;
 				display: block;
-				margin: 8px 2px;
+				margin: 5px 2px;
 			}
 			.hl-righttopline .hl-source-type {
 				max-height: 11px;
@@ -780,7 +786,25 @@
 				margin: 0px 0px 0px 5px;
 			}
 			.hl-rightside .hl-message {
-				margin: 1px 7px;
+				margin: 2px 7px 2px 7px;
+				display:inilne-flex;
+			}
+			
+			
+			.hl-rightside.bubble .hl-message {
+				margin: 4px 7px 7px 7px;
+			}
+			
+			.bubble span.hl-content:empty {
+				display:none;
+			}
+			
+			.hl-message.bubble span.hl-donation {
+				margin: auto 0
+			}
+			
+			.compactmode .hl-message.bubble {
+				display:flex;
 			}
 
 			.bot > .hl-message {
@@ -798,7 +822,6 @@
 
 			.hl-badges {
 				margin-left: 4px;
-				vertical-align: text-bottom;
 			}
 			.hl-badges:first-child {
 				margin-left: 0;
@@ -807,7 +830,7 @@
 			.highlight-chat {
 				display: var(--list-or-horizontal);
 				cursor: var(--cursor-type);
-				width: fit-content;
+				width: auto;
 				background-color: var(--highlight-base);
 				min-height: 24px;
 				max-width: 100%;
@@ -863,6 +886,7 @@
 			
 			.horizontal:not(.alignbottom) .highlight-chat.compactmode {
 				vertical-align: top;
+				display:inline-flex;
 			}
 
 			.horizontal .compactmode.time-arrived {
@@ -870,8 +894,8 @@
 			}
 			
 
-			.horizontal .highlight-chat.larger-emojis {
-				line-height: 30px;
+			.horizontal .highlight-chat.larger-emojis:not(.compactmode) {
+				line-height: 30px; 
 				height: 40px;
 				max-height: 40px;
 			}
@@ -914,21 +938,15 @@
 			}
 
 			.larger-emojis img.hl-badge {
-				top: 3px;
 				height: 22px;
 				max-height: 22px;
 			}
 			.larger-emojis .icon, .larger-emojis .svg.hl-badge  {
-				top: 3px;
 				height: 24px;
 				max-height: 24px;
 				vertical-align: top;
 			}
 			
-			.larger-emojis  .time-arrived {
-				vertical-align: top;
-			}
-
 			.hl-badge.svg {
 				object-fit: contain;
 				display: inline-block;
@@ -938,14 +956,6 @@
 			.notcompactmode .highlight-chat > img.icon {
 				top: 0px;
 				margin: 1.6px 2px auto 1px;
-			}
-
-			.notcompactmode .time-arrived {
-				margin: 8px 2px auto 1px;
-			}
-
-			.notcompactmode div:not(.expand) > .time-arrived {
-				margin: 9.5px 2px auto 1px;
 			}
 
 			.notcompactmode .larger-emojis > .time-arrived {
@@ -969,8 +979,8 @@
 				margin: 2px 5px 0 5px;
 			}
 
-			div {
-				display: inline-block;
+			.highlight-chat {
+				display: flex;
 			}
 
 			.hide {
@@ -1007,17 +1017,31 @@
 				left: 0;
 				width: fit-content;
 				color: var(--font-color-name);
-				display: inline-block;
+				display: inline-flex;
 				font-size: var(--author-font-size);
 			}
 
 			.notcompactmode .hl-name {
-				margin: 3.14px 5px 0 5px;
+				    margin: 3.14px 5px 0 5px;
 				min-width: max(135px, 12vw);
 				max-width: max(220px, 25vw);
 				white-space: unset;
 				min-height: 24px;
 				line-height: max(var(--author-font-size), var(--message-line-height));
+			}
+			.notcompactmode .highlight-chat>div:not(.bubble) .hl-name {
+				margin: 3.14px 5px 0 5px;
+			}
+			.notcompactmode .highlight-chat>div.bubble .hl-name {
+				min-width: max(35px, 2vw);
+				line-height: unset;
+			}
+			.notcompactmode div:not(.expand) > .time-arrived {
+				margin: 9.5px 2px auto 1px;
+			}
+			
+			.notcompactmode .hl-righttopline > div.time-arrived {
+				margin: 1.5px 2px auto 1px;
 			}
 			
 			.hl-name:first-child {
@@ -1029,6 +1053,7 @@
 				padding: 2px 1px;
 				margin: 0;
 				min-height: 27px;
+				display:inline-flex;
 			}
 
 			@media only screen and (max-width: 400px) {
@@ -1142,17 +1167,14 @@
 			}
 
 			.bubble {
-				border-radius: 20px;
-				padding: 7px 10px;
+				border-radius: 13px;
+				padding: 7px 12px 7px 10px;
 				background-color: var(--bgcolor-bubble);
 				margin: 0px 0 0px 5px;
 			}
 
 			.bubble.odd {
-				border-radius: 20px;
-				padding: 7px 10px;
 				background-color: var(--bgcolor-bubble-odd);
-				margin: 0px 0 0px 5px;
 			}
 
 			.bubble.dono-highlight {
@@ -1218,6 +1240,13 @@
 				padding-left: 5px;
 				margin: var(--donation-amount-margin);
 				white-space: nowrap;
+				margin: auto 0;
+				margin: auto min(2%, 31px) auto auto
+			}
+			
+			.horizontal .donationAmount {
+				vertical-align: middle;
+				margin: auto 0;
 			}
 
 			@-webkit-keyframes glow {
@@ -1241,6 +1270,7 @@
 				left: 2px;
 				position: relative;
 				white-space: nowrap;
+				vertical-align: middle;
 			}
 
 			#menu {
@@ -2506,7 +2536,7 @@
 			
 
 			try {
-				if (electronApi) {
+				if (window.electronApi) {
 					// fix for electron dragging.
 					document.body.style.width = "95%";
 					setTimeout(function () {
@@ -2543,6 +2573,14 @@
 			var readDonos = false;
 			if (urlParams.has("ttsdonos")) {
 				readDonos = urlParams.get("ttsdonos") || "en-US";
+			}
+			
+			var ttsSources = false;
+			if (urlParams.get("ttssources")) {
+				ttsSources = urlParams.get("ttssources").trim() || false;
+				if (ttsSources){
+					ttsSources = ttsSources.toLowerCase().split(",").map(element => element.trim());
+				}
 			}
 			
 			var waitToReveal = 0;
@@ -4410,7 +4448,9 @@
 				else if (data.bot && !(allowbottss || bottts)){return;} // do not read out bot messages
 				else if (data.host && !(allowhosttss || hosttts)){return;} 
 				
-				else if (data.reflection && norelfectionstts){return;} 
+				else if (data.reflection && norelfectionstts){return;}
+				
+				else if (ttsSources && !ttsSources.includes(data.type)){return;}
 				
 				
 				//else if (data.mod && !(allowmodtss || modtts)){return;} 
@@ -4897,6 +4937,12 @@
 					document.getElementById("topbar").style.color = "white";
 					document.getElementById("topbar").style.fontWeight = "700";
 				}
+			} else if (urlParams.has("bolder")) {
+				document.documentElement.style.setProperty("--text-shadow", "-3px -3px #000000, -3px -1.5px #000000, -3px 0px #000000, -3px 1.5px #000000, -3px 3px #000000, -1.5px -3px #000000, -1.5px -1.5px #000000, -1.5px 0px #000000, -1.5px 1.5px #000000, -1.5px 3px #000000, 0px -3px #000000, 0px -1.5px #000000, 0px 0px #000000, 0px 1.5px #000000, 0px 3px #000000, 1.5px -3px #000000, 1.5px -1.5px #000000, 1.5px 0px #000000, 1.5px 1.5px #000000, 1.5px 3px #000000, 3px -3px #000000, 3px -1.5px #000000, 3px 0px #000000, 3px 1.5px #000000, 3px 3px #000000");
+			
+			} else if (urlParams.has("thinner")) {
+				document.documentElement.style.setProperty("--text-shadow", "-1.5px -1.5px #000000, -1.5px -0.75px #000000, -1.5px 0px #000000, -1.5px 0.75px #000000, -1.5px 1.5px #000000, -0.75px -1.5px #000000, -0.75px -0.75px #000000, -0.75px 0px #000000, -0.75px 0.75px #000000, -0.75px 1.5px #000000, 0px -1.5px #000000, 0px -0.75px #000000, 0px 0px #000000, 0px 0.75px #000000, 0px 1.5px #000000, 0.75px -1.5px #000000, 0.75px -0.75px #000000, 0.75px 0px #000000, 0.75px 0.75px #000000, 0.75px 1.5px #000000, 1.5px -1.5px #000000, 1.5px -0.75px #000000, 1.5px 0px #000000, 1.5px 0.75px #000000, 1.5px 1.5px #000000");
+			
 			}
 
 			if (urlParams.has("transparent") || urlParams.has("transparency")) {
@@ -8228,7 +8274,7 @@
 					}
 					
 					if (largeavatar) {
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived + "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
+						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
 					} else if (twoLines) {
 						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-firstline">' + "<div class='queueid'></div>" + showType + chatImg + chatname + '</div><div class="hl-message">' + timeArrived + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
 					} else if (splitMode) {

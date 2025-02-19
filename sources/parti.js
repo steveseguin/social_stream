@@ -23,6 +23,8 @@
 	
 	var names = {};
 	
+	
+	
 	function escapeHtml(unsafe){
 		try {
 			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
@@ -68,6 +70,41 @@
 		});
 		return resp;
 	}
+	
+	var userId = "";
+	const urlParams = new URLSearchParams(window.location.search);
+	
+	function checkFollowers(){
+		userId = urlParams.get('id') || "";
+		if (userId && (settings.showviewercount || settings.hypemode)){
+			fetch('https://api-backend.parti.com/parti_v2/profile/get_livestream_channel_info/'+userId)
+			  .then(response => response.json())
+			  .then(data => {
+				try {
+					let count = data?.channel_info?.stream?.viewer_count || 0;
+					console.log(count);
+					chrome.runtime.sendMessage(
+						chrome.runtime.id,
+						({message:{
+								type: 'parti',
+								event: 'viewer_update',
+								meta: parseInt(count)
+								//chatmessage: data.data[0] + " has started following"
+							}
+						}),
+						function (e) {}
+					);
+				} catch (e) {
+					console.log(e);
+				}				
+				  //console.log('Viewer count:', count);
+			  });
+		}
+	}
+	
+	setTimeout(function(){checkFollowers();},2500);
+	setInterval(function(){checkFollowers()},60000);
+
 
 	function processMessage(ele){
 		if (ele && ele.marked){
@@ -228,7 +265,7 @@
 					document.querySelector('#q-app main > div > div[class], .app-body > [class] > [class] > [class] > div').marked=true;
 					document.querySelectorAll('#q-app main > div > div[class]>div, .app-body > [class] > [class] > [class] > div').forEach(ele=>{
 						try {
-							processMessage(ele);
+							//processMessage(ele);
 							ele.marked = true;
 						} catch(e){}
 					});

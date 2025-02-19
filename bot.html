@@ -1511,12 +1511,12 @@
 				ttsSpeakChatname = false;
 				English = false;
 			}
-			
-			var speechOriginal = speech;
 
 			if (urlParams.has("simpletts")) {
 				English = false;
 			}
+			
+			var speechOriginal = speech;
 
 			var colorized = false;
 			if (urlParams.has("colorednames") || urlParams.has("color")) {
@@ -2484,9 +2484,9 @@
 									} else if (English) {
 										// no name but english
 										if (msgPlain) {
-											speak("Someone has donated " + donoText + " and says " + msgPlain);
+											speak("The bot has donated " + donoText + " and says " + msgPlain);
 										} else {
-											speak("Someone has donated " + donoText);
+											speak("The bot has donated " + donoText);
 										}
 									} else if (msgPlain) {
 										// no name; not english
@@ -2504,7 +2504,7 @@
 										}
 									} else if (English) {
 										// NO NAME
-										speak("Someone says! " + msgPlain);
+										speak("The bot  says! " + msgPlain);
 									} else {
 										speak(msgPlain);
 									}
@@ -2519,7 +2519,7 @@
 										}
 									} else if (English) {
 										// NO NAME
-										speak("Someone says! " + msgPlain);
+										speak("The bot says! " + msgPlain);
 									} else {
 										speak(msgPlain);
 									}

@@ -161,10 +161,35 @@
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 	
+	
+	
 	var counter = 1;
 	
-	async function processMessage(ele){	// twitch
+	async function processMessage(ele, deleted=false){	// twitch
+	
 	  if (!ele || !ele.isConnected) return;
+	  
+	  if (deleted && ele.querySelector(".line-through")){
+		console.log("DELETEED");
+	  try {
+			var data = {};
+			data.chatname = escapeHtml(ele.querySelector("button[title]").innerText);
+			data.chatname = data.chatname.replace("Channel Host", "");
+			data.chatname = data.chatname.replace(":", "");
+			data.chatname = data.chatname.trim();
+			data.type = "kick";
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				{
+					delete: data
+				},
+				function (e) {}
+			);
+		} catch (e) {
+		}
+		return;
+	  }
+	  
 	  if (ele.matched){return;}
 	  ele.matched = true;
 	  let sibling = ele.nextElementSibling;
@@ -314,7 +339,9 @@
 	  //}
 	  
 	  try {
-		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){
+			//console.log(e); // I should figure out why MID isn't returning, as I need that to be selective with deleting.
+		});
 	  } catch(e){
 		  //
 	  }
@@ -362,29 +389,35 @@
 	function onElementInserted(target, subtree=false) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					for (var i = 0; i < mutation.addedNodes.length; i++) {
-						try {
-							if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
-								if (SevenTV){
-									setTimeout(function(ele){
-										processMessage(ele);
-									}, 300, mutation.addedNodes[i]); // give seventv time to load, before parsing the message
-								} else {
-									processMessage(mutation.addedNodes[i]);
-								}
-								
-							} else if (mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner")){
-								let ele = mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner");
-								
-								processMessage(ele);
-							}
-						} catch(e){}
+				if (mutation.removedNodes.length) {
+					if (mutation.target.parentNode && mutation.target.parentNode.dataset.index){
+						processMessage(mutation.target.parentNode, true);
 					}
-				}
+				} else if (mutation.target == target || subtree){
+					if (mutation.addedNodes.length) {
+						for (var i = 0; i < mutation.addedNodes.length; i++) {
+							try {
+								if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
+									if (SevenTV){
+										setTimeout(function(ele){
+											processMessage(ele);
+										}, 300, mutation.addedNodes[i]); // give seventv time to load, before parsing the message
+									} else {
+										processMessage(mutation.addedNodes[i]);
+									}
+									
+								} else if (mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner")){
+									let ele = mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner");
+									
+									processMessage(ele);
+								}
+							} catch(e){}
+						}
+					}
+				} 
 			});
 		};
-		var config = { childList: true, subtree: subtree };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);

@@ -395,22 +395,22 @@
 	}
 
 	async function processMessage(ele, wss = true, eventType=false) {
-		console.log(ele);
+		//console.log(ele);
 		if (!ele || !ele.isConnected){
-			return;
+			return 1;
 		}
 		if (ele.hasAttribute("is-deleted")) {
 			deleteThis(ele)
-			return;
+			return 2;
 		}
 		if (settings.customyoutubestate) {
-			return;
+			return 3;
 		}
 		try {
 			if (ele.skip) {
-				return;
+				return 4;
 			} else if (ele.id) {
-				if (messageHistory.has(ele.id)) return;
+				if (messageHistory.has(ele.id)) return 5;
 				messageHistory.add(ele.id);
 				if (messageHistory.size > 300) { // 250 seems to be Youtube's max?
 				    const iterator = messageHistory.values();
@@ -435,26 +435,16 @@
 				}
 				//console.log(messageHistory);
 		    } else {
-				return; // no id.
+				return 6; // no id.
 		    }
 			if (ele.querySelector("[in-banner]")) {
 				//console.log("Message in-banner");
-				return;
+				return 7;
 			}
 		} catch (e) {}
 
 		ele.skip = true;
 		
-		//if (channelName && settings.customyoutubestate){
-		//if (settings.customyoutubeaccount && settings.customyoutubeaccount.textsetting && (settings.customyoutubeaccount.textsetting.toLowerCase() !== channelName.toLowerCase())){
-		//	return;
-		//} else if (!settings.customyoutubeaccount){
-		//	return;
-		//}
-		//  }
-		
-		
-		//<yt-live-chat-text-message-renderer class="style-scope yt-live-chat-item-list-renderer" modern="" enable-refresh-web="" id="ChwKGkNObVM1cUhZdjRvREZRRFpGZ2tkMUxFREln" whole-message-clickable="{&quot;commandMetadata&quot;:{&quot;webCommandMetadata&quot;:{&quot;ignoreNavigation&quot;:true}},&quot;liveChatItemContextMenuEndpoint&quot;:{&quot;params&quot;:&quot;Q2g0S0hBb2FRMDV0VXpWeFNGbDJORzlFUmxGRVdrWm5hMlF4VEVWRVNXY2FLU29uQ2hoVlEwdHViMlJJU25CYVpEaFZZbE4yUVhWbVJHUXpYMmNTQzNadmVIVlNibVZLWTB0UklBSW9BVElhQ2hoVlEyMXhWaTFvTld3MFZtRXRZWE00TXpOemFqbExNVkU0QWtnQVVBRSUzRA==&quot;}}" author-type="moderator"><!--css-build:shady--><!--css-build:shady--><yt-img-shadow id="author-photo" class="no-transition style-scope yt-live-chat-text-message-renderer" height="24" width="24" style="background-color: transparent;" loaded=""><!--css-build:shady--><!--css-build:shady--><img id="img" draggable="false" class="style-scope yt-img-shadow" alt="" height="24" width="24" src="https://yt4.ggpht.com/aKvMhfJ7bDJsUN1e1x4jQzhAQwJTtyOqKurlxOEvajrzPp8sJcFrZyLnSNysNUEnaGYwR1CWtw=s32-c-k-c0x00ffffff-no-rj"></yt-img-shadow><div id="content" class="style-scope yt-live-chat-text-message-renderer"><span id="timestamp" class="style-scope yt-live-chat-text-message-renderer">12:38 AM</span><yt-live-chat-author-chip class="style-scope yt-live-chat-text-message-renderer"><!--css-build:shady--><!--css-build:shady--><span id="prepend-chat-badges" class="style-scope yt-live-chat-author-chip"></span><span id="author-name" dir="auto" class="moderator style-scope yt-live-chat-author-chip style-scope yt-live-chat-author-chip">Stephanie Warfield<span id="chip-badges" class="style-scope yt-live-chat-author-chip"></span></span><span id="chat-badges" class="style-scope yt-live-chat-author-chip"><yt-live-chat-author-badge-renderer class="style-scope yt-live-chat-author-chip" aria-label="Moderator" type="moderator" shared-tooltip-text="Moderator"><!--css-build:shady--><!--css-build:shady--><div id="image" class="style-scope yt-live-chat-author-badge-renderer"><yt-icon class="style-scope yt-live-chat-author-badge-renderer"><!--css-build:shady--><!--css-build:shady--><span class="yt-icon-shape style-scope yt-icon yt-spec-icon-shape"><div style="width: 100%; height: 100%; display: block; fill: currentcolor;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" focusable="false" aria-hidden="true" style="pointer-events: none; display: inherit; width: 100%; height: 100%; fill: rgb(94, 132, 241);"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z"></path></svg></div></span></yt-icon></div></yt-live-chat-author-badge-renderer><yt-live-chat-author-badge-renderer class="style-scope yt-live-chat-author-chip" aria-label="New member" type="member" shared-tooltip-text="New member"><!--css-build:shady--><!--css-build:shady--><div id="image" class="style-scope yt-live-chat-author-badge-renderer"><img src="https://yt3.ggpht.com/7_W1_is17mb5tlSPcOpd-t40Jqrk2tdSzCKPKE5nfmWKNaoK7lx0r7bnf2t5CVqbDgDosT3s=s32-c-k" class="style-scope yt-live-chat-author-badge-renderer" alt="New member"></div></yt-live-chat-author-badge-renderer></span></yt-live-chat-author-chip>&ZeroWidthSpace;<div id="before-content-buttons" class="style-scope yt-live-chat-text-message-renderer"></div>&ZeroWidthSpace;<span id="message" dir="auto" class="style-scope yt-live-chat-text-message-renderer">ewww <img class="small-emoji emoji yt-formatted-string style-scope yt-live-chat-text-message-renderer" src="https://fonts.gstatic.com/s/e/notoemoji/15.1/1f92e/72.png" alt="🤮" shared-tooltip-text=":face_vomiting:" id="emoji-132"><img class="small-emoji emoji yt-formatted-string style-scope yt-live-chat-text-message-renderer" src="https://fonts.gstatic.com/s/e/notoemoji/15.1/1f922/72.png" alt="🤢" shared-tooltip-text=":nauseated_face:" id="emoji-133"></span><span id="deleted-state" class="style-scope yt-live-chat-text-message-renderer"></span><a id="show-original" href="#" class="style-scope yt-live-chat-text-message-renderer"></a></div><div id="menu" class="style-scope yt-live-chat-text-message-renderer"><yt-icon-button id="menu-button" class="style-scope yt-live-chat-text-message-renderer" role="button" aria-label="yt-icon-button"><!--css-build:shady--><!--css-build:shady--><button id="button" class="style-scope yt-icon-button" aria-label="Chat actions"><yt-icon icon="more_vert" class="style-scope yt-live-chat-text-message-renderer"><!--css-build:shady--><!--css-build:shady--><span class="yt-icon-shape style-scope yt-icon yt-spec-icon-shape"><div style="width: 100%; height: 100%; display: block; fill: currentcolor;"><svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true" style="pointer-events: none; display: inherit; width: 100%; height: 100%;"><path d="M12 16.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zM10.5 12c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5-1.5.67-1.5 1.5zm0-6c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5-1.5.67-1.5 1.5z"></path></svg></div></span></yt-icon></button><yt-interaction id="interaction" class="circular style-scope yt-icon-button"><!--css-build:shady--><!--css-build:shady--><div class="stroke style-scope yt-interaction"></div><div class="fill style-scope yt-interaction"></div></yt-interaction></yt-icon-button></div><div id="inline-action-button-container" class="style-scope yt-live-chat-text-message-renderer" aria-hidden="true"><div id="inline-action-buttons" class="style-scope yt-live-chat-text-message-renderer"></div></div></yt-live-chat-text-message-renderer>
 
 		var chatmessage = "";
 		var chatname = "";
@@ -466,12 +456,12 @@
 		var donoValue = "";
 
 		var srcImg = ""; // what shows up as the source image; blank is default (dock decides).
-
+		
 		try {
 			var nameElement = ele.querySelector("#author-name");
 			chatname = escapeHtml(nameElement.innerText);
 			if (!chatname){
-				return;
+				return 8;
 			}
 			
 			ele.querySelectorAll('yt-live-chat-author-badge-renderer[type]').forEach(type=>{
@@ -665,7 +655,7 @@
 		
 		
 		if (settings.memberchatonly && !hasMembership){
-			return;
+			return 9;
 		}
 
 		if (giftedmemembership && !hasDonation) {
@@ -718,8 +708,17 @@
 		}
 
 		if (!chatmessage && !hasDonation) {
-			//console.error("No message or donation");
-			return;
+			let donat = ele.querySelector("#text.yt-live-chat-donation-announcement-renderer");
+			if (donat){
+				chatmessage = getAllContentNodes(donat).trim();
+				eventType = "donation";
+				if (chatmessage.split(" donated ").length>=2){
+					hasDonation = chatmessage.split(" donated ").pop().trim();
+				}
+			}
+			if (!chatmessage){
+				return 10;
+			}
 		}
 		
 		chatmessage = chatmessage.trim();
@@ -736,9 +735,6 @@
 			chatmessage = "";
 		}
 		
-
-		
-
 		var data = {};
 		data.chatname = chatname;
 		data.nameColor = nameColor;
@@ -766,6 +762,8 @@
 			data.type = "youtubeshorts";
 		}
 		
+		// console.log(data);
+		
 		if (data.hasDonation){
 			data.title = getTranslation("donation", "DONATION");
 			if (!data.chatmessage){
@@ -779,7 +777,7 @@
 		data.event = eventType;
 		
 		//if (eventType){
-		//	console.log(data);
+			//console.log(data);
 		//}
 
 		try {
@@ -944,10 +942,10 @@
 	});
 
 	function onElementInserted(target, callback) {
-		console.log(target);
+		//console.log(target);
 		var onMutationsObserved = function (mutations) {
 			mutations.forEach(function (mutation) {
-				console.log(mutation.addedNodes);
+				//console.log(mutation.addedNodes);
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
@@ -959,6 +957,9 @@
 								callback(mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].tagName == "yt-live-chat-membership-item-renderer".toUpperCase()) {
 								callback(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].tagName == "yt-live-chat-donation-announcement-renderer".toUpperCase()) {
+								//console.log(mutation.addedNodes[i]);
+								callback(mutation.addedNodes[i])
 							} else if (mutation.addedNodes[i].tagName == "yt-live-chat-paid-sticker-renderer".toUpperCase()) {
 								callback(mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].tagName == "ytd-sponsorships-live-chat-gift-redemption-announcement-renderer".toUpperCase()) {
@@ -966,6 +967,8 @@
 							} else if (mutation.addedNodes[i].tagName == "ytd-sponsorships-live-chat-gift-purchase-announcement-renderer".toUpperCase()) {
 								// ytd-sponsorships-live-chat-gift-purchase-announcement-renderer
 								callback(mutation.addedNodes[i], "giftpurchase");
+							} else if (mutation.addedNodes[i].tagName.startsWith("ytd-sponsorship") || mutation.addedNodes[i].tagName.startsWith("yt-live-chat")){
+								callback(mutation.addedNodes[i]);
 							} else {
 								//console.error("unknown: "+mutation.addedNodes[i].tagName);
 							}
@@ -1027,9 +1030,9 @@
 
 			// Add event listener to the button
 			button.addEventListener('click', () => {
-				const videoId = input.value.trim();
-				if (videoId) {
-					window.location.href = `https://www.youtube.com/live_chat?is_popout=1&v=${videoId}`;
+				const videoId123 = input.value.trim();
+				if (videoId123) {
+					window.location.href = `https://www.youtube.com/live_chat?is_popout=1&v=${videoId123}`;
 				} else {
 					alert('Please enter a valid video ID');
 				}

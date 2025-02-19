@@ -1,0 +1,42 @@
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+		<meta content="utf-8" http-equiv="encoding" />
+		<title>Social Stream - Dashboard</title>
+		<meta name="title" content="Social Stream - Dashboard" />
+		<link rel="icon" href="./favicon.ico" />
+		<link href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
+		<meta name="robots" content="noindex">
+		<style>
+			body {
+				margin:0;
+				padding:0;
+				border:0;
+				background-color:black;
+				overflow:hidden;
+			}
+			iframe {
+				width:100%;height:100px;margin:0;padding:0 0 10px 0;border:0;
+			}
+		</style>
+	</head>
+	<body>
+	<script>
+		var urlParams = new URLSearchParams(window.location.search);
+		var session = urlParams.get("session");
+		document.body.innerHTML = `
+		<iframe src="dock.html?hidemenu&session=${session}&compact"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&largeavatar&bubble"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&emoji"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&emoji&compact&bubble"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&notime&bubble"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&noavatar&horizontal"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&hidebadge&horizontal&compact"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&nosource&hidesource&"></iframe>
+		`;
+	</script>
+	</body>
+</html>

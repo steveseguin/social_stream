@@ -102,6 +102,10 @@
 	padding: 5px;
 	font-family: Arial, sans-serif;
 	font-size: 12px;
+	display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
 }
 .username-item {
 	display: flex;
@@ -140,7 +144,8 @@
 .username-tag {
 	background-color: #443;
     border-radius: 4px;
-    padding: 0 7px;
+    padding: 2px 7px;
+    margin-bottom: 2px;
 }
 .source-type {
   font-size: 0.8em;
@@ -1567,6 +1572,12 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="do-not-read-out-reflections">🚫➿ Do not read out reflections (your replies)</span>
 								</div>
+								<div>
+									<div class="textInputContainer" style="width: 95%;" title="Only allow TTS from specific sources">
+                                    <input type="text" id="ttssources" class="textInput instant" autocomplete="off" placeholder="eg: youtube,twitch" data-textparam1="ttssources" />
+                                    <label for="ttssources"><span data-translate="ttssources">&gt; Source(s) to allow TTS</span></label>
+                                </div>
+								</div>
 							</div>
 							<div class="options_group tts-behavior-options">
 								<h4>Read out only specific user/messages</h4>
@@ -2219,6 +2230,20 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="no-text-outlining">〰️ No text outlining </span>
+                                </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="bolder" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    ✒️<span data-translate="add-text-outlining">Increase text outline by 50%</span>
+                                </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="thinner" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    ✒️<span data-translate="reduce-text-outlining">Decrease text outline by 33%</span>
                                 </div>
 								<h3>Background Shading for Messages</h3>
                                 <div>
@@ -3479,6 +3504,21 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="read-out-urls">🗣️ Read out URLs rather than saying "link". </span>
 								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param10="simpletts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="do-not-say-says-or-someone-says-with-tts">🚫🗣️ Do not say "says" or "The bot says" with TTS </span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param10="simpletts2" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="do-not-read-out-chatname-and-someone-says-when-using-tts">🚫🗣️ Do not read out bot name or "The bot says" when using TTS. </span>
+								</div>
+								
 							</div>
 							
 							<div class="options_group tts-behavior-options">
@@ -5604,11 +5644,16 @@ input:checked + .slider:before {
                                 </div>
 								
 								<div title="Makes it easier to see names on darker backgrounds.">
-                                    <label class="switch">
+                                    <label class="switch"> 
                                         <input type="checkbox" data-setting="lightencolorname" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="lightencolorname">☀️ Lighten and desaturat name colors</span>
+                                </div>
+								
+								<div class="textInputContainer" style="width: 95%;" title="Trivial events can be highlighted in the dock using &trivialevents">
+                                    <input type="text" id="highlightword" class="textInput" autocomplete="off" placeholder="Mark as trivial event if body contains" data-textsetting="highlightword" />
+                                    <label for="highlightword"><span data-translate="highlightword">&gt; Mark as trivial event if body contains</span></label>
                                 </div>
 
                                 <div class="textInputContainer" style="width: 95%;">
