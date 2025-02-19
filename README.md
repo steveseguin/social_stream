@@ -128,7 +128,9 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - castr.io (https://chat.castr.io/room/XXXXXXXX)
 - tellonym.me
 - peertube (triggers on: https://*/plugins/livechat/*router/webchat/room/*)
-- IRC (via https://webchat.quakenet.org/)
+- IRC Quakenet (via https://webchat.quakenet.org)
+- IRC Libera Chat and custom IRC servers (via http://socialstream.ninja/sources/websocket/irc)
+- IRC KiwiIRC (via kiwiirc.com)
 - Tradingview.com (just the normal viewer page; no pop out)
 - rooter.gg (no pop out; just pause the video I guess)
 - loco.com (no pop out; just pause the video I guess)
@@ -178,7 +180,9 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - parti.com (pop out chat)
 - live.nicovideo.jp (no pop out chat)
 - bitchute.com (no pop out chat)
-  
+- substack
+- online.church (no pop out)
+
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   
 [More on request](#requesting-a-site)
@@ -338,6 +342,8 @@ To customize the featured chat overlay, the following URL parameters are availab
 - &fade (will have featured messages fade in, rather than pop up)
 - &swipe (will have featured messages swipe in from the left side)
 - &center (center featured messages)
+
+For managing multiple URLs and their parameters, for the main dock (streaming overlay) page, you can try this tool out: [https://socialstream.ninja/urleditor.html](https://socialstream.ninja/urleditor.html)
 
 To customize the color, font-size and styling, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the and using the featured.html file. See below:
 

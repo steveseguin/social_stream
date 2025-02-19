@@ -82,7 +82,6 @@
 		} else {
 		  ele.marked = true;
 		}
-		
 
 		var nameColor = "";
         var name = "";
