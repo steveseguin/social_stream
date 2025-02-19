@@ -372,7 +372,7 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const settings = {
-            pollType: urlParams.get('pollType') || 'multiple',
+            pollType: urlParams.get('pollType') || 'freeform',
             pollQuestion: urlParams.get('pollQuestion') || 'Loading poll ...',
             pollOptions: urlParams.get('pollOptions') ? urlParams.get('pollOptions').split(',').map(opt => opt.trim()) : [],
             pollTimer: urlParams.get('pollTimer') || 60,
@@ -558,7 +558,7 @@
         }
 
         function processData(data) {
-			// console.log("Received data:", data);  // For debugging
+			console.log("Received data:", data);  // For debugging
 
 			if (data.setting && !data.settings) {
 				data.settings = {
