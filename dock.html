@@ -762,8 +762,9 @@
 			}
 
 			.hl-righttopline {
-				display: block;
+				display: inline-flex;
 				margin: 5px 2px;
+				width:100%;
 			}
 			.hl-righttopline .hl-source-type {
 				max-height: 11px;
@@ -792,9 +793,12 @@
 			}
 			.hl-rightside .hl-message {
 				margin: 2px 7px 2px 7px;
-				display:inilne-flex;
+				display: inline-flex;
+				width: -webkit-fill-available;
 			}
-			
+			.hl-rightside .hl-message .donationAmount {
+				margin: auto;
+			}
 			
 			.hl-rightside.bubble .hl-message {
 				margin: 4px 7px 7px 7px;
@@ -1043,7 +1047,7 @@
 			}
 			
 			.notcompactmode .hl-righttopline > div.time-arrived {
-				margin: 1.5px 2px auto 1px;
+				margin: auto 2px auto 1px;
 			}
 			
 			.hl-name:first-child {
