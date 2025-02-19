@@ -632,6 +632,7 @@ button:disabled {
 				<option value="Charon">Male Voice 2 (Charon)</option>
 				<option value="Fenrir">Male Voice 3 (Fenrir)</option>
 			</select>
+			<textarea placeholder="This is where you can specify an initial instruction prompt." id="systemPrompt" rows="4" style="width: 100%; background: #2a2a2a; color: #e0e0e0; border: 1px solid #404040; border-radius: 8px; padding: 8px; font-family: inherit;"></textarea>
 			<div class="api-key-container">
 				<input type="password" id="apiKey" placeholder="Enter Gemini API Key" size="15" class="api-key">
 				<div class="api-key-info">
@@ -862,12 +863,13 @@ class ChatGPTPublisher {
             this.ws.addEventListener('open', resolve, { once: true });
             this.ws.addEventListener('error', reject, { once: true });
         });
-
+		
+		const systemPrompt = document.getElementById('systemPrompt');
         const setupMessage = {
             type: 'session.update',
             session: {
                 modalities: ['text', 'audio'],
-                instructions: "You are a friendly and helpful social chat assistant that can see and hear the user."
+                instructions: systemPrompt.value
             }
         };
         this.ws.send(JSON.stringify(setupMessage));
@@ -1131,12 +1133,13 @@ class GoogleLivePublisher {
                 once: true
             });
         });
+		const systemPrompt = document.getElementById('systemPrompt');
         const setupMessage = {
             setup: {
                 model: "models/gemini-2.0-flash-exp",
                 systemInstruction: {
                     parts: [{
-                        text: "You are a friendly social chat assistant that can see and hear the user. Avoid describing what you see unless asked."
+                        text: document.getElementById('systemPrompt').value
                     }]
                 },
                 generationConfig: {
@@ -1496,6 +1499,7 @@ startButton.addEventListener('click', async () => {
             startButton.textContent = 'Start Stream';
             startButton.disabled = false;
             sendButton.disabled = true;
+			document.getElementById('systemPrompt').disabled = false;
             return;
         }
 
@@ -1515,7 +1519,7 @@ startButton.addEventListener('click', async () => {
         startButton.textContent = 'Stop Stream';
         startButton.disabled = false;
         sendButton.disabled = false;
-
+		document.getElementById('systemPrompt').disabled = true;
         // Add audio level indicator
         if (stream.getAudioTracks().length > 0) {
             setupAudioIndicator(stream);
@@ -1526,6 +1530,7 @@ startButton.addEventListener('click', async () => {
         startButton.textContent = 'Start Stream';
         startButton.disabled = false;
         sendButton.disabled = true;
+		document.getElementById('systemPrompt').disabled = false;
     }
 });
 
@@ -1787,11 +1792,15 @@ document.getElementById('voiceSelect').addEventListener('change', async () => {
             await publisher.start();
             startButton.textContent = 'Stop Stream';
             startButton.disabled = false;
+			sendButton.disabled = false;
+            document.getElementById('systemPrompt').disabled = true;
         } catch (err) {
             console.error(err);
             showError('Failed to restart with new voice: ' + err.message);
             startButton.textContent = 'Start Stream';
             startButton.disabled = false;
+			sendButton.disabled = true;
+			document.getElementById('systemPrompt').disabled = false;
         }
     }
 });
@@ -1812,6 +1821,8 @@ document.getElementById('responseType').addEventListener('change', function() {
                 await publisher.start();
                 startButton.textContent = 'Stop Stream';
                 startButton.disabled = false;
+				sendButton.disabled = false;
+				document.getElementById('systemPrompt').disabled = true;
 				
 				if (audioContext) {
 					audioContext.close();
@@ -1822,6 +1833,8 @@ document.getElementById('responseType').addEventListener('change', function() {
                 showError('Failed to restart with new response type: ' + err.message);
                 startButton.textContent = 'Start Stream';
                 startButton.disabled = false;
+				sendButton.disabled = true;
+				document.getElementById('systemPrompt').disabled = false;
             }
         })();
     }
@@ -1844,9 +1857,36 @@ const apiKeyContainer = document.querySelector('.api-key-container');
 apiKeyContainer.parentElement.insertBefore(providerSelect, apiKeyContainer);
 
 
+const defaultPrompts = {
+    gemini: "You are a friendly social chat assistant that can see and hear the user. Avoid describing what you see unless asked.",
+    chatgpt: "You are a friendly and helpful social chat assistant that can see and hear the user."
+};
+
+// Add system prompt container after provider select
+const systemPrompt = document.getElementById('systemPrompt');
+systemPrompt.value = defaultPrompts.gemini;
+
+// Save to localStorage if available
+if (localStorage) {
+    const savedPrompts = localStorage.getItem('systemPrompts');
+    if (savedPrompts) {
+        const prompts = JSON.parse(savedPrompts);
+        Object.assign(defaultPrompts, prompts);
+        systemPrompt.value = defaultPrompts[providerSelect.value];
+    }
+}
+
+systemPrompt.addEventListener('change', function() {
+    defaultPrompts[providerSelect.value] = this.value;
+    if (localStorage) {
+        localStorage.setItem('systemPrompts', JSON.stringify(defaultPrompts));
+    }
+});
+
 providerSelect.addEventListener('change', function() {
     const apiKeyInput = document.getElementById('apiKey');
     const apiKeyInfo = document.querySelector('.api-key-info');
+    systemPrompt.value = defaultPrompts[this.value];
     
     if (this.value === 'chatgpt') {
         apiKeyInput.placeholder = 'Enter ChatGPT API Key';
