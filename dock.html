@@ -596,8 +596,13 @@
 
 			.twoLines.alignright .hl-firstline {
 				display: flex;
-				flex-direction: row-reverse;
 				margin: 3px 0 5px 0;
+				margin-left: auto;
+				flex-direction: row;
+			}
+			
+			.twoLines.alignright .hl-firstline {
+				justify-content: flex-end;
 			}
 
 			.hl-firstline .hl-name {
@@ -803,6 +808,18 @@
 			}
 			.hl-rightside .hl-message .donationAmount {
 				margin: auto;
+			}
+			
+			.alignright .hl-rightside.bubble .hl-message, .alignright .hl-rightside.bubble .hl-righttopline{
+				margin-left: auto;
+			}
+			
+			.alignright .hl-rightside.bubble .hl-righttopline .time-arrived{
+				margin: 9.5px 2px auto 1px;
+			}
+			
+			.alignright .highlight-chat.larger-emojis.compactmode .hl-message.bubble .hl-content {
+				    margin: auto;
 			}
 			
 			.hl-rightside.bubble .hl-message {
@@ -1178,6 +1195,7 @@
 				padding: 7px 12px 7px 10px;
 				background-color: var(--bgcolor-bubble);
 				margin: 0px 0 0px 5px;
+				display: grid;
 			}
 
 			.bubble.odd {
@@ -2102,7 +2120,6 @@
 
 			.alignright .compactmode {
 				margin-left: auto;
-				margin-right: 0;
 			}
 			
 			.horizontal .hl-message {
@@ -2127,14 +2144,41 @@
 
 			.alignright .compactmode .hl-message {
 				flex-direction: var(--flex-direction);
-				display: flex;
 				overflow:hidden;
 				text-overflow: ellipsis;
+				margin-left: auto;
+				display: flex;
+			}
+			
+			.alignright .horizontal .compactmode div.hl-message {
+				display: inline-block
+			}
+			
+			.alignright .compactmode .bubble.hl-message {
+				flex-direction: row;
+				overflow:hidden;
+				text-overflow: ellipsis;
+				margin-left: auto;
+				display: flex;
+			}
+			
+			.alignright .hl-message.hl-content.bubble {
+				margin-left: auto;
+				display: flex;
+			}
+			
+			.alignright .compactmode.horizontal .hl-message {
+				display: inline-block;
+			}
+			
+			.alignright  .hl-message .time-arrived {
+				margin:auto 4px;
 			}
 			
 			.alignright .highlight-chat .hl-firstline {
 				overflow:hidden;
 				text-overflow: ellipsis;
+				margin-left: auto;
 			}
 			
 			#currentScene {
