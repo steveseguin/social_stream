@@ -992,6 +992,7 @@
 
 	console.log("Social stream inserted");
 	var marked = false;
+	
 	const checkTimer = setInterval(function () {
 	  const ele = document.querySelector("yt-live-chat-app #items.yt-live-chat-item-list-renderer");
 	  if (ele && !ele.skip) {
@@ -1009,6 +1010,30 @@
 		onElementInserted(ele, function (ele2) {
 			setTimeout(() => processMessage(ele2, false), captureDelay);
 		});
+	  } else if (!ele && document.querySelector("iframe#hyperchat") && !document.querySelector("iframe#hyperchat").marked) {
+			try {
+				var ele22 = document.querySelector("iframe#hyperchat").contentWindow.document.body.querySelector(".content");
+				if (ele22 && ele22.childNodes.length){
+					var onMutationsObserved2 = function (mutations) {
+						mutations.forEach(function (mutation) {
+							if (mutation.addedNodes.length) {
+								for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+									try {
+										processHyperChat(mutation.addedNodes[i]);
+									} catch (e) {
+										console.log(e);
+									}
+								}
+							}
+						});
+					};
+					var config2 = {childList: true, subtree: false};
+					var MutationObserver2 = window.MutationObserver || window.WebKitMutationObserver;
+					var observer2 = new MutationObserver2(onMutationsObserved2);
+					observer2.observe(ele22, config2);
+					document.querySelector("iframe#hyperchat").marked = true;
+				}
+			} catch(e){console.log(e);}
 	  } else if (!ele){
 		 const message = document.querySelector("yt-live-chat-app yt-formatted-string.yt-live-chat-message-renderer");
 		if (message && !document.getElementById("videoIdInput")) {
@@ -1043,6 +1068,7 @@
 			});
 		}
 	  }
+	  
 	  // style-scope yt-live-chat-message-renderer
 	  
 	  if (settings.autoLiveYoutube && document.querySelector("#trigger") && !marked){
@@ -1116,6 +1142,26 @@
 				}
 			}
 		}, 3000);
+	}
+	
+	
+	function processHyperChat(ele) {
+		try {
+			var data = {};
+			data.chatname = getAllContentNodes(ele.querySelector(".text-owner-light, .text-owner-dark"));
+			data.chatmessage = getAllContentNodes(ele.querySelector("span.cursor-auto.align-middle"));
+			data.type = "youtube";
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				{
+					message: data
+				},
+				(e)=> {
+					//console.log(e);
+					e.id ? (ele.dataset.mid = e.id) : "";
+				}
+			);
+		} catch (e) {}
 	}
 	
 	
