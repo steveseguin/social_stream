@@ -212,7 +212,85 @@ button:disabled {
 }
 
 
+.mute-button:hover {
+    background: #333;
+    border-color: #505050;
+}
 
+.mute-button.muted {
+    background: #c5225e;
+    border-color: #a3164a;
+}
+
+.mute-button.muted:hover {
+    background: #a3164a;
+}
+
+.mute-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    height: 35px;
+}
+
+.mute-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #2a2a2a;
+    border: 1px solid #404040;
+    color: #e0e0e0;
+    padding: 8px;
+    height: 35px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mute-icon {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+}
+
+.mute-icon::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.mic-icon::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e0e0e0' viewBox='0 0 24 24'%3E%3Cpath d='M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z'/%3E%3Cpath d='M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z'/%3E%3C/svg%3E");
+}
+
+.mic-icon.muted::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e0e0e0' viewBox='0 0 24 24'%3E%3Cpath d='M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9l4.19 4.18L21 20.73 4.27 3z'/%3E%3C/svg%3E");
+}
+
+.speaker-icon::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e0e0e0' viewBox='0 0 24 24'%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'/%3E%3C/svg%3E");
+}
+
+.speaker-icon.muted::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e0e0e0' viewBox='0 0 24 24'%3E%3Cpath d='M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z'/%3E%3C/svg%3E");
+}
+
+.video-icon::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e0e0e0' viewBox='0 0 24 24'%3E%3Cpath d='M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'/%3E%3C/svg%3E");
+}
+
+.video-icon.muted::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e0e0e0' viewBox='0 0 24 24'%3E%3Cpath d='M21 6.5l-4 4V7c0-.55-.45-1-1-1H9.82L21 17.18V6.5zM3.27 2L2 3.27 4.73 6H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.21 0 .39-.08.54-.18L19.73 21 21 19.73 3.27 2z'/%3E%3C/svg%3E");
+}
 
 :root {
   --puppet-primary: #333;
@@ -630,6 +708,7 @@ button:disabled {
 #apiKey {
 	webkitTextSecurity:disc{	
 }
+
 </style>
 </head>
 <body>
@@ -637,6 +716,17 @@ button:disabled {
         <div class="controls">
 			<select id="videoSource"></select>
 			<select id="audioSource"></select>
+			<div class="mute-controls" style="display: flex; gap: 10px;">
+				<button id="muteMic" class="mute-button">
+					<div class="mute-icon mic-icon"></div>
+				</button>
+				<button id="muteAudio" class="mute-button">
+					<div class="mute-icon speaker-icon"></div>
+				</button>
+				<button id="muteVideo" class="mute-button">
+					<div class="mute-icon video-icon"></div>
+				</button>
+			</div>
 			<button id="startButton">Start and Connect</button>
 			<select id="responseType">
 				<option value="audio" selected>Audio Response</option>
@@ -1757,7 +1847,7 @@ audioSelect.addEventListener('change', async () => {
     await updateMediaStream();
 });
 
-async function updateMediaStream() {
+async function originalUpdateMediaStream() {
     try {
         const newStream = await getStream();
         
@@ -1790,6 +1880,36 @@ async function updateMediaStream() {
         if (stream.getAudioTracks().length > 0) {
             setupAudioIndicator(stream);
         }
+    } catch (err) {
+        console.error('Failed to update media stream:', err);
+        showError('Failed to update media stream: ' + err.message);
+    }
+}
+
+async function updateMediaStream() {
+    try {
+        const previousMicMuted = micMuted;
+		const previousAudioMuted = audioMuted;
+		
+		await originalUpdateMediaStream();
+		
+		if (previousMicMuted) {
+			const audioTracks = stream.getAudioTracks();
+			audioTracks.forEach(track => {
+				if (track.kind === 'audio' && track.label && !track.label.toLowerCase().includes('system')) {
+					track.enabled = false;
+				}
+			});
+		}
+		
+		if (previousAudioMuted) {
+			const audioTracks = stream.getAudioTracks();
+			audioTracks.forEach(track => {
+				if (track.kind === 'audio' && track.label && track.label.toLowerCase().includes('system')) {
+					track.enabled = false;
+				}
+			});
+		}
     } catch (err) {
         console.error('Failed to update media stream:', err);
         showError('Failed to update media stream: ' + err.message);
@@ -1844,6 +1964,54 @@ async function getDevices() {
         showError('Failed to get devices: ' + err.message);
     }
 }
+
+let micMuted = false;
+let audioMuted = false;
+let videoMuted = false;
+
+const muteMicButton = document.getElementById('muteMic');
+const muteAudioButton = document.getElementById('muteAudio');
+const muteVideoButton = document.getElementById('muteVideo');
+
+muteVideoButton.addEventListener('click', () => {
+    if (stream) {
+        const videoTracks = stream.getVideoTracks();
+        videoTracks.forEach(track => {
+            track.enabled = videoMuted;
+        });
+        videoMuted = !videoMuted;
+        muteVideoButton.classList.toggle('muted');
+        muteVideoButton.querySelector('.video-icon').classList.toggle('muted');
+    }
+});
+
+muteMicButton.addEventListener('click', () => {
+    if (stream) {
+        const audioTracks = stream.getAudioTracks();
+        audioTracks.forEach(track => {
+            if (track.kind === 'audio' && track.label && !track.label.toLowerCase().includes('system')) {
+                track.enabled = micMuted;
+            }
+        });
+        micMuted = !micMuted;
+        muteMicButton.classList.toggle('muted');
+        muteMicButton.querySelector('.mic-icon').classList.toggle('muted');
+    }
+});
+
+muteAudioButton.addEventListener('click', () => {
+    if (stream) {
+        const audioTracks = stream.getAudioTracks();
+        audioTracks.forEach(track => {
+            if (track.kind === 'audio' && track.label && track.label.toLowerCase().includes('system')) {
+                track.enabled = audioMuted;
+            }
+        });
+        audioMuted = !audioMuted;
+        muteAudioButton.classList.toggle('muted');
+        muteAudioButton.querySelector('.speaker-icon').classList.toggle('muted');
+    }
+});
 
 let audioContext;
 let audioMixer;
