@@ -2198,23 +2198,21 @@ async function updateMediaStream() {
             const oldStream = stream;
             stream = newStream;
 
-            const apiKey = apiKeyInput.value;
-            const currentProvider = providerSelect.value;
+            // Update the stream in the publisher without reconnecting
+            publisher.stream = newStream;
 
-            // Stop publisher and clean up
-            await publisher.stop();
-            publisher = null;
+            // Only update audio/video processing without full restart
+            if (stream.getAudioTracks().length > 0) {
+                await publisher.setupAudioProcessing();
+            }
+            if (stream.getVideoTracks().length > 0) {
+                publisher.setupVideoProcessing();
+            }
 
-            // Clean up old stream after publisher is stopped
+            // Clean up old stream after updating
             if (oldStream) {
                 oldStream.getTracks().forEach(track => track.stop());
             }
-
-            // Create new publisher
-            publisher = currentProvider === 'chatgpt' 
-                ? new ChatGPTPublisher(stream, apiKey)
-                : new GoogleLivePublisher(stream, apiKey);
-            await publisher.start();
         } else {
             stream = newStream;
         }
