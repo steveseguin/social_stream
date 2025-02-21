@@ -7237,12 +7237,15 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		if (settings.highlightevent && settings.highlightevent.textsetting.trim() && data.chatmessage && data.event) {
-			if (data.chatmessage.includes(settings.highlightevent.textsetting)){
+			const eventTexts = settings.highlightevent.textsetting.split(',').map(text => text.trim());
+			if (eventTexts.some(text => data.chatmessage.includes(text))) {
 				data.highlightColor = "#FFFF21";
 			}
 		}
+
 		if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
-			if (data.chatmessage.includes(settings.highlightword.textsetting)){
+			const wordTexts = settings.highlightword.textsetting.split(',').map(text => text.trim());
+			if (wordTexts.some(text => data.chatmessage.includes(text))) {
 				data.highlightColor = "#FFFF21";
 			}
 		}
