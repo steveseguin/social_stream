@@ -1825,45 +1825,92 @@ function setupAudioIndicator(stream) {
             cancelAnimationFrame(currentAnimationFrame);
         }
     }
-    
+
+    // Create new audio context and analyzers for different audio sources
     currentAudioContext = new AudioContext();
-    const source = currentAudioContext.createMediaStreamSource(stream);
-    const analyser = currentAudioContext.createAnalyser();
-    analyser.fftSize = 256;
-    source.connect(analyser);
+    const analyserMic = currentAudioContext.createAnalyser();
+    const analyserSystem = currentAudioContext.createAnalyser();
+    analyserMic.fftSize = 256;
+    analyserSystem.fftSize = 256;
+
+    // Create container for indicators
+    const container = document.createElement('div');
+    container.style.cssText = `
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 8px;
+    `;
+
+    // Create separate indicators for mic and system audio
+    const micIndicator = document.createElement('div');
+    const systemIndicator = document.createElement('div');
     
-    const indicator = document.createElement('div');
-    indicator.style.cssText = `
+    const baseIndicatorStyle = `
         width: 100%;
         height: 4px;
         background: #333;
-        margin-top: 8px;
         border-radius: 2px;
         overflow: hidden;
+        position: relative;
     `;
-    preview.insertAdjacentElement('afterend', indicator);
-    currentAudioIndicator = indicator;
-
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
     
-    function updateIndicator() {
+    micIndicator.style.cssText = baseIndicatorStyle;
+    systemIndicator.style.cssText = baseIndicatorStyle;
+
+    // Add labels
+    const micLabel = document.createElement('div');
+    const systemLabel = document.createElement('div');
+    micLabel.textContent = 'Microphone';
+    systemLabel.textContent = 'System Audio';
+    micLabel.style.cssText = 'font-size: 12px; color: #999; margin-bottom: 2px;';
+    systemLabel.style.cssText = 'font-size: 12px; color: #999; margin-bottom: 2px; margin-top: 4px;';
+
+    // Organize elements
+    container.appendChild(micLabel);
+    container.appendChild(micIndicator);
+    container.appendChild(systemLabel);
+    container.appendChild(systemIndicator);
+    preview.insertAdjacentElement('afterend', container);
+    currentAudioIndicator = container;
+
+    // Process audio tracks
+    stream.getAudioTracks().forEach(track => {
+        const source = currentAudioContext.createMediaStreamSource(new MediaStream([track]));
+        if (track.label && track.label.toLowerCase().includes('system')) {
+            source.connect(analyserSystem);
+        } else {
+            source.connect(analyserMic);
+        }
+    });
+
+    const micData = new Uint8Array(analyserMic.frequencyBinCount);
+    const systemData = new Uint8Array(analyserSystem.frequencyBinCount);
+
+    function updateIndicators() {
         if (!stream.active) {
-            indicator.remove();
+            container.remove();
             currentAudioIndicator = null;
             currentAudioContext = null;
             cancelAnimationFrame(currentAnimationFrame);
             return;
         }
-        
-        analyser.getByteFrequencyData(dataArray);
-        const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-        const level = Math.min(100, (average / 128) * 100);
-        indicator.style.background = `linear-gradient(90deg, #4CAF50 ${level}%, #333 ${level}%)`;
-        
-        currentAnimationFrame = requestAnimationFrame(updateIndicator);
+
+        // Update microphone level
+        analyserMic.getByteFrequencyData(micData);
+        const micLevel = Math.min(100, (micData.reduce((a, b) => a + b) / micData.length / 128) * 100);
+        micIndicator.style.background = `linear-gradient(90deg, #4CAF50 ${micLevel}%, #333 ${micLevel}%)`;
+
+        // Update system audio level
+        analyserSystem.getByteFrequencyData(systemData);
+        const systemLevel = Math.min(100, (systemData.reduce((a, b) => a + b) / systemData.length / 128) * 100);
+        systemIndicator.style.background = `linear-gradient(90deg, #2196F3 ${systemLevel}%, #333 ${systemLevel}%)`;
+
+        currentAnimationFrame = requestAnimationFrame(updateIndicators);
     }
-    
-    updateIndicator();
+
+    updateIndicators();
 }
 
 videoSelect.addEventListener('change', async () => {
@@ -1873,63 +1920,6 @@ videoSelect.addEventListener('change', async () => {
 audioSelect.addEventListener('change', async () => {
     await updateMediaStream();
 });
-
-async function updateMediaStream() {
-    try {
-        const previousMicMuted = micMuted;
-        const previousAudioMuted = audioMuted;
-        
-        const newStream = await getStream();
-        
-        if (preview.srcObject) {
-            preview.srcObject.getTracks().forEach(track => track.stop());
-        }
-        
-        preview.srcObject = newStream;
-        
-        if (publisher) {
-            const oldStream = stream;
-            stream = newStream;
-            
-            const apiKey = apiKeyInput.value;
-            const currentProvider = providerSelect.value;
-            
-            await publisher.stop();
-            publisher = currentProvider === 'chatgpt' 
-                ? new ChatGPTPublisher(stream, apiKey)
-                : new GoogleLivePublisher(stream, apiKey);
-            await publisher.start();
-            
-            if (oldStream) {
-                oldStream.getTracks().forEach(track => track.stop());
-            }
-        } else {
-            stream = newStream;
-        }
-        
-        if (stream.getAudioTracks().length > 0) {
-            setupAudioIndicator(stream);
-        }
-
-        // Handle mute states
-        if (previousMicMuted || previousAudioMuted) {
-            const audioTracks = stream.getAudioTracks();
-            audioTracks.forEach(track => {
-                if (track.kind === 'audio' && track.label) {
-                    if (previousMicMuted && !track.label.toLowerCase().includes('system')) {
-                        track.enabled = false;
-                    }
-                    if (previousAudioMuted && track.label.toLowerCase().includes('system')) {
-                        track.enabled = false;
-                    }
-                }
-            });
-        }
-    } catch (err) {
-        console.error('Failed to update media stream:', err);
-        showError('Failed to update media stream: ' + err.message);
-    }
-}
 
 async function getDevices() {
     try {
@@ -2063,66 +2053,69 @@ let audioContext;
 
 async function getStream() {
     try {
+        // Stop any existing tracks in the preview
+        if (preview.srcObject) {
+            preview.srcObject.getTracks().forEach(track => track.stop());
+            preview.srcObject = null;
+        }
+
+        // Stop any existing tracks in the current stream
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+
         let videoStream = null;
         let micStream = null;
         const outputStream = new MediaStream();
-        
+
         // Handle video source
         if (videoSelect.value === 'screen') {
-            videoStream = await navigator.mediaDevices.getDisplayMedia({
-                video: true,
-                audio: true
-            });
-            
-            const videoTrack = videoStream.getVideoTracks()[0];
-            if (videoTrack) {
-                outputStream.addTrack(videoTrack);
+            try {
+                videoStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true,
+                    audio: true
+                });
+
+                const videoTrack = videoStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    // Remove any existing video tracks
+                    outputStream.getVideoTracks().forEach(track => {
+                        outputStream.removeTrack(track);
+                        track.stop();
+                    });
+                    outputStream.addTrack(videoTrack);
+                }
+            } catch (err) {
+                console.error('Screen share failed:', err);
+                // Reset video select to 'none' if screen share fails
+                videoSelect.value = 'none';
             }
         } else if (videoSelect.value !== 'none') {
             try {
-                // Try selected device first
                 videoStream = await navigator.mediaDevices.getUserMedia({
                     video: {
                         deviceId: { exact: videoSelect.value }
                     }
                 });
+
+                const videoTrack = videoStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    // Remove any existing video tracks
+                    outputStream.getVideoTracks().forEach(track => {
+                        outputStream.removeTrack(track);
+                        track.stop();
+                    });
+                    outputStream.addTrack(videoTrack);
+                }
             } catch (err) {
-                // If selected device fails, try other available devices
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevices = devices.filter(d => d.kind === 'videoinput');
-                
-                for (const device of videoDevices) {
-                    if (device.deviceId !== videoSelect.value) {
-                        try {
-                            videoStream = await navigator.mediaDevices.getUserMedia({
-                                video: {
-                                    deviceId: { exact: device.deviceId }
-                                }
-                            });
-                            // Update select element to reflect the working device
-                            videoSelect.value = device.deviceId;
-                            break;
-                        } catch (innerErr) {
-                            console.warn(`Failed to get stream from device: ${device.label || device.deviceId}`);
-                        }
-                    }
-                }
-                
-                if (!videoStream) {
-                    throw new Error('No available video devices');
-                }
-            }
-            
-            const videoTrack = videoStream.getVideoTracks()[0];
-            if (videoTrack) {
-                outputStream.addTrack(videoTrack);
+                console.warn('Selected video device failed:', err);
+                videoSelect.value = 'none';
             }
         }
-        
-        // Handle audio with fallback
+
+        // Handle audio with cleanup
         if (audioSelect.value !== 'none') {
             try {
-                // Try selected device first
                 micStream = await navigator.mediaDevices.getUserMedia({
                     audio: {
                         deviceId: { exact: audioSelect.value },
@@ -2130,58 +2123,145 @@ async function getStream() {
                         noiseSuppression: true
                     }
                 });
-            } catch (err) {
-                // If selected device fails, try other available devices
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const audioDevices = devices.filter(d => d.kind === 'audioinput');
-                
-                for (const device of audioDevices) {
-                    if (device.deviceId !== audioSelect.value) {
-                        try {
-                            micStream = await navigator.mediaDevices.getUserMedia({
-                                audio: {
-                                    deviceId: { exact: device.deviceId },
-                                    echoCancellation: true,
-                                    noiseSuppression: true
-                                }
-                            });
-                            // Update select element to reflect the working device
-                            audioSelect.value = device.deviceId;
-                            break;
-                        } catch (innerErr) {
-                            console.warn(`Failed to get stream from device: ${device.label || device.deviceId}`);
-                        }
+
+                // Clean up existing audio tracks
+                outputStream.getAudioTracks().forEach(track => {
+                    outputStream.removeTrack(track);
+                    track.stop();
+                });
+
+                if (videoStream?.getAudioTracks().length > 0) {
+                    // Handle system audio from screen share
+                    const ctx = new AudioContext();
+                    const dest = ctx.createMediaStreamDestination();
+
+                    const systemSource = ctx.createMediaStreamSource(videoStream);
+                    const micSource = ctx.createMediaStreamSource(micStream);
+
+                    systemSource.connect(dest);
+                    micSource.connect(dest);
+
+                    const mixedTrack = dest.stream.getAudioTracks()[0];
+                    if (mixedTrack) {
+                        // Add custom label for mixed audio
+                        mixedTrack.label = "Mixed Audio (System + Microphone)";
+                        outputStream.addTrack(mixedTrack);
+                    }
+
+                    // Stop individual tracks after mixing
+                    videoStream.getAudioTracks().forEach(track => track.stop());
+                    micStream.getAudioTracks().forEach(track => track.stop());
+                } else {
+                    // Just microphone audio
+                    const audioTrack = micStream.getAudioTracks()[0];
+                    if (audioTrack) {
+                        outputStream.addTrack(audioTrack);
                     }
                 }
-                
-                if (!micStream) {
-                    throw new Error('No available audio devices');
-                }
-            }
-            
-            if (videoStream?.getAudioTracks().length > 0) {
-                // Mix system audio and mic audio
-                const ctx = new AudioContext();
-                const dest = ctx.createMediaStreamDestination();
-                
-                const systemSource = ctx.createMediaStreamSource(videoStream);
-                const micSource = ctx.createMediaStreamSource(micStream);
-                
-                systemSource.connect(dest);
-                micSource.connect(dest);
-                
-                outputStream.addTrack(dest.stream.getAudioTracks()[0]);
-            } else {
-                outputStream.addTrack(micStream.getAudioTracks()[0]);
+            } catch (err) {
+                console.warn('Selected audio device failed:', err);
+                audioSelect.value = 'none';
             }
         } else if (videoStream?.getAudioTracks().length > 0) {
-            outputStream.addTrack(videoStream.getAudioTracks()[0]);
+            // Only system audio from screen share
+            const systemTrack = videoStream.getAudioTracks()[0];
+            if (systemTrack) {
+                // Remove any existing audio tracks
+                outputStream.getAudioTracks().forEach(track => {
+                    outputStream.removeTrack(track);
+                    track.stop();
+                });
+                outputStream.addTrack(systemTrack);
+            }
         }
-        
+
         return outputStream;
     } catch (err) {
         showError('Failed to get stream: ' + err.message);
         throw err;
+    }
+}
+
+async function updateMediaStream() {
+    try {
+        const previousMicMuted = micMuted;
+        const previousAudioMuted = audioMuted;
+
+        // Get new stream with automatic cleanup of old tracks
+        const newStream = await getStream();
+
+        // Set preview
+        preview.srcObject = newStream;
+
+        if (publisher) {
+            // Store old stream for cleanup
+            const oldStream = stream;
+            stream = newStream;
+
+            const apiKey = apiKeyInput.value;
+            const currentProvider = providerSelect.value;
+
+            // Stop publisher and clean up
+            await publisher.stop();
+            publisher = null;
+
+            // Clean up old stream after publisher is stopped
+            if (oldStream) {
+                oldStream.getTracks().forEach(track => track.stop());
+            }
+
+            // Create new publisher
+            publisher = currentProvider === 'chatgpt' 
+                ? new ChatGPTPublisher(stream, apiKey)
+                : new GoogleLivePublisher(stream, apiKey);
+            await publisher.start();
+        } else {
+            stream = newStream;
+        }
+
+        // Setup audio indicator if we have audio tracks
+        if (stream.getAudioTracks().length > 0) {
+            setupAudioIndicator(stream);
+        }
+
+        // Handle mute states
+        if (previousMicMuted || previousAudioMuted) {
+            const audioTracks = stream.getAudioTracks();
+            audioTracks.forEach(track => {
+                if (track.kind === 'audio' && track.label) {
+                    if (previousMicMuted && !track.label.toLowerCase().includes('system')) {
+                        track.enabled = false;
+                    }
+                    if (previousAudioMuted && track.label.toLowerCase().includes('system')) {
+                        track.enabled = false;
+                    }
+                }
+            });
+        }
+    } catch (err) {
+        console.error('Failed to update media stream:', err);
+        showError('Failed to update media stream: ' + err.message);
+        
+        // Reset states and cleanup on error
+        if (publisher) {
+            publisher.stop();
+            publisher = null;
+        }
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        if (preview.srcObject) {
+            preview.srcObject.getTracks().forEach(track => track.stop());
+            preview.srcObject = null;
+        }
+        
+        // Reset UI states
+        startButton.textContent = 'Start Stream';
+        startButton.dataset.started = "false";
+        startButton.disabled = false;
+        sendButton.disabled = true;
+        document.getElementById('systemPrompt').disabled = false;
     }
 }
 
