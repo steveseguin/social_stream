@@ -133,7 +133,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('p[data-placeholder], div[contenteditable="true"]').focus();
+					document.querySelector("ds-text-editor").shadowRoot.querySelector('div[contenteditable="true"],p[data-placeholder]>p, p[data-placeholder],').focus();
 					sendResponse(true);
 					return;
 				}
