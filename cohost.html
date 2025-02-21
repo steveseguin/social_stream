@@ -1699,7 +1699,34 @@ const errorDisplay = document.getElementById('error');
 const responsesDiv = document.getElementById('responses');
 let publisher = null;
 
-
+async function tryGetInitialPermissions() {
+    try {
+        // First try just audio, as it's less likely to be in use
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        audioStream.getTracks().forEach(track => track.stop());
+        
+        // Then try to get video separately
+        try {
+            const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+            videoStream.getTracks().forEach(track => track.stop());
+        } catch (videoErr) {
+            console.log("Default video device unavailable, will try alternatives during enumeration");
+        }
+        
+        await getDevices();
+    } catch (audioErr) {
+        try {
+            // If audio failed, try video only
+            const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+            videoStream.getTracks().forEach(track => track.stop());
+            await getDevices();
+        } catch (err) {
+            // If both audio and video fail individually, try with no initial devices
+            console.warn("Could not access default devices, attempting enumeration anyway");
+            await getDevices();
+        }
+    }
+}
 
 const apiKeyInput = document.getElementById('apiKey');
 apiKeyInput.value = localStorage.getItem('apiKey') || '';
@@ -1847,8 +1874,11 @@ audioSelect.addEventListener('change', async () => {
     await updateMediaStream();
 });
 
-async function originalUpdateMediaStream() {
+async function updateMediaStream() {
     try {
+        const previousMicMuted = micMuted;
+        const previousAudioMuted = audioMuted;
+        
         const newStream = await getStream();
         
         if (preview.srcObject) {
@@ -1880,36 +1910,21 @@ async function originalUpdateMediaStream() {
         if (stream.getAudioTracks().length > 0) {
             setupAudioIndicator(stream);
         }
-    } catch (err) {
-        console.error('Failed to update media stream:', err);
-        showError('Failed to update media stream: ' + err.message);
-    }
-}
 
-async function updateMediaStream() {
-    try {
-        const previousMicMuted = micMuted;
-		const previousAudioMuted = audioMuted;
-		
-		await originalUpdateMediaStream();
-		
-		if (previousMicMuted) {
-			const audioTracks = stream.getAudioTracks();
-			audioTracks.forEach(track => {
-				if (track.kind === 'audio' && track.label && !track.label.toLowerCase().includes('system')) {
-					track.enabled = false;
-				}
-			});
-		}
-		
-		if (previousAudioMuted) {
-			const audioTracks = stream.getAudioTracks();
-			audioTracks.forEach(track => {
-				if (track.kind === 'audio' && track.label && track.label.toLowerCase().includes('system')) {
-					track.enabled = false;
-				}
-			});
-		}
+        // Handle mute states
+        if (previousMicMuted || previousAudioMuted) {
+            const audioTracks = stream.getAudioTracks();
+            audioTracks.forEach(track => {
+                if (track.kind === 'audio' && track.label) {
+                    if (previousMicMuted && !track.label.toLowerCase().includes('system')) {
+                        track.enabled = false;
+                    }
+                    if (previousAudioMuted && track.label.toLowerCase().includes('system')) {
+                        track.enabled = false;
+                    }
+                }
+            });
+        }
     } catch (err) {
         console.error('Failed to update media stream:', err);
         showError('Failed to update media stream: ' + err.message);
@@ -1944,20 +1959,51 @@ async function getDevices() {
             audioSelect.appendChild(new Option(device.label || `Microphone ${audioSelect.length}`, device.deviceId));
         });
 
-        // Select default devices
+        // Try to find an available video device
         if (videoDevices.length > 0) {
-            const defaultVideo = videoDevices.find(device => device.deviceId === 'default') || videoDevices[0];
-            videoSelect.value = defaultVideo.deviceId;
+            for (const device of videoDevices) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { deviceId: { exact: device.deviceId } }
+                    });
+                    stream.getTracks().forEach(track => track.stop());
+                    videoSelect.value = device.deviceId;
+                    break;
+                } catch (err) {
+                    console.warn(`Video device ${device.label || device.deviceId} unavailable:`, err.message);
+                    continue;
+                }
+            }
+            // If no video devices are available, default to screen share
+            if (!videoSelect.value) {
+                videoSelect.value = 'screen';
+            }
         } else {
             videoSelect.value = 'screen';
         }
 
+        // Try to find an available audio device
         if (audioDevices.length > 0) {
-            const defaultAudio = audioDevices.find(device => device.deviceId === 'default') || audioDevices[0];
-            audioSelect.value = defaultAudio.deviceId;
+            for (const device of audioDevices) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: { deviceId: { exact: device.deviceId } }
+                    });
+                    stream.getTracks().forEach(track => track.stop());
+                    audioSelect.value = device.deviceId;
+                    break;
+                } catch (err) {
+                    console.warn(`Audio device ${device.label || device.deviceId} unavailable:`, err.message);
+                    continue;
+                }
+            }
+            // If no audio devices are available, default to no audio
+            if (!audioSelect.value) {
+                audioSelect.value = 'none';
+            }
         }
 
-        // Show initial preview
+        // Show initial preview with the selected devices
         await updateMediaStream();
         
     } catch (err) {
@@ -2014,7 +2060,6 @@ muteAudioButton.addEventListener('click', () => {
 });
 
 let audioContext;
-let audioMixer;
 
 async function getStream() {
     try {
@@ -2034,11 +2079,39 @@ async function getStream() {
                 outputStream.addTrack(videoTrack);
             }
         } else if (videoSelect.value !== 'none') {
-            videoStream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    deviceId: { exact: videoSelect.value }
+            try {
+                // Try selected device first
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        deviceId: { exact: videoSelect.value }
+                    }
+                });
+            } catch (err) {
+                // If selected device fails, try other available devices
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(d => d.kind === 'videoinput');
+                
+                for (const device of videoDevices) {
+                    if (device.deviceId !== videoSelect.value) {
+                        try {
+                            videoStream = await navigator.mediaDevices.getUserMedia({
+                                video: {
+                                    deviceId: { exact: device.deviceId }
+                                }
+                            });
+                            // Update select element to reflect the working device
+                            videoSelect.value = device.deviceId;
+                            break;
+                        } catch (innerErr) {
+                            console.warn(`Failed to get stream from device: ${device.label || device.deviceId}`);
+                        }
+                    }
                 }
-            });
+                
+                if (!videoStream) {
+                    throw new Error('No available video devices');
+                }
+            }
             
             const videoTrack = videoStream.getVideoTracks()[0];
             if (videoTrack) {
@@ -2046,15 +2119,45 @@ async function getStream() {
             }
         }
         
-        // Handle audio
+        // Handle audio with fallback
         if (audioSelect.value !== 'none') {
-            micStream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    deviceId: { exact: audioSelect.value },
-                    echoCancellation: true,
-                    noiseSuppression: true
+            try {
+                // Try selected device first
+                micStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        deviceId: { exact: audioSelect.value },
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    }
+                });
+            } catch (err) {
+                // If selected device fails, try other available devices
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioDevices = devices.filter(d => d.kind === 'audioinput');
+                
+                for (const device of audioDevices) {
+                    if (device.deviceId !== audioSelect.value) {
+                        try {
+                            micStream = await navigator.mediaDevices.getUserMedia({
+                                audio: {
+                                    deviceId: { exact: device.deviceId },
+                                    echoCancellation: true,
+                                    noiseSuppression: true
+                                }
+                            });
+                            // Update select element to reflect the working device
+                            audioSelect.value = device.deviceId;
+                            break;
+                        } catch (innerErr) {
+                            console.warn(`Failed to get stream from device: ${device.label || device.deviceId}`);
+                        }
+                    }
                 }
-            });
+                
+                if (!micStream) {
+                    throw new Error('No available audio devices');
+                }
+            }
             
             if (videoStream?.getAudioTracks().length > 0) {
                 // Mix system audio and mic audio
@@ -2101,15 +2204,26 @@ function showError(message) {
 if (!navigator.mediaDevices?.getUserMedia) {
     showError('getUserMedia not supported');
 } else {
-    navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: true
+    // Try audio first since it's less likely to be in use
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then(audioStream => {
+            audioStream.getTracks().forEach(track => track.stop());
+            // Then try video
+            return navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                .catch(videoErr => {
+                    console.log("Default video unavailable, continuing with enumeration");
+                });
         })
-        .then(initialStream => {
-            initialStream.getTracks().forEach(track => track.stop());
+        .then(videoStream => {
+            if (videoStream) videoStream.getTracks().forEach(track => track.stop());
+        })
+        .catch(err => {
+            console.warn("Initial device check failed:", err);
+        })
+        .finally(() => {
             getDevices();
-        })
-        .catch(err => showError('Initial permission request failed: ' + err.message));
+        });
+        
     navigator.mediaDevices.addEventListener('devicechange', getDevices);
 }
 
