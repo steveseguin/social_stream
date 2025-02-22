@@ -896,7 +896,7 @@
             return;
         }
 		
-		console.log('Current channel:', StreamState.getCurrentChannel(),  StreamState.isValid());
+		// console.log('Current channel:', StreamState.getCurrentChannel(),  StreamState.isValid());
 
         var data = {};
         data.chatname = chatname;
