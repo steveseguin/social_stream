@@ -60,6 +60,23 @@
 	}
 	
 	
+	
+	function getMainDomain(url) {
+	  const knownTlds = ['co.uk', 'com.au', 'co.jp'];
+	  const parts = url.split('.');
+	  
+	  for (const tld of knownTlds) {
+		if (url.endsWith(tld)) {
+		  return parts[parts.length - 3];
+		}
+	  }
+	  
+	  return parts[parts.length - 2];
+	}
+	
+	var mainDomain = getMainDomain(window.location.href) || "uscreen";
+	
+	
 	function processMessage(ele){
 		
 		if (!ele.dataset.lcMessage){return;}
@@ -102,7 +119,7 @@
 			data.hasDonation = "";
 			data.membership = "";;
 			data.textonly = settings.textonlymode || false;
-			data.type = "uscreen";
+			data.type = mainDomain || "uscreen";
 			
 			pushMessage(data);
 		} catch(e){
@@ -176,7 +193,7 @@
 		observer.observe(target, config);
 	}
 	
-	console.log("social stream injected");
+	console.log("social stream injected: "+mainDomain);
 
 	setInterval(function(){
 		try {

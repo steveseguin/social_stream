@@ -895,6 +895,8 @@
             //console.log("duplicate message; skipping");
             return;
         }
+		
+		// console.log('Current channel:', StreamState.getCurrentChannel(),  StreamState.isValid());
 
         var data = {};
         data.chatname = chatname;
@@ -922,7 +924,7 @@
 		if (!isExtensionOn) {
 			return;
 		}
-
+		
 		let target = null;
 		
 		// First try for chat room
@@ -1238,6 +1240,53 @@
             }
         );
     } catch (e) {}
+	
+	
+	const StreamState = {
+		initialUrl: null,
+		lastUserInteraction: 0,
+		navigationTimeout: 10000,
 
+		init() {
+			this.initialUrl = location.href;
+			this.lastUserInteraction = Date.now();
+			
+			document.addEventListener('click', () => {
+				this.lastUserInteraction = Date.now();
+				console.log(this.lastUserInteraction);
+			});
+			document.addEventListener('keydown', () => {
+				this.lastUserInteraction = Date.now();
+				console.log(this.lastUserInteraction);
+			});
+			document.addEventListener('touchstart', () => {
+				this.lastUserInteraction = Date.now();
+				console.log(this.lastUserInteraction);
+			});
+		},
+
+		isValid() {
+			const currentUrl = location.href;
+			
+			// Initial page load is always valid
+			if (currentUrl === this.initialUrl) {
+				return true;
+			}
+
+			// Check if recent navigation was user-initiated
+			const timeSinceInteraction = Date.now() - this.lastUserInteraction;
+			return timeSinceInteraction <= this.navigationTimeout;
+		},
+
+		getCurrentChannel() {
+			const match = location.href.match(/@([^/]+)/);
+			return match ? match[1] : null;
+		}
+	};
+
+	// Usage
+	StreamState.init();
 
 })();
+
+
