@@ -895,8 +895,6 @@
             //console.log("duplicate message; skipping");
             return;
         }
-		
-		// console.log('Current channel:', StreamState.getCurrentChannel(),  StreamState.isValid());
 
         var data = {};
         data.chatname = chatname;
@@ -915,6 +913,11 @@
         data.event = ital; // if an event or actual message
 
         //console.log(data);
+		
+		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
+			console.log("Has the channel changed? If so, click the page to validate it");
+			return;
+		}
 
         pushMessage(data);
     }

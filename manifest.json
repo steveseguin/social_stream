@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.12.21",
+  "version": "3.12.22",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -185,7 +185,8 @@
 	"https://play.sooplive.co.kr/*?vtype=chat",
 	"https://*.on24.com/view/*",
     "https://*.meetme.com/*",
-    "https://meetme.com/*"
+    "https://meetme.com/*",
+	"https://fansly.com/chatroom/*"
   ],
   "content_scripts": [
     {
@@ -204,6 +205,10 @@
     {
       "js": [ "./sources/chaturbate.js" ],
       "matches": [ "https://chaturbate.com/*/" ]
+    },
+	{
+      "js": [ "./sources/fansly.js" ],
+      "matches": [ "https://fansly.com/chatroom/*" ]
     },
     {
       "js": [ "./sources/cherrytv.js" ],
