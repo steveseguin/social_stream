@@ -62,7 +62,7 @@
 	
 	function processMessage(ele){
 		
-		console.log(ele);
+		//console.log(ele);
 		var chatimg = "";
 		
 		var name="";
@@ -189,7 +189,7 @@
 				document.querySelector('.chat-container').marked=true;
 				document.querySelector('.chat-container').childNodes.forEach(ele=>{
 					ele.skip = true;
-					processMessage(ele);
+					//processMessage(ele);
 				});
 				
 				onElementInserted('app-chat-room-message');
