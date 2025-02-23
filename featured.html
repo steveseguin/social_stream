@@ -754,6 +754,16 @@
 				return false;
 			};
 			
+			function getById(id) {
+				// js helper
+				var el = document.getElementById(id);
+				if (!el) {
+					console.log("couldn't find "+id);
+					el = document.createElement("span"); // create a fake element
+				}
+				return el;
+			}
+			
 			async function fetchWithTimeout(URL, timeout = 8000) {
 				// ref: https://dmitripavlutin.com/timeout-fetch-request/
 				try {
