@@ -1947,6 +1947,7 @@ function update(response, sync=true){
 									document.getElementById('elevenlabsTTS').classList.add('hidden');
 									document.getElementById('googleTTS').classList.add('hidden');
 									document.getElementById('speechifyTTS').classList.add('hidden');
+									document.getElementById('kokoroTTS').classList.add('hidden');
 									
 									if (ele.value == "system") {
 										document.getElementById('systemTTS').classList.remove('hidden');
@@ -1956,6 +1957,8 @@ function update(response, sync=true){
 										document.getElementById('googleTTS').classList.remove('hidden');
 									} else if (ele.value == "speechify") {
 										document.getElementById('speechifyTTS').classList.remove('hidden');
+									} else if (ele.value == "kokoro") {
+										document.getElementById('kokoroTTS').classList.remove('hidden');
 									}
 								}
 							}
@@ -2130,6 +2133,18 @@ function update(response, sync=true){
 								if (ele){
 									ele.value = response.settings[key].textparam11;
 									updateSettings(ele, sync);
+								}
+							}
+							if ("optionparam1" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam1='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam1;
+									updateSettings(ele, sync);
+								}
+								
+								var ele = document.querySelector("input[data-param1='"+key+"']");
+								if (ele && ele.checked){
+									updateSettings(ele, false, response.settings[key].optionparam1);
 								}
 							}
 							if ("optionparam2" in response.settings[key]){
@@ -3244,6 +3259,8 @@ function updateSettings(ele, sync=true, value=null){
 			document.getElementById('elevenlabsTTS').classList.add('hidden');
 			document.getElementById('googleTTS').classList.add('hidden');
 			document.getElementById('speechifyTTS').classList.add('hidden');
+			document.getElementById('kokoroTTS').classList.add('hidden');
+			
 			switch(ele.value) {
 				case 'system':
 					document.getElementById('systemTTS').classList.remove('hidden');
@@ -3256,6 +3273,9 @@ function updateSettings(ele, sync=true, value=null){
 					break;
 				case 'speechify':
 					document.getElementById('speechifyTTS').classList.remove('hidden');
+					break;
+				case 'kokoro':
+					document.getElementById('kokoroTTS').classList.remove('hidden');
 					break;
 				default:
 					document.getElementById('systemTTS').classList.remove('hidden');
@@ -3689,7 +3709,6 @@ const TTSManager = {
     speech: false,
     voice: null,
     voices: null,
-    premiumQueueTTS: [],
     premiumQueueActive: false,
     feedbackTimeout: null,
     
@@ -3773,6 +3792,12 @@ const TTSManager = {
                 voice: document.getElementById('systemLanguageSelect')?.selectedOptions[0]?.dataset.name,
                 rate: document.querySelector('[data-param1="rate"]').checked ?  parseFloat(document.querySelector('[data-numbersetting="rate"]')?.value) || 1.0 : 1.0,
                 pitch: document.querySelector('[data-param1="pitch"]').checked ? (parseFloat(document.querySelector('[data-numbersetting="pitch"]')?.value) || 1.0) : 1.0
+            },
+			
+			// Kokoro TTS settings
+            kokoro: {
+                voice: document.getElementById('kokoroVoiceSelect')?.selectedOptions[0]?.value || "af_aoede",
+                rate: document.querySelector('[data-param1="kokorospeed"]').checked ?  parseFloat(document.querySelector('[data-numbersetting="kokorospeed"]')?.value) || 1.0 : 1.0,
             },
             
             // Google Cloud TTS settings
@@ -3889,20 +3914,18 @@ const TTSManager = {
             if ((settings.service == "google") && settings.google.key) {
                 if (!this.premiumQueueActive) {
                     await this.googleTTS(text, settings);
-                } else {
-                    this.premiumQueueTTS.push(text);
-                }
+                } 
             } else if ((settings.service == "elevenlabs") && settings.elevenLabs.key) {
                 if (!this.premiumQueueActive) {
                     await this.elevenLabsTTS(text, settings);
-                } else {
-                    this.premiumQueueTTS.push(text);
-                }
+                } 
             } else if ((settings.service == "speechify") && settings.speechify.key) {
                 if (!this.premiumQueueActive) {
                     await this.speechifyTTS(text, settings);
-                } else {
-                    this.premiumQueueTTS.push(text);
+                }
+			} else if (settings.service == "kokoro") {
+                if (!this.premiumQueueActive) {
+                    await this.kokoroTTS(text, settings);
                 }
             } else if (!settings.service || (settings.service == "system")) {
                 this.systemTTS(text, settings);
@@ -3932,6 +3955,53 @@ const TTSManager = {
         
         window.speechSynthesis.speak(utterance);
     },
+	
+	async kokoroTTS(text, settings) {
+		try {
+			if (!kokoroTtsInstance) {
+				const initialized = await initKokoro();
+				if (!initialized) {
+					this.finishedAudio();
+					return;
+				}
+			}
+			premiumQueueActive = true;
+			const streamer = new TextSplitterStream();
+			streamer.push(text);
+			streamer.close();
+			
+			const audioElement = document.createElement("audio");
+			audioElement.onended = this.finishedAudio;
+			
+			const stream = kokoroTtsInstance.stream(streamer, { 
+				voice: settings.kokoro.voice || "af_aoede",
+				speed: settings.kokoro.speed || 1.0,
+				streamAudio: false 
+			});
+
+			for await (const { audio } of stream) {
+				if (!audio) {
+					this.finishedAudio();
+					return;
+				}
+				
+				const audioBlob = audio.toBlob();
+				audioElement.src = URL.createObjectURL(audioBlob);
+				if (settings.volume) audioElement.volume = settings.volume;
+				
+				try {
+					await audioElement.play();
+				} catch (e) {
+					this.finishedAudio();
+					console.error(e);
+					errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+				}
+			}
+		} catch (e) {
+			console.error("Kokoro TTS error:", e);
+			this.finishedAudio();
+		}
+	},
     
     googleTTS(text, settings) {
         this.premiumQueueActive = true;
@@ -4069,11 +4139,131 @@ const TTSManager = {
     
     finishedAudio() {
         this.premiumQueueActive = false;
-        if (this.premiumQueueTTS.length) {
-            this.speak(this.premiumQueueTTS.shift());
-        }
-    }
+    },
 };
+
+var TextSplitterStream = null;
+var KokoroTTS = false;
+var kokoroDownloadInProgress  = null;
+var kokoroTtsInstance = null;
+var kokoroSettings = {
+	rate: 1.0,
+	voiceName: false,
+	model: "kokoro-82M-v1.0"
+};
+async function initKokoro() {
+	if (kokoroDownloadInProgress) return false;
+	
+	if (!KokoroTTS) {
+	
+		async function openDB() {
+			return new Promise((resolve, reject) => {
+				const request = indexedDB.open('kokoroTTS', 1);
+				request.onerror = () => reject(request.error);
+				request.onsuccess = () => resolve(request.result);
+				request.onupgradeneeded = (event) => {
+					const db = event.target.result;
+					if (!db.objectStoreNames.contains('models')) {
+						db.createObjectStore('models');
+					}
+				};
+			});
+		}
+
+		async function getCachedModel() {
+			const db = await openDB();
+			return new Promise((resolve, reject) => {
+				const transaction = db.transaction('models', 'readonly');
+				const store = transaction.objectStore('models');
+				const request = store.get('kokoro-82M-v1.0');
+				request.onerror = () => reject(request.error);
+				request.onsuccess = () => resolve(request.result);
+			});
+		}
+
+		async function cacheModel(modelData) {
+			const db = await openDB();
+			return new Promise((resolve, reject) => {
+				const transaction = db.transaction('models', 'readwrite');
+				const store = transaction.objectStore('models');
+				const request = store.put(modelData, 'kokoro-82M-v1.0');
+				request.onerror = () => reject(request.error);
+				request.onsuccess = () => resolve();
+			});
+		}
+	
+		try {
+			kokoroDownloadInProgress = true;
+			console.log("Loading Kokoro dependencies...");
+			const module = window.location.href.startsWith("chrome-extension://") ? await import('./thirdparty/kokoro-bundle.es.ext.js') : await import('./thirdparty/kokoro-bundle.es.js');
+			KokoroTTS = module.KokoroTTS;
+			TextSplitterStream = module.TextSplitterStream;
+			const detectWebGPU = module.detectWebGPU;
+			
+			// Initialize IndexedDB handling
+			const DB_NAME = 'kokoroTTS';
+			const STORE_NAME = 'models';
+			const MODEL_KEY = 'kokoro-82M-v1.0';
+			
+			const device = (await detectWebGPU()) ? "webgpu" : "wasm";
+			console.log("Using device:", device);
+			
+			// Check cache first
+			console.log("Checking cache for model...");
+			let modelData = await getCachedModel();
+			
+			if (!modelData) {
+				console.log("Downloading model...");
+				const modelUrl = 'https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model.onnx';
+				const response = await fetch(modelUrl);
+				const total = +response.headers.get('Content-Length');
+				let loaded = 0;
+				
+				const reader = response.body.getReader();
+				const chunks = [];
+				
+				while (true) {
+					const {done, value} = await reader.read();
+					if (done) break;
+					
+					chunks.push(value);
+					loaded += value.length;
+					
+					const percentage = (loaded / total) * 100;
+					console.log(`Downloading model: ${percentage.toFixed(1)}%`);
+				}
+				
+				const modelBlob = new Blob(chunks);
+				modelData = new Uint8Array(await modelBlob.arrayBuffer());
+				
+				console.log("Caching model...");
+				await cacheModel(modelData);
+			} else {
+				console.log("Loading model from cache");
+			}
+			
+			console.log("Initializing Kokoro TTS...");
+			const customLoadFn = async () => modelData;
+			kokoroTtsInstance = await KokoroTTS.from_pretrained(
+				"onnx-community/Kokoro-82M-v1.0-ONNX",
+				{
+					dtype: device === "wasm" ? "q8" : "fp32",
+					device,
+					load_fn: customLoadFn
+				}
+			);
+			
+			console.log("Kokoro TTS ready!");
+			kokoroDownloadInProgress = false;
+			return true;
+		} catch (error) {
+			console.error('Failed to initialize Kokoro:', error);
+			kokoroDownloadInProgress = false;
+			return false;
+		}
+	}
+	return true;
+}
 
 const PollManager = {
     savedPolls: [],

@@ -3858,6 +3858,9 @@
 			var GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
 			var ElevenLabsKey = urlParams.get("elevenlabskey") || false;
 			var SpeechifyAPIKey = urlParams.get("speechifykey") || false;
+			var useKokoroTTS = urlParams.has("kokorotts") || urlParams.has("kokoro") || false;
+			var KokoroTTS = false;
+			var TextSplitterStream = null;
 			
 			if (GoogleAPIKey || ElevenLabsKey || SpeechifyAPIKey) {
 				audio = document.createElement("audio");
@@ -3913,6 +3916,18 @@
 				voiceName: false
 			};
 			
+			var kokoroDownloadInProgress  = null;
+			var kokoroTtsInstance = null;
+			var kokoroSettings = {
+				rate: false,
+				voiceName: false,
+				model: "kokoro-82M-v1.0"
+			};
+
+			// Kokoro settings
+			kokoroSettings.speed = urlParams.has("korospeed") ? parseFloat(urlParams.get("korospeed")) || 1.0 : rate;
+			kokoroSettings.voiceName = urlParams.get("voicekokoro") || "af_aoede";
+			
 			// Google Cloud settings
 			googleSettings.rate = urlParams.has("googlerate") ? parseFloat(urlParams.get("googlerate")) || 1 : rate;
 			googleSettings.pitch = urlParams.has("googlepitch") ? parseFloat(urlParams.get("googlepitch")) || 0 : 0;
@@ -3930,7 +3945,7 @@
 			elevenLabsSettings.model = urlParams.get("elevenlabsmodel") || "eleven_multilingual_v2";
 
 			// Speechify settings
-			speechifySettings.speed = urlParams.has("speechifyspeed") ? parseFloat(urlParams.get("speechifyspeed")) || 1.0 : 1.0;
+			speechifySettings.speed = urlParams.has("speechifyspeed") ? parseFloat(urlParams.get("speechifyspeed")) || 1.0 : rate;
 			speechifySettings.model = urlParams.get("speechifymodel") || 'simba-english';
 			speechifySettings.voiceName = urlParams.get("voicespeechify") || false;
 
@@ -4146,7 +4161,14 @@
 					//text = text.replace(/https?:\/\/[^\s]+/g, 'Link');
 				}
 
-				if (GoogleAPIKey) {
+				 if (useKokoroTTS) {
+					if (!premiumQueueActive) {
+						kokoroTTS(text);
+					} else {
+						premiumQueueTTS.push(text);
+					}
+					return;
+				} else if (GoogleAPIKey) {
 					if (!premiumQueueActive) {
 						googleTTS(text);
 					} else {
@@ -4291,6 +4313,180 @@
 					ele.title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
 				}
 			}
+			
+			async function initKokoro() {
+				if (kokoroDownloadInProgress) return false;
+				
+				if (!KokoroTTS) {
+				
+					async function openDB() {
+						return new Promise((resolve, reject) => {
+							const request = indexedDB.open('kokoroTTS', 1);
+							request.onerror = () => reject(request.error);
+							request.onsuccess = () => resolve(request.result);
+							request.onupgradeneeded = (event) => {
+								const db = event.target.result;
+								if (!db.objectStoreNames.contains('models')) {
+									db.createObjectStore('models');
+								}
+							};
+						});
+					}
+
+					async function getCachedModel() {
+						const db = await openDB();
+						return new Promise((resolve, reject) => {
+							const transaction = db.transaction('models', 'readonly');
+							const store = transaction.objectStore('models');
+							const request = store.get('kokoro-82M-v1.0');
+							request.onerror = () => reject(request.error);
+							request.onsuccess = () => resolve(request.result);
+						});
+					}
+
+					async function cacheModel(modelData) {
+						const db = await openDB();
+						return new Promise((resolve, reject) => {
+							const transaction = db.transaction('models', 'readwrite');
+							const store = transaction.objectStore('models');
+							const request = store.put(modelData, 'kokoro-82M-v1.0');
+							request.onerror = () => reject(request.error);
+							request.onsuccess = () => resolve();
+						});
+					}
+				
+					try {
+						kokoroDownloadInProgress = true;
+						console.log("Loading Kokoro dependencies...");
+						const module = window.location.href.startsWith("chrome-extension://") ? await import('./thirdparty/kokoro-bundle.es.ext.js') : await import('./thirdparty/kokoro-bundle.es.js');
+						KokoroTTS = module.KokoroTTS;
+						TextSplitterStream = module.TextSplitterStream;
+						const detectWebGPU = module.detectWebGPU;
+						
+						// Initialize IndexedDB handling
+						const DB_NAME = 'kokoroTTS';
+						const STORE_NAME = 'models';
+						const MODEL_KEY = 'kokoro-82M-v1.0';
+						
+						const device = (await detectWebGPU()) ? "webgpu" : "wasm";
+						console.log("Using device:", device);
+						
+						// Check cache first
+						console.log("Checking cache for model...");
+						let modelData = await getCachedModel();
+						
+						if (!modelData) {
+							console.log("Downloading model...");
+							const modelUrl = 'https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model.onnx';
+							const response = await fetch(modelUrl);
+							const total = +response.headers.get('Content-Length');
+							let loaded = 0;
+							
+							const reader = response.body.getReader();
+							const chunks = [];
+							
+							while (true) {
+								const {done, value} = await reader.read();
+								if (done) break;
+								
+								chunks.push(value);
+								loaded += value.length;
+								
+								const percentage = (loaded / total) * 100;
+								console.log(`Downloading model: ${percentage.toFixed(1)}%`);
+							}
+							
+							const modelBlob = new Blob(chunks);
+							modelData = new Uint8Array(await modelBlob.arrayBuffer());
+							
+							console.log("Caching model...");
+							await cacheModel(modelData);
+						} else {
+							console.log("Loading model from cache");
+						}
+						
+						console.log("Initializing Kokoro TTS...");
+						const customLoadFn = async () => modelData;
+						kokoroTtsInstance = await KokoroTTS.from_pretrained(
+							"onnx-community/Kokoro-82M-v1.0-ONNX",
+							{
+								dtype: device === "wasm" ? "q8" : "fp32",
+								device,
+								load_fn: customLoadFn
+							}
+						);
+						
+						console.log("Kokoro TTS ready!");
+						kokoroDownloadInProgress = false;
+						return true;
+					} catch (error) {
+						console.error('Failed to initialize Kokoro:', error);
+						kokoroDownloadInProgress = false;
+						return false;
+					}
+				}
+				return true;
+			}
+			
+			if (useKokoroTTS){
+				try {
+					initKokoro();
+				} catch(e){
+					console.error("Failed to load Kokoro TTS",e);
+				}
+			}
+			
+			async function kokoroTTS(text) {
+				try {
+					if (!kokoroTtsInstance) {
+						const initialized = await initKokoro();
+						if (!initialized) {
+							finishedAudio();
+							return;
+						}
+					}
+					
+					premiumQueueActive = true;
+					const streamer = new TextSplitterStream();
+					streamer.push(text);
+					streamer.close();
+					
+					const audioElement = document.createElement("audio");
+					audioElement.onended = finishedAudio;
+					
+					const stream = kokoroTtsInstance.stream(streamer, { 
+						voice: kokoroSettings.voiceName || Object.keys(kokoroTtsInstance.voices)[0],
+						speed: kokoroSettings.speed,
+						streamAudio: false 
+					});
+
+					for await (const { audio } of stream) {
+						if (!audio) {
+							finishedAudio();
+							return;
+						}
+						
+						const audioBlob = audio.toBlob();
+						audioElement.src = URL.createObjectURL(audioBlob);
+						if (volume) audioElement.volume = volume;
+						
+						try {
+							if (audioContext.state === 'suspended') {
+								await audioContext.resume();
+							}
+							await audioElement.play();
+						} catch (e) {
+							finishedAudio();
+							console.error(e);
+							errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+						}
+					}
+				} catch (e) {
+					console.error("Kokoro TTS error:", e);
+					finishedAudio();
+				}
+			}
+
 			function ElevenLabsTTS(tts) {
 				try {
 					premiumQueueActive = true;

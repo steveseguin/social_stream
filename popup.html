@@ -1684,6 +1684,7 @@ input:checked + .slider:before {
 							<h3>Text-to-Speech Service Provider</h3>
 							<select id="ttsProvider" data-optionsetting="ttsProvider" class="textInput">
 								<option selected value="system">System TTS</option>
+								<option value="kokoro">Kokoro (webGPU)</option>
 								<option value="elevenlabs">ElevenLabs</option>
 								<option value="google">Google Cloud</option>
 								<option value="speechify">Speechify</option>
@@ -1723,6 +1724,30 @@ input:checked + .slider:before {
 									🎵 Pitch
 									<input type="number" style="max-width: 6ch;" step="0.1" max="2" min="0.1" value="1.0" 
 										size="5" data-numbersetting="pitch" />
+								</span>
+							</div>
+						</div>
+						<!-- Kokoro TTS Options -->
+						<div class="tts-provider-options options_group" id="kokoroTTS">
+							<h4>GPU-powered TTS Options</h4>
+							<i>note: this free locally-running TTS needs a power computer to run well.</i>
+							<br /><br />
+							<div>
+								🎭 Voice to use: 
+								<select id="kokoroVoiceSelect" data-optionparam1="voicekokoro" title="Select the Kokoro TTS Voice">
+									<option value="af_heart">Heart (American Female)</option><option value="af_alloy">Alloy (American Female)</option><option selected value="af_aoede">Aoede (American Female)</option><option value="af_bella">Bella (American Female)</option><option value="af_jessica">Jessica (American Female)</option><option value="af_kore">Kore (American Female)</option><option value="af_nicole">Nicole (American Female)</option><option value="af_nova">Nova (American Female)</option><option value="af_river">River (American Female)</option><option value="af_sarah">Sarah (American Female)</option><option value="af_sky">Sky (American Female)</option><option value="am_adam">Adam (American Male)</option><option value="am_echo">Echo (American Male)</option><option value="am_eric">Eric (American Male)</option><option value="am_fenrir">Fenrir (American Male)</option><option value="am_liam">Liam (American Male)</option><option value="am_michael">Michael (American Male)</option><option value="am_onyx">Onyx (American Male)</option><option value="am_puck">Puck (American Male)</option><option value="am_santa">Santa (American Male)</option><option value="bf_emma">Emma (British Female)</option><option value="bf_isabella">Isabella (British Female)</option><option value="bm_george">George (British Male)</option><option value="bm_lewis">Lewis (British Male)</option><option value="bf_alice">Alice (British Female)</option><option value="bf_lily">Lily (British Female)</option><option value="bm_daniel">Daniel (British Male)</option><option value="bm_fable">Fable (British Male)</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="kokorospeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="kokoro-tts-speed">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" 
+										size="5" data-numbersetting="kokorospeed" />
 								</span>
 							</div>
 						</div>
@@ -2909,7 +2934,7 @@ input:checked + .slider:before {
 								<br />
 								<br />
                                 <div>
-                                    <select id="languageSelect2" data-optionparam2="lang" data-del2="lang,voice" title="Select the default text to speech language"> </select>								 
+                                    <select id="languageSelect2" data-optionparam2="lang" data-del2="lang,voice" title="Select the default text to speech language"> </select>
                                 </div>
                                 <div>
                                     <label class="switch">

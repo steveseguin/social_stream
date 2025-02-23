@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.12.22",
+  "version": "3.12.23",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -11,7 +11,7 @@
     "service_worker": "service_worker.js"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },
   "permissions": [
     "webNavigation",
@@ -32,7 +32,7 @@
 	"https://*.webinargeek.com/watch/*",
     "https://chaturbate.com/*/",
     "https://cherry.tv/*",				
-	"https://*.online.church",
+	"https://*.online.church/",
     "https://beamstream.gg/*/chat",
     "https://socialstream.ninja/sources/websocket/*",
     "https://socialstream.ninja/websocket/*",
