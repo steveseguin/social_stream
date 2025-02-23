@@ -1339,6 +1339,53 @@
 						});
 				}
 			}
+			
+			function updateAudioSource(newUrl) {
+				var audioElement = getById("testtone");
+				var sources = audioElement.getElementsByTagName("source");
+				var extension = newUrl.split(".").pop().toLowerCase();
+				var mimeType;
+
+				switch (extension) {
+					case "mp3":
+						mimeType = "audio/mpeg";
+						break;
+					case "wav":
+						mimeType = "audio/wav";
+						break;
+					case "ogg":
+						mimeType = "audio/ogg";
+						break;
+					case "aac":
+					case "m4a":
+						mimeType = "audio/aac";
+						break;
+					case "opus":
+						mimeType = "audio/opus";
+						break;
+					case "flac":
+						mimeType = "audio/flac";
+						break;
+					case "webm":
+						mimeType = "audio/webm";
+						break;
+					default:
+						console.error("Unsupported file type:", extension);
+						return;
+				}
+				if (sources.length === 1) {
+					sources[0].src = newUrl;
+					sources[0].type = mimeType;
+				} else {
+					audioElement.innerHTML = "";
+					var newSource = document.createElement("source");
+					newSource.src = newUrl;
+					newSource.type = mimeType;
+					audioElement.appendChild(newSource);
+				}
+				audioElement.load();
+			}
+			
 			if (urlParams.get("custombeep")) {
 				updateAudioSource(urlParams.get("custombeep"));
 			}
