@@ -3272,6 +3272,7 @@ input:checked + .slider:before {
 										<option value="chatgpt">ChatGPT API</option>
 										<option value="gemini">Gemini API</option>
 										<option value="deepseek">DeepSeek API</option>
+										<option value="xai">xAI API (Grok)</option>
 										<option value="custom">Custom API</option>
 									</select>
 								<div>
@@ -3289,6 +3290,11 @@ input:checked + .slider:before {
 									<div id="geminiApiKey" class="textInputContainer hidden" style="width: 95%;">
 										<input type="password"  class="textInput" autocomplete="off" placeholder="Your Google API key" data-textsetting="geminiApiKey" />
 										<label for="geminiApiKey">&gt; Google API Key</label>
+									</div>
+									
+									<div id="xaiApiKey" class="textInputContainer hidden" style="width: 95%;">
+										<input type="password"  class="textInput" autocomplete="off" placeholder="Your xAI API key" data-textsetting="xaiApiKey" />
+										<label for="xaiApiKey">&gt; xAI API Key</label>
 									</div>
 									
 									<div id="deepseekApiKey" class="textInputContainer hidden" style="width: 95%;">
@@ -3316,6 +3322,12 @@ input:checked + .slider:before {
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-1.5-flash" data-textsetting="geminimodel" />
 										<label for="geminimodel"><span data-translate="geminimodel">&gt; Gemini Model to use</span></label>
+									</div>
+								</div>
+								<div id="xaimodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-1.5-flash" data-textsetting="xaimodel" />
+										<label for="xaimodel"><span data-translate="xaimodel">&gt; xAI Model to use</span></label>
 									</div>
 								</div>
 								<div id="chatgptmodel" class="hidden">

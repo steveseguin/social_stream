@@ -1918,6 +1918,8 @@ function update(response, sync=true){
 									document.getElementById("ollamaKeepAlive").classList.add("hidden");
 									document.getElementById("geminiApiKey").classList.add("hidden");
 									document.getElementById("geminimodel").classList.add("hidden");
+									document.getElementById("xaiApiKey").classList.add("hidden");
+									document.getElementById("xaimodel").classList.add("hidden");
 									document.getElementById("chatgptmodel").classList.add("hidden");
 									document.getElementById("deepseekApiKey").classList.add("hidden");
 									document.getElementById("deepseekmodel").classList.add("hidden");
@@ -1932,6 +1934,9 @@ function update(response, sync=true){
 									} else if (ele.value == "chatgpt"){
 										document.getElementById("chatgptApiKey").classList.remove("hidden");
 										document.getElementById("chatgptmodel").classList.remove("hidden");
+									} else if (ele.value == "xai"){
+										document.getElementById("xaiApiKey").classList.remove("hidden");
+										document.getElementById("xaimodel").classList.remove("hidden");
 									} else if (ele.value == "gemini"){
 										document.getElementById("geminiApiKey").classList.remove("hidden");
 										document.getElementById("geminimodel").classList.remove("hidden");
@@ -3186,6 +3191,8 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("chatgptApiKey").classList.add("hidden");
 				document.getElementById("geminiApiKey").classList.add("hidden");
 				document.getElementById("geminimodel").classList.add("hidden");
+				document.getElementById("xaiApiKey").classList.add("hidden");
+				document.getElementById("xaimodel").classList.add("hidden");
 				document.getElementById("chatgptmodel").classList.add("hidden");
 				document.getElementById("deepseekApiKey").classList.add("hidden");
 				document.getElementById("deepseekmodel").classList.add("hidden");
@@ -3198,6 +3205,8 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("ollamamodel").classList.add("hidden");
 				document.getElementById("ollamaendpoint").classList.add("hidden");
 				document.getElementById("geminiApiKey").classList.add("hidden");
+				document.getElementById("xaiApiKey").classList.add("hidden");
+				document.getElementById("xaimodel").classList.add("hidden");
 				document.getElementById("geminimodel").classList.add("hidden");
 				document.getElementById("deepseekApiKey").classList.add("hidden");
 				document.getElementById("deepseekmodel").classList.add("hidden");
@@ -3212,6 +3221,8 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("chatgptApiKey").classList.add("hidden");
 				document.getElementById("chatgptmodel").classList.add("hidden");
 				document.getElementById("deepseekApiKey").classList.add("hidden");
+				document.getElementById("xaiApiKey").classList.add("hidden");
+				document.getElementById("xaimodel").classList.add("hidden");
 				document.getElementById("deepseekmodel").classList.add("hidden");
 				document.getElementById("customAIEndpoint").classList.add("hidden");
 				document.getElementById("customAIModel").classList.add("hidden");
@@ -3221,6 +3232,22 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("deepseekmodel").classList.remove("hidden");
 				document.getElementById("ollamamodel").classList.add("hidden");
 				document.getElementById("ollamaendpoint").classList.add("hidden");
+				document.getElementById("xaiApiKey").classList.add("hidden");
+				document.getElementById("xaimodel").classList.add("hidden");
+				document.getElementById("chatgptApiKey").classList.add("hidden");
+				document.getElementById("geminiApiKey").classList.add("hidden");
+				document.getElementById("geminimodel").classList.add("hidden");
+				document.getElementById("chatgptmodel").classList.add("hidden");
+				document.getElementById("customAIEndpoint").classList.add("hidden");
+				document.getElementById("customAIModel").classList.add("hidden");
+				document.getElementById("ollamaKeepAlive").classList.add("hidden");
+			} else if (ele.value == "deepseek"){
+				document.getElementById("deepseekApiKey").classList.add("hidden");
+				document.getElementById("deepseekmodel").classList.add("hidden");
+				document.getElementById("ollamamodel").classList.add("hidden");
+				document.getElementById("ollamaendpoint").classList.add("hidden");
+				document.getElementById("xaiApiKey").classList.remove("hidden");
+				document.getElementById("xaimodel").classList.remove("hidden");
 				document.getElementById("chatgptApiKey").classList.add("hidden");
 				document.getElementById("geminiApiKey").classList.add("hidden");
 				document.getElementById("geminimodel").classList.add("hidden");
@@ -3233,6 +3260,8 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("customAIModel").classList.remove("hidden");
 				document.getElementById("ollamamodel").classList.add("hidden");
 				document.getElementById("ollamaendpoint").classList.add("hidden");
+				document.getElementById("xaiApiKey").classList.add("hidden");
+				document.getElementById("xaimodel").classList.add("hidden");
 				document.getElementById("chatgptApiKey").classList.add("hidden");
 				document.getElementById("geminiApiKey").classList.add("hidden");
 				document.getElementById("geminimodel").classList.add("hidden");
@@ -3244,6 +3273,8 @@ function updateSettings(ele, sync=true, value=null){
 				document.getElementById("ollamamodel").classList.add("hidden");
 				document.getElementById("ollamaendpoint").classList.add("hidden");
 				document.getElementById("chatgptApiKey").classList.add("hidden");
+				document.getElementById("xaiApiKey").classList.add("hidden");
+				document.getElementById("xaimodel").classList.add("hidden");
 				document.getElementById("geminiApiKey").classList.add("hidden");
 				document.getElementById("geminimodel").classList.add("hidden");
 				document.getElementById("chatgptmodel").classList.add("hidden");
@@ -3956,8 +3987,54 @@ const TTSManager = {
         window.speechSynthesis.speak(utterance);
     },
 	
+	async electronTTS(text,settings){
+	  try {
+		// Get WAV buffer directly from main process
+		const wavBuffer = await ipcRenderer.invoke('tts', text);
+		
+		// Create blob from buffer
+		const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+		
+		// Play the audio
+		const audioElement = document.getElementById('yourAudioElementId'); // Replace with your audio element
+		audioElement.src = URL.createObjectURL(audioBlob);
+		
+		// Set volume if needed
+		//const settings = { volume: 0.8 }; // Replace with your actual settings
+		//if (settings.volume) audioElement.volume = settings.volume;
+		
+		audioElement.play();
+	  } catch (error) {
+		console.error("Error playing TTS:", error);
+	  }
+	},
+	
 	async kokoroTTS(text, settings) {
 		try {
+			if (ssapp){
+				try {
+					// Get WAV buffer directly from main process
+					const wavBuffer = await ipcRenderer.invoke('tts', text);
+					
+					// Create blob from buffer
+					const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+					
+					// Play the audio
+					const audioElement = document.createElement("audio");
+					audioElement.src = URL.createObjectURL(audioBlob);
+					audioElement.onended = this.finishedAudio;
+					
+					// Set volume if needed
+					//const settings = { volume: 0.8 }; // Replace with your actual settings
+					//if (settings.volume) audioElement.volume = settings.volume;
+					
+					audioElement.play();
+					return;
+			  } catch (error) {
+				console.error("Error playing TTS:", error);
+			  }
+			}
+			
 			if (!kokoroTtsInstance) {
 				const initialized = await initKokoro();
 				if (!initialized) {
@@ -4152,6 +4229,7 @@ var kokoroSettings = {
 	model: "kokoro-82M-v1.0"
 };
 async function initKokoro() {
+	if (ssapp) return false;
 	if (kokoroDownloadInProgress) return false;
 	
 	if (!KokoroTTS) {
@@ -4205,7 +4283,7 @@ async function initKokoro() {
 			const STORE_NAME = 'models';
 			const MODEL_KEY = 'kokoro-82M-v1.0';
 			
-			const device = (await detectWebGPU()) ? "webgpu" : "wasm";
+			let device = (await detectWebGPU()) ? "webgpu" : "wasm";
 			console.log("Using device:", device);
 			
 			// Check cache first
@@ -4243,15 +4321,45 @@ async function initKokoro() {
 			}
 			
 			console.log("Initializing Kokoro TTS...");
-			const customLoadFn = async () => modelData;
-			kokoroTtsInstance = await KokoroTTS.from_pretrained(
-				"onnx-community/Kokoro-82M-v1.0-ONNX",
-				{
-					dtype: device === "wasm" ? "q8" : "fp32",
-					device,
-					load_fn: customLoadFn
+			try {
+				const customLoadFn = async () => modelData;
+				kokoroTtsInstance = await KokoroTTS.from_pretrained(
+					"onnx-community/Kokoro-82M-v1.0-ONNX",
+					{
+						dtype: device === "wasm" ? "q8" : "fp32",
+						device,
+						load_fn: customLoadFn
+					}
+				);
+			} catch(e){
+				console.error(e);
+				if (device === "webgpu"){
+					device = "wasm";
+					try {
+						const customLoadFn = async () => modelData;
+						kokoroTtsInstance = await KokoroTTS.from_pretrained(
+							"onnx-community/Kokoro-82M-v1.0-ONNX",
+							{
+								dtype: device === "wasm" ? "q8" : "fp32",
+								device,
+								load_fn: customLoadFn
+							}
+						);
+					} catch(e){
+						console.error(e);
+						device = "auto";
+						const customLoadFn = async () => modelData;
+						kokoroTtsInstance = await KokoroTTS.from_pretrained(
+							"onnx-community/Kokoro-82M-v1.0-ONNX",
+							{
+								dtype: device === "wasm" ? "q8" : "fp32",
+								device,
+								load_fn: customLoadFn
+							}
+						);
+					}
 				}
-			);
+			}
 			
 			console.log("Kokoro TTS ready!");
 			kokoroDownloadInProgress = false;

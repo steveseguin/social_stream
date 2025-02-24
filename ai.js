@@ -204,6 +204,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			apiKey = settings.geminiApiKey?.textsetting;
 			callback = null;
 			break;
+		case "xai":  // New case for Grok
+			endpoint = "https://api.x.ai/v1/chat/completions";
+			model = model || settings.xaimodel?.textsetting || "grok-beta";  // Default to grok-beta
+			apiKey = settings.xaiApiKey?.textsetting;  // Requires an API key from xAI
+			// streamable = true;  // Grok supports streaming
+			callback = null;
+			break;
 		case "custom":
 			endpoint = settings.customAIEndpoint?.textsetting || "http://localhost:11434";
 			if (!endpoint.includes("/v1") || !endpoint.includes("/completions")){ // going to assume you already ended the completions URL
