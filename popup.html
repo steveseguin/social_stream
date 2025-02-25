@@ -3273,6 +3273,7 @@ input:checked + .slider:before {
 										<option value="gemini">Gemini API</option>
 										<option value="deepseek">DeepSeek API</option>
 										<option value="xai">xAI API (Grok)</option>
+										<option value="bedrock">AWS Bedrock API</option>
 										<option value="custom">Custom API</option>
 									</select>
 								<div>
@@ -3340,6 +3341,27 @@ input:checked + .slider:before {
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: deepseek-chat" data-textsetting="deepseekmodel" />
 										<label for="deepseekmodel"><span data-translate="deepseekmodel">&gt; DeepSeek Model to use</span></label>
+									</div>
+								</div>
+								<div id="bedrockAccessKey" class="textInputContainer hidden" style="width: 95%;">
+									<input type="password" class="textInput" autocomplete="off" placeholder="Your AWS Access Key" data-textsetting="bedrockAccessKey" />
+									<label for="bedrockAccessKey">&gt; AWS Access Key</label>
+								</div>
+
+								<div id="bedrockSecretKey" class="textInputContainer hidden" style="width: 95%;">
+									<input type="password" class="textInput" autocomplete="off" placeholder="Your AWS Secret Key" data-textsetting="bedrockSecretKey" />
+									<label for="bedrockSecretKey">&gt; AWS Secret Key</label>
+								</div>
+
+								<div id="bedrockRegion" class="textInputContainer hidden" style="width: 95%;">
+									<input type="text" class="textInput" autocomplete="off" placeholder="e.g., us-east-1" data-textsetting="bedrockRegion" />
+									<label for="bedrockRegion">&gt; AWS Region</label>
+								</div>
+
+								<div id="bedrockmodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="e.g., anthropic.claude-v2" data-textsetting="bedrockmodel" />
+										<label for="bedrockmodel">&gt; Bedrock Model to use</label>
 									</div>
 								</div>
 								<div id="customAIModel" class="hidden">

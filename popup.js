@@ -1945,6 +1945,11 @@ function update(response, sync=true){
 										} else if (ele.value == "deepseek"){
 											document.getElementById("deepseekApiKey").classList.remove("hidden");
 											document.getElementById("deepseekmodel").classList.remove("hidden");
+										} else if (ele.value == "bedrock"){
+											document.getElementById('bedrockAccessKey').classList.remove('hidden');
+											document.getElementById('bedrockSecretKey').classList.remove('hidden');
+											document.getElementById('bedrockRegion').classList.remove('hidden');
+											document.getElementById('bedrockmodel').classList.remove('hidden');
 										} else if (ele.value == "custom"){
 											document.getElementById("customAIEndpoint").classList.remove("hidden");
 											document.getElementById("customAIModel").classList.remove("hidden");
@@ -3188,105 +3193,48 @@ function updateSettings(ele, sync=true, value=null){
 			}
 		}
 		if (ele.dataset.optionsetting == "aiProvider"){
+			document.getElementById('bedrockAccessKey').classList.add('hidden');
+			document.getElementById('bedrockSecretKey').classList.add('hidden');
+			document.getElementById('bedrockRegion').classList.add('hidden');
+			document.getElementById('bedrockmodel').classList.add('hidden');
+			document.getElementById("chatgptApiKey").classList.add("hidden");
+			document.getElementById("geminiApiKey").classList.add("hidden");
+			document.getElementById("geminimodel").classList.add("hidden");
+			document.getElementById("xaiApiKey").classList.add("hidden");
+			document.getElementById("xaimodel").classList.add("hidden");
+			document.getElementById("chatgptmodel").classList.add("hidden");
+			document.getElementById("deepseekApiKey").classList.add("hidden");
+			document.getElementById("deepseekmodel").classList.add("hidden");
+			document.getElementById("customAIEndpoint").classList.add("hidden");
+			document.getElementById("customAIModel").classList.add("hidden");
+			document.getElementById("ollamamodel").classList.add("hidden");
+			document.getElementById("ollamaendpoint").classList.add("hidden");
+				
 			if (ele.value == "ollama"){
 				document.getElementById("ollamamodel").classList.remove("hidden");
 				document.getElementById("ollamaendpoint").classList.remove("hidden");
-				document.getElementById("chatgptApiKey").classList.add("hidden");
-				document.getElementById("geminiApiKey").classList.add("hidden");
-				document.getElementById("geminimodel").classList.add("hidden");
-				document.getElementById("xaiApiKey").classList.add("hidden");
-				document.getElementById("xaimodel").classList.add("hidden");
-				document.getElementById("chatgptmodel").classList.add("hidden");
-				document.getElementById("deepseekApiKey").classList.add("hidden");
-				document.getElementById("deepseekmodel").classList.add("hidden");
-				document.getElementById("customAIEndpoint").classList.add("hidden");
-				document.getElementById("customAIModel").classList.add("hidden");
 				document.getElementById("ollamaKeepAlive").classList.remove("hidden");
 			} else if (ele.value == "chatgpt"){
 				document.getElementById("chatgptApiKey").classList.remove("hidden");
 				document.getElementById("chatgptmodel").classList.remove("hidden");
-				document.getElementById("ollamamodel").classList.add("hidden");
-				document.getElementById("ollamaendpoint").classList.add("hidden");
-				document.getElementById("geminiApiKey").classList.add("hidden");
-				document.getElementById("xaiApiKey").classList.add("hidden");
-				document.getElementById("xaimodel").classList.add("hidden");
-				document.getElementById("geminimodel").classList.add("hidden");
-				document.getElementById("deepseekApiKey").classList.add("hidden");
-				document.getElementById("deepseekmodel").classList.add("hidden");
-				document.getElementById("customAIEndpoint").classList.add("hidden");
-				document.getElementById("customAIModel").classList.add("hidden");
-				document.getElementById("ollamaKeepAlive").classList.add("hidden");
 			} else if (ele.value == "gemini"){
 				document.getElementById("geminiApiKey").classList.remove("hidden");
 				document.getElementById("geminimodel").classList.remove("hidden");
-				document.getElementById("ollamamodel").classList.add("hidden");
-				document.getElementById("ollamaendpoint").classList.add("hidden");
-				document.getElementById("chatgptApiKey").classList.add("hidden");
-				document.getElementById("chatgptmodel").classList.add("hidden");
-				document.getElementById("deepseekApiKey").classList.add("hidden");
-				document.getElementById("xaiApiKey").classList.add("hidden");
-				document.getElementById("xaimodel").classList.add("hidden");
-				document.getElementById("deepseekmodel").classList.add("hidden");
-				document.getElementById("customAIEndpoint").classList.add("hidden");
-				document.getElementById("customAIModel").classList.add("hidden");
-				document.getElementById("ollamaKeepAlive").classList.add("hidden");
 			} else if (ele.value == "deepseek"){
 				document.getElementById("deepseekApiKey").classList.remove("hidden");
 				document.getElementById("deepseekmodel").classList.remove("hidden");
-				document.getElementById("ollamamodel").classList.add("hidden");
-				document.getElementById("ollamaendpoint").classList.add("hidden");
-				document.getElementById("xaiApiKey").classList.add("hidden");
-				document.getElementById("xaimodel").classList.add("hidden");
-				document.getElementById("chatgptApiKey").classList.add("hidden");
-				document.getElementById("geminiApiKey").classList.add("hidden");
-				document.getElementById("geminimodel").classList.add("hidden");
-				document.getElementById("chatgptmodel").classList.add("hidden");
-				document.getElementById("customAIEndpoint").classList.add("hidden");
-				document.getElementById("customAIModel").classList.add("hidden");
-				document.getElementById("ollamaKeepAlive").classList.add("hidden");
-			} else if (ele.value == "deepseek"){
-				document.getElementById("deepseekApiKey").classList.add("hidden");
-				document.getElementById("deepseekmodel").classList.add("hidden");
-				document.getElementById("ollamamodel").classList.add("hidden");
-				document.getElementById("ollamaendpoint").classList.add("hidden");
+			} else if (ele.value == "xai"){
 				document.getElementById("xaiApiKey").classList.remove("hidden");
 				document.getElementById("xaimodel").classList.remove("hidden");
-				document.getElementById("chatgptApiKey").classList.add("hidden");
-				document.getElementById("geminiApiKey").classList.add("hidden");
-				document.getElementById("geminimodel").classList.add("hidden");
-				document.getElementById("chatgptmodel").classList.add("hidden");
-				document.getElementById("customAIEndpoint").classList.add("hidden");
-				document.getElementById("customAIModel").classList.add("hidden");
-				document.getElementById("ollamaKeepAlive").classList.add("hidden");
+			} else if (ele.value == "bedrock"){
+				document.getElementById('bedrockAccessKey').classList.remove('hidden');
+				document.getElementById('bedrockSecretKey').classList.remove('hidden');
+				document.getElementById('bedrockRegion').classList.remove('hidden');
+				document.getElementById('bedrockmodel').classList.remove('hidden');
 			} else if (ele.value == "custom"){
 				document.getElementById("customAIEndpoint").classList.remove("hidden");
 				document.getElementById("customAIModel").classList.remove("hidden");
-				document.getElementById("ollamamodel").classList.add("hidden");
-				document.getElementById("ollamaendpoint").classList.add("hidden");
-				document.getElementById("xaiApiKey").classList.add("hidden");
-				document.getElementById("xaimodel").classList.add("hidden");
-				document.getElementById("chatgptApiKey").classList.add("hidden");
-				document.getElementById("geminiApiKey").classList.add("hidden");
-				document.getElementById("geminimodel").classList.add("hidden");
-				document.getElementById("chatgptmodel").classList.add("hidden");
-				document.getElementById("deepseekApiKey").classList.add("hidden");
-				document.getElementById("deepseekmodel").classList.add("hidden");
-				document.getElementById("ollamaKeepAlive").classList.add("hidden");
-			} else {
-				document.getElementById("ollamamodel").classList.add("hidden");
-				document.getElementById("ollamaendpoint").classList.add("hidden");
-				document.getElementById("chatgptApiKey").classList.add("hidden");
-				document.getElementById("xaiApiKey").classList.add("hidden");
-				document.getElementById("xaimodel").classList.add("hidden");
-				document.getElementById("geminiApiKey").classList.add("hidden");
-				document.getElementById("geminimodel").classList.add("hidden");
-				document.getElementById("chatgptmodel").classList.add("hidden");
-				document.getElementById("deepseekApiKey").classList.add("hidden");
-				document.getElementById("deepseekmodel").classList.add("hidden");
-				document.getElementById("customAIEndpoint").classList.add("hidden");
-				document.getElementById("customAIModel").classList.add("hidden");
-				document.getElementById("ollamaKeepAlive").classList.add("hidden");
-			}
+			} 
 		}
 		if (ele.dataset.optionsetting == "ttsProvider"){
 			document.getElementById('systemTTS').classList.add('hidden');
