@@ -7239,14 +7239,14 @@ async function applyBotActions(data, tab = false) {
 		if (settings.highlightevent && settings.highlightevent.textsetting.trim() && data.chatmessage && data.event) {
 			const eventTexts = settings.highlightevent.textsetting.split(',').map(text => text.trim());
 			if (eventTexts.some(text => data.chatmessage.includes(text))) {
-				data.highlightColor = "#FFFF21";
+				data.highlightColor = "#fff387";
 			}
 		}
 
 		if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
 			const wordTexts = settings.highlightword.textsetting.split(',').map(text => text.trim());
 			if (wordTexts.some(text => data.chatmessage.includes(text))) {
-				data.highlightColor = "#FFFF21";
+				data.highlightColor = "#fff387";
 			}
 		}
 
