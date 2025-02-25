@@ -1543,7 +1543,7 @@ function update(response, sync=true){
 					if (response.settings?.ttskey?.textparam1){ttsService = "google";}
 					else if (response.settings?.googleAPIKey?.textparam1){ttsService = "google";}
 					else if (response.settings?.elevenlabskey?.textparam1){ttsService = "elevenlabs";}
-					else if (response.settings?.speechifykey?.textparam1){ttsService = "speechifykey";}
+					else if (response.settings?.speechifykey?.textparam1){ttsService = "speechify";}
 					if (!response.settings.ttsProvider){
 						response.settings.ttsProvider = {}
 					}
@@ -1557,7 +1557,7 @@ function update(response, sync=true){
 					if (response.settings?.ttskey?.textparam10){ttsService = "google";}
 					else if (response.settings?.googleAPIKey?.textparam10){ttsService = "google";}
 					else if (response.settings?.elevenlabskey?.textparam10){ttsService = "elevenlabs";}
-					else if (response.settings?.speechifykey?.textparam10){ttsService = "speechifykey";}
+					else if (response.settings?.speechifykey?.textparam10){ttsService = "speechify";}
 					if (!response.settings.ttsProvider){
 						response.settings.ttsProvider = {}
 					}
@@ -1894,8 +1894,11 @@ function update(response, sync=true){
 								
 							} 
 							if ("optionsetting" in response.settings[key]){
+								
 								var ele = document.querySelector("select[data-optionsetting='"+key+"']");
+								
 								if (ele){
+									
 									if (key == "midiOutputDevice" || key.startsWith("mididevice")){
 										if (response.settings[key]?.optionsetting && (ele.value !== response.settings[key].optionsetting)){
 											const option = document.createElement("option");
@@ -1908,62 +1911,62 @@ function update(response, sync=true){
 									
 									ele.value = response.settings[key].optionsetting;
 									updateSettings(ele, sync); 
-								}
 								
-								if (key == "aiProvider"){
-									// First hide all elements
-									document.getElementById("ollamamodel").classList.add("hidden");
-									document.getElementById("ollamaendpoint").classList.add("hidden");
-									document.getElementById("chatgptApiKey").classList.add("hidden");
-									document.getElementById("ollamaKeepAlive").classList.add("hidden");
-									document.getElementById("geminiApiKey").classList.add("hidden");
-									document.getElementById("geminimodel").classList.add("hidden");
-									document.getElementById("xaiApiKey").classList.add("hidden");
-									document.getElementById("xaimodel").classList.add("hidden");
-									document.getElementById("chatgptmodel").classList.add("hidden");
-									document.getElementById("deepseekApiKey").classList.add("hidden");
-									document.getElementById("deepseekmodel").classList.add("hidden");
-									document.getElementById("customAIEndpoint").classList.add("hidden");
-									document.getElementById("customAIModel").classList.add("hidden");
-									
-									// Then show only the relevant ones based on selected provider
-									if (ele.value == "ollama"){
-										document.getElementById("ollamamodel").classList.remove("hidden");
-										document.getElementById("ollamaKeepAlive").classList.remove("hidden");
-										document.getElementById("ollamaendpoint").classList.remove("hidden");
-									} else if (ele.value == "chatgpt"){
-										document.getElementById("chatgptApiKey").classList.remove("hidden");
-										document.getElementById("chatgptmodel").classList.remove("hidden");
-									} else if (ele.value == "xai"){
-										document.getElementById("xaiApiKey").classList.remove("hidden");
-										document.getElementById("xaimodel").classList.remove("hidden");
-									} else if (ele.value == "gemini"){
-										document.getElementById("geminiApiKey").classList.remove("hidden");
-										document.getElementById("geminimodel").classList.remove("hidden");
-									} else if (ele.value == "deepseek"){
-										document.getElementById("deepseekApiKey").classList.remove("hidden");
-										document.getElementById("deepseekmodel").classList.remove("hidden");
-									} else if (ele.value == "custom"){
-										document.getElementById("customAIEndpoint").classList.remove("hidden");
-										document.getElementById("customAIModel").classList.remove("hidden");
-									}
-								} else if (key == "ttsProvider") {
-									document.getElementById('systemTTS').classList.add('hidden');
-									document.getElementById('elevenlabsTTS').classList.add('hidden');
-									document.getElementById('googleTTS').classList.add('hidden');
-									document.getElementById('speechifyTTS').classList.add('hidden');
-									document.getElementById('kokoroTTS').classList.add('hidden');
-									
-									if (ele.value == "system") {
-										document.getElementById('systemTTS').classList.remove('hidden');
-									} else if (ele.value == "elevenlabs") {
-										document.getElementById('elevenlabsTTS').classList.remove('hidden');
-									} else if (ele.value == "google") {
-										document.getElementById('googleTTS').classList.remove('hidden');
-									} else if (ele.value == "speechify") {
-										document.getElementById('speechifyTTS').classList.remove('hidden');
-									} else if (ele.value == "kokoro") {
-										document.getElementById('kokoroTTS').classList.remove('hidden');
+									if (key == "aiProvider"){
+										// First hide all elements
+										document.getElementById("ollamamodel").classList.add("hidden");
+										document.getElementById("ollamaendpoint").classList.add("hidden");
+										document.getElementById("chatgptApiKey").classList.add("hidden");
+										document.getElementById("ollamaKeepAlive").classList.add("hidden");
+										document.getElementById("geminiApiKey").classList.add("hidden");
+										document.getElementById("geminimodel").classList.add("hidden");
+										document.getElementById("xaiApiKey").classList.add("hidden");
+										document.getElementById("xaimodel").classList.add("hidden");
+										document.getElementById("chatgptmodel").classList.add("hidden");
+										document.getElementById("deepseekApiKey").classList.add("hidden");
+										document.getElementById("deepseekmodel").classList.add("hidden");
+										document.getElementById("customAIEndpoint").classList.add("hidden");
+										document.getElementById("customAIModel").classList.add("hidden");
+										
+										// Then show only the relevant ones based on selected provider
+										if (ele.value == "ollama"){
+											document.getElementById("ollamamodel").classList.remove("hidden");
+											document.getElementById("ollamaKeepAlive").classList.remove("hidden");
+											document.getElementById("ollamaendpoint").classList.remove("hidden");
+										} else if (ele.value == "chatgpt"){
+											document.getElementById("chatgptApiKey").classList.remove("hidden");
+											document.getElementById("chatgptmodel").classList.remove("hidden");
+										} else if (ele.value == "xai"){
+											document.getElementById("xaiApiKey").classList.remove("hidden");
+											document.getElementById("xaimodel").classList.remove("hidden");
+										} else if (ele.value == "gemini"){
+											document.getElementById("geminiApiKey").classList.remove("hidden");
+											document.getElementById("geminimodel").classList.remove("hidden");
+										} else if (ele.value == "deepseek"){
+											document.getElementById("deepseekApiKey").classList.remove("hidden");
+											document.getElementById("deepseekmodel").classList.remove("hidden");
+										} else if (ele.value == "custom"){
+											document.getElementById("customAIEndpoint").classList.remove("hidden");
+											document.getElementById("customAIModel").classList.remove("hidden");
+										}
+									} else if (key == "ttsProvider") {
+										document.getElementById('systemTTS').classList.add('hidden');
+										document.getElementById('elevenlabsTTS').classList.add('hidden');
+										document.getElementById('googleTTS').classList.add('hidden');
+										document.getElementById('speechifyTTS').classList.add('hidden');
+										document.getElementById('kokoroTTS').classList.add('hidden');
+										
+										if (ele.value == "system") {
+											document.getElementById('systemTTS').classList.remove('hidden');
+										} else if (ele.value == "elevenlabs") {
+											document.getElementById('elevenlabsTTS').classList.remove('hidden');
+										} else if (ele.value == "google") {
+											document.getElementById('googleTTS').classList.remove('hidden');
+										} else if (ele.value == "speechify") {
+											document.getElementById('speechifyTTS').classList.remove('hidden');
+										} else if (ele.value == "kokoro") {
+											document.getElementById('kokoroTTS').classList.remove('hidden');
+										}
 									}
 								}
 							}
@@ -3291,26 +3294,17 @@ function updateSettings(ele, sync=true, value=null){
 			document.getElementById('googleTTS').classList.add('hidden');
 			document.getElementById('speechifyTTS').classList.add('hidden');
 			document.getElementById('kokoroTTS').classList.add('hidden');
-			
-			switch(ele.value) {
-				case 'system':
-					document.getElementById('systemTTS').classList.remove('hidden');
-					break;
-				case 'elevenlabs':
-					document.getElementById('elevenlabsTTS').classList.remove('hidden');
-					break;
-				case 'google':
-					document.getElementById('googleTTS').classList.remove('hidden');
-					break;
-				case 'speechify':
-					document.getElementById('speechifyTTS').classList.remove('hidden');
-					break;
-				case 'kokoro':
-					document.getElementById('kokoroTTS').classList.remove('hidden');
-					break;
-				default:
-					document.getElementById('systemTTS').classList.remove('hidden');
-					break;
+
+			if (ele.value == "system") {
+				document.getElementById('systemTTS').classList.remove('hidden');
+			} else if (ele.value == "elevenlabs") {
+				document.getElementById('elevenlabsTTS').classList.remove('hidden');
+			} else if (ele.value == "google") {
+				document.getElementById('googleTTS').classList.remove('hidden');
+			} else if (ele.value == "speechify") {
+				document.getElementById('speechifyTTS').classList.remove('hidden');
+			} else if (ele.value == "kokoro") {
+				document.getElementById('kokoroTTS').classList.remove('hidden');
 			}
 		}
 		
@@ -3987,28 +3981,6 @@ const TTSManager = {
         window.speechSynthesis.speak(utterance);
     },
 	
-	async electronTTS(text,settings){
-	  try {
-		// Get WAV buffer directly from main process
-		const wavBuffer = await ipcRenderer.invoke('tts', text);
-		
-		// Create blob from buffer
-		const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
-		
-		// Play the audio
-		const audioElement = document.getElementById('yourAudioElementId'); // Replace with your audio element
-		audioElement.src = URL.createObjectURL(audioBlob);
-		
-		// Set volume if needed
-		//const settings = { volume: 0.8 }; // Replace with your actual settings
-		//if (settings.volume) audioElement.volume = settings.volume;
-		
-		audioElement.play();
-	  } catch (error) {
-		console.error("Error playing TTS:", error);
-	  }
-	},
-	
 	async kokoroTTS(text, settings) {
 		try {
 			if (ssapp){
@@ -4032,6 +4004,7 @@ const TTSManager = {
 					return;
 			  } catch (error) {
 				console.error("Error playing TTS:", error);
+				throw new Error("Error playing TTS. Try upgrading your app or perhaps your system ins't compatible");
 			  }
 			}
 			
@@ -4326,7 +4299,7 @@ async function initKokoro() {
 				kokoroTtsInstance = await KokoroTTS.from_pretrained(
 					"onnx-community/Kokoro-82M-v1.0-ONNX",
 					{
-						dtype: device === "wasm" ? "q8" : "fp32",
+						dtype: "q8", //device === "wasm" ? "q8" : "fp16",
 						device,
 						load_fn: customLoadFn
 					}
@@ -4340,7 +4313,7 @@ async function initKokoro() {
 						kokoroTtsInstance = await KokoroTTS.from_pretrained(
 							"onnx-community/Kokoro-82M-v1.0-ONNX",
 							{
-								dtype: device === "wasm" ? "q8" : "fp32",
+								dtype: "q8", //device === "wasm" ? "q8" : "fp16",
 								device,
 								load_fn: customLoadFn
 							}
@@ -4352,7 +4325,7 @@ async function initKokoro() {
 						kokoroTtsInstance = await KokoroTTS.from_pretrained(
 							"onnx-community/Kokoro-82M-v1.0-ONNX",
 							{
-								dtype: device === "wasm" ? "q8" : "fp32",
+								dtype: "q8", //device === "wasm" ? "q8" : "fp16",
 								device,
 								load_fn: customLoadFn
 							}

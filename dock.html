@@ -3853,16 +3853,47 @@
 					speak(premiumQueueTTS.shift()); // play next
 				}
 			}
-			
-			 // You can get your API key from Google Cloud ; KEEP IT PRIVATE/SECRET.  It will look like: "ahasdfuyu234hjjUASDtu1234gughasdguhaU" or somnething like that.
+
 			var GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
 			var ElevenLabsKey = urlParams.get("elevenlabskey") || false;
 			var SpeechifyAPIKey = urlParams.get("speechifykey") || false;
 			var useKokoroTTS = urlParams.has("kokorotts") || urlParams.has("kokoro") || false;
 			var KokoroTTS = false;
 			var TextSplitterStream = null;
-			
-			if (GoogleAPIKey || ElevenLabsKey || SpeechifyAPIKey) {
+
+			// TTS Provider selection logic
+			var TTSProvider = urlParams.get("ttsprovider") || "system";
+
+			// Determine the provider based on explicit selection or fallback to previous behavior
+			if (TTSProvider !== "system") {
+				// For non-system providers, validate capabilities and requirements
+				if (TTSProvider === "kokoro") {
+					useKokoroTTS = true;
+				} else if (TTSProvider === "elevenlabs" && !ElevenLabsKey) {
+					console.warn("ElevenLabs selected but no API key provided. Falling back to system TTS.");
+					TTSProvider = "system";
+				} else if (TTSProvider === "google" && !GoogleAPIKey) {
+					console.warn("Google Cloud selected but no API key provided. Falling back to system TTS.");
+					TTSProvider = "system";
+				} else if (TTSProvider === "speechify" && !SpeechifyAPIKey) {
+					console.warn("Speechify selected but no API key provided. Falling back to system TTS.");
+					TTSProvider = "system";
+				}
+			} else {
+				// Backwards compatibility - determine provider based on available keys
+				if (useKokoroTTS) {
+					TTSProvider = "kokoro";
+				} else if (GoogleAPIKey) {
+					TTSProvider = "google";
+				} else if (ElevenLabsKey) {
+					TTSProvider = "elevenlabs";
+				} else if (SpeechifyAPIKey) {
+					TTSProvider = "speechify";
+				}
+			}
+
+			// Create audio element for non-system TTS providers
+			if (TTSProvider !== "system") {
 				audio = document.createElement("audio");
 				audio.onended = finishedAudio;
 			}
@@ -4158,43 +4189,53 @@
 
 				if (replaceURLInLink) { 
 					text = replaceURLsWithSubstring(text, "Link");
-					//text = text.replace(/https?:\/\/[^\s]+/g, 'Link');
 				}
 
-				 if (useKokoroTTS) {
-					if (!premiumQueueActive) {
-						kokoroTTS(text);
-					} else {
-						premiumQueueTTS.push(text);
-					}
-					return;
-				} else if (GoogleAPIKey) {
-					if (!premiumQueueActive) {
-						googleTTS(text);
-					} else {
-						premiumQueueTTS.push(text);
-					}
-					return;
-				} else if (ElevenLabsKey) {
-					if (!premiumQueueActive) {
-						ElevenLabsTTS(text);
-					} else {
-						premiumQueueTTS.push(text);
-					}
-					return;
-				} else if (SpeechifyAPIKey) {
-					if (!premiumQueueActive) {
-						SpeechifyTTS(text);
-					} else {
-						premiumQueueTTS.push(text);
-					}
-					return;
+				// Use the selected provider
+				switch (TTSProvider) {
+					case "kokoro":
+						if (!premiumQueueActive) {
+							kokoroTTS(text);
+						} else {
+							premiumQueueTTS.push(text);
+						}
+						return;
+					case "google":
+						if (GoogleAPIKey) {
+							if (!premiumQueueActive) {
+								googleTTS(text);
+							} else {
+								premiumQueueTTS.push(text);
+							}
+							return;
+						}
+						break;
+					case "elevenlabs":
+						if (ElevenLabsKey) {
+							if (!premiumQueueActive) {
+								ElevenLabsTTS(text);
+							} else {
+								premiumQueueTTS.push(text);
+							}
+							return;
+						}
+						break;
+					case "speechify":
+						if (SpeechifyAPIKey) {
+							if (!premiumQueueActive) {
+								SpeechifyTTS(text);
+							} else {
+								premiumQueueTTS.push(text);
+							}
+							return;
+						}
+						break;
 				}
 
 				if (!voices && voices === null) {
 					return;
 				}
-
+				// system tts instead
 				if (!voice) {
 					if (!voices || !voices.length) {
 						if (window.speechSynthesis) {
@@ -4315,8 +4356,10 @@
 			}
 			
 			async function initKokoro() {
+				if (window.electronApi){
+					return;
+				}
 				if (kokoroDownloadInProgress) return false;
-				
 				if (!KokoroTTS) {
 				
 					async function openDB() {
@@ -4410,7 +4453,7 @@
 						kokoroTtsInstance = await KokoroTTS.from_pretrained(
 							"onnx-community/Kokoro-82M-v1.0-ONNX",
 							{
-								dtype: device === "wasm" ? "q8" : "fp32",
+								dtype: "q8", // device === "wasm" ? "q8" : "fp32",
 								device,
 								load_fn: customLoadFn
 							}
@@ -4438,6 +4481,31 @@
 			
 			async function kokoroTTS(text) {
 				try {
+					if (window.electronApi){
+						try {
+							// Get WAV buffer directly from main process
+							const wavBuffer = await ipcRenderer.invoke('tts', text);
+							
+							// Create blob from buffer
+							const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+							
+							// Play the audio
+							const audioElement = document.createElement("audio");
+							audioElement.src = URL.createObjectURL(audioBlob);
+							audioElement.onended = this.finishedAudio;
+							
+							// Set volume if needed
+							//const settings = { volume: 0.8 }; // Replace with your actual settings
+							//if (settings.volume) audioElement.volume = settings.volume;
+							
+							audioElement.play();
+							return;
+					  } catch (error) {
+						console.error("Error playing TTS:", error);
+						throw new Error("Error playing TTS. Try upgrading your app or perhaps your system ins't compatible");
+					  }
+					}
+				
 					if (!kokoroTtsInstance) {
 						const initialized = await initKokoro();
 						if (!initialized) {
