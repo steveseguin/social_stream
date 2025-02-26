@@ -90,7 +90,7 @@
 	  
 	  var chatimg = "";
 	  try{
-		   chatimg = ele.querySelector("img.presence-entity__image[src], img.avatar[src]").src;
+		   chatimg = ele.querySelector("img.presence-entity__image[src], img.avatar[src], img[class*='EntityPhoto-circle'][src]").src;
 		   if (chatimg.startsWith("data:image/gif;base64")){
 			   chatimg="";
 		   }
