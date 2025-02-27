@@ -4429,6 +4429,22 @@ input:checked + .slider:before {
                 </div>
             </div>
 			
+			<div class="link" title="Giveaway Tool">
+                <h2 class="giveaway_mode_title">
+                    <span data-translate="giveaway">Giveaway Tool</span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#giveaway" title="Jump to the giveaway link options."><span data-translate="options">[options]</span></a>
+                </h2>
+				<h3>
+                    <span data-translate="giveaway-made">
+                       A giveaway made by a community member
+                    </span>
+                </h3>
+                <div id="giveaway" data-raw="" class="streaming_chat"><a href="" id="giveawaylink"></a></div>
+            </div>
+           
+			
+			
 			<div class="link" title="Polling system">
                 <h2 class="poll_mode_title">
                     <span data-translate="pollmeter">Graphical Poll </span>
@@ -4587,6 +4603,126 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									⌚ <span data-translate="auto-start-lobby">Increase lobby wait time to 30s</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="link" title="End credits roll">
+				<h2 class="credits_mode_title">
+					<span data-translate="creditsmeter">Credits roll</span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#credits" title="Jump to the credits link options."><span data-translate="options">[options]</span></a>
+				</h2>
+				<h3>
+					<span data-translate="when-enabled-a-credits">
+					   A credits roll overlay. Show appreciation to your chat participants and donors.
+					</span>
+				</h3>
+				<div id="credits" data-raw="" class="streaming_chat"><a href="" id="creditslink"></a></div>
+			</div>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-credits-general-options" />
+					<label class="collapsible-label" for="wrapper-credits-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group credits">
+								<h3><span data-translate="must-enable-the-trigger-to-use">Must enable the trigger to use</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="credits" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="enable-the-credits">🚦 Enable </span>
+									<div>
+										<button class="glowingButton" style="width: 270px; border: 1px solid #000; padding: 12px;margin-top:10px;" data-action="startcredits">
+											<span style="height:20px"><span data-translate="start-credits">🎬 Start Credits Roll</span></span>
+										</button>
+									</div>
+								</div>
+								<h3><span data-translate="other-customization-options">Other customization options</span></h3>
+								<div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param10="includechat" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="include-chat-users">
+											💬 Include all chat participants
+										</span>
+									</div>
+									<br>
+									
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param10="includedonors" checked />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="include-donors">
+											💰 Include donors
+										</span>
+									</div>
+									<br>
+									
+									<div>
+										<span data-translate="credits-speed">
+											⏲️ Scroll speed <input type="number" style="max-width: 8ch;" max="10" min="0.1" value="1" size="3" data-numbersetting10="speed" />x
+										</span>
+									</div>
+									<br>
+									
+									<div>
+										<span data-translate="display-style-credits">
+											Credits Style
+										</span>
+										<select data-optionparam10="style">
+											<option value="starwars">Star Wars</option>
+											<option value="standard">Standard Roll</option>
+											<option value="minimal">Minimal</option>
+											<option value="elegant">Elegant</option>
+										</select>
+									</div>
+									<br>
+									<span data-translate="font-family">
+										Font Family
+									</span>
+									<select data-optionparam10="font">
+										<option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
+										<option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
+									</select>
+								</div>
+								<br>
+								<div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
+									<input type="text" id="googlefont10" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam10="googlefont" />
+									<label for="googlefont10"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+								</div>
+								<br>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param10="showcategories" checked />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="show-categories">
+										🏷️ Show category headers (Donors, Chatters, etc.)
+									</span>
+								</div>
+								<br>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param10="showamounts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="show-donation-amounts">
+										💲 Show donation amounts
+									</span>
+								</div>
+								<br>
+								<div class="textInputContainer" style="width: 95%;" title="Custom message to show at the end">
+									<input type="text" id="endmessage10" class="textInput instant" autocomplete="off" placeholder="eg: Thanks for watching!" value="Thank you all for being part of the stream! ❤️" data-textparam10="endmessage" />
+									<label for="endmessage10"><span data-translate="end-message">&gt; Custom end message</span></label>
 								</div>
 							</div>
 						</div>

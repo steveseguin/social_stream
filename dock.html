@@ -4484,7 +4484,7 @@
 					if (window.electronApi){
 						try {
 							// Get WAV buffer directly from main process
-							const wavBuffer = await ipcRenderer.invoke('tts', text);
+							const wavBuffer = await ipcRenderer.invoke("tts", {text:text, settings:kokoroSettings}, );
 							
 							// Create blob from buffer
 							const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
