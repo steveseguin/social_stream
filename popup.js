@@ -2567,7 +2567,8 @@ function getTargetMap() {
         'tipjar': 12,
         'credits': 13,
         'giveaway': 14,
-        'privatechatbot': 15 // Added this from handleBothParam
+        'privatechatbot': 15,
+		'poll': 16
     };
 }
 
