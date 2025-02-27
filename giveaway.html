@@ -1521,7 +1521,7 @@
         function renderCompletedGiveaways() {
             const completedContainer = document.getElementById('completed-giveaways');
             
-            if (giveawayState.completed.length === 0) {
+            if (!giveawayState.completed || giveawayState.completed.length === 0) {
                 completedContainer.innerHTML = '<p>No completed giveaways</p>';
                 return;
             }
@@ -2766,18 +2766,19 @@
         // Social Stream integration
         // const urlParams = new URLSearchParams(window.location.search); // Already defined above
         function processData(data) {
+			console.log(data);
             // Check if there's an active giveaway
             const activeGiveaway = getActiveGiveaway();
             if (!activeGiveaway) return;
             
             // Only process chat messages
-            if (data.type !== 'messages' && data.type !== 'youtube' && data.type !== 'twitch' && data.type !== 'instagram' && data.type !== 'facebook' && data.type !== 'tiktok') return;
+            if (!(data.type && data.chatmessage)){return;}
             
             // Get the message and sender
-            const message = data.message || '';
-            const userId = data.id || data.user_id || generateRandomId();
-            const userName = data.user || data.name || 'Anonymous';
-            const userImg = data.img || '';
+            const message = data.chatmessage || '';
+            const userId = data.userid || parseInt(Math.random()*10000000)+""
+            const userName = data.chatname || 'Anonymous';
+            const userImg = data.chatimg || '';
             
             // Check if this is a keyword giveaway and if the message matches the keyword
             if (activeGiveaway.type === 'keyword' && !activeGiveaway.winnerPicked) {
@@ -2809,12 +2810,14 @@
                     renderActiveGiveaway();
                 }
             }
+			
+			console.log("finished processing incoming message");
         }
     
         // We get the data via this embedded iFRAME
         const iframe = document.createElement("iframe");
         const filename = "giveaway";
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label="+filename+"&cleanoutput&room=" + urlParams.get('session');
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=false&solo&notmobile&label=dock&view=" + urlParams.get('session') + "&novideo&noaudio&label="+filename+"&cleanoutput&room=" + urlParams.get('session');
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";
