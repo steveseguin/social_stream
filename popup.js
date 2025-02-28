@@ -2860,7 +2860,12 @@ function handleSpecialSettings(ele, sync) {
                 cmd: "sidUpdated",
                 target: ele.dataset.target || null,
                 streamID: xsx
-            }, function (response) { log("streamID updated"); });
+            }, function (response) { 
+				log("Password updated");
+				if (response.streamID || response.password){
+					update(response, false);
+				}
+			});
         }
     } else if (ele.dataset.special === "password") {
         if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
@@ -2870,7 +2875,12 @@ function handleSpecialSettings(ele, sync) {
             cmd: "sidUpdated",
             target: ele.dataset.target || null,
             password: ele.value || ""
-        }, function (response) { log("Password updated"); });
+        }, function (response) {
+			log("Password updated");
+			if (response.streamID || response.password){
+				update(response, false);
+			}
+		});
     }
     
     return true;

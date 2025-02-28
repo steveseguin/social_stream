@@ -3515,9 +3515,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (isExtensionOn) {
 				loadIframe(streamID, password);
 			}
-			// isSSAPP
-
-			sendResponse({ state: isExtensionOn });
+			
+			if (isSSAPP){
+				sendResponse({ state: isExtensionOn});
+			} else {
+				sendResponse({ state: isExtensionOn, streamID: streamID, password: password });
+			}
+			
 		} else if (request.cmd && (request.cmd === 'uploadBadwords')) {
 			localStorage.setItem('customBadwords', request.data);
 			try {
