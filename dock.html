@@ -5651,30 +5651,13 @@
 			
 			function createPopoutChat() {
 				//  todo -- make broadcast channel based.
-				<!-- if (session.broadcastChannelID === false) { -->
-					<!-- session.broadcastChannelID = session.generateStreamID(8); -->
-					<!-- log(session.broadcastChannelID); -->
-
-					<!-- session.broadcastChannel = new BroadcastChannel(session.broadcastChannelID); -->
-					<!-- session.broadcastChannel.onmessage = function (e) { -->
-						<!-- if ("loaded" in e.data) { -->
-							<!-- session.broadcastChannel.postMessage({ -->
-								<!-- messageList: messageList -->
-							<!-- }); -->
-						<!-- } else if ("msg" in e.data) { -->
-							<!-- sendChatMessage(e.data.msg, true); -->
-						<!-- } -->
-					<!-- }; -->
-
-					<!-- session.broadcastChannel.onmessageerror = function (e) { -->
-						<!-- errorlog(e); -->
-					<!-- }; -->
-				<!-- } -->
 				let pass = "";
 				if (urlParams.has("password")) {
 					pass = "&password="+password;
 				}
-				const popup = window.open("./input.html?session=" + roomID+pass, "popup", "width=600,height=60,toolbar=no,menubar=no,resizable=yes");
+				
+				const uniqueName = "popup_" + Date.now();
+				const popup = window.open("./input.html?session=" + roomID + pass, uniqueName, "width=600,height=60,toolbar=no,menubar=no,resizable=yes");
 
 				popup.document.body.style.margin = "0";
 				popup.document.body.style.padding = "0";
