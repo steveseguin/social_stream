@@ -5652,7 +5652,7 @@
 			function createPopoutChat() {
 				//  todo -- make broadcast channel based.
 				
-				setTimeout(function(){
+				setTimeout(function(){ // timeout to avoid middle+click causing override.
 					let pass = "";
 					if (urlParams.has("password")) {
 						pass = "&password="+password;
@@ -5664,9 +5664,6 @@
 					popup.document.body.style.padding = "0";
 				},0);
 
-
-				
-				
 				//window.open("./popout.html?id=" + session.broadcastChannelID, "popup", "width=600,height=480,toolbar=no,menubar=no,resizable=yes");
 				return false;
 			}

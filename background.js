@@ -17,7 +17,7 @@ var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
 var sentimentAnalysisLoaded = false;
 
-var messageCounter = 0;
+var messageCounter = Math.floor(Math.random() * 90000);
 var lastAntiSpam = 0;
 
 var connectedPeers = {};
