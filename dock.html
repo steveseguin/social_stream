@@ -5651,16 +5651,21 @@
 			
 			function createPopoutChat() {
 				//  todo -- make broadcast channel based.
-				let pass = "";
-				if (urlParams.has("password")) {
-					pass = "&password="+password;
-				}
 				
-				const uniqueName = "popup_" + Date.now();
-				const popup = window.open("./input.html?session=" + roomID + pass, uniqueName, "width=600,height=60,toolbar=no,menubar=no,resizable=yes");
+				setTimeout(function(){
+					let pass = "";
+					if (urlParams.has("password")) {
+						pass = "&password="+password;
+					}
 
-				popup.document.body.style.margin = "0";
-				popup.document.body.style.padding = "0";
+					const uniqueName = "popup_" + Date.now();
+					const popup = window.open("./input.html?session=" + roomID + pass, uniqueName, "width=600,height=60,toolbar=no,menubar=no,resizable=yes");
+					popup.document.body.style.margin = "0";
+					popup.document.body.style.padding = "0";
+				},0);
+
+
+				
 				
 				//window.open("./popout.html?id=" + session.broadcastChannelID, "popup", "width=600,height=480,toolbar=no,menubar=no,resizable=yes");
 				return false;
