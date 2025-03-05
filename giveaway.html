@@ -8,9 +8,26 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=Kode+Mono:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="icon" href="./favicon.ico" />
-    <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <!-- Commented out due to CORS issues when running locally -->
+    <!-- <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous"> -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+        /* Debugging Styles */
+        .debug-box {
+            border: 2px solid red;
+            position: relative;
+        }
+        .debug-box::before {
+            content: attr(data-debug);
+            position: absolute;
+            top: -20px;
+            left: 0;
+            background: black;
+            color: white;
+            padding: 2px 5px;
+            font-size: 12px;
+        }
 
         :root {
             /* Color Palette - Based on Loophole */
@@ -210,6 +227,7 @@
             height: 400px;
             margin: 0 auto;
             display: none;
+            max-width: 100%;
         }
 
         .spinner {
@@ -233,6 +251,9 @@
             background-color: var(--color-lime);
             color: var(--color-gray-100);
             display: none;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .tabs {
@@ -319,30 +340,82 @@
 
         /* OBS Display mode styles */
         .obs-mode {
-            background-color: transparent;
-            overflow: visible;
+            background-color: transparent !important;
+            overflow: visible !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: auto !important;
         }
         
         .obs-mode .container {
-            padding: 0;
+            padding: 0 !important;
+            min-height: 100vh !important;
+            height: 100vh !important;
+            width: 100% !important;
+            margin: 0 !important;
+            overflow: visible !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
         }
         
         .obs-mode .giveaway-panel {
-            display: none;
+            display: none !important;
+        }
+        
+        /* Hide OBS container in admin mode by default */
+        #obs-display-container {
+            display: none !important;
+            visibility: hidden !important;
+            position: absolute !important;
+            width: 0 !important;
+            height: 0 !important;
+            overflow: hidden !important;
+            opacity: 0 !important;
+        }
+        
+        /* Only show in OBS mode */
+        .obs-mode #obs-display-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 auto !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            height: 100vh !important;
+            visibility: visible !important;
+            position: relative !important;
+            overflow: visible !important;
+            opacity: 1 !important;
+        }
+        
+        #obs-active-giveaway {
+            min-width: 500px !important; /* Matched to preview width */
+            width: 500px !important; /* Fixed width to match preview */
+            max-width: 800px !important;
+            padding: 16px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+            margin: 0 auto !important;
+            box-sizing: border-box !important;
         }
         
         /* Loophole-style OBS display */
         .giveaway-pane {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            max-width: 900px;
+            gap: 15px;
+            max-width: 800px;
+            width: auto;
             color: var(--color-buffalo-charcoal);
             background: var(--color-buffalo-yellow);
-            padding: 16px;
+            padding: 20px;
             font-size: var(--obs-font-size);
             font-weight: var(--obs-font-weight);
             border-radius: var(--pane-radius);
+            margin: 0 auto;
         }
         
         .giveaway-main {
@@ -368,6 +441,8 @@
         .giveaway-bar {
             display: flex;
             gap: 12px;
+            width: 100%;
+            justify-content: center;
         }
         
         .giveaway-bar > span {
@@ -405,6 +480,9 @@
             background-color: var(--color-buffalo-yellow);
             color: var(--color-buffalo-charcoal);
             text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+            width: auto;
         }
         
         .giveaway-spinning {
@@ -551,15 +629,22 @@
         }
         
         .preview-giveaway-pane {
-            min-width: 340px !important; /* Slightly narrower to fit better */
-            width: 340px !important;
+            min-width: 500px !important; /* Match proportions of OBS view */
+            width: 500px !important; /* Increased to match actual OBS width */
+            max-width: 800px !important; /* Same as OBS view */
             transform: scale(0.7);
             transform-origin: center;
+            margin: 0 auto !important;
+            padding: 16px !important;
+            gap: 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            box-sizing: border-box !important;
         }
         
         #settings-preview-area {
             width: 100%; 
-            height: 300px; 
+            height: 320px; /* Increased to accommodate larger preview size */
             background-color: rgba(0,0,0,0.1); 
             border-radius: 8px; 
             overflow: hidden; 
@@ -567,6 +652,7 @@
             display: flex; 
             justify-content: center; 
             align-items: center;
+            padding: 0;
         }
         
         .preview-frame {
@@ -758,7 +844,7 @@
 <body>
     <div class="container">
         <!-- OBS display container - only shown in OBS mode -->
-        <div id="obs-display-container" style="display: none;">
+        <div id="obs-display-container" style="display: none !important; visibility: hidden !important; position: absolute !important; width: 0 !important; height: 0 !important; overflow: hidden !important;">
             <div id="obs-active-giveaway" class="giveaway-pane"></div>
             <div id="obs-spinner-container" class="spinner-container">
                 <div id="obs-spinner" class="spinner"></div>
@@ -1121,8 +1207,42 @@
         
         // Apply display mode if needed
         if (isDisplayMode) {
+            console.log("Applying OBS display mode");
             document.body.classList.add('obs-mode');
-            document.getElementById('obs-display-container').style.display = 'block';
+            
+            // Make the OBS container visible and correctly styled
+            const obsContainer = document.getElementById('obs-display-container');
+            if (obsContainer) {
+                // Remove all the restrictive styles first
+                obsContainer.style.cssText = '';
+                obsContainer.style.display = 'flex';
+                obsContainer.style.justifyContent = 'center';
+                obsContainer.style.alignItems = 'center';
+                obsContainer.style.width = '100%';
+                obsContainer.style.height = '100vh';
+                obsContainer.style.position = 'relative';
+                obsContainer.style.visibility = 'visible';
+                obsContainer.style.overflow = 'visible';
+            } else {
+                console.error("Could not find OBS display container!");
+            }
+            
+            // Hide admin panel in OBS mode
+            const adminPanel = document.querySelector('.giveaway-panel');
+            if (adminPanel) {
+                adminPanel.style.display = 'none';
+            }
+        } else {
+            // Explicitly ensure the OBS container is hidden in admin mode
+            const obsContainer = document.getElementById('obs-display-container');
+            if (obsContainer) {
+                obsContainer.style.display = 'none !important';
+                obsContainer.style.visibility = 'hidden !important';
+                obsContainer.style.position = 'absolute !important';
+                obsContainer.style.width = '0 !important';
+                obsContainer.style.height = '0 !important';
+                obsContainer.style.overflow = 'hidden !important';
+            }
         }
         
         // State management
@@ -1154,20 +1274,28 @@
             }
         };
         
-        // DOM Elements
-        const createGiveawayBtn = document.getElementById('create-giveaway-btn');
-        const pickWinnerBtn = document.getElementById('pick-winner-btn');
-        const completeGiveawayBtn = document.getElementById('complete-giveaway-btn');
-        const cancelGiveawayBtn = document.getElementById('cancel-giveaway-btn');
-        const clearCompletedBtn = document.getElementById('clear-completed-btn');
-        const saveSettingsBtn = document.getElementById('save-settings-btn');
-        const giveawayTypeSelect = document.getElementById('giveaway-type');
-        const keywordField = document.querySelector('.keyword-field');
-        const tabs = document.querySelectorAll('.tab');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const winnerDisplay = document.getElementById('winner-display');
-        const spinner = document.getElementById('spinner'); // Note: This is now used for the spinning entrants list
-        const spinnerContainer = document.getElementById('spinner-container');
+        // Connection management variables
+        let reconnectionTimeout = null;
+        let retryCount = 0;
+        const MAX_RETRY_ATTEMPTS = 5;
+        const RETRY_DELAY = 5000; // 5 seconds
+        let iframeConnectionEstablished = false;
+        let iframe = null;
+        
+        // DOM Elements - Will be initialized in init function
+        let createGiveawayBtn;
+        let pickWinnerBtn;
+        let completeGiveawayBtn;
+        let cancelGiveawayBtn;
+        let clearCompletedBtn;
+        let saveSettingsBtn;
+        let giveawayTypeSelect;
+        let keywordField;
+        let tabs;
+        let tabContents;
+        let winnerDisplay;
+        let spinner;
+        let spinnerContainer;
         
         // Helper functions
         function generateId() {
@@ -1200,281 +1328,447 @@
             return giveawayState.giveaways.filter(g => g.state === 'complete');
         }
         
-        function renderActiveGiveaway() {
-            const activeGiveaway = getActiveGiveaway();
-            const activeContainer = document.getElementById('active-giveaway');
-            const activeControls = document.getElementById('active-controls');
-            
-            if (activeGiveaway) {
-                const entrantsCount = Object.keys(activeGiveaway.entrants).length;
+        // REPLACED FUNCTIONS WITH IMPROVED VERSIONS
+        
+        /**
+         * Save the giveaway state to storage
+         * Attempts to use Social Stream's database if available, falls back to localStorage
+         */
+        async function saveGiveawayState() {
+            try {
+                // First try to save to localStorage as a fallback
+                localStorage.setItem('ssn_giveawayState', JSON.stringify(giveawayState));
                 
-                // Update admin panel view
-                if (!isDisplayMode) {
-                    activeContainer.innerHTML = `
-                        <h3>${activeGiveaway.title}</h3>
-                        <div class="giveaway-details">
-                            <ul>
-                                <li><strong>Prize:</strong> ${activeGiveaway.prize}</li>
-                                ${activeGiveaway.type === 'keyword' ? `<li><strong>Keyword:</strong> ${activeGiveaway.keyword}</li>` : ''}
-                                <li><strong>Entries:</strong> ${entrantsCount}</li>
-                            </ul>
-                        </div>
-                        <div id="entrants-list"></div>
-                    `;
-                    
-                    // Render entrants
-                    const entrantsList = document.getElementById('entrants-list');
-                    entrantsList.innerHTML = '';
-                    
-                    if (entrantsCount > 0) {
-                        entrantsList.innerHTML = '<h4>Entrants:</h4>';
-                        const entrantElem = document.createElement('div');
-                        entrantElem.className = 'entrants-grid';
-                        
-                        // Get last 20 entrants or all if less than 20
-                        const entries = Object.entries(activeGiveaway.entrants);
-                        const lastEntries = entries.length <= 20 ? entries : entries.slice(-20);
-                        
-                        lastEntries.forEach(([id, entrant]) => {
-                            entrantElem.innerHTML += `
-                                <div class="entrant-item">
-                                    <span>${entrant.name}</span>
-                                </div>
-                            `;
-                        });
-                        
-                        entrantsList.appendChild(entrantElem);
-                    }
-                    
-                    // Show active giveaway controls
-                    activeControls.style.display = 'block';
-                    
-                    // Enable/disable buttons based on state
-                    if (activeGiveaway.winnerPicked && activeGiveaway.winner) {
-                        pickWinnerBtn.disabled = true;
-                        completeGiveawayBtn.disabled = false;
-                        cancelGiveawayBtn.disabled = false;
-                    } else {
-                        pickWinnerBtn.disabled = false;
-                        completeGiveawayBtn.disabled = true;
-                        cancelGiveawayBtn.disabled = false;
-                    }
-                } else {
-                    // OBS display mode - get the styles
-                    const styles = giveawayState.settings.styling;
-                    
-                    // Apply styles to all relevant elements
-                    const obsGiveawayPane = document.querySelector('.giveaway-pane');
-                    if (obsGiveawayPane) {
-                        obsGiveawayPane.style.fontFamily = styles.fontFamily;
-                        // ... other styling for the pane ...
-                    }
-                    
-                    // Apply styles to other elements - header, entries, etc.
-                    // ... existing styling code ...
+                // If the DB API is available, use it for more robust storage
+                if (typeof addToDB === 'function') {
+                    const giveawayData = {
+                        type: 'giveaway_state',
+                        timestamp: Date.now(),
+                        data: giveawayState
+                    };
+                    await addToDB(giveawayData);
                 }
-                
-                // Handle OBS display
-                if (isDisplayMode) {
-                    const obsActiveGiveaway = document.getElementById('obs-active-giveaway');
-                    
-                    if (activeGiveaway) {
-                        let entrantsCount = Object.keys(activeGiveaway.entrants || {}).length;
-                        
-                        // If spinner is active but winner not yet shown
-                        if (activeGiveaway.winnerPicked && activeGiveaway.winner) {
-                            // If the spinner has finished and we're showing the winner within the active giveaway display
-                            // We just leave it as is - the callout text and styling were updated by the pickWinner function
-                            // and we don't want to interfere with the positioned winner
-                        } else if (activeGiveaway.winnerPicked) {
-                            // If we're in the middle of spinning to select a winner
-                            obsActiveGiveaway.style.display = 'flex';
-                            
-                            // Create a spinning layout with names
-                            obsActiveGiveaway.innerHTML = `
-                                <div class="giveaway-main-bg">
-                                    <div class="giveaway-main" style="height: 3.45em; overflow: hidden;">
-                                        <div class="giveaway-spinning" style="height: 3.45em; position: relative; overflow: hidden; mask: linear-gradient(to bottom, rgba(0, 0, 0, 5%) 0%, #000 28%, #000 72%, rgba(0, 0, 0, 5%) 100%);">
-                                            <div class="spinning-container" id="spinning-container" style="position: absolute; width: 100%; display: flex; flex-direction: column; justify-content: flex-start;"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="giveaway-bar">
-                                    <span>Prize: ${activeGiveaway.prize}</span>
-                                    <span>Entries: ${entrantsCount}</span>
-                                </div>
-                                <div class="giveaway-callout">
-                                    <div class="giveaway-callout-text">Picking a winner...</div>
-                                </div>
-                            `;
-                            
-                            // Hide any previous winner display
-                            document.getElementById('obs-winner-display').style.display = 'none';
-                            
-                            // Hide the entrants display during spinning
-                            const obsEntrantsDisplay = document.getElementById('obs-entrants-display');
-                            obsEntrantsDisplay.style.display = 'none';
-                            
-                            // Populate the spinning container
-                            const spinningContainer = document.getElementById('spinning-container');
-                            
-                            if (spinningContainer) {
-                                spinningContainer.innerHTML = '';
-                                
-                                // Create a list of entrants to display
-                                const entrantNames = Object.values(activeGiveaway.entrants).map(e => e.name || 'Anonymous');
-                                let displayEntrants = entrantNames.length > 0 ? entrantNames : ['Anonymous'];
-                                
-                                // Repeat the list many times to create a long scroll
-                                let repeatedEntrants = [];
-                                for (let i = 0; i < 20; i++) {
-                                    repeatedEntrants = repeatedEntrants.concat(displayEntrants);
-                                }
-                                
-                                // Add divs for each entrant with fixed height and flex centering
-                                repeatedEntrants.forEach(name => {
-                                    const entrantDiv = document.createElement('div');
-                                    entrantDiv.textContent = name;
-                                    entrantDiv.style.height = '56px'; // Fixed height
-                                    entrantDiv.style.display = 'flex';
-                                    entrantDiv.style.alignItems = 'center';
-                                    entrantDiv.style.justifyContent = 'center';
-                                    entrantDiv.style.textAlign = 'center';
-                                    entrantDiv.style.padding = '10px';
-                                    entrantDiv.style.borderBottom = '1px solid rgba(0,0,0,0.1)';
-                                    entrantDiv.style.fontSize = `${giveawayState.settings.styling.entryTextSize}px`;
-                                    entrantDiv.style.fontWeight = 'bold';
-                                    entrantDiv.style.backgroundColor = `rgba(${hexToRgb(giveawayState.settings.styling.entrantBgColor)}, ${giveawayState.settings.styling.entrantBgOpacity})`;
-                                    entrantDiv.style.color = giveawayState.settings.styling.entriesTextColor;
-                                    
-                                    // Explicitly set the font family with !important to override any other styles
-                                    entrantDiv.style.setProperty('font-family', giveawayState.settings.styling.fontFamily, 'important');
-                                    
-                                    spinningContainer.appendChild(entrantDiv);
-                                });
-                                
-                                // Force a reflow to ensure animation works
-                                void spinningContainer.offsetWidth;
-                                
-                                // Start the animation
-                                setTimeout(() => {
-                                    spinningContainer.style.animation = 'scrollDown cubic-bezier(0.2, 0.43, 0.77, 1.04) 1 12s';
-                                }, 10);
-                            }
-                        } else {
-                            // Normal display of active giveaway
-                            obsActiveGiveaway.style.display = 'flex';
-                            obsActiveGiveaway.innerHTML = `
-                                <div class="giveaway-main-bg">
-                                    <div class="giveaway-main">
-                                        ${activeGiveaway.title}
-                                    </div>
-                                </div>
-                                <div class="giveaway-bar">
-                                    <span>Prize: ${activeGiveaway.prize}</span>
-                                    <span>Entries: ${entrantsCount}</span>
-                                </div>
-                                <div class="giveaway-callout">
-                                    <div class="giveaway-callout-text">Type "${activeGiveaway.keyword || '!win'}" in chat to enter!</div>
-                                </div>
-                            `;
-                            
-                            // Hide any previous winner display
-                            document.getElementById('obs-winner-display').style.display = 'none';
-                            
-                            // Show the entrants display in normal mode
-                            const obsEntrantsDisplay = document.getElementById('obs-entrants-display');
-                            obsEntrantsDisplay.style.display = 'block';
-                            
-                            // Show the last 5 entrants or all if less than 5
-                            updateEntrantsDisplay(activeGiveaway);
-                        }
-                        
-                        // Apply styling from settings
-                        const styles = giveawayState.settings.styling;
-                        obsActiveGiveaway.style.backgroundColor = `rgba(${hexToRgb(styles.headerBgColor)}, ${styles.headerBgOpacity})`;
-                        obsActiveGiveaway.style.color = styles.headerTextColor;
-                        obsActiveGiveaway.style.fontSize = `${styles.titleSize}px`;
-                        obsActiveGiveaway.style.borderRadius = `${styles.cornerRadius}px`; // Apply corner radius
-                        
-                        // Style the title background
-                        const titleBg = obsActiveGiveaway.querySelector('.giveaway-main-bg');
-                        if (titleBg) {
-                            titleBg.style.backgroundColor = `rgba(${hexToRgb(styles.titleBgColor)}, ${styles.titleBgOpacity})`;
-                            titleBg.style.borderRadius = `${Math.round(styles.cornerRadius * 0.8)}px`; // Scale for nested element
-                            titleBg.style.fontFamily = styles.fontFamily; // Apply font family to title bg
-                        }
-                        
-                        // Apply styles to giveaway bar spans
-                        const giveawayBarSpans = obsActiveGiveaway.querySelectorAll('.giveaway-bar > span');
-                        giveawayBarSpans.forEach(span => {
-                            span.style.backgroundColor = `rgba(${hexToRgb(styles.entriesBgColor)}, ${styles.entriesBgOpacity})`;
-                            span.style.color = styles.entriesTextColor;
-                            span.style.fontSize = `${styles.entryTextSize}px`;
-                            span.style.borderRadius = `${Math.round(styles.cornerRadius * 0.6)}px`; // Scale for nested elements
-                            span.style.fontFamily = styles.fontFamily; // Apply font family to bar spans
-                        });
-                        
-                        // Style the callout text
-                        const calloutText = obsActiveGiveaway.querySelector('.giveaway-callout-text');
-                        if (calloutText) {
-                            calloutText.style.fontSize = `${styles.entryTextSize}px`;
-                            calloutText.style.color = styles.entriesTextColor;
-                            calloutText.style.fontFamily = styles.fontFamily; // Apply font family to callout text
-                        }
-                        
-                        // Apply font family to all entrant divs in the spinning container
-                        const spinningContainer = obsActiveGiveaway.querySelector('#spinning-container');
-                        if (spinningContainer) {
-                            const entrantDivs = spinningContainer.querySelectorAll('div');
-                            entrantDivs.forEach(div => {
-                                div.style.fontFamily = styles.fontFamily;
-                            });
-                        }
-                    } else {
-                        // No active giveaway
-                        obsActiveGiveaway.style.display = 'none';
-                        document.getElementById('obs-winner-display').style.display = 'none';
-                        document.getElementById('obs-entrants-display').style.display = 'none';
-                    }
-                }
-            } else {
-                // No active giveaway
-                if (!isDisplayMode) {
-                    activeContainer.innerHTML = '<p>No active giveaway</p>';
-                    activeControls.style.display = 'none';
-                } else {
-                    // Hide OBS displays
-                    const obsActiveGiveaway = document.getElementById('obs-active-giveaway');
-                    if (obsActiveGiveaway) {
-                        obsActiveGiveaway.style.display = 'none';
-                    }
-                    
-                    const obsWinnerDisplay = document.getElementById('obs-winner-display');
-                    if (obsWinnerDisplay) {
-                        obsWinnerDisplay.style.display = 'none';
-                    }
-                    
-                    const obsEntrantsDisplay = document.getElementById('obs-entrants-display');
-                    if (obsEntrantsDisplay) {
-                        obsEntrantsDisplay.style.display = 'none';
-                    }
+            } catch (error) {
+                console.error('Error saving giveaway state:', error);
+                // Ensure localStorage fallback happens even if there's an error
+                try {
+                    localStorage.setItem('ssn_giveawayState', JSON.stringify(giveawayState));
+                } catch (e) {
+                    console.error('Critical error: Unable to save giveaway state to localStorage:', e);
                 }
             }
-            
-            // Apply styles to the OBS display
-            if (isDisplayMode && activeGiveaway) {
-                const styles = giveawayState.settings.styling;
-                const obsGiveawayPane = document.querySelector('.giveaway-pane');
-                const obsHeader = document.querySelector('.giveaway-header');
-                const obsEntries = document.querySelector('.giveaway-entries');
+        }
+        
+        /**
+         * Load the giveaway state from storage
+         * Attempts to use Social Stream's database if available, falls back to localStorage
+         */
+        async function loadGiveawayState() {
+            try {
+                // First try to load from localStorage as a fallback
+                const savedState = localStorage.getItem('ssn_giveawayState');
+                let loadedState = null;
                 
-                if (obsGiveawayPane) {
-                    // Apply font family to the giveaway pane
-                    obsGiveawayPane.style.fontFamily = styles.fontFamily;
-                    
-                    // ... rest of the styling code ...
+                if (savedState) {
+                    try {
+                        const parsedState = JSON.parse(savedState);
+                        // Validate the parsed state before using it
+                        if (parsedState && typeof parsedState === 'object' && Array.isArray(parsedState.giveaways)) {
+                            loadedState = parsedState;
+                        }
+                    } catch (parseError) {
+                        console.error('Error parsing saved giveaway state:', parseError);
+                    }
                 }
+                
+                // If the DB API is available, try to get more recent data
+                if (typeof getFromDB === 'function') {
+                    try {
+                        const dbState = await getFromDB('giveaway_state');
+                        if (dbState && dbState.data) {
+                            // Compare timestamps if we have both sources
+                            if (!loadedState || (dbState.timestamp > loadedState.timestamp)) {
+                                loadedState = dbState.data;
+                            }
+                        }
+                    } catch (dbError) {
+                        console.error('Error loading from database, using localStorage data:', dbError);
+                    }
+                }
+                
+                // If we found valid state data, apply it
+                if (loadedState) {
+                    giveawayState.giveaways = loadedState.giveaways || [];
+                    
+                    // Merge settings, preserving defaults for any missing properties
+                    if (loadedState.settings) {
+                        giveawayState.settings = {
+                            ...giveawayState.settings,
+                            ...loadedState.settings
+                        };
+                        
+                        // Ensure nested styling object is properly merged too
+                        if (loadedState.settings.styling) {
+                            giveawayState.settings.styling = {
+                                ...giveawayState.settings.styling,
+                                ...loadedState.settings.styling
+                            };
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading giveaway state:', error);
+            }
+            
+            // Ensure we integrate with Social Stream's global settings if available
+            integrateWithGlobalSettings();
+        }
+        
+        /**
+         * Attempt to integrate with Social Stream's global settings system
+         */
+        function integrateWithGlobalSettings() {
+            try {
+                // Check if global settings are available
+                if (typeof getSettings === 'function') {
+                    getSettings('giveaway', (settings) => {
+                        if (settings) {
+                            // Apply any global giveaway settings
+                            if (settings.winnerAnimation) {
+                                giveawayState.settings.winnerAnimation = settings.winnerAnimation;
+                            }
+                            
+                            // Merge styling settings if available
+                            if (settings.styling) {
+                                giveawayState.settings.styling = {
+                                    ...giveawayState.settings.styling,
+                                    ...settings.styling
+                                };
+                            }
+                            
+                            // Apply the updated settings
+                            applySettings();
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error integrating with global settings:', error);
+            }
+        }
+        
+        /**
+         * Sanitize user input to prevent XSS attacks
+         * @param {string} input - The user input to sanitize
+         * @return {string} Sanitized input safe for insertion into HTML
+         */
+        function sanitizeInput(input) {
+            if (!input) return '';
+            
+            // Use existing Social Stream functions if available
+            if (typeof filterXSS === 'function') {
+                return filterXSS(input);
+            } else if (typeof escapeHtml === 'function') {
+                return escapeHtml(input);
+            } else {
+                // Simple fallback
+                return String(input)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+        }
+        
+        /**
+         * Efficiently render the list of entrants using document fragments
+         * @param {HTMLElement} container - The container element
+         * @param {Object} entrants - The entrants object
+         * @param {number} limit - Maximum number of entrants to display
+         */
+        function renderEntrants(container, entrants, limit = 20) {
+            if (!container) return;
+            
+            // Clear existing content
+            container.innerHTML = '';
+            
+            const entrantKeys = Object.keys(entrants);
+            if (entrantKeys.length === 0) return;
+            
+            // Create a document fragment for better performance
+            const fragment = document.createDocumentFragment();
+            const header = document.createElement('h4');
+            header.textContent = 'Entrants:';
+            fragment.appendChild(header);
+            
+            const entrantGrid = document.createElement('div');
+            entrantGrid.className = 'entrants-grid';
+            
+            // Get the most recent entrants up to the limit
+            const displayEntrants = entrantKeys.length <= limit 
+                ? Object.entries(entrants) 
+                : Object.entries(entrants).slice(-limit);
+            
+            // Add entrants to the grid
+            displayEntrants.forEach(([id, entrant]) => {
+                const entrantItem = document.createElement('div');
+                entrantItem.className = 'entrant-item';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = sanitizeInput(entrant.name || 'Anonymous');
+                
+                if (entrant.platform) {
+                    nameSpan.title = sanitizeInput(entrant.platform);
+                }
+                
+                entrantItem.appendChild(nameSpan);
+                entrantGrid.appendChild(entrantItem);
+            });
+            
+            fragment.appendChild(entrantGrid);
+            container.appendChild(fragment);
+        }
+        
+        /**
+         * Set up the data connection with proper error handling and reconnection logic
+         */
+        function setupConnection() {
+            try {
+                // Clear any existing connection timers
+                if (reconnectionTimeout) {
+                    clearTimeout(reconnectionTimeout);
+                    reconnectionTimeout = null;
+                }
+                
+                // Reset retry counter
+                retryCount = 0;
+                
+                // Check if we're already connected
+                if (iframe && iframe.contentWindow) {
+                    console.log('Connection already exists, reusing');
+                    return;
+                }
+                
+                // Remove any existing iframe
+                if (document.getElementById('frame1')) {
+                    document.getElementById('frame1').remove();
+                }
+                
+                // Create iframe connection
+                iframe = document.createElement("iframe");
+                
+                // Get session ID from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const session = urlParams.get('session') || SESSION_ID || '';
+                const filename = urlParams.get('filename') || 'giveaway';
+                
+                if (!session) {
+                    console.warn('No session ID found. Connection may not work properly.');
+                }
+                
+                iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" +
+                    session + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + session;
+                
+                iframe.style.width = "0px";
+                iframe.style.height = "0px";
+                iframe.style.position = "fixed";
+                iframe.style.left = "-100px";
+                iframe.style.top = "-100px";
+                iframe.id = "frame1";
+                
+                iframe.onerror = function() {
+                    console.error('Giveaway iframe connection error. Retrying...');
+                    handleConnectionError();
+                };
+                
+                // Add the iframe to the document
+                document.body.appendChild(iframe);
+                
+                // Set connection timeout - if we don't receive data within 10 seconds, retry
+                setTimeout(() => {
+                    if (!iframeConnectionEstablished) {
+                        console.warn('No data received within timeout period. Reconnecting...');
+                        handleConnectionError();
+                    }
+                }, 10000);
+                
+                console.log('Giveaway iframe connection setup completed with session:', session);
+            } catch (error) {
+                console.error('Error setting up connection:', error);
+                handleConnectionError();
+            }
+        }
+        
+        function handleConnectionError() {
+            try {
+                // Increment retry counter
+                retryCount++;
+                
+                if (retryCount <= MAX_RETRY_ATTEMPTS) {
+                    console.log(`Connection attempt ${retryCount}/${MAX_RETRY_ATTEMPTS} failed. Retrying in ${RETRY_DELAY / 1000} seconds...`);
+                    
+                    // Set up reconnection with exponential backoff
+                    const backoffDelay = RETRY_DELAY * Math.pow(1.5, retryCount - 1);
+                    reconnectionTimeout = setTimeout(setupConnection, backoffDelay);
+                    
+                    // Show connection error in the UI
+                    if (!isDisplayMode) {
+                        const errorMessage = `Connection error. Retry ${retryCount}/${MAX_RETRY_ATTEMPTS}...`;
+                        showNotification(errorMessage, 'error');
+                    }
+                } else {
+                    console.error('Maximum connection attempts reached. Please check your connection and refresh the page.');
+                    
+                    // Show permanent error in the UI
+                    if (!isDisplayMode) {
+                        showNotification('Failed to establish connection. Please check your connection and refresh the page.', 'error', true);
+                    }
+                }
+            } catch (error) {
+                console.error('Error in handleConnectionError:', error);
+            }
+        }
+        
+        /**
+         * Process incoming data from the connection
+         * @param {Object} data - The received data
+         */
+        function processData(data) {
+            try {
+                // Check if there's an active giveaway
+                const activeGiveaway = getActiveGiveaway();
+                if (!activeGiveaway) return;
+                
+                // Only process chat messages
+                if (data.type !== 'messages' && data.type !== 'youtube' && data.type !== 'twitch' && 
+                    data.type !== 'instagram' && data.type !== 'facebook' && data.type !== 'tiktok') return;
+                
+                // Get the message and sender
+                const message = data.message || '';
+                const userId = data.id || data.user_id || generateRandomId();
+                const userName = data.user || data.name || 'Anonymous';
+                const userImg = data.img || '';
+                
+                // Check if this is a keyword giveaway and if the message matches the keyword
+                if (activeGiveaway.type === 'keyword' && !activeGiveaway.winnerPicked) {
+                    if (message.toLowerCase().includes(activeGiveaway.keyword.toLowerCase())) {
+                        // Add user to entrants if not already added
+                        if (!activeGiveaway.entrants[userId]) {
+                            activeGiveaway.entrants[userId] = {
+                                name: sanitizeInput(userName),
+                                img: userImg,
+                                platform: data.type || 'unknown'  // Store the platform
+                            };
+                            
+                            // Save state and update UI
+                            saveGiveawayState();
+                            renderActiveGiveaway();
+                        }
+                    }
+                } else if (activeGiveaway.type === 'all' && !activeGiveaway.winnerPicked) {
+                    // For 'all' type, add any user who sends a message
+                    if (!activeGiveaway.entrants[userId]) {
+                        activeGiveaway.entrants[userId] = {
+                            name: sanitizeInput(userName),
+                            img: userImg,
+                            platform: data.type || 'unknown'  // Store the platform
+                        };
+                        
+                        // Save state and update UI
+                        saveGiveawayState();
+                        renderActiveGiveaway();
+                    }
+                }
+            } catch (error) {
+                console.error('Error processing data:', error);
+            }
+        }
+        
+        /**
+         * Modified renderActiveGiveaway function to use optimized DOM methods
+         */
+        function renderActiveGiveaway() {
+            try {
+                const activeGiveaway = getActiveGiveaway();
+                const activeContainer = document.getElementById('active-giveaway');
+                const activeControls = document.getElementById('active-controls');
+                
+                if (activeGiveaway) {
+                    const entrantsCount = Object.keys(activeGiveaway.entrants).length;
+                    
+                    // Update admin panel view
+                    if (!isDisplayMode) {
+                        // Create the content using a document fragment
+                        const fragment = document.createDocumentFragment();
+                        
+                        // Title
+                        const title = document.createElement('h3');
+                        title.textContent = sanitizeInput(activeGiveaway.title);
+                        fragment.appendChild(title);
+                        
+                        // Details container
+                        const detailsDiv = document.createElement('div');
+                        detailsDiv.className = 'giveaway-details';
+                        
+                        const detailsList = document.createElement('ul');
+                        
+                        // Prize
+                        const prizeItem = document.createElement('li');
+                        const prizeLabel = document.createElement('strong');
+                        prizeLabel.textContent = 'Prize: ';
+                        prizeItem.appendChild(prizeLabel);
+                        prizeItem.appendChild(document.createTextNode(sanitizeInput(activeGiveaway.prize)));
+                        detailsList.appendChild(prizeItem);
+                        
+                        // Keyword (if applicable)
+                        if (activeGiveaway.type === 'keyword') {
+                            const keywordItem = document.createElement('li');
+                            const keywordLabel = document.createElement('strong');
+                            keywordLabel.textContent = 'Keyword: ';
+                            keywordItem.appendChild(keywordLabel);
+                            keywordItem.appendChild(document.createTextNode(sanitizeInput(activeGiveaway.keyword)));
+                            detailsList.appendChild(keywordItem);
+                        }
+                        
+                        // Entries count
+                        const entriesItem = document.createElement('li');
+                        const entriesLabel = document.createElement('strong');
+                        entriesLabel.textContent = 'Entries: ';
+                        entriesItem.appendChild(entriesLabel);
+                        entriesItem.appendChild(document.createTextNode(entrantsCount));
+                        detailsList.appendChild(entriesItem);
+                        
+                        detailsDiv.appendChild(detailsList);
+                        fragment.appendChild(detailsDiv);
+                        
+                        // Entrants list container
+                        const entrantsListDiv = document.createElement('div');
+                        entrantsListDiv.id = 'entrants-list';
+                        fragment.appendChild(entrantsListDiv);
+                        
+                        // Clear and replace the content
+                        activeContainer.innerHTML = '';
+                        activeContainer.appendChild(fragment);
+                        
+                        // Now render the entrants
+                        const entrantsList = document.getElementById('entrants-list');
+                        renderEntrants(entrantsList, activeGiveaway.entrants, 20);
+                        
+                        // Show active giveaway controls
+                        activeControls.style.display = 'block';
+                    } else {
+                        // OBS display mode updates
+                        updateOBSDisplay(activeGiveaway);
+                    }
+                } else if (activeContainer) {
+                    // No active giveaway
+                    activeContainer.innerHTML = '<p>No active giveaway</p>';
+                    if (activeControls) {
+                        activeControls.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error rendering active giveaway:', error);
             }
         }
         
@@ -1520,15 +1814,16 @@
         
         function renderCompletedGiveaways() {
             const completedContainer = document.getElementById('completed-giveaways');
+            const completedGiveaways = getCompletedGiveaways();
             
-            if (!giveawayState.completed || giveawayState.completed.length === 0) {
+            if (completedGiveaways.length === 0) {
                 completedContainer.innerHTML = '<p>No completed giveaways</p>';
                 return;
             }
             
             let html = '';
             
-            giveawayState.completed.forEach((giveaway, index) => {
+            completedGiveaways.forEach((giveaway, index) => {
                 const entrantsCount = Object.keys(giveaway.entrants).length;
                 
                 html += `
@@ -1630,6 +1925,8 @@
                     obsWinnerDisplay.style.backgroundColor = `rgba(${hexToRgb(styles.winnerBgColor)}, ${styles.winnerBgOpacity})`;
                     obsWinnerDisplay.style.color = styles.winnerTextColor;
                     obsWinnerDisplay.style.fontSize = `${styles.winnerTextSize}px`;
+                    obsWinnerDisplay.style.maxWidth = '800px';
+                    obsWinnerDisplay.style.margin = '0 auto';
                     
                     // Apply the font family to the winner display with !important to ensure it takes precedence
                     obsWinnerDisplay.style.setProperty('font-family', styles.fontFamily, 'important');
@@ -1665,222 +1962,242 @@
 
         // Function to pick a winner
         function pickWinner() {
-            // Get the active giveaway
-            const activeGiveaway = getActiveGiveaway();
-            
-            if (!activeGiveaway) {
-                alert('No active giveaway');
-                return;
-            }
-            
-            const entrants = activeGiveaway.entrants;
-            const entrantCount = Object.keys(entrants).length;
-            
-            if (entrantCount === 0) {
-                alert('No entries for this giveaway');
-                return;
-            }
-            
-            // Mark the giveaway as having a winner being picked
-            activeGiveaway.winnerPicked = true;
-            activeGiveaway.winner = null;
-            saveGiveawayState();
-            
-            // Update UI to show spinning animation
-            renderActiveGiveaway();
-            
-            // In non-OBS mode, prepare the wheel
-            if (!isDisplayMode) {
-                spinnerContainer.style.display = 'block';
+            try {
+                const activeGiveaway = getActiveGiveaway();
+                if (!activeGiveaway) return;
+                
+                // Get all entrants
+                const entrants = Object.entries(activeGiveaway.entrants);
+                
+                // Check if there are enough entrants to pick a winner (at least 1)
+                if (entrants.length < 1) {
+                    alert('Need at least 1 entrant to pick a winner');
+                    return;
+                }
+                
+                // If a winner has already been picked, don't pick again
+                if (activeGiveaway.winnerPicked) {
+                    alert('A winner has already been picked for this giveaway');
+                    return;
+                }
+                
+                // Disable the pick winner button
+                pickWinnerBtn.disabled = true;
+                
+                // Show the spinner
+                spinnerContainer.style.display = 'flex';
                 spinner.innerHTML = '';
-                winnerDisplay.style.display = 'none';
                 
-                // We are now using the spinner animation instead of the wheel
-                // Show the spinning animation in the container
-            }
-            
-            // Pick a random winner
-            const entrantIds = Object.keys(entrants);
-            const winnerIndex = Math.floor(Math.random() * entrantCount);
-            const winnerId = entrantIds[winnerIndex];
-            const winner = entrants[winnerId];
-            const winnerName = winner.name || 'Anonymous';
-            const winnerPlatform = winner.platform || '';
-            
-            // For OBS mode with spinning list
-            if (isDisplayMode) {
-                // Find the spinning container
-                const spinningContainer = document.getElementById('spinning-container');
-                const giveawayCallout = document.querySelector('.giveaway-callout-text');
+                // Create an array with all entrants for the spinner
+                const entrantIds = Object.keys(activeGiveaway.entrants);
                 
-                if (spinningContainer) {
-                    // Get all entrant elements in the spinning container
-                    const entrantElements = spinningContainer.querySelectorAll('div');
-                    
-                    // Calculate the exact position to stop the animation
-                    // We'll find a specific entrant div that matches our winner and position it
-                    let targetElement = null;
-                    let targetIndex = -1;
-                    
-                    // Look for an element with our winner's name, ideally in the latter part of the list
-                    for (let i = Math.floor(entrantElements.length * 0.7); i < entrantElements.length; i++) {
-                        if (entrantElements[i].textContent === winnerName) {
-                            targetElement = entrantElements[i];
-                            targetIndex = i;
-                            break;
-                        }
+                // If in OBS mode, update the OBS display
+                if (isDisplayMode) {
+                    const obsSpinnerContainer = document.getElementById('obs-spinner-container');
+                    if (obsSpinnerContainer) {
+                        obsSpinnerContainer.style.display = 'flex';
                     }
                     
-                    // If we didn't find in the latter part, look through the whole list
-                    if (!targetElement) {
-                        for (let i = 0; i < entrantElements.length; i++) {
-                            if (entrantElements[i].textContent === winnerName) {
-                                targetElement = entrantElements[i];
-                                targetIndex = i;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    // If we found a matching element
-                    if (targetElement) {
-                        // Calculate the exact pixel position to center this element
-                        const containerHeight = document.querySelector('.giveaway-spinning').offsetHeight;
-                        const elementHeight = targetElement.offsetHeight;
-                        const centerPosition = (containerHeight - elementHeight) / 2;
-                        
-                        // Create a custom keyframe animation for this specific instance
-                        const customStyleSheet = document.createElement('style');
-                        customStyleSheet.textContent = `
-                            @keyframes exactScrollDown {
-                                0% { bottom: -800px; }
-                                90% { bottom: ${centerPosition + 10}px; }
-                                100% { bottom: ${centerPosition}px; }
-                            }
-                        `;
-                        document.head.appendChild(customStyleSheet);
-                        
-                        // Apply the custom animation
-                        setTimeout(() => {
-                            spinningContainer.style.animation = 'exactScrollDown cubic-bezier(0.2, 0.43, 0.77, 1.04) 1 12s';
-                            
-                            // Add an animation end listener to freeze the final position and show winner
-                            spinningContainer.addEventListener('animationend', function freezePosition() {
-                                // Remove the animation to prevent any reset
-                                spinningContainer.style.animation = 'none';
-                                // Set the final position explicitly using bottom property
-                                spinningContainer.style.bottom = `${centerPosition}px`;
-                                
-                                // Store the winner's position for reference
-                                spinningContainer.dataset.winnerPosition = centerPosition;
-                                
-                                // Change "Picking a winner..." to "WINNER!"
-                                if (giveawayCallout) {
-                                    giveawayCallout.textContent = `WINNER: ${winnerName} ${winnerPlatform ? `(${winnerPlatform})` : ''}!`;
-                                    giveawayCallout.style.fontWeight = 'bold';
-                                    
-                                    // Add highlight effect to the winner
-                                    targetElement.style.backgroundColor = giveawayState.settings.styling.winnerBgColor;
-                                    targetElement.style.color = giveawayState.settings.styling.winnerTextColor;
-                                    targetElement.style.fontWeight = 'bold';
-                                    targetElement.style.transform = 'scale(1.05)';
-                                    targetElement.style.transition = 'all 0.3s ease-in-out';
-                                }
-                                
-                                // Trigger confetti if enabled
-                                if (giveawayState.settings.winnerAnimation === 'confetti') {
-                                    createConfetti();
-                                }
-                                
-                                // Update the active giveaway with winner information
-                                activeGiveaway.winner = {
-                                    name: winnerName,
-                                    platform: winnerPlatform
-                                };
-                                activeGiveaway.winnerPicked = true;
-                                
-                                // Save the updated state
-                                saveGiveawayState();
-                                
-                                // Remove this listener
-                                spinningContainer.removeEventListener('animationend', freezePosition);
-                            });
-                        }, 10);
-                        
-                        // Clean up the custom style after animation
-                        setTimeout(() => {
-                            if (document.head.contains(customStyleSheet)) {
-                                document.head.removeChild(customStyleSheet);
-                            }
-                        }, 13000);
-                    } else {
-                        // Fall back to the standard animation if we can't find the matching element
-                        const centerPosition = 0; // Default center position for standard animation
-                        
-                        setTimeout(() => {
-                            spinningContainer.style.animation = 'scrollDown cubic-bezier(0.2, 0.43, 0.77, 1.04) 1 12s';
-                            
-                            // Add an animation end listener to freeze the final position
-                            spinningContainer.addEventListener('animationend', function freezePosition() {
-                                // Remove the animation to prevent any reset
-                                spinningContainer.style.animation = 'none';
-                                // Set the final position explicitly
-                                spinningContainer.style.bottom = `${centerPosition}px`;
-                                
-                                // Change "Picking a winner..." to "WINNER!"
-                                if (giveawayCallout) {
-                                    giveawayCallout.textContent = `WINNER: ${winnerName} ${winnerPlatform ? `(${winnerPlatform})` : ''}!`;
-                                    giveawayCallout.style.fontWeight = 'bold';
-                                }
-                                
-                                // Trigger confetti if enabled
-                                if (giveawayState.settings.winnerAnimation === 'confetti') {
-                                    createConfetti();
-                                }
-                                
-                                // Update the active giveaway with winner information
-                                activeGiveaway.winner = {
-                                    name: winnerName,
-                                    platform: winnerPlatform
-                                };
-                                activeGiveaway.winnerPicked = true;
-                                
-                                // Save the updated state
-                                saveGiveawayState();
-                                
-                                // Remove this listener
-                                spinningContainer.removeEventListener('animationend', freezePosition);
-                            });
-                        }, 10);
+                    // Hide the regular giveaway display
+                    const obsActiveGiveaway = document.getElementById('obs-active-giveaway');
+                    if (obsActiveGiveaway) {
+                        obsActiveGiveaway.style.display = 'none';
                     }
                 }
-            } else {
-                // For admin view with wheel
-                // Set the winner after a delay (for animation time)
-                setTimeout(() => {
-                    // Set the winner
-                    const winnerDisplay = document.getElementById('winner-display');
-                    winnerDisplay.textContent = `Winner: ${winnerName} ${winnerPlatform ? `(${winnerPlatform})` : ''}`;
-                    winnerDisplay.style.display = 'block';
+                
+                // Start spinning and pick a winner after a random time
+                let spinCount = 0;
+                let currentIndex = 0;
+                
+                // Clear existing entrants in the spinner
+                const spinInterval = setInterval(() => {
+                    // Pick the next entrant to display
+                    const entrantId = entrantIds[currentIndex];
+                    const entrant = activeGiveaway.entrants[entrantId];
                     
+                    if (!entrant) {
+                        // Skip undefined entrants
+                        currentIndex = (currentIndex + 1) % entrantIds.length;
+                        return;
+                    }
+                    
+                    // Highlight the current entrant
+                    const entrantHTML = `
+                        <div class="spinner-entrant">
+                            <div class="entrant-avatar">
+                                ${entrant.img ? `<img src="${entrant.img}" alt="${entrant.name}">` : '👤'}
+                            </div>
+                            <div class="entrant-name">${entrant.name || 'Anonymous'}</div>
+                            <div class="entrant-platform">${entrant.platform || ''}</div>
+                        </div>
+                    `;
+                    
+                    spinner.innerHTML = entrantHTML;
+                    
+                    // Also update OBS spinner if in display mode
+                    if (isDisplayMode) {
+                        const obsSpinner = document.getElementById('obs-spinner');
+                        if (obsSpinner) {
+                            obsSpinner.innerHTML = entrantHTML;
+                        }
+                    }
+                    
+                    // Move to the next entrant
+                    currentIndex = (currentIndex + 1) % entrantIds.length;
+                    
+                    // Speed up gradually at the start
+                    if (spinCount < 10) spinCount++;
+                    
+                    // After a certain number of cycles, start slowing down and pick a winner
+                    if (spinCount > 20) {
+                        clearInterval(spinInterval);
+                        selectFinalWinner(activeGiveaway, entrantIds);
+                    }
+                }, 100);
+            } catch (error) {
+                console.error('Error picking winner:', error);
+                alert('Error picking winner: ' + error.message);
+                
+                // Reset UI
+                pickWinnerBtn.disabled = false;
+                spinnerContainer.style.display = 'none';
+                
+                // Reset OBS UI if in display mode
+                if (isDisplayMode) {
+                    const obsSpinnerContainer = document.getElementById('obs-spinner-container');
+                    if (obsSpinnerContainer) {
+                        obsSpinnerContainer.style.display = 'none';
+                    }
+                    
+                    const obsActiveGiveaway = document.getElementById('obs-active-giveaway');
+                    if (obsActiveGiveaway) {
+                        obsActiveGiveaway.style.display = 'block';
+                    }
+                }
+            }
+        }
+        
+        // Function to select the final winner (split from pickWinner for clarity)
+        function selectFinalWinner(activeGiveaway, entrantIds) {
+            try {
+                // Safety check
+                if (!activeGiveaway || entrantIds.length === 0) {
+                    console.error('No active giveaway or no entrants');
+                    pickWinnerBtn.disabled = false;
+                    spinnerContainer.style.display = 'none';
+                    return;
+                }
+                
+                // Pick a random winner
+                const randomIndex = Math.floor(Math.random() * entrantIds.length);
+                const winnerId = entrantIds[randomIndex];
+                const winner = activeGiveaway.entrants[winnerId];
+                
+                if (!winner) {
+                    console.error('Selected winner not found in entrants');
+                    pickWinnerBtn.disabled = false;
+                    spinnerContainer.style.display = 'none';
+                    return;
+                }
+                
+                // Update the giveaway with the winner
+                activeGiveaway.winnerPicked = true;
+                activeGiveaway.winner = winner;  // Store the full winner object
+                activeGiveaway.winnerId = winnerId;
+                
+                // Save the state
+                saveGiveawayState();
+                
+                // Update the UI after a delay
+                setTimeout(() => {
                     // Hide the spinner
                     spinnerContainer.style.display = 'none';
                     
-                    // Update the active giveaway with winner information
-                    activeGiveaway.winner = {
-                        name: winnerName,
-                        platform: winnerPlatform
-                    };
-                    activeGiveaway.winnerPicked = true;
+                    // Show the winner
+                    winnerDisplay.innerHTML = `
+                        <div class="winner-details">
+                            <div class="winner-avatar">
+                                ${winner.img ? `<img src="${winner.img}" alt="${winner.name}">` : '👑'}
+                            </div>
+                            <div class="winner-name">${winner.name || 'Anonymous'}</div>
+                            <div class="winner-platform">${winner.platform || ''}</div>
+                        </div>
+                    `;
+                    winnerDisplay.style.display = 'flex';
                     
-                    // Save the updated state
-                    saveGiveawayState();
+                    // Enable the complete button
+                    completeGiveawayBtn.disabled = false;
                     
-                    // Trigger confetti if enabled
+                    // Run the winner animation
                     if (giveawayState.settings.winnerAnimation === 'confetti') {
-                        createConfetti();
+                        createConfetti(40); // Create 40 confetti particles
                     }
-                }, 3500); // Time for wheel to spin in admin view
+                    
+                    // Update OBS display if needed
+                    if (isDisplayMode) {
+                        // Apply OBS styling from settings
+                        const styles = giveawayState.settings.styling;
+                        const obsWinnerDisplay = document.getElementById('obs-winner-display');
+                        
+                        if (obsWinnerDisplay) {
+                            // Set styling
+                            obsWinnerDisplay.style.backgroundColor = `rgba(${hexToRgb(styles.winnerBgColor)}, ${styles.winnerBgOpacity})`;
+                            obsWinnerDisplay.style.color = styles.winnerTextColor;
+                            obsWinnerDisplay.style.fontSize = `${styles.winnerTextSize}px`;
+                            obsWinnerDisplay.style.fontFamily = styles.fontFamily;
+                            obsWinnerDisplay.style.borderRadius = `${styles.cornerRadius}px`;
+                            obsWinnerDisplay.style.maxWidth = '800px';
+                            obsWinnerDisplay.style.margin = '0 auto';
+                            obsWinnerDisplay.style.width = 'auto';
+                            
+                            // Set content
+                            obsWinnerDisplay.innerHTML = `
+                                <div class="winner-details" style="font-family: ${styles.fontFamily};">
+                                    <div class="winner-avatar">
+                                        ${winner.img ? `<img src="${winner.img}" alt="${winner.name}">` : '👑'}
+                                    </div>
+                                    <div class="winner-name" style="font-family: ${styles.fontFamily};">${winner.name || 'Anonymous'}</div>
+                                    <div class="winner-platform" style="font-family: ${styles.fontFamily};">${winner.platform || ''}</div>
+                                </div>
+                            `;
+                            obsWinnerDisplay.style.display = 'flex';
+                        }
+                        
+                        // Hide the spinner container
+                        const obsSpinnerContainer = document.getElementById('obs-spinner-container');
+                        if (obsSpinnerContainer) {
+                            obsSpinnerContainer.style.display = 'none';
+                        }
+                        
+                        // Run confetti if enabled
+                        if (giveawayState.settings.winnerAnimation === 'confetti') {
+                            createConfetti(60); // More particles for OBS display
+                        }
+                    }
+                    
+                    // Re-render the active giveaway to show the winner
+                    renderActiveGiveaway();
+                }, 1000);
+            } catch (error) {
+                console.error('Error selecting final winner:', error);
+                alert('Error selecting winner: ' + error.message);
+                
+                // Reset UI
+                pickWinnerBtn.disabled = false;
+                spinnerContainer.style.display = 'none';
+                
+                // Reset OBS UI if needed
+                if (isDisplayMode) {
+                    const obsSpinnerContainer = document.getElementById('obs-spinner-container');
+                    if (obsSpinnerContainer) {
+                        obsSpinnerContainer.style.display = 'none';
+                    }
+                    
+                    const obsActiveGiveaway = document.getElementById('obs-active-giveaway');
+                    if (obsActiveGiveaway) {
+                        obsActiveGiveaway.style.display = 'block';
+                    }
+                }
             }
         }
         
@@ -2019,20 +2336,70 @@
             const activeGiveaway = getActiveGiveaway();
             if (!activeGiveaway) return;
             
+            // Check if there's a winner picked
+            if (!activeGiveaway.winnerPicked && !confirm("No winner has been picked yet. Are you sure you want to complete this giveaway?")) {
+                return;
+            }
+            
+            // Update the giveaway state
             activeGiveaway.state = 'complete';
             activeGiveaway.completedDate = new Date().toISOString(); // Add timestamp
-            renderGiveaways();
+            
+            // If a winner exists but is in object form, ensure it's saved properly for reporting
+            if (activeGiveaway.winner && typeof activeGiveaway.winner === 'object') {
+                activeGiveaway.winnerName = activeGiveaway.winner.name || 'Anonymous';
+                activeGiveaway.winnerPlatform = activeGiveaway.winner.platform || '';
+            }
+            
+            // Save and update UI
             saveGiveawayState();
+            renderGiveaways();
             
             // Hide spinner and winner display in admin view
             spinnerContainer.style.display = 'none';
             winnerDisplay.style.display = 'none';
             
+            // Re-enable pick winner button for the next giveaway
+            if (pickWinnerBtn) {
+                pickWinnerBtn.disabled = false;
+            }
+            
             // Hide in OBS view if needed
             if (isDisplayMode) {
-                document.getElementById('obs-spinner-container').style.display = 'none';
-                document.getElementById('obs-winner-display').style.display = 'none';
+                const obsElements = [
+                    document.getElementById('obs-spinner-container'),
+                    document.getElementById('obs-winner-display'),
+                    document.getElementById('obs-active-giveaway')
+                ];
+                
+                obsElements.forEach(element => {
+                    if (element) element.style.display = 'none';
+                });
+                
+                // Show a completion message in OBS
+                const obsWinnerDisplay = document.getElementById('obs-winner-display');
+                if (obsWinnerDisplay) {
+                    const styles = giveawayState.settings.styling;
+                    
+                    obsWinnerDisplay.style.backgroundColor = `rgba(${hexToRgb(styles.winnerBgColor)}, ${styles.winnerBgOpacity})`;
+                    obsWinnerDisplay.style.color = styles.winnerTextColor;
+                    obsWinnerDisplay.style.fontFamily = styles.fontFamily;
+                    
+                    const winnerName = (activeGiveaway.winner && typeof activeGiveaway.winner === 'object') 
+                        ? activeGiveaway.winner.name 
+                        : activeGiveaway.winner;
+                        
+                    obsWinnerDisplay.innerHTML = `<div style="font-family: ${styles.fontFamily};">Giveaway Complete!</div>`;
+                    obsWinnerDisplay.style.display = 'flex';
+                    
+                    // Hide the completion message after 5 seconds
+                    setTimeout(() => {
+                        if (obsWinnerDisplay) obsWinnerDisplay.style.display = 'none';
+                    }, 5000);
+                }
             }
+            
+            showNotification('Giveaway completed successfully!', 'success');
         }
         
         function cancelGiveaway() {
@@ -2045,6 +2412,14 @@
                 // Hide spinner and winner display
                 spinnerContainer.style.display = 'none';
                 winnerDisplay.style.display = 'none';
+                
+                // Hide in OBS view if needed
+                if (isDisplayMode) {
+                    document.getElementById('obs-spinner-container').style.display = 'none';
+                    document.getElementById('obs-winner-display').style.display = 'none';
+                }
+                
+                showNotification('Giveaway cancelled', 'info');
             }
         }
         
@@ -2200,48 +2575,202 @@
             });
         }
         
+        // LocalStorage key for broadcasts between tabs
+        const BROADCAST_CHANNEL_KEY = 'giveaway_broadcast_update';
+        
+        // Setup broadcast channel for cross-tab communication
+        let broadcastChannel;
+        try {
+            if (window.BroadcastChannel) {
+                broadcastChannel = new BroadcastChannel('giveaway_updates');
+                console.log("BroadcastChannel initialized for real-time updates");
+                
+                // Listen for updates from admin panel
+                broadcastChannel.onmessage = function(event) {
+                    if (isDisplayMode && event.data.type === 'state_update') {
+                        console.log("Received state update from admin panel");
+                        
+                        // Apply the new state
+                        if (event.data.state && isValidGiveawayState(event.data.state)) {
+                            Object.assign(giveawayState, event.data.state);
+                            
+                            // Re-render the OBS display with new state
+                            console.log("Updating OBS display with new state");
+                            renderGiveaways();
+                        }
+                    }
+                };
+            } else {
+                console.log("BroadcastChannel not supported, falling back to localStorage");
+            }
+        } catch (error) {
+            console.error("Error setting up BroadcastChannel:", error);
+        }
+        
         // Save and load state
         function saveGiveawayState() {
-            localStorage.setItem('ssn_giveawayState', JSON.stringify(giveawayState));
+            try {
+                // First try to use Social Stream's built-in database functions if available
+                if (typeof addToDB === 'function') {
+                    addToDB('giveaway_state', giveawayState)
+                        .then(() => console.log('Giveaway state saved to database'))
+                        .catch((error) => {
+                            console.error('Failed to save to database, falling back to localStorage:', error);
+                            // Fall back to localStorage
+                            localStorage.setItem('giveawayState', JSON.stringify(giveawayState));
+                        });
+                } else {
+                    // Use localStorage as fallback
+                    localStorage.setItem('giveawayState', JSON.stringify(giveawayState));
+                }
+                
+                // Broadcast update to OBS display (if we're in admin mode)
+                if (!isDisplayMode) {
+                    // Use BroadcastChannel if available
+                    if (broadcastChannel) {
+                        console.log("Broadcasting state update to OBS display");
+                        broadcastChannel.postMessage({ 
+                            type: 'state_update', 
+                            state: giveawayState,
+                            timestamp: Date.now()
+                        });
+                    } else {
+                        // Fallback to localStorage broadcast
+                        localStorage.setItem(BROADCAST_CHANNEL_KEY, JSON.stringify({
+                            state: giveawayState,
+                            timestamp: Date.now()
+                        }));
+                    }
+                }
+            } catch (error) {
+                console.error('Error saving giveaway state:', error);
+                // Last resort fallback
+                try {
+                    localStorage.setItem('giveawayState', JSON.stringify(giveawayState));
+                } catch (innerError) {
+                    console.error('Failed even with localStorage fallback:', innerError);
+                }
+            }
         }
         
         function loadGiveawayState() {
-            const savedState = localStorage.getItem('ssn_giveawayState');
-            if (savedState) {
-                const parsedState = JSON.parse(savedState);
-                giveawayState.giveaways = parsedState.giveaways || [];
-                
-                // Load settings with defaults for backward compatibility
-                giveawayState.settings = {
-                    winnerAnimation: parsedState.settings?.winnerAnimation || 'confetti',
-                    styling: parsedState.settings?.styling || {
-                        headerBgColor: '#fcd00b',
-                        headerBgOpacity: 1,
-                        headerTextColor: '#362e2c',
-                        titleBgColor: '#ffffff',
-                        titleBgOpacity: 1,
-                        entriesBgColor: '#e3e1de',
-                        entriesBgOpacity: 1,
-                        entriesTextColor: '#362e2c',
-                        calloutTextColor: '#362e2c', // New property for callout text color
-                        entrantBgColor: '#ffffff',
-                        entrantBgOpacity: 1,
-                        winnerBgColor: '#fcd00b',
-                        winnerBgOpacity: 1,
-                        winnerTextColor: '#362e2c',
-                        titleSize: 32,
-                        entryTextSize: 18,
-                        winnerTextSize: 36,
-                        cornerRadius: 12,
-                        fontFamily: 'IBM Plex Sans, Montserrat, Arial, sans-serif'
-                    }
-                };
-                
-                // Update UI with loaded settings if not in display mode
-                if (!isDisplayMode) {
-                    loadStyleSettingsToUI();
+            try {
+                // First try to use Social Stream's built-in database functions if available
+                if (typeof getFromDB === 'function') {
+                    getFromDB('giveaway_state')
+                        .then((savedState) => {
+                            if (savedState) {
+                                // Validate state before applying
+                                if (isValidGiveawayState(savedState)) {
+                                    Object.assign(giveawayState, savedState);
+                                    console.log('Giveaway state loaded from database');
+                                    renderGiveaways();
+                                }
+                            } else {
+                                // If not in database, check localStorage
+                                loadFromLocalStorage();
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Failed to load from database, checking localStorage:', error);
+                            loadFromLocalStorage();
+                        });
+                } else {
+                    // Use localStorage as fallback
+                    loadFromLocalStorage();
                 }
+                
+                // Set up a storage event listener for OBS display mode
+                if (isDisplayMode) {
+                    console.log("Setting up localStorage listener for OBS display updates");
+                    
+                    // Storage event listener for cross-tab communication (fallback method)
+                    window.addEventListener('storage', function(event) {
+                        if (event.key === BROADCAST_CHANNEL_KEY) {
+                            try {
+                                console.log("Received localStorage update in OBS display");
+                                const data = JSON.parse(event.newValue);
+                                
+                                if (data && data.state && isValidGiveawayState(data.state)) {
+                                    // Update the state
+                                    Object.assign(giveawayState, data.state);
+                                    
+                                    // Re-render the OBS display
+                                    console.log("Updating OBS display with new state from localStorage");
+                                    renderGiveaways();
+                                }
+                            } catch (error) {
+                                console.error("Error processing localStorage update:", error);
+                            }
+                        } else if (event.key === 'giveawayState') {
+                            // Direct localStorage update
+                            try {
+                                console.log("Direct giveawayState update detected");
+                                const savedState = JSON.parse(event.newValue);
+                                
+                                if (isValidGiveawayState(savedState)) {
+                                    Object.assign(giveawayState, savedState);
+                                    renderGiveaways();
+                                }
+                            } catch (error) {
+                                console.error("Error processing direct state update:", error);
+                            }
+                        }
+                    });
+                    
+                    // Also poll for updates as a last resort (every 2 seconds)
+                    setInterval(function() {
+                        try {
+                            const savedState = localStorage.getItem('giveawayState');
+                            if (savedState) {
+                                const parsedState = JSON.parse(savedState);
+                                
+                                // Check if there's been an update
+                                if (isValidGiveawayState(parsedState) && 
+                                    JSON.stringify(parsedState) !== JSON.stringify(giveawayState)) {
+                                    console.log("Detected state change via polling");
+                                    Object.assign(giveawayState, parsedState);
+                                    renderGiveaways();
+                                }
+                            }
+                        } catch (error) {
+                            console.error("Error in polling update:", error);
+                        }
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Error loading giveaway state:', error);
+                // Initialize with default state if loading fails
+                renderGiveaways();
             }
+        }
+        
+        function loadFromLocalStorage() {
+            try {
+                const savedState = localStorage.getItem('giveawayState');
+                if (savedState) {
+                    const parsedState = JSON.parse(savedState);
+                    
+                    // Validate state before applying
+                    if (isValidGiveawayState(parsedState)) {
+                        Object.assign(giveawayState, parsedState);
+                        console.log('Giveaway state loaded from localStorage');
+                    }
+                }
+                
+                renderGiveaways();
+            } catch (error) {
+                console.error('Error loading from localStorage:', error);
+                renderGiveaways();
+            }
+        }
+        
+        function isValidGiveawayState(state) {
+            // Basic validation to ensure the state object has expected properties
+            return state && 
+                   typeof state === 'object' && 
+                   Array.isArray(state.giveaways) && 
+                   typeof state.settings === 'object';
         }
         
         // Event Listeners
@@ -2560,6 +3089,11 @@
             const currentMode = mode || 'normal';
             const activeGiveaway = getActiveGiveaway() || createSampleGiveaway();
             
+            // Ensure the preview area has proper styling
+            previewArea.style.display = 'flex';
+            previewArea.style.justifyContent = 'center';
+            previewArea.style.alignItems = 'center';
+            
             // Clear any previous preview content
             previewPane.innerHTML = '';
             
@@ -2573,6 +3107,16 @@
             previewPane.style.fontSize = `${styles.titleSize}px`;
             previewPane.style.borderRadius = `${styles.cornerRadius}px`; // Apply corner radius
             previewPane.style.fontFamily = styles.fontFamily; // Apply the font family
+            previewPane.style.padding = '16px';
+            previewPane.style.gap = '10px';
+            previewPane.style.display = 'flex';
+            previewPane.style.flexDirection = 'column';
+            previewPane.style.boxSizing = 'border-box';
+            
+            // Ensure preview dimensions match OBS view for accurate representation
+            previewPane.style.minWidth = '500px';
+            previewPane.style.width = '500px';
+            previewPane.style.maxWidth = '800px';
             
             // Generate content based on mode
             if (currentMode === 'spinning') {
@@ -2585,7 +3129,7 @@
                         </div>
                     </div>
                     <div class="giveaway-bar">
-                        <span>Prize: ${activeGiveaway.prize}</span>
+                        <span>${activeGiveaway.prize}</span>
                         <span>Entries: ${Object.keys(activeGiveaway.entrants).length}</span>
                     </div>
                     <div class="giveaway-callout">
@@ -2641,22 +3185,27 @@
             } else {
                 // Default/normal display - regular giveaway display
                 previewPane.innerHTML = `
-                    <div class="giveaway-main-bg" style="background-color: rgba(${hexToRgb(styles.titleBgColor)}, ${styles.titleBgOpacity}); border-radius: ${Math.round(styles.cornerRadius * 0.8)}px;">
+                    <div class="giveaway-main-bg" style="background-color: rgba(${hexToRgb(styles.titleBgColor)}, ${styles.titleBgOpacity}); border-radius: ${Math.round(styles.cornerRadius * 0.8)}px; margin-bottom: 6px;">
                         <div class="giveaway-main" style="padding: 10px; font-family: ${styles.fontFamily};">Giveaway!</div>
                     </div>
-                    <div class="giveaway-bar">
-                        <span style="background-color: rgba(${hexToRgb(styles.entriesBgColor)}, ${styles.entriesBgOpacity}); color: ${styles.entriesTextColor}; font-size: ${styles.entryTextSize}px; border-radius: ${Math.round(styles.cornerRadius * 0.6)}px; font-family: ${styles.fontFamily};">Prize: ${activeGiveaway.prize}</span>
-                        <span style="background-color: rgba(${hexToRgb(styles.entriesBgColor)}, ${styles.entriesBgOpacity}); color: ${styles.entriesTextColor}; font-size: ${styles.entryTextSize}px; border-radius: ${Math.round(styles.cornerRadius * 0.6)}px; font-family: ${styles.fontFamily};">Entries: ${Object.keys(activeGiveaway.entrants).length}</span>
+                    <div class="giveaway-bar" style="width: 100%; justify-content: center; gap: 12px; margin-bottom: 6px;">
+                        <span style="background-color: rgba(${hexToRgb(styles.entriesBgColor)}, ${styles.entriesBgOpacity}); color: ${styles.entriesTextColor}; font-size: ${styles.entryTextSize}px; border-radius: ${Math.round(styles.cornerRadius * 0.6)}px; font-family: ${styles.fontFamily}; margin: 2px;">${activeGiveaway.prize}</span>
+                        <span style="background-color: rgba(${hexToRgb(styles.entriesBgColor)}, ${styles.entriesBgOpacity}); color: ${styles.entriesTextColor}; font-size: ${styles.entryTextSize}px; border-radius: ${Math.round(styles.cornerRadius * 0.6)}px; font-family: ${styles.fontFamily}; margin: 2px;">Entries: ${Object.keys(activeGiveaway.entrants).length}</span>
                     </div>
-                    <div class="giveaway-callout">
+                    <div class="giveaway-callout" style="margin-top: 3px;">
                         <div class="giveaway-callout-text" style="font-size: ${styles.entryTextSize}px; color: ${styles.entriesTextColor}; font-family: ${styles.fontFamily};">Type !enter in chat to join</div>
                     </div>
                 `;
                 
-                // After setting the HTML, ensure all elements have the font family applied
+                // After setting the HTML, ensure all elements have the font family and consistent margin applied
                 previewPane.querySelectorAll('*').forEach(el => {
                     if (!el.style.fontFamily) {
                         el.style.fontFamily = styles.fontFamily;
+                    }
+                    
+                    // Ensure consistent margins in spans within giveaway-bar
+                    if (el.parentElement && el.parentElement.classList.contains('giveaway-bar') && el.tagName === 'SPAN') {
+                        el.style.margin = '2px';
                     }
                 });
             }
@@ -2670,6 +3219,7 @@
                 span.style.color = styles.entriesTextColor;
                 span.style.fontSize = `${styles.entryTextSize}px`;
                 span.style.borderRadius = `${Math.round(styles.cornerRadius * 0.6)}px`; // Scale for nested elements
+                span.style.margin = '2px'; // Add consistent margin
             });
             
             // Style the callout text
@@ -2766,19 +3316,18 @@
         // Social Stream integration
         // const urlParams = new URLSearchParams(window.location.search); // Already defined above
         function processData(data) {
-			console.log(data);
             // Check if there's an active giveaway
             const activeGiveaway = getActiveGiveaway();
             if (!activeGiveaway) return;
             
             // Only process chat messages
-            if (!(data.type && data.chatmessage)){return;}
+            if (data.type !== 'messages' && data.type !== 'youtube' && data.type !== 'twitch' && data.type !== 'instagram' && data.type !== 'facebook' && data.type !== 'tiktok') return;
             
             // Get the message and sender
-            const message = data.chatmessage || '';
-            const userId = data.userid || parseInt(Math.random()*10000000)+""
-            const userName = data.chatname || 'Anonymous';
-            const userImg = data.chatimg || '';
+            const message = data.message || '';
+            const userId = data.id || data.user_id || generateRandomId();
+            const userName = data.user || data.name || 'Anonymous';
+            const userImg = data.img || '';
             
             // Check if this is a keyword giveaway and if the message matches the keyword
             if (activeGiveaway.type === 'keyword' && !activeGiveaway.winnerPicked) {
@@ -2786,7 +3335,7 @@
                     // Add user to entrants if not already added
                     if (!activeGiveaway.entrants[userId]) {
                         activeGiveaway.entrants[userId] = {
-                            name: userName,
+                            name: sanitizeInput(userName),
                             img: userImg,
                             platform: data.type || 'unknown'  // Store the platform
                         };
@@ -2800,7 +3349,7 @@
                 // For 'all' type, add any user who sends a message
                 if (!activeGiveaway.entrants[userId]) {
                     activeGiveaway.entrants[userId] = {
-                        name: userName,
+                        name: sanitizeInput(userName),
                         img: userImg,
                         platform: data.type || 'unknown'  // Store the platform
                     };
@@ -2810,21 +3359,10 @@
                     renderActiveGiveaway();
                 }
             }
-			
-			console.log("finished processing incoming message");
         }
     
-        // We get the data via this embedded iFRAME
-        const iframe = document.createElement("iframe");
-        const filename = "giveaway";
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=false&solo&notmobile&label=dock&view=" + urlParams.get('session') + "&novideo&noaudio&label="+filename+"&cleanoutput&room=" + urlParams.get('session');
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
+        // NOTE: We don't create an iframe here anymore.
+        // The iframe is created in the setupConnection function.
 
         const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
         const eventer = window[eventMethod];
@@ -2841,80 +3379,347 @@
         
         // Initialize
         function init() {
-            if (!isDisplayMode) {
-                loadGiveawayState();
-                setupEventListeners();
+            try {
+                console.log("Initializing giveaway application...");
                 
-                // Set OBS URL in the field
-                const obsUrlField = document.getElementById('obs-url');
-                if (obsUrlField) {
-                    obsUrlField.value = generateObsUrl();
+                // Initialize DOM elements first to avoid null references
+                createGiveawayBtn = document.getElementById('create-giveaway-btn');
+                pickWinnerBtn = document.getElementById('pick-winner-btn');
+                completeGiveawayBtn = document.getElementById('complete-giveaway-btn');
+                cancelGiveawayBtn = document.getElementById('cancel-giveaway-btn');
+                clearCompletedBtn = document.getElementById('clear-completed-btn');
+                saveSettingsBtn = document.getElementById('save-settings-btn');
+                giveawayTypeSelect = document.getElementById('giveaway-type');
+                keywordField = document.querySelector('.keyword-field');
+                tabs = document.querySelectorAll('.tab');
+                tabContents = document.querySelectorAll('.tab-content');
+                winnerDisplay = document.getElementById('winner-display');
+                spinner = document.getElementById('spinner');
+                spinnerContainer = document.getElementById('spinner-container');
+                
+                // IMPORTANT FIX: Ensure OBS display container is hidden in admin mode
+                const obsDisplayContainer = document.getElementById('obs-display-container');
+                if (obsDisplayContainer && !isDisplayMode) {
+                    obsDisplayContainer.style.display = 'none';
                 }
                 
-                // Initialize preview if on settings tab
-                if (document.querySelector('.tab[data-tab="settings"]').classList.contains('active')) {
-                    updateSettingsPreview('normal');
-                }
-            } else {
-                // In display mode, still need to load giveaways
-                loadGiveawayState();
-            }
-            
-            renderGiveaways();
-            applySettings();
-        }
-        
-        // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', init);
-
-        function downloadGiveawayRecords(format) {
-            const completed = giveawayState.completed;
-            
-            if (completed.length === 0) {
-                alert('No completed giveaways to download');
-                return;
-            }
-            
-            let data;
-            let filename;
-            let mimeType;
-            
-            if (format === 'csv') {
-                // CSV format
-                let csvContent = 'Title,Prize,Type,Keyword,Entries Count,Winner,Winner Platform\n';
-                
-                completed.forEach(giveaway => {
-                    const entrantsCount = Object.keys(giveaway.entrants).length;
-                    const escapedTitle = giveaway.title.includes(',') ? `"${giveaway.title}"` : giveaway.title;
-                    const escapedPrize = giveaway.prize.includes(',') ? `"${giveaway.prize}"` : giveaway.prize;
-                    
-                    csvContent += `${escapedTitle},${escapedPrize},${giveaway.type},${giveaway.keyword || ''},${entrantsCount},${giveaway.winner},${giveaway.winnerPlatform || ''}\n`;
+                // Log DOM elements to check if they're found
+                console.log("DOM Elements initialized: ", {
+                    createGiveawayBtn: !!createGiveawayBtn,
+                    tabs: tabs?.length,
+                    giveawayTypeSelect: !!giveawayTypeSelect
                 });
                 
-                data = csvContent;
-                filename = 'giveaway_records.csv';
-                mimeType = 'text/csv';
-            } else {
-                // JSON format
-                data = JSON.stringify(completed, null, 2);
-                filename = 'giveaway_records.json';
-                mimeType = 'application/json';
+                // Initialize the state before anything else
+                if (!giveawayState.giveaways) {
+                    giveawayState.giveaways = [];
+                }
+                
+                if (!giveawayState.settings) {
+                    giveawayState.settings = {
+                        winnerAnimation: 'confetti',
+                        styling: {
+                            headerBgColor: '#fcd00b',
+                            headerBgOpacity: 1,
+                            headerTextColor: '#362e2c',
+                            titleBgColor: '#ffffff',
+                            titleBgOpacity: 1,
+                            entriesBgColor: '#e3e1de',
+                            entriesBgOpacity: 1,
+                            entriesTextColor: '#362e2c',
+                            calloutTextColor: '#362e2c',
+                            entrantBgColor: '#ffffff',
+                            entrantBgOpacity: 1,
+                            winnerBgColor: '#fcd00b',
+                            winnerBgOpacity: 1,
+                            winnerTextColor: '#362e2c',
+                            titleSize: 32,
+                            entryTextSize: 18,
+                            winnerTextSize: 36,
+                            cornerRadius: 12,
+                            fontFamily: 'IBM Plex Sans, Montserrat, Arial, sans-serif'
+                        }
+                    };
+                }
+                
+                // Load state and set up event listeners
+                loadGiveawayState();
+                
+                // This is crucial - always set up event listeners regardless of mode
+                setupEventListeners();
+                
+                if (!isDisplayMode) {
+                    // Set OBS URL in the field
+                    const obsUrlField = document.getElementById('obs-url');
+                    if (obsUrlField) {
+                        obsUrlField.value = generateObsUrl();
+                    }
+                    
+                    // Initialize preview if on settings tab
+                    if (document.querySelector('.tab[data-tab="settings"]')?.classList.contains('active')) {
+                        updateSettingsPreview('normal');
+                    }
+                    
+                    // Set up help tooltips
+                    if (typeof setupHelpTooltips === 'function') {
+                        setupHelpTooltips();
+                    }
+                }
+                
+                // Setup iframe connection with error handling
+                setupConnection();
+                
+                // Set up message event listener for iframe communication - ONLY ONCE
+                const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+                const eventer = window[eventMethod];
+                const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+                eventer(messageEvent, function (e) {
+                    try {
+                        if (e.source && e.source === iframe?.contentWindow) {
+                            if (e.data && e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+                                iframeConnectionEstablished = true;
+                                processData(e.data.dataReceived.overlayNinja);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error in message event handler:', error);
+                    }
+                });
+                
+                // Render giveaways and apply settings
+                renderGiveaways();
+                applySettings();
+                
+                // Apply fonts to all elements
+                if (typeof forceApplyFontToAllObsElements === 'function') {
+                    setTimeout(() => {
+                        forceApplyFontToAllObsElements();
+                    }, 200);
+                }
+                
+                // Special handling for OBS mode
+                if (isDisplayMode) {
+                    console.log("OBS mode detected, ensuring display is properly initialized");
+                    
+                    // Create a sample giveaway if none exists
+                    if (getActiveGiveaway() === undefined) {
+                        console.log("No active giveaway found, creating a sample one for OBS");
+                        
+                        // Create a sample giveaway for testing
+                        const sampleGiveaway = {
+                            id: 'sample-obs',
+                            title: 'Sample Giveaway',
+                            prize: 'Cool Prize',
+                            type: 'keyword',
+                            keyword: '!win',
+                            state: 'active',
+                            entrants: {
+                                user1: { name: 'Viewer1', platform: 'Twitch' },
+                                user2: { name: 'Viewer2', platform: 'YouTube' },
+                                user3: { name: 'Viewer3', platform: 'Twitch' }
+                            }
+                        };
+                        
+                        // Add to the giveaways array
+                        giveawayState.giveaways.push(sampleGiveaway);
+                        
+                        // Update the OBS display with this sample
+                        setTimeout(() => {
+                            updateOBSDisplay(sampleGiveaway);
+                            
+                            // Additional styling fixes after rendering
+                            const obsActiveGiveaway = document.getElementById('obs-active-giveaway');
+                            if (obsActiveGiveaway) {
+                                // Ensure consistent spacing in pane
+                                obsActiveGiveaway.style.padding = '20px';
+                                obsActiveGiveaway.style.gap = '15px';
+                                
+                                // Adjust the bar items spacing
+                                const barItems = obsActiveGiveaway.querySelectorAll('.giveaway-bar > span');
+                                barItems.forEach(item => {
+                                    item.style.margin = '4px';
+                                });
+                            }
+                        }, 300);
+                    }
+                }
+                
+                console.log("Giveaway application initialized successfully!");
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                if (typeof showNotification === 'function') {
+                    showNotification('Error initializing: ' + error.message, 'error', true);
+                } else {
+                    alert('Error initializing: ' + error.message);
+                }
             }
-            
-            // Create download link
-            const blob = new Blob([data], { type: mimeType });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            
-            // Cleanup
-            setTimeout(() => {
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-            }, 0);
+        }
+        
+        // Setup error handler to catch JavaScript errors
+        window.addEventListener('error', function(event) {
+            console.error('JavaScript error:', event.message, 'at', event.filename, 'line', event.lineno);
+            alert('An error occurred: ' + event.message);
+        });
+
+        // Wait for window to fully load before initializing
+        console.log("Document ready state:", document.readyState);
+        
+        function startApp() {
+            console.log("Window loaded, initializing app");
+            // Use requestAnimationFrame for best timing
+            window.requestAnimationFrame(function() {
+                try {
+                    init();
+                    
+                    // Additional initialization for OBS mode
+                    if (isDisplayMode) {
+                        // Force centering for OBS display on first load
+                        const obsDisplayContainer = document.getElementById('obs-display-container');
+                        if (obsDisplayContainer) {
+                            obsDisplayContainer.style.display = 'flex';
+                            obsDisplayContainer.style.justifyContent = 'center';
+                            obsDisplayContainer.style.alignItems = 'center';
+                            obsDisplayContainer.style.width = '100%';
+                            obsDisplayContainer.style.height = '100vh';
+                        }
+                        
+                        // Ensure active giveaway is centered
+                        const obsActiveGiveaway = document.getElementById('obs-active-giveaway');
+                        if (obsActiveGiveaway) {
+                            obsActiveGiveaway.style.margin = '0 auto';
+                            obsActiveGiveaway.style.maxWidth = '800px';
+                            obsActiveGiveaway.style.width = 'auto';
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error during initialization:", e);
+                    alert("Error during initialization: " + e.message);
+                }
+            });
+        }
+        
+        // Handle different loading scenarios
+        if (document.readyState === 'complete') {
+            // Already loaded
+            console.log("Document already complete");
+            startApp();
+        } else {
+            // Wait for load event
+            console.log("Waiting for window load event");
+            window.addEventListener('load', startApp);
+        }
+
+        function downloadGiveawayRecords() {
+            try {
+                // Get the selected format from the dropdown
+                const formatSelect = document.getElementById('download-format');
+                const format = formatSelect ? formatSelect.value : 'csv';
+                
+                // Get completed giveaways
+                const completed = getCompletedGiveaways();
+                
+                if (!completed || completed.length === 0) {
+                    alert('No completed giveaways to download');
+                    return;
+                }
+                
+                let data;
+                let filename;
+                let mimeType;
+                
+                if (format === 'csv') {
+                    // CSV format
+                    let csvContent = 'Title,Prize,Type,Keyword,Entries Count,Winner,Winner Platform\n';
+                    
+                    completed.forEach(giveaway => {
+                        try {
+                            // Safety checks for required properties
+                            if (!giveaway || typeof giveaway !== 'object') return;
+                            
+                            const title = giveaway.title || 'Untitled';
+                            const prize = giveaway.prize || '';
+                            const type = giveaway.type || 'unknown';
+                            const keyword = giveaway.keyword || '';
+                            const entrants = giveaway.entrants || {};
+                            const entrantsCount = Object.keys(entrants).length;
+                            
+                            // Handle winner safely
+                            let winnerName = '';
+                            let winnerPlatform = '';
+                            
+                            if (giveaway.winner) {
+                                if (typeof giveaway.winner === 'object') {
+                                    winnerName = giveaway.winner.name || 'Unknown';
+                                    winnerPlatform = giveaway.winner.platform || '';
+                                } else {
+                                    winnerName = String(giveaway.winner);
+                                    winnerPlatform = giveaway.winnerPlatform || '';
+                                }
+                            } else if (giveaway.winnerName) {
+                                winnerName = giveaway.winnerName;
+                                winnerPlatform = giveaway.winnerPlatform || '';
+                            }
+                            
+                            // Escape commas in fields
+                            const escapedTitle = title.includes(',') ? `"${title}"` : title;
+                            const escapedPrize = prize.includes(',') ? `"${prize}"` : prize;
+                            
+                            csvContent += `${escapedTitle},${escapedPrize},${type},${keyword},${entrantsCount},${winnerName},${winnerPlatform}\n`;
+                        } catch (itemError) {
+                            console.error('Error processing giveaway item:', itemError);
+                        }
+                    });
+                    
+                    data = csvContent;
+                    filename = 'giveaway_records.csv';
+                    mimeType = 'text/csv';
+                } else {
+                    // JSON format - provide a safer version of the data
+                    const safeData = completed.map(giveaway => {
+                        try {
+                            // Only include essential fields
+                            const entrants = giveaway.entrants || {};
+                            return {
+                                title: giveaway.title || 'Untitled',
+                                prize: giveaway.prize || '',
+                                type: giveaway.type || 'unknown',
+                                keyword: giveaway.keyword || '',
+                                entrantsCount: Object.keys(entrants).length,
+                                winner: giveaway.winner || giveaway.winnerName || '',
+                                winnerPlatform: (typeof giveaway.winner === 'object' && giveaway.winner?.platform) || 
+                                                giveaway.winnerPlatform || '',
+                                completedDate: giveaway.completedDate || new Date().toISOString()
+                            };
+                        } catch (itemError) {
+                            console.error('Error processing giveaway item for JSON:', itemError);
+                            return { error: 'Failed to process this giveaway' };
+                        }
+                    });
+                    
+                    data = JSON.stringify(safeData, null, 2);
+                    filename = 'giveaway_records.json';
+                    mimeType = 'application/json';
+                }
+                
+                // Create download link
+                const blob = new Blob([data], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                link.click();
+                
+                // Clean up
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+                console.log('Giveaway records downloaded successfully!');
+            } catch (error) {
+                console.error('Error downloading giveaway records:', error);
+                alert('Error downloading records: ' + error.message);
+            }
         }
 
         // Generate OBS URL
@@ -2959,11 +3764,14 @@
             
             // Apply font family to the container
             obsEntrantsDisplay.style.fontFamily = styles.fontFamily;
+            obsEntrantsDisplay.style.maxWidth = '800px';
+            obsEntrantsDisplay.style.margin = '0 auto';
+            obsEntrantsDisplay.style.width = 'auto';
             
             // Create the container
             obsEntrantsDisplay.innerHTML = `
                 <div style="background-color: rgba(${hexToRgb(styles.entriesBgColor)}, ${styles.entriesBgOpacity}); padding: 15px; border-radius: ${styles.cornerRadius}px; max-height: 200px; overflow-y: auto; margin-top: 10px; color: ${styles.entriesTextColor}; font-family: ${styles.fontFamily};">
-                    <div id="obs-entrants-list" style="display: flex; flex-wrap: wrap; gap: 8px; font-family: ${styles.fontFamily};"></div>
+                    <div id="obs-entrants-list" style="display: flex; flex-wrap: wrap; gap: 8px; font-family: ${styles.fontFamily}; justify-content: center;"></div>
                 </div>
             `;
             
@@ -2990,51 +3798,135 @@
         // Add new fields to styling object in initGiveawayState function 
         // ... existing code ...
         function updateStyleSetting() {
-            const styles = giveawayState.settings.styling;
-            
-            // Header styles
-            styles.headerBgColor = document.getElementById('header-bg-color').value;
-            styles.headerBgOpacity = document.getElementById('header-bg-opacity').value / 100;
-            styles.headerTextColor = document.getElementById('header-text-color').value;
-            document.getElementById('header-bg-opacity-value').textContent = `${document.getElementById('header-bg-opacity').value}%`;
-            
-            // Title background styles
-            styles.titleBgColor = document.getElementById('title-bg-color').value;
-            styles.titleBgOpacity = document.getElementById('title-bg-opacity').value / 100;
-            document.getElementById('title-bg-opacity-value').textContent = `${document.getElementById('title-bg-opacity').value}%`;
-            
-            // Entries styles
-            styles.entriesBgColor = document.getElementById('entries-bg-color').value;
-            styles.entriesBgOpacity = document.getElementById('entries-bg-opacity').value / 100;
-            styles.entriesTextColor = document.getElementById('entries-text-color').value;
-            document.getElementById('entries-bg-opacity-value').textContent = `${document.getElementById('entries-bg-opacity').value}%`;
-            
-            // Entrant styles
-            styles.entrantBgColor = document.getElementById('entrant-bg-color').value;
-            styles.entrantBgOpacity = document.getElementById('entrant-bg-opacity').value / 100;
-            document.getElementById('entrant-bg-opacity-value').textContent = `${document.getElementById('entrant-bg-opacity').value}%`;
-            
-            // Winner styles
-            styles.winnerBgColor = document.getElementById('winner-bg-color').value;
-            styles.winnerBgOpacity = document.getElementById('winner-bg-opacity').value / 100;
-            styles.winnerTextColor = document.getElementById('winner-text-color').value;
-            document.getElementById('winner-bg-opacity-value').textContent = `${document.getElementById('winner-bg-opacity').value}%`;
-            
-            // Typography
-            styles.fontFamily = document.getElementById('font-family').value;
-            styles.titleSize = document.getElementById('title-size').value;
-            styles.entryTextSize = document.getElementById('entry-text-size').value;
-            styles.winnerTextSize = document.getElementById('winner-text-size').value;
-            document.getElementById('title-size-value').textContent = `${styles.titleSize}px`;
-            document.getElementById('entry-text-size-value').textContent = `${styles.entryTextSize}px`;
-            document.getElementById('winner-text-size-value').textContent = `${styles.winnerTextSize}px`;
-            
-            // Layout & Design
-            styles.cornerRadius = document.getElementById('corner-radius').value;
-            document.getElementById('corner-radius-value').textContent = `${styles.cornerRadius}px`;
-            
-            // Update the preview
-            updateSettingsPreview(document.querySelector('#settings-preview-area').getAttribute('data-mode') || 'normal');
+            try {
+                console.log("Updating style settings...");
+                const styles = giveawayState.settings.styling;
+                
+                // Header styles
+                const headerBgColor = document.getElementById('header-bg-color');
+                if (headerBgColor) styles.headerBgColor = headerBgColor.value;
+                
+                const headerBgOpacity = document.getElementById('header-bg-opacity');
+                if (headerBgOpacity) {
+                    styles.headerBgOpacity = parseInt(headerBgOpacity.value) / 100;
+                    const opacityValue = document.getElementById('header-bg-opacity-value');
+                    if (opacityValue) opacityValue.textContent = `${headerBgOpacity.value}%`;
+                }
+                
+                const headerTextColor = document.getElementById('header-text-color');
+                if (headerTextColor) styles.headerTextColor = headerTextColor.value;
+                
+                // Title background styles
+                const titleBgColor = document.getElementById('title-bg-color');
+                if (titleBgColor) styles.titleBgColor = titleBgColor.value;
+                
+                const titleBgOpacity = document.getElementById('title-bg-opacity');
+                if (titleBgOpacity) {
+                    styles.titleBgOpacity = parseInt(titleBgOpacity.value) / 100;
+                    const opacityValue = document.getElementById('title-bg-opacity-value');
+                    if (opacityValue) opacityValue.textContent = `${titleBgOpacity.value}%`;
+                }
+                
+                // Entries styles
+                const entriesBgColor = document.getElementById('entries-bg-color');
+                if (entriesBgColor) styles.entriesBgColor = entriesBgColor.value;
+                
+                const entriesBgOpacity = document.getElementById('entries-bg-opacity');
+                if (entriesBgOpacity) {
+                    styles.entriesBgOpacity = parseInt(entriesBgOpacity.value) / 100;
+                    const opacityValue = document.getElementById('entries-bg-opacity-value');
+                    if (opacityValue) opacityValue.textContent = `${entriesBgOpacity.value}%`;
+                }
+                
+                const entriesTextColor = document.getElementById('entries-text-color');
+                if (entriesTextColor) styles.entriesTextColor = entriesTextColor.value;
+                
+                // Entrant styles
+                const entrantBgColor = document.getElementById('entrant-bg-color');
+                if (entrantBgColor) styles.entrantBgColor = entrantBgColor.value;
+                
+                const entrantBgOpacity = document.getElementById('entrant-bg-opacity');
+                if (entrantBgOpacity) {
+                    styles.entrantBgOpacity = parseInt(entrantBgOpacity.value) / 100;
+                    const opacityValue = document.getElementById('entrant-bg-opacity-value');
+                    if (opacityValue) opacityValue.textContent = `${entrantBgOpacity.value}%`;
+                }
+                
+                // Winner styles
+                const winnerBgColor = document.getElementById('winner-bg-color');
+                if (winnerBgColor) styles.winnerBgColor = winnerBgColor.value;
+                
+                const winnerBgOpacity = document.getElementById('winner-bg-opacity');
+                if (winnerBgOpacity) {
+                    styles.winnerBgOpacity = parseInt(winnerBgOpacity.value) / 100;
+                    const opacityValue = document.getElementById('winner-bg-opacity-value');
+                    if (opacityValue) opacityValue.textContent = `${winnerBgOpacity.value}%`;
+                }
+                
+                const winnerTextColor = document.getElementById('winner-text-color');
+                if (winnerTextColor) styles.winnerTextColor = winnerTextColor.value;
+                
+                // Typography
+                const fontFamily = document.getElementById('font-family');
+                if (fontFamily) styles.fontFamily = fontFamily.value;
+                
+                const titleSize = document.getElementById('title-size');
+                if (titleSize) {
+                    styles.titleSize = parseInt(titleSize.value);
+                    const sizeValue = document.getElementById('title-size-value');
+                    if (sizeValue) sizeValue.textContent = `${titleSize.value}px`;
+                }
+                
+                const entryTextSize = document.getElementById('entry-text-size');
+                if (entryTextSize) {
+                    styles.entryTextSize = parseInt(entryTextSize.value);
+                    const sizeValue = document.getElementById('entry-text-size-value');
+                    if (sizeValue) sizeValue.textContent = `${entryTextSize.value}px`;
+                }
+                
+                const winnerTextSize = document.getElementById('winner-text-size');
+                if (winnerTextSize) {
+                    styles.winnerTextSize = parseInt(winnerTextSize.value);
+                    const sizeValue = document.getElementById('winner-text-size-value');
+                    if (sizeValue) sizeValue.textContent = `${winnerTextSize.value}px`;
+                }
+                
+                // Layout & Design
+                const cornerRadius = document.getElementById('corner-radius');
+                if (cornerRadius) {
+                    styles.cornerRadius = parseInt(cornerRadius.value);
+                    const radiusValue = document.getElementById('corner-radius-value');
+                    if (radiusValue) radiusValue.textContent = `${cornerRadius.value}px`;
+                }
+                
+                // Apply font family to all elements
+                if (typeof applyFontFamilyToAllElements === 'function') {
+                    setTimeout(() => applyFontFamilyToAllElements(), 50);
+                }
+                
+                // Apply settings to OBS elements
+                if (typeof forceApplyFontToAllObsElements === 'function') {
+                    setTimeout(() => forceApplyFontToAllObsElements(), 100);
+                }
+                
+                // Save state after updating styles
+                if (typeof saveGiveawayState === 'function') {
+                    saveGiveawayState();
+                }
+                
+                // Update the preview if settings tab is active
+                const previewArea = document.querySelector('#settings-preview-area');
+                if (previewArea) {
+                    const mode = previewArea.getAttribute('data-mode') || 'normal';
+                    if (typeof updateSettingsPreview === 'function') {
+                        updateSettingsPreview(mode);
+                    }
+                }
+                
+                console.log("Style settings updated successfully!");
+            } catch (error) {
+                console.error('Error updating style settings:', error);
+            }
         }
 
         // First, add a function to load Google Fonts
@@ -3184,14 +4076,7 @@
             }
         }
         
-        // Make sure to call this after any font change and when rendering giveaways
-        const originalUpdateStyleSetting = updateStyleSetting;
-        updateStyleSetting = function() {
-            originalUpdateStyleSetting.apply(this, arguments);
-            
-            // Ensure fonts are applied to all elements after style updates
-            setTimeout(() => applyFontFamilyToAllElements(), 100);
-        };
+        // Note: The updateStyleSetting function directly applies fonts when called
         
         // Enhanced custom font handling with live preview
         document.getElementById('custom-font-name').addEventListener('input', function() {
@@ -3303,16 +4188,8 @@
             console.log('Font family applied to all OBS elements:', fontFamily);
         }
         
-        // Update init function to call font application
+        // Preserve the original init function
         const originalInit = init;
-        init = function() {
-            originalInit.apply(this, arguments);
-            
-            // After init, apply fonts to all elements
-            setTimeout(() => {
-                forceApplyFontToAllObsElements();
-            }, 200);
-        };
         
         // Also call at key points in the app lifecycle
         document.addEventListener('visibilitychange', function() {
@@ -3334,8 +4211,177 @@
             // Also directly force apply fonts to OBS elements
             setTimeout(() => {
                 forceApplyFontToAllObsElements();
+                
+                // Additional check to ensure OBS container stays hidden in admin mode
+                const obsDisplayContainer = document.getElementById('obs-display-container');
+                if (obsDisplayContainer && !isDisplayMode) {
+                    obsDisplayContainer.style.display = 'none';
+                }
             }, 100);
         };
+
+        /**
+         * Updates the OBS display with active giveaway information
+         * @param {Object} activeGiveaway - The current active giveaway
+         */
+        function updateOBSDisplay(activeGiveaway) {
+            try {
+                console.log("Updating OBS display with active giveaway:", activeGiveaway?.title);
+                
+                // Get OBS elements
+                const obsActiveGiveaway = document.getElementById('obs-active-giveaway');
+                const obsDisplayContainer = document.getElementById('obs-display-container');
+                
+                // If no element to update or no giveaway, return
+                if (!obsActiveGiveaway || !activeGiveaway) {
+                    console.log("Missing OBS display elements or no active giveaway");
+                    return;
+                }
+                
+                // Get styling
+                const styles = giveawayState.settings.styling;
+                
+                // Ensure the container is properly styled - BUT ONLY IN DISPLAY MODE
+                // This is critical to prevent the yellow circle showing in admin mode
+                if (obsDisplayContainer) {
+                    if (isDisplayMode) {
+                        obsDisplayContainer.style.display = 'flex';
+                        obsDisplayContainer.style.justifyContent = 'center';
+                        obsDisplayContainer.style.alignItems = 'center';
+                        obsDisplayContainer.style.width = '100%';
+                        obsDisplayContainer.style.height = '100vh';
+                    } else {
+                        // In admin mode, ensure it stays hidden
+                        obsDisplayContainer.style.display = 'none';
+                    }
+                }
+                
+                // Format the giveaway display for OBS
+                obsActiveGiveaway.innerHTML = `
+                    <div class="giveaway-main-bg" style="background-color: rgba(${hexToRgb(styles.titleBgColor)}, ${styles.titleBgOpacity}); border-radius: ${Math.round(styles.cornerRadius * 0.8)}px; margin-bottom: 6px;">
+                        <div class="giveaway-main" style="padding: 10px; font-family: ${styles.fontFamily}; font-size: ${styles.titleSize}px; color: ${styles.headerTextColor};">
+                            ${sanitizeInput(activeGiveaway.title)}
+                        </div>
+                    </div>
+                    <div class="giveaway-bar" style="width: 100%; justify-content: center; gap: 12px; margin-bottom: 6px;">
+                        <span style="background-color: rgba(${hexToRgb(styles.entriesBgColor)}, ${styles.entriesBgOpacity}); color: ${styles.entriesTextColor}; font-size: ${styles.entryTextSize}px; border-radius: ${Math.round(styles.cornerRadius * 0.6)}px; font-family: ${styles.fontFamily}; margin: 2px;">
+                            ${sanitizeInput(activeGiveaway.prize)}
+                        </span>
+                        <span style="background-color: rgba(${hexToRgb(styles.entriesBgColor)}, ${styles.entriesBgOpacity}); color: ${styles.entriesTextColor}; font-size: ${styles.entryTextSize}px; border-radius: ${Math.round(styles.cornerRadius * 0.6)}px; font-family: ${styles.fontFamily}; margin: 2px;">
+                            Entries: ${Object.keys(activeGiveaway.entrants || {}).length}
+                        </span>
+                    </div>
+                    <div class="giveaway-callout" style="margin-top: 3px;">
+                        <div class="giveaway-callout-text" style="font-size: ${styles.entryTextSize}px; color: ${styles.entriesTextColor}; font-family: ${styles.fontFamily};">
+                            ${activeGiveaway.type === 'keyword' ? 
+                                `Type ${sanitizeInput(activeGiveaway.keyword)} in chat to enter!` : 
+                                'Chat to enter the giveaway!'}
+                        </div>
+                    </div>
+                `;
+                
+                // Apply the background color to the main giveaway container
+                obsActiveGiveaway.style.backgroundColor = `rgba(${hexToRgb(styles.headerBgColor)}, ${styles.headerBgOpacity})`;
+                obsActiveGiveaway.style.color = styles.headerTextColor;
+                obsActiveGiveaway.style.fontFamily = styles.fontFamily;
+                obsActiveGiveaway.style.borderRadius = `${styles.cornerRadius}px`;
+                obsActiveGiveaway.style.padding = '16px';
+                obsActiveGiveaway.style.gap = '10px';
+                obsActiveGiveaway.style.minWidth = '500px'; // Ensure consistent width with preview
+                obsActiveGiveaway.style.width = '500px'; // Fixed width to match preview
+                obsActiveGiveaway.style.display = 'flex';
+                obsActiveGiveaway.style.flexDirection = 'column';
+                obsActiveGiveaway.style.boxSizing = 'border-box';
+                
+                // Make sure it's visible
+                obsActiveGiveaway.style.display = 'flex';
+                
+                // Apply consistent spacing to the bar items
+                setTimeout(() => {
+                    const barItems = obsActiveGiveaway.querySelectorAll('.giveaway-bar > span');
+                    barItems.forEach(item => {
+                        item.style.margin = '2px';
+                    });
+                }, 50);
+                
+                // Update the entrants display
+                updateEntrantsDisplay(activeGiveaway);
+                
+                console.log("OBS display updated successfully");
+            } catch (error) {
+                console.error("Error updating OBS display:", error);
+            }
+        }
+        
+        /**
+         * Helper function to set up contextual help tooltips
+         */
+        function setupHelpTooltips() {
+            const helpItems = document.querySelectorAll('.help-icon');
+            helpItems.forEach(item => {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = item.getAttribute('data-help') || 'Help information';
+                item.appendChild(tooltip);
+                
+                item.addEventListener('mouseenter', () => {
+                    tooltip.style.opacity = '1';
+                });
+                
+                item.addEventListener('mouseleave', () => {
+                    tooltip.style.opacity = '0';
+                });
+            });
+        }
+
+        // New utility function to show notifications
+        function showNotification(message, type = 'info', isPersistent = false) {
+            const notificationContainer = document.getElementById('notification-container');
+            
+            // Create notification container if it doesn't exist
+            if (!notificationContainer) {
+                const container = document.createElement('div');
+                container.id = 'notification-container';
+                container.style.position = 'fixed';
+                container.style.top = '10px';
+                container.style.right = '10px';
+                container.style.zIndex = '9999';
+                document.body.appendChild(container);
+            }
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = message;
+            notification.style.backgroundColor = type === 'error' ? '#e56942' : type === 'success' ? '#35b045' : '#4265e5';
+            notification.style.color = 'white';
+            notification.style.padding = '10px';
+            notification.style.margin = '5px 0';
+            notification.style.borderRadius = '4px';
+            notification.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+            
+            // Add to container
+            document.getElementById('notification-container').appendChild(notification);
+            
+            // Remove after timeout unless persistent
+            if (!isPersistent) {
+                setTimeout(() => {
+                    notification.remove();
+                }, 5000);
+            } else {
+                // Add close button for persistent notifications
+                const closeButton = document.createElement('button');
+                closeButton.innerHTML = '×';
+                closeButton.style.marginLeft = '10px';
+                closeButton.style.background = 'none';
+                closeButton.style.border = 'none';
+                closeButton.style.color = 'white';
+                closeButton.style.cursor = 'pointer';
+                closeButton.style.fontSize = '16px';
+                closeButton.onclick = () => notification.remove();
+                notification.appendChild(closeButton);
+            }
+        }
     </script>
 </body>
 </html> 
