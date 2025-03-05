@@ -183,6 +183,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - substack
 - online.church (no pop out)
 - fansly - pop out chat
+- nextcloud (requires domain added)
 
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   
