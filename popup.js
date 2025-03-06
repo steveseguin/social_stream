@@ -1939,6 +1939,8 @@ function update(response, sync=true){
 										document.getElementById("deepseekmodel").classList.add("hidden");
 										document.getElementById("customAIEndpoint").classList.add("hidden");
 										document.getElementById("customAIModel").classList.add("hidden");
+										document.getElementById("openrouterApiKey").classList.add("hidden");
+										document.getElementById("openroutermodel").classList.add("hidden");
 										
 										// Then show only the relevant ones based on selected provider
 										if (ele.value == "ollama"){
@@ -1965,7 +1967,11 @@ function update(response, sync=true){
 										} else if (ele.value == "custom"){
 											document.getElementById("customAIEndpoint").classList.remove("hidden");
 											document.getElementById("customAIModel").classList.remove("hidden");
+										} else if (ele.value == "openrouter"){
+											document.getElementById("openrouterApiKey").classList.remove("hidden");
+											document.getElementById("openroutermodel").classList.remove("hidden");
 										}
+										
 									} else if (key == "ttsProvider") {
 										document.getElementById('systemTTS').classList.add('hidden');
 										document.getElementById('elevenlabsTTS').classList.add('hidden');
@@ -2904,12 +2910,13 @@ function handleOptionSetting(ele, sync) {
     // Handle AI Provider settings
     if (settingValue === "aiProvider") {
         // Hide all AI provider-specific elements
-        const aiProviderElements = [
-            'bedrockAccessKey', 'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel',
-            'chatgptApiKey', 'geminiApiKey', 'geminimodel', 'xaiApiKey', 'xaimodel',
-            'chatgptmodel', 'deepseekApiKey', 'deepseekmodel', 'customAIEndpoint',
-            'customAIModel', 'ollamamodel', 'ollamaendpoint', 'ollamaKeepAlive'
-        ];
+		const aiProviderElements = [
+			'bedrockAccessKey', 'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel',
+			'chatgptApiKey', 'geminiApiKey', 'geminimodel', 'xaiApiKey', 'xaimodel',
+			'chatgptmodel', 'deepseekApiKey', 'deepseekmodel', 'customAIEndpoint',
+			'customAIModel', 'ollamamodel', 'ollamaendpoint', 'ollamaKeepAlive',
+			'openrouterApiKey', 'openroutermodel'
+		];
         
         aiProviderElements.forEach(id => {
             document.getElementById(id).classList.add("hidden");
@@ -2944,6 +2951,10 @@ function handleOptionSetting(ele, sync) {
                 document.getElementById('bedrockRegion').classList.remove('hidden');
                 document.getElementById('bedrockmodel').classList.remove('hidden');
                 break;
+			case 'openrouter':
+				document.getElementById("openrouterApiKey").classList.remove("hidden");
+				document.getElementById("openroutermodel").classList.remove("hidden");
+				break;
             case 'custom':
                 document.getElementById("customAIEndpoint").classList.remove("hidden");
                 document.getElementById("customAIModel").classList.remove("hidden");

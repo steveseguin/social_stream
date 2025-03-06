@@ -325,6 +325,12 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			const region = settings.bedrockRegion?.textsetting || "us-east-1";
 			callback = null; // TODO: Implement streaming for Bedrock if desired
 			break;
+		case "openrouter":
+			endpoint = "https://openrouter.ai/api/v1/chat/completions";
+			model = model || settings.openroutermodel?.textsetting || "openai/gpt-4o";
+			apiKey = settings.openrouterApiKey?.textsetting;
+			callback = null;
+			break;
 		case "custom":
 			endpoint = settings.customAIEndpoint?.textsetting || "http://localhost:11434";
 			if (!endpoint.includes("/v1") || !endpoint.includes("/completions")){ // going to assume you already ended the completions URL

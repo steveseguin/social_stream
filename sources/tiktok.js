@@ -677,6 +677,8 @@
         if (ele.querySelector("[class*='DivTopGiverContainer']")) {
             return;
         }
+		
+		updateLastInputTime();
 
         var membership = "";
         var chatbadges = "";
@@ -1123,9 +1125,9 @@
         });
     } catch (e) {}
 
-	let pokeTimeout = 59;
+	let pokeTimeout = 27;
 	if (window.electronApi){
-		pokeTimeout = 10;
+		pokeTimeout = 10; // we can be more annoying in this case.
 	}
     var pokeMe = setInterval(function() {
         try {
@@ -1172,7 +1174,7 @@
                                 }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 
                                 });
-                            }, 1000 * 60 * 57);
+                            }, 1000 * 60 * pokeTimeout);
                         } else if (document.querySelector("[contenteditable][placeholder]")) {
 
                             document.querySelector("[contenteditable][placeholder]").focus();
@@ -1189,7 +1191,7 @@
                                 }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 
                                 });
-                            }, 1000 * 60 * 57);
+                            }, 1000 * 60 * pokeTimeout);
                         } else {
                             sendResponse(false);
                         }
@@ -1289,6 +1291,36 @@
 
 	// Usage
 	StreamState.init();
+	
+	
+	let lastUserInputTime = Date.now();
+
+	// Function to update the last input time
+	function updateLastInputTime() {
+	  lastUserInputTime = Date.now();
+	}
+
+	
+	// Function to check for inactivity and click the element if needed
+	function checkInactivityAndClick() {
+	  const currentTime = Date.now();
+	  const timeElapsed = currentTime - lastUserInputTime;
+	  
+	  if (timeElapsed >= 10000) { // 10 seconds in milliseconds
+		const unreadTipsElement = document.querySelector("[class*='DivUnreadTipsContent']");
+		if (unreadTipsElement) {
+		  unreadTipsElement.click();
+		  // Reset the timer after clicking
+		  lastUserInputTime = currentTime;
+		}
+	  }
+	}
+
+	// Add event listener for mouse wheel
+	window.addEventListener('wheel', updateLastInputTime);
+
+	// Set up interval to check for inactivity (checks every second)
+	setInterval(checkInactivityAndClick, 5000);
 
 })();
 
