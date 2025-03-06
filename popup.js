@@ -2894,6 +2894,8 @@ function handleSpecialSettings(ele, sync) {
 
 function handleOptionSetting(ele, sync) {
     if (!ele.dataset.optionsetting && !ele.dataset.optionsetting10) return false;
+	
+	console.log(ele);
     
     const settingType = ele.dataset.optionsetting ? 'optionsetting' : 'optionsetting10';
     const settingValue = ele.dataset[settingType];
@@ -2964,6 +2966,10 @@ function handleOptionSetting(ele, sync) {
     
     // Handle TTS Provider settings
     if (settingValue === "ttsProvider") {
+		
+		console.log("settingValue: "+settingValue);
+		console.log("ele.value: "+ele.value);
+		
         const suffix = settingType === 'optionsetting10' ? '10' : '';
         const ttsProviderElements = [
             `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, 
@@ -3094,12 +3100,13 @@ function updateSettings(ele, sync = true, value = null) {
     if (ele.target) {
         ele = this;
     }
+	
     
     const target = ele.dataset.target || null;
-    
+	
     // Handle custom gif commands
     if (handleCustomGifCommand(ele, sync)) return;
-    
+	
     // Handle poll settings
     if (handlePollSettings(ele, sync)) return;
     
@@ -3121,6 +3128,7 @@ function updateSettings(ele, sync = true, value = null) {
     for (const { type, target } of paramTargets) {
         if (handleElementParam(ele, target, type, sync, value)) {
             refreshLinks();
+			console.warn(".");
             return;
         }
     }
@@ -3149,7 +3157,7 @@ function updateSettings(ele, sync = true, value = null) {
     for (const { type, target } of optionParamTargets) {
         if (handleOptionParam(ele, target, type, sync)) {
             refreshLinks();
-            return;
+            //return;
         }
     }
     
