@@ -7960,21 +7960,42 @@
 				let flagCounter = 0;
 				let flags = [];
 				
+				// First handle flag emoji sequences
 				text = text.replace(/(\uD83C[\uDDE6-\uDDFF]){2}/g, (match) => {
 					flags.push(match);
 					return `###FLAG${flagCounter++}###`;
 				});
 				
-				text = text.replace(
-					/([\u2011-\u26FF]|[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDD10-\uDDFF])/g,
-					"<span class='emoji'>$1</span>"
+				// Regex for detecting emoji sequences
+				// This pattern includes emoji with variation selectors (FE0F) and keycap sequences
+				const emojiPattern = new RegExp(
+					// Keycap sequences (digit/symbol + FE0F + 20E3)
+					'(?:[0-9#*]\\uFE0F?\\u20E3)|' +
+					
+					// Basic emoji
+					'(?:[\\u2011-\\u26FF]|[\\u2700-\\u27BF]|[\\uE000-\\uF8FF]|\\uD83C[\\uDC00-\\uDFFF]|\\uD83D[\\uDC00-\\uDFFF]|\\uD83E[\\uDD10-\\uDDFF])' +
+					// Optional variation selector
+					'(?:\\uFE0F)?' +
+					// Optional skin tone modifier
+					'(?:\\uD83C[\\uDFFB-\\uDFFF])?' +
+					// Optional zero width joiner sequences (for compound emoji)
+					'(?:\\u200D(?:[\\u2011-\\u26FF]|[\\u2700-\\u27BF]|[\\uE000-\\uF8FF]|\\uD83C[\\uDC00-\\uDFFF]|\\uD83D[\\uDC00-\\uDFFF]|\\uD83E[\\uDD10-\\uDDFF])' +
+					'(?:\\uFE0F)?' +
+					'(?:\\uD83C[\\uDFFB-\\uDFFF])?)*',
+					'g'
 				);
+				
+				// Replace all emoji with spans
+				text = text.replace(emojiPattern, "<span class='emoji'>$&</span>");
+				
+				// Replace flag placeholders
 				flags.forEach((flag, index) => {
 					text = text.replace(
 						`###FLAG${index}###`,
 						`<span class='emoji'>${flag}</span>`
 					);
 				});
+				
 				return text;
 			}
 

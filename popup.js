@@ -2894,8 +2894,6 @@ function handleSpecialSettings(ele, sync) {
 
 function handleOptionSetting(ele, sync) {
     if (!ele.dataset.optionsetting && !ele.dataset.optionsetting10) return false;
-	
-	console.log(ele);
     
     const settingType = ele.dataset.optionsetting ? 'optionsetting' : 'optionsetting10';
     const settingValue = ele.dataset[settingType];
@@ -2966,9 +2964,6 @@ function handleOptionSetting(ele, sync) {
     
     // Handle TTS Provider settings
     if (settingValue === "ttsProvider") {
-		
-		console.log("settingValue: "+settingValue);
-		console.log("ele.value: "+ele.value);
 		
         const suffix = settingType === 'optionsetting10' ? '10' : '';
         const ttsProviderElements = [
@@ -3128,7 +3123,6 @@ function updateSettings(ele, sync = true, value = null) {
     for (const { type, target } of paramTargets) {
         if (handleElementParam(ele, target, type, sync, value)) {
             refreshLinks();
-			console.warn(".");
             return;
         }
     }
@@ -3731,7 +3725,8 @@ const TTSManager = {
 			if (ssapp){
 				try {
 					// Get WAV buffer directly from main process
-					const wavBuffer = await ipcRenderer.invoke("tts", {text, settings});
+					
+					const wavBuffer = await ipcRenderer.invoke("tts", {text, settings: (settings?.kokoro || {} )});
 					
 					// Create blob from buffer
 					const audioBlob = new Blob([wavBuffer], { type: "audio/wav" });
@@ -3770,7 +3765,7 @@ const TTSManager = {
 			
 			const stream = kokoroTtsInstance.stream(streamer, { 
 				voice: settings.kokoro.voice || "af_aoede",
-				speed: settings.kokoro.speed || 1.0,
+				speed: settings.kokoro.rate || 1.0,
 				streamAudio: false 
 			});
 
@@ -3941,11 +3936,7 @@ var TextSplitterStream = null;
 var KokoroTTS = false;
 var kokoroDownloadInProgress  = null;
 var kokoroTtsInstance = null;
-var kokoroSettings = {
-	rate: 1.0,
-	voiceName: false,
-	model: "kokoro-82M-v1.0"
-};
+
 async function initKokoro() {
 	if (ssapp) return false;
 	if (kokoroDownloadInProgress) return false;
