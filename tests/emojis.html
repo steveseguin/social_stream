@@ -6,8 +6,25 @@
 	<title>Social Stream - Dashboard</title>
 	<meta name="title" content="Social Stream - Test" />
 	<link rel="icon" href="./favicon.ico" />
-	<link href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
+	<link href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
 	<meta name="robots" content="noindex">
+	<style>
+		@font-face {
+			font-family: NotoColorEmojiLimited;
+			unicode-range: U+1F1E6-1F1FF;
+			src: url(./thirdparty/NotoColorEmoji.ttf);
+			font-display: swap;
+		}
+		 .test-container { font-family: Arial, sans-serif; margin: 20px; }
+		.test-case { margin-bottom: 20px; border: 1px solid #eee; padding: 15px; border-radius: 5px; }
+		.test-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+		.test-result { font-weight: bold; }
+		.passed { color: green; }
+		.failed { color: red; }
+		.emoji { display: inline-block; font-size: 1.5em; }
+		.test-row { margin: 5px 0; }
+		.raw, .wrapped { padding: 10px; background: #f9f9f9; border-radius: 4px; margin-top: 5px; }
+	</style>
 </head>
 <body>
 <script>
@@ -151,17 +168,6 @@ function testEmojiWrapping() {
   const displayResults = () => {
     const container = document.createElement('div');
     container.innerHTML = `
-      <style>
-        .test-container { font-family: Arial, sans-serif; margin: 20px; }
-        .test-case { margin-bottom: 20px; border: 1px solid #eee; padding: 15px; border-radius: 5px; }
-        .test-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .test-result { font-weight: bold; }
-        .passed { color: green; }
-        .failed { color: red; }
-        .emoji { display: inline-block; font-size: 1.5em; }
-        .test-row { margin: 5px 0; }
-        .raw, .wrapped { padding: 10px; background: #f9f9f9; border-radius: 4px; margin-top: 5px; }
-      </style>
       <div class="test-container">
         <h2>Emoji Wrapping Visual Test Results</h2>
         ${results.map(r => `
