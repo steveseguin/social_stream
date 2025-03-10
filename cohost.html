@@ -2427,12 +2427,27 @@ systemPrompt.value = defaultPrompts.gemini;
 
 // Save to localStorage if available
 if (localStorage) {
+	
+	if (localStorage.getItem('selectedProvider')) {
+		providerSelect.value = localStorage.getItem('selectedProvider');
+		
+		// Update the API key placeholder and info based on the selected provider
+		const apiKeyInfo = document.querySelector('.api-key-info');
+		if (providerSelect.value === 'chatgpt') {
+			apiKeyInput.placeholder = 'Enter ChatGPT API Key';
+			apiKeyInfo.innerHTML = 'Get your ChatGPT API key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI</a>';
+		} else {
+			apiKeyInput.placeholder = 'Enter Gemini API Key';
+			apiKeyInfo.innerHTML = 'Get your free Gemini API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>';
+		}
+	}
+	
     const savedPrompts = localStorage.getItem('systemPrompts');
     if (savedPrompts) {
         const prompts = JSON.parse(savedPrompts);
         Object.assign(defaultPrompts, prompts);
-        systemPrompt.value = defaultPrompts[providerSelect.value];
     }
+    systemPrompt.value = defaultPrompts[providerSelect.value];
 }
 
 systemPrompt.addEventListener('change', function() {
@@ -2445,6 +2460,9 @@ systemPrompt.addEventListener('change', function() {
 providerSelect.addEventListener('change', function() {
     const apiKeyInfo = document.querySelector('.api-key-info');
     systemPrompt.value = defaultPrompts[this.value];
+    
+    // Save the selected provider to localStorage
+    localStorage.setItem('selectedProvider', this.value);
     
     if (this.value === 'chatgpt') {
         apiKeyInput.placeholder = 'Enter ChatGPT API Key';
