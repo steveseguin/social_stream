@@ -1375,20 +1375,28 @@ class GoogleLivePublisher {
         this.imageHeight = 360;
         this.handleMessage = this.handleMessage.bind(this);
         this.audioPlayer = new AudioPlayer();
+        
+        // Connection management
+        this.stopped = false;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+        this.reconnectTimeout = null;
+        this.pingInterval = null;
+        this.lastHeartbeatResponse = Date.now();
     }
 	
-	handleConnectionFailure() {
-		this.stop();
-		const startButton = document.getElementById('startButton');
-		const sendButton = document.getElementById('sendButton');
-		const systemPrompt = document.getElementById('systemPrompt');
-		
-		startButton.textContent = 'Start Stream';
-		startButton.dataset.started = "false";
-		startButton.disabled = false;
-		sendButton.disabled = true;
-		systemPrompt.disabled = false;
-	}
+    handleConnectionFailure() {
+        this.stop();
+        const startButton = document.getElementById('startButton');
+        const sendButton = document.getElementById('sendButton');
+        const systemPrompt = document.getElementById('systemPrompt');
+        
+        startButton.textContent = 'Start Stream';
+        startButton.dataset.started = "false";
+        startButton.disabled = false;
+        sendButton.disabled = true;
+        systemPrompt.disabled = false;
+    }
 
     async handleMessage(event) {
         try {
@@ -1399,8 +1407,13 @@ class GoogleLivePublisher {
             } else {
                 response = JSON.parse(event.data);
             }
+            
+            // Update heartbeat time on any message received
+            this.lastHeartbeatResponse = Date.now();
+            
             if (response.setupComplete) {
                 console.log('Setup complete received');
+                this.reconnectAttempts = 0; // Reset reconnect counter on successful setup
                 this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.");
             }
             if (response.serverContent?.modelTurn?.parts) {
@@ -1436,23 +1449,32 @@ class GoogleLivePublisher {
                     this.audioPlayer.complete();
                 }
             }
-            if (!response.setupComplete && !response.serverContent) {
+            if (response.heartbeat) {
+                console.log('Heartbeat received');
+                // No need to do anything else with heartbeat
+            }
+            if (!response.setupComplete && !response.serverContent && !response.heartbeat) {
                 console.log('Other response type:', response);
             }
         } catch (err) {
             console.error('Error handling message:', err);
         }
     }
+    
     sendPrompt(text) {
         if (!this.isConnected()) {
             console.error('WebSocket not connected, attempting reconnect...');
-            this.connect().then(() => {
+            this.reconnect().then(() => {
                 this._sendPromptInternal(text);
+            }).catch(error => {
+                console.error('Failed to reconnect:', error);
+                showError('Connection lost. Please try restarting the stream.');
             });
             return;
         }
         this._sendPromptInternal(text);
     }
+    
     _sendPromptInternal(text) {
         if (this.isConnected()) {
             const message = {
@@ -1472,94 +1494,224 @@ class GoogleLivePublisher {
             console.error('WebSocket still not ready after reconnect attempt');
         }
     }
+    
     sendMediaChunk(mediaChunks) {
         if (this.ws?.readyState === WebSocket.OPEN) {
             const message = {
                 realtimeInput: {
-                    mediaChunks: mediaChunks.map(chunk => ({
-                        mimeType: chunk.inlineData.mimeType,
-                        data: chunk.inlineData.data
-                    }))
+                    mediaChunks
                 }
             };
             this.ws.send(JSON.stringify(message));
         }
     }
+    
     isConnected() {
         return this.ws && this.ws.readyState === WebSocket.OPEN;
     }
+    
     async connect() {
         const host = 'generativelanguage.googleapis.com';
         const uri = `wss://${host}/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${this.apiKey}`;
+        
         if (this.isConnected()) {
             console.log('Already connected');
             return;
         }
+        
         const responseType = document.getElementById('responseType');
         const voiceSelect = document.getElementById('voiceSelect');
         voiceSelect.style.display = responseType.value === 'audio' ? 'block' : 'none';
+        
+        // Clear any existing reconnect timeouts
+        if (this.reconnectTimeout) {
+            clearTimeout(this.reconnectTimeout);
+            this.reconnectTimeout = null;
+        }
+        
+        // Clear any existing ping intervals
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
+        
+        // Create new WebSocket connection
         this.ws = new WebSocket(uri);
         this.ws.onmessage = this.handleMessage;
-		
-		this.ws.onerror = (error) => {
-			console.error('WebSocket error:', error);
-			const errorMsg = 'Connection error occurred. Please check your API key and try again.';
-			showError(errorMsg);
-			this.handleConnectionFailure();
-		};
-
-		this.ws.onclose = (event) => {
-			console.log('WebSocket closed:', event.code, event.reason);
-			let errorMsg = 'Connection closed.';
-			if (event.code === 1007) {
-				errorMsg = 'Invalid API key. Please check your key and try again.';
-			} else if (event.code === 1006) {
-				errorMsg = 'Connection terminated unexpectedly. Please try again.';
-			}
-			showError(errorMsg);
-			this.handleConnectionFailure();
-		};
-		
-        await new Promise((resolve, reject) => {
-            this.ws.addEventListener('open', resolve, {
-                once: true
-            });
-            this.ws.addEventListener('error', reject, {
-                once: true
-            });
-        });
-		const systemPrompt = document.getElementById('systemPrompt');
-        const setupMessage = {
-            setup: {
-                model: "models/gemini-2.0-flash-exp",
-                systemInstruction: {
-                    parts: [{
-                        text: document.getElementById('systemPrompt').value
-                    }]
-                },
-                generationConfig: {
-                    temperature: 0.9,
-                    topK: 1,
-                    topP: 1,
-                    candidateCount: 1,
-                    responseModalities: responseType.value === 'audio' ? 'AUDIO' : 'TEXT',
-                    ...(responseType.value === 'audio' && {
-                        speechConfig: {
-                            voiceConfig: {
-                                prebuiltVoiceConfig: {
-                                    voiceName: voiceSelect.value
-                                }
-                            }
-                        }
-                    })
-                }
+        
+        this.ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            const errorMsg = 'Connection error occurred. Please check your API key and try again.';
+            showError(errorMsg);
+            
+            if (!this.stopped) {
+                this.attemptReconnect();
+            } else {
+                this.handleConnectionFailure();
             }
         };
-        console.log('Sending setup message:', setupMessage);
-        this.ws.send(JSON.stringify(setupMessage));
+
+        this.ws.onclose = (event) => {
+            console.log('WebSocket closed:', event.code, event.reason);
+            let errorMsg = 'Connection closed.';
+            
+            if (event.code === 1007) {
+                errorMsg = 'Invalid API key. Please check your key and try again.';
+                this.handleConnectionFailure();
+            } else if (event.code === 1006) {
+                errorMsg = 'Connection terminated unexpectedly.';
+                if (!this.stopped) {
+                    this.attemptReconnect();
+                    errorMsg += ' Attempting to reconnect...';
+                }
+            } else if (!this.stopped) {
+                this.attemptReconnect();
+                errorMsg += ' Attempting to reconnect...';
+            }
+            
+            showError(errorMsg);
+            
+            // If stopped or max reconnection attempts reached, handle failure
+            if (this.stopped || this.reconnectAttempts >= this.maxReconnectAttempts) {
+                this.handleConnectionFailure();
+            }
+        };
+        
+        return new Promise((resolve, reject) => {
+            const connectionTimeout = setTimeout(() => {
+                reject(new Error('Connection timeout'));
+            }, 10000);
+            
+            this.ws.addEventListener('open', () => {
+                clearTimeout(connectionTimeout);
+                
+                // Start heartbeat after connection opens
+                this.startHeartbeat();
+                
+                const systemPrompt = document.getElementById('systemPrompt');
+                const setupMessage = {
+                    setup: {
+                        model: "models/gemini-2.0-flash-exp",
+                        systemInstruction: {
+                            parts: [{
+                                text: systemPrompt.value
+                            }]
+                        },
+                        generationConfig: {
+                            temperature: 0.9,
+                            topK: 1,
+                            topP: 1,
+                            candidateCount: 1,
+                            responseModalities: responseType.value === 'audio' ? 'AUDIO' : 'TEXT',
+                            ...(responseType.value === 'audio' && {
+                                speechConfig: {
+                                    voiceConfig: {
+                                        prebuiltVoiceConfig: {
+                                            voiceName: voiceSelect.value
+                                        }
+                                    }
+                                }
+                            })
+                        }
+                    }
+                };
+                console.log('Sending setup message:', setupMessage);
+                this.ws.send(JSON.stringify(setupMessage));
+                resolve();
+            }, { once: true });
+            
+            this.ws.addEventListener('error', () => {
+                clearTimeout(connectionTimeout);
+                reject(new Error('Connection error'));
+            }, { once: true });
+        });
     }
+    
+    startHeartbeat() {
+        // Clear any existing interval
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+        }
+        
+        // Set last heartbeat time to now
+        this.lastHeartbeatResponse = Date.now();
+        
+        // Send heartbeat every 30 seconds
+        this.pingInterval = setInterval(() => {
+            if (this.isConnected()) {
+                // Send heartbeat
+                this.ws.send(JSON.stringify({ heartbeat: true }));
+                
+                // Check if we've received a response recently
+                const elapsed = Date.now() - this.lastHeartbeatResponse;
+                if (elapsed > 60000) { // 60 seconds with no response
+                    console.warn('No heartbeat response for 60 seconds, reconnecting');
+                    this.reconnect();
+                }
+            } else {
+                // Connection is closed, clear interval
+                clearInterval(this.pingInterval);
+                this.pingInterval = null;
+                
+                // Try to reconnect if not stopped
+                if (!this.stopped) {
+                    this.attemptReconnect();
+                }
+            }
+        }, 30000); // Send heartbeat every 30 seconds
+    }
+    
+    attemptReconnect() {
+        // Only attempt reconnect if not already stopped
+        if (this.stopped) return;
+        
+        this.reconnectAttempts++;
+        
+        if (this.reconnectAttempts <= this.maxReconnectAttempts) {
+            const delay = Math.min(30000, Math.pow(2, this.reconnectAttempts) * 1000);
+            console.log(`Attempting to reconnect in ${delay/1000} seconds (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+            
+            this.reconnectTimeout = setTimeout(() => {
+                this.reconnect().catch(error => {
+                    console.error('Reconnection failed:', error);
+                    // The reconnect method will handle further reconnection attempts
+                });
+            }, delay);
+        } else {
+            console.error('Max reconnection attempts reached');
+            this.handleConnectionFailure();
+        }
+    }
+    
+    async reconnect() {
+        // Close existing connection if it exists
+        if (this.ws) {
+            this.ws.close();
+            this.ws = null;
+        }
+        
+        // Clear any existing intervals
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
+        
+        try {
+            await this.connect();
+            console.log('Successfully reconnected');
+            showError('Connection restored!');
+            return true;
+        } catch (error) {
+            console.error('Failed to reconnect:', error);
+            this.attemptReconnect();
+            throw error;
+        }
+    }
+    
     async start() {
         try {
+            this.stopped = false;
+            this.reconnectAttempts = 0;
             await this.connect();
             await this.setupAudioProcessing();
             this.setupVideoProcessing();
@@ -1569,6 +1721,7 @@ class GoogleLivePublisher {
             throw err;
         }
     }
+    
     async setupAudioProcessing() {
         this.audioContext = new AudioContext({
             sampleRate: 16000
@@ -1585,73 +1738,91 @@ class GoogleLivePublisher {
             if (event.data.data?.int16arrayBuffer) {
                 const base64Audio = btoa(String.fromCharCode(...new Uint8Array(event.data.data.int16arrayBuffer)));
                 this.sendMediaChunk([{
-                    mime_type: "audio/pcm;rate=16000",
+                    mimeType: "audio/pcm;rate=16000",
                     data: base64Audio
                 }]);
             }
         };
         source.connect(processor);
     }
+    
     setupVideoProcessing() {
-		const videoTrack = this.stream.getVideoTracks()[0];
-		if (!videoTrack) {
-			console.log('No video track available - skipping video processing');
-			return;
-		}
-		
-		const canvas = document.createElement('canvas');
-		canvas.width = this.imageWidth;
-		canvas.height = this.imageHeight;
-		this.canvasContext = canvas.getContext('2d');
-		
-		const videoElement = document.createElement('video');
-		videoElement.srcObject = new MediaStream([videoTrack]);
-		videoElement.autoplay = true;
-		
-		let animationFrame;
-		const captureFrame = () => {
-			if (this.stopped || !this.canvasContext) {
-				if (animationFrame) {
-					cancelAnimationFrame(animationFrame);
-				}
-				return;
-			}
-			
-			const now = Date.now();
-			if (now - this.lastImageTime >= this.imageInterval) {
-				this.canvasContext.drawImage(videoElement, 0, 0, this.imageWidth, this.imageHeight);
-				const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-				this.sendMediaChunk([{
-					mime_type: "image/jpeg",
-					data: base64Image
-				}]);
-				this.lastImageTime = now;
-			}
-			
-			animationFrame = requestAnimationFrame(captureFrame);
-		};
-		
-		videoElement.addEventListener('loadedmetadata', () => {
-			animationFrame = requestAnimationFrame(captureFrame);
-		});
-	}
-    sendMediaChunk(mediaChunks) {
-        if (this.ws?.readyState === WebSocket.OPEN) {
-            const message = {
-                realtimeInput: {
-                    mediaChunks
-                }
-            };
-            this.ws.send(JSON.stringify(message));
+        const videoTrack = this.stream.getVideoTracks()[0];
+        if (!videoTrack) {
+            console.log('No video track available - skipping video processing');
+            return;
         }
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = this.imageWidth;
+        canvas.height = this.imageHeight;
+        this.canvasContext = canvas.getContext('2d');
+        
+        const videoElement = document.createElement('video');
+        videoElement.srcObject = new MediaStream([videoTrack]);
+        videoElement.autoplay = true;
+        
+        let animationFrame;
+        const captureFrame = () => {
+            if (this.stopped || !this.canvasContext) {
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                }
+                return;
+            }
+            
+            const now = Date.now();
+            if (now - this.lastImageTime >= this.imageInterval) {
+                this.canvasContext.drawImage(videoElement, 0, 0, this.imageWidth, this.imageHeight);
+                const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+                this.sendMediaChunk([{
+                    mimeType: "image/jpeg",
+                    data: base64Image
+                }]);
+                this.lastImageTime = now;
+            }
+            
+            animationFrame = requestAnimationFrame(captureFrame);
+        };
+        
+        videoElement.addEventListener('loadedmetadata', () => {
+            animationFrame = requestAnimationFrame(captureFrame);
+        });
     }
+    
     stop() {
         this.stopped = true;
-        this.ws?.close();
-        this.audioContext?.close();
-        this.audioPlayer?.stop();
-        this.ws = null;
-        this.audioContext = null;
+        
+        // Clear any reconnect attempts
+        if (this.reconnectTimeout) {
+            clearTimeout(this.reconnectTimeout);
+            this.reconnectTimeout = null;
+        }
+        
+        // Clear heartbeat interval
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
+        
+        // Close WebSocket
+        if (this.ws) {
+            this.ws.close();
+            this.ws = null;
+        }
+        
+        // Close audio context
+        if (this.audioContext) {
+            this.audioContext.close();
+            this.audioContext = null;
+        }
+        
+        // Stop audio player
+        if (this.audioPlayer) {
+            this.audioPlayer.stop();
+        }
+        
+        // Clean up video processing
         this.videoProcessor = null;
         this.canvasContext = null;
     }
