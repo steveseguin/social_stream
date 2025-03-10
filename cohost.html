@@ -1017,16 +1017,21 @@ class ChatGPTPublisher {
 		systemPrompt.disabled = false;
 	}
 	
-    async connect() {
-        const uri = 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
-        
-        if (this.isConnected()) {
-            console.log('Already connected');
-            return;
-        }
+	async connect() {
+		const uri = 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
+		
+		if (this.isConnected()) {
+			console.log('Already connected');
+			return;
+		}
 
-        this.ws = new WebSocket(uri);
-        this.ws.onmessage = this.handleMessage;
+		// Create headers object with the API key
+		const headers = {
+			'Authorization': `Bearer ${this.apiKey}`
+		};
+
+		this.ws = new WebSocket(uri, [], { headers });
+		this.ws.onmessage = this.handleMessage;
 		
 		this.ws.onerror = (error) => {
 			console.error('WebSocket error:', error);
@@ -1047,21 +1052,21 @@ class ChatGPTPublisher {
 			this.handleConnectionFailure();
 		};
 
-        await new Promise((resolve, reject) => {
-            this.ws.addEventListener('open', resolve, { once: true });
-            this.ws.addEventListener('error', reject, { once: true });
-        });
+		await new Promise((resolve, reject) => {
+			this.ws.addEventListener('open', resolve, { once: true });
+			this.ws.addEventListener('error', reject, { once: true });
+		});
 		
 		const systemPrompt = document.getElementById('systemPrompt');
-        const setupMessage = {
-            type: 'session.update',
-            session: {
-                modalities: ['text', 'audio'],
-                instructions: systemPrompt.value
-            }
-        };
-        this.ws.send(JSON.stringify(setupMessage));
-    }
+		const setupMessage = {
+			type: 'session.update',
+			session: {
+				modalities: ['text', 'audio'],
+				instructions: systemPrompt.value
+			}
+		};
+		this.ws.send(JSON.stringify(setupMessage));
+	}
 	
 
     sendPrompt(text) {
