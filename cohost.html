@@ -1025,12 +1025,20 @@ class ChatGPTPublisher {
 			return;
 		}
 
-		// Create headers object with the API key
+		// Create a headers object for the WebSocket
 		const headers = {
 			'Authorization': `Bearer ${this.apiKey}`
 		};
 
-		this.ws = new WebSocket(uri, [], { headers });
+		// For browsers that support it (most modern browsers)
+		try {
+			this.ws = new WebSocket(uri, [], { headers });
+		} catch (e) {
+			// Fallback for browsers without headers support in WebSocket constructor
+			this.ws = new WebSocket(uri);
+			console.warn("Using fallback WebSocket connection method - headers may not be sent properly");
+		}
+		
 		this.ws.onmessage = this.handleMessage;
 		
 		this.ws.onerror = (error) => {
@@ -1067,7 +1075,6 @@ class ChatGPTPublisher {
 		};
 		this.ws.send(JSON.stringify(setupMessage));
 	}
-	
 
     sendPrompt(text) {
         if (!this.isConnected()) {
