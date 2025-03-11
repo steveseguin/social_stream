@@ -940,11 +940,16 @@
 			}
 		} else {
 			// Try main selectors for chat container
-			target = document.querySelector('[class*="DivChatMessageList"], .live-shared-ui-chat-list-scrolling-list');
+			target = document.querySelector('[class*="DivChatMessageList"], .live-shared-ui-chat-list-scrolling-list, [data-e2e="chat-room"], [data-e2e="chat-room"]');
 		}
 		
 		if (!target) {
-			return;
+			target = document.querySelector('[role="heading"][tabindex]');
+			if (target && window.location.href.includes("/live") && target.nodeType==1){
+				// we will see.
+			} else {
+				return;
+			}
 		}
 		
 		if (!window.location.href.includes("livecenter") && 
@@ -1324,4 +1329,4 @@
 
 })();
 
-
+// try reloading the page if no activitiy for a while?
