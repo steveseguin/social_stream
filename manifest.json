@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.12.28",
+  "version": "3.12.29",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -26,6 +26,7 @@
     "https://zap.stream/*",
     "https://www.bigo.tv/*",
 	"https://claude.ai/*",
+	"https://studio.favorited.com/popout/chat",
 	"https://*/*autoreloadwithsocialstream",
 	"https://*.webinargeek.com/webinar/*",
 	"https://www.ilmfix.de/programs/*",
@@ -252,6 +253,10 @@
       "matches": [ "https://riverside.fm/studio/*" ]
     },
     {
+      "js": [ "./sources/favorited.js" ],
+      "matches": [ "https://studio.favorited.com/popout/chat" ]
+    },
+	{
       "js": [ "./sources/pilled.js" ],
       "matches": [ "https://pilled.net/*" ]
     },
