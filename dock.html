@@ -4027,6 +4027,11 @@
 				doNotReadEvents = false;
 			}
 			
+			var neuroSyncEnabled = false;
+			if (urlParams.has("neurosync")) {
+				neuroSyncEnabled = true;
+			}
+			
 			var bottts = false;
 			if (urlParams.has("bottts")) {
 				bottts = true;
@@ -4487,6 +4492,24 @@
 							// Create blob from buffer
 							const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
 							
+							if (neuroSyncEnabled) {
+							  sendToNeuroSync(audioBlob, { 
+								isKokoroAudio: true,
+								onProgress: (progress) => {
+								  console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
+								}
+							  }).then(result => {
+								if (result && result.blendshapes) {
+								  // Do something with the blendshapes
+								  console.log(`Received ${result.blendshapes.length} blendshape frames`);
+								  // You would apply these to your 3D model here
+								}
+							  }).catch(err => {
+								console.error("NeuroSync error:", err);
+							  });
+							  return;
+							}
+							
 							// Play the audio
 							const audioElement = document.createElement("audio");
 							audioElement.src = URL.createObjectURL(audioBlob);
@@ -4529,6 +4552,24 @@
 					for await (const { audio } of stream) {
 						if (!audio) {
 							finishedAudio();
+							return;
+						}
+						
+						// Send to NeuroSync if enabled
+						if (neuroSyncEnabled) {
+							sendToNeuroSync(audio, { 
+							  isKokoroAudio: true,
+							  onProgress: (progress) => {
+								console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
+							  }
+							}).then(result => {
+							  if (result && result.blendshapes) {
+								console.log(`Received ${result.blendshapes.length} blendshape frames`);
+								// You would apply these to your 3D model here
+							  }
+							}).catch(err => {
+							  console.error("NeuroSync error:", err);
+							});
 							return;
 						}
 						
@@ -4585,6 +4626,19 @@
 						.then(data => data.blob())
 						.then(async res => {
 							const newBlob = new Blob([res]);
+							
+							// Send to NeuroSync in parallel
+							if (neuroSyncEnabled) {
+							  sendToNeuroSync(newBlob).then(result => {
+								if (result && result.blendshapes) {
+								  console.log(`Received ${result.blendshapes.length} blendshape frames`);
+								}
+							  }).catch(err => {
+								console.error("NeuroSync error:", err);
+							  });
+							  return;
+							}
+							
 							const blobUrl = window.URL.createObjectURL(newBlob);
 							if (!audio) {
 								audio = document.createElement("audio");
@@ -4594,6 +4648,7 @@
 							if (volume) {
 								audio.volume = volume;
 							}
+							
 							try {
 								if (audioContext.state === 'suspended') {
 									await audioContext.resume();
@@ -4651,11 +4706,38 @@
 					fetch(url, otherparam)
 						.then(data => data.json())
 						.then(async res => {
+							
+							
+							
+							// Send to NeuroSync in parallel
+							if (neuroSyncEnabled) {
+							  // Convert base64 to blob
+							  const byteCharacters = atob(res.audioContent);
+							  const byteNumbers = new Array(byteCharacters.length);
+							  for (let i = 0; i < byteCharacters.length; i++) {
+								byteNumbers[i] = byteCharacters.charCodeAt(i);
+							  }
+							  const byteArray = new Uint8Array(byteNumbers);
+							  const audioBlob = new Blob([byteArray], {type: 'audio/mp3'});
+							  
+							  // Send to NeuroSync
+							  sendToNeuroSync(audioBlob).then(result => {
+								if (result && result.blendshapes) {
+								  // Do something with the blendshapes
+								  console.log(`Received ${result.blendshapes.length} blendshape frames`);
+								}
+							  }).catch(err => {
+								console.error("NeuroSync error:", err);
+							  });
+							  return;
+							}
+							
 							if (!audio) {
 								audio = document.createElement("audio");
 								audio.onended = finishedAudio;
 							}
 							audio.src = "data:audio/mp3;base64," + res.audioContent;
+							
 							if (volume) {
 								audio.volume = volume;
 							}
@@ -4742,6 +4824,165 @@
 					finishedAudio();
 					console.error("Error in SpeechifyTTS function:", e);
 				}
+			}
+			
+			async function sendToNeuroSync(input, options = {}) {
+			  // Default options
+			  const apiUrl = options.apiUrl || 'http://127.0.0.1:5000/audio_to_blendshapes';
+			  const targetSampleRate = options.targetSampleRate || 88200;
+			  const onProgress = options.onProgress || (() => {});
+			  const isKokoroAudio = options.isKokoroAudio || false;
+			  
+			  try {
+				// Step 1: Get audio data as ArrayBuffer
+				let audioData;
+				
+				// Special handling for Kokoro TTS audio
+				if (isKokoroAudio && input) {
+				  // Direct handling for Kokoro TTS audio blob
+				  // This could be from const audioBlob = audio.toBlob() or new Blob([wavBuffer], { type: 'audio/wav' })
+				  if (input instanceof Blob) {
+					audioData = await getArrayBufferFromBlob(input);
+				  } else if (input.toBlob && typeof input.toBlob === 'function') {
+					// For Kokoro audio objects with toBlob method
+					const audioBlob = input.toBlob();
+					audioData = await getArrayBufferFromBlob(audioBlob);
+				  } else if (input instanceof ArrayBuffer || input instanceof Uint8Array) {
+					// For wavBuffer from electron or raw audio data
+					audioData = input instanceof ArrayBuffer ? input : input.buffer;
+				  } else {
+					throw new Error('Unsupported Kokoro audio format');
+				  }
+				}
+				else if (input instanceof HTMLAudioElement) {
+				  // Handle audio element
+				  const audioSrc = input.src || input.currentSrc;
+				  if (!audioSrc) throw new Error('Audio element has no source');
+				  
+				  const response = await fetch(audioSrc);
+				  const blob = await response.blob();
+				  audioData = await getArrayBufferFromBlob(blob);
+				} 
+				else if (typeof input === 'string') {
+				  // Handle URL string
+				  const response = await fetch(input);
+				  const blob = await response.blob();
+				  audioData = await getArrayBufferFromBlob(blob);
+				}
+				else if (input instanceof Blob || input instanceof File) {
+				  // Handle Blob or File
+				  audioData = await getArrayBufferFromBlob(input);
+				}
+				else if (input instanceof ArrayBuffer) {
+				  // Already an ArrayBuffer
+				  audioData = input;
+				}
+				else {
+				  throw new Error('Unsupported input type');
+				}
+				
+				onProgress(0.5); // 50% - got the data, now process and send
+				
+				// Step 2: Process the audio data
+				const processedData = await processAudioData(audioData, targetSampleRate);
+				
+				onProgress(0.7); // 70% - processed, now sending
+				
+				// Step 3: Send to API
+				const response = await fetch(apiUrl, {
+				  method: 'POST',
+				  headers: {
+					'Content-Type': 'application/octet-stream'
+				  },
+				  body: processedData
+				});
+				
+				if (!response.ok) {
+				  throw new Error(`API error: ${response.status} ${response.statusText}`);
+				}
+				
+				onProgress(1.0); // 100% - done
+				
+				return await response.json();
+			  } catch (error) {
+				console.error('NeuroSync error:', error);
+				throw error;
+			  }
+			  
+			  // Helper: Get ArrayBuffer from Blob
+			  async function getArrayBufferFromBlob(blob) {
+				// For audio files, we need to decode them properly
+				return new Promise((resolve, reject) => {
+				  const reader = new FileReader();
+				  reader.onload = () => resolve(reader.result);
+				  reader.onerror = reject;
+				  reader.readAsArrayBuffer(blob);
+				});
+			  }
+			  
+			  // Helper: Process audio data for the API
+			  async function processAudioData(arrayBuffer, targetSampleRate) {
+				const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+				
+				try {
+				  // Decode the audio
+				  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+				  
+				  // Get raw audio data
+				  const rawData = audioBuffer.getChannelData(0);
+				  
+				  // Resample if needed
+				  const resampledData = 
+					audioBuffer.sampleRate !== targetSampleRate 
+					  ? resampleAudio(rawData, audioBuffer.sampleRate, targetSampleRate)
+					  : rawData;
+				  
+				  // Convert to 16-bit PCM (the format the API expects)
+				  const pcmData = floatTo16BitPCM(resampledData);
+				  
+				  return pcmData.buffer;
+				} finally {
+				  // Close the audio context when done
+				  if (audioContext.state !== 'closed') {
+					await audioContext.close();
+				  }
+				}
+			  }
+			  
+			  // Helper: Resample audio
+			  function resampleAudio(audioData, originalSampleRate, targetSampleRate) {
+				if (originalSampleRate === targetSampleRate) {
+				  return audioData;
+				}
+				
+				const ratio = targetSampleRate / originalSampleRate;
+				const newLength = Math.round(audioData.length * ratio);
+				const result = new Float32Array(newLength);
+				
+				// Linear interpolation resampling
+				for (let i = 0; i < newLength; i++) {
+				  const position = i / ratio;
+				  const lowerIndex = Math.floor(position);
+				  const upperIndex = Math.min(lowerIndex + 1, audioData.length - 1);
+				  const alpha = position - lowerIndex;
+				  
+				  result[i] = audioData[lowerIndex] * (1 - alpha) + audioData[upperIndex] * alpha;
+				}
+				
+				return result;
+			  }
+			  
+			  // Helper: Convert Float32Array to Int16Array
+			  function floatTo16BitPCM(floatData) {
+				const pcmData = new Int16Array(floatData.length);
+				
+				for (let i = 0; i < floatData.length; i++) {
+				  const s = Math.max(-1, Math.min(1, floatData[i]));
+				  pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+				}
+				
+				return pcmData;
+			  }
 			}
 
 			function speechMeta(data, allow = false) {
