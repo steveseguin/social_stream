@@ -6153,9 +6153,17 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
     
     var msg2Save = checkExactDuplicateAlreadyRelayed(data.response, false, false, true);  // this might be more efficient if I do it after, rather than before
     
+	if (settings.s10apikey && settings.s10) {
+		try {
+			handleStageTen(data, metadata);
+		} catch(e){}
+	}
+	
     try {
+		
         const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
         var published = {};
+		
         
         for (const tab of tabs) {
             try {
@@ -6173,8 +6181,8 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 
                 // Handle different site types
                 if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
-                    handleStageTen(tab, data, metadata);
-					
+					// we will handle this on its own.
+					continue;
                 } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
 					let restxt = data.response.length > 500 ? data.response.substring(0, 500) : data.response;
 					await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout);
@@ -6329,7 +6337,7 @@ function messageExistsInTimeWindow(tabId, messageToFind, timeWindowMs = 1000) {
 
 
 // Helper function to handle StageTen
-function handleStageTen(tab, data, metadata) {
+function handleStageTen(data, metadata) {
     if (!data.response) return;
     if (metadata) {
         sendToS10(metadata, true);

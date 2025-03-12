@@ -2316,8 +2316,8 @@
 			<!-- Text-to-speech buttons -->
 			
 			<div class="volume-container">
-			    <input type="range" id="volumeSlider" min="0" max="100" value="100" class="volume-slider" oninput="volume = this.value/100;">
-			    <button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts();" style="background-image: url(./icons/tts_incoming_messages_off.png)" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
+			    <input type="range" id="volumeSlider" min="0" max="100" value="100" class="volume-slider">
+			    <button class="imgButton imgSmallButton" id="tts" data-state="0" style="background-image: url(./icons/tts_incoming_messages_off.png)" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
 			</div>
 
 			<!-- Scroll button -->
@@ -2437,7 +2437,7 @@
 			<button id="filterClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png)" title="🧹 Clear this filter"></button>
 			<button id="filterCloseButton" class="imgButton imgSmallButton" style="background-image: url(./icons/close.png)" title="❌ Close this dialog"></button>
 		</div>
-
+		<script src="tts.js"></script>
 		<script>
 			window.onerror = function backupErr(errorMsg, url = false, lineNumber = false) {
 				console.error(errorMsg);
@@ -2691,6 +2691,11 @@
 			if (urlParams.get("hidefrom") || urlParams.get("exclude")) {
 				hideFrom = (urlParams.get("hidefrom") || urlParams.get("exclude")).toLowerCase().trim().split(",");
 			}
+			
+			var trivialevents = false;
+			if (urlParams.has("trivialevents")) {
+				trivialevents = true;
+			}
 
 			var filterNamesNotMessages = false;
 			if (urlParams.has("namefilter")) {
@@ -2911,7 +2916,12 @@
 			if (urlParams.has("hidesource")) {
 				showsource = false;
 			}
-
+			
+			var passTTS = false;
+			if (urlParams.has("passtts")) {
+				passTTS = true;
+			}
+			
 			if (urlParams.has("border")) {
 				if (urlParams.get("border")) {
 					document.documentElement.style.setProperty("--profile-pic-border", "3px solid " + urlParams.get("border"));
@@ -3790,15 +3800,6 @@
 				setupSocketExtension();
 			}
 
-			function isSafari() {
-				const userAgent = navigator.userAgent;
-				const isChrome = userAgent.indexOf("Chrome") > -1;
-				const isSafari = userAgent.indexOf("Safari") > -1;
-				const vendor = navigator.vendor;
-
-				return isSafari && !isChrome && vendor.indexOf("Apple") > -1;
-			}
-
 			var filterEvents = false;
 			if (urlParams.has("filterevents")) {
 				// &filterevents=joined,otherkeyword
@@ -3812,1299 +3813,6 @@
 			if (urlParams.has("branded")) {
 				customSource = true;
 			}
-			
-			
-			// start of tts
-
-			var speechLang = "en-US";
-			var speech = false;
-			var English = true;
-			var voice = false;
-			var voices = null;
-
-			try {
-				voices = window.speechSynthesis.getVoices();
-				if (!voices.length) {
-					if (isSafari()) {
-						console.warn("Safari doesn't really support automatic TTS");
-					}
-				}
-			} catch (e) {
-				getById("tts").style.display = "none";
-			}
-
-			var voiceGender = false;
-			if (urlParams.has("gender")) {
-				voiceGender = urlParams.get("gender") || "MALE";
-			}
-
-			var audio = false;
-
-			var premiumQueueTTS = [];
-			var premiumQueueActive = false;
-
-			function finishedAudio(e = false) {
-				//console.log("finishedAudio");
-				//console.log(e);
-				premiumQueueActive = false;
-				if (premiumQueueTTS.length) {
-					speak(premiumQueueTTS.shift()); // play next
-				}
-			}
-
-			var GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
-			var ElevenLabsKey = urlParams.get("elevenlabskey") || false;
-			var SpeechifyAPIKey = urlParams.get("speechifykey") || false;
-			var useKokoroTTS = urlParams.has("kokorotts") || urlParams.has("kokoro") || false;
-			var KokoroTTS = false;
-			var TextSplitterStream = null;
-
-			// TTS Provider selection logic
-			var TTSProvider = urlParams.get("ttsprovider") || "system";
-
-			// Determine the provider based on explicit selection or fallback to previous behavior
-			if (TTSProvider !== "system") {
-				// For non-system providers, validate capabilities and requirements
-				if (TTSProvider === "kokoro") {
-					useKokoroTTS = true;
-				} else if (TTSProvider === "elevenlabs" && !ElevenLabsKey) {
-					console.warn("ElevenLabs selected but no API key provided. Falling back to system TTS.");
-					TTSProvider = "system";
-				} else if (TTSProvider === "google" && !GoogleAPIKey) {
-					console.warn("Google Cloud selected but no API key provided. Falling back to system TTS.");
-					TTSProvider = "system";
-				} else if (TTSProvider === "speechify" && !SpeechifyAPIKey) {
-					console.warn("Speechify selected but no API key provided. Falling back to system TTS.");
-					TTSProvider = "system";
-				}
-			} else {
-				// Backwards compatibility - determine provider based on available keys
-				if (useKokoroTTS) {
-					TTSProvider = "kokoro";
-				} else if (GoogleAPIKey) {
-					TTSProvider = "google";
-				} else if (ElevenLabsKey) {
-					TTSProvider = "elevenlabs";
-				} else if (SpeechifyAPIKey) {
-					TTSProvider = "speechify";
-				}
-			}
-
-			// Create audio element for non-system TTS providers
-			if (TTSProvider !== "system") {
-				audio = document.createElement("audio");
-				audio.onended = finishedAudio;
-			}
-			
-			var volume = 1;
-			if (urlParams.has("volume")) {
-				volume = urlParams.get("volume") || 1;
-				volume = parseFloat(volume);
-				document.getElementById('volumeSlider').value = volume*100;
-			}
-			
-			var pitch = 0;
-			if (urlParams.has("pitch")) {
-				pitch = urlParams.get("pitch") || 1;
-				pitch = parseFloat(pitch);
-			}
-
-			var rate = 1;
-			if (urlParams.has("rate")) {
-				rate = urlParams.get("rate") || 1;
-				rate = parseFloat(rate);
-			}
-
-			var voiceLatency = 4; // 0 slowest, but best quality; 4 is fastest, but worst quality
-			if (urlParams.has("latency")) {
-				voiceLatency = urlParams.get("latency") || 0;
-				voiceLatency = parseInt(voiceLatency) || 0;
-			}
-			
-			var googleSettings = {
-				rate: 1,
-				pitch: 0,
-				audioProfile: false,
-				voiceName: false
-			};
-
-			var elevenLabsSettings = {
-				latency: 4,
-				stability: 0.5,
-				similarity: 0.75,
-				style: 0.5,
-				speakerBoost: false,
-				voiceName: false,
-				speakingRate: 1.0,
-				model: "eleven_multilingual_v2"
-			};
-
-			var speechifySettings = {
-				speed: 1.0,
-				model: 'simba-english',
-				voiceName: false
-			};
-			
-			var kokoroDownloadInProgress  = null;
-			var kokoroTtsInstance = null;
-			var kokoroSettings = {
-				rate: false,
-				voiceName: false,
-				model: "kokoro-82M-v1.0"
-			};
-
-			// Kokoro settings
-			kokoroSettings.speed = urlParams.has("korospeed") ? parseFloat(urlParams.get("korospeed")) || 1.0 : rate;
-			kokoroSettings.voiceName = urlParams.get("voicekokoro") || "af_aoede";
-			
-			// Google Cloud settings
-			googleSettings.rate = urlParams.has("googlerate") ? parseFloat(urlParams.get("googlerate")) || 1 : rate;
-			googleSettings.pitch = urlParams.has("googlepitch") ? parseFloat(urlParams.get("googlepitch")) || 0 : 0;
-			googleSettings.audioProfile = urlParams.get("googleaudioprofile") || false;
-			googleSettings.voiceName = urlParams.get("voicegoogle") || false;
-
-			// ElevenLabs settings
-			elevenLabsSettings.latency = urlParams.has("elevenlatency") ? parseInt(urlParams.get("elevenlatency")) || 0 : voiceLatency;
-			elevenLabsSettings.stability = urlParams.has("elevenstability") ? parseFloat(urlParams.get("elevenstability")) || 0.5 : 0.5;
-			elevenLabsSettings.similarity = urlParams.has("elevensimilarity") ? parseFloat(urlParams.get("elevensimilarity")) || 0.75 : 0.75;
-			elevenLabsSettings.style = urlParams.has("elevenstyle") ? parseFloat(urlParams.get("elevenstyle")) || 0.5 : 0.5;
-			elevenLabsSettings.speakingRate = urlParams.has("elevenrate") ? parseFloat(urlParams.get("elevenrate")) || 1.0 : 1.0;
-			elevenLabsSettings.speakerBoost = urlParams.has("elevenspeakerboost");
-			elevenLabsSettings.voiceName = urlParams.get("voice11") || urlParams.get("elevenlabsvoice") || false;
-			elevenLabsSettings.model = urlParams.get("elevenlabsmodel") || "eleven_multilingual_v2";
-
-			// Speechify settings
-			speechifySettings.speed = urlParams.has("speechifyspeed") ? parseFloat(urlParams.get("speechifyspeed")) || 1.0 : rate;
-			speechifySettings.model = urlParams.get("speechifymodel") || 'simba-english';
-			speechifySettings.voiceName = urlParams.get("voicespeechify") || false;
-
-			if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
-				//  tts();
-				getById("tts").dataset.state = 1;
-				getById("tts").classList.remove("hidden");
-
-				getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
-				getById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
-				speech = true;
-				speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || speechLang;
-
-				if (speechLang.split("-")[0].toLowerCase() == "en") {
-					English = true;
-				} else {
-					English = false;
-				}
-			}
-			if (urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln")) {
-				speechLang = urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln");
-				if (speechLang.split("-")[0].toLowerCase() == "en") {
-					English = true;
-				} else {
-					English = false;
-				}
-			}
-
-			if (urlParams.has("simpletts")) {
-				English = false;
-			}
-
-			var passTTS = false;
-			if (urlParams.has("passtts")) {
-				passTTS = true;
-			}
-
-			var trivialevents = false;
-			if (urlParams.has("trivialevents")) {
-				trivialevents = true;
-			}
-
-			var skipTTSMessages = false;
-			if (urlParams.has("skipmessages")) {
-				skipTTSMessages = parseInt(urlParams.get("skipmessages")) || 3;
-			}
-
-			var doNotReadEvents = true;
-			if (urlParams.has("readevents")) {
-				doNotReadEvents = false;
-			}
-			
-			var neuroSyncEnabled = false;
-			if (urlParams.has("neurosync")) {
-				neuroSyncEnabled = true;
-			}
-			
-			var bottts = false;
-			if (urlParams.has("bottts")) {
-				bottts = true;
-			}
-			
-			var modtts = false;
-			if (urlParams.has("modtts")) {
-				modtts = true;
-			}
-			
-			var hosttts = false;
-			if (urlParams.has("hosttts")) {
-				hosttts = true;
-			}
-			
-			var admintts = false;
-			if (urlParams.has("admintts")) {
-				admintts = true;
-			}
-			
-			var viptts = false;
-			if (urlParams.has("viptts")) {
-				viptts = true;
-			}
-			
-			var allowbottss = false;
-			if (urlParams.has("allowbottss")) {
-				allowbottss = true;
-			}
-			
-			var norelfectionstts = false;
-			if (urlParams.has("norelfectionstts")) {
-				norelfectionstts = true;
-			}
-			
-			var allowhosttss = false;
-			if (urlParams.has("allowhosttss")) {
-				allowhosttss = true;
-			}
-			
-			var allowmodtss = false;
-			if (urlParams.has("allowmodtss")) {
-				allowmodtss = true;
-			}
-			
-			var allowadmintss = false;
-			if (urlParams.has("allowadmintss")) {
-				allowadmintss = true;
-			}
-			
-			var allowviptss = false;
-			if (urlParams.has("allowviptss")) {
-				allowviptss = true;
-			}
-
-			var voiceName = false;
-			if (urlParams.has("voice")) {
-				voiceName = urlParams.get("voice") || "google";
-			}
-			
-			var voiceNameGoogle = voiceName;
-			if (urlParams.has("voicegoogle")) {
-				voiceNameGoogle = urlParams.get("voicegoogle");
-			}
-			
-			var voiceNameElevenlabs = voiceName;
-			if (urlParams.has("voice11") || urlParams.has("elevenlabsvoice")) {
-				voiceNameElevenlabs = urlParams.get("voice11") ||  urlParams.get("elevenlabsvoice");;
-			}
-			
-			var voiceNameSpeechify = voiceName;
-			if (urlParams.has("voicespeechify")) {
-				voiceNameSpeechify = urlParams.get("voicespeechify");
-			}
-			
-			var ttsSpeakChatname = true;
-			if (urlParams.has("simpletts2")) {
-				// You don't want to hear the chatname when TTS is enabled. ＞﹏＜
-				ttsSpeakChatname = false;
-				English = false;
-			}
-			
-			var ttscommand = false;
-			if (urlParams.has("ttscommand")) {
-				ttscommand = urlParams.get("ttscommand") || "!say";
-			}
-			
-			var ttscommandmembersonly = false;
-			if (urlParams.has("ttscommandmembersonly")) {
-				ttscommandmembersonly = true;
-			}
-			
-			function replaceURLsWithSubstring(text, replacement = "[Link]") {
-				if (typeof text !== "string") return text;
-				
-				try {
-					const urlPattern = /(?:(?:https?:\/\/)?(?:www\.)?)?(?!-)[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?(?=\s|$)|(?:https?:\/\/)[^\s]+/g;
-					
-					return text.replace(urlPattern, (match) => {
-						// Skip emoticons and similar patterns
-						if (/^[a-zA-Z0-9](?:\.[a-zA-Z0-9]){1,2}$/.test(match) && 
-							match.length <= 5 && 
-							!match.includes('/')) {
-							return match;
-						}
-						
-						// Always replace if it has a protocol or www
-						if (match.startsWith('http') || match.startsWith('www.')) {
-							return replacement;
-						}
-						
-						// Check TLD for bare domains
-						const parts = match.split('.');
-						const potentialTLD = parts[parts.length - 1].split(/[/?#]/)[0];
-						
-						// Replace if it has a valid TLD or contains a path
-						if (match.includes('/') || isValidTLD(potentialTLD)) {
-							return replacement;
-						}
-						
-						return match;
-					});
-				} catch (e) {
-					console.error(e);
-					return text;
-				}
-			}
-			
-			function cleanPunctuation(text) {
-				if (!text) return text;
-				
-				return text
-					.replace(/[.]{2,}/g, '.')
-					.replace(/[?]{2,}/g, '?')
-					.replace(/[!]{2,}/g, '!')
-					.replace(/[,]{2,}/g, ',')
-					.replace(/[:]{2,}/g, ':')
-					.replace(/[;]{2,}/g, ';')
-					.replace(/[-]{2,}/g, '-')
-					.replace(/^[\s.!?,;:-]+$/, '')
-					.trim();
-			}
-
-			function speak(text, allow = false) {
-				if (!speech && !allow) {
-					return;
-				}
-				
-				text = cleanPunctuation(text);
-				
-				if (!text) {
-					return;
-				}
-				
-				if (text.startsWith("!")) {
-					return;
-				} // do not TTS commands.
-
-				if (replaceURLInLink) { 
-					text = replaceURLsWithSubstring(text, "Link");
-				}
-
-				// Use the selected provider
-				switch (TTSProvider) {
-					case "kokoro":
-						if (!premiumQueueActive) {
-							kokoroTTS(text);
-						} else {
-							premiumQueueTTS.push(text);
-						}
-						return;
-					case "google":
-						if (GoogleAPIKey) {
-							if (!premiumQueueActive) {
-								googleTTS(text);
-							} else {
-								premiumQueueTTS.push(text);
-							}
-							return;
-						}
-						break;
-					case "elevenlabs":
-						if (ElevenLabsKey) {
-							if (!premiumQueueActive) {
-								ElevenLabsTTS(text);
-							} else {
-								premiumQueueTTS.push(text);
-							}
-							return;
-						}
-						break;
-					case "speechify":
-						if (SpeechifyAPIKey) {
-							if (!premiumQueueActive) {
-								SpeechifyTTS(text);
-							} else {
-								premiumQueueTTS.push(text);
-							}
-							return;
-						}
-						break;
-				}
-
-				if (!voices && voices === null) {
-					return;
-				}
-				// system tts instead
-				if (!voice) {
-					if (!voices || !voices.length) {
-						if (window.speechSynthesis) {
-							voices = window.speechSynthesis.getVoices();
-						}
-					}
-					if (voices) {
-						voices.forEach(vce => {
-							if (vce.name && voiceName && vce.name.toLowerCase().includes(voiceName.toLowerCase())) {
-								if (vce.lang && vce.lang.toLowerCase() == speechLang.toLowerCase()) {
-									voice = vce;
-								} else if (!voice && vce.lang && vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase()) {
-									voice = vce;
-								}
-							} else if (vce.name && vce.name.includes("Siri")) {
-								// SIRI sucks and breaks a lot, so lets skip if possible.
-								return;
-							} else if (!voice && vce.lang && vce.lang.toLowerCase() == speechLang.toLowerCase()) {
-								voice = vce;
-							} else if (!voice && vce.lang && vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase()) {
-								voice = vce;
-							}
-						});
-					}
-					if (!voice && voices.length) {
-						voice = voices.shift(); // take the first/default voice
-					}
-					if (voice) {
-						//console.log("Voice being used:");
-						//console.log(voice);
-						if (voice.lang && voice.lang.split("-")[0].toLowerCase() != "en") {
-							English = false;
-						}
-					} else {
-						//console.log("No voice found; using lang: "+speechLang);
-					}
-				}
-				if (!SpeechSynthesisUtterance) {
-					return;
-				}
-
-				var speechInput = new SpeechSynthesisUtterance();
-				if (!voice) {
-					speechInput.lang = speechLang;
-				} else {
-					speechInput.voice = voice;
-				}
-				// console.log("volume: "+volume);
-				speechInput.volume = volume;
-				speechInput.rate = rate;
-				speechInput.pitch = pitch;
-				speechInput.text = text;
-
-				if (window.speechSynthesis) {
-					window.speechSynthesis.speak(speechInput);
-					getById("tts").style["background-image"] = "url(./icons/tts_stop.png)";
-					getById("tts").title = "Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech";
-				}
-
-				try {
-					speechInput.addEventListener("end", function (e) {
-						if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
-							getById("tts").style["background-image"] = "url(./icons/tts_stop.png)";
-							getById("tts").title = "Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech";
-						} else if (!speech) {
-							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
-							getById("tts").title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
-						} else {
-							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
-							getById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
-						}
-					});
-				} catch (e) {
-					console.error(e);
-				}
-			}
-			
-			function clearTTS() {
-				// clear but don't stop tss
-				if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
-					window.speechSynthesis.cancel();
-				} else if (premiumQueueActive) {
-					premiumQueueTTS = [];
-					try {
-						if (audio) {
-							audio.pause();
-						}
-					} catch (e) {}
-				}
-			}
-			function tts() {
-				var ele = getById("tts");
-
-				if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
-					// clear and stop tts
-					speech = false;
-					window.speechSynthesis.cancel();
-				} else if (premiumQueueActive) {
-					speech = false;
-					premiumQueueTTS = [];
-					try {
-						if (audio) {
-							audio.pause();
-						}
-					} catch (e) {}
-					premiumQueueActive = false;
-				} else {
-					speech = !speech;
-				}
-
-				if (speech) {
-					ele.style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
-					ele.title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
-				} else {
-					ele.style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
-					ele.title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
-				}
-			}
-			
-			async function initKokoro() {
-				if (window.electronApi){
-					return;
-				}
-				if (kokoroDownloadInProgress) return false;
-				if (!KokoroTTS) {
-				
-					async function openDB() {
-						return new Promise((resolve, reject) => {
-							const request = indexedDB.open('kokoroTTS', 1);
-							request.onerror = () => reject(request.error);
-							request.onsuccess = () => resolve(request.result);
-							request.onupgradeneeded = (event) => {
-								const db = event.target.result;
-								if (!db.objectStoreNames.contains('models')) {
-									db.createObjectStore('models');
-								}
-							};
-						});
-					}
-
-					async function getCachedModel() {
-						const db = await openDB();
-						return new Promise((resolve, reject) => {
-							const transaction = db.transaction('models', 'readonly');
-							const store = transaction.objectStore('models');
-							const request = store.get('kokoro-82M-v1.0');
-							request.onerror = () => reject(request.error);
-							request.onsuccess = () => resolve(request.result);
-						});
-					}
-
-					async function cacheModel(modelData) {
-						const db = await openDB();
-						return new Promise((resolve, reject) => {
-							const transaction = db.transaction('models', 'readwrite');
-							const store = transaction.objectStore('models');
-							const request = store.put(modelData, 'kokoro-82M-v1.0');
-							request.onerror = () => reject(request.error);
-							request.onsuccess = () => resolve();
-						});
-					}
-				
-					try {
-						kokoroDownloadInProgress = true;
-						console.log("Loading Kokoro dependencies...");
-						const module = window.location.href.startsWith("chrome-extension://") ? await import('./thirdparty/kokoro-bundle.es.ext.js') : await import('./thirdparty/kokoro-bundle.es.js');
-						KokoroTTS = module.KokoroTTS;
-						TextSplitterStream = module.TextSplitterStream;
-						const detectWebGPU = module.detectWebGPU;
-						
-						// Initialize IndexedDB handling
-						const DB_NAME = 'kokoroTTS';
-						const STORE_NAME = 'models';
-						const MODEL_KEY = 'kokoro-82M-v1.0';
-						
-						const device = (await detectWebGPU()) ? "webgpu" : "wasm";
-						console.log("Using device:", device);
-						
-						// Check cache first
-						console.log("Checking cache for model...");
-						let modelData = await getCachedModel();
-						
-						if (!modelData) {
-							console.log("Downloading model...");
-							const modelUrl = 'https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model.onnx';
-							const response = await fetch(modelUrl);
-							const total = +response.headers.get('Content-Length');
-							let loaded = 0;
-							
-							const reader = response.body.getReader();
-							const chunks = [];
-							
-							while (true) {
-								const {done, value} = await reader.read();
-								if (done) break;
-								
-								chunks.push(value);
-								loaded += value.length;
-								
-								const percentage = (loaded / total) * 100;
-								console.log(`Downloading model: ${percentage.toFixed(1)}%`);
-							}
-							
-							const modelBlob = new Blob(chunks);
-							modelData = new Uint8Array(await modelBlob.arrayBuffer());
-							
-							console.log("Caching model...");
-							await cacheModel(modelData);
-						} else {
-							console.log("Loading model from cache");
-						}
-						
-						console.log("Initializing Kokoro TTS...");
-						const customLoadFn = async () => modelData;
-						kokoroTtsInstance = await KokoroTTS.from_pretrained(
-							"onnx-community/Kokoro-82M-v1.0-ONNX",
-							{
-								dtype: "q8", // device === "wasm" ? "q8" : "fp32",
-								device,
-								load_fn: customLoadFn
-							}
-						);
-						
-						console.log("Kokoro TTS ready!");
-						kokoroDownloadInProgress = false;
-						return true;
-					} catch (error) {
-						console.error('Failed to initialize Kokoro:', error);
-						kokoroDownloadInProgress = false;
-						return false;
-					}
-				}
-				return true;
-			}
-			
-			if (useKokoroTTS){
-				try {
-					initKokoro();
-				} catch(e){
-					console.error("Failed to load Kokoro TTS",e);
-				}
-			}
-			
-			async function kokoroTTS(text) {
-			  try {
-				if (window.electronApi) {
-				  try {
-					// Get WAV buffer directly from main process using window.electronApi
-					const wavBuffer = await window.electronApi.tts(text, kokoroSettings);
-					
-					// Create blob from buffer
-					const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
-					
-					if (neuroSyncEnabled) {
-					  sendToNeuroSync(audioBlob, { 
-						isKokoroAudio: true,
-						onProgress: (progress) => {
-						  console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
-						}
-					  }).then(result => {
-						if (result && result.blendshapes) {
-						  // Do something with the blendshapes
-						  console.log(`Received ${result.blendshapes.length} blendshape frames`);
-						  // You would apply these to your 3D model here
-						}
-					  }).catch(err => {
-						console.error("NeuroSync error:", err);
-					  });
-					  return;
-					}
-					
-					// Play the audio
-					const audioElement = document.createElement("audio");
-					audioElement.src = URL.createObjectURL(audioBlob);
-					audioElement.onended = this.finishedAudio;
-					
-					// Set volume if needed
-					//const settings = { volume: 0.8 }; // Replace with your actual settings
-					//if (settings.volume) audioElement.volume = settings.volume;
-					
-					audioElement.play();
-					return;
-				  } catch (error) {
-					console.error("Error playing TTS:", error);
-					throw new Error("Error playing TTS. Try upgrading your app or perhaps your system ins't compatible");
-				  }
-				}
-
-				// Fallback to web implementation if electronApi not available
-				if (!kokoroTtsInstance) {
-				  const initialized = await initKokoro();
-				  if (!initialized) {
-					finishedAudio();
-					return;
-				  }
-				}
-				
-				premiumQueueActive = true;
-				const streamer = new TextSplitterStream();
-				streamer.push(text);
-				streamer.close();
-				
-				const audioElement = document.createElement("audio");
-				audioElement.onended = finishedAudio;
-				
-				const stream = kokoroTtsInstance.stream(streamer, { 
-				  voice: kokoroSettings.voiceName || Object.keys(kokoroTtsInstance.voices)[0],
-				  speed: kokoroSettings.speed,
-				  streamAudio: false 
-				});
-				for await (const { audio } of stream) {
-				  if (!audio) {
-					finishedAudio();
-					return;
-				  }
-				  
-				  // Send to NeuroSync if enabled
-				  if (neuroSyncEnabled) {
-					sendToNeuroSync(audio, { 
-					  isKokoroAudio: true,
-					  onProgress: (progress) => {
-						console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
-					  }
-					}).then(result => {
-					  if (result && result.blendshapes) {
-						console.log(`Received ${result.blendshapes.length} blendshape frames`);
-						// You would apply these to your 3D model here
-					  }
-					}).catch(err => {
-					  console.error("NeuroSync error:", err);
-					});
-					return;
-				  }
-				  
-				  const audioBlob = audio.toBlob();
-				  audioElement.src = URL.createObjectURL(audioBlob);
-				  if (volume) audioElement.volume = volume;
-				  
-				  try {
-					if (audioContext.state === 'suspended') {
-					  await audioContext.resume();
-					}
-					await audioElement.play();
-				  } catch (e) {
-					finishedAudio();
-					console.error(e);
-					errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-				  }
-				}
-			  } catch (e) {
-				console.error("Kokoro TTS error:", e);
-				finishedAudio();
-			  }
-			}
-
-			function ElevenLabsTTS(tts) {
-				try {
-					premiumQueueActive = true;
-					const voiceid = voiceNameElevenlabs  || "VR6AewLTigWG4xSOukaG";
-					const url = "https://api.elevenlabs.io/v1/text-to-speech/" + voiceid + "/stream?optimize_streaming_latency=" + elevenLabsSettings.latency;
-
-					var data = {
-						text: tts,
-						model_id: elevenLabsSettings.model,
-						voice_settings: {
-							stability: elevenLabsSettings.stability,
-							similarity_boost: elevenLabsSettings.similarity,
-							style: elevenLabsSettings.style,
-							use_speaker_boost: elevenLabsSettings.speakerBoost,
-							speaking_rate: elevenLabsSettings.speakingRate
-						}
-					};
-
-					const otherparam = {
-						headers: {
-							"content-type": "application/json",
-							"xi-api-key": ElevenLabsKey,
-							accept: "*/*"
-						},
-						body: JSON.stringify(data),
-						method: "POST"
-					};
-
-					fetch(url, otherparam)
-						.then(data => data.blob())
-						.then(async res => {
-							const newBlob = new Blob([res]);
-							
-							// Send to NeuroSync in parallel
-							if (neuroSyncEnabled) {
-							  sendToNeuroSync(newBlob).then(result => {
-								if (result && result.blendshapes) {
-								  console.log(`Received ${result.blendshapes.length} blendshape frames`);
-								}
-							  }).catch(err => {
-								console.error("NeuroSync error:", err);
-							  });
-							  return;
-							}
-							
-							const blobUrl = window.URL.createObjectURL(newBlob);
-							if (!audio) {
-								audio = document.createElement("audio");
-								audio.onended = finishedAudio;
-							}
-							audio.src = blobUrl;
-							if (volume) {
-								audio.volume = volume;
-							}
-							
-							try {
-								if (audioContext.state === 'suspended') {
-									await audioContext.resume();
-								}
-								audio.play();
-							} catch (e) {
-								finishedAudio();
-								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-							}
-						})
-						.catch(error => {
-							finishedAudio();
-							console.error(error);
-						});
-				} catch (e) {
-					finishedAudio();
-				}
-			}
-
-			function googleTTS(tts) {
-				premiumQueueActive = true;
-
-				try {
-					const url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=" + GoogleAPIKey;
-					var data = {
-						input: {
-							text: tts
-						},
-						voice: {
-							languageCode: speechLang.toLowerCase(),
-							name: googleSettings.voiceName || "en-GB-Standard-A",
-							ssmlGender: voiceGender ? voiceGender.toUpperCase() : "FEMALE"
-						},
-						audioConfig: {
-							audioEncoding: "MP3",
-							speakingRate: googleSettings.rate,
-							pitch: googleSettings.pitch
-						}
-					};
-
-					if (googleSettings.audioProfile) {
-						data.audioConfig.effectsProfileId = [googleSettings.audioProfile];
-					} else {
-						data.audioConfig.effectsProfileId = ['handset-class-device'];
-					}
-
-					const otherparam = {
-						headers: {
-							"content-type": "application/json; charset=UTF-8"
-						},
-						body: JSON.stringify(data),
-						method: "POST"
-					};
-
-					fetch(url, otherparam)
-						.then(data => data.json())
-						.then(async res => {
-							
-							// Send to NeuroSync in parallel
-							if (neuroSyncEnabled) {
-							  // Convert base64 to blob
-							  const byteCharacters = atob(res.audioContent);
-							  const byteNumbers = new Array(byteCharacters.length);
-							  for (let i = 0; i < byteCharacters.length; i++) {
-								byteNumbers[i] = byteCharacters.charCodeAt(i);
-							  }
-							  const byteArray = new Uint8Array(byteNumbers);
-							  const audioBlob = new Blob([byteArray], {type: 'audio/mp3'});
-							  
-							  // Send to NeuroSync
-							  sendToNeuroSync(audioBlob).then(result => {
-								if (result && result.blendshapes) {
-								  // Do something with the blendshapes
-								  console.log(`Received ${result.blendshapes.length} blendshape frames`);
-								}
-							  }).catch(err => {
-								console.error("NeuroSync error:", err);
-							  });
-							  return;
-							}
-							
-							if (!audio) {
-								audio = document.createElement("audio");
-								audio.onended = finishedAudio;
-							}
-							audio.src = "data:audio/mp3;base64," + res.audioContent;
-							
-							if (volume) {
-								audio.volume = volume;
-							}
-							try {
-								if (audioContext.state === 'suspended') {
-									await audioContext.resume();
-								}
-								audio.play();
-							} catch (e) {
-								finishedAudio();
-								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-							}
-						})
-						.catch(error => {
-							finishedAudio();
-							console.error(error);
-						});
-				} catch (e) {
-					finishedAudio();
-				}
-			}
-
-			function SpeechifyTTS(tts) {
-				premiumQueueActive = true;
-				try {
-					const url = "https://api.sws.speechify.com/v1/audio/speech";
-					let model = speechifySettings.model;
-					const data = {
-						input: "<speak>" + tts + "</speak>",
-						voice_id: speechifySettings.voiceName || voiceNameSpeechify || "henry",
-						model: model,
-						audio_format: "mp3",
-						speed: speechifySettings.speed
-					};
-					
-					const otherparam = {
-						method: "POST",
-						headers: {
-							"Authorization": `Bearer ${SpeechifyAPIKey}`,
-							"Content-Type": "application/json"
-						},
-						body: JSON.stringify(data)
-					};
-					
-					fetch(url, otherparam)
-						.then(response => {
-							if (!response.ok) {
-								throw new Error(`HTTP error! status: ${response.status}`);
-							}
-							return response.json();
-						})
-						.then(async json => {
-							if (!json.audio_data) {
-								finishedAudio();
-								throw new Error("No audio data in JSON response");
-							}
-							try {
-								if (!audio) {
-									audio = document.createElement("audio");
-									audio.onended = finishedAudio;
-								}
-								audio.src = "data:audio/mp3;base64," + json.audio_data;
-								if (volume) {
-									audio.volume = volume;
-								}
-								if (audioContext.state === 'suspended') {
-									await audioContext.resume();
-								}
-								audio.play().catch(err => {
-									console.error("Audio play failed, user interaction required", err);
-									finishedAudio();
-								});
-							} catch (e) {
-								console.error(e);
-								finishedAudio();
-								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-							}
-						})
-						.catch(error => {
-							finishedAudio();
-							console.error("Error with Speechify TTS:", error);
-						});
-				} catch (e) {
-					finishedAudio();
-					console.error("Error in SpeechifyTTS function:", e);
-				}
-			}
-			
-			async function sendToNeuroSync(input, options = {}) {
-			  // Default options
-			  const apiUrl = options.apiUrl || 'http://127.0.0.1:5000/audio_to_blendshapes';
-			  const targetSampleRate = options.targetSampleRate || 88200;
-			  const onProgress = options.onProgress || (() => {});
-			  const isKokoroAudio = options.isKokoroAudio || false;
-			  
-			  try {
-				// Step 1: Get audio data as ArrayBuffer
-				let audioData;
-				
-				// Special handling for Kokoro TTS audio
-				if (isKokoroAudio && input) {
-				  // Direct handling for Kokoro TTS audio blob
-				  // This could be from const audioBlob = audio.toBlob() or new Blob([wavBuffer], { type: 'audio/wav' })
-				  if (input instanceof Blob) {
-					audioData = await getArrayBufferFromBlob(input);
-				  } else if (input.toBlob && typeof input.toBlob === 'function') {
-					// For Kokoro audio objects with toBlob method
-					const audioBlob = input.toBlob();
-					audioData = await getArrayBufferFromBlob(audioBlob);
-				  } else if (input instanceof ArrayBuffer || input instanceof Uint8Array) {
-					// For wavBuffer from electron or raw audio data
-					audioData = input instanceof ArrayBuffer ? input : input.buffer;
-				  } else {
-					throw new Error('Unsupported Kokoro audio format');
-				  }
-				}
-				else if (input instanceof HTMLAudioElement) {
-				  // Handle audio element
-				  const audioSrc = input.src || input.currentSrc;
-				  if (!audioSrc) throw new Error('Audio element has no source');
-				  
-				  const response = await fetch(audioSrc);
-				  const blob = await response.blob();
-				  audioData = await getArrayBufferFromBlob(blob);
-				} 
-				else if (typeof input === 'string') {
-				  // Handle URL string
-				  const response = await fetch(input);
-				  const blob = await response.blob();
-				  audioData = await getArrayBufferFromBlob(blob);
-				}
-				else if (input instanceof Blob || input instanceof File) {
-				  // Handle Blob or File
-				  audioData = await getArrayBufferFromBlob(input);
-				}
-				else if (input instanceof ArrayBuffer) {
-				  // Already an ArrayBuffer
-				  audioData = input;
-				}
-				else {
-				  throw new Error('Unsupported input type');
-				}
-				
-				onProgress(0.5); // 50% - got the data, now process and send
-				
-				// Step 2: Process the audio data
-				const processedData = await processAudioData(audioData, targetSampleRate);
-				
-				onProgress(0.7); // 70% - processed, now sending
-				
-				// Step 3: Send to API
-				const response = await fetch(apiUrl, {
-				  method: 'POST',
-				  headers: {
-					'Content-Type': 'application/octet-stream'
-				  },
-				  body: processedData
-				});
-				
-				if (!response.ok) {
-				  throw new Error(`API error: ${response.status} ${response.statusText}`);
-				}
-				
-				onProgress(1.0); // 100% - done
-				
-				return await response.json();
-			  } catch (error) {
-				console.error('NeuroSync error:', error);
-				throw error;
-			  }
-			  
-			  // Helper: Get ArrayBuffer from Blob
-			  async function getArrayBufferFromBlob(blob) {
-				// For audio files, we need to decode them properly
-				return new Promise((resolve, reject) => {
-				  const reader = new FileReader();
-				  reader.onload = () => resolve(reader.result);
-				  reader.onerror = reject;
-				  reader.readAsArrayBuffer(blob);
-				});
-			  }
-			  
-			  // Helper: Process audio data for the API
-			  async function processAudioData(arrayBuffer, targetSampleRate) {
-				const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-				
-				try {
-				  // Decode the audio
-				  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-				  
-				  // Get raw audio data
-				  const rawData = audioBuffer.getChannelData(0);
-				  
-				  // Resample if needed
-				  const resampledData = 
-					audioBuffer.sampleRate !== targetSampleRate 
-					  ? resampleAudio(rawData, audioBuffer.sampleRate, targetSampleRate)
-					  : rawData;
-				  
-				  // Convert to 16-bit PCM (the format the API expects)
-				  const pcmData = floatTo16BitPCM(resampledData);
-				  
-				  return pcmData.buffer;
-				} finally {
-				  // Close the audio context when done
-				  if (audioContext.state !== 'closed') {
-					await audioContext.close();
-				  }
-				}
-			  }
-			  
-			  // Helper: Resample audio
-			  function resampleAudio(audioData, originalSampleRate, targetSampleRate) {
-				if (originalSampleRate === targetSampleRate) {
-				  return audioData;
-				}
-				
-				const ratio = targetSampleRate / originalSampleRate;
-				const newLength = Math.round(audioData.length * ratio);
-				const result = new Float32Array(newLength);
-				
-				// Linear interpolation resampling
-				for (let i = 0; i < newLength; i++) {
-				  const position = i / ratio;
-				  const lowerIndex = Math.floor(position);
-				  const upperIndex = Math.min(lowerIndex + 1, audioData.length - 1);
-				  const alpha = position - lowerIndex;
-				  
-				  result[i] = audioData[lowerIndex] * (1 - alpha) + audioData[upperIndex] * alpha;
-				}
-				
-				return result;
-			  }
-			  
-			  // Helper: Convert Float32Array to Int16Array
-			  function floatTo16BitPCM(floatData) {
-				const pcmData = new Int16Array(floatData.length);
-				
-				for (let i = 0; i < floatData.length; i++) {
-				  const s = Math.max(-1, Math.min(1, floatData[i]));
-				  pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-				}
-				
-				return pcmData;
-			  }
-			}
-
-			function speechMeta(data, allow = false) {
-				if (skipTTSMessages && !data.hasDonation) {
-					if (parseInt(data.id) % skipTTSMessages !== 0) {
-						return;
-					}
-				}
-				
-				if (!data.bot && bottts){return;} // only allow bot messages
-				else if (!data.host && hosttts){return;} 
-				else if (!data.mod && modtts){return;}
-				else if (!data.vip && viptts){return;} 
-				else if (!data.admin && admintts){return;}
-				
-				else if (data.bot && !(allowbottss || bottts)){return;} // do not read out bot messages
-				else if (data.host && !(allowhosttss || hosttts)){return;} 
-				
-				else if (data.reflection && norelfectionstts){return;}
-				
-				else if (ttsSources && !ttsSources.includes(data.type)){return;}
-				
-				
-				//else if (data.mod && !(allowmodtss || modtts)){return;} 
-				//else if (data.vip && !(allowviptss || viptts)){return;} 
-				//else if (data.admin && !(allowadmintss || admintts)){return;} 
-				
-				if (readDonos && !(data.hasDonation || data.donation)){return;}
-
-				if (doNotReadEvents && data.event) {
-					return;
-				}
-				
-				try {
-					var isCommand = false;
-					var msgPlain = document.getElementById("content_" + data.id);
-
-					if (msgPlain) {
-						msgPlain = (msgPlain.textContent || msgPlain.innerText || "") // Remove emojis, underscores, and @ symbols
-							.replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, "")
-							.replace(/_/g, " ")
-							.replace(/@/g, " ")
-							
-						if (ttscommand && msgPlain.includes(ttscommand+" ")){
-							msgPlain = msgPlain.split(ttscommand+" ")[1].trim();
-							allow = true;
-						}
-						
-						msgPlain = msgPlain.replace(/^!/, ""); // check if it starts with '!'
-						msgPlain = msgPlain.replace(/!+/g, " "); // Replace multiple '!' with a single space
-						msgPlain = msgPlain.replace(/catJAM/gi, ""); // Remove 'catJAM' case-insensitively
-						if (beepwords){
-							msgPlain = msgPlain.replace(/\*+/g, ' beep ');
-						} else {
-							msgPlain = msgPlain.replace(/\*/g, '');
-						}
-						msgPlain = msgPlain.trim();
-					}
-
-					var chatname = "";
-					if (ttsSpeakChatname && data.chatname) {
-						chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
-						chatname = chatname.replaceAll("_", " ");
-						chatname = chatname.replaceAll("@", " ");
-						chatname = chatname.replaceAll("!", " ");
-					}
-
-					if (data.hasDonation) {
-						var donoText = document.createElement("div");
-						donoText.innerHTML = data.hasDonation;
-						donoText = donoText.textContent || donoText.innerText || "";
-						donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
-						donoText = donoText.replaceAll("_", " ");
-						donoText = donoText.replaceAll("@", " ");
-						donoText = donoText.replaceAll("!", " ");
-
-						if (chatname) {
-							///// NAME
-							if (English) {
-								if (msgPlain) {
-									speak(chatname + " has donated " + donoText + " and says " + msgPlain, allow);
-								} else {
-									speak(chatname + " has donated " + donoText, allow);
-								}
-							} else if (msgPlain) {
-								speak(chatname + "! ! .. " + donoText + "! ! .. " + msgPlain, allow);
-							} else {
-								speak(chatname + "! ! .. " + donoText, allow);
-							}
-						} else if (English) {
-							// no name but english
-							if (msgPlain) {
-								speak("Someone has donated " + donoText + " and says " + msgPlain, allow);
-							} else {
-								speak("Someone has donated " + donoText, allow);
-							}
-						} else if (msgPlain) {
-							// no name; not english
-							speak(donoText + "! ! .. " + msgPlain, allow);
-						} else {
-							speak(donoText, allow);
-						}
-					} else if (msgPlain) {
-						// NO DONATION
-						if (chatname) {
-							// NAME
-							if (English) {
-								speak(chatname + " says! " + msgPlain, allow);
-							} else {
-								speak(chatname + "! ! .. " + msgPlain, allow);
-							}
-						} else if (English) {
-							// NO NAME
-							speak("Someone says! " + msgPlain, allow);
-						} else {
-							speak(msgPlain, allow);
-						}
-					}
-				} catch(e){
-					errorlog(e);
-				}
-			}
-
-			// end of TTS 
 			
 			if (urlParams.has("chroma")) {
 				var chroma = urlParams.get("chroma") || "0F0";
@@ -7021,7 +5729,7 @@
 						}
 						sendDataP2P(false);
 						updateQueueButton();
-						clearTTS();
+						TTS.clearQueue();
 						return true;
 					} else if (data.action == "clearOverlay") {
 						// or just send data=false
@@ -7079,29 +5787,29 @@
 					} else if (data.action === "toggleTTS" || data.action === "tts") {
 						if ("value" in data){
 							if (data.value == "toggle") {
-								speech = !speech;
+								TTS.speech = !TTS.speech;
 							} else if (data.value == "true") {
-								speech = true;
+								TTS.speech = true;
 							} else if (data.value == "false") {
-								speech = false;
+								TTS.speech = false;
 							} else if (data.value == "1") {
-								speech = true;
+								TTS.speech = true;
 							} else if (data.value == "0") {
-								speech = false;
+								TTS.speech = false;
 							} else if (data.value == "on") {
-								speech = true;
+								TTS.speech = true;
 							} else if (data.value == "off") {
-								speech = false;
+								TTS.speech = false;
 							} else if (data.value) {
-								speech = true;
+								TTS.speech = true;
 							} else {
-								speech = false;
+								TTS.speech = false;
 							}
 						} else {
-							speech = !speech;
+							TTS.speech = !TTS.speech;
 						}
-						//console.log("TTS: "+speech);
-						if (speech) {
+						//console.log("TTS: "+TTS.speech);
+						if (TTS.speech) {
 							getById("tts").dataset.state = "1";
 							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
 							getById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
@@ -7110,7 +5818,7 @@
 							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
 							getById("tts").title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
 						}
-						return speech;
+						return TTS.speech;
 					}
 				} else if ("forward" in data) {
 					sendDataP2P(data.forward);
@@ -9240,13 +7948,13 @@
 						updateQueueButton();
 					}
 					
-					if (ttscommand && data.chatmessage && data.chatmessage.includes(ttscommand+" ") && (!ttscommandmembersonly || (ttscommandmembersonly && data.membership))){
+					if (TTS.ttscommand && data.chatmessage && data.chatmessage.includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
 						if (!node.classList.contains("hide")) {
-							speechMeta(data);
+							TTS.speechMeta(data);
 						}
-					} else if (speech) {
+					} else if (TTS.speech) {
 						if (!node.classList.contains("hide")) {
-							speechMeta(data);
+							TTS.speechMeta(data);
 						}
 					} 
 					return node;
@@ -9464,7 +8172,7 @@
 						if (tid.includes("TTS")) {
 							tid = tid.filter(item => item !== "TTS");
 							if (data){
-								speak(data, true);
+								TTS.speak(data, true);
 							}
 							if (!tid.length){
 								return;
@@ -9472,7 +8180,7 @@
 						}
 					} else if (tid === "TTS") {
 						if (data){
-							speak(data, true);
+							TTS.speak(data, true);
 						}
 						return;
 					}
@@ -9778,7 +8486,7 @@
 								syncDataAny({ pin: [taskItemInContext.rawContents] });
 							}
 						} else if (link.getAttribute("data-action") === "TTS") {
-							speechMeta(taskItemInContext.rawContents, true);
+							TTS.speechMeta(taskItemInContext.rawContents, true);
 						} else if (link.getAttribute("data-action") === "Queue") {
 							if (taskItemInContext.classList.contains("queued")) {
 								removeQueue(taskItemInContext);
@@ -10045,7 +8753,7 @@
 				selectedQueue = [];
 				sendDataP2P(false);
 				updateQueueButton();
-				clearTTS();
+				TTS.clearQueue();
 				if (relay){
 					syncDataAny({ "clearAll": true }, false, true);
 				}

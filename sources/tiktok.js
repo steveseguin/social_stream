@@ -930,6 +930,7 @@
 		}
 		
 		let target = null;
+		let subtree = false;
 		
 		// First try for chat room
 		if (window.location.href.startsWith("https://livecenter.tiktok.com/common_live_chat")) {
@@ -939,7 +940,14 @@
 			}
 		} else {
 			// Try main selectors for chat container
-			target = document.querySelector('[class*="DivChatMessageList"], .live-shared-ui-chat-list-scrolling-list, [data-e2e="chat-room"], [data-e2e="chat-room"]');
+			target = document.querySelector('[data-item="list-message-list"]');
+			
+			if (!target){
+				target = document.querySelector('[class*="DivChatMessageList"], .live-shared-ui-chat-list-scrolling-list, [data-e2e="chat-room"], [data-e2e="chat-room"]');
+				if (target){
+					subtree = true;
+				}
+			}
 		}
 		
 		if (!target) {
@@ -962,8 +970,12 @@
 			return;
 		}
 		
+		document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele=>{
+			ele.dataset.skip = ++msgCount;
+		});
+		
 		target.hasObserver = true;
-		console.log("Starting chat observer");
+		console.log("Starting social stream");
 		
 		// Create mutation observer with original configuration
 		const observer = new MutationObserver((mutations) => {
@@ -972,18 +984,36 @@
 					for (let i = 0; i < mutation.addedNodes.length; i++) {
 						try {
 							const node = mutation.addedNodes[i];
-							
-							// Handle regular chat messages
-							if (node.dataset && node.dataset.e2e === "chat-message") {
-								setTimeout(() => {
+							//console.log(node);
+							if (!subtree && node.dataset && node.dataset.e2e === "chat-message") {
+								setTimeout((node) => {
 									if (node.isConnected) {
+										//console.log(node);
 										processMessage(node);
 									}
-								}, 300);
-							}
-							// Handle all other additions (including donations)
-							else if (settings.captureevents) {
-								setTimeout(() => {
+								}, 300, node);
+							} else if (subtree){
+								
+								let msg = node.querySelector('[data-e2e="chat-message"]');
+								if (msg || (node.dataset && node.dataset.e2e === "chat-message")){
+									setTimeout((msg) => {
+										if (msg.isConnected) {
+											processMessage(msg);
+										}
+									}, 300, msg);
+								} else if (settings.captureevents) {
+									setTimeout(() => {
+										if (node.isConnected) {
+											if (node.dataset && node.dataset.e2e) {
+												processMessage(node.cloneNode(true), node.dataset.e2e);
+											} else {
+												processMessage(node);
+											}
+										}
+									}, 300);
+								}
+							} else if (settings.captureevents) {
+								setTimeout((node) => {
 									if (node.isConnected) {
 										if (node.dataset && node.dataset.e2e) {
 											processMessage(node.cloneNode(true), node.dataset.e2e);
@@ -991,25 +1021,23 @@
 											processMessage(node);
 										}
 									}
-								}, 300);
+								}, 300, node);
 							}
 						} catch (e) {
-							console.error("Error processing node:", e);
+							//console.error("Error processing node:", e);
 						}
 					}
 				}
 			});
 		});
 		
-		// Use original configuration with subtree: false
 		observer.observe(target, {
 			childList: true,
-			subtree: false
+			subtree: subtree
 		});
 	}
 
 	var counter = 0;
-	// The second observer for events
 	function start2() {
 		if (!isExtensionOn || !settings.captureevents) {
 			return;
@@ -1123,8 +1151,6 @@
                 if ("state" in response) {
                     isExtensionOn = response.state;
                 }
-            } else {
-                console.log(response);
             }
         });
     } catch (e) {}

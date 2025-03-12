@@ -1283,7 +1283,6 @@ function countTokens(text) {
     // Simple approximation: ~4 characters per token for English text
     return Math.ceil(text.length / 4);
 }
-
 class GoogleLivePublisher {
     constructor(stream, apiKey) {
         this.stream = stream;
@@ -1724,6 +1723,25 @@ class GoogleLivePublisher {
 					this.attemptReconnect();
 					errorMsg += ' Attempting to reconnect...';
 				}
+			} else if (event.code === 1011 || 
+				 (event.reason && event.reason.includes('quota') || 
+				  event.reason.includes('resource_exhausted') || 
+				  event.reason.includes('exceeded'))) {
+				
+				// Show error message
+				showError('API quota exceeded. Please try again manually.');
+				
+				// Also display in chat (optional)
+				const errorDiv = document.createElement('div');
+				errorDiv.className = 'message system-message';
+				errorDiv.style.background = '#6c1c1c';
+				errorDiv.style.color = '#ffffff';
+				errorDiv.textContent = `Error: API quota exceeded`;
+				document.getElementById('responses').appendChild(errorDiv);
+				
+				// Force manual restart
+				this.handleConnectionFailure();
+				return; // Prevent auto-reconnect
 			} else if (!this.stopped) {
 				this.attemptReconnect();
 				errorMsg += ' Attempting to reconnect...';
