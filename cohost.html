@@ -1278,6 +1278,7 @@ class GoogleLivePublisher {
         this.reconnectTimeout = null;
         this.pingInterval = null;
         this.lastHeartbeatResponse = Date.now();
+		this.keepaliveDelay = 30000;
     }
     handleConnectionFailure() {
         this.stop();
