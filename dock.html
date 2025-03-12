@@ -2583,7 +2583,6 @@
 			
 			var encode = false;
 			
-			
 
 			try {
 				if (window.electronApi) {
@@ -2601,15 +2600,16 @@
 						document.body.style.width = "100%";
 					}, 5000);
 					
-					if (!ipcRenderer) {
-						ipcRenderer = require("electron").ipcRenderer;
-						ipcRenderer.on('close-file-stream', async () => {
-							if (writer){
-								await writer.close();
-								writer = null;
-							}
-						});
-					}
+					let writerCloseHandler = async () => {
+						if (writer) {
+						  await writer.close();
+						  writer = null;
+						}
+					};
+					  
+					document.addEventListener('DOMContentLoaded', () => {
+						window.electronApi.onCloseFileStream(writerCloseHandler);
+					});
 				}
 			} catch (e) {
 				//console.error(e);
@@ -4483,115 +4483,115 @@
 			}
 			
 			async function kokoroTTS(text) {
-				try {
-					if (window.electronApi){
-						try {
-							// Get WAV buffer directly from main process
-							const wavBuffer = await ipcRenderer.invoke("tts", {text:text, settings:kokoroSettings}, );
-							
-							// Create blob from buffer
-							const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
-							
-							if (neuroSyncEnabled) {
-							  sendToNeuroSync(audioBlob, { 
-								isKokoroAudio: true,
-								onProgress: (progress) => {
-								  console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
-								}
-							  }).then(result => {
-								if (result && result.blendshapes) {
-								  // Do something with the blendshapes
-								  console.log(`Received ${result.blendshapes.length} blendshape frames`);
-								  // You would apply these to your 3D model here
-								}
-							  }).catch(err => {
-								console.error("NeuroSync error:", err);
-							  });
-							  return;
-							}
-							
-							// Play the audio
-							const audioElement = document.createElement("audio");
-							audioElement.src = URL.createObjectURL(audioBlob);
-							audioElement.onended = this.finishedAudio;
-							
-							// Set volume if needed
-							//const settings = { volume: 0.8 }; // Replace with your actual settings
-							//if (settings.volume) audioElement.volume = settings.volume;
-							
-							audioElement.play();
-							return;
-					  } catch (error) {
-						console.error("Error playing TTS:", error);
-						throw new Error("Error playing TTS. Try upgrading your app or perhaps your system ins't compatible");
-					  }
-					}
-				
-					if (!kokoroTtsInstance) {
-						const initialized = await initKokoro();
-						if (!initialized) {
-							finishedAudio();
-							return;
+			  try {
+				if (window.electronApi) {
+				  try {
+					// Get WAV buffer directly from main process using window.electronApi
+					const wavBuffer = await window.electronApi.tts(text, kokoroSettings);
+					
+					// Create blob from buffer
+					const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+					
+					if (neuroSyncEnabled) {
+					  sendToNeuroSync(audioBlob, { 
+						isKokoroAudio: true,
+						onProgress: (progress) => {
+						  console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
 						}
+					  }).then(result => {
+						if (result && result.blendshapes) {
+						  // Do something with the blendshapes
+						  console.log(`Received ${result.blendshapes.length} blendshape frames`);
+						  // You would apply these to your 3D model here
+						}
+					  }).catch(err => {
+						console.error("NeuroSync error:", err);
+					  });
+					  return;
 					}
 					
-					premiumQueueActive = true;
-					const streamer = new TextSplitterStream();
-					streamer.push(text);
-					streamer.close();
-					
+					// Play the audio
 					const audioElement = document.createElement("audio");
-					audioElement.onended = finishedAudio;
+					audioElement.src = URL.createObjectURL(audioBlob);
+					audioElement.onended = this.finishedAudio;
 					
-					const stream = kokoroTtsInstance.stream(streamer, { 
-						voice: kokoroSettings.voiceName || Object.keys(kokoroTtsInstance.voices)[0],
-						speed: kokoroSettings.speed,
-						streamAudio: false 
-					});
-
-					for await (const { audio } of stream) {
-						if (!audio) {
-							finishedAudio();
-							return;
-						}
-						
-						// Send to NeuroSync if enabled
-						if (neuroSyncEnabled) {
-							sendToNeuroSync(audio, { 
-							  isKokoroAudio: true,
-							  onProgress: (progress) => {
-								console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
-							  }
-							}).then(result => {
-							  if (result && result.blendshapes) {
-								console.log(`Received ${result.blendshapes.length} blendshape frames`);
-								// You would apply these to your 3D model here
-							  }
-							}).catch(err => {
-							  console.error("NeuroSync error:", err);
-							});
-							return;
-						}
-						
-						const audioBlob = audio.toBlob();
-						audioElement.src = URL.createObjectURL(audioBlob);
-						if (volume) audioElement.volume = volume;
-						
-						try {
-							if (audioContext.state === 'suspended') {
-								await audioContext.resume();
-							}
-							await audioElement.play();
-						} catch (e) {
-							finishedAudio();
-							console.error(e);
-							errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-						}
-					}
-				} catch (e) {
-					console.error("Kokoro TTS error:", e);
-					finishedAudio();
+					// Set volume if needed
+					//const settings = { volume: 0.8 }; // Replace with your actual settings
+					//if (settings.volume) audioElement.volume = settings.volume;
+					
+					audioElement.play();
+					return;
+				  } catch (error) {
+					console.error("Error playing TTS:", error);
+					throw new Error("Error playing TTS. Try upgrading your app or perhaps your system ins't compatible");
+				  }
 				}
+
+				// Fallback to web implementation if electronApi not available
+				if (!kokoroTtsInstance) {
+				  const initialized = await initKokoro();
+				  if (!initialized) {
+					finishedAudio();
+					return;
+				  }
+				}
+				
+				premiumQueueActive = true;
+				const streamer = new TextSplitterStream();
+				streamer.push(text);
+				streamer.close();
+				
+				const audioElement = document.createElement("audio");
+				audioElement.onended = finishedAudio;
+				
+				const stream = kokoroTtsInstance.stream(streamer, { 
+				  voice: kokoroSettings.voiceName || Object.keys(kokoroTtsInstance.voices)[0],
+				  speed: kokoroSettings.speed,
+				  streamAudio: false 
+				});
+				for await (const { audio } of stream) {
+				  if (!audio) {
+					finishedAudio();
+					return;
+				  }
+				  
+				  // Send to NeuroSync if enabled
+				  if (neuroSyncEnabled) {
+					sendToNeuroSync(audio, { 
+					  isKokoroAudio: true,
+					  onProgress: (progress) => {
+						console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
+					  }
+					}).then(result => {
+					  if (result && result.blendshapes) {
+						console.log(`Received ${result.blendshapes.length} blendshape frames`);
+						// You would apply these to your 3D model here
+					  }
+					}).catch(err => {
+					  console.error("NeuroSync error:", err);
+					});
+					return;
+				  }
+				  
+				  const audioBlob = audio.toBlob();
+				  audioElement.src = URL.createObjectURL(audioBlob);
+				  if (volume) audioElement.volume = volume;
+				  
+				  try {
+					if (audioContext.state === 'suspended') {
+					  await audioContext.resume();
+					}
+					await audioElement.play();
+				  } catch (e) {
+					finishedAudio();
+					console.error(e);
+					errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+				  }
+				}
+			  } catch (e) {
+				console.error("Kokoro TTS error:", e);
+				finishedAudio();
+			  }
 			}
 
 			function ElevenLabsTTS(tts) {
@@ -4706,8 +4706,6 @@
 					fetch(url, otherparam)
 						.then(data => data.json())
 						.then(async res => {
-							
-							
 							
 							// Send to NeuroSync in parallel
 							if (neuroSyncEnabled) {
