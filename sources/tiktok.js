@@ -1294,15 +1294,15 @@
 			
 			document.addEventListener('click', () => {
 				this.lastUserInteraction = Date.now();
-				console.log(this.lastUserInteraction);
+				//console.log(this.lastUserInteraction);
 			});
 			document.addEventListener('keydown', () => {
 				this.lastUserInteraction = Date.now();
-				console.log(this.lastUserInteraction);
+				//console.log(this.lastUserInteraction);
 			});
 			document.addEventListener('touchstart', () => {
 				this.lastUserInteraction = Date.now();
-				console.log(this.lastUserInteraction);
+				//console.log(this.lastUserInteraction);
 			});
 		},
 
