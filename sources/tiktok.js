@@ -677,6 +677,8 @@
         if (ele.querySelector("[class*='DivTopGiverContainer']")) {
             return;
         }
+		
+		updateLastInputTime();
 
         var membership = "";
         var chatbadges = "";
@@ -895,8 +897,6 @@
             //console.log("duplicate message; skipping");
             return;
         }
-		
-		// console.log('Current channel:', StreamState.getCurrentChannel(),  StreamState.isValid());
 
         var data = {};
         data.chatname = chatname;
@@ -915,6 +915,11 @@
         data.event = ital; // if an event or actual message
 
         //console.log(data);
+		
+		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
+			console.log("Has the channel changed? If so, click the page to validate it");
+			return;
+		}
 
         pushMessage(data);
     }
@@ -926,6 +931,7 @@
 		}
 		
 		let target = null;
+		let subtree = false;
 		
 		// First try for chat room
 		if (window.location.href.startsWith("https://livecenter.tiktok.com/common_live_chat")) {
@@ -935,11 +941,23 @@
 			}
 		} else {
 			// Try main selectors for chat container
-			target = document.querySelector('[class*="DivChatMessageList"], .live-shared-ui-chat-list-scrolling-list');
+			target = document.querySelector('[data-item="list-message-list"]');
+			
+			if (!target){
+				target = document.querySelector('[class*="DivChatMessageList"], .live-shared-ui-chat-list-scrolling-list, [data-e2e="chat-room"], [data-e2e="chat-room"]');
+				if (target){
+					subtree = true;
+				}
+			}
 		}
 		
 		if (!target) {
-			return;
+			target = document.querySelector('[role="heading"][tabindex]');
+			if (target && window.location.href.includes("/live") && target.nodeType==1){
+				// we will see.
+			} else {
+				return;
+			}
 		}
 		
 		if (!window.location.href.includes("livecenter") && 
@@ -953,8 +971,12 @@
 			return;
 		}
 		
+		document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele=>{
+			ele.dataset.skip = ++msgCount;
+		});
+		
 		target.hasObserver = true;
-		console.log("Starting chat observer");
+		console.log("Starting social stream");
 		
 		// Create mutation observer with original configuration
 		const observer = new MutationObserver((mutations) => {
@@ -963,18 +985,36 @@
 					for (let i = 0; i < mutation.addedNodes.length; i++) {
 						try {
 							const node = mutation.addedNodes[i];
-							
-							// Handle regular chat messages
-							if (node.dataset && node.dataset.e2e === "chat-message") {
-								setTimeout(() => {
+							//console.log(node);
+							if (!subtree && node.dataset && node.dataset.e2e === "chat-message") {
+								setTimeout((node) => {
 									if (node.isConnected) {
+										//console.log(node);
 										processMessage(node);
 									}
-								}, 300);
-							}
-							// Handle all other additions (including donations)
-							else if (settings.captureevents) {
-								setTimeout(() => {
+								}, 300, node);
+							} else if (subtree){
+								
+								let msg = node.querySelector('[data-e2e="chat-message"]');
+								if (msg || (node.dataset && node.dataset.e2e === "chat-message")){
+									setTimeout((msg) => {
+										if (msg.isConnected) {
+											processMessage(msg);
+										}
+									}, 300, msg);
+								} else if (settings.captureevents) {
+									setTimeout(() => {
+										if (node.isConnected) {
+											if (node.dataset && node.dataset.e2e) {
+												processMessage(node.cloneNode(true), node.dataset.e2e);
+											} else {
+												processMessage(node);
+											}
+										}
+									}, 300);
+								}
+							} else if (settings.captureevents) {
+								setTimeout((node) => {
 									if (node.isConnected) {
 										if (node.dataset && node.dataset.e2e) {
 											processMessage(node.cloneNode(true), node.dataset.e2e);
@@ -982,25 +1022,23 @@
 											processMessage(node);
 										}
 									}
-								}, 300);
+								}, 300, node);
 							}
 						} catch (e) {
-							console.error("Error processing node:", e);
+							//console.error("Error processing node:", e);
 						}
 					}
 				}
 			});
 		});
 		
-		// Use original configuration with subtree: false
 		observer.observe(target, {
 			childList: true,
-			subtree: false
+			subtree: subtree
 		});
 	}
 
 	var counter = 0;
-	// The second observer for events
 	function start2() {
 		if (!isExtensionOn || !settings.captureevents) {
 			return;
@@ -1114,15 +1152,13 @@
                 if ("state" in response) {
                     isExtensionOn = response.state;
                 }
-            } else {
-                console.log(response);
             }
         });
     } catch (e) {}
 
-	let pokeTimeout = 59;
+	let pokeTimeout = 27;
 	if (window.electronApi){
-		pokeTimeout = 10;
+		pokeTimeout = 10; // we can be more annoying in this case.
 	}
     var pokeMe = setInterval(function() {
         try {
@@ -1169,7 +1205,7 @@
                                 }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 
                                 });
-                            }, 1000 * 60 * 57);
+                            }, 1000 * 60 * pokeTimeout);
                         } else if (document.querySelector("[contenteditable][placeholder]")) {
 
                             document.querySelector("[contenteditable][placeholder]").focus();
@@ -1186,7 +1222,7 @@
                                 }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 
                                 });
-                            }, 1000 * 60 * 57);
+                            }, 1000 * 60 * pokeTimeout);
                         } else {
                             sendResponse(false);
                         }
@@ -1286,7 +1322,37 @@
 
 	// Usage
 	StreamState.init();
+	
+	
+	let lastUserInputTime = Date.now();
+
+	// Function to update the last input time
+	function updateLastInputTime() {
+	  lastUserInputTime = Date.now();
+	}
+
+	
+	// Function to check for inactivity and click the element if needed
+	function checkInactivityAndClick() {
+	  const currentTime = Date.now();
+	  const timeElapsed = currentTime - lastUserInputTime;
+	  
+	  if (timeElapsed >= 10000) { // 10 seconds in milliseconds
+		const unreadTipsElement = document.querySelector("[class*='DivUnreadTipsContent']");
+		if (unreadTipsElement) {
+		  unreadTipsElement.click();
+		  // Reset the timer after clicking
+		  lastUserInputTime = currentTime;
+		}
+	  }
+	}
+
+	// Add event listener for mouse wheel
+	window.addEventListener('wheel', updateLastInputTime);
+
+	// Set up interval to check for inactivity (checks every second)
+	setInterval(checkInactivityAndClick, 5000);
 
 })();
 
-
+// try reloading the page if no activitiy for a while?
