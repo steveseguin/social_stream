@@ -687,7 +687,7 @@
         var nameColor = "";
 
         try {
-            var cb = ele.children[1].querySelectorAll("img[class*='ImgBadgeChatMessage'], img[class*='ImgCombineBadgeIcon']");
+            var cb = ele.querySelectorAll("img[class*='ImgBadgeChatMessage'], img[class*='ImgCombineBadgeIcon']");
             if (cb.length) {
                 chatbadges = [];
                 cb.forEach(cbimg => {
@@ -750,7 +750,13 @@
 
         var chatmessage = "";
         try {
-            chatmessage = getAllContentNodes(ele.querySelector("div[class*='-DivUserInfo'], span[data-e2e='message-owner-name']").nextSibling);
+			
+			let chatEle = ele.querySelector("div[class*='-DivComment']");
+			if (chatEle){
+				chatmessage = getAllContentNodes(chatEle);
+			} else {
+				chatmessage = getAllContentNodes(ele.querySelector("div[class*='-DivUserInfo'],  div[class*='-DivUserInfo'], span[data-e2e='message-owner-name']").nextSibling);
+			}
             //live-shared-ui-chat-list-chat-message-comment
             if (!chatmessage) {
                 try {
