@@ -1,4 +1,8 @@
 (function () {
+	
+	window.addEventListener('unhandledrejection', (event) => {
+	  console.error('Unhandled promise rejection:', event.reason);
+	});
 	 
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
