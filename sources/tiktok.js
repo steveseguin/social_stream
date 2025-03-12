@@ -832,25 +832,27 @@
         try {
             if (!chatmessage) {
                 var eles = ele.childNodes[1].childNodes;
-                if (eles.length > 1) {
-                    for (var i = 1; i < eles.length; i++) {
-                        if (eles[i].nodeName === "#text") {
-                            chatmessage = escapeHtml(eles[i].textContent);
-                        } else if (settings.textonlymode) {
-                            chatmessage = escapeHtml(eles[i].textContent);
-                        } else {
-                            chatmessage = eles[i].innerHTML;
-                        }
-                    }
-                } else if (eles.length == 1) {
-                    for (var i = 1; i < eles[0].childNodes.length; i++) {
-                        if (settings.textonlymode) {
-                            chatmessage = escapeHtml(eles[0].childNodes[i].textContent);
-                        } else {
-                            chatmessage = eles[0].childNodes[i].innerHTML;
-                        }
-                    }
-                }
+				if (eles.length > 1) {
+					for (var i = eles.length - 1; i >= 1; i--) {
+						if (eles[i].nodeName === "#text") {
+							chatmessage = escapeHtml(eles[i].textContent);
+						} else if (settings.textonlymode) {
+							chatmessage = escapeHtml(eles[i].textContent);
+						} else {
+							chatmessage = eles[i].innerHTML;
+						}
+						if (chatmessage) break;
+					}
+				} else if (eles.length == 1) {
+					for (var i = eles[0].childNodes.length - 1; i >= 1; i--) {
+						if (settings.textonlymode) {
+							chatmessage = escapeHtml(eles[0].childNodes[i].textContent);
+						} else {
+							chatmessage = eles[0].childNodes[i].innerHTML;
+						}
+						if (chatmessage) break;
+					}
+				}
             }
         } catch (e) {}
 
@@ -979,6 +981,7 @@
 		document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele=>{
 			ele.dataset.skip = ++msgCount;
 		});
+		
 		
 		target.hasObserver = true;
 		console.log("Starting social stream");
@@ -1294,15 +1297,15 @@
 			
 			document.addEventListener('click', () => {
 				this.lastUserInteraction = Date.now();
-				console.log(this.lastUserInteraction);
+				//console.log(this.lastUserInteraction);
 			});
 			document.addEventListener('keydown', () => {
 				this.lastUserInteraction = Date.now();
-				console.log(this.lastUserInteraction);
+				//console.log(this.lastUserInteraction);
 			});
 			document.addEventListener('touchstart', () => {
 				this.lastUserInteraction = Date.now();
-				console.log(this.lastUserInteraction);
+				//console.log(this.lastUserInteraction);
 			});
 		},
 
