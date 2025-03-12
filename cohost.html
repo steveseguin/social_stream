@@ -943,73 +943,99 @@ class ChatGPTPublisher {
         console.log('Video processing not needed for ChatGPT, skipping');
         return Promise.resolve();
     }
-    async handleMessage(event) {
-        try {
-            let data;
-            if (typeof event.data === 'string') {
-                data = JSON.parse(event.data);
-            } else if (event.data instanceof Blob) {
-                const text = await event.data.text();
-                data = JSON.parse(text);
-            } else {
-                console.warn('Unhandled message format:', event.data);
-                return;
-            }
-            console.log('Received from ChatGPT:', data.type);
-            switch (data.type) {
-                case 'session.created':
-                    console.log('Session created with ChatGPT');
-                    break;
-                case 'session.updated':
-                    console.log('Session updated');
-                    break;
-                case 'response.text.delta':
-                    if (data.delta) {
-                        const textEvent = new CustomEvent('modelResponse', {
-                            detail: { text: data.delta }
-                        });
-                        window.dispatchEvent(textEvent);
-                    }
-                    break;
-                case 'response.audio.delta':
-                    if (data.delta) {
-                        const audioData = base64ToArrayBuffer(data.delta);
-                        this.audioPlayer.resume();
-                        this.audioPlayer.addPCM16(new Uint8Array(audioData));
-                    }
-                    break;
-                case 'response.audio_transcript.delta':
-                    if (data.delta) {
-                        const textEvent = new CustomEvent('modelResponse', {
-                            detail: { text: data.delta }
-                        });
-                        window.dispatchEvent(textEvent);
-                    }
-                    break;
-                case 'response.created':
-                    console.log('Response created');
-                    this.activeConversation = true;
-                    break;
-                case 'response.done':
-                    console.log('Response complete');
-                    this.audioPlayer.complete();
-                    this.responseActive = false;
-                    this.activeConversation = false;
-                    break;
-                case 'error':
-                    const errorMessage = data.message || 'Unknown error occurred';
-                    console.error('ChatGPT API error:', errorMessage);
-                    showError('ChatGPT API error: ' + errorMessage);
-                    if (errorMessage.includes('already has an active response')) {
-                        this.responseActive = false;
-                    }
-                    break;
-            }
-        } catch (err) {
-            console.error('Error handling message:', err);
-            showError('Error processing response: ' + err.message);
-        }
-    }
+	async handleMessage(event) {
+		try {
+			let response;
+			let rawText = '';
+			
+			// First handle the different types of message data
+			if (event.data instanceof Blob) {
+				rawText = await event.data.text();
+			} else if (typeof event.data === 'string') {
+				rawText = event.data;
+			} else {
+				console.warn('Unhandled message format:', event.data);
+				// Still update the activity timestamps even for unknown formats
+				this.lastHeartbeatResponse = Date.now();
+				this.lastActivityTime = Date.now();
+				return;
+			}
+			
+			// Always update activity timestamps, even before JSON parsing
+			this.lastHeartbeatResponse = Date.now();
+			this.lastActivityTime = Date.now();
+			
+			// Try to parse as JSON, but don't fail if it's not valid JSON
+			try {
+				response = JSON.parse(rawText);
+			} catch (jsonError) {
+				// Log but don't show error for parsing issues
+				console.warn('Received non-JSON message or invalid JSON:', 
+							 rawText.substring(0, 100) + (rawText.length > 100 ? '...' : ''));
+				
+				// Reset connection attempts on any activity, even invalid JSON
+				this.inactivityReconnectAttempts = 0;
+				return;
+			}
+			
+			// Update counts for reconnection logic
+			this.inactivityReconnectAttempts = 0;
+			this.reconnectAttempts = 0; // Reset reconnect attempts on successful message
+			
+			// Process based on message type
+			if (response.setupComplete) {
+				console.log('Setup complete received');
+				this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.");
+			}
+			
+			// Handle model content
+			if (response.serverContent?.modelTurn?.parts) {
+				const parts = response.serverContent.modelTurn.parts;
+				let hasAudioParts = false;
+				parts.forEach(part => {
+					if (part.text) {
+						console.log('Model response:', part.text);
+						const event = new CustomEvent('modelResponse', {
+							detail: {
+								text: part.text
+							}
+						});
+						window.dispatchEvent(event);
+					}
+					if (part.inlineData && part.inlineData.mimeType.startsWith('audio/')) {
+						hasAudioParts = true;
+						console.log('Received audio response with mime type:', part.inlineData.mimeType);
+						try {
+							const rateMatch = part.inlineData.mimeType.match(/rate=(\d+)/);
+							const sampleRate = rateMatch ? parseInt(rateMatch[1]) : 24000;
+							this.audioPlayer.resume();
+							const audioData = base64ToArrayBuffer(part.inlineData.data);
+							console.log('Processing audio chunk of size:', audioData.byteLength);
+							this.audioPlayer.addPCM16(new Uint8Array(audioData));
+						} catch (err) {
+							console.error('Error processing audio:', err);
+						}
+					}
+				});
+				if (response.serverContent.turnComplete && hasAudioParts) {
+					console.log('Turn complete, finalizing audio');
+					this.audioPlayer.complete();
+				}
+			}
+			
+			// Simply log heartbeat messages but don't take specific action
+			if (rawText.includes('heartbeat')) {
+				console.log('Heartbeat received from server');
+			}
+		} catch (err) {
+			// Just log the error but keep connection alive
+			console.error('Error handling message:', err);
+			
+			// Still update timestamps to prevent timeout-based reconnects
+			this.lastHeartbeatResponse = Date.now();
+			this.lastActivityTime = Date.now();
+		}
+	}
     async connect() {
         const uri = 'wss://api.openai.com/v1/realtime?model=gpt-4o-mini-realtime-preview-2024-12-17';
         if (this.isConnected()) {
@@ -1278,7 +1304,6 @@ class GoogleLivePublisher {
         this.reconnectTimeout = null;
         this.pingInterval = null;
         this.lastHeartbeatResponse = Date.now();
-		this.keepaliveDelay = 30000;
     }
     handleConnectionFailure() {
         this.stop();
@@ -1291,7 +1316,7 @@ class GoogleLivePublisher {
         sendButton.disabled = true;
         systemPrompt.disabled = false;
     }
-    async handleMessage(event) {
+	async handleMessage(event) {
 		try {
 			let response;
 			let rawText = '';
@@ -1309,26 +1334,30 @@ class GoogleLivePublisher {
 				return;
 			}
 			
+			// Always update activity timestamps, even before JSON parsing
+			this.lastHeartbeatResponse = Date.now();
+			this.lastActivityTime = Date.now();
+			
 			// Try to parse as JSON, but don't fail if it's not valid JSON
 			try {
 				response = JSON.parse(rawText);
 			} catch (jsonError) {
-				console.warn('Received non-JSON message:', rawText.substring(0, 200) + (rawText.length > 200 ? '...' : ''));
-				// Still update the activity timestamps even for non-JSON messages
-				this.lastHeartbeatResponse = Date.now();
-				this.lastActivityTime = Date.now();
+				// Log but don't show error for parsing issues
+				console.warn('Received non-JSON message or invalid JSON:', 
+							 rawText.substring(0, 100) + (rawText.length > 100 ? '...' : ''));
+				
+				// Reset connection attempts on any activity, even invalid JSON
+				this.inactivityReconnectAttempts = 0;
 				return;
 			}
 			
-			// Update activity timestamps for any valid message
-			this.lastHeartbeatResponse = Date.now();
-			this.lastActivityTime = Date.now();
+			// Update counts for reconnection logic
 			this.inactivityReconnectAttempts = 0;
+			this.reconnectAttempts = 0; // Reset reconnect attempts on successful message
 			
 			// Process based on message type
 			if (response.setupComplete) {
 				console.log('Setup complete received');
-				this.reconnectAttempts = 0;
 				this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.");
 			}
 			
@@ -1367,27 +1396,31 @@ class GoogleLivePublisher {
 				}
 			}
 			
-			// Handle explicit heartbeat responses
-			if (response.heartbeat) {
-				console.log('Heartbeat response received');
-			}
+			// Handle ANY response from server as a valid heartbeat response
+			// We're not explicitly looking for a heartbeat property anymore
 			
-			// Special handling for unknown field 'heartbeat' in the response
-			if (rawText.includes('"heartbeat"') && !response.heartbeat) {
-				console.log('Received message with heartbeat field but not in expected format');
-				// Still treat this as a valid heartbeat response
-				this.lastHeartbeatResponse = Date.now();
-			}
-			
-			// Log other response types without failing
-			if (!response.setupComplete && !response.serverContent && !response.heartbeat) {
-				console.log('Other response type:', response);
+			// Log unknown response types for debugging but continue processing
+			if (!response.setupComplete && !response.serverContent) {
+				// Don't attempt to stringify the entire response as it may be large
+				// Just log that we received something unknown
+				console.log('Received message with unknown structure');
+				console.log('Response keys:', Object.keys(response));
+				
+				// If the response has a heartbeat field (in any form), log it
+				if (rawText.includes('heartbeat')) {
+					console.log('Message appears to contain heartbeat information');
+				}
 			}
 		} catch (err) {
+			// Just log the error but keep connection alive
 			console.error('Error handling message:', err);
-			// Don't throw the error further, just log it and continue
+			
+			// Still update timestamps to prevent timeout-based reconnects
+			this.lastHeartbeatResponse = Date.now();
+			this.lastActivityTime = Date.now();
 		}
 	}
+
     sendPrompt(text) {
         if (!this.isConnected()) {
             console.error('WebSocket not connected, attempting reconnect...');
@@ -1501,17 +1534,30 @@ class GoogleLivePublisher {
 			console.log('WebSocket closed:', event.code, event.reason);
 			let errorMsg = 'Connection closed.';
 			
+			// Don't show error for intentional closing (when stopping)
+			if (this.stopped) {
+				console.log('WebSocket closed intentionally');
+				return;
+			}
+			
 			if (event.code === 1007) {
 				// Handle invalid JSON payload error specially
 				if (event.reason && event.reason.includes('Invalid JSON payload')) {
 					console.warn('Invalid JSON payload error, attempting to reconnect');
-					errorMsg = 'Server had trouble with message format. Attempting to reconnect...';
+					errorMsg = 'Connection reset. Reconnecting...';
+					if (!this.stopped) {
+						// For JSON payload errors, try to reconnect with a short delay
+						setTimeout(() => this.reconnect(), 2000);
+					}
+				} else if (event.reason && event.reason.includes('API key')) {
+					errorMsg = 'Invalid API key. Please check your key and try again.';
+					this.handleConnectionFailure();
+				} else {
+					// Other 1007 errors
+					console.warn('Unspecified 1007 error, attempting to reconnect', event.reason);
 					if (!this.stopped) {
 						this.attemptReconnect();
 					}
-				} else {
-					errorMsg = 'Invalid API key. Please check your key and try again.';
-					this.handleConnectionFailure();
 				}
 			} else if (event.code === 1006) {
 				errorMsg = 'Connection terminated unexpectedly.';
@@ -1524,7 +1570,16 @@ class GoogleLivePublisher {
 				errorMsg += ' Attempting to reconnect...';
 			}
 			
-			showError(errorMsg);
+			// Only show error message to user for permanent failures
+			if (event.code === 1007 && event.reason && event.reason.includes('Invalid JSON payload')) {
+				// Don't show error for temporary JSON issues - these will auto-reconnect
+				console.log('Suppressing error message for automatic reconnection');
+			} else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+				showError('Connection lost after multiple reconnection attempts. Please restart the stream.');
+			} else {
+				showError(errorMsg);
+			}
+			
 			if (this.stopped || this.reconnectAttempts >= this.maxReconnectAttempts) {
 				this.handleConnectionFailure();
 			}
@@ -1573,28 +1628,22 @@ class GoogleLivePublisher {
             }, { once: true });
         });
     }
-    startHeartbeat() {
+	startHeartbeat() {
 		if (this.pingInterval) {
 			clearInterval(this.pingInterval);
 		}
+		
 		this.lastHeartbeatResponse = Date.now();
 		this.lastActivityTime = Date.now();
+		
+		// Monitor the connection health, but don't send heartbeats
 		this.pingInterval = setInterval(() => {
 			if (this.isConnected()) {
-				try {
-					// Try a simpler heartbeat format (this seems to work better with Google's API)
-					this.ws.send(JSON.stringify({ heartbeat: {} }));
-					
-					const elapsed = Date.now() - this.lastHeartbeatResponse;
-					if (elapsed > 60000) {
-						console.warn('No heartbeat response for 60 seconds, reconnecting');
-						this.reconnect();
-					}
-				} catch (err) {
-					console.error('Error sending heartbeat:', err);
-					if (!this.stopped) {
-						this.attemptReconnect();
-					}
+				// Only check for heartbeat response timeout
+				const elapsed = Date.now() - this.lastHeartbeatResponse;
+				if (elapsed > 60000) {
+					console.warn('No heartbeat response for 60 seconds, reconnecting');
+					this.reconnect();
 				}
 			} else {
 				clearInterval(this.pingInterval);
@@ -1604,33 +1653,8 @@ class GoogleLivePublisher {
 				}
 			}
 		}, 30000);
+		
 		this.startConnectionWatchdog();
-		this.startKeepalive();
-	}
-	startKeepalive() {
-		if (this.keepaliveInterval) {
-			clearInterval(this.keepaliveInterval);
-		}
-		this.keepaliveInterval = setInterval(() => {
-			if (this.isConnected()) {
-				try {
-					// Use a simple format that's less likely to cause JSON parsing issues
-					this.ws.send(JSON.stringify({ keepalive: {} }));
-					console.log('Sent keepalive message');
-				} catch (err) {
-					console.error('Error sending keepalive:', err);
-					if (!this.stopped) {
-						this.attemptReconnect();
-					}
-				}
-			} else {
-				clearInterval(this.keepaliveInterval);
-				this.keepaliveInterval = null;
-				if (!this.stopped) {
-					this.attemptReconnect();
-				}
-			}
-		}, this.keepaliveDelay);
 	}
 	startConnectionWatchdog() {
 		if (this.connectionWatchdog) {
