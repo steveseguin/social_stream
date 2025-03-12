@@ -2002,12 +2002,21 @@ async function tryGetInitialPermissions() {
 }
 const apiKeyInput = document.getElementById('apiKey');
 apiKeyInput.value = localStorage.getItem('apiKey') || '';
-validateApiKey();
+
 document.getElementById('apiKey').addEventListener('input', validateApiKey);
 function validateApiKey() {
     const apiKey = apiKeyInput.value.trim();
     startButton.disabled = !apiKey;
-    localStorage.setItem('apiKey', apiKey);
+    
+    // Only try to use provider-specific storage if providerSelect exists
+    if (window.providerSelect) {
+        const provider = providerSelect.value;
+        localStorage.setItem(`apiKey_${provider}`, apiKey);
+    } else {
+        // Fallback to old method if providerSelect isn't created yet
+        localStorage.setItem('apiKey', apiKey);
+    }
+    
     return apiKey;
 }
 startButton.addEventListener('click', async () => {
@@ -2670,15 +2679,18 @@ systemPrompt.addEventListener('change', function() {
 document.getElementById('providerSelect').addEventListener('change', function() {
     const apiKeyInfo = document.querySelector('#apikeyinfo');
     const apiKeyInput = document.getElementById('apiKey');
+    
+    const providerKey = localStorage.getItem(`apiKey_${this.value}`) || '';
+    apiKeyInput.value = providerKey;
+    
     if (this.value === 'chatgpt') {
         apiKeyInput.placeholder = 'Enter ChatGPT API Key';
         apiKeyInfo.innerHTML = 'Get your ChatGPT API key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI</a>';
-        console.log('Changed to ChatGPT API info');
     } else {
         apiKeyInput.placeholder = 'Enter Gemini API Key';
         apiKeyInfo.innerHTML = 'Get your free Gemini API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>';
-        console.log('Changed to Gemini API info');
     }
+    
     systemPrompt.value = defaultPrompts[this.value];
     const isChatGPT = this.value === 'chatgpt';
     videoSelect.disabled = isChatGPT;
@@ -2698,10 +2710,10 @@ document.getElementById('providerSelect').addEventListener('change', function() 
     } else if (deviceNotice && !isChatGPT) {
         deviceNotice.remove();
     }
-    if (localStorage) {
-        localStorage.setItem('selectedProvider', this.value);
-    }
+    
+    localStorage.setItem('selectedProvider', this.value);
 });
+
 const avatar = new PuppetAvatar('#puppet-container');
 avatar.setPosition('calc(100vw - 320px)', 'calc(100vh - 320px)');
 avatar.setEmotion('happy', false);
@@ -2937,6 +2949,17 @@ function setupConnectionMonitoring() {
         stop: stopMonitoring
     };
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const savedProvider = localStorage.getItem('selectedProvider') || 'gemini';
+    providerSelect.value = savedProvider;
+    
+    const providerKey = localStorage.getItem(`apiKey_${savedProvider}`) || localStorage.getItem('apiKey') || '';
+    apiKeyInput.value = providerKey;
+    
+    validateApiKey();
+});
+
 const connectionMonitor = setupConnectionMonitoring();
 </script>
 </body>
