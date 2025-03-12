@@ -918,7 +918,6 @@
 		
 		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
 			console.log("Has the channel changed? If so, click the page to validate it");
-			return;
 		}
 
         pushMessage(data);
