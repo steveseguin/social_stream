@@ -1294,20 +1294,45 @@ class GoogleLivePublisher {
     async handleMessage(event) {
 		try {
 			let response;
+			let rawText = '';
+			
+			// First handle the different types of message data
 			if (event.data instanceof Blob) {
-				const text = await event.data.text();
-				response = JSON.parse(text);
+				rawText = await event.data.text();
+			} else if (typeof event.data === 'string') {
+				rawText = event.data;
 			} else {
-				response = JSON.parse(event.data);
+				console.warn('Unhandled message format:', event.data);
+				// Still update the activity timestamps even for unknown formats
+				this.lastHeartbeatResponse = Date.now();
+				this.lastActivityTime = Date.now();
+				return;
 			}
+			
+			// Try to parse as JSON, but don't fail if it's not valid JSON
+			try {
+				response = JSON.parse(rawText);
+			} catch (jsonError) {
+				console.warn('Received non-JSON message:', rawText.substring(0, 200) + (rawText.length > 200 ? '...' : ''));
+				// Still update the activity timestamps even for non-JSON messages
+				this.lastHeartbeatResponse = Date.now();
+				this.lastActivityTime = Date.now();
+				return;
+			}
+			
+			// Update activity timestamps for any valid message
 			this.lastHeartbeatResponse = Date.now();
 			this.lastActivityTime = Date.now();
 			this.inactivityReconnectAttempts = 0;
+			
+			// Process based on message type
 			if (response.setupComplete) {
 				console.log('Setup complete received');
 				this.reconnectAttempts = 0;
 				this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.");
 			}
+			
+			// Handle model content
 			if (response.serverContent?.modelTurn?.parts) {
 				const parts = response.serverContent.modelTurn.parts;
 				let hasAudioParts = false;
@@ -1341,14 +1366,26 @@ class GoogleLivePublisher {
 					this.audioPlayer.complete();
 				}
 			}
+			
+			// Handle explicit heartbeat responses
 			if (response.heartbeat) {
-				console.log('Heartbeat received');
+				console.log('Heartbeat response received');
 			}
+			
+			// Special handling for unknown field 'heartbeat' in the response
+			if (rawText.includes('"heartbeat"') && !response.heartbeat) {
+				console.log('Received message with heartbeat field but not in expected format');
+				// Still treat this as a valid heartbeat response
+				this.lastHeartbeatResponse = Date.now();
+			}
+			
+			// Log other response types without failing
 			if (!response.setupComplete && !response.serverContent && !response.heartbeat) {
 				console.log('Other response type:', response);
 			}
 		} catch (err) {
 			console.error('Error handling message:', err);
+			// Don't throw the error further, just log it and continue
 		}
 	}
     sendPrompt(text) {
@@ -1461,26 +1498,37 @@ class GoogleLivePublisher {
             }
         };
         this.ws.onclose = (event) => {
-            console.log('WebSocket closed:', event.code, event.reason);
-            let errorMsg = 'Connection closed.';
-            if (event.code === 1007) {
-                errorMsg = 'Invalid API key. Please check your key and try again.';
-                this.handleConnectionFailure();
-            } else if (event.code === 1006) {
-                errorMsg = 'Connection terminated unexpectedly.';
-                if (!this.stopped) {
-                    this.attemptReconnect();
-                    errorMsg += ' Attempting to reconnect...';
-                }
-            } else if (!this.stopped) {
-                this.attemptReconnect();
-                errorMsg += ' Attempting to reconnect...';
-            }
-            showError(errorMsg);
-            if (this.stopped || this.reconnectAttempts >= this.maxReconnectAttempts) {
-                this.handleConnectionFailure();
-            }
-        };
+			console.log('WebSocket closed:', event.code, event.reason);
+			let errorMsg = 'Connection closed.';
+			
+			if (event.code === 1007) {
+				// Handle invalid JSON payload error specially
+				if (event.reason && event.reason.includes('Invalid JSON payload')) {
+					console.warn('Invalid JSON payload error, attempting to reconnect');
+					errorMsg = 'Server had trouble with message format. Attempting to reconnect...';
+					if (!this.stopped) {
+						this.attemptReconnect();
+					}
+				} else {
+					errorMsg = 'Invalid API key. Please check your key and try again.';
+					this.handleConnectionFailure();
+				}
+			} else if (event.code === 1006) {
+				errorMsg = 'Connection terminated unexpectedly.';
+				if (!this.stopped) {
+					this.attemptReconnect();
+					errorMsg += ' Attempting to reconnect...';
+				}
+			} else if (!this.stopped) {
+				this.attemptReconnect();
+				errorMsg += ' Attempting to reconnect...';
+			}
+			
+			showError(errorMsg);
+			if (this.stopped || this.reconnectAttempts >= this.maxReconnectAttempts) {
+				this.handleConnectionFailure();
+			}
+		};
         return new Promise((resolve, reject) => {
             const connectionTimeout = setTimeout(() => {
                 reject(new Error('Connection timeout'));
@@ -1533,11 +1581,20 @@ class GoogleLivePublisher {
 		this.lastActivityTime = Date.now();
 		this.pingInterval = setInterval(() => {
 			if (this.isConnected()) {
-				this.ws.send(JSON.stringify({ heartbeat: true }));
-				const elapsed = Date.now() - this.lastHeartbeatResponse;
-				if (elapsed > 60000) {
-					console.warn('No heartbeat response for 60 seconds, reconnecting');
-					this.reconnect();
+				try {
+					// Try a simpler heartbeat format (this seems to work better with Google's API)
+					this.ws.send(JSON.stringify({ heartbeat: {} }));
+					
+					const elapsed = Date.now() - this.lastHeartbeatResponse;
+					if (elapsed > 60000) {
+						console.warn('No heartbeat response for 60 seconds, reconnecting');
+						this.reconnect();
+					}
+				} catch (err) {
+					console.error('Error sending heartbeat:', err);
+					if (!this.stopped) {
+						this.attemptReconnect();
+					}
 				}
 			} else {
 				clearInterval(this.pingInterval);
@@ -1557,7 +1614,8 @@ class GoogleLivePublisher {
 		this.keepaliveInterval = setInterval(() => {
 			if (this.isConnected()) {
 				try {
-					this.ws.send(JSON.stringify({ keepalive: true }));
+					// Use a simple format that's less likely to cause JSON parsing issues
+					this.ws.send(JSON.stringify({ keepalive: {} }));
 					console.log('Sent keepalive message');
 				} catch (err) {
 					console.error('Error sending keepalive:', err);
