@@ -190,14 +190,14 @@
 		return;
 	  }
 	  
-	  if (ele.matched){return;}
-	  ele.matched = true;
+	  if (ele.dataset.matched){return;}
+	  ele.dataset.matched = true;
 	  let sibling = ele.nextElementSibling;
 	  let nextCount = 0;
 	  while(sibling) {
 		nextCount++;
 		if (nextCount>5){return;}
-		if (sibling.matched){return;}
+		if (sibling.dataset.matched){return;}
 		sibling = sibling.nextElementSibling;
 	  }
 	  
@@ -340,8 +340,9 @@
 	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
-			ele.dataset.mid = e.id;
-			
+			if (e){
+				ele.dataset.mid = e?.id;
+			}
 		});
 	  } catch(e){
 		  //
