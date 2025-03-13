@@ -81,8 +81,8 @@ function updateMessageStats() {
     const activeSources = document.getElementById('active-sources');
     
     // We'll use messageCounter from background.js
-    if (window.messageCounter) {
-        messageCount.textContent = window.messageCounter;
+    if (window.messageCounter - window.messageCounterBase) {
+        messageCount.textContent = window.messageCounterwindow.messageCounterBase;
     }
     
     // Count active sources from tabs or metadata
@@ -231,37 +231,6 @@ function setupPeriodicUpdates() {
     }, 1000);
 }
 
-// Hook into processIncomingMessage to display messages
-function setupMessageHook() {
-    if (window.processIncomingMessage) {
-        const originalProcessIncomingMessage = window.processIncomingMessage;
-        window.processIncomingMessage = function(message, sender) {
-            // Call the original function
-            const result = originalProcessIncomingMessage(message, sender);
-            
-            // Update our UI
-            if (message && message.chatmessage) {
-                // Safely get plaintext message content
-                let plainTextMessage = message.chatmessage;
-                if (!message.textonly) {
-                    // Try to convert HTML to plain text
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = message.chatmessage;
-                    plainTextMessage = tempDiv.textContent || tempDiv.innerText || message.chatmessage;
-                }
-                
-                addMessage({
-                    source: message.type || 'Unknown',
-                    content: plainTextMessage
-                });
-            }
-            
-            updateMessageStats();
-            return result;
-        };
-    }
-}
-
 // Intercept console logs
 function setupConsoleHook() {
     const originalConsoleLog = console.log;
@@ -284,14 +253,6 @@ function setupConsoleHook() {
 function initDashboard() {
     setupConsoleHook();
     setupPeriodicUpdates();
-    
-    // Wait for background.js to load then hook into message processing
-    window.addEventListener('load', function() {
-        // Allow some time for background.js to initialize
-        setTimeout(function() {
-            setupMessageHook();
-        }, 2000);
-    });
 }
 
 // Start dashboard when DOM is ready

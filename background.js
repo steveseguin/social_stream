@@ -17,7 +17,8 @@ var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
 var sentimentAnalysisLoaded = false;
 
-var messageCounter = Math.floor(Math.random() * 90000);
+var messageCounterBase = Math.floor(Math.random() * 90000);
+var messageCounter = messageCounterBase;
 var lastAntiSpam = 0;
 
 var connectedPeers = {};
@@ -2674,6 +2675,7 @@ function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
 const checkDuplicateSources = new CheckDuplicateSources();
 
 async function processIncomingMessage(message, sender=null){
+	
 	try {
 		if (sender?.tab){
 			message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from

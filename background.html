@@ -72,6 +72,17 @@
             color: var(--primary-color);
         }
 
+        .badge {
+            display: inline-block;
+            background-color: #6c757d;
+            color: white;
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
         .keep-open-alert {
             background-color: var(--alert-color);
             color: white;
@@ -84,6 +95,43 @@
             max-width: 800px;
             box-shadow: var(--shadow-light);
             animation: pulse 2s infinite;
+        }
+
+        .info-notice {
+            background-color: rgb(25, 118, 210, 0.1);
+            border-left: 4px solid rgb(25, 118, 210);
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin: 20px auto 30px;
+            max-width: 800px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .info-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            margin-top: 2px;
+        }
+
+        .info-content {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-dark);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .info-notice {
+                background-color: rgba(25, 118, 210, 0.15);
+            }
+            .info-content {
+                color: var(--text-light);
+            }
+        }
+
+        .highlight-text {
+            font-weight: bold;
+            color: var(--alert-color);
         }
 
         @keyframes pulse {
@@ -334,11 +382,22 @@
     <div class="container">
         <div class="header">
             <div class="logo">Social Stream Ninja</div>
-            <p>Background Service Dashboard</p>
+            <p><strong>Background Service Dashboard</strong> <span class="badge">Not the main app</span></p>
         </div>
 
         <div class="keep-open-alert">
             ⚠️ IMPORTANT: You must keep this page open for Social Stream Ninja to work!
+        </div>
+
+        <div class="info-notice">
+            <div class="info-icon">ℹ️</div>
+            <div class="info-content">
+                <strong>This is not the main application.</strong> This is just a background service page that powers Social Stream Ninja.
+                <br>
+                All settings and controls are available through the extension popup or main menu.
+                <br>
+                <span class="highlight-text">Do not close this page or the extension will stop working.</span>
+            </div>
         </div>
 
         <div class="dashboard">
@@ -381,29 +440,13 @@
                 </h3>
                 <div class="stat-group">
                     <div class="stat-value" id="message-count">0</div>
-                    <div class="stat-label">Messages Processed</div>
+                    <div class="stat-label">Messages Processed this Session</div>
                 </div>
                 <div class="stat-group">
                     <div class="stat-value" id="active-sources">0</div>
                     <div class="stat-label">Active Sources</div>
                 </div>
             </div>
-
-            <div class="card" id="recent-messages">
-                <h3>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="17" y1="10" x2="3" y2="10"></line>
-                        <line x1="21" y1="6" x2="3" y2="6"></line>
-                        <line x1="21" y1="14" x2="3" y2="14"></line>
-                        <line x1="17" y1="18" x2="3" y2="18"></line>
-                    </svg>
-                    Recent Messages
-                </h3>
-                <div class="message-list" id="message-list">
-                    <div class="message empty-message">No messages yet</div>
-                </div>
-            </div>
-
             <div class="card" id="feature-status">
                 <h3>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
