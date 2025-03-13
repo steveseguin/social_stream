@@ -686,49 +686,7 @@
 
         var nameColor = "";
 
-        try {
-            var cb = ele.querySelectorAll("img[class*='ImgBadgeChatMessage'], img[class*='ImgCombineBadgeIcon']");
-            if (cb.length) {
-                chatbadges = [];
-                cb.forEach(cbimg => {
-                    try {
-                        if (cbimg.src) {
-                            chatbadges.push(cbimg.src);
-                            if (cbimg.src.includes("/moderator_")) {
-                                if (!settings.nosubcolor) {
-                                    nameColor = "#F5D5D1";
-                                }
-                            } else if (cbimg.src.includes("/moderater_")) {
-                                if (!settings.nosubcolor) {
-                                    nameColor = "#F5D5D1";
-                                }
-                            } else if (cbimg.src.includes("/sub_")) {
-                                membership = getTranslation("subscriber", "SUBSCRIBER");
-                                if (!settings.nosubcolor) {
-                                    nameColor = "#139F1D";
-                                }
-                            } else if (cbimg.src.includes("/subs_")) {
-                                membership = getTranslation("subscriber", "SUBSCRIBER");
-                                if (!settings.nosubcolor) {
-                                    nameColor = "#139F1D";
-                                }
-                            } else if (!rank && !nameColor && cbimg.src.includes("/grade_")) {
-                                try {
-                                    rank = parseInt(cbimg.nextElementSibling.innerText) || 1;
-                                    if (!settings.nosubcolor) {
-                                        if (rank > 40) {
-                                            rank = 40;
-                                        }
-                                        nameColor = lut[rank];
-                                    }
-                                } catch (e) {}
-                            }
-                        }
-                    } catch (e) {}
-                });
-            }
-        } catch (e) {}
-
+        
         var chatname = "";
 
 
@@ -748,14 +706,18 @@
 
         } catch (e) {}
 
+		var chatBadgeAlt = false;
         var chatmessage = "";
         try {
 			
 			let chatEle = ele.querySelector("div[class*='-DivComment']");
 			if (chatEle){
 				chatmessage = getAllContentNodes(chatEle);
-			} else {
-				chatmessage = getAllContentNodes(ele.querySelector("div[class*='-DivUserInfo'],  div[class*='-DivUserInfo'], span[data-e2e='message-owner-name']").nextSibling);
+			} else if (ele.querySelector("div[class*='-DivUserInfo'],  div[class*='-DivUserInfo']")?.nextSibling){
+				chatmessage = getAllContentNodes(ele.querySelector("div[class*='-DivUserInfo'],  div[class*='-DivUserInfo']").nextSibling);
+			} else if (ele.childNodes[1].childNodes[ele.childNodes[1].childNodes.length-1]){
+				chatmessage = getAllContentNodes(ele.childNodes[1].childNodes[ele.childNodes[1].childNodes.length-1]);
+				chatBadgeAlt = true;
 			}
             //live-shared-ui-chat-list-chat-message-comment
             if (!chatmessage) {
@@ -855,6 +817,60 @@
 				}
             }
         } catch (e) {}
+		
+		
+		try {
+            var cb = ele.querySelectorAll("img[class*='ImgBadgeChatMessage'], img[class*='ImgCombineBadgeIcon']");
+			
+			if (!cb.length && chatBadgeAlt) {
+				try{
+					if (ele.childNodes[1].childNodes.length==2){
+						cb = ele.querySelector("span[data-e2e='message-owner-name']").parentNode.querySelectorAll("img[src]");
+					}
+				} catch(e){}
+			}
+			
+            if (cb.length) {
+                chatbadges = [];
+                cb.forEach(cbimg => {
+                    try {
+                        if (cbimg.src) {
+                            chatbadges.push(cbimg.src);
+                            if (cbimg.src.includes("/moderator_")) {
+                                if (!settings.nosubcolor) {
+                                    nameColor = "#F5D5D1";
+                                }
+                            } else if (cbimg.src.includes("/moderater_")) {
+                                if (!settings.nosubcolor) {
+                                    nameColor = "#F5D5D1";
+                                }
+                            } else if (cbimg.src.includes("/sub_")) {
+                                membership = getTranslation("subscriber", "SUBSCRIBER");
+                                if (!settings.nosubcolor) {
+                                    nameColor = "#139F1D";
+                                }
+                            } else if (cbimg.src.includes("/subs_")) {
+                                membership = getTranslation("subscriber", "SUBSCRIBER");
+                                if (!settings.nosubcolor) {
+                                    nameColor = "#139F1D";
+                                }
+                            } else if (!rank && !nameColor && cbimg.src.includes("/grade_")) {
+                                try {
+                                    rank = parseInt(cbimg.nextElementSibling.innerText) || 1;
+                                    if (!settings.nosubcolor) {
+                                        if (rank > 40) {
+                                            rank = 40;
+                                        }
+                                        nameColor = lut[rank];
+                                    }
+                                } catch (e) {}
+                            }
+                        }
+                    } catch (e) {}
+                });
+            }
+        } catch (e) {}
+
 
         if (!chatmessage && !chatbadges) {
             return;
