@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.14.4",
+  "version": "3.14.5",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -21,6 +21,7 @@
     "tabs"
   ],
   "host_permissions": [
+	"http://localhost:8080/fav.html",
     "http://localhost:11434/api/generate",
     "http://127.0.0.1:11434/api/generate",
     "https://zap.stream/*",
@@ -697,7 +698,8 @@
       "js": [ "./sources/tiktok.js" ],
       "matches": [
         "https://www.tiktok.com/*live*",
-        "https://livecenter.tiktok.com/*"
+        "https://livecenter.tiktok.com/*",
+		"http://localhost:8080/fav.html"
       ]
     },
     {

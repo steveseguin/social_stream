@@ -1,6 +1,5 @@
 (function() {
 	
-	
 	const avatarCache = {
 		_cache: {},
 		MAX_SIZE: 300,
@@ -1035,7 +1034,6 @@
 					for (let i = 0; i < mutation.addedNodes.length; i++) {
 						try {
 							const node = mutation.addedNodes[i];
-							//console.log(node);
 							if (!subtree && node.dataset && node.dataset.e2e === "chat-message") {
 								setTimeout((node) => {
 									if (node.isConnected) {
@@ -1047,11 +1045,11 @@
 								
 								let msg = node.querySelector('[data-e2e="chat-message"]');
 								if (msg || (node.dataset && node.dataset.e2e === "chat-message")){
-									setTimeout((msg) => {
-										if (msg.isConnected) {
-											processMessage(msg);
+									setTimeout((msgx) => {
+										if (msgx.isConnected) {
+											processMessage(msgx);
 										}
-									}, 300, msg);
+									}, 300, (msg || node));
 								} else if (settings.captureevents) {
 									setTimeout(() => {
 										if (node.isConnected) {

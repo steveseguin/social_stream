@@ -1,5 +1,4 @@
 // dashboard.js - Supporting JavaScript for Social Stream Ninja background page
-// This file contains all the functionality that was previously inline in the HTML
 
 // Function to update connection status indicators
 function updateConnectionStatus() {
@@ -112,46 +111,6 @@ function updateFeatureStatus() {
     hypeStatus.className = 'status-indicator ' + (settings.hypemode ? 'status-active' : 'status-inactive');
 }
 
-// Function to add a message to the recent messages list
-function addMessage(message) {
-    const messageList = document.getElementById('message-list');
-    const emptyMessage = messageList.querySelector('.empty-message');
-    
-    if (emptyMessage) {
-        messageList.removeChild(emptyMessage);
-    }
-    
-    const messageElement = document.createElement('div');
-    messageElement.className = 'message';
-    
-    const messageHeader = document.createElement('div');
-    messageHeader.className = 'message-header';
-    
-    const messageSource = document.createElement('span');
-    messageSource.className = 'message-source';
-    messageSource.textContent = message.source || 'Unknown';
-    
-    const messageTime = document.createElement('span');
-    messageTime.className = 'message-time';
-    messageTime.textContent = new Date().toLocaleTimeString();
-    
-    messageHeader.appendChild(messageSource);
-    messageHeader.appendChild(messageTime);
-    
-    const messageContent = document.createElement('div');
-    messageContent.className = 'message-content';
-    messageContent.textContent = message.content || '';
-    
-    messageElement.appendChild(messageHeader);
-    messageElement.appendChild(messageContent);
-    
-    messageList.insertBefore(messageElement, messageList.firstChild);
-    
-    // Keep only the last 5 messages
-    while (messageList.children.length > 5) {
-        messageList.removeChild(messageList.lastChild);
-    }
-}
 
 // Function to add a log message
 function addLogMessage(message, isError = false) {
