@@ -1343,8 +1343,8 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 		
 		const context = await ChatContextManager.getContext(data);
 		
-		console.log(data);
-		console.log(context);
+		//console.log(data);
+		//console.log(context);
 		
 		// Add context elements
 		if (context.chatSummary) {
@@ -2658,8 +2658,8 @@ const ChatContextManager = { // summary and chat context
             summary = await this.getSummary();
         }
 		
-		console.log(recentMessages);
-		console.log(userHistory);
+		//console.log(recentMessages);
+		//console.log(userHistory);
 
         const processedContext = {
             recentMessages: this.messageToLLMString(recentMessages),

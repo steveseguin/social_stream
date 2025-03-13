@@ -19,6 +19,35 @@ try {
     console.error("Web Audio API not supported", e);
 }
 
+
+TTS.initAudioContext = function() {
+    try {
+        if (!TTS.audioContext) {
+            TTS.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Resume context if suspended
+        if (TTS.audioContext.state === 'suspended') {
+            TTS.audioContext.resume().catch(err => {
+                console.warn("Could not resume audio context:", err);
+            });
+        }
+        
+        return TTS.audioContext;
+    } catch(e) {
+        console.error("Web Audio API not supported", e);
+        return null;
+    }
+};
+
+document.addEventListener('click', function() {
+    TTS.initAudioContext();
+}, { once: true });
+
+document.addEventListener('keydown', function() {
+    TTS.initAudioContext();
+}, { once: true });
+
 TTS.isSafari = function() {
 	const userAgent = navigator.userAgent;
 	const isChrome = userAgent.indexOf("Chrome") > -1;
@@ -702,6 +731,8 @@ TTS.speak = function(text, allow = false) {
     if (TTS.replaceURLInLink) { 
         text = TTS.replaceURLsWithSubstring(text, "Link");
     }
+	
+	TTS.initAudioContext();
 
     // Use the selected provider
     switch (TTS.TTSProvider) {
@@ -875,7 +906,7 @@ TTS.toggle = function() {
  */
 TTS.speechMeta = function(data, allow = false) {
     if (TTS.skipTTSMessages && !data.hasDonation) {
-        if (parseInt(data.id) % TTS.skipTTSMessages !== 0) {
+        if (parseInt(data.id||0) % TTS.skipTTSMessages !== 0) {
             return;
         }
     }
@@ -898,7 +929,6 @@ TTS.speechMeta = function(data, allow = false) {
     if (TTS.doNotReadEvents && data.event) {
         return;
     }
-    
     try {
         var isCommand = false;
         var msgPlain = document.getElementById("content_" + data.id);
@@ -923,7 +953,9 @@ TTS.speechMeta = function(data, allow = false) {
                 msgPlain = msgPlain.replace(/\*/g, '');
             }
             msgPlain = msgPlain.trim();
-        }
+        } else if (data.chatmessage){
+			msgPlain = data.chatmessage;
+		}
 
         var chatname = "";
         if (TTS.ttsSpeakChatname && data.chatname) {
