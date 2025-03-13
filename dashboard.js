@@ -82,7 +82,7 @@ function updateMessageStats() {
     
     // We'll use messageCounter from background.js
     if (window.messageCounter - window.messageCounterBase) {
-        messageCount.textContent = window.messageCounterwindow.messageCounterBase;
+        messageCount.textContent = window.messageCounter - window.messageCounterBase;
     }
     
     // Count active sources from tabs or metadata
