@@ -995,10 +995,31 @@ TTS.speechMeta = function(data, allow = false) {
  */
 TTS.initKokoro = async function() {
     if (window.electronApi) {
-        return;
+        return true; // Electron already handles this
     }
     if (TTS.kokoroDownloadInProgress) return false;
-    if (!TTS.KokoroTTS) {
+    if (TTS.kokoroTtsInstance) return true;
+    
+    try {
+        TTS.kokoroDownloadInProgress = true;
+        console.log("Loading Kokoro dependencies...");
+        
+        // Import the module using the same path pattern as the working version
+        const relativePath = window.location.href.startsWith("chrome-extension://") 
+            ? './thirdparty/kokoro-bundle.es.ext.js'
+            : './thirdparty/kokoro-bundle.es.js'; // Changed to match working version path
+        
+        const module = await import(relativePath);
+        
+        TTS.KokoroTTS = module.KokoroTTS;
+        TTS.TextSplitterStream = module.TextSplitterStream;
+        const detectWebGPU = module.detectWebGPU;
+        
+        // Use the same WebGPU detection as the working version
+        const device = (await detectWebGPU()) ? "webgpu" : "wasm";
+        console.log("Using device:", device);
+        
+        // Open indexedDB to check for cached model
         async function openDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open('kokoroTTS', 1);
@@ -1034,83 +1055,63 @@ TTS.initKokoro = async function() {
                 request.onsuccess = () => resolve();
             });
         }
-    
-        try {
-            TTS.kokoroDownloadInProgress = true;
-            console.log("Loading Kokoro dependencies...");
+        
+        console.log("Checking cache for model...");
+        let modelData = await getCachedModel();
+        
+        if (!modelData) {
+            console.log("Downloading model...");
+            const modelUrl = 'https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model.onnx';
+            const response = await fetch(modelUrl);
+            const total = +response.headers.get('Content-Length');
+            let loaded = 0;
             
-            // Use dynamic import similar to original implementation
-            const module = window.location.href.startsWith("chrome-extension://") 
-                ? await import('./thirdparty/kokoro-bundle.es.ext.js') 
-                : await import('./thirdparty/kokoro-bundle.es.js');
-                
-            TTS.KokoroTTS = module.KokoroTTS;
-            TTS.TextSplitterStream = module.TextSplitterStream;
-            const detectWebGPU = module.detectWebGPU;
+            const reader = response.body.getReader();
+            const chunks = [];
             
-            const device = (await detectWebGPU()) ? "webgpu" : "wasm";
-            console.log("Using device:", device);
-            
-            console.log("Checking cache for model...");
-            let modelData = await getCachedModel();
-            
-            if (!modelData) {
-                console.log("Downloading model...");
-                const modelUrl = 'https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model.onnx';
-                const response = await fetch(modelUrl);
-                const total = +response.headers.get('Content-Length');
-                let loaded = 0;
+            while (true) {
+                const {done, value} = await reader.read();
+                if (done) break;
                 
-                const reader = response.body.getReader();
-                const chunks = [];
+                chunks.push(value);
+                loaded += value.length;
                 
-                while (true) {
-                    const {done, value} = await reader.read();
-                    if (done) break;
-                    
-                    chunks.push(value);
-                    loaded += value.length;
-                    
-                    const percentage = (loaded / total) * 100;
-                    console.log(`Downloading model: ${percentage.toFixed(1)}%`);
-                }
-                
-                const modelBlob = new Blob(chunks);
-                modelData = new Uint8Array(await modelBlob.arrayBuffer());
-                
-                console.log("Caching model...");
-                await cacheModel(modelData);
-            } else {
-                console.log("Loading model from cache");
+                const percentage = (loaded / total) * 100;
+                console.log(`Downloading model: ${percentage.toFixed(1)}%`);
             }
             
-            console.log("Initializing Kokoro TTS...");
-            const customLoadFn = async () => modelData;
-            TTS.kokoroTtsInstance = await TTS.KokoroTTS.from_pretrained(
-                "onnx-community/Kokoro-82M-v1.0-ONNX",
-                {
-                    dtype: "q8",
-                    device,
-                    load_fn: customLoadFn
-                }
-            );
+            const modelBlob = new Blob(chunks);
+            modelData = new Uint8Array(await modelBlob.arrayBuffer());
             
-            console.log("Kokoro TTS ready!");
-            TTS.kokoroDownloadInProgress = false;
-            return true;
-        } catch (error) {
-            console.error('Failed to initialize Kokoro:', error);
-            TTS.kokoroDownloadInProgress = false;
-            return false;
+            console.log("Caching model...");
+            await cacheModel(modelData);
+        } else {
+            console.log("Loading model from cache");
         }
+        
+        console.log("Initializing Kokoro TTS...");
+        const customLoadFn = async () => modelData;
+        
+        // Use the same model initialization parameters as working version
+        TTS.kokoroTtsInstance = await TTS.KokoroTTS.from_pretrained(
+            "onnx-community/Kokoro-82M-v1.0-ONNX",
+            {
+                dtype: device === "wasm" ? "q8" : "fp32", // Match working version
+                device,
+                load_fn: customLoadFn
+            }
+        );
+        
+        console.log("Kokoro TTS ready!");
+        TTS.kokoroDownloadInProgress = false;
+        return true;
+    } catch (error) {
+        console.error('Failed to initialize Kokoro:', error);
+        TTS.kokoroDownloadInProgress = false;
+        return false;
     }
-    return true;
 };
 
-/**
- * Kokoro TTS implementation
- * @param {string} text - Text to speak
- */
 /**
  * ElevenLabs TTS implementation
  * @param {string} tts - Text to speak
@@ -1361,10 +1362,8 @@ TTS.kokoroTTS = async function(text) {
   try {
     if (window.electronApi) {
       try {
-        // Get WAV buffer directly from main process using window.electronApi
+        // Electron implementation remains the same
         const wavBuffer = await window.electronApi.tts(text, TTS.kokoroSettings);
-        
-        // Create blob from buffer
         const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
         
         if (TTS.neuroSyncEnabled) {
@@ -1383,14 +1382,15 @@ TTS.kokoroTTS = async function(text) {
           return;
         }
         
-        // Play the audio
-        const audioElement = document.createElement("audio");
-        audioElement.src = URL.createObjectURL(audioBlob);
-        audioElement.onended = TTS.finishedAudio;
+        if (!TTS.audio) {
+			TTS.audio = document.createElement("audio");
+			TTS.audio.onended = TTS.finishedAudio;
+		}
+        TTS.audio.src = URL.createObjectURL(audioBlob);
         
-        if (TTS.volume) audioElement.volume = TTS.volume;
+        if (TTS.volume) TTS.audio.volume = TTS.volume;
         
-        audioElement.play();
+        TTS.audio.play();
         return;
       } catch (error) {
         console.error("Error playing TTS:", error);
@@ -1398,7 +1398,7 @@ TTS.kokoroTTS = async function(text) {
       }
     }
 
-    // Fallback to web implementation if electronApi not available
+    // Web implementation with fixes aligned to working version
     if (!TTS.kokoroTtsInstance) {
       const initialized = await TTS.initKokoro();
       if (!initialized || !TTS.kokoroTtsInstance) {
@@ -1409,56 +1409,65 @@ TTS.kokoroTTS = async function(text) {
     }
     
     TTS.premiumQueueActive = true;
+    
+    // Create a new streamer for each text processing
     const streamer = new TTS.TextSplitterStream();
     streamer.push(text);
     streamer.close();
     
-    const audioElement = document.createElement("audio");
-    audioElement.onended = TTS.finishedAudio;
+    if (!TTS.audio) {
+		TTS.audio = document.createElement("audio");
+		TTS.audio.onended = TTS.finishedAudio;
+	}
     
-    const stream = TTS.kokoroTtsInstance.stream(streamer, { 
-      voice: TTS.kokoroSettings.voiceName || Object.keys(TTS.kokoroTtsInstance.voices)[0],
-      speed: TTS.kokoroSettings.speed,
-      streamAudio: false 
-    });
+    // Use the same stream options as the working version
+    const speed = TTS.kokoroSettings.speed || 1.0;
+    const selectedVoice = TTS.kokoroSettings.voiceName || "af_aoede"; // Use a specific default
     
-    for await (const { audio } of stream) {
-      if (!audio) {
-        TTS.finishedAudio();
-        return;
-      }
+    try {
+      const stream = TTS.kokoroTtsInstance.stream(streamer, { 
+        voice: selectedVoice,
+        speed: speed,
+        streamAudio: false
+      });
       
-      // Send to NeuroSync if enabled
-      if (TTS.neuroSyncEnabled) {
-        TTS.sendToNeuroSync(audio, { 
-          isKokoroAudio: true,
-          onProgress: (progress) => {
-            console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
-          }
-        }).then(result => {
-          if (result && result.blendshapes) {
-            console.log(`Received ${result.blendshapes.length} blendshape frames`);
-          }
-        }).catch(err => {
-          console.error("NeuroSync error:", err);
-        });
-        return;
-      }
-      
-      const audioBlob = audio.toBlob();
-      audioElement.src = URL.createObjectURL(audioBlob);
-      if (TTS.volume) audioElement.volume = TTS.volume;
-      
-      try {
-        if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
-          await TTS.audioContext.resume();
+      for await (const { audio } of stream) {
+        if (!audio) continue;
+        
+        if (TTS.neuroSyncEnabled) {
+          TTS.sendToNeuroSync(audio, { 
+            isKokoroAudio: true,
+            onProgress: (progress) => {
+              console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
+            }
+          }).then(result => {
+            if (result && result.blendshapes) {
+              console.log(`Received ${result.blendshapes.length} blendshape frames`);
+            }
+          }).catch(err => {
+            console.error("NeuroSync error:", err);
+          });
+          TTS.finishedAudio();
+          return;
         }
-        await audioElement.play();
-      } catch (e) {
-        TTS.finishedAudio();
-        console.error(e);
-        console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+        
+        const audioBlob = audio.toBlob();
+        TTS.audio.src = URL.createObjectURL(audioBlob);
+        if (TTS.volume) TTS.audio.volume = TTS.volume;
+        
+        try {
+          if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
+            await TTS.audioContext.resume();
+          }
+          await TTS.audio.play();
+        } catch (e) {
+          console.error("Audio playback failed:", e);
+          TTS.finishedAudio();
+        }
       }
+    } catch (err) {
+      console.error("Stream processing error:", err);
+      TTS.finishedAudio();
     }
   } catch (e) {
     console.error("Kokoro TTS error:", e);

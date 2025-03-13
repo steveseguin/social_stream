@@ -4035,11 +4035,12 @@ async function initKokoro() {
 				kokoroTtsInstance = await KokoroTTS.from_pretrained(
 					"onnx-community/Kokoro-82M-v1.0-ONNX",
 					{
-						dtype: "q8", //device === "wasm" ? "q8" : "fp16",
+						dtype: device === "wasm" ? "q8" : "fp32",
 						device,
 						load_fn: customLoadFn
 					}
 				);
+
 			} catch(e){
 				console.error(e);
 				if (device === "webgpu"){
@@ -4049,7 +4050,7 @@ async function initKokoro() {
 						kokoroTtsInstance = await KokoroTTS.from_pretrained(
 							"onnx-community/Kokoro-82M-v1.0-ONNX",
 							{
-								dtype: "q8", //device === "wasm" ? "q8" : "fp16",
+								dtype: device === "wasm" ? "q8" : "fp32",
 								device,
 								load_fn: customLoadFn
 							}
