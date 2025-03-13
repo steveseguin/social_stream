@@ -667,7 +667,7 @@
 
         // Initialize iframe for communication
         const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=${urlParams.get('session')}&novideo&noaudio&label=poll&cleanoutput&room=${urlParams.get('session')}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=${urlParams.get('password') || "false"}&solo&view=${urlParams.get('session')}&novideo&noaudio&label=poll&cleanoutput&room=${urlParams.get('session')}`;
         iframe.style.cssText = "width:0;height:0;border:0;border:none;position:absolute;";
         document.body.appendChild(iframe);
 
