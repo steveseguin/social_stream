@@ -1110,7 +1110,6 @@
 		}
 		
 		target2.hasObserver = true;
-		console.log("Starting event observer");
 		
 		const observer2 = new MutationObserver((mutations) => {
 			if (!settings.captureevents) return;
