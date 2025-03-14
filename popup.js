@@ -1354,7 +1354,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		WebMidi.addListener("disconnected", updateAllMidiSelects);
 		
 	  } catch(e) {
-		console.error("Failed to initialize WebMidi:", e);
+		console.log("Failed to initialize WebMidi:", e);
 	  }
 	}
     // Dynamically load the WebMidi script and initialize the dropdown logic

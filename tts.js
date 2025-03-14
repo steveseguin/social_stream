@@ -399,7 +399,21 @@ TTS.configure = function(urlParams) {
         TTS.voiceLatency = urlParams.get("latency") || 0;
         TTS.voiceLatency = parseInt(TTS.voiceLatency) || 0;
     }
-
+	
+	// Voice latency
+    if (urlParams.has("latency")) {
+        TTS.voiceLatency = urlParams.get("latency") || 0;
+        TTS.voiceLatency = parseInt(TTS.voiceLatency) || 0;
+    }
+	
+	if (urlParams.get("ttssources").trim()) {
+		TTS.ttsSources = urlParams.get("ttssources").toLowerCase().split(",").map(element => element.trim());
+	}
+	
+	if (urlParams.has("latency")) {
+        TTS.readDonos  = urlParams.get("ttsdonos").trim() || "en-US";;
+    }
+	
     // API Keys
     TTS.GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
     TTS.ElevenLabsKey = urlParams.get("elevenlabskey") || false;

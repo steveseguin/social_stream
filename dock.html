@@ -2620,19 +2620,6 @@
 				timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
 			}
 			
-			var readDonos = false;
-			if (urlParams.has("ttsdonos")) {
-				readDonos = urlParams.get("ttsdonos") || "en-US";
-			}
-			
-			var ttsSources = false;
-			if (urlParams.get("ttssources")) {
-				ttsSources = urlParams.get("ttssources").trim() || false;
-				if (ttsSources){
-					ttsSources = ttsSources.toLowerCase().split(",").map(element => element.trim());
-				}
-			}
-			
 			var waitToReveal = 0;
 			if (urlParams.has("delaytime")) {
 				waitToReveal = parseInt(urlParams.get("delaytime")) || 10000;
