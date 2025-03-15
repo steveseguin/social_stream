@@ -1679,6 +1679,11 @@
 				readDonos = urlParams.get("ttsdonos") || "en-US";
 			}
 			
+			var disableTTS = false;
+			if (urlParams.has("notts")) {
+				disableTTS = true;
+			}
+			
 			var newmembertts = false;
 			if (urlParams.has("ttsnewmembers")) {
 				newmembertts = urlParams.get("ttsnewmembers") || "en-US";
@@ -1845,6 +1850,9 @@
 				}
 				if (!text) {
 					return;
+				}
+				if (disableTTS){
+					return; // no exceptions.
 				}
 
 				if (replaceURLInLink) {
