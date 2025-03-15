@@ -153,6 +153,9 @@ TTS.skipTTSMessages = false;
 TTS.beepwords = false;
 TTS.ttsSources = null;
 TTS.readDonos = false;
+TTS.disableTTS = false;
+TTS.ttsSources = false;
+TTS.readDonos = "en-US";
 
 /**
  * Check if the browser is Safari
@@ -370,10 +373,15 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 TTS.configure = function(urlParams) {
     // Voice gender
+	
+	if (urlParams.has("notts")) {
+        TTS.disableTTS = true;
+    }
+	
     if (urlParams.has("gender")) {
         TTS.voiceGender = urlParams.get("gender") || "MALE";
     }
-
+	
     // Volume
     if (urlParams.has("volume")) {
         TTS.volume = urlParams.get("volume") || 1;
@@ -400,17 +408,11 @@ TTS.configure = function(urlParams) {
         TTS.voiceLatency = parseInt(TTS.voiceLatency) || 0;
     }
 	
-	// Voice latency
-    if (urlParams.has("latency")) {
-        TTS.voiceLatency = urlParams.get("latency") || 0;
-        TTS.voiceLatency = parseInt(TTS.voiceLatency) || 0;
-    }
-	
-	if (urlParams.get("ttssources").trim()) {
+	if (urlParams.get("ttssources")) {
 		TTS.ttsSources = urlParams.get("ttssources").toLowerCase().split(",").map(element => element.trim());
 	}
 	
-	if (urlParams.has("latency")) {
+	if (urlParams.has("ttsdonos")) {
         TTS.readDonos  = urlParams.get("ttsdonos").trim() || "en-US";;
     }
 	
@@ -731,6 +733,11 @@ TTS.speak = function(text, allow = false) {
     if (!TTS.speech && !allow) {
         return;
     }
+	
+	if (TTS.disableTTS){
+		// do not allow ever
+		return;
+	}
     
     text = TTS.cleanPunctuation(text);
     
@@ -924,6 +931,11 @@ TTS.speechMeta = function(data, allow = false) {
             return;
         }
     }
+	
+	if (TTS.disableTTS){
+		// do not allow ever
+		return;
+	}
     
     if (!data.bot && TTS.bottts) return; // only allow bot messages
     else if (!data.host && TTS.hosttts) return; 
