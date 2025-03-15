@@ -2024,12 +2024,15 @@
 							document.getElementById("output").classList.remove(transitionType);
 							
 							console.log(data);
-							if ("tts" in data){
+							if ("tts" in data) {
 								TTS.speech = data.tts ? true : false;
+								console.log("TTS setting changed to:", TTS.speech);
 							}
-							
+
 							if (TTS.speech) {
-								TTS.speechMeta(data);
+								TTS.initAudioContext();
+								console.log("TTS speaking:", data.chatname, data.chatmessage);
+								TTS.speechMeta(data, true); // Add true as the second parameter to force speech
 							}
 
 							if (timeoutDelay) {

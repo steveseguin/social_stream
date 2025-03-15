@@ -19,18 +19,23 @@ try {
     console.error("Web Audio API not supported", e);
 }
 
-
 TTS.initAudioContext = function() {
     try {
         if (!TTS.audioContext) {
             TTS.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            console.log("New AudioContext created:", TTS.audioContext.state);
         }
         
         // Resume context if suspended
         if (TTS.audioContext.state === 'suspended') {
-            TTS.audioContext.resume().catch(err => {
+            console.log("Attempting to resume suspended AudioContext");
+            TTS.audioContext.resume().then(() => {
+                console.log("AudioContext resumed successfully");
+            }).catch(err => {
                 console.warn("Could not resume audio context:", err);
             });
+        } else {
+            console.log("AudioContext state:", TTS.audioContext.state);
         }
         
         return TTS.audioContext;
@@ -41,12 +46,27 @@ TTS.initAudioContext = function() {
 };
 
 document.addEventListener('click', function() {
+    console.log("Document clicked, initializing AudioContext");
     TTS.initAudioContext();
+    // Try to play a silent sound to unblock audio
+    try {
+        const silentSound = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0]);
+        const audioBuffer = TTS.audioContext.createBuffer(1, 8, 44100);
+        const source = TTS.audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(TTS.audioContext.destination);
+        source.start(0);
+        console.log("Silent sound played to unblock audio");
+    } catch (e) {
+        console.warn("Failed to play silent sound:", e);
+    }
 }, { once: true });
 
 document.addEventListener('keydown', function() {
+    console.log("Key pressed, initializing AudioContext");
     TTS.initAudioContext();
 }, { once: true });
+
 
 TTS.isSafari = function() {
 	const userAgent = navigator.userAgent;
@@ -151,11 +171,9 @@ TTS.allowviptss = false;
 TTS.voiceName = false;
 TTS.skipTTSMessages = false;
 TTS.beepwords = false;
-TTS.ttsSources = null;
 TTS.readDonos = false;
 TTS.disableTTS = false;
 TTS.ttsSources = false;
-TTS.readDonos = "en-US";
 
 /**
  * Check if the browser is Safari
@@ -730,28 +748,35 @@ TTS.updateButtonState = function(state) {
  * @param {boolean} allow - Whether to allow speech even if speech is disabled
  */
 TTS.speak = function(text, allow = false) {
+    console.log("TTS.speak called with:", text, "Allow:", allow, "TTS.speech:", TTS.speech);
+    
     if (!TTS.speech && !allow) {
+        console.log("Speech is disabled and not forced, aborting");
         return;
     }
 	
 	if (TTS.disableTTS){
-		// do not allow ever
+		console.log("TTS is disabled globally, aborting");
 		return;
 	}
     
     text = TTS.cleanPunctuation(text);
     
     if (!text) {
+        console.log("No text to speak after cleaning");
         return;
     }
     
     if (text.startsWith("!")) {
+        console.log("Text starts with !, aborting");
         return;
     } // do not TTS commands.
 
     if (TTS.replaceURLInLink) { 
         text = TTS.replaceURLsWithSubstring(text, "Link");
     }
+    
+    console.log("About to speak:", text);
 	
 	TTS.initAudioContext();
 
@@ -926,33 +951,72 @@ TTS.toggle = function() {
  * @param {boolean} allow - Whether to allow speech even if speech is disabled
  */
 TTS.speechMeta = function(data, allow = false) {
+    console.log("TTS.speechMeta called with data:", data, "Allow:", allow);
+    
+    if (!data) {
+        console.error("TTS.speechMeta: No data provided");
+        return;
+    }
+    
     if (TTS.skipTTSMessages && !data.hasDonation) {
         if (parseInt(data.id||0) % TTS.skipTTSMessages !== 0) {
+            console.log("Message skipped due to skipTTSMessages filter");
             return;
         }
     }
 	
 	if (TTS.disableTTS){
-		// do not allow ever
+		console.log("TTS is disabled globally, aborting");
 		return;
 	}
+	
+    if (!data.bot && TTS.bottts) {
+        console.log("Filter: Only bot messages allowed and this is not a bot message");
+        return;
+    } 
+    else if (!data.host && TTS.hosttts) {
+        console.log("Filter: Only host messages allowed and this is not a host message");
+        return;
+    } 
+    else if (!data.mod && TTS.modtts) {
+        console.log("Filter: Only mod messages allowed and this is not a mod message");
+        return;
+    }
+    else if (!data.vip && TTS.viptts) {
+        console.log("Filter: Only VIP messages allowed and this is not a VIP message");
+        return;
+    } 
+    else if (!data.admin && TTS.admintts) {
+        console.log("Filter: Only admin messages allowed and this is not an admin message");
+        return;
+    }
     
-    if (!data.bot && TTS.bottts) return; // only allow bot messages
-    else if (!data.host && TTS.hosttts) return; 
-    else if (!data.mod && TTS.modtts) return;
-    else if (!data.vip && TTS.viptts) return; 
-    else if (!data.admin && TTS.admintts) return;
+    else if (data.bot && !(TTS.allowbottss || TTS.bottts)) {
+        console.log("Filter: Bot messages not allowed");
+        return;
+    } 
+    else if (data.host && !(TTS.allowhosttss || TTS.hosttts)) {
+        console.log("Filter: Host messages not allowed");
+        return;
+    } 
     
-    else if (data.bot && !(TTS.allowbottss || TTS.bottts)) return; // do not read out bot messages
-    else if (data.host && !(TTS.allowhosttss || TTS.hosttts)) return; 
+    else if (data.reflection && TTS.norelfectionstts) {
+        console.log("Filter: Reflection messages not allowed");
+        return;
+    }
     
-    else if (data.reflection && TTS.norelfectionstts) return;
+    else if (TTS.ttsSources && !TTS.ttsSources.includes(data.type)) {
+        console.log(`Filter: Source type ${data.type} not in allowed sources list`);
+        return;
+    }
     
-    else if (TTS.ttsSources && !TTS.ttsSources.includes(data.type)) return;
-    
-    if (TTS.readDonos && !(data.hasDonation || data.donation)) return;
+    if (TTS.readDonos && !(data.hasDonation || data.donation)) {
+        console.log("Filter: Only donations allowed and this is not a donation");
+        return;
+    }
 
     if (TTS.doNotReadEvents && data.event) {
+        console.log("Filter: Events not allowed and this is an event");
         return;
     }
     try {
