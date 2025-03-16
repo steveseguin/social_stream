@@ -1047,10 +1047,12 @@ function checkTriggerWords(triggerString, sentence) {
     // For phrase matching, first check if it's a simple space-separated phrase (no commas or modifiers)
     if (!triggerString.includes(',') && !triggerString.includes('+') && !triggerString.includes('-') && !triggerString.includes('"')) {
         const phrase = triggerString.toLowerCase().trim();
-        return sentence.toLowerCase().includes(phrase);
+        // Create a regex with word boundaries for the phrase
+        const regex = new RegExp(`\\b${phrase}\\b`, 'i');
+        return regex.test(sentence.toLowerCase());
     }
-
-    // Rest of the function for comma-separated and modified triggers
+    
+    // Rest of the function remains the same
     const triggers = triggerString.match(/(?:[^,\s"]+|"[^"]*")+/g)
         .map(t => t.trim())
         .filter(t => t);
