@@ -1502,6 +1502,31 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   }
 }
 
+function removeTTSProviderParams(url, selectedProvider) {
+  if (!url) return url;
+  
+  // Map of all provider-specific parameters
+  const providerParams = {
+    system: ['lang', 'voice'],
+    elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice'],
+    google: ['googleapikey', 'googlevoice'],
+    speechify: ['speechifykey', 'speechifyvoice'],
+    kokoro: ['kokorokey', 'voicekokoro']
+  };
+  
+  // Get all parameters except those for the selected provider
+  const paramsToRemove = Object.keys(providerParams)
+    .filter(provider => provider !== selectedProvider)
+    .flatMap(provider => providerParams[provider]);
+  
+  // Remove each parameter
+  let cleanedUrl = url;
+  for (const param of paramsToRemove) {
+    cleanedUrl = removeQueryParamWithValue(cleanedUrl, param);
+  }
+  
+  return cleanedUrl;
+}
 
 function update(response, sync=true){
 	log("update-> response: ",response);
@@ -1999,23 +2024,6 @@ function update(response, sync=true){
 									ele.value = response.settings[key].optionsetting10;
 									updateSettings(ele, sync); 
 								}
-								
-								if (key == "ttsProvider") {
-									document.getElementById('systemTTS10').classList.add('hidden');
-									document.getElementById('elevenlabsTTS10').classList.add('hidden');
-									document.getElementById('googleTTS10').classList.add('hidden');
-									document.getElementById('speechifyTTS10').classList.add('hidden');
-									
-									if (ele.value == "system") {
-										document.getElementById('systemTTS10').classList.remove('hidden');
-									} else if (ele.value == "elevenlabs") {
-										document.getElementById('elevenlabsTTS10').classList.remove('hidden');
-									} else if (ele.value == "google") {
-										document.getElementById('googleTTS10').classList.remove('hidden');
-									} else if (ele.value == "speechify") {
-										document.getElementById('speechifyTTS10').classList.remove('hidden');
-									}
-								}
 							}
 							if ("numbersetting" in response.settings[key]){
 								var ele = document.querySelector("input[data-numbersetting='"+key+"']");
@@ -2244,6 +2252,26 @@ function update(response, sync=true){
 								if (ele){
 									ele.value = response.settings[key].optionparam10;
 									updateSettings(ele, sync);
+								}
+								
+								if (key == "ttsprovider") {
+									document.getElementById('systemTTS10').classList.add('hidden');
+									document.getElementById('elevenlabsTTS10').classList.add('hidden');
+									document.getElementById('googleTTS10').classList.add('hidden');
+									document.getElementById('speechifyTTS10').classList.add('hidden');
+									document.getElementById('kokoroTTS10').classList.add('hidden');
+									
+									if (ele.value == "system") {
+										document.getElementById('systemTTS10').classList.remove('hidden');
+									} else if (ele.value == "elevenlabs") {
+										document.getElementById('elevenlabsTTS10').classList.remove('hidden');
+									} else if (ele.value == "google") {
+										document.getElementById('googleTTS10').classList.remove('hidden');
+									} else if (ele.value == "speechify") {
+										document.getElementById('speechifyTTS10').classList.remove('hidden');
+									} else if (ele.value == "kokoro") {
+										document.getElementById('kokoroTTS10').classList.remove('hidden');
+									}
 								}
 								
 								var ele = document.querySelector("input[data-param10='"+key+"']");
@@ -2726,6 +2754,13 @@ function handleOptionParam(ele, targetId, paramType, sync) {
                 targetElement.raw = removeQueryParamWithValue(targetElement.raw, rem.split("=")[0]);
             }
         });
+        
+        // Special handling for TTS provider
+        if (paramValue === 'ttsprovider') {
+            // Clean TTS provider-specific parameters when changing providers
+            targetElement.raw = removeTTSProviderParams(targetElement.raw, ele.value);
+        }
+        
         targetElement.raw = updateURL(`${paramValue}=${encodeURIComponent(ele.value).replace(/%26/g, '&').replace(/%3D/g, '=')}`, targetElement.raw);
     }
     
@@ -2743,6 +2778,7 @@ function handleOptionParam(ele, targetId, paramType, sync) {
     
     return true;
 }
+
 
 function handleDelParam(ele, sync) {
     // Get the target map to determine which indices are valid
@@ -3468,7 +3504,7 @@ function deleteBadwordsFile() {
   }
 }
 
-const TTSManager = {
+const TTSManager = {  // this is for testing the audio I think; not for managing settings
     audio: null,
     speech: false,
     voice: null,
