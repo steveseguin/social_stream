@@ -17,7 +17,8 @@ var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
 var sentimentAnalysisLoaded = false;
 
-var messageCounter = 0;
+var messageCounterBase = Math.floor(Math.random() * 90000);
+var messageCounter = messageCounterBase;
 var lastAntiSpam = 0;
 
 var connectedPeers = {};
@@ -2674,6 +2675,7 @@ function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
 const checkDuplicateSources = new CheckDuplicateSources();
 
 async function processIncomingMessage(message, sender=null){
+	
 	try {
 		if (sender?.tab){
 			message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
@@ -3515,9 +3517,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (isExtensionOn) {
 				loadIframe(streamID, password);
 			}
-			// isSSAPP
-
-			sendResponse({ state: isExtensionOn });
+			
+			if (isSSAPP){
+				sendResponse({ state: isExtensionOn});
+			} else {
+				sendResponse({ state: isExtensionOn, streamID: streamID, password: password });
+			}
+			
 		} else if (request.cmd && (request.cmd === 'uploadBadwords')) {
 			localStorage.setItem('customBadwords', request.data);
 			try {
@@ -6149,9 +6155,17 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
     
     var msg2Save = checkExactDuplicateAlreadyRelayed(data.response, false, false, true);  // this might be more efficient if I do it after, rather than before
     
+	if (settings.s10apikey && settings.s10) {
+		try {
+			handleStageTen(data, metadata);
+		} catch(e){}
+	}
+	
     try {
+		
         const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
         var published = {};
+		
         
         for (const tab of tabs) {
             try {
@@ -6169,8 +6183,8 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 
                 // Handle different site types
                 if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
-                    handleStageTen(tab, data, metadata);
-					
+					// we will handle this on its own.
+					continue;
                 } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
 					let restxt = data.response.length > 500 ? data.response.substring(0, 500) : data.response;
 					await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout);
@@ -6325,7 +6339,7 @@ function messageExistsInTimeWindow(tabId, messageToFind, timeWindowMs = 1000) {
 
 
 // Helper function to handle StageTen
-function handleStageTen(tab, data, metadata) {
+function handleStageTen(data, metadata) {
     if (!data.response) return;
     if (metadata) {
         sendToS10(metadata, true);
@@ -7239,14 +7253,14 @@ async function applyBotActions(data, tab = false) {
 		if (settings.highlightevent && settings.highlightevent.textsetting.trim() && data.chatmessage && data.event) {
 			const eventTexts = settings.highlightevent.textsetting.split(',').map(text => text.trim());
 			if (eventTexts.some(text => data.chatmessage.includes(text))) {
-				data.highlightColor = "#FFFF21";
+				data.highlightColor = "#fff387";
 			}
 		}
 
 		if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
 			const wordTexts = settings.highlightword.textsetting.split(',').map(text => text.trim());
 			if (wordTexts.some(text => data.chatmessage.includes(text))) {
-				data.highlightColor = "#FFFF21";
+				data.highlightColor = "#fff387";
 			}
 		}
 

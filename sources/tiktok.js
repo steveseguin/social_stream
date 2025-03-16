@@ -941,6 +941,7 @@
 		
 		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
 			console.log("Has the channel changed? If so, click the page to validate it");
+			return;
 		}
 
         pushMessage(data);
@@ -1110,7 +1111,6 @@
 		}
 		
 		target2.hasObserver = true;
-		console.log("Starting event observer");
 		
 		const observer2 = new MutationObserver((mutations) => {
 			if (!settings.captureevents) return;

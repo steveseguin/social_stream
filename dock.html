@@ -2316,8 +2316,8 @@
 			<!-- Text-to-speech buttons -->
 			
 			<div class="volume-container">
-			    <input type="range" id="volumeSlider" min="0" max="100" value="100" class="volume-slider" oninput="volume = this.value/100;">
-			    <button class="imgButton imgSmallButton" id="tts" data-state="0" onclick="tts();" style="background-image: url(./icons/tts_incoming_messages_off.png)" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
+			    <input type="range" id="volumeSlider" min="0" max="100" value="100" class="volume-slider">
+			    <button class="imgButton imgSmallButton" id="tts" data-state="0" style="background-image: url(./icons/tts_incoming_messages_off.png)" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
 			</div>
 
 			<!-- Scroll button -->
@@ -2437,7 +2437,7 @@
 			<button id="filterClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png)" title="🧹 Clear this filter"></button>
 			<button id="filterCloseButton" class="imgButton imgSmallButton" style="background-image: url(./icons/close.png)" title="❌ Close this dialog"></button>
 		</div>
-
+		<script src="tts.js"></script>
 		<script>
 			window.onerror = function backupErr(errorMsg, url = false, lineNumber = false) {
 				console.error(errorMsg);
@@ -2583,7 +2583,6 @@
 			
 			var encode = false;
 			
-			
 
 			try {
 				if (window.electronApi) {
@@ -2601,15 +2600,16 @@
 						document.body.style.width = "100%";
 					}, 5000);
 					
-					if (!ipcRenderer) {
-						ipcRenderer = require("electron").ipcRenderer;
-						ipcRenderer.on('close-file-stream', async () => {
-							if (writer){
-								await writer.close();
-								writer = null;
-							}
-						});
-					}
+					let writerCloseHandler = async () => {
+						if (writer) {
+						  await writer.close();
+						  writer = null;
+						}
+					};
+					  
+					document.addEventListener('DOMContentLoaded', () => {
+						window.electronApi.onCloseFileStream(writerCloseHandler);
+					});
 				}
 			} catch (e) {
 				//console.error(e);
@@ -2618,19 +2618,6 @@
 			var timeoutDelay = 0;
 			if (urlParams.has("showtime")) {
 				timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
-			}
-			
-			var readDonos = false;
-			if (urlParams.has("ttsdonos")) {
-				readDonos = urlParams.get("ttsdonos") || "en-US";
-			}
-			
-			var ttsSources = false;
-			if (urlParams.get("ttssources")) {
-				ttsSources = urlParams.get("ttssources").trim() || false;
-				if (ttsSources){
-					ttsSources = ttsSources.toLowerCase().split(",").map(element => element.trim());
-				}
 			}
 			
 			var waitToReveal = 0;
@@ -2690,6 +2677,11 @@
 			var hideFrom = [];
 			if (urlParams.get("hidefrom") || urlParams.get("exclude")) {
 				hideFrom = (urlParams.get("hidefrom") || urlParams.get("exclude")).toLowerCase().trim().split(",");
+			}
+			
+			var trivialevents = false;
+			if (urlParams.has("trivialevents")) {
+				trivialevents = true;
 			}
 
 			var filterNamesNotMessages = false;
@@ -2890,8 +2882,6 @@
 			} else {
 				window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
 			}
-			
-			roomID = validateRoomId(roomID)
 			if (!roomID) {
 				document.write("Invalid session ID");
 				throw new Error('Invalid session ID');
@@ -2913,7 +2903,12 @@
 			if (urlParams.has("hidesource")) {
 				showsource = false;
 			}
-
+			
+			var passTTS = false;
+			if (urlParams.has("passtts")) {
+				passTTS = true;
+			}
+			
 			if (urlParams.has("border")) {
 				if (urlParams.get("border")) {
 					document.documentElement.style.setProperty("--profile-pic-border", "3px solid " + urlParams.get("border"));
@@ -3792,15 +3787,6 @@
 				setupSocketExtension();
 			}
 
-			function isSafari() {
-				const userAgent = navigator.userAgent;
-				const isChrome = userAgent.indexOf("Chrome") > -1;
-				const isSafari = userAgent.indexOf("Safari") > -1;
-				const vendor = navigator.vendor;
-
-				return isSafari && !isChrome && vendor.indexOf("Apple") > -1;
-			}
-
 			var filterEvents = false;
 			if (urlParams.has("filterevents")) {
 				// &filterevents=joined,otherkeyword
@@ -3814,796 +3800,6 @@
 			if (urlParams.has("branded")) {
 				customSource = true;
 			}
-			
-			
-			// start of tts
-
-			var speechLang = "en-US";
-			var speech = false;
-			var English = true;
-			var voice = false;
-			var voices = null;
-
-			try {
-				voices = window.speechSynthesis.getVoices();
-				if (!voices.length) {
-					if (isSafari()) {
-						console.warn("Safari doesn't really support automatic TTS");
-					}
-				}
-			} catch (e) {
-				getById("tts").style.display = "none";
-			}
-
-			var voiceGender = false;
-			if (urlParams.has("gender")) {
-				voiceGender = urlParams.get("gender") || "MALE";
-			}
-
-			var audio = false;
-
-			var premiumQueueTTS = [];
-			var premiumQueueActive = false;
-
-			function finishedAudio(e = false) {
-				//console.log("finishedAudio");
-				//console.log(e);
-				premiumQueueActive = false;
-				if (premiumQueueTTS.length) {
-					speak(premiumQueueTTS.shift()); // play next
-				}
-			}
-			
-			 // You can get your API key from Google Cloud ; KEEP IT PRIVATE/SECRET.  It will look like: "ahasdfuyu234hjjUASDtu1234gughasdguhaU" or somnething like that.
-			var GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
-			var ElevenLabsKey = urlParams.get("elevenlabskey") || false;
-			var SpeechifyAPIKey = urlParams.get("speechifykey") || false;
-			
-			if (GoogleAPIKey || ElevenLabsKey || SpeechifyAPIKey) {
-				audio = document.createElement("audio");
-				audio.onended = finishedAudio;
-			}
-			
-			var volume = 1;
-			if (urlParams.has("volume")) {
-				volume = urlParams.get("volume") || 1;
-				volume = parseFloat(volume);
-				document.getElementById('volumeSlider').value = volume*100;
-			}
-			
-			var pitch = 0;
-			if (urlParams.has("pitch")) {
-				pitch = urlParams.get("pitch") || 1;
-				pitch = parseFloat(pitch);
-			}
-
-			var rate = 1;
-			if (urlParams.has("rate")) {
-				rate = urlParams.get("rate") || 1;
-				rate = parseFloat(rate);
-			}
-
-			var voiceLatency = 4; // 0 slowest, but best quality; 4 is fastest, but worst quality
-			if (urlParams.has("latency")) {
-				voiceLatency = urlParams.get("latency") || 0;
-				voiceLatency = parseInt(voiceLatency) || 0;
-			}
-			
-			var googleSettings = {
-				rate: 1,
-				pitch: 0,
-				audioProfile: false,
-				voiceName: false
-			};
-
-			var elevenLabsSettings = {
-				latency: 4,
-				stability: 0.5,
-				similarity: 0.75,
-				style: 0.5,
-				speakerBoost: false,
-				voiceName: false,
-				speakingRate: 1.0,
-				model: "eleven_multilingual_v2"
-			};
-
-			var speechifySettings = {
-				speed: 1.0,
-				model: 'simba-english',
-				voiceName: false
-			};
-			
-			// Google Cloud settings
-			googleSettings.rate = urlParams.has("googlerate") ? parseFloat(urlParams.get("googlerate")) || 1 : rate;
-			googleSettings.pitch = urlParams.has("googlepitch") ? parseFloat(urlParams.get("googlepitch")) || 0 : 0;
-			googleSettings.audioProfile = urlParams.get("googleaudioprofile") || false;
-			googleSettings.voiceName = urlParams.get("voicegoogle") || false;
-
-			// ElevenLabs settings
-			elevenLabsSettings.latency = urlParams.has("elevenlatency") ? parseInt(urlParams.get("elevenlatency")) || 0 : voiceLatency;
-			elevenLabsSettings.stability = urlParams.has("elevenstability") ? parseFloat(urlParams.get("elevenstability")) || 0.5 : 0.5;
-			elevenLabsSettings.similarity = urlParams.has("elevensimilarity") ? parseFloat(urlParams.get("elevensimilarity")) || 0.75 : 0.75;
-			elevenLabsSettings.style = urlParams.has("elevenstyle") ? parseFloat(urlParams.get("elevenstyle")) || 0.5 : 0.5;
-			elevenLabsSettings.speakingRate = urlParams.has("elevenrate") ? parseFloat(urlParams.get("elevenrate")) || 1.0 : 1.0;
-			elevenLabsSettings.speakerBoost = urlParams.has("elevenspeakerboost");
-			elevenLabsSettings.voiceName = urlParams.get("voice11") || urlParams.get("elevenlabsvoice") || false;
-			elevenLabsSettings.model = urlParams.get("elevenlabsmodel") || "eleven_multilingual_v2";
-
-			// Speechify settings
-			speechifySettings.speed = urlParams.has("speechifyspeed") ? parseFloat(urlParams.get("speechifyspeed")) || 1.0 : 1.0;
-			speechifySettings.model = urlParams.get("speechifymodel") || 'simba-english';
-			speechifySettings.voiceName = urlParams.get("voicespeechify") || false;
-
-			if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
-				//  tts();
-				getById("tts").dataset.state = 1;
-				getById("tts").classList.remove("hidden");
-
-				getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
-				getById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
-				speech = true;
-				speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || speechLang;
-
-				if (speechLang.split("-")[0].toLowerCase() == "en") {
-					English = true;
-				} else {
-					English = false;
-				}
-			}
-			if (urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln")) {
-				speechLang = urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln");
-				if (speechLang.split("-")[0].toLowerCase() == "en") {
-					English = true;
-				} else {
-					English = false;
-				}
-			}
-
-			if (urlParams.has("simpletts")) {
-				English = false;
-			}
-
-			var passTTS = false;
-			if (urlParams.has("passtts")) {
-				passTTS = true;
-			}
-
-			var trivialevents = false;
-			if (urlParams.has("trivialevents")) {
-				trivialevents = true;
-			}
-
-			var skipTTSMessages = false;
-			if (urlParams.has("skipmessages")) {
-				skipTTSMessages = parseInt(urlParams.get("skipmessages")) || 3;
-			}
-
-			var doNotReadEvents = true;
-			if (urlParams.has("readevents")) {
-				doNotReadEvents = false;
-			}
-			
-			var bottts = false;
-			if (urlParams.has("bottts")) {
-				bottts = true;
-			}
-			
-			var modtts = false;
-			if (urlParams.has("modtts")) {
-				modtts = true;
-			}
-			
-			var hosttts = false;
-			if (urlParams.has("hosttts")) {
-				hosttts = true;
-			}
-			
-			var admintts = false;
-			if (urlParams.has("admintts")) {
-				admintts = true;
-			}
-			
-			var viptts = false;
-			if (urlParams.has("viptts")) {
-				viptts = true;
-			}
-			
-			var allowbottss = false;
-			if (urlParams.has("allowbottss")) {
-				allowbottss = true;
-			}
-			
-			var norelfectionstts = false;
-			if (urlParams.has("norelfectionstts")) {
-				norelfectionstts = true;
-			}
-			
-			var allowhosttss = false;
-			if (urlParams.has("allowhosttss")) {
-				allowhosttss = true;
-			}
-			
-			var allowmodtss = false;
-			if (urlParams.has("allowmodtss")) {
-				allowmodtss = true;
-			}
-			
-			var allowadmintss = false;
-			if (urlParams.has("allowadmintss")) {
-				allowadmintss = true;
-			}
-			
-			var allowviptss = false;
-			if (urlParams.has("allowviptss")) {
-				allowviptss = true;
-			}
-
-			var voiceName = false;
-			if (urlParams.has("voice")) {
-				voiceName = urlParams.get("voice") || "google";
-			}
-			
-			var voiceNameGoogle = voiceName;
-			if (urlParams.has("voicegoogle")) {
-				voiceNameGoogle = urlParams.get("voicegoogle");
-			}
-			
-			var voiceNameElevenlabs = voiceName;
-			if (urlParams.has("voice11") || urlParams.has("elevenlabsvoice")) {
-				voiceNameElevenlabs = urlParams.get("voice11") ||  urlParams.get("elevenlabsvoice");;
-			}
-			
-			var voiceNameSpeechify = voiceName;
-			if (urlParams.has("voicespeechify")) {
-				voiceNameSpeechify = urlParams.get("voicespeechify");
-			}
-			
-			var ttsSpeakChatname = true;
-			if (urlParams.has("simpletts2")) {
-				// You don't want to hear the chatname when TTS is enabled. ＞﹏＜
-				ttsSpeakChatname = false;
-				English = false;
-			}
-			
-			var ttscommand = false;
-			if (urlParams.has("ttscommand")) {
-				ttscommand = urlParams.get("ttscommand") || "!say";
-			}
-			
-			var ttscommandmembersonly = false;
-			if (urlParams.has("ttscommandmembersonly")) {
-				ttscommandmembersonly = true;
-			}
-			
-			function replaceURLsWithSubstring(text, replacement = "[Link]") {
-				if (typeof text !== "string") return text;
-				
-				try {
-					const urlPattern = /(?:(?:https?:\/\/)?(?:www\.)?)?(?!-)[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?(?=\s|$)|(?:https?:\/\/)[^\s]+/g;
-					
-					return text.replace(urlPattern, (match) => {
-						// Skip emoticons and similar patterns
-						if (/^[a-zA-Z0-9](?:\.[a-zA-Z0-9]){1,2}$/.test(match) && 
-							match.length <= 5 && 
-							!match.includes('/')) {
-							return match;
-						}
-						
-						// Always replace if it has a protocol or www
-						if (match.startsWith('http') || match.startsWith('www.')) {
-							return replacement;
-						}
-						
-						// Check TLD for bare domains
-						const parts = match.split('.');
-						const potentialTLD = parts[parts.length - 1].split(/[/?#]/)[0];
-						
-						// Replace if it has a valid TLD or contains a path
-						if (match.includes('/') || isValidTLD(potentialTLD)) {
-							return replacement;
-						}
-						
-						return match;
-					});
-				} catch (e) {
-					console.error(e);
-					return text;
-				}
-			}
-			
-			function cleanPunctuation(text) {
-				if (!text) return text;
-				
-				return text
-					.replace(/[.]{2,}/g, '.')
-					.replace(/[?]{2,}/g, '?')
-					.replace(/[!]{2,}/g, '!')
-					.replace(/[,]{2,}/g, ',')
-					.replace(/[:]{2,}/g, ':')
-					.replace(/[;]{2,}/g, ';')
-					.replace(/[-]{2,}/g, '-')
-					.replace(/^[\s.!?,;:-]+$/, '')
-					.trim();
-			}
-
-			function speak(text, allow = false) {
-				if (!speech && !allow) {
-					return;
-				}
-				
-				text = cleanPunctuation(text);
-				
-				if (!text) {
-					return;
-				}
-				
-				if (text.startsWith("!")) {
-					return;
-				} // do not TTS commands.
-
-				if (replaceURLInLink) { 
-					text = replaceURLsWithSubstring(text, "Link");
-					//text = text.replace(/https?:\/\/[^\s]+/g, 'Link');
-				}
-
-				if (GoogleAPIKey) {
-					if (!premiumQueueActive) {
-						googleTTS(text);
-					} else {
-						premiumQueueTTS.push(text);
-					}
-					return;
-				} else if (ElevenLabsKey) {
-					if (!premiumQueueActive) {
-						ElevenLabsTTS(text);
-					} else {
-						premiumQueueTTS.push(text);
-					}
-					return;
-				} else if (SpeechifyAPIKey) {
-					if (!premiumQueueActive) {
-						SpeechifyTTS(text);
-					} else {
-						premiumQueueTTS.push(text);
-					}
-					return;
-				}
-
-				if (!voices && voices === null) {
-					return;
-				}
-
-				if (!voice) {
-					if (!voices || !voices.length) {
-						if (window.speechSynthesis) {
-							voices = window.speechSynthesis.getVoices();
-						}
-					}
-					if (voices) {
-						voices.forEach(vce => {
-							if (vce.name && voiceName && vce.name.toLowerCase().includes(voiceName.toLowerCase())) {
-								if (vce.lang && vce.lang.toLowerCase() == speechLang.toLowerCase()) {
-									voice = vce;
-								} else if (!voice && vce.lang && vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase()) {
-									voice = vce;
-								}
-							} else if (vce.name && vce.name.includes("Siri")) {
-								// SIRI sucks and breaks a lot, so lets skip if possible.
-								return;
-							} else if (!voice && vce.lang && vce.lang.toLowerCase() == speechLang.toLowerCase()) {
-								voice = vce;
-							} else if (!voice && vce.lang && vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase()) {
-								voice = vce;
-							}
-						});
-					}
-					if (!voice && voices.length) {
-						voice = voices.shift(); // take the first/default voice
-					}
-					if (voice) {
-						//console.log("Voice being used:");
-						//console.log(voice);
-						if (voice.lang && voice.lang.split("-")[0].toLowerCase() != "en") {
-							English = false;
-						}
-					} else {
-						//console.log("No voice found; using lang: "+speechLang);
-					}
-				}
-				if (!SpeechSynthesisUtterance) {
-					return;
-				}
-
-				var speechInput = new SpeechSynthesisUtterance();
-				if (!voice) {
-					speechInput.lang = speechLang;
-				} else {
-					speechInput.voice = voice;
-				}
-				// console.log("volume: "+volume);
-				speechInput.volume = volume;
-				speechInput.rate = rate;
-				speechInput.pitch = pitch;
-				speechInput.text = text;
-
-				if (window.speechSynthesis) {
-					window.speechSynthesis.speak(speechInput);
-					getById("tts").style["background-image"] = "url(./icons/tts_stop.png)";
-					getById("tts").title = "Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech";
-				}
-
-				try {
-					speechInput.addEventListener("end", function (e) {
-						if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
-							getById("tts").style["background-image"] = "url(./icons/tts_stop.png)";
-							getById("tts").title = "Text-to-speech — ⏹🔊 Stop reading out-loud with text-to-speech";
-						} else if (!speech) {
-							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
-							getById("tts").title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
-						} else {
-							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
-							getById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
-						}
-					});
-				} catch (e) {
-					console.error(e);
-				}
-			}
-			
-			function clearTTS() {
-				// clear but don't stop tss
-				if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
-					window.speechSynthesis.cancel();
-				} else if (premiumQueueActive) {
-					premiumQueueTTS = [];
-					try {
-						if (audio) {
-							audio.pause();
-						}
-					} catch (e) {}
-				}
-			}
-			function tts() {
-				var ele = getById("tts");
-
-				if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
-					// clear and stop tts
-					speech = false;
-					window.speechSynthesis.cancel();
-				} else if (premiumQueueActive) {
-					speech = false;
-					premiumQueueTTS = [];
-					try {
-						if (audio) {
-							audio.pause();
-						}
-					} catch (e) {}
-					premiumQueueActive = false;
-				} else {
-					speech = !speech;
-				}
-
-				if (speech) {
-					ele.style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
-					ele.title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
-				} else {
-					ele.style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
-					ele.title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
-				}
-			}
-			function ElevenLabsTTS(tts) {
-				try {
-					premiumQueueActive = true;
-					const voiceid = voiceNameElevenlabs  || "VR6AewLTigWG4xSOukaG";
-					const url = "https://api.elevenlabs.io/v1/text-to-speech/" + voiceid + "/stream?optimize_streaming_latency=" + elevenLabsSettings.latency;
-
-					var data = {
-						text: tts,
-						model_id: elevenLabsSettings.model,
-						voice_settings: {
-							stability: elevenLabsSettings.stability,
-							similarity_boost: elevenLabsSettings.similarity,
-							style: elevenLabsSettings.style,
-							use_speaker_boost: elevenLabsSettings.speakerBoost,
-							speaking_rate: elevenLabsSettings.speakingRate
-						}
-					};
-
-					const otherparam = {
-						headers: {
-							"content-type": "application/json",
-							"xi-api-key": ElevenLabsKey,
-							accept: "*/*"
-						},
-						body: JSON.stringify(data),
-						method: "POST"
-					};
-
-					fetch(url, otherparam)
-						.then(data => data.blob())
-						.then(async res => {
-							const newBlob = new Blob([res]);
-							const blobUrl = window.URL.createObjectURL(newBlob);
-							if (!audio) {
-								audio = document.createElement("audio");
-								audio.onended = finishedAudio;
-							}
-							audio.src = blobUrl;
-							if (volume) {
-								audio.volume = volume;
-							}
-							try {
-								if (audioContext.state === 'suspended') {
-									await audioContext.resume();
-								}
-								audio.play();
-							} catch (e) {
-								finishedAudio();
-								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-							}
-						})
-						.catch(error => {
-							finishedAudio();
-							console.error(error);
-						});
-				} catch (e) {
-					finishedAudio();
-				}
-			}
-
-			function googleTTS(tts) {
-				premiumQueueActive = true;
-
-				try {
-					const url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=" + GoogleAPIKey;
-					var data = {
-						input: {
-							text: tts
-						},
-						voice: {
-							languageCode: speechLang.toLowerCase(),
-							name: googleSettings.voiceName || "en-GB-Standard-A",
-							ssmlGender: voiceGender ? voiceGender.toUpperCase() : "FEMALE"
-						},
-						audioConfig: {
-							audioEncoding: "MP3",
-							speakingRate: googleSettings.rate,
-							pitch: googleSettings.pitch
-						}
-					};
-
-					if (googleSettings.audioProfile) {
-						data.audioConfig.effectsProfileId = [googleSettings.audioProfile];
-					} else {
-						data.audioConfig.effectsProfileId = ['handset-class-device'];
-					}
-
-					const otherparam = {
-						headers: {
-							"content-type": "application/json; charset=UTF-8"
-						},
-						body: JSON.stringify(data),
-						method: "POST"
-					};
-
-					fetch(url, otherparam)
-						.then(data => data.json())
-						.then(async res => {
-							if (!audio) {
-								audio = document.createElement("audio");
-								audio.onended = finishedAudio;
-							}
-							audio.src = "data:audio/mp3;base64," + res.audioContent;
-							if (volume) {
-								audio.volume = volume;
-							}
-							try {
-								if (audioContext.state === 'suspended') {
-									await audioContext.resume();
-								}
-								audio.play();
-							} catch (e) {
-								finishedAudio();
-								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-							}
-						})
-						.catch(error => {
-							finishedAudio();
-							console.error(error);
-						});
-				} catch (e) {
-					finishedAudio();
-				}
-			}
-
-			function SpeechifyTTS(tts) {
-				premiumQueueActive = true;
-				try {
-					const url = "https://api.sws.speechify.com/v1/audio/speech";
-					let model = speechifySettings.model;
-					const data = {
-						input: "<speak>" + tts + "</speak>",
-						voice_id: speechifySettings.voiceName || voiceNameSpeechify || "henry",
-						model: model,
-						audio_format: "mp3",
-						speed: speechifySettings.speed
-					};
-					
-					const otherparam = {
-						method: "POST",
-						headers: {
-							"Authorization": `Bearer ${SpeechifyAPIKey}`,
-							"Content-Type": "application/json"
-						},
-						body: JSON.stringify(data)
-					};
-					
-					fetch(url, otherparam)
-						.then(response => {
-							if (!response.ok) {
-								throw new Error(`HTTP error! status: ${response.status}`);
-							}
-							return response.json();
-						})
-						.then(async json => {
-							if (!json.audio_data) {
-								finishedAudio();
-								throw new Error("No audio data in JSON response");
-							}
-							try {
-								if (!audio) {
-									audio = document.createElement("audio");
-									audio.onended = finishedAudio;
-								}
-								audio.src = "data:audio/mp3;base64," + json.audio_data;
-								if (volume) {
-									audio.volume = volume;
-								}
-								if (audioContext.state === 'suspended') {
-									await audioContext.resume();
-								}
-								audio.play().catch(err => {
-									console.error("Audio play failed, user interaction required", err);
-									finishedAudio();
-								});
-							} catch (e) {
-								console.error(e);
-								finishedAudio();
-								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-							}
-						})
-						.catch(error => {
-							finishedAudio();
-							console.error("Error with Speechify TTS:", error);
-						});
-				} catch (e) {
-					finishedAudio();
-					console.error("Error in SpeechifyTTS function:", e);
-				}
-			}
-
-			function speechMeta(data, allow = false) {
-				if (skipTTSMessages && !data.hasDonation) {
-					if (parseInt(data.id) % skipTTSMessages !== 0) {
-						return;
-					}
-				}
-				
-				if (!data.bot && bottts){return;} // only allow bot messages
-				else if (!data.host && hosttts){return;} 
-				else if (!data.mod && modtts){return;}
-				else if (!data.vip && viptts){return;} 
-				else if (!data.admin && admintts){return;}
-				
-				else if (data.bot && !(allowbottss || bottts)){return;} // do not read out bot messages
-				else if (data.host && !(allowhosttss || hosttts)){return;} 
-				
-				else if (data.reflection && norelfectionstts){return;}
-				
-				else if (ttsSources && !ttsSources.includes(data.type)){return;}
-				
-				
-				//else if (data.mod && !(allowmodtss || modtts)){return;} 
-				//else if (data.vip && !(allowviptss || viptts)){return;} 
-				//else if (data.admin && !(allowadmintss || admintts)){return;} 
-				
-				if (readDonos && !(data.hasDonation || data.donation)){return;}
-
-				if (doNotReadEvents && data.event) {
-					return;
-				}
-				
-				try {
-					var isCommand = false;
-					var msgPlain = document.getElementById("content_" + data.id);
-
-					if (msgPlain) {
-						msgPlain = (msgPlain.textContent || msgPlain.innerText || "") // Remove emojis, underscores, and @ symbols
-							.replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, "")
-							.replace(/_/g, " ")
-							.replace(/@/g, " ")
-							
-						if (ttscommand && msgPlain.includes(ttscommand+" ")){
-							msgPlain = msgPlain.split(ttscommand+" ")[1].trim();
-							allow = true;
-						}
-						
-						msgPlain = msgPlain.replace(/^!/, ""); // check if it starts with '!'
-						msgPlain = msgPlain.replace(/!+/g, " "); // Replace multiple '!' with a single space
-						msgPlain = msgPlain.replace(/catJAM/gi, ""); // Remove 'catJAM' case-insensitively
-						if (beepwords){
-							msgPlain = msgPlain.replace(/\*+/g, ' beep ');
-						} else {
-							msgPlain = msgPlain.replace(/\*/g, '');
-						}
-						msgPlain = msgPlain.trim();
-					}
-
-					var chatname = "";
-					if (ttsSpeakChatname && data.chatname) {
-						chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
-						chatname = chatname.replaceAll("_", " ");
-						chatname = chatname.replaceAll("@", " ");
-						chatname = chatname.replaceAll("!", " ");
-					}
-
-					if (data.hasDonation) {
-						var donoText = document.createElement("div");
-						donoText.innerHTML = data.hasDonation;
-						donoText = donoText.textContent || donoText.innerText || "";
-						donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
-						donoText = donoText.replaceAll("_", " ");
-						donoText = donoText.replaceAll("@", " ");
-						donoText = donoText.replaceAll("!", " ");
-
-						if (chatname) {
-							///// NAME
-							if (English) {
-								if (msgPlain) {
-									speak(chatname + " has donated " + donoText + " and says " + msgPlain, allow);
-								} else {
-									speak(chatname + " has donated " + donoText, allow);
-								}
-							} else if (msgPlain) {
-								speak(chatname + "! ! .. " + donoText + "! ! .. " + msgPlain, allow);
-							} else {
-								speak(chatname + "! ! .. " + donoText, allow);
-							}
-						} else if (English) {
-							// no name but english
-							if (msgPlain) {
-								speak("Someone has donated " + donoText + " and says " + msgPlain, allow);
-							} else {
-								speak("Someone has donated " + donoText, allow);
-							}
-						} else if (msgPlain) {
-							// no name; not english
-							speak(donoText + "! ! .. " + msgPlain, allow);
-						} else {
-							speak(donoText, allow);
-						}
-					} else if (msgPlain) {
-						// NO DONATION
-						if (chatname) {
-							// NAME
-							if (English) {
-								speak(chatname + " says! " + msgPlain, allow);
-							} else {
-								speak(chatname + "! ! .. " + msgPlain, allow);
-							}
-						} else if (English) {
-							// NO NAME
-							speak("Someone says! " + msgPlain, allow);
-						} else {
-							speak(msgPlain, allow);
-						}
-					}
-				} catch(e){
-					errorlog(e);
-				}
-			}
-
-			// end of TTS 
 			
 			if (urlParams.has("chroma")) {
 				var chroma = urlParams.get("chroma") || "0F0";
@@ -5389,34 +4585,19 @@
 			
 			function createPopoutChat() {
 				//  todo -- make broadcast channel based.
-				<!-- if (session.broadcastChannelID === false) { -->
-					<!-- session.broadcastChannelID = session.generateStreamID(8); -->
-					<!-- log(session.broadcastChannelID); -->
-
-					<!-- session.broadcastChannel = new BroadcastChannel(session.broadcastChannelID); -->
-					<!-- session.broadcastChannel.onmessage = function (e) { -->
-						<!-- if ("loaded" in e.data) { -->
-							<!-- session.broadcastChannel.postMessage({ -->
-								<!-- messageList: messageList -->
-							<!-- }); -->
-						<!-- } else if ("msg" in e.data) { -->
-							<!-- sendChatMessage(e.data.msg, true); -->
-						<!-- } -->
-					<!-- }; -->
-
-					<!-- session.broadcastChannel.onmessageerror = function (e) { -->
-						<!-- errorlog(e); -->
-					<!-- }; -->
-				<!-- } -->
-				let pass = "";
-				if (urlParams.has("password")) {
-					pass = "&password="+password;
-				}
-				const popup = window.open("./input.html?session=" + roomID+pass, "popup", "width=600,height=60,toolbar=no,menubar=no,resizable=yes");
-
-				popup.document.body.style.margin = "0";
-				popup.document.body.style.padding = "0";
 				
+				setTimeout(function(){ // timeout to avoid middle+click causing override.
+					let pass = "";
+					if (urlParams.has("password")) {
+						pass = "&password="+password;
+					}
+
+					const uniqueName = "popup_" + Date.now();
+					const popup = window.open("./input.html?session=" + roomID + pass, uniqueName, "width=600,height=60,toolbar=no,menubar=no,resizable=yes");
+					popup.document.body.style.margin = "0";
+					popup.document.body.style.padding = "0";
+				},0);
+
 				//window.open("./popout.html?id=" + session.broadcastChannelID, "popup", "width=600,height=480,toolbar=no,menubar=no,resizable=yes");
 				return false;
 			}
@@ -6535,7 +5716,7 @@
 						}
 						sendDataP2P(false);
 						updateQueueButton();
-						clearTTS();
+						TTS.clearQueue();
 						return true;
 					} else if (data.action == "clearOverlay") {
 						// or just send data=false
@@ -6593,29 +5774,29 @@
 					} else if (data.action === "toggleTTS" || data.action === "tts") {
 						if ("value" in data){
 							if (data.value == "toggle") {
-								speech = !speech;
+								TTS.speech = !TTS.speech;
 							} else if (data.value == "true") {
-								speech = true;
+								TTS.speech = true;
 							} else if (data.value == "false") {
-								speech = false;
+								TTS.speech = false;
 							} else if (data.value == "1") {
-								speech = true;
+								TTS.speech = true;
 							} else if (data.value == "0") {
-								speech = false;
+								TTS.speech = false;
 							} else if (data.value == "on") {
-								speech = true;
+								TTS.speech = true;
 							} else if (data.value == "off") {
-								speech = false;
+								TTS.speech = false;
 							} else if (data.value) {
-								speech = true;
+								TTS.speech = true;
 							} else {
-								speech = false;
+								TTS.speech = false;
 							}
 						} else {
-							speech = !speech;
+							TTS.speech = !TTS.speech;
 						}
-						//console.log("TTS: "+speech);
-						if (speech) {
+						//console.log("TTS: "+TTS.speech);
+						if (TTS.speech) {
 							getById("tts").dataset.state = "1";
 							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_on.png)";
 							getById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
@@ -6624,7 +5805,7 @@
 							getById("tts").style["background-image"] = "url(./icons/tts_incoming_messages_off.png)";
 							getById("tts").title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
 						}
-						return speech;
+						return TTS.speech;
 					}
 				} else if ("forward" in data) {
 					sendDataP2P(data.forward);
@@ -7713,21 +6894,42 @@
 				let flagCounter = 0;
 				let flags = [];
 				
+				// First handle flag emoji sequences
 				text = text.replace(/(\uD83C[\uDDE6-\uDDFF]){2}/g, (match) => {
 					flags.push(match);
 					return `###FLAG${flagCounter++}###`;
 				});
 				
-				text = text.replace(
-					/([\u2011-\u26FF]|[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDD10-\uDDFF])/g,
-					"<span class='emoji'>$1</span>"
+				// Regex for detecting emoji sequences
+				// This pattern includes emoji with variation selectors (FE0F) and keycap sequences
+				const emojiPattern = new RegExp(
+					// Keycap sequences (digit/symbol + FE0F + 20E3)
+					'(?:[0-9#*]\\uFE0F?\\u20E3)|' +
+					
+					// Basic emoji
+					'(?:[\\u2011-\\u26FF]|[\\u2700-\\u27BF]|[\\uE000-\\uF8FF]|\\uD83C[\\uDC00-\\uDFFF]|\\uD83D[\\uDC00-\\uDFFF]|\\uD83E[\\uDD10-\\uDDFF])' +
+					// Optional variation selector
+					'(?:\\uFE0F)?' +
+					// Optional skin tone modifier
+					'(?:\\uD83C[\\uDFFB-\\uDFFF])?' +
+					// Optional zero width joiner sequences (for compound emoji)
+					'(?:\\u200D(?:[\\u2011-\\u26FF]|[\\u2700-\\u27BF]|[\\uE000-\\uF8FF]|\\uD83C[\\uDC00-\\uDFFF]|\\uD83D[\\uDC00-\\uDFFF]|\\uD83E[\\uDD10-\\uDDFF])' +
+					'(?:\\uFE0F)?' +
+					'(?:\\uD83C[\\uDFFB-\\uDFFF])?)*',
+					'g'
 				);
+				
+				// Replace all emoji with spans
+				text = text.replace(emojiPattern, "<span class='emoji'>$&</span>");
+				
+				// Replace flag placeholders
 				flags.forEach((flag, index) => {
 					text = text.replace(
 						`###FLAG${index}###`,
 						`<span class='emoji'>${flag}</span>`
 					);
 				});
+				
 				return text;
 			}
 
@@ -8733,13 +7935,13 @@
 						updateQueueButton();
 					}
 					
-					if (ttscommand && data.chatmessage && data.chatmessage.includes(ttscommand+" ") && (!ttscommandmembersonly || (ttscommandmembersonly && data.membership))){
+					if (TTS.ttscommand && data.chatmessage && data.chatmessage.includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
 						if (!node.classList.contains("hide")) {
-							speechMeta(data);
+							TTS.speechMeta(data);
 						}
-					} else if (speech) {
+					} else if (TTS.speech) {
 						if (!node.classList.contains("hide")) {
-							speechMeta(data);
+							TTS.speechMeta(data);
 						}
 					} 
 					return node;
@@ -8957,7 +8159,7 @@
 						if (tid.includes("TTS")) {
 							tid = tid.filter(item => item !== "TTS");
 							if (data){
-								speak(data, true);
+								TTS.speak(data, true);
 							}
 							if (!tid.length){
 								return;
@@ -8965,7 +8167,7 @@
 						}
 					} else if (tid === "TTS") {
 						if (data){
-							speak(data, true);
+							TTS.speak(data, true);
 						}
 						return;
 					}
@@ -9271,7 +8473,7 @@
 								syncDataAny({ pin: [taskItemInContext.rawContents] });
 							}
 						} else if (link.getAttribute("data-action") === "TTS") {
-							speechMeta(taskItemInContext.rawContents, true);
+							TTS.speechMeta(taskItemInContext.rawContents, true);
 						} else if (link.getAttribute("data-action") === "Queue") {
 							if (taskItemInContext.classList.contains("queued")) {
 								removeQueue(taskItemInContext);
@@ -9538,7 +8740,7 @@
 				selectedQueue = [];
 				sendDataP2P(false);
 				updateQueueButton();
-				clearTTS();
+				TTS.clearQueue();
 				if (relay){
 					syncDataAny({ "clearAll": true }, false, true);
 				}

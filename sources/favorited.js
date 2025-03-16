@@ -73,7 +73,7 @@
 		
 		var name="";
 		try {
-			name = ele.querySelector("[data-sentry-component='UserInlineWithBadges'] span").textContent.trim();
+			name = ele.querySelector("[data-sentry-component='UserInlineWithBadges'] span:not(:empty), section p.text-neutral-50.font-bold").textContent.trim();
 			name = escapeHtml(name);
 		} catch(e){
 		}

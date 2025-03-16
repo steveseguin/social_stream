@@ -174,6 +174,112 @@ const streamingPostNode = async function (URL, body, headers = {}, onChunk = nul
 	}
 };
 
+function signAWSRequest(method, url, headers, body, accessKey, secretKey, region, service = 'bedrock') {
+    const timestamp = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
+    const date = timestamp.slice(0, 8);
+    
+    // Add required headers
+    headers['x-amz-date'] = timestamp;
+    
+    // If content-type is not already set
+    if (!headers['content-type']) {
+        headers['content-type'] = 'application/json';
+    }
+    
+    // Parse URL
+    const parsedUrl = new URL(url);
+    const canonicalUri = parsedUrl.pathname || '/';
+    
+    // Create canonical request
+    const canonicalHeaders = Object.keys(headers)
+        .sort()
+        .map(key => `${key.toLowerCase()}:${headers[key].trim()}\n`)
+        .join('');
+    
+    const signedHeaders = Object.keys(headers)
+        .sort()
+        .map(key => key.toLowerCase())
+        .join(';');
+    
+    // Create canonical query string
+    const searchParams = parsedUrl.searchParams;
+    const canonicalQueryString = Array.from(searchParams.keys())
+        .sort()
+        .map(key => {
+            return `${encodeURIComponent(key)}=${encodeURIComponent(searchParams.get(key))}`;
+        })
+        .join('&');
+    
+    // Create payload hash
+    let payloadHash;
+    if (typeof body === 'string') {
+        payloadHash = sha256(body);
+    } else if (body) {
+        payloadHash = sha256(JSON.stringify(body));
+    } else {
+        payloadHash = sha256('');
+    }
+    
+    const canonicalRequest = [
+        method,
+        canonicalUri,
+        canonicalQueryString,
+        canonicalHeaders,
+        signedHeaders,
+        payloadHash
+    ].join('\n');
+    
+    // Create string to sign
+    const algorithm = 'AWS4-HMAC-SHA256';
+    const scope = `${date}/${region}/${service}/aws4_request`;
+    const stringToSign = [
+        algorithm,
+        timestamp,
+        scope,
+        sha256(canonicalRequest)
+    ].join('\n');
+    
+    // Calculate signature
+    function hmac(key, string) {
+        const hmacObj = crypto.createHmac('sha256', key);
+        hmacObj.update(string);
+        return hmacObj.digest();
+    }
+    
+    let signingKey = 'AWS4' + secretKey;
+    signingKey = hmac(signingKey, date);
+    signingKey = hmac(signingKey, region);
+    signingKey = hmac(signingKey, service);
+    signingKey = hmac(signingKey, 'aws4_request');
+    
+    const signature = hmacToHex(hmac(signingKey, stringToSign));
+    
+    // Add the signature to the headers
+    headers['Authorization'] = `${algorithm} Credential=${accessKey}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+    
+    return headers;
+}
+
+function sha256(message) {
+    if (crypto) {
+        return crypto.createHash('sha256').update(message).digest('hex');
+    } else if (window.crypto && window.crypto.subtle) {
+        // For browser environments
+        const encoder = new TextEncoder();
+        const data = encoder.encode(message);
+        return window.crypto.subtle.digest('SHA-256', data)
+            .then(hash => {
+                return Array.from(new Uint8Array(hash))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+            });
+    }
+}
+
+function hmacToHex(hmacBuffer) {
+    return Array.prototype.map.call(new Uint8Array(hmacBuffer), x => ('00' + x.toString(16)).slice(-2)).join('');
+}
+
 const activeChatBotSessions = {};
 let tmpModelFallback = "";
 async function callLLMAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null) {
@@ -202,6 +308,27 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			endpoint = "https://generativelanguage.googleapis.com/v1beta/chat/completions";
 			model = model || settings.geminimodel?.textsetting || "gemini-1.5-flash";
 			apiKey = settings.geminiApiKey?.textsetting;
+			callback = null;
+			break;
+		case "xai":  // New case for Grok
+			endpoint = "https://api.x.ai/v1/chat/completions";
+			model = model || settings.xaimodel?.textsetting || "grok-beta";  // Default to grok-beta
+			apiKey = settings.xaiApiKey?.textsetting;  // Requires an API key from xAI
+			// streamable = true;  // Grok supports streaming
+			callback = null;
+			break;
+		case "bedrock":
+			endpoint = `https://bedrock-runtime.${settings.bedrockRegion?.textsetting || "us-east-1"}.amazonaws.com/model`;
+			model = model || settings.bedrockmodel?.textsetting || "anthropic.claude-3-sonnet-20240229-v1:0";
+			apiKey = settings.bedrockAccessKey?.textsetting;
+			const secretKey = settings.bedrockSecretKey?.textsetting;
+			const region = settings.bedrockRegion?.textsetting || "us-east-1";
+			callback = null; // TODO: Implement streaming for Bedrock if desired
+			break;
+		case "openrouter":
+			endpoint = "https://openrouter.ai/api/v1/chat/completions";
+			model = model || settings.openroutermodel?.textsetting || "openai/gpt-4o";
+			apiKey = settings.openrouterApiKey?.textsetting;
 			callback = null;
 			break;
 		case "custom":
@@ -311,7 +438,132 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
             return;
         }
         return result.complete ? result.response : result.response + "💥";
-		
+	} else if (provider === "bedrock") {
+		try {
+			const modelId = model;
+			const bedrockEndpoint = `${endpoint}/${modelId}/invoke`;
+			
+			let requestBody;
+			
+			// Format the request body based on the model (anthropic, amazon, etc.)
+			if (modelId.includes('anthropic')) {
+				requestBody = {
+					anthropic_version: "bedrock-2023-05-31",
+					max_tokens: 4096,
+					messages: [
+						{
+							role: "user",
+							content: prompt
+						}
+					]
+				};
+			} else if (modelId.includes('amazon')) {
+				requestBody = {
+					inputText: prompt,
+					textGenerationConfig: {
+						maxTokenCount: 4096,
+						stopSequences: [],
+						temperature: 0.7,
+						topP: 0.9
+					}
+				};
+			} else if (modelId.includes('cohere')) {
+				requestBody = {
+					prompt: prompt,
+					max_tokens: 4096,
+					temperature: 0.7,
+					p: 0.9
+				};
+			} else {
+				// Default format (try Claude style)
+				requestBody = {
+					prompt: prompt,
+					max_tokens_to_sample: 4096
+				};
+			}
+			
+			// Create headers with AWS signature
+			const headers = {
+				'Content-Type': 'application/json',
+				'Accept': 'application/json'
+			};
+			
+			// Sign the request
+			const signedHeaders = signAWSRequest(
+				'POST', 
+				bedrockEndpoint, 
+				headers, 
+				requestBody, 
+				apiKey, 
+				secretKey, 
+				region, 
+				'bedrock'
+			);
+			
+			if (typeof ipcRenderer !== 'undefined') {
+				const response = await fetchNode(bedrockEndpoint, signedHeaders, 'POST', requestBody);
+				
+				if (response.status !== 200) {
+					let errorMessage = '';
+					try {
+						const errorData = JSON.parse(response.data);
+						errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
+					} catch(e) {
+						errorMessage = `HTTP error! status: ${response.status}`;
+					}
+					throw new Error(errorMessage);
+				}
+				
+				const data = JSON.parse(response.data);
+				
+				// Extract the response based on model
+				if (modelId.includes('anthropic')) {
+					return data.content && data.content[0] && data.content[0].text ? data.content[0].text : '';
+				} else if (modelId.includes('amazon')) {
+					return data.results && data.results[0] && data.results[0].outputText ? data.results[0].outputText : '';
+				} else if (modelId.includes('cohere')) {
+					return data.generations && data.generations[0] && data.generations[0].text ? data.generations[0].text : '';
+				} else {
+					return data.completion || '';
+				}
+			} else {
+				const response = await fetch(bedrockEndpoint, {
+					method: 'POST',
+					headers: signedHeaders,
+					body: JSON.stringify(requestBody),
+					signal: abortController?.signal
+				});
+				
+				if (!response.ok) {
+					let errorMessage = '';
+					try {
+						const errorData = await response.json();
+						errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
+					} catch(e) {
+						errorMessage = `HTTP error! status: ${response.status}`;
+					}
+					throw new Error(errorMessage);
+				}
+				
+				const data = await response.json();
+				
+				// Extract the response based on model
+				if (modelId.includes('anthropic')) {
+					return data.content && data.content[0] && data.content[0].text ? data.content[0].text : '';
+				} else if (modelId.includes('amazon')) {
+					return data.results && data.results[0] && data.results[0].outputText ? data.results[0].outputText : '';
+				} else if (modelId.includes('cohere')) {
+					return data.generations && data.generations[0] && data.generations[0].text ? data.generations[0].text : '';
+				} else {
+					return data.completion || '';
+				}
+			}
+		} catch (error) {
+			if (error.name === 'AbortError') {
+				return { aborted: true };
+			}
+			throw error;
+		}
     // Replace the else block in callLLMAPI with:
 	} else { // non-Ollama Request, but rather ChatGPT compatible APIs
 		const message = {
@@ -795,10 +1047,12 @@ function checkTriggerWords(triggerString, sentence) {
     // For phrase matching, first check if it's a simple space-separated phrase (no commas or modifiers)
     if (!triggerString.includes(',') && !triggerString.includes('+') && !triggerString.includes('-') && !triggerString.includes('"')) {
         const phrase = triggerString.toLowerCase().trim();
-        return sentence.toLowerCase().includes(phrase);
+        // Create a regex with word boundaries for the phrase
+        const regex = new RegExp(`\\b${phrase}\\b`, 'i');
+        return regex.test(sentence.toLowerCase());
     }
-
-    // Rest of the function for comma-separated and modified triggers
+    
+    // Rest of the function remains the same
     const triggers = triggerString.match(/(?:[^,\s"]+|"[^"]*")+/g)
         .map(t => t.trim())
         .filter(t => t);
@@ -1091,8 +1345,8 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 		
 		const context = await ChatContextManager.getContext(data);
 		
-		console.log(data);
-		console.log(context);
+		//console.log(data);
+		//console.log(context);
 		
 		// Add context elements
 		if (context.chatSummary) {
@@ -2406,8 +2660,8 @@ const ChatContextManager = { // summary and chat context
             summary = await this.getSummary();
         }
 		
-		console.log(recentMessages);
-		console.log(userHistory);
+		//console.log(recentMessages);
+		//console.log(userHistory);
 
         const processedContext = {
             recentMessages: this.messageToLLMString(recentMessages),

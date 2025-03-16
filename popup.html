@@ -1657,6 +1657,14 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="if-using-tts-only-announce-every-3rd-message">🗣️ If using TTS, only announce every 3rd message </span>
 								</div>
+								
+								<div title="For the purpose of using this with neurosync. WILL NOT WORK WITH SYSTEM TTS">
+									<label class="switch">
+										<input type="checkbox" data-param1="neurosync" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="route-audio-to-local-server">⏩ Send TTS as PCM audio to 127.0.0.1:5000 instead</span>
+								</div>
 							   
 								<div>
 									<label class="switch">
@@ -1682,8 +1690,9 @@ input:checked + .slider:before {
 						
 						<div class="tts-provider-selection" style="margin:0 10px 10px 10px">
 							<h3>Text-to-Speech Service Provider</h3>
-							<select id="ttsProvider" data-optionsetting="ttsProvider" class="textInput">
+							<select id="ttsProvider" data-optionparam1="ttsprovider" data-optionsetting="ttsProvider" class="textInput">
 								<option selected value="system">System TTS</option>
+								<option value="kokoro">Kokoro (webGPU/CPU)</option>
 								<option value="elevenlabs">ElevenLabs</option>
 								<option value="google">Google Cloud</option>
 								<option value="speechify">Speechify</option>
@@ -1723,6 +1732,30 @@ input:checked + .slider:before {
 									🎵 Pitch
 									<input type="number" style="max-width: 6ch;" step="0.1" max="2" min="0.1" value="1.0" 
 										size="5" data-numbersetting="pitch" />
+								</span>
+							</div>
+						</div>
+						<!-- Kokoro TTS Options -->
+						<div class="tts-provider-options options_group" id="kokoroTTS">
+							<h4>Kokoro TTS Options</h4>
+							<i>note: this free locally-running TTS needs a powerful computer to run well.</i>
+							<br /><br />
+							<div>
+								🎭 Voice to use: 
+								<select id="kokoroVoiceSelect" data-optionparam1="voicekokoro" title="Select the Kokoro TTS Voice">
+									<option value="af_heart">Heart (American Female)</option><option value="af_alloy">Alloy (American Female)</option><option selected value="af_aoede">Aoede (American Female)</option><option value="af_bella">Bella (American Female)</option><option value="af_jessica">Jessica (American Female)</option><option value="af_kore">Kore (American Female)</option><option value="af_nicole">Nicole (American Female)</option><option value="af_nova">Nova (American Female)</option><option value="af_river">River (American Female)</option><option value="af_sarah">Sarah (American Female)</option><option value="af_sky">Sky (American Female)</option><option value="am_adam">Adam (American Male)</option><option value="am_echo">Echo (American Male)</option><option value="am_eric">Eric (American Male)</option><option value="am_fenrir">Fenrir (American Male)</option><option value="am_liam">Liam (American Male)</option><option value="am_michael">Michael (American Male)</option><option value="am_onyx">Onyx (American Male)</option><option value="am_puck">Puck (American Male)</option><option value="am_santa">Santa (American Male)</option><option value="bf_emma">Emma (British Female)</option><option value="bf_isabella">Isabella (British Female)</option><option value="bm_george">George (British Male)</option><option value="bm_lewis">Lewis (British Male)</option><option value="bf_alice">Alice (British Female)</option><option value="bf_lily">Lily (British Female)</option><option value="bm_daniel">Daniel (British Male)</option><option value="bm_fable">Fable (British Male)</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="kokorospeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="kokoro-tts-speed">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" 
+										size="5" data-numbersetting="kokorospeed" />
 								</span>
 							</div>
 						</div>
@@ -2909,7 +2942,7 @@ input:checked + .slider:before {
 								<br />
 								<br />
                                 <div>
-                                    <select id="languageSelect2" data-optionparam2="lang" data-del2="lang,voice" title="Select the default text to speech language"> </select>								 
+                                    <select id="languageSelect2" data-optionparam2="lang" data-del2="lang,voice" title="Select the default text to speech language"> </select>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -3247,6 +3280,9 @@ input:checked + .slider:before {
 										<option value="chatgpt">ChatGPT API</option>
 										<option value="gemini">Gemini API</option>
 										<option value="deepseek">DeepSeek API</option>
+										<option value="xai">xAI API (Grok)</option>
+										<option value="bedrock">AWS Bedrock API</option>
+										<option value="openrouter">OpenRouter API</option>
 										<option value="custom">Custom API</option>
 									</select>
 								<div>
@@ -3264,6 +3300,11 @@ input:checked + .slider:before {
 									<div id="geminiApiKey" class="textInputContainer hidden" style="width: 95%;">
 										<input type="password"  class="textInput" autocomplete="off" placeholder="Your Google API key" data-textsetting="geminiApiKey" />
 										<label for="geminiApiKey">&gt; Google API Key</label>
+									</div>
+									
+									<div id="xaiApiKey" class="textInputContainer hidden" style="width: 95%;">
+										<input type="password"  class="textInput" autocomplete="off" placeholder="Your xAI API key" data-textsetting="xaiApiKey" />
+										<label for="xaiApiKey">&gt; xAI API Key</label>
 									</div>
 									
 									<div id="deepseekApiKey" class="textInputContainer hidden" style="width: 95%;">
@@ -3293,6 +3334,12 @@ input:checked + .slider:before {
 										<label for="geminimodel"><span data-translate="geminimodel">&gt; Gemini Model to use</span></label>
 									</div>
 								</div>
+								<div id="xaimodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-1.5-flash" data-textsetting="xaimodel" />
+										<label for="xaimodel"><span data-translate="xaimodel">&gt; xAI Model to use</span></label>
+									</div>
+								</div>
 								<div id="chatgptmodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gpt-4o-mini" data-textsetting="chatgptmodel" />
@@ -3305,6 +3352,27 @@ input:checked + .slider:before {
 										<label for="deepseekmodel"><span data-translate="deepseekmodel">&gt; DeepSeek Model to use</span></label>
 									</div>
 								</div>
+								<div id="bedrockAccessKey" class="textInputContainer hidden" style="width: 95%;">
+									<input type="password" class="textInput" autocomplete="off" placeholder="Your AWS Access Key" data-textsetting="bedrockAccessKey" />
+									<label for="bedrockAccessKey">&gt; AWS Access Key</label>
+								</div>
+
+								<div id="bedrockSecretKey" class="textInputContainer hidden" style="width: 95%;">
+									<input type="password" class="textInput" autocomplete="off" placeholder="Your AWS Secret Key" data-textsetting="bedrockSecretKey" />
+									<label for="bedrockSecretKey">&gt; AWS Secret Key</label>
+								</div>
+
+								<div id="bedrockRegion" class="textInputContainer hidden" style="width: 95%;">
+									<input type="text" class="textInput" autocomplete="off" placeholder="e.g., us-east-1" data-textsetting="bedrockRegion" />
+									<label for="bedrockRegion">&gt; AWS Region</label>
+								</div>
+
+								<div id="bedrockmodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="e.g., anthropic.claude-v2" data-textsetting="bedrockmodel" />
+										<label for="bedrockmodel">&gt; Bedrock Model to use</label>
+									</div>
+								</div>
 								<div id="customAIModel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: fine-tuned-v1" data-textsetting="customAIModel" />
@@ -3312,7 +3380,17 @@ input:checked + .slider:before {
 									</div>
 								</div>
 								
-								
+								<div id="openrouterApiKey" class="textInputContainer hidden" style="width: 95%;">
+									<input type="password" class="textInput" autocomplete="off" placeholder="Your OpenRouter API key" data-textsetting="openrouterApiKey" />
+									<label for="openrouterApiKey">&gt; OpenRouter API Key</label>
+								</div>
+
+								<div id="openroutermodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: openai/gpt-4o" data-textsetting="openroutermodel" />
+										<label for="openroutermodel"><span data-translate="openroutermodel">&gt; OpenRouter Model to use</span></label>
+									</div>
+								</div>
 								
 							</div>
 						</div>
@@ -3540,11 +3618,12 @@ input:checked + .slider:before {
 						
 						<div class="tts-provider-selection" style="margin:0 10px 10px 10px">
 							<h3>Text-to-Speech Service Provider</h3>
-							<select id="ttsProvider10" data-optionsetting10="ttsProvider" class="textInput">
+							<select id="ttsProvider10" data-optionparam10="ttsprovider" data-optionsetting10="ttsProvider" class="textInput">
 								<option selected value="system">System TTS</option>
 								<option value="elevenlabs">ElevenLabs</option>
 								<option value="google">Google Cloud</option>
 								<option value="speechify">Speechify</option>
+								<option value="kokoro">Kokoro (webGPU/CPU)</option>
 							</select>
 						</div>
 						
@@ -3796,6 +3875,30 @@ input:checked + .slider:before {
 									<option value="de">German</option>
 									<option value="it">Italian</option>
 								</select>
+							</div>
+						</div>
+						<!-- Kokoro TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="kokoroTTS10">
+							<h4>Kokoro TTS Options</h4>
+							<i>note: this free locally-running TTS needs a powerful computer to run well.</i>
+							<br /><br />
+							<div>
+								🎭 Voice to use: 
+								<select id="kokoroVoiceSelect10" data-optionparam10="voicekokoro" title="Select the Kokoro TTS Voice">
+									<option value="af_heart">Heart (American Female)</option><option value="af_alloy">Alloy (American Female)</option><option selected value="af_aoede">Aoede (American Female)</option><option value="af_bella">Bella (American Female)</option><option value="af_jessica">Jessica (American Female)</option><option value="af_kore">Kore (American Female)</option><option value="af_nicole">Nicole (American Female)</option><option value="af_nova">Nova (American Female)</option><option value="af_river">River (American Female)</option><option value="af_sarah">Sarah (American Female)</option><option value="af_sky">Sky (American Female)</option><option value="am_adam">Adam (American Male)</option><option value="am_echo">Echo (American Male)</option><option value="am_eric">Eric (American Male)</option><option value="am_fenrir">Fenrir (American Male)</option><option value="am_liam">Liam (American Male)</option><option value="am_michael">Michael (American Male)</option><option value="am_onyx">Onyx (American Male)</option><option value="am_puck">Puck (American Male)</option><option value="am_santa">Santa (American Male)</option><option value="bf_emma">Emma (British Female)</option><option value="bf_isabella">Isabella (British Female)</option><option value="bm_george">George (British Male)</option><option value="bm_lewis">Lewis (British Male)</option><option value="bf_alice">Alice (British Female)</option><option value="bf_lily">Lily (British Female)</option><option value="bm_daniel">Daniel (British Male)</option><option value="bm_fable">Fable (British Male)</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="kokorospeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="kokoro-tts-speed">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" 
+										size="5" data-numbersetting10="kokorospeed" />
+								</span>
 							</div>
 						</div>
 					</div>
@@ -4370,6 +4473,22 @@ input:checked + .slider:before {
                 </div>
             </div>
 			
+			<div class="link" title="Giveaway Tool">
+                <h2 class="giveaway_mode_title">
+                    <span data-translate="giveaway">Giveaway Tool</span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#giveaway" title="Jump to the giveaway link options."><span data-translate="options">[options]</span></a>
+                </h2>
+				<h3>
+                    <span data-translate="giveaway-made">
+                       A giveaway made by a community member
+                    </span>
+                </h3>
+                <div id="giveaway" data-raw="" class="streaming_chat"><a href="" id="giveawaylink"></a></div>
+            </div>
+           
+			
+			
 			<div class="link" title="Polling system">
                 <h2 class="poll_mode_title">
                     <span data-translate="pollmeter">Graphical Poll </span>
@@ -4528,6 +4647,126 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									⌚ <span data-translate="auto-start-lobby">Increase lobby wait time to 30s</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="link" title="End credits roll">
+				<h2 class="credits_mode_title">
+					<span data-translate="creditsmeter">Credits roll</span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#credits" title="Jump to the credits link options."><span data-translate="options">[options]</span></a>
+				</h2>
+				<h3>
+					<span data-translate="when-enabled-a-credits">
+					   A credits roll overlay. Show appreciation to your chat participants and donors.
+					</span>
+				</h3>
+				<div id="credits" data-raw="" class="streaming_chat"><a href="" id="creditslink"></a></div>
+			</div>
+			<div class="wrapper hidden wip">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-credits-general-options" />
+					<label class="collapsible-label" for="wrapper-credits-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group credits">
+								<h3><span data-translate="must-enable-the-trigger-to-use">Must enable the trigger to use</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="credits" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="enable-the-credits">🚦 Enable </span>
+									<div>
+										<button class="glowingButton" style="width: 270px; border: 1px solid #000; padding: 12px;margin-top:10px;" data-action="startcredits">
+											<span style="height:20px"><span data-translate="start-credits">🎬 Start Credits Roll</span></span>
+										</button>
+									</div>
+								</div>
+								<h3><span data-translate="other-customization-options">Other customization options</span></h3>
+								<div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param10="includechat" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="include-chat-users">
+											💬 Include all chat participants
+										</span>
+									</div>
+									<br>
+									
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param10="includedonors" checked />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="include-donors">
+											💰 Include donors
+										</span>
+									</div>
+									<br>
+									
+									<div>
+										<span data-translate="credits-speed">
+											⏲️ Scroll speed <input type="number" style="max-width: 8ch;" max="10" min="0.1" value="1" size="3" data-numbersetting10="speed" />x
+										</span>
+									</div>
+									<br>
+									
+									<div>
+										<span data-translate="display-style-credits">
+											Credits Style
+										</span>
+										<select data-optionparam10="style">
+											<option value="starwars">Star Wars</option>
+											<option value="standard">Standard Roll</option>
+											<option value="minimal">Minimal</option>
+											<option value="elegant">Elegant</option>
+										</select>
+									</div>
+									<br>
+									<span data-translate="font-family">
+										Font Family
+									</span>
+									<select data-optionparam10="font">
+										<option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
+										<option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
+									</select>
+								</div>
+								<br>
+								<div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
+									<input type="text" id="googlefont10" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam10="googlefont" />
+									<label for="googlefont10"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+								</div>
+								<br>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param10="showcategories" checked />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="show-categories">
+										🏷️ Show category headers (Donors, Chatters, etc.)
+									</span>
+								</div>
+								<br>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param10="showamounts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="show-donation-amounts">
+										💲 Show donation amounts
+									</span>
+								</div>
+								<br>
+								<div class="textInputContainer" style="width: 95%;" title="Custom message to show at the end">
+									<input type="text" id="endmessage10" class="textInput instant" autocomplete="off" placeholder="eg: Thanks for watching!" value="Thank you all for being part of the stream! ❤️" data-textparam10="endmessage" />
+									<label for="endmessage10"><span data-translate="end-message">&gt; Custom end message</span></label>
 								</div>
 							</div>
 						</div>
@@ -5434,7 +5673,8 @@ input:checked + .slider:before {
                         <div class="options">
                             <div class="options_group">
 							
-								<h3><span data-translate="message-echos">Message doubling / echos / duplicates</span></h3>
+								<h3><span data-translate="message-echos">Message doubling / echos / duplicates / relayed</span></h3>
+								<p>If you're using the RELAY ALL function, you might find the following options helpful in controlling for duplicate responses. (I like to call relayed message echos "reflections")</p><br />
 								
 								<div title="Do not capture your responses that you make to chat. They will be filtered out, so will not appear in the dock">
                                     <label class="switch">
@@ -5448,7 +5688,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" id="firstsourceonly" data-setting="firstsourceonly" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="filter-out-duplicate-message-echos">💬💬🚫 Hide duplicates; show you first reply only</span>
+                                    <span data-translate="filter-out-duplicate-message-echos">💬💬🚫 Hide duplicates; show your first reply only [RELAY]</span>
                                 </div>
 								 <div title="Only show replies from you if they are from the selected source">
                                     <label class="switch">

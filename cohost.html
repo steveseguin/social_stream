@@ -111,7 +111,37 @@ button:hover {
 #startButton[data-started="true"]:hover {
     background: #a3164a;
 }
+select:disabled, button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #251f1f;
+}
 
+#chatgpt-device-notice {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13px;
+    margin-top: 8px;
+    color: #a0a0a0;
+    text-align: center;
+}
+
+/* Optional: Add a subtle visual indicator of disabled selectors */
+select:disabled {
+    position: relative;
+}
+
+select:disabled::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    pointer-events: none;
+}
 @keyframes pulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
@@ -742,7 +772,7 @@ button:disabled {
 			<textarea placeholder="This is where you can specify an initial instruction prompt." id="systemPrompt" rows="4" style="width: 100%; background: #2a2a2a; color: #e0e0e0; border: 1px solid #404040; border-radius: 8px; padding: 8px; font-family: inherit;"></textarea>
 			<div class="api-key-container">
 				<input type="password" id="apiKey" placeholder="Enter Gemini API Key" size="15" class="api-key">
-				<div class="api-key-info">
+				<div class="api-key-info" id="apikeyinfo">
 					Get your free Gemini API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
 				</div>
 			</div>        </div>
@@ -765,7 +795,6 @@ button:disabled {
 	</a>
 	<div id="puppet-container"></div>
 <script>
-
 class PuppetAvatar {
     constructor(containerSelector) {
         this.container = document.querySelector(containerSelector);
@@ -780,7 +809,6 @@ class PuppetAvatar {
         this.startBlinking();
         this.initializeDragging();
     }
-
     initializePuppet() {
         this.container.innerHTML = `
             <div class="puppet">
@@ -803,62 +831,47 @@ class PuppetAvatar {
             </div>`;
         this.puppet = this.container.querySelector('.puppet');
     }
-
     initializeDragging() {
 		this.container.style.cursor = 'grab';
-		const scale = 0.5; // Match the scale from CSS
-		
+		const scale = 0.5;
 		this.container.addEventListener('mousedown', (e) => {
 			this.isDragging = true;
 			this.container.style.cursor = 'grabbing';
 			const rect = this.container.getBoundingClientRect();
-			
-			// Account for the scale in the offset calculation
 			this.dragOffset = {
 				x: (e.clientX - rect.left) * (1 / scale),
 				y: (e.clientY - rect.top) * (1 / scale)
 			};
 		});
-
 		document.addEventListener('mousemove', (e) => {
 			if (!this.isDragging) return;
-			
-			// Account for scale when calculating new position
 			const x = (e.clientX * (1 / scale)) - this.dragOffset.x;
 			const y = (e.clientY * (1 / scale)) - this.dragOffset.y;
-			
-			// Scale the container dimensions for boundary checking
 			const containerWidth = this.container.offsetWidth * scale;
 			const containerHeight = this.container.offsetHeight * scale;
-			
 			this.setPosition(
 				Math.max(0, Math.min(window.innerWidth - containerWidth, x * scale)),
 				Math.max(0, Math.min(window.innerHeight - containerHeight, y * scale))
 			);
 		});
-
 		document.addEventListener('mouseup', () => {
 			this.isDragging = false;
 			this.container.style.cursor = 'grab';
 		});
-
 		window.addEventListener('resize', () => {
 			const rect = this.container.getBoundingClientRect();
 			const containerWidth = this.container.offsetWidth * scale;
 			const containerHeight = this.container.offsetHeight * scale;
-			
 			this.setPosition(
 				Math.min(window.innerWidth - containerWidth, rect.left),
 				Math.min(window.innerHeight - containerHeight, rect.top)
 			);
 		});
 	}
-
     setEmotion(emotion, talking = false) {
         this.currentEmotion = emotion;
         this.isTalking = talking;
         this.updateState();
-        
         if (emotion === 'sleepy') {
             this.stopBlinking();
             this.startSlowBlinking();
@@ -866,18 +879,15 @@ class PuppetAvatar {
             this.startBlinking();
         }
     }
-
     updateState() {
         const classes = [this.currentEmotion];
         if (this.isTalking) classes.push('talking');
         this.puppet.className = 'puppet ' + classes.join(' ');
     }
-
     blink() {
         this.puppet.classList.add('blink');
         setTimeout(() => this.puppet.classList.remove('blink'), this.BLINK_DURATION);
     }
-
     startBlinking() {
         if (this.blinkInterval) clearInterval(this.blinkInterval);
         this.blinkInterval = setInterval(() => {
@@ -887,28 +897,23 @@ class PuppetAvatar {
             }
         }, this.BLINK_INTERVAL + Math.random() * 2000);
     }
-
     startSlowBlinking() {
         if (this.blinkInterval) clearInterval(this.blinkInterval);
         this.blinkInterval = setInterval(() => this.blink(), this.BLINK_INTERVAL * 2);
     }
-
     stopBlinking() {
         if (this.blinkInterval) {
             clearInterval(this.blinkInterval);
             this.blinkInterval = null;
         }
     }
-
     setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
     }
-
 	setPosition(x, y) {
 		this.container.style.left = typeof x === 'number' ? `${x}px` : x;
 		this.container.style.top = typeof y === 'number' ? `${y}px` : y;
 	}
-
     destroy() {
         this.stopBlinking();
         document.removeEventListener('mousemove', this.handleMouseMove);
@@ -917,159 +922,283 @@ class PuppetAvatar {
         this.container.innerHTML = '';
     }
 }
-
 class ChatGPTPublisher {
     constructor(stream, apiKey) {
         this.stream = stream;
         this.apiKey = apiKey;
         this.ws = null;
         this.audioContext = null;
-        this.mediaRecorder = null;
-        this.audioChunks = [];
+        this.stopped = false;
         this.handleMessage = this.handleMessage.bind(this);
         this.audioPlayer = new AudioPlayer();
-        this.videoProcessor = null;
-        this.canvasContext = null;
-        this.lastImageTime = 0;
-        this.imageInterval = 200;
-        this.imageWidth = 640;
-        this.imageHeight = 360;
+        this.recognition = null;
+        this.isRecognizing = false;
+        this.recognitionTimeout = null;
+        this.interimTranscript = '';
+        this.finalTranscript = '';
+        this.activeConversation = false;
+        this.responseActive = false;
     }
-
-	setupVideoProcessing() {
-		const videoTrack = this.stream.getVideoTracks()[0];
-		if (!videoTrack) {
-			console.log('No video track available - skipping video processing');
-			return;
-		}
-
-		const canvas = document.createElement('canvas');
-		canvas.width = this.imageWidth;
-		canvas.height = this.imageHeight;
-		this.canvasContext = canvas.getContext('2d');
-
-		const videoElement = document.createElement('video');
-		videoElement.srcObject = new MediaStream([videoTrack]);
-		videoElement.autoplay = true;
-
-		let animationFrame;
-		const captureFrame = () => {
-			if (this.stopped || !this.canvasContext) {
-				if (animationFrame) {
-					cancelAnimationFrame(animationFrame);
-				}
+    setupVideoProcessing() {
+        console.log('Video processing not needed for ChatGPT, skipping');
+        return Promise.resolve();
+    }
+	async handleMessage(event) {
+		try {
+			let response;
+			let rawText = '';
+			
+			// First handle the different types of message data
+			if (event.data instanceof Blob) {
+				rawText = await event.data.text();
+			} else if (typeof event.data === 'string') {
+				rawText = event.data;
+			} else {
+				console.warn('Unhandled message format:', event.data);
+				// Still update the activity timestamps even for unknown formats
+				this.lastHeartbeatResponse = Date.now();
+				this.lastActivityTime = Date.now();
 				return;
 			}
-
-			const now = Date.now();
-			if (now - this.lastImageTime >= this.imageInterval) {
-				this.canvasContext.drawImage(videoElement, 0, 0, this.imageWidth, this.imageHeight);
-				const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+			
+			// Always update activity timestamps, even before JSON parsing
+			this.lastHeartbeatResponse = Date.now();
+			this.lastActivityTime = Date.now();
+			
+			// Try to parse as JSON, but don't fail if it's not valid JSON
+			try {
+				response = JSON.parse(rawText);
+			} catch (jsonError) {
+				// Log but don't show error for parsing issues
+				console.warn('Received non-JSON message or invalid JSON:', 
+							 rawText.substring(0, 100) + (rawText.length > 100 ? '...' : ''));
 				
-				this.sendMediaChunk([{
-					mime_type: "image/jpeg",
-					data: base64Image
-				}]);
-				this.lastImageTime = now;
+				// Reset connection attempts on any activity, even invalid JSON
+				this.inactivityReconnectAttempts = 0;
+				return;
 			}
-
-			animationFrame = requestAnimationFrame(captureFrame);
-		};
-
-		videoElement.addEventListener('loadedmetadata', () => {
-			animationFrame = requestAnimationFrame(captureFrame);
-		});
+			
+			// Update counts for reconnection logic
+			this.inactivityReconnectAttempts = 0;
+			this.reconnectAttempts = 0; // Reset reconnect attempts on successful message
+			
+			// Process based on message type
+			if (response.setupComplete) {
+				console.log('Setup complete received');
+				this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.");
+			}
+			
+			// Handle model content
+			if (response.serverContent?.modelTurn?.parts) {
+				const parts = response.serverContent.modelTurn.parts;
+				let hasAudioParts = false;
+				parts.forEach(part => {
+					if (part.text) {
+						console.log('Model response:', part.text);
+						const event = new CustomEvent('modelResponse', {
+							detail: {
+								text: part.text
+							}
+						});
+						window.dispatchEvent(event);
+					}
+					if (part.inlineData && part.inlineData.mimeType.startsWith('audio/')) {
+						hasAudioParts = true;
+						console.log('Received audio response with mime type:', part.inlineData.mimeType);
+						try {
+							const rateMatch = part.inlineData.mimeType.match(/rate=(\d+)/);
+							const sampleRate = rateMatch ? parseInt(rateMatch[1]) : 24000;
+							this.audioPlayer.resume();
+							const audioData = base64ToArrayBuffer(part.inlineData.data);
+							console.log('Processing audio chunk of size:', audioData.byteLength);
+							this.audioPlayer.addPCM16(new Uint8Array(audioData));
+						} catch (err) {
+							console.error('Error processing audio:', err);
+						}
+					}
+				});
+				if (response.serverContent.turnComplete && hasAudioParts) {
+					console.log('Turn complete, finalizing audio');
+					this.audioPlayer.complete();
+				}
+			}
+			
+			// Simply log heartbeat messages but don't take specific action
+			if (rawText.includes('heartbeat')) {
+				console.log('Heartbeat received from server');
+			}
+		} catch (err) {
+			// Just log the error but keep connection alive
+			console.error('Error handling message:', err);
+			
+			// Still update timestamps to prevent timeout-based reconnects
+			this.lastHeartbeatResponse = Date.now();
+			this.lastActivityTime = Date.now();
+		}
 	}
-
-    async handleMessage(event) {
-        try {
-            const data = JSON.parse(event.data);
-            switch(data.type) {
-                case 'response.text.delta':
-                    const textEvent = new CustomEvent('modelResponse', {
-                        detail: { text: data.delta }
-                    });
-                    window.dispatchEvent(textEvent);
-                    break;
-                case 'response.audio.delta':
-                    if (data.delta) {
-                        const audioData = base64ToArrayBuffer(data.delta);
-                        this.audioPlayer.resume();
-                        this.audioPlayer.addPCM16(new Uint8Array(audioData));
-                    }
-                    break;
-            }
-        } catch (err) {
-            console.error('Error handling message:', err);
-        }
-    }
-	
-	handleConnectionFailure() {
-		this.stop();
-		const startButton = document.getElementById('startButton');
-		const sendButton = document.getElementById('sendButton');
-		const systemPrompt = document.getElementById('systemPrompt');
-		
-		startButton.textContent = 'Start Stream';
-		startButton.dataset.started = "false";
-		startButton.disabled = false;
-		sendButton.disabled = true;
-		systemPrompt.disabled = false;
-	}
-	
     async connect() {
-        const uri = 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
-        
+        const uri = 'wss://api.openai.com/v1/realtime?model=gpt-4o-mini-realtime-preview-2024-12-17';
         if (this.isConnected()) {
             console.log('Already connected');
             return;
         }
-
-        this.ws = new WebSocket(uri);
-        this.ws.onmessage = this.handleMessage;
-		
-		this.ws.onerror = (error) => {
-			console.error('WebSocket error:', error);
-			const errorMsg = 'Connection error occurred. Please check your API key and try again.';
-			showError(errorMsg);
-			this.handleConnectionFailure();
-		};
-		
-		this.ws.onclose = (event) => {
-			console.log('WebSocket closed:', event.code, event.reason);
-			let errorMsg = 'Connection closed.';
-			if (event.code === 1007) {
-				errorMsg = 'Invalid API key. Please check your key and try again.';
-			} else if (event.code === 1006) {
-				errorMsg = 'Connection terminated unexpectedly. Please try again.';
-			}
-			showError(errorMsg);
-			this.handleConnectionFailure();
-		};
-
-        await new Promise((resolve, reject) => {
-            this.ws.addEventListener('open', resolve, { once: true });
-            this.ws.addEventListener('error', reject, { once: true });
-        });
-		
-		const systemPrompt = document.getElementById('systemPrompt');
-        const setupMessage = {
-            type: 'session.update',
-            session: {
-                modalities: ['text', 'audio'],
-                instructions: systemPrompt.value
+        try {
+            this.ws = new WebSocket(
+                uri,
+                [
+                    "realtime",
+                    "openai-insecure-api-key." + this.apiKey,
+                    "openai-beta.realtime-v1"
+                ]
+            );
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('Connection timed out'));
+                    this.ws = null;
+                }, 10000);
+                this.ws.onmessage = this.handleMessage;
+                this.ws.onopen = () => {
+                    console.log('WebSocket connected successfully');
+                    clearTimeout(timeout);
+                    const systemPrompt = document.getElementById('systemPrompt');
+                    const responseType = document.getElementById('responseType');
+                    const setupMessage = {
+                        type: 'session.update',
+                        session: {
+                            modalities: responseType.value === 'audio' ? ['text', 'audio'] : ['text'],
+                            instructions: systemPrompt.value
+                        }
+                    };
+                    this.ws.send(JSON.stringify(setupMessage));
+                    resolve();
+                };
+                this.ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    clearTimeout(timeout);
+                    this.ws = null;
+                    reject(new Error('Connection error occurred'));
+                };
+                this.ws.onclose = (event) => {
+                    console.log('WebSocket closed:', event.code, event.reason);
+                    clearTimeout(timeout);
+                    this.ws = null;
+                    if (!this.stopped) {
+                        reject(new Error(`Connection closed: ${event.code}`));
+                    }
+                };
+            });
+        } catch (error) {
+            console.error('Failed to create WebSocket:', error);
+            this.ws = null;
+            throw error;
+        }
+    }
+    handleConnectionFailure() {
+        this.stop();
+        const startButton = document.getElementById('startButton');
+        const sendButton = document.getElementById('sendButton');
+        const systemPrompt = document.getElementById('systemPrompt');
+        startButton.textContent = 'Start Stream';
+        startButton.dataset.started = "false";
+        startButton.disabled = false;
+        sendButton.disabled = true;
+        systemPrompt.disabled = false;
+    }
+    async setupSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.error('Speech recognition not supported in this browser');
+            showError('Speech recognition is not supported in your browser. Try using Chrome.');
+            return;
+        }
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = true;
+        this.recognition.maxAlternatives = 1;
+        this.recognition.lang = 'en-US';
+        this.recognition.onstart = () => {
+            console.log('Speech recognition started');
+            this.isRecognizing = true;
+            avatar.setEmotion('thinking', false);
+        };
+        this.recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+            this.interimTranscript = interimTranscript;
+            if (finalTranscript) {
+                this.finalTranscript = finalTranscript;
+                console.log('Final transcript:', finalTranscript);
+                this.sendPrompt(finalTranscript);
+                this.finalTranscript = '';
+                this.interimTranscript = '';
+            }
+            if (interimTranscript || finalTranscript) {
+                avatar.setEmotion('happy', true);
+                clearTimeout(this.recognitionTimeout);
+                this.recognitionTimeout = setTimeout(() => {
+                    if (!this.interimTranscript) {
+                        avatar.setEmotion('happy', false);
+                    }
+                }, 1500);
             }
         };
-        this.ws.send(JSON.stringify(setupMessage));
+        this.recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            if (event.error === 'no-speech') {
+                console.log('No speech detected');
+            } else {
+                showError(`Speech recognition error: ${event.error}`);
+            }
+            if (event.error !== 'not-allowed' && this.isRecognizing && !micMuted) {
+                this.restartRecognition();
+            } else {
+                this.isRecognizing = false;
+                avatar.setEmotion('sad', false);
+            }
+        };
+        this.recognition.onend = () => {
+            console.log('Speech recognition ended');
+            this.isRecognizing = false;
+            if (!this.stopped && !micMuted) {
+                this.restartRecognition();
+            }
+        };
+        try {
+            if (!micMuted) {
+                this.recognition.start();
+            } else {
+                console.log('Microphone is muted, not starting speech recognition');
+            }
+        } catch (err) {
+            console.error('Failed to start speech recognition:', err);
+            showError('Failed to start speech recognition: ' + err.message);
+        }
     }
-	
-
+    restartRecognition() {
+        if (this.stopped || !this.recognition || micMuted) return;
+        try {
+            setTimeout(() => {
+                if (!this.isRecognizing && !this.stopped && !micMuted) {
+                    console.log('Restarting speech recognition...');
+                    this.recognition.start();
+                }
+            }, 300);
+        } catch (err) {
+            console.error('Failed to restart speech recognition:', err);
+        }
+    }
     sendPrompt(text) {
         if (!this.isConnected()) {
             console.error('WebSocket not connected');
             return;
         }
-
         this.ws.send(JSON.stringify({
             type: 'conversation.item.create',
             item: {
@@ -1081,110 +1210,78 @@ class ChatGPTPublisher {
                 }]
             }
         }));
-        this.ws.send(JSON.stringify({ type: 'response.create' }));
+        if (!this.responseActive) {
+            this.responseActive = true;
+            setTimeout(() => {
+                if (this.isConnected()) {
+                    this.ws.send(JSON.stringify({
+                        type: 'response.create',
+                        response: {
+                            modalities: document.getElementById('responseType').value === 'audio' ? ['text', 'audio'] : ['text']
+                        }
+                    }));
+                }
+            }, 300);
+        } else {
+            console.log('Response already active, not creating a new one');
+        }
     }
-
-    sendMediaChunk(mediaChunks) {
-        if (!this.isConnected()) return;
-        
-        mediaChunks.forEach(chunk => {
-            let content = [];
-            
-            if (chunk.mime_type.startsWith('audio/')) {
-                content.push({
-                    type: 'input_audio',
-                    audio: chunk.data
-                });
-            } else if (chunk.mime_type.startsWith('image/')) {
-                content.push({
-                    type: 'image_url',
-                    image_url: {
-                        url: `data:${chunk.mime_type};base64,${chunk.data}`,
-                        detail: 'auto'
-                    }
-                });
-            }
-
-            if (content.length > 0) {
-                this.ws.send(JSON.stringify({
-                    type: 'conversation.item.create',
-                    item: {
-                        type: 'message',
-                        role: 'user',
-                        content
-                    }
-                }));
-            }
-        });
-        
-        this.ws.send(JSON.stringify({ type: 'response.create' }));
-    }
-
     isConnected() {
         return this.ws && this.ws.readyState === WebSocket.OPEN;
     }
-
-	async start() {
+    async start() {
         try {
+            this.stopped = false;
+            this.isRecognizing = false;
+            this.interimTranscript = '';
+            this.finalTranscript = '';
+            this.activeConversation = false;
+            this.responseActive = false;
             await this.connect();
-            await this.setupAudioProcessing();
-            const hasVideoTracks = this.stream.getVideoTracks().length > 0;
-            if (hasVideoTracks) {
-                this.setupVideoProcessing();
+            if (this.stream.getAudioTracks().length > 0) {
+                await this.setupSpeechRecognition();
+            } else {
+                console.log('No audio tracks available, skipping speech recognition');
             }
+            console.log('ChatGPT connected successfully');
         } catch (err) {
-            console.error('Failed to start:', err);
+            console.error('Failed to start ChatGPT:', err);
             this.stop();
             throw err;
         }
     }
-
-    async setupAudioProcessing() {
-        this.audioContext = new AudioContext({ sampleRate: 16000 });
-        const source = this.audioContext.createMediaStreamSource(this.stream);
-        
-        this.mediaRecorder = new MediaRecorder(this.stream);
-        this.mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                this.audioChunks.push(event.data);
-            }
-        };
-        
-        this.mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
-            this.processAudioBlob(audioBlob);
-            this.audioChunks = [];
-        };
-        
-        this.mediaRecorder.start(1000);
-    }
-
-    async processAudioBlob(audioBlob) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const base64Audio = reader.result.split(',')[1];
-            this.sendMediaChunk([{
-                mime_type: 'audio/wav',
-                data: base64Audio
-            }]);
-        };
-        reader.readAsDataURL(audioBlob);
-    }
-	
     stop() {
         this.stopped = true;
-        if (this.mediaRecorder) {
-            this.mediaRecorder.stop();
+        this.activeConversation = false;
+        this.responseActive = false;
+        if (this.ws) {
+            this.ws.close();
+            this.ws = null;
         }
-        this.ws?.close();
-        this.audioContext?.close();
-        this.audioPlayer?.stop();
-        this.ws = null;
-        this.audioContext = null;
-        this.mediaRecorder = null;
-        this.videoProcessor = null;
-        this.canvasContext = null;
+        if (this.recognition) {
+            try {
+                this.recognition.stop();
+            } catch (e) {
+                console.log('Error stopping recognition:', e);
+            }
+            this.recognition = null;
+        }
+        if (this.audioContext) {
+            this.audioContext.close();
+            this.audioContext = null;
+        }
+        if (this.audioPlayer) {
+            this.audioPlayer.stop();
+        }
+        this.isRecognizing = false;
+        this.interimTranscript = '';
+        this.finalTranscript = '';
+        clearTimeout(this.recognitionTimeout);
     }
+}
+function countTokens(text) {
+    // Simple approximation: ~4 characters per token for English text
+    return Math.ceil(text.length / 4);
 }
 class GoogleLivePublisher {
     constructor(stream, apiKey) {
@@ -1200,40 +1297,223 @@ class GoogleLivePublisher {
         this.imageHeight = 360;
         this.handleMessage = this.handleMessage.bind(this);
         this.audioPlayer = new AudioPlayer();
+		this.connectionWatchdog = null;
+		this.lastActivityTime = Date.now();
+		this.inactivityThreshold = 30000;
+		this.maxInactivityReconnects = 3;
+		this.inactivityReconnectAttempts = 0;
+        this.stopped = false;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+        this.reconnectTimeout = null;
+        this.pingInterval = null;
+        this.lastHeartbeatResponse = Date.now();
+		this.conversationHistory = [];
+        this.maxTokens = 20000; // Set below the 32K limit
+        this.loadConversationHistory(); 
     }
-	
-	handleConnectionFailure() {
-		this.stop();
-		const startButton = document.getElementById('startButton');
-		const sendButton = document.getElementById('sendButton');
-		const systemPrompt = document.getElementById('systemPrompt');
-		
-		startButton.textContent = 'Start Stream';
-		startButton.dataset.started = "false";
-		startButton.disabled = false;
-		sendButton.disabled = true;
-		systemPrompt.disabled = false;
-	}
-
-    async handleMessage(event) {
+	loadConversationHistory() {
+        const savedHistory = localStorage.getItem('conversationHistory');
+        if (savedHistory) {
+            try {
+                this.conversationHistory = JSON.parse(savedHistory);
+                console.log(`Loaded ${this.conversationHistory.length} messages from history`);
+                
+                // Display the loaded history
+                this.displaySavedHistory();
+            } catch (e) {
+                console.error('Failed to parse conversation history:', e);
+                localStorage.removeItem('conversationHistory');
+                this.conversationHistory = [];
+            }
+        }
+    }
+    
+    saveConversationHistory() {
+        localStorage.setItem('conversationHistory', JSON.stringify(this.conversationHistory));
+    }
+    
+    displaySavedHistory() {
+        // Clear existing messages
+        const responsesDiv = document.getElementById('responses');
+        responsesDiv.innerHTML = '';
+        
+        // Display each message from history
+        this.conversationHistory.forEach(msg => {
+            if (msg.role === "user") {
+                messageFormatter.appendMessage(msg.content, true);
+            } else if (msg.role === "assistant") {
+                messageFormatter.appendMessage(msg.content);
+            } else if (msg.role === "system") {
+                // Display system messages (summaries) differently
+                const summaryDiv = document.createElement('div');
+                summaryDiv.className = 'message system-message';
+                summaryDiv.style.background = '#333';
+                summaryDiv.style.color = '#aaa';
+                summaryDiv.style.fontStyle = 'italic';
+                summaryDiv.style.padding = '8px 12px';
+                summaryDiv.style.margin = '8px 0';
+                summaryDiv.style.borderRadius = '8px';
+                summaryDiv.style.fontSize = '0.9em';
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'markdown-content';
+                contentDiv.innerHTML = messageFormatter.formatMarkdown(msg.content);
+                
+                summaryDiv.appendChild(contentDiv);
+                responsesDiv.appendChild(summaryDiv);
+            }
+        });
+        
+        // Scroll to bottom
+        responsesDiv.scrollTop = responsesDiv.scrollHeight;
+    }
+    
+    addUserMessage(text) {
+        this.conversationHistory.push({
+            role: "user",
+            content: text,
+            timestamp: Date.now()
+        });
+        
+        this.saveConversationHistory();
+        this.checkAndTruncateHistory();
+    }
+    
+    addAssistantMessage(text) {
+        this.conversationHistory.push({
+            role: "assistant",
+            content: text,
+            timestamp: Date.now()
+        });
+        
+        this.saveConversationHistory();
+        this.checkAndTruncateHistory();
+    }
+    
+    checkAndTruncateHistory() {
+        let totalTokens = 0;
+        
+        // Count tokens in the conversation
+        this.conversationHistory.forEach(msg => {
+            totalTokens += countTokens(msg.content);
+        });
+        
+        console.log(`Current conversation size: ${totalTokens} tokens`);
+        
+        // If over limit, truncate
+        if (totalTokens > this.maxTokens) {
+            console.log(`Conversation exceeded token limit (${totalTokens}/${this.maxTokens}), truncating...`);
+            this.truncateConversation();
+        }
+    }
+    
+    truncateConversation() {
+        // Keep the first two messages (usually system prompt and greeting)
+        // and the most recent messages to stay under token limit
+        const introCount = 2; 
+        const recentCount = 10;
+        
+        if (this.conversationHistory.length <= introCount + recentCount) {
+            return; // Not enough messages to truncate
+        }
+        
+        // Keep introduction and recent messages
+        const introMessages = this.conversationHistory.slice(0, introCount);
+        const recentMessages = this.conversationHistory.slice(-recentCount);
+        
+        // Create a summary system message
+        const summaryMessage = {
+            role: "system",
+            content: "Some older messages have been summarized to stay within token limits.",
+            timestamp: Date.now()
+        };
+        
+        // Update the history
+        this.conversationHistory = [...introMessages, summaryMessage, ...recentMessages];
+        console.log(`Truncated conversation to ${this.conversationHistory.length} messages`);
+        
+        // Save the updated history
+        this.saveConversationHistory();
+    }
+    
+    clearConversationHistory() {
+        this.conversationHistory = [];
+        localStorage.removeItem('conversationHistory');
+        
+        // Clear the UI
+        const responsesDiv = document.getElementById('responses');
+        responsesDiv.innerHTML = '';
+        
+        console.log('Conversation history cleared');
+    }
+    handleConnectionFailure() {
+        this.stop();
+        const startButton = document.getElementById('startButton');
+        const sendButton = document.getElementById('sendButton');
+        const systemPrompt = document.getElementById('systemPrompt');
+        startButton.textContent = 'Start Stream';
+        startButton.dataset.started = "false";
+        startButton.disabled = false;
+        sendButton.disabled = true;
+        systemPrompt.disabled = false;
+    }
+	async handleMessage(event) {
         try {
             let response;
+            let rawText = '';
+            
+            // First handle the different types of message data
             if (event.data instanceof Blob) {
-                const text = await event.data.text();
-                response = JSON.parse(text);
+                rawText = await event.data.text();
+            } else if (typeof event.data === 'string') {
+                rawText = event.data;
             } else {
-                response = JSON.parse(event.data);
+                console.warn('Unhandled message format:', event.data);
+                // Still update the activity timestamps even for unknown formats
+                this.lastHeartbeatResponse = Date.now();
+                this.lastActivityTime = Date.now();
+                return;
             }
+            
+            // Always update activity timestamps, even before JSON parsing
+            this.lastHeartbeatResponse = Date.now();
+            this.lastActivityTime = Date.now();
+            
+            // Try to parse as JSON, but don't fail if it's not valid JSON
+            try {
+                response = JSON.parse(rawText);
+            } catch (jsonError) {
+                // Log but don't show error for parsing issues
+                console.warn('Received non-JSON message or invalid JSON:', 
+                             rawText.substring(0, 100) + (rawText.length > 100 ? '...' : ''));
+                
+                // Reset connection attempts on any activity, even invalid JSON
+                this.inactivityReconnectAttempts = 0;
+                return;
+            }
+            
+            // Update counts for reconnection logic
+            this.inactivityReconnectAttempts = 0;
+            this.reconnectAttempts = 0; // Reset reconnect attempts on successful message
+            
+            // Process based on message type
             if (response.setupComplete) {
                 console.log('Setup complete received');
                 this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.");
             }
+            
+            // Handle model content
             if (response.serverContent?.modelTurn?.parts) {
                 const parts = response.serverContent.modelTurn.parts;
                 let hasAudioParts = false;
+                let modelTextResponse = ""; // Accumulate text response
+                
                 parts.forEach(part => {
                     if (part.text) {
                         console.log('Model response:', part.text);
+                        modelTextResponse += part.text; // Accumulate text
+                        
                         const event = new CustomEvent('modelResponse', {
                             detail: {
                                 text: part.text
@@ -1256,26 +1536,57 @@ class GoogleLivePublisher {
                         }
                     }
                 });
+                
                 if (response.serverContent.turnComplete && hasAudioParts) {
                     console.log('Turn complete, finalizing audio');
                     this.audioPlayer.complete();
                 }
+                
+                // After processing all parts, add to history if response is complete
+                if (modelTextResponse && response.serverContent.turnComplete) {
+                    this.addAssistantMessage(modelTextResponse);
+                }
             }
+            
+            // Handle ANY response from server as a valid heartbeat response
+            // We're not explicitly looking for a heartbeat property anymore
+            
+            // Log unknown response types for debugging but continue processing
             if (!response.setupComplete && !response.serverContent) {
-                console.log('Other response type:', response);
+                // Don't attempt to stringify the entire response as it may be large
+                // Just log that we received something unknown
+                console.log('Received message with unknown structure');
+                console.log('Response keys:', Object.keys(response));
+                
+                // If the response has a heartbeat field (in any form), log it
+                if (rawText.includes('heartbeat')) {
+                    console.log('Message appears to contain heartbeat information');
+                }
             }
         } catch (err) {
+            // Just log the error but keep connection alive
             console.error('Error handling message:', err);
+            
+            // Still update timestamps to prevent timeout-based reconnects
+            this.lastHeartbeatResponse = Date.now();
+            this.lastActivityTime = Date.now();
         }
     }
     sendPrompt(text) {
         if (!this.isConnected()) {
             console.error('WebSocket not connected, attempting reconnect...');
-            this.connect().then(() => {
+            this.reconnect().then(() => {
                 this._sendPromptInternal(text);
+            }).catch(error => {
+                console.error('Failed to reconnect:', error);
+                showError('Connection lost. Please try restarting the stream.');
             });
             return;
         }
+        
+        // Add message to history
+        this.addUserMessage(text);
+        
         this._sendPromptInternal(text);
     }
     _sendPromptInternal(text) {
@@ -1301,10 +1612,7 @@ class GoogleLivePublisher {
         if (this.ws?.readyState === WebSocket.OPEN) {
             const message = {
                 realtimeInput: {
-                    mediaChunks: mediaChunks.map(chunk => ({
-                        mimeType: chunk.inlineData.mimeType,
-                        data: chunk.inlineData.data
-                    }))
+                    mediaChunks
                 }
             };
             this.ws.send(JSON.stringify(message));
@@ -1313,78 +1621,309 @@ class GoogleLivePublisher {
     isConnected() {
         return this.ws && this.ws.readyState === WebSocket.OPEN;
     }
-    async connect() {
-        const host = 'generativelanguage.googleapis.com';
-        const uri = `wss://${host}/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${this.apiKey}`;
-        if (this.isConnected()) {
-            console.log('Already connected');
-            return;
-        }
+	async connect() {
+		
+		this.loadConversationHistory();
+		
+		const host = 'generativelanguage.googleapis.com';
+		const uri = `wss://${host}/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${this.apiKey}`;
+		if (this.isConnected()) {
+			console.log('Already connected');
+			return;
+		}
+		if (this.ws && this.ws.readyState === WebSocket.CONNECTING) {
+			console.log('Connection already in progress, waiting...');
+			return new Promise((resolve, reject) => {
+				const checkState = () => {
+					if (!this.ws) {
+						reject(new Error('WebSocket was closed while connecting'));
+						return;
+					}
+					if (this.ws.readyState === WebSocket.OPEN) {
+						resolve();
+					} else if (this.ws.readyState === WebSocket.CLOSED || this.ws.readyState === WebSocket.CLOSING) {
+						reject(new Error('WebSocket closed before fully connecting'));
+					} else {
+						setTimeout(checkState, 100);
+					}
+				};
+				checkState();
+			});
+		}
+		if (this.ws && this.ws.readyState === WebSocket.CLOSING) {
+			console.log('Previous connection is closing, waiting...');
+			return new Promise((resolve, reject) => {
+				const checkClosed = () => {
+					if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
+						this.ws = null;
+						this.connect().then(resolve).catch(reject);
+					} else {
+						setTimeout(checkClosed, 100);
+					}
+				};
+				checkClosed();
+			});
+		}
+		this.clearAllTimers();
         const responseType = document.getElementById('responseType');
         const voiceSelect = document.getElementById('voiceSelect');
         voiceSelect.style.display = responseType.value === 'audio' ? 'block' : 'none';
+        if (this.reconnectTimeout) {
+            clearTimeout(this.reconnectTimeout);
+            this.reconnectTimeout = null;
+        }
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
         this.ws = new WebSocket(uri);
         this.ws.onmessage = this.handleMessage;
-		
-		this.ws.onerror = (error) => {
-			console.error('WebSocket error:', error);
-			const errorMsg = 'Connection error occurred. Please check your API key and try again.';
-			showError(errorMsg);
-			this.handleConnectionFailure();
-		};
-
-		this.ws.onclose = (event) => {
-			console.log('WebSocket closed:', event.code, event.reason);
-			let errorMsg = 'Connection closed.';
-			if (event.code === 1007) {
-				errorMsg = 'Invalid API key. Please check your key and try again.';
-			} else if (event.code === 1006) {
-				errorMsg = 'Connection terminated unexpectedly. Please try again.';
-			}
-			showError(errorMsg);
-			this.handleConnectionFailure();
-		};
-		
-        await new Promise((resolve, reject) => {
-            this.ws.addEventListener('open', resolve, {
-                once: true
-            });
-            this.ws.addEventListener('error', reject, {
-                once: true
-            });
-        });
-		const systemPrompt = document.getElementById('systemPrompt');
-        const setupMessage = {
-            setup: {
-                model: "models/gemini-2.0-flash-exp",
-                systemInstruction: {
-                    parts: [{
-                        text: document.getElementById('systemPrompt').value
-                    }]
-                },
-                generationConfig: {
-                    temperature: 0.9,
-                    topK: 1,
-                    topP: 1,
-                    candidateCount: 1,
-                    responseModalities: responseType.value === 'audio' ? 'AUDIO' : 'TEXT',
-                    ...(responseType.value === 'audio' && {
-                        speechConfig: {
-                            voiceConfig: {
-                                prebuiltVoiceConfig: {
-                                    voiceName: voiceSelect.value
-                                }
-                            }
-                        }
-                    })
-                }
+        this.ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            const errorMsg = 'Connection error occurred. Please check your API key and try again.';
+            showError(errorMsg);
+            if (!this.stopped) {
+                this.attemptReconnect();
+            } else {
+                this.handleConnectionFailure();
             }
         };
-        console.log('Sending setup message:', setupMessage);
-        this.ws.send(JSON.stringify(setupMessage));
+        this.ws.onclose = (event) => {
+			console.log('WebSocket closed:', event.code, event.reason);
+			let errorMsg = 'Connection closed.';
+			
+			// Don't show error for intentional closing (when stopping)
+			if (this.stopped) {
+				console.log('WebSocket closed intentionally');
+				return;
+			}
+			
+			if (event.code === 1007) {
+				// Handle invalid JSON payload error specially
+				if (event.reason && event.reason.includes('Invalid JSON payload')) {
+					console.warn('Invalid JSON payload error, attempting to reconnect');
+					errorMsg = 'Connection reset. Reconnecting...';
+					if (!this.stopped) {
+						// For JSON payload errors, try to reconnect with a short delay
+						setTimeout(() => this.reconnect(), 2000);
+					}
+				} else if (event.reason && event.reason.includes('API key')) {
+					errorMsg = 'Invalid API key. Please check your key and try again.';
+					this.handleConnectionFailure();
+				} else {
+					// Other 1007 errors
+					console.warn('Unspecified 1007 error, attempting to reconnect', event.reason);
+					if (!this.stopped) {
+						this.attemptReconnect();
+					}
+				}
+			} else if (event.code === 1006) {
+				errorMsg = 'Connection terminated unexpectedly.';
+				if (!this.stopped) {
+					this.attemptReconnect();
+					errorMsg += ' Attempting to reconnect...';
+				}
+			} else if (event.code === 1011 || 
+				 (event.reason && event.reason.includes('quota') || 
+				  event.reason.includes('resource_exhausted') || 
+				  event.reason.includes('exceeded'))) {
+				
+				// Show error message
+				showError('API quota exceeded. Please try again manually.');
+				
+				// Also display in chat (optional)
+				const errorDiv = document.createElement('div');
+				errorDiv.className = 'message system-message';
+				errorDiv.style.background = '#6c1c1c';
+				errorDiv.style.color = '#ffffff';
+				errorDiv.textContent = `Error: API quota exceeded`;
+				document.getElementById('responses').appendChild(errorDiv);
+				
+				// Force manual restart
+				this.handleConnectionFailure();
+				return; // Prevent auto-reconnect
+			} else if (!this.stopped) {
+				this.attemptReconnect();
+				errorMsg += ' Attempting to reconnect...';
+			}
+			
+			// Only show error message to user for permanent failures
+			if (event.code === 1007 && event.reason && event.reason.includes('Invalid JSON payload')) {
+				// Don't show error for temporary JSON issues - these will auto-reconnect
+				console.log('Suppressing error message for automatic reconnection');
+			} else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+				showError('Connection lost after multiple reconnection attempts. Please restart the stream.');
+			} else {
+				showError(errorMsg);
+			}
+			
+			if (this.stopped || this.reconnectAttempts >= this.maxReconnectAttempts) {
+				this.handleConnectionFailure();
+			}
+		};
+        return new Promise((resolve, reject) => {
+            const connectionTimeout = setTimeout(() => {
+                reject(new Error('Connection timeout'));
+            }, 10000);
+            this.ws.addEventListener('open', () => {
+                clearTimeout(connectionTimeout);
+                this.startHeartbeat();
+                const systemPrompt = document.getElementById('systemPrompt');
+                const setupMessage = {
+                    setup: {
+                        model: "models/gemini-2.0-flash-exp",
+                        systemInstruction: {
+                            parts: [{
+                                text: systemPrompt.value
+                            }]
+                        },
+                        generationConfig: {
+                            temperature: 0.9,
+                            topK: 1,
+                            topP: 1,
+                            candidateCount: 1,
+                            responseModalities: responseType.value === 'audio' ? 'AUDIO' : 'TEXT',
+                            ...(responseType.value === 'audio' && {
+                                speechConfig: {
+                                    voiceConfig: {
+                                        prebuiltVoiceConfig: {
+                                            voiceName: voiceSelect.value
+                                        }
+                                    }
+                                }
+                            })
+                        }
+                    }
+                };
+                console.log('Sending setup message:', setupMessage);
+                this.ws.send(JSON.stringify(setupMessage));
+                resolve();
+            }, { once: true });
+            this.ws.addEventListener('error', () => {
+                clearTimeout(connectionTimeout);
+                reject(new Error('Connection error'));
+            }, { once: true });
+        });
     }
+	startHeartbeat() {
+		if (this.pingInterval) {
+			clearInterval(this.pingInterval);
+		}
+		
+		this.lastHeartbeatResponse = Date.now();
+		this.lastActivityTime = Date.now();
+		
+		// Monitor the connection health, but don't send heartbeats
+		this.pingInterval = setInterval(() => {
+			if (this.isConnected()) {
+				// Only check for heartbeat response timeout
+				const elapsed = Date.now() - this.lastHeartbeatResponse;
+				if (elapsed > 60000) {
+					console.warn('No heartbeat response for 60 seconds, reconnecting');
+					this.reconnect();
+				}
+			} else {
+				clearInterval(this.pingInterval);
+				this.pingInterval = null;
+				if (!this.stopped) {
+					this.attemptReconnect();
+				}
+			}
+		}, 30000);
+		
+		this.startConnectionWatchdog();
+	}
+	startConnectionWatchdog() {
+		if (this.connectionWatchdog) {
+			clearInterval(this.connectionWatchdog);
+		}
+		this.connectionWatchdog = setInterval(() => {
+			const inactiveTime = Date.now() - this.lastActivityTime;
+			if (inactiveTime > this.inactivityThreshold && this.isConnected()) {
+				console.warn(`Connection inactive for ${inactiveTime/1000} seconds, attempting reconnection`);
+				if (this.inactivityReconnectAttempts < this.maxInactivityReconnects) {
+					this.inactivityReconnectAttempts++;
+					console.log(`Inactivity reconnection attempt ${this.inactivityReconnectAttempts}/${this.maxInactivityReconnects}`);
+					this.reconnect();
+				} else {
+					console.error('Max inactivity reconnection attempts reached');
+					showError('Connection appears to be inactive. Please restart the stream manually.');
+					this.handleConnectionFailure();
+				}
+			}
+		}, 10000);
+	}
+	attemptReconnect() {
+		if (this.stopped || this.reconnectTimeout) return;
+		this.reconnectAttempts++;
+		if (this.reconnectAttempts <= this.maxReconnectAttempts) {
+			const delay = Math.min(30000, Math.pow(2, this.reconnectAttempts) * 1000);
+			console.log(`Attempting to reconnect in ${delay/1000} seconds (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+			if (this.reconnectTimeout) {
+				clearTimeout(this.reconnectTimeout);
+			}
+			this.reconnectTimeout = setTimeout(() => {
+				this.reconnectTimeout = null;
+				this.reconnect().catch(error => {
+					console.error('Reconnection failed:', error);
+				});
+			}, delay);
+		} else {
+			console.error('Max reconnection attempts reached');
+			this.handleConnectionFailure();
+		}
+	}
+	async reconnect() {
+		if (this._reconnectPromise) {
+			return this._reconnectPromise;
+		}
+		if (this.ws) {
+			try {
+				this.ws.close();
+			} catch (e) {
+				console.warn('Error closing websocket:', e);
+			}
+			this.ws = null;
+		}
+		this.clearAllTimers();
+		this._reconnectPromise = (async () => {
+			try {
+				await this.connect();
+				console.log('Successfully reconnected');
+				showError('Connection restored!');
+				return true;
+			} catch (error) {
+				console.error('Failed to reconnect:', error);
+				this.attemptReconnect();
+				throw error;
+			} finally {
+				this._reconnectPromise = null;
+			}
+		})();
+		return this._reconnectPromise;
+	}
+	clearAllTimers() {
+		if (this.pingInterval) {
+			clearInterval(this.pingInterval);
+			this.pingInterval = null;
+		}
+		if (this.connectionWatchdog) {
+			clearInterval(this.connectionWatchdog);
+			this.connectionWatchdog = null;
+		}
+		if (this.keepaliveInterval) {
+			clearInterval(this.keepaliveInterval);
+			this.keepaliveInterval = null;
+		}
+		if (this.reconnectTimeout) {
+			clearTimeout(this.reconnectTimeout);
+			this.reconnectTimeout = null;
+		}
+	}
     async start() {
         try {
+            this.stopped = false;
+            this.reconnectAttempts = 0;
             await this.connect();
             await this.setupAudioProcessing();
             this.setupVideoProcessing();
@@ -1410,7 +1949,7 @@ class GoogleLivePublisher {
             if (event.data.data?.int16arrayBuffer) {
                 const base64Audio = btoa(String.fromCharCode(...new Uint8Array(event.data.data.int16arrayBuffer)));
                 this.sendMediaChunk([{
-                    mime_type: "audio/pcm;rate=16000",
+                    mimeType: "audio/pcm;rate=16000",
                     data: base64Audio
                 }]);
             }
@@ -1418,123 +1957,118 @@ class GoogleLivePublisher {
         source.connect(processor);
     }
     setupVideoProcessing() {
-		const videoTrack = this.stream.getVideoTracks()[0];
-		if (!videoTrack) {
-			console.log('No video track available - skipping video processing');
-			return;
-		}
-		
-		const canvas = document.createElement('canvas');
-		canvas.width = this.imageWidth;
-		canvas.height = this.imageHeight;
-		this.canvasContext = canvas.getContext('2d');
-		
-		const videoElement = document.createElement('video');
-		videoElement.srcObject = new MediaStream([videoTrack]);
-		videoElement.autoplay = true;
-		
-		let animationFrame;
-		const captureFrame = () => {
-			if (this.stopped || !this.canvasContext) {
-				if (animationFrame) {
-					cancelAnimationFrame(animationFrame);
-				}
-				return;
-			}
-			
-			const now = Date.now();
-			if (now - this.lastImageTime >= this.imageInterval) {
-				this.canvasContext.drawImage(videoElement, 0, 0, this.imageWidth, this.imageHeight);
-				const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-				this.sendMediaChunk([{
-					mime_type: "image/jpeg",
-					data: base64Image
-				}]);
-				this.lastImageTime = now;
-			}
-			
-			animationFrame = requestAnimationFrame(captureFrame);
-		};
-		
-		videoElement.addEventListener('loadedmetadata', () => {
-			animationFrame = requestAnimationFrame(captureFrame);
-		});
-	}
-    sendMediaChunk(mediaChunks) {
-        if (this.ws?.readyState === WebSocket.OPEN) {
-            const message = {
-                realtimeInput: {
-                    mediaChunks
-                }
-            };
-            this.ws.send(JSON.stringify(message));
+        const videoTrack = this.stream.getVideoTracks()[0];
+        if (!videoTrack) {
+            console.log('No video track available - skipping video processing');
+            return;
         }
+        const canvas = document.createElement('canvas');
+        canvas.width = this.imageWidth;
+        canvas.height = this.imageHeight;
+        this.canvasContext = canvas.getContext('2d');
+        const videoElement = document.createElement('video');
+        videoElement.srcObject = new MediaStream([videoTrack]);
+        videoElement.autoplay = true;
+        let animationFrame;
+        const captureFrame = () => {
+            if (this.stopped || !this.canvasContext) {
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                }
+                return;
+            }
+            const now = Date.now();
+            if (now - this.lastImageTime >= this.imageInterval) {
+                this.canvasContext.drawImage(videoElement, 0, 0, this.imageWidth, this.imageHeight);
+                const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+                this.sendMediaChunk([{
+                    mimeType: "image/jpeg",
+                    data: base64Image
+                }]);
+                this.lastImageTime = now;
+            }
+            animationFrame = requestAnimationFrame(captureFrame);
+        };
+        videoElement.addEventListener('loadedmetadata', () => {
+            animationFrame = requestAnimationFrame(captureFrame);
+        });
     }
-    stop() {
-        this.stopped = true;
-        this.ws?.close();
-        this.audioContext?.close();
-        this.audioPlayer?.stop();
-        this.ws = null;
-        this.audioContext = null;
-        this.videoProcessor = null;
-        this.canvasContext = null;
-    }
+	stop() {
+		this.stopped = true;
+		this.clearAllTimers();
+		if (this.ws) {
+			this.ws.close();
+			this.ws = null;
+		}
+		this._reconnectPromise = null;
+		if (this.reconnectTimeout) {
+			clearTimeout(this.reconnectTimeout);
+			this.reconnectTimeout = null;
+		}
+		if (this.pingInterval) {
+			clearInterval(this.pingInterval);
+			this.pingInterval = null;
+		}
+		if (this.connectionWatchdog) {
+			clearInterval(this.connectionWatchdog);
+			this.connectionWatchdog = null;
+		}
+		if (this.keepaliveInterval) {
+			clearInterval(this.keepaliveInterval);
+			this.keepaliveInterval = null;
+		}
+		if (this.ws) {
+			this.ws.close();
+			this.ws = null;
+		}
+		if (this.audioContext) {
+			this.audioContext.close();
+			this.audioContext = null;
+		}
+		if (this.audioPlayer) {
+			this.audioPlayer.stop();
+		}
+		this.videoProcessor = null;
+		this.canvasContext = null;
+	}
 }
 class AudioPlayer {
     constructor() {
         this.context = new AudioContext({sampleRate: 24000});
         this.gainNode = this.context.createGain();
         this.gainNode.connect(this.context.destination);
-        
         this.samples = new Float32Array(0);
         this.isPlaying = false;
         this.nextTime = 0;
         this.completeCalled = false;
-		
 		this.timeout = null;
     }
-
     addPCM16(chunk) {
-        // Convert to float32
         const float32Array = new Float32Array(chunk.length / 2);
         const dataView = new DataView(chunk.buffer);
         for (let i = 0; i < chunk.length / 2; i++) {
             float32Array[i] = dataView.getInt16(i * 2, true) / 32768;
         }
-
-        // Add to existing samples
         const newSamples = new Float32Array(this.samples.length + float32Array.length);
         newSamples.set(this.samples);
         newSamples.set(float32Array, this.samples.length);
         this.samples = newSamples;
-
-        // Start playing if not already
         if (!this.isPlaying) {
             this.play();
         }
     }
-
     play() {
         if (this.samples.length === 0) return;
         this.isPlaying = true;
-
-        // Create buffer for current samples
         const buffer = this.context.createBuffer(1, this.samples.length, this.context.sampleRate);
         buffer.getChannelData(0).set(this.samples);
-        
         const source = this.context.createBufferSource();
         source.buffer = buffer;
         source.connect(this.gainNode);
-        
-        // Calculate start time
         const startTime = Math.max(this.context.currentTime, this.nextTime);
         source.start(startTime);
         this.nextTime = startTime + buffer.duration;
-        
-        // Reset samples buffer
         this.samples = new Float32Array(0);
-        
         source.onended = () => {
             this.isPlaying = false;
             if (this.samples.length > 0) {
@@ -1542,41 +2076,44 @@ class AudioPlayer {
             } else if (this.completeCalled) {
                 avatar.setEmotion('happy', false);
             } else {
-				clearInterval(this.timeout);
-				this.timeout = setTimeout(()=>{
-					avatar.setEmotion('happy', false);
-				},20);
-			}
+                this.clearAndSetTimeout(() => {
+                    avatar.setEmotion('happy', false);
+                }, 20);
+            }
         };
-		clearInterval(this.timeout);
+        this.clearAndSetTimeout(null);
         avatar.setEmotion("happy", true);
     }
-
+	clearAndSetTimeout(callback, duration) {
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+        if (callback && duration) {
+            this.timeout = setTimeout(callback, duration);
+        }
+    }
     async resume() {
         if (this.context.state === "suspended") {
             await this.context.resume();
         }
     }
-
     stop() {
         this.samples = new Float32Array(0);
         this.isPlaying = false;
         this.nextTime = 0;
         this.completeCalled = false;
-        
         this.gainNode.disconnect();
         this.gainNode = this.context.createGain();
         this.gainNode.connect(this.context.destination);
-        clearInterval(this.timeout);
+        this.clearAndSetTimeout(null);
         avatar.setEmotion('happy', false);
     }
-
     complete() {
         this.completeCalled = true;
         if (!this.isPlaying && this.samples.length > 0) {
             this.play();
         }
-		
     }
 }
 function base64ToArrayBuffer(base64) {
@@ -1698,77 +2235,70 @@ const preview = document.getElementById('preview');
 const errorDisplay = document.getElementById('error');
 const responsesDiv = document.getElementById('responses');
 let publisher = null;
-
 async function tryGetInitialPermissions() {
     try {
-        // First try just audio, as it's less likely to be in use
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        audioStream.getTracks().forEach(track => track.stop());
-        
-        // Then try to get video separately
-        try {
-            const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
-            videoStream.getTracks().forEach(track => track.stop());
-        } catch (videoErr) {
-            console.log("Default video device unavailable, will try alternatives during enumeration");
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+            .catch(err => {
+                console.log("Initial audio permission check failed:", err.message);
+                return null;
+            });
+        if (audioStream) {
+            audioStream.getTracks().forEach(track => track.stop());
         }
-        
+        const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true })
+            .catch(err => {
+                console.log("Initial video permission check failed:", err.message);
+                return null;
+            });
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+        }
         await getDevices();
-    } catch (audioErr) {
-        try {
-            // If audio failed, try video only
-            const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
-            videoStream.getTracks().forEach(track => track.stop());
-            await getDevices();
-        } catch (err) {
-            // If both audio and video fail individually, try with no initial devices
-            console.warn("Could not access default devices, attempting enumeration anyway");
-            await getDevices();
-        }
+    } catch (err) {
+        console.warn("Initial permission checks failed:", err);
+        await getDevices();
     }
 }
-
 const apiKeyInput = document.getElementById('apiKey');
 apiKeyInput.value = localStorage.getItem('apiKey') || '';
-validateApiKey();
 
 document.getElementById('apiKey').addEventListener('input', validateApiKey);
-
 function validateApiKey() {
     const apiKey = apiKeyInput.value.trim();
     startButton.disabled = !apiKey;
-    localStorage.setItem('apiKey', apiKey);
+    
+    // Only try to use provider-specific storage if providerSelect exists
+    if (window.providerSelect) {
+        const provider = providerSelect.value;
+        localStorage.setItem(`apiKey_${provider}`, apiKey);
+    } else {
+        // Fallback to old method if providerSelect isn't created yet
+        localStorage.setItem('apiKey', apiKey);
+    }
+    
     return apiKey;
 }
-
 startButton.addEventListener('click', async () => {
     const apiKey = apiKeyInput.value.trim();
-
     if (!apiKey) {
         apiKeyInput.classList.add('highlight');
         setTimeout(() => apiKeyInput.classList.remove('highlight'), 2000);
         return;
     }
-
     try {
         if (publisher) {
             startButton.textContent = 'Starting...';
             startButton.disabled = true;
-            
-            // Proper cleanup when stopping
             publisher.stop();
             publisher = null;
-            
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
                 stream = null;
             }
-            
             if (currentAudioIndicator) {
                 currentAudioIndicator.remove();
                 currentAudioIndicator = null;
             }
-            
             preview.srcObject = null;
             startButton.textContent = 'Start Stream';
             startButton.disabled = false;
@@ -1776,26 +2306,21 @@ startButton.addEventListener('click', async () => {
             document.getElementById('systemPrompt').disabled = false;
             return;
         }
-
         startButton.textContent = 'Starting...';
         startButton.disabled = true;
-
         stream = await getStream();
         preview.srcObject = stream;
         sessionStorage.setItem('apiKey', apiKey);
-        
         const currentProvider = providerSelect.value;
-        publisher = currentProvider === 'chatgpt' 
+        publisher = currentProvider === 'chatgpt'
             ? new ChatGPTPublisher(stream, apiKey)
             : new GoogleLivePublisher(stream, apiKey);
-            
         await publisher.start();
         startButton.textContent = 'Stop Stream';
         startButton.dataset.started = "true";
         startButton.disabled = false;
         sendButton.disabled = false;
         document.getElementById('systemPrompt').disabled = true;
-        
         if (stream.getAudioTracks().length > 0) {
             setupAudioIndicator(stream);
         }
@@ -1809,13 +2334,10 @@ startButton.addEventListener('click', async () => {
         document.getElementById('systemPrompt').disabled = false;
     }
 });
-
 let currentAudioIndicator = null;
 let currentAudioContext = null;
 let currentAnimationFrame = null;
-
 function setupAudioIndicator(stream) {
-    // Cleanup previous instance
     if (currentAudioIndicator) {
         currentAudioIndicator.remove();
         if (currentAudioContext) {
@@ -1825,15 +2347,11 @@ function setupAudioIndicator(stream) {
             cancelAnimationFrame(currentAnimationFrame);
         }
     }
-
-    // Create new audio context and analyzers for different audio sources
     currentAudioContext = new AudioContext();
     const analyserMic = currentAudioContext.createAnalyser();
     const analyserSystem = currentAudioContext.createAnalyser();
     analyserMic.fftSize = 256;
     analyserSystem.fftSize = 256;
-
-    // Create container for indicators
     const container = document.createElement('div');
     container.style.cssText = `
         width: 100%;
@@ -1842,11 +2360,8 @@ function setupAudioIndicator(stream) {
         gap: 4px;
         margin-top: 8px;
     `;
-
-    // Create separate indicators for mic and system audio
     const micIndicator = document.createElement('div');
     const systemIndicator = document.createElement('div');
-    
     const baseIndicatorStyle = `
         width: 100%;
         height: 4px;
@@ -1855,27 +2370,20 @@ function setupAudioIndicator(stream) {
         overflow: hidden;
         position: relative;
     `;
-    
     micIndicator.style.cssText = baseIndicatorStyle;
     systemIndicator.style.cssText = baseIndicatorStyle;
-
-    // Add labels
     const micLabel = document.createElement('div');
     const systemLabel = document.createElement('div');
     micLabel.textContent = 'Microphone';
     systemLabel.textContent = 'System Audio';
     micLabel.style.cssText = 'font-size: 12px; color: #999; margin-bottom: 2px;';
     systemLabel.style.cssText = 'font-size: 12px; color: #999; margin-bottom: 2px; margin-top: 4px;';
-
-    // Organize elements
     container.appendChild(micLabel);
     container.appendChild(micIndicator);
     container.appendChild(systemLabel);
     container.appendChild(systemIndicator);
     preview.insertAdjacentElement('afterend', container);
     currentAudioIndicator = container;
-
-    // Process audio tracks
     stream.getAudioTracks().forEach(track => {
         const source = currentAudioContext.createMediaStreamSource(new MediaStream([track]));
         if (track.label && track.label.toLowerCase().includes('system')) {
@@ -1884,10 +2392,8 @@ function setupAudioIndicator(stream) {
             source.connect(analyserMic);
         }
     });
-
     const micData = new Uint8Array(analyserMic.frequencyBinCount);
     const systemData = new Uint8Array(analyserSystem.frequencyBinCount);
-
     function updateIndicators() {
         if (!stream.active) {
             container.remove();
@@ -1896,61 +2402,73 @@ function setupAudioIndicator(stream) {
             cancelAnimationFrame(currentAnimationFrame);
             return;
         }
-
-        // Update microphone level
         analyserMic.getByteFrequencyData(micData);
         const micLevel = Math.min(100, (micData.reduce((a, b) => a + b) / micData.length / 128) * 100);
         micIndicator.style.background = `linear-gradient(90deg, #4CAF50 ${micLevel}%, #333 ${micLevel}%)`;
-
-        // Update system audio level
         analyserSystem.getByteFrequencyData(systemData);
         const systemLevel = Math.min(100, (systemData.reduce((a, b) => a + b) / systemData.length / 128) * 100);
         systemIndicator.style.background = `linear-gradient(90deg, #2196F3 ${systemLevel}%, #333 ${systemLevel}%)`;
-
         currentAnimationFrame = requestAnimationFrame(updateIndicators);
     }
-
     updateIndicators();
 }
-
 videoSelect.addEventListener('change', async () => {
+    localStorage.setItem('selectedVideoId', videoSelect.value);
     await updateMediaStream();
 });
-
 audioSelect.addEventListener('change', async () => {
+    localStorage.setItem('selectedAudioId', audioSelect.value);
     await updateMediaStream();
 });
-
 async function getDevices() {
     try {
         const devices = await navigator.mediaDevices.enumerateDevices();
-        
-        // Clear existing options
         videoSelect.innerHTML = '';
         audioSelect.innerHTML = '';
-        
-        // Filter devices
         const videoDevices = devices.filter(d => d.kind === 'videoinput');
         const audioDevices = devices.filter(d => d.kind === 'audioinput');
-        
-        // Add no input options
         videoSelect.appendChild(new Option('No Video', 'none'));
         audioSelect.appendChild(new Option('No Audio', 'none'));
-        
-        // Add screen share option
         videoSelect.appendChild(new Option('Screen Share', 'screen'));
-        
-        // Add remaining device options
         videoDevices.forEach(device => {
             videoSelect.appendChild(new Option(device.label || `Camera ${videoSelect.length}`, device.deviceId));
         });
-        
         audioDevices.forEach(device => {
             audioSelect.appendChild(new Option(device.label || `Microphone ${audioSelect.length}`, device.deviceId));
         });
-
-        // Try to find an available video device
-        if (videoDevices.length > 0) {
+        const previousVideoId = localStorage.getItem('selectedVideoId');
+        const previousAudioId = localStorage.getItem('selectedAudioId');
+        let videoDeviceFound = false;
+        let audioDeviceFound = false;
+        if (previousVideoId) {
+            if (previousVideoId === 'screen' || previousVideoId === 'none') {
+                videoSelect.value = previousVideoId;
+                videoDeviceFound = true;
+            } else {
+                for (const option of videoSelect.options) {
+                    if (option.value === previousVideoId) {
+                        videoSelect.value = previousVideoId;
+                        videoDeviceFound = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (previousAudioId) {
+            if (previousAudioId === 'none') {
+                audioSelect.value = previousAudioId;
+                audioDeviceFound = true;
+            } else {
+                for (const option of audioSelect.options) {
+                    if (option.value === previousAudioId) {
+                        audioSelect.value = previousAudioId;
+                        audioDeviceFound = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!videoDeviceFound && videoDevices.length > 0) {
             for (const device of videoDevices) {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({
@@ -1958,22 +2476,18 @@ async function getDevices() {
                     });
                     stream.getTracks().forEach(track => track.stop());
                     videoSelect.value = device.deviceId;
+                    videoDeviceFound = true;
                     break;
                 } catch (err) {
                     console.warn(`Video device ${device.label || device.deviceId} unavailable:`, err.message);
                     continue;
                 }
             }
-            // If no video devices are available, default to screen share
-            if (!videoSelect.value) {
-                videoSelect.value = 'screen';
-            }
-        } else {
+        }
+        if (!videoDeviceFound) {
             videoSelect.value = 'screen';
         }
-
-        // Try to find an available audio device
-        if (audioDevices.length > 0) {
+        if (!audioDeviceFound && audioDevices.length > 0) {
             for (const device of audioDevices) {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({
@@ -1981,34 +2495,30 @@ async function getDevices() {
                     });
                     stream.getTracks().forEach(track => track.stop());
                     audioSelect.value = device.deviceId;
+                    audioDeviceFound = true;
                     break;
                 } catch (err) {
                     console.warn(`Audio device ${device.label || device.deviceId} unavailable:`, err.message);
                     continue;
                 }
             }
-            // If no audio devices are available, default to no audio
-            if (!audioSelect.value) {
-                audioSelect.value = 'none';
-            }
         }
-
-        // Show initial preview with the selected devices
+        if (!audioDeviceFound) {
+            audioSelect.value = 'none';
+        }
+        localStorage.setItem('selectedVideoId', videoSelect.value);
+        localStorage.setItem('selectedAudioId', audioSelect.value);
         await updateMediaStream();
-        
     } catch (err) {
         showError('Failed to get devices: ' + err.message);
     }
 }
-
 let micMuted = false;
 let audioMuted = false;
 let videoMuted = false;
-
 const muteMicButton = document.getElementById('muteMic');
 const muteAudioButton = document.getElementById('muteAudio');
 const muteVideoButton = document.getElementById('muteVideo');
-
 muteVideoButton.addEventListener('click', () => {
     if (stream) {
         const videoTracks = stream.getVideoTracks();
@@ -2020,65 +2530,86 @@ muteVideoButton.addEventListener('click', () => {
         muteVideoButton.querySelector('.video-icon').classList.toggle('muted');
     }
 });
-
 muteMicButton.addEventListener('click', () => {
-    if (stream) {
-        const audioTracks = stream.getAudioTracks();
-        audioTracks.forEach(track => {
-            if (track.kind === 'audio' && track.label && !track.label.toLowerCase().includes('system')) {
-                track.enabled = micMuted;
+    if (providerSelect.value === 'chatgpt' && publisher && publisher.recognition) {
+        if (!micMuted) {
+            publisher.recognition.stop();
+            publisher.isRecognizing = false;
+        } else {
+            if (!publisher.isRecognizing) {
+                try {
+                    publisher.recognition.start();
+                    publisher.isRecognizing = true;
+                } catch (err) {
+                    console.error('Failed to restart speech recognition:', err);
+                    setTimeout(() => {
+                        publisher.restartRecognition();
+                    }, 300);
+                }
             }
+        }
+        micMuted = !micMuted;
+        muteMicButton.classList.toggle('muted');
+        muteMicButton.querySelector('.mic-icon').classList.toggle('muted');
+        return;
+    }
+    if (stream) {
+        let microphoneTracks = stream.getAudioTracks().filter(track =>
+            track.kind === 'audio' &&
+            (!track.label || !track.label.toLowerCase().includes('system'))
+        );
+        if (microphoneTracks.length === 0) {
+            console.warn('No microphone tracks found to mute/unmute');
+            return;
+        }
+        microphoneTracks.forEach(track => {
+            track.enabled = micMuted;
         });
         micMuted = !micMuted;
         muteMicButton.classList.toggle('muted');
         muteMicButton.querySelector('.mic-icon').classList.toggle('muted');
     }
 });
-
 muteAudioButton.addEventListener('click', () => {
     if (stream) {
-        const audioTracks = stream.getAudioTracks();
-        audioTracks.forEach(track => {
-            if (track.kind === 'audio' && track.label && track.label.toLowerCase().includes('system')) {
-                track.enabled = audioMuted;
-            }
+        let systemTracks = stream.getAudioTracks().filter(track =>
+            track.kind === 'audio' &&
+            track.label &&
+            track.label.toLowerCase().includes('system')
+        );
+        if (systemTracks.length === 0) {
+            console.warn('No system audio tracks found to mute/unmute');
+            return;
+        }
+        systemTracks.forEach(track => {
+            track.enabled = audioMuted;
         });
         audioMuted = !audioMuted;
         muteAudioButton.classList.toggle('muted');
         muteAudioButton.querySelector('.speaker-icon').classList.toggle('muted');
     }
 });
-
 let audioContext;
-
 async function getStream() {
     try {
-        // Stop any existing tracks in the preview
         if (preview.srcObject) {
             preview.srcObject.getTracks().forEach(track => track.stop());
             preview.srcObject = null;
         }
-
-        // Stop any existing tracks in the current stream
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
         }
-
         let videoStream = null;
         let micStream = null;
         const outputStream = new MediaStream();
-
-        // Handle video source
         if (videoSelect.value === 'screen') {
             try {
                 videoStream = await navigator.mediaDevices.getDisplayMedia({
                     video: true,
                     audio: true
                 });
-
                 const videoTrack = videoStream.getVideoTracks()[0];
                 if (videoTrack) {
-                    // Remove any existing video tracks
                     outputStream.getVideoTracks().forEach(track => {
                         outputStream.removeTrack(track);
                         track.stop();
@@ -2087,7 +2618,6 @@ async function getStream() {
                 }
             } catch (err) {
                 console.error('Screen share failed:', err);
-                // Reset video select to 'none' if screen share fails
                 videoSelect.value = 'none';
             }
         } else if (videoSelect.value !== 'none') {
@@ -2097,10 +2627,8 @@ async function getStream() {
                         deviceId: { exact: videoSelect.value }
                     }
                 });
-
                 const videoTrack = videoStream.getVideoTracks()[0];
                 if (videoTrack) {
-                    // Remove any existing video tracks
                     outputStream.getVideoTracks().forEach(track => {
                         outputStream.removeTrack(track);
                         track.stop();
@@ -2112,8 +2640,6 @@ async function getStream() {
                 videoSelect.value = 'none';
             }
         }
-
-        // Handle audio with cleanup
         if (audioSelect.value !== 'none') {
             try {
                 micStream = await navigator.mediaDevices.getUserMedia({
@@ -2123,36 +2649,25 @@ async function getStream() {
                         noiseSuppression: true
                     }
                 });
-
-                // Clean up existing audio tracks
                 outputStream.getAudioTracks().forEach(track => {
                     outputStream.removeTrack(track);
                     track.stop();
                 });
-
                 if (videoStream?.getAudioTracks().length > 0) {
-                    // Handle system audio from screen share
                     const ctx = new AudioContext();
                     const dest = ctx.createMediaStreamDestination();
-
                     const systemSource = ctx.createMediaStreamSource(videoStream);
                     const micSource = ctx.createMediaStreamSource(micStream);
-
                     systemSource.connect(dest);
                     micSource.connect(dest);
-
                     const mixedTrack = dest.stream.getAudioTracks()[0];
                     if (mixedTrack) {
-                        // Add custom label for mixed audio
                         mixedTrack.label = "Mixed Audio (System + Microphone)";
                         outputStream.addTrack(mixedTrack);
                     }
-
-                    // Stop individual tracks after mixing
                     videoStream.getAudioTracks().forEach(track => track.stop());
                     micStream.getAudioTracks().forEach(track => track.stop());
                 } else {
-                    // Just microphone audio
                     const audioTrack = micStream.getAudioTracks()[0];
                     if (audioTrack) {
                         outputStream.addTrack(audioTrack);
@@ -2163,10 +2678,8 @@ async function getStream() {
                 audioSelect.value = 'none';
             }
         } else if (videoStream?.getAudioTracks().length > 0) {
-            // Only system audio from screen share
             const systemTrack = videoStream.getAudioTracks()[0];
             if (systemTrack) {
-                // Remove any existing audio tracks
                 outputStream.getAudioTracks().forEach(track => {
                     outputStream.removeTrack(track);
                     track.stop();
@@ -2174,55 +2687,37 @@ async function getStream() {
                 outputStream.addTrack(systemTrack);
             }
         }
-
         return outputStream;
     } catch (err) {
         showError('Failed to get stream: ' + err.message);
         throw err;
     }
 }
-
 async function updateMediaStream() {
     try {
         const previousMicMuted = micMuted;
         const previousAudioMuted = audioMuted;
-
-        // Get new stream with automatic cleanup of old tracks
         const newStream = await getStream();
-
-        // Set preview
         preview.srcObject = newStream;
-
         if (publisher) {
-            // Store old stream for cleanup
             const oldStream = stream;
             stream = newStream;
-
-            // Update the stream in the publisher without reconnecting
             publisher.stream = newStream;
-
-            // Only update audio/video processing without full restart
-            if (stream.getAudioTracks().length > 0) {
+            if (typeof publisher.setupAudioProcessing === 'function' && stream.getAudioTracks().length > 0) {
                 await publisher.setupAudioProcessing();
             }
-            if (stream.getVideoTracks().length > 0) {
-                publisher.setupVideoProcessing();
+            if (typeof publisher.setupVideoProcessing === 'function' && stream.getVideoTracks().length > 0) {
+                await publisher.setupVideoProcessing();
             }
-
-            // Clean up old stream after updating
             if (oldStream) {
                 oldStream.getTracks().forEach(track => track.stop());
             }
         } else {
             stream = newStream;
         }
-
-        // Setup audio indicator if we have audio tracks
         if (stream.getAudioTracks().length > 0) {
             setupAudioIndicator(stream);
         }
-
-        // Handle mute states
         if (previousMicMuted || previousAudioMuted) {
             const audioTracks = stream.getAudioTracks();
             audioTracks.forEach(track => {
@@ -2239,8 +2734,6 @@ async function updateMediaStream() {
     } catch (err) {
         console.error('Failed to update media stream:', err);
         showError('Failed to update media stream: ' + err.message);
-        
-        // Reset states and cleanup on error
         if (publisher) {
             publisher.stop();
             publisher = null;
@@ -2253,8 +2746,6 @@ async function updateMediaStream() {
             preview.srcObject.getTracks().forEach(track => track.stop());
             preview.srcObject = null;
         }
-        
-        // Reset UI states
         startButton.textContent = 'Start Stream';
         startButton.dataset.started = "false";
         startButton.disabled = false;
@@ -2262,7 +2753,6 @@ async function updateMediaStream() {
         document.getElementById('systemPrompt').disabled = false;
     }
 }
-
 function showError(message) {
 	errorDisplay.textContent = message;
 	errorDisplay.style.display = 'block';
@@ -2271,46 +2761,41 @@ function showError(message) {
 	errorDisplay.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
 	errorDisplay.style.border = '1px solid #ff6b6b';
 	errorDisplay.style.borderRadius = '8px';
-	
-	// Clear error after 5 seconds
 	setTimeout(() => {
 		errorDisplay.style.display = 'none';
 		errorDisplay.textContent = '';
 	}, 5000);
 }
-
 if (!navigator.mediaDevices?.getUserMedia) {
     showError('getUserMedia not supported');
 } else {
-    // Try audio first since it's less likely to be in use
-    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-        .then(audioStream => {
-            audioStream.getTracks().forEach(track => track.stop());
-            // Then try video
-            return navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                .catch(videoErr => {
-                    console.log("Default video unavailable, continuing with enumeration");
+    let deviceInitialized = false;
+    const initializeDevices = async () => {
+        if (deviceInitialized) return;
+        deviceInitialized = true;
+        try {
+            const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+                .catch(err => {
+                    console.log("Audio permission check failed:", err.message);
+                    return null;
                 });
-        })
-        .then(videoStream => {
-            if (videoStream) videoStream.getTracks().forEach(track => track.stop());
-        })
-        .catch(err => {
-            console.warn("Initial device check failed:", err);
-        })
-        .finally(() => {
-            getDevices();
-        });
-        
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+            }
+            await getDevices();
+        } catch (err) {
+            console.warn("Permission checks failed:", err);
+            await getDevices();
+        }
+    };
+    initializeDevices();
     navigator.mediaDevices.addEventListener('devicechange', getDevices);
 }
-
 const messageInput = document.querySelector('.message-input');
 const sendButton = document.querySelector('#sendButton');
 sendButton.disabled = true;
 responsesDiv.parentElement.insertBefore(messageInput, responsesDiv);
 responsesDiv.parentElement.insertBefore(sendButton, responsesDiv);
-
 sendButton.addEventListener('click', async () => {
     if (!publisher || sendButton.disabled) {
         showError('Please start the stream first');
@@ -2327,7 +2812,6 @@ sendButton.addEventListener('click', async () => {
         }
     }
 });
-
 document.getElementById('voiceSelect').addEventListener('change', async () => {
     if (publisher && startButton.textContent === 'Stop Stream') {
         startButton.textContent = 'Starting...';
@@ -2376,7 +2860,6 @@ document.getElementById('responseType').addEventListener('change', function() {
                 startButton.disabled = false;
 				sendButton.disabled = false;
 				document.getElementById('systemPrompt').disabled = true;
-				
 				if (audioContext) {
 					audioContext.close();
 					audioContext = null;
@@ -2398,29 +2881,46 @@ messageInput.addEventListener('keypress', (e) => {
         sendButton.click();
     }
 });
-
 const providerSelect = document.createElement('select');
 providerSelect.id = 'providerSelect';
 providerSelect.innerHTML = `
     <option value="gemini">Google Gemini</option>
     <option value="chatgpt">ChatGPT</option>
 `;
-
-// Insert provider select before API key input
 const apiKeyContainer = document.querySelector('.api-key-container');
 apiKeyContainer.parentElement.insertBefore(providerSelect, apiKeyContainer);
-
-
 const defaultPrompts = {
     gemini: "You are a friendly social chat assistant that can see and hear the user. Avoid describing what you see unless asked.",
     chatgpt: "You are a friendly and helpful social chat assistant that can see and hear the user."
 };
-
-// Add system prompt container after provider select
 const systemPrompt = document.getElementById('systemPrompt');
 systemPrompt.value = defaultPrompts.gemini;
-
-// Save to localStorage if available
+if (localStorage) {
+    const savedProvider = localStorage.getItem('selectedProvider');
+    if (savedProvider) {
+        providerSelect.value = savedProvider;
+        const apiKeyInfo = document.querySelector('.api-key-info');
+        if (savedProvider === 'chatgpt') {
+            apiKeyInput.placeholder = 'Enter ChatGPT API Key';
+            apiKeyInfo.innerHTML = 'Get your ChatGPT API key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI</a>';
+        }
+        systemPrompt.value = defaultPrompts[providerSelect.value];
+    }
+}
+if (providerSelect.value === 'chatgpt') {
+    videoSelect.disabled = true;
+    audioSelect.disabled = true;
+    const deviceNotice = document.createElement('div');
+    deviceNotice.id = 'chatgpt-device-notice';
+    deviceNotice.className = 'api-key-info';
+    deviceNotice.innerHTML = 'ChatGPT uses your system default microphone for speech recognition';
+    deviceNotice.style.marginTop = '8px';
+    deviceNotice.style.padding = '6px';
+    deviceNotice.style.background = '#333';
+    deviceNotice.style.borderRadius = '6px';
+    const deviceContainer = document.querySelector('.controls');
+    deviceContainer.insertBefore(deviceNotice, muteMicButton.parentElement.nextSibling);
+}
 if (localStorage) {
     const savedPrompts = localStorage.getItem('systemPrompts');
     if (savedPrompts) {
@@ -2429,17 +2929,18 @@ if (localStorage) {
         systemPrompt.value = defaultPrompts[providerSelect.value];
     }
 }
-
 systemPrompt.addEventListener('change', function() {
     defaultPrompts[providerSelect.value] = this.value;
     if (localStorage) {
         localStorage.setItem('systemPrompts', JSON.stringify(defaultPrompts));
     }
 });
-
-providerSelect.addEventListener('change', function() {
-    const apiKeyInfo = document.querySelector('.api-key-info');
-    systemPrompt.value = defaultPrompts[this.value];
+document.getElementById('providerSelect').addEventListener('change', function() {
+    const apiKeyInfo = document.querySelector('#apikeyinfo');
+    const apiKeyInput = document.getElementById('apiKey');
+    
+    const providerKey = localStorage.getItem(`apiKey_${this.value}`) || '';
+    apiKeyInput.value = providerKey;
     
     if (this.value === 'chatgpt') {
         apiKeyInput.placeholder = 'Enter ChatGPT API Key';
@@ -2448,16 +2949,35 @@ providerSelect.addEventListener('change', function() {
         apiKeyInput.placeholder = 'Enter Gemini API Key';
         apiKeyInfo.innerHTML = 'Get your free Gemini API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>';
     }
+    
+    systemPrompt.value = defaultPrompts[this.value];
+    const isChatGPT = this.value === 'chatgpt';
+    videoSelect.disabled = isChatGPT;
+    audioSelect.disabled = isChatGPT;
+    let deviceNotice = document.getElementById('chatgpt-device-notice');
+    if (!deviceNotice && isChatGPT) {
+        deviceNotice = document.createElement('div');
+        deviceNotice.id = 'chatgpt-device-notice';
+        deviceNotice.className = 'api-key-info';
+        deviceNotice.innerHTML = 'ChatGPT uses your system default microphone for speech recognition';
+        deviceNotice.style.marginTop = '8px';
+        deviceNotice.style.padding = '6px';
+        deviceNotice.style.background = '#333';
+        deviceNotice.style.borderRadius = '6px';
+        const deviceContainer = document.querySelector('.controls');
+        deviceContainer.insertBefore(deviceNotice, muteMicButton.parentElement.nextSibling);
+    } else if (deviceNotice && !isChatGPT) {
+        deviceNotice.remove();
+    }
+    
+    localStorage.setItem('selectedProvider', this.value);
 });
 
 const avatar = new PuppetAvatar('#puppet-container');
 avatar.setPosition('calc(100vw - 320px)', 'calc(100vh - 320px)');
 avatar.setEmotion('happy', false);
-
-
 var ipcRenderer = false;
 var ElectronDesktopCapture = false;
-
 try {
 	ipcRenderer = require("electron").ipcRenderer;
 	window.navigator.mediaDevices.getDisplayMedia = (constraints = false) => {
@@ -2466,7 +2986,6 @@ try {
 				const sources = await ipcRenderer.sendSync("getSources", { types: ["screen", "window"] });
 				const selectionElem = document.createElement("div");
 				selectionElem.classList = "desktop-capturer-selection";
-
 				selectionElem.innerHTML = `
 				<div class="desktop-capturer-selection__scroller">
 				  <ul class="desktop-capturer-selection__list">
@@ -2490,7 +3009,6 @@ try {
 				</div>
 			  `;
 				document.body.appendChild(selectionElem);
-				
 				const isMac = navigator.platform.toLowerCase().includes('mac');
 				if (isMac) {
 					try {
@@ -2500,7 +3018,6 @@ try {
 						document.getElementById("alsoCaptureAudioParent2").style.display = "inline-block";
 					} catch(e){}
 				}
-
 				document.getElementById("cancelscreenshare").addEventListener("click", async () => {
 					selectionElem.remove();
 					reject(null);
@@ -2522,7 +3039,6 @@ try {
 									}
 								};
 								new_constraints.video.mandatory.maxFrameRate = 1;
-								
 								const stream = await window.navigator.mediaDevices.getUserMedia(new_constraints);
 								if (stream.getVideoTracks().length) {
 									var track = stream.getVideoTracks()[0];
@@ -2554,7 +3070,6 @@ try {
 										track.stop();
 									}
 								}
-
 								const id = button.getAttribute("data-id");
 								const source = sources.find(source => source.id === id);
 								if (!source) {
@@ -2585,11 +3100,9 @@ try {
 									}
 								} catch (e) {}
 								const stream = await window.navigator.mediaDevices.getUserMedia(new_constraints);
-
 								if (audioStream && audioStream.getAudioTracks().length) {
 									stream.addTrack(audioStream.getAudioTracks()[0]);
 								}
-
 								resolve(stream);
 								selectionElem.remove();
 							}
@@ -2609,7 +3122,134 @@ try {
 } catch (e) {
 	console.warn("Couldn't load electron's screen capture. Elevate the app's permission to allow it (right-click?)");
 }
+function setupConnectionMonitoring() {
+    let monitoringActive = false;
+    let monitoringInterval = null;
+    function startMonitoring() {
+        if (monitoringActive) return;
+        monitoringActive = true;
+        if (monitoringInterval) {
+            clearInterval(monitoringInterval);
+        }
+        monitoringInterval = setInterval(() => {
+            if (startButton.dataset.started !== "true" || !publisher) return;
+            if (!publisher.isConnected()) {
+                console.log('Stream should be active but connection is closed, attempting to reconnect');
+                if (publisher.reconnectAttempts < publisher.maxReconnectAttempts) {
+                    publisher.reconnect().catch(err => {
+                        console.error('Failed automatic reconnection:', err);
+                    });
+                } else {
+                    console.log('Max reconnection attempts reached, notifying user');
+                    showError('Connection lost. Please try restarting the stream manually.');
+                }
+            }
+            if (stream) {
+                const allTracks = [...stream.getAudioTracks(), ...stream.getVideoTracks()];
+                const anyTrackEnded = allTracks.some(track => !track.readyState || track.readyState === 'ended');
+                if (anyTrackEnded) {
+                    console.warn('One or more media tracks have ended unexpectedly');
+                    if (publisher && !publisher.reconnectTimeout && !publisher._reconnectPromise) {
+                        updateMediaStream().catch(err => {
+                            console.error('Failed to recover media stream:', err);
+                        });
+                    }
+                }
+            }
+        }, 15000);
+    }
+    function stopMonitoring() {
+        if (monitoringInterval) {
+            clearInterval(monitoringInterval);
+            monitoringInterval = null;
+        }
+        monitoringActive = false;
+    }
+    window.addEventListener('online', () => {
+        console.log('Network connection restored');
+        if (publisher && !publisher.isConnected() && startButton.dataset.started === "true") {
+            console.log('Attempting to reconnect after network restoration');
+            showError('Network connection restored. Reconnecting...');
+            publisher.reconnect().catch(err => {
+                console.error('Failed to reconnect after network restoration:', err);
+            });
+        }
+    });
+    window.addEventListener('offline', () => {
+        console.log('Network connection lost');
+        showError('Network connection lost. Waiting for connection to restore...');
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            console.log('Tab became visible');
+            if (publisher && startButton.dataset.started === "true") {
+                const lastActivity = Date.now() - (publisher.lastActivityTime || 0);
+                if (lastActivity > 10000) {
+                    console.log('Long inactivity detected after tab became visible, reconnecting');
+                    publisher.reconnect().catch(err => {
+                        console.error('Failed to reconnect after tab became visible:', err);
+                    });
+                }
+            }
+        }
+    });
+    startButton.addEventListener('click', () => {
+        if (startButton.dataset.started === "true") {
+            startMonitoring();
+        } else {
+            stopMonitoring();
+        }
+    });
+    if (startButton.dataset.started === "true") {
+        startMonitoring();
+    }
+    return {
+        start: startMonitoring,
+        stop: stopMonitoring
+    };
+}
 
+function addClearHistoryButton() {
+    // Check if button already exists
+    if (document.querySelector('#clearHistoryButton')) {
+        return;
+    }
+    
+    const clearButton = document.createElement('button');
+    clearButton.id = 'clearHistoryButton';
+    clearButton.textContent = 'Clear Chat History';
+    clearButton.style.marginLeft = '10px';
+    clearButton.style.background = '#6c1c1c';
+    
+    clearButton.addEventListener('click', () => {
+        if (confirm('Are you sure you want to clear the conversation history?')) {
+            if (publisher && typeof publisher.clearConversationHistory === 'function') {
+                publisher.clearConversationHistory();
+            } else {
+                localStorage.removeItem('conversationHistory');
+                document.getElementById('responses').innerHTML = '';
+            }
+        }
+    });
+    
+    // Add to your controls
+    const controlsDiv = document.querySelector('.controls');
+    if (controlsDiv) {
+        controlsDiv.appendChild(clearButton);
+    }
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const savedProvider = localStorage.getItem('selectedProvider') || 'gemini';
+    providerSelect.value = savedProvider;
+    
+    const providerKey = localStorage.getItem(`apiKey_${savedProvider}`) || localStorage.getItem('apiKey') || '';
+    apiKeyInput.value = providerKey;
+    
+    validateApiKey();
+	addClearHistoryButton();
+});
+
+const connectionMonitor = setupConnectionMonitoring();
 </script>
 </body>
 </html>
