@@ -5399,7 +5399,6 @@
 							if (!localBlockUserList) {
 								localBlockUserList = {};
 							}
-
 							if (localBlockUserList[data.blockUser.username]) {
 								if (!localBlockUserList[data.blockUser.username].includes(data.blockUser.type)) {
 									localBlockUserList[data.blockUser.username].push(data.blockUser.type);
@@ -5407,11 +5406,9 @@
 							} else {
 								localBlockUserList[data.blockUser.username] = [data.blockUser.type];
 							}
-
 							document.querySelectorAll("[data-chatname='" + data.blockUser.username + "'][data-source-type='" + data.blockUser.type + "']").forEach(ele => {
 								ele.remove();
 							});
-							
 							
 							if (data.blockUser.type=="youtube"){
 								if (!localBlockUserList[data.blockUser.username].includes("youtubeshorts")) {
@@ -5422,11 +5419,31 @@
 								});
 							}
 							
+							// Remove user from local block list after 10 seconds
+							setTimeout(() => {
+								if (localBlockUserList && localBlockUserList[data.blockUser.username]) {
+									const typeIndex = localBlockUserList[data.blockUser.username].indexOf(data.blockUser.type);
+									if (typeIndex !== -1) {
+										localBlockUserList[data.blockUser.username].splice(typeIndex, 1);
+									}
+									
+									if (data.blockUser.type == "youtube") {
+										const shortsIndex = localBlockUserList[data.blockUser.username].indexOf("youtubeshorts");
+										if (shortsIndex !== -1) {
+											localBlockUserList[data.blockUser.username].splice(shortsIndex, 1);
+										}
+									}
+									
+									if (localBlockUserList[data.blockUser.username].length === 0) {
+										delete localBlockUserList[data.blockUser.username];
+									}
+								}
+							}, 10000);
+							
 						} else if (data.blockUser.username) {
 							if (!localBlockUserList) {
 								localBlockUserList = {};
 							}
-
 							if (localBlockUserList[data.blockUser.username]) {
 								if (!localBlockUserList[data.blockUser.username].includes("*")) {
 									localBlockUserList[data.blockUser.username].push("*");
@@ -5434,10 +5451,22 @@
 							} else {
 								localBlockUserList[data.blockUser.username] = ["*"];
 							}
-
 							document.querySelectorAll("[data-chatname='" + data.blockUser.username + "']").forEach(ele => {
 								ele.remove();
 							});
+							
+							// Remove user from local block list after 10 seconds
+							setTimeout(() => {
+								if (localBlockUserList && localBlockUserList[data.blockUser.username]) {
+									const index = localBlockUserList[data.blockUser.username].indexOf("*");
+									if (index !== -1) {
+										localBlockUserList[data.blockUser.username].splice(index, 1);
+										if (localBlockUserList[data.blockUser.username].length === 0) {
+											delete localBlockUserList[data.blockUser.username];
+										}
+									}
+								}
+							}, 10000);
 						}
 						return true;
 					} catch (e) {
@@ -6308,6 +6337,19 @@
 						//console.log(sendBlob);
 						
 						send2Extension({ action: "blockUser", value: sendBlob });
+						
+						// Remove user from local block list after 10 seconds
+						setTimeout(() => {
+							if (localBlockUserList && localBlockUserList[chatName]) {
+								const index = localBlockUserList[chatName].indexOf(type);
+								if (index !== -1) {
+									localBlockUserList[chatName].splice(index, 1);
+									if (localBlockUserList[chatName].length === 0) {
+										delete localBlockUserList[chatName];
+									}
+								}
+							}
+						}, 10000);
 					}
 				} catch(e){
 					console.error(e);
