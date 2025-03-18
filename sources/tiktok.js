@@ -993,7 +993,7 @@
 			target = document.querySelector('[data-item="list-message-list"]');
 			
 			if (!target){
-				target = document.querySelector('[class*="DivChatMessageList"], .live-shared-ui-chat-list-scrolling-list, [data-e2e="chat-room"], [data-e2e="chat-room"]');
+				target = document.querySelector('[class*="DivChatMessageList"], .live-shared-ui-chat-list-scrolling-list, [data-e2e="chat-room"], [data-e2e="chat-room"], [class*="DivChatRoomContent"]');
 				if (target){
 					subtree = true;
 				}
