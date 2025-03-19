@@ -38,7 +38,7 @@
             }
         );
         chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response) {
-            if ("settings" in response) {
+            if (response && "settings" in response) {
                 settings = response.settings;
                 if (settings.collecttwitchpoints) {
                     startCheck();

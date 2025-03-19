@@ -1305,17 +1305,19 @@
 			this.initialUrl = location.href;
 			this.lastUserInteraction = Date.now();
 			
+			// Add stronger click handler that resets everything
 			document.addEventListener('click', () => {
+				this.initialUrl = location.href; // Reset the initial URL to current URL
 				this.lastUserInteraction = Date.now();
-				//console.log(this.lastUserInteraction);
+				console.log("Stream state reset by click");
 			});
+			
+			// Keep other handlers simple
 			document.addEventListener('keydown', () => {
 				this.lastUserInteraction = Date.now();
-				//console.log(this.lastUserInteraction);
 			});
 			document.addEventListener('touchstart', () => {
 				this.lastUserInteraction = Date.now();
-				//console.log(this.lastUserInteraction);
 			});
 		},
 

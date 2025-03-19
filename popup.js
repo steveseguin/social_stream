@@ -1502,7 +1502,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   }
 }
 
-function removeTTSProviderParams(url, selectedProvider) {
+function removeTTSProviderParams(url, selectedProvider=null) {
   if (!url) return url;
   
   // Map of all provider-specific parameters
@@ -1514,6 +1514,16 @@ function removeTTSProviderParams(url, selectedProvider) {
     kokoro: ['kokorokey', 'voicekokoro']
   };
   
+  if (selectedProvider === null) {
+    try {
+      const tmpUrl = new URL(url);
+      const urlParams = new URLSearchParams(tmpUrl.search);
+      selectedProvider = urlParams.get("ttsprovider") || false;
+      if (!selectedProvider) return url;
+    } catch (e) {
+      return url; // Invalid URL
+    }
+  }
   // Get all parameters except those for the selected provider
   const paramsToRemove = Object.keys(providerParams)
     .filter(provider => provider !== selectedProvider)
@@ -2317,7 +2327,7 @@ function update(response, sync=true){
 								ele.checked = response.settings[key];
 								updateSettings(ele, sync);
 							}
-							var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"'], textarea[data-textsetting='"+key+"'], textarea[data-textparam1='"+key+"'],");
+							var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"'], textarea[data-textsetting='"+key+"'], textarea[data-textparam1='"+key+"']");
 							if (ele){
 								ele.value = response.settings[key];
 								updateSettings(ele, sync);
@@ -2365,9 +2375,13 @@ function update(response, sync=true){
 					const sourceElement = document.getElementById(sourceId);
 					
 					if (sourceElement && sourceElement.raw) {
+						
+					  sourceElement.raw = removeTTSProviderParams(sourceElement.raw);
+						
 					  linkElement.innerText = hideLinks ? "Click to open link" : sourceElement.raw;
 					  linkElement.href = sourceElement.raw;
 					}
+					
 				  });
 			} catch(e){}
 		
@@ -2523,20 +2537,7 @@ if (ssapp){
 	document.head.appendChild(style);
 } 
 	
-function updateURL(param, href) {
 
-	href = href.replace("??", "?");
-	var arr = href.split('?');
-	var newurl;
-	if (arr.length > 1 && arr[1] !== '') {
-		newurl = href + '&' + param;
-	} else {
-		newurl = href + '?' + param;
-	}
-	newurl = newurl.replace("?&", "?");
-	return newurl;
-
-}
 function removeQueryParamWithValue(url, paramWithValue) {
     let [baseUrl, queryString] = url.split('?');
     if (!queryString) {
