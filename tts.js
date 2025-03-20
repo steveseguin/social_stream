@@ -569,7 +569,7 @@ TTS.configure = function(urlParams) {
         TTS.viptts = true;
     }
 	
-	if (urlParams.has("memebertts")) {
+	if (urlParams.has("membertts")) {
         TTS.membertts = true;
     }
 
