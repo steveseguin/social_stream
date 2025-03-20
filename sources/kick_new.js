@@ -248,8 +248,7 @@
 		nameColor = ele.querySelector("button[title]").style.color;
 	  } catch(e){}
 	  
-	  
-	  
+	   
 	  if (!settings.textonlymode){
 		  try {
 			var chatNodes = ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
@@ -286,6 +285,21 @@
 	  }
 	  
 	  if (!chatmessage){return;}
+	  
+	  	  
+	  if (settings.replyingto){
+		  let reply = ele.querySelector(".text-xs button");
+		  if (reply){
+				reply = getAllContentNodes(reply).trim();
+				if (reply){
+					if (settings.textonlymode) {
+						chatmessage = "@"+reply + ": " + chatmessage;
+					} else {
+						chatmessage = "<i><small>@"+reply + ":&nbsp;</small></i> " + chatmessage;
+					}
+				}
+		  }
+	  }
 	  
 	  
 	  ele.querySelectorAll("div > div > div > div > div > div[data-state] img[src], div > div > div > div > div > div[data-state] svg").forEach(badge=>{

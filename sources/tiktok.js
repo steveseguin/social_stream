@@ -173,7 +173,7 @@
                     if ((node.nodeName == "IMG") && node.src) {
                         node.src = node.src + "";
                         resp += "<img src='" + node.src + "' />";
-                    } else {
+                    } else if (node.nodeName == "SVG") {
                         resp += node.outerHTML;
                     }
                 }
@@ -690,7 +690,7 @@
 
 
         try {
-            chatname = ele.querySelector("span[data-e2e='message-owner-name']").textContent;
+            chatname = ele.querySelector("[data-e2e='message-owner-name']").textContent;
             chatname = escapeHtml(chatname);
         } catch (e) {}
 
@@ -709,14 +709,17 @@
         var chatmessage = "";
         try {
 			
-			let chatEle = ele.querySelector("div[class*='-DivComment']");
+			let chatEle = ele.querySelector("[class*='-DivComment']");
 			if (chatEle){
 				chatmessage = getAllContentNodes(chatEle);
-			} else if (ele.querySelector("div[class*='-DivUserInfo'],  div[class*='-DivUserInfo']")?.nextSibling){
-				chatmessage = getAllContentNodes(ele.querySelector("div[class*='-DivUserInfo'],  div[class*='-DivUserInfo']").nextSibling);
+			} else if (ele.querySelector("[class*='-DivUserInfo'],  [class*='-DivUserInfo']")?.nextSibling){
+				chatmessage = getAllContentNodes(ele.querySelector("[class*='-DivUserInfo'],  [class*='-DivUserInfo']").nextSibling);
 			} else if (ele.childNodes[1].childNodes[ele.childNodes[1].childNodes.length-1]){
 				chatmessage = getAllContentNodes(ele.childNodes[1].childNodes[ele.childNodes[1].childNodes.length-1]);
 				chatBadgeAlt = true;
+				if (chatmessage && ele.className.contains("DivGiftMessage")){
+					ital = "gift";
+				}
 			}
             //live-shared-ui-chat-list-chat-message-comment
             if (!chatmessage) {
@@ -738,53 +741,62 @@
             chatmessage = "";
         }
 		
+		if (!chatmessage && ele.querySelector("[data-e2e='message-owner-name']")?.nextSibling){
+			ital = "gift";
+			chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='message-owner-name']").nextSibling);
+		}
+		
 		var hasdonation = "";
 		try {
-			if (settings.tiktokdonations && chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")){
-				//console.log(chatmessage);
-				if (validateTikTokDonationMessage(chatmessage)){
-					var donation = parseDonationMessage(chatmessage);
-					//console.log(donation);
-					if (donation.isValid && donation.imageSrc){
-						var giftid = getIdFromUrl(donation.imageSrc);
-						if (giftid){
-							if (giftMapping[giftid]){
-								var valuea = giftMapping[giftid].coins || giftMapping[giftid].name;
-							} else {
-								try {
-									var valuea = document.querySelector("img[src*='"+giftid+"']").parentNode.querySelector("svg").nextSibling.textContent.trim();
-									if (parseInt(valuea) == valuea){
-										giftMapping[giftid] = {coins: parseInt(valuea)};
-										//console.log(giftMapping);
-									}
-								} catch(e){
-									//console.log("Unknown item", donation);
-									if (donation.quantity>1){
-										var valuea = "gifts";
-									} else {
-										var valuea = "gift";
-									}
-								}
-							}
-							if (parseInt(valuea) == valuea){
-								valuea = (donation.quantity * parseInt(valuea));
-								if (valuea>1){
-									hasdonation = valuea + " coins";
+			if (chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")){
+				chatmessage = chatmessage.replace("<img src="," <img src=");
+				chatmessage = chatmessage.replace(".png>x",".png> x");
+				if (settings.tiktokdonations || !settings.notiktokdonations){
+					//console.log(chatmessage);
+					if (validateTikTokDonationMessage(chatmessage)){
+						var donation = parseDonationMessage(chatmessage);
+						//console.log(donation);
+						if (donation.isValid && donation.imageSrc){
+							var giftid = getIdFromUrl(donation.imageSrc);
+							if (giftid){
+								if (giftMapping[giftid]){
+									var valuea = giftMapping[giftid].coins || giftMapping[giftid].name;
 								} else {
-									hasdonation = valuea + " coin";
+									try {
+										var valuea = document.querySelector("img[src*='"+giftid+"']").parentNode.querySelector("svg").nextSibling.textContent.trim();
+										if (parseInt(valuea) == valuea){
+											giftMapping[giftid] = {coins: parseInt(valuea)};
+											//console.log(giftMapping);
+										}
+									} catch(e){
+										//console.log("Unknown item", donation);
+										if (donation.quantity>1){
+											var valuea = "gifts";
+										} else {
+											var valuea = "gift";
+										}
+									}
 								}
-							} else {
-								hasdonation = donation.quantity + " "+valuea;
+								if (parseInt(valuea) == valuea){
+									valuea = (donation.quantity * parseInt(valuea));
+									if (valuea>1){
+										hasdonation = valuea + " coins";
+									} else {
+										hasdonation = valuea + " coin";
+									}
+								} else {
+									hasdonation = donation.quantity + " "+valuea;
+								}
 							}
+							
+							// https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png
+							// https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp
+							
 						}
-						
-						// https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png
-						// https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp
-						
 					}
 				}
-				//console.log("hasdonation: "+hasdonation);
-				
+			} else if (!settings.captureevents && ital){
+				return;
 			}
 		} catch(e){
 			//console.log(e);
@@ -824,7 +836,7 @@
 			if (!cb.length && chatBadgeAlt) {
 				try{
 					if (ele.childNodes[1].childNodes.length==2){
-						cb = ele.querySelector("span[data-e2e='message-owner-name']").parentNode.querySelectorAll("img[src]");
+						cb = ele.querySelector("[data-e2e='message-owner-name']").parentNode.querySelectorAll("img[src]");
 					}
 				} catch(e){}
 			}

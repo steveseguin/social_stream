@@ -1594,6 +1594,13 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="modtts">👩‍🏫 Only specific mods can have messages read</span>
 								</div>
+								<div title="Only 'member' marked users will have messages read out.">
+									<label class="switch">
+										<input type="checkbox" data-param1="membertts" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="membertts">🤴 Only members can have messages read</span>
+								</div>
 								<div title="Only 'vip' marked users will have messages read out.">
 									<label class="switch">
 										<input type="checkbox" data-param1="viptts" />
@@ -1627,17 +1634,17 @@ input:checked + .slider:before {
 								<h4>Bots, hosts and events are excluded from TTS</h4>
 								<div title="Allow 'bot' marked users to have messages read out; default is to filter them out">
 									<label class="switch">
-										<input type="checkbox" data-param1="allowbottss" />
+										<input type="checkbox" data-param1="allowbottts" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="allowbottss">🤖✅ Allow bot messages to be read out</span>
+									<span data-translate="allowbottts">🤖✅ Allow bot messages to be read out</span>
 								</div>
 								<div title="Allow 'bot' marked users to have messages read out; default is to filter them out">
 									<label class="switch">
-										<input type="checkbox" data-param1="allowhosttss" />
+										<input type="checkbox" data-param1="allowhosttts" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="allowhosttss">🕺✅ Allow host messages to be read out</span>
+									<span data-translate="allowhosttts">🕺✅ Allow host messages to be read out</span>
 								</div>
 								<div>
 									<label class="switch">
@@ -5257,13 +5264,13 @@ input:checked + .slider:before {
                                     <img class="icon" src="./sources/images/tiktok.png" style="display: inline-block;" />🚪
                                     <span data-translate="capture-joined-events"> Don't block "joined" stream events (TikTok) </span>
                                 </div>
-								<div title="Treat coin-bought items as gifts on Tiktok, such as roses">
+								<div title="Do not treat coin-bought items as gifts on Tiktok, such as roses">
                                     <label class="switch">
-                                        <input type="checkbox" data-setting="tiktokdonations" />
+                                        <input type="checkbox" data-setting="notiktokdonations" />
                                         <span class="slider round"></span>
                                     </label>
                                     <img class="icon" src="./sources/images/tiktok.png" style="display: inline-block;" />🌹
-                                    <span data-translate="tiktokdonations"> Treat roses et al as donations on TikTok </span>
+                                    <span data-translate="notiktokdonations"> Do NOT treat roses/etc as donations on TikTok </span>
                                 </div>
                                 <div title="Block donations/memberships from Youtube Shorts. Requires &shorts added to the Youtube chat pop out also.">
                                     <label class="switch">
@@ -5325,12 +5332,12 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="enable-pronoun support"> 👨‍👩‍👧‍👦 Add user pronouns (Twitch) <a class="options-link rounded_area" href="https://pr.alejo.io/" target="_blank">via third-party</a>  </span>
                                 </div>
-                                <div title="Mark a message as a memberchat, just because they are a member, rather than just highlighted membership messages">
-                                    <label class="switch">
-                                        <input type="checkbox" data-setting="allmemberchat" />
+                                <div title="Mark a message as a memberchat only when its a highlighted membership message">
+                                    <label class="switch"> 
+                                        <input type="checkbox" data-setting="limitedyoutubememberchat" data-setting-old="allmemberchat" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="all-youtube-member-chat-included"> Any message from a YouTube member is treated as membership chat, not just monthly featured messages </span>
+                                    <img src="./sources/images/youtube.png" class="icon" /><span data-translate="no-all-youtube-member-chat-included"> Only monthly featured messages from a YouTube are marked as a membership </span>
                                 </div>
                                 <div>
                                     <label class="switch">

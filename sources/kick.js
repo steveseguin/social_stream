@@ -212,7 +212,7 @@
 		nameColor = ele.querySelector(".chat-entry-username").style.color;
 	  } catch(e){}
 	  
-	  
+	  // settings.replyingto
 	  
 	  if (!settings.textonlymode){
 		  try {
