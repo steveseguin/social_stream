@@ -173,7 +173,7 @@
                     if ((node.nodeName == "IMG") && node.src) {
                         node.src = node.src + "";
                         resp += "<img src='" + node.src + "' />";
-                    } else {
+                    } else if (node.nodeName == "SVG") {
                         resp += node.outerHTML;
                     }
                 }
@@ -690,7 +690,7 @@
 
 
         try {
-            chatname = ele.querySelector("span[data-e2e='message-owner-name']").textContent;
+            chatname = ele.querySelector("[data-e2e='message-owner-name']").textContent;
             chatname = escapeHtml(chatname);
         } catch (e) {}
 
@@ -709,11 +709,11 @@
         var chatmessage = "";
         try {
 			
-			let chatEle = ele.querySelector("div[class*='-DivComment']");
+			let chatEle = ele.querySelector("[class*='-DivComment']");
 			if (chatEle){
 				chatmessage = getAllContentNodes(chatEle);
-			} else if (ele.querySelector("div[class*='-DivUserInfo'],  div[class*='-DivUserInfo']")?.nextSibling){
-				chatmessage = getAllContentNodes(ele.querySelector("div[class*='-DivUserInfo'],  div[class*='-DivUserInfo']").nextSibling);
+			} else if (ele.querySelector("[class*='-DivUserInfo'],  [class*='-DivUserInfo']")?.nextSibling){
+				chatmessage = getAllContentNodes(ele.querySelector("[class*='-DivUserInfo'],  [class*='-DivUserInfo']").nextSibling);
 			} else if (ele.childNodes[1].childNodes[ele.childNodes[1].childNodes.length-1]){
 				chatmessage = getAllContentNodes(ele.childNodes[1].childNodes[ele.childNodes[1].childNodes.length-1]);
 				chatBadgeAlt = true;
@@ -824,7 +824,7 @@
 			if (!cb.length && chatBadgeAlt) {
 				try{
 					if (ele.childNodes[1].childNodes.length==2){
-						cb = ele.querySelector("span[data-e2e='message-owner-name']").parentNode.querySelectorAll("img[src]");
+						cb = ele.querySelector("[data-e2e='message-owner-name']").parentNode.querySelectorAll("img[src]");
 					}
 				} catch(e){}
 			}
