@@ -249,7 +249,8 @@
 	  } catch(e){}
 	  
 	  
-	  
+	   // settings.replyingto
+	   
 	  if (!settings.textonlymode){
 		  try {
 			var chatNodes = ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th

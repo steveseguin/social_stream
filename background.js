@@ -2984,6 +2984,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "allmemberchat") {
 				pushSettingChange();
 			}
+			if (request.setting == "limitedyoutubememberchat") {
+				pushSettingChange();
+			}
 			if (request.setting == "drawmode") {
 				sendWaitlistConfig(null, true);
 			}

@@ -553,8 +553,21 @@
 			member = true;
 		} catch (e) {}
 		
-		var treatAsMemberChat = false;
+		
+/* 		var treatAsMemberChat = false;
 		if (settings.allmemberchat && member) {
+			treatAsMemberChat = true;
+		} else if (chatmembership) {
+			treatAsMemberChat = true;
+		} */
+		
+		var treatAsMemberChat = false;
+		
+		if (settings.limitedyoutubememberchat && member){
+			if (chatmembership) {
+				treatAsMemberChat = true;
+			}
+		} else if (member) {
 			treatAsMemberChat = true;
 		} else if (chatmembership) {
 			treatAsMemberChat = true;
