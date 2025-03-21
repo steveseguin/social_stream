@@ -1079,6 +1079,76 @@ input:checked + .slider:before {
   margin-bottom: 12px;
 }
 
+/* ARC browser modal style */
+.arc-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arc-dialog {
+  background-color: var(--options-group-background-color);
+  color: var(--options-group-text-color);
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid var(--collapsible-border-color);
+  box-shadow: 0 5px 11px 0 rgba(0, 0, 0, 0.1), 0 4px 11px 0 rgba(0, 0, 0, 0.08);
+  max-width: 400px;
+  width: 100%;
+}
+
+.arc-dialog p {
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.arc-input {
+  width: 100%;
+  padding: 8px;
+  margin: 10px 0;
+  background-color: var(--color-accent-subtle);
+  color: var(--default-text-color);
+  border: 1px solid var(--collapsible-border-color);
+  border-radius: 4px;
+}
+
+.arc-input:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+.arc-button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.arc-button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.arc-cancel-button {
+  background-color: var(--color-wrapper-background);
+  color: var(--default-text-color);
+  border: 1px solid var(--collapsible-border-color);
+}
+
+.arc-ok-button {
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+}
         </style>
     </head>
 

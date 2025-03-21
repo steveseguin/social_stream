@@ -102,7 +102,7 @@ if (typeof(chrome.runtime)=='undefined'){
 	}
 	
 	try {
-		window.prompt = function(title, val, message=""){
+		window.prompt = async function(title, val, message=""){
 			log("window.prompt");
 			return ipcRenderer.sendSync('prompt', {title, val, message}); // call if needed in the future
 		};
@@ -119,6 +119,63 @@ if (typeof(chrome.runtime)=='undefined'){
 		   } catch(e){}
 	   }
 	})
+} else {
+	window.prompt = async function(message, defaultValue = "") {
+		return await new Promise(resolve => {
+		  const modal = document.createElement("div");
+		  modal.className = "arc-modal";
+		  
+		  const dialog = document.createElement("div");
+		  dialog.className = "arc-dialog";
+		  
+		  const text = document.createElement("p");
+		  text.textContent = message;
+		  
+		  const input = document.createElement("input");
+		  input.type = "text";
+		  input.value = defaultValue;
+		  input.className = "arc-input";
+		  
+		  const buttonContainer = document.createElement("div");
+		  buttonContainer.className = "arc-button-container";
+		  
+		  const cancelBtn = document.createElement("button");
+		  cancelBtn.textContent = "Cancel";
+		  cancelBtn.className = "arc-button arc-cancel-button";
+		  cancelBtn.onclick = () => {
+			document.body.removeChild(modal);
+			resolve(null);
+		  };
+		  
+		  const okBtn = document.createElement("button");
+		  okBtn.textContent = "OK";
+		  okBtn.className = "arc-button arc-ok-button";
+		  okBtn.onclick = () => {
+			document.body.removeChild(modal);
+			resolve(input.value);
+		  };
+		  
+		  buttonContainer.appendChild(cancelBtn);
+		  buttonContainer.appendChild(okBtn);
+		  
+		  dialog.appendChild(text);
+		  dialog.appendChild(input);
+		  dialog.appendChild(buttonContainer);
+		  modal.appendChild(dialog);
+		  document.body.appendChild(modal);
+		  
+		  input.focus();
+		  input.select();
+		  
+		  input.addEventListener("keydown", e => {
+			if (e.key === "Enter") {
+			  okBtn.click();
+			} else if (e.key === "Escape") {
+			  cancelBtn.click();
+			}
+		  });
+		});
+	}
 }
 
 
@@ -4166,8 +4223,9 @@ const PollManager = {
         };
     },
 
-    saveCurrentPoll() {
-		const pollName = prompt("Enter a name for this poll preset:", document.querySelector('[data-textsetting="pollQuestion"]').value.trim());
+    async saveCurrentPoll() {
+		const pollName = await prompt("Enter a name for this poll preset:", document.querySelector('[data-textsetting="pollQuestion"]').value.trim());
+		
         if (!pollName) return;
 
         const newPoll = {
