@@ -889,7 +889,8 @@
 		try {
 			if (chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")){
 				chatmessage = chatmessage.replace("<img src="," <img src=");
-				chatmessage = chatmessage.replace(".png>x",".png> x");
+				chatmessage = chatmessage.replace('.png">x','.png"> x');
+				chatmessage = chatmessage.replace(".png'>x",".png'> x");
 				if (settings.tiktokdonations || !settings.notiktokdonations){
 					//console.log(chatmessage);
 					if (validateTikTokDonationMessage(chatmessage)){
