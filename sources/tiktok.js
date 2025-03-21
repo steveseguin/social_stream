@@ -736,6 +736,35 @@
                 chatmessage = "";
             }
         }
+		
+				
+        try {
+            if (!chatmessage) {
+                var eles = ele.childNodes[1].childNodes;
+				if (eles.length > 1) {
+					for (var i = eles.length - 1; i >= 1; i--) {
+						if (eles[i].nodeName === "#text") {
+							chatmessage = escapeHtml(eles[i].textContent);
+						} else if (settings.textonlymode) {
+							chatmessage = escapeHtml(eles[i].textContent);
+						} else {
+							chatmessage = eles[i].innerHTML;
+						}
+						if (chatmessage) break;
+					}
+				} else if (eles.length == 1) {
+					for (var i = eles[0].childNodes.length - 1; i >= 1; i--) {
+						if (settings.textonlymode) {
+							chatmessage = escapeHtml(eles[0].childNodes[i].textContent);
+						} else {
+							chatmessage = eles[0].childNodes[i].innerHTML;
+						}
+						if (chatmessage) break;
+					}
+				}
+            }
+        } catch (e) {}
+		
 
         if (chatmessage == "Moderator") {
             chatmessage = "";
@@ -801,34 +830,7 @@
 		} catch(e){
 			//console.log(e);
 		}
-		
-        try {
-            if (!chatmessage) {
-                var eles = ele.childNodes[1].childNodes;
-				if (eles.length > 1) {
-					for (var i = eles.length - 1; i >= 1; i--) {
-						if (eles[i].nodeName === "#text") {
-							chatmessage = escapeHtml(eles[i].textContent);
-						} else if (settings.textonlymode) {
-							chatmessage = escapeHtml(eles[i].textContent);
-						} else {
-							chatmessage = eles[i].innerHTML;
-						}
-						if (chatmessage) break;
-					}
-				} else if (eles.length == 1) {
-					for (var i = eles[0].childNodes.length - 1; i >= 1; i--) {
-						if (settings.textonlymode) {
-							chatmessage = escapeHtml(eles[0].childNodes[i].textContent);
-						} else {
-							chatmessage = eles[0].childNodes[i].innerHTML;
-						}
-						if (chatmessage) break;
-					}
-				}
-            }
-        } catch (e) {}
-		
+
 		
 		try {
             var cb = ele.querySelectorAll("img[class*='ImgBadgeChatMessage'], img[class*='ImgCombineBadgeIcon']");

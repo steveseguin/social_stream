@@ -1507,27 +1507,32 @@ function removeTTSProviderParams(url, selectedProvider=null) {
   
   // Map of all provider-specific parameters
   const providerParams = {
-    system: ['lang', 'voice'],
-    elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice'],
-    google: ['googleapikey', 'googlevoice'],
-    speechify: ['speechifykey', 'speechifyvoice'],
-    kokoro: ['kokorokey', 'voicekokoro']
+    system: ['lang', 'voice', 'rate', 'pitch'],
+    elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate'],
+    google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
+    speechify: ['speechifykey', 'speechifyvoice','speechifymodel','speechifylang','speechifyspeed'],
+    kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed']
   };
   
   if (selectedProvider === null) {
     try {
       const tmpUrl = new URL(url);
-      const urlParams = new URLSearchParams(tmpUrl.search);
-      selectedProvider = urlParams.get("ttsprovider") || false;
+      //const urlParams = new URLSearchParams(tmpUrl.search);
+      selectedProvider = urlParams.get("ttsprovider") || "system";
       if (!selectedProvider) return url;
     } catch (e) {
       return url; // Invalid URL
     }
   }
+  
   // Get all parameters except those for the selected provider
   const paramsToRemove = Object.keys(providerParams)
     .filter(provider => provider !== selectedProvider)
     .flatMap(provider => providerParams[provider]);
+	
+  if (selectedProvider=="system"){
+	  paramsToRemove.push("ttsprovider");
+  }
   
   // Remove each parameter
   let cleanedUrl = url;
