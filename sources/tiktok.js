@@ -156,13 +156,16 @@
         if (!element) {
             return resp;
         }
-        if (!element.childNodes || !element.childNodes.length) {
+        if (!element.children || !element.children.length) {
             if (element.textContent) {
                 return escapeHtml(element.textContent) || "";
             } else {
                 return "";
             }
         }
+		
+		let isBadge = false;
+		
         element.childNodes.forEach(node => {
             if (node.childNodes.length) {
                 resp += getAllContentNodes(node)
@@ -171,6 +174,10 @@
             } else if (node.nodeType === 1) {
                 if (!settings.textonlymode) {
                     if ((node.nodeName == "IMG") && node.src) {
+						if (node.skip || node.src.includes("_badge_")){
+							isBadge = true;
+							return;
+						}
                         node.src = node.src + "";
                         resp += "<img src='" + node.src + "' />";
                     } else if (node.nodeName == "SVG") {
@@ -179,6 +186,10 @@
                 }
             }
         });
+		
+		if (isBadge){
+			return "";
+		}
         return resp;
     }
 
@@ -648,9 +659,31 @@
 		return directMatch ? directMatch[1] : url;
 	}
 
+/* 
+	<div class="css-2yexzo-DivGiftMessage edkxpga0" data-skip="351">
+	 		<div class="css-1p9durm-DivLeadIcon e14w8t9p0">
+	 			<img src="https://p16-sign-sg.tiktokcdn.com/tos-alisg-avt-0068/64ceb81c9a0656329f9ff1b2b616d83a~tplv-tiktokx-cropcenter:100:100.webp?dr=14579&amp;refresh_token=c70df6bc&amp;x-expires=1742756400&amp;x-signature=mA4m4jJGtRzXbaNRrGCb0DBcGSo%3D&amp;t=4d5b0474&amp;ps=13740610&amp;shp=a5d48078&amp;shcp=fdd36af4&amp;idc=my2" style="display: block;">
+			</div>
+			<div class="css-qfhyf7-DivContent edkxpga1">
+				<span data-e2e="message-owner-name" title="💜koori-connection💎" class="css-6ujdqp-SpanNickName e1u0q3bo0" data-skip="true">
+					<span class="css-1ymr58b-SpanEllipsisName e1u0q3bo1">
+						💜koori-connection💎
+					</span>
+				</span>
+				<div class="css-1hbqad0-DivDesc edkxpga2">
+					sent
+					<img src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/d56945782445b0b8c8658ed44f894c7b~tplv-obj.png" style="display: block; border-radius: 0px; width: 26px; height: 26px;">
+					<span class="css-eo4zha-SpanGiftCount edkxpga3">
+						x1
+					</span>
+				</div>
+			</div>
+		</div>
+ */
     function processMessage(ele, ital = false) {
-
+		
         if (ele && ele.dataset.skip) {
+			//console.warn("skipping");
             return;
         }
 
@@ -659,6 +692,9 @@
                 return;
             }
         }
+		
+		//console.log("PROCESS:", ital);
+		//console.log(ele);
 
         ele.dataset.skip = ++msgCount;
 
@@ -670,10 +706,13 @@
             } else {
                 chatimg = chatimg.src;
             }
-        } catch (e) {}
+        } catch (e) {
+			//console.warn(e);
+		}
 
 
         if (ele.querySelector("[class*='DivTopGiverContainer']")) {
+			//console.warn(".");
             return;
         }
 		
@@ -683,16 +722,22 @@
         var chatbadges = "";
         var rank = 0;
 
-        var nameColor = "";
 
-        
+		// chat name
+        var nameColor = "";
         var chatname = "";
 
-
         try {
-            chatname = ele.querySelector("[data-e2e='message-owner-name']").textContent;
-            chatname = escapeHtml(chatname);
-        } catch (e) {}
+			let chatNameEle = ele.querySelector("[data-e2e='message-owner-name']");
+			if (chatNameEle){
+				if (chatNameEle.dataset.skip){return;}
+				chatNameEle.dataset.skip = true;
+				chatname = chatNameEle.textContent;
+				chatname = escapeHtml(chatname);
+			}
+        } catch (e) {
+			//console.warn(e);
+		}
 
         try {
             if (!chatname) {
@@ -703,24 +748,86 @@
                 }
             }
 
-        } catch (e) {}
+        } catch (e) {
+			//console.warn(e);
+		}
 
-		var chatBadgeAlt = false;
+
+		// chat badges
+		try {
+            var cb = ele.querySelectorAll("img[class*='ImgBadgeChatMessage'], img[class*='ImgCombineBadgeIcon'], img[src*='_badge_']");
+			
+			if (!cb.length && chatBadgeAlt) {
+				try{
+					if (ele.childNodes[1].childNodes.length==2){
+						cb = ele.querySelector("[data-e2e='message-owner-name']").parentNode.querySelectorAll("img[src]");
+					}
+				} catch(e){}
+			}
+			
+            if (cb.length) {
+                chatbadges = [];
+                cb.forEach(cbimg => {
+                    try {
+						cbimg.skip = true;
+                        if (cbimg.src) {
+                            chatbadges.push(cbimg.src);
+                            if (cbimg.src.includes("/moderator_")) {
+                                if (!settings.nosubcolor) {
+                                    nameColor = "#F5D5D1";
+                                }
+                            } else if (cbimg.src.includes("/moderater_")) {
+                                if (!settings.nosubcolor) {
+                                    nameColor = "#F5D5D1";
+                                }
+                            } else if (cbimg.src.includes("/sub_")) {
+                                membership = getTranslation("subscriber", "SUBSCRIBER");
+                                if (!settings.nosubcolor) {
+                                    nameColor = "#139F1D";
+                                }
+                            } else if (cbimg.src.includes("/subs_")) {
+                                membership = getTranslation("subscriber", "SUBSCRIBER");
+                                if (!settings.nosubcolor) {
+                                    nameColor = "#139F1D";
+                                }
+                            } else if (!rank && !nameColor && cbimg.src.includes("/grade_")) {
+                                try {
+                                    rank = parseInt(cbimg.nextElementSibling.innerText) || 1;
+                                    if (!settings.nosubcolor) {
+                                        if (rank > 40) {
+                                            rank = 40;
+                                        }
+                                        nameColor = lut[rank];
+                                    }
+                                } catch (e) {}
+                            }
+                        }
+                    } catch (e) {}
+                });
+            }
+        } catch (e) {}
+		
+		
+		// chat messages
         var chatmessage = "";
+		
         try {
 			
 			let chatEle = ele.querySelector("[class*='-DivComment']");
 			if (chatEle){
 				chatmessage = getAllContentNodes(chatEle);
-			} else if (ele.querySelector("[class*='-DivUserInfo'],  [class*='-DivUserInfo']")?.nextSibling){
-				chatmessage = getAllContentNodes(ele.querySelector("[class*='-DivUserInfo'],  [class*='-DivUserInfo']").nextSibling);
+			} else if (ele.querySelector("[class*='-DivUserInfo'],  [class*='-DivUserInfo']")?.nextElementSibling){
+				chatmessage = getAllContentNodes(ele.querySelector("[class*='-DivUserInfo'],  [class*='-DivUserInfo']").nextElementSibling);
 			} else if (ele.childNodes[1].childNodes[ele.childNodes[1].childNodes.length-1]){
 				chatmessage = getAllContentNodes(ele.childNodes[1].childNodes[ele.childNodes[1].childNodes.length-1]);
-				chatBadgeAlt = true;
 				if (chatmessage && ele.className.contains("DivGiftMessage")){
 					ital = "gift";
 				}
 			}
+		} catch (e) {
+		}
+			
+        try {
             //live-shared-ui-chat-list-chat-message-comment
             if (!chatmessage) {
                 try {
@@ -730,12 +837,15 @@
                 }
             }
         } catch (e) {
-            try {
-                chatmessage = getAllContentNodes(ele.querySelector(".live-shared-ui-chat-list-chat-message-comment"));
-            } catch (e) {
-                chatmessage = "";
-            }
         }
+		
+		try {
+			if (!chatmessage){
+				chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='chat-message'] .break-words.align-middle"));
+			}
+		} catch (e) {
+			//console.warn(e);
+		}
 		
 				
         try {
@@ -748,7 +858,7 @@
 						} else if (settings.textonlymode) {
 							chatmessage = escapeHtml(eles[i].textContent);
 						} else {
-							chatmessage = eles[i].innerHTML;
+							chatmessage = getAllContentNodes(eles[i]);
 						}
 						if (chatmessage) break;
 					}
@@ -757,7 +867,7 @@
 						if (settings.textonlymode) {
 							chatmessage = escapeHtml(eles[0].childNodes[i].textContent);
 						} else {
-							chatmessage = eles[0].childNodes[i].innerHTML;
+							chatmessage = getAllContentNodes(eles[0].childNodes[i]);
 						}
 						if (chatmessage) break;
 					}
@@ -770,9 +880,9 @@
             chatmessage = "";
         }
 		
-		if (!chatmessage && ele.querySelector("[data-e2e='message-owner-name']")?.nextSibling){
+		if (!chatmessage && ele.querySelector("[data-e2e='message-owner-name']")?.nextElementSibling){
 			ital = "gift";
-			chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='message-owner-name']").nextSibling);
+			chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='message-owner-name']").nextElementSibling);
 		}
 		
 		var hasdonation = "";
@@ -792,7 +902,7 @@
 									var valuea = giftMapping[giftid].coins || giftMapping[giftid].name;
 								} else {
 									try {
-										var valuea = document.querySelector("img[src*='"+giftid+"']").parentNode.querySelector("svg").nextSibling.textContent.trim();
+										var valuea = document.querySelector("img[src*='"+giftid+"']").parentNode.querySelector("svg").nextElementSibling.textContent.trim();
 										if (parseInt(valuea) == valuea){
 											giftMapping[giftid] = {coins: parseInt(valuea)};
 											//console.log(giftMapping);
@@ -830,60 +940,6 @@
 		} catch(e){
 			//console.log(e);
 		}
-
-		
-		try {
-            var cb = ele.querySelectorAll("img[class*='ImgBadgeChatMessage'], img[class*='ImgCombineBadgeIcon']");
-			
-			if (!cb.length && chatBadgeAlt) {
-				try{
-					if (ele.childNodes[1].childNodes.length==2){
-						cb = ele.querySelector("[data-e2e='message-owner-name']").parentNode.querySelectorAll("img[src]");
-					}
-				} catch(e){}
-			}
-			
-            if (cb.length) {
-                chatbadges = [];
-                cb.forEach(cbimg => {
-                    try {
-                        if (cbimg.src) {
-                            chatbadges.push(cbimg.src);
-                            if (cbimg.src.includes("/moderator_")) {
-                                if (!settings.nosubcolor) {
-                                    nameColor = "#F5D5D1";
-                                }
-                            } else if (cbimg.src.includes("/moderater_")) {
-                                if (!settings.nosubcolor) {
-                                    nameColor = "#F5D5D1";
-                                }
-                            } else if (cbimg.src.includes("/sub_")) {
-                                membership = getTranslation("subscriber", "SUBSCRIBER");
-                                if (!settings.nosubcolor) {
-                                    nameColor = "#139F1D";
-                                }
-                            } else if (cbimg.src.includes("/subs_")) {
-                                membership = getTranslation("subscriber", "SUBSCRIBER");
-                                if (!settings.nosubcolor) {
-                                    nameColor = "#139F1D";
-                                }
-                            } else if (!rank && !nameColor && cbimg.src.includes("/grade_")) {
-                                try {
-                                    rank = parseInt(cbimg.nextElementSibling.innerText) || 1;
-                                    if (!settings.nosubcolor) {
-                                        if (rank > 40) {
-                                            rank = 40;
-                                        }
-                                        nameColor = lut[rank];
-                                    }
-                                } catch (e) {}
-                            }
-                        }
-                    } catch (e) {}
-                });
-            }
-        } catch (e) {}
-
 
         if (!chatmessage && !chatbadges) {
             return;
@@ -1014,6 +1070,16 @@
 			}
 		}
 		
+		if (!target){
+			target = document.querySelectorAll('[data-index].w-full');
+			if (target && target.length>3){
+				target = target[target.length-1].parentNode;
+				subtree = false;
+			} else{
+				return;
+			}
+		}
+		
 		if (!target) {
 			target = document.querySelector('[role="heading"][tabindex]');
 			if (target && window.location.href.includes("/live") && target.nodeType==1){
@@ -1023,6 +1089,7 @@
 			}
 		}
 		
+		
 		if (!window.location.href.includes("livecenter") && 
 			!(window.location.pathname.includes("@") && 
 			  window.location.pathname.includes("live"))) {
@@ -1030,7 +1097,7 @@
 		}
 		
 		// Prevent multiple observers on the same target
-		if (target.hasObserver) {
+		if (!target || target.hasObserver) {
 			return;
 		}
 		
@@ -1044,18 +1111,40 @@
 		
 		// Create mutation observer with original configuration
 		const observer = new MutationObserver((mutations) => {
+			
 			mutations.forEach((mutation) => {
 				if (mutation.addedNodes.length) {
+					//console.log(mutation.addedNodes);
 					for (let i = 0; i < mutation.addedNodes.length; i++) {
 						try {
 							const node = mutation.addedNodes[i];
-							if (!subtree && node.dataset && node.dataset.e2e === "chat-message") {
-								setTimeout((node) => {
-									if (node.isConnected) {
-										//console.log(node);
-										processMessage(node);
-									}
-								}, 300, node);
+							if (!subtree){
+
+								if (node.dataset && node.dataset.e2e === "chat-message") {
+									setTimeout((node) => {
+										if (node.isConnected) {
+											//console.log(node);
+											processMessage(node);
+										}
+									}, 300, node);
+								} else if (node.querySelector("[data-e2e='chat-message']")){
+									setTimeout((node) => {
+										if (node.isConnected) {
+											//console.log(node);
+											processMessage(node);
+										}
+									}, 300, node);
+								} else if (settings.captureevents) {
+									setTimeout((node) => {
+										if (node.isConnected) {
+											if (node.dataset && node.dataset.e2e) {
+												processMessage(node.cloneNode(true), node.dataset.e2e);
+											} else {
+												processMessage(node);
+											}
+										}
+									}, 300, node);
+								}
 							} else if (subtree){
 								
 								let msg = node.querySelector('[data-e2e="chat-message"]');
@@ -1151,7 +1240,7 @@
 								}, 200);
 							}
 						} catch (e) {
-							console.error("Error processing event:", e);
+							//console.error("Error processing event:", e);
 						}
 					}
 				}
