@@ -77,18 +77,19 @@
 
 	function processMessage(ele){
 		
-		console.log(ele);
+		//console.warn(ele);
 		
 		var chatname="";
 		try {
-			chatname = ele.querySelector(".dlive-name__text").textContent;
+			chatname = ele.querySelector(".dlive-name__text, .dlive-name, .sender-name").textContent;
 			chatname = chatname.replace(":","");
 			chatname = chatname.trim();
 			chatname = escapeHtml(chatname);
+			console.log(chatname);
 		} catch(e){
 			return;
 		}
-		
+		var eventType = false;
 		var chatmessage="";
 		try{
 			 if (settings.textonlymode){
@@ -103,10 +104,26 @@
 					}
 				});
 			 }
-			 chatmessage = chatmessage.trim();
+		//	 console.warn(chatmessage);
 		} catch(e){
-			return;
+		//	console.error(e);
+			
 		}
+		if (!chatmessage){
+			try {
+				chatmessage = getAllContentNodes(ele.querySelector(".chatrow-link").nextSibling);
+			//	console.warn(chatmessage);
+				eventType = true;
+				if (chatmessage.includes("followed!")){
+					eventType = "followed";
+				}
+			} catch (e){
+			//	console.error(e);
+				return;
+			}
+		}
+		
+		chatmessage = chatmessage.trim();
 
 		var chatimg="";
 		try{
@@ -115,7 +132,7 @@
 		} catch(e){
 			chatimg = "";
 		}
-	  
+	// console.warn(chatimg);
 
 	  var data = {};
 	  data.chatname = chatname;
@@ -129,7 +146,9 @@
 	  data.contentimg = "";
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "dlive";
+	  data.event = eventType;
 	  
+	 // console.log(data);
 	  pushMessage(data);
 	}
 	
@@ -167,7 +186,7 @@
 				try{
 					if (!main[j].dataset.set123){
 						main[j].dataset.set123 = "true";
-						//processMessage(main[j]);
+					//	processMessage(main[j]);
 					} 
 				} catch(e){}
 			}
