@@ -680,6 +680,22 @@
 			</div>
 		</div>
  */
+ 
+	function checkNextSiblingsForAttribute(newElement, attributeName) {
+		let nextSibling = newElement.nextElementSibling;
+
+		while (nextSibling) {
+			if (nextSibling.hasAttribute(attributeName)) {
+			  return true;
+			}
+			nextSibling = nextSibling.nextElementSibling;
+		}
+
+		return false;
+	}
+ 
+	var globalIndex = -1;
+	
     function processMessage(ele, ital = false) {
 		
         if (ele && ele.dataset.skip) {
@@ -697,7 +713,25 @@
 		//console.log(ele);
 
         ele.dataset.skip = ++msgCount;
-
+		
+		if (checkNextSiblingsForAttribute(ele, "data-skip")){
+			return;
+		}
+		
+/* 		try {
+			let index = ele?.dataset?.index || ele?.parentNode?.dataset?.index || -1;
+			if (index){
+				index = parseInt(index) || 0;
+				if (index && index>=globalIndex){
+					globalIndex = index;
+				} else if (index && index<globalIndex){
+					return;
+				}
+			}
+			console.log("index: " + index + " " +globalIndex);
+		} catch (e) {
+		} */
+		
         var chatimg = "";
         try {
             chatimg = ele.children[0].querySelector("img");
@@ -986,7 +1020,15 @@
                 return;
             }
         }
-
+		
+		if (!chatname){
+			chatmessage = chatmessage.replace("----","");
+		}
+		
+		if (!chatname && !chatmessage){
+			return;
+		}
+		
         if (isDuplicateMessage(chatname, chatmessage, ele)) {
             //console.log("duplicate message; skipping");
             return;
@@ -1102,10 +1144,6 @@
 			return;
 		}
 		
-		document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele=>{
-			ele.dataset.skip = ++msgCount;
-		});
-		
 		
 		target.hasObserver = true;
 		console.log("Starting social stream");
@@ -1185,10 +1223,15 @@
 			});
 		});
 		
-		observer.observe(target, {
-			childList: true,
-			subtree: subtree
-		});
+		setTimeout(function(observer,subtree,target){
+			document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele=>{
+				ele.dataset.skip = ++msgCount;
+			});
+			observer.observe(target, {
+				childList: true,
+				subtree: subtree
+			});
+		},2000,observer,subtree,target);
 	}
 
 	var counter = 0;
