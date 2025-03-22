@@ -805,7 +805,7 @@
                     try {
 						cbimg.skip = true;
                         if (cbimg.src) {
-                            chatbadges.push(cbimg.src);
+                            chatbadges.push(cbimg.src+"");
                             if (cbimg.src.includes("/moderator_")) {
                                 if (!settings.nosubcolor) {
                                     nameColor = "#F5D5D1";
@@ -992,7 +992,9 @@
 			avatarCache.add(chatname, chatimg);
 		} else if (chatname) {
 			chatimg = avatarCache.get(chatname);
-        } else if (chatmessage && (chatmessage === "----")) { // no chat name
+        }
+		
+		if (chatmessage && (chatmessage === "----")) { // no chat name
             return;
         }
 
