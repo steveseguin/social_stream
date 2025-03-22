@@ -672,6 +672,12 @@ In these cases, the JSON being delivered is in the Social Stream Ninja data-stru
 
 `https://socialstream.ninja/dock?session=XXXXXX&postserver=https://127.0.0.1/messageingest/?socialstream`
 
+##### POST without dock
+
+You can publish messages to a POST endpoint without the dock being open; there's quite a few options actually.
+
+An example of this being supported with a third party application, for custom [game-themed message skins, is here;](https://github.com/steveseguin/ChatGameFontificator?tab=readme-ov-file#using-with-social-stream-ninja)
+
 #### Inbound third-party donation support
 
 ##### Stripe webhook donation support
