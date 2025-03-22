@@ -135,7 +135,31 @@
             return "";
         }
     }
-
+	
+	function cleanText(text) {
+		let processedText = text
+			.replace(/&amp;quot;/g, '&quot;')
+			.replace(/&amp;amp;/g, '&amp;')
+			.replace(/&amp;lt;/g, '&lt;')
+			.replace(/&amp;gt;/g, '&gt;')
+			.replace(/&amp;#039;/g, '&#039;');
+		
+		if (settings.textonlymode) {
+			processedText = processedText
+				.replace(/&quot;/g, '"')
+				.replace(/&amp;/g, '&')
+				.replace(/&lt;/g, '<')
+				.replace(/&gt;/g, '>')
+				.replace(/&#039;/g, "'");
+		} else {
+			processedText = escapeHtml(processedText).replace(/&#039;/g, "'");
+		}
+		
+		return processedText
+			.replace(/…/g, '')
+			.replace(/\s+/g, ' ')
+			.replaceAll("  "," ");
+	}
 
     function isEmoji(char) {
         const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
@@ -147,9 +171,9 @@
 		
 		if (!element) return resp;
 		
-		if (!element.childNodes || !element.childNodes.length) {
+		if (!element.children || !element.children.length) {
 			if (element.textContent) {
-				return cleanText(element.textContent);
+				return escapeHtml(element.textContent);
 			}
 			return "";
 		}
@@ -159,13 +183,7 @@
 				if (node.nodeName === "A") {
 					let linkText = "";
 					const spans = node.querySelectorAll('span[aria-hidden="true"]');
-					if (spans.length) {
-						linkText = Array.from(spans)
-							.map(span => span.textContent)
-							.join('');
-					} else {
-						linkText = node.href || node.textContent;
-					}
+					linkText = node.textContent || node.href;
 					resp += " " + linkText +" ";
 				} else {
 					resp += getAllContentNodes(node, textonly);
@@ -181,17 +199,11 @@
 				if (node.nodeName === "A") {
 					let linkText = "";
 					const spans = node.querySelectorAll('span[aria-hidden="true"]');
-					if (spans.length) {
-						linkText = Array.from(spans)
-							.map(span => span.textContent)
-							.join('');
-					} else {
-						linkText = node.href || node.textContent;
-					}
+					linkText =  node.textContent || node.href;
 					resp += " " + linkText + " ";
 				} else if (node.nodeName === "IMG") {
 					if (node.alt && isEmoji(node.alt)) {
-						resp += cleanText(node.alt);
+						resp += escapeHtml(node.alt);
 					} else if (!settings.textonlymode && !textonly) {
 						node.src = node.src + "";
 						resp += node.outerHTML;
@@ -201,16 +213,11 @@
 				}
 			}
 		});
-		return cleanText(resp);
+		return resp;
 	}
 
-	function cleanText(text) {
-		return escapeHtml(text)
-			.replace(/…/g, '')
-			.replace(/&#039;/g, "'")
-			.replace(/\s+/g, ' ')
-			.trim();
-	}
+
+
     function prepMessage(ele) {
         if (ele == window) {
             return;
@@ -351,7 +358,7 @@
         var backgroundColor = "";
         var textColor = "";
 
-        /* try {
+        try {
             var msglink = ele.querySelector("a[href] > time").parentNode.href;
             if (autoGrabTweets) {
                 if (grabbedTweets.includes(msglink)) {
@@ -365,7 +372,7 @@
             if (autoGrabTweets) {
                 return;
             }
-        } */
+        }
 
 
         var data = {};

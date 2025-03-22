@@ -63,20 +63,8 @@
 	
 	function processMessage(ele){
 		
-		var chatimg = "";
-		try{
-		   chatimg = ele.querySelector(".messages__avatar img[src]").src;
-		} catch(e){
-			//console.error(e);
-		}
 		
-		var name="";
-		try {
-			name = ele.querySelector(".messages__author").textContent.trim();
-			name = escapeHtml(name);
-		} catch(e){
-			//console.error(e);
-		}
+		
 		var msg="";
 		try {
 			ele.querySelectorAll("[data-message-id]:not([data-skip])").forEach(ll=>{
@@ -94,10 +82,36 @@
 					msg += getAllContentNodes(m)+" ";
 				}
 			});
+			if (!msg){return;}
 			msg = msg.trim();
+		} catch(e){
+		}
+		
+		
+		var chatimg = "";
+		try{
+		   chatimg = ele.querySelector(".messages__avatar img[src]").src;
 		} catch(e){
 			//console.error(e);
 		}
+		
+		var name="";
+		try {
+			name = ele.querySelector(".messages__author").textContent.trim();
+			
+		} catch(e){
+		}
+		
+		if (chatimg && name.includes(".") && name.includes("@")){
+			try {
+				name = chatimg.split("/avatar/")[1].split("/")[0].trim();
+			} catch(e){}
+		}
+		
+		if (name){
+			name = escapeHtml(name);
+		}
+		
 		if (!msg){
 			return;
 		}
@@ -106,9 +120,6 @@
 			
 			if (ele.querySelector(".system")){
 				data.event = "system";
-				//if (!settings.captureevents) {
-				//	return;
-				//}
 			}
 			
 			data.chatname = name;
@@ -122,8 +133,9 @@
 			data.contentimg = "";
 			data.textonly = settings.textonlymode || false;
 			data.type = "nextcloud";
-			
-			pushMessage(data);
+			if (firstRun){
+				pushMessage(data);
+			}
 		} catch(e){
 			//console.error(e);
 		}
@@ -171,50 +183,42 @@
 	var observer = null;
 	
 	
-	function onElementInserted(target) {
-		var onMutationsObserved = function(mutations) {
-			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							if (mutation.addedNodes[i] && mutation.addedNodes[i].childNodes){
-								if (mutation.addedNodes[i].dataset.messageId){
-									processMessage(mutation.addedNodes[i].parentNode.parentNode);
-								} else if (mutation.addedNodes[i].className.contains("messages-group")){
-									processMessage(mutation.addedNodes[i]);
-								}
-							}
-						} catch(e){}
-					}
-				}
-			});
-		};
-		
-		var config = { childList: true, subtree: true };
-		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		
-		observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
-	}
 	
 	console.log("social stream injected");
 
+	var firstRun = false;
+	
 	setInterval(function(){
-		try {
-			if (document.querySelector('.messages-list__scroller > .scroller__content') && !document.querySelector('.messages-list__scroller > .scroller__content').marked){
-				
-				document.querySelector('.messages-list__scroller > .scroller__content').marked=true;
-				console.log("CONNECTED chat detected");
-				setTimeout(function(){
-					document.querySelectorAll('.messages-list__scroller > .scroller__content > li').forEach(ele=>{
-						processMessage(ele); // dev purposes
-					});
-					console.log("Loading chat capture logic");
-					onElementInserted(document.querySelector('.messages-list__scroller > .scroller__content'));
-				},1000);
-			}
-		} catch(e){}
-	},2000);
+		const allItems = document.querySelectorAll('.messages-list__scroller > .scroller__content > li');
+		
 
+		const items = [...allItems];
+		
+		// Get unprocessed items
+		const unprocessedItems = items.filter(item => !item.dataset.done);
+		
+		// Get last processed item if it exists
+		const processedItems = items.filter(item => item.dataset.done);
+		const lastProcessedItem = processedItems.length ? processedItems[processedItems.length - 1] : null;
+		
+		// Create array of items to process
+		const itemsToProcess = [...unprocessedItems];
+		
+		// Add last processed item if it exists
+		if (lastProcessedItem) {
+			itemsToProcess.push(lastProcessedItem);
+		}
+		// Process each item
+		itemsToProcess.forEach(ele => {
+			ele.dataset.done = true;
+			processMessage(ele);
+		});
+		
+		if (!firstRun){
+			if (document.querySelector('.messages-list__scroller')){
+				firstRun = true;
+			}
+		}
+	}, 700);
+	
 })();
