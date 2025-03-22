@@ -147,7 +147,7 @@
 		
 		if (!element) return resp;
 		
-		if (!element.childNodes || !element.childNodes.length) {
+		if (!element.children || !element.children.length) {
 			if (element.textContent) {
 				return cleanText(element.textContent);
 			}
@@ -209,7 +209,7 @@
 			.replace(/…/g, '')
 			.replace(/&#039;/g, "'")
 			.replace(/\s+/g, ' ')
-			.trim();
+			.replaceAll("  "," ")
 	}
     function prepMessage(ele) {
         if (ele == window) {
@@ -351,7 +351,7 @@
         var backgroundColor = "";
         var textColor = "";
 
-        /* try {
+        try {
             var msglink = ele.querySelector("a[href] > time").parentNode.href;
             if (autoGrabTweets) {
                 if (grabbedTweets.includes(msglink)) {
@@ -365,7 +365,7 @@
             if (autoGrabTweets) {
                 return;
             }
-        } */
+        }
 
 
         var data = {};
