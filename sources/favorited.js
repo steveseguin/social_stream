@@ -181,7 +181,7 @@
 							if (mutation.addedNodes[i].dataset.sentryComponent){
 								setTimeout(function(ele){
 									processMessage(ele);
-								},1400,mutation.addedNodes[i]);
+								},400,mutation.addedNodes[i]);
 							}
 						} catch(e){}
 					}
