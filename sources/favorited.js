@@ -73,14 +73,14 @@
 		
 		var name="";
 		try {
-			name = ele.querySelector("[data-sentry-component='UserInlineWithBadges'] span:not(:empty), section p.text-neutral-50.font-bold").textContent.trim();
+			name = ele.querySelector("[data-sentry-component='UserInlineWithBadges'] span:not(:empty), section p.text-neutral-50.font-bold, button>section>p").textContent.trim();
 			name = escapeHtml(name);
 		} catch(e){
 		}
 		
 		var chatbadges = [];
 		try {
-			ele.querySelector("[data-sentry-component='UserInlineWithBadges'] svg, [data-sentry-component='UserInlineWithBadges'] img").forEach(badge => {
+			ele.querySelectorAll("[data-sentry-component='UserInlineWithBadges'] svg, [data-sentry-component='UserInlineWithBadges'] img, img[src*='/badges/']").forEach(badge => {
 				if (badge.srcset) {
 					let bb = badge.srcset.split("https://").pop();
 					if (bb) {
@@ -105,9 +105,7 @@
 		
 		var msg="";
 		try {
-			ele.querySelectorAll("span.inline.text").forEach(xx=>{
-				msg+= getAllContentNodes(xx);
-			});
+			msg = getAllContentNodes(ele.children[ele.children.length-1]);
 		} catch(e){
 		}
 		
@@ -124,8 +122,6 @@
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "favorited";
-		
-		console.log(data);
 		
 		pushMessage(data);
 	}
@@ -185,7 +181,7 @@
 							if (mutation.addedNodes[i].dataset.sentryComponent){
 								setTimeout(function(ele){
 									processMessage(ele);
-								},400,mutation.addedNodes[i]);
+								},1400,mutation.addedNodes[i]);
 							}
 						} catch(e){}
 					}
