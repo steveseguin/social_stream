@@ -682,11 +682,19 @@
  */
  
 	function checkNextSiblingsForAttribute(newElement, attributeName) {
-		let nextSibling = newElement.nextElementSibling;
+		let nextSibling = newElement.nextElementSibling
+		
+		let dig = false;
+		if (!nextSibling){
+			dig = true;
+			nextSibling = newElement?.parentNode?.nextElementSibling;
+		}
 
 		while (nextSibling) {
 			if (nextSibling.hasAttribute(attributeName)) {
 			  return true;
+			} else if (dig && nextSibling.querySelector("["+attributeName+"]")){
+				return true;
 			}
 			nextSibling = nextSibling.nextElementSibling;
 		}
@@ -718,9 +726,9 @@
 			return;
 		}
 		
-/* 		try {
+ 		try {
 			let index = ele?.dataset?.index || ele?.parentNode?.dataset?.index || -1;
-			if (index){
+			if (index && (index!==-1)){
 				index = parseInt(index) || 0;
 				if (index && index>=globalIndex){
 					globalIndex = index;
@@ -728,9 +736,8 @@
 					return;
 				}
 			}
-			console.log("index: " + index + " " +globalIndex);
 		} catch (e) {
-		} */
+		}
 		
         var chatimg = "";
         try {
@@ -1142,16 +1149,14 @@
 		}
 		
 		// Prevent multiple observers on the same target
-		if (!target || target.hasObserver) {
+		if (!target || target.observer) {
 			return;
 		}
 		
-		
-		target.hasObserver = true;
 		console.log("Starting social stream");
 		
 		// Create mutation observer with original configuration
-		const observer = new MutationObserver((mutations) => {
+		target.observer = new MutationObserver((mutations) => {
 			
 			mutations.forEach((mutation) => {
 				if (mutation.addedNodes.length) {
@@ -1233,7 +1238,7 @@
 				childList: true,
 				subtree: subtree
 			});
-		},2000,observer,subtree,target);
+		},2000, target.observer, subtree, target);
 	}
 
 	var counter = 0;
@@ -1255,13 +1260,11 @@
 			return;
 		}
 		
-		if (target2.hasObserver) {
+		if (target2.observer2) {
 			return;
 		}
 		
-		target2.hasObserver = true;
-		
-		const observer2 = new MutationObserver((mutations) => {
+		target2.observer2 = new MutationObserver((mutations) => {
 			if (!settings.captureevents) return;
 			
 			mutations.forEach((mutation) => {
