@@ -702,7 +702,6 @@
 		return false;
 	}
  
-	var globalIndex = -1;
 	
     function processMessage(ele, ital = false) {
 		
@@ -726,19 +725,7 @@
 			return;
 		}
 		
- 		try {
-			let index = ele?.dataset?.index || ele?.parentNode?.dataset?.index || -1;
-			if (index && (index!==-1)){
-				index = parseInt(index) || 0;
-				if (index && index>=globalIndex){
-					globalIndex = index;
-				} else if (index && index<globalIndex){
-					return;
-				}
-			}
-		} catch (e) {
-		}
-		
+
         var chatimg = "";
         try {
             chatimg = ele.children[0].querySelector("img");
