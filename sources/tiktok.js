@@ -974,13 +974,14 @@
             //alert("!!");
         }
 
-		if (chatname && (chatimg || chatbadges || membership)) {
-			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
-		}
-		
+
 		if (chatmessage && (chatmessage === "----")) { // no chat name
             return;
         }
+		
+		if (chatname && (chatimg || chatbadges || membership)) {
+			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
+		}
 
         if ((ital===true) && chatmessage && (chatmessage === "joined")) { // no chat name
             if (!settings.capturejoinedevent) {
