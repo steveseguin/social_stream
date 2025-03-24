@@ -2,23 +2,33 @@
 	
 	const avatarCache = {
 		_cache: {},
-		MAX_SIZE: 300,
+		MAX_SIZE: 500,
 		CLEANUP_COUNT: 50,
 		
-		add(chatname, chatimg) {
-			if (!chatname || !chatimg) return;
+		add(chatname, chatimg, badges = null, membership = null, nameColor = null) {
+			if (!chatname) return;
 			
-			this._cache[chatname] = {
-				url: chatimg,
-				timestamp: Date.now()
-			};
+			// Update or create entry
+			if (!this._cache[chatname]) {
+				this._cache[chatname] = {
+					timestamp: Date.now()
+				};
+			} else {
+				// Update timestamp on existing cache entries
+				this._cache[chatname].timestamp = Date.now();
+			}
+			
+			// Only update fields that are provided
+			if (chatimg) this._cache[chatname].url = chatimg;
+			if (badges) this._cache[chatname].badges = badges;
+			if (membership) this._cache[chatname].membership = membership;
+			if (nameColor) this._cache[chatname].nameColor = nameColor;
 			
 			this.cleanup();
 		},
 		
 		get(chatname) {
-			const avatar = this._cache[chatname];
-			return avatar ? avatar.url : null;
+			return this._cache[chatname] || {};
 		},
 		
 		cleanup() {
@@ -964,11 +974,16 @@
             //alert("!!");
         }
 
-        if (chatname && chatimg) {
-			avatarCache.add(chatname, chatimg);
-		} else if (chatname) {
-			chatimg = avatarCache.get(chatname);
-        }
+		if (chatname) {
+			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
+			if (!chatimg) {
+				const cached = avatarCache.get(chatname);
+				chatimg = cached.url || "";
+				if (!chatbadges && cached.badges) chatbadges = cached.badges;
+				if (!membership && cached.membership) membership = cached.membership;
+				if (!nameColor && cached.nameColor) nameColor = cached.nameColor;
+			}
+		}
 		
 		if (chatmessage && (chatmessage === "----")) { // no chat name
             return;
@@ -1035,6 +1050,7 @@
         //console.log(data);
 		
 		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
+			avatarCache.cleanup();
 			console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
@@ -1163,25 +1179,33 @@
         }
 		
 		let chatimg = "";
-		if (chatname) {
-			chatimg = avatarCache.get(chatname);
-        }
+		let cachedBadges = "";
+		let cachedMembership = "";
+		let cachedNameColor = "";
 
-        var data = {};
-        data.chatname = chatname;
-        data.chatbadges = "";
-        data.backgroundColor = "";
-        data.nameColor = "";
-        data.textColor = "";
-        data.chatmessage = chatmessage;
-        data.chatimg = chatimg;
-        data.hasDonation = hasdonation;
-        data.membership = "";
-        data.contentimg = "";
-        // data.metaClass = "";
-        data.textonly = settings.textonlymode || false;
-        data.type = "tiktok";
-        data.event = ital; // if an event or actual message
+		if (chatname) {
+			const cached = avatarCache.get(chatname);
+			chatimg = cached.url || "";
+			cachedBadges = cached.badges || "";
+			cachedMembership = cached.membership || "";
+			cachedNameColor = cached.nameColor || "";
+		}
+
+		var data = {};
+		data.chatname = chatname;
+		data.chatbadges = cachedBadges;
+		data.backgroundColor = "";
+		data.nameColor = cachedNameColor;
+		data.textColor = "";
+		data.chatmessage = chatmessage;
+		data.chatimg = chatimg;
+		data.hasDonation = hasdonation;
+		data.membership = cachedMembership;
+		data.contentimg = "";
+		// data.metaClass = "";
+		data.textonly = settings.textonlymode || false;
+		data.type = "tiktok";
+		data.event = ital;
 
         //console.log(data);
 		
