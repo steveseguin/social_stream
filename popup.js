@@ -1567,15 +1567,15 @@ function removeTTSProviderParams(url, selectedProvider=null) {
     system: ['lang', 'voice', 'rate', 'pitch'],
     elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate'],
     google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
-    speechify: ['speechifykey', 'speechifyvoice','speechifymodel','speechifylang','speechifyspeed'],
+    speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
     kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed']
   };
   
   if (selectedProvider === null) {
     try {
       const tmpUrl = new URL(url);
-      //const urlParams = new URLSearchParams(tmpUrl.search);
-      selectedProvider = urlParams.get("ttsprovider") || "system";
+      const urlParams2 = new URLSearchParams(tmpUrl.search);
+      selectedProvider = urlParams2.get("ttsprovider") || "system";
       if (!selectedProvider) return url;
     } catch (e) {
       return url; // Invalid URL
