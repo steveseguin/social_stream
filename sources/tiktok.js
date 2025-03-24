@@ -974,15 +974,8 @@
             //alert("!!");
         }
 
-		if (chatname) {
+		if (chatname && (chatimg || chatbadges || membership)) {
 			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
-			if (!chatimg) {
-				const cached = avatarCache.get(chatname);
-				chatimg = cached.url || "";
-				if (!chatbadges && cached.badges) chatbadges = cached.badges;
-				if (!membership && cached.membership) membership = cached.membership;
-				if (!nameColor && cached.nameColor) nameColor = cached.nameColor;
-			}
 		}
 		
 		if (chatmessage && (chatmessage === "----")) { // no chat name
