@@ -1,16 +1,17 @@
 # Social Stream - Neutron theme
 
 Recommended resolution on OBS:  
-> `stream.html`: 1920x1080  
-> `chatOnly.html`: 430x650
+> [stream.html](https://socialstream.ninja/themes/Neutron/stream.html): 1920x1080  
+> [chatOnly.html]https://socialstream.ninja/themes/Neutron/chatOnly.html): 430x650
 
 Why is it called Neutron?  
 > The background image is from [here](https://github.com/xcruxiex/themes),  
 > and one of its themes is called Neutron.
 
 How to access:
+>stream page:
 > https://socialstream.ninja/themes/Neutron/stream.html?session=SESSIONIDHERE
-How to access:
+>chatonly page:
 > https://socialstream.ninja/themes/Neutron/chatOnly.html?session=SESSIONIDHERE
 
 Preview:
