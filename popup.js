@@ -3536,17 +3536,28 @@ function uploadBadwordsFile() {
   fileInput.onchange = (event) => {
     const file = event.target.files[0];
     if (file) {
+      // Check file size before reading (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File is too large. Maximum size is 5MB.');
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         const contents = e.target.result;
-		//console.log({cmd: 'uploadBadwords', data: contents});
-        chrome.runtime.sendMessage({cmd: 'uploadBadwords', data: contents}, (response) => {
-		  //console.log(response);
+        // Limit content size
+        const maxLength = 500000;
+        const truncatedContents = contents.length > maxLength ? 
+          contents.substring(0, maxLength) : contents;
+          
+        chrome.runtime.sendMessage({cmd: 'uploadBadwords', data: truncatedContents}, (response) => {
           if (response.success) {
-            alert('Badwords file uploaded successfully.');
+				alert('Badwords file uploaded successfully.');
+          } else if (response.streamID) {
+			  // derp.
           } else {
-            alert('Failed to upload badwords file.');
-          }
+			  alert('Failed to upload badwords file.');
+		  }
         });
       };
       reader.readAsText(file);
@@ -3560,6 +3571,8 @@ function deleteBadwordsFile() {
     chrome.runtime.sendMessage({cmd: 'deleteBadwords'}, (response) => {
       if (response.success) {
         alert('Badwords file deleted successfully.');
+	  } else if (response.streamID) {
+	    // derp.
       } else {
         alert('Failed to delete badwords file.');
       }

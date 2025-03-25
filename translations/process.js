@@ -48,7 +48,7 @@ const allPlaceholders = document.querySelectorAll('[placeholder]');
 const defaultTrans = {};
 allItems.forEach((ele) => {
     const key = ele.dataset.translate;
-    defaultTrans[key] = ele.innerHTML;
+    defaultTrans[key] = ele.innerHTML.replaceAll("\n","").replaceAll("\t","");
 });
 
 const defaultTransTitles = {};

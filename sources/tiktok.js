@@ -1,24 +1,37 @@
 (function() {
 	
+	
+	var bigDUPE = false;
+	
 	const avatarCache = {
 		_cache: {},
-		MAX_SIZE: 300,
+		MAX_SIZE: 500,
 		CLEANUP_COUNT: 50,
 		
-		add(chatname, chatimg) {
-			if (!chatname || !chatimg) return;
+		add(chatname, chatimg, badges = null, membership = null, nameColor = null) {
+			if (!chatname) return;
 			
-			this._cache[chatname] = {
-				url: chatimg,
-				timestamp: Date.now()
-			};
+			// Update or create entry
+			if (!this._cache[chatname]) {
+				this._cache[chatname] = {
+					timestamp: Date.now()
+				};
+			} else {
+				// Update timestamp on existing cache entries
+				this._cache[chatname].timestamp = Date.now();
+			}
+			
+			// Only update fields that are provided
+			if (chatimg) this._cache[chatname].url = chatimg;
+			if (badges) this._cache[chatname].badges = badges;
+			if (membership) this._cache[chatname].membership = membership;
+			if (nameColor) this._cache[chatname].nameColor = nameColor;
 			
 			this.cleanup();
 		},
 		
 		get(chatname) {
-			const avatar = this._cache[chatname];
-			return avatar ? avatar.url : null;
+			return this._cache[chatname] || {};
 		},
 		
 		cleanup() {
@@ -37,41 +50,79 @@
 	};
 
 	const messageLog = {
-		_log: {},
+		_log: [],
+		_mode: 'count', // 'count' or 'time'
+		_maxMessages: 400,
+		_timeWindow: 10000, // 10 seconds in ms
 		_cleanupInterval: null,
 		
-		init() {
+		init(options = {}) {
+			// Set configuration
+			this._mode = options.mode || 'count';
+			this._maxMessages = options.maxMessages || 400;
+			this._timeWindow = options.timeWindow || 10000;
+			
 			// Clear any existing interval
 			if (this._cleanupInterval) {
 				clearInterval(this._cleanupInterval);
 			}
+			
 			// Set up periodic cleanup
 			this._cleanupInterval = setInterval(() => this.cleanup(), 5000);
 		},
 		
 		cleanup() {
 			const currentTime = Date.now();
-			Object.keys(this._log).forEach(key => {
-				if ((currentTime - this._log[key].currentTime) > 10000) {
-					delete this._log[key];
-				}
-			});
+			
+			if (this._mode === 'time') {
+				// Time-based: Remove old messages
+				this._log = this._log.filter(entry => 
+					(currentTime - entry.time) <= this._timeWindow && 
+					(!entry.ele || entry.ele.isConnected)
+				);
+			} else {
+				// Count-based: Remove disconnected elements and limit size
+				this._log = this._log
+					.filter(entry => !entry.ele || entry.ele.isConnected)
+					.slice(-this._maxMessages);
+			}
 		},
 		
 		isDuplicate(name, message, ele) {
 			const currentTime = Date.now();
 			const messageKey = `${name}:${message}`;
 			
-			if (this._log[messageKey] && (currentTime - this._log[messageKey].currentTime) <= 10000) {
-				if (this._log[messageKey].ele && !this._log[messageKey].ele.isConnected) {
-					return true;
-				}
+			// Check if message exists in log based on mode
+			let duplicate = false;
+			
+			if (this._mode === 'time') {
+				duplicate = this._log.some(entry => 
+					entry.key === messageKey && 
+					(currentTime - entry.time) <= this._timeWindow &&
+					(!entry.ele || entry.ele.isConnected)
+				);
+			} else {
+				duplicate = this._log.some(entry => 
+					entry.key === messageKey && 
+					(!entry.ele || entry.ele.isConnected)
+				);
 			}
 			
-			this._log[messageKey] = {
-				currentTime: currentTime,
+			if (duplicate) {
+				return true;
+			}
+			
+			// Add new message to log
+			this._log.push({
+				key: messageKey,
+				time: currentTime,
 				ele: ele
-			};
+			});
+			
+			// Cleanup immediately if needed
+			if (this._mode === 'count' && this._log.length > this._maxMessages) {
+				this._log.shift();
+			}
 			
 			return false;
 		},
@@ -81,12 +132,19 @@
 				clearInterval(this._cleanupInterval);
 				this._cleanupInterval = null;
 			}
-			this._log = {};
+			this._log = [];
+		},
+		
+		configure(options = {}) {
+			if (options.mode !== undefined) this._mode = options.mode;
+			if (options.maxMessages !== undefined) this._maxMessages = options.maxMessages;
+			if (options.timeWindow !== undefined) this._timeWindow = options.timeWindow;
+			this.cleanup();
 		}
 	};
 
 	// Initialize when script starts
-	messageLog.init();
+	messageLog.init({ mode: 'time', timeWindow: 10000 }); // 10 seconds
 
 
     function pushMessage(data) {
@@ -293,33 +351,6 @@
 		if (!xNumberPattern.test(lastText)) return false;
 		
 		return true;
-	}
-	
-	function cleanupOldMessages() {
-		try {
-			// Find all chat message elements with skip dataset
-			const messageElements = document.querySelectorAll('[data-skip]:not([data-done])');
-			const maxMessages = 30;
-			
-			if (messageElements.length > maxMessages) {
-				// Convert to array and sort by skip value (which is our message count)
-				const messages = Array.from(messageElements);
-				messages.sort((a, b) => {
-					return parseInt(a.dataset.skip) - parseInt(b.dataset.skip);
-				});
-				
-				// Remove oldest messages, keeping the last 30
-				const numToRemove = messages.length - maxMessages;
-				for (let i = 0; i < numToRemove; i++) {
-					if (messages[i] && messages[i].parentNode) {
-						messages[i].innerHTML = "";
-						messages[i].dataset.done = true;
-					}
-				}
-			}
-		} catch (e) {
-			console.error("Error cleaning up messages:", e);
-		}
 	}
 	
 	let giftMapping = {
@@ -703,19 +734,24 @@
 	
     function processMessage(ele) {
 		
-        if (ele && ele.dataset.skip) {
+        if (!ele || ele.dataset.skip) {
             return;
         }
-
-        ele.dataset.skip = ++msgCount;
 		
-		if (checkNextSiblingsForAttribute(ele, "data-skip")){
-			return;
-		}
+		if (ele?.parentNode?.dataset.skip) {
+            return;
+        }
 		
 		if (ele.querySelector("[class*='DivTopGiverContainer']")) {
             return;
         }
+
+		if (checkNextSiblingsForAttribute(ele, "data-skip")){
+			ele.dataset.skip = ++msgCount;
+			return;
+		}
+		
+		ele.dataset.skip = ++msgCount;
 		
 		var ital = false;
 		
@@ -756,6 +792,7 @@
 			}
 		} catch (e) {
 		}
+		
 		try {
 			if (!chatname) {
 				if (ele.childNodes[1].childNodes[0].children.length) {
@@ -905,10 +942,8 @@
 				chatmessage = chatmessage.replace('.png">x','.png"> x');
 				chatmessage = chatmessage.replace(".png'>x",".png'> x");
 				if (settings.tiktokdonations || !settings.notiktokdonations){
-					console.log(chatmessage);
 					if (validateTikTokDonationMessage(chatmessage)){
 						var donation = parseDonationMessage(chatmessage);
-						//console.log(donation);
 						if (donation.isValid && donation.imageSrc){
 							var giftid = getIdFromUrl(donation.imageSrc);
 							if (giftid){
@@ -964,27 +999,35 @@
             //alert("!!");
         }
 
-        if (chatname && chatimg) {
-			avatarCache.add(chatname, chatimg);
-		} else if (chatname) {
-			chatimg = avatarCache.get(chatname);
-        }
-		
+
 		if (chatmessage && (chatmessage === "----")) { // no chat name
             return;
         }
+		
+		if (chatname && (chatimg || chatbadges || membership)) {
+			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
+		}
 
         if ((ital===true) && chatmessage && (chatmessage === "joined")) { // no chat name
             if (!settings.capturejoinedevent) {
                 return;
             }
 			ital = "joined";
+			if (!chatname){
+				 return;
+			}
         } else if ((ital===true) && chatmessage && chatmessage.includes("shared")) { // no sharing events
              return;
         } else if ((ital===true) && chatmessage && chatmessage.includes("followed")) { // no sharing events
              ital = "followed";
+			 if (!chatname){
+				 return;
+			 }
         } else if ((ital===true) && chatmessage && chatmessage.includes("liked")) { // no sharing events
              ital = "liked";
+			 if (!chatname){
+				 return;
+			 }
         }
 		
 
@@ -1011,6 +1054,17 @@
 			return;
 		}
 		
+		if (ital && (ital===true) && !chatname){
+			return; // block em all.
+			
+			if (chatmessage.includes("New Welcome")){
+				return;
+			}
+			if (chatmessage=="New"){
+				return;
+			}
+		}
+		
         if (isDuplicateMessage(chatname, chatmessage, ele)) {
             //console.log("duplicate message; skipping");
             return;
@@ -1035,6 +1089,7 @@
         //console.log(data);
 		
 		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
+			avatarCache.cleanup();
 			console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
@@ -1044,9 +1099,18 @@
 	
 	function processEvent(ele) {
 		
+		
 		if (ele.querySelector("[class*='DivTopGiverContainer']")) {
             return;
         }
+		
+		if (ele.dataset.skip){return;}
+		
+		
+		if (checkNextSiblingsForAttribute(ele, "data-skip")){
+			ele.dataset.skip = ++msgCount;
+			return;
+		}
 		
 		//console.log(ele);
 		
@@ -1064,6 +1128,7 @@
 		} catch (e) {
 		}
 		
+		ele.dataset.skip = ++msgCount;
 		
 		// chat messages
         var chatmessage = "";
@@ -1154,34 +1219,51 @@
                 return;
             }
 			ital = "joined";
+			if (!chatname){
+				 return;
+			 }
         } else if ((ital===true) && chatmessage.includes("shared")) { // no sharing events
              return;
         } else if ((ital===true) && chatmessage.includes("followed")) { // no sharing events
              ital = "followed";
+			 if (!chatname){
+				 return;
+			 }
         }  else if ((ital===true) && chatmessage && chatmessage.includes("liked")) { // no sharing events
              ital = "liked";
+			 if (!chatname){
+				 return;
+			 }
         }
 		
 		let chatimg = "";
-		if (chatname) {
-			chatimg = avatarCache.get(chatname);
-        }
+		let cachedBadges = "";
+		let cachedMembership = "";
+		let cachedNameColor = "";
 
-        var data = {};
-        data.chatname = chatname;
-        data.chatbadges = "";
-        data.backgroundColor = "";
-        data.nameColor = "";
-        data.textColor = "";
-        data.chatmessage = chatmessage;
-        data.chatimg = chatimg;
-        data.hasDonation = hasdonation;
-        data.membership = "";
-        data.contentimg = "";
-        // data.metaClass = "";
-        data.textonly = settings.textonlymode || false;
-        data.type = "tiktok";
-        data.event = ital; // if an event or actual message
+		if (chatname) {
+			const cached = avatarCache.get(chatname);
+			chatimg = cached.url || "";
+			cachedBadges = cached.badges || "";
+			cachedMembership = cached.membership || "";
+			cachedNameColor = cached.nameColor || "";
+		}
+
+		var data = {};
+		data.chatname = chatname;
+		data.chatbadges = cachedBadges;
+		data.backgroundColor = "";
+		data.nameColor = cachedNameColor;
+		data.textColor = "";
+		data.chatmessage = chatmessage;
+		data.chatimg = chatimg;
+		data.hasDonation = hasdonation;
+		data.membership = cachedMembership;
+		data.contentimg = "";
+		// data.metaClass = "";
+		data.textonly = settings.textonlymode || false;
+		data.type = "tiktok";
+		data.event = ital;
 
         //console.log(data);
 		
@@ -1192,6 +1274,8 @@
 
         pushMessage(data);
     }
+	
+	var observer = false;
 
 
 	function start() {
@@ -1201,34 +1285,32 @@
 		
 		if (settings.showviewercount || settings.hypemode){
 			try {
-				try {
-					var viewerCount = document.querySelector("[data-e2e='live-people-count']");
-					
-					if (viewerCount && viewerCount.textContent){
-						let views = viewerCount.textContent;
-						let multiplier = 1;
-						if (views.includes("K")){
-							multiplier = 1000;
-							views = views.replace("K","");
-						} else if (views.includes("M")){
-							multiplier = 1000000;
-							views = views.replace("M","");
-						}
-						if (views == parseInt(views)){
-							views = parseInt(views) * multiplier;
-							chrome.runtime.sendMessage(
-								chrome.runtime.id,
-								({message:{
-										type: 'tiktok',
-										event: 'viewer_update',
-										meta: views
-									}
-								}),
-								function (e) {}
-							);
-						}
+				var viewerCount = document.querySelector("[data-e2e='live-people-count']");
+				
+				if (viewerCount && viewerCount.textContent){
+					let views = viewerCount.textContent;
+					let multiplier = 1;
+					if (views.includes("K")){
+						multiplier = 1000;
+						views = views.replace("K","");
+					} else if (views.includes("M")){
+						multiplier = 1000000;
+						views = views.replace("M","");
 					}
-				} catch(e){}
+					if (views == parseFloat(views)){
+						views = parseFloat(views) * multiplier;
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							({message:{
+									type: 'tiktok',
+									event: 'viewer_update',
+									meta: views
+								}
+							}),
+							function (e) {}
+						);
+					}
+				}
 			} catch(e){
 				//console.error(e);
 			}
@@ -1245,10 +1327,10 @@
 			}
 		} else {
 			// Try main selectors for chat container
-			target = document.querySelector('[data-item="list-message-list"]');
+			target = document.querySelector('[data-item="list-message-list"], [class*="DivChatMessageList"]');
 			
 			if (!target){
-				target = document.querySelector('[class*="DivChatMessageList"], .live-shared-ui-chat-list-scrolling-list, [data-e2e="chat-room"], [data-e2e="chat-room"], [class*="DivChatRoomContent"]');
+				target = document.querySelector('[data-e2e="chat-room"], [data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list');
 				if (target){
 					subtree = true;
 				}
@@ -1282,14 +1364,22 @@
 		}
 		
 		// Prevent multiple observers on the same target
-		if (!target || target.observer) {
+		if (!target || observer) {
 			return;
+		}
+		
+		
+		if (!subtree){
+			start2(target);
+		} else {
+			console.log("Switching to hard dupe filter");
+			messageLog.configure({ mode: 'count', maxMessages: 400 });
 		}
 		
 		console.log("Starting social stream");
 		
 		// Create mutation observer with original configuration
-		target.observer = new MutationObserver((mutations) => {
+		observer = new MutationObserver((mutations) => {
 			
 			mutations.forEach((mutation) => {
 				if (mutation.addedNodes.length) {
@@ -1349,7 +1439,16 @@
 			});
 		});
 		
-		setTimeout(function(observer,subtree,target){
+		setTimeout(function(observer, subtree, target){
+			if (!target){
+				observer = false;
+				return;
+			}
+			[target.children].forEach(ele=>{
+				if (ele && ele.dataset && ele.isConnected){
+					ele.dataset.skip = ++msgCount;
+				}
+			})
 			document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele=>{
 				ele.dataset.skip = ++msgCount;
 			});
@@ -1357,16 +1456,22 @@
 				childList: true,
 				subtree: subtree
 			});
-		},2000, target.observer, subtree, target);
+		},2000, observer, subtree, target);
 	}
 
-	function start2() {
+	var observer2 = false;
+	
+	function start2(other=false) {
 		
 		if (!isExtensionOn || !settings.captureevents) {
 			return;
 		}
 		
-		const target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
+		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
+		
+		if (!target2 && other) {
+			target2 = other.nextElementSibling;
+		}
 		
 		if (!target2) {
 			return;
@@ -1378,11 +1483,11 @@
 			return;
 		}
 		
-		if (target2.observer2) {
+		if (observer2) {
 			return;
 		}
 		
-		target2.observer2 = new MutationObserver((mutations) => {
+		observer2 = new MutationObserver((mutations) => {
 			if (!settings.captureevents) return;
 			
 			mutations.forEach((mutation) => {
@@ -1412,7 +1517,7 @@
 			});
 		});
 		
-		target2.observer2.observe(target2, {
+		observer2.observe(target2, {
 			childList: true,
 			subtree: true
 		});
@@ -1420,7 +1525,6 @@
 
 	// Initialize observers
 	setInterval(start, 2000);
-	setInterval(start2, 2000);
 
     var settings = {};
     var isExtensionOn = false;
@@ -1639,7 +1743,7 @@
 	window.addEventListener('wheel', updateLastInputTime);
 
 	// Set up interval to check for inactivity (checks every second)
-	setInterval(checkInactivityAndClick, 5000);
+	// setInterval(checkInactivityAndClick, 5000);
 
 })();
 
