@@ -1298,8 +1298,8 @@
 							multiplier = 1000000;
 							views = views.replace("M","");
 						}
-						if (views == parseInt(views)){
-							views = parseInt(views) * multiplier;
+						if (views == parseFloat(views)){
+							views = parseFloat(views) * multiplier;
 							chrome.runtime.sendMessage(
 								chrome.runtime.id,
 								({message:{
