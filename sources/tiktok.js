@@ -1285,34 +1285,32 @@
 		
 		if (settings.showviewercount || settings.hypemode){
 			try {
-				try {
-					var viewerCount = document.querySelector("[data-e2e='live-people-count']");
-					
-					if (viewerCount && viewerCount.textContent){
-						let views = viewerCount.textContent;
-						let multiplier = 1;
-						if (views.includes("K")){
-							multiplier = 1000;
-							views = views.replace("K","");
-						} else if (views.includes("M")){
-							multiplier = 1000000;
-							views = views.replace("M","");
-						}
-						if (views == parseFloat(views)){
-							views = parseFloat(views) * multiplier;
-							chrome.runtime.sendMessage(
-								chrome.runtime.id,
-								({message:{
-										type: 'tiktok',
-										event: 'viewer_update',
-										meta: views
-									}
-								}),
-								function (e) {}
-							);
-						}
+				var viewerCount = document.querySelector("[data-e2e='live-people-count']");
+				
+				if (viewerCount && viewerCount.textContent){
+					let views = viewerCount.textContent;
+					let multiplier = 1;
+					if (views.includes("K")){
+						multiplier = 1000;
+						views = views.replace("K","");
+					} else if (views.includes("M")){
+						multiplier = 1000000;
+						views = views.replace("M","");
 					}
-				} catch(e){}
+					if (views == parseFloat(views)){
+						views = parseFloat(views) * multiplier;
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							({message:{
+									type: 'tiktok',
+									event: 'viewer_update',
+									meta: views
+								}
+							}),
+							function (e) {}
+						);
+					}
+				}
 			} catch(e){
 				//console.error(e);
 			}

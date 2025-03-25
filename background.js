@@ -437,47 +437,80 @@ const alternativeChars = {
 	c: ["<"]
 };
 function generateVariations(word) {
-	const variations = [word];
-	for (let i = 0; i < word.length; i++) {
-		const char = word[i].toLowerCase();
-		if (alternativeChars.hasOwnProperty(char)) {
-			const charVariations = alternativeChars[char];
-			const newVariations = [];
-			for (const variation of variations) {
-				for (const altChar of charVariations) {
-					const newWord = variation.slice(0, i) + altChar + variation.slice(i + 1);
-					newVariations.push(newWord);
-				}
-			}
-			variations.push(...newVariations);
-		}
-	}
-	return variations;
+  // Skip empty words
+  if (!word || !word.trim()) return [word];
+  
+  // Limit word length to prevent memory issues
+  const maxLength = 20;
+  if (word.length > maxLength) return [word];
+  
+  let variations = [word];
+  
+  // Limit total variations to prevent exponential growth
+  const maxVariations = 100;
+  
+  for (let i = 0; i < word.length && variations.length < maxVariations; i++) {
+    const char = word[i].toLowerCase();
+    if (alternativeChars.hasOwnProperty(char)) {
+      const charVariations = alternativeChars[char];
+      const newVariations = [];
+      
+      // Only process a reasonable number of existing variations
+      const variationsToProcess = variations.slice(0, 10);
+      
+      for (const variation of variationsToProcess) {
+        for (const altChar of charVariations) {
+          if (newVariations.length + variations.length >= maxVariations) break;
+          const newWord = variation.slice(0, i) + altChar + variation.slice(i + 1);
+          newVariations.push(newWord);
+        }
+      }
+      variations.push(...newVariations);
+    }
+  }
+  
+  // Limit final result size
+  return variations.slice(0, maxVariations).filter(word => !word.match(/[A-Z]/));
 }
 
 function generateVariationsList(words) {
-	const variationsList = [];
-	for (const word of words) {
-		variationsList.push(...generateVariations(word));
-	}
-	return variationsList.filter(word => !word.match(/[A-Z]/));
+  // Cap input size
+  const maxWordList = 1000;
+  const wordsTrimmed = words.slice(0, maxWordList);
+  
+  const variationsList = [];
+  const maxTotalVariations = 10000;
+  
+  for (const word of wordsTrimmed) {
+    if (variationsList.length >= maxTotalVariations) break;
+    const wordVariations = generateVariations(word);
+    
+    // Add variations up to the limit
+    const remainingSlots = maxTotalVariations - variationsList.length;
+    variationsList.push(...wordVariations.slice(0, remainingSlots));
+  }
+  
+  return variationsList.filter(word => word && !word.match(/[A-Z]/));
 }
 
 function createProfanityHashTable(profanityVariationsList) {
-    const hashTable = {};
-    for (let word of profanityVariationsList) {
-        word = word.trim().toLowerCase();
-        if (!word) continue;
-        
-        const firstChar = word.charAt(0);
-        if (!hashTable[firstChar]) {
-            hashTable[firstChar] = {};
-        }
-        hashTable[firstChar][word] = true;
+  // Limit size to prevent memory issues
+  const maxEntries = 20000;
+  const limitedList = profanityVariationsList.slice(0, maxEntries);
+  
+  const hashTable = {};
+  for (let word of limitedList) {
+    word = word.trim().toLowerCase();
+    if (!word) continue;
+    
+    const firstChar = word.charAt(0);
+    if (!hashTable[firstChar]) {
+      hashTable[firstChar] = {};
     }
-    return hashTable;
+    hashTable[firstChar][word] = true;
+  }
+  return hashTable;
 }
-
 function isProfanity(word) {
 	if (!profanityHashTable) {
 		return false;
