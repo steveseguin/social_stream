@@ -3611,6 +3611,12 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             container.appendChild(testButton);
             container.appendChild(feedback);
             menuWrapper.replaceWith(container);
+			
+			if (document.getElementById("listElevenLabsVoicesBtn")){
+				document.getElementById('listElevenLabsVoicesBtn')?.addEventListener('click', async (e) => {
+					this.listElevenLabsVoices();
+				});
+			}
             
             // Add styles if they don't exist
             if (!document.getElementById('ttsFeedbackStyles')) {
@@ -3960,6 +3966,91 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			body: JSON.stringify(data)
 		}, 'blob');
 	},
+		
+	async getElevenLabsVoices(settings) {
+		if (!settings?.elevenLabs?.key) {
+			console.error("No ElevenLabs API key provided");
+			console.log(settings);
+			return [];
+		}
+		
+		try {
+			const response = await fetch("https://api.elevenlabs.io/v1/voices", {
+				headers: {
+					"xi-api-key": settings.elevenLabs.key,
+					"accept": "application/json"
+				}
+			});
+			
+			if (!response.ok) {
+				throw new Error(`API error: ${response.status} ${response.statusText}`);
+			}
+			
+			const data = await response.json();
+			return data.voices || [];
+		} catch (error) {
+			console.error("Failed to fetch ElevenLabs voices:", error);
+			return [];
+		}
+	},
+
+	listElevenLabsVoices() {
+		const settings = this.getSettings();
+		if (!settings?.elevenLabs?.key) {
+			this.showFeedback("No ElevenLabs API key provided. Please enter your API key first.", 'error');
+			return;
+		}
+		
+		const voicesList = document.getElementById('elevenLabsVoicesList');
+		if (!voicesList) return;
+		
+		voicesList.innerHTML = '<div style="text-align:center">Loading voices...</div>';
+		voicesList.style.display = 'block';
+		
+		this.getElevenLabsVoices(settings).then(voices => {
+			if (!voices || voices.length === 0) {
+				voicesList.innerHTML = '<div style="text-align:center">No voices found in your ElevenLabs account</div>';
+				return;
+			}
+			
+			voicesList.innerHTML = '';
+			
+			voices.forEach(voice => {
+				const voiceItem = document.createElement('div');
+				voiceItem.className = 'voice-item';
+				voiceItem.style.padding = '8px';
+				voiceItem.style.borderBottom = '1px solid #444';
+				voiceItem.style.cursor = 'pointer';
+				voiceItem.style.transition = 'background-color 0.2s';
+				
+				voiceItem.innerHTML = `
+					<div style="font-weight:bold">${voice.name}</div>
+					<div style="font-size:0.9em;opacity:0.8">ID: ${voice.voice_id}</div>
+					<div style="font-size:0.9em;opacity:0.8">Category: ${voice.category || 'Unknown'}</div>
+				`;
+				
+				voiceItem.addEventListener('mouseover', () => {
+					voiceItem.style.backgroundColor = 'rgba(255,255,255,0.1)';
+				});
+				
+				voiceItem.addEventListener('mouseout', () => {
+					voiceItem.style.backgroundColor = 'transparent';
+				});
+				
+				voiceItem.addEventListener('click', () => {
+					document.getElementById('elevenLabsVoiceID').value = voice.voice_id;
+					this.showFeedback(`Voice "${voice.name}" selected`, 'success');
+					voicesList.style.display = 'none';
+				});
+				
+				voicesList.appendChild(voiceItem);
+			});
+		}).catch(err => {
+			voicesList.innerHTML = `<div style="text-align:center;color:#f8d7da">Error: ${err.message}</div>`;
+			console.error("Error fetching voices:", err);
+		});
+	},
+
     
     speechifyTTS(text, settings) {
         this.premiumQueueActive = true;
