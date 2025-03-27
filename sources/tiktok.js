@@ -141,7 +141,7 @@
 		}
 	};
 	// Initialize when script starts
-	messageLog.init({ mode: 'time', timeWindow: 10000 }); // 10 seconds
+	messageLog.init({ mode: 'count', maxMessages: 421 });
 
 
     function pushMessage(data) {
@@ -1362,12 +1362,12 @@
 		}
 		
 		
-		if (!subtree){
-			start2(target);
-		} else {
-			console.log("Switching to hard dupe filter");
-			messageLog.configure({ mode: 'count', maxMessages: 400 });
-		}
+		//if (!subtree){
+		//	start2(target);
+		//} else {
+		//	console.log("Switching to hard dupe filter");
+		//	messageLog.configure({ mode: 'count', maxMessages: 400 });
+		//}
 		
 		console.log("Starting social stream");
 		
