@@ -52,16 +52,6 @@
 			}
 		}
 
-		/* Standard Roll style */
-		@keyframes standardRoll {
-			0% {
-				transform: translateY(100vh);
-			}
-			
-			100% {
-				transform: translateY(-300vh);
-			}
-		}
 
 		/* Minimal style */
 		@keyframes minimalScroll {
@@ -378,6 +368,76 @@
             background: #000;
         }
 
+
+		body.visible {
+			opacity: 1;
+		}
+
+		#app.visible {
+			display: block;
+		}
+
+		/* Fix animation duration settings */
+		.text-container.animate {
+			animation-duration: var(--animation-speed, 600s);
+			animation-timing-function: linear;
+			animation-fill-mode: forwards;
+		}
+
+		/* Ensure proper star visibility control for different styles */
+		.minimal .stars, .elegant .stars {
+			display: none;
+		}
+
+		/* Fix animation speed issue */
+		:root {
+			--animation-speed: 600s;
+		}
+
+		/* Fix footer text position for different styles */
+		.footer-text {
+			color: white;
+			font-size: 14vh;
+			text-align: center;
+			padding-top: 20%;
+			position: relative;
+			z-index: 1;
+		}
+
+		/* StarWars style stays at default speed (long duration) */
+		.text-container.animate.starwars {
+			animation-name: translateText;
+			animation-duration: var(--animation-speed, 600s);
+		}
+
+		/* Standard style is much faster */
+		.text-container.animate.standard {
+			animation-name: standardRoll;
+			animation-duration: var(--standard-speed, 120s);
+		}
+
+		/* Minimal style is faster */
+		.text-container.animate.minimal {
+			animation-name: minimalScroll;
+			animation-duration: var(--standard-speed, 120s);
+		}
+
+		/* Elegant style is faster */
+		.text-container.animate.elegant {
+			animation-name: elegantFade;
+			animation-duration: var(--standard-speed, 120s);
+		}
+
+		/* Adjust standardRoll animation to fit shorter duration */
+		@keyframes standardRoll {
+			0% {
+				transform: translateY(100vh);
+			}
+			
+			100% {
+				transform: translateY(-300vh);
+			}
+		}
 	</style>
 </head>
 <body>
@@ -403,228 +463,259 @@
     </div>
 
     <script>
-        // User tracking
-        const users = new Map();
+	
+	// Get URL parameters
+	const urlParams = new URLSearchParams(window.location.search);
 
-        class User {
-            constructor(name, type) {
-                this.name = name;
-                this.type = type;
-                this.messageCount = 0;
-                this.donations = 0;
-                this.isMember = false;
-            }
+	// User tracking
+	const users = new Map();
 
-            get score() {
-                return (
-                    this.messageCount * 1 +
-                    this.donations * 100 +
-                    (this.isMember ? 50 : 0)
-                );
-            }
+	class User {
+		constructor(name, type) {
+			this.name = name;
+			this.type = type;
+			this.messageCount = 0;
+			this.donations = 0;
+			this.isMember = false;
+		}
 
-            get displayName() {
-                let badges = [];
-                if (this.isMember) badges.push('👑');
-                if (this.donations > 0) badges.push('💝');
-                if (this.messageCount > 10) badges.push('💬');
-                
-                const nameDisplay = this.name;
-                const badgesDisplay = badges.length > 0 ? badges.join(' ') : '';
-                const typeDisplay = `[${this.type}]`;
-                
-                // If showamounts is true and there are donations, show them
-                const donationDisplay = (showamounts && this.donations > 0) ? ` ($${this.donations.toFixed(2)})` : '';
-                
-                return `${nameDisplay} ${badgesDisplay} ${typeDisplay}${donationDisplay}`;
-            }
-        }
+		get score() {
+			return (
+				this.messageCount * 1 +
+				this.donations * 100 +
+				(this.isMember ? 50 : 0)
+			);
+		}
 
-        function getOrCreateUser(name, type) {
-            const key = `${name}-${type}`;
-            if (!users.has(key)) {
-                users.set(key, new User(name, type));
-            }
-            return users.get(key);
-        }
+		get displayName() {
+			let badges = [];
+			if (this.isMember) badges.push('👑');
+			if (this.donations > 0) badges.push('💝');
+			if (this.messageCount > 10) badges.push('💬');
+			
+			const nameDisplay = this.name;
+			const badgesDisplay = badges.length > 0 ? badges.join(' ') : '';
+			const typeDisplay = `[${this.type}]`;
+			
+			const showamounts = urlParams.has('showamounts');
+			const donationDisplay = (showamounts && this.donations > 0) ? ` ($${this.donations.toFixed(2)})` : '';
+			
+			return `${nameDisplay} ${badgesDisplay} ${typeDisplay}${donationDisplay}`;
+		}
+	}
 
-        function processData(data) {
-            console.log(data);
-            
-            if (data.content) {
-                data = data.content;
-            }
+	function getOrCreateUser(name, type) {
+		const key = `${name}-${type}`;
+		if (!users.has(key)) {
+			users.set(key, new User(name, type));
+		}
+		return users.get(key);
+	}
 
-            if (!data.chatname || !data.type) return;
+	function processData(data) {
+		console.log(data);
+		
+		if (data.content) {
+			data = data.content;
+		}
 
-            if (!data.hasDonation && onlydonors) return;
+		if (!data.chatname || !data.type) return;
 
-            const user = getOrCreateUser(data.chatname, data.type);
-            user.messageCount++;
+		const onlydonors = urlParams.has('onlydonors');
+		if (onlydonors && !data.hasDonation) return;
 
-            if (data.membership) {
-                user.isMember = true;
-            }
+		const user = getOrCreateUser(data.chatname, data.type);
+		user.messageCount++;
 
-            if (data.hasDonation) {
-                const [amount] = data.hasDonation.split(' ');
-                user.donations += parseFloat(amount);
-            }
-        }
+		if (data.membership) {
+			user.isMember = true;
+		}
 
-        function generateCreditsContent() {
-            const sortedUsers = Array.from(users.values())
-                .sort((a, b) => b.score - a.score);
+		if (data.hasDonation) {
+			const [amount] = data.hasDonation.split(' ');
+			user.donations += parseFloat(amount);
+		}
+	}
 
-            const vips = sortedUsers.filter(u => u.score >= 150);
-            const regulars = sortedUsers.filter(u => u.score >= 50 && u.score < 150);
-            const participants = sortedUsers.filter(u => u.score < 50);
+	function generateCreditsContent() {
+		const sortedUsers = Array.from(users.values())
+			.sort((a, b) => b.score - a.score);
 
-            let content = '';
+		const vips = sortedUsers.filter(u => u.score >= 150);
+		const regulars = sortedUsers.filter(u => u.score >= 50 && u.score < 150);
+		const participants = sortedUsers.filter(u => u.score < 50);
 
-            if (vips.length > 0 && (hidecategories || vips.length > 0)) {
-                content += hidecategories ? `<div class="category-header ${creditsStyle}">VIP Supporters</div>` : '';
-                content += vips.map(u => u.displayName).join('<br>') + '<br><br>';
-            }
+		const hidecategories = urlParams.has('hidecategories');
+		let content = '';
 
-            if (regulars.length > 0 && (hidecategories || regulars.length > 0)) {
-                content += hidecategories ? `<div class="category-header ${creditsStyle}">Regular Supporters</div>` : '';
-                content += regulars.map(u => u.displayName).join('<br>') + '<br><br>';
-            }
+		if (vips.length > 0) {
+			content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">VIP Supporters</div>`;
+			content += vips.map(u => u.displayName).join('<br>') + '<br><br>';
+		}
 
-            if (participants.length > 0 && (hidecategories || participants.length > 0)) {
-                content += hidecategories ? `<div class="category-header ${creditsStyle}">Stream Participants</div>` : '';
-                content += participants.map(u => u.displayName).join('<br>');
-            }
+		if (regulars.length > 0) {
+			content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Regular Supporters</div>`;
+			content += regulars.map(u => u.displayName).join('<br>') + '<br><br>';
+		}
 
-            return content;
-        }
+		if (participants.length > 0) {
+			content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Participants</div>`;
+			content += participants.map(u => u.displayName).join('<br>');
+		}
 
-        // IFRAME setup for Social Stream Ninja
-        const iframe = document.createElement("iframe");
-        const filename = "dock";
-        const urlParams = new URLSearchParams(window.location.search);
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
-        
-        // Get URL parameters
-        const endMessage = urlParams.get('endmessage');
-        if (endMessage) {
-            document.getElementById("endmessage").innerText = endMessage;
-        }
-        
-        // Store settings
-        const showamounts = urlParams.has('showamounts');
-        const hidecategories = urlParams.has('hidecategories') !== false; // Default to true if not specified
-        const onlydonors = urlParams.has('onlydonors') !== false; // Default to true if not specified
-        
-        // Get style and speed
-        let creditsStyle = urlParams.get('style') || "starwars";
-        const speed = parseFloat(urlParams.get('speed') || "1");
-        
-        // Apply custom font if specified
-        const fontFamily = urlParams.get('font');
-        const googlefont = urlParams.get('googlefont');
-        
-        if (googlefont) {
-            // Load Google font
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(googlefont)}&display=swap`;
-            document.head.appendChild(link);
-            
-            // Apply the font
-            document.body.style.fontFamily = `'${googlefont}', sans-serif`;
-        } else if (fontFamily) {
-            // Apply predefined font
-            document.body.style.fontFamily = `'${fontFamily}', sans-serif`;
-            
-            // Load the OpenDyslexic font if specified
-            if (fontFamily === 'opendyslexic') {
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = 'https://fonts.cdnfonts.com/css/opendyslexic';
-                document.head.appendChild(link);
-            }
-        }
-        
-        // Apply style to app
-        const appElement = document.getElementById('app');
-        appElement.classList.add(creditsStyle);
-        
-        // Apply style to text container and content
-        const textContainer = document.querySelector('.text-container');
-        textContainer.classList.add(creditsStyle);
-        
-        const textElement = document.querySelector('.text');
-        textElement.classList.add(creditsStyle);
-        
-        // Adjust animation speed
-        if (speed !== 1) {
-            document.documentElement.style.setProperty('--animation-speed', `${600 / speed}s`);
-            document.querySelector('.text-container.animate').style.animationDuration = `${600 / speed}s`;
-        }
+		return content;
+	}
 
-        const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-        const eventer = window[eventMethod];
-        const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-        eventer(messageEvent, function (e) {
-            if (e.source != iframe.contentWindow) return;
-            if ("dataReceived" in e.data) {
-                if ("overlayNinja" in e.data.dataReceived) {
-                    processData(e.data.dataReceived.overlayNinja);
-                }
-            }
-        });
+	// IFRAME setup for Social Stream Ninja
+	const iframe = document.createElement("iframe");
+	const filename = "dock";
+	iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
+	iframe.style.width = "0px";
+	iframe.style.height = "0px";
+	iframe.style.position = "fixed";
+	iframe.style.left = "-100px";
+	iframe.style.top = "-100px";
+	iframe.id = "frame1";
+	document.body.appendChild(iframe);
 
-        document.addEventListener('visibilitychange', function() {
-            const appElement = document.getElementById('app');
-            const textContainer = document.querySelector('.text-container');
-            
-            if (!document.hidden) {
-                // Page becomes visible
-                document.body.classList.add('visible');
-                appElement.classList.add('visible');
-                
-                // Generate and insert credits content
-                const creditsContent = document.getElementById('credits-content');
-                creditsContent.innerHTML = generateCreditsContent();
-                
-                // Force a reflow before starting animation
-                void textContainer.offsetWidth;
-                
-                // Small delay before adding animation class
-                setTimeout(() => {
-                    textContainer.classList.add('animate');
-                }, 50);
-            } else {
-                // Page becomes hidden
-                document.body.classList.remove('visible');
-                appElement.classList.remove('visible');
-                textContainer.classList.remove('fadeout');
-                
-                // Remove animation class to reset position
-                textContainer.classList.remove('animate');
-            }
-        });
-        
-        document.querySelector('.text-container').addEventListener('animationend', function() {
-            // Clear collected names when animation completes
-            users.clear();
-            
-            // Remove the animation class to reset position
-            this.classList.add('fadeout');
-            
-            // Hide the app
-            document.getElementById('app').classList.remove('visible');
-            document.body.classList.remove('visible');
-        });
+	// Set end message if provided
+	const endMessage = urlParams.get('endmessage');
+	if (endMessage) {
+		document.getElementById("endmessage").innerText = endMessage;
+	}
+
+	// Apply style classes
+	const creditsStyle = urlParams.get('style') || "starwars";
+	const appElement = document.getElementById('app');
+	appElement.classList.add(creditsStyle);
+
+	// Apply style to text container and content
+	const textContainer = document.querySelector('.text-container');
+	textContainer.classList.add(creditsStyle);
+
+	// Apply style to all necessary elements
+	document.querySelectorAll('.text, .category-header').forEach(el => {
+		el.classList.add(creditsStyle);
+	});
+
+	if (creditsStyle !== "starwars") {
+		if (creditsStyle === "elegant") {
+			document.querySelector('.background').style.background = "linear-gradient(45deg, #1a1a2e, #16213e)";
+		} else if (creditsStyle === "minimal") {
+			document.querySelector('.background').style.background = "#000";
+		}
+		
+		// Hide stars for non-starwars styles
+		if (creditsStyle === "minimal" || creditsStyle === "elegant") {
+			document.getElementById('space').style.display = "none";
+		}
+		
+		// Remove the star background-image from body immediately
+		document.body.style.backgroundImage = "none";
+	}
+
+
+	// Set animation speed
+	const speed = parseFloat(urlParams.get('speed') || "1");
+
+	// Set different default speeds based on style
+	if (speed !== 1) {
+		// If speed parameter is provided, apply it to both animation types
+		const starWarsSpeed = `${600 / speed}s`;
+		const standardSpeed = `${60 / speed}s`;
+		
+		document.documentElement.style.setProperty('--animation-speed', starWarsSpeed);
+		document.documentElement.style.setProperty('--standard-speed', standardSpeed);
+	} else {
+		// Default speeds if no speed parameter provided
+		document.documentElement.style.setProperty('--animation-speed', '600s');
+		document.documentElement.style.setProperty('--standard-speed', '60s');
+	}
+
+
+	// Apply custom font if specified
+	const fontFamily = urlParams.get('font');
+	const googlefont = urlParams.get('googlefont');
+
+	if (googlefont) {
+		// Load Google font
+		const link = document.createElement('link');
+		link.rel = 'stylesheet';
+		link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(googlefont)}&display=swap`;
+		document.head.appendChild(link);
+		
+		// Apply the font
+		document.body.style.fontFamily = `'${googlefont}', sans-serif`;
+	} else if (fontFamily) {
+		// Apply predefined font
+		document.body.style.fontFamily = `'${fontFamily}', sans-serif`;
+		
+		// Load the OpenDyslexic font if specified
+		if (fontFamily === 'opendyslexic') {
+			const link = document.createElement('link');
+			link.rel = 'stylesheet';
+			link.href = 'https://fonts.cdnfonts.com/css/opendyslexic';
+			document.head.appendChild(link);
+		}
+	}
+
+	// Handle message events
+	const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+	const eventer = window[eventMethod];
+	const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+	eventer(messageEvent, function (e) {
+		if (e.source != iframe.contentWindow) return;
+		if ("dataReceived" in e.data) {
+			if ("overlayNinja" in e.data.dataReceived) {
+				processData(e.data.dataReceived.overlayNinja);
+			}
+		}
+	});
+
+	// Handle visibility changes
+	document.addEventListener('visibilitychange', function() {
+		if (!document.hidden) {
+			// Page becomes visible
+			document.body.classList.add('visible');
+			appElement.classList.add('visible');
+			
+			// Generate and insert credits content
+			const creditsContent = document.getElementById('credits-content');
+			creditsContent.innerHTML = generateCreditsContent();
+			
+			// Force a reflow before starting animation
+			void textContainer.offsetWidth;
+			
+			// Ensure fadeout class is removed
+			textContainer.classList.remove('fadeout');
+			
+			// Small delay before adding animation class
+			setTimeout(() => {
+				textContainer.classList.add('animate');
+			}, 50);
+		} else {
+			// Page becomes hidden
+			document.body.classList.remove('visible');
+			appElement.classList.remove('visible');
+			textContainer.classList.remove('fadeout');
+			
+			// Remove animation class to reset position
+			textContainer.classList.remove('animate');
+		}
+	});
+
+	// Handle animation end
+	document.querySelector('.text-container').addEventListener('animationend', function() {
+		// Clear collected names when animation completes
+		users.clear();
+		
+		// Apply fadeout class
+		this.classList.add('fadeout');
+		
+		// Hide the app
+		document.getElementById('app').classList.remove('visible');
+		document.body.classList.remove('visible');
+	});
     </script>
 </body>
 </html>

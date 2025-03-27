@@ -1994,6 +1994,51 @@ function update(response, sync=true){
 									updateSettings(ele, sync);
 								}
 							}
+							if ("param13" in response.settings[key]){
+								var ele = document.querySelector("input[data-param13='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param13;
+									if (!key.includes("=")){
+										if ("numbersetting13" in response.settings[key]){
+											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting13));
+										} else if (document.querySelector("input[data-numbersetting13='"+key+"']")){
+											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting13='"+key+"']").value));
+										} else if ("optionparam13" in response.settings[key]){
+											updateSettings(ele, sync, response.settings[key].optionparam13);
+										} else if ("textparam13" in response.settings[key]){
+											updateSettings(ele, sync, response.settings[key].textparam13);
+										} else if (document.querySelector("input[data-optionparam13='"+key+"']")){
+											updateSettings(ele, sync, document.querySelector("input[data-optionparam13='"+key+"']").value);
+										} else {
+											updateSettings(ele, sync); 
+										}
+									} else {
+										updateSettings(ele, sync);
+									}
+								} else if (key.includes("=")){
+									var keys = key.split('=');
+									ele = document.querySelector("input[data-param13='"+keys[0]+"']");
+									log(keys);
+									log(response.settings);
+									if (ele){
+										ele.checked = response.settings[key].param13;
+										if (keys[1]){
+											var ele2 = document.querySelector("input[data-numbersetting13='"+keys[0]+"']");
+											if (ele2){
+												ele2.value = parseFloat(keys[1]);
+											} else {
+												var ele2 = document.querySelector("input[data-numbersetting13='"+keys[0]+"'], input[data-textparam13='"+keys[0]+"']");
+												if (ele2){
+													ele2.value = keys[1];
+												}
+											}
+											updateSettings(ele, sync, parseFloat(keys[1]));
+										} else{
+											updateSettings(ele, sync);
+										}
+									}
+								}
+							}
 							if ("both" in response.settings[key]){
 								var ele = document.querySelector("input[data-both='"+key+"']");
 								if (ele){
@@ -2298,6 +2343,20 @@ function update(response, sync=true){
 									updateSettings(ele, sync);
 								}
 							}
+							if ("textparam12" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam12='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam12;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("textparam13" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam13='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam13;
+									updateSettings(ele, sync);
+								}
+							}
 							if ("optionparam1" in response.settings[key]){
 								var ele = document.querySelector("select[data-optionparam1='"+key+"']");
 								if (ele){
@@ -2420,6 +2479,18 @@ function update(response, sync=true){
 								var ele = document.querySelector("input[data-param12='"+key+"']");
 								if (ele && ele.checked){
 									updateSettings(ele, false, response.settings[key].optionparam12);
+								}
+							}
+							if ("optionparam13" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam13='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam13;
+									updateSettings(ele, sync);
+								}
+								
+								var ele = document.querySelector("input[data-param13='"+key+"']");
+								if (ele && ele.checked){
+									updateSettings(ele, false, response.settings[key].optionparam13);
 								}
 							}
 							if (('customGifCommands' in response.settings) && response.settings.customGifCommands.json) {
