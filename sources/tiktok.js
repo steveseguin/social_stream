@@ -1369,12 +1369,7 @@
 		}
 		
 		
-		if (!subtree){
-			start2(target);
-		} else {
-			console.log("Switching to hard dupe filter");
-			messageLog.configure({ mode: 'count', maxMessages: 400 });
-		}
+		messageLog.configure({ mode: 'count', maxMessages: 400 });
 		
 		console.log("Starting social stream");
 		
