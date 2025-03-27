@@ -943,6 +943,58 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 		return false;
 	};
+	if (!ssapp) {
+		// Get reference to the select element first
+		const sourceSelector = document.getElementById('source-selector');
+		
+		// Check if the element exists
+		if (!sourceSelector) {
+		  console.error("Could not find source-selector element");
+		  return;
+		}
+		
+		const manifestData = chrome.runtime.getManifest();
+		
+		if (manifestData && manifestData.content_scripts) {
+		  // Set to store unique source files
+		  const sources = new Set();
+		  
+		  // Extract source filenames from content_scripts
+		  manifestData.content_scripts.forEach(script => {
+			if (script.js && script.js.length > 0) {
+			  script.js.forEach(jsFile => {
+				if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
+				  // Extract just the filename without path and extension
+				  const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
+				  sources.add(sourceName);
+				}
+			  });
+			}
+		  });
+		  
+		  // Create and add options for each source
+		  Array.from(sources).sort().forEach(source => {
+			const option = document.createElement('option');
+			option.value = source;
+			// Capitalize first letter for display
+			option.textContent = source.charAt(0).toUpperCase() + source.slice(1);
+			sourceSelector.appendChild(option);
+		  });
+		}
+		
+		document.getElementById("custominject").classList.remove("hidden");
+		document.getElementById('inject-button').addEventListener('click', function() {
+		  const source = document.getElementById('source-selector').value;
+		  
+		  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+			chrome.runtime.sendMessage({
+			  action: 'injectCustomSource', // Changed 'type' to 'action' to match service_worker listener
+			  source: source,
+			  tabId: tabs[0].id
+			});
+		  });
+		});
+	}
 	
 	document.getElementById('addCustomGifCommand').addEventListener('click', function() {
 		const commandsList = document.getElementById('customGifCommandsList');
@@ -2598,7 +2650,6 @@ if (ssapp){
 	style.id = 'hide-ssapp-style';
 	document.head.appendChild(style);
 } 
-	
 
 function removeQueryParamWithValue(url, paramWithValue) {
     let [baseUrl, queryString] = url.split('?');
@@ -2668,6 +2719,7 @@ function getTargetMap() {
 		'poll': 16
     };
 }
+
 
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const targetElement = document.getElementById(targetId);

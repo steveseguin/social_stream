@@ -123,6 +123,11 @@
 	font-weight: bold;
 	margin-right: 8px;
 }
+
+#source-selector {
+	max-height: 200px;
+    max-width: 126px;
+}
 .add-username-container {
 	display: flex;
 	margin-top: 5px;
@@ -5266,6 +5271,21 @@ input:checked + .slider:before {
                                     </label>
                                     <img class="icon" src="./sources/images/youtube.png" style="display: inline-block;" /> <span data-translate="paid-promotion">Hide "Paid Promotion" banners in Youtube</span>
                                 </div>
+								
+								
+								<div id="custominject" class="hidden custom-inject">
+								  <h3>Custom Injection</h3>
+								  
+								  <select id="source-selector" style="max-height:200px">
+									<option value="twitch">Twitch</option>
+									<option value="youtube">YouTube</option>
+									<option value="zoom">Zoom</option>
+									<option value="x">X</option>
+									<!-- Sources added automatically -->
+								  </select>
+								  <button id="inject-button" class="glowingButton"><span>Inject into current page</span></button><br />
+								  <p>Force inject SSN into specific sites if not setup to automatically do so. Useful for self-hosted chat services where you might be hosting it on your own domain</p>
+								</div>
                             </div>
                         </div>
                     </div>
