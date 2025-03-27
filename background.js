@@ -4277,7 +4277,49 @@ function sendToS10(data, fakechat=false, relayed=false) {
 		}
 	}
 }
+function sendAllToDiscord(data) {
+    if (!settings.postalldiscord || !settings.postallserverdiscord) {
+        return;
+    }
+	if (!data.chatmessage){
+		return;
+	}
 
+    try {
+        let postServerDiscord = normalizeWebhookUrl(settings.postserverdiscord.textsetting);
+        
+        const avatarUrl = validateImageUrl(data.chatimg);
+        
+        const payload = {
+            username: "Relayed Message", // Custom webhook name
+            avatar_url: "https://socialstream.ninja/icons/bot.png", 
+            embeds: [{
+                title: formatTitle(data),
+                description: formatDescription(data),
+                color: 0x00ff00, // Green color for donations
+                timestamp: new Date().toISOString(),
+                thumbnail: {
+                    url: data.type ? `https://socialstream.ninja/sources/images/${data.type}.png` : null
+                },
+                author: {
+                    name: data.chatname,
+                    icon_url: avatarUrl || undefined
+                },
+                fields: buildFields(data)
+            }]
+        };
+        fetch(postServerDiscord, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        }).catch(error => console.warn('Discord webhook error:', error));
+
+    } catch (e) {
+        console.warn('Error sending Discord webhook:', e);
+    }
+}
 function sendToDiscord(data) {
     if (!settings.postdiscord || !settings.postserverdiscord) {
         return;
@@ -4359,6 +4401,9 @@ function validateImageUrl(url) {
         // Google domains
         'lh3.googleusercontent.com', // Google user content (including profile pictures)
         'storage.googleapis.com',
+		
+		// socialstream
+		'socialstream.ninja',
         
         // Kick domains
         'files.kick.com',
