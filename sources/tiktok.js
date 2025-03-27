@@ -87,7 +87,7 @@
 			}
 		},
 		
-		isDuplicate(name, message, ele = null) {
+		isDuplicate(name, message) {
 			const currentTime = Date.now();
 			const messageKey = `${name}:${message}`;
 			
@@ -1058,8 +1058,8 @@
 			}
 		}
 		
-        if (messageLog?.isDuplicate(chatname, chatmessage, ele)) {
-            //console.log("duplicate message; skipping");
+        if (messageLog?.isDuplicate(chatname, chatmessage)) {
+            console.log("duplicate message; skipping",chatname, chatmessage);
             return;
         }
 

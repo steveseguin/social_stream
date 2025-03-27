@@ -37,6 +37,7 @@
 			padding-top:20%;
 		}
 
+		/* Star Wars style (default) */
 		@keyframes translateText {
 			0% {
 				transform: rotateX(15deg) scale(1.0, 1.0) translateY(66vh);
@@ -48,6 +49,59 @@
 			
 			100% {
 				transform: rotateX(25deg) scale(0.65, 0.5) translateY(-3750vh);
+			}
+		}
+
+		/* Standard Roll style */
+		@keyframes standardRoll {
+			0% {
+				transform: translateY(100vh);
+			}
+			
+			100% {
+				transform: translateY(-300vh);
+			}
+		}
+
+		/* Minimal style */
+		@keyframes minimalScroll {
+			0% {
+				transform: translateY(100vh);
+				opacity: 0;
+			}
+			
+			5% {
+				opacity: 1;
+			}
+			
+			95% {
+				opacity: 1;
+			}
+			
+			100% {
+				transform: translateY(-300vh);
+				opacity: 0;
+			}
+		}
+
+		/* Elegant style */
+		@keyframes elegantFade {
+			0% {
+				transform: translateY(50vh);
+				opacity: 0;
+			}
+			
+			5% {
+				opacity: 1;
+			}
+			
+			95% {
+				opacity: 1;
+			}
+			
+			100% {
+				transform: translateY(-300vh);
+				opacity: 0;
 			}
 		}
 
@@ -80,6 +134,23 @@
             display: none;
         }
 
+        /* Style-specific class overrides */
+        #app.starwars {
+            perspective: 400px;
+            perspective-origin: center 100%;
+        }
+
+        #app.standard {
+            perspective: none;
+        }
+
+        #app.minimal {
+            perspective: none;
+        }
+
+        #app.elegant {
+            perspective: none;
+        }
 
         #app.visible {
             display: block;
@@ -129,10 +200,60 @@
 			transform: rotateX(25deg) scale(0.4, 0.6) translateY(50vh);
 		}
 
-		.text-container.animate {
-			animation: 600s linear translateText forwards;
+        /* Style-specific class overrides */
+        .text-container.starwars {
+            transform: rotateX(25deg) scale(0.4, 0.6) translateY(50vh);
+        }
+
+        .text-container.standard {
+            transform: translateY(100vh);
+        }
+
+        .text-container.minimal {
+            transform: translateY(100vh);
+        }
+
+        .text-container.elegant {
+            transform: translateY(50vh);
+        }
+
+		.text-container.animate.starwars {
+			animation-name: translateText;
 		}
 
+        .text-container.animate.standard {
+            animation-name: standardRoll;
+        }
+
+        .text-container.animate.minimal {
+            animation-name: minimalScroll;
+        }
+
+        .text-container.animate.elegant {
+            animation-name: elegantFade;
+        }
+
+        .text-container.animate {
+			animation-duration: 600s;
+            animation-timing-function: linear;
+            animation-fill-mode: forwards;
+		}
+
+        /* Style-specific text styles */
+        .text.standard, .category-header.standard {
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .text.minimal, .category-header.minimal {
+            color: #ffffff;
+            text-shadow: none;
+        }
+
+        .text.elegant, .category-header.elegant {
+            color: #d3d3d3;
+            text-shadow: 0 0 8px rgba(211, 211, 211, 0.6);
+        }
 
         .stars {
 			overflow: visible;
@@ -242,6 +363,21 @@
 			transition: opacity 2s ease-out;
 		}
 
+        /* Hide stars for minimal and elegant styles */
+        .minimal #space, .elegant #space {
+            display: none;
+        }
+
+        /* Elegant background */
+        .elegant .background {
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+        }
+
+        /* Minimal background */
+        .minimal .background {
+            background: #000;
+        }
+
 	</style>
 </head>
 <body>
@@ -293,7 +429,14 @@
                 if (this.donations > 0) badges.push('💝');
                 if (this.messageCount > 10) badges.push('💬');
                 
-                return `${this.name} ${badges.join(' ')} [${this.type}]`;
+                const nameDisplay = this.name;
+                const badgesDisplay = badges.length > 0 ? badges.join(' ') : '';
+                const typeDisplay = `[${this.type}]`;
+                
+                // If showamounts is true and there are donations, show them
+                const donationDisplay = (showamounts && this.donations > 0) ? ` ($${this.donations.toFixed(2)})` : '';
+                
+                return `${nameDisplay} ${badgesDisplay} ${typeDisplay}${donationDisplay}`;
             }
         }
 
@@ -313,6 +456,8 @@
             }
 
             if (!data.chatname || !data.type) return;
+
+            if (!data.hasDonation && onlydonors) return;
 
             const user = getOrCreateUser(data.chatname, data.type);
             user.messageCount++;
@@ -337,18 +482,18 @@
 
             let content = '';
 
-            if (vips.length > 0) {
-                content += '<div class="category-header">VIP Supporters</div>';
+            if (vips.length > 0 && (hidecategories || vips.length > 0)) {
+                content += hidecategories ? `<div class="category-header ${creditsStyle}">VIP Supporters</div>` : '';
                 content += vips.map(u => u.displayName).join('<br>') + '<br><br>';
             }
 
-            if (regulars.length > 0) {
-                content += '<div class="category-header">Regular Supporters</div>';
+            if (regulars.length > 0 && (hidecategories || regulars.length > 0)) {
+                content += hidecategories ? `<div class="category-header ${creditsStyle}">Regular Supporters</div>` : '';
                 content += regulars.map(u => u.displayName).join('<br>') + '<br><br>';
             }
 
-            if (participants.length > 0) {
-                content += '<div class="category-header">Stream Participants</div>';
+            if (participants.length > 0 && (hidecategories || participants.length > 0)) {
+                content += hidecategories ? `<div class="category-header ${creditsStyle}">Stream Participants</div>` : '';
                 content += participants.map(u => u.displayName).join('<br>');
             }
 
@@ -367,10 +512,64 @@
         iframe.style.top = "-100px";
         iframe.id = "frame1";
         document.body.appendChild(iframe);
-		
-		if (urlParams.has('session')){
-			document.getElementById("endmessage").innerText = urlParams.has('session') || "";
-		}
+        
+        // Get URL parameters
+        const endMessage = urlParams.get('endmessage');
+        if (endMessage) {
+            document.getElementById("endmessage").innerText = endMessage;
+        }
+        
+        // Store settings
+        const showamounts = urlParams.has('showamounts');
+        const hidecategories = urlParams.has('hidecategories') !== false; // Default to true if not specified
+        const onlydonors = urlParams.has('onlydonors') !== false; // Default to true if not specified
+        
+        // Get style and speed
+        let creditsStyle = urlParams.get('style') || "starwars";
+        const speed = parseFloat(urlParams.get('speed') || "1");
+        
+        // Apply custom font if specified
+        const fontFamily = urlParams.get('font');
+        const googlefont = urlParams.get('googlefont');
+        
+        if (googlefont) {
+            // Load Google font
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(googlefont)}&display=swap`;
+            document.head.appendChild(link);
+            
+            // Apply the font
+            document.body.style.fontFamily = `'${googlefont}', sans-serif`;
+        } else if (fontFamily) {
+            // Apply predefined font
+            document.body.style.fontFamily = `'${fontFamily}', sans-serif`;
+            
+            // Load the OpenDyslexic font if specified
+            if (fontFamily === 'opendyslexic') {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://fonts.cdnfonts.com/css/opendyslexic';
+                document.head.appendChild(link);
+            }
+        }
+        
+        // Apply style to app
+        const appElement = document.getElementById('app');
+        appElement.classList.add(creditsStyle);
+        
+        // Apply style to text container and content
+        const textContainer = document.querySelector('.text-container');
+        textContainer.classList.add(creditsStyle);
+        
+        const textElement = document.querySelector('.text');
+        textElement.classList.add(creditsStyle);
+        
+        // Adjust animation speed
+        if (speed !== 1) {
+            document.documentElement.style.setProperty('--animation-speed', `${600 / speed}s`);
+            document.querySelector('.text-container.animate').style.animationDuration = `${600 / speed}s`;
+        }
 
         const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
         const eventer = window[eventMethod];
@@ -384,48 +583,48 @@
             }
         });
 
-		document.addEventListener('visibilitychange', function() {
-			const appElement = document.getElementById('app');
-			const textContainer = document.querySelector('.text-container');
-			
-			if (!document.hidden) {
-				// Page becomes visible
-				document.body.classList.add('visible');
-				appElement.classList.add('visible');
-				
-				// Generate and insert credits content
-				const creditsContent = document.getElementById('credits-content');
-				creditsContent.innerHTML = generateCreditsContent();
-				
-				// Force a reflow before starting animation
-				void textContainer.offsetWidth;
-				
-				// Small delay before adding animation class
-				setTimeout(() => {
-					textContainer.classList.add('animate');
-				}, 50);
-			} else {
-				// Page becomes hidden
-				document.body.classList.remove('visible');
-				appElement.classList.remove('visible');
-				textContainer.classList.remove('fadeout');
-				
-				// Remove animation class to reset position
-				textContainer.classList.remove('animate');
-			}
-		});
-		
-		document.querySelector('.text-container').addEventListener('animationend', function() {
-			// Clear collected names when animation completes
-			users.clear();
-			
-			// Remove the animation class to reset position
-			this.classList.add('fadeout');
-			
-			// Hide the app
-			document.getElementById('app').classList.remove('visible');
-			document.body.classList.remove('visible');
-		});
+        document.addEventListener('visibilitychange', function() {
+            const appElement = document.getElementById('app');
+            const textContainer = document.querySelector('.text-container');
+            
+            if (!document.hidden) {
+                // Page becomes visible
+                document.body.classList.add('visible');
+                appElement.classList.add('visible');
+                
+                // Generate and insert credits content
+                const creditsContent = document.getElementById('credits-content');
+                creditsContent.innerHTML = generateCreditsContent();
+                
+                // Force a reflow before starting animation
+                void textContainer.offsetWidth;
+                
+                // Small delay before adding animation class
+                setTimeout(() => {
+                    textContainer.classList.add('animate');
+                }, 50);
+            } else {
+                // Page becomes hidden
+                document.body.classList.remove('visible');
+                appElement.classList.remove('visible');
+                textContainer.classList.remove('fadeout');
+                
+                // Remove animation class to reset position
+                textContainer.classList.remove('animate');
+            }
+        });
+        
+        document.querySelector('.text-container').addEventListener('animationend', function() {
+            // Clear collected names when animation completes
+            users.clear();
+            
+            // Remove the animation class to reset position
+            this.classList.add('fadeout');
+            
+            // Hide the app
+            document.getElementById('app').classList.remove('visible');
+            document.body.classList.remove('visible');
+        });
     </script>
 </body>
 </html>

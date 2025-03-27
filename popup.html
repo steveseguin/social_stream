@@ -42,6 +42,7 @@
 	--gif-color: #9a3f7bdd;
 	--wordcloud-color: #6a6bffdd;
 	--poll-color: #a3ff3bdd;
+	--credits-color: #98a399;
     --download-link: blue;
     --font-family: "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
 }
@@ -661,6 +662,10 @@ h2.custom_gif_commands_title {
 
 h2.poll_mode_title {
     color: var(--poll-color);
+}
+
+h2.credits_mode_title {
+    color: var(--credits-color);
 }
 
 .link div a {
@@ -4747,53 +4752,29 @@ input:checked + .slider:before {
 				</h3>
 				<div id="credits" data-raw="" class="streaming_chat"><a href="" id="creditslink"></a></div>
 			</div>
-			<div class="wrapper hidden wip">
+			<div class="wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-credits-general-options" />
 					<label class="collapsible-label" for="wrapper-credits-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group credits">
-								<h3><span data-translate="must-enable-the-trigger-to-use">Must enable the trigger to use</span></h3>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-setting="credits" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="enable-the-credits">🚦 Enable </span>
-									<div>
-										<button class="glowingButton" data-action="startcredits">
-											<span style="height:20px"><span data-translate="start-credits">🎬 Start Credits Roll</span></span>
-										</button>
-									</div>
-								</div>
-								<h3><span data-translate="other-customization-options">Other customization options</span></h3>
+								<h3><span data-translate="other-customization-options">Customization options</span></h3>
 								<div>
 									<div>
 										<label class="switch">
-											<input type="checkbox" data-param10="includechat" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="include-chat-users">
-											💬 Include all chat participants
-										</span>
-									</div>
-									<br>
-									
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param10="includedonors" checked />
+											<input type="checkbox" data-param13="onlydonors" />
 											<span class="slider round"></span>
 										</label>
 										<span data-translate="include-donors">
-											💰 Include donors
+											💰 Only include donors
 										</span>
 									</div>
 									<br>
 									
 									<div>
 										<span data-translate="credits-speed">
-											⏲️ Scroll speed <input type="number" style="max-width: 8ch;" max="10" min="0.1" value="1" size="3" data-numbersetting10="speed" />x
+											⏲️ Scroll speed <input type="number" style="max-width: 8ch;" max="10" min="0.1" value="1" size="3" data-numbersetting13="speed" />x
 										</span>
 									</div>
 									<br>
@@ -4802,7 +4783,7 @@ input:checked + .slider:before {
 										<span data-translate="display-style-credits">
 											Credits Style
 										</span>
-										<select data-optionparam10="style">
+										<select data-optionparam13="style">
 											<option value="starwars">Star Wars</option>
 											<option value="standard">Standard Roll</option>
 											<option value="minimal">Minimal</option>
@@ -4813,40 +4794,40 @@ input:checked + .slider:before {
 									<span data-translate="font-family">
 										Font Family
 									</span>
-									<select data-optionparam10="font">
+									<select data-optionparam13="font">
 										<option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
 										<option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
 									</select>
 								</div>
 								<br>
 								<div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
-									<input type="text" id="googlefont10" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam10="googlefont" />
-									<label for="googlefont10"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+									<input type="text" id="googlefont13" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam13="googlefont" />
+									<label for="googlefont13"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
 								</div>
 								<br>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param10="showcategories" checked />
+										<input type="checkbox" data-param13="hidecategories" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="show-categories">
-										🏷️ Show category headers (Donors, Chatters, etc.)
+										🏷️ Hide category headers (Donors, Chatters, etc.)
 									</span>
 								</div>
 								<br>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param10="showamounts" />
+										<input type="checkbox" data-param13="showamounts" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="show-donation-amounts">
 										💲 Show donation amounts
 									</span>
 								</div>
-								<br>
+								<br> 
 								<div class="textInputContainer" style="width: 95%;" title="Custom message to show at the end">
-									<input type="text" id="endmessage10" class="textInput instant" autocomplete="off" placeholder="eg: Thanks for watching!" value="Thank you all for being part of the stream! ❤️" data-textparam10="endmessage" />
-									<label for="endmessage10"><span data-translate="end-message">&gt; Custom end message</span></label>
+									<input type="text" id="endmessage13" class="textInput instant" autocomplete="off" placeholder="eg: Thanks for watching!" value="Thank you all for being part of the stream! ❤️" data-textparam13="endmessage" />
+									<label for="endmessage13"><span data-translate="end-message">&gt; Custom end message</span></label>
 								</div>
 							</div>
 						</div>

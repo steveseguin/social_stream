@@ -364,9 +364,9 @@
 
 	setInterval(function(){
 		try {
-			if (document.querySelector('[data-testid="chatContainer"]')){
+			if (document.querySelector('[data-testid="chatContainer"], main > div > div > div:nth-child(2)')){
 				//console.log("found it");
-				var container = document.querySelector('[data-testid="chatContainer"]');
+				var container = document.querySelector('[data-testid="chatContainer"], main > div > div > div:nth-child(2)');
 				if (!container.marked){
 					container.marked=true;
 					setTimeout(function(container){
