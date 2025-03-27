@@ -988,7 +988,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		  
 		  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 			chrome.runtime.sendMessage({
-			  action: 'injectCustomSource', // Changed 'type' to 'action' to match service_worker listener
+			  type: 'injectCustomSource', // Changed 'type' to 'action' to match service_worker listener
 			  source: source,
 			  tabId: tabs[0].id
 			});
