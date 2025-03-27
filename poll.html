@@ -472,7 +472,7 @@
             });
         }
 		
-        function processVote(vote, name, source) {
+		function processVote(vote, name, source) {
 			if (settings.pollClosed) return;
 			if (!settings.pollSpam && alreadyVoted[name+":"+source]) return;
 			
@@ -483,20 +483,38 @@
 				// Handle numeric votes first
 				const numericVote = parseInt(vote);
 				if (!isNaN(numericVote)) {
-					const option = settings.pollOptions[numericVote - 1];
-					if (option) {
-						results[option] = (results[option] || 0) + 1;
-						totalVotes++;
-						if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
-						updatePollResults();
-						return;
+					// For yes/no, 1 = Yes, 2 = No
+					if (settings.pollType === 'yesno') {
+						if (numericVote === 1) {
+							results['Yes'] = (results['Yes'] || 0) + 1;
+							totalVotes++;
+							if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
+							updatePollResults();
+							return;
+						} else if (numericVote === 2 || numericVote === 0) {
+							results['No'] = (results['No'] || 0) + 1;
+							totalVotes++;
+							if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
+							updatePollResults();
+							return;
+						}
+					} else {
+						// Regular multiple choice handling
+						const option = settings.pollOptions[numericVote - 1];
+						if (option) {
+							results[option] = (results[option] || 0) + 1;
+							totalVotes++;
+							if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
+							updatePollResults();
+							return;
+						}
 					}
 				}
 
 				// Special handling for yes/no polls
 				if (settings.pollType === 'yesno') {
-					const yesMatches = ['yes', 'y'];
-					const noMatches = ['no', 'n'];
+					const yesMatches = ['yes', 'y', 'yea', 'yeah', 'yep', 'yup', '1'];
+					const noMatches = ['no', 'n', 'nah', 'nope', '0', '2'];
 					
 					if (yesMatches.includes(vote)) {
 						results['Yes'] = (results['Yes'] || 0) + 1;
@@ -528,6 +546,7 @@
 					if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
 				}
 			} else if (settings.pollType === 'freeform') {
+				// Freeform handling remains the same
 				let hashtag = vote.match(/^#(\w+)$/);
 				if (hashtag) {
 					hashtag = hashtag[1].toUpperCase();
