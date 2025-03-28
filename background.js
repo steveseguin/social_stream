@@ -4286,7 +4286,7 @@ function sendAllToDiscord(data) {
 	}
 
     try {
-        let postServerDiscord = normalizeWebhookUrl(settings.postserverdiscord.textsetting);
+        let postServerDiscord = normalizeWebhookUrl(settings.postallserverdiscord.textsetting);
         
         const avatarUrl = validateImageUrl(data.chatimg);
         
