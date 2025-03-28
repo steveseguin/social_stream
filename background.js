@@ -4278,6 +4278,7 @@ function sendToS10(data, fakechat=false, relayed=false) {
 	}
 }
 function sendAllToDiscord(data) {
+	
     if (!settings.postalldiscord || !settings.postallserverdiscord) {
         return;
     }
@@ -4294,7 +4295,7 @@ function sendAllToDiscord(data) {
             username: "Relayed Message", // Custom webhook name
             avatar_url: "https://socialstream.ninja/icons/bot.png", 
             embeds: [{
-                title: formatTitle(data),
+                title: formatTitle(data, "message"),
                 description: formatDescription(data),
                 color: 0x00ff00, // Green color for donations
                 timestamp: new Date().toISOString(),
@@ -4321,6 +4322,10 @@ function sendAllToDiscord(data) {
     }
 }
 function sendToDiscord(data) {
+	console.log(data);
+	sendAllToDiscord(data); // << generic
+	//.. donations only .. vv
+	
     if (!settings.postdiscord || !settings.postserverdiscord) {
         return;
     }
@@ -4422,28 +4427,27 @@ function validateImageUrl(url) {
     
     return null;
 }
-function formatTitle(data) {
+function formatTitle(data, type="donation") {
     if (data.title) {
         return data.title;
     }
-    return `New donation from ${(data.type.charAt(0).toUpperCase() + data.type.slice(1)) || 'unknown'}!`;
+    return `New ${type} from ${(data.type.charAt(0).toUpperCase() + data.type.slice(1)) || 'unknown'}!`;
 }
 function formatDescription(data) {
     let description = '';
     
     if (data.chatmessage) { 
-		if (!data.textonly){
-			// convert to text from html if not text only mode
-			var textArea = document.createElement('textarea');
-			textArea.innerHTML = data.chatmessage;
-			description += `>>> ${textArea.value.trim()}\n\n`;
-		} else {
-			description += `>>> ${data.chatmessage.trim()}\n\n`;
-		}
+        if (!data.textonly) {
+            // Convert HTML to plain text
+            description += `>>> ${decodeAndCleanHtml(data.chatmessage)}\n\n`;
+        } else {
+            description += `>>> ${data.chatmessage.trim()}\n\n`;
+        }
     }
     
     return description || undefined;
 }
+
 function buildFields(data) {
     const fields = [];
     
@@ -7807,12 +7811,17 @@ function ensureFunction(functionName, scriptUrl) {
 }
 
 
-function decodeAndCleanHtml(input) {
+function decodeAndCleanHtml(input, spaces=false) {
     var doc = new DOMParser().parseFromString(input, 'text/html');
     doc.querySelectorAll('img[alt]').forEach(img => {
         var alt = img.getAttribute('alt');
         img.parentNode.replaceChild(doc.createTextNode(alt), img);
     });
+	if (spaces){
+		doc.querySelectorAll('br').forEach(br => {
+			br.replaceWith(doc.createTextNode('\n'));
+		});
+	}
     var decodedInput = doc.body.textContent || "";
     return decodedInput.replace(/\s\s+/g, " ").trim();
 }
