@@ -4277,6 +4277,11 @@ function sendToS10(data, fakechat=false, relayed=false) {
 		}
 	}
 }
+
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 function sendAllToDiscord(data) {
 	
     if (!settings.postalldiscord || !settings.postallserverdiscord) {
@@ -4292,21 +4297,16 @@ function sendAllToDiscord(data) {
         const avatarUrl = validateImageUrl(data.chatimg);
         
         const payload = {
-            username: "Relayed Message", // Custom webhook name
-            avatar_url: "https://socialstream.ninja/icons/bot.png", 
+            username: (data.chatname || "Unknown") + " @ "+capitalizeFirstLetter(data.type), // Custom webhook name
+            avatar_url: avatarUrl || "https://socialstream.ninja/unknown.png", 
             embeds: [{
-                title: formatTitle(data, "message"),
-                description: formatDescription(data),
-                color: 0x00ff00, // Green color for donations
+                description: decodeAndCleanHtml(data.chatmessage||""),
+                color: 0xFFFFFF, // Green color for donations
                 timestamp: new Date().toISOString(),
                 thumbnail: {
                     url: data.type ? `https://socialstream.ninja/sources/images/${data.type}.png` : null
                 },
-                author: {
-                    name: data.chatname,
-                    icon_url: avatarUrl || undefined
-                },
-                fields: buildFields(data)
+                fields: []
             }]
         };
         fetch(postServerDiscord, {
