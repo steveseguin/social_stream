@@ -693,6 +693,102 @@
 				return false;
 			};
 			
+			function createReliableTimer(callback, delay, data) {
+			  // Check if we're in Electron or OBS Studio
+			  if (window.electronAPI || window.obsstudio) {
+				// Use standard setTimeout for these environments
+				const timerId = setTimeout(callback, delay, data);
+				return {
+				  clear: function() {
+					clearTimeout(timerId);
+				  }
+				};
+			  }
+			  
+			  // For browser environments, try to use AudioContext
+			  let fallbackTimerId = null;
+			  
+			  // Try to get an audioContext - might be suspended initially
+			  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+			  
+			  // Create a resume function we can call if needed
+			  const tryResumeAudio = async function() {
+				if (audioContext.state === "suspended") {
+				  try {
+					await audioContext.resume();
+					return audioContext.state === "running";
+				  } catch (e) {
+					console.warn("Could not resume AudioContext", e);
+					return false;
+				  }
+				}
+				return audioContext.state === "running";
+			  };
+			  
+			  // Create a wrapper function to pass the data
+			  const wrappedCallback = function() {
+				callback(data);
+			  };
+			  
+			  // Set up a fallback setTimeout as backup
+			  fallbackTimerId = setTimeout(wrappedCallback, delay);
+			  
+			  // Try to set up audio timer if possible
+			  let audioComponents = null;
+			  
+			  tryResumeAudio().then(audioRunning => {
+				if (audioRunning) {
+				  const startTime = audioContext.currentTime;
+				  const oscillator = audioContext.createOscillator();
+				  oscillator.frequency.value = 0; // Silent
+				  
+				  const processor = audioContext.createScriptProcessor(4096, 1, 1);
+				  processor.onaudioprocess = function() {
+					const elapsedTime = (audioContext.currentTime - startTime) * 1000;
+					if (elapsedTime >= delay) {
+					  // Clear the fallback since we're handling it with audio
+					  if (fallbackTimerId) {
+						clearTimeout(fallbackTimerId);
+						fallbackTimerId = null;
+					  }
+					  
+					  oscillator.stop();
+					  processor.disconnect();
+					  oscillator.disconnect();
+					  wrappedCallback();
+					}
+				  };
+				  
+				  oscillator.connect(processor);
+				  processor.connect(audioContext.destination);
+				  oscillator.start();
+				  
+				  audioComponents = {
+					oscillator,
+					processor
+				  };
+				}
+			  });
+			  
+			  return {
+				clear: function() {
+				  // Clear the fallback timer
+				  if (fallbackTimerId) {
+					clearTimeout(fallbackTimerId);
+					fallbackTimerId = null;
+				  }
+				  
+				  // Clean up audio components if they were created
+				  if (audioComponents) {
+					audioComponents.oscillator.stop();
+					audioComponents.processor.disconnect();
+					audioComponents.oscillator.disconnect();
+				  }
+				}
+			  };
+			}
+
+			
 			async function fetchWithTimeout(URL, timeout = 8000) {
 				// ref: https://dmitripavlutin.com/timeout-fetch-request/
 				try {
@@ -1202,7 +1298,7 @@
 				}
 				timeoutTone = true;
 
-				setTimeout(function () {
+				createReliableTimer(function () {
 					timeoutTone = false;
 				}, 500);
 
@@ -1374,7 +1470,7 @@
 				socketserver = new WebSocket(serverURL);
 
 				socketserver.onclose = function () {
-					reconnectionTimeout = setTimeout(function () {
+					reconnectionTimeout = createReliableTimer(function () {
 						conCon += 1;
 						setupSocket(allin);
 					}, 100 * conCon);
@@ -1639,7 +1735,7 @@
 
 					if (isIFrame) {
 						clearTimeout(iframeTimeout);
-						iframeTimeout = setTimeout(function () {
+						iframeTimeout = createReliableTimer(function () {
 							parent.postMessage({ resizeWindow: { height: "0px" } }, "*");
 						}, 300);
 					}
@@ -1704,17 +1800,17 @@
 
 					if (isIFrame) {
 						clearTimeout(iframeTimeout);
-						iframeTimeout = setTimeout(function () {
+						iframeTimeout = createReliableTimer(function () {
 							parent.postMessage({ resizeWindow: { height: "220px" } }, "*");
 						}, 300);
 					}
 				
 					if (queuetime){
-						queueTimer = setTimeout(checkqueue,queuetime);
+						queueTimer = createReliableTimer(checkqueue,queuetime);
 					}
 				
-					nextComment = setTimeout(
-						function (data) {
+					nextComment = createReliableTimer(
+						function(data) {
 							var addImage = "";
 							var largeImage = false;
 							
@@ -2036,7 +2132,7 @@
 							}
 
 							if (timeoutDelay) {
-								timeoutTimer = setTimeout(function () {
+								timeoutTimer = createReliableTimer(function () {
 									lastMessageId = null;
 									document.getElementById("output").classList.add(transitionType);
 									clearTimeout(nextComment);

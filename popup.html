@@ -7,7 +7,7 @@
         <script src="popup.js?v=2"></script>
         <style>
 :root {
-    --body-background-enabled: #fff;
+    --body-background-enabled: #e7e7e7;
     --body-background-disabled: #ffdcdd;
     --default-text-color: #362e26;
     --section-title-color: #362e26;
@@ -33,16 +33,16 @@
     --extension-disabled-text-color: white;
     --streaming-chat-color: #00a6ff;
     --single-message-color: #ff7f00;
-    --emotes-wall-color: #ffd400;
+    --emotes-wall-color: #d7b300;
 	--tipjar-color: #35d0ff;
 	--chatbot-wall-color: #ff0000;
-    --hype-meter-color: #00ff5e;
+    --hype-meter-color: #00d74f;
     --waitlist-color: #ff00d2;
 	--ticker-color: #ff3a3bdd;
 	--gif-color: #9a3f7bdd;
 	--wordcloud-color: #6a6bffdd;
-	--poll-color: #a3ff3bdd;
-	--credits-color: #98F3F9;
+	--poll-color: #61b700dd;
+	--credits-color: #02a0aa;
     --download-link: blue;
     --font-family: "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
 }
@@ -152,6 +152,7 @@
     border-radius: 4px;
     padding: 2px 7px;
     margin-bottom: 2px;
+	color:white;
 }
 .source-type {
   font-size: 0.8em;
@@ -569,8 +570,14 @@ h2 {
 .options_group {
     word-break: break-word;
 }
+.lightblue{
+	color: #006f93;
+}
 @media (prefers-color-scheme: dark) {
 	.options_group > a {
+		color: lightblue;
+	}
+	.lightblue{
 		color: lightblue;
 	}
 }
@@ -1789,7 +1796,7 @@ input:checked + .slider:before {
 						
 						<div class="tts-provider-options options_group" id="systemTTS">
 							<h4>Built-in System TTS Options</h4>
-							<i>note: the free built-in TTS plays out via the default audio device. <a style="color:lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
+							<i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
 							<br /><br />
 							<div>
 								<label class="switch">
@@ -2856,7 +2863,7 @@ input:checked + .slider:before {
 				
             </div>
 			<div style="color:white;font"><i>
-				Want a different design? Check out the <a style="color:lightblue;font" href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">community made styles!</a></i>
+				Want a different design? Check out the <a class="lightblue"  href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">community made styles!</a></i>
 			</div>
             <div class="link" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
                 <h2 class="single_message_title">
@@ -3028,7 +3035,7 @@ input:checked + .slider:before {
                                     <span data-translate="enable-text-to-speech">🗣️ Enable text-to-speech </span>									  
                                 </div>
 								<br />
-								<i>note: the free built-in TTS plays out via the default audio device. <a target="_blank"  style="color:lightblue"  href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
+								<i>note: the free built-in TTS plays out via the default audio device. <a target="_blank" class="lightblue"  href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
 								<br />
 								<br />
                                 <div>
@@ -3382,7 +3389,7 @@ input:checked + .slider:before {
 							<div class="options_group streaming_chat">
 							
 								<p>Using this section requires a bot service to be made available.</p>
-								<p>You can install one for free with Ollama: <a href="https://socialstream.ninja/ai" style="color:lightblue" target="_blank">Installation Guide Here</a></p>
+								<p>You can install one for free with Ollama: <a href="https://socialstream.ninja/ai" class="lightblue"  target="_blank">Installation Guide Here</a></p>
 
 								<h3>Configure LLM API 🦙</h3>
 								
@@ -3743,7 +3750,7 @@ input:checked + .slider:before {
 						
 						<div class="tts-provider-options options_group" id="systemTTS10">
 							<h4>Built-in System TTS Options</h4>
-							<i>note: the free built-in TTS plays out via the default audio device. <a style="color:lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
+							<i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue"  target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
 							<br /><br />
 							<div>
 								<label class="switch">
@@ -5330,7 +5337,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="disableDB" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="disable-store-messages-in-local-database"> 🚫🗄️ Disable the <a href="./chathistory.html" id="chathistory" style="color:lightblue" target="blank">local message database</a> </span>
+                                    <span data-translate="disable-store-messages-in-local-database"> 🚫🗄️ Disable the <a href="./chathistory.html" id="chathistory"  class="lightblue"  target="blank">local message database</a> </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -5769,7 +5776,7 @@ input:checked + .slider:before {
 								
                                 <h3><span data-translate="trigger-midi-note">Trigger MIDI note on command</span></h3>
 								Default Output MIDI Device:<select id="midiDeviceSelect" style="max-width: calc(100% - 50px);margin: 5px;" class="textInput" data-optionsetting="midiOutputDevice"></select>
-								<a href="https://socialstream.ninja/midimonitor" style="color:lightblue;" title="Open a page to debug MIDI with" target="_blank">⚙️</a>
+								<a href="https://socialstream.ninja/midimonitor" class="lightblue"  title="Open a page to debug MIDI with" target="_blank">⚙️</a>
                                 <div id="midiCommands"></div>
                             </div>
                         </div>
@@ -5947,7 +5954,7 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group">
-								<div><i><a href="#colorizename" style="color:lightblue">Name colors in the dock won't show without <b>&color</b></a></i></div>
+								<div><i><a href="#colorizename"class="lightblue"  >Name colors in the dock won't show without <b>&color</b></a></i></div>
 							
 								<div title="Sets the color for a name to the color of the source's branding. This does not cause a name to be displayed as colorful though- you need to enable that option.">
                                     <label class="switch">
@@ -6586,7 +6593,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 			<p style="text-align: right; padding-bottom: 11px;">
-				<a  style="color:lightblue" href="https://socialstream.ninja/TOS" target="_blank">Terms of Service</a> | <a  style="color:lightblue"href="https://socialstream.ninja/privacy" target="_blank">Privacy Policy</a> | <a  style="color:lightblue" href="https://www.youtube.com/t/terms " target="_blank">YouTube's Terms of Service</a>
+				<a class="lightblue"  href="https://socialstream.ninja/TOS" target="_blank">Terms of Service</a> | <a class="lightblue"  href="https://socialstream.ninja/privacy" target="_blank">Privacy Policy</a> | <a  class="lightblue" href="https://www.youtube.com/t/terms " target="_blank">YouTube's Terms of Service</a>
 			</p>
 			<span>
             <a href="https://www.buymeacoffee.com/steveseguin" target="_blank">
