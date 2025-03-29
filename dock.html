@@ -4587,6 +4587,11 @@
 				}
 			}
 			
+			document.addEventListener('animationend', function(e) {
+			  if (e.target.classList.contains('dissolve')) {
+				e.target.remove(); // Remove the element when animation ends
+			  }
+			});
 			
 			function createPopoutChat() {
 				//  todo -- make broadcast channel based.
@@ -7668,6 +7673,11 @@
 
 					if (disolveEvents && data.event) {
 						node.classList.add("dissolve");
+						node.addEventListener('animationend', function() {
+							if (this){
+								this.remove();
+							}
+						});
 					}
 
 					if (random) {
