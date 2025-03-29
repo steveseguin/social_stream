@@ -159,8 +159,30 @@ function sendMessageToBackgroundPage(message, sendResponse) {
   });
 }
 
+function injectCustomSource(source, tabId) {
+  const scriptPath = `./sources/${source}.js`;
+  
+  chrome.scripting.executeScript({
+    target: {tabId: tabId},
+    files: [scriptPath]
+  }).catch(error => {
+    console.error('Error injecting script:', error);
+    
+    // Notify the user of the error
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icons/icon-128.png',
+      title: 'Injection Error',
+      message: `Failed to inject ${source}.js into the page. ${error.message}`
+    });
+  });
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'toBackground') {
+	
+  if (message.type === 'injectCustomSource') {
+    injectCustomSource(message.source, message.tabId);
+  } else if (message.type === 'toBackground') {
     log("SERVICE WORKER: ", message);
 
     checkBackgroundPageIsOpen().then((isOpen) => {

@@ -75,20 +75,19 @@
 			const currentTime = Date.now();
 			
 			if (this._mode === 'time') {
-				// Time-based: Remove old messages
+				// Time-based: Only remove entries older than the time window
 				this._log = this._log.filter(entry => 
-					(currentTime - entry.time) <= this._timeWindow && 
-					(!entry.ele || entry.ele.isConnected)
+					(currentTime - entry.time) <= this._timeWindow
 				);
 			} else {
-				// Count-based: Remove disconnected elements and limit size
-				this._log = this._log
-					.filter(entry => !entry.ele || entry.ele.isConnected)
-					.slice(-this._maxMessages);
+				// Count-based: Just limit size
+				if (this._log.length > this._maxMessages) {
+					this._log = this._log.slice(-this._maxMessages);
+				}
 			}
 		},
 		
-		isDuplicate(name, message, ele) {
+		isDuplicate(name, message) {
 			const currentTime = Date.now();
 			const messageKey = `${name}:${message}`;
 			
@@ -96,15 +95,15 @@
 			let duplicate = false;
 			
 			if (this._mode === 'time') {
+				// For time mode, check if message was seen within time window
 				duplicate = this._log.some(entry => 
 					entry.key === messageKey && 
-					(currentTime - entry.time) <= this._timeWindow &&
-					(!entry.ele || entry.ele.isConnected)
+					(currentTime - entry.time) <= this._timeWindow
 				);
 			} else {
+				// For count mode, just check if message exists in current log
 				duplicate = this._log.some(entry => 
-					entry.key === messageKey && 
-					(!entry.ele || entry.ele.isConnected)
+					entry.key === messageKey
 				);
 			}
 			
@@ -115,8 +114,7 @@
 			// Add new message to log
 			this._log.push({
 				key: messageKey,
-				time: currentTime,
-				ele: ele
+				time: currentTime
 			});
 			
 			// Cleanup immediately if needed
@@ -142,9 +140,8 @@
 			this.cleanup();
 		}
 	};
-
 	// Initialize when script starts
-	messageLog.init({ mode: 'time', timeWindow: 10000 }); // 10 seconds
+	messageLog.init({ mode: 'count', maxMessages: 421 });
 
 
     function pushMessage(data) {
@@ -299,10 +296,6 @@
     var savedavatars = {};
     var channelName = false;
     var msgCount = 0;
-	
-	function isDuplicateMessage(name, message, ele) {
-		return messageLog.isDuplicate(name, message, ele);
-	}
 	
 	function parseDonationMessage(message) {
 		if (!validateTikTokDonationMessage(message)) return null;
@@ -1065,8 +1058,8 @@
 			}
 		}
 		
-        if (isDuplicateMessage(chatname, chatmessage, ele)) {
-            //console.log("duplicate message; skipping");
+        if (messageLog?.isDuplicate(chatname, chatmessage)) {
+            console.log("duplicate message; skipping",chatname, chatmessage);
             return;
         }
 
@@ -1369,12 +1362,12 @@
 		}
 		
 		
-		if (!subtree){
-			start2(target);
-		} else {
-			console.log("Switching to hard dupe filter");
-			messageLog.configure({ mode: 'count', maxMessages: 400 });
-		}
+		//if (!subtree){
+		//	start2(target);
+		//} else {
+		//	console.log("Switching to hard dupe filter");
+		//	messageLog.configure({ mode: 'count', maxMessages: 400 });
+		//}
 		
 		console.log("Starting social stream");
 		

@@ -42,6 +42,7 @@
 	--gif-color: #9a3f7bdd;
 	--wordcloud-color: #6a6bffdd;
 	--poll-color: #a3ff3bdd;
+	--credits-color: #98F3F9;
     --download-link: blue;
     --font-family: "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
 }
@@ -121,6 +122,11 @@
 	color: #ff0000;
 	font-weight: bold;
 	margin-right: 8px;
+}
+
+#source-selector {
+	max-height: 200px;
+    max-width: 126px;
 }
 .add-username-container {
 	display: flex;
@@ -661,6 +667,10 @@ h2.custom_gif_commands_title {
 
 h2.poll_mode_title {
     color: var(--poll-color);
+}
+
+h2.credits_mode_title {
+    color: var(--credits-color);
 }
 
 .link div a {
@@ -1851,6 +1861,10 @@ input:checked + .slider:before {
 								<label for="elevenLabsVoiceID">
 									<span data-translate="elevenlabs-voice-id">ElevenLabs Voice ID</span>
 								</label>
+							</div>
+							<div style="margin: 10px 0;">
+								<button id="listElevenLabsVoicesBtn" class="glowingButton" style="width: 100%;"><span>🔍 List My Available Voices</span></button>
+								<div id="elevenLabsVoicesList" style="margin-top: 10px; max-height: 200px; overflow-y: auto; display: none; border: 1px solid #444; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 4px;"></div>
 							</div>
 							<div>
 								<label class="switch">
@@ -4743,53 +4757,29 @@ input:checked + .slider:before {
 				</h3>
 				<div id="credits" data-raw="" class="streaming_chat"><a href="" id="creditslink"></a></div>
 			</div>
-			<div class="wrapper hidden wip">
+			<div class="wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-credits-general-options" />
 					<label class="collapsible-label" for="wrapper-credits-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group credits">
-								<h3><span data-translate="must-enable-the-trigger-to-use">Must enable the trigger to use</span></h3>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-setting="credits" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="enable-the-credits">🚦 Enable </span>
-									<div>
-										<button class="glowingButton" data-action="startcredits">
-											<span style="height:20px"><span data-translate="start-credits">🎬 Start Credits Roll</span></span>
-										</button>
-									</div>
-								</div>
-								<h3><span data-translate="other-customization-options">Other customization options</span></h3>
+								<h3><span data-translate="other-customization-options">Customization options</span></h3>
 								<div>
 									<div>
 										<label class="switch">
-											<input type="checkbox" data-param10="includechat" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="include-chat-users">
-											💬 Include all chat participants
-										</span>
-									</div>
-									<br>
-									
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param10="includedonors" checked />
+											<input type="checkbox" data-param13="onlydonors" />
 											<span class="slider round"></span>
 										</label>
 										<span data-translate="include-donors">
-											💰 Include donors
+											💰 Only include donors
 										</span>
 									</div>
 									<br>
 									
 									<div>
 										<span data-translate="credits-speed">
-											⏲️ Scroll speed <input type="number" style="max-width: 8ch;" max="10" min="0.1" value="1" size="3" data-numbersetting10="speed" />x
+											⏲️ Scroll speed <input type="number" style="max-width: 8ch;" max="10" min="0.1" value="1" size="3" data-numbersetting13="speed" />x
 										</span>
 									</div>
 									<br>
@@ -4798,7 +4788,7 @@ input:checked + .slider:before {
 										<span data-translate="display-style-credits">
 											Credits Style
 										</span>
-										<select data-optionparam10="style">
+										<select data-optionparam13="style">
 											<option value="starwars">Star Wars</option>
 											<option value="standard">Standard Roll</option>
 											<option value="minimal">Minimal</option>
@@ -4809,40 +4799,40 @@ input:checked + .slider:before {
 									<span data-translate="font-family">
 										Font Family
 									</span>
-									<select data-optionparam10="font">
+									<select data-optionparam13="font">
 										<option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
 										<option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
 									</select>
 								</div>
 								<br>
 								<div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
-									<input type="text" id="googlefont10" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam10="googlefont" />
-									<label for="googlefont10"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+									<input type="text" id="googlefont13" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam13="googlefont" />
+									<label for="googlefont13"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
 								</div>
 								<br>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param10="showcategories" checked />
+										<input type="checkbox" data-param13="hidecategories" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="show-categories">
-										🏷️ Show category headers (Donors, Chatters, etc.)
+										🏷️ Hide category headers (Donors, Chatters, etc.)
 									</span>
 								</div>
 								<br>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param10="showamounts" />
+										<input type="checkbox" data-param13="showamounts" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="show-donation-amounts">
 										💲 Show donation amounts
 									</span>
 								</div>
-								<br>
+								<br> 
 								<div class="textInputContainer" style="width: 95%;" title="Custom message to show at the end">
-									<input type="text" id="endmessage10" class="textInput instant" autocomplete="off" placeholder="eg: Thanks for watching!" value="Thank you all for being part of the stream! ❤️" data-textparam10="endmessage" />
-									<label for="endmessage10"><span data-translate="end-message">&gt; Custom end message</span></label>
+									<input type="text" id="endmessage13" class="textInput instant" autocomplete="off" placeholder="eg: Thanks for watching!" value="Thank you all for being part of the stream! ❤️" data-textparam13="endmessage" />
+									<label for="endmessage13"><span data-translate="end-message">&gt; Custom end message</span></label>
 								</div>
 							</div>
 						</div>
@@ -5281,6 +5271,18 @@ input:checked + .slider:before {
                                     </label>
                                     <img class="icon" src="./sources/images/youtube.png" style="display: inline-block;" /> <span data-translate="paid-promotion">Hide "Paid Promotion" banners in Youtube</span>
                                 </div>
+								
+								
+								<div id="custominject" class="hidden custom-inject">
+								  <h3>Custom Injection</h3>
+								  
+								  <select id="source-selector" style="max-height:200px">
+									<option value="generic">Generic</option>
+									<!-- Sources added automatically -->
+								  </select>
+								  <button id="inject-button" class="glowingButton"><span>Inject into current page</span></button><br />
+								  <p>Force inject SSN into specific sites if not setup to automatically do so. Useful for self-hosted chat services where you might be hosting it on your own domain</p>
+								</div>
                             </div>
                         </div>
                     </div>
@@ -5508,14 +5510,24 @@ input:checked + .slider:before {
                                         <label for="postserver"><span data-translate="send-all-to-post-server">&gt; Send all to POST server</span></label>
                                     </div>
                                 </div>
-								 <div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="postalldiscord" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                        <input type="text" id="postallserverdiscord" class="textInput" autocomplete="off" placeholder="Provide Discord Webhook URL" data-textsetting="postallserverdiscord" />
+                                        <label for="postallserverdiscord"><span data-translate="send-all-messages-to-post-server-discord">&gt; Publish all messages to Discord</span></label>
+                                    </div>
+                                </div>
+								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-setting="postdiscord" />
                                         <span class="slider round"></span>
                                     </label>
                                     <div class="textInputContainer" style="display: inline-block; width: 250px;">
                                         <input type="text" id="postserverdiscord" class="textInput" autocomplete="off" placeholder="Provide Discord Webhook URL" data-textsetting="postserverdiscord" />
-                                        <label for="postserverdiscord"><span data-translate="send-all-to-post-server-discord">&gt; Donations published to Discord</span></label>
+                                        <label for="postserverdiscord"><span data-translate="send-donations-to-post-server-discord">&gt; Donations published to Discord</span></label>
                                     </div>
                                 </div>
 

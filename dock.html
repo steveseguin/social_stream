@@ -8382,6 +8382,11 @@
 
 					function clickInsideElement(e, value = "menu") {
 						var el = e.srcElement || e.target;
+						
+						if (el.tagName && el.tagName.toLowerCase() === 'a') {
+							return false;
+						}
+
 						if (el.dataset && value in el.dataset) {
 							return el;
 						} else {
@@ -8944,11 +8949,35 @@
 			}
 			
 			
-			try {
-				navigator.wakeLock.request("screen");
-			} catch (err) {
-			
+			async function requestWakeLock() {
+			  if (!navigator.wakeLock) {
+				return null;
+			  }
+
+			  let wakeLock = null;
+			  try {
+				// The page must be visible to request a wake lock
+				if (document.visibilityState !== "visible") {
+				  return null;
+				}
+				
+				wakeLock = await navigator.wakeLock.request("screen");
+				
+				// Handle page visibility changes
+				document.addEventListener("visibilitychange", async () => {
+				  if (wakeLock !== null && document.visibilityState === "visible") {
+					wakeLock = await navigator.wakeLock.request("screen");
+				  }
+				});
+				
+				return wakeLock;
+			  } catch (err) {
+				console.warn(`Wake lock request failed: ${err.name}, ${err.message}`);
+				return null;
+			  }
 			}
+
+			requestWakeLock();
 			
 		</script>
 	</body>

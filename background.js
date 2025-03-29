@@ -4278,7 +4278,54 @@ function sendToS10(data, fakechat=false, relayed=false) {
 	}
 }
 
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function sendAllToDiscord(data) {
+	
+    if (!settings.postalldiscord || !settings.postallserverdiscord) {
+        return;
+    }
+	if (!data.chatmessage){
+		return;
+	}
+
+    try {
+        let postServerDiscord = normalizeWebhookUrl(settings.postallserverdiscord.textsetting);
+        
+        const avatarUrl = validateImageUrl(data.chatimg);
+        
+        const payload = {
+            username: (data.chatname || "Unknown") + " @ "+capitalizeFirstLetter(data.type), // Custom webhook name
+            avatar_url: avatarUrl || "https://socialstream.ninja/unknown.png", 
+            embeds: [{
+                description: decodeAndCleanHtml(data.chatmessage||""),
+                color: 0xFFFFFF, // Green color for donations
+                timestamp: new Date().toISOString(),
+                thumbnail: {
+                    url: data.type ? `https://socialstream.ninja/sources/images/${data.type}.png` : null
+                },
+                fields: []
+            }]
+        };
+        fetch(postServerDiscord, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        }).catch(error => console.warn('Discord webhook error:', error));
+
+    } catch (e) {
+        console.warn('Error sending Discord webhook:', e);
+    }
+}
 function sendToDiscord(data) {
+	console.log(data);
+	sendAllToDiscord(data); // << generic
+	//.. donations only .. vv
+	
     if (!settings.postdiscord || !settings.postserverdiscord) {
         return;
     }
@@ -4359,6 +4406,9 @@ function validateImageUrl(url) {
         // Google domains
         'lh3.googleusercontent.com', // Google user content (including profile pictures)
         'storage.googleapis.com',
+		
+		// socialstream
+		'socialstream.ninja',
         
         // Kick domains
         'files.kick.com',
@@ -4377,28 +4427,27 @@ function validateImageUrl(url) {
     
     return null;
 }
-function formatTitle(data) {
+function formatTitle(data, type="donation") {
     if (data.title) {
         return data.title;
     }
-    return `New donation from ${(data.type.charAt(0).toUpperCase() + data.type.slice(1)) || 'unknown'}!`;
+    return `New ${type} from ${(data.type.charAt(0).toUpperCase() + data.type.slice(1)) || 'unknown'}!`;
 }
 function formatDescription(data) {
     let description = '';
     
     if (data.chatmessage) { 
-		if (!data.textonly){
-			// convert to text from html if not text only mode
-			var textArea = document.createElement('textarea');
-			textArea.innerHTML = data.chatmessage;
-			description += `>>> ${textArea.value.trim()}\n\n`;
-		} else {
-			description += `>>> ${data.chatmessage.trim()}\n\n`;
-		}
+        if (!data.textonly) {
+            // Convert HTML to plain text
+            description += `>>> ${decodeAndCleanHtml(data.chatmessage)}\n\n`;
+        } else {
+            description += `>>> ${data.chatmessage.trim()}\n\n`;
+        }
     }
     
     return description || undefined;
 }
+
 function buildFields(data) {
     const fields = [];
     
@@ -7762,12 +7811,17 @@ function ensureFunction(functionName, scriptUrl) {
 }
 
 
-function decodeAndCleanHtml(input) {
+function decodeAndCleanHtml(input, spaces=false) {
     var doc = new DOMParser().parseFromString(input, 'text/html');
     doc.querySelectorAll('img[alt]').forEach(img => {
         var alt = img.getAttribute('alt');
         img.parentNode.replaceChild(doc.createTextNode(alt), img);
     });
+	if (spaces){
+		doc.querySelectorAll('br').forEach(br => {
+			br.replaceWith(doc.createTextNode('\n'));
+		});
+	}
     var decodedInput = doc.body.textContent || "";
     return decodedInput.replace(/\s\s+/g, " ").trim();
 }

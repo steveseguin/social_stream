@@ -943,6 +943,58 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 		return false;
 	};
+	if (!ssapp) {
+		// Get reference to the select element first
+		const sourceSelector = document.getElementById('source-selector');
+		
+		// Check if the element exists
+		if (!sourceSelector) {
+		  console.error("Could not find source-selector element");
+		  return;
+		}
+		
+		const manifestData = chrome.runtime.getManifest();
+		
+		if (manifestData && manifestData.content_scripts) {
+		  // Set to store unique source files
+		  const sources = new Set();
+		  
+		  // Extract source filenames from content_scripts
+		  manifestData.content_scripts.forEach(script => {
+			if (script.js && script.js.length > 0) {
+			  script.js.forEach(jsFile => {
+				if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
+				  // Extract just the filename without path and extension
+				  const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
+				  sources.add(sourceName);
+				}
+			  });
+			}
+		  });
+		  
+		  // Create and add options for each source
+		  Array.from(sources).sort().forEach(source => {
+			const option = document.createElement('option');
+			option.value = source;
+			// Capitalize first letter for display
+			option.textContent = source.charAt(0).toUpperCase() + source.slice(1);
+			sourceSelector.appendChild(option);
+		  });
+		}
+		
+		document.getElementById("custominject").classList.remove("hidden");
+		document.getElementById('inject-button').addEventListener('click', function() {
+		  const source = document.getElementById('source-selector').value;
+		  
+		  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+			chrome.runtime.sendMessage({
+			  type: 'injectCustomSource', // Changed 'type' to 'action' to match service_worker listener
+			  source: source,
+			  tabId: tabs[0].id
+			});
+		  });
+		});
+	}
 	
 	document.getElementById('addCustomGifCommand').addEventListener('click', function() {
 		const commandsList = document.getElementById('customGifCommandsList');
@@ -1942,6 +1994,51 @@ function update(response, sync=true){
 									updateSettings(ele, sync);
 								}
 							}
+							if ("param13" in response.settings[key]){
+								var ele = document.querySelector("input[data-param13='"+key+"']");
+								if (ele){
+									ele.checked = response.settings[key].param13;
+									if (!key.includes("=")){
+										if ("numbersetting13" in response.settings[key]){
+											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting13));
+										} else if (document.querySelector("input[data-numbersetting13='"+key+"']")){
+											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting13='"+key+"']").value));
+										} else if ("optionparam13" in response.settings[key]){
+											updateSettings(ele, sync, response.settings[key].optionparam13);
+										} else if ("textparam13" in response.settings[key]){
+											updateSettings(ele, sync, response.settings[key].textparam13);
+										} else if (document.querySelector("input[data-optionparam13='"+key+"']")){
+											updateSettings(ele, sync, document.querySelector("input[data-optionparam13='"+key+"']").value);
+										} else {
+											updateSettings(ele, sync); 
+										}
+									} else {
+										updateSettings(ele, sync);
+									}
+								} else if (key.includes("=")){
+									var keys = key.split('=');
+									ele = document.querySelector("input[data-param13='"+keys[0]+"']");
+									log(keys);
+									log(response.settings);
+									if (ele){
+										ele.checked = response.settings[key].param13;
+										if (keys[1]){
+											var ele2 = document.querySelector("input[data-numbersetting13='"+keys[0]+"']");
+											if (ele2){
+												ele2.value = parseFloat(keys[1]);
+											} else {
+												var ele2 = document.querySelector("input[data-numbersetting13='"+keys[0]+"'], input[data-textparam13='"+keys[0]+"']");
+												if (ele2){
+													ele2.value = keys[1];
+												}
+											}
+											updateSettings(ele, sync, parseFloat(keys[1]));
+										} else{
+											updateSettings(ele, sync);
+										}
+									}
+								}
+							}
 							if ("both" in response.settings[key]){
 								var ele = document.querySelector("input[data-both='"+key+"']");
 								if (ele){
@@ -2246,6 +2343,20 @@ function update(response, sync=true){
 									updateSettings(ele, sync);
 								}
 							}
+							if ("textparam12" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam12='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam12;
+									updateSettings(ele, sync);
+								}
+							}
+							if ("textparam13" in response.settings[key]){
+								var ele = document.querySelector("input[data-textparam13='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].textparam13;
+									updateSettings(ele, sync);
+								}
+							}
 							if ("optionparam1" in response.settings[key]){
 								var ele = document.querySelector("select[data-optionparam1='"+key+"']");
 								if (ele){
@@ -2368,6 +2479,18 @@ function update(response, sync=true){
 								var ele = document.querySelector("input[data-param12='"+key+"']");
 								if (ele && ele.checked){
 									updateSettings(ele, false, response.settings[key].optionparam12);
+								}
+							}
+							if ("optionparam13" in response.settings[key]){
+								var ele = document.querySelector("select[data-optionparam13='"+key+"']");
+								if (ele){
+									ele.value = response.settings[key].optionparam13;
+									updateSettings(ele, sync);
+								}
+								
+								var ele = document.querySelector("input[data-param13='"+key+"']");
+								if (ele && ele.checked){
+									updateSettings(ele, false, response.settings[key].optionparam13);
 								}
 							}
 							if (('customGifCommands' in response.settings) && response.settings.customGifCommands.json) {
@@ -2598,7 +2721,6 @@ if (ssapp){
 	style.id = 'hide-ssapp-style';
 	document.head.appendChild(style);
 } 
-	
 
 function removeQueryParamWithValue(url, paramWithValue) {
     let [baseUrl, queryString] = url.split('?');
@@ -2668,6 +2790,7 @@ function getTargetMap() {
 		'poll': 16
     };
 }
+
 
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const targetElement = document.getElementById(targetId);
@@ -3611,6 +3734,12 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             container.appendChild(testButton);
             container.appendChild(feedback);
             menuWrapper.replaceWith(container);
+			
+			if (document.getElementById("listElevenLabsVoicesBtn")){
+				document.getElementById('listElevenLabsVoicesBtn')?.addEventListener('click', async (e) => {
+					this.listElevenLabsVoices();
+				});
+			}
             
             // Add styles if they don't exist
             if (!document.getElementById('ttsFeedbackStyles')) {
@@ -3960,6 +4089,91 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			body: JSON.stringify(data)
 		}, 'blob');
 	},
+		
+	async getElevenLabsVoices(settings) {
+		if (!settings?.elevenLabs?.key) {
+			console.error("No ElevenLabs API key provided");
+			console.log(settings);
+			return [];
+		}
+		
+		try {
+			const response = await fetch("https://api.elevenlabs.io/v1/voices", {
+				headers: {
+					"xi-api-key": settings.elevenLabs.key,
+					"accept": "application/json"
+				}
+			});
+			
+			if (!response.ok) {
+				throw new Error(`API error: ${response.status} ${response.statusText}`);
+			}
+			
+			const data = await response.json();
+			return data.voices || [];
+		} catch (error) {
+			console.error("Failed to fetch ElevenLabs voices:", error);
+			return [];
+		}
+	},
+
+	listElevenLabsVoices() {
+		const settings = this.getSettings();
+		if (!settings?.elevenLabs?.key) {
+			this.showFeedback("No ElevenLabs API key provided. Please enter your API key first.", 'error');
+			return;
+		}
+		
+		const voicesList = document.getElementById('elevenLabsVoicesList');
+		if (!voicesList) return;
+		
+		voicesList.innerHTML = '<div style="text-align:center">Loading voices...</div>';
+		voicesList.style.display = 'block';
+		
+		this.getElevenLabsVoices(settings).then(voices => {
+			if (!voices || voices.length === 0) {
+				voicesList.innerHTML = '<div style="text-align:center">No voices found in your ElevenLabs account</div>';
+				return;
+			}
+			
+			voicesList.innerHTML = '';
+			
+			voices.forEach(voice => {
+				const voiceItem = document.createElement('div');
+				voiceItem.className = 'voice-item';
+				voiceItem.style.padding = '8px';
+				voiceItem.style.borderBottom = '1px solid #444';
+				voiceItem.style.cursor = 'pointer';
+				voiceItem.style.transition = 'background-color 0.2s';
+				
+				voiceItem.innerHTML = `
+					<div style="font-weight:bold">${voice.name}</div>
+					<div style="font-size:0.9em;opacity:0.8">ID: ${voice.voice_id}</div>
+					<div style="font-size:0.9em;opacity:0.8">Category: ${voice.category || 'Unknown'}</div>
+				`;
+				
+				voiceItem.addEventListener('mouseover', () => {
+					voiceItem.style.backgroundColor = 'rgba(255,255,255,0.1)';
+				});
+				
+				voiceItem.addEventListener('mouseout', () => {
+					voiceItem.style.backgroundColor = 'transparent';
+				});
+				
+				voiceItem.addEventListener('click', () => {
+					document.getElementById('elevenLabsVoiceID').value = voice.voice_id;
+					this.showFeedback(`Voice "${voice.name}" selected`, 'success');
+					voicesList.style.display = 'none';
+				});
+				
+				voicesList.appendChild(voiceItem);
+			});
+		}).catch(err => {
+			voicesList.innerHTML = `<div style="text-align:center;color:#f8d7da">Error: ${err.message}</div>`;
+			console.error("Error fetching voices:", err);
+		});
+	},
+
     
     speechifyTTS(text, settings) {
         this.premiumQueueActive = true;
