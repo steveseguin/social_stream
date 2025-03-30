@@ -1758,7 +1758,6 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="route-audio-to-local-server">⏩ Send TTS as PCM audio to 127.0.0.1:5000 instead</span>
 								</div>
-							   
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param1="passtts" />
@@ -3661,7 +3660,7 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-message-tts-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-message-tts-options">
-						<span data-translate="message---tts">🗣️ Overlay and TTS for Chat Bot</span>
+						<span data-translate="message---tts">🗣️ Overlay Page and TTS for Chat Bot</span>
 					</label>  
 					<div class="collapsible-text">
 						<div class="options">
@@ -3693,7 +3692,7 @@ input:checked + .slider:before {
 							
 							<!-- Global TTS Behavior Options -->
 							<div class="options_group tts-behavior-options">
-								<h4>TTS Behaviors</h4>
+								<h4>TTS Behaviours</h4>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param10="readouturls" />
@@ -3719,8 +3718,24 @@ input:checked + .slider:before {
 							</div>
 							
 							<div class="options_group tts-behavior-options">
-								<h4>More TTS options</h4>
-								
+								<h4>More bot overlay page options</h4>
+								<div title="For the purpose of using this with neurosync. WILL NOT WORK WITH SYSTEM TTS">
+									<label class="switch">
+										<input type="checkbox" data-param10="neurosync" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="route-audio-to-local-server">⏩ Send TTS as PCM audio to 127.0.0.1:5000 instead</span>
+								</div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param10="postserver" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                        <input type="text" id="postserver10" class="textInput" autocomplete="off" placeholder="http://127.0.0.1:8000" data-textparam10="postserver" />
+                                        <label for="postserver10"><span data-translate="send-bot-to-post-server">&gt; Send bot replies to POST server</span></label>
+                                    </div>
+                                </div>
 								<div title="The volume has a max of 1.0 (100%)">
 									<label class="switch">
 										<input type="checkbox" data-param10="volume" />
