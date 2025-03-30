@@ -143,6 +143,10 @@
 		  if (!chatmessage){
 			  return;
 		  }
+		  
+		  if (chatmessage ===  "now"){
+			  return;
+		  }
 		 
 		  var chatimg = "";
 		  try {
