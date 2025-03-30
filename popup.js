@@ -1600,6 +1600,19 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     }
   });
   
+ /*   document.querySelectorAll("input[data-param10]").forEach(checkbox => {
+    if (checkbox.checked) {
+      const paramName = checkbox.getAttribute("data-param10");
+      const textInput = document.querySelector(`input[data-textparam10="${paramName}"]`);
+      
+      if (textInput && textInput.value.trim() !== "") {
+        password += `&${paramName}=${encodeURIComponent(textInput.value.trim())}`;
+      } else {
+        password += `&${paramName}`;
+      }
+    }
+  }); */
+  
   // Handle the custom gif commands separately
   const gifElement = document.getElementById(customGifConfig.id);
   if (gifElement) {
@@ -1940,16 +1953,22 @@ function update(response, sync=true){
 								if (ele){
 									ele.checked = response.settings[key].param10;
 									if (!key.includes("=")){
+										
 										if ("numbersetting10" in response.settings[key]){
 											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting10));
+											
 										} else if (document.querySelector("input[data-numbersetting10='"+key+"']")){
 											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting10='"+key+"']").value));
+											
 										} else if ("optionparam10" in response.settings[key]){
 											updateSettings(ele, sync, response.settings[key].optionparam10);
+											
 										} else if ("textparam10" in response.settings[key]){
 											updateSettings(ele, sync, response.settings[key].textparam10);
+											
 										} else if (document.querySelector("input[data-optionparam10='"+key+"']")){
 											updateSettings(ele, sync, document.querySelector("input[data-optionparam10='"+key+"']").value);
+											
 										} else {
 											updateSettings(ele, sync); 
 										}
@@ -1980,6 +1999,8 @@ function update(response, sync=true){
 									}
 								}
 							}
+							
+							
 							if ("param11" in response.settings[key]){
 								var ele = document.querySelector("input[data-param11='"+key+"']");
 								if (ele){
@@ -2252,7 +2273,7 @@ function update(response, sync=true){
 									var ele = document.querySelector("input[data-param1='"+key+"']");
 									if (ele){
 										if (ele.checked){
-											updateSettings(ele, false, parseFloat(response.settings[key].textparam1));
+											updateSettings(ele, false, response.settings[key].textparam1);
 										}
 									}
 								}
@@ -2267,7 +2288,7 @@ function update(response, sync=true){
 									var ele = document.querySelector("input[data-param2='"+key+"']");
 									if (ele){
 										if (ele.checked){
-											updateSettings(ele, false, parseFloat(response.settings[key].textparam2));
+											updateSettings(ele, false, response.settings[key].textparam2);
 										}
 									}
 								}
@@ -2331,11 +2352,12 @@ function update(response, sync=true){
 									var ele = document.querySelector("input[data-param10='"+key+"']");
 									if (ele){
 										if (ele.checked){
-											updateSettings(ele, false, parseFloat(response.settings[key].textparam10));
+											updateSettings(ele, false, response.settings[key].textparam10);
 										}
 									}
 								}
 							}
+							
 							if ("textparam11" in response.settings[key]){
 								var ele = document.querySelector("input[data-textparam11='"+key+"']");
 								if (ele){
@@ -2791,7 +2813,6 @@ function getTargetMap() {
     };
 }
 
-
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const targetElement = document.getElementById(targetId);
     if (!targetElement) return false;
@@ -2800,30 +2821,52 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const paramValue = ele.dataset[paramType];
     if (!paramValue) return false;
     
+    // Get the param number (e.g., "10" from "param10")
+    const paramNum = paramType.match(/\d+$/) ? paramType.match(/\d+$/)[0] : '';
+    
     if (ele.checked) {
+        // Always remove any existing instance of this parameter first to prevent duplication
+        targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
+        
         if (value !== null) {
-            targetElement.raw = updateURL(`${paramValue}=${value}`, targetElement.raw);
-        } else if (document.querySelector(`input[data-numbersetting${paramType.endsWith('1') ? '' : paramType.slice(-1)}='${paramValue}']`)) {
-            value = document.querySelector(`input[data-numbersetting${paramType.endsWith('1') ? '' : paramType.slice(-1)}='${paramValue}']`).value;
-            targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
-            targetElement.raw = updateURL(`${paramValue}=${value}`, targetElement.raw);
-        } else if (document.querySelector(`[data-optionparam${paramType.slice(-1)}='${paramValue}'], [data-textparam${paramType.slice(-1)}='${paramValue}']`)) {
-            value = document.querySelector(`[data-optionparam${paramType.slice(-1)}='${paramValue}'], [data-textparam${paramType.slice(-1)}='${paramValue}']`).value;
-            targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
+            // If a value is explicitly provided, use it
             targetElement.raw = updateURL(`${paramValue}=${value}`, targetElement.raw);
         } else {
-            targetElement.raw = updateURL(paramValue, targetElement.raw);
+            // Check for a corresponding text parameter first
+            const textParamSelector = `input[data-textparam${paramNum}='${paramValue}'], textarea[data-textparam${paramNum}='${paramValue}']`;
+            const textParam = document.querySelector(textParamSelector);
+            
+            if (textParam && textParam.value.trim() !== '') {
+                // If we have a text parameter with a value, use it
+                targetElement.raw = updateURL(`${paramValue}=${encodeURIComponent(textParam.value.trim())}`, targetElement.raw);
+            } else if (document.querySelector(`input[data-numbersetting${paramNum}='${paramValue}']`)) {
+                // If we have a number setting, use it
+                value = document.querySelector(`input[data-numbersetting${paramNum}='${paramValue}']`).value;
+                targetElement.raw = updateURL(`${paramValue}=${value}`, targetElement.raw);
+            } else if (document.querySelector(`[data-optionparam${paramNum}='${paramValue}']`)) {
+                // If we have an option parameter, use it
+                value = document.querySelector(`[data-optionparam${paramNum}='${paramValue}']`).value;
+                targetElement.raw = updateURL(`${paramValue}=${value}`, targetElement.raw);
+            } else {
+                // Otherwise just add the parameter with no value
+                targetElement.raw = updateURL(paramValue, targetElement.raw);
+            }
         }
         
         // Handle special case exclusions
         handleExclusiveCases(ele, paramType, paramValue, sync);
     } else {
+        // If checkbox is unchecked, remove the parameter from URL
         targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
+        
+        // NEW CODE: Don't clear corresponding text parameter values - we want to preserve them
+        // Even though we're removing from URL, we need to keep the stored value
     }
     
     targetElement.raw = cleanURL(targetElement.raw);
     
     if (sync) {
+        // Still save the checkbox state
         chrome.runtime.sendMessage({
             cmd: "saveSetting",
             type: paramType,
@@ -2831,6 +2874,19 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
             setting: paramValue,
             value: ele.checked
         }, function (response) {});
+        
+        // NEW CODE: Save the text parameter value even if checkbox is unchecked
+        const textParamSelector = `input[data-textparam${paramNum}='${paramValue}'], textarea[data-textparam${paramNum}='${paramValue}']`;
+        const textParam = document.querySelector(textParamSelector);
+        if (textParam && textParam.value !== undefined) {
+            chrome.runtime.sendMessage({
+                cmd: "saveSetting",
+                type: `textparam${paramNum}`,
+                target: ele.dataset.target || null,
+                setting: paramValue,
+                value: textParam.value
+            }, function (response) {});
+        }
     }
     
     // Handle "siblings" with the same param prefix
@@ -2895,18 +2951,34 @@ function handleTextParam(ele, targetId, paramType, sync) {
     const paramValue = ele.dataset[paramType];
     if (!paramValue) return false;
     
-    targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
+    // Get the param number (e.g., "10" from "textparam10")
+    const paramNum = paramType.match(/\d+$/) ? paramType.match(/\d+$/)[0] : '';
     
-    if (ele.value) {
-        if (paramValue === 'cssb64') {
-            targetElement.raw = updateURL(`${paramValue}=${btoa(encodeURIComponent(ele.value))}`, targetElement.raw);
-        } else {
-            targetElement.raw = updateURL(`${paramValue}=${encodeURIComponent(ele.value)}`, targetElement.raw);
+    // Check if there's a corresponding checkbox
+    const checkboxSelector = `input[data-param${paramNum}='${paramValue}']`;
+    const checkbox = document.querySelector(checkboxSelector);
+    
+    // Only modify URL if there's no checkbox, or if checkbox exists and is checked
+    if (!checkbox || checkbox.checked) {
+        // First remove any existing instance of this parameter
+        targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
+        
+        if (ele.value) {
+            // If there's a value, add the parameter with value
+            if (paramValue === 'cssb64') {
+                targetElement.raw = updateURL(`${paramValue}=${btoa(encodeURIComponent(ele.value))}`, targetElement.raw);
+            } else {
+                targetElement.raw = updateURL(`${paramValue}=${encodeURIComponent(ele.value)}`, targetElement.raw);
+            }
+        } else if (checkbox && checkbox.checked) {
+            // If value is empty but checkbox is checked, add the parameter without a value
+            targetElement.raw = updateURL(paramValue, targetElement.raw);
         }
+        
+        targetElement.raw = cleanURL(targetElement.raw);
     }
     
-    targetElement.raw = cleanURL(targetElement.raw);
-    
+    // Always save the text parameter value regardless of checkbox state
     if (sync) {
         chrome.runtime.sendMessage({
             cmd: "saveSetting",
