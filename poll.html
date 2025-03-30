@@ -370,461 +370,526 @@
         <div id="poll-options"></div>
     </div>
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const settings = {
-            pollType: urlParams.get('pollType') || 'freeform',
-            pollQuestion: urlParams.get('pollQuestion') || 'Loading poll ...',
-            pollOptions: urlParams.get('pollOptions') ? urlParams.get('pollOptions').split(',').map(opt => opt.trim()) : [],
-            pollTimer: urlParams.get('pollTimer') || 60,
-            pollEnabled: urlParams.get('pollEnabled') || false,
-            styleType: urlParams.get('style') || 'default',
-			pollSpam: urlParams.has('pollSpam') || false,
-			pollClosed: false,
-			pollTally: urlParams.has('pollTally') || false, 
-        };
+// Replace the existing script with this optimized version
 
-        let results = {};
-        let totalVotes = 0;
-		let alreadyVoted = {}
+const urlParams = new URLSearchParams(window.location.search);
+const settings = {
+    pollType: urlParams.get('pollType') || 'freeform',
+    pollQuestion: urlParams.get('pollQuestion') || 'Loading poll ...',
+    pollOptions: urlParams.get('pollOptions') ? urlParams.get('pollOptions').split(',').map(opt => opt.trim()) : [],
+    pollTimer: urlParams.get('pollTimer') || 60,
+    pollEnabled: urlParams.get('pollEnabled') || false,
+    styleType: urlParams.get('style') || 'default',
+    pollSpam: urlParams.has('pollSpam') || false,
+    pollClosed: false,
+    pollTally: urlParams.has('pollTally') || false, 
+};
 
-        function initializePoll() {
-            const pollContainer = document.getElementById('poll-container');
-            pollContainer.className = `poll-container style-${settings.styleType} ${settings.pollEnabled ? '' : 'hidden'}`;
-            document.getElementById('poll-title').innerText = settings.pollQuestion;
-            updatePollOptions();
+let results = {};
+let totalVotes = 0;
+let alreadyVoted = {};
+let updatePending = false;
+let lastUpdateTime = 0;
+const UPDATE_THROTTLE = 200; // Only update UI every 200ms
+
+// Cached DOM elements
+let pollContainer;
+let pollTitle;
+let pollOptionsContainer;
+
+function initializePoll() {
+    pollContainer = document.getElementById('poll-container');
+    pollTitle = document.getElementById('poll-title');
+    pollOptionsContainer = document.getElementById('poll-options');
+    
+    pollContainer.className = `poll-container style-${settings.styleType} ${settings.pollEnabled ? '' : 'hidden'}`;
+    pollTitle.innerText = settings.pollQuestion;
+    updatePollOptions();
+}
+
+function updatePollOptions() {
+    pollOptionsContainer.innerHTML = '';
+
+    if (settings.pollType === 'yesno') {
+        settings.pollOptions = ['Yes', 'No'];
+    }
+    
+    if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+        const fragment = document.createDocumentFragment();
+        
+        settings.pollOptions.forEach((option, index) => {
+            const optionElement = document.createElement('div');
+            optionElement.className = 'poll-option';
+            
+            const numberSpan = document.createElement('span');
+            numberSpan.className = 'option-number';
+            numberSpan.textContent = index + 1;
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = 'option-text';
+            textSpan.textContent = option;
+            
+            const percentageSpan = document.createElement('span');
+            percentageSpan.className = 'option-percentage';
+            percentageSpan.textContent = '0%';
+            
+            const barDiv = document.createElement('div');
+            barDiv.className = 'poll-bar';
+            barDiv.style.width = '0%';
+            
+            optionElement.appendChild(numberSpan);
+            optionElement.appendChild(textSpan);
+            optionElement.appendChild(percentageSpan);
+            optionElement.appendChild(barDiv);
+            
+            fragment.appendChild(optionElement);
+        });
+        
+        pollOptionsContainer.appendChild(fragment);
+    } else if (settings.pollType === 'freeform') {
+        const instructionElement = document.createElement('div');
+        instructionElement.className = 'poll-instruction';
+        instructionElement.textContent = 'Enter a hashtagged #word into chat to vote for it!';
+        pollOptionsContainer.appendChild(instructionElement);
+    }
+}
+
+function scheduleUpdate() {
+    if (updatePending) return;
+    
+    const now = Date.now();
+    const timeSinceLastUpdate = now - lastUpdateTime;
+    
+    if (timeSinceLastUpdate >= UPDATE_THROTTLE) {
+        updatePollResults();
+        lastUpdateTime = now;
+    } else {
+        updatePending = true;
+        setTimeout(() => {
+            updatePending = false;
+            updatePollResults();
+            lastUpdateTime = Date.now();
+        }, UPDATE_THROTTLE - timeSinceLastUpdate);
+    }
+}
+
+function updatePollResults() {
+    pollOptionsContainer.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    if (settings.pollType === 'freeform' && !settings.pollClosed) {
+        const instructionElement = document.createElement('div');
+        instructionElement.className = 'poll-instruction';
+        instructionElement.textContent = 'Enter a hashtagged #word into chat to vote for it!';
+        fragment.appendChild(instructionElement);
+    }
+
+    let displayOptions = [];
+
+    if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+        displayOptions = settings.pollOptions.map(option => [option, results[option] || 0]);
+    } else if (settings.pollType === 'freeform') {
+        displayOptions = Object.entries(results).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    }
+
+    const maxVotes = Math.max(...displayOptions.map(([_, votes]) => votes), 0);
+
+    displayOptions.forEach(([option, votes], index) => {
+        const percentage = totalVotes > 0 ? (votes / totalVotes * 100).toFixed(1) : 0;
+
+        const optionElement = document.createElement('div');
+        optionElement.className = 'poll-option';
+        
+        if (votes === maxVotes && maxVotes > 0 && settings.pollClosed) {
+            optionElement.style.fontWeight = 'bold';
+            optionElement.style.fontSize = '1.1em';
         }
 
-        function updatePollOptions() {
-            const pollOptionsContainer = document.getElementById('poll-options');
-            pollOptionsContainer.innerHTML = '';
+        let html = '';
+        if (!settings.pollClosed) {
+            html += `<span class="option-number">${index + 1}</span>`;
+        }
+        
+        html += `<span class="option-text">${option}</span>`;
+        
+        if (settings.pollTally) {
+            html += `<span class="option-percentage">${votes} votes</span>`;
+        } else {
+            html += `<span class="option-percentage">${percentage}%</span>`;
+        }
+        
+        html += `<div class="poll-bar" style="width: ${percentage}%;"></div>`;
+        
+        optionElement.innerHTML = html;
 
+        if (parseFloat(percentage) > 90) {
+            optionElement.style.color = '#fff';
+            optionElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
+        }
+
+        fragment.appendChild(optionElement);
+    });
+
+    pollOptionsContainer.appendChild(fragment);
+}
+
+// Create lookup tables for faster matching
+const yesMatches = new Set(['yes', 'y', 'yea', 'yeah', 'yep', 'yup', '1']);
+const noMatches = new Set(['no', 'n', 'nah', 'nope', '0', '2']);
+
+// Optimize with a debounced message queue
+const messageQueue = [];
+let processingQueue = false;
+
+function queueVote(vote, name, source) {
+    messageQueue.push({vote, name, source});
+    if (!processingQueue) {
+        processingQueue = true;
+        setTimeout(processVoteQueue, 50); // Process votes in batches every 50ms
+    }
+}
+
+function processVoteQueue() {
+    const startTime = Date.now();
+    const timeLimit = 20; // Process for max 20ms to avoid UI freezing
+    
+    while (messageQueue.length > 0 && (Date.now() - startTime < timeLimit)) {
+        const {vote, name, source} = messageQueue.shift();
+        processVoteSingle(vote, name, source);
+    }
+    
+    if (messageQueue.length > 0) {
+        // If there are still items, schedule another processing cycle
+        setTimeout(processVoteQueue, 0);
+    } else {
+        processingQueue = false;
+        scheduleUpdate(); // Update UI after processing batch
+    }
+}
+
+function processVoteSingle(vote, name, source) {
+    if (settings.pollClosed) return;
+    
+    const voterKey = name+":"+source;
+    if (!settings.pollSpam && alreadyVoted[voterKey]) return;
+    
+    // Clean the vote: lowercase and remove common punctuation
+    vote = vote.trim().toLowerCase().replace(/[!.,?]+$/, '');
+    
+    if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+        // Handle numeric votes first
+        const numericVote = parseInt(vote);
+        if (!isNaN(numericVote)) {
+            // For yes/no, 1 = Yes, 2 = No
             if (settings.pollType === 'yesno') {
-                settings.pollOptions = ['Yes', 'No'];
-            }
-			
-            if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
-                settings.pollOptions.forEach((option, index) => {
-                    const optionElement = document.createElement('div');
-                    optionElement.className = 'poll-option';
-                    optionElement.innerHTML = `
-                        <span class="option-number">${index + 1}</span>
-                        <span class="option-text">${option}</span>
-                        <span class="option-percentage">0%</span>
-                        <div class="poll-bar" style="width: 0%;"></div>
-                    `;
-                    pollOptionsContainer.appendChild(optionElement);
-                });
-            } else if (settings.pollType === 'freeform') {
-                const instructionElement = document.createElement('div');
-                instructionElement.className = 'poll-instruction';
-                instructionElement.textContent = 'Enter a hashtagged #word into chat to vote for it!';
-                pollOptionsContainer.appendChild(instructionElement);
+                if (numericVote === 1) {
+                    results['Yes'] = (results['Yes'] || 0) + 1;
+                    totalVotes++;
+                    if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                    return;
+                } else if (numericVote === 2 || numericVote === 0) {
+                    results['No'] = (results['No'] || 0) + 1;
+                    totalVotes++;
+                    if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                    return;
+                }
+            } else {
+                // Regular multiple choice handling
+                const option = settings.pollOptions[numericVote - 1];
+                if (option) {
+                    results[option] = (results[option] || 0) + 1;
+                    totalVotes++;
+                    if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                    return;
+                }
             }
         }
 
-        function updatePollResults() {
-            const pollOptionsContainer = document.getElementById('poll-options');
-            pollOptionsContainer.innerHTML = '';
-
-            if (settings.pollType === 'freeform' && !settings.pollClosed) {
-                const instructionElement = document.createElement('div');
-                instructionElement.className = 'poll-instruction';
-                instructionElement.textContent = 'Enter a hashtagged #word into chat to vote for it!';
-                pollOptionsContainer.appendChild(instructionElement);
+        // Special handling for yes/no polls
+        if (settings.pollType === 'yesno') {
+            if (yesMatches.has(vote)) {
+                results['Yes'] = (results['Yes'] || 0) + 1;
+                totalVotes++;
+                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                return;
             }
-
-            let displayOptions = [];
-
-            if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
-                displayOptions = settings.pollOptions.map(option => [option, results[option] || 0]);
-            } else if (settings.pollType === 'freeform') {
-                displayOptions = Object.entries(results).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            if (noMatches.has(vote)) {
+                results['No'] = (results['No'] || 0) + 1;
+                totalVotes++;
+                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                return;
             }
+        }
 
-            const maxVotes = Math.max(...displayOptions.map(([_, votes]) => votes));
-
-            displayOptions.forEach(([option, votes], index) => {
-                const percentage = totalVotes > 0 ? (votes / totalVotes * 100).toFixed(1) : 0;
-
-                const optionElement = document.createElement('div');
-                optionElement.className = 'poll-option';
+        // For multiple choice, cached option lookup
+        for (let i = 0; i < settings.pollOptions.length; i++) {
+            const option = settings.pollOptions[i];
+            const normalizedOption = option.toLowerCase();
+            
+            if (vote === normalizedOption || 
+                normalizedOption === vote + 's' || 
+                vote === normalizedOption + 's') {
                 
-                if (votes === maxVotes && settings.pollClosed) {
-                    optionElement.style.fontWeight = 'bold';
-                    optionElement.style.fontSize = '1.1em';
+                results[option] = (results[option] || 0) + 1;
+                totalVotes++;
+                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                return;
+            }
+        }
+    } else if (settings.pollType === 'freeform') {
+        // Freeform handling - optimize hashtag matching
+        if (vote.startsWith('#') && vote.length > 1) {
+            const hashtag = vote.substring(1).toUpperCase();
+            if (hashtag.match(/^\w+$/)) {
+                results[hashtag] = (results[hashtag] || 0) + 1;
+                totalVotes++;
+                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                return;
+            }
+        } else {
+            const numericVote = parseInt(vote, 10);
+            const resultsKeys = Object.keys(results);
+            if (!isNaN(numericVote) && numericVote > 0 && numericVote <= resultsKeys.length) {
+                const selectedOption = resultsKeys[numericVote - 1];
+                results[selectedOption]++;
+                totalVotes++;
+                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+            }
+        }
+    }
+}
+
+function updatePollVisibility() {
+    if (settings.pollEnabled) {
+        pollContainer.classList.remove('hidden');
+    } else {
+        pollContainer.classList.add('hidden');
+    }
+}
+
+function processData(data) {
+    if (data.setting && !data.settings) {
+        data.settings = {
+            [data.setting]: {
+                [data.type]: data.value !== undefined ? data.value : false
+            }
+        };
+    }
+
+    if (data.settings) {
+        let settingsChanged = false;
+        
+        if (data.settings.pollEnabled) {
+            settings.pollEnabled = data.settings.pollEnabled.setting;
+            settingsChanged = true;
+        }
+        if (data.settings.pollType) {
+            settings.pollType = data.settings.pollType.optionsetting || 'multiple';
+            settingsChanged = true;
+        }
+        if (data.settings.pollQuestion) {
+            settings.pollQuestion = data.settings.pollQuestion.textsetting || 'Loading poll...';
+            settingsChanged = true;
+        }
+        if (data.settings.pollTally) {
+            settings.pollTally = data.settings.pollTally.setting;
+            settingsChanged = true;
+        }
+        if (data.settings.pollStyle) {
+            settings.styleType = data.settings.pollStyle.optionsetting || 'default';
+            settingsChanged = true;
+        }
+        if (data.settings.pollSpam) {
+            settings.pollSpam = data.settings.pollSpam.setting;
+            settingsChanged = true;
+        }
+        if (data.settings.multipleChoiceOptions) {
+            settings.pollOptions = data.settings.multipleChoiceOptions.textsetting
+                .split(',')
+                .map(option => option.trim());
+            settingsChanged = true;
+        }
+        if (data.settings.pollTimer) {
+            settings.pollTimer = data.settings.pollTimer.numbersetting || 60;
+            settingsChanged = true;
+        }
+        settings.pollTimerState = data.settings.pollTimerState ? true : false;
+        
+        if (settingsChanged) {
+            results = {};
+            totalVotes = 0;
+            alreadyVoted = {};
+            settings.pollClosed = false; // Reset closed state when settings change
+            initializePoll();
+            updatePollVisibility();
+        }
+    } else if (data.chatmessage) {
+        queueVote(data.chatmessage, data.chatname, data.type);
+    } else if (data.cmd) {
+        if (data.cmd === "closepoll") {
+            closePoll();
+        } else if (data.cmd === "resetpoll") {
+            resetPoll();
+        } else if (data.cmd === "startpoll") {
+            startPoll();
+        }
+    }
+}
+
+function closePoll() {
+    settings.pollClosed = true;
+    pollTitle.innerText = settings.pollQuestion + " (Closed)";
+    updatePollResults();
+}
+
+function startPoll() {
+    settings.pollEnabled = true;
+    settings.pollClosed = false;
+    alreadyVoted = {};
+    totalVotes = 0;
+    results = {};
+    initializePoll();
+    updatePollVisibility();
+}
+
+function resetPoll() {
+    settings.pollClosed = false;
+    results = {};
+    totalVotes = 0;
+    alreadyVoted = {};
+    initializePoll();
+}
+
+function processInput(data) {
+    if (!data) return false;
+    if ("action" in data) {
+        if (data.action === "closepoll") {
+            closePoll();
+        } else if (data.action === "resetpoll") {
+            resetPoll();
+        } else if (data.action === "startpoll") {
+            startPoll();
+        }
+        return true;
+    } else if (data.chatmessage) {
+        queueVote(data.chatmessage, data.chatname, data.type);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+// Memory optimization - create connection manager
+const ConnectionManager = {
+    setupMainSocket() {
+        if (urlParams.has("server")) {
+            this.setupSocket(
+                urlParams.get("server") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api"),
+                urlParams.get('session').split(",")[0],
+                2, 1,
+                (data) => processInput(data)
+            );
+        }
+    },
+    
+    setupExtensionSocket() {
+        if (urlParams.has("server2") || urlParams.has("server3")) {
+            const serverURL = urlParams.has("server2") ? 
+                (urlParams.get("server2") || "wss://io.socialstream.ninja/extension") : 
+                (urlParams.get("server3") || "wss://io.socialstream.ninja/extension");
+            
+            this.setupSocket(
+                serverURL,
+                urlParams.get('session').split(",")[0],
+                3, 4,
+                (data) => {
+                    if ((urlParams.has("server2") || urlParams.has("server3"))) {
+                        processInput(data);
+                    }
                 }
-
-                optionElement.innerHTML = `
-                    ${!settings.pollClosed ? `<span class="option-number">${index + 1}</span>` : ''}
-                    <span class="option-text">${option}</span>
-                    ${settings.pollTally ? 
-                        `<span class="option-percentage">${votes} votes</span>` : 
-                        `<span class="option-percentage">${percentage}%</span>`}
-                    <div class="poll-bar" style="width: ${percentage}%;"></div>
-                `;
-
-                if (parseFloat(percentage) > 90) {
-                    optionElement.style.color = '#fff';
-                    optionElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
+            );
+        }
+    },
+    
+    setupSocket(serverURL, session, outChannel, inChannel, messageHandler) {
+        let socket = null;
+        let connectionAttempts = 1;
+        let reconnectionTimeout = null;
+        
+        function connect() {
+            if (reconnectionTimeout) {
+                clearTimeout(reconnectionTimeout);
+                reconnectionTimeout = null;
+            }
+            
+            if (socket) {
+                socket.onclose = null;
+                socket.close();
+            }
+            
+            socket = new WebSocket(serverURL);
+            
+            socket.onclose = function() {
+                reconnectionTimeout = setTimeout(() => {
+                    connectionAttempts += 1;
+                    connect();
+                }, 100 * connectionAttempts);
+            };
+            
+            socket.onopen = function() {
+                connectionAttempts = 1;
+                socket.send(JSON.stringify({ join: session, out: outChannel, in: inChannel }));
+            };
+            
+            socket.onerror = function(error) {
+                socket.close();
+            };
+            
+            socket.addEventListener("message", function(event) {
+                if (!event.data) return;
+                
+                try {
+                    const data = JSON.parse(event.data);
+                    const resp = messageHandler(data);
+                    
+                    if (resp !== null && data.get) {
+                        const ret = { 
+                            callback: {
+                                get: data.get,
+                                result: resp
+                            }
+                        };
+                        socket.send(JSON.stringify(ret));
+                    }
+                } catch (e) {
+                    // Silently ignore parsing errors
                 }
-
-                pollOptionsContainer.appendChild(optionElement);
             });
         }
-		
-		function processVote(vote, name, source) {
-			if (settings.pollClosed) return;
-			if (!settings.pollSpam && alreadyVoted[name+":"+source]) return;
-			
-			// Clean the vote: lowercase and remove common punctuation
-			vote = vote.trim().toLowerCase().replace(/[!.,?]+$/, '');
-			
-			if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
-				// Handle numeric votes first
-				const numericVote = parseInt(vote);
-				if (!isNaN(numericVote)) {
-					// For yes/no, 1 = Yes, 2 = No
-					if (settings.pollType === 'yesno') {
-						if (numericVote === 1) {
-							results['Yes'] = (results['Yes'] || 0) + 1;
-							totalVotes++;
-							if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
-							updatePollResults();
-							return;
-						} else if (numericVote === 2 || numericVote === 0) {
-							results['No'] = (results['No'] || 0) + 1;
-							totalVotes++;
-							if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
-							updatePollResults();
-							return;
-						}
-					} else {
-						// Regular multiple choice handling
-						const option = settings.pollOptions[numericVote - 1];
-						if (option) {
-							results[option] = (results[option] || 0) + 1;
-							totalVotes++;
-							if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
-							updatePollResults();
-							return;
-						}
-					}
-				}
+        
+        connect();
+    }
+};
 
-				// Special handling for yes/no polls
-				if (settings.pollType === 'yesno') {
-					const yesMatches = ['yes', 'y', 'yea', 'yeah', 'yep', 'yup', '1'];
-					const noMatches = ['no', 'n', 'nah', 'nope', '0', '2'];
-					
-					if (yesMatches.includes(vote)) {
-						results['Yes'] = (results['Yes'] || 0) + 1;
-						totalVotes++;
-						if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
-						updatePollResults();
-						return;
-					}
-					if (noMatches.includes(vote)) {
-						results['No'] = (results['No'] || 0) + 1;
-						totalVotes++;
-						if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
-						updatePollResults();
-						return;
-					}
-				}
+// Initialize iframe for communication
+const iframe = document.createElement("iframe");
+iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=${urlParams.get('password') || "false"}&solo&view=${urlParams.get('session')}&novideo&noaudio&label=poll&cleanoutput&room=${urlParams.get('session')}`;
+iframe.style.cssText = "width:0;height:0;border:0;border:none;position:absolute;";
+document.body.appendChild(iframe);
 
-				// For multiple choice, require either exact match or the vote must be the complete option name
-				let matchedOption = settings.pollOptions.find(option => {
-					const normalizedOption = option.toLowerCase();
-					return vote === normalizedOption || 
-						   normalizedOption === vote + 's' || // Handle singular/plural
-						   vote === normalizedOption + 's';
-				});
+window.addEventListener("message", (event) => {
+    if (event.source !== iframe.contentWindow) return;
+    if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+        processData(event.data.dataReceived.overlayNinja);
+    }
+});
 
-				if (matchedOption) {
-					results[matchedOption] = (results[matchedOption] || 0) + 1;
-					totalVotes++;
-					if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
-				}
-			} else if (settings.pollType === 'freeform') {
-				// Freeform handling remains the same
-				let hashtag = vote.match(/^#(\w+)$/);
-				if (hashtag) {
-					hashtag = hashtag[1].toUpperCase();
-					results[hashtag] = (results[hashtag] || 0) + 1;
-					totalVotes++;
-					if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
-				} else {
-					let numericVote = parseInt(vote, 10);
-					if (!isNaN(numericVote) && numericVote > 0 && numericVote <= Object.keys(results).length) {
-						let selectedOption = Object.keys(results)[numericVote - 1];
-						results[selectedOption]++;
-						totalVotes++;
-						if (!settings.pollSpam) alreadyVoted[name+":"+source] = true;
-					}
-				}
-			}
+// Setup socket connections
+ConnectionManager.setupMainSocket();
+ConnectionManager.setupExtensionSocket();
 
-			updatePollResults();
-		}
-		
-		function updatePollVisibility() {
-            const pollContainer = document.getElementById('poll-container');
-            if (settings.pollEnabled) {
-                pollContainer.classList.remove('hidden');
-            } else {
-                pollContainer.classList.add('hidden');
-            }
-        }
-
-        function processData(data) {
-			console.log("Received data:", data);  // For debugging
-
-			if (data.setting && !data.settings) {
-				data.settings = {
-					[data.setting]: {
-						[data.type]: data.value !== undefined ? data.value : false
-					}
-				};
-			}
-
-			if (data.settings) {
-				// console.log(data);
-				
-				if (data.settings.pollEnabled){
-					settings.pollEnabled = data.settings.pollEnabled.setting;
-				}
-				if (data.settings.pollType) {
-					settings.pollType = data.settings.pollType.optionsetting || 'multiple';
-				}
-				if (data.settings.pollQuestion) {
-					settings.pollQuestion = data.settings.pollQuestion.textsetting || 'Loading poll...';
-				}
-				if (data.settings.pollTally) {
-					settings.pollTally = data.settings.pollTally.setting;
-				}
-				if (data.settings.pollStyle) {
-					settings.styleType = data.settings.pollStyle.optionsetting || 'default';
-				}
-				if (data.settings.pollSpam) {
-					settings.pollSpam = data.settings.pollSpam.setting;
-				}
-				if (data.settings.multipleChoiceOptions) {
-					settings.pollOptions = data.settings.multipleChoiceOptions.textsetting
-						.split(',')
-						.map(option => option.trim());
-				}
-				if (data.settings.pollTimer) {
-					settings.pollTimer = data.settings.pollTimer.numbersetting || 60;
-				}
-				settings.pollTimerState = data.settings.pollTimerState ? true : false;
-			   
-				results = {};
-				totalVotes = 0;
-				alreadyVoted = {};
-				settings.pollClosed = false; // Reset closed state when settings change
-				initializePoll();
-				
-				updatePollVisibility();
-				
-			} else if (data.chatmessage) {
-				processVote(data.chatmessage, data.chatname, data.type);
-			} else if (data.cmd) {
-				if (data.cmd === "closepoll") {
-					closePoll();
-				} else if (data.cmd === "resetpoll") {
-					resetPoll();
-				} else if (data.cmd === "startpoll") {
-					startPoll();
-				}
-			} 
-		}
-		
-		function closePoll() {
-			settings.pollClosed = true;
-			const pollTitle = document.getElementById('poll-title');
-			pollTitle.innerText = settings.pollQuestion + " (Closed)";
-			updatePollResults();
-		}
-		
-		function startPoll() {
-			console.log("start poll");
-			settings.pollEnabled = true;
-			settings.pollClosed = false;
-			alreadyVoted = {};
-			totalVotes = 0;
-			results = {};
-			initializePoll();
-			updatePollVisibility();
-		}
-
-		function resetPoll() {
-			settings.pollClosed = false;
-			results = {};
-			totalVotes = 0;
-			alreadyVoted = {};
-			initializePoll();
-		}
-		
-		function processInput(data){
-			if (!data){return false;}
-			if ("action" in data){
-				if (data.action === "closepoll") {
-					closePoll();
-				} else if (data.action === "resetpoll") {
-					resetPoll();
-				} else if (data.action === "startpoll") {
-					startPoll();
-				}
-				return true;
-			} else if (data.chatmessage) {
-				processVote(data.chatmessage, data.chatname, data.type);
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-        // Initialize iframe for communication
-        const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=${urlParams.get('password') || "false"}&solo&view=${urlParams.get('session')}&novideo&noaudio&label=poll&cleanoutput&room=${urlParams.get('session')}`;
-        iframe.style.cssText = "width:0;height:0;border:0;border:none;position:absolute;";
-        document.body.appendChild(iframe);
-
-        window.addEventListener("message", (event) => {
-            if (event.source !== iframe.contentWindow) return;
-            if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
-                processData(event.data.dataReceived.overlayNinja);
-            }
-        });
-		
-		var conCon = 1;
-		var socketserver = false;
-		var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api";
-		var reconnectionTimeout = null;
-		function setupSocket() {
-			// Clear any existing reconnection timeout
-			if (reconnectionTimeout) {
-				clearTimeout(reconnectionTimeout);
-				reconnectionTimeout = null;
-			}
-
-			if (socketserver) {
-				socketserver.onclose = null;
-				socketserver.close();
-				socketserver = null;
-			}
-			socketserver = new WebSocket(serverURL);
-
-			socketserver.onclose = function () {
-				reconnectionTimeout = setTimeout(function () {
-					conCon += 1;
-					setupSocket();
-				}, 100 * conCon);
-			};
-			socketserver.onopen = function () {
-				conCon = 1;
-				socketserver.send(JSON.stringify({ join: urlParams.get('session').split(",")[0], out: 2, in: 1 }));
-				console.log("output channel: 2, input channel: 1");
-			};
-
-			socketserver.onerror = function (error) {
-				console.error("WebSocket error:", error);
-				socketserver.close();
-			};
-
-			socketserver.addEventListener("message", function (event) {
-				var resp = false;
-				if (event.data) {
-					try {
-						var data = JSON.parse(event.data);
-					} catch (e) {
-						return;
-					}
-					resp = processInput(data);
-					console.log(resp);
-					if (resp !== null) {
-						if (data.get) {
-							var ret = {};
-							ret.callback = {};
-							ret.callback.get = data.get;
-							ret.callback.result = resp;
-							socketserver.send(JSON.stringify(ret));
-						}
-					}
-				}
-			});
-		}
-
-		if (urlParams.has("server")) {
-			serverURL = urlParams.get("server") || serverURL;
-			setupSocket();
-		}
-		
-		var conConExtension = 1;
-		var socketserverExtension = false;
-		var serverURLExtension = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension";
-		var server2 = false;
-		var server3 = false;
-		var reconnectionTimeoutExtension = null;
-
-		function setupSocketExtension() {
-			if (reconnectionTimeoutExtension) {
-				clearTimeout(reconnectionTimeoutExtension);
-				reconnectionTimeoutExtension = null;
-			}
-
-			if (socketserverExtension) {
-				socketserverExtension.onclose = null;
-				socketserverExtension.close();
-				socketserverExtension = null;
-			}
-
-			socketserverExtension = new WebSocket(serverURLExtension);
-
-			socketserverExtension.onclose = function () {
-				reconnectionTimeoutExtension = setTimeout(function () {
-					conConExtension += 1;
-					setupSocketExtension();
-				}, 100 * conConExtension);
-			};
-			socketserverExtension.onopen = function () {
-				conConExtension = 1;
-				socketserverExtension.send(JSON.stringify({ join: urlParams.get('session').split(",")[0], out: 3, in: 4 }));
-				console.log("output channel: 3, input channel: 4");
-			};
-
-			socketserverExtension.onerror = function (error) {
-				console.error("WebSocket error:", error);
-				socketserverExtension.close();
-			};
-
-			socketserverExtension.addEventListener("message", function (event) {
-				var resp = false;
-				if (event.data && server2) {
-					try {
-						var data = JSON.parse(event.data);
-						processInput(data);
-					} catch (e) {
-						console.error(e);
-					}
-				}
-			});
-		}
-
-		if (urlParams.has("server2")) {
-			server2 = true;
-			if (urlParams.has("server3")) {
-				server3 = true;
-			}
-			serverURLExtension = urlParams.get("server2") || serverURLExtension;
-			setupSocketExtension();
-		} else if (urlParams.has("server3")) {
-			server3 = true;
-			serverURLExtension = urlParams.get("server3") || serverURLExtension;
-			setupSocketExtension();
-		}
-
-        initializePoll();
+// Initialize the poll on page load
+document.addEventListener('DOMContentLoaded', initializePoll);
     </script>
 </body>
 </html>
