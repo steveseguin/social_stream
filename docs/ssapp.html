@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Social Stream Ninja</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom right, #4a8dc7, #63a4d8);
+            color: #ffffff;
+            margin: 0;
+            padding: 0; /* Remove body padding if this is the full page */
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.3); /* Slightly darker background for readability */
+            border-radius: 10px;
+            padding: 25px 35px;
+            margin: 30px; /* Add margin around the container */
+            max-width: 900px;
+            width: 90%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+         h2 {
+            color: #e0f2ff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 8px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+        }
+        p, li {
+            font-size: 1.05em;
+            color: #e8faff;
+        }
+        a {
+            color: #a9dcff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        ol, ul {
+            padding-left: 25px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        code {
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            font-size: 0.95em;
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            background: #000;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+         .note {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #a9dcff;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.95em;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 15px;
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+             h2 {
+                font-size: 1.4em;
+            }
+            p, li {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Social Stream Ninja! 🥷</h1>
+        <p>Consolidate your live social messaging streams and more, all in one place. This page will guide you through the first steps.</p>
+        <p class="note">Once you add your first source, this welcome message will disappear.</p>
+
+        <h2>Getting Started: Adding Your First Chat Source</h2>
+        <ol>
+            <li>Look at the <strong>left sidebar</strong> of the main application window.</li>
+            <li>Click the button corresponding to the platform you want to add (e.g., <img src="https://socialstream.ninja/sources/images/youtube.png" alt="YouTube icon" style="height: 1em; vertical-align: middle; border-radius: 50%;"> <code>YouTube Username</code>, <img src="https://socialstream.ninja/sources/images/twitch.png" alt="Twitch icon" style="height: 1em; vertical-align: middle; border-radius: 50%;"> <code>Twitch Username</code>, etc.).</li>
+            <li>A prompt will appear. Enter your <strong>username</strong>, <strong>Video ID</strong>, or <strong>URL</strong> as requested.
+                <ul>
+                    <li>For most platforms, this is your username (e.g., <code>YourChannelName</code>).</li>
+                    <li>For YouTube, you can also add by <strong>Video ID</strong> if you know it.</li>
+                    <li>For unsupported sites, use <code>Other chat sites</code> and paste the direct chat URL.</li>
+                </ul>
+            </li>
+            <li>The source will be added to the main area. Now click the <code>Activate source</code> button (or <code>Select Live Sources</code> / <code>Auto-find & Activate</code> for YouTube channel sources).</li>
+            <li>For some sites (like Facebook, TikTok, Instagram), you may need to use the <code>Sign in</code> button first or navigate within the popped-out window to find the live chat.</li>
+            <li>Your chat messages will now start appearing in the <strong>Dashboard / Overlay</strong>! You can access this via the link at the top right of the main app window, labeled <code>Streaming chat (dock & overlay)</code>. Copy this link into OBS as a Browser Source or Dock.</li>
+        </ol>
+
+        <h2>Video Guide</h2>
+        <p>Watch this video for a visual walkthrough:</p>
+        <div class="video-container">
+            <iframe 
+                src="https://www.youtube.com/embed/YOUR_YOUTUBE_VIDEO_ID" 
+                title="YouTube video player" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                allowfullscreen>
+            </iframe>
+        </div>
+        <p class="note">Make sure to replace <code>YOUR_YOUTUBE_VIDEO_ID</code> in the code with the actual ID from your YouTube video URL.</p>
+
+        <h2>Key Features</h2>
+        <ul>
+            <li>Supports live automated <strong>two-way chat messaging</strong> with Facebook, YouTube, Twitch, Kick, Zoom, TikTok, Rumble, DLive, and dozens more.</li>
+            <li>Includes a "<strong>Featured Chat</strong>" overlay, with messages selectable via the dockable dashboard (auto or manual selection).</li>
+            <li>Supports <strong>bot commands</strong> and automated chat responses (custom logic via scriptable plugins).</li>
+            <li><strong>LLM support</strong> (including native Ollama API) for AI moderation, chat assistance, RAG, and custom instructions.</li>
+            <li><strong>Text-to-Speech (TTS)</strong> support for free, premium, and ultra-premium services.</li>
+            <li>Multi-channel source-icon support to easily differentiate streams.</li>
+            <li>Automatic <strong>message relaying</strong> between platforms.</li>
+            <li><strong>No user login, API key, or permissions needed</strong> for chat capture from most sites.</li>
+            <li>Message queuing for later highlighting.</li>
+            <li>Secure data transport using VDO.Ninja's API - free and low latency!</li>
+        </ul>
+
+        <h2>Need Help?</h2>
+        <p>If you have questions or run into issues, the best place to get help is our friendly community on Discord.</p>
+        <p><a href="https://discord.socialstream.ninja" target="_blank">Join the Social Stream Ninja Discord Server</a></p>
+
+        <p style="text-align: center; margin-top: 30px;"><strong>Happy Streaming!</strong></p>
+    </div>
+</body>
+</html>
