@@ -84,7 +84,7 @@
 		var msg="";
 		try {
 			if (eventType){
-				msg = getAllContentNodes(ele.querySelector(".pencraft.pc-opacity-90").trim());
+				msg = getAllContentNodes(ele.querySelector(".pencraft.pc-opacity-90")).trim();
 				if (msg!="joined"){
 					msg = getAllContentNodes(ele).trim();
 				}
