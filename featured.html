@@ -724,141 +724,139 @@
 		}
 		
 		/* Styles for when avatar is hidden */
-.no-avatar-donation {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  margin-top: 5px;
-  transform: none;
-  max-width: none;
-  width: auto;
-  z-index: 2;
-  border-radius: 3px;
-  overflow: hidden;
-}
+		.no-avatar-donation {
+		  position: relative;
+		  display: flex;
+		  flex-direction: row;
+		  margin-top: 7px;
+		  transform: none;
+		  max-width: none;
+		  width: auto;
+		  z-index: 2;
+		  border-radius: 3px;
+		  overflow: hidden;
+		}
 
-.no-avatar-donation .donation-title {
-  display: inline-block;
-  padding: 3px 8px;
-  font-size: 14px;
-  background: linear-gradient(to right, var(--donation-gradient-stop0), var(--donation-gradient-stop1), var(--donation-gradient-stop2));
-  color: var(--donation-color);
-  font-weight: bold;
-  width:unset;
-  border-radius: 3px;
-  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-}
+		.no-avatar-donation .donation-title {
+		  display: inline-block;
+		  padding: 3px 8px;
+		  font-size: 20px;
+		  background: linear-gradient(to right, var(--donation-gradient-stop0), var(--donation-gradient-stop1), var(--donation-gradient-stop2));
+		  color: var(--donation-color);
+		  font-weight: bold;
+		  width:unset;
+		  border-radius: 3px;
+		  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+		}
 
-.no-avatar-donation .subtitle {
-  display: inline-block;
-  font-size: 14px;
-  padding: 3px 8px;
-  background-color: var(--donation-bg-color);
-  color: var(--donation-color);
-}
+		.no-avatar-donation .subtitle {
+		  display: inline-block;
+		  font-size: 20px;
+		  padding: 3px 8px;
+		  background-color: var(--donation-bg-color);
+		  color: var(--donation-color);
+		}
 
-/* For just membership or just subtitle */
-.no-avatar-donation.single-item .donation-title,
-.no-avatar-donation.single-item .subtitle {
-  border-radius: 3px;
-}
+		/* For just membership or just subtitle */
+		.no-avatar-donation.single-item .donation-title,
+		.no-avatar-donation.single-item .subtitle {
+		  border-radius: 3px;
+		}
 
-/* Position membership/donation info relative to message in no avatar mode */
-.no-avatar .hl-c-cont {
-  position: relative;
-}
+		/* Position membership/donation info relative to message in no avatar mode */
+		.no-avatar .hl-c-cont {
+		  position: relative;
+		}
 
-/* Fix name positioning */
-.no-avatar .hl-name {
-  margin-bottom: 0; /* Remove the gap */
-  max-width: calc(100% - 20px);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  z-index: 3;
-}
+		/* Fix name positioning */
+		.no-avatar .hl-name {
+		  margin-bottom: 0; /* Remove the gap */
+		  max-width: calc(100% - 20px);
+		  overflow: hidden;
+		  text-overflow: ellipsis;
+		  z-index: 3;
+		}
 
-.no-avatar .hl-message {
-  margin-bottom: 0;
-  border-radius: var(--rounded-border-radius) var(--rounded-border-radius) 0 0;
-}
+		.no-avatar .hl-message {
+		  margin-bottom: 0;
+		  border-radius: var(--rounded-border-radius) var(--rounded-border-radius) 0 0;
+		}
 
-/* Adjustments for source icon in no avatar mode */
-.no-avatar .noavatar-source {
-  position: relative;
-  bottom: auto;
-  left: auto;
-  display: inline-block;
-  margin-left: 5px !important;
-  vertical-align: middle;
-}
+		/* Adjustments for source icon in no avatar mode */
+		.no-avatar .noavatar-source {
+		  position: relative;
+		  bottom: auto;
+		  left: auto;
+		  display: inline-block;
+		  margin-left: 5px !important;
+		  vertical-align: middle;
+		}
 
-/* When stacked with no avatar */
-.stacked.no-avatar .hl-name {
-  position: relative;
-  top: 0;
-  left: 0;
-  margin-left: 20px;
-}
+		/* When stacked with no avatar */
+		.stacked.no-avatar .hl-name {
+		  position: relative;
+		  top: 0;
+		  left: 0;
+		  margin-left: 20px;
+		}
 
-/* Specific style for sponsorship label to match example image */
-.no-avatar-donation.sponsorship {
-  display: inline-block;
-  background: #eee;
-  border-radius: 3px;
-  padding: 2px 6px;
-  font-size: 12px;
-  font-weight: bold;
-  color: #555;
-  text-transform: uppercase;
-  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-}
+		/* Specific style for sponsorship label to match example image */
+		.no-avatar-donation.sponsorship {
+		  display: inline-block;
+		  background: #eee;
+		  border-radius: 3px;
+		  padding: 2px 6px;
+		  font-size: 20px;
+		  font-weight: bold;
+		  color: #555;
+		  text-transform: uppercase;
+		  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+		}
 
-/* Handle mobile/small screens */
-@media (max-width: 600px) {
-  .no-avatar-donation {
-    left: 20px;
-  }
-}
+		/* Handle mobile/small screens */
+		@media (max-width: 600px) {
+		  .no-avatar-donation {
+			left: 20px;
+		  }
+		}
 
-.no-avatar .donation {
-  position: relative;
-  left: auto;
-  top: auto;
-  transform: none;
-  width: 100%;
-  margin-top: 0;
-  display: flex;
-  flex-direction: row;
-  border-radius: 0;
-  z-index: 2;
-}
+		.no-avatar .donation {
+		  position: relative;
+		  left: auto;
+		  top: auto;
+		  transform: none;
+		  width: 100%;
+		  margin-top: 0;
+		  display: flex;
+		  flex-direction: row;
+		  border-radius: 0;
+		  z-index: 2;
+		}
 
-.no-avatar .donation .donation-title {
-  text-align: center;
-  background-color: var(--donation-gradient-stop0);
-  color: black;
-  padding: 8px 15px;
-  font-size: 14px;
-  flex-grow: 1;
-  border-radius: 0;
-  width:unset;
-}
-
-
-.no-avatar .donation .subtitle {
-  background-color: var(--donation-gradient-stop1);
-  color: var(--donation-color);
-  padding: 8px 15px;
-  font-size: 14px;
-  font-weight: bold;
-  border-radius: 0;
-}
+		.no-avatar .donation .donation-title {
+		  text-align: center;
+		  background-color: var(--donation-gradient-stop0);
+		  color: black;
+		  padding: 8px 15px;
+		  font-size: 20px;
+		  flex-grow: 1;
+		  border-radius: 0;
+		  width:unset;
+		}
 
 
+		.no-avatar .donation .subtitle {
+		  background-color: var(--donation-gradient-stop1);
+		  color: var(--donation-color);
+		  padding: 8px 15px;
+		  font-size: 20px;
+		  font-weight: bold;
+		  border-radius: 0;
+		}
 
-.no-avatar .donation::after {
-  display: none;
-}
+		.no-avatar .donation::after {
+		  display: none;
+		}
 		</style>
 	</head>
 	<body>
