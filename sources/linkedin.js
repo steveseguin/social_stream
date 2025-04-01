@@ -99,7 +99,7 @@
 	  var name = "";
 	  
 	  try{
-		  name = ele.querySelector(".comments-post-meta__name-text > span > span[aria-hidden='true'], h3.comments-post-meta__actor .comments-post-meta__name-text").textContent;
+		  name = ele.querySelector(".comments-post-meta__name-text > span > span[aria-hidden='true'], h3.comments-post-meta__actor .comments-post-meta__name-text, .comments-post-metaname-text").textContent;
 		  name = escapeHtml(name);
 	  } catch(e){
 		  
@@ -107,11 +107,15 @@
 	  if (name){
 		name = name.trim();
 	  } else {
-		  name = ele.querySelector(".comments-post-meta__name-text").textContent;
+		  name = ele.querySelector(".comments-post-meta__name-text, .comments-post-metaname-text, .comments-post-metaactor").textContent;
 		  if (name){
 			name = name.trim();
 			name = escapeHtml(name);
 		  }
+	  }
+	  
+	  if (name){
+		  name = name.replace("• You","");
 	  }
 	  
 	  var msg = "";
