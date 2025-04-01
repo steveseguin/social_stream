@@ -265,6 +265,54 @@
 	})();
 	
 	
+	
+	function findViewerSpan() {
+	  const spans = document.querySelectorAll('span');
+	  return Array.from(spans).find(span => {
+		const text = span.textContent.trim();
+		return text.includes('view') && !text.includes('LIVE') && /\d+\s*view/.test(text);
+	  });
+	}
+	
+	function checkViewers(){
+		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
+			try {
+				let viewerSpan = findViewerSpan();
+				if (viewerSpan && viewerSpan.textContent){
+					let views = viewerSpan.textContent.toUpperCase();
+					let multiplier = 1;
+					if (views.includes("K")){
+						multiplier = 1000;
+						views = views.replace("K","");
+					} else if (views.includes("M")){
+						multiplier = 1000000;
+						views = views.replace("M","");
+					}
+					views = views.split(" ")[0];
+					if (views == parseFloat(views)){
+						views = parseFloat(views) * multiplier;
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							({message:{
+									type: 'x',
+									event: 'viewer_update',
+									meta: views
+								}
+							}),
+							function (e) {}
+						);
+					}
+				}
+			} catch (e) {
+				console.log(e);
+			}
+		}
+	}
+	
+	setTimeout(function(){checkViewers();},2000);
+	setInterval(function(){checkViewers()},5000);
+	
+	
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
