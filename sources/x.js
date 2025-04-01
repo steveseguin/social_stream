@@ -304,13 +304,13 @@
 					}
 				}
 			} catch (e) {
-				//console.log(e);
+				console.log(e);
 			}
 		}
 	}
 	
-	setTimeout(function(){checkViewers();},2500);
-	setInterval(function(){checkViewers()},65000);
+	setTimeout(function(){checkViewers();},2000);
+	setInterval(function(){checkViewers()},5000);
 	
 	
 	function onElementInserted(target) {
