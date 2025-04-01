@@ -99,7 +99,7 @@
 	  var name = "";
 	  
 	  try{
-		  name = ele.querySelector(".comments-post-meta__name-text > span > span[aria-hidden='true']").textContent;
+		  name = ele.querySelector(".comments-post-meta__name-text > span > span[aria-hidden='true'], h3.comments-post-meta__actor .comments-post-meta__name-text").textContent;
 		  name = escapeHtml(name);
 	  } catch(e){
 		  
@@ -116,7 +116,7 @@
 	  
 	  var msg = "";
 	  try {
-		msg = ele.querySelector('.comments-comment-item__main-content').textContent;
+		msg = ele.querySelector('.comments-comment-item__main-content, .comments-comment-item-content-body').textContent;
 		msg = escapeHtml(msg);
 	  } catch(e){
 		
