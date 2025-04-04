@@ -136,10 +136,14 @@
 		if ("settings" in response){
 			settings = response.settings;
 		}
+		if ("state" in response){
+			isExtensionOn = response.state;
+		}
 	});
-
+var isExtensionOn = true;
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
+			if (!isExtensionOn){return;}
 			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 					document.querySelector('input[class^="input-"], textarea, input[type="text"]').focus();
@@ -190,6 +194,42 @@
 	}
 	
 	console.log("social stream injected");
+	
+
+	function checkViewers(){
+		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
+			try {
+				let viewerSpan = document.querySelectorAll("[class*='viewerCountContainer'] button")[1];
+				if (viewerSpan && viewerSpan.textContent){
+					let views = viewerSpan.textContent.toUpperCase();
+					let multiplier = 1;
+					if (views.includes("K")){
+						multiplier = 1000;
+						views = views.replace("K","");
+					} else if (views.includes("M")){
+						multiplier = 1000000;
+						views = views.replace("M","");
+					}
+					views = views.split(" ")[0];
+					if (views == parseFloat(views)){
+						views = parseFloat(views) * multiplier;
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							({message:{
+									type: 'substack',
+									event: 'viewer_update',
+									meta: views
+								}
+							}),
+							function (e) {}
+						);
+					}
+				}
+			} catch (e) {
+				console.log(e);
+			}
+		}
+	}
 
 	setInterval(function(){
 		try {
@@ -198,7 +238,11 @@
 				document.querySelector('h4').marked=true;
 				onElementInserted(document.querySelector('h4').nextSibling.childNodes[0]);
 			}
+			
+			checkViewers();
 		}} catch(e){}
+		
+		
 	},2000);
 
 })();
