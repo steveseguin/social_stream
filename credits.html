@@ -438,6 +438,35 @@
 				transform: translateY(-300vh);
 			}
 		}
+
+        /* Avatar styles */
+        .avatar {
+            display: inline-block;
+            width: 6vh;
+            height: 6vh;
+            border-radius: 50%;
+            margin-right: 1vh;
+            vertical-align: middle;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .user-entry {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1vh;
+        }
+
+        .user-entry.with-avatar {
+            margin-bottom: 2vh;
+        }
+
+        .user-info {
+            display: inline-block;
+            vertical-align: middle;
+        }
 	</style>
 </head>
 <body>
@@ -477,6 +506,7 @@
 			this.messageCount = 0;
 			this.donations = 0;
 			this.isMember = false;
+            this.avatarUrl = null;
 		}
 
 		get score() {
@@ -502,6 +532,19 @@
 			
 			return `${nameDisplay} ${badgesDisplay} ${typeDisplay}${donationDisplay}`;
 		}
+
+        generateHtml() {
+            const showAvatars = urlParams.has('showavatar') || urlParams.has('showavatars');
+            
+            if (showAvatars && this.avatarUrl) {
+                return `<div class="user-entry with-avatar">
+                    <img src="${this.avatarUrl}" alt="${this.name}" class="avatar">
+                    <span class="user-info">${this.displayName}</span>
+                </div>`;
+            } else {
+                return `<div class="user-entry">${this.displayName}</div>`;
+            }
+        }
 	}
 
 	function getOrCreateUser(name, type) {
@@ -527,6 +570,11 @@
 		const user = getOrCreateUser(data.chatname, data.type);
 		user.messageCount++;
 
+        // Store avatar URL if available
+        if (data.chatimg) {
+            user.avatarUrl = data.chatimg;
+        }
+
 		if (data.membership) {
 			user.isMember = true;
 		}
@@ -550,17 +598,17 @@
 
 		if (vips.length > 0) {
 			content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">VIP Supporters</div>`;
-			content += vips.map(u => u.displayName).join('<br>') + '<br><br>';
+			content += vips.map(u => u.generateHtml()).join('') + '<br><br>';
 		}
 
 		if (regulars.length > 0) {
 			content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Regular Supporters</div>`;
-			content += regulars.map(u => u.displayName).join('<br>') + '<br><br>';
+			content += regulars.map(u => u.generateHtml()).join('') + '<br><br>';
 		}
 
 		if (participants.length > 0) {
 			content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Participants</div>`;
-			content += participants.map(u => u.displayName).join('<br>');
+			content += participants.map(u => u.generateHtml()).join('');
 		}
 
 		return content;
