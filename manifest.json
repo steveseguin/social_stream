@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.16.1",
+  "version": "3.16.3",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -111,6 +111,7 @@
     "https://web.whatsapp.com/",
     "https://www.amazon.com/live*",
 	"https://substack.com/*?liveStream=*",
+	"https://*.substack.com/live-stream/*",
     "https://www.amazon.com/b/?node=*&broadcast=*",
     "https://*.telegram.org/*",
     "https://*.webex.com/*",
@@ -698,7 +699,7 @@
     },
 	{
       "js": [ "./sources/substack.js" ],
-      "matches": [ "https://substack.com/*?liveStream=*" ]
+      "matches": [ "https://substack.com/*?liveStream=*", "https://*.substack.com/live-stream/*" ]
     },
     {
       "js": [ "./sources/tiktok.js" ],
