@@ -214,6 +214,12 @@ A bit about Social Stream Ninja (old now): https://www.youtube.com/watch?v=X_11N
 
 How to setup for discord, slack, whatsapp, meet, and telegram, see: https://www.youtube.com/watch?v=L3l0_8V1t0Q
 
+### Important Notice
+
+Using this application may potentially violate the Terms of Service of some social media platforms.
+
+Additionally, using timed commands, bots, or automated messaging in chats increases the risk of your account being temporarily blocked or permanently banned by these platforms. Please use responsibly and be aware of each platform's terms before proceeding.
+
 ### Manually install extension
 
 This extension should work with Chromium-based browser on systems that support webRTC. This includes Chrome, Edge, and Brave. [Firefox users see here](https://github.com/steveseguin/social_stream#firefox-support).
