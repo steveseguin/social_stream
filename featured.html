@@ -722,7 +722,141 @@
 			margin-left: auto;
 			margin-right: 15px;
 		}
+		
+		/* Styles for when avatar is hidden */
+		.no-avatar-donation {
+		  position: relative;
+		  display: flex;
+		  flex-direction: row;
+		  margin-top: 7px;
+		  transform: none;
+		  max-width: none;
+		  width: auto;
+		  z-index: 2;
+		  border-radius: 3px;
+		  overflow: hidden;
+		}
 
+		.no-avatar-donation .donation-title {
+		  display: inline-block;
+		  padding: 3px 8px;
+		  font-size: 20px;
+		  background: linear-gradient(to right, var(--donation-gradient-stop0), var(--donation-gradient-stop1), var(--donation-gradient-stop2));
+		  color: var(--donation-color);
+		  font-weight: bold;
+		  width:unset;
+		  border-radius: 3px;
+		  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+		}
+
+		.no-avatar-donation .subtitle {
+		  display: inline-block;
+		  font-size: 20px;
+		  padding: 3px 8px;
+		  background-color: var(--donation-bg-color);
+		  color: var(--donation-color);
+		}
+
+		/* For just membership or just subtitle */
+		.no-avatar-donation.single-item .donation-title,
+		.no-avatar-donation.single-item .subtitle {
+		  border-radius: 3px;
+		}
+
+		/* Position membership/donation info relative to message in no avatar mode */
+		.no-avatar .hl-c-cont {
+		  position: relative;
+		}
+
+		/* Fix name positioning */
+		.no-avatar .hl-name {
+		  margin-bottom: 0; /* Remove the gap */
+		  max-width: calc(100% - 20px);
+		  overflow: hidden;
+		  text-overflow: ellipsis;
+		  z-index: 3;
+		}
+
+		.no-avatar .hl-message {
+		  margin-bottom: 0;
+		  border-radius: var(--rounded-border-radius) var(--rounded-border-radius) 0 0;
+		}
+
+		/* Adjustments for source icon in no avatar mode */
+		.no-avatar .noavatar-source {
+		  position: relative;
+		  bottom: auto;
+		  left: auto;
+		  display: inline-block;
+		  margin-left: 5px !important;
+		  vertical-align: middle;
+		}
+
+		/* When stacked with no avatar */
+		.stacked.no-avatar .hl-name {
+		  position: relative;
+		  top: 0;
+		  left: 0;
+		  margin-left: 20px;
+		}
+
+		/* Specific style for sponsorship label to match example image */
+		.no-avatar-donation.sponsorship {
+		  display: inline-block;
+		  background: #eee;
+		  border-radius: 3px;
+		  padding: 2px 6px;
+		  font-size: 20px;
+		  font-weight: bold;
+		  color: #555;
+		  text-transform: uppercase;
+		  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+		}
+
+		/* Handle mobile/small screens */
+		@media (max-width: 600px) {
+		  .no-avatar-donation {
+			left: 20px;
+		  }
+		}
+
+		.no-avatar .donation {
+		  position: relative;
+		  left: auto;
+		  top: auto;
+		  transform: none;
+		  width: 100%;
+		  margin-top: 0;
+		  display: flex;
+		  flex-direction: row;
+		  border-radius: 0;
+		  z-index: 2;
+		}
+
+		.no-avatar .donation .donation-title {
+		  text-align: center;
+		  background-color: var(--donation-gradient-stop0);
+		  color: black;
+		  padding: 8px 15px;
+		  font-size: 20px;
+		  flex-grow: 1;
+		  border-radius: 0;
+		  width:unset;
+		}
+
+
+		.no-avatar .donation .subtitle {
+		  background-color: var(--donation-gradient-stop1);
+		  color: var(--donation-color);
+		  padding: 8px 15px;
+		  font-size: 20px;
+		  font-weight: bold;
+		  border-radius: 0;
+		}
+
+		.no-avatar .donation::after {
+		  display: none;
+		}
 		</style>
 	</head>
 	<body>
@@ -2497,524 +2631,564 @@
 			}
 			
 			function showmessage(contents) {
-				try {
-					clearTimeout(timeoutTimer);
-					
-					if (!stacking) {
-						document.getElementById("output").classList.add(transitionType);
-					}
-					clearTimeout(nextComment);
-
-					if (isIFrame) {
-						clearTimeout(iframeTimeout);
-						iframeTimeout = setTimeout(function () {
-							parent.postMessage({ resizeWindow: { height: "220px" } }, "*");
-						}, 300);
-					}
-
-					if (queuetime) {
-						queueTimer = setTimeout(checkqueue, queuetime);
-					}
+			  try {
+				clearTimeout(timeoutTimer);
 				
-					nextComment = setTimeout(
-						function (data) {
-							var addImage = "";
-							var largeImage = false;
-							
-							if (!data.chatmessage && data.contentimg){
-								if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
-									data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video>';
-								} else {
-									data.chatmessage = '<img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" />';
-								}
-								largeImage = true;
-							} else if (data.contentimg){
-								if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
-									addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video></div>';
-								} else {
-									addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></div>';
-								}
-							} else {
-								data.contentimg = "";
-							}
-							
-							
-
-							if (!data.chatimg) {
-								data.chatimg = "";
-							}
-							var showType = "";
-							
-							if (!data.type) {
-								data.type = "none";
-							} else {
-								data.type = data.type.toString();
-								showType = data.type;
-							}
-
-							var customSourceClass = "sourceOffset";
-							if (showType && showsource && avatar) {
-								showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
-							} else if (showType && showsource && !avatar) {
-								showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
-							} else {
-								customSourceClass = "";
-								showType = "";
-							}
-
-							if (data.sourceImg && customSource && avatar) {
-								showType += '<img src="./sources/images/' + data.sourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
-							} else if (data.sourceImg && customSource && !avatar) {
-								showType += '<img src="./sources/images/' + +data.sourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
-							}
-
-							if (hideNames) {
-								data.chatname = "";
-							} else if (firstNamesOnly && data.chatname) {
-								data.chatname = data.chatname.toString();
-								var nn = data.chatname.split(" ");
-								if (nn.length > 1) {
-									if (nn[0].length <= 2) {
-										if (nn[1].length < 6) {
-											data.chatname = nn[0] + " " + nn[1];
-										} else {
-											data.chatname = nn[0];
-										}
-									} else {
-										data.chatname = nn[0];
-									}
-								}
-							} else if (!data.chatname) {
-								data.chatname = "";
-							} else {
-								data.chatname = data.chatname.toString();
-							}
-
-							var memebershipHTML = "";
-
-							if (data.hasMembership) {
-								if (data.hasMembership===true){
-									data.hasMembership = getTranslation("membership", "Membership");
-								}
-								// doesn't have subtitles; shouldn't at least.
-								data.membership = data.hasMembership.toString();
-								memebershipHTML = data.membership;
-							} else if (data.membership) {
-								if (data.membership===true){
-									data.membership = getTranslation("membership", "Membership");
-								} else {
-									data.membership = data.membership.toString(); 
-								}
-								
-								if (data.subtitle) {
-									memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
-								} else {
-									memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div></div>";
-								}
-							} else if (data.subtitle) {
-								memebershipHTML = '<div class="donation membership"><div class="subtitle">' + data.subtitle + "</div></div>";
-							} else {
-								data.membership = "";
-							}
-
-							if (!data.chatmessage) {
-								data.chatmessage = "";
-							} else {
-								data.chatmessage = data.chatmessage.toString();
-							}
-
-							var donationHTML = "";
-							if (data.hasDonation) {
-								if (data.type === "twitch") {
-									let donationTitle = getTranslation("cheers", "CHEERS");
-									if ("title" in data){
-										donationTitle = data.title;
-									}
-									donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
-									
-								} else if ((data.type == "youtube") || (data.type == "youtubeshorts")) {
-									let donationTitle = getTranslation("donation", "DONATION");
-									if ("title" in data){
-										donationTitle = data.title;
-									}
-									if (memebershipHTML) {
-										donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
-									} else {
-										donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
-									}
-									
-								} else if (data.title){
-									donationHTML = '<div class="donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
-									
-								} else {
-									donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
-								}
-							} else {
-								data.hasDonation = "";
-							}
-
-							var backgroundColor = "";
-							if (data.backgroundColor) {
-								if (data.backgroundColor.startsWith("background-color:")) {
-									backgroundColor = data.backgroundColor;
-								} else {
-									backgroundColor = "background-color:" + data.backgroundColor + ";";
-								}
-							}
-
-							var styleOverride = backgroundColor;
-
-							if (data.textColor) {
-								if (data.textColor.startsWith("color")) {
-									styleOverride += " " + data.textColor;
-								} else {
-									styleOverride += "color:" + data.textColor + ";";
-								}
-							}
-							if (styleOverride) {
-								styleOverride = ' style="' + styleOverride + '"';
-							}
-
-							var styleOverrideName = "";
-							if (data.backgroundNameColor) {
-								styleOverrideName = data.backgroundNameColor;
-							}
-
-							if (data.nameColor && colorized) {
-								styleOverrideName += " color:" + data.nameColor + ";";
-							} else if (data.textNameColor) {
-								styleOverrideName += " " + data.textNameColor;
-							}
-
-							if (styleOverrideName) {
-								styleOverrideName = 'style="' + styleOverrideName + '"';
-							}
-
-							var avatarImg = "";
-							if (avatar) {
-								if (data.backupChatimg) {
-									avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="' + data.backupChatimg + '"onerror="errorImage(this);"></div>';
-								} else {
-									let chatimg = "";
-									if (!data.chatimg){
-										if (!data.chatname && data.event){
-											chatimg = "./icons/announcement.png";
-										} else {
-											chatimg = "./sources/images/unknown.png";
-										}
-									} else {
-										chatimg = data.chatimg
-									}
-									avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + chatimg + '" class="hl-profile-pic" onerror="errorImage(this);"></div>';
-								}
-							} 
-
-							var chatbadges = "";
-							if (data.chatbadges && showbadges) {
-								data.chatbadges.forEach(badge => {
-									if (typeof badge == "object") {
-										if (badge.type && badge.type == "img" && badge.src) {
-											chatbadges += "<img class='hl-badge' src='" + badge.src + "' />";
-										} else if (badge.type && badge.type == "svg" && badge.html) {
-											chatbadges += "<span class='hl-badge'>" + badge.html + "</span>";
-										}
-									} else {
-										chatbadges += "<img class='hl-badge' src='" + badge + "' />";
-									}
-								});
-							}
-
-							if (chatbadges) {
-								chatbadges = '<div class="hl-badges" >' + chatbadges + "</div>";
-							}
-
-							if (stacking) {
-								try {
-									document.getElementById("message").id = "";
-									document.getElementById("nameDIV").id = "";
-									document.getElementById("newmessage").id = "";
-								} catch (e) {}
-
-								const messageId = 'msg_' + Date.now(); // Unique ID for the message
-								
-								// Create new elements
-								const messageContainer = document.createElement('div');
-								messageContainer.className = 'hl-c-cont highlight-chat stacked';
-								messageContainer.id = messageId;
-								messageContainer.setAttribute('data-source-type', data.type);
-
-								// Create name div
-								const nameDiv = document.createElement('div');
-								nameDiv.className = 'hl-name';
-								nameDiv.id = 'nameDIV_' + messageId;
-								if (styleOverrideName) {
-									nameDiv.setAttribute('style', styleOverrideName.replace(/style="/i, '').replace(/"$/,''));
-								}
-								nameDiv.innerHTML = data.chatname + chatbadges;
-								messageContainer.appendChild(nameDiv);
-
-								// Create message div
-								const messageDiv = document.createElement('div');
-								messageDiv.className = 'hl-message';
-								messageDiv.id = 'message_' + messageId;
-								if (styleOverride) {
-									messageDiv.setAttribute('style', styleOverride.replace(/style="/i, '').replace(/"$/,''));
-								}
-								messageDiv.setAttribute('dir', textDirection);
-								messageDiv.innerHTML = data.chatmessage;
-								messageContainer.appendChild(messageDiv);
-
-								// Add the remaining elements
-								const remainingContent = document.createElement('div');
-								remainingContent.innerHTML = avatarImg + showType + addImage + (donationHTML || memebershipHTML);
-								while (remainingContent.firstChild) {
-									messageContainer.appendChild(remainingContent.firstChild);
-								}
-								
-								if (data.chatmessage && messageDiv && (stripLinks || activeLinks || shortlink)) {
-									processURLs(messageDiv, { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
-								} 
-
-								// Add the new message to output
-								document.getElementById("output").appendChild(messageContainer);
-
-								cleanupOldMessages();
-								
-								if (data.hasDonation || memebershipHTML) {
-									messageContainer.classList.add("dono");
-								}
-
-								// Individual timeout for this message
-								if (timeoutDelay) {
-									setTimeout(() => {
-										if (messageContainer && messageContainer.parentNode) {
-											messageContainer.classList.add(transitionType);
-											// Remove the element after transition completes
-											setTimeout(() => {
-												if (messageContainer && messageContainer.parentNode) {
-													messageContainer.parentNode.removeChild(messageContainer);
-												}
-											}, 500); // Matches the CSS transition time
-										}
-									}, timeoutDelay);
-								}
-							} else {
-								// Original non-stacking behavior remains unchanged
-								document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="' + data.type + '">' +
-									'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" +
-									'<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + data.chatmessage + "</div>" +
-									avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
-
-								if (data.hasDonation || memebershipHTML) {
-									document.getElementById("newmessage").classList.add("dono");
-								}
-								
-								if ((stripLinks || activeLinks || shortlink) && data.chatmessage && document.getElementById("message")) {
-									processURLs(document.getElementById("message"), { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
-								} 
-							}
-							if (!data.chatname && !data.chatbadges) {
-								document.getElementById("nameDIV").style.display = "none";
-							}
-
-							var fontsize = "";
-							var limitchar = parseInt(window.innerWidth / 6.5);
-
-							if (largeImage){
-								document.getElementById("message").classList.add("largeImage");
-							} else if (fontfit) {
-								if (document.getElementById("message").innerText.length > limitchar) {
-									fontsize = parseInt((limitchar * 100) / document.getElementById("message").innerText.length);
-									if (fontsize < 43) {
-										fontsize = 43;
-									}
-
-									if (data.textColor && !data.textColor.startsWith("color")) {
-										document.getElementById("message").style = data.backgroundColor + "; color:" + data.textColor + "; font-size: " + fontsize + "%;";
-									} else {
-										document.getElementById("message").style = data.backgroundColor + " " + data.textColor + "; font-size: " + fontsize + "%;";
-									}
-								}
-							}
-
-							var username = data.username || data.chatname;
-							if ((data.type == "twitch") && avatar && username) {
-								if (!data.chatimg || data.chatimg.startsWith("https://api.socialstream.ninja")){
-									var twitchImage = new Image();
-									data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(username);
-									twitchImage.onload = function () {
-										try {
-											document.getElementById("img_" + data.id).src = data.chatimg;
-										} catch (e) {}
-									}.bind(data);
-									twitchImage.src = data.chatimg;
-								}
-							}
-
-							if (centering) {
-								try {
-									var offsetLeft = (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth + 20)) / 2; // 20 and 15 are the offsets/margins used. might need to update if changed.
-									offsetLeft -= 15;
-									document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft + "px");
-								} catch (e) {}
-							}
-
-							for (i = 0; i < document.getElementsByTagName("img").length; i++) {
-								try {
-									if (data.type == "twitch" && document.getElementsByTagName("img")[i].src.includes("/light/")) {
-										// dark mode
-										document.getElementsByTagName("img")[i].srcBackup = document.getElementsByTagName("img")[i].src;
-										document.getElementsByTagName("img")[i].src = document.getElementsByTagName("img")[i].src.replaceAll("/light/", "/dark/");
-									}
-
-									if (!document.getElementsByTagName("img")[i].onerror) {
-										document.getElementsByTagName("img")[i].onerror = function () {
-											if (this.srcBackup) {
-												this.src = this.srcBackup;
-												this.srcBackup = null;
-												delete this.srcBackup;
-											} else if (this.alt.length !== 2) {
-												this.style.display = "none";
-											} else {
-												this.outerHTML = this.alt;
-											}
-										};
-									}
-									if (!document.getElementsByTagName("img")[i].onload) {
-										document.getElementsByTagName("img")[i].onload = realign;
-									}
-								} catch (e) {}
-							}
-							document.getElementById("output").classList.remove(transitionType);
-
-							
-							
-							if (speech) {
-								var msgPlain = document.getElementById("message"); // text only
-								//var msgPlain = document.getElementById('content_'+data.counter); // text only
-								if (msgPlain) {
-									msgPlain = (msgPlain.textContent || msgPlain.innerText || "")
-										.replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, "")
-										.replace(/_/g, " ")
-										.replace(/@/g, " ")
-										.replace(/^!/, ""); // Remove emojis, underscores, and @ symbols, and check if it starts with '!'
-
-									msgPlain = msgPlain.replace(/!+/g, " "); // Replace multiple '!' with a single space
-									msgPlain = msgPlain.replace(/catJAM/gi, ""); // Remove 'catJAM' case-insensitively
-									msgPlain = msgPlain.trim();
-								}
-
-								var chatname = "";
-								if (data.chatname && ttsSpeakChatname) {
-									chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
-									chatname = chatname.replaceAll("_", " ");
-									chatname = chatname.replaceAll("@", " ");
-									chatname = chatname.replaceAll("!", " ");
-								}
-
-								
-								if (data.hasDonation && (!(newmembertts || ttsclicked) || readDonos)) {
-									var donoText = document.createElement("div");
-									donoText.innerHTML = data.hasDonation;
-									donoText = donoText.innerText.trim();
-									donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
-									donoText = donoText.replaceAll("_", " ");
-									donoText = donoText.replaceAll("@", " ");
-									donoText = donoText.replaceAll("!", " ");
-
-									if (chatname) {
-										///// NAME
-										if (English) {
-											if (msgPlain) {
-												speak(chatname + " has donated " + donoText + " and says " + msgPlain);
-											} else {
-												speak(chatname + " has donated " + donoText);
-											}
-										} else if (msgPlain) {
-											speak(chatname + "! ! .. " + donoText + "! ! .. " + msgPlain);
-										} else {
-											speak(chatname + "! ! .. " + donoText);
-										}
-									} else if (English) {
-										// no name but english
-										if (msgPlain) {
-											speak("Someone has donated " + donoText + " and says " + msgPlain);
-										} else {
-											speak("Someone has donated " + donoText);
-										}
-									} else if (msgPlain) {
-										// no name; not english
-										speak(donoText + "! ! .. " + msgPlain);
-									} else {
-										speak(donoText);
-									}
-								} else if (msgPlain && newmembertts && data.event && (data.event == "newmember")){
-									if (chatname) {
-										// NAME
-										if (English) {
-											speak(chatname + " says! " + msgPlain);
-										} else {
-											speak(chatname + "! ! .. " + msgPlain);
-										}
-									} else if (English) {
-										// NO NAME
-										speak("Someone says! " + msgPlain);
-									} else {
-										speak(msgPlain);
-									}
-								} else if (msgPlain && ((!readDonos && !newmembertts && !ttsclicked) || (ttsclicked && data.clicked))) {
-									// NO DONATION
-									if (chatname) {
-										// NAME
-										if (English) {
-											speak(chatname + " says! " + msgPlain);
-										} else {
-											speak(chatname + "! ! .. " + msgPlain);
-										}
-									} else if (English) {
-										// NO NAME
-										speak("Someone says! " + msgPlain);
-									} else {
-										speak(msgPlain);
-									}
-								}
-							}
-
-							if (timeoutDelay) {
-								timeoutTimer = setTimeout(function () {
-									lastMessageId = null;
-									document.getElementById("output").classList.add(transitionType);
-									clearTimeout(nextComment);
-									checkqueue(true);
-									
-								}, timeoutDelay);
-							}
-						},
-						500, // give time for the previous featured message to go fade/drop away
-						contents
-					);
-
-					sendToDisk(contents);
-
-					if (beep) {
-						playtone();
-					}
-
-					if (newImageHandle && contents && contents.chatimg) {
-						if (contents.type && contents.chatimg && ((contents.type == "youtube") || (contents.type == "youtubeshorts"))) {
-							contents.chatimg = contents.chatimg.replace("=s32-", "=s512-"); // high, but meh.
-							contents.chatimg = contents.chatimg.replace("=s64-", "=s512-");
-						}
-						if (contents.type && (contents.type == "twitch") && contents.chatname) {
-							if (!contents.chatimg  || contents.chatimg.startsWith("https://api.socialstream.ninja")){
-								contents.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(contents.chatname); // 150x150
-							}
-						}
-						overwriteImage(contents.chatimg);
-					}
-				} catch(e){
-					console.error(e);
+				if (!stacking) {
+				  document.getElementById("output").classList.add(transitionType);
 				}
+				clearTimeout(nextComment);
+
+				if (isIFrame) {
+				  clearTimeout(iframeTimeout);
+				  iframeTimeout = setTimeout(function () {
+					parent.postMessage({ resizeWindow: { height: "220px" } }, "*");
+				  }, 300);
+				}
+
+				if (queuetime) {
+				  queueTimer = setTimeout(checkqueue, queuetime);
+				}
+			  
+				nextComment = setTimeout(
+				  function (data) {
+					var addImage = "";
+					var largeImage = false;
+					
+					if (!data.chatmessage && data.contentimg){
+					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
+						data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video>';
+					  } else {
+						data.chatmessage = '<img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" />';
+					  }
+					  largeImage = true;
+					} else if (data.contentimg){
+					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
+						addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video></div>';
+					  } else {
+						addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></div>';
+					  }
+					} else {
+					  data.contentimg = "";
+					}
+					
+					if (!data.chatimg) {
+					  data.chatimg = "";
+					}
+					var showType = "";
+					
+					if (!data.type) {
+					  data.type = "none";
+					} else {
+					  data.type = data.type.toString();
+					  showType = data.type;
+					}
+
+					var customSourceClass = "sourceOffset";
+					if (showType && showsource && avatar) {
+					  showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+					} else if (showType && showsource && !avatar) {
+					  showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+					} else {
+					  customSourceClass = "";
+					  showType = "";
+					}
+
+					if (data.sourceImg && customSource && avatar) {
+					  showType += '<img src="./sources/images/' + data.sourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
+					} else if (data.sourceImg && customSource && !avatar) {
+					  showType += '<img src="./sources/images/' + +data.sourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
+					}
+
+					if (hideNames) {
+					  data.chatname = "";
+					} else if (firstNamesOnly && data.chatname) {
+					  data.chatname = data.chatname.toString();
+					  var nn = data.chatname.split(" ");
+					  if (nn.length > 1) {
+						if (nn[0].length <= 2) {
+						  if (nn[1].length < 6) {
+							data.chatname = nn[0] + " " + nn[1];
+						  } else {
+							data.chatname = nn[0];
+						  }
+						} else {
+						  data.chatname = nn[0];
+						}
+					  }
+					} else if (!data.chatname) {
+					  data.chatname = "";
+					} else {
+					  data.chatname = data.chatname.toString();
+					}
+
+					var memebershipHTML = "";
+
+					// MODIFIED MEMBERSHIP/DONATION HANDLING
+					if (data.hasMembership) {
+					  if (data.hasMembership === true) {
+						data.hasMembership = getTranslation("membership", "Membership");
+					  }
+					  data.membership = data.hasMembership.toString();
+					  
+					  if (avatar) {
+						memebershipHTML = data.membership;
+					  } else {
+						// No avatar membership display
+						memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+					  }
+					} else if (data.membership) {
+					  if (data.membership === true) {
+						data.membership = getTranslation("membership", "Membership");
+					  } else {
+						data.membership = data.membership.toString();
+					  }
+					  
+					  if (avatar) {
+						if (data.subtitle) {
+						  memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+						} else {
+						  memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div></div>";
+						}
+					  } else {
+						// No avatar membership with possible subtitle
+						const isSponsor = data.membership.toLowerCase().includes('sponsor') || 
+										  data.membership.toLowerCase().includes('membership');
+						if (isSponsor) {
+						  // Special format for sponsorships to match the example image
+						  memebershipHTML = '<div class="no-avatar-donation sponsorship">' + data.membership.toUpperCase() + '</div>';
+						} else if (data.subtitle) {
+						  memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+						} else {
+						  memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+						}
+					  }
+					} else if (data.subtitle) {
+					  if (avatar) {
+						memebershipHTML = '<div class="donation membership"><div class="subtitle">' + data.subtitle + "</div></div>";
+					  } else {
+						memebershipHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.subtitle + '</div></div>';
+					  }
+					} else {
+					  data.membership = "";
+					}
+
+					var donationHTML = "";
+					if (data.hasDonation) {
+					  if (data.type === "twitch") {
+						let donationTitle = getTranslation("cheers", "CHEERS");
+						if ("title" in data) {
+						  donationTitle = data.title;
+						}
+						
+						if (avatar) {
+						  donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						} else {
+						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + '</div></div>';
+						}
+					  } else if ((data.type == "youtube") || (data.type == "youtubeshorts")) {
+						let donationTitle = getTranslation("donation", "DONATION");
+						if ("title" in data) {
+						  donationTitle = data.title;
+						}
+						
+						if (avatar) {
+						  if (memebershipHTML) {
+							donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
+						  } else {
+							donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						  }
+						} else {
+						  const isYouTubeSponsor = data.hasDonation.toLowerCase().includes('sponsor');
+						  
+						  if (isYouTubeSponsor) {
+							donationHTML = '<div class="no-avatar-donation sponsorship">' + 'SPONSORSHIP' + '</div>';
+						  } else if (memebershipHTML) {
+							donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.hasDonation + '</div></div>';
+						  } else {
+							donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ donationTitle + ': ' + data.hasDonation + '</div></div>';
+						  }
+						}
+					  } else if (data.title) {
+						if (avatar) {
+						  donationHTML = '<div class="donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						} else {
+						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + '</div></div>';
+						}
+					  } else if (avatar) {
+						donationHTML = '<div>' + data.hasDonation + "</div>";
+					  } else {
+						donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.hasDonation + '</div></div>';
+					  }
+					} else {
+					  data.hasDonation = "";
+					}
+
+					var backgroundColor = "";
+					if (data.backgroundColor) {
+					  if (data.backgroundColor.startsWith("background-color:")) {
+						backgroundColor = data.backgroundColor;
+					  } else {
+						backgroundColor = "background-color:" + data.backgroundColor + ";";
+					  }
+					}
+
+					var styleOverride = backgroundColor;
+
+					if (data.textColor) {
+					  if (data.textColor.startsWith("color")) {
+						styleOverride += " " + data.textColor;
+					  } else {
+						styleOverride += "color:" + data.textColor + ";";
+					  }
+					}
+					if (styleOverride) {
+					  styleOverride = ' style="' + styleOverride + '"';
+					}
+
+					var styleOverrideName = "";
+					if (data.backgroundNameColor) {
+					  styleOverrideName = data.backgroundNameColor;
+					}
+
+					if (data.nameColor && colorized) {
+					  styleOverrideName += " color:" + data.nameColor + ";";
+					} else if (data.textNameColor) {
+					  styleOverrideName += " " + data.textNameColor;
+					}
+
+					if (styleOverrideName) {
+					  styleOverrideName = 'style="' + styleOverrideName + '"';
+					}
+
+					var avatarImg = "";
+					if (avatar) {
+					  if (data.backupChatimg) {
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="' + data.backupChatimg + '"onerror="errorImage(this);"></div>';
+					  } else {
+						let chatimg = "";
+						if (!data.chatimg){
+						  if (!data.chatname && data.event){
+							chatimg = "./icons/announcement.png";
+						  } else {
+							chatimg = "./sources/images/unknown.png";
+						  }
+						} else {
+						  chatimg = data.chatimg
+						}
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + chatimg + '" class="hl-profile-pic" onerror="errorImage(this);"></div>';
+					  }
+					} 
+
+					var chatbadges = "";
+					if (data.chatbadges && showbadges) {
+					  data.chatbadges.forEach(badge => {
+						if (typeof badge == "object") {
+						  if (badge.type && badge.type == "img" && badge.src) {
+							chatbadges += "<img class='hl-badge' src='" + badge.src + "' />";
+						  } else if (badge.type && badge.type == "svg" && badge.html) {
+							chatbadges += "<span class='hl-badge'>" + badge.html + "</span>";
+						  }
+						} else {
+						  chatbadges += "<img class='hl-badge' src='" + badge + "' />";
+						}
+					  });
+					}
+
+					if (chatbadges) {
+					  chatbadges = '<div class="hl-badges" >' + chatbadges + "</div>";
+					}
+
+					// ADD NO-AVATAR CLASS TO CONTAINER
+					var noAvatarClass = avatar ? "" : " no-avatar";
+
+					if (stacking) {
+					  try {
+						document.getElementById("message").id = "";
+						document.getElementById("nameDIV").id = "";
+						document.getElementById("newmessage").id = "";
+					  } catch (e) {}
+
+					  const messageId = 'msg_' + Date.now();
+					  
+					  const messageContainer = document.createElement('div');
+					  messageContainer.className = 'hl-c-cont highlight-chat stacked' + noAvatarClass;
+					  messageContainer.id = messageId;
+					  messageContainer.setAttribute('data-source-type', data.type);
+
+					  const nameDiv = document.createElement('div');
+					  nameDiv.className = 'hl-name';
+					  nameDiv.id = 'nameDIV_' + messageId;
+					  if (styleOverrideName) {
+						nameDiv.setAttribute('style', styleOverrideName.replace(/style="/i, '').replace(/"$/,''));
+					  }
+					  
+					  // Put name and badges in the name div
+					  nameDiv.innerHTML = data.chatname + chatbadges;
+					  messageContainer.appendChild(nameDiv);
+
+					  const messageDiv = document.createElement('div');
+					  messageDiv.className = 'hl-message';
+					  messageDiv.id = 'message_' + messageId;
+					  if (styleOverride) {
+						messageDiv.setAttribute('style', styleOverride.replace(/style="/i, '').replace(/"$/,''));
+					  }
+					  messageDiv.setAttribute('dir', textDirection);
+					  messageDiv.innerHTML = data.chatmessage;
+					  messageContainer.appendChild(messageDiv);
+
+					  // Add the avatar and source type elements first
+					  const avatarContent = document.createElement('div');
+					  avatarContent.innerHTML = avatarImg + showType + addImage;
+					  while (avatarContent.firstChild) {
+						messageContainer.appendChild(avatarContent.firstChild);
+					  }
+					  
+					  // Add donation or membership HTML after the message for no-avatar mode
+					  if (!avatar && (donationHTML || memebershipHTML)) {
+						const donationWrapper = document.createElement('div');
+						donationWrapper.style.marginTop = '5px';
+						donationWrapper.innerHTML = donationHTML || memebershipHTML;
+						messageDiv.insertAdjacentElement('afterend', donationWrapper);
+					  } else {
+						// Add normally if avatar is present
+						const donoContent = document.createElement('div');
+						donoContent.innerHTML = donationHTML || memebershipHTML;
+						while (donoContent.firstChild) {
+						  messageContainer.appendChild(donoContent.firstChild);
+						}
+					  }
+					  
+					  if (data.chatmessage && messageDiv && (stripLinks || activeLinks || shortlink)) {
+						processURLs(messageDiv, { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
+					  } 
+
+					  document.getElementById("output").appendChild(messageContainer);
+
+					  cleanupOldMessages();
+					  
+					  if (data.hasDonation || memebershipHTML) {
+						messageContainer.classList.add("dono");
+					  }
+
+					  // Individual timeout for this message
+					  if (timeoutDelay) {
+						setTimeout(() => {
+						  if (messageContainer && messageContainer.parentNode) {
+							messageContainer.classList.add(transitionType);
+							// Remove the element after transition completes
+							setTimeout(() => {
+							  if (messageContainer && messageContainer.parentNode) {
+								messageContainer.parentNode.removeChild(messageContainer);
+							  }
+							}, 500);
+						  }
+						}, timeoutDelay);
+					  }
+					} else {
+					  // Original non-stacking behavior with no-avatar class added
+					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat' + noAvatarClass + '" id="newmessage" data-source-type="' + data.type + '">' +
+						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" +
+						'<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + data.chatmessage + "</div>" +
+						avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
+
+					  if (data.hasDonation || memebershipHTML) {
+						document.getElementById("newmessage").classList.add("dono");
+					  }
+					  
+					  if ((stripLinks || activeLinks || shortlink) && data.chatmessage && document.getElementById("message")) {
+						processURLs(document.getElementById("message"), { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
+					  } 
+					}
+					
+					if (!data.chatname && !data.chatbadges) {
+					  document.getElementById("nameDIV").style.display = "none";
+					}
+
+					var fontsize = "";
+					var limitchar = parseInt(window.innerWidth / 6.5);
+
+					if (largeImage){
+					  document.getElementById("message").classList.add("largeImage");
+					} else if (fontfit) {
+					  if (document.getElementById("message").innerText.length > limitchar) {
+						fontsize = parseInt((limitchar * 100) / document.getElementById("message").innerText.length);
+						if (fontsize < 43) {
+						  fontsize = 43;
+						}
+
+						if (data.textColor && !data.textColor.startsWith("color")) {
+						  document.getElementById("message").style = data.backgroundColor + "; color:" + data.textColor + "; font-size: " + fontsize + "%;";
+						} else {
+						  document.getElementById("message").style = data.backgroundColor + " " + data.textColor + "; font-size: " + fontsize + "%;";
+						}
+					  }
+					}
+
+					var username = data.username || data.chatname;
+					if ((data.type == "twitch") && avatar && username) {
+					  if (!data.chatimg || data.chatimg.startsWith("https://api.socialstream.ninja")){
+						var twitchImage = new Image();
+						data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(username);
+						twitchImage.onload = function () {
+						  try {
+							document.getElementById("img_" + data.id).src = data.chatimg;
+						  } catch (e) {}
+						}.bind(data);
+						twitchImage.src = data.chatimg;
+					  }
+					}
+
+					if (centering) {
+					  try {
+						var offsetLeft = (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth + 20)) / 2;
+						offsetLeft -= 15;
+						document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft + "px");
+					  } catch (e) {}
+					}
+
+					for (i = 0; i < document.getElementsByTagName("img").length; i++) {
+					  try {
+						if (data.type == "twitch" && document.getElementsByTagName("img")[i].src.includes("/light/")) {
+						  document.getElementsByTagName("img")[i].srcBackup = document.getElementsByTagName("img")[i].src;
+						  document.getElementsByTagName("img")[i].src = document.getElementsByTagName("img")[i].src.replaceAll("/light/", "/dark/");
+						}
+
+						if (!document.getElementsByTagName("img")[i].onerror) {
+						  document.getElementsByTagName("img")[i].onerror = function () {
+							if (this.srcBackup) {
+							  this.src = this.srcBackup;
+							  this.srcBackup = null;
+							  delete this.srcBackup;
+							} else if (this.alt.length !== 2) {
+							  this.style.display = "none";
+							} else {
+							  this.outerHTML = this.alt;
+							}
+						  };
+						}
+						if (!document.getElementsByTagName("img")[i].onload) {
+						  document.getElementsByTagName("img")[i].onload = realign;
+						}
+					  } catch (e) {}
+					}
+					document.getElementById("output").classList.remove(transitionType);
+
+					if (speech) {
+					  var msgPlain = document.getElementById("message");
+					  if (msgPlain) {
+						msgPlain = (msgPlain.textContent || msgPlain.innerText || "")
+						  .replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, "")
+						  .replace(/_/g, " ")
+						  .replace(/@/g, " ")
+						  .replace(/^!/, "");
+
+						msgPlain = msgPlain.replace(/!+/g, " ");
+						msgPlain = msgPlain.replace(/catJAM/gi, "");
+						msgPlain = msgPlain.trim();
+					  }
+
+					  var chatname = "";
+					  if (data.chatname && ttsSpeakChatname) {
+						chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
+						chatname = chatname.replaceAll("_", " ");
+						chatname = chatname.replaceAll("@", " ");
+						chatname = chatname.replaceAll("!", " ");
+					  }
+
+					  if (data.hasDonation && (!(newmembertts || ttsclicked) || readDonos)) {
+						var donoText = document.createElement("div");
+						donoText.innerHTML = data.hasDonation;
+						donoText = donoText.innerText.trim();
+						donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
+						donoText = donoText.replaceAll("_", " ");
+						donoText = donoText.replaceAll("@", " ");
+						donoText = donoText.replaceAll("!", " ");
+
+						if (chatname) {
+						  if (English) {
+							if (msgPlain) {
+							  speak(chatname + " has donated " + donoText + " and says " + msgPlain);
+							} else {
+							  speak(chatname + " has donated " + donoText);
+							}
+						  } else if (msgPlain) {
+							speak(chatname + "! ! .. " + donoText + "! ! .. " + msgPlain);
+						  } else {
+							speak(chatname + "! ! .. " + donoText);
+						  }
+						} else if (English) {
+						  if (msgPlain) {
+							speak("Someone has donated " + donoText + " and says " + msgPlain);
+						  } else {
+							speak("Someone has donated " + donoText);
+						  }
+						} else if (msgPlain) {
+						  speak(donoText + "! ! .. " + msgPlain);
+						} else {
+						  speak(donoText);
+						}
+					  } else if (msgPlain && newmembertts && data.event && (data.event == "newmember")){
+						if (chatname) {
+						  if (English) {
+							speak(chatname + " says! " + msgPlain);
+						  } else {
+							speak(chatname + "! ! .. " + msgPlain);
+						  }
+						} else if (English) {
+						  speak("Someone says! " + msgPlain);
+						} else {
+						  speak(msgPlain);
+						}
+					  } else if (msgPlain && ((!readDonos && !newmembertts && !ttsclicked) || (ttsclicked && data.clicked))) {
+						if (chatname) {
+						  if (English) {
+							speak(chatname + " says! " + msgPlain);
+						  } else {
+							speak(chatname + "! ! .. " + msgPlain);
+						  }
+						} else if (English) {
+						  speak("Someone says! " + msgPlain);
+						} else {
+						  speak(msgPlain);
+						}
+					  }
+					}
+
+					if (timeoutDelay) {
+					  timeoutTimer = setTimeout(function () {
+						lastMessageId = null;
+						document.getElementById("output").classList.add(transitionType);
+						clearTimeout(nextComment);
+						checkqueue(true);
+					  }, timeoutDelay);
+					}
+				  },
+				  500,
+				  contents
+				);
+
+				sendToDisk(contents);
+
+				if (beep) {
+				  playtone();
+				}
+
+				if (newImageHandle && contents && contents.chatimg) {
+				  if (contents.type && contents.chatimg && ((contents.type == "youtube") || (contents.type == "youtubeshorts"))) {
+					contents.chatimg = contents.chatimg.replace("=s32-", "=s512-");
+					contents.chatimg = contents.chatimg.replace("=s64-", "=s512-");
+				  }
+				  if (contents.type && (contents.type == "twitch") && contents.chatname) {
+					if (!contents.chatimg  || contents.chatimg.startsWith("https://api.socialstream.ninja")){
+					  contents.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(contents.chatname);
+					}
+				  }
+				  overwriteImage(contents.chatimg);
+				}
+			  } catch(e){
+				console.error(e);
+			  }
 			}
 
 			if (urlParams.has("js")) {

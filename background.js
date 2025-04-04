@@ -792,8 +792,7 @@ function loadSettings(item, resave = false) {
 	if (reloadNeeded) {
 		updateExtensionState(false);
 	}
-
-
+	
 	try {
 		if (isSSAPP && ipcRenderer) {
 			ipcRenderer.sendSync("fromBackground", { streamID, password, settings, state: isExtensionOn }); 
@@ -828,6 +827,8 @@ function loadSettings(item, resave = false) {
 		changeLg(settings.translationlanguage.optionsetting);
 	}
 	
+	setupSocket();
+	setupSocketDock();
 	loadedFirst = true;
 }
 ////////////
@@ -4718,6 +4719,17 @@ function setupSocket() {
 					resp = selectRandomWaitlist(parseInt(data.value) || 1);
 				} else {
 					resp = selectRandomWaitlist();
+				}
+			} else if (data.action){
+				try {
+					if (data.target && (data.target.toLowerCase!=="null")){
+						sendTargetP2P(data, data.target);
+					} else {
+						sendDataP2P(data);
+					}
+					resp = true;
+				} catch (e) {
+					console.error(e);
 				}
 			}
 

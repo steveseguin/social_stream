@@ -553,6 +553,19 @@ The extension processes various API actions, including:
 9. `downloadwaitlist`: Initiates a download of the waitlist.
 10. `selectwinner`: Selects a random winner from the waitlist.
 
+.. and most actions that targets the dock can be sent via the extension API or other overlays.
+
+The logic in the app lets you target non-Dock overlays via the extension API using the `target` value, where target is the label name of the connected P2P IFRAME.
+
+```javascript
+if (data.target && (data.target.toLowerCase!=="null")){
+	sendTargetP2P(data, data.target);
+} else {
+	sendDataP2P(data);
+}
+```
+
+
 ### Example API Usage
 
 To send a chat message:

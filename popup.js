@@ -923,10 +923,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
 		
-		const basePath = decodeURIComponent(urlParams.get('basePath') || '');
-		if (basePath){
-			document.getElementById("chathistory").href = basePath  + "chathistory.html";
-		}
+		document.getElementById("chathistory").href = window.location.origin+"/chathistory.html";
 	} else {
 		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
 	}
