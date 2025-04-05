@@ -1097,6 +1097,13 @@
             return;
         }
 		
+	//	if (ele.querySelector("[class*='DivTopGiverContainer'], [data-e2e='top-givers-header'] , [data-e2e='top-givers']")) {
+     //       return;
+     //   }
+	//	if (ele.dataset.e2e=='top-givers-header' ||  ele.dataset.e2e=='top-givers'){
+      //      return;
+     //   }
+		
 		if (ele.dataset.skip){return;}
 		
 		
@@ -1369,12 +1376,9 @@
 		}
 		
 		
-		//if (!subtree){
-		//	start2(target);
-		//} else {
-		//	console.log("Switching to hard dupe filter");
-		//	messageLog.configure({ mode: 'count', maxMessages: 400 });
-		//}
+		if (!subtree){
+			start2(target);
+		} 
 		
 		console.log("Starting social stream");
 		
