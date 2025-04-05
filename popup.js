@@ -924,7 +924,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
 		const basePath = decodeURIComponent(urlParams.get('basePath'));
  		if (basePath){
- 			document.getElementById("chathistory").href = basePath  + "/chathistory.html?origin="+window.location.origin;
+ 			document.getElementById("chathistory").href = basePath  + "/chathistory.html?href="+encodeURIComponent(window.location.href);
  		}
 	} else {
 		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
