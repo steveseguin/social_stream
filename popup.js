@@ -922,11 +922,10 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 document.addEventListener("DOMContentLoaded", async function(event) {
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
-		
-		document.getElementById("chathistory").href = window.location.origin+"/chathistory.html";
 	} else {
 		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
 	}
+	document.getElementById("chathistory").href = window.location.origin+"/chathistory.html";
 	//document.body.className = "extension-disabled";
 	document.getElementById("disableButton").style.display = "";
 	//chrome.browserAction.setIcon({path: "/icons/off.png"});
