@@ -81,6 +81,12 @@ Make your own custom theme. It's super easy when using an LLM AI service like Cl
 
 > **Warning**: Direct modification of `dock.html` is not recommended due to its complexity and size.
 
+### Themeless code-only examples
+
+If you want as little code needed, to help you Vibe Code something for Social Stream Ninjafrom scratch, please see the [Bare Template](https://github.com/steveseguin/social_stream/blob/main/baretempate.html). I don't have anything more basic than this, but it should be enough to copy/paste into a half-decent LLM service and get something that works with Social Stream Ninja.
+
+If you're still not having luck with your vibe coding efforts, let me know, however I do not offer help with debugging of code that I did not write.
+
 ## Testing Themes
 
 ### Basic Testing
