@@ -104,10 +104,21 @@
 		} catch(e){
 		}
 		
+		
+		if (msg.startsWith(name)){
+			msg = msg.replace(name,"");
+			msg = msg.trim();
+			if (msg.startsWith(":")){
+				msg = msg.replace(":","");
+				msg = msg.trim();
+			}
+		}
 
 		if (!msg || !name){
 			return;
 		}
+		
+		
 		
 		var data = {};
 		data.chatname = name;
@@ -133,10 +144,51 @@
 		} catch(e){
 		}
 	}
+	var isExtensionOn = true;
+	
+	function checkViewers(){
+		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
+			try {
+				let viewerSpan = document.querySelector("[class*='OnlineViewers_root']");
+				if (viewerSpan && viewerSpan.textContent){
+					let views = viewerSpan.textContent.toUpperCase();
+					let multiplier = 1;
+					if (views.includes("K")){
+						multiplier = 1000;
+						views = views.replace("K","");
+					} else if (views.includes("M")){
+						multiplier = 1000000;
+						views = views.replace("M","");
+					}
+					views = views.split(" ")[0];
+					if (views == parseFloat(views)){
+						views = parseFloat(views) * multiplier;
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							({message:{
+									type: 'vkvideo',
+									event: 'viewer_update',
+									meta: views
+								}
+							}),
+							function (e) {}
+						);
+					}
+				}
+			} catch (e) {
+			}
+		}
+	}
+
+
+	// OnlineViewers_root_orkvv
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
+		}
+		if ("state" in response){
+			isExtensionOn = response.state;
 		}
 	});
 
@@ -150,12 +202,16 @@
 					return;
 				}
 				if (typeof request === "object"){
+					if ("state" in request) {
+						isExtensionOn = request.state;
+					}
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
 						return;
 					}
 				}
+				
 			} catch(e){}
 			sendResponse(false);
 		}
@@ -206,6 +262,7 @@
 					onElementInserted(container);
 				},2000);
 			}
+			checkViewers();
 		} catch(e){}
 	},2000);
 
