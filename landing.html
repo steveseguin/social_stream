@@ -244,6 +244,31 @@ img {
 .beta-link:hover {
     color: #0056b3;
 }
+
+/* Fix heading hierarchy */
+h1 { font-size: 2.4em; }
+h2 { font-size: 2em; }
+h3 { font-size: 1.6em; }
+h4 { font-size: 1.3em; }
+h5 { font-size: 1.1em; } /* Adjusted to be slightly smaller than h4 but bigger than regular text */
+h6 { font-size: 1em; }
+
+p { font-size: 1em; } /* Adjusted to be standard size */
+
+/* Make headers clickable with anchor links */
+h1, h2, h3, h4, h5, h6 {
+    position: relative;
+    cursor: pointer;
+}
+
+h1:hover::after, h2:hover::after, h3:hover::after, 
+h4:hover::after, h5:hover::after, h6:hover::after {
+    content: "#";
+    position: absolute;
+    left: -20px;
+    color: #007bff;
+}
+
 </style>
 
 
@@ -964,17 +989,40 @@ img {
 		  marked.use({ extensions: [gfmHeading] });
 		  
 		  fetch('./README.md')
-			.then(response => {
-			  if (!response.ok) throw new Error('Failed to fetch README.md');
-			  return response.text();
-			})
-			.then(text => {
-			  document.getElementById('markdown').innerHTML = marked.parse(text);
-			  if (window.location.hash) {
-				scrollToAnchor(window.location.hash);
-			  }
-			})
-			.catch(error => console.error('Error loading the README:', error));
+			  .then(response => {
+			    if (!response.ok) throw new Error('Failed to fetch README.md');
+			    return response.text();
+			  })
+			  .then(text => {
+			    document.getElementById('markdown').innerHTML = marked.parse(text);
+			    
+			    // Add click events to headers
+			    const headings = document.querySelectorAll('#markdown h1, #markdown h2, #markdown h3, #markdown h4, #markdown h5, #markdown h6');
+			    headings.forEach(heading => {
+			      heading.addEventListener('click', function(e) {
+			        // Don't trigger if clicking a link inside the heading
+			        if (e.target.tagName === 'A') return;
+			        
+			        // Get the heading ID
+			        const id = this.id;
+			        if (!id) return;
+			        
+			        // Create the URL with anchor
+			        const url = window.location.pathname + '#' + id;
+			        
+			        // Update the URL without reloading the page
+			        history.pushState(null, '', url);
+			        
+			        // Copy to clipboard
+			        navigator.clipboard.writeText(window.location.origin + url)
+			          .catch(err => console.error('Could not copy URL: ', err));
+			      });
+			    });
+			    
+			    if (window.location.hash) {
+			      scrollToAnchor(window.location.hash);
+			    }
+			  })
 		  
 		  window.addEventListener('hashchange', () => {
 			if (window.location.hash) {
