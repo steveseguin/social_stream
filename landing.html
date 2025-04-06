@@ -912,7 +912,7 @@ h4:hover::after, h5:hover::after, h6:hover::after {
         <p>Join our community for free support on <a href="https://discord.socialstream.ninja" target="_blank">Discord</a>.</p>
     </footer>
 	<script>
-	function scrollToAnchor(hash, retryCount = 0, maxRetries = 3) {
+	function scrollToAnchor(hash, retryCount = 0, maxRetries = 3, updateUrl = true) {
 		const targetId = hash.replace('#', '');
 		let targetElement = document.getElementById(targetId);
 		
@@ -950,8 +950,13 @@ h4:hover::after, h5:hover::after, h6:hover::after {
 					behavior: 'smooth'
 				});
 				
+				// Update URL if requested
+				if (updateUrl && hash !== window.location.hash) {
+					history.pushState(null, null, hash);
+				}
+				
 				if (Math.abs(targetElement.getBoundingClientRect().top) > 50 && retryCount < maxRetries) {
-					setTimeout(() => scrollToAnchor(hash, retryCount + 1, maxRetries), 500);
+					setTimeout(() => scrollToAnchor(hash, retryCount + 1, maxRetries, false), 500);
 				}
 			}, 100);
 		});
