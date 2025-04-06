@@ -913,54 +913,54 @@ h4:hover::after, h5:hover::after, h6:hover::after {
     </footer>
 	<script>
 	function scrollToAnchor(hash, retryCount = 0, maxRetries = 3, updateUrl = true) {
-		const targetId = hash.replace('#', '');
-		let targetElement = document.getElementById(targetId);
-		
-		if (!targetElement) {
-			const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-			for (const heading of headings) {
-				try {
-					const headingId = heading.textContent.toLowerCase()
-						.replace(/[^\w\s-]/g, '')
-						.replace(/\s+/g, '-');
-					
-					if (headingId === targetId) {
-						targetElement = heading;
-						break;
-					}
-				} catch(e) {}
-			}
-		}
-		
-		if (!targetElement) return;
+    const targetId = hash.replace('#', '');
+    let targetElement = document.getElementById(targetId);
+    
+    if (!targetElement) {
+        const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        for (const heading of headings) {
+            try {
+                const headingId = heading.textContent.toLowerCase()
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/\s+/g, '-');
+                
+                if (headingId === targetId) {
+                    targetElement = heading;
+                    break;
+                }
+            } catch(e) {}
+        }
+    }
+    
+    if (!targetElement) return;
 
-		const images = document.querySelectorAll('#markdown img');
-		const imagePromises = Array.from(images).map(img => 
-			img.complete ? Promise.resolve() : 
-			new Promise(resolve => {
-				img.onload = img.onerror = resolve;
-			})
-		);
+    const images = document.querySelectorAll('#markdown img');
+    const imagePromises = Array.from(images).map(img => 
+        img.complete ? Promise.resolve() : 
+        new Promise(resolve => {
+            img.onload = img.onerror = resolve;
+        })
+    );
 
-		Promise.all(imagePromises).then(() => {
-			setTimeout(() => {
-				const offset = targetElement.getBoundingClientRect().top + window.scrollY - 20;
-				window.scrollTo({
-					top: offset,
-					behavior: 'smooth'
-				});
-				
-				// Update URL if requested
-				if (updateUrl && hash !== window.location.hash) {
-					history.pushState(null, null, hash);
-				}
-				
-				if (Math.abs(targetElement.getBoundingClientRect().top) > 50 && retryCount < maxRetries) {
-					setTimeout(() => scrollToAnchor(hash, retryCount + 1, maxRetries, false), 500);
-				}
-			}, 100);
-		});
-	}
+    Promise.all(imagePromises).then(() => {
+        setTimeout(() => {
+            const offset = targetElement.getBoundingClientRect().top + window.scrollY - 20;
+            window.scrollTo({
+                top: offset,
+                behavior: 'smooth'
+            });
+            
+            // Update URL if requested
+            if (updateUrl && hash !== window.location.hash) {
+                history.pushState(null, null, hash);
+            }
+            
+            if (Math.abs(targetElement.getBoundingClientRect().top) > 50 && retryCount < maxRetries) {
+                setTimeout(() => scrollToAnchor(hash, retryCount + 1, maxRetries, false), 500);
+            }
+        }, 100);
+    });
+}
 
 	const REQUIRED_SCRIPTS = [
 	  './thirdparty/marked.umd.min.js',
@@ -981,63 +981,81 @@ h4:hover::after, h5:hover::after, h6:hover::after {
 	}
 
 	if (location.protocol.startsWith('http')) {
-		document.addEventListener("DOMContentLoaded", () => {
-	  loadScripts(REQUIRED_SCRIPTS, () => {
-		  const gfmHeading = markedGfmHeadingId.gfmHeadingId();
-		  gfmHeading.name = 'gfm-heading-id'; 
-		  
-		  marked.setOptions({
-			headerIds: true,
-			mangle: false
-		  });
-		  
-		  marked.use({ extensions: [gfmHeading] });
-		  
-		  fetch('./README.md')
-			  .then(response => {
-			    if (!response.ok) throw new Error('Failed to fetch README.md');
-			    return response.text();
-			  })
-			  .then(text => {
-			    document.getElementById('markdown').innerHTML = marked.parse(text);
-			    
-			    // Add click events to headers
-			    const headings = document.querySelectorAll('#markdown h1, #markdown h2, #markdown h3, #markdown h4, #markdown h5, #markdown h6');
-			    headings.forEach(heading => {
-			      heading.addEventListener('click', function(e) {
-			        // Don't trigger if clicking a link inside the heading
-			        if (e.target.tagName === 'A') return;
-			        
-			        // Get the heading ID
-			        const id = this.id;
-			        if (!id) return;
-			        
-			        // Create the URL with anchor
-			        const url = window.location.pathname + '#' + id;
-			        
-			        // Update the URL without reloading the page
-			        history.pushState(null, '', url);
-			        
-			        // Copy to clipboard
-			        navigator.clipboard.writeText(window.location.origin + url)
-			          .catch(err => console.error('Could not copy URL: ', err));
-			      });
-			    });
-			    
-			    if (window.location.hash) {
-			      scrollToAnchor(window.location.hash);
-			    }
-			  })
-		  
-		  window.addEventListener('hashchange', () => {
-			if (window.location.hash) {
-			  scrollToAnchor(window.location.hash);
-			}
-		  });
-		});
-	  });
-	}
-
+    document.addEventListener("DOMContentLoaded", () => {
+        loadScripts(REQUIRED_SCRIPTS, () => {
+            const gfmHeading = markedGfmHeadingId.gfmHeadingId();
+            gfmHeading.name = 'gfm-heading-id'; 
+            
+            marked.setOptions({
+                headerIds: true,
+                mangle: false
+            });
+            
+            marked.use({ extensions: [gfmHeading] });
+            
+            // Function to add click handlers to all headings in the document
+            function setupHeadingClickHandlers() {
+                document.querySelectorAll('#markdown h1, #markdown h2, #markdown h3, #markdown h4, #markdown h5, #markdown h6').forEach(heading => {
+                    // Skip if we've already set this up
+                    if (heading.dataset.clickable) return;
+                    
+                    heading.addEventListener('click', function(e) {
+                        // Get the ID directly or create one based on text content
+                        let headingId = this.id;
+                        if (!headingId || headingId === '') {
+                            headingId = this.textContent.toLowerCase()
+                                .replace(/[^\w\s-]/g, '')
+                                .replace(/\s+/g, '-');
+                            // Set the ID if it doesn't have one
+                            this.id = headingId;
+                        }
+                        scrollToAnchor('#' + headingId);
+                    });
+                    
+                    heading.style.cursor = 'pointer';
+                    heading.title = 'Click to copy link to this section';
+                    
+                    // Mark as processed
+                    heading.dataset.clickable = 'true';
+                });
+            }
+            
+            // Set up a mutation observer to watch for content changes
+            const observer = new MutationObserver((mutations) => {
+                setupHeadingClickHandlers();
+            });
+            
+            // Start observing the document
+            observer.observe(document.body, { 
+                childList: true, 
+                subtree: true 
+            });
+            
+            fetch('./README.md')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch README.md');
+                    return response.text();
+                })
+                .then(text => {
+                    document.getElementById('markdown').innerHTML = marked.parse(text);
+                    
+                    // Initial setup of heading click handlers
+                    setupHeadingClickHandlers();
+                    
+                    if (window.location.hash) {
+                        scrollToAnchor(window.location.hash);
+                    }
+                })
+                .catch(error => console.error('Error loading the README:', error));
+            
+            window.addEventListener('hashchange', () => {
+                if (window.location.hash) {
+                    scrollToAnchor(window.location.hash);
+                }
+            });
+        });
+    });
+}
 
 	</script>
 </body>
