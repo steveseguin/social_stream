@@ -749,9 +749,30 @@ You can sometimes install additional local languages if on Windows. See: https:/
 
 ![image](https://user-images.githubusercontent.com/2575698/165753730-374498e7-7885-49ef-83ba-7fe2acde26ee.png)
 
-Please note that when using this free TTS approach, the audio will play out the default system audio output device. This might be a problem if using OBS for capture, as you'll need to use a virtual audio cable to capture the audio output of the system output and route it back into OBS for capture.  Another user mentioned they were able to capture the TTS audio in OBS by selecting `explorer.exe` in the system application recorder.
+### Capturing TTS Audio in OBS
 
-If it's too complicated to use the built-in free TTS, using the premium Google Cloud / ElevenLabs TTS option (mentioned below) would be a great non-free solution to this issue. The paid options play out as browser tab audio, not system audio. See the related issue here: https://github.com/w3c/mediacapture-output/issues/102
+Please note that when using this free TTS approach, the audio will play out the default system audio output device. This might be a problem if using OBS for capture, as the "Control audio via OBS" option for browser sources will not capture system TTS audio. Here are several methods to properly capture this audio:
+
+#### Method 1: Virtual Audio Cable
+
+1. Install a virtual audio cable solution such as [VB-Audio VoiceMeeter](https://vb-audio.com/Voicemeeter/), [VB-Cable](https://vb-audio.com/Cable/), or [Virtual Audio Cable](https://vac.muzychenko.net/).
+2. Set the virtual cable as your system's default audio output device in Windows sound settings.
+3. In OBS, add an Audio Input Capture source and select the virtual cable as the input device.
+4. The TTS audio will now play through the virtual cable and be captured by OBS.
+
+#### Method 2: Application Audio Capture with explorer.exe
+
+As mentioned by other users, you can capture system sounds from specific applications:
+1. In OBS, add an Application Audio Capture source.
+2. Select `explorer.exe` from the dropdown (this captures system sounds including TTS).
+3. Note: Selecting the browser itself will NOT capture the TTS audio as it's played through the system, not the browser.
+
+#### Method 3: Desktop Audio Capture
+
+The simplest but least flexible option:
+1. In OBS, ensure Desktop Audio is enabled in the Audio Mixer.
+2. This will capture all system sounds, including TTS, but also any other system notifications or sounds.
+3. Be cautious of unwanted audio being captured during streams.
 
 If loading the app in the Chrome/Edge/Firefox browser, you will need to "click" the web page first before audio will play. This isn't the case with OBS, but most browsers require the user interact with the website on some level before it will play audio.  Please keep this in mind when testing things.
 
@@ -759,20 +780,28 @@ There is a toggle in the dock to turn off and on the text-to-speech; turning it 
 
 #### Installing different language-speech packs
 
-By default, the list of support languages on your computer could be slim. To add more speech options for different langauges, you'll need to install them.
+By default, the list of support languages on your computer could be slim. To add more speech options for different languages, you'll need to install them.
 
 see: https://support.microsoft.com/en-us/windows/download-language-pack-for-speech-24d06ef3-ca09-ddcc-70a0-63606fd16394 for details
 
 There's a simplified test app for text-to-speech here also, that might also help try different languages on the fly: 
 https://mdn.github.io/dom-examples/web-speech-api/speak-easy-synthesis/
 
-You can manaul set the pitch, volume, rate, and even voice-name with the below URL parameters.  The voice just matches on a partial word, so "siri", "google", "bob", or whatever is being used will work.  This still assumes the language selected also matches. `&speech=en` (first english to match),  `&speech=en-US` (default), or `&speech=fr-CA` can specify the language, for example.
+You can manual set the pitch, volume, rate, and even voice-name with the below URL parameters.  The voice just matches on a partial word, so "siri", "google", "bob", or whatever is being used will work.  This still assumes the language selected also matches. `&speech=en` (first english to match),  `&speech=en-US` (default), or `&speech=fr-CA` can specify the language, for example.
 ```
 &pitch=1
 &volume=1
 &voice=google
 &rate=1
 ```
+
+##### Kokoro Premium FREE TTS
+
+Social Stream Ninja now supports Kokoro TTS, a high-quality browser-based text-to-speech solution. Unlike the system TTS, Kokoro runs directly in the browser, making it easier to capture the audio output with OBS browser sources.
+
+Since Kokoro plays audio through the browser rather than the system, OBS can capture this audio directly when "Control audio via OBS" is enabled in the browser source settings - no virtual audio cables needed.
+
+Kokoro requires a POWERFUL computer and may be slow to generate responses.
 
 #### Premium TTS voice options
 
@@ -784,16 +813,8 @@ Go to https://cloud.google.com/text-to-speech -> Enable the service, and then ge
 
 ![image](https://user-images.githubusercontent.com/2575698/180443408-5cc0f7a9-c015-420d-9541-fd94a520ef25.png)
 
-This premium text-to-speech is supported on the featured.html (the featured chat overlay) and dock.html page. If  you stop the TTS with the button in the dock's menu, it will stop playback immediately in the dock. It will also delete any queued messages to be spoken.
+This premium text-to-speech is supported on the featured.html (the featured chat overlay), bot.html and dock.html page. If  you stop the TTS with the button in the dock's menu, it will stop playback immediately in the dock. It will also delete any queued messages to be spoken.
 
-You need at least &speech and &ttskey to enable the premium TTS, but there are customizations:
-```
-&volume=1
-&voice=en-GB-Standard-A
-&gender=FEMALE
-&speech=en-us
-&ttskey=XXXXXXX
-```
 See the Google Cloud doc for more help
 
 ##### Eleven Labs TTS 
@@ -806,16 +827,17 @@ Available voices: https://api.elevenlabs.io/docs#/voices/Get_voices_v1_voices_ge
 
 To use this with Social Stream Ninja, you'll need to be using the featured-chat featured.html or dock.html page, and you'll need to provide your api key there.
 
-Example URL with options `https://socialstream.ninja/featured.html?session=SESSIONIDHERE&tts&elevenlabskey=YOURELEVENLABSAPIKEYHERE&latency=4&voice=VR6AewLTigWG4xSOukaG`
-
-- &tts is also required to enable TTS in general
-- &voice={VOICEIDHERE} , is the voice ID you want to use.
-- &latency={N}, where N can be 0,1,2,3, or 4.  0 is high latency, but better quality. Default is 4 (fastest)
-- &elevenlabskey={APIKEYHERE} , don't share this API key, but this is needed to use the service and to specify that you want to use elevenlabs for TTS
+You can configure the TTS settings in the Social Stream Ninja menu (Text to speech setting).
 
 If  you stop the TTS with the button in the dock's menu, it will stop playback immediately in the dock. It will also delete any queued messages to be spoken. 
 
 Please NOTE: Make sure to CLICK on the browser page after it loads, else audio may not work in the browser. Browsers require user-gesture detection before audio can auto-play.  OBS Studio's browser source and the Electron Capture app are exceptions to this rule.
+
+##### Speechfy TTS
+
+Speechfy is a premium TTS service, like Eleven Labs.
+
+Speechify integration allows users to leverage Speechify's natural-sounding voices for text-to-speech, offering premium voice quality through browser-based playback that can be directly captured in OBS without additional audio routing.
 
 ### Branded channel support
 
