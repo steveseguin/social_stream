@@ -753,25 +753,25 @@ You can sometimes install additional local languages if on Windows. See: https:/
 
 ![image](https://user-images.githubusercontent.com/2575698/165753730-374498e7-7885-49ef-83ba-7fe2acde26ee.png)
 
-### Capturing TTS Audio in OBS
+#### Capturing TTS Audio in OBS
 
 Please note that when using this free TTS approach, the audio will play out the default system audio output device. This might be a problem if using OBS for capture, as the "Control audio via OBS" option for browser sources will not capture system TTS audio. Here are several methods to properly capture this audio:
 
-#### Method 1: Virtual Audio Cable
+##### Method 1: Virtual Audio Cable
 
 1. Install a virtual audio cable solution such as [VB-Audio VoiceMeeter](https://vb-audio.com/Voicemeeter/), [VB-Cable](https://vb-audio.com/Cable/), or [Virtual Audio Cable](https://vac.muzychenko.net/).
 2. Set the virtual cable as your system's default audio output device in Windows sound settings.
 3. In OBS, add an Audio Input Capture source and select the virtual cable as the input device.
 4. The TTS audio will now play through the virtual cable and be captured by OBS.
 
-#### Method 2: Application Audio Capture with explorer.exe
+##### Method 2: Application Audio Capture with explorer.exe
 
 As mentioned by other users, you can capture system sounds from specific applications:
 1. In OBS, add an Application Audio Capture source.
 2. Select `explorer.exe` from the dropdown (this captures system sounds including TTS).
 3. Note: Selecting the browser itself will NOT capture the TTS audio as it's played through the system, not the browser.
 
-#### Method 3: Desktop Audio Capture
+##### Method 3: Desktop Audio Capture
 
 The simplest but least flexible option:
 1. In OBS, ensure Desktop Audio is enabled in the Audio Mixer.
