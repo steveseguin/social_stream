@@ -12,6 +12,9 @@ const searchInput = document.getElementById('search-input');
 const messagesContainer = document.getElementById('messages-container');
 const exportButton = document.getElementById('export-button');
 const exportFormat = document.getElementById('export-format');
+const exportTimeframe = document.getElementById('export-timeframe');
+const dateFilterFrom = document.getElementById('date-filter-from');
+const dateFilterTo = document.getElementById('date-filter-to');
 
 function initDatabase() {
     return new Promise((resolve, reject) => {
@@ -195,61 +198,154 @@ function checkAndLoadMore() {
     } else {
     }
 }
+
+function getDateRangeFromTimeframe(timeframe) {
+    const now = new Date();
+    const startDate = new Date();
+    
+    switch(timeframe) {
+        case 'day':
+            startDate.setDate(now.getDate() - 1);
+            break;
+        case 'week':
+            startDate.setDate(now.getDate() - 7);
+            break;
+        case 'month':
+            startDate.setMonth(now.getMonth() - 1);
+            break;
+        case 'custom':
+            if (dateFilterFrom.value) {
+                return {
+                    startDate: new Date(dateFilterFrom.value),
+                    endDate: dateFilterTo.value ? new Date(dateFilterTo.value) : now
+                };
+            }
+            startDate.setMonth(now.getMonth() - 1); // Default to 1 month if no date specified
+            break;
+        case 'all':
+        default:
+            startDate.setFullYear(startDate.getFullYear() - 10); // Effectively all messages
+    }
+    
+    return { startDate, endDate: now };
+}
+
+function loadAllMessagesFiltered(startDate, endDate) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], "readonly");
+        const store = transaction.objectStore(STORE_NAME);
+        const index = store.index("timestamp");
+        
+        const startTimestamp = startDate.getTime();
+        const endTimestamp = endDate.getTime();
+        const range = IDBKeyRange.bound(startTimestamp, endTimestamp);
+        
+        const messages = [];
+        
+        index.openCursor(range).onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                messages.push(cursor.value);
+                cursor.continue();
+            } else {
+                resolve(messages);
+            }
+        };
+        
+        transaction.onerror = (event) => reject(event.target.error);
+    });
+}
+
 function exportMessages(format) {
     const searchTerm = searchInput.value.toLowerCase();
-    const filteredMessages = messages.filter(message =>
-        message.chatname?.toLowerCase().includes(searchTerm) ||
-        message.type?.toLowerCase().includes(searchTerm) ||
-        message.chatmessage?.toLowerCase().includes(searchTerm)
-    );
-    let content = '';
-    let filename = `chat_export_${new Date().toISOString()}.${format}`;
-    switch (format) {
-        case 'json':
-            content = JSON.stringify(filteredMessages, null, 2);
-            break;
-        case 'tsv':
-            content = 'ID\tTimestamp\tUsername\tType\tMessage\tDonation\n' +
-                filteredMessages.map(m =>
-                    `${m.id}\t${m.timestamp}\t${m.chatname}\t${m.type}\t${m.chatmessage}\t${m.hasDonation || ''}`
-                ).join('\n');
-            break;
-        case 'html':
-            content = `
-                <html>
-                <head>
-                    <style>
-                        body { font-family: Arial, sans-serif; }
-                        .message { border-bottom: 1px solid #ccc; padding: 10px; }
-                        .username { font-weight: bold; }
-                        .timestamp { color: #888; font-size: 0.8em; }
-                    </style>
-                </head>
-                <body>
-                    ${filteredMessages.map(m => `
-                        <div class="message">
-                            <span class="username">${m.chatname}</span>
-                            <span class="timestamp">${new Date(m.timestamp).toLocaleString()}</span>
-                            <p>${m.chatmessage}</p>
-                            ${m.hasDonation ? `<p>Donation: ${m.hasDonation}</p>` : ''}
-                        </div>
-                    `).join('')}
-                </body>
-                </html>
-            `;
-            break;
-    }
-    const blob = new Blob([content], { type: 'text/' + format });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(link.href);
+    const timeframe = exportTimeframe.value;
+    
+    const { startDate, endDate } = getDateRangeFromTimeframe(timeframe);
+    const startTimestamp = startDate.getTime();
+    const endTimestamp = endDate.getTime();
+    
+    // Show loading indicator
+    exportButton.disabled = true;
+    exportButton.textContent = 'Exporting...';
+    
+    loadAllMessagesFiltered(startDate, endDate)
+        .then(allMessages => {
+            const filteredMessages = searchTerm 
+                ? allMessages.filter(message => 
+                    (message.chatname || '').toLowerCase().includes(searchTerm) ||
+                    (message.type || '').toLowerCase().includes(searchTerm) ||
+                    (message.chatmessage || '').toLowerCase().includes(searchTerm))
+                : allMessages;
+                
+            let content = '';
+            let filename = `chat_export_${new Date().toISOString()}.${format}`;
+            
+            switch (format) {
+                case 'json':
+                    content = JSON.stringify(filteredMessages, null, 2);
+                    break;
+                case 'tsv':
+                    content = 'ID\tTimestamp\tUsername\tType\tMessage\tDonation\n' +
+                        filteredMessages.map(m =>
+                            `${m.id}\t${m.timestamp}\t${m.chatname}\t${m.type}\t${m.chatmessage}\t${m.hasDonation || ''}`
+                        ).join('\n');
+                    break;
+                case 'html':
+                    content = `
+                        <html>
+                        <head>
+                            <style>
+                                body { font-family: Arial, sans-serif; }
+                                .message { border-bottom: 1px solid #ccc; padding: 10px; }
+                                .username { font-weight: bold; }
+                                .timestamp { color: #888; font-size: 0.8em; }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>Chat Export (${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()})</h1>
+                            <p>Total messages: ${filteredMessages.length}</p>
+                            ${filteredMessages.map(m => `
+                                <div class="message">
+                                    <span class="username">${m.chatname}</span>
+                                    <span class="timestamp">${new Date(m.timestamp).toLocaleString()}</span>
+                                    <p>${m.chatmessage}</p>
+                                    ${m.hasDonation ? `<p>Donation: ${m.hasDonation}</p>` : ''}
+                                </div>
+                            `).join('')}
+                        </body>
+                        </html>
+                    `;
+                    break;
+            }
+            
+            const blob = new Blob([content], { type: 'text/' + format });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            
+            // Reset button
+            exportButton.disabled = false;
+            exportButton.textContent = 'Download';
+        })
+        .catch(error => {
+            console.error("Error exporting messages:", error);
+            exportButton.disabled = false;
+            exportButton.textContent = 'Download';
+        });
 }
-document.getElementById('export-button').addEventListener('click', () => {
-    const format = document.getElementById('export-format').value;
-    exportMessages(format);
+
+// Toggle custom date filter fields visibility
+exportTimeframe.addEventListener('change', function() {
+    const dateFilterContainer = document.getElementById('date-filter-container');
+    if (this.value === 'custom') {
+        dateFilterContainer.style.display = 'inline-block';
+    } else {
+        dateFilterContainer.style.display = 'none';
+    }
 });
+
 function loadAllMessages() {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], "readonly");
@@ -259,9 +355,21 @@ function loadAllMessages() {
         request.onsuccess = event => resolve(event.target.result);
     });
 }
+
+// Set default date values
+function setDefaultDates() {
+    const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setMonth(today.getMonth() - 1);
+    
+    dateFilterFrom.valueAsDate = lastMonth;
+    dateFilterTo.valueAsDate = today;
+}
+
 initDatabase()
     .then(result => {
         db = result;
+        setDefaultDates();
         return loadMessages();
     })
    .then(loadedMessages => {

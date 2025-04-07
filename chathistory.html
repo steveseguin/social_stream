@@ -12,7 +12,7 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-			overflow: hidden;
+            overflow: hidden;
         }
         #search-container {
             padding: 10px;
@@ -22,6 +22,13 @@
             width: 100%;
             padding: 5px;
             font-size: 16px;
+            margin-bottom: 10px;
+        }
+        #filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
         }
         #messages-container {
             flex-grow: 1;
@@ -40,7 +47,7 @@
         .avatar {
             width: 40px;
             height: 40px;
-			min-height: 40px;
+            min-height: 40px;
             border-radius: 50%;
             margin-right: 10px;
         }
@@ -61,46 +68,73 @@
             color: green;
             font-weight: bold;
         }
-		img, svg, video {
-			max-width:20px;
-			max-height:20px;
-		}
-		.avatar {
-			max-width:40px;
-			max-height:40px;
-			width:40px;
-		}
-		.export-container {
-			display: inline-block;
-			margin-left: 10px;
-		}
-
-		#export-button {
-			padding: 5px 10px;
-			background-color: #4CAF50;
-			color: white;
-			border: none;
-			cursor: pointer;
-		}
-
-		#export-format {
-			margin-left: 5px;
-		}
+        img, svg, video {
+            max-width: 20px;
+            max-height: 20px;
+        }
+        .avatar {
+            max-width: 40px;
+            max-height: 40px;
+            width: 40px;
+        }
+        .export-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        #export-button {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        select, input[type="date"] {
+            padding: 4px;
+        }
+        #date-filter-container {
+            display: none;
+            margin-left: 5px;
+        }
+        .filter-label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
-	<div id="search-container">
-		<input type="text" id="search-input" placeholder="Search messages...">
-		<div class="export-container">
-			<button id="export-button">Download All</button>
-			<select id="export-format">
-				<option value="json">JSON</option>
-				<option value="tsv">TSV</option>
-				<option value="html">HTML</option>
-			</select>
-		</div>
-	</div>
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="Search messages...">
+        <div id="filter-options">
+            <div class="export-container">
+                <span class="filter-label">Format:</span>
+                <select id="export-format">
+                    <option value="json">JSON</option>
+                    <option value="tsv">TSV</option>
+                    <option value="html">HTML</option>
+                </select>
+                
+                <span class="filter-label">Time Range:</span>
+                <select id="export-timeframe">
+                    <option value="all">All Time</option>
+                    <option value="day">Last 24 Hours</option>
+                    <option value="week">Last Week</option>
+                    <option value="month">Last Month</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+                
+                <div id="date-filter-container">
+                    <span class="filter-label">From:</span>
+                    <input type="date" id="date-filter-from">
+                    <span class="filter-label">To:</span>
+                    <input type="date" id="date-filter-to">
+                </div>
+                
+                <button id="export-button">Download</button>
+            </div>
+        </div>
+    </div>
     <div id="messages-container"></div>
-	<script type="text/javascript" src="./chathistory.js?v=1"></script>
+    <script type="text/javascript" src="./chathistory.js?v=1"></script>
 </body>
 </html>
