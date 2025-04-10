@@ -1204,6 +1204,8 @@
 				shortlink = true;
 			}
 			
+
+			
 			var filterfeaturedusers = false;
 			if (urlParams.has("filterfeaturedusers")) {
 				filterfeaturedusers = urlParams.get("filterfeaturedusers");
@@ -1283,6 +1285,21 @@
 			var hideDonations = false;
 			if (urlParams.has("hidedonations")) {
 				hideDonations = true;
+			}
+
+			var stripDonations = false;
+			if (urlParams.has("stripdonations")) {
+				stripDonations = true;
+			}
+
+			var stripMemberships = false;
+			if (urlParams.has("stripmemberships")) {
+				stripMemberships = true;
+			}
+
+			var stripSubtitles = false;
+			if (urlParams.has("stripsubtitles")) {
+				stripSubtitles = true;
 			}
 
 			var onlyTwitch = false;
@@ -2497,6 +2514,21 @@
 				if (data && data.contents) {
 					if (onlyshowdonos && !data.contents.hasDonation) {
 						return false;
+					}
+					
+					 // Strip components based on URL parameters
+					if (stripDonations) {
+						data.contents.hasDonation = "";
+						data.contents.donation = "";
+					}
+					
+					if (stripMemberships) {
+						data.contents.membership = "";
+						data.contents.hasMembership = "";
+					}
+					
+					if (stripSubtitles) {
+						data.contents.subtitle = "";
 					}
 					
 					if (!data.contents.chatmessage && !data.contents.chatname && !data.contents.contentimg && !data.contents.donation && !data.contents.hasDonation && !data.contents.memebership && !data.contents.hasMembership){
