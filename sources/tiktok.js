@@ -306,8 +306,23 @@
 		const nodes = Array.from(tempDiv.childNodes);
 		const word = nodes[0].textContent.trim();
 		const imageSrc = nodes[1].getAttribute('src');
-		const quantity = parseInt(nodes[2].textContent.slice(1), 10);
+		let quantity = 0;
 		
+		//console.log(nodes);
+		
+		if (nodes[2]){
+			quantity = parseInt(nodes[2].textContent.trim().slice(1), 10);
+		} else {
+			quantity = parseInt(nodes[1]?.parentNode?.nextElementSibling.textContent.trim().slice(1), 10);
+		}
+		
+		if (!quantity){
+			return null;
+		}
+		
+		// <div class="inline-flex items-center whitespace-nowrap flex-1">sent<div class="w-[26px] h-[26px] rounded-none">
+		// <img src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/resource/52ebbe9f3f53b5567ad11ad6f8303c58.png~tplv-obj.png" class="tiktok-ogoe9v e12t33lv0" style="display: block;"></div>
+		// <span class="font-600">x1</span></div>
 		return {
 			word,
 			imageSrc,
@@ -928,58 +943,6 @@
 			chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='message-owner-name']").nextElementSibling);
 		}
 		
-		var hasdonation = "";
-		try {
-			if (chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")){
-				chatmessage = chatmessage.replace("<img src="," <img src=");
-				chatmessage = chatmessage.replace('.png">x','.png"> x');
-				chatmessage = chatmessage.replace(".png'>x",".png'> x");
-				if (settings.tiktokdonations || !settings.notiktokdonations){
-					if (validateTikTokDonationMessage(chatmessage)){
-						var donation = parseDonationMessage(chatmessage);
-						if (donation.isValid && donation.imageSrc){
-							var giftid = getIdFromUrl(donation.imageSrc);
-							if (giftid){
-								if (giftMapping[giftid]){
-									var valuea = giftMapping[giftid].coins || giftMapping[giftid].name;
-								} else {
-									try {
-										var valuea = document.querySelector("img[src*='"+giftid+"']").parentNode.querySelector("svg").nextElementSibling.textContent.trim();
-										if (parseInt(valuea) == valuea){
-											giftMapping[giftid] = {coins: parseInt(valuea)};
-											//console.log(giftMapping);
-										}
-									} catch(e){
-										//console.log("Unknown item", donation);
-										if (donation.quantity>1){
-											var valuea = "gifts";
-										} else {
-											var valuea = "gift";
-										}
-									}
-								}
-								if (parseInt(valuea) == valuea){
-									valuea = (donation.quantity * parseInt(valuea));
-									if (valuea>1){
-										hasdonation = valuea + " coins";
-									} else {
-										hasdonation = valuea + " coin";
-									}
-								} else {
-									hasdonation = donation.quantity + " "+valuea;
-								}
-							}
-							
-						}
-					}
-				}
-			} else if (!settings.captureevents && ital){
-				return;
-			}
-		} catch(e){
-			//console.log(e);
-		}
-
         if (!chatmessage && !chatbadges) {
             return;
         } else if (chatmessage) {
@@ -992,10 +955,27 @@
             //alert("!!");
         }
 
-
 		if (chatmessage && (chatmessage === "----")) { // no chat name
             return;
         }
+		
+		var hasdonation = "";
+		try {
+			if (chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")){
+				
+				hasdonation = processGifts(chatmessage);
+				if (hasdonation){
+					ital = "gift";
+				}
+				chatmessage = chatmessage.replace("<img src="," <img src=");
+				chatmessage = chatmessage.replace('.png">x','.png"> x');
+				chatmessage = chatmessage.replace(".png'>x",".png'> x");
+			} else if (!settings.captureevents && (ital===true)){
+				return "";
+			}
+		} catch(e){
+			//console.warn(e);
+		}
 		
 		if (chatname && (chatimg || chatbadges || membership)) {
 			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
@@ -1059,7 +1039,7 @@
 		}
 		
         if (messageLog?.isDuplicate(chatname, chatmessage)) {
-            console.log("duplicate message; skipping",chatname, chatmessage);
+            //console.log("duplicate message; skipping",chatname, chatmessage);
             return;
         }
 
@@ -1078,6 +1058,10 @@
         data.textonly = settings.textonlymode || false;
         data.type = "tiktok";
         data.event = ital; // if an event or actual message
+		
+		if (!settings.tiktokdonations && settings.notiktokdonations){
+			data.hasDonation = "";
+		}
 
         //console.log(data);
 		
@@ -1090,6 +1074,54 @@
         pushMessage(data);
     }
 	
+	function processGifts(chatmessage){
+		//console.warn(settings.tiktokdonations || !settings.notiktokdonations);
+		var hasdonation = "";
+		if (settings.tiktokdonations || !settings.notiktokdonations){
+			//console.warn(validateTikTokDonationMessage(chatmessage));
+			if (validateTikTokDonationMessage(chatmessage)){
+				var donation = parseDonationMessage(chatmessage);
+				//console.warn(donation);
+				if (donation && donation.isValid && donation.imageSrc){
+					var giftid = getIdFromUrl(donation.imageSrc);
+					//console.warn(giftid);
+					if (giftid){
+						if (giftMapping[giftid]){
+							var valuea = giftMapping[giftid].coins || giftMapping[giftid].name;
+						} else {
+							try {
+								var valuea = document.querySelector("img[src*='"+giftid+"']").parentNode.querySelector("svg").nextElementSibling.textContent.trim();
+								if (parseInt(valuea) == valuea){
+									giftMapping[giftid] = {coins: parseInt(valuea)};
+									//console.log(giftMapping);
+								}
+							} catch(e){
+								//console.log("Unknown item", donation);
+								if (donation.quantity>1){
+									var valuea = "gifts";
+								} else {
+									var valuea = "gift";
+								}
+							}
+						}
+						if (parseInt(donation.quantity) && parseInt(valuea) && (parseInt(valuea) == valuea)){
+							valuea = (parseInt(donation.quantity) * parseInt(valuea));
+							if (valuea>1){
+								hasdonation = valuea + " coins";
+							} else {
+								hasdonation = valuea + " coin";
+							}
+						} else if (donation.quantity){
+							hasdonation = donation.quantity + " "+valuea;
+						}
+					}
+					
+				}
+			}
+		}
+		return hasdonation;
+	}
+	
 	function processEvent(ele) {
 		
 		
@@ -1097,12 +1129,6 @@
             return;
         }
 		
-	//	if (ele.querySelector("[class*='DivTopGiverContainer'], [data-e2e='top-givers-header'] , [data-e2e='top-givers']")) {
-     //       return;
-     //   }
-	//	if (ele.dataset.e2e=='top-givers-header' ||  ele.dataset.e2e=='top-givers'){
-      //      return;
-     //   }
 		
 		if (ele.dataset.skip){return;}
 		
@@ -1112,25 +1138,9 @@
 			return;
 		}
 		
-		//console.log(ele);
-		
-		// chat name
-        var chatname = "";
-
-		try {
-			let chatNameEle = ele.querySelector("[data-e2e='message-owner-name']");
-			if (chatNameEle){
-				if (chatNameEle.dataset.skip){return;}
-				chatNameEle.dataset.skip = true;
-				chatname = chatNameEle.textContent;
-				chatname = escapeHtml(chatname);
-			}
-		} catch (e) {
-		}
 		
 		ele.dataset.skip = ++msgCount;
 		
-		// chat messages
         var chatmessage = "";
 		
 		let try1 = ele.querySelector("[data-e2e='message-owner-name']");
@@ -1152,59 +1162,7 @@
 		var hasdonation = "";
 		var ital = true;
 		
-		if (chatmessage && (ele.classList.contains("DivGiftMessage") || ele.querySelector("[class*='SpanGiftCount']"))){
-			ital = "gift";
-			
-			try {
-				if (chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")){
-					chatmessage = chatmessage.replace("<img src="," <img src=");
-					chatmessage = chatmessage.replace('.png">x','.png"> x');
-					chatmessage = chatmessage.replace(".png'>x",".png'> x");
-					if (settings.tiktokdonations || !settings.notiktokdonations){
-						//console.log(chatmessage);
-						if (validateTikTokDonationMessage(chatmessage)){
-							var donation = parseDonationMessage(chatmessage);
-							//console.log(donation);
-							if (donation.isValid && donation.imageSrc){
-								var giftid = getIdFromUrl(donation.imageSrc);
-								if (giftid){
-									if (giftMapping[giftid]){
-										var valuea = giftMapping[giftid].coins || giftMapping[giftid].name;
-									} else {
-										try {
-											var valuea = document.querySelector("img[src*='"+giftid+"']").parentNode.querySelector("svg").nextElementSibling.textContent.trim();
-											if (parseInt(valuea) == valuea){
-												giftMapping[giftid] = {coins: parseInt(valuea)};
-												//console.log(giftMapping);
-											}
-										} catch(e){
-											//console.log("Unknown item", donation);
-											if (donation.quantity>1){
-												var valuea = "gifts";
-											} else {
-												var valuea = "gift";
-											}
-										}
-									}
-									if (parseInt(valuea) == valuea){
-										valuea = (donation.quantity * parseInt(valuea));
-										if (valuea>1){
-											hasdonation = valuea + " coins";
-										} else {
-											hasdonation = valuea + " coin";
-										}
-									} else {
-										hasdonation = donation.quantity + " "+valuea;
-									}
-								}
-								
-							}
-						}
-					}
-				}
-			} catch(e){
-			}
-		}
+		
 
         if (chatmessage) {
             chatmessage = chatmessage.trim();
@@ -1213,6 +1171,38 @@
 		if (!chatmessage || (chatmessage === "----")) { // no chat name
             return;
         }
+		
+		if (chatmessage && (ele.classList.contains("DivGiftMessage") || ele.querySelector("[class*='SpanGiftCount']") || (chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")))){
+			
+			try {
+				
+				hasdonation = processGifts(chatmessage)
+				if (hasdonation){
+					ital = "gift";
+				}
+				chatmessage = chatmessage.replace("<img src="," <img src=");
+				chatmessage = chatmessage.replace('.png">x','.png"> x');
+				chatmessage = chatmessage.replace(".png'>x",".png'> x");
+			} catch(e){
+			//	console.warn(e);
+			}
+		} else if (!settings.captureevents && (ital===true)){
+			return "";
+		}
+		
+		// chat name
+        var chatname = "";
+
+		try {
+			let chatNameEle = ele.querySelector("[data-e2e='message-owner-name']");
+			if (chatNameEle){
+				if (chatNameEle.dataset.skip){return;}
+				chatNameEle.dataset.skip = true;
+				chatname = chatNameEle.textContent;
+				chatname = escapeHtml(chatname);
+			}
+		} catch (e) {
+		}
 
         if ((ital===true) && !settings.capturejoinedevent && (chatmessage.includes("joined"))) { // no chat name
             if (!settings.capturejoinedevent) {
@@ -1267,6 +1257,10 @@
 
         //console.log(data);
 		
+		if (!settings.tiktokdonations && settings.notiktokdonations){
+			data.hasDonation = "";
+		}
+		
 		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
 			console.log("Has the channel changed? If so, click the page to validate it");
 			return;
@@ -1282,8 +1276,6 @@
 		if (!isExtensionOn) {
 			return;
 		}
-		
-		
 		
 		if (settings.showviewercount || settings.hypemode){
 			try {
@@ -1405,7 +1397,7 @@
 											processMessage(node);
 										}
 									}, 10, node);
-								} else if (settings.captureevents) {
+								} else if (settings.captureevents || node.querySelector("img")) {
 									setTimeout((node) => {
 										if (node.isConnected) {
 											processEvent(node);
@@ -1421,14 +1413,14 @@
 											processMessage(node);
 										}
 									}, 10, (msg || node));
-								} else if (settings.captureevents) {
+								} else if (settings.captureevents || node.querySelector("img")) {
 									setTimeout((node) => {
 										if (node.isConnected) {
 											processEvent(node);
 										}
 									}, 10, node);
 								}
-							} else if (settings.captureevents) {
+							} else if (settings.captureevents || node.querySelector("img")) {
 								setTimeout((node) => {
 									if (node.isConnected) {
 										processEvent(node);

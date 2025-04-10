@@ -192,7 +192,7 @@ function setupPeriodicUpdates() {
 
 // Intercept console logs
 function setupConsoleHook() {
-    const originalConsoleLog = console.log;
+    const originalConsoleLog = console.warn;
     const originalConsoleError = console.error;
     
     console.log = function() {
