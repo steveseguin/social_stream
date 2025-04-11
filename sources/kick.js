@@ -239,7 +239,7 @@
 	  if (settings.replyingto){
 		  let reply = ele.querySelector(".chat-entry");
 		  if (reply?.children.length == 2){
-				reply = escapeHtml(reply.children[1].textContent);
+				reply = escapeHtml(reply.children[0].textContent);
 				if (reply){
 					if (settings.textonlymode) {
 						chatmessage = "@"+reply + ": " + chatmessage;
