@@ -566,15 +566,15 @@
 			if (settings.replyingto && chatmessage) {
 				try {
 					var replyMessage = getAllContentNodes(ele.querySelector(".chat-line__message-container [title], .seventv-reply-message-part"));
-					replyMessage = replyMessage.split(":")[0].trim();
+					replyMessage = replyMessage.trim();
 					if (!replyMessage) {
 						replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
-						replyMessage = replyMessage.split(":")[0].trim();
+						replyMessage = replyMessage.trim();
 					}
 				} catch (e) {
 					try {
 						var replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
-						replyMessage = replyMessage.split(":")[0].trim();
+						replyMessage = replyMessage.trim();
 					} catch (ee) {
 					}
 				}
