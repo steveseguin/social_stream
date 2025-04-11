@@ -140,7 +140,8 @@
 			isExtensionOn = response.state;
 		}
 	});
-var isExtensionOn = true;
+	
+	var isExtensionOn = true;
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			if (!isExtensionOn){return;}
@@ -151,6 +152,9 @@ var isExtensionOn = true;
 					return;
 				}
 				if (typeof request === "object"){
+					if ("state" in request) {
+						isExtensionOn = request.state;
+					}
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
@@ -226,7 +230,6 @@ var isExtensionOn = true;
 					}
 				}
 			} catch (e) {
-				console.log(e);
 			}
 		}
 	}

@@ -236,6 +236,21 @@
 		  } catch(e){}
 	  }
 	  
+	  if (settings.replyingto){
+		  let reply = ele.querySelector(".chat-entry");
+		  if (reply?.children.length == 2){
+				reply = escapeHtml(reply.children[1].textContent);
+				if (reply){
+					if (settings.textonlymode) {
+						chatmessage = "@"+reply + ": " + chatmessage;
+					} else {
+						chatmessage = "<i><small>@"+reply + ":&nbsp;</small></i> " + chatmessage;
+					}
+				}
+		  }
+	  }
+	  
+	  
 	  if (!chatmessage){return;}
 	  
 	  

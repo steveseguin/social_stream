@@ -2986,9 +2986,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "tiktokdonations") {
 				pushSettingChange();
 			}
-			if (request.setting == "twichadmute") {
+			if (request.setting == "notiktokdonations") {
 				pushSettingChange();
 			}
+			if (request.setting == "twichadmute") {
+				pushSettingChange();
+			} 
 			if (request.setting == "twichadannounce") {
 				pushSettingChange();
 			}
@@ -4323,7 +4326,7 @@ function sendAllToDiscord(data) {
     }
 }
 function sendToDiscord(data) {
-	console.log(data);
+	
 	sendAllToDiscord(data); // << generic
 	//.. donations only .. vv
 	
@@ -4333,7 +4336,7 @@ function sendToDiscord(data) {
 	if (!data.hasDonation && !data.donation){
 		return;
 	}
-
+	console.log(data);
     try {
         let postServerDiscord = normalizeWebhookUrl(settings.postserverdiscord.textsetting);
         

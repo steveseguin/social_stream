@@ -2566,6 +2566,11 @@ input:checked + .slider:before {
 									<label for="customCSS">&gt; Custom CSS</label>
 								</div>
 								
+								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
+									<textarea id="customJS" class="textInput" rows="4" data-textparam1="jsb64" placeholder="For security/privacy purposes, Javascript injection is only allowed if hosted on file://, github.io, github.com, or if using OBS Studio or in the standalone app."></textarea>
+									<label for="customJS">&gt; Custom Javascript</label>
+								</div>
+								
                                 <div>
                                     <span data-translate="font-family">
                                         Font Family
@@ -3243,8 +3248,31 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param2="hidedonations" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="hide-donations">💸 Hide Donations </span>
+                                    <span data-translate="hide-donations">💸 Hide messages with donations </span>
                                 </div>
+								
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="stripdonations" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="stripdonations">💸 Strip out donations </span>
+                                </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="stripmemberships" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="stripmemberships">💛 Strip out Memberships </span>
+                                </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="stripsubtitles" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="stripsubtitles">📃 Strip out user sub-titles</span>
+                                </div>
+								
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param2="firstnames" />
@@ -4128,7 +4156,7 @@ input:checked + .slider:before {
 						<div class="options">
 							<div class="options_group streaming_chat">
 								<h2><span data-translate="local-censor-bot">Censor bot options 🤖🚫🤬</span></h2>
-								<i>Does not respond to chat, but has access to the chat. It can censor, filter, and sanitize incoming live chat message</i><br/>
+								<i>Does not respond to chat, but has access to the chat. It can censor, filter, and sanitize incoming live chat messages.<br /><br /><strong>⚠️ Requires a properly configured LLM service provider in the "Configure LLM Service Provider" section above.</strong></i><br/>
 								<br>
 								<div>
 									<div style="display: inline-block;" title="Use the bot to moderate messages, deleting messages that it thinks aren't fit. It will skip messages if it can't keep up.">
@@ -4173,7 +4201,9 @@ input:checked + .slider:before {
 									</div>
 								</div>
 								
-								<i>This is different than the chat bot overlay. This allows for private 1 on 1 conversation with your both on a dedicated page, just in case you want to talk privately. It does not have access to the RAG knowledge dataset currently or your other chat histories.</i><br/><br/>
+								<i>This is different than the chat bot overlay. This allows for private 1 on 1 conversation with your bot on a dedicated page, just in case you want to talk privately. It does not have access to the RAG knowledge dataset currently or your other chat histories.<br /><br /><strong>⚠️ Requires a properly configured LLM service provider in the "Configure LLM Service Provider" section above.</strong></i>
+								
+								<br/><br/>
 								<div style="display:inline-block;" title="Allow for private communication with the chat bot. Currently doesn't have access to RAG.">
 									<label class="switch">
 										<input type="checkbox" id="allowChatBot" data-setting="allowChatBot" />

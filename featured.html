@@ -1204,6 +1204,8 @@
 				shortlink = true;
 			}
 			
+
+			
 			var filterfeaturedusers = false;
 			if (urlParams.has("filterfeaturedusers")) {
 				filterfeaturedusers = urlParams.get("filterfeaturedusers");
@@ -1283,6 +1285,21 @@
 			var hideDonations = false;
 			if (urlParams.has("hidedonations")) {
 				hideDonations = true;
+			}
+
+			var stripDonations = false;
+			if (urlParams.has("stripdonations")) {
+				stripDonations = true;
+			}
+
+			var stripMemberships = false;
+			if (urlParams.has("stripmemberships")) {
+				stripMemberships = true;
+			}
+
+			var stripSubtitles = false;
+			if (urlParams.has("stripsubtitles")) {
+				stripSubtitles = true;
 			}
 
 			var onlyTwitch = false;
@@ -2499,6 +2516,21 @@
 						return false;
 					}
 					
+					 // Strip components based on URL parameters
+					if (stripDonations) {
+						data.contents.hasDonation = "";
+						data.contents.donation = "";
+					}
+					
+					if (stripMemberships) {
+						data.contents.membership = "";
+						data.contents.hasMembership = "";
+					}
+					
+					if (stripSubtitles) {
+						data.contents.subtitle = "";
+					}
+					
 					if (!data.contents.chatmessage && !data.contents.chatname && !data.contents.contentimg && !data.contents.donation && !data.contents.hasDonation && !data.contents.memebership && !data.contents.hasMembership){
 						return;
 					}
@@ -3191,7 +3223,7 @@
 			  }
 			}
 
-			if (urlParams.has("js")) {
+			/*if (urlParams.has("js")) {
 				// ie: &js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js
 				console.warn("Third-party Javascript has been injected into the code. Security cannot be ensured.");
 				var jsURL = urlParams.get("js");
@@ -3209,7 +3241,7 @@
 					console.log("Third-party Javascript loaded");
 				};
 				document.head.appendChild(externalJavaascript);
-			}
+			}*/
 		</script>
 	</body>
 </html>
