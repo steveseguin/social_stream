@@ -242,9 +242,9 @@
 				reply = escapeHtml(reply.children[0].textContent);
 				if (reply){
 					if (settings.textonlymode) {
-						chatmessage = "@"+reply + ": " + chatmessage;
+						chatmessage = reply + ": " + chatmessage;
 					} else {
-						chatmessage = "<i><small>@"+reply + ":&nbsp;</small></i> " + chatmessage;
+						chatmessage = "<i><small>"+reply + ":&nbsp;</small></i> " + chatmessage;
 					}
 				}
 		  }
