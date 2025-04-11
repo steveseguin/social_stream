@@ -242,7 +242,7 @@
 	
 	var checkReady = setInterval(function(){
 		
-		if (!window.location.pathname.startsWith("/streamers/")){return;}
+		if (!window.location.pathname.startsWith("/streamers/") && !window.location.pathname.startsWith("/chat/")){return;}
 		
 		var mainChat = document.querySelector(".chat-elements-list");
 		if (mainChat){ // just in case 
