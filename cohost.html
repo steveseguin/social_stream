@@ -1789,7 +1789,7 @@ class GoogleLivePublisher {
                                         prebuiltVoiceConfig: {
                                             voiceName: voiceSelect.value
                                         }
-                                    }
+                                    } 
                                 }
                             })
                         }
@@ -1934,6 +1934,12 @@ class GoogleLivePublisher {
         }
     }
     async setupAudioProcessing() {
+	
+		if (!this.stream.getAudioTracks().length) {
+			console.log('No audio tracks available, skipping audio processing setup');
+			return;
+		}
+		
         this.audioContext = new AudioContext({
             sampleRate: 16000
         });
@@ -2686,6 +2692,29 @@ async function getStream() {
                 });
                 outputStream.addTrack(systemTrack);
             }
+        }
+		if (outputStream.getTracks().length === 0) {
+            console.log('No audio or video selected, creating dummy video track');
+			
+            const canvas = document.createElement('canvas');
+            canvas.width = 640;
+            canvas.height = 480;
+            const ctx = canvas.getContext('2d');
+            
+			
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+			
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '24px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('No audio or video selected', canvas.width / 2, canvas.height / 2);
+            
+			
+            const dummyStream = canvas.captureStream(1); // 1 fps
+            const videoTrack = dummyStream.getVideoTracks()[0];
+            outputStream.addTrack(videoTrack);
         }
         return outputStream;
     } catch (err) {
