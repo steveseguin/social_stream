@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.16.14",
+  "version": "3.17.0",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -31,6 +31,7 @@
 	"https://soulbound.tv/*",
 	"https://claude.ai/*",
 	"https://arena.social/live/*",
+	"https://www.moonbeam.stream/*",
 	"https://studio.favorited.com/popout/chat",
 	"https://*/*autoreloadwithsocialstream",
 	"https://*.webinargeek.com/webinar/*",
@@ -291,7 +292,11 @@
       "matches": [ "https://rutube.ru/live/chat/*/" ]
     },
 	{
-      "js": [ "./sources/fc2.js" ],
+      "js": [ "./sources/moonbeam.js" ],
+      "matches": [ "https://www.moonbeam.stream/*" ]
+    },
+	{
+      "js": ["./sources/fc2.js"],
       "matches": [ "https://live.fc2.com/*/" ]
     },
 	{
