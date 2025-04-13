@@ -60,7 +60,7 @@
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
-					if ((node.nodeName == "IMG") && node.src){
+					if (node && node.nodeName && (node.nodeName == "IMG") && node.src){
 						node.src = node.src+"";
 					}
 					resp += node.outerHTML;
@@ -79,6 +79,7 @@
 	}
 	
 	function processMessage(ele){
+		console.log(ele);
 		if (!ele){return;}
 		if (!ele.isConnected){return;}
 		if (!ele.querySelector){return;}
@@ -94,23 +95,24 @@
 			return;
 		}
 		
-		var msg = "";
+		var msg = getAllContentNodes(ele.querySelector('[property="body"]')) || "";
+		console.log("..");
 		var contentimg = "";
 		try {
 			let images1 = getNextElement(nameEle);
 			//console.log(images1.nodeName, images1);
-			if ((images1.nodeName == "IMG") && images1.src){
+			if ((images1?.nodeName == "IMG") && images1.src){
 				contentimg = images1.src;
 				
-			} else if ((images1.nodeName == "VIDEO")){
+			} else if ((images1?.nodeName == "VIDEO")){
 				
 				if (images1.querySelector("source[type='video/webm'][src]")?.src.endsWith(".webm")){
 					contentimg = images1.querySelector("source[type='video/webm'][src]").src;
 				} else {
 					contentimg = images1.getAttribute("poster");
 				}
-			} else {
-				while (nameEle.nextSibling){
+			} else if (!msg){
+				while (nameEle?.nextSibling){
 					nameEle = nameEle.nextSibling;
 					msg += getAllContentNodes(nameEle) + " ";
 				}
@@ -222,16 +224,11 @@
 								// do not reprocess flag + id, if needed.
 								nodes[i].dataset.mid = mid++;
 								
-								// an easy way to avoid duplicates caused by react/vue quirks.
-								if (nodes[i].isConnected && previousNode && !previousNode.isConnected){
-									previousNode = nodes[i];
-									continue;
-								}
-								previousNode = nodes[i];
+								console.log(nodes[i])
 								
 								setTimeout(function(ele){
 									processMessage(ele);
-								},100,nodes[i]);
+								},400,nodes[i]);
 								
 							}
 						}
