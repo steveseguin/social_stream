@@ -25,6 +25,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
   - [Supported sites:](#supported-sites)
     - [Chat graveyard 🪦🪦🪦](#chat-graveyard-)
   - [Video walk-thru](#video-walk-thru)
+  - [Important Notice](#important-notice)
   - [Manually install extension](#manually-install-extension)
     - [Seeing an error message about Manifest Version 2?](#seeing-an-error-message-about-manifest-version-2)
   - [Chrome Web Store version](#chrome-web-store-version)
@@ -51,9 +52,12 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
     - [Message structure](#message-structure)
     - [Remote server API support (publish messages to third parties)](#remote-server-api-support-publish-messages-to-third-parties)
     - [Inbound third-party donation support](#inbound-third-party-donation-support)
-  - [Text to speech](#text-to-speech)
-    - [Installing different language-speech packs](#installing-different-language-speech-packs)
-    - [Premium TTS voice options](#premium-tts-voice-options)
+  - [Text to Speech](#text-to-speech)
+    - [Installing Additional Language Packs](#installing-additional-language-packs)
+    - [Customizing System TTS](#customizing-system-tts)
+    - [Premium TTS Options](#premium-tts-options)
+    - [Capturing TTS Audio in OBS](#capturing-tts-audio-in-obs)
+    - [Toggle Controls and Important Notes](#toggle-controls-and-important-notes)
   - [Branded channel support](#branded-channel-support)
   - [Random other commands not documented elsewhere](#random-other-commands-not-documented-elsewhere)
   - [Known issues or solutions](#known-issues-or-solutions)
@@ -213,6 +217,12 @@ Install guide for the extension: https://www.youtube.com/watch?v=Zql6Q5H2Eqw
 A bit about Social Stream Ninja (old now): https://www.youtube.com/watch?v=X_11Np2JHNU
 
 How to setup for discord, slack, whatsapp, meet, and telegram, see: https://www.youtube.com/watch?v=L3l0_8V1t0Q
+
+### Important Notice
+
+Using this application may potentially violate the Terms of Service of some social media platforms.
+
+Additionally, using timed commands, bots, or automated messaging in chats increases the risk of your account being temporarily blocked or permanently banned by these platforms. Please use responsibly and be aware of each platform's terms before proceeding.
 
 ### Manually install extension
 
@@ -672,6 +682,12 @@ In these cases, the JSON being delivered is in the Social Stream Ninja data-stru
 
 `https://socialstream.ninja/dock?session=XXXXXX&postserver=https://127.0.0.1/messageingest/?socialstream`
 
+##### POST without dock
+
+You can publish messages to a POST endpoint without the dock being open; there's quite a few options actually.
+
+An example of this being supported with a third party application, for custom [game-themed message skins, is here;](https://github.com/steveseguin/ChatGameFontificator?tab=readme-ov-file#using-with-social-stream-ninja)
+
 #### Inbound third-party donation support
 
 ##### Stripe webhook donation support
@@ -722,87 +738,143 @@ The default display name if none provided by the user will be `Anonymous`.
 
 `support_note` and amount donated, with currency type, will be used as fields for the donation event.
 
-### Text to speech
+### Text to Speech
 
-Text messages can be converted to speech for free, assuming your system supports TTS.  On my Windows machine running Chrome/Edge/OBS, it works just fine.  I have it set to English-US by default, but you can change the language to something else by editing the URL and adjusting the language code.
+Text messages can be converted to speech for free, utilizing your system's built-in TTS capabilities. This works on Windows, macOS, and Linux systems running compatible browsers like Chrome, Edge, Firefox, or within OBS browser sources. The default language is English-US, but you can easily change this by modifying the URL parameter.
 
-ie: `featured.html?session=XXXXXX&speech=en-US` or `socialstream.ninja/?session=xxx&&speech=en-US`
+**Examples:**
+- `featured.html?session=XXXXXX&speech=en-US` 
+- `socialstream.ninja/?session=xxx&speech=en-US`
+- `featured.html?session=XXXXXX&speech=fr-FR` (French)
+- `featured.html?session=XXXXXX&speech=de-DE` (German)
 
-Please visit https://socialstream.ninja/tts for a list of available speech options for your specific browser + system. Google Chrome and MS Edge will offer both local and cloud-hosted language options, while "free" open-source browsers, like Chromium or Firefox may only have access to local system languages or none at all. Local options should work within the OBS browser source, such as the ones shown in the image below, but non-local free options will need to be used via Chrome or Edge.
+To check what free Web API TTS voices are available on your specific browser and system, visit [https://socialstream.ninja/tts](https://socialstream.ninja/tts). This page only shows the free Web Speech API options, which vary significantly by browser:
 
-![image](https://github.com/steveseguin/social_stream/assets/2575698/228ff1ca-ad7b-4d73-b3a6-2ff2e01c6cca)
+- **Google Chrome/MS Edge**: Provides both local system voices and some cloud-hosted language options
+- **Firefox/Chromium**: Generally limited to local system languages only or none at all
+- **SSN Standalone App**: Very limited, showing only system-supported languages
 
-You can sometimes install additional local languages if on Windows. See: https://support.microsoft.com/en-us/windows/download-language-pack-for-speech-24d06ef3-ca09-ddcc-70a0-63606fd16394
+**Important Note:** The free Web Speech API TTS is quite limited in both language options and capturing capabilities. In contrast, the premium TTS options (Kokoro, Google Cloud, ElevenLabs, Speechify) offer far more language choices and are fully supported by both the SSN app and OBS browser sources with much better integration.
 
-![image](https://user-images.githubusercontent.com/2575698/165753730-374498e7-7885-49ef-83ba-7fe2acde26ee.png)
+![TTS Language Options](https://github.com/steveseguin/social_stream/assets/2575698/228ff1ca-ad7b-4d73-b3a6-2ff2e01c6cca)
 
-Please note that when using this free TTS approach, the audio will play out the default system audio output device. This might be a problem if using OBS for capture, as you'll need to use a virtual audio cable to capture the audio output of the system output and route it back into OBS for capture.  Another user mentioned they were able to capture the TTS audio in OBS by selecting `explorer.exe` in the system application recorder.
+#### Installing Additional Language Packs
 
-If it's too complicated to use the built-in free TTS, using the premium Google Cloud / ElevenLabs TTS option (mentioned below) would be a great non-free solution to this issue. The paid options play out as browser tab audio, not system audio. See the related issue here: https://github.com/w3c/mediacapture-output/issues/102
+Your computer's default language support might be limited. Here's how to expand your options:
 
-If loading the app in the Chrome/Edge/Firefox browser, you will need to "click" the web page first before audio will play. This isn't the case with OBS, but most browsers require the user interact with the website on some level before it will play audio.  Please keep this in mind when testing things.
+##### Windows 11 Method
+1. Navigate to **Start > Settings > Time & Language > Speech**
+2. Under **Manage Voices**, click **Add Voices**
+3. Select your desired languages and click **Add**
+4. Restart browsers or applications to refresh available voices
 
-There is a toggle in the dock to turn off and on the text-to-speech; turning it off whill automatically stop any audio playout. Still, be careful when using text-to-speech with the dock, as viewers can exploit it to have your system read out unwanted things on air.
+##### Windows 10 Method
+You can install additional language packs following Microsoft's guide: [Download language pack for speech](https://support.microsoft.com/en-us/windows/download-language-pack-for-speech-24d06ef3-ca09-ddcc-70a0-63606fd16394)
 
-#### Installing different language-speech packs
+![Windows Language Settings](https://user-images.githubusercontent.com/2575698/165753730-374498e7-7885-49ef-83ba-7fe2acde26ee.png)
 
-By default, the list of support languages on your computer could be slim. To add more speech options for different langauges, you'll need to install them.
+##### Testing Different Languages
+Use this simplified test app to try different TTS languages: [Web Speech API Demo](https://mdn.github.io/dom-examples/web-speech-api/speak-easy-synthesis/)
 
-see: https://support.microsoft.com/en-us/windows/download-language-pack-for-speech-24d06ef3-ca09-ddcc-70a0-63606fd16394 for details
+**Note:** Some third-party voices (e.g., modified SAPI5 voices) may not appear in browsers due to compatibility issues. Firefox often shows more system voices than Chromium-based browsers.
 
-There's a simplified test app for text-to-speech here also, that might also help try different languages on the fly: 
-https://mdn.github.io/dom-examples/web-speech-api/speak-easy-synthesis/
+#### Customizing System TTS
 
-You can manaul set the pitch, volume, rate, and even voice-name with the below URL parameters.  The voice just matches on a partial word, so "siri", "google", "bob", or whatever is being used will work.  This still assumes the language selected also matches. `&speech=en` (first english to match),  `&speech=en-US` (default), or `&speech=fr-CA` can specify the language, for example.
+Fine-tune your TTS experience with these URL parameters:
+
 ```
-&pitch=1
-&volume=1
-&voice=google
-&rate=1
+&pitch=1       // Voice pitch (0.1 to 2.0)
+&volume=1      // Volume level (0.0 to 1.0)
+&rate=1        // Speaking rate (0.1 to 10.0)
+&voice=google  // Partial voice name match
 ```
 
-#### Premium TTS voice options
+The `voice` parameter works with partial matching, so you can use terms like "siri", "google", "microsoft", etc. Make sure the specified language matches available voices (e.g., `&speech=en-US`, `&speech=fr-CA`, `&speech=en`).
 
-##### GOOGLE CLOUD TTS 
+#### Premium TTS Options
 
-I've added support for Google Cloud Text to Speech API, but you must use your own API key to use this feature, as it is expensive to use.  
+Unlike the system TTS (free), all premium TTS options are fully supported by both the Social Stream Ninja app and OBS browser sources with direct audio capture capabilities. These options provide superior language support and much easier integration.
 
-Go to https://cloud.google.com/text-to-speech -> Enable the service, and then get an API key.
+##### Kokoro Premium FREE TTS
+Social Stream Ninja now includes Kokoro TTS, a high-quality browser-based text-to-speech solution that runs directly in the browser. Benefits include:
 
-![image](https://user-images.githubusercontent.com/2575698/180443408-5cc0f7a9-c015-420d-9541-fd94a520ef25.png)
+- Easy audio capture with OBS browser sources
+- No virtual audio cables needed when "Control audio via OBS" is enabled
+- Direct browser audio output rather than system audio
 
-This premium text-to-speech is supported on the featured.html (the featured chat overlay) and dock.html page. If  you stop the TTS with the button in the dock's menu, it will stop playback immediately in the dock. It will also delete any queued messages to be spoken.
+**Note:** Kokoro requires a powerful computer and may be slow to generate responses.
 
-You need at least &speech and &ttskey to enable the premium TTS, but there are customizations:
-```
-&volume=1
-&voice=en-GB-Standard-A
-&gender=FEMALE
-&speech=en-us
-&ttskey=XXXXXXX
-```
-See the Google Cloud doc for more help
+##### Google Cloud TTS
+For professional-quality voices, Google Cloud Text to Speech API integration is available:
 
-##### Eleven Labs TTS 
+1. Go to [https://cloud.google.com/text-to-speech](https://cloud.google.com/text-to-speech)
+2. Enable the service and generate an API key
+3. Configure your key in featured.html, bot.html, or dock.html pages
 
-If you want a different set of voices, or wish to train your own, ElevenLabs.io has a TTS service that you can try. There's a "free" version you can get started testing with, which just needs you to create an account there and get an API key from your profile settings there. You may need to provide attribution as required, for the free tier?
+![Google Cloud Setup](https://user-images.githubusercontent.com/2575698/180443408-5cc0f7a9-c015-420d-9541-fd94a520ef25.png)
 
-Anyways, documentation on getting start with finding a voice you want to use and testing your API key:
-API Social Stream Ninja is using: https://api.elevenlabs.io/docs#/text-to-speech/Text_to_speech_v1_text_to_speech__voice_id__stream_post
-Available voices: https://api.elevenlabs.io/docs#/voices/Get_voices_v1_voices_get
+**Note:** This requires your own API key as the service has usage costs.
 
-To use this with Social Stream Ninja, you'll need to be using the featured-chat featured.html or dock.html page, and you'll need to provide your api key there.
+##### ElevenLabs TTS
+ElevenLabs.io offers another premium TTS service with these features:
 
-Example URL with options `https://socialstream.ninja/featured.html?session=SESSIONIDHERE&tts&elevenlabskey=YOURELEVENLABSAPIKEYHERE&latency=4&voice=VR6AewLTigWG4xSOukaG`
+- Free tier available for testing (requires account creation)
+- Custom voice training capabilities
+- Higher quality voices than system TTS
 
-- &tts is also required to enable TTS in general
-- &voice={VOICEIDHERE} , is the voice ID you want to use.
-- &latency={N}, where N can be 0,1,2,3, or 4.  0 is high latency, but better quality. Default is 4 (fastest)
-- &elevenlabskey={APIKEYHERE} , don't share this API key, but this is needed to use the service and to specify that you want to use elevenlabs for TTS
+Setup process:
+1. Create an account at [ElevenLabs.io](https://elevenlabs.io)
+2. Get an API key from your profile settings
+3. Configure the API key in featured.html or dock.html
+4. Select voices through the Social Stream Ninja menu (Text to speech settings)
 
-If  you stop the TTS with the button in the dock's menu, it will stop playback immediately in the dock. It will also delete any queued messages to be spoken. 
+API documentation:
+- [ElevenLabs API Docs](https://api.elevenlabs.io/docs#/text-to-speech/Text_to_speech_v1_text_to_speech__voice_id__stream_post)
+- [Available Voices](https://api.elevenlabs.io/docs#/voices/Get_voices_v1_voices_get)
 
-Please NOTE: Make sure to CLICK on the browser page after it loads, else audio may not work in the browser. Browsers require user-gesture detection before audio can auto-play.  OBS Studio's browser source and the Electron Capture app are exceptions to this rule.
+**Important:** Click on the browser page after loading to ensure audio works properly. Browsers require user interaction before allowing audio playback (OBS browser sources and Electron Capture app are exceptions).
+
+##### Speechify TTS
+Speechify is another premium TTS option offering:
+
+- Natural-sounding voices
+- Premium voice quality
+- Browser-based playback for direct OBS capture
+- No additional audio routing required
+
+#### Capturing TTS Audio in OBS
+
+**Note:** The following capture methods are only necessary for the system TTS (free) option. All premium TTS services (Kokoro, ElevenLabs, Google Cloud, Speechify) play audio directly through the browser and can be captured using standard OBS browser source audio capture with "Control audio via OBS" enabled.
+
+When using system TTS, the audio plays through your default system output device. This creates challenges for OBS capture since "Control audio via OBS" doesn't capture system TTS audio. Here are solutions:
+
+##### Method 1: Virtual Audio Cable
+1. Install [VB-Audio VoiceMeeter](https://vb-audio.com/Voicemeeter/), [VB-Cable](https://vb-audio.com/Cable/), or [Virtual Audio Cable](https://vac.muzychenko.net/)
+2. Set the virtual cable as your system's default audio output
+3. Add an Audio Input Capture source in OBS, selecting the virtual cable
+4. TTS audio will now route through the virtual cable and be captured by OBS
+
+##### Method 2: Application Audio Capture with explorer.exe
+1. Add an Application Audio Capture source in OBS
+2. Select `explorer.exe` from the dropdown (captures system sounds including TTS)
+3. Note: Selecting the browser itself won't capture system TTS
+
+##### Method 3: Desktop Audio Capture
+1. Enable Desktop Audio in OBS Audio Mixer
+2. This captures all system sounds including TTS
+3. Be aware this will also capture system notifications and other sounds
+
+#### Toggle Controls and Important Notes
+
+- The dock includes a toggle to turn TTS on/off
+- Disabling TTS will immediately stop audio playback and clear the queue
+- When loading in Chrome/Edge/Firefox, you must click the web page before audio will play (not required in OBS browser sources)
+- Be cautious with user-generated TTS content in live broadcasts
+
+**Audio Capture Summary:**
+- **System TTS (free)**: Requires special audio routing methods detailed above
+- **Premium TTS options**: All work directly with OBS browser sources using "Control audio via OBS" setting
+- **App compatibility**: All premium TTS options are fully supported in both the SSN app and OBS
 
 ### Branded channel support
 
