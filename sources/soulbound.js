@@ -160,8 +160,8 @@
 			if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
 				try {
 					let viewerSpan = document.querySelector("svg>polygon[points='6 3 20 12 6 21 6 3']");
-					if (viewerSpan?.parentNode?.nextElementSibling?.textContent){
-						let views = viewerSpan.parentNode.nextElementSibling.textContent.toUpperCase();
+					if (viewerSpan?.parentNode?.nextSibling?.textContent){
+						let views = viewerSpan.parentNode.nextSibling.textContent.toUpperCase();
 						let multiplier = 1;
 						if (views.includes("K")){
 							multiplier = 1000;
