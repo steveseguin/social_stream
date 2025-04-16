@@ -4287,154 +4287,105 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-function sendToStreamerBot(data, fakechat = false, relayed = false) {
-    // Ensure Streamer.bot integration is enabled in settings
+function sendToStreamerBot(data, fakechat=false, relayed=false) {
     if (!settings.streamerbot) {
-        // console.log("Streamer.bot integration disabled or endpoint URL not set.");
         return;
     }
-
+    
     try {
-        // --- Existing Pre-Checks (Assuming these functions exist elsewhere) ---
         if (data.type && data.type === "streamerbot") {
-            // console.log("Avoiding loopback to Streamer.bot");
-            return; // Avoid potential loops if Streamer.bot itself sent a message
+            return; // Avoid potential loops
+        }
+        
+        if (data.chatmessage.includes(miscTranslations.said)){
+            return null;
         }
 
-        let cleaned = data.chatmessage || "";
-        if (typeof cleaned !== 'string') {
-             cleaned = String(cleaned); // Ensure it's a string
-        }
-
-        // --- Existing Message Cleaning (Assuming these functions exist elsewhere) ---
-        if (data.textonly) {
-            cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML tags
-            cleaned = cleaned.replace(/\s\s+/g, " "); // Collapse whitespace
+        let cleaned = data.chatmessage;
+        if (data.textonly){
+            cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
+            cleaned = cleaned.replace(/\s\s+/g, " "); 
         } else {
-             // Assume decodeAndCleanHtml exists and returns a string
-            cleaned = typeof decodeAndCleanHtml === 'function' ? decodeAndCleanHtml(cleaned) : cleaned;
+            cleaned = decodeAndCleanHtml(cleaned);
         }
-
-        if (!cleaned.trim() && !data.hasDonation) {
-             // console.log("Skipping empty message after cleaning.");
-            return; // Don't send empty messages
-        }
-
-        // --- Existing Duplicate Handling (Assuming these functions exist elsewhere) ---
-        if (relayed && typeof verifyOriginalNewIncomingMessage === 'function' && !verifyOriginalNewIncomingMessage(cleaned, true)) {
-            if (data.bot) {
-                // console.log("Skipping relayed bot message.");
-                return;
-            }
-            if (typeof checkExactDuplicateAlreadyRelayed === 'function' && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
-                // console.log("Skipping already relayed duplicate message.");
-                return;
-            }
-        } else if (!fakechat && typeof checkExactDuplicateAlreadyRelayed === 'function' && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
-            // console.log("Skipping non-fake duplicate message.");
+        if (!cleaned){
             return;
         }
-
-        // --- Existing Bot Handling ---
+        
+        // Duplicate message handling
+        if (relayed && !verifyOriginalNewIncomingMessage(cleaned, true)){
+            if (data.bot) {
+                return null;
+            }
+            if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)){
+                return;
+            }
+        } else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)){
+            return null;
+        }
+        
+        // Bot handling
         let botname = "🤖💬";
-        if (settings.ollamabotname?.textsetting) {
+        if (settings.ollamabotname && settings.ollamabotname.textsetting){
             botname = settings.ollamabotname.textsetting.trim();
         }
-
-        let derivedUsername = data.chatname || data.userid || "UnknownUser"; // Start with original name
-        let isBot = data.bot || false; // Use original bot flag if available
-        if (!settings.noollamabotname && cleaned.startsWith(botname + ":")) {
-            cleaned = cleaned.replace(botname + ":", "").trim();
-            derivedUsername = botname; // Override username if bot prefix matches
-            isBot = true; // Mark as bot if prefix matches
+        
+        let username = "";
+        let isBot = false;
+        if (!settings.noollamabotname && cleaned.startsWith(botname+":")){
+            cleaned = cleaned.replace(botname+":","").trim();
+            username = botname;
+            isBot = true;
         }
-
-        // --- Construct Payload for Streamer.bot ---
-        // Map your 'data' fields to keys that will appear in Streamer.bot's '%args%'
+        
+        // Create payload for Streamer.bot
         const payload = {
-            // Core chat info
-            userName: derivedUsername,
-            userId: data.userid || null, // Send null if not available
-            displayName: data.chatname || derivedUsername, // Often same as userName, but can differ
-            message: cleaned,
-            platform: data.type || "socialstream", // Your 'type' field
-            userAvatarUrl: data.chatimg || null, // Your 'chatimg'
-            platformImageUrl: data.sourceImg || `https://socialstream.ninja/sources/images/${data.type || 'socialstream'}.png`, // Your 'sourceImg' or default
-
-            // Flags & Status
-            isModerator: data.moderator || false,
-            isAdmin: data.admin || false, // Your 'admin' field
-            isBot: isBot, // Use the derived bot status
-            isQuestion: data.question || false, // Your 'question' field
-            isPrivate: data.private || false, // Your 'private' field
-            isTextOnly: data.textonly || false, // Your 'textonly' field
-
-            // Event & Donation related
-            isEvent: data.event || false, // Treat boolean true as a generic event, or use the string type
-            eventType: typeof data.event === 'string' ? data.event : null, // Specific event type if string
-            donationAmount: data.hasDonation || null, // Your 'hasDonation' field
-            membershipInfo: data.membership || null, // Your 'membership' field
-            eventTitle: data.title || null, // Your 'title' field (e.g., CHEERS)
-            eventSubtitle: data.subtitle || null, // Your 'subtitle' (e.g., months)
-            contentImageUrl: data.contentimg || null, // Your 'contentimg'
-
-            // Metadata & Custom
-            badges: data.chatbadges || [], // Send as array
-            karmaScore: data.karma !== undefined ? parseFloat(data.karma) : null, // Your 'karma', ensure float
-            internalMsgId: data.id !== undefined ? parseInt(data.id) : null, // Your 'id', ensure int
-            nameColor: data.nameColor || null,
-            textColor: data.textColor || null,
-            backgroundColor: data.backgroundColor || null,
-
-            // Include the original raw data object if needed for complex logic in Streamer.bot
-            originalRawData: data // Consider JSON.stringify(data) if SB has issues with nested objects
+            action: {
+                id: settings?.streamerbotactionid?.textsetting || "socialstream",
+                name: "Process SocialStream Chat"
+            },
+            args: {
+                platform: data.type || "socialstream",
+                source: data.source || "socialstream",
+                event: "chat",
+                data: {
+                    username: username || data.chatname || data.userid || "Host⚡",
+                    userId: data.userid || "socialstream",
+                    message: cleaned,
+                    avatar: data.chatimg || `https://socialstream.ninja/sources/images/${data.type}.png`,
+                    isBot: isBot,
+                    originalData: JSON.stringify(data)
+                }
+            }
         };
-
-        // --- Send to Streamer.bot ---
-        const endpointUrl = settings.streamerbotEndpointUrl?.textsetting || "http://127.0.0.1:8080/socialstream/chat";
-
-        // Use fetch API for the POST request
-        fetch(endpointUrl, {
+        
+        // Send to Streamer.bot
+        let endpoint = settings?.streamerbotendpoint?.textsetting || "http://127.0.0.1:7474/DoAction";
+        
+        fetch(endpoint, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                // Add Authentication header if you configured it in Streamer.bot
-                // 'Authorization': 'Basic ' + btoa('username:password') // Example for Basic Auth
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ args: payload }) // *** IMPORTANT: Wrap the payload in an 'args' object ***
-                                                   // This ensures it matches how Streamer.bot expects data
-                                                   // for custom HTTP endpoints to populate the %args% dictionary.
+            body: JSON.stringify(payload)
         })
         .then(response => {
             if (!response.ok) {
-                 // Log more detailed error for debugging
-                console.warn(`Error sending to Streamer.bot: ${response.status} ${response.statusText}`);
-                 return response.text().then(text => { console.warn("Response body:", text); }); // Log response body if possible
-            } else {
-                // console.log("Successfully sent message to Streamer.bot."); // Optional success log
-                return response.json().catch(() => {}); // Attempt to parse JSON, ignore if no body/not JSON
+                console.warn("Error sending to Streamer.bot:", response.status);
             }
+            return response.json();
         })
-        // .then(responseData => {
-        //     if (responseData) {
-        //          console.log("Streamer.bot response:", responseData); // Optional: log response if needed
-        //     }
-        // })
+        .then(data => {
+            //console.log("Streamer.bot response:", data);
+        })
         .catch(error => {
-            console.error("Network or other error sending to Streamer.bot:", error);
+            console.warn("Error sending to Streamer.bot:", error);
         });
-
-        // --- Existing Fake Chat Handling ---
-         if (fakechat && typeof setLastSentMessage === 'function') { // Assuming setLastSentMessage exists
-             setLastSentMessage(cleaned);
-         }
-
+        
     } catch (e) {
-        console.error("Error within sendToStreamerBot function:", e);
+        console.warn("Error in sendToStreamerBot:", e);
     }
 }
-
-
 function sendAllToDiscord(data) {
 	
     if (!settings.postalldiscord || !settings.postallserverdiscord) {
