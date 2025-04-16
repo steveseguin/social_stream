@@ -4341,7 +4341,7 @@ function sendToStreamerBot(data, fakechat=false, relayed=false) {
         // Create payload for Streamer.bot
         const payload = {
             action: {
-                id: settings?.streamerbotactionid.textsetting || "socialstream",
+                id: settings?.streamerbotactionid?.textsetting || "socialstream",
                 name: "Process SocialStream Chat"
             },
             args: {
