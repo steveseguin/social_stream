@@ -1,127 +1,201 @@
-# Integrating SocialStreamNinja with Streamer.bot
+I'll convert this document into HTML for you. Here's the complete HTML version:
 
-This guide explains how to configure Streamer.bot to receive chat messages and events from SocialStreamNinja (or a similar application sending data in the specified format) using Streamer.bot's built-in HTTP Server. This allows you to trigger actions, control OBS, and use Streamer.bot's features based on multi-platform chat activity.
-
-## Prerequisites
-
-* **Streamer.bot:** Installed and running on your computer. Download from [streamer.bot](https://streamer.bot/).
-* **SocialStream.Ninja:** Configured via the menu and running, with the ability to send HTTP POST requests to the Streamer.bot server.
-* **Basic understanding** of Streamer.bot's interface (Actions, Servers/Clients tabs).
-
-## Setup Steps
-
-### Step 1: Enable Streamer.bot's HTTP Server
-
-1.  Open Streamer.bot.
-2.  Navigate to the **Servers/Clients** tab.
-3.  Select the **HTTP Server** sub-tab.
-4.  Ensure the server is **Enabled** (check the box) and **Started**. If not started, click `Start Server`. You might want to enable `Auto start` as well.
-5.  **Note down the `Address` and `Port`**. The default is typically `127.0.0.1` and port `8080`. You'll need this for configuring SocialStreamNinja.
-    * *Note:* `127.0.0.1` means only applications on the *same computer* can connect. If SocialStreamNinja runs elsewhere, you might need to bind to `0.0.0.0` (use with caution, consider network security/firewalls).
-6.  (Optional) You can configure Authentication here if needed, but it's simpler to start without it.
-
-### Step 2: Create a Streamer.bot Action to Handle Incoming Messages
-
-This action will be triggered when SocialStreamNinja sends a message.
-
-1.  Go to the **Actions** tab in Streamer.bot.
-2.  Right-click in the Actions list pane and select **Add** (or click the `+ Add` button).
-3.  Give the Action a descriptive **Name**, for example: `Handle SocialStream Chat`.
-4.  Keep this action selected. Now, in the **Sub-Actions** pane (usually on the right):
-    * Right-click and select **Add Sub-Action**.
-    * Navigate to **Core** -> **Log Message**.
-    * In the `Message` field, you can test receiving data using variables like this:
-        ```
-        [SocialStream] [%args[platform%]] %args[userName%]: %args[message%] (Moderator: %args[isModerator%])
-        ```
-        *(See the "Accessing Data" section below for available `%args%` variables)*.
-    * Click **OK**.
-5.  You can add more sub-actions here later to *do things* with the incoming data (e.g., `Core` -> `Set Argument`, `OBS` -> `Set Source Visibility`, `Core` -> `Action` -> `Run Action` to trigger other actions).
-
-### Step 3: Create an HTTP Server Endpoint (Route)
-
-This links a specific URL path to the Action you just created.
-
-1.  Go back to the **Servers/Clients** -> **HTTP Server** tab.
-2.  Select the **Endpoints** sub-tab below the server settings.
-3.  Click the **Add** button (or right-click -> Add).
-4.  Configure the Endpoint:
-    * **Endpoint Path:** Choose a unique path for SocialStreamNinja messages. Example: `/socialstream/chat` or `/ssn/message`. **Make this path memorable - you need it in the next step!**
-    * **HTTP Method:** Select **`POST`**.
-    * **Enabled:** Make sure this is checked.
-    * **Action:** Select the Action you created in Step 2 (e.g., `Handle SocialStream Chat`) from the dropdown list.
-    * **Allowed Methods:** Should automatically reflect `POST`.
-5.  Click **OK**.
-
-### Step 4: Configure SocialStreamNinja (Your Application)
-
-1.  Open the settings/configuration area of SocialStreamNinja where the Streamer.bot integration is handled.
-2.  Find the setting for the **Streamer.bot Endpoint URL**. This corresponds to the `settings.streamerbotEndpointUrl.textsetting` in the JavaScript code.
-3.  Enter the **full URL** constructed from:
-    * `http://` (or `https://` if you configured SSL in Streamer.bot)
-    * The **Address** noted in Step 1 (e.g., `127.0.0.1`)
-    * `:` followed by the **Port** noted in Step 1 (e.g., `:8080`)
-    * The **Endpoint Path** you chose in Step 3 (e.g., `/socialstream/chat`)
-    * **Example Full URL:** `http://127.0.0.1:8080/socialstream/chat`
-4.  Ensure the setting to **enable** sending messages to Streamer.bot is turned **ON**.
-5.  Save the settings in SocialStreamNinja.
-
-### Step 5: Test the Integration
-
-1.  Make sure Streamer.bot is running with the HTTP Server active.
-2.  Make sure SocialStreamNinja is running and configured with the correct endpoint URL.
-3.  Have a chat message appear in SocialStreamNinja from any connected platform.
-4.  Check the **Action Queues** -> **History** tab in Streamer.bot.
-5.  You should see your `Handle SocialStream Chat` action being triggered.
-6.  Double-click the entry in the History tab. In the window that appears, check the `Log` tab. You should see the message logged by the "Log Message" sub-action you added, containing data from the chat message.
-
-## Accessing Data in Streamer.bot Actions
-
-When SocialStreamNinja sends data, the fields are accessible within the triggered Streamer.bot Action via the `%args%` variable dictionary. Based on the provided JavaScript code, here are the primary variables you can use in your sub-actions:
-
-* `%args[userName]%`: The user's display name (or bot name).
-* `%args[userId]%`: The platform-specific user ID (or null).
-* `%args[displayName]%`: User's display name.
-* `%args[message]%`: The cleaned chat message content.
-* `%args[platform]%`: The source platform (e.g., `twitch`, `youtube`, `socialstream`).
-* `%args[userAvatarUrl]%`: URL to the user's avatar (or null).
-* `%args[platformImageUrl]%`: URL to the platform icon.
-* `%args[isModerator]%`: `True` or `False`.
-* `%args[isAdmin]%`: `True` or `False`.
-* `%args[isBot]%`: `True` or `False`.
-* `%args[isQuestion]%`: `True` or `False`.
-* `%args[isPrivate]%`: `True` or `False`.
-* `%args[isTextOnly]%`: `True` or `False`.
-* `%args[isEvent]%`: `True` (if it's any event) or the specific event type string, or `False`.
-* `%args[eventType]%`: Specific event type string (e.g., `follow`, `sub`) or `null`.
-* `%args[donationAmount]%`: Donation string (e.g., `$5 USD`, `3 roses`) or `null`.
-* `%args[membershipInfo]%`: Membership details string or `null`.
-* `%args[eventTitle]%`: Custom event title (e.g., `CHEERS`) or `null`.
-* `%args[eventSubtitle]%`: Custom event subtitle (e.g., `5 months`) or `null`.
-* `%args[contentImageUrl]%`: URL of associated image/video for the message or `null`.
-* `%args[badges]%`: An array containing badge information (URLs or objects). You might need C# to easily process this array in detail, but you can log it: `%args[badges]%`.
-* `%args[karmaScore]%`: Floating point number representing message sentiment (or null).
-* `%args[internalMsgId]%`: Internal message ID number (or null).
-* `%args[nameColor]%`: Custom name color CSS value (or null).
-* `%args[textColor]%`: Custom text color CSS value (or null).
-* `%args[backgroundColor]%`: Custom background color CSS value (or null).
-* `%args[originalRawData]%`: The complete, original data object sent from SocialStreamNinja (useful for debugging or complex C# logic if needed later).
-
-You can use these variables in most sub-action fields within your `Handle SocialStream Chat` action.
-
-## Troubleshooting
-
-* **Action Not Triggering:**
-    * Verify the **Streamer.bot HTTP Server** is running (Step 1).
-    * Double-check the **Full Endpoint URL** in SocialStreamNinja settings matches *exactly* the Address, Port, and Path configured in Streamer.bot (Step 4 vs Steps 1 & 3). Check for typos, missing `/`, `http` vs `https`.
-    * Ensure the **Endpoint** in Streamer.bot is **Enabled** and linked to the correct **Action** (Step 3).
-    * Check if a **Firewall** (Windows Firewall or other security software) is blocking connections to the port Streamer.bot is using (e.g., 8080). You may need to create an allow rule.
-    * Check the Streamer.bot `Action Queues` -> `Errors` tab for any relevant errors.
-    * Check the console/logs in SocialStreamNinja for network errors when it tries to send the message.
-* **Data Not Appearing Correctly in Logs:**
-    * Ensure the variable names in your `Log Message` sub-action (e.g., `%args[userName]%`) match the keys listed in the "Accessing Data" section. Case sensitivity might matter depending on the Streamer.bot version.
-    * Log the raw args to see what's arriving: add a Log sub-action with just `%args%`.
-* **Error 401 Unauthorized (If using Auth):**
-    * Make sure the username/password or token configured in Streamer.bot's HTTP Server Authentication matches what SocialStreamNinja is sending (if the JS code was modified to send authentication headers).
-
-By following these steps, you should have a robust connection sending chat data from SocialStreamNinja directly into Streamer.bot actions!
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrating SocialStreamNinja with Streamer.bot</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: monospace;
+        }
+        ul, ol {
+            padding-left: 25px;
+        }
+        .note {
+            background-color: #e7f3fe;
+            border-left: 4px solid #2196F3;
+            padding: 10px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Integrating SocialStreamNinja with Streamer.bot</h1>
+    
+    <p>This guide explains how to configure Streamer.bot to receive chat messages and events from SocialStreamNinja (or a similar application sending data in the specified format) using Streamer.bot's built-in HTTP Server. This allows you to trigger actions, control OBS, and use Streamer.bot's features based on multi-platform chat activity.</p>
+    
+    <h2>Prerequisites</h2>
+    <ul>
+        <li><strong>Streamer.bot:</strong> Installed and running on your computer. Download from <a href="https://streamer.bot/">streamer.bot</a>.</li>
+        <li><strong>SocialStream.Ninja:</strong> Configured via the menu and running, with the ability to send HTTP POST requests to the Streamer.bot server.</li>
+        <li><strong>Basic understanding</strong> of Streamer.bot's interface (Actions, Servers/Clients tabs).</li>
+    </ul>
+    
+    <h2>Setup Steps</h2>
+    
+    <h3>Step 1: Enable Streamer.bot's HTTP Server</h3>
+    <ol>
+        <li>Open Streamer.bot.</li>
+        <li>Navigate to the <strong>Servers/Clients</strong> tab.</li>
+        <li>Select the <strong>HTTP Server</strong> sub-tab.</li>
+        <li>Ensure the server is <strong>Enabled</strong> (check the box) and <strong>Started</strong>. If not started, click <code>Start Server</code>. You might want to enable <code>Auto start</code> as well.</li>
+        <li><strong>Note down the <code>Address</code> and <code>Port</code></strong>. The default is typically <code>127.0.0.1</code> and port <code>8080</code>. You'll need this for configuring SocialStreamNinja.
+            <div class="note"><em>Note:</em> <code>127.0.0.1</code> means only applications on the <em>same computer</em> can connect. If SocialStreamNinja runs elsewhere, you might need to bind to <code>0.0.0.0</code> (use with caution, consider network security/firewalls).</div>
+        </li>
+        <li>(Optional) You can configure Authentication here if needed, but it's simpler to start without it.</li>
+    </ol>
+    
+    <h3>Step 2: Create a Streamer.bot Action to Handle Incoming Messages</h3>
+    <p>This action will be triggered when SocialStreamNinja sends a message.</p>
+    <ol>
+        <li>Go to the <strong>Actions</strong> tab in Streamer.bot.</li>
+        <li>Right-click in the Actions list pane and select <strong>Add</strong> (or click the <code>+ Add</code> button).</li>
+        <li>Give the Action a descriptive <strong>Name</strong>, for example: <code>Handle SocialStream Chat</code>.</li>
+        <li>Keep this action selected. Now, in the <strong>Sub-Actions</strong> pane (usually on the right):
+            <ul>
+                <li>Right-click and select <strong>Add Sub-Action</strong>.</li>
+                <li>Navigate to <strong>Core</strong> -&gt; <strong>Log Message</strong>.</li>
+                <li>In the <code>Message</code> field, you can test receiving data using variables like this:
+                    <pre>[SocialStream] [%args[platform%]] %args[userName%]: %args[message%] (Moderator: %args[isModerator%])</pre>
+                    <em>(See the "Accessing Data" section below for available <code>%args%</code> variables)</em>.</li>
+                <li>Click <strong>OK</strong>.</li>
+            </ul>
+        </li>
+        <li>You can add more sub-actions here later to <em>do things</em> with the incoming data (e.g., <code>Core</code> -&gt; <code>Set Argument</code>, <code>OBS</code> -&gt; <code>Set Source Visibility</code>, <code>Core</code> -&gt; <code>Action</code> -&gt; <code>Run Action</code> to trigger other actions).</li>
+    </ol>
+    
+    <h3>Step 3: Create an HTTP Server Endpoint (Route)</h3>
+    <p>This links a specific URL path to the Action you just created.</p>
+    <ol>
+        <li>Go back to the <strong>Servers/Clients</strong> -&gt; <strong>HTTP Server</strong> tab.</li>
+        <li>Select the <strong>Endpoints</strong> sub-tab below the server settings.</li>
+        <li>Click the <strong>Add</strong> button (or right-click -&gt; Add).</li>
+        <li>Configure the Endpoint:
+            <ul>
+                <li><strong>Endpoint Path:</strong> Choose a unique path for SocialStreamNinja messages. Example: <code>/socialstream/chat</code> or <code>/ssn/message</code>. <strong>Make this path memorable - you need it in the next step!</strong></li>
+                <li><strong>HTTP Method:</strong> Select <strong><code>POST</code></strong>.</li>
+                <li><strong>Enabled:</strong> Make sure this is checked.</li>
+                <li><strong>Action:</strong> Select the Action you created in Step 2 (e.g., <code>Handle SocialStream Chat</code>) from the dropdown list.</li>
+                <li><strong>Allowed Methods:</strong> Should automatically reflect <code>POST</code>.</li>
+            </ul>
+        </li>
+        <li>Click <strong>OK</strong>.</li>
+    </ol>
+    
+    <h3>Step 4: Configure SocialStreamNinja (Your Application)</h3>
+    <ol>
+        <li>Open the settings/configuration area of SocialStreamNinja where the Streamer.bot integration is handled.</li>
+        <li>Find the setting for the <strong>Streamer.bot Endpoint URL</strong>. This corresponds to the <code>settings.streamerbotEndpointUrl.textsetting</code> in the JavaScript code.</li>
+        <li>Enter the <strong>full URL</strong> constructed from:
+            <ul>
+                <li><code>http://</code> (or <code>https://</code> if you configured SSL in Streamer.bot)</li>
+                <li>The <strong>Address</strong> noted in Step 1 (e.g., <code>127.0.0.1</code>)</li>
+                <li><code>:</code> followed by the <strong>Port</strong> noted in Step 1 (e.g., <code>:8080</code>)</li>
+                <li>The <strong>Endpoint Path</strong> you chose in Step 3 (e.g., <code>/socialstream/chat</code>)</li>
+                <li><strong>Example Full URL:</strong> <code>http://127.0.0.1:8080/socialstream/chat</code></li>
+            </ul>
+        </li>
+        <li>Ensure the setting to <strong>enable</strong> sending messages to Streamer.bot is turned <strong>ON</strong>.</li>
+        <li>Save the settings in SocialStreamNinja.</li>
+    </ol>
+    
+    <h3>Step 5: Test the Integration</h3>
+    <ol>
+        <li>Make sure Streamer.bot is running with the HTTP Server active.</li>
+        <li>Make sure SocialStreamNinja is running and configured with the correct endpoint URL.</li>
+        <li>Have a chat message appear in SocialStreamNinja from any connected platform.</li>
+        <li>Check the <strong>Action Queues</strong> -&gt; <strong>History</strong> tab in Streamer.bot.</li>
+        <li>You should see your <code>Handle SocialStream Chat</code> action being triggered.</li>
+        <li>Double-click the entry in the History tab. In the window that appears, check the <code>Log</code> tab. You should see the message logged by the "Log Message" sub-action you added, containing data from the chat message.</li>
+    </ol>
+    
+    <h2>Accessing Data in Streamer.bot Actions</h2>
+    
+    <p>When SocialStreamNinja sends data, the fields are accessible within the triggered Streamer.bot Action via the <code>%args%</code> variable dictionary. Based on the provided JavaScript code, here are the primary variables you can use in your sub-actions:</p>
+    
+    <ul>
+        <li><code>%args[userName]%</code>: The user's display name (or bot name).</li>
+        <li><code>%args[userId]%</code>: The platform-specific user ID (or null).</li>
+        <li><code>%args[displayName]%</code>: User's display name.</li>
+        <li><code>%args[message]%</code>: The cleaned chat message content.</li>
+        <li><code>%args[platform]%</code>: The source platform (e.g., <code>twitch</code>, <code>youtube</code>, <code>socialstream</code>).</li>
+        <li><code>%args[userAvatarUrl]%</code>: URL to the user's avatar (or null).</li>
+        <li><code>%args[platformImageUrl]%</code>: URL to the platform icon.</li>
+        <li><code>%args[isModerator]%</code>: <code>True</code> or <code>False</code>.</li>
+        <li><code>%args[isAdmin]%</code>: <code>True</code> or <code>False</code>.</li>
+        <li><code>%args[isBot]%</code>: <code>True</code> or <code>False</code>.</li>
+        <li><code>%args[isQuestion]%</code>: <code>True</code> or <code>False</code>.</li>
+        <li><code>%args[isPrivate]%</code>: <code>True</code> or <code>False</code>.</li>
+        <li><code>%args[isTextOnly]%</code>: <code>True</code> or <code>False</code>.</li>
+        <li><code>%args[isEvent]%</code>: <code>True</code> (if it's any event) or the specific event type string, or <code>False</code>.</li>
+        <li><code>%args[eventType]%</code>: Specific event type string (e.g., <code>follow</code>, <code>sub</code>) or <code>null</code>.</li>
+        <li><code>%args[donationAmount]%</code>: Donation string (e.g., <code>$5 USD</code>, <code>3 roses</code>) or <code>null</code>.</li>
+        <li><code>%args[membershipInfo]%</code>: Membership details string or <code>null</code>.</li>
+        <li><code>%args[eventTitle]%</code>: Custom event title (e.g., <code>CHEERS</code>) or <code>null</code>.</li>
+        <li><code>%args[eventSubtitle]%</code>: Custom event subtitle (e.g., <code>5 months</code>) or <code>null</code>.</li>
+        <li><code>%args[contentImageUrl]%</code>: URL of associated image/video for the message or <code>null</code>.</li>
+        <li><code>%args[badges]%</code>: An array containing badge information (URLs or objects). You might need C# to easily process this array in detail, but you can log it: <code>%args[badges]%</code>.</li>
+        <li><code>%args[karmaScore]%</code>: Floating point number representing message sentiment (or null).</li>
+        <li><code>%args[internalMsgId]%</code>: Internal message ID number (or null).</li>
+        <li><code>%args[nameColor]%</code>: Custom name color CSS value (or null).</li>
+        <li><code>%args[textColor]%</code>: Custom text color CSS value (or null).</li>
+        <li><code>%args[backgroundColor]%</code>: Custom background color CSS value (or null).</li>
+        <li><code>%args[originalRawData]%</code>: The complete, original data object sent from SocialStreamNinja (useful for debugging or complex C# logic if needed later).</li>
+    </ul>
+    
+    <p>You can use these variables in most sub-action fields within your <code>Handle SocialStream Chat</code> action.</p>
+    
+    <h2>Troubleshooting</h2>
+    
+    <ul>
+        <li><strong>Action Not Triggering:</strong>
+            <ul>
+                <li>Verify the <strong>Streamer.bot HTTP Server</strong> is running (Step 1).</li>
+                <li>Double-check the <strong>Full Endpoint URL</strong> in SocialStreamNinja settings matches <em>exactly</em> the Address, Port, and Path configured in Streamer.bot (Step 4 vs Steps 1 &amp; 3). Check for typos, missing <code>/</code>, <code>http</code> vs <code>https</code>.</li>
+                <li>Ensure the <strong>Endpoint</strong> in Streamer.bot is <strong>Enabled</strong> and linked to the correct <strong>Action</strong> (Step 3).</li>
+                <li>Check if a <strong>Firewall</strong> (Windows Firewall or other security software) is blocking connections to the port Streamer.bot is using (e.g., 8080). You may need to create an allow rule.</li>
+                <li>Check the Streamer.bot <code>Action Queues</code> -&gt; <code>Errors</code> tab for any relevant errors.</li>
+                <li>Check the console/logs in SocialStreamNinja for network errors when it tries to send the message.</li>
+            </ul>
+        </li>
+        <li><strong>Data Not Appearing Correctly in Logs:</strong>
+            <ul>
+                <li>Ensure the variable names in your <code>Log Message</code> sub-action (e.g., <code>%args[userName]%</code>) match the keys listed in the "Accessing Data" section. Case sensitivity might matter depending on the Streamer.bot version.</li>
+                <li>Log the raw args to see what's arriving: add a Log sub-action with just <code>%args%</code>.</li>
+            </ul>
+        </li>
+        <li><strong>Error 401 Unauthorized (If using Auth):</strong>
+            <ul>
+                <li>Make sure the username/password or token configured in Streamer.bot's HTTP Server Authentication matches what SocialStreamNinja is sending (if the JS code was modified to send authentication headers).</li>
+            </ul>
+        </li>
+    </ul>
+    
+    <p>By following these steps, you should have a robust connection sending chat data from SocialStreamNinja directly into Streamer.bot actions!</p>
+</body>
+</html>
+```
