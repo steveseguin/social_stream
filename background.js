@@ -4360,7 +4360,7 @@ function sendToStreamerBot(data, fakechat=false, relayed=false) {
         };
         
         // Send to Streamer.bot
-        let endpoint = settings?.streamerbotendpoint.textsetting || "http://127.0.0.1:7474/DoAction";
+        let endpoint = settings?.streamerbotendpoint?.textsetting || "http://127.0.0.1:7474/DoAction";
         
         fetch(endpoint, {
             method: 'POST',
