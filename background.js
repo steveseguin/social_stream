@@ -3864,6 +3864,7 @@ async function sendToDestinations(message) {
 	sendToH2R(message);
 	sendToPost(message);
 	sendToDiscord(message);  // donos only
+	sendToStreamerBot(message);
 	if (message.chatmessage || message.hasDonation || message.chatname){
 		message.idx = await addMessageDB(message);
 	}
