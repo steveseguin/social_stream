@@ -196,7 +196,6 @@ function setupConsoleHook() {
     const originalConsoleError = console.error;
     
     console.log = function() {
-        originalConsoleLog.apply(console, arguments);
         const message = Array.from(arguments).join(' ');
         addLogMessage(message);
     };
