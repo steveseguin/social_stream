@@ -7311,7 +7311,9 @@ async function applyBotActions(data, tab = false) {
 
 				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
 				if (tmpmsg) {  
-					if (data.chatname){
+					if (settings.nosaid){
+						msg.response = tmpmsg;
+					} else if (data.chatname){
 						msg.response = sanitizeRelay(data.chatname, true, miscTranslations.someone) + miscTranslations.said + tmpmsg; 
 					} else if (data.type){
 						msg.response = data.type.replace(/\b\w/g, c => c.toUpperCase())+": " + tmpmsg;
