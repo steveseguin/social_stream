@@ -6988,7 +6988,7 @@ async function applyBotActions(data, tab = false) {
 			}
 			delete settings.mynameext;
 		}
-		if (!data.bot && settings.botnamesext?.textsetting && (data.chatname || data.userid)) {
+		if (!data.bot && settings.botnamesext?.textsetting && (data.chatname || data.userid)) { 
 			try {
 				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
 				if (!userIdentifier) return;
@@ -7297,7 +7297,7 @@ async function applyBotActions(data, tab = false) {
 				return null;
 			}
 			
-			if (!data.bot) {
+			if (!data.bot && (!settings.relayhostonly || data.host)) {
 				//messageTimeout = Date.now();
 				var msg = {};
 				
@@ -7307,7 +7307,7 @@ async function applyBotActions(data, tab = false) {
 				// this should be ideall HTML stripped
 				if (tab) {
 					msg.url = tab.url;
-				}
+				} 
 
 				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
 				if (tmpmsg) {  
