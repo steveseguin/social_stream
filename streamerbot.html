@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SocialStream.Ninja Integration with Streamer.bot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #3498db;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        pre {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            overflow: auto;
+        }
+        code {
+            font-family: 'Courier New', monospace;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        .note {
+            background-color: #f0f7fb;
+            border-left: 5px solid #3498db;
+            padding: 10px;
+            margin: 15px 0;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .toc {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+        .toc ul {
+            list-style-type: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>SocialStream.Ninja Integration with Streamer.bot</h1>
+    
+    <p>This guide explains how to integrate SocialStream.Ninja with Streamer.bot, allowing you to process chat messages from multiple platforms in one unified system.</p>
+    
+    <div class="toc">
+        <h2>Table of Contents</h2>
+        <ul>
+            <li><a href="#prerequisites">Prerequisites</a></li>
+            <li><a href="#installation">Installation</a></li>
+            <li><a href="#setting-up-streamerbot">Setting Up Streamer.bot</a></li>
+            <li><a href="#configuring-SocialStream.Ninja">Configuring SocialStream.Ninja</a></li>
+            <li><a href="#integration-features">Integration Features</a></li>
+            <li><a href="#troubleshooting">Troubleshooting</a></li>
+            <li><a href="#advanced-usage">Advanced Usage</a></li>
+        </ul>
+    </div>
+    
+    <div id="prerequisites" class="section">
+        <h2>Prerequisites</h2>
+        <ul>
+            <li><a href="https://streamer.bot/">Streamer.bot</a> installed on your computer</li>
+            <li>SocialStream.Ninja's Standalone app installed and configured</li>
+            <li>Basic familiarity with Streamer.bot's interface</li>
+        </ul>
+    </div>
+    
+    <div id="installation" class="section">
+        <h2>Installation</h2>
+        
+        <h3>1. Install Streamer.bot</h3>
+        <ul>
+            <li>Download from <a href="https://streamer.bot/download">streamer.bot</a></li>
+            <li>Complete the installation process</li>
+            <li>Run Streamer.bot as administrator (recommended)</li>
+        </ul>
+        
+        <h3>2. Enable HTTP Server</h3>
+        <ul>
+            <li>In Streamer.bot, go to <strong>Servers/Clients</strong> → <strong>HTTP Server</strong></li>
+            <li>Ensure the server is enabled</li>
+            <li>Default settings (127.0.0.1:7474) are recommended</li>
+        </ul>
+		
+    </div>
+    
+    <div id="setting-up-streamerbot" class="section">
+        <h2>Setting Up Streamer.bot</h2>
+        
+        <h3>Create Default Action</h3>
+        <ol>
+            <li>In Streamer.bot, navigate to the <strong>Actions</strong> tab</li>
+            <li>Click the <strong>+</strong> button to create a new action</li>
+            <li>Name it "socialstream" (this is the default action name)</li>
+            <li>Add a C# code sub-action:
+                <ul>
+                    <li>Right-click the action → <strong>Add Sub-Action</strong> → <strong>Core</strong> → <strong>C#</strong> →<strong>Execute C# Code</strong></li>
+                    <li>Paste the following code:</li>
+                </ul>
+                <pre><code>using System;
+using Newtonsoft.Json.Linq;
+
+public class CPHInline
+{
+    public bool Execute()
+    {
+        // Extract data from the incoming request safely
+        string platform = args.ContainsKey("platform") ? args["platform"].ToString() : "unknown";
+        string username = "Unknown User";
+        string message = "";
+        string userId = "";
+        
+        // Safely extract nested data
+        if (args.ContainsKey("data"))
+        {
+            var data = args["data"] as JObject;
+            if (data != null)
+            {
+                username = data.ContainsKey("username") ? data["username"].ToString() : "Unknown User";
+                message = data.ContainsKey("message") ? data["message"].ToString() : "";
+                userId = data.ContainsKey("userId") ? data["userId"].ToString() : "";
+            }
+        }
+        
+        // Log the message to Streamer.bot console
+        CPH.LogInfo($"[SocialStream] [{platform}] {username}: {message}");
+        
+        // Set arguments for sub-actions
+        CPH.SetArgument("platform", platform);
+        CPH.SetArgument("username", username);
+        CPH.SetArgument("message", message);
+        CPH.SetArgument("userId", userId);
+        
+        // Optional: Trigger different actions based on platform
+        if (platform.Equals("youtube", StringComparison.OrdinalIgnoreCase))
+        {
+            CPH.RunAction("Process YouTube Message");
+        }
+        else if (platform.Equals("twitch", StringComparison.OrdinalIgnoreCase))
+        {
+            CPH.RunAction("Process Twitch Message");
+        }
+        
+        return true;
+    }
+}</code></pre>
+            </li>
+            <li>Click <strong>Compile</strong> to check for errors</li>
+            <li>Click <strong>OK</strong> to save the code</li>
+            <li>Click <strong>Save</strong> to save the action</li>
+        </ol>
+        
+        <h3>Add Chat Integration</h3>
+        <p>To forward SocialStream.Ninja messages to your YouTube stream chat:</p>
+        
+        <ol>
+            <li>In the same "socialstream" action:
+                <ul>
+                    <li>Right-click → <strong>Add Sub-Action</strong> → <strong>YouTube</strong> → <strong>Chat</strong> → <strong>Send Message to Channel</strong></li>
+                    <li>Set Message to: <code>[{platform}] {username}: {message}</code></li>
+                    <li>Enable <strong>Use Arguments</strong></li>
+                </ul>
+            </li>
+            
+        </ol>
+        
+        <h3>Create Platform-Specific Actions (Optional)</h3>
+        <p>For specialized handling of different platforms:</p>
+        
+        <ol>
+            <li>Create an action named "Process YouTube Message":
+                <ul>
+                    <li>Add sub-actions specific to YouTube messages</li>
+                    <li>Can include special alerts, sounds, or commands</li>
+                </ul>
+            </li>
+            <li>Create an action named "Process Twitch Message":
+                <ul>
+                    <li>Add sub-actions specific to Twitch messages</li>
+                    <li>Can include different handling for subscribers or mods</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+    
+    <div id="configuring-SocialStream.Ninja" class="section">
+        <h2>Configuring SocialStream.Ninja</h2>
+		<h3>3. Enable Streamer.bot in SocialStream.Ninja's menu</h3>
+        <ul>
+           
+        <ol>
+            <li>In SSN's menu, go to <strong>Global settings and tools</strong> → <strong>Mechanics</strong></li>
+            <li>Ensure the Streamer.bot supported is toggled on</li>
+            <li>The default server endpoint is <code>http://127.0.0.1:7474/DoAction</code></li>
+            <li>Leave the action ID field empty to use the default "socialstream" action</li>
+        </ol>
+    </div>
+    
+    <div id="integration-features" class="section">
+        <h2>Integration Features</h2>
+        
+        <h3>Unified Chat</h3>
+        <p>The setup allows you to:</p>
+        <ul>
+            <li>Receive chat messages from all platforms SocialStream.Ninja supports</li>
+            <li>Forward them to your main streaming platform's chat</li>
+            <li>Apply consistent moderation and commands across platforms</li>
+            <li>Create specialized handling for different platforms</li>
+        </ul>
+        
+        <h3>Creating a Chat Overlay</h3>
+        <p>For a custom chat overlay:</p>
+        <ol>
+            <li>Create an HTML/CSS/JavaScript overlay</li>
+            <li>Connect it to Streamer.bot's WebSocket server</li>
+            <li>Style messages differently based on their platform</li>
+            <li>Add to OBS as a Browser Source</li>
+        </ol>
+    </div>
+    
+    <div id="troubleshooting" class="section">
+        <h2>Troubleshooting</h2>
+        
+        <h3>Common Issues</h3>
+        <ul>
+            <li>
+                <strong>No messages appearing in Streamer.bot</strong>:
+                <ul>
+                    <li>Verify HTTP Server is running</li>
+                    <li>Check that both applications are running</li>
+                    <li>Confirm endpoint in SocialStream.Ninja is correct</li>
+					<li>Ensure CORS is allowed if using the SSN extension, or use the app instead</li>
+                </ul>
+            </li>
+            <li>
+                <strong>C# Code Errors</strong>:
+                <ul>
+                    <li>Make sure code compiles without errors</li>
+                    <li>Check Streamer.bot log for exception details</li>
+                    <li>Update to the latest version of Streamer.bot</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Messages not forwarding to chat</strong>:
+                <ul>
+                    <li>Verify the Chat sub-actions are configured correctly</li>
+                    <li>Check that arguments are being passed properly</li>
+                    <li>Ensure you're logged into the correct accounts in Streamer.bot</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    
+    <div id="advanced-usage" class="section">
+        <h2>Advanced Usage</h2>
+        
+        <h3>Custom Message Formatting</h3>
+        <p>You can customize how messages appear in your chat:</p>
+        <ul>
+            <li>Add platform icons or emojis as prefixes</li>
+            <li>Format usernames differently based on platform</li>
+            <li>Add custom badges or tags</li>
+        </ul>
+        
+        <h3>Command Processing</h3>
+        <p>Process commands from any platform:</p>
+        <ol>
+            <li>Add command detection in the C# code:
+                <pre><code>if (message.StartsWith("!"))
+{
+    CPH.SetArgument("isCommand", true);
+    CPH.RunAction("Process Commands");
+}</code></pre>
+            </li>
+            <li>Create a "Process Commands" action that handles commands regardless of their source platform</li>
+        </ol>
+        
+        <h3>Rate Limiting</h3>
+        <p>To prevent spam from overwhelming your chat:</p>
+        <ol>
+            <li>Add a queue system in Streamer.bot</li>
+            <li>Use Streamer.bot's cooldown features</li>
+            <li>Add filtering for duplicate messages</li>
+        </ol>
+    </div>
+    
+    <hr>
+    
+    <p>With this integration, you can unify chat from over 150 sources into a single system, providing a seamless experience for both you and your viewers. The setup leverages Streamer.bot's powerful automation capabilities with SocialStream.Ninja's multi-platform support.</p>
+    
+    <p>For more information, visit the <a href="https://wiki.streamer.bot/">Streamer.bot Wiki</a> or join their Discord community.</p>
+</body>
+</html>

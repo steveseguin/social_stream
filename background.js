@@ -3864,6 +3864,7 @@ async function sendToDestinations(message) {
 	sendToH2R(message);
 	sendToPost(message);
 	sendToDiscord(message);  // donos only
+	sendToStreamerBot(message);
 	if (message.chatmessage || message.hasDonation || message.chatname){
 		message.idx = await addMessageDB(message);
 	}
@@ -4286,6 +4287,105 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+function sendToStreamerBot(data, fakechat=false, relayed=false) {
+    if (!settings.streamerbot) {
+        return;
+    }
+    
+    try {
+        if (data.type && data.type === "streamerbot") {
+            return; // Avoid potential loops
+        }
+        
+        if (data.chatmessage.includes(miscTranslations.said)){
+            return null;
+        }
+
+        let cleaned = data.chatmessage;
+        if (data.textonly){
+            cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
+            cleaned = cleaned.replace(/\s\s+/g, " "); 
+        } else {
+            cleaned = decodeAndCleanHtml(cleaned);
+        }
+        if (!cleaned){
+            return;
+        }
+        
+        // Duplicate message handling
+        if (relayed && !verifyOriginalNewIncomingMessage(cleaned, true)){
+            if (data.bot) {
+                return null;
+            }
+            if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)){
+                return;
+            }
+        } else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)){
+            return null;
+        }
+        
+        // Bot handling
+        let botname = "🤖💬";
+        if (settings.ollamabotname && settings.ollamabotname.textsetting){
+            botname = settings.ollamabotname.textsetting.trim();
+        }
+        
+        let username = "";
+        let isBot = false;
+        if (!settings.noollamabotname && cleaned.startsWith(botname+":")){
+            cleaned = cleaned.replace(botname+":","").trim();
+            username = botname;
+            isBot = true;
+        }
+        
+        // Create payload for Streamer.bot
+        const payload = {
+            action: {
+                id: settings?.streamerbotactionid?.textsetting || "socialstream",
+                name: "Process SocialStream Chat"
+            },
+            args: {
+                platform: data.type || "socialstream",
+                source: data.source || "socialstream",
+                event: "chat",
+                data: {
+                    username: username || data.chatname || data.userid || "Host⚡",
+                    userId: data.userid || "socialstream",
+                    message: cleaned,
+                    avatar: data.chatimg || `https://socialstream.ninja/sources/images/${data.type}.png`,
+                    isBot: isBot,
+                    originalData: JSON.stringify(data)
+                }
+            }
+        };
+        
+        // Send to Streamer.bot
+        let endpoint = settings?.streamerbotendpoint?.textsetting || "http://127.0.0.1:7474/DoAction";
+        
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.warn("Error sending to Streamer.bot:", response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            //console.log("Streamer.bot response:", data);
+        })
+        .catch(error => {
+            console.warn("Error sending to Streamer.bot:", error);
+        });
+        
+    } catch (e) {
+        console.warn("Error in sendToStreamerBot:", e);
+    }
+}
 function sendAllToDiscord(data) {
 	
     if (!settings.postalldiscord || !settings.postallserverdiscord) {
@@ -6812,14 +6912,6 @@ async function applyBotActions(data, tab = false) {
 		messageCounter += 1;
 		data.id = messageCounter;
 	}
-	
-/* 	if (settings.storeBSky && data.userid && ((data.type == "x") || (data.type == "twitter"))){
-		var matchedBSky = extractBskyUsername(data.chatname) || extractBskyUsername(data.chatmessage);
-		if (matchedBSky){
-			BSky[data.userid] = matchedBSky;
-			localStorage.setItem("x2bsky",JSON.stringify(BSky));
-		}
-	} */
 
 	try {
 		
@@ -6896,7 +6988,7 @@ async function applyBotActions(data, tab = false) {
 			}
 			delete settings.mynameext;
 		}
-		if (!data.bot && settings.botnamesext?.textsetting && (data.chatname || data.userid)) {
+		if (!data.bot && settings.botnamesext?.textsetting && (data.chatname || data.userid)) { 
 			try {
 				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
 				if (!userIdentifier) return;
@@ -7205,7 +7297,7 @@ async function applyBotActions(data, tab = false) {
 				return null;
 			}
 			
-			if (!data.bot) {
+			if (!data.bot && (!settings.relayhostonly || data.host)) {
 				//messageTimeout = Date.now();
 				var msg = {};
 				
@@ -7215,11 +7307,13 @@ async function applyBotActions(data, tab = false) {
 				// this should be ideall HTML stripped
 				if (tab) {
 					msg.url = tab.url;
-				}
+				} 
 
 				let tmpmsg = sanitizeRelay(data.chatmessage, data.textonly).trim();
 				if (tmpmsg) {  
-					if (data.chatname){
+					if (settings.nosaid){
+						msg.response = tmpmsg;
+					} else if (data.chatname){
 						msg.response = sanitizeRelay(data.chatname, true, miscTranslations.someone) + miscTranslations.said + tmpmsg; 
 					} else if (data.type){
 						msg.response = data.type.replace(/\b\w/g, c => c.toUpperCase())+": " + tmpmsg;

@@ -33,8 +33,11 @@
 
 	function getAllContentNodes(element) {
 		var resp = "";
+		if(element.skipe){return resp;}
 		element.childNodes.forEach(node=>{
-			if (node.childNodes.length){
+			if (node.skip){
+				return;
+			} else if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				if (settings.textonlymode){
@@ -62,72 +65,30 @@
 	
 	async function processMessage(ele){	// twitch
 	
+		console.log(ele);
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
-	  
+	  var chatbadges  = "";
 	  
 	  var chatimg = "";
 	  try {
-			chatimg =  ele.querySelector("img[class^='avatarImage'][src]").src;
+			chatimg =  ele.querySelector("a > img[src]").src;
+			ele.querySelector("a > img[src]").skip = true;
 	  } catch(e){}
 	  
-	  if (chatimg.startsWith("data:")){
-		  try {
-			  await new Promise(r => setTimeout(r, 50));
-			  chatimg =  ele.querySelector("img[class^='avatarImage'][src]").src;
-			  if (chatimg.startsWith("data:")){
-				  await new Promise(r => setTimeout(r, 100));
-				  chatimg =  ele.querySelector("img[class^='avatarImage'][src]").src;
-				  if (chatimg.startsWith("data:")){
-						await new Promise(r => setTimeout(r, 200));
-						chatimg =  ele.querySelector("img[class^='avatarImage'][src]").src;
-						if (chatimg.startsWith("data:")){
-							chatimg = ""; // and I give up if it still isn't loaded.
-						}
-				  }
-			  }
-		  } catch(e){
-			  chatimg = "";
-		  }
-	  }
 	  
-	  try {
-		  try {
-			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(1)");
-			var chatname = escapeHtml((nameEle.innerText);
-		  } catch(e){
-			 return;
-		  }
-	 } catch(e){
-		return;
-	  }
+	  var data = getAllContentNodes(ele).split(":");
+	  if (!data.length || data.legnth < 2){return;}
 	  
-	  chatname = chatname.trim();
-	  if (!chatname){return;}
+	  var chatname = data[0].trim();
 	  
-	  var chatbadges = [];
-	  var hasDonation = '';
+	  data.shift();
 	  
-	  try {
-		  var eleContent = ele.querySelector("[class^='commentText']");
-		  chatmessage = getAllContentNodes(eleContent);
-	  } catch(e){ // donation?
-		  try {
-			var eleContent = ele.querySelector("div:nth-of-type(2) > span:nth-of-type(2)");
-			chatmessage = getAllContentNodes(eleContent);
-		  } catch(e){
-			  return;
-		  }
-	  }
+	  var hasDonation = "";
 	  
-	 if (chatmessage){
-		 chatmessage = chatmessage.trim();
-	 }
-	 
-	  if (chatmessage && chatmessage.startsWith("[Message ")){
-		  return; // I'm assuming this is a deleted message
-	  }
+	  chatmessage = data.join(":");
+	  
 	 
 	 if ((lastMessage === chatmessage) && (lastUser === chatname)){
 		  lastMessage = "";
@@ -206,9 +167,7 @@
 							if (mutation.addedNodes[i].role){continue;}
 							if (mutation.addedNodes[i].ignore){continue;}
 							mutation.addedNodes[i].ignore=true;
-							if (mutation.addedNodes[i].className && mutation.addedNodes[i].className.startsWith("nameAndCommentContainerInNormalChat")){
-								processMessage(mutation.addedNodes[i]);
-							}
+							processMessage(mutation.addedNodes[i]);
 								
 						} catch(e){}
 					}
@@ -228,16 +187,12 @@
 		
 		if (!window.location.pathname.startsWith("/stream/")){return;}
 		
-		var mainChat = document.querySelector("[class*='rightSideBarContainerLive']");
+		var mainChat = document.querySelector("[id*='Live Chat'][role='tabpanel']");
 		if (mainChat){ // just in case 
 			console.log("Social Stream Start");
 			clearInterval(checkReady);
 			
 			setTimeout(function(){
-				var clear = mainChat.querySelectorAll("[class^='nameAndCommentContainerInNormalChat']");
-				for (var i = 0;i<clear.length;i++){
-					clear[i].ignore = true; // don't let already loaded messages to re-load.
-				}
 				console.log("Social Stream ready to go");
 				onElementInserted(mainChat);
 			},1000);
