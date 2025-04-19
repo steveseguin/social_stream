@@ -829,6 +829,7 @@ function loadSettings(item, resave = false) {
 	
 	setupSocket();
 	setupSocketDock();
+	handleStreamerBotSettingsChange();
 	loadedFirst = true;
 }
 ////////////
@@ -3042,6 +3043,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "customtwitchstate") {
 				pushSettingChange();
 			}
+			if (request.setting == "streamerbot") {
+				handleStreamerBotSettingsChange();
+			}
 			if (request.setting == "replyingto") {
 				pushSettingChange();
 			}
@@ -4287,105 +4291,550 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-function sendToStreamerBot(data, fakechat=false, relayed=false) {
-    if (!settings.streamerbot) {
+class StreamerbotWebsocketClient {
+  constructor(options = {}) {
+    // Configuration
+    this.url = options.url || 'ws://127.0.0.1:8080';
+    this.autoReconnect = options.autoReconnect !== false;
+    this.reconnectInterval = options.reconnectInterval || 5000;
+    this.maxReconnectAttempts = options.maxReconnectAttempts || 10;
+    this.debug = options.debug || false;
+    
+    // State
+    this.socket = null;
+    this.enabled = false;
+    this.reconnectAttempts = 0;
+    this.reconnectTimeout = null;
+    this.messageQueue = [];
+    this.isAuthenticated = false;
+    this.subscribedEvents = new Set();
+    
+    // Auth
+    this.password = options.password || '';
+    
+    // Callbacks
+    this.onConnected = options.onConnected || (() => {});
+    this.onDisconnected = options.onDisconnected || (() => {});
+    this.onError = options.onError || (() => {});
+    this.onMessage = options.onMessage || (() => {});
+    this.onReconnecting = options.onReconnecting || (() => {});
+    this.onAuthenticated = options.onAuthenticated || (() => {});
+    this.onAuthFailed = options.onAuthFailed || (() => {});
+  }
+
+  log(...args) {
+    if (this.debug) {
+      console.log('[StreamerbotWS]', ...args);
+    }
+  }
+
+  connect() {
+    if (this.socket && (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN)) {
+      this.log('Already connected or connecting');
+      return;
+    }
+
+    this.enabled = true;
+    this.reconnectAttempts = 0;
+    this._connect();
+  }
+
+  _connect() {
+    try {
+      this.log(`Connecting to ${this.url}...`);
+      this.socket = new WebSocket(this.url);
+      
+      this.socket.onopen = this._handleOpen.bind(this);
+      this.socket.onclose = this._handleClose.bind(this);
+      this.socket.onerror = this._handleError.bind(this);
+      this.socket.onmessage = this._handleMessage.bind(this);
+    } catch (error) {
+      this.log('Connection error:', error);
+      this._scheduleReconnect();
+    }
+  }
+
+  disconnect() {
+    this.enabled = false;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    
+    if (this.socket) {
+      this.log('Disconnecting...');
+      try {
+        this.socket.close(1000, 'Disconnect requested');
+      } catch (error) {
+        this.log('Error during disconnect:', error);
+      }
+      this.socket = null;
+      this.isAuthenticated = false;
+    }
+  }
+
+  _handleOpen() {
+    this.log('Connected to Streamer.bot WebSocket');
+    this.reconnectAttempts = 0;
+    this.onConnected();
+    
+    // Authenticate if password is set
+    if (this.password) {
+      this._authenticate();
+    } else {
+      this.isAuthenticated = true;
+      this._processQueue();
+      this._subscribeToEvents();
+    }
+  }
+
+  _authenticate() {
+    this.log('Authenticating...');
+    
+    const authPayload = {
+      request: 'Subscribe',
+      id: 'auth-' + Date.now(),
+      events: ['General.Log'],
+      authentication: this.password
+    };
+    
+    this.socket.send(JSON.stringify(authPayload));
+  }
+
+  _handleClose(event) {
+    this.isAuthenticated = false;
+    this.log(`WebSocket closed: ${event.code} ${event.reason}`);
+    this.onDisconnected(event);
+    
+    if (this.enabled && this.autoReconnect) {
+      this._scheduleReconnect();
+    }
+  }
+
+  _handleError(error) {
+    this.log('WebSocket error:', error);
+    this.onError(error);
+  }
+
+  _handleMessage(event) {
+    try {
+      const data = JSON.parse(event.data);
+      this.log('Received message:', data);
+      
+      // Handle authentication response
+      if (data.id && data.id.startsWith('auth-')) {
+        if (data.status && data.status.code === 200) {
+          this.log('Authentication successful');
+          this.isAuthenticated = true;
+          this.onAuthenticated();
+          this._processQueue();
+          this._subscribeToEvents();
+        } else {
+          this.log('Authentication failed:', data);
+          this.isAuthenticated = false;
+          this.onAuthFailed(data);
+        }
         return;
+      }
+      
+      // Process regular messages
+      this.onMessage(data);
+    } catch (error) {
+      this.log('Error processing message:', error, event.data);
+    }
+  }
+
+  _scheduleReconnect() {
+    if (!this.enabled || !this.autoReconnect) return;
+    
+    this.reconnectAttempts++;
+    
+    if (this.maxReconnectAttempts > 0 && this.reconnectAttempts > this.maxReconnectAttempts) {
+      this.log(`Maximum reconnect attempts (${this.maxReconnectAttempts}) reached, giving up`);
+      return;
+    }
+    
+    const delay = this.reconnectInterval;
+    this.log(`Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
+    this.onReconnecting(this.reconnectAttempts);
+    
+    this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = null;
+      this._connect();
+    }, delay);
+  }
+
+  _processQueue() {
+    if (!this.isAuthenticated || this.messageQueue.length === 0) return;
+    
+    this.log(`Processing queued messages (${this.messageQueue.length})`);
+    while (this.messageQueue.length > 0) {
+      const message = this.messageQueue.shift();
+      this._sendMessage(message);
+    }
+  }
+
+  _sendMessage(message) {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      this.log('Socket not open, queueing message');
+      this.messageQueue.push(message);
+      
+      if (this.enabled && this.socket?.readyState !== WebSocket.CONNECTING) {
+        this._connect();
+      }
+      return false;
+    }
+    
+    if (!this.isAuthenticated && this.password) {
+      this.log('Not authenticated, queueing message');
+      this.messageQueue.push(message);
+      return false;
     }
     
     try {
-        if (data.type && data.type === "streamerbot") {
-            return; // Avoid potential loops
-        }
-        
-        if (data.chatmessage.includes(miscTranslations.said)){
-            return null;
-        }
-
-        let cleaned = data.chatmessage;
-        if (data.textonly){
-            cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
-            cleaned = cleaned.replace(/\s\s+/g, " "); 
-        } else {
-            cleaned = decodeAndCleanHtml(cleaned);
-        }
-        if (!cleaned){
-            return;
-        }
-        
-        // Duplicate message handling
-        if (relayed && !verifyOriginalNewIncomingMessage(cleaned, true)){
-            if (data.bot) {
-                return null;
-            }
-            if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)){
-                return;
-            }
-        } else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)){
-            return null;
-        }
-        
-        // Bot handling
-        let botname = "🤖💬";
-        if (settings.ollamabotname && settings.ollamabotname.textsetting){
-            botname = settings.ollamabotname.textsetting.trim();
-        }
-        
-        let username = "";
-        let isBot = false;
-        if (!settings.noollamabotname && cleaned.startsWith(botname+":")){
-            cleaned = cleaned.replace(botname+":","").trim();
-            username = botname;
-            isBot = true;
-        }
-        
-        // Create payload for Streamer.bot
-        const payload = {
-            action: {
-                id: settings?.streamerbotactionid?.textsetting || "socialstream",
-                name: "Process SocialStream Chat"
-            },
-            args: {
-                platform: data.type || "socialstream",
-                source: data.source || "socialstream",
-                event: "chat",
-                data: {
-                    username: username || data.chatname || data.userid || "Host⚡",
-                    userId: data.userid || "socialstream",
-                    message: cleaned,
-                    avatar: data.chatimg || `https://socialstream.ninja/sources/images/${data.type}.png`,
-                    isBot: isBot,
-                    originalData: JSON.stringify(data)
-                }
-            }
-        };
-        
-        // Send to Streamer.bot
-        let endpoint = settings?.streamerbotendpoint?.textsetting || "http://127.0.0.1:7474/DoAction";
-        
-        fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => {
-            if (!response.ok) {
-                console.warn("Error sending to Streamer.bot:", response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            //console.log("Streamer.bot response:", data);
-        })
-        .catch(error => {
-            console.warn("Error sending to Streamer.bot:", error);
-        });
-        
-    } catch (e) {
-        console.warn("Error in sendToStreamerBot:", e);
+      const payload = typeof message === 'string' ? message : JSON.stringify(message);
+      this.socket.send(payload);
+      return true;
+    } catch (error) {
+      this.log('Error sending message:', error);
+      return false;
     }
+  }
+  
+  _subscribeToEvents() {
+    if (this.subscribedEvents.size === 0) return;
+    
+    const eventsArray = Array.from(this.subscribedEvents);
+    this.log('Subscribing to events:', eventsArray);
+    
+    const subscribePayload = {
+      request: 'Subscribe',
+      id: 'subscribe-' + Date.now(),
+      events: eventsArray
+    };
+    
+    if (this.password) {
+      subscribePayload.authentication = this.password;
+    }
+    
+    this._sendMessage(subscribePayload);
+  }
+  
+  // Public API methods
+  
+  /**
+   * Subscribe to specific Streamer.bot WebSocket events
+   * @param {string|string[]} events - Event name(s) to subscribe to
+   */
+  subscribe(events) {
+    const eventList = Array.isArray(events) ? events : [events];
+    let newEvents = false;
+    
+    for (const event of eventList) {
+      if (!this.subscribedEvents.has(event)) {
+        this.subscribedEvents.add(event);
+        newEvents = true;
+      }
+    }
+    
+    if (newEvents && this.isAuthenticated && this.socket?.readyState === WebSocket.OPEN) {
+      this._subscribeToEvents();
+    }
+  }
+  
+  /**
+   * Unsubscribe from specific Streamer.bot WebSocket events
+   * @param {string|string[]} events - Event name(s) to unsubscribe from
+   */
+  unsubscribe(events) {
+    const eventList = Array.isArray(events) ? events : [events];
+    
+    for (const event of eventList) {
+      this.subscribedEvents.delete(event);
+    }
+    
+    if (this.isAuthenticated && this.socket?.readyState === WebSocket.OPEN) {
+      const unsubscribePayload = {
+        request: 'Unsubscribe',
+        id: 'unsubscribe-' + Date.now(),
+        events: eventList
+      };
+      
+      if (this.password) {
+        unsubscribePayload.authentication = this.password;
+      }
+      
+      this._sendMessage(unsubscribePayload);
+    }
+  }
+  
+  /**
+   * Send a chat message to Streamer.bot via WebSocket
+   * @param {Object} chatData - Chat message data from SocialStream
+   * @param {boolean} fakechat - Flag indicating if this is a fake chat message
+   * @param {boolean} relayed - Flag indicating if this message has been relayed
+   */
+  sendChatMessage(chatData, fakechat = false, relayed = false) {
+    try {
+      // Basic validation
+      if (!chatData) return;
+      if (chatData.type && chatData.type === "streamerbot") return; // Avoid loops
+      
+      let cleaned = chatData.chatmessage;
+      if (!cleaned) return;
+      
+      if (chatData.textonly) {
+        cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, "");
+        cleaned = cleaned.replace(/\s\s+/g, " ");
+      } else if (typeof cleaned === 'string') {
+        // Simple HTML cleaning function - you may want to improve this
+        cleaned = cleaned.replace(/<[^>]*>/g, "");
+      }
+      
+      if (!cleaned) return;
+      
+      // Format the payload for Streamer.bot WebSocket
+      const payload = {
+        request: "DoAction",
+        id: "chat-" + Date.now(),
+        action: {
+          id: typeof chatData?.streamerbotactionid === 'string' ? 
+               chatData.streamerbotactionid : "socialstream",
+          name: "Process SocialStream Chat"
+        },
+        args: {
+          platform: chatData.type || "socialstream",
+          source: chatData.source || "socialstream", 
+          event: "chat",
+          data: {
+            username: chatData.chatname || chatData.userid || "Host⚡",
+            userId: chatData.userid || "socialstream",
+            message: cleaned,
+            avatar: chatData.chatimg || `https://socialstream.ninja/sources/images/${chatData.type}.png`,
+            isBot: chatData.isBot || false,
+            originalData: JSON.stringify(chatData)
+          }
+        }
+      };
+      
+      return this._sendMessage(payload);
+    } catch (error) {
+      this.log('Error sending chat message:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Trigger a Streamer.bot action via WebSocket
+   * @param {string} actionId - The ID of the action to trigger
+   * @param {Object} args - Arguments to pass to the action
+   */
+  doAction(actionId, args = {}) {
+    if (!actionId) {
+      this.log('No action ID provided');
+      return false;
+    }
+    
+    const payload = {
+      request: "DoAction",
+      id: "action-" + Date.now(),
+      action: {
+        id: actionId
+      },
+      args: args
+    };
+    
+    return this._sendMessage(payload);
+  }
+  
+  /**
+   * Get a list of actions from Streamer.bot
+   * @returns {Promise} Promise that resolves with the list of actions
+   */
+  getActions() {
+    return new Promise((resolve, reject) => {
+      const id = "get-actions-" + Date.now();
+      
+      const handler = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.id === id) {
+            this.socket.removeEventListener('message', handler);
+            
+            if (data.status && data.status.code === 200) {
+              resolve(data.actions || []);
+            } else {
+              reject(new Error(`Failed to get actions: ${data.status?.description || 'Unknown error'}`));
+            }
+          }
+        } catch (error) {
+          // Ignore other messages
+        }
+      };
+      
+      this.socket.addEventListener('message', handler);
+      
+      const payload = {
+        request: "GetActions",
+        id: id
+      };
+      
+      if (this.password) {
+        payload.authentication = this.password;
+      }
+      
+      const sent = this._sendMessage(payload);
+      if (!sent) {
+        this.socket.removeEventListener('message', handler);
+        reject(new Error('Failed to send GetActions request'));
+      }
+    });
+  }
 }
+let streamerbotClient = null;
+
+function initializeStreamerbot() {
+  // Only initialize if settings are configured
+  if (!settings.streamerbot) {
+    return;
+  }
+  
+  // Close any existing connection
+  if (streamerbotClient) {
+    streamerbotClient.disconnect();
+  }
+  
+  // Get configuration from settings
+  const wsUrl = settings?.streamerbotendpoint?.textsetting || 'ws://127.0.0.1:8080';
+  const password = settings?.streamerbotpassword?.textsetting || '';
+  
+  // Create new client
+  streamerbotClient = new StreamerbotWebsocketClient({
+    url: wsUrl,
+    password: password,
+    debug: settings?.streamerbotdebug || false,
+    
+    // Optional callbacks
+    onConnected: () => {
+      console.log("Connected to Streamer.bot");
+      // Maybe update UI or notify user
+    },
+    onDisconnected: () => {
+      console.log("Disconnected from Streamer.bot");
+      // Maybe update UI or notify user
+    },
+    onAuthenticated: () => {
+      console.log("Authenticated with Streamer.bot");
+      // Maybe update UI or notify user
+      
+      // Subscribe to events we care about
+      streamerbotClient.subscribe([
+        'Twitch.ChatMessage',
+        'YouTube.ChatMessage',
+        'Raw'
+      ]);
+    },
+    onMessage: (data) => {
+      // Handle incoming messages from Streamer.bot
+      console.log("Received message from Streamer.bot:", data);
+      // Process based on event type if needed
+    }
+  });
+  
+  // Connect to the WebSocket server
+  streamerbotClient.connect();
+  
+  return streamerbotClient;
+}
+
+// Replace the old HTTP function with this WebSocket version
+function sendToStreamerBot(data, fakechat = false, relayed = false) {
+  // Initialize if needed
+  if (!streamerbotClient && settings.streamerbot) {
+    initializeStreamerbot();
+  }
+  
+  // If not initialized or disabled, exit
+  if (!streamerbotClient) {
+    return;
+  }
+  
+  // Handle duplicate checks, cleaning, etc. same as your original function
+  
+  try {
+    if (data.type && data.type === "streamerbot") {
+      return; // Avoid potential loops
+    }
+    
+    if (data.chatmessage && data.chatmessage.includes(miscTranslations.said)) {
+      return null;
+    }
+    
+    let cleaned = data.chatmessage;
+    if (data.textonly) {
+      cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, ""); // keep a cleaned copy
+      cleaned = cleaned.replace(/\s\s+/g, " "); 
+    } else if (typeof cleaned === 'string') {
+      cleaned = decodeAndCleanHtml(cleaned);
+    }
+    
+    if (!cleaned) {
+      return;
+    }
+    
+    // Duplicate message handling
+    if (relayed && !verifyOriginalNewIncomingMessage(cleaned, true)) {
+      if (data.bot) {
+        return null;
+      }
+      if (checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
+        return;
+      }
+    } else if (!fakechat && checkExactDuplicateAlreadyRelayed(cleaned, data.textonly, data.tid, false)) {
+      return null;
+    }
+    
+    // Bot handling
+    let botname = "🤖💬";
+    if (settings.ollamabotname && settings.ollamabotname.textsetting) {
+      botname = settings.ollamabotname.textsetting.trim();
+    }
+    
+    let username = "";
+    let isBot = false;
+    if (!settings.noollamabotname && cleaned.startsWith(botname + ":")) {
+      cleaned = cleaned.replace(botname + ":", "").trim();
+      username = botname;
+      isBot = true;
+    }
+    
+    // Add action ID to data if configured in settings
+    if (settings?.streamerbotactionid?.textsetting) {
+      data.streamerbotactionid = settings.streamerbotactionid.textsetting;
+    }
+    
+    // Add these fields to data
+    data.chatname = username || data.chatname || data.userid || "Host⚡";
+    data.isBot = isBot;
+    data.chatmessage = cleaned;
+    
+    // Send via WebSocket client
+    return streamerbotClient.sendChatMessage(data, fakechat, relayed);
+    
+  } catch (e) {
+    console.warn("Error in sendToStreamerBot:", e);
+    return false;
+  }
+}
+function handleStreamerBotSettingsChange() {
+  if (settings.streamerbot) {
+    initializeStreamerbot();
+  } else if (streamerbotClient) {
+    streamerbotClient.disconnect();
+    streamerbotClient = null;
+  }
+}
+
 function sendAllToDiscord(data) {
 	
     if (!settings.postalldiscord || !settings.postallserverdiscord) {

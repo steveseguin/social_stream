@@ -65,7 +65,10 @@
 	
 	async function processMessage(ele){	// twitch
 	
-		console.log(ele);
+		
+	  if (ele.skip){return;}
+	  ele.skip = true;
+		
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
@@ -89,8 +92,9 @@
 	  
 	  chatmessage = data.join(":");
 	  
+	  if (!chatmessage.trim()){return;}
 	 
-	 if ((lastMessage === chatmessage) && (lastUser === chatname)){
+	  if ((lastMessage === chatmessage) && (lastUser === chatname)){
 		  lastMessage = "";
 		  chatname = "";
 		  return;
