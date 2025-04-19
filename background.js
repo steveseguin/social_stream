@@ -4731,6 +4731,7 @@ function initializeStreamerbot() {
       streamerbotClient.subscribe([
         'Twitch.ChatMessage',
         'YouTube.ChatMessage',
+		'ChatMessage',
         'Raw'
       ]);
     },
@@ -4747,7 +4748,6 @@ function initializeStreamerbot() {
   return streamerbotClient;
 }
 
-// Replace the old HTTP function with this WebSocket version
 function sendToStreamerBot(data, fakechat = false, relayed = false) {
   // Initialize if needed
   if (!streamerbotClient && settings.streamerbot) {
@@ -4808,21 +4808,66 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
       isBot = true;
     }
     
-    // Add action ID to data if configured in settings
-    if (settings?.streamerbotactionid?.textsetting) {
-      data.streamerbotactionid = settings.streamerbotactionid.textsetting;
-    }
-    
+
     // Add these fields to data
     data.chatname = username || data.chatname || data.userid || "Host⚡";
     data.isBot = isBot;
     data.chatmessage = cleaned;
+	
+	// Add action ID to data if configured in settings
+    if (settings?.streamerbotactionid?.textsetting) {
+		// Send to trigger actions (using your actionId from Streamer.bot)
+		data.streamerbotactionid = settings.streamerbotactionid.textsetting;
+		streamerbotClient.sendChatMessage(data, fakechat, relayed);
+    } else {
+		sendToStreamerBotChat(data);
+	}
     
-    // Send via WebSocket client
-    return streamerbotClient.sendChatMessage(data, fakechat, relayed);
+	return true;
     
   } catch (e) {
     console.warn("Error in sendToStreamerBot:", e);
+    return false;
+  }
+}
+function sendToStreamerBotChat(chatData) {
+  if (!streamerbotClient || !chatData) {
+    return false;
+  }
+  
+  try {
+    // Format the platform name more nicely
+    let platform = chatData.type || "socialstream";
+    platform = platform.charAt(0).toUpperCase() + platform.slice(1); // Capitalize first letter
+    
+    // Create the payload for a raw chat message
+    const payload = {
+      request: "ChatMessage",
+      id: "chat-message-" + Date.now(),
+      data: {
+        message: chatData.chatmessage,
+        platforms: [platform], // Platform to simulate the message from
+        userName: chatData.chatname || "Viewer",
+        userId: chatData.userid || chatData.chatname || "unknown",
+        role: 1, // 1=Regular viewer, 2=Moderator, 3=VIP, 4=Broadcaster
+        color: chatData.nameColor || "#FFFFFF",
+        badges: chatData.chatbadges || [],
+        emotes: [], // You could parse emotes here if needed
+        // You can add more properties as needed
+        avatar: chatData.chatimg || null,
+        isBot: chatData.isBot || false,
+        isAction: false, // Set to true for /me style messages
+        isFirstMessage: false,
+        isHighlighted: false,
+        isCustomReward: false,
+        // Additional data for your reference
+        source: "SocialStream.Ninja"
+      }
+    };
+    
+    return streamerbotClient._sendMessage(payload);
+  } catch (error) {
+    console.error('Error sending chat message to Streamer.bot chat:', error);
     return false;
   }
 }
