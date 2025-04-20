@@ -28,27 +28,6 @@
     --font-mono: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 }
 
-@media (max-width: 576px) {
-    .hero-content h1 {
-        font-size: 3.6rem;
-    }
-    
-    .footer-columns {
-        grid-template-columns: 1fr;
-    }
-    
-    .get-started-cta {
-        flex-direction: column;
-    }
-    
-    .features-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .testimonial-content {
-        padding: 2rem;
-    }
-}
 
 /* Typography Setup */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
@@ -138,7 +117,22 @@ p {
     margin-bottom: 4rem;
     text-align: center;
 }
+.page-hero {
+    padding: 12rem 0 6rem;
+    background-color: var(--background-dark);
+    text-align: center;
+}
 
+.page-hero h1 {
+    margin-bottom: 2rem;
+}
+
+.page-hero p {
+    font-size: 2rem;
+    color: var(--text-secondary);
+    max-width: 80rem;
+    margin: 0 auto;
+}
 /* Button Styles */
 .btn {
     display: inline-block;
@@ -427,15 +421,16 @@ nav a:hover::after, nav a.active::after {
 
 .testimonials-slider {
     display: flex;
-    overflow: hidden;
     margin: 5rem 0;
+    position: relative; /* Add this to ensure proper positioning */
+    transition: transform var(--transition-speed) ease; /* Move transition here */
 }
 
 .testimonial {
     min-width: 100%;
     padding: 0 10rem;
-    transition: transform var(--transition-speed) ease;
 }
+
 
 .testimonial-content {
     background-color: var(--background-card);
@@ -658,25 +653,35 @@ footer {
     }
 }
 
-@media (max-width: 992px) {
-    html {
-        font-size: 55%;
-    }
-    
-    .hero .container {
-        flex-direction: column;
-    }
-    
-    .hero-content {
-        text-align: center;
-    }
-    
-    .hero-buttons {
-        justify-content: center;
+
+
+/* Fix potential path issues for social icons */
+.social-links img {
+    width: 2rem;
+    height: 2rem;
+    filter: brightness(0) invert(1);
+    display: block; /* Ensure proper rendering */
+}
+
+@media (max-width: 576px) {
+    .hero-content h1 {
+        font-size: 3.6rem;
     }
     
     .footer-columns {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr;
+    }
+    
+    .get-started-cta {
+        flex-direction: column;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .testimonial-content {
+        padding: 2rem 1.5rem;
     }
 }
 
@@ -747,3 +752,34 @@ footer {
     .platform-logos img {
         height: 4rem;
     }
+	 .testimonial {
+        padding: 0 2rem;
+    }
+    
+    .testimonial-content {
+        padding: 3rem 2rem;
+    }
+}
+
+
+@media (max-width: 992px) {
+    html {
+        font-size: 55%;
+    }
+    
+    .hero .container {
+        flex-direction: column;
+    }
+    
+    .hero-content {
+        text-align: center;
+    }
+    
+    .hero-buttons {
+        justify-content: center;
+    }
+    
+    .footer-columns {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

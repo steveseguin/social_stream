@@ -44,17 +44,27 @@
         </div>
     </section>
 
-    <section class="guide-navigation" id="guides-nav">
-        <div class="container">
-            <div class="guide-nav-links">
-                <a href="#getting-started" class="guide-nav-link">Getting Started</a>
-                <a href="#customization" class="guide-nav-link">Customization</a>
-                <a href="#advanced-features" class="guide-nav-link">Advanced Features</a>
-                <a href="#troubleshooting" class="guide-nav-link">Troubleshooting</a>
-                <a href="#faq" class="guide-nav-link">FAQ</a>
-            </div>
-        </div>
-    </section>
+	<section class="guide-navigation" id="guides-nav">
+		<div class="container">
+			<div class="guide-nav-links">
+				<a href="#getting-started" class="guide-nav-link active">
+					<i class="fas fa-rocket"></i> Getting Started
+				</a>
+				<a href="#customization" class="guide-nav-link">
+					<i class="fas fa-paint-brush"></i> Customization
+				</a>
+				<a href="#advanced-features" class="guide-nav-link">
+					<i class="fas fa-sliders-h"></i> Advanced Features
+				</a>
+				<a href="#troubleshooting" class="guide-nav-link">
+					<i class="fas fa-tools"></i> Troubleshooting
+				</a>
+				<a href="#faq" class="guide-nav-link">
+					<i class="fas fa-question-circle"></i> FAQ
+				</a>
+			</div>
+		</div>
+	</section>
 
     <section id="getting-started" class="guide-section">
         <div class="container">
@@ -137,13 +147,12 @@
             
             <div class="guide-card">
                 <h3>URL Parameters</h3>
-                <p>You can customize both the dashboard and overlay by adding parameters to their URLs:</p>
+                <p>You can customize both the dashboard and overlay by adding parameters to their URL. Some examples:</p>
                 
                 <h4>Dashboard Parameters:</h4>
                 <div class="code-block">
                     <code>&darkmode</code> - Enables dark mode for the dashboard<br>
                     <code>&scale=2</code> - Doubles the size/resolution of all elements<br>
-                    <code>&notime</code> - Hides the timestamp in the chat stream<br>
                     <code>&hidesource</code> - Hides platform icons (YouTube, Twitch, etc.)<br>
                     <code>&compact</code> - Removes spacing between name and message<br>
                     <code>&autoshow</code> - Auto-features messages as they appear (about 2 per 3 seconds)
@@ -334,69 +343,251 @@
     </section>
     
     <section id="troubleshooting" class="guide-section alt">
-        <div class="container">
-            <h2>Troubleshooting</h2>
-            
-            <div class="guide-card">
-                <h3>Common Issues</h3>
-                
-                <div class="issue-solution">
-                    <h4>Chat Stops When Window is Minimized</h4>
-                    <div class="issue-content">
-                        <p><strong>Problem:</strong> Chat messages stop appearing when browser windows are minimized or in the background.</p>
-                        <p><strong>Solutions:</strong></p>
-                        <ul class="guide-list">
-                            <li>Disable browser throttling: Go to <code>chrome://flags/#enable-throttle-display-none-and-visibility-hidden-cross-origin-iframes</code> and set to "Disabled"</li>
-                            <li>Also disable <code>chrome://flags/#calculate-native-win-occlusion</code></li>
-                            <li>Avoid minimizing windows; keep them visible or at least not minimized</li>
-                            <li>Disable background tab throttling in <code>chrome://settings/performance</code></li>
-                            <li>Go to <code>chrome://discards/</code> and toggle off "Auto Discardable" for chat pop-out pages</li>
-                            <li>Try the standalone desktop app instead of the browser extension</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="issue-solution">
-                    <h4>Blue Bar Appears or Auto-Responder Not Working</h4>
-                    <div class="issue-content">
-                        <p><strong>Problem:</strong> You see a blue debugging bar or automated responses don't work.</p>
-                        <p><strong>Solutions:</strong></p>
-                        <ul class="guide-list">
-                            <li>Make sure the pop-out chat window is open and visible</li>
-                            <li>Use a Chromium-based browser (Chrome, Edge, Brave) instead of Firefox</li>
-                            <li>Go to <code>chrome://apps</code> and remove any YouTube apps</li>
-                            <li>Make sure you have permission to chat in the platform (some require subscription)</li>
-                            <li>Start Chrome with <code>--silent-debugger-extension-api</code> flag to hide the blue bar</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="issue-solution">
-                    <h4>Can't Export Settings or Save Files</h4>
-                    <div class="issue-content">
-                        <p><strong>Problem:</strong> Unable to save settings to disk or export configuration.</p>
-                        <p><strong>Solution:</strong></p>
-                        <ul class="guide-list">
-                            <li>Enable the File System Access API in your browser</li>
-                            <li>In Brave, go to <code>brave://flags/#file-system-access-api</code> and enable it</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="issue-solution">
-                    <h4>Other Common Problems</h4>
-                    <div class="issue-content">
-                        <ul class="guide-list">
-                            <li><strong>Sessions don't match:</strong> Ensure your session ID matches in both the extension and dock page</li>
-                            <li><strong>Certain platforms not working:</strong> Some platforms (Discord, Slack, Telegram) require enabling a toggle in settings</li>
-                            <li><strong>Extension stopped working:</strong> Try refreshing the chat page to retrigger the code</li>
-                            <li><strong>Extension icon remains red:</strong> Click "Enable extension" to turn it on (icon should turn green)</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+		<div class="container">
+			<h2>Troubleshooting</h2>
+			<p class="section-subtitle">Solutions for common issues with Social Stream Ninja</p>
+			
+			<div class="troubleshooting-grid">
+				<div class="troubleshooting-card">
+					<div class="issue-header">
+						<div class="issue-icon">
+							<img src="../icons/minimized.svg" alt="Minimized Window Issue">
+						</div>
+						<h3>Chat Stops When Background/Minimized</h3>
+					</div>
+					<div class="issue-content">
+						<p class="issue-description">Chat messages stop appearing when browser windows are in the background or minimized. This happens because browsers throttle background tabs to save resources.</p>
+						
+						<div class="solutions">
+							<div class="solution">
+								<h5>Disable Browser Throttling</h5>
+								<ul class="solution-steps">
+									<li>
+										<strong>Chrome/Edge/Brave:</strong> 
+										<ol>
+											<li>Open <code>chrome://flags/#enable-throttle-display-none-and-visibility-hidden-cross-origin-iframes</code></li>
+											<li>Set to "Disabled"</li>
+											<li>Also disable <code>chrome://flags/#calculate-native-win-occlusion</code></li>
+											<li>Restart your browser</li>
+										</ol>
+									</li>
+									<li>
+										<strong>Disable Performance Throttling:</strong>
+										<ol>
+											<li>Go to <code>chrome://settings/performance</code></li>
+											<li>Disable "Throttle Javascript timers in background"</li>
+										</ol>
+									</li>
+									<li>
+										<strong>Prevent Tab Discarding:</strong>
+										<ol>
+											<li>Go to <code>chrome://discards/</code></li>
+											<li>Find chat pop-out pages</li>
+											<li>Toggle off "Auto Discardable"</li>
+										</ol>
+										<div class="solution-image">
+											<img src="../icons/chrome-discards.png" alt="Chrome Discards Settings">
+										</div>
+									</li>
+								</ul>
+							</div>
+							
+							<div class="solution">
+								<h5>Alternative Approaches</h5>
+								<ul class="solution-steps">
+									<li>
+										<strong>Keep Windows Visible:</strong> Arrange windows so they're not minimized; even a small visible portion can prevent throttling.
+									</li>
+									<li>
+										<strong>Use Virtual Desktops:</strong> On Windows, use Win+Tab to create two virtual desktops, with chat windows on one and OBS on the other.
+									</li>
+									<li>
+										<strong>Try the Standalone App:</strong> The Social Stream Ninja desktop app avoids many browser throttling issues.
+									</li>
+									<li>
+										<strong>"Always on Top" Apps:</strong> Use third-party apps to pin chat windows so they remain visible but small.
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="troubleshooting-card">
+					<div class="issue-header">
+						<div class="issue-icon">
+							<img src="../icons/debug.svg" alt="Debug Bar Issue">
+						</div>
+						<h3>Blue Bar Appears / Auto-Responder Not Working</h3>
+					</div>
+					<div class="issue-content">
+						<p class="issue-description">A blue debugging bar appears or automated responses don't work when trying to use bot commands or auto-responses.</p>
+						
+						<div class="solutions">
+							<div class="solution">
+								<h5>Check Chat Window Visibility</h5>
+								<ul class="solution-steps">
+									<li>Make sure if using Youtube/Twitch that the pop-out chat window is open and visible</li>
+									<li>For some platforms, you may need to keep the main window open alongside the pop-out</li>
+								</ul>
+							</div>
+							
+							<div class="solution">
+								<h5>Browser Compatibility</h5>
+								<ul class="solution-steps">
+									<li>Auto-responder works best with Chromium-based browsers (Chrome, Edge, Brave)</li>
+									<li>Firefox has limited support for extension features</li>
+								</ul>
+							</div>
+							
+							<div class="solution">
+								<h5>Remove Conflicting Apps</h5>
+								<ul class="solution-steps">
+									<li>Go to <code>chrome://apps</code> and remove any YouTube apps that might appear</li>
+									<li>Check for browser extensions that might interfere with Social Stream Ninja</li>
+								</ul>
+							</div>
+							
+							<div class="solution">
+								<h5>Chat Permissions</h5>
+								<ul class="solution-steps">
+									<li>Make sure you have permission to post into the chat</li>
+									<li>Some platforms require you to be a subscriber or member to send chat messages</li>
+									<li>Try sending a manual message first to verify permissions</li>
+								</ul>
+							</div>
+							
+							<div class="solution">
+								<h5>Hide the Blue Debug Bar</h5>
+								<ul class="solution-steps">
+									<li>Start Chrome with <code>--silent-debugger-extension-api</code> flag to hide the blue bar</li>
+									<li>
+										<strong>Windows:</strong> Create a shortcut to Chrome and add the flag to the Target field:
+										<div class="code-block">
+											<pre>"C:\Program Files\Google\Chrome\Application\chrome.exe" --silent-debugger-extension-api</pre>
+										</div>
+									</li>
+									<li>
+										<strong>macOS:</strong> Run from Terminal:
+										<div class="code-block">
+											<pre>open -a "Google Chrome" --args --silent-debugger-extension-api</pre>
+										</div>
+									</li>
+								</ul>
+								<div class="solution-image">
+									<img src="../icons/blue-bar.png" alt="Blue Debug Bar">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="troubleshooting-card">
+					<div class="issue-header">
+						<div class="issue-icon">
+							<img src="../icons/main_msg_save.png" alt="File System Issue">
+						</div>
+						<h3>Can't Export Settings or Save Files</h3>
+					</div>
+					<div class="issue-content">
+						<p class="issue-description">Unable to save settings to disk or export configuration when trying to back up your Social Stream Ninja setup.</p>
+						
+						<div class="solutions">
+							<div class="solution">
+								<h5>Enable File System Access API</h5>
+								<ul class="solution-steps">
+									<li>
+										<strong>In Brave:</strong>
+										<ol>
+											<li>Go to <code>brave://flags/#file-system-access-api</code></li>
+											<li>Enable the setting</li>
+											<li>Restart Brave</li>
+										</ol>
+									</li>
+									<li>
+										<strong>In Chrome:</strong>
+										<ol>
+											<li>Go to <code>chrome://flags/#file-system-access-api</code></li>
+											<li>Enable the setting</li>
+											<li>Restart Chrome</li>
+										</ol>
+									</li>
+									<li>
+										<strong>In Edge:</strong>
+										<ol>
+											<li>Go to <code>edge://flags/#file-system-access-api</code></li>
+											<li>Enable the setting</li>
+											<li>Restart Edge</li>
+										</ol>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="troubleshooting-card">
+					<div class="issue-header">
+						<div class="issue-icon">
+							<img src="../icons/issues.svg" alt="General Issues">
+						</div>
+						<h3>Other Common Issues</h3>
+					</div>
+					<div class="issue-content">
+						<div class="solutions">
+							<div class="solution">
+								<h5>Session ID Mismatch</h5>
+								<p>If your extension and dock pages aren't communicating:</p>
+								<ul class="solution-steps">
+									<li>Verify that the session ID in the extension matches the one in the dock.html URL</li>
+									<li>To set a custom session ID: Go to Extensions settings → Social Stream Ninja → Details → Extension options</li>
+								</ul>
+							</div>
+							
+							<div class="solution">
+								<h5>Platform-Specific Issues</h5>
+								<p>If certain platforms aren't working:</p>
+								<ul class="solution-steps">
+									<li>Discord, Slack, Telegram, and WhatsApp require enabling the specific toggle in extension settings</li>
+									<li>Some platforms may need the main window to remain open alongside the pop-out</li>
+									<li>Facebook works best when connected to WiFi/Ethernet, not mobile data</li>
+								</ul>
+							</div>
+							
+							<div class="solution">
+								<h5>Extension Stopped Working</h5>
+								<p>If the extension suddenly stops capturing messages:</p>
+								<ul class="solution-steps">
+									<li>Refresh the chat page to retrigger the extension code</li>
+									<li>Ensure the extension is enabled (green icon, not red)</li>
+									<li>Check if the browser has been running for an extended period (may need restart)</li>
+								</ul>
+							</div>
+							
+							<div class="solution">
+								<h5>macOS/Linux Browser Source Issues</h5>
+								<p>If using OBS on macOS or Linux:</p>
+								<ul class="solution-steps">
+									<li>The extension may not work if hosted locally on your drive</li>
+									<li>Use the hosted version on socialstream.ninja instead</li>
+									<li>Apply custom CSS via the browser source style section in OBS</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="support-cta">
+				<h3>Still Having Issues?</h3>
+				<p>If you're still experiencing problems after trying these solutions, get help from our community:</p>
+				<div class="support-buttons">
+					<a href="https://discord.socialstream.ninja" target="_blank" class="btn btn-primary">Join Our Discord</a>
+					<a href="https://github.com/steveseguin/social_stream/issues" target="_blank" class="btn btn-secondary">Report on GitHub</a>
+				</div>
+			</div>
+		</div>
+	</section>
     
     <section id="faq" class="guide-section">
         <div class="container">
@@ -488,255 +679,6 @@
         </div>
     </section>
 	
-	<section id="enhanced-troubleshooting" class="guide-section alt">
-    <div class="container">
-        <h2>Advanced Troubleshooting</h2>
-        <p class="section-subtitle">Solutions for common issues with Social Stream Ninja</p>
-        
-        <div class="troubleshooting-grid">
-            <div class="troubleshooting-card">
-                <div class="issue-header">
-                    <div class="issue-icon">
-                        <img src="../icons/minimized.svg" alt="Minimized Window Issue">
-                    </div>
-                    <h3>Chat Stops When Background/Minimized</h3>
-                </div>
-                <div class="issue-content">
-                    <p class="issue-description">Chat messages stop appearing when browser windows are in the background or minimized. This happens because browsers throttle background tabs to save resources.</p>
-                    
-                    <div class="solutions">
-                        <h4>Solutions:</h4>
-                        <div class="solution">
-                            <h5>1. Disable Browser Throttling</h5>
-                            <ul class="solution-steps">
-                                <li>
-                                    <strong>Chrome/Edge/Brave:</strong> 
-                                    <ol>
-                                        <li>Open <code>chrome://flags/#enable-throttle-display-none-and-visibility-hidden-cross-origin-iframes</code></li>
-                                        <li>Set to "Disabled"</li>
-                                        <li>Also disable <code>chrome://flags/#calculate-native-win-occlusion</code></li>
-                                        <li>Restart your browser</li>
-                                    </ol>
-                                </li>
-                                <li>
-                                    <strong>Disable Performance Throttling:</strong>
-                                    <ol>
-                                        <li>Go to <code>chrome://settings/performance</code></li>
-                                        <li>Disable "Throttle Javascript timers in background"</li>
-                                    </ol>
-                                </li>
-                                <li>
-                                    <strong>Prevent Tab Discarding:</strong>
-                                    <ol>
-                                        <li>Go to <code>chrome://discards/</code></li>
-                                        <li>Find chat pop-out pages</li>
-                                        <li>Toggle off "Auto Discardable"</li>
-                                    </ol>
-                                    <div class="solution-image">
-                                        <img src="../icons/chrome-discards.png" alt="Chrome Discards Settings">
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                        
-                        <div class="solution">
-                            <h5>2. Try Alternative Approaches</h5>
-                            <ul class="solution-steps">
-                                <li>
-                                    <strong>Keep Windows Visible:</strong> Arrange windows so they're not minimized; even a small visible portion can prevent throttling.
-                                </li>
-                                <li>
-                                    <strong>Use Virtual Desktops:</strong> On Windows, use Win+Tab to create two virtual desktops, with chat windows on one and OBS on the other.
-                                </li>
-                                <li>
-                                    <strong>Try the Standalone App:</strong> The Social Stream Ninja desktop app avoids many browser throttling issues.
-                                </li>
-                                <li>
-                                    <strong>"Always on Top" Apps:</strong> Use third-party apps to pin chat windows so they remain visible but small.
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="troubleshooting-card">
-                <div class="issue-header">
-                    <div class="issue-icon">
-                        <img src="../icons/debug.svg" alt="Debug Bar Issue">
-                    </div>
-                    <h3>Blue Bar Appears / Auto-Responder Not Working</h3>
-                </div>
-                <div class="issue-content">
-                    <p class="issue-description">A blue debugging bar appears or automated responses don't work when trying to use bot commands or auto-responses.</p>
-                    
-                    <div class="solutions">
-                        <h4>Solutions:</h4>
-                        <div class="solution">
-                            <h5>1. Check Chat Window Visibility</h5>
-                            <ul class="solution-steps">
-                                <li>Make sure if using Youtube/Twitch that the pop-out chat window is open and visible</li>
-                                <li>For some platforms, you may need to keep the main window open alongside the pop-out</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="solution">
-                            <h5>2. Browser Compatibility</h5>
-                            <ul class="solution-steps">
-                                <li>Auto-responder works best with Chromium-based browsers (Chrome, Edge, Brave)</li>
-                                <li>Firefox has limited support for extension features</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="solution">
-                            <h5>3. Remove Conflicting Apps</h5>
-                            <ul class="solution-steps">
-                                <li>Go to <code>chrome://apps</code> and remove any YouTube apps that might appear</li>
-                                <li>Check for browser extensions that might interfere with Social Stream Ninja</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="solution">
-                            <h5>4. Chat Permissions</h5>
-                            <ul class="solution-steps">
-                                <li>Make sure you have permission to post into the chat</li>
-                                <li>Some platforms require you to be a subscriber or member to send chat messages</li>
-                                <li>Try sending a manual message first to verify permissions</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="solution">
-                            <h5>5. Hide the Blue Debug Bar</h5>
-                            <ul class="solution-steps">
-                                <li>Start Chrome with <code>--silent-debugger-extension-api</code> flag to hide the blue bar</li>
-                                <li>
-                                    <strong>Windows:</strong> Create a shortcut to Chrome and add the flag to the Target field:
-                                    <div class="code-block">
-                                        <pre>"C:\Program Files\Google\Chrome\Application\chrome.exe" --silent-debugger-extension-api</pre>
-                                    </div>
-                                </li>
-                                <li>
-                                    <strong>macOS:</strong> Run from Terminal:
-                                    <div class="code-block">
-                                        <pre>open -a "Google Chrome" --args --silent-debugger-extension-api</pre>
-                                    </div>
-                                </li>
-                            </ul>
-                            <div class="solution-image">
-                                <img src="../icons/blue-bar.png" alt="Blue Debug Bar">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="troubleshooting-card">
-                <div class="issue-header">
-                    <div class="issue-icon">
-                        <img src="../icons/main_msg_save.png" alt="File System Issue">
-                    </div>
-                    <h3>Can't Export Settings or Save Files</h3>
-                </div>
-                <div class="issue-content">
-                    <p class="issue-description">Unable to save settings to disk or export configuration when trying to back up your Social Stream Ninja setup.</p>
-                    
-                    <div class="solutions">
-                        <h4>Solution:</h4>
-                        <div class="solution">
-                            <h5>Enable File System Access API</h5>
-                            <ul class="solution-steps">
-                                <li>
-                                    <strong>In Brave:</strong>
-                                    <ol>
-                                        <li>Go to <code>brave://flags/#file-system-access-api</code></li>
-                                        <li>Enable the setting</li>
-                                        <li>Restart Brave</li>
-                                    </ol>
-                                </li>
-                                <li>
-                                    <strong>In Chrome:</strong>
-                                    <ol>
-                                        <li>Go to <code>chrome://flags/#file-system-access-api</code></li>
-                                        <li>Enable the setting</li>
-                                        <li>Restart Chrome</li>
-                                    </ol>
-                                </li>
-                                <li>
-                                    <strong>In Edge:</strong>
-                                    <ol>
-                                        <li>Go to <code>edge://flags/#file-system-access-api</code></li>
-                                        <li>Enable the setting</li>
-                                        <li>Restart Edge</li>
-                                    </ol>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="troubleshooting-card">
-                <div class="issue-header">
-                    <div class="issue-icon">
-                        <img src="../icons/issues.svg" alt="General Issues">
-                    </div>
-                    <h3>Other Common Issues</h3>
-                </div>
-                <div class="issue-content">
-                    <div class="solutions">
-                        <div class="solution">
-                            <h5>Session ID Mismatch</h5>
-                            <p>If your extension and dock pages aren't communicating:</p>
-                            <ul class="solution-steps">
-                                <li>Verify that the session ID in the extension matches the one in the dock.html URL</li>
-                                <li>To set a custom session ID: Go to Extensions settings → Social Stream Ninja → Details → Extension options</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="solution">
-                            <h5>Platform-Specific Issues</h5>
-                            <p>If certain platforms aren't working:</p>
-                            <ul class="solution-steps">
-                                <li>Discord, Slack, Telegram, and WhatsApp require enabling the specific toggle in extension settings</li>
-                                <li>Some platforms may need the main window to remain open alongside the pop-out</li>
-                                <li>Facebook works best when connected to WiFi/Ethernet, not mobile data</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="solution">
-                            <h5>Extension Stopped Working</h5>
-                            <p>If the extension suddenly stops capturing messages:</p>
-                            <ul class="solution-steps">
-                                <li>Refresh the chat page to retrigger the extension code</li>
-                                <li>Ensure the extension is enabled (green icon, not red)</li>
-                                <li>Check if the browser has been running for an extended period (may need restart)</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="solution">
-                            <h5>macOS/Linux Browser Source Issues</h5>
-                            <p>If using OBS on macOS or Linux:</p>
-                            <ul class="solution-steps">
-                                <li>The extension may not work if hosted locally on your drive</li>
-                                <li>Use the hosted version on socialstream.ninja instead</li>
-                                <li>Apply custom CSS via the browser source style section in OBS</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="support-cta">
-            <h3>Still Having Issues?</h3>
-            <p>If you're still experiencing problems after trying these solutions, get help from our community:</p>
-            <div class="support-buttons">
-                <a href="https://discord.socialstream.ninja" target="_blank" class="btn btn-primary">Join Our Discord</a>
-                <a href="https://github.com/steveseguin/social_stream/issues" target="_blank" class="btn btn-secondary">Report on GitHub</a>
-            </div>
-        </div>
-    </div>
-</section>
 
     <footer>
         <div class="container">
@@ -789,27 +731,57 @@
 
     <script src="js/main.js"></script>
     <script>
-        // Set current year in footer
-        document.getElementById('current-year').textContent = new Date().getFullYear();
-        
-        // Accordion functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const accordionHeaders = document.querySelectorAll('.accordion-header');
-            
-            accordionHeaders.forEach(header => {
-                header.addEventListener('click', () => {
-                    const accordionItem = header.parentElement;
-                    accordionItem.classList.toggle('active');
-                });
-            });
-            
-            // Smooth scroll for guide navigation
-            document.querySelectorAll('.guide-nav-link').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    const targetId = this.getAttribute('href');
-                    const targetElement = document.querySelector(targetId);
-                    
-                    if (targetElement) {
-                        const headerHeight = document.querySelector('
+       // Add this to your main.js file or inside a script tag at the bottom of guides.html
+		document.addEventListener('DOMContentLoaded', function() {
+			// Smooth scroll for guide navigation
+			document.querySelectorAll('.guide-nav-link').forEach(anchor => {
+				anchor.addEventListener('click', function(e) {
+					e.preventDefault();
+					
+					const targetId = this.getAttribute('href');
+					const targetElement = document.querySelector(targetId);
+					
+					if (targetElement) {
+						const headerHeight = document.querySelector('header').offsetHeight;
+						const navHeight = document.querySelector('.guide-navigation').offsetHeight;
+						const offsetPosition = targetElement.offsetTop - headerHeight - navHeight - 20;
+						
+						window.scrollTo({
+							top: offsetPosition,
+							behavior: 'smooth'
+						});
+						
+						// Update active class on navigation
+						document.querySelectorAll('.guide-nav-link').forEach(link => {
+							link.classList.remove('active');
+						});
+						this.classList.add('active');
+					}
+				});
+			});
+			
+			// Sticky navigation on scroll
+			const guideNav = document.getElementById('guides-nav');
+			const navOffset = guideNav.offsetTop;
+			
+			window.addEventListener('scroll', function() {
+				if (window.pageYOffset >= navOffset) {
+					guideNav.classList.add('sticky');
+				} else {
+					guideNav.classList.remove('sticky');
+				}
+			});
+			
+			// Accordion functionality for FAQ section
+			const accordionHeaders = document.querySelectorAll('.accordion-header');
+			
+			accordionHeaders.forEach(header => {
+				header.addEventListener('click', () => {
+					const accordionItem = header.parentElement;
+					accordionItem.classList.toggle('active');
+				});
+			});
+		});
+		</script>
+	</body>
+</html>

@@ -44,17 +44,33 @@
         </div>
     </section>
 
-    <section class="command-navigation">
-        <div class="container">
-            <div class="command-nav-links">
-                <a href="#bot-commands" class="command-nav-link">Bot Commands</a>
-                <a href="#server-api" class="command-nav-link">Server API</a>
-                <a href="#midi-hotkey" class="command-nav-link">MIDI & Hotkeys</a>
-                <a href="#webhook" class="command-nav-link">Webhook Integration</a>
-                <a href="#custom-scripts" class="command-nav-link">Custom Scripts</a>
-            </div>
-        </div>
-    </section>
+	<section class="command-navigation" id="commands-nav">
+		<div class="container">
+			<div class="command-nav-links">
+				<a href="#bot-commands" class="command-nav-link active">
+					<i class="fas fa-robot"></i> Bot Commands
+				</a>
+				<a href="#server-api" class="command-nav-link">
+					<i class="fas fa-server"></i> Server API
+				</a>
+				<a href="#ai-integration" class="command-nav-link">
+					<i class="fas fa-brain"></i> AI Integration
+				</a>
+				<a href="#midi-hotkey" class="command-nav-link">
+					<i class="fas fa-music"></i> MIDI & Hotkeys
+				</a>
+				<a href="#webhook" class="command-nav-link">
+					<i class="fas fa-plug"></i> Webhooks
+				</a>
+				<a href="#custom-scripts" class="command-nav-link">
+					<i class="fas fa-code"></i> Custom Scripts
+				</a>
+				<a href="#custom-overlays" class="command-nav-link">
+					<i class="fas fa-paint-brush"></i> Custom Overlays
+				</a>
+			</div>
+		</div>
+	</section>
 
     <section id="bot-commands" class="command-section">
         <div class="container">
@@ -113,120 +129,330 @@
         </div>
     </section>
 
-    <section id="server-api" class="command-section alt">
-        <div class="container">
-            <h2>Server API</h2>
+    
+<section id="server-api" class="command-section alt">
+    <div class="container">
+        <h2>Server API</h2>
+        
+        <div class="command-card">
+            <h3>Overview</h3>
+            <p>Social Stream Ninja provides a powerful API that allows you to control every aspect of your streaming setup programmatically.</p>
             
-            <div class="command-card">
-                <h3>Overview</h3>
-                <p>Social Stream Ninja provides a powerful API that allows you to:</p>
-                <ul class="command-list">
-                    <li>Send messages to connected chat platforms</li>
-                    <li>Control the overlay (clear messages, select featured messages)</li>
-                    <li>Manage queued messages</li>
-                    <li>Receive events from external services</li>
-                </ul>
+            <div class="api-capabilities">
+                <div class="api-capability">
+                    <div class="capability-icon">
+                        <i class="fas fa-comment-alt"></i>
+                    </div>
+                    <div class="capability-content">
+                        <h4>Chat Control</h4>
+                        <p>Send messages to all connected chat platforms simultaneously or to specific platforms only.</p>
+                    </div>
+                </div>
                 
-                <div class="command-note">
-                    <p><strong>Important:</strong> You must enable the Server API toggle in the extension menu for the API to work.</p>
+                <div class="api-capability">
+                    <div class="capability-icon">
+                        <i class="fas fa-tv"></i>
+                    </div>
+                    <div class="capability-content">
+                        <h4>Overlay Management</h4>
+                        <p>Control featured messages, clear overlays, and manipulate content appearance in your stream.</p>
+                    </div>
+                </div>
+                
+                <div class="api-capability">
+                    <div class="capability-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <div class="capability-content">
+                        <h4>Queue Operations</h4>
+                        <p>Programmatically manage queued messages for highlighting during your stream.</p>
+                    </div>
+                </div>
+                
+                <div class="api-capability">
+                    <div class="capability-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="capability-content">
+                        <h4>Webhook Integration</h4>
+                        <p>Receive events from third-party services like Stripe, Ko-Fi, and Buy Me A Coffee.</p>
+                    </div>
                 </div>
             </div>
             
-            <div class="command-card">
-                <h3>API Endpoints</h3>
-                <p>The API supports multiple connection methods:</p>
-                <ul class="command-list">
-                    <li><strong>HTTP GET/POST:</strong> <code>https://io.socialstream.ninja/</code></li>
-                    <li><strong>WebSocket:</strong> <code>wss://io.socialstream.ninja:443</code></li>
-                    <li><strong>Server-Sent Events:</strong> <code>https://io.socialstream.ninja/sse/</code></li>
-                </ul>
-                
-                <h4>API Structure</h4>
-                <p>The general format for HTTP requests is:</p>
-                <div class="code-block">
-                    <code>https://io.socialstream.ninja/{sessionID}/{action}/{target}/{value}</code>
-                </div>
-                <p>Fields can be replaced with "null" if no value is being passed.</p>
-            </div>
-            
-            <div class="command-card">
-                <h3>Common API Commands</h3>
-                
-                <div class="command-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Action</th>
-                                <th>Description</th>
-                                <th>Example</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><code>sendChat</code></td>
-                                <td>Sends a message to all connected chat platforms</td>
-                                <td><code>https://io.socialstream.ninja/SESSIONID/sendChat/null/Hello everyone!</code></td>
-                            </tr>
-                            <tr>
-                                <td><code>clearOverlay</code></td>
-                                <td>Clears the featured message from the overlay</td>
-                                <td><code>https://io.socialstream.ninja/SESSIONID/clearOverlay</code></td>
-                            </tr>
-                            <tr>
-                                <td><code>nextInQueue</code></td>
-                                <td>Displays the next message in the queue</td>
-                                <td><code>https://io.socialstream.ninja/SESSIONID/nextInQueue</code></td>
-                            </tr>
-                            <tr>
-                                <td><code>clearQueue</code></td>
-                                <td>Clears all messages from the queue</td>
-                                <td><code>https://io.socialstream.ninja/SESSIONID/clearQueue</code></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="api-explorer">
-                    <h4>API Sandbox</h4>
-                    <p>Try out the API with our interactive sandbox:</p>
-                    <a href="https://socialstream.ninja/sampleapi.html" class="btn btn-primary" target="_blank">Open API Sandbox</a>
-                    <p class="api-note">Don't forget to replace SESSIONID with your actual session ID!</p>
-                </div>
-            </div>
-            
-            <div class="command-card">
-                <h3>Message Structure</h3>
-                <p>Messages sent to and from the API follow this basic structure:</p>
-                <div class="code-block">
-<pre>{
-  "chatname": "Display Name",
-  "chatmessage": "Chat message content",
-  "chatimg": "URL or DataBlob of user avatar",
-  "type": "platform name (e.g., twitch, youtube)",
-  "textonly": true,
-  "hasDonation": "optional donation amount (e.g., $50 USD)",
-  "chatbadges": ["array of badge URLs"],
-  "contentimg": "optional attached image URL",
-  "membership": "optional membership description",
-  "title": "optional alternative title",
-  "subtitle": "optional subtitle",
-  "moderator": false,
-  "event": false,
-  "admin": false,
-  "bot": false,
-  "question": false,
-  "userid": "unique user ID",
-  "karma": 1.0,
-  "private": false,
-  "nameColor": "#ff0000",
-  "textColor": "#000000",
-  "backgroundColor": "#ffffff"
-}</pre>
-                </div>
-                <p>Not all fields are required, and some are only used in specific contexts.</p>
+            <div class="command-note">
+                <p><strong>Important:</strong> You must enable the Server API toggle in the extension menu for API functionality to work.</p>
             </div>
         </div>
-    </section>
+        
+        <div class="command-card">
+            <h3>API Endpoints and Connection Methods</h3>
+            
+            <div class="api-methods">
+                <div class="api-method">
+                    <h4><i class="fas fa-globe"></i> HTTP GET/POST</h4>
+                    <div class="code-block">
+                        <pre>https://io.socialstream.ninja/{sessionID}/{action}/{target}/{value}</pre>
+                    </div>
+                    <p>Perfect for simple commands from Stream Deck or custom scripts.</p>
+                </div>
+                
+                <div class="api-method">
+                    <h4><i class="fas fa-exchange-alt"></i> WebSocket</h4>
+                    <div class="code-block">
+                        <pre>wss://io.socialstream.ninja:443</pre>
+                    </div>
+                    <p>For real-time bidirectional communication with auto-reconnection.</p>
+                </div>
+                
+                <div class="api-method">
+                    <h4><i class="fas fa-broadcast-tower"></i> Server-Sent Events</h4>
+                    <div class="code-block">
+                        <pre>https://io.socialstream.ninja/sse/{sessionID}</pre>
+                    </div>
+                    <p>For one-way real-time updates from the server.</p>
+                </div>
+            </div>
+            
+            <div class="channel-system">
+                <h4>Channel System</h4>
+                <p>The API uses a channel system for message routing control:</p>
+                <div class="code-block">
+                    <pre>
+- Channel 1: Main communication channel (default)
+- Channel 2: Typically used for dock.html communication
+- Channel 3: Often used for extension communication
+- Channel 4: Commonly used for featured.html communication
+- Channel 5: Used for waitlist.html communication
+- Channels 6-9: Reserved for future use</pre>
+                </div>
+                <p>You can specify input and output channels when connecting:</p>
+                <div class="code-block">
+                    <pre>wss://io.socialstream.ninja/join/SESSION_ID/IN_CHANNEL/OUT_CHANNEL</pre>
+                </div>
+            </div>
+        </div>
+        
+        <div class="command-card">
+            <h3>Common API Commands</h3>
+            
+            <div class="command-table-responsive">
+                <table class="command-table">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>sendChat</code></td>
+                            <td>Sends a message to all connected chat platforms</td>
+                            <td><code>https://io.socialstream.ninja/SESSIONID/sendChat/null/Hello everyone!</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>sendEncodedChat</code></td>
+                            <td>Sends a URL-encoded message to all platforms</td>
+                            <td><code>https://io.socialstream.ninja/SESSIONID/sendEncodedChat/null/Hello%20everyone%21</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>clearOverlay</code></td>
+                            <td>Clears the featured message from the overlay</td>
+                            <td><code>https://io.socialstream.ninja/SESSIONID/clearOverlay</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>nextInQueue</code></td>
+                            <td>Displays the next message in the queue</td>
+                            <td><code>https://io.socialstream.ninja/SESSIONID/nextInQueue</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>autoShow</code></td>
+                            <td>Toggles automatic featuring of messages</td>
+                            <td><code>https://io.socialstream.ninja/SESSIONID/autoShow/toggle</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>blockUser</code></td>
+                            <td>Blocks a user from a specific platform</td>
+                            <td><code>https://io.socialstream.ninja/SESSIONID/blockUser/null/{"chatname":"username","type":"twitch"}</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>extContent</code></td>
+                            <td>Sends external content as a chat message</td>
+                            <td><code>https://io.socialstream.ninja/SESSIONID/extContent/null/{"chatname":"User","chatmessage":"Hello"}</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="view-more-link">
+                <a href="https://github.com/steveseguin/social_stream/blob/master/api.md" target="_blank" class="btn btn-secondary">
+                    <i class="fab fa-github"></i> View Complete API Documentation
+                </a>
+            </div>
+        </div>
+        
+        <div class="command-card">
+            <h3>Interactive API Sandbox</h3>
+            <p>Try out the API with our interactive sandbox that provides easy access to all commands and features:</p>
+            
+            <div class="api-sandbox-preview">
+                <img src="../icons/api-sandbox.png" alt="API Sandbox Preview">
+                <div class="sandbox-overlay">
+                    <a href="https://socialstream.ninja/sampleapi.html" class="btn btn-primary" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> Open API Sandbox
+                    </a>
+                </div>
+            </div>
+            
+            <div class="sandbox-features">
+                <div class="sandbox-feature">
+                    <i class="fas fa-flask"></i>
+                    <h4>Test Commands</h4>
+                    <p>Try all API commands in a safe environment</p>
+                </div>
+                
+                <div class="sandbox-feature">
+                    <i class="fas fa-code"></i>
+                    <h4>Generate Code</h4>
+                    <p>Get code examples for HTTP, WebSocket, and SSE</p>
+                </div>
+                
+                <div class="sandbox-feature">
+                    <i class="fas fa-eye"></i>
+                    <h4>View Results</h4>
+                    <p>See real-time responses from your commands</p>
+                </div>
+                
+                <div class="sandbox-feature">
+                    <i class="fas fa-magic"></i>
+                    <h4>Create Tests</h4>
+                    <p>Generate test messages with random content</p>
+                </div>
+            </div>
+            
+            <div class="api-note">
+                <p><strong>Note:</strong> Remember to replace <code>SESSIONID</code> with your actual session ID from Social Stream Ninja!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+	<section id="ai-integration" class="command-section">
+    <div class="container">
+        <h2>AI Integration</h2>
+        
+        <div class="command-card">
+            <h3>AI Chat Bot Mode</h3>
+            <p>Social Stream Ninja provides built-in AI integration to enhance your streams with AI-powered chat responses, moderation, and more.</p>
+            
+            <div class="feature-highlights">
+                <div class="feature-highlight">
+                    <div class="feature-icon">
+                        <i class="fas fa-comment-dots"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Automated Chat Responses</h4>
+                        <p>Let the AI engage with your viewers automatically, answering questions and keeping the conversation lively even when you're focused on your content.</p>
+                    </div>
+                </div>
+                
+                <div class="feature-highlight">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Content Moderation</h4>
+                        <p>Use AI to help moderate chat by identifying potentially harmful messages and automatically handling them based on your preferences.</p>
+                    </div>
+                </div>
+                
+                <div class="feature-highlight">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>RAG Search</h4>
+                        <p>Retrieval-Augmented Generation allows the AI to search through your custom knowledge base to provide accurate answers specific to your content.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="command-card">
+            <h3>Setting Up Ollama with Social Stream Ninja</h3>
+            <p>Social Stream Ninja supports self-hosted AI models using Ollama. This gives you complete control over your AI assistant while maintaining privacy.</p>
+            
+            <div class="ai-setup-steps">
+                <div class="ai-step">
+                    <div class="ai-step-number">1</div>
+                    <div class="ai-step-content">
+                        <h4>Install Ollama</h4>
+                        <p>Download and install Ollama from <a href="https://ollama.com" target="_blank">ollama.com</a></p>
+                        <div class="ai-step-image">
+                            <img src="../icons/ollama-setup.png" alt="Ollama Setup">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="ai-step">
+                    <div class="ai-step-number">2</div>
+                    <div class="ai-step-content">
+                        <h4>Install an LLM Model</h4>
+                        <p>Open Command Prompt or Terminal and run:</p>
+                        <div class="code-block">
+                            <pre>ollama pull llama3.2</pre>
+                        </div>
+                        <p>Social Stream Ninja targets Llama3.2 by default, but you can specify other models in the settings.</p>
+                    </div>
+                </div>
+                
+                <div class="ai-step">
+                    <div class="ai-step-number">3</div>
+                    <div class="ai-step-content">
+                        <h4>Configure CORS for Chrome Extension</h4>
+                        <p>To allow the extension to communicate with Ollama, you need to set CORS permissions:</p>
+                        <div class="code-block">
+                            <pre>ollama serve stop
+taskkill /F /IM ollama.exe
+set OLLAMA_ORIGINS=chrome-extension://*
+ollama serve</pre>
+                        </div>
+                        <p>For permanent configuration on Windows, add <code>OLLAMA_ORIGINS=chrome-extension://*</code> to your system environment variables.</p>
+                    </div>
+                </div>
+                
+                <div class="ai-step">
+                    <div class="ai-step-number">4</div>
+                    <div class="ai-step-content">
+                        <h4>Enable AI Chat Bot Mode</h4>
+                        <p>In Social Stream Ninja, enable the AI Chat Bot toggle in the extension settings.</p>
+                        <div class="ai-step-image">
+                            <img src="../icons/ai-toggle.png" alt="AI Toggle in Settings">
+                        </div>
+                        <p>The bot will respond automatically to chat if it determines a response is appropriate. There is a 5-second timeout per source site to prevent spam.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="documentation-links">
+                <h4>Detailed Documentation</h4>
+                <p>For complete setup instructions and advanced configuration options, see our detailed guides:</p>
+                <div class="doc-links">
+                    <a href="https://socialstream.ninja/ai" class="doc-link" target="_blank">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Complete AI Integration Guide</span>
+                    </a>
+                    <a href="https://github.com/steveseguin/social_stream/blob/master/ai.md" class="doc-link" target="_blank">
+                        <i class="fab fa-github"></i>
+                        <span>AI Setup Documentation on GitHub</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 
     <section id="midi-hotkey" class="command-section">
         <div class="container">
@@ -821,6 +1047,9 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
 				</section>
         </div>
     </section>
+	
+	
+
 
     <section class="get-started">
         <div class="container">
@@ -886,40 +1115,75 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
     <script>
         // Set current year in footer
         document.getElementById('current-year').textContent = new Date().getFullYear();
-        
-		// Enhanced API section for commands.html
+		// Add this to your main.js file or in a script tag at the bottom of commands.html
 		document.addEventListener('DOMContentLoaded', function() {
-			// Code block syntax highlighting (simple version)
-			document.querySelectorAll('.code-block pre').forEach(block => {
-				// Add line numbers
-				const lines = block.innerHTML.split('\n');
-				let numberedCode = '';
-				
-				lines.forEach((line, index) => {
-					if (line.trim() !== '') {
-						numberedCode += `<span class="line-number">${index + 1}</span>${line}\n`;
-					} else {
-						numberedCode += '\n';
+			// Smooth scroll for command navigation
+			document.querySelectorAll('.command-nav-link').forEach(anchor => {
+				anchor.addEventListener('click', function(e) {
+					e.preventDefault();
+					
+					const targetId = this.getAttribute('href');
+					const targetElement = document.querySelector(targetId);
+					
+					if (targetElement) {
+						const headerHeight = document.querySelector('header').offsetHeight;
+						const navHeight = document.querySelector('.command-navigation').offsetHeight;
+						const offsetPosition = targetElement.offsetTop - headerHeight - navHeight - 20;
+						
+						window.scrollTo({
+							top: offsetPosition,
+							behavior: 'smooth'
+						});
+						
+						// Update active class on navigation
+						document.querySelectorAll('.command-nav-link').forEach(link => {
+							link.classList.remove('active');
+						});
+						this.classList.add('active');
 					}
 				});
+			});
+			
+			// Update active nav item on scroll
+			window.addEventListener('scroll', function() {
+				const scrollPosition = window.scrollY;
+				const headerHeight = document.querySelector('header').offsetHeight;
+				const navHeight = document.querySelector('.command-navigation').offsetHeight;
+				const offset = headerHeight + navHeight + 50;
 				
-				block.innerHTML = numberedCode;
-				
-				// Add copy button
+				document.querySelectorAll('.command-section').forEach(section => {
+					const sectionTop = section.offsetTop - offset;
+					const sectionBottom = sectionTop + section.offsetHeight;
+					
+					if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+						const id = section.getAttribute('id');
+						document.querySelectorAll('.command-nav-link').forEach(link => {
+							link.classList.remove('active');
+							if (link.getAttribute('href') === `#${id}`) {
+								link.classList.add('active');
+							}
+						});
+					}
+				});
+			});
+
+			// Add copy functionality to code blocks
+			document.querySelectorAll('.code-block pre').forEach(block => {
 				const copyButton = document.createElement('button');
 				copyButton.className = 'copy-button';
-				copyButton.textContent = 'Copy';
+				copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+				copyButton.setAttribute('title', 'Copy to clipboard');
+				
 				copyButton.addEventListener('click', function() {
-					const textToCopy = block.innerText.replace(/^\d+\s+/gm, ''); // Remove line numbers
-					navigator.clipboard.writeText(textToCopy).then(() => {
-						copyButton.textContent = 'Copied!';
+					const code = block.textContent;
+					navigator.clipboard.writeText(code).then(() => {
+						copyButton.innerHTML = '<i class="fas fa-check"></i>';
 						setTimeout(() => {
-							copyButton.textContent = 'Copy';
+							copyButton.innerHTML = '<i class="fas fa-copy"></i>';
 						}, 2000);
 					});
 				});
 				
-				// Add the button to a wrapper
 				const wrapper = document.createElement('div');
 				wrapper.className = 'code-block-wrapper';
 				block.parentNode.insertBefore(wrapper, block);
@@ -927,32 +1191,15 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
 				wrapper.appendChild(copyButton);
 			});
 			
-			// Interactive API examples
-			const apiSamples = document.querySelectorAll('.api-sample');
-			apiSamples.forEach(sample => {
-				const tryButton = sample.querySelector('.try-button');
-				const resultDisplay = sample.querySelector('.result-display');
-				
-				if (tryButton && resultDisplay) {
-					tryButton.addEventListener('click', function() {
-						const endpoint = sample.getAttribute('data-endpoint');
-						const sessionInput = document.getElementById('api-session-id');
-						
-						if (!sessionInput || !sessionInput.value) {
-							resultDisplay.innerHTML = '<div class="error">Please enter your session ID first</div>';
-							return;
-						}
-						
-						const sessionId = sessionInput.value;
-						const url = endpoint.replace('SESSIONID', sessionId);
-						
-						resultDisplay.innerHTML = '<div class="loading">Sending request...</div>';
-						
-						// Simulate API request (you'd implement actual fetch here)
-						setTimeout(() => {
-							resultDisplay.innerHTML = '<div class="success">Request sent successfully!</div>';
-						}, 1000);
-					});
+			// Add anchor links to headings
+			document.querySelectorAll('h2, h3').forEach(heading => {
+				if (heading.id) {
+					heading.classList.add('section-heading');
+					const anchor = document.createElement('a');
+					anchor.className = 'section-anchor';
+					anchor.href = `#${heading.id}`;
+					anchor.innerHTML = '<i class="fas fa-link"></i>';
+					heading.appendChild(anchor);
 				}
 			});
 		});

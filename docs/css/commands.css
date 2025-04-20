@@ -279,3 +279,302 @@ img {
     font-style: italic;
     color: var(--text-secondary);
 }
+
+/* Sticky Command Navigation */
+.command-navigation {
+    position: sticky;
+    top: 80px;
+    background-color: var(--background-light);
+    z-index: 99;
+    padding: 10px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.command-nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.command-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1.5rem;
+    background-color: var(--background-card);
+    border-radius: var(--radius-md);
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.command-nav-link:hover, 
+.command-nav-link.active {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.command-nav-link i {
+    margin-right: 8px;
+    font-size: 1.2rem;
+}
+
+/* Dropdown Menu */
+.command-nav-dropdown {
+    position: relative;
+}
+
+.command-nav-dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 200px;
+    background-color: var(--background-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: 0.5rem 0;
+    z-index: 100;
+}
+
+.command-nav-dropdown:hover .command-nav-dropdown-content {
+    display: block;
+}
+
+.dropdown-link {
+    display: block;
+    padding: 0.8rem 1.5rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.dropdown-link:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--primary-color);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .command-nav-links {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 1rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+    }
+    
+    .command-nav-links::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+    
+    .command-nav-link {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+    
+    .command-nav-dropdown-content {
+        position: fixed;
+        top: auto;
+        left: 0;
+        right: 0;
+        width: 100%;
+        border-radius: 0;
+    }
+}
+
+/* Section heading anchor links */
+.section-heading {
+    position: relative;
+}
+
+.section-anchor {
+    position: absolute;
+    left: -30px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    color: var(--primary-color);
+}
+
+.section-heading:hover .section-anchor {
+    opacity: 1;
+}
+
+/* Enhanced Commands Page Styles */
+
+/* Feature Highlights */
+.feature-highlights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.feature-highlight {
+    display: flex;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-highlight:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-sm);
+}
+
+.feature-icon {
+    margin-right: 1.5rem;
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    flex-shrink: 0;
+    width: 3rem;
+    text-align: center;
+}
+
+.feature-content h4 {
+    margin-top: 0;
+    margin-bottom: 0.8rem;
+    color: var(--primary-color);
+}
+
+.feature-content p {
+    margin-bottom: 0;
+    color: var(--text-secondary);
+}
+
+/* API Capabilities */
+.api-capabilities {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.api-capability {
+    display: flex;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.api-capability:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-sm);
+}
+
+.capability-icon {
+    margin-right: 1.5rem;
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    flex-shrink: 0;
+    width: 3rem;
+    text-align: center;
+}
+
+.capability-content h4 {
+    margin-top: 0;
+    margin-bottom: 0.8rem;
+    color: var(--primary-color);
+}
+
+.capability-content p {
+    margin-bottom: 0;
+    color: var(--text-secondary);
+}
+
+/* API Methods */
+.api-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.api-method {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.api-method:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-sm);
+}
+
+.api-method h4 {
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.api-method h4 i {
+    margin-right: 0.8rem;
+}
+
+.api-method p {
+    margin-bottom: 0;
+    color: var(--text-secondary);
+}
+
+/* Channel System */
+.channel-system {
+    margin-top: 2.5rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+}
+
+.channel-system h4 {
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+/* Command Tables */
+.command-table-responsive {
+    overflow-x: auto;
+    margin: 2rem 0;
+}
+
+.command-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1.4rem;
+}
+
+.command-table th,
+.command-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.command-table th {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.command-table tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.command-table code {
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 0.3rem 0.5rem;
+    border-radius: var(--radius-sm);
+    
+}
