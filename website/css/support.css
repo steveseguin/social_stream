@@ -1,0 +1,166 @@
+/* Support Page Specific Styles */
+
+.support-options {
+    padding: 6rem 0;
+}
+
+.support-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+}
+
+.support-card {
+    background-color: var(--background-card);
+    border-radius: var(--radius-md);
+    padding: 3rem;
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.support-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.support-icon {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.support-icon img {
+    width: 8rem;
+    height: 8rem;
+}
+
+.support-card h3 {
+    margin-bottom: 1.5rem;
+}
+
+.support-card p {
+    margin-bottom: 2rem;
+    color: var(--text-secondary);
+    flex-grow: 1;
+}
+
+.support-card .btn {
+    margin-top: auto;
+}
+
+/* Support Sections */
+.support-section {
+    padding: 8rem 0;
+}
+
+.support-section.alt {
+    background-color: var(--background-dark);
+}
+
+.request-form, 
+.contribute-options {
+    background-color: var(--background-card);
+    border-radius: var(--radius-md);
+    padding: 4rem;
+    box-shadow: var(--shadow-md);
+    max-width: 90rem;
+    margin: 4rem auto 0;
+}
+
+.request-steps,
+.contribute-steps {
+    margin: 2rem 0;
+    padding-left: 2rem;
+}
+
+.request-steps li,
+.contribute-steps li {
+    margin-bottom: 1.5rem;
+    font-size: 1.6rem;
+    line-height: 1.6;
+}
+
+.request-note {
+    margin-top: 3rem;
+    padding: 2rem;
+    background-color: rgba(255, 214, 0, 0.1);
+    border-left: 4px solid var(--warning-color);
+    border-radius: var(--radius-sm);
+}
+
+.contribute-option {
+    margin-bottom: 4rem;
+}
+
+.contribute-option h3 {
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+}
+
+.contributors {
+    text-align: center;
+    margin-top: 6rem;
+}
+
+.contributors h3 {
+    margin-bottom: 2rem;
+}
+
+.contributors-image {
+    max-width: 80rem;
+    margin: 3rem auto 0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+/* FAQ Section */
+.faq {
+    padding: 8rem 0;
+    background-color: var(--background-dark);
+}
+
+.faq h2 {
+    text-align: center;
+    margin-bottom: 5rem;
+}
+
+.faq .accordion-content ul {
+    list-style: disc;
+    padding-left: 2rem;
+    margin-top: 1rem;
+}
+
+.faq .accordion-content li {
+    margin-bottom: 1rem;
+}
+
+.faq .accordion-content code {
+    display: inline-block;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.3rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    margin: 0.5rem 0;
+}
+
+/* Media Queries */
+@media (max-width: 992px) {
+    .support-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .request-form, 
+    .contribute-options {
+        padding: 3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .support-grid {
+        grid-template-columns: 1fr;
+    }
+}

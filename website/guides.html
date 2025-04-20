@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guides - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Comprehensive guides for getting started with Social Stream Ninja, including setup, customization, and troubleshooting.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="../icons/icon-128.png" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="download.html">Download</a></li>
+                    <li><a href="guides.html" class="active">Guides</a></li>
+                    <li><a href="commands.html">Commands & API</a></li>
+                    <li><a href="support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="mobile-nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Guides</h1>
+            <p>Learn how to set up, customize, and get the most out of Social Stream Ninja</p>
+        </div>
+    </section>
+
+    <section class="guide-navigation" id="guides-nav">
+        <div class="container">
+            <div class="guide-nav-links">
+                <a href="#getting-started" class="guide-nav-link">Getting Started</a>
+                <a href="#customization" class="guide-nav-link">Customization</a>
+                <a href="#advanced-features" class="guide-nav-link">Advanced Features</a>
+                <a href="#troubleshooting" class="guide-nav-link">Troubleshooting</a>
+                <a href="#faq" class="guide-nav-link">FAQ</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="getting-started" class="guide-section">
+        <div class="container">
+            <h2>Getting Started</h2>
+            
+            <div class="guide-card">
+                <h3>1. Installation</h3>
+                <p>Before you can use Social Stream Ninja, you'll need to install it first. There are multiple ways to install depending on your preferences:</p>
+                <ul class="guide-list">
+                    <li><strong>Browser Extension (recommended):</strong> Install via Chrome Web Store or manual installation for the most up-to-date version.</li>
+                    <li><strong>Standalone App:</strong> Available for Windows, macOS, and Linux for those who prefer a desktop application.</li>
+                </ul>
+                <p>For detailed installation instructions, please visit the <a href="download.html">Download page</a>.</p>
+            </div>
+            
+            <div class="guide-card">
+                <h3>2. Basic Setup</h3>
+                <p>Once installed, follow these steps to start using Social Stream Ninja:</p>
+                <ol class="guide-steps">
+                    <li>Open your streaming platform's chat in a browser (or use the pop-out chat feature if available)</li>
+                    <li>Click the Social Stream Ninja extension icon in your browser toolbar</li>
+                    <li>Click "Enable Extension" to turn it on (the icon should turn green)</li>
+                    <li>Open the "Dashboard Link" provided in the extension popup</li>
+                    <li>Open the "Overlay Link" in OBS as a browser source</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>Note:</strong> For the best experience, keep chat windows visible (not minimized) when using the browser extension.</p>
+                </div>
+                <div class="guide-image">
+                    <img src="../icons/guides/basic-setup.png" alt="Basic Setup Process">
+                </div>
+            </div>
+            
+            <div class="guide-card">
+                <h3>3. Connecting to Different Platforms</h3>
+                <p>Social Stream Ninja works with 70+ platforms. Here's how to connect to the most popular ones:</p>
+                
+                <div class="platform-guide">
+                    <h4>YouTube</h4>
+                    <ul class="guide-list">
+                        <li>Open YouTube Live chat</li>
+                        <li>Click the "Pop out chat" button in the top-right corner</li>
+                        <li>Ensure the Social Stream Ninja extension is enabled (green icon)</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-guide">
+                    <h4>Twitch</h4>
+                    <ul class="guide-list">
+                        <li>Open Twitch chat for your channel</li>
+                        <li>Click the gear icon and select "Pop out chat"</li>
+                        <li>Ensure the Social Stream Ninja extension is enabled (green icon)</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-guide">
+                    <h4>Facebook</h4>
+                    <ul class="guide-list">
+                        <li>Open your Facebook Live broadcast (as a viewer or publisher)</li>
+                        <li>Ensure you're connected to WiFi or Ethernet (not mobile data)</li>
+                        <li>Ensure the Social Stream Ninja extension is enabled (green icon)</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-guide">
+                    <h4>Discord, Slack, WhatsApp, etc.</h4>
+                    <ul class="guide-list">
+                        <li>First, enable these platforms in the extension settings (toggle switch)</li>
+                        <li>Open the web versions of these platforms in your browser</li>
+                        <li>Ensure the Social Stream Ninja extension is enabled (green icon)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="customization" class="guide-section alt">
+        <div class="container">
+            <h2>Customization</h2>
+            
+            <div class="guide-card">
+                <h3>URL Parameters</h3>
+                <p>You can customize both the dashboard and overlay by adding parameters to their URLs:</p>
+                
+                <h4>Dashboard Parameters:</h4>
+                <div class="code-block">
+                    <code>&darkmode</code> - Enables dark mode for the dashboard<br>
+                    <code>&scale=2</code> - Doubles the size/resolution of all elements<br>
+                    <code>&notime</code> - Hides the timestamp in the chat stream<br>
+                    <code>&hidesource</code> - Hides platform icons (YouTube, Twitch, etc.)<br>
+                    <code>&compact</code> - Removes spacing between name and message<br>
+                    <code>&autoshow</code> - Auto-features messages as they appear (about 2 per 3 seconds)
+                </div>
+                
+                <h4>Overlay Parameters:</h4>
+                <div class="code-block">
+                    <code>&showtime=20000</code> - Auto-hides selected messages after 20 seconds<br>
+                    <code>&showsource</code> - Shows the platform icons next to usernames<br>
+                    <code>&fade</code> - Makes featured messages fade in instead of popping up<br>
+                    <code>&swipe</code> - Makes featured messages swipe in from the left<br>
+                    <code>&center</code> - Centers featured messages on screen
+                </div>
+                
+                <p>For easier URL management, try our <a href="https://socialstream.ninja/urleditor.html" target="_blank">URL Parameter Editor Tool</a>.</p>
+            </div>
+            
+            <div class="guide-card">
+                <h3>CSS Customization</h3>
+                <p>You can completely change the look of your chat overlay by customizing the CSS. Here are two ways to do it:</p>
+                
+                <h4>Method 1: OBS Browser Source CSS</h4>
+                <p>In OBS, you can add custom CSS to the browser source:</p>
+                <ol class="guide-steps">
+                    <li>Add your overlay as a Browser Source in OBS</li>
+                    <li>Check the "Custom CSS" option</li>
+                    <li>Enter your custom CSS in the text box</li>
+                </ol>
+                
+                <div class="code-block">
+                    <pre>body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
+
+:root {
+    --comment-color: #090;
+    --comment-bg-color: #DDD;
+    --comment-border-radius: 10px;
+    --comment-font-size: 30px;
+    --author-border-radius: 10px;
+    --author-bg-color: #FF0000;
+    --author-avatar-border-color: #FF0000;
+    --author-font-size: 32px;
+    --author-color: blue;
+    --font-family: "Arial", sans-serif;
+}
+
+.hl-name {
+    padding: 2px 10px !important;
+}</pre>
+                </div>
+                
+                <h4>Method 2: URL Parameter</h4>
+                <p>You can also add CSS via URL parameters:</p>
+                <div class="code-block">
+                    <code>&css=https://yourdomain.com/style.css</code> - Link to a CSS file<br>
+                    <code>&b64css=YOUR_BASE64_ENCODED_CSS</code> - Directly embed CSS
+                </div>
+            </div>
+            
+            <div class="guide-card">
+                <h3>Pre-styled Templates</h3>
+                <p>Don't want to create your own design? We offer pre-styled templates that you can use immediately:</p>
+                
+                <div class="templates-grid">
+                    <div class="template-card">
+                        <div class="template-preview">
+                            <img src="../icons/templates/pretty.png" alt="Pretty Template">
+                        </div>
+                        <h4>Pretty Template</h4>
+                        <p>A colorful, modern design with animated messages.</p>
+                        <a href="https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID" class="btn btn-secondary" target="_blank">Preview</a>
+                    </div>
+                    
+                    <div class="template-card">
+                        <div class="template-preview">
+                            <img src="../icons/templates/minimal.png" alt="Minimal Template">
+                        </div>
+                        <h4>Minimal Template</h4>
+                        <p>Clean, simple design that focuses on readability.</p>
+                        <a href="https://socialstream.ninja/themes/minimal.html?session=YOURSESSIONID" class="btn btn-secondary" target="_blank">Preview</a>
+                    </div>
+                    
+                    <div class="template-card">
+                        <div class="template-preview">
+                            <img src="../icons/templates/gaming.png" alt="Gaming Template">
+                        </div>
+                        <h4>Gaming Template</h4>
+                        <p>Bold, high-contrast design perfect for gaming streams.</p>
+                        <a href="https://socialstream.ninja/themes/gaming.html?session=YOURSESSIONID" class="btn btn-secondary" target="_blank">Preview</a>
+                    </div>
+                </div>
+                
+                <p class="template-note">Don't forget to replace YOURSESSIONID with your actual session ID!</p>
+            </div>
+        </div>
+    </section>
+    
+    <section id="advanced-features" class="guide-section">
+        <div class="container">
+            <h2>Advanced Features</h2>
+            
+            <div class="guide-card">
+                <h3>Text-to-Speech</h3>
+                <p>Social Stream Ninja can read chat messages aloud using Text-to-Speech technology:</p>
+                
+                <h4>Setting Up TTS:</h4>
+                <ol class="guide-steps">
+                    <li>Add <code>&speech=en-US</code> to your featured.html or dock.html URL</li>
+                    <li>For other languages, change the language code (e.g., <code>&speech=fr-FR</code> for French)</li>
+                    <li>Customize voice settings with parameters like <code>&pitch=1&volume=1&rate=1</code></li>
+                </ol>
+                
+                <h4>Premium TTS Options:</h4>
+                <ul class="guide-list">
+                    <li><strong>Kokoro TTS:</strong> Browser-based premium quality TTS (included free)</li>
+                    <li><strong>Google Cloud TTS:</strong> Professional-quality voices (requires Google API key)</li>
+                    <li><strong>ElevenLabs:</strong> Ultra-realistic voices with custom voice training</li>
+                    <li><strong>Speechify:</strong> Natural-sounding premium voices</li>
+                </ul>
+                
+                <h4>Capturing TTS Audio in OBS:</h4>
+                <p>For system TTS (free option), you'll need to capture the audio:</p>
+                <ul class="guide-list">
+                    <li>Use a virtual audio cable to route system audio to OBS</li>
+                    <li>Or capture all desktop audio in OBS</li>
+                </ul>
+                <p>Premium TTS options play directly through the browser and can be captured with "Control audio via OBS" enabled on the browser source.</p>
+            </div>
+            
+            <div class="guide-card">
+                <h3>Queuing and Pinning Messages</h3>
+                <p>Organize how messages appear in your overlay:</p>
+                
+                <h4>Queuing Messages:</h4>
+                <ol class="guide-steps">
+                    <li>Hold CTRL (or Cmd on Mac) while clicking messages in the dashboard</li>
+                    <li>Click the "Next in Queue" button to display them one by one</li>
+                    <li>Messages will appear in your overlay in the order they were queued</li>
+                </ol>
+                
+                <h4>Pinning Messages:</h4>
+                <ol class="guide-steps">
+                    <li>Hold ALT while clicking a message in the dashboard</li>
+                    <li>The message will stay pinned at the top of the dashboard</li>
+                    <li>To unpin, hold ALT and click the pinned message again</li>
+                </ol>
+            </div>
+            
+            <div class="guide-card">
+                <h3>Bot Commands and Auto-Responses</h3>
+                <p>Automate interactions with your audience:</p>
+                
+                <h4>Built-in Commands:</h4>
+                <ul class="guide-list">
+                    <li><code>!joke</code> - Tells a random geeky dad joke (can be enabled in settings)</li>
+                    <li><code>hi</code> - Welcomes anyone who says "hi" (can be enabled in settings)</li>
+                </ul>
+                
+                <h4>Custom Commands:</h4>
+                <p>Create your own commands with the custom.js file:</p>
+                <ol class="guide-steps">
+                    <li>Rename custom_sample.js to custom.js</li>
+                    <li>Edit the file to create your own custom commands</li>
+                    <li>Add the appropriate URL parameters to activate your commands</li>
+                </ol>
+            </div>
+            
+            <div class="guide-card">
+                <h3>API Integration</h3>
+                <p>Social Stream Ninja offers powerful API options for remote control and integration:</p>
+                
+                <h4>Server API:</h4>
+                <p>Send messages to Social Stream Ninja via API:</p>
+                <div class="code-block">
+                    <code>https://io.socialstream.ninja/SESSIONID/sendChat/null/Hello</code> - Sends "Hello" to all chats
+                </div>
+                
+                <h4>Webhook Support:</h4>
+                <p>Receive donations and events from third-party services:</p>
+                <ul class="guide-list">
+                    <li><strong>Stripe:</strong> Set up a webhook to <code>https://io.socialstream.ninja/SESSIONID/stripe</code></li>
+                    <li><strong>Ko-Fi:</strong> Set up a webhook to <code>https://io.socialstream.ninja/SESSIONID/kofi</code></li>
+                    <li><strong>Buy Me A Coffee:</strong> Set up a webhook to <code>https://io.socialstream.ninja/SESSIONID/bmac</code></li>
+                </ul>
+                
+                <p>For more detailed API documentation, visit the <a href="commands.html">Commands & API page</a>.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section id="troubleshooting" class="guide-section alt">
+        <div class="container">
+            <h2>Troubleshooting</h2>
+            
+            <div class="guide-card">
+                <h3>Common Issues</h3>
+                
+                <div class="issue-solution">
+                    <h4>Chat Stops When Window is Minimized</h4>
+                    <div class="issue-content">
+                        <p><strong>Problem:</strong> Chat messages stop appearing when browser windows are minimized or in the background.</p>
+                        <p><strong>Solutions:</strong></p>
+                        <ul class="guide-list">
+                            <li>Disable browser throttling: Go to <code>chrome://flags/#enable-throttle-display-none-and-visibility-hidden-cross-origin-iframes</code> and set to "Disabled"</li>
+                            <li>Also disable <code>chrome://flags/#calculate-native-win-occlusion</code></li>
+                            <li>Avoid minimizing windows; keep them visible or at least not minimized</li>
+                            <li>Disable background tab throttling in <code>chrome://settings/performance</code></li>
+                            <li>Go to <code>chrome://discards/</code> and toggle off "Auto Discardable" for chat pop-out pages</li>
+                            <li>Try the standalone desktop app instead of the browser extension</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="issue-solution">
+                    <h4>Blue Bar Appears or Auto-Responder Not Working</h4>
+                    <div class="issue-content">
+                        <p><strong>Problem:</strong> You see a blue debugging bar or automated responses don't work.</p>
+                        <p><strong>Solutions:</strong></p>
+                        <ul class="guide-list">
+                            <li>Make sure the pop-out chat window is open and visible</li>
+                            <li>Use a Chromium-based browser (Chrome, Edge, Brave) instead of Firefox</li>
+                            <li>Go to <code>chrome://apps</code> and remove any YouTube apps</li>
+                            <li>Make sure you have permission to chat in the platform (some require subscription)</li>
+                            <li>Start Chrome with <code>--silent-debugger-extension-api</code> flag to hide the blue bar</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="issue-solution">
+                    <h4>Can't Export Settings or Save Files</h4>
+                    <div class="issue-content">
+                        <p><strong>Problem:</strong> Unable to save settings to disk or export configuration.</p>
+                        <p><strong>Solution:</strong></p>
+                        <ul class="guide-list">
+                            <li>Enable the File System Access API in your browser</li>
+                            <li>In Brave, go to <code>brave://flags/#file-system-access-api</code> and enable it</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="issue-solution">
+                    <h4>Other Common Problems</h4>
+                    <div class="issue-content">
+                        <ul class="guide-list">
+                            <li><strong>Sessions don't match:</strong> Ensure your session ID matches in both the extension and dock page</li>
+                            <li><strong>Certain platforms not working:</strong> Some platforms (Discord, Slack, Telegram) require enabling a toggle in settings</li>
+                            <li><strong>Extension stopped working:</strong> Try refreshing the chat page to retrigger the code</li>
+                            <li><strong>Extension icon remains red:</strong> Click "Enable extension" to turn it on (icon should turn green)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="faq" class="guide-section">
+        <div class="container">
+            <h2>Frequently Asked Questions</h2>
+            
+            <div class="accordion">
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        What platforms does Social Stream Ninja support?
+                        <span class="accordion-icon"></span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Social Stream Ninja supports over 70 platforms including YouTube, Twitch, Facebook, Instagram, TikTok, Discord, Zoom, Google Meet, X (Twitter), WhatsApp, Telegram, and many more. For a complete list, see the <a href="features.html#supported-platforms">Supported Platforms</a> section.</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        Do I need an API key or login credentials for each platform?
+                        <span class="accordion-icon"></span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>No! One of the biggest advantages of Social Stream Ninja is that it doesn't require API keys or login credentials for most platforms. It works by capturing the chat data directly from the browser window. However, you do need to be logged into each platform to see the chat normally.</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        How do I update Social Stream Ninja?
+                        <span class="accordion-icon"></span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>To update the manually installed extension, download the latest version, replace the old files with the new ones, and then reload the extension or restart your browser. <strong>Do not uninstall</strong> the extension if you want to keep your settings.</p>
+                        <p>If using the Chrome Web Store version, it will update automatically but less frequently due to the review process.</p>
+                        <p>The standalone app version will update automatically when you restart it.</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        Can I send messages back to multiple platforms at once?
+                        <span class="accordion-icon"></span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Yes! Social Stream Ninja supports two-way chat functionality for most platforms. When you're logged into a platform and have the appropriate permissions, you can send messages from the dashboard or via API commands that will appear in all connected chats simultaneously.</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        Does it work with OBS and other streaming software?
+                        <span class="accordion-icon"></span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Absolutely! Social Stream Ninja is designed to work perfectly with OBS Studio and other streaming software. Simply add the overlay URL as a browser source in your streaming software. You can customize the appearance using CSS directly in OBS or via URL parameters.</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        Is Social Stream Ninja really free?
+                        <span class="accordion-icon"></span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Yes, Social Stream Ninja is completely free and open source under the GPLv3.0 License. There are no subscriptions, no hidden fees, and no feature limitations. The project is maintained by Steve Seguin with contributions from the community.</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        Can I add my own custom design to the chat overlay?
+                        <span class="accordion-icon"></span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Yes! You have complete control over the appearance of your chat overlay. You can use CSS to customize colors, fonts, sizes, animations, and more. You can apply CSS through OBS browser source settings, via URL parameters, or by creating your own custom overlay file.</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        Where can I get help if I'm having problems?
+                        <span class="accordion-icon"></span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Social Stream Ninja has an active community on Discord where you can get help directly from the developer and other users. Join at <a href="https://discord.socialstream.ninja" target="_blank">discord.socialstream.ninja</a>. You can also report issues on the <a href="https://github.com/steveseguin/social_stream/issues" target="_blank">GitHub repository</a>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+	
+	<section id="enhanced-troubleshooting" class="guide-section alt">
+    <div class="container">
+        <h2>Advanced Troubleshooting</h2>
+        <p class="section-subtitle">Solutions for common issues with Social Stream Ninja</p>
+        
+        <div class="troubleshooting-grid">
+            <div class="troubleshooting-card">
+                <div class="issue-header">
+                    <div class="issue-icon">
+                        <img src="../icons/issues/minimized.svg" alt="Minimized Window Issue">
+                    </div>
+                    <h3>Chat Stops When Background/Minimized</h3>
+                </div>
+                <div class="issue-content">
+                    <p class="issue-description">Chat messages stop appearing when browser windows are in the background or minimized. This happens because browsers throttle background tabs to save resources.</p>
+                    
+                    <div class="solutions">
+                        <h4>Solutions:</h4>
+                        <div class="solution">
+                            <h5>1. Disable Browser Throttling</h5>
+                            <ul class="solution-steps">
+                                <li>
+                                    <strong>Chrome/Edge/Brave:</strong> 
+                                    <ol>
+                                        <li>Open <code>chrome://flags/#enable-throttle-display-none-and-visibility-hidden-cross-origin-iframes</code></li>
+                                        <li>Set to "Disabled"</li>
+                                        <li>Also disable <code>chrome://flags/#calculate-native-win-occlusion</code></li>
+                                        <li>Restart your browser</li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <strong>Disable Performance Throttling:</strong>
+                                    <ol>
+                                        <li>Go to <code>chrome://settings/performance</code></li>
+                                        <li>Disable "Throttle Javascript timers in background"</li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <strong>Prevent Tab Discarding:</strong>
+                                    <ol>
+                                        <li>Go to <code>chrome://discards/</code></li>
+                                        <li>Find chat pop-out pages</li>
+                                        <li>Toggle off "Auto Discardable"</li>
+                                    </ol>
+                                    <div class="solution-image">
+                                        <img src="../icons/guides/chrome-discards.png" alt="Chrome Discards Settings">
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="solution">
+                            <h5>2. Try Alternative Approaches</h5>
+                            <ul class="solution-steps">
+                                <li>
+                                    <strong>Keep Windows Visible:</strong> Arrange windows so they're not minimized; even a small visible portion can prevent throttling.
+                                </li>
+                                <li>
+                                    <strong>Use Virtual Desktops:</strong> On Windows, use Win+Tab to create two virtual desktops, with chat windows on one and OBS on the other.
+                                </li>
+                                <li>
+                                    <strong>Try the Standalone App:</strong> The Social Stream Ninja desktop app avoids many browser throttling issues.
+                                </li>
+                                <li>
+                                    <strong>"Always on Top" Apps:</strong> Use third-party apps to pin chat windows so they remain visible but small.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="troubleshooting-card">
+                <div class="issue-header">
+                    <div class="issue-icon">
+                        <img src="../icons/issues/debug.svg" alt="Debug Bar Issue">
+                    </div>
+                    <h3>Blue Bar Appears / Auto-Responder Not Working</h3>
+                </div>
+                <div class="issue-content">
+                    <p class="issue-description">A blue debugging bar appears or automated responses don't work when trying to use bot commands or auto-responses.</p>
+                    
+                    <div class="solutions">
+                        <h4>Solutions:</h4>
+                        <div class="solution">
+                            <h5>1. Check Chat Window Visibility</h5>
+                            <ul class="solution-steps">
+                                <li>Make sure if using Youtube/Twitch that the pop-out chat window is open and visible</li>
+                                <li>For some platforms, you may need to keep the main window open alongside the pop-out</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="solution">
+                            <h5>2. Browser Compatibility</h5>
+                            <ul class="solution-steps">
+                                <li>Auto-responder works best with Chromium-based browsers (Chrome, Edge, Brave)</li>
+                                <li>Firefox has limited support for extension features</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="solution">
+                            <h5>3. Remove Conflicting Apps</h5>
+                            <ul class="solution-steps">
+                                <li>Go to <code>chrome://apps</code> and remove any YouTube apps that might appear</li>
+                                <li>Check for browser extensions that might interfere with Social Stream Ninja</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="solution">
+                            <h5>4. Chat Permissions</h5>
+                            <ul class="solution-steps">
+                                <li>Make sure you have permission to post into the chat</li>
+                                <li>Some platforms require you to be a subscriber or member to send chat messages</li>
+                                <li>Try sending a manual message first to verify permissions</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="solution">
+                            <h5>5. Hide the Blue Debug Bar</h5>
+                            <ul class="solution-steps">
+                                <li>Start Chrome with <code>--silent-debugger-extension-api</code> flag to hide the blue bar</li>
+                                <li>
+                                    <strong>Windows:</strong> Create a shortcut to Chrome and add the flag to the Target field:
+                                    <div class="code-block">
+                                        <pre>"C:\Program Files\Google\Chrome\Application\chrome.exe" --silent-debugger-extension-api</pre>
+                                    </div>
+                                </li>
+                                <li>
+                                    <strong>macOS:</strong> Run from Terminal:
+                                    <div class="code-block">
+                                        <pre>open -a "Google Chrome" --args --silent-debugger-extension-api</pre>
+                                    </div>
+                                </li>
+                            </ul>
+                            <div class="solution-image">
+                                <img src="../icons/guides/blue-bar.png" alt="Blue Debug Bar">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="troubleshooting-card">
+                <div class="issue-header">
+                    <div class="issue-icon">
+                        <img src="../icons/issues/file.svg" alt="File System Issue">
+                    </div>
+                    <h3>Can't Export Settings or Save Files</h3>
+                </div>
+                <div class="issue-content">
+                    <p class="issue-description">Unable to save settings to disk or export configuration when trying to back up your Social Stream Ninja setup.</p>
+                    
+                    <div class="solutions">
+                        <h4>Solution:</h4>
+                        <div class="solution">
+                            <h5>Enable File System Access API</h5>
+                            <ul class="solution-steps">
+                                <li>
+                                    <strong>In Brave:</strong>
+                                    <ol>
+                                        <li>Go to <code>brave://flags/#file-system-access-api</code></li>
+                                        <li>Enable the setting</li>
+                                        <li>Restart Brave</li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <strong>In Chrome:</strong>
+                                    <ol>
+                                        <li>Go to <code>chrome://flags/#file-system-access-api</code></li>
+                                        <li>Enable the setting</li>
+                                        <li>Restart Chrome</li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <strong>In Edge:</strong>
+                                    <ol>
+                                        <li>Go to <code>edge://flags/#file-system-access-api</code></li>
+                                        <li>Enable the setting</li>
+                                        <li>Restart Edge</li>
+                                    </ol>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="troubleshooting-card">
+                <div class="issue-header">
+                    <div class="issue-icon">
+                        <img src="../icons/issues/general.svg" alt="General Issues">
+                    </div>
+                    <h3>Other Common Issues</h3>
+                </div>
+                <div class="issue-content">
+                    <div class="solutions">
+                        <div class="solution">
+                            <h5>Session ID Mismatch</h5>
+                            <p>If your extension and dock pages aren't communicating:</p>
+                            <ul class="solution-steps">
+                                <li>Verify that the session ID in the extension matches the one in the dock.html URL</li>
+                                <li>To set a custom session ID: Go to Extensions settings → Social Stream Ninja → Details → Extension options</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="solution">
+                            <h5>Platform-Specific Issues</h5>
+                            <p>If certain platforms aren't working:</p>
+                            <ul class="solution-steps">
+                                <li>Discord, Slack, Telegram, and WhatsApp require enabling the specific toggle in extension settings</li>
+                                <li>Some platforms may need the main window to remain open alongside the pop-out</li>
+                                <li>Facebook works best when connected to WiFi/Ethernet, not mobile data</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="solution">
+                            <h5>Extension Stopped Working</h5>
+                            <p>If the extension suddenly stops capturing messages:</p>
+                            <ul class="solution-steps">
+                                <li>Refresh the chat page to retrigger the extension code</li>
+                                <li>Ensure the extension is enabled (green icon, not red)</li>
+                                <li>Check if the browser has been running for an extended period (may need restart)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="solution">
+                            <h5>macOS/Linux Browser Source Issues</h5>
+                            <p>If using OBS on macOS or Linux:</p>
+                            <ul class="solution-steps">
+                                <li>The extension may not work if hosted locally on your drive</li>
+                                <li>Use the hosted version on socialstream.ninja instead</li>
+                                <li>Apply custom CSS via the browser source style section in OBS</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="support-cta">
+            <h3>Still Having Issues?</h3>
+            <p>If you're still experiencing problems after trying these solutions, get help from our community:</p>
+            <div class="support-buttons">
+                <a href="https://discord.socialstream.ninja" target="_blank" class="btn btn-primary">Join Our Discord</a>
+                <a href="https://github.com/steveseguin/social_stream/issues" target="_blank" class="btn btn-secondary">Report on GitHub</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Consolidates your live social messaging streams and more. Free and open source.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../icons/discord.svg" alt="Discord"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="features.html">Features</a></li>
+                        <li><a href="download.html">Download</a></li>
+                        <li><a href="guides.html">Guides</a></li>
+                        <li><a href="commands.html">Commands & API</a></li>
+                        <li><a href="support.html">Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="guides.html#installation">Installation Guide</a></li>
+                        <li><a href="guides.html#customization">Customization Guide</a></li>
+                        <li><a href="guides.html#faq">FAQ</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Report an Issue</a></li>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Community</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Join our Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub Repository</a></li>
+                        <li><a href="support.html#contribute">Contribute</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License. Created by <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> with contributions from the community.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        // Accordion functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+            
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const accordionItem = header.parentElement;
+                    accordionItem.classList.toggle('active');
+                });
+            });
+            
+            // Smooth scroll for guide navigation
+            document.querySelectorAll('.guide-nav-link').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        const headerHeight = document.querySelector('
