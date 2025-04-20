@@ -66,6 +66,30 @@
         .toc ul {
             list-style-type: none;
         }
+        .data-structure {
+            background-color: #f0f8ff;
+            border-left: 5px solid #4682b4;
+            padding: 10px;
+            margin: 15px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
     </style>
 </head>
 <body>
@@ -74,7 +98,9 @@
     <p>This guide explains how to integrate SocialStream.Ninja with Streamer.bot using WebSockets. This allows Streamer.bot to receive chat messages captured by SocialStream.Ninja and trigger custom actions based on them.</p>
 
     <div class="toc">        <h2>Table of Contents</h2>        <ul>            <li><a href="#prerequisites">Prerequisites</a></li>            <li><a href="#setting-up-streamerbot-ws">Setting Up Streamer.bot WebSocket Server</a></li>
-            <li><a href="#setting-up-streamerbot-action">Setting Up the Streamer.bot Action <span class="required">(Required)</span></a></li>            <li><a href="#configuring-socialstreamninja">Configuring SocialStream.Ninja</a></li>            <li><a href="#integration-features">Integration Features</a></li>            <li><a href="#troubleshooting">Troubleshooting</a></li>            <li><a href="#important-note">Important Note on Direct Chat Display</a></li>
+            <li><a href="#setting-up-streamerbot-action">Setting Up the Streamer.bot Action <span class="required">(Required)</span></a></li>            <li><a href="#configuring-socialstreamninja">Configuring SocialStream.Ninja</a></li>
+            <li><a href="#data-structure">SocialStream.Ninja Data Structure Reference</a></li>
+            <li><a href="#integration-features">Integration Features</a></li>            <li><a href="#troubleshooting">Troubleshooting</a></li>            <li><a href="#important-note">Important Note on Direct Chat Display</a></li>
         </ul>    </div>
 
     <div id="prerequisites" class="section">        <h2>Prerequisites</h2>        <ul>            <li><a href="https://streamer.bot/">Streamer.bot</a> installed on your computer (v0.2.0 or higher recommended)</li>            <li>SocialStream.Ninja's Standalone app installed and configured</li>            <li>Basic familiarity with Streamer.bot's interface (Actions, Sub-Actions)</li>        </ul>    </div>
@@ -190,12 +216,208 @@ public class CPHInline
         </ol>
     </div>
 
+    <div id="data-structure" class="section">
+        <h2>SocialStream.Ninja Data Structure Reference</h2>
+        
+        <p>When SocialStream.Ninja sends data to Streamer.bot, it passes a detailed JSON object with the following fields that you can access in your Streamer.bot actions. The example C# code above extracts these fields and makes them available as arguments.</p>
+        
+        <div class="data-structure">
+            <h3>Primary Data Fields</h3>
+            <p>These are the main fields available in the chatData object:</p>
+            
+            <table>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Argument Name</th>
+                    <th>Example Usage</th>
+                </tr>
+                <tr>
+                    <td>chatmessage</td>
+                    <td>String</td>
+                    <td>The actual chat message content. May contain HTML tags if textonly is false.</td>
+                    <td>ss_message</td>
+                    <td>%ss_message%</td>
+                </tr>
+                <tr>
+                    <td>chatname</td>
+                    <td>String</td>
+                    <td>The display name of the user who sent the message.</td>
+                    <td>ss_username</td>
+                    <td>%ss_username%</td>
+                </tr>
+                <tr>
+                    <td>userid</td>
+                    <td>String</td>
+                    <td>The unique ID of the user from the original platform.</td>
+                    <td>ss_userId</td>
+                    <td>%ss_userId%</td>
+                </tr>
+                <tr>
+                    <td>chatimg</td>
+                    <td>String</td>
+                    <td>URL to the user's avatar/profile image.</td>
+                    <td>ss_avatar</td>
+                    <td>%ss_avatar%</td>
+                </tr>
+                <tr>
+                    <td>isBot</td>
+                    <td>Boolean</td>
+                    <td>Flag indicating if the message was from a bot.</td>
+                    <td>ss_isBot</td>
+                    <td>%ss_isBot%</td>
+                </tr>
+                <tr>
+                    <td>originalPlatform</td>
+                    <td>String</td>
+                    <td>The platform the message originated from (e.g., "youtube", "twitch", "kick", etc.).</td>
+                    <td>ss_platform</td>
+                    <td>%ss_platform%</td>
+                </tr>
+                <tr>
+                    <td>source</td>
+                    <td>String</td>
+                    <td>Identifies the source as "SocialStream.Ninja".</td>
+                    <td>ss_source</td>
+                    <td>%ss_source%</td>
+                </tr>
+            </table>
+
+            <h3>Additional Available Fields</h3>
+            <p>These additional fields may be present depending on the message type and platform:</p>
+            
+            <table>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Access in C#</th>
+                </tr>
+                <tr>
+                    <td>contentimg</td>
+                    <td>String</td>
+                    <td>URL to content image, if present in the message.</td>
+                    <td>GetValue&lt;string&gt;(chatData, "contentimg", "")</td>
+                </tr>
+                <tr>
+                    <td>subtitle</td>
+                    <td>String</td>
+                    <td>Additional text like user status or other metadata.</td>
+                    <td>GetValue&lt;string&gt;(chatData, "subtitle", "")</td>
+                </tr>
+                <tr>
+                    <td>membership</td>
+                    <td>String</td>
+                    <td>Membership information, if applicable.</td>
+                    <td>GetValue&lt;string&gt;(chatData, "membership", "")</td>
+                </tr>
+                <tr>
+                    <td>hasDonation</td>
+                    <td>String/Boolean</td>
+                    <td>Donation information, if present.</td>
+                    <td>GetValue&lt;string&gt;(chatData, "hasDonation", "")</td>
+                </tr>
+                <tr>
+                    <td>type</td>
+                    <td>String</td>
+                    <td>Source type (e.g., "twitch", "youtube", "kick").</td>
+                    <td>GetValue&lt;string&gt;(chatData, "type", "")</td>
+                </tr>
+                <tr>
+                    <td>id</td>
+                    <td>String</td>
+                    <td>Unique message ID from the source platform.</td>
+                    <td>GetValue&lt;string&gt;(chatData, "id", "")</td>
+                </tr>
+                <tr>
+                    <td>nameColor</td>
+                    <td>String</td>
+                    <td>HEX color code for the username (e.g., "#FF0000").</td>
+                    <td>GetValue&lt;string&gt;(chatData, "nameColor", "#FFFFFF")</td>
+                </tr>
+                <tr>
+                    <td>chatbadges</td>
+                    <td>String/Array</td>
+                    <td>Chat badges from the source platform.</td>
+                    <td>GetValue&lt;string&gt;(chatData, "chatbadges", "")</td>
+                </tr>
+                <tr>
+                    <td>textonly</td>
+                    <td>Boolean</td>
+                    <td>If true, indicates that HTML has been stripped from the message.</td>
+                    <td>GetValue&lt;bool&gt;(chatData, "textonly", false)</td>
+                </tr>
+                <tr>
+                    <td>tid</td>
+                    <td>String</td>
+                    <td>Transaction ID used for duplicate detection.</td>
+                    <td>GetValue&lt;string&gt;(chatData, "tid", "")</td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>Accessing Additional Fields in C#</h3>
+        <p>To access fields not already extracted in the example C# code, add lines like:</p>
+        
+        <pre><code>// Extract additional fields as needed
+string contentImage = GetValue&lt;string&gt;(chatData, "contentimg", "");
+string subtitle = GetValue&lt;string&gt;(chatData, "subtitle", "");
+string nameColor = GetValue&lt;string&gt;(chatData, "nameColor", "#FFFFFF");
+
+// Make them available as arguments
+CPH.SetArgument("ss_contentImage", contentImage);
+CPH.SetArgument("ss_subtitle", subtitle);
+CPH.SetArgument("ss_nameColor", nameColor);</code></pre>
+
+        <h3>Example: Working with Platform-Specific Messages</h3>
+        <p>You can add conditional logic based on the platform or other message properties:</p>
+        
+        <pre><code>// Example: Process messages differently based on platform
+if (originalPlatform.Equals("youtube", StringComparison.OrdinalIgnoreCase))
+{
+    // YouTube-specific processing
+    CPH.PlaySound("sounds/youtube_alert.mp3");
+    
+    // Check for YouTube memberships
+    string membership = GetValue&lt;string&gt;(chatData, "membership", "");
+    if (!string.IsNullOrEmpty(membership))
+    {
+        CPH.SetArgument("ss_hasMembership", true);
+        CPH.SetArgument("ss_membershipInfo", membership);
+        CPH.LogInfo($"[YouTube Membership] {username}: {membership}");
+    }
+}
+else if (originalPlatform.Equals("twitch", StringComparison.OrdinalIgnoreCase))
+{
+    // Twitch-specific processing
+    string badges = GetValue&lt;string&gt;(chatData, "chatbadges", "");
+    bool isSubscriber = badges.Contains("subscriber");
+    CPH.SetArgument("ss_isSubscriber", isSubscriber);
+}</code></pre>
+
+        <h3>Example: Creating Custom Text Formats</h3>
+        <p>You can format messages for display in various ways:</p>
+        
+        <pre><code>// Standard format with platform
+string formattedMessage = $"[{originalPlatform.ToUpper()}] {username}: {message}";
+CPH.SetArgument("ss_formattedMessage", formattedMessage);
+
+// HTML format for web display
+string htmlFormat = $"&lt;span style='color:{GetValue&lt;string&gt;(chatData, "nameColor", "#FFFFFF")}'&gt;{username}&lt;/span&gt;: {message}";
+CPH.SetArgument("ss_htmlMessage", htmlFormat);
+
+// Format for OBS Text Source
+string obsText = $"{originalPlatform} | {username} says: {message}";
+CPH.SetArgument("ss_obsText", obsText);</code></pre>
+    </div>
+
     <div id="integration-features" class="section">        <h2>Integration Features</h2>
         <ul>            <li><strong>Centralized Processing:</strong> Receive messages from various platforms supported by SocialStream.Ninja and process them within Streamer.bot.</li>            <li><strong>Custom Actions:</strong> Trigger any Streamer.bot action based on incoming messages (play sounds, show alerts, send messages to Twitch/YouTube, control OBS, etc.).</li>            <li><strong>Filtering/Routing:</strong> Use Streamer.bot's logic (C#, If/Else sub-actions) to handle messages differently based on platform, user, or content.</li>            <li><strong>Reliable Connection:</strong> Uses WebSockets for a persistent, low-latency connection.</li>        </ul>
     </div>
 
     <div id="troubleshooting" class="section">        <h2>Troubleshooting</h2>
-        <ul>            <li>                <strong>Cannot connect to WebSocket</strong>:                <ul>                    <li>Verify the WebSocket Server is **Enabled** and **Running** (Status: Listening) in Streamer.bot (Servers/Clients → WebSocket Server).</li>                    <li>Ensure the **Port** in SocialStream.Ninja matches the Port in Streamer.bot.</li>                    <li>Check firewall rules on your PC aren't blocking the connection (especially if not using `127.0.0.1`).</li>                    <li>Verify the **Password** matches exactly if authentication is enabled in Streamer.bot (or that it's blank in both if disabled).</li>                    <li>Check the SocialStream.Ninja console logs (usually F12 in the app/browser) for connection errors.</li>                </ul>            </li>            <li>                <strong>Messages not triggering Action in Streamer.bot</strong>:                <ul>                    <li>Verify the **Action ID** in SocialStream.Ninja settings exactly matches the ID copied from Streamer.bot (right-click action -> Copy Action ID).</li>                    <li>Check the Streamer.bot **Action Queues** tab (under Processing) to see if the action is being triggered but failing. Look for errors.</li>                    <li>Ensure the C# code in your action compiles successfully.</li>                    <li>Add a simple `Core -> Log Message` sub-action as the *first* sub-action in your Streamer.bot action to confirm it's being triggered at all.</li>                    <li>Check the SocialStream.Ninja console logs for errors when sending the `DoAction` request.</li>                </ul>            </li>            <li>                <strong>Arguments not working in Sub-Actions</strong>:                <ul>                    <li>Ensure the C# sub-action runs *before* the sub-actions that use the arguments.</li>                    <li>Double-check the argument names set in C# (`CPH.SetArgument("ss_message", ...)` correspond to the variables used in sub-actions (`%ss_message%`).</li>                    <li>Ensure the "Use Arguments" option (or similar) is enabled in the sub-actions that need them.</li>                </ul>            </li>        </ul>    </div>
+        <ul>            <li>                <strong>Cannot connect to WebSocket</strong>:                <ul>                    <li>Verify the WebSocket Server is **Enabled** and **Running** (Status: Listening) in Streamer.bot (Servers/Clients → WebSocket Server).</li>                    <li>Ensure the **Port** in SocialStream.Ninja matches the Port in Streamer.bot.</li>                    <li>Check firewall rules on your PC aren't blocking the connection (especially if not using `127.0.0.1`).</li>                    <li>Verify the **Password** matches exactly if authentication is enabled in Streamer.bot (or that it's blank in both if disabled).</li>                    <li>Check the SocialStream.Ninja console logs (usually F12 in the app/browser) for connection errors.</li>                </ul>            </li>            <li>                <strong>Messages not triggering Action in Streamer.bot</strong>:                <ul>                    <li>Verify the **Action ID** in SocialStream.Ninja settings exactly matches the ID copied from Streamer.bot (right-click action -> Copy Action ID).</li>                    <li>Check the Streamer.bot **Action Queues** tab (under Processing) to see if the action is being triggered but failing. Look for errors.</li>                    <li>Ensure the C# code in your action compiles successfully.</li>                    <li>Add a simple `Core -> Misc -> Log Message` sub-action as the *first* sub-action in your Streamer.bot action to confirm it's being triggered at all.</li>                    <li>Check the SocialStream.Ninja console logs for errors when sending the `DoAction` request.</li>                </ul>            </li>            <li>                <strong>Arguments not working in Sub-Actions</strong>:                <ul>                    <li>Ensure the C# sub-action runs *before* the sub-actions that use the arguments.</li>                    <li>Double-check the argument names set in C# (`CPH.SetArgument("ss_message", ...)` correspond to the variables used in sub-actions (`%ss_message%`).</li>                    <li>Ensure the "Use Arguments" option (or similar) is enabled in the sub-actions that need them.</li>                </ul>            </li>        </ul>    </div>
 
     <div id="important-note" class="section">        <h2>Important Note on Direct Chat Display</h2>
         <div class="warning">            <p><strong>Limitation:</strong> Sending messages from an external application (like SocialStream.Ninja) via WebSocket to directly appear within Streamer.bot's own "Chat" tab or integrated overlays (using the `ChatMessage` request type) is currently **not a reliably supported feature** of the Streamer.bot WebSocket server.</p>
