@@ -150,7 +150,6 @@
    </ol>
    <pre><code>using System;
 using Newtonsoft.Json.Linq; // Make sure Newtonsoft.Json is referenced
-
 public class CPHInline
 {
     public bool Execute()
@@ -176,21 +175,19 @@ public class CPHInline
                  return false; // Exit if we definitely don't have chatData
              }
         }
-
         // --- Extract specific fields from the chatData object ---
-        string message = GetValue<string>(chatData, "chatmessage", ""); // Renamed from 'message' in previous C# example
-        string username = GetValue<string>(chatData, "chatname", "Unknown User"); // Renamed from 'username'
-        string userId = GetValue<string>(chatData, "userid", ""); // Renamed from 'userId'
-        string avatar = GetValue<string>(chatData, "chatimg", ""); // Renamed from 'avatar'
-        bool isBot = GetValue<bool>(chatData, "isBot", false);
-        string originalPlatform = GetValue<string>(chatData, "originalPlatform", "unknown"); // Get the original platform
-        string source = GetValue<string>(chatData, "source", "unknown"); // Get the source (should be SocialStream.Ninja)
-
+        string message = GetStringValue(chatData, "chatmessage", ""); 
+        string username = GetStringValue(chatData, "chatname", "Unknown User");
+        string userId = GetStringValue(chatData, "userid", "");
+        string avatar = GetStringValue(chatData, "chatimg", "");
+        bool isBot = GetBoolValue(chatData, "isBot", false);
+        string originalPlatform = GetStringValue(chatData, "originalPlatform", "unknown");
+        string source = GetStringValue(chatData, "source", "unknown");
+        
         // Log the received message to Streamer.bot's Action Queue logs for debugging
         CPH.LogInfo($"[SocialStream][{originalPlatform}] {username}: {message}");
-
+        
         // --- Set arguments for subsequent sub-actions ---
-        // These arguments can be used in other sub-actions (like Send Twitch Message) using %argumentName%
         CPH.SetArgument("ss_message", message);
         CPH.SetArgument("ss_username", username);
         CPH.SetArgument("ss_userId", userId);
@@ -198,28 +195,33 @@ public class CPHInline
         CPH.SetArgument("ss_isBot", isBot);
         CPH.SetArgument("ss_platform", originalPlatform);
         CPH.SetArgument("ss_source", source);
-
-        // --- Add your custom logic here ---
-        // Example: Send the message to Twitch chat
-        // CPH.SendMessage($"[{originalPlatform}] {username}: {message}", true); // The 'true' sends as broadcaster
-
-        // Example: Play a sound only for YouTube messages
-        // if (originalPlatform.Equals("youtube", StringComparison.OrdinalIgnoreCase))
-        // {
-        //    CPH.PlaySound("path/to/your/sound.mp3");
-        // }
-
-        return true; // Indicate the C# sub-action completed successfully
+        
+        return true;
     }
-
-    // Helper method to safely get values from JObject
-    private T GetValue<T>(JObject obj, string key, T defaultValue)
+    
+    // Helper methods to safely get values from JObject with specific types
+    private string GetStringValue(JObject obj, string key, string defaultValue)
     {
         try
         {
             if (obj != null && obj.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out JToken token))
             {
-                return token.ToObject<T>();
+                return token.ToString();
+            }
+        }
+        catch (Exception ex) {
+             CPH.LogWarn($"[SocialStream] Error getting value for key '{key}': {ex.Message}");
+        }
+        return defaultValue;
+    }
+    
+    private bool GetBoolValue(JObject obj, string key, bool defaultValue)
+    {
+        try
+        {
+            if (obj != null && obj.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out JToken token))
+            {
+                return token.ToObject<bool>();
             }
         }
         catch (Exception ex) {
