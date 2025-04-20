@@ -113,5 +113,50 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-});
 
+	
+	    // Dark Mode Toggle Logic - Fixed Version
+    const themeToggle = document.getElementById('theme-toggle');
+    
+    // Function to update the theme
+    function updateTheme(isDark) {
+        if (isDark) {
+            document.documentElement.classList.add('dark-mode');
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('darkMode', 'true');
+        } else {
+            document.documentElement.classList.remove('dark-mode');
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('darkMode', 'false');
+        }
+    }
+    
+    // Check for saved theme preference or use system preference as fallback
+    const savedTheme = localStorage.getItem('darkMode');
+    
+    if (savedTheme === 'true') {
+        updateTheme(true);
+    } else if (savedTheme === 'false') {
+        updateTheme(false);
+    } else {
+        // If no saved preference, check system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        updateTheme(prefersDark);
+    }
+    
+    // Toggle theme when button is clicked
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            const isDarkMode = document.documentElement.classList.contains('dark-mode');
+            updateTheme(!isDarkMode);
+        });
+    }
+    
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        // Only apply if user hasn't set a preference
+        if (!localStorage.getItem('darkMode')) {
+            updateTheme(e.matches);
+        }
+    });
+});
