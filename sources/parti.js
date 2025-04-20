@@ -21,6 +21,10 @@
 		xhr.send();
 	};
 	
+	var names = {};
+	
+	
+	
 	function escapeHtml(unsafe){
 		try {
 			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
@@ -66,6 +70,41 @@
 		});
 		return resp;
 	}
+	
+	var userId = "";
+	const urlParams = new URLSearchParams(window.location.search);
+	
+	function checkFollowers(){
+		userId = urlParams.get('id') || "";
+		if (userId && (settings.showviewercount || settings.hypemode)){
+			fetch('https://api-backend.parti.com/parti_v2/profile/get_livestream_channel_info/'+userId)
+			  .then(response => response.json())
+			  .then(data => {
+				try {
+					let count = data?.channel_info?.stream?.viewer_count || 0;
+					console.log(count);
+					chrome.runtime.sendMessage(
+						chrome.runtime.id,
+						({message:{
+								type: 'parti',
+								event: 'viewer_update',
+								meta: parseInt(count)
+								//chatmessage: data.data[0] + " has started following"
+							}
+						}),
+						function (e) {}
+					);
+				} catch (e) {
+					console.log(e);
+				}				
+				  //console.log('Viewer count:', count);
+			  });
+		}
+	}
+	
+	setTimeout(function(){checkFollowers();},2500);
+	setInterval(function(){checkFollowers()},60000);
+
 
 	function processMessage(ele){
 		if (ele && ele.marked){
@@ -87,17 +126,13 @@
 			//console.log(e);
 		}
 		
-		if (!name){
-			return;
-		}
-
-		var msg = "";
+		var chatbadge = "";
 		try {
-			msg = getAllContentNodes(ele.querySelector("span.username").nextSibling);
-			msg = msg.trim();
-		} catch(e){
-			return;
-		}
+			if (ele.querySelector("img.q-img__image[src^='data:image/svg']")){
+				chatbadge = [];
+				chatbadge.push(ele.querySelector("img.q-img__image[src^='data:image/svg']").src);
+			}
+		} catch(e){}
 		
 		
 		var chatimg = "";
@@ -106,13 +141,42 @@
 		} catch(e){}
 		//data.sourceImg = brandedImageURL;
 		
-		var chatbadge = "";
-		try {
-			if (ele.querySelector("img.q-img__image[src^='data:image/svg']")){
-				chatbadge = [];
-				chatbadge.push(ele.querySelector("img.q-img__image[src^='data:image/svg']").src);
+		var msg = "";
+		var hasDonation = "";
+		
+		if (!name){
+			msg = ele.querySelector(".bi-coin").parentNode.nextSibling.textContent;
+			try {
+				hasDonation = msg.split("tipped")[1].split("🎉")[0].trim();
+			} catch(e){
+				
 			}
-		} catch(e){}
+			
+			try {
+				name = msg.split("has tipped ")[0].trim();
+				chatimg = names[name][0] || "";
+				chatbadge = names[name][1] || "";
+			} catch(e){
+				
+			}
+			
+		} else if (chatimg){
+			names[name] = [chatimg,chatbadge];
+		}
+		
+		if (!name){
+			return;
+		}
+
+		try {
+			if (!msg){
+				msg = getAllContentNodes(ele.querySelector("span.username").nextSibling);
+			}
+			msg = msg.trim();
+		} catch(e){
+			return;
+		}
+		
 
 		var data = {};
 		data.chatname = name;
@@ -122,7 +186,7 @@
 		data.nameColor = nameColor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
-		data.hasDonation = "";
+		data.hasDonation = hasDonation;
 		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
@@ -201,7 +265,7 @@
 					document.querySelector('#q-app main > div > div[class], .app-body > [class] > [class] > [class] > div').marked=true;
 					document.querySelectorAll('#q-app main > div > div[class]>div, .app-body > [class] > [class] > [class] > div').forEach(ele=>{
 						try {
-							processMessage(ele);
+							//processMessage(ele);
 							ele.marked = true;
 						} catch(e){}
 					});

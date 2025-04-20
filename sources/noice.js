@@ -66,15 +66,23 @@
 		});
 		return resp;
 	}
+	
+	var historySet = new Set();
 
 	function processMessage(ele){
 		
-		console.log(ele);
+		if (!ele || !ele.isConnected){return;}
+		//console.log(ele);
 		if (ele && ele.marked){
 		  return;
 		} else {
 		  ele.marked = true;
 		}
+		
+		const id = ele.querySelector("[id]")?.id;
+		if (!id || !id.includes("-")) return;
+		if (historySet.has(id)) return;
+		historySet.add(id);
 		
 		//console.log(ele);
 
@@ -82,7 +90,7 @@
         var name = "";
 		
 		try {
-			name = escapeHtml(ele.querySelector('button[class^="_message-username_"]').innerText);
+			name = escapeHtml(ele.querySelector('[class^="_message-username_"]').innerText);
 			name = name.trim();
 			nameColor = ele.querySelector('button[class^="_message-username_"]').style.color;
 		} catch(e){
@@ -137,7 +145,8 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){ // doesn't support/have chat
-					sendResponse(false);
+					document.querySelector('[role="textbox"], [contenteditable="true"]').focus();
+					sendResponse(true);
 					return;
 				}
 				if (typeof request === "object"){

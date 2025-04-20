@@ -1,5 +1,5 @@
 (function () {
-	
+	try {
 	
 	async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlutin.com/timeout-fetch-request/
 		try {
@@ -31,95 +31,148 @@
 		}
 	}
 
-	function getAllContentNodes(element) {
+	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
-		if(element.skipe){return resp;}
+		
+		if (!element){return resp;}
+		
+		if (element?.className.includes("senderName_")){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
 		element.childNodes.forEach(node=>{
-			if (node.skip){
-				return;
-			} else if (node.childNodes.length){
+			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				if (settings.textonlymode){
-					resp += escapeHtml(node.textContent.trim())+" ";
-				} else {
-					resp += escapeHtml(node.textContent.trim())+" ";
-				}
+				resp += escapeHtml(node.textContent.trim())+" ";
 			} else if (node.nodeType === 1){
-				if (settings.textonlymode){
-				//	if ("alt" in node){
-				//		resp += node.alt.trim()+" ";
-					//}
-				} else if (node && node.src && node.src.startsWith("data:")){
-					return; // I'm not going to wait
-				} else {
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
 					resp += node.outerHTML;
 				}
-			} 
+			}
 		});
 		return resp;
 	}
 	
-	var lastMessage = "";
-	var lastUser  = "";
+	const messageHistory = [];
+	const TWO_MINUTES = 2 * 60 * 1000;
+
+	function checkMessage(message) {
+		const now = Date.now();
+		messageHistory.forEach((entry, index) => {
+			if (now - entry.timestamp > TWO_MINUTES) {
+				messageHistory.splice(index, 1);
+			}
+		});
+		
+		const isDuplicate = messageHistory.some(entry => 
+			entry.content === message && now - entry.timestamp <= TWO_MINUTES
+		);
+		
+		if (!isDuplicate) {
+			messageHistory.push({ content: message, timestamp: now });
+			return false;
+		}
+		return true;
+	}
 	
 	async function processMessage(ele){	// twitch
 	
+	
+		//console.log(ele);
 		
-	  if (ele.skip){return;}
-	  ele.skip = true;
-		
-	  var chatsticker = false;
-	  var chatmessage = "";
-	  var nameColor = "";
-	  var chatbadges  = "";
-	  
-	  var chatimg = "";
-	  try {
-			chatimg =  ele.querySelector("a > img[src]").src;
-			ele.querySelector("a > img[src]").skip = true;
-	  } catch(e){}
-	  
-	  
-	  var data = getAllContentNodes(ele).split(":");
-	  if (!data.length || data.legnth < 2){return;}
-	  
-	  var chatname = data[0].trim();
-	  
-	  data.shift();
-	  
-	  var hasDonation = "";
-	  
-	  chatmessage = data.join(":");
-	  
-	  if (!chatmessage.trim()){return;}
-	 
-	  if ((lastMessage === chatmessage) && (lastUser === chatname)){
-		  lastMessage = "";
-		  chatname = "";
-		  return;
-	  } else {
-		lastMessage = chatmessage;
-		lastUser = chatname;
-	  }
-	  
-	  if (!chatmessage && !hasDonation){
-		return;
-	  }
+		try {
+			
+			if (ele.nextSibling || !ele.isConnected){
+				return;
+			}
+			
+		  if (!ele.querySelector("[data-testid='message-timeWrapper']") || (ele.querySelector("[data-testid='message-timeWrapper']").textContent !== "now")){
+			return;  
+		  }
+			
+		  var chatsticker = false;
+		  var chatmessage = "";
+		  var nameColor = "";
+		  var chatname = escapeHtml(ele.querySelector("[class^='senderName_name']").textContent);
+		  
+		  chatname = chatname.trim();
+		  if (!chatname){return;}
+		  
+		  var chatbadges = [];
+		  var hasDonation = '';
+		  var contentimg = "";
+		  
+		  ele.querySelectorAll("[class^='senderName_iconWrapper'] svg").forEach(badge=>{
+			try {
+				if (badge && badge.nodeName == "IMG"){
+					var tmp = {};
+					tmp.src = badge.src;
+					tmp.type = "img";
+					chatbadges.push(tmp);
+				} else if (badge && badge.nodeName.toLowerCase() == "svg"){
+					var tmp = {};
+					tmp.html = badge.outerHTML;
+					tmp.type = "svg";
+					chatbadges.push(tmp);
+				}
+			} catch(e){  }
+		  });
+		  
+		  
+		  
+		  try {
+			var eleContent = ele.querySelector("[class^='messageBody_textWrapper'] > p");
+			chatmessage = getAllContentNodes(eleContent).trim();
+		  } catch(e){ // donation?
+		  }
+		 
+		  if (chatmessage){
+			 chatmessage = chatmessage.trim();
+		  }
+		 
+		  if (!chatmessage){
+			  return;
+		  }
+		  
+		  if (chatmessage ===  "now"){
+			  return;
+		  }
+		 
+		  var chatimg = "";
+		  try {
+				chatimg = ele.querySelector("img[data-testid^='avatar-'][src]")?.src || "";
+		  } catch(e){}
 
+	  } catch(e){
+		  //console.log(e);
+		 return;
+	  }
 	  var data = {};
 	  data.chatname = chatname;
 	  data.chatbadges = chatbadges;
 	  data.nameColor = nameColor;
 	  data.chatmessage = chatmessage;
 	  data.chatimg = chatimg;
+	  data.contentimg = contentimg;
 	  data.hasDonation = hasDonation;
 	  data.membership = "";
 	  data.textonly = settings.textonlymode || false;
-	  data.type = "rooter";
+	  data.type = "onlinechurch";
 	  
-	//  console.log(data);
 	  
+	  if (checkMessage(chatname+"::"+chatmessage)){
+		  return;
+	  }
 	 
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
@@ -132,7 +185,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("focusChat" == request){
-					document.querySelector('#commentInput').focus();
+					document.querySelector('#publicchat textarea[placeholder][maxlength]').focus();
 					sendResponse(true);
 					return;
 				}
@@ -155,7 +208,7 @@
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if ("settings" in response){
+		if (response && "settings" in response){
 			settings = response.settings;
 		}
 	});
@@ -167,8 +220,6 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].nodeName.toLowerCase() !== "div"){continue;}
-							if (mutation.addedNodes[i].role){continue;}
 							if (mutation.addedNodes[i].ignore){continue;}
 							mutation.addedNodes[i].ignore=true;
 							processMessage(mutation.addedNodes[i]);
@@ -179,7 +230,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -189,16 +240,25 @@
 	
 	var checkReady = setInterval(function(){
 		
-		if (!window.location.pathname.startsWith("/stream/")){return;}
-		
-		var mainChat = document.querySelector("[id*='Live Chat'][role='tabpanel']");
+		var mainChat = document.querySelector("#publicchat [data-testid='feed-objectList']");
 		if (mainChat){ // just in case 
+			if (mainChat.set){
+				return;
+			}
 			console.log("Social Stream Start");
-			clearInterval(checkReady);
+			mainChat.set = true;
 			
-			setTimeout(function(){
-				console.log("Social Stream ready to go");
-				onElementInserted(mainChat);
+			setTimeout(()=>{
+				var clear = document.querySelector("#publicchat [data-testid='feed-objectList']");
+				if (clear){
+					for (var i = 0;i<clear.length;i++){
+						clear[i].ignore = true; // don't let already loaded messages to re-load.
+						//console.log("doing what I shouldn't be doing?");
+						//processMessage(clear[i]);
+					}
+					//console.log("Social Stream ready to go");
+					onElementInserted(document.querySelector("#publicchat [data-testid='feed-objectList']"));
+				}
 			},1000);
 		} 
 	},500);
@@ -236,6 +296,9 @@
 				console.log("KEEP ALIVE TRICk ENABLED");
 			})
 			.catch(errorHandle);
+	} catch(e){
+		console.log(e);
+	}
 	} catch(e){
 		console.log(e);
 	}

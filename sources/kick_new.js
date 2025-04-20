@@ -1,7 +1,9 @@
 (function () {
 	
 	var cachedUserProfiles = {};
-	
+	var processedMessages = new Set(); // Add this line
+	var maxTrackedMessages = 40;
+
 	function escapeHtml(unsafe){
 		try {
 			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
@@ -151,20 +153,78 @@
 		});
 	}
 	
+	function clearMessageTracking() {
+	  processedMessages.clear();
+	}
+	
 	function sleep(ms) {
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 	
+	
+	var counter = 1;
+	
 	async function processMessage(ele){	// twitch
 	
+	  if (!ele || !ele.isConnected) return;
+	  
+	  if (ele.querySelector(".line-through")){
+		  console.log("DELETEED");
+		  try {
+				var data = {};
+				data.chatname = escapeHtml(ele.querySelector("button[title]").innerText);
+				data.chatname = data.chatname.replace("Channel Host", "");
+				data.chatname = data.chatname.replace(":", "");
+				data.chatname = data.chatname.trim();
+				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
+				data.type = "kick";
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					{
+						delete: data
+					},
+					function (e) {}
+				);
+			} catch (e) {
+			}
+		return;
+	  }
+	  
+	  if (ele.dataset.matched){return;}
+	  ele.dataset.matched = true;
+	  let sibling = ele.nextElementSibling;
+	  let nextCount = 0;
+	  while(sibling) {
+		nextCount++;
+		if (nextCount>5){return;}
+		if (sibling.dataset.matched){return;}
+		sibling = sibling.nextElementSibling;
+	  }
+	  
+	  let messageId = "";
+	  try {
+		  const content = ele.textContent || "";
+		  messageId = `${content.slice(0, 100)}`;
+		
+		if (processedMessages.has(messageId)) return;
+		
+		processedMessages.add(messageId);
+		
+		if (processedMessages.size > maxTrackedMessages) {
+		  const entriesToRemove = processedMessages.size - maxTrackedMessages;
+		  const entries = Array.from(processedMessages);
+		  for (let i = 0; i < entriesToRemove; i++) {
+			processedMessages.delete(entries[i]);
+		  }
+		}
+		
+	  } catch(e) {
+		return;
+	  }
+		
 	  if (settings.delaykick){
 		  await sleep(3000);
 	  }
-	
-	  if (!ele){return;}
-	  
-	  if (!ele.isConnected){return;}
-	  
 	  
 	  if (settings.customkickstate) {
 		return;
@@ -188,8 +248,7 @@
 		nameColor = ele.querySelector("button[title]").style.color;
 	  } catch(e){}
 	  
-	  
-	  
+	   
 	  if (!settings.textonlymode){
 		  try {
 			var chatNodes = ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
@@ -226,6 +285,21 @@
 	  }
 	  
 	  if (!chatmessage){return;}
+	  
+	  	  
+	  if (settings.replyingto){
+		  let reply = ele.querySelector(".text-xs button");
+		  if (reply){
+				reply = getAllContentNodes(reply).trim();
+				if (reply){
+					if (settings.textonlymode) {
+						chatmessage = "@"+reply + ": " + chatmessage;
+					} else {
+						chatmessage = "<i><small>@"+reply + ":&nbsp;</small></i> " + chatmessage;
+					}
+				}
+		  }
+	  }
 	  
 	  
 	  ele.querySelectorAll("div > div > div > div > div > div[data-state] img[src], div > div > div > div > div > div[data-state] svg").forEach(badge=>{
@@ -279,7 +353,11 @@
 	  //}
 	  
 	  try {
-		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
+			if (e){
+				ele.dataset.mid = e?.id;
+			}
+		});
 	  } catch(e){
 		  //
 	  }
@@ -327,40 +405,41 @@
 	function onElementInserted(target, subtree=false) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					for (var i = 0; i < mutation.addedNodes.length; i++) {
-						try {
-							if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
-								if (pastMessages.includes(mutation.addedNodes[i].dataset.index)){continue;}
-							
-								pastMessages.push(mutation.addedNodes[i].dataset.index)
-								pastMessages = pastMessages.slice(-300);
-								
-								if (SevenTV){
-									setTimeout(function(ele){
-										processMessage(ele);
-									}, 300, mutation.addedNodes[i]); // give seventv time to load, before parsing the message
-								} else {
-									processMessage(mutation.addedNodes[i]);
-								}
-								
-							} else if (mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner")){
-								let ele = mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner");
-								
-								processMessage(ele);
-							}
-						} catch(e){}
+				if (mutation.removedNodes.length) {
+					if (mutation.target.parentNode && mutation.target.parentNode.dataset.index){
+						processMessage(mutation.target.parentNode);
 					}
-				}
+				} else if (mutation.target == target || subtree){
+					if (mutation.addedNodes.length) {
+						for (var i = 0; i < mutation.addedNodes.length; i++) {
+							try {
+								if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
+									if (SevenTV){
+										setTimeout(function(ele){
+											processMessage(ele);
+										}, 300, mutation.addedNodes[i]); // give seventv time to load, before parsing the message
+									} else {
+										processMessage(mutation.addedNodes[i]);
+									}
+									
+								} else if (mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner")){
+									let ele = mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner");
+									
+									processMessage(ele);
+								}
+							} catch(e){}
+						}
+					}
+				} 
 			});
 		};
-		var config = { childList: true, subtree: subtree };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 	}
 	
-	var pastMessages = [];
+	//var pastMessages = [];
 	var SevenTV = false;
 	
 	console.log("Social stream injected");
@@ -368,13 +447,14 @@
 		if (document.querySelectorAll("#chatroom-messages > div").length){
 			clearInterval(xxx);
 			setTimeout(function(){
+				clearMessageTracking();
 				if (document.getElementById("seventv-extension")){
 					SevenTV = true;
 				}
 				var clear = document.querySelectorAll("div[data-chat-entry]");
-				for (var i = 0;i<clear.length;i++){
-					pastMessages.push(clear[i].dataset.chatEntry);
-				}
+				//for (var i = 0;i<clear.length;i++){
+				//	pastMessages.push(clear[i].dataset.chatEntry);
+				//}
 				onElementInserted(document.querySelectorAll("#chatroom-messages > div")[0], false);
 				if (document.querySelectorAll("#chatroom-messages > div").length>1){
 					onElementInserted(document.querySelectorAll("#chatroom-messages > div")[1], true);

@@ -1,4 +1,8 @@
 (function () {
+	
+	window.addEventListener('unhandledrejection', (event) => {
+	  console.error('Unhandled promise rejection:', event.reason);
+	});
 	 
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
@@ -24,36 +28,20 @@
 	  xhr.send();
 	}
 
-
-	var lastMessage = "";
-	
-	
-	function escapeHtml(unsafe){
-		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
-				return unsafe;
-			}
-			return unsafe
-				 .replace(/&/g, "&amp;")
-				 .replace(/</g, "&lt;")
-				 .replace(/>/g, "&gt;")
-				 .replace(/"/g, "&quot;")
-				 .replace(/'/g, "&#039;") || "";
-		} catch(e){
-			return "";
-		}
+	function escapeHtml(unsafe){ // success is when goofs be trying to hack me
+		return unsafe
+			 .replace(/&/g, "&amp;")
+			 .replace(/</g, "&lt;")
+			 .replace(/>/g, "&gt;")
+			 .replace(/"/g, "&quot;")
+			 .replace(/'/g, "&#039;") || "";
 	}
-
-	function getAllContentNodes(element) { // takes an element.
+	function getAllContentNodes(element) {
 		var resp = "";
 		
-		if (!element){return resp;}
-		
 		if (!element.childNodes || !element.childNodes.length){
-			if (element.textContent){
+			if (element.nodeType===3){
 				return escapeHtml(element.textContent) || "";
-			} else {
-				return "";
 			}
 		}
 		
@@ -77,44 +65,65 @@
 	
 	function processMessage(ele){
 		
-		console.log(ele);
-		
-	
 		var chatimg = "";
+		try{
+		   chatimg = ele.querySelector("[data-sentry-component='UserAvatar'] img[src]").src;
+		} catch(e){
+		}
 		
 		var name="";
-		 try {
-			name = ele.querySelector(".user-name-content").innerText.trim();
+		try {
+			name = ele.querySelector("[data-sentry-component='UserInlineWithBadges'] span:not(:empty), section p.text-neutral-50.font-bold, button>section>p").textContent.trim();
 			name = escapeHtml(name);
 		} catch(e){
-		} 
+		}
 		
-		var msg = "";
+		var chatbadges = [];
 		try {
-			msg = ele.querySelector(".comment-text").textContent.trim();
-			msg = escapeHtml(msg);
+			ele.querySelectorAll("[data-sentry-component='UserInlineWithBadges'] svg, [data-sentry-component='UserInlineWithBadges'] img, img[src*='/badges/']").forEach(badge => {
+				if (badge.srcset) {
+					let bb = badge.srcset.split("https://").pop();
+					if (bb) {
+						bb = "https://" + bb.split(" ")[0];
+						if (!chatbadges.includes(bb)) {
+							chatbadges.push(bb);
+						}
+					}
+				} else if (badge && badge.nodeName == "IMG"){
+					var tmp = {};
+					tmp.src = badge.src+"";
+					tmp.type = "img";
+					chatbadges.push(tmp);
+				} else if (badge && badge.nodeName.toLowerCase() == "svg"){
+					var tmp = {};
+					tmp.html = badge.outerHTML;
+					tmp.type = "svg";
+					chatbadges.push(tmp);
+				}
+			});
+		} catch (e) {}
+		
+		var msg="";
+		try {
+			msg = getAllContentNodes(ele.children[ele.children.length-1]);
 		} catch(e){
 		}
 		
 		
-		var contentimg = "";
-		
 		var data = {};
 		data.chatname = name;
-		data.chatbadges = "";
+		data.chatbadges = chatbadges;
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";;
-		data.contentimg = contentimg;
+		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
-		data.type = "nicovideo";
-		
+		data.type = "favorited";
 		
 		pushMessage(data);
-		
 	}
 
 	function pushMessage(data){
@@ -137,16 +146,9 @@
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
-			try {
-				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-				
-				    document.querySelectorAll('iframe').forEach(frame => frame.remove());
-					document.querySelectorAll('*').forEach(el => {
-						if (el.shadowRoot) {
-							el.shadowRoot.querySelectorAll('iframe').forEach(frame => frame.remove());
-						}
-					});
-					document.querySelector('textarea,input[type="text"].comment-text-box').focus();
+			try{
+				if ("focusChat" == request){ 
+					document.querySelector('input[placeholder]').focus();
 					sendResponse(true);
 					return;
 				}
@@ -163,29 +165,31 @@
 	);
 
 	var lastURL =  "";
-	var lastMessageID = 0;
 	var observer = null;
 	
-
 	
 	function onElementInserted(target) {
-		if (!target){return;}
 		
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
+					
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try{
+						try {
 							if (mutation.addedNodes[i].skip){continue;}
 							mutation.addedNodes[i].skip = true;
-							processMessage(mutation.addedNodes[i]);
+							if (mutation.addedNodes[i].dataset.sentryComponent){
+								setTimeout(function(ele){
+									processMessage(ele);
+								},400,mutation.addedNodes[i]);
+							}
 						} catch(e){}
 					}
 				}
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -196,17 +200,17 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"]').children.length){
-			if (!document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"]').marked){
-				document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"]').marked=true;
+			if (!document.querySelector('[data-sentry-element="ScrollableCardContent"]').marked){
+				document.querySelector('[data-sentry-element="ScrollableCardContent"]').marked=true;
+				console.log("CONNECTED chat detected");
 				setTimeout(function(){
-					document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"][data-offset]').childNodes.forEach(ele=>{
-						ele.skip = true;
+					document.querySelectorAll('[data-sentry-component="ChatMessageUser"').forEach(ele=>{
+						ele.skip=true;
 					});
-					onElementInserted(document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"][data-offset]'));
-				},3000);
+					onElementInserted(document.querySelector('[data-sentry-element="ScrollableCardContent"]'));
+				},1000);
 			}
-		}} catch(e){}
+		} catch(e){}
 	},2000);
 
 })();

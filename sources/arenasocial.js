@@ -74,50 +74,40 @@
 		var chatimg = ""
 
 		try {
-			//chatimg = ele.querySelector("[class^='vkuiLink Link-module__link--V7bkY vkuiTappable vkuiInternalTappable vkuiTappable--hasActive vkui-focus-visible']").src;
+			chatimg = ele.querySelector("img.aspect-square[src]").src;
 		} catch(e){
 		}
 		
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector("[class^='ChatMessageAuthorPanel_name']").textContent.split(":")[0].trim());
+			name = escapeHtml(ele.querySelector(".flex-grow.text-sm > [class][style][role]").textContent);
 		} catch(e){
 		}
 		
 		var namecolor="";
 		try {
-			namecolor = ele.querySelector("[class^='ChatMessageAuthorPanel_name']").style.color;
+			namecolor = ele.querySelector(".flex-grow.text-sm > [class][style][role]").style.color;
 		} catch(e){
 		}
 		
 		var badges=[];
-		try {
+		/* try {
 			ele.querySelectorAll("img[class^='ChatBadge_image_'][src]").forEach(badge=>{
 				badges.push(badge.src);
 			});
 		} catch(e){
-		}
+		} */
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector("[data-role='messageMainContent']")).trim();
+			msg = getAllContentNodes(ele.querySelector(".flex-grow.text-sm > div.inline > span")).trim();
 		} catch(e){
 		}
 		
 		
-		if (msg.startsWith(name)){
-			msg = msg.replace(name,"");
-			msg = msg.trim();
-			if (msg.startsWith(":")){
-				msg = msg.replace(":","");
-				msg = msg.trim();
-			}
-		}
-
 		if (!msg || !name){
 			return;
 		}
-		
 		
 		
 		var data = {};
@@ -132,7 +122,7 @@
 		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
-		data.type = "vkvideo";
+		data.type = "arenasocial";
 		
 		
 		pushMessage(data);
@@ -149,7 +139,7 @@
 	function checkViewers(){
 		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			try {
-				let viewerSpan = document.querySelector("[class*='OnlineViewers_root']");
+				let viewerSpan = document.querySelector("svg > path[d='M15 12a3 3 0 11-6 0 3 3 0 016 0z']").parentNode.nextElementSibling;
 				if (viewerSpan && viewerSpan.textContent){
 					let views = viewerSpan.textContent.toUpperCase();
 					let multiplier = 1;
@@ -166,7 +156,7 @@
 						chrome.runtime.sendMessage(
 							chrome.runtime.id,
 							({message:{
-									type: 'vkvideo',
+									type: 'arenasocial',
 									event: 'viewer_update',
 									meta: views
 								}
@@ -239,7 +229,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -252,7 +242,7 @@
 
 	setInterval(function(){
 		try {
-			var container = document.querySelector("[class^='Chat_root']");
+			var container = document.querySelector("[data-testid='virtuoso-item-list']");
 			if (!container.marked){
 				container.marked=true;
 

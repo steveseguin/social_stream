@@ -96,10 +96,10 @@
 	}
 	
 	const SELECTORS = {
-		displayName: ".chat-author__display-name, .chatter-name, .seventv-chat-user-username",
-		messageBody: ".seventv-chat-message-body, .seventv-message-context, [data-test-selector='chat-line-message-body'], [data-a-target='chat-line-message-body']",
-		chatBadges: "img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge, .user-pronoun",
-		messageContainer: ".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper"
+		displayName: ".chat-author__display-name, .chatter-name, .seventv-chat-user-username,  [data-test-selector='extension-message-name'], .seventv-chat-user-username",
+		messageBody: ".seventv-chat-message-body, .seventv-message-context, [data-test-selector='chat-line-message-body'], [data-a-target='chat-line-message-body'], [data-a-target='chat-message-text']",
+		chatBadges: "img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge, .user-pronoun, img.chat-badge[src]",
+		messageContainer: ".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper, .room-message"
 	};
 	
 	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
@@ -327,8 +327,8 @@
 		var donations = 0;
 		var highlightColor = "";
 		
-		try {
-			var displayNameEle = ele.querySelector(".chat-author__display-name, .chatter-name") || ele.querySelector(".seventv-chat-user-username");
+		try { 
+			var displayNameEle = ele.querySelector(SELECTORS.displayName); 
 			var displayName = displayNameEle.innerText;
 			var username = displayName;
 			var usernameEle = ele.querySelector(".chat-author__intl-login");
@@ -496,6 +496,8 @@
 				return;
 			}
 		}
+		
+		
 
 		try {
 			if (!donations) {
@@ -518,6 +520,20 @@
 				donations = escapeHtml(elements.textContent);
 			} catch (e) {}
 		}
+		
+		// if (!donations && displayName && (displayName==="Stream Stickers") && chatmessage && chatmessage.includes("Bits")) {
+			// donations = chatmessage.split(" Bits").pop()
+			// donations = donations.split(" ").pop();
+			// if (donations == parseInt(donations)){
+				// if (donations == "1"){
+					// donations = donations + " Bit";
+				//} else if (donations == "0"){
+				//	donations = false;
+				// } else {
+					// donations = donations + " Bits";
+				// }
+			// }
+		// }
 
 		var hasDonation = "";
 		if (donations) {
@@ -550,15 +566,15 @@
 			if (settings.replyingto && chatmessage) {
 				try {
 					var replyMessage = getAllContentNodes(ele.querySelector(".chat-line__message-container [title], .seventv-reply-message-part"));
-					replyMessage = replyMessage.split(":")[0].trim();
+					replyMessage = replyMessage.trim();
 					if (!replyMessage) {
 						replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
-						replyMessage = replyMessage.split(":")[0].trim();
+						replyMessage = replyMessage.trim();
 					}
 				} catch (e) {
 					try {
 						var replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
-						replyMessage = replyMessage.split(":")[0].trim();
+						replyMessage = replyMessage.trim();
 					} catch (ee) {
 					}
 				}
@@ -652,10 +668,7 @@
 					message: data
 				},
 				function (e) {
-					if ("mid" in e) {
-						ele.dataset.mid = e.mid;
-						//midList.push(e.mid);
-					}
+					ele.dataset.mid = e.id;
 				}
 			);
 		} catch (e) {
@@ -735,7 +748,8 @@
 			chrome.runtime.id, {getSettings: true},	function (response) {
 				// {"state":isExtensionOn,"streamID":channel, "settings":settings}
 				//console.log(response);
-				if ("settings" in response) {
+				
+				if (response && "settings" in response) {
 					settings = response.settings;
 					if (settings.bttv && !BTTV) {
 						chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, channel: channelName ? channelName.toLowerCase() : null, type:"twitch" }, function (response) {
@@ -753,7 +767,7 @@
 						});
 					}
 				}
-				if ("state" in response) {
+				if (response && "state" in response) {
 					isExtensionOn = response.state;
 				}
 			}
@@ -890,6 +904,8 @@
 				var data = {};
 				data.chatname = escapeHtml(chatname.innerText);
 				data.type = "twitch";
+				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
+				
 				try {
 					chrome.runtime.sendMessage(
 						chrome.runtime.id,

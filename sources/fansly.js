@@ -13,7 +13,6 @@
 
 		var reader = new FileReader();
 		
-		
 		reader.onloadend = function() {
 		  callback(reader.result);
 		}
@@ -24,42 +23,28 @@
 	  xhr.send();
 	}
 
-
-	var lastMessage = "";
-	
-	
-	function escapeHtml(unsafe){
-		try {
-			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
-				return unsafe;
-			}
-			return unsafe
-				 .replace(/&/g, "&amp;")
-				 .replace(/</g, "&lt;")
-				 .replace(/>/g, "&gt;")
-				 .replace(/"/g, "&quot;")
-				 .replace(/'/g, "&#039;") || "";
-		} catch(e){
-			return "";
-		}
+	function escapeHtml(unsafe){ // success is when goofs be trying to hack me
+		return unsafe
+			 .replace(/&/g, "&amp;")
+			 .replace(/</g, "&lt;")
+			 .replace(/>/g, "&gt;")
+			 .replace(/"/g, "&quot;")
+			 .replace(/'/g, "&#039;") || "";
 	}
-
-	function getAllContentNodes(element) { // takes an element.
+	function getAllContentNodes(element) {
 		var resp = "";
 		
-		if (!element){return resp;}
-		
 		if (!element.childNodes || !element.childNodes.length){
-			if (element.textContent){
+			if (element.nodeType===3){
 				return escapeHtml(element.textContent) || "";
-			} else {
-				return "";
 			}
 		}
 		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
+				if (!node.classList.contains("comment-see-more")){
+					resp += getAllContentNodes(node)
+				}
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
@@ -77,44 +62,53 @@
 	
 	function processMessage(ele){
 		
-		console.log(ele);
-		
-	
+		//console.log(ele);
 		var chatimg = "";
 		
 		var name="";
-		 try {
-			name = ele.querySelector(".user-name-content").innerText.trim();
-			name = escapeHtml(name);
-		} catch(e){
-		} 
-		
-		var msg = "";
+		var nameColor="";
 		try {
-			msg = ele.querySelector(".comment-text").textContent.trim();
-			msg = escapeHtml(msg);
+			name = escapeHtml(ele.querySelector("[appaccountcard][style]").textContent.trim());
+			nameColor = ele.querySelector("[appaccountcard][style]").style?.color || "";
 		} catch(e){
+			return;
 		}
 		
 		
-		var contentimg = "";
+		var badges = [];
+		try {
+			if (ele.querySelector(".broadcaster-badge")){
+				badges.push("http://socialstream.ninja/icons/host.png");
+			}
+		} catch(e){
+
+		}
+		
+		var msg="";
+		try {
+			msg = getAllContentNodes(ele.querySelector(".message-text"));
+			msg = msg.trim();
+		} catch(e){
+			return;
+		}
+		
+		if (!msg && !name){return;}
 		
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = "";
+		data.chatbadges = badges;
 		data.backgroundColor = "";
 		data.textColor = "";
+		data.nameColor = nameColor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";;
-		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
-		data.type = "nicovideo";
-		
+		data.type = "fansly";
 		
 		pushMessage(data);
-		
 	}
 
 	function pushMessage(data){
@@ -137,16 +131,9 @@
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
-			try {
+			try{
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-				
-				    document.querySelectorAll('iframe').forEach(frame => frame.remove());
-					document.querySelectorAll('*').forEach(el => {
-						if (el.shadowRoot) {
-							el.shadowRoot.querySelectorAll('iframe').forEach(frame => frame.remove());
-						}
-					});
-					document.querySelector('textarea,input[type="text"].comment-text-box').focus();
+					document.querySelector('textarea').focus();
 					sendResponse(true);
 					return;
 				}
@@ -163,19 +150,20 @@
 	);
 
 	var lastURL =  "";
-	var lastMessageID = 0;
 	var observer = null;
 	
-
 	
-	function onElementInserted(target) {
+	function onElementInserted(containerSelector) {
+		var target = document.querySelector(containerSelector);
 		if (!target){return;}
+		
 		
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
+					
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try{
+						try {
 							if (mutation.addedNodes[i].skip){continue;}
 							mutation.addedNodes[i].skip = true;
 							processMessage(mutation.addedNodes[i]);
@@ -185,7 +173,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -196,15 +184,15 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"]').children.length){
-			if (!document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"]').marked){
-				document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"]').marked=true;
-				setTimeout(function(){
-					document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"][data-offset]').childNodes.forEach(ele=>{
-						ele.skip = true;
-					});
-					onElementInserted(document.querySelector('[class^="___comment-data-grid"] [role="rowgroup"][data-offset]'));
-				},3000);
+		if (document.querySelector('.chat-container').children.length){
+			if (!document.querySelector('.chat-container').marked){
+				document.querySelector('.chat-container').marked=true;
+				document.querySelector('.chat-container').childNodes.forEach(ele=>{
+					ele.skip = true;
+					//processMessage(ele);
+				});
+				
+				onElementInserted('app-chat-room-message');
 			}
 		}} catch(e){}
 	},2000);

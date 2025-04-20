@@ -203,7 +203,7 @@
 		} catch(e){
 		}
 	}
-	
+	var isExtensionOn = true;
 	var settings = {};
 	// settings.textonlymode
 	// settings.captureevents
@@ -213,17 +213,23 @@
 		if ("settings" in response){
 			settings = response.settings;
 		}
+		if ("state" in response) {
+			isExtensionOn = response.state;
+		}
 	});
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+				if ("focusChat" == request && isExtensionOn){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 					document.querySelector('#chat-message-text-input').focus();
 					sendResponse(true);
 					return;
 				}
 				if (typeof request === "object"){
+					if ("state" in request) {
+						isExtensionOn = request.state;
+					}
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
@@ -261,12 +267,66 @@
 	
 	
 
+	
+
+	var count = -1;
+
+	
+	function checkViewers(){ 
+		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
+			
+			try {
+				var video_id = parseInt(document.querySelector("[data-video-fid]").dataset.videoFid);
+			} catch(e){
+				return;
+			}
+			
+			var URL = "https://wn0.rumble.com/service.php?video_id="+video_id+"&name=video.watching-now&included_js_libs=main%2Cweb_services%2Cevents%2Cerror%2Cfacebook_events%2Chtmx.org%2Cnavigation-state%2Cmodal-base%2Cdarkmode%2Crandom%2Clocal_storage%2Cnotify%2Cpopout%2Ctooltip%2Ccontext-menus%2Cprovider%2Cswipe-slider%2Cui%2Cads%2Csearch-bar%2Cui_header%2Cmain-menu-item-hover%2Cpremium-popup&included_css_libs=global";
+			
+			
+			fetch(URL, {
+			  method: 'GET',
+			  credentials: 'include', // This sends all cookies automatically
+			  headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			  }
+			})
+			.then(response => response.json())
+			.then(data => {
+				
+			  try {
+				//console.log(data);
+				let viewr = data.viewer_count || data.num_watching_now || data?.data.viewer_count || data?.data.num_watching_now;
+				viewr = parseInt(viewr);
+				if (isNaN(viewr)){return;}
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					({message:{
+					  type: 'rumble',
+					  event: 'viewer_update', 
+					  meta: viewr
+					}}),
+					function (e) {}
+				);
+				
+			  } catch (e) {
+				//console.log(e);
+			  }       
+			});
+		}
+	}
+	
+	setInterval(function(){
+		checkViewers();
+	},10000);
+
 	setInterval(function(){
 		if (document.querySelector('.chat--height')){
 			if (!document.querySelector('.chat--height').marked){
 				document.querySelector('.chat--height').marked=true;
-				onElementInserted(document.querySelector('.chat--height'));
 				
+				onElementInserted(document.querySelector('.chat--height'));
+				checkViewers();
 				//document.querySelectorAll(".chat-history--row").forEach(ele=>{
 				//	processMessage(ele);
 				//});

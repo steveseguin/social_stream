@@ -90,7 +90,7 @@
 	  
 	  var chatimg = "";
 	  try{
-		   chatimg = ele.querySelector("img.presence-entity__image[src], img.avatar[src]").src;
+		   chatimg = ele.querySelector("img.presence-entity__image[src], img.avatar[src], img[class*='EntityPhoto-circle'][src]").src;
 		   if (chatimg.startsWith("data:image/gif;base64")){
 			   chatimg="";
 		   }
@@ -99,7 +99,7 @@
 	  var name = "";
 	  
 	  try{
-		  name = ele.querySelector(".comments-post-meta__name-text > span > span[aria-hidden='true']").textContent;
+		  name = ele.querySelector(".comments-post-meta__name-text > span > span[aria-hidden='true'], h3.comments-post-meta__actor .comments-post-meta__name-text, .comments-post-metaname-text").textContent;
 		  name = escapeHtml(name);
 	  } catch(e){
 		  
@@ -107,16 +107,20 @@
 	  if (name){
 		name = name.trim();
 	  } else {
-		  name = ele.querySelector(".comments-post-meta__name-text").textContent;
+		  name = ele.querySelector(".comments-post-meta__name-text, .comments-post-metaname-text, .comments-post-metaactor").textContent;
 		  if (name){
 			name = name.trim();
 			name = escapeHtml(name);
 		  }
 	  }
 	  
+	  if (name){
+		  name = name.replace("• You","");
+	  }
+	  
 	  var msg = "";
 	  try {
-		msg = ele.querySelector('.comments-comment-item__main-content').textContent;
+		msg = ele.querySelector('.comments-comment-item__main-content, .comments-comment-item-content-body').textContent;
 		msg = escapeHtml(msg);
 	  } catch(e){
 		

@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 2,
-  "version": "1.84.0",
+  "version": "1.85.0",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -22,37 +22,58 @@
   "permissions": [
     "webNavigation",
     "notifications",
-	"http://localhost:11434/api/generate",
-	"http://127.0.0.1:11434/api/generate",
-	"https://zap.stream/*",
-	"https://www.bigo.tv/*",
+	"http://localhost:8080/fav.html",
+    "http://localhost:11434/api/generate",
+    "http://127.0.0.1:11434/api/generate",
+    "https://zap.stream/*",
+    "https://www.bigo.tv/*",
+	"https://soulbound.tv/*",
+	"https://claude.ai/*",
+	"https://arena.social/live/*",
+	"https://www.moonbeam.stream/*",
+	"https://studio.favorited.com/popout/chat",
+	"https://*/*autoreloadwithsocialstream",
+	"https://*.webinargeek.com/webinar/*",
+	"https://www.ilmfix.de/programs/*",
+	"https://cloud.malte-schroeder.de/call/*",
+	"https://*.webinargeek.com/watch/*",
     "https://chaturbate.com/*/",
-    "https://cherry.tv/*",
+    "https://cherry.tv/*",	
+	"https://*.online.church/",
     "https://beamstream.gg/*/chat",
     "https://socialstream.ninja/sources/websocket/*",
     "https://socialstream.ninja/websocket/*",
+	"https://beta.socialstream.ninja/sources/websocket/*",
+    "https://beta.socialstream.ninja/websocket/*",
     "https://cozy.tv/*",
     "https://play.afreecatv.com/*?vtype=chat",
     "https://kiwiirc.com/nextclient/*",
     "https://webchat.quakenet.org/*",
+	"https://live.nicovideo.jp/watch/*",
     "https://*.cbox.ws/box/*",
-	"https://community.talkinghealthtech.com/live/*",
+    "https://cbox.ws/box/*",
+    "https://community.talkinghealthtech.com/live/*",
     "https://community.insidethe.show/live/*",
 	"https://members.firstinfam.com/live/*",
     "https://*.circle.so/*",
     "https://tellonym.me/*",
-    "https://*.wix.com/*",
-	"https://verticalpixelzone.com/*",
-	"https://rutube.ru/live/chat/*/",
+    "https://chat.wix.com/*",
+    "https://live.wix.com/*",
+    "https://www.wix.com/*",
+    "https://wix.com/*",
+    "https://verticalpixelzone.com/*",
+    "https://rutube.ru/live/chat/*/",
     "https://chat.castr.io/*",
     "https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*",
     "https://www.x.com/*",
+	"https://parti.com/popout-chat*",
     "https://x.com/*",
     "https://www.twitter.com/*",
     "https://twitter.com/*",
     "https://app.sli.do/event/*",
     "https://wall.sli.do/event/*",
     "https://admin.sli.do/event/*",
+	"https://music.gala.com/streaming/*",
     "https://*.rokfin.com/popout/chat/*",
     "https://rokfin.com/popout/chat/*",
     "https://instafeed.me/*",
@@ -62,6 +83,8 @@
 	"https://kick.com/popout/*/chat",
     "https://chatroll.com/embed/chat/*",
     "https://www.nimo.tv/popout/chat/*",
+	"https://noice.com/*",
+	"https://studio.noice.com/popout/*",
     "https://dashboard.nimo.tv/popout/chat/*",
     "https://demo.openstreamingplatform.com/view/*chatOnly=True*",
     "https://*.locals.com/post/*",
@@ -85,20 +108,23 @@
     "https://studio.mobcrush.com/chatpopup.html",
     "https://mobcrush.com/*",
     "https://picarto.tv/chatpopout/*",
+	"https://www.picarto.tv/chatpopout/*",
     "https://dlive.tv/*",
     "https://web.whatsapp.com/",
-    "https://rumble.com/*",
     "https://www.amazon.com/live*",
-	"https://www.amazon.com/b/?node=*&broadcast=*",
+	"https://substack.com/*?liveStream=*",
+	"https://*.substack.com/live-stream/*",
+    "https://www.amazon.com/b/?node=*&broadcast=*",
     "https://*.telegram.org/*",
     "https://*.webex.com/*",
     "https://webex.com/*",
     "https://www.linkedin.com/*",
-    "https://*.vdo.ninja/*",
+    "https://vdo.ninja/*",
     "https://youtube.com/*",
     "https://www.youtube.com/*",
     "https://studio.youtube.com/*",
     "https://*.twitch.tv/*",
+	"https://www.bitchute.com/video/*",
     "https://www.instagram.com/*",
     "https://livecenter.tiktok.com/*",
     "https://www.tiktok.com/*live*",
@@ -112,6 +138,7 @@
     "https://www.crowdcast.io/e/*",
     "https://*.zoom.us/*",
     "https://watch.owncast.online/*",
+    "https://live.simontv.org/*",
     "https://discord.com/*",
     "https://www.mixcloud.com/live/*/chat/",
     "https://vimeo.com/live*",
@@ -120,21 +147,27 @@
     "https://teams.live.com/*",
     "https://teams.microsoft.com/*",
     "https://livestream.com/accounts/*",
-    "https://*/plugins/livechat/*router/webchat/room/*",
-    "https://*/p/livechat/room?room=*",
+    "https://joinpeertube.org/*/plugins/livechat/*router/webchat/room/*",
+    "https://joinpeertube.org/*/p/livechat/room?room=*",
+	"https://*/p/livechat/room?room=*",
     "https://app.slack.com/client/*",
     "https://*.rooter.gg/*",
     "https://www.nonolive.com/*",
     "https://www.tradingview.com/streams/*",
     "https://app.chime.aws/meetings/*",
     "https://*.loco.gg/*",
-    "https://joystick.tv/u/*/chat",
+	"https://loco.gg/*",
+	"https://*.loco.com/*",
+	"https://loco.com/*",
+    "https://joystick.tv/u/*/chat",	   
     "https://www.buzzit.ca/event/*/chat",
     "https://*.floatplane.com/popout/livechat",
     "https://www.threads.net/*",
     "https://*.bandlab.com/*",
     "https://vkplay.live/*/only-chat?*",
     "https://live.vkplay.ru/*/only-chat?*",
+	"https://live.vkvideo.ru/*/only-chat",
+	"https://vk.com/*",
     "https://maestro-launcher.vercel.app/",
     "https://arena.tv/*",
     "https://boltplus.tv/chatpopout/*",
@@ -155,12 +188,13 @@
     "https://chzzk.naver.com/live/*/chat",
     "https://riverside.fm/studio/*",
     "https://estrim.com/publications/view/*",
-    "https://vk.com/*",
     "https://wave.video/*",
 	"https://www.sooplive.com/chat/*",
+	"https://play.sooplive.co.kr/*?vtype=chat",
 	"https://*.on24.com/view/*",
-  "https://*.meetme.com/*",
-  "https://meetme.com/*",
+    "https://*.meetme.com/*",
+    "https://meetme.com/*",
+	"https://fansly.com/chatroom/*",
     "storage",
     "debugger"
   ],
@@ -168,6 +202,10 @@
     "default_popup": "popup.html"
   },
   "content_scripts": [
+    {
+      "js": [ "./sources/generic.js" ],
+      "matches": [ "https://versus.cam/?testchat" ]
+    },
     {
       "js": [ "./sources/zapstream.js" ],
       "matches": [ "https://zap.stream/*" ]
@@ -185,9 +223,17 @@
       "js": [ "./sources/chaturbate.js" ],
       "matches": [ "https://chaturbate.com/*/" ]
     },
+	{
+      "js": [ "./sources/fansly.js" ],
+      "matches": [ "https://fansly.com/chatroom/*" ]
+    },
     {
       "js": [ "./sources/cherrytv.js" ],
       "matches": [ "https://cherry.tv/*" ]
+    },
+	{
+      "js": [ "./sources/onlinechurch.js" ],
+      "matches": [ "https://*.online.church/" ]
     },
     {
       "js": [ "./sources/beamstream.js" ],
@@ -197,13 +243,25 @@
       "js": [ "./sources/chzzk.js" ],
       "matches": [ "https://chzzk.naver.com/live/*/chat" ]
     },
+	 {
+      "js": [ "./sources/parti.js" ],
+      "matches": [ "https://parti.com/popout-chat?id=*" ]
+    },
     {
       "js": [ "./sources/wavevideo.js" ],
       "matches": ["https://wave.video/*" ]
     },
     {
+      "js": [ "./sources/webinargeek.js" ],
+      "matches": [ "https://*.webinargeek.com/webinar/*","https://*.webinargeek.com/watch/*"  ]
+    },
+    {
       "js": [ "./sources/openstreamingplatform.js" ],
       "matches": [ "https://demo.openstreamingplatform.com/view/*chatOnly=True*" ]
+    },
+    {
+      "js": [ "./sources/soulbound.js" ],
+      "matches": [ "https://soulbound.tv/*" ]
     },
     {
       "js": [ "./sources/truffle.js" ],
@@ -214,12 +272,40 @@
       "matches": [ "https://riverside.fm/studio/*" ]
     },
     {
+      "js": [ "./sources/favorited.js" ],
+      "matches": [ "https://studio.favorited.com/popout/chat" ]
+    },
+	{
       "js": [ "./sources/pilled.js" ],
       "matches": [ "https://pilled.net/*" ]
     },
-	 {
+	{
+      "js": [ "./sources/uscreen.js" ],
+      "matches": [ "https://www.ilmfix.de/programs/*" ]
+    },
+	{
+      "js": [ "./sources/noice.js"],
+      "matches": [ "https://noice.com/*", "https://studio.noice.com/popout/*"]
+    },
+	{
+      "js": [ "./sources/nicovideo.js" ],
+      "matches": [ "https://live.nicovideo.jp/watch/*"]
+    },
+	{
       "js": [ "./sources/rutube.js" ],
       "matches": [ "https://rutube.ru/live/chat/*/" ]
+    },
+	{
+      "js": [ "./sources/moonbeam.js" ],
+      "matches": [ "https://www.moonbeam.stream/*" ]
+    },
+	{
+      "js": ["./sources/fc2.js"],
+      "matches": [ "https://live.fc2.com/*/" ]
+    },
+	{
+      "js": [ "./sources/autoreload.js" ],
+      "matches": [ "https://*/*autoreloadwithsocialstream" ]
     },
     {
       "js": [ "./sources/steam.js" ],
@@ -250,6 +336,10 @@
     {
       "js": [ "./sources/cozy.js" ],
       "matches": [ "https://cozy.tv/*" ]
+    },
+	{
+      "js": [ "./sources/gala.js" ],
+      "matches": [ "https://music.gala.com/streaming/*" ]
     },
     {
       "js": [ "./sources/circle.js" ],
@@ -287,6 +377,10 @@
       "js": [ "./sources/sooplive.js" ],
       "matches": [ "https://www.sooplive.com/chat/*" ]
     },
+	{
+      "js": [ "./sources/soopliveco.js" ],
+      "matches": ["https://play.sooplive.co.kr/*?vtype=chat" ]
+    },
     {
       "js": [ "./sources/bandlab.js" ],
       "matches": [ "https://*.bandlab.com/*" ]
@@ -302,13 +396,6 @@
 	{
       "js": [ "./sources/twitcasting.js" ],
       "matches": [ "https://*.twitcasting.tv/*", "https://twitcasting.tv/*" ]
-    },
-    {
-      "js": [ "./sources/vkplay.js" ],
-      "matches": [
-        "https://vkplay.live/*/only-chat?*",
-        "https://live.vkplay.ru/*/only-chat?*"
-      ]
     },
     {
       "js": [ "./sources/cbox.js" ],
@@ -333,7 +420,7 @@
     },
     {
       "js": [ "./sources/loco.js" ],
-      "matches": [ "https://*.loco.gg/*" ]
+      "matches": [ "https://*.loco.gg/*", "https://loco.gg/streamers/*", "https://*.loco.com/*", "https://loco.com/streamers/*" , "https://loco.com/chat/streamers/*"   ]
     },
     {
       "js": [ "./sources/joystick.js" ],
@@ -348,8 +435,12 @@
       "matches": [ "https://www.x.com/*", "https://x.com/*"]
     },
 	{
+      "js": ["./sources/static/claude.js" ],
+      "matches": ["https://claude.ai/*"]
+    },
+	{
       "js": [ "./sources/x.js" ],
-      "matches": [ "https://www.x.com/i/broadcasts/*/chat", "https://x.com/i/broadcasts/*/chat",  "https://www.twitter.com/*", "https://twitter.com/*" ]
+      "matches": [ "https://www.twitter.com/*", "https://twitter.com/*", "https://x.com/*/chat", "https://www.x.com/*/chat",  "https://x.com/i/broadcasts/*?chat"]
     },
     {
       "js": [ "./sources/static/threads.js" ],
@@ -371,6 +462,10 @@
       "js": [ "./sources/tradingview.js" ],
       "matches": [ "https://www.tradingview.com/streams/*" ]
     },
+	{
+      "js": [ "./sources/nextcloud.js" ],
+      "matches": [ "https://cloud.malte-schroeder.de/call/*" ]
+    },
     {
       "js": [ "./sources/youtube.js" ],
       "matches": [
@@ -387,7 +482,7 @@
       ]
     },
     {
-      "js": [ "./sources/static/youtube.js" ],
+      "js": [ "./sources/static/youtube_static.js" ],
       "matches": [ "https://www.youtube.com/*" ]
     },
     {
@@ -460,6 +555,10 @@
 		"https://live.bilibili.com/*"
       ]
     },
+	{
+      "js": [ "./sources/bitchute.js" ],
+      "matches": [ "https://www.bitchute.com/video/*" ]
+    },
     {
       "js": [ "./sources/piczel.js" ],
       "matches": [ "https://piczel.tv/chat/*" ]
@@ -471,9 +570,19 @@
     {
       "js": [ "./sources/websocket/twitch.js" ],
       "matches": [
-        "https://socialstream.ninja/sources/websocket/twitch.html*",
-		"https://socialstream.ninja/sources/websocket/twitch?*",
-        "file:///C:/Users/steve/Code/social_stream/sources/websocket/twitch.html*"
+        "https://socialstream.ninja/sources/websocket/twitch*",
+		"https://beta.socialstream.ninja/sources/websocket/twitch*",
+        "file:///C:/Users/steve/Code/social_stream/sources/websocket/twitch.html*",
+		"http://localhost/twitch.html*"
+      ]
+    },
+	{
+      "js": [ "./sources/websocket/irc.js" ],
+      "matches": [
+        "https://socialstream.ninja/sources/websocket/irc*",
+		"https://beta.socialstream.ninja/sources/websocket/irc*",
+        "file:///C:/Users/steve/Code/social_stream/sources/websocket/irc.html*",
+		"http://localhost/irc.html*"
       ]
     },
     {
@@ -501,7 +610,7 @@
     },
     {
       "js": [ "./sources/picarto.js" ],
-      "matches": [ "https://picarto.tv/chatpopout/*" ]
+      "matches": [ "https://picarto.tv/chatpopout/*", "https://www.picarto.tv/chatpopout/*"  ]
     },
     {
       "js": [ "./sources/mobcrush.js" ],
@@ -513,7 +622,7 @@
     },
     {
       "js": [ "./sources/dlive.js" ],
-      "matches": [ "https://dlive.tv/*" ]
+      "matches": [ "https://dlive.tv/c/*" ]
     },
     {
       "js": [ "./sources/instafeed.js" ],
@@ -551,7 +660,7 @@
     },
     {
       "js": [ "./sources/owncast.js" ],
-      "matches": [ "https://watch.owncast.online/*" ]
+      "matches": [ "https://watch.owncast.online/*", "https://live.simontv.org/embed/chat/readwrite/*"]
     },
     {
       "js": [ "./sources/zoom.js" ],
@@ -585,6 +694,10 @@
       "js": [ "./sources/on24.js" ],
       "matches": [ "https://*.on24.com/view/*" ]
     },
+	{
+      "js": [ "./sources/arenasocial.js" ],
+      "matches": [ "https://arena.social/live/*" ]
+    },
     {
       "js": [ "./sources/teams.js" ],
       "matches": [ "https://teams.microsoft.com/*" ],
@@ -603,16 +716,21 @@
       "js": [ "./sources/instagram.js" ],
       "matches": [ "https://www.instagram.com/*" ]
     },
+	{
+      "js": [ "./sources/substack.js" ],
+      "matches": [ "https://substack.com/*?liveStream=*", "https://*.substack.com/live-stream/*" ]
+    },
     {
       "js": [ "./sources/tiktok.js" ],
       "matches": [
         "https://www.tiktok.com/*live*",
-        "https://livecenter.tiktok.com/*"
+        "https://livecenter.tiktok.com/*",
+		"http://localhost:8080/fav.html"
       ]
     },
     {
       "js": [ "./sources/vdoninja.js" ],
-      "matches": [ "https://*.vdo.ninja/*popout.html*" ],
+      "matches": [ "https://vdo.ninja/popout.html*", "https://vdo.ninja/alpha/popout.html*", "https://vdo.ninja/beta/popout.html*" ],
 	  "all_frames": true
     },
     {
@@ -660,6 +778,14 @@
     {
       "js": [ "./sources/vklive.js" ],
       "matches": [ "https://vk.com/*" ]
+    },
+	{
+      "js": [ "./sources/vkvideo.js" ],
+      "matches": [
+	    "https://live.vkplay.ru/*/only-chat?*",
+        "https://vkplay.live/*/only-chat?*",
+        "https://live.vkvideo.ru/*/only-chat"
+      ]
     }
   ],
   "options_ui": {

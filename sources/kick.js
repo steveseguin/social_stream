@@ -17,6 +17,66 @@
 			return "";
 		}
 	}
+		
+	function extractKickUsername(url) {
+		const pattern = /kick\.com\/(?:popout\/)?([^/]+)(?:\/(?:chat|chatroom))?$/i;
+		const match = url.match(pattern);
+		if (match) {
+			return match[1];
+		}
+		return false;
+	}
+
+	try {
+		var kickUsername = extractKickUsername(window.location.href);
+	} catch(e){}
+
+	var isExtensionOn = true;
+	
+	async function getKickViewerCount(username) {
+		try {
+			const response = await fetch(`https://kick.com/api/v2/channels/${username}`);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			const data = await response.json();
+			
+			if (data.livestream) {
+				return data.livestream.viewer_count || 0;
+			}
+
+			return 0;
+
+		} catch (error) {
+			console.log(error);
+			return 0;
+		}
+	}
+	
+	async function checkViewers(){
+		if (kickUsername && isExtensionOn && (settings.showviewercount || settings.hypemode)){
+			try {
+				var viewers = await getKickViewerCount(kickUsername) || 0;
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					({message:{
+							type: "kick",
+							event: 'viewer_update',
+							meta: viewers
+						}
+					}),
+					function (e) {}
+				);
+			} catch (e) {
+				console.log(e);
+			}
+		}
+	}
+	
+	setTimeout(function(){checkViewers();},2500);
+	setInterval(function(){checkViewers()},65000);
+	
 	
 	
 	function getAllContentNodes(element) {
@@ -90,8 +150,32 @@
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 	
-	async function processMessage(ele){	// twitch
 	
+	function deleteThis(ele){
+		if (ele.querySelector("[class^='deleted-message']")){
+		  console.log("DELETEED");
+		  try {
+				var data = {};
+				data.chatname = escapeHtml(ele.querySelector(".chat-entry-username").innerText);
+				chatname = chatname.replace("Channel Host", "");
+				chatname = chatname.replace(":", "");
+				chatname = chatname.trim();
+
+				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
+				data.type = "kick";
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					{
+						delete: data
+					},
+					function (e) {}
+				);
+			} catch (e) {
+			}
+		 }
+	}
+	
+	async function processMessage(ele){	// twitch
 	
 	  if (settings.delaykick){
 		  await sleep(3000);
@@ -103,6 +187,11 @@
 	  
 	  if (settings.customkickstate) {
 		return;
+	  }
+	  
+	   if (ele.querySelector("[class^='deleted-message']")){
+		  console.log("DELETEED");
+		  return;
 	  }
 		
 	  var chatsticker = false;
@@ -123,7 +212,7 @@
 		nameColor = ele.querySelector(".chat-entry-username").style.color;
 	  } catch(e){}
 	  
-	  
+	  // settings.replyingto
 	  
 	  if (!settings.textonlymode){
 		  try {
@@ -146,6 +235,21 @@
 			chatmessage = escapeHtml(ele.querySelector(".chat-entry-content").innerText);
 		  } catch(e){}
 	  }
+	  
+	  if (settings.replyingto){
+		  let reply = ele.querySelector(".chat-entry");
+		  if (reply?.children.length == 2){
+				reply = escapeHtml(reply.children[0].textContent);
+				if (reply){
+					if (settings.textonlymode) {
+						chatmessage = reply + ": " + chatmessage;
+					} else {
+						chatmessage = "<i><small>"+reply + ":&nbsp;</small></i> " + chatmessage;
+					}
+				}
+		  }
+	  }
+	  
 	  
 	  if (!chatmessage){return;}
 	  
@@ -201,7 +305,9 @@
 	  //}
 	  
 	  try {
-		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
+			ele.dataset.mid = e.id;
+		});
 	  } catch(e){
 		  //
 	  }

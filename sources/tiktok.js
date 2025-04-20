@@ -1,33 +1,44 @@
 (function() {
 	
 	
+	var bigDUPE = false;
+	
 	const avatarCache = {
 		_cache: {},
-		MAX_SIZE: 300,
+		MAX_SIZE: 500,
 		CLEANUP_COUNT: 50,
 		
-		add(chatname, chatimg) {
-			if (!chatname || !chatimg) return;
+		add(chatname, chatimg, badges = null, membership = null, nameColor = null) {
+			if (!chatname) return;
 			
-			this._cache[chatname] = {
-				url: chatimg,
-				timestamp: Date.now()
-			};
+			// Update or create entry
+			if (!this._cache[chatname]) {
+				this._cache[chatname] = {
+					timestamp: Date.now()
+				};
+			} else {
+				// Update timestamp on existing cache entries
+				this._cache[chatname].timestamp = Date.now();
+			}
+			
+			// Only update fields that are provided
+			if (chatimg) this._cache[chatname].url = chatimg;
+			if (badges) this._cache[chatname].badges = badges;
+			if (membership) this._cache[chatname].membership = membership;
+			if (nameColor) this._cache[chatname].nameColor = nameColor;
 			
 			this.cleanup();
 		},
 		
 		get(chatname) {
-			const avatar = this._cache[chatname];
-			return avatar ? avatar.url : null;
+			return this._cache[chatname] || {};
 		},
 		
 		cleanup() {
 			const cacheSize = Object.keys(this._cache).length;
 			if (cacheSize > this.MAX_SIZE) {
 				// Sort by timestamp and remove oldest entries
-				const sorted = Object.entries(this._cache)
-					.sort(([,a], [,b]) => a.timestamp - b.timestamp);
+				const sorted = Object.entries(this._cache).sort(([,a], [,b]) => a.timestamp - b.timestamp);
 					
 				for (let i = 0; i < this.CLEANUP_COUNT; i++) {
 					if (sorted[i]) {
@@ -39,42 +50,77 @@
 	};
 
 	const messageLog = {
-		_log: {},
+		_log: [],
+		_mode: 'count', // 'count' or 'time'
+		_maxMessages: 400,
+		_timeWindow: 10000, // 10 seconds in ms
 		_cleanupInterval: null,
 		
-		init() {
+		init(options = {}) {
+			// Set configuration
+			this._mode = options.mode || 'count';
+			this._maxMessages = options.maxMessages || 400;
+			this._timeWindow = options.timeWindow || 10000;
+			
 			// Clear any existing interval
 			if (this._cleanupInterval) {
 				clearInterval(this._cleanupInterval);
 			}
+			
 			// Set up periodic cleanup
 			this._cleanupInterval = setInterval(() => this.cleanup(), 5000);
 		},
 		
 		cleanup() {
 			const currentTime = Date.now();
-			Object.keys(this._log).forEach(key => {
-				if ((currentTime - this._log[key].currentTime) > 3000) {
-					delete this._log[key];
+			
+			if (this._mode === 'time') {
+				// Time-based: Only remove entries older than the time window
+				this._log = this._log.filter(entry => 
+					(currentTime - entry.time) <= this._timeWindow
+				);
+			} else {
+				// Count-based: Just limit size
+				if (this._log.length > this._maxMessages) {
+					this._log = this._log.slice(-this._maxMessages);
 				}
-			});
+			}
 		},
 		
-		isDuplicate(name, message, ele) {
+		isDuplicate(name, message) {
 			const currentTime = Date.now();
 			const messageKey = `${name}:${message}`;
 			
-			if (this._log[messageKey] && 
-				(currentTime - this._log[messageKey].currentTime) <= 3000) {
-				if (this._log[messageKey].ele && !this._log[messageKey].ele.isConnected) {
-					return true;
-				}
+			// Check if message exists in log based on mode
+			let duplicate = false;
+			
+			if (this._mode === 'time') {
+				// For time mode, check if message was seen within time window
+				duplicate = this._log.some(entry => 
+					entry.key === messageKey && 
+					(currentTime - entry.time) <= this._timeWindow
+				);
+			} else {
+				// For count mode, just check if message exists in current log
+				duplicate = this._log.some(entry => 
+					entry.key === messageKey
+				);
 			}
 			
-			this._log[messageKey] = {
-				currentTime: currentTime,
-				ele: ele
-			};
+			if (duplicate) {
+				return true;
+			}
+			
+			// Add new message to log
+			this._log.push({
+				key: messageKey,
+				time: currentTime
+			});
+			
+			// Cleanup immediately if needed
+			if (this._mode === 'count' && this._log.length > this._maxMessages) {
+				this._log.shift();
+			}
 			
 			return false;
 		},
@@ -84,12 +130,18 @@
 				clearInterval(this._cleanupInterval);
 				this._cleanupInterval = null;
 			}
-			this._log = {};
+			this._log = [];
+		},
+		
+		configure(options = {}) {
+			if (options.mode !== undefined) this._mode = options.mode;
+			if (options.maxMessages !== undefined) this._maxMessages = options.maxMessages;
+			if (options.timeWindow !== undefined) this._timeWindow = options.timeWindow;
+			this.cleanup();
 		}
 	};
-
 	// Initialize when script starts
-	messageLog.init();
+	messageLog.init({ mode: 'count', maxMessages: 421 });
 
 
     function pushMessage(data) {
@@ -157,29 +209,40 @@
         if (!element) {
             return resp;
         }
-        if (!element.childNodes || !element.childNodes.length) {
+        if (!element.children || !element.children.length) {
             if (element.textContent) {
                 return escapeHtml(element.textContent) || "";
             } else {
                 return "";
             }
         }
+		
+		let isBadge = false;
+		
         element.childNodes.forEach(node => {
             if (node.childNodes.length) {
-                resp += getAllContentNodes(node)
+                resp += getAllContentNodes(node).trim() + " ";
             } else if ((node.nodeType === 3) && node.textContent) {
                 resp += escapeHtml(node.textContent);
             } else if (node.nodeType === 1) {
                 if (!settings.textonlymode) {
                     if ((node.nodeName == "IMG") && node.src) {
+						if (node.skip || node.src.includes("_badge_")){
+							isBadge = true;
+							return;
+						}
                         node.src = node.src + "";
                         resp += "<img src='" + node.src + "' />";
-                    } else {
+                    } else if (node.nodeName == "SVG") {
                         resp += node.outerHTML;
                     }
                 }
             }
         });
+		
+		if (isBadge){
+			return "";
+		}
         return resp;
     }
 
@@ -234,10 +297,6 @@
     var channelName = false;
     var msgCount = 0;
 	
-	function isDuplicateMessage(name, message, ele) {
-		return messageLog.isDuplicate(name, message, ele);
-	}
-	
 	function parseDonationMessage(message) {
 		if (!validateTikTokDonationMessage(message)) return null;
 		
@@ -285,33 +344,6 @@
 		if (!xNumberPattern.test(lastText)) return false;
 		
 		return true;
-	}
-	
-	function cleanupOldMessages() {
-		try {
-			// Find all chat message elements with skip dataset
-			const messageElements = document.querySelectorAll('[data-skip]:not([data-done])');
-			const maxMessages = 30;
-			
-			if (messageElements.length > maxMessages) {
-				// Convert to array and sort by skip value (which is our message count)
-				const messages = Array.from(messageElements);
-				messages.sort((a, b) => {
-					return parseInt(a.dataset.skip) - parseInt(b.dataset.skip);
-				});
-				
-				// Remove oldest messages, keeping the last 30
-				const numToRemove = messages.length - maxMessages;
-				for (let i = 0; i < numToRemove; i++) {
-					if (messages[i] && messages[i].parentNode) {
-						messages[i].innerHTML = "";
-						messages[i].dataset.done = true;
-					}
-				}
-			}
-		} catch (e) {
-			console.error("Error cleaning up messages:", e);
-		}
 	}
 	
 	let giftMapping = {
@@ -649,19 +681,77 @@
 		return directMatch ? directMatch[1] : url;
 	}
 
-    function processMessage(ele, ital = false) {
+/* 
+	<div class="css-2yexzo-DivGiftMessage edkxpga0" data-skip="351">
+	 		<div class="css-1p9durm-DivLeadIcon e14w8t9p0">
+	 			<img src="https://p16-sign-sg.tiktokcdn.com/tos-alisg-avt-0068/64ceb81c9a0656329f9ff1b2b616d83a~tplv-tiktokx-cropcenter:100:100.webp?dr=14579&amp;refresh_token=c70df6bc&amp;x-expires=1742756400&amp;x-signature=mA4m4jJGtRzXbaNRrGCb0DBcGSo%3D&amp;t=4d5b0474&amp;ps=13740610&amp;shp=a5d48078&amp;shcp=fdd36af4&amp;idc=my2" style="display: block;">
+			</div>
+			<div class="css-qfhyf7-DivContent edkxpga1">
+				<span data-e2e="message-owner-name" title="💜koori-connection💎" class="css-6ujdqp-SpanNickName e1u0q3bo0" data-skip="true">
+					<span class="css-1ymr58b-SpanEllipsisName e1u0q3bo1">
+						💜koori-connection💎
+					</span>
+				</span>
+				<div class="css-1hbqad0-DivDesc edkxpga2">
+					sent
+					<img src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/d56945782445b0b8c8658ed44f894c7b~tplv-obj.png" style="display: block; border-radius: 0px; width: 26px; height: 26px;">
+					<span class="css-eo4zha-SpanGiftCount edkxpga3">
+						x1
+					</span>
+				</div>
+			</div>
+		</div>
+ */
+ 
+	function checkNextSiblingsForAttribute(newElement, attributeName) {
+		let nextSibling = newElement.nextElementSibling
+		
+		let dig = false;
+		if (!nextSibling){
+			dig = true;
+			nextSibling = newElement?.parentNode?.nextElementSibling;
+		}
 
-        if (ele && ele.dataset.skip) {
+		while (nextSibling) {
+			if (nextSibling.hasAttribute(attributeName)) {
+			  return true;
+			} else if (dig && nextSibling.querySelector("["+attributeName+"]")){
+				return true;
+			}
+			nextSibling = nextSibling.nextElementSibling;
+		}
+
+		return false;
+	}
+ 
+	
+    function processMessage(ele) {
+		
+        if (!ele || ele.dataset.skip) {
+            return;
+        }
+		
+		if (ele?.parentNode?.dataset.skip) {
+            return;
+        }
+		
+		if (ele.querySelector("[class*='DivTopGiverContainer']")) {
             return;
         }
 
-        if (!settings.capturejoinedevent && ital) {
-            if (ital == "enter-message") { // xxx joined the room
-                return;
-            }
-        }
-
-        ele.dataset.skip = ++msgCount;
+		if (checkNextSiblingsForAttribute(ele, "data-skip")){
+			ele.dataset.skip = ++msgCount;
+			return;
+		}
+		
+		ele.dataset.skip = ++msgCount;
+		
+		var ital = false;
+		
+		if (ele.dataset.e2e && (ele.dataset.e2e=="social-message")){
+			if (!settings.captureevents){return;}
+			ital = true;
+		}
 
         var chatimg = "";
         try {
@@ -671,84 +761,116 @@
             } else {
                 chatimg = chatimg.src;
             }
-        } catch (e) {}
-
-
-        if (ele.querySelector("[class*='DivTopGiverContainer']")) {
-            return;
-        }
+        } catch (e) {
+		}
+		
+		updateLastInputTime();
 
         var membership = "";
         var chatbadges = "";
         var rank = 0;
 
+
+		// chat name
         var nameColor = "";
-
-        try {
-            var cb = ele.children[1].querySelectorAll("img[class*='ImgBadgeChatMessage'], img[class*='ImgCombineBadgeIcon']");
-            if (cb.length) {
-                chatbadges = [];
-                cb.forEach(cbimg => {
-                    try {
-                        if (cbimg.src) {
-                            chatbadges.push(cbimg.src);
-                            if (cbimg.src.includes("/moderator_")) {
-                                if (!settings.nosubcolor) {
-                                    nameColor = "#F5D5D1";
-                                }
-                            } else if (cbimg.src.includes("/moderater_")) {
-                                if (!settings.nosubcolor) {
-                                    nameColor = "#F5D5D1";
-                                }
-                            } else if (cbimg.src.includes("/sub_")) {
-                                membership = getTranslation("subscriber", "SUBSCRIBER");
-                                if (!settings.nosubcolor) {
-                                    nameColor = "#139F1D";
-                                }
-                            } else if (cbimg.src.includes("/subs_")) {
-                                membership = getTranslation("subscriber", "SUBSCRIBER");
-                                if (!settings.nosubcolor) {
-                                    nameColor = "#139F1D";
-                                }
-                            } else if (!rank && !nameColor && cbimg.src.includes("/grade_")) {
-                                try {
-                                    rank = parseInt(cbimg.nextElementSibling.innerText) || 1;
-                                    if (!settings.nosubcolor) {
-                                        if (rank > 40) {
-                                            rank = 40;
-                                        }
-                                        nameColor = lut[rank];
-                                    }
-                                } catch (e) {}
-                            }
-                        }
-                    } catch (e) {}
-                });
-            }
-        } catch (e) {}
-
         var chatname = "";
 
-
-        try {
-            chatname = ele.querySelector("span[data-e2e='message-owner-name']").textContent;
-            chatname = escapeHtml(chatname);
-        } catch (e) {}
-
-        try {
-            if (!chatname) {
-                if (ele.childNodes[1].childNodes[0].children.length) {
-                    chatname = escapeHtml(ele.childNodes[1].childNodes[0].childNodes[0].innerText);
-                } else {
-                    chatname = escapeHtml(ele.childNodes[1].childNodes[0].innerText);
-                }
-            }
-
-        } catch (e) {}
-
+		try {
+			let chatNameEle = ele.querySelector("[data-e2e='message-owner-name']");
+			if (chatNameEle){
+				if (chatNameEle.dataset.skip){return;}
+				chatNameEle.dataset.skip = true;
+				chatname = chatNameEle.textContent;
+				chatname = escapeHtml(chatname);
+			}
+		} catch (e) {
+		}
+		
+		try {
+			if (!chatname) {
+				if (ele.childNodes[1].childNodes[0].children.length) {
+					chatname = escapeHtml(ele.childNodes[1].childNodes[0].childNodes[0].innerText);
+				} else {
+					chatname = escapeHtml(ele.childNodes[1].childNodes[0].innerText);
+				}
+			}
+		} catch (e) {
+		}
+		
+		// chat badges
+		try {
+			var cb = ele.querySelectorAll("img[class*='ImgBadgeChatMessage'], img[class*='ImgCombineBadgeIcon'], img[src*='_badge_']");
+			
+			if (!cb.length && chatBadgeAlt) {
+				try{
+					if (ele.childNodes[1].childNodes.length==2){
+						cb = ele.querySelector("[data-e2e='message-owner-name']").parentNode.querySelectorAll("img[src]");
+					}
+				} catch(e){}
+			}
+			
+			if (cb.length) {
+				chatbadges = [];
+				cb.forEach(cbimg => {
+					try {
+						cbimg.skip = true;
+						if (cbimg.src) {
+							chatbadges.push(cbimg.src+"");
+							if (cbimg.src.includes("/moderator_")) {
+								if (!settings.nosubcolor) {
+									nameColor = "#F5D5D1";
+								}
+							} else if (cbimg.src.includes("/moderater_")) {
+								if (!settings.nosubcolor) {
+									nameColor = "#F5D5D1";
+								}
+							} else if (cbimg.src.includes("/sub_")) {
+								membership = getTranslation("subscriber", "SUBSCRIBER");
+								if (!settings.nosubcolor) {
+									nameColor = "#139F1D";
+								}
+							} else if (cbimg.src.includes("/subs_")) {
+								membership = getTranslation("subscriber", "SUBSCRIBER");
+								if (!settings.nosubcolor) {
+									nameColor = "#139F1D";
+								}
+							} else if (!rank && !nameColor && cbimg.src.includes("/grade_")) {
+								try {
+									rank = parseInt(cbimg.nextElementSibling.innerText) || 1;
+									if (!settings.nosubcolor) {
+										if (rank > 40) {
+											rank = 40;
+										}
+										nameColor = lut[rank];
+									}
+								} catch (e) {}
+							}
+						}
+					} catch (e) {}
+				});
+			}
+		} catch (e) {}
+		
+		
         var chatmessage = "";
+		
         try {
-            chatmessage = getAllContentNodes(ele.querySelector("div[class*='-DivUserInfo'], span[data-e2e='message-owner-name']").nextSibling);
+			
+			let chatEle = ele.querySelector("[class*='-DivComment']");
+			if (chatEle){
+				chatmessage = getAllContentNodes(chatEle);
+			} else if (ele.querySelector("[class*='-DivUserInfo'],  [class*='-DivUserInfo']")?.nextElementSibling){
+				chatmessage = getAllContentNodes(ele.querySelector("[class*='-DivUserInfo'],  [class*='-DivUserInfo']").nextElementSibling);
+			} else if (ele.childNodes[1].childNodes[ele.childNodes[1].childNodes.length-1]){
+				chatmessage = getAllContentNodes(ele.childNodes[1].childNodes[ele.childNodes[1].childNodes.length-1]);
+				if (chatmessage && ele.classList.contains("DivGiftMessage")){
+					ital = "gift";
+				}
+			}
+		} catch (e) {
+		}
+			
+        try {
             //live-shared-ui-chat-list-chat-message-comment
             if (!chatmessage) {
                 try {
@@ -758,93 +880,105 @@
                 }
             }
         } catch (e) {
-            try {
-                chatmessage = getAllContentNodes(ele.querySelector(".live-shared-ui-chat-list-chat-message-comment"));
-            } catch (e) {
-                chatmessage = "";
-            }
         }
+		
+		try {
+			if (!chatmessage){
+				chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='chat-message'] .break-words.align-middle"));
+			}
+		} catch (e) {
+			//console.warn(e);
+		}
+		
+				
+        try {
+            if (!chatmessage) {
+                var eles = ele.childNodes[1].childNodes;
+				if (eles.length > 1) {
+					for (var i = eles.length - 1; i >= 1; i--) {
+						if (eles[i].nodeName === "#text") {
+							chatmessage = escapeHtml(eles[i].textContent);
+						} else if (settings.textonlymode) {
+							chatmessage = escapeHtml(eles[i].textContent);
+						} else {
+							chatmessage = getAllContentNodes(eles[i]);
+						}
+						if (chatmessage) break;
+					}
+				} else if (eles.length == 1) {
+					for (var i = eles[0].childNodes.length - 1; i >= 1; i--) {
+						if (settings.textonlymode) {
+							chatmessage = escapeHtml(eles[0].childNodes[i].textContent);
+						} else {
+							chatmessage = getAllContentNodes(eles[0].childNodes[i]);
+						}
+						if (chatmessage) break;
+					}
+				}
+            }
+        } catch (e) {}
+		
 
         if (chatmessage == "Moderator") {
             chatmessage = "";
         }
 		
+		if (!chatmessage && ele.querySelector("[data-e2e='message-owner-name']")?.nextElementSibling){
+			ital = "gift";
+			chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='message-owner-name']").nextElementSibling);
+		}
+		
 		var hasdonation = "";
 		try {
-			if (settings.tiktokdonations && chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")){
-				//console.log(chatmessage);
-				if (validateTikTokDonationMessage(chatmessage)){
-					var donation = parseDonationMessage(chatmessage);
-					//console.log(donation);
-					if (donation.isValid && donation.imageSrc){
-						var giftid = getIdFromUrl(donation.imageSrc);
-						if (giftid){
-							if (giftMapping[giftid]){
-								var valuea = giftMapping[giftid].coins || giftMapping[giftid].name;
-							} else {
-								try {
-									var valuea = document.querySelector("img[src*='"+giftid+"']").parentNode.querySelector("svg").nextSibling.textContent.trim();
-									if (parseInt(valuea) == valuea){
-										giftMapping[giftid] = {coins: parseInt(valuea)};
-										//console.log(giftMapping);
-									}
-								} catch(e){
-									//console.log("Unknown item", donation);
-									if (donation.quantity>1){
-										var valuea = "gifts";
-									} else {
-										var valuea = "gift";
-									}
-								}
-							}
-							if (parseInt(valuea) == valuea){
-								valuea = (donation.quantity * parseInt(valuea));
-								if (valuea>1){
-									hasdonation = valuea + " coins";
+			if (chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")){
+				chatmessage = chatmessage.replace("<img src="," <img src=");
+				chatmessage = chatmessage.replace('.png">x','.png"> x');
+				chatmessage = chatmessage.replace(".png'>x",".png'> x");
+				if (settings.tiktokdonations || !settings.notiktokdonations){
+					if (validateTikTokDonationMessage(chatmessage)){
+						var donation = parseDonationMessage(chatmessage);
+						if (donation.isValid && donation.imageSrc){
+							var giftid = getIdFromUrl(donation.imageSrc);
+							if (giftid){
+								if (giftMapping[giftid]){
+									var valuea = giftMapping[giftid].coins || giftMapping[giftid].name;
 								} else {
-									hasdonation = valuea + " coin";
+									try {
+										var valuea = document.querySelector("img[src*='"+giftid+"']").parentNode.querySelector("svg").nextElementSibling.textContent.trim();
+										if (parseInt(valuea) == valuea){
+											giftMapping[giftid] = {coins: parseInt(valuea)};
+											//console.log(giftMapping);
+										}
+									} catch(e){
+										//console.log("Unknown item", donation);
+										if (donation.quantity>1){
+											var valuea = "gifts";
+										} else {
+											var valuea = "gift";
+										}
+									}
 								}
-							} else {
-								hasdonation = donation.quantity + " "+valuea;
+								if (parseInt(valuea) == valuea){
+									valuea = (donation.quantity * parseInt(valuea));
+									if (valuea>1){
+										hasdonation = valuea + " coins";
+									} else {
+										hasdonation = valuea + " coin";
+									}
+								} else {
+									hasdonation = donation.quantity + " "+valuea;
+								}
 							}
+							
 						}
-						
-						// https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png
-						// https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp
-						
 					}
 				}
-				//console.log("hasdonation: "+hasdonation);
-				
+			} else if (!settings.captureevents && ital){
+				return;
 			}
 		} catch(e){
 			//console.log(e);
 		}
-		
-        try {
-            if (!chatmessage) {
-                var eles = ele.childNodes[1].childNodes;
-                if (eles.length > 1) {
-                    for (var i = 1; i < eles.length; i++) {
-                        if (eles[i].nodeName === "#text") {
-                            chatmessage = escapeHtml(eles[i].textContent);
-                        } else if (settings.textonlymode) {
-                            chatmessage = escapeHtml(eles[i].textContent);
-                        } else {
-                            chatmessage = eles[i].innerHTML;
-                        }
-                    }
-                } else if (eles.length == 1) {
-                    for (var i = 1; i < eles[0].childNodes.length; i++) {
-                        if (settings.textonlymode) {
-                            chatmessage = escapeHtml(eles[0].childNodes[i].textContent);
-                        } else {
-                            chatmessage = eles[0].childNodes[i].innerHTML;
-                        }
-                    }
-                }
-            }
-        } catch (e) {}
 
         if (!chatmessage && !chatbadges) {
             return;
@@ -858,23 +992,37 @@
             //alert("!!");
         }
 
-        if (chatname && chatimg) {
-			avatarCache.add(chatname, chatimg);
-		} else if (chatname) {
-			chatimg = avatarCache.get(chatname);
-        } else if (chatmessage && (chatmessage === "----")) { // no chat name
+
+		if (chatmessage && (chatmessage === "----")) { // no chat name
             return;
         }
+		
+		if (chatname && (chatimg || chatbadges || membership)) {
+			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
+		}
 
-        if (ital && chatmessage && (chatmessage === "joined")) { // no chat name
+        if ((ital===true) && chatmessage && (chatmessage === "joined")) { // no chat name
             if (!settings.capturejoinedevent) {
                 return;
             }
+			ital = "joined";
+			if (!chatname){
+				 return;
+			}
+        } else if ((ital===true) && chatmessage && chatmessage.includes("shared")) { // no sharing events
+             return;
+        } else if ((ital===true) && chatmessage && chatmessage.includes("followed")) { // no sharing events
+             ital = "followed";
+			 if (!chatname){
+				 return;
+			 }
+        } else if ((ital===true) && chatmessage && chatmessage.includes("liked")) { // no sharing events
+             ital = "liked";
+			 if (!chatname){
+				 return;
+			 }
         }
 		
-		if (ital && chatmessage && chatmessage.includes("shared")) { // no sharing events
-             return;
-        }
 
         if (settings.customtiktokstate) {
             var channel = window.location.pathname.split("/@");
@@ -890,9 +1038,28 @@
                 return;
             }
         }
-
-        if (isDuplicateMessage(chatname, chatmessage, ele)) {
-            //console.log("duplicate message; skipping");
+		
+		if (!chatname){
+			chatmessage = chatmessage.replace("----","");
+		}
+		
+		if (!chatname && !chatmessage.trim()){
+			return;
+		}
+		
+		if (ital && (ital===true) && !chatname){
+			return; // block em all.
+			
+			if (chatmessage.includes("New Welcome")){
+				return;
+			}
+			if (chatmessage=="New"){
+				return;
+			}
+		}
+		
+        if (messageLog?.isDuplicate(chatname, chatmessage)) {
+            console.log("duplicate message; skipping",chatname, chatmessage);
             return;
         }
 
@@ -913,32 +1080,289 @@
         data.event = ital; // if an event or actual message
 
         //console.log(data);
+		
+		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
+			avatarCache.cleanup();
+			console.log("Has the channel changed? If so, click the page to validate it");
+			return;
+		}
 
         pushMessage(data);
     }
+	
+	function processEvent(ele) {
+		
+		
+		if (ele.querySelector("[class*='DivTopGiverContainer']")) {
+            return;
+        }
+		
+	//	if (ele.querySelector("[class*='DivTopGiverContainer'], [data-e2e='top-givers-header'] , [data-e2e='top-givers']")) {
+     //       return;
+     //   }
+	//	if (ele.dataset.e2e=='top-givers-header' ||  ele.dataset.e2e=='top-givers'){
+      //      return;
+     //   }
+		
+		if (ele.dataset.skip){return;}
+		
+		
+		if (checkNextSiblingsForAttribute(ele, "data-skip")){
+			ele.dataset.skip = ++msgCount;
+			return;
+		}
+		
+		//console.log(ele);
+		
+		// chat name
+        var chatname = "";
+
+		try {
+			let chatNameEle = ele.querySelector("[data-e2e='message-owner-name']");
+			if (chatNameEle){
+				if (chatNameEle.dataset.skip){return;}
+				chatNameEle.dataset.skip = true;
+				chatname = chatNameEle.textContent;
+				chatname = escapeHtml(chatname);
+			}
+		} catch (e) {
+		}
+		
+		ele.dataset.skip = ++msgCount;
+		
+		// chat messages
+        var chatmessage = "";
+		
+		let try1 = ele.querySelector("[data-e2e='message-owner-name']");
+		
+		if (try1){
+			try1 = try1?.nextElementSibling || try1.nextSibling;
+			if (try1){
+				chatmessage = getAllContentNodes(try1);
+			}
+		}
+		
+        try {
+			if (!chatmessage){
+				chatmessage = getAllContentNodes(ele);
+			}
+		} catch (e) {
+		}
+	
+		var hasdonation = "";
+		var ital = true;
+		
+		if (chatmessage && (ele.classList.contains("DivGiftMessage") || ele.querySelector("[class*='SpanGiftCount']"))){
+			ital = "gift";
+			
+			try {
+				if (chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")){
+					chatmessage = chatmessage.replace("<img src="," <img src=");
+					chatmessage = chatmessage.replace('.png">x','.png"> x');
+					chatmessage = chatmessage.replace(".png'>x",".png'> x");
+					if (settings.tiktokdonations || !settings.notiktokdonations){
+						//console.log(chatmessage);
+						if (validateTikTokDonationMessage(chatmessage)){
+							var donation = parseDonationMessage(chatmessage);
+							//console.log(donation);
+							if (donation.isValid && donation.imageSrc){
+								var giftid = getIdFromUrl(donation.imageSrc);
+								if (giftid){
+									if (giftMapping[giftid]){
+										var valuea = giftMapping[giftid].coins || giftMapping[giftid].name;
+									} else {
+										try {
+											var valuea = document.querySelector("img[src*='"+giftid+"']").parentNode.querySelector("svg").nextElementSibling.textContent.trim();
+											if (parseInt(valuea) == valuea){
+												giftMapping[giftid] = {coins: parseInt(valuea)};
+												//console.log(giftMapping);
+											}
+										} catch(e){
+											//console.log("Unknown item", donation);
+											if (donation.quantity>1){
+												var valuea = "gifts";
+											} else {
+												var valuea = "gift";
+											}
+										}
+									}
+									if (parseInt(valuea) == valuea){
+										valuea = (donation.quantity * parseInt(valuea));
+										if (valuea>1){
+											hasdonation = valuea + " coins";
+										} else {
+											hasdonation = valuea + " coin";
+										}
+									} else {
+										hasdonation = donation.quantity + " "+valuea;
+									}
+								}
+								
+							}
+						}
+					}
+				}
+			} catch(e){
+			}
+		}
+
+        if (chatmessage) {
+            chatmessage = chatmessage.trim();
+        }
+		
+		if (!chatmessage || (chatmessage === "----")) { // no chat name
+            return;
+        }
+
+        if ((ital===true) && !settings.capturejoinedevent && (chatmessage.includes("joined"))) { // no chat name
+            if (!settings.capturejoinedevent) {
+                return;
+            }
+			ital = "joined";
+			if (!chatname){
+				 return;
+			 }
+        } else if ((ital===true) && chatmessage.includes("shared")) { // no sharing events
+             return;
+        } else if ((ital===true) && chatmessage.includes("followed")) { // no sharing events
+             ital = "followed";
+			 if (!chatname){
+				 return;
+			 }
+        }  else if ((ital===true) && chatmessage && chatmessage.includes("liked")) { // no sharing events
+             ital = "liked";
+			 if (!chatname){
+				 return;
+			 }
+        }
+		
+		let chatimg = "";
+		let cachedBadges = "";
+		let cachedMembership = "";
+		let cachedNameColor = "";
+
+		if (chatname) {
+			const cached = avatarCache.get(chatname);
+			chatimg = cached.url || "";
+			cachedBadges = cached.badges || "";
+			cachedMembership = cached.membership || "";
+			cachedNameColor = cached.nameColor || "";
+		}
+
+		var data = {};
+		data.chatname = chatname;
+		data.chatbadges = cachedBadges;
+		data.backgroundColor = "";
+		data.nameColor = cachedNameColor;
+		data.textColor = "";
+		data.chatmessage = chatmessage;
+		data.chatimg = chatimg;
+		data.hasDonation = hasdonation;
+		data.membership = cachedMembership;
+		data.contentimg = "";
+		// data.metaClass = "";
+		data.textonly = settings.textonlymode || false;
+		data.type = "tiktok";
+		data.event = ital;
+
+        //console.log(data);
+		
+		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
+			console.log("Has the channel changed? If so, click the page to validate it");
+			return;
+		}
+
+        pushMessage(data);
+    }
+	
+	var observer = false;
 
 
 	function start() {
 		if (!isExtensionOn) {
 			return;
 		}
-
+		
+		
+		
+		if (settings.showviewercount || settings.hypemode){
+			try {
+				
+				if (!StreamState.isValid() && StreamState.getCurrentChannel()){
+					// not active
+				} else {
+					var viewerCount = document.querySelector("[data-e2e='live-people-count']");
+					
+					if (viewerCount && viewerCount.textContent){
+						let views = viewerCount.textContent;
+						let multiplier = 1;
+						if (views.includes("K")){
+							multiplier = 1000;
+							views = views.replace("K","");
+						} else if (views.includes("M")){
+							multiplier = 1000000;
+							views = views.replace("M","");
+						}
+						if (views == parseFloat(views)){
+							views = parseFloat(views) * multiplier;
+							chrome.runtime.sendMessage(
+								chrome.runtime.id,
+								({message:{
+										type: 'tiktok',
+										event: 'viewer_update',
+										meta: views
+									}
+								}),
+								function (e) {}
+							);
+						}
+					}
+				}
+			} catch(e){
+				//console.error(e);
+			}
+		}
+		
 		let target = null;
+		let subtree = false;
 		
 		// First try for chat room
-		if (window.location.href === "https://livecenter.tiktok.com/common_live_chat") {
+		if (window.location.href.startsWith("https://livecenter.tiktok.com/common_live_chat")) {
 			target = document.querySelector('[data-e2e]');
 			if (target) {
 				target = target.parentNode;
 			}
 		} else {
 			// Try main selectors for chat container
-			target = document.querySelector('[class*="DivChatMessageList"], .live-shared-ui-chat-list-scrolling-list');
+			target = document.querySelector('[data-item="list-message-list"], [class*="DivChatMessageList"]');
+			
+			if (!target){
+				target = document.querySelector('[data-e2e="chat-room"], [data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list');
+				if (target){
+					subtree = true;
+				}
+			}
+		}
+		
+		if (!target){
+			target = document.querySelectorAll('[data-index].w-full');
+			if (target && target.length>3){
+				target = target[target.length-1].parentNode;
+				subtree = false;
+			} else{
+				return;
+			}
 		}
 		
 		if (!target) {
-			return;
+			target = document.querySelector('[role="heading"][tabindex]');
+			if (target && window.location.href.includes("/live") && target.nodeType==1){
+				// we will see.
+			} else {
+				return;
+			}
 		}
+		
 		
 		if (!window.location.href.includes("livecenter") && 
 			!(window.location.pathname.includes("@") && 
@@ -947,64 +1371,111 @@
 		}
 		
 		// Prevent multiple observers on the same target
-		if (target.hasObserver) {
+		if (!target || observer) {
 			return;
 		}
 		
-		target.hasObserver = true;
-		console.log("Starting chat observer");
+		
+		if (!subtree){
+			start2(target);
+		} 
+		
+		console.log("Starting social stream");
 		
 		// Create mutation observer with original configuration
-		const observer = new MutationObserver((mutations) => {
+		observer = new MutationObserver((mutations) => {
+			
 			mutations.forEach((mutation) => {
 				if (mutation.addedNodes.length) {
+					//console.log(mutation.addedNodes);
 					for (let i = 0; i < mutation.addedNodes.length; i++) {
 						try {
 							const node = mutation.addedNodes[i];
-							
-							// Handle regular chat messages
-							if (node.dataset && node.dataset.e2e === "chat-message") {
-								setTimeout(() => {
-									if (node.isConnected) {
-										processMessage(node);
-									}
-								}, 300);
-							}
-							// Handle all other additions (including donations)
-							else if (settings.captureevents) {
-								setTimeout(() => {
-									if (node.isConnected) {
-										if (node.dataset && node.dataset.e2e) {
-											processMessage(node.cloneNode(true), node.dataset.e2e);
-										} else {
+							if (!subtree){
+
+								if (node.dataset && node.dataset.e2e === "chat-message") {
+									setTimeout((node) => {
+										if (node.isConnected) {
 											processMessage(node);
 										}
+									}, 10, node);
+								} else if (node.querySelector("[data-e2e='chat-message']")){
+									setTimeout((node) => {
+										if (node.isConnected) {
+											processMessage(node);
+										}
+									}, 10, node);
+								} else if (settings.captureevents) {
+									setTimeout((node) => {
+										if (node.isConnected) {
+											processEvent(node);
+										}
+									}, 10, node);
+								}
+							} else if (subtree){
+								
+								let msg = node.querySelector('[data-e2e="chat-message"]');
+								if (msg || (node.dataset && node.dataset.e2e === "chat-message")){
+									setTimeout((node) => {
+									if (node.isConnected) {
+											processMessage(node);
+										}
+									}, 10, (msg || node));
+								} else if (settings.captureevents) {
+									setTimeout((node) => {
+										if (node.isConnected) {
+											processEvent(node);
+										}
+									}, 10, node);
+								}
+							} else if (settings.captureevents) {
+								setTimeout((node) => {
+									if (node.isConnected) {
+										processEvent(node);
 									}
-								}, 300);
+								}, 10, node);
 							}
 						} catch (e) {
-							console.error("Error processing node:", e);
+							//console.error("Error processing node:", e);
 						}
 					}
 				}
 			});
 		});
 		
-		// Use original configuration with subtree: false
-		observer.observe(target, {
-			childList: true,
-			subtree: false
-		});
+		setTimeout(function(observer, subtree, target){
+			if (!target){
+				observer = false;
+				return;
+			}
+			[target.children].forEach(ele=>{
+				if (ele && ele.dataset && ele.isConnected){
+					ele.dataset.skip = ++msgCount;
+				}
+			})
+			document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele=>{
+				ele.dataset.skip = ++msgCount;
+			});
+			observer.observe(target, {
+				childList: true,
+				subtree: subtree
+			});
+		},2000, observer, subtree, target);
 	}
 
-	var counter = 0;
-	// The second observer for events
-	function start2() {
+	var observer2 = false;
+	
+	function start2(other=false) {
+		
 		if (!isExtensionOn || !settings.captureevents) {
 			return;
 		}
 		
-		const target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
+		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
+		
+		if (!target2 && other) {
+			target2 = other.nextElementSibling;
+		}
 		
 		if (!target2) {
 			return;
@@ -1016,45 +1487,11 @@
 			return;
 		}
 		
-		
-		if (settings.showviewercount || settings.hypemode){
-			try {
-				if (counter%5==0){
-					try {
-						var viewerCount = document.querySelector("[data-e2e='live-people-count']");
-						
-						if (viewerCount && viewerCount.textContent){
-							if (viewerCount.textContent == parseInt(viewerCount.textContent)){
-								chrome.runtime.sendMessage(
-									chrome.runtime.id,
-									({message:{
-											type: 'tiktok',
-											event: 'viewer_update',
-											meta: parseInt(viewerCount.textContent)
-										}
-									}),
-									function (e) {}
-								);
-							}
-						}
-					} catch(e){}
-				}
-				
-			} catch(e){
-				//console.error(e);
-			}
-			counter+=1;
-		}
-		
-		
-		if (target2.hasObserver) {
+		if (observer2) {
 			return;
 		}
 		
-		target2.hasObserver = true;
-		console.log("Starting event observer");
-		
-		const observer2 = new MutationObserver((mutations) => {
+		observer2 = new MutationObserver((mutations) => {
 			if (!settings.captureevents) return;
 			
 			mutations.forEach((mutation) => {
@@ -1062,21 +1499,19 @@
 					for (let i = 0; i < mutation.addedNodes.length; i++) {
 						try {
 							const node = mutation.addedNodes[i];
+							
 							if (node.nodeName === "DIV") {
-								setTimeout(() => {
-									if (!node.isConnected) return;
-									
-									const typeOfEvent = node.querySelector("[data-e2e]");
-									if (typeOfEvent) {
-										if (!settings.capturejoinedevent && 
-											typeOfEvent.dataset.e2e === "enter-message") {
-											return;
-										}
-										processMessage(node.cloneNode(true), typeOfEvent.dataset.e2e || true);
-									} else {
-										processMessage(node.cloneNode(true), true);
+								if (!node.isConnected) return;
+								
+								const typeOfEvent = node.dataset.e2e || node.querySelector("[data-e2e]")?.dataset.e2e;
+								if (typeOfEvent) {
+									if (!settings.capturejoinedevent && typeOfEvent === "enter-message") {
+										return;
 									}
-								}, 200);
+									processEvent(node.cloneNode(true), typeOfEvent || true);
+								} else {
+									processEvent(node.cloneNode(true), true);
+								}
 							}
 						} catch (e) {
 							console.error("Error processing event:", e);
@@ -1094,7 +1529,6 @@
 
 	// Initialize observers
 	setInterval(start, 2000);
-	setInterval(start2, 2000);
 
     var settings = {};
     var isExtensionOn = false;
@@ -1112,13 +1546,14 @@
                 if ("state" in response) {
                     isExtensionOn = response.state;
                 }
-            } else {
-                console.log(response);
             }
         });
     } catch (e) {}
 
-
+	let pokeTimeout = 27;
+	if (window.electronApi){
+		pokeTimeout = 10; // we can be more annoying in this case.
+	}
     var pokeMe = setInterval(function() {
         try {
             //if (chrome.runtime.id !== 1){
@@ -1129,7 +1564,7 @@
             });
             //}
         } catch (e) {}
-    }, 1000 * 60 * 59);
+    }, 1000 * 60 * pokeTimeout);
 
     var videosMuted = false;
 
@@ -1138,6 +1573,10 @@
             function(request, sender, sendResponse) {
                 try {
                     if ("focusChat" == request) {
+						
+						if (!StreamState.isValid() && StreamState.getCurrentChannel()){
+							return;
+						}
 						
 						if (settings.customtiktokstate) {
 							var channel = window.location.pathname.split("/@");
@@ -1164,7 +1603,7 @@
                                 }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 
                                 });
-                            }, 1000 * 60 * 57);
+                            }, 1000 * 60 * pokeTimeout);
                         } else if (document.querySelector("[contenteditable][placeholder]")) {
 
                             document.querySelector("[contenteditable][placeholder]").focus();
@@ -1181,7 +1620,7 @@
                                 }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 
                                 });
-                            }, 1000 * 60 * 57);
+                            }, 1000 * 60 * pokeTimeout);
                         } else {
                             sendResponse(false);
                         }
@@ -1235,6 +1674,85 @@
             }
         );
     } catch (e) {}
+	
+	
+	const StreamState = {
+		initialUrl: null,
+		lastUserInteraction: 0,
+		navigationTimeout: 10000,
 
+		init() {
+			this.initialUrl = location.href;
+			this.lastUserInteraction = Date.now();
+			
+			// Add stronger click handler that resets everything
+			document.addEventListener('click', () => {
+				this.initialUrl = location.href; // Reset the initial URL to current URL
+				this.lastUserInteraction = Date.now();
+				console.log("Stream state reset by click");
+			});
+			
+			// Keep other handlers simple
+			document.addEventListener('keydown', () => {
+				this.lastUserInteraction = Date.now();
+			});
+			document.addEventListener('touchstart', () => {
+				this.lastUserInteraction = Date.now();
+			});
+		},
+
+		isValid() {
+			const currentUrl = location.href;
+			
+			// Initial page load is always valid
+			if (currentUrl === this.initialUrl) {
+				return true;
+			}
+
+			// Check if recent navigation was user-initiated
+			const timeSinceInteraction = Date.now() - this.lastUserInteraction;
+			return timeSinceInteraction <= this.navigationTimeout;
+		},
+
+		getCurrentChannel() {
+			const match = location.href.match(/@([^/]+)/);
+			return match ? match[1] : null;
+		}
+	};
+
+	// Usage
+	StreamState.init();
+	
+	
+	let lastUserInputTime = Date.now();
+
+	// Function to update the last input time
+	function updateLastInputTime() {
+	  lastUserInputTime = Date.now();
+	}
+
+	
+	// Function to check for inactivity and click the element if needed
+	function checkInactivityAndClick() {
+	  const currentTime = Date.now();
+	  const timeElapsed = currentTime - lastUserInputTime;
+	  
+	  if (timeElapsed >= 10000) { // 10 seconds in milliseconds
+		const unreadTipsElement = document.querySelector("[class*='DivUnreadTipsContent']");
+		if (unreadTipsElement) {
+		  unreadTipsElement.click();
+		  // Reset the timer after clicking
+		  lastUserInputTime = currentTime;
+		}
+	  }
+	}
+
+	// Add event listener for mouse wheel
+	window.addEventListener('wheel', updateLastInputTime);
+
+	// Set up interval to check for inactivity (checks every second)
+	// setInterval(checkInactivityAndClick, 5000);
 
 })();
+
+// try reloading the page if no activitiy for a while?

@@ -71,50 +71,60 @@
 	
 	function processMessage(ele){
 		
-		var chatimg = ""
+		var chatimg = "";
 
 		try {
-			//chatimg = ele.querySelector("[class^='vkuiLink Link-module__link--V7bkY vkuiTappable vkuiInternalTappable vkuiTappable--hasActive vkui-focus-visible']").src;
-		} catch(e){
-		}
-		
-		var name="";
-		try {
-			name = escapeHtml(ele.querySelector("[class^='ChatMessageAuthorPanel_name']").textContent.split(":")[0].trim());
-		} catch(e){
-		}
-		
-		var namecolor="";
-		try {
-			namecolor = ele.querySelector("[class^='ChatMessageAuthorPanel_name']").style.color;
-		} catch(e){
-		}
-		
-		var badges=[];
-		try {
-			ele.querySelectorAll("img[class^='ChatBadge_image_'][src]").forEach(badge=>{
-				badges.push(badge.src);
-			});
-		} catch(e){
-		}
-
-		var msg="";
-		try {
-			msg = getAllContentNodes(ele.querySelector("[data-role='messageMainContent']")).trim();
-		} catch(e){
-		}
-		
-		
-		if (msg.startsWith(name)){
-			msg = msg.replace(name,"");
-			msg = msg.trim();
-			if (msg.startsWith(":")){
-				msg = msg.replace(":","");
-				msg = msg.trim();
+			const avatarImg = ele.querySelector(".rounded-full.overflow-hidden img");
+			if (avatarImg && avatarImg.src) {
+				chatimg = avatarImg.src;
 			}
+		} catch(e){
 		}
-
-		if (!msg || !name){
+		
+		var name = "";
+		var namecolor = "";
+		try {
+			const nameElement = ele.querySelector("a[style]");
+			if (nameElement) {
+				name = escapeHtml(nameElement.textContent);
+				namecolor = nameElement.style.color;
+			}
+		} catch(e){
+		}
+		
+		var event  = "";
+		var donation = "";
+		var msg = "";
+		try {
+			let msgElement = ele.querySelector(".text-white.text-sm.break-words");
+			if (msgElement) {
+				msg = getAllContentNodes(msgElement).trim();
+			} else {
+				msgElement = ele.querySelector(".text-sm.break-words.font-blenderPro.text-amber-400");
+				if (msgElement) {
+					msg = getAllContentNodes(msgElement).trim();
+					event = true;
+					if (msg.includes("tipped")){
+						try {
+							var tmp = msg.split("tipped ")[1].split(" ")
+							tmp.pop()
+							donation = tmp.join(" ");
+						} catch(e){}
+					}
+					
+				} else {
+					msgElement = ele.querySelector(".text-sm.break-words.font-blenderPro.text-red-400");
+					if (msgElement) {
+						msg = getAllContentNodes(msgElement).trim();
+						event = true;
+					}
+				}
+			}
+		} catch(e){
+		}
+		
+		
+		if (!msg || !(name || event)){
 			return;
 		}
 		
@@ -122,18 +132,18 @@
 		
 		var data = {};
 		data.chatname = name;
-		data.chatbadges = badges;
+		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.nameColor = namecolor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
-		data.hasDonation = "";
+		data.hasDonation = donation;
 		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
-		data.type = "vkvideo";
-		
+		data.type = "soulbound";
+		data.event = event;
 		
 		pushMessage(data);
 	}
@@ -147,42 +157,39 @@
 	var isExtensionOn = true;
 	
 	function checkViewers(){
-		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
-			try {
-				let viewerSpan = document.querySelector("[class*='OnlineViewers_root']");
-				if (viewerSpan && viewerSpan.textContent){
-					let views = viewerSpan.textContent.toUpperCase();
-					let multiplier = 1;
-					if (views.includes("K")){
-						multiplier = 1000;
-						views = views.replace("K","");
-					} else if (views.includes("M")){
-						multiplier = 1000000;
-						views = views.replace("M","");
+			if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
+				try {
+					let viewerSpan = document.querySelector("svg>polygon[points='6 3 20 12 6 21 6 3']");
+					if (viewerSpan?.parentNode?.nextSibling?.textContent){
+						let views = viewerSpan.parentNode.nextSibling.textContent.toUpperCase();
+						let multiplier = 1;
+						if (views.includes("K")){
+							multiplier = 1000;
+							views = views.replace("K","");
+						} else if (views.includes("M")){
+							multiplier = 1000000;
+							views = views.replace("M","");
+						}
+						views = views.split(" ")[0];
+						if (views == parseFloat(views)){
+							views = parseFloat(views) * multiplier;
+							chrome.runtime.sendMessage(
+								chrome.runtime.id,
+								({message:{
+										type: 'soulbound',
+										event: 'viewer_update',
+										meta: views
+									}
+								}),
+								function (e) {}
+							);
+						}
 					}
-					views = views.split(" ")[0];
-					if (views == parseFloat(views)){
-						views = parseFloat(views) * multiplier;
-						chrome.runtime.sendMessage(
-							chrome.runtime.id,
-							({message:{
-									type: 'vkvideo',
-									event: 'viewer_update',
-									meta: views
-								}
-							}),
-							function (e) {}
-						);
-					}
+				} catch (e) {
 				}
-			} catch (e) {
 			}
 		}
-	}
 
-
-	// OnlineViewers_root_orkvv
-	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
@@ -195,9 +202,11 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-				
-					document.querySelector('#type-a-message').focus();
+				if ("focusChat" == request){
+					const chatInput = document.querySelector('[contenteditable][data-placeholder="Chat"]');
+					if (chatInput) {
+						chatInput.focus();
+					}
 					sendResponse(true);
 					return;
 				}
@@ -220,7 +229,6 @@
 	var lastURL =  "";
 	var observer = null;
 	
-	
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
@@ -230,8 +238,8 @@
 							if (mutation.addedNodes[i].skip){continue;}
 
 							mutation.addedNodes[i].skip = true;
-
-							processMessage(mutation.addedNodes[i]); // maybe here
+							
+							processMessage(mutation.addedNodes[i]);
 							
 						} catch(e){}
 					}
@@ -239,7 +247,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -248,22 +256,22 @@
 	
 	console.log("social stream injected");
 
-
-
 	setInterval(function(){
 		try {
-			var container = document.querySelector("[class^='Chat_root']");
-			if (!container.marked){
-				container.marked=true;
+			// Find the chat container by looking for the main chat list container
+			var container = document.querySelector(".no-scrollbar > .custom-scrollbar");;
+			
+			if (container && !container.marked){
+				container.marked = true;
 
 				console.log("CONNECTED chat detected");
 
 				setTimeout(function(){
 					onElementInserted(container);
-				},2000);
+				}, 2000);
 			}
 			checkViewers();
 		} catch(e){}
-	},2000);
+	}, 2000);
 
 })();
