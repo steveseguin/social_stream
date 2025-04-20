@@ -108,6 +108,9 @@
     flex-wrap: wrap;
     justify-content: space-around;
 }
+hr {
+    margin: 5px 0;
+}
 .username-item {
 	display: flex;
     justify-content: flex-start;
@@ -5657,27 +5660,39 @@ input:checked + .slider:before {
                                     </div>
                                    
                                 </div>
+								<hr>
 								<div>    
 									<label class="switch">
 										<input type="checkbox" data-setting="streamerbot" />
 										<span class="slider round"></span>
 									</label>
 									<img class="icon" src="./sources/images/streamerbot.png" style="display: inline-block;" />
+									Enable Streamer.bot websocket support
+								</div>
+								<div>
 									<div class="textInputContainer" style="display: inline-block; width: 250px;">
 										<input type="text" id="streamerbotendpoint" class="textInput" autocomplete="off" placeholder="ws://127.0.0.1:8080" data-textsetting="streamerbotendpoint" />
 										<label for="streamerbotendpoint"><span data-translate="send-all-to-streamerbot-server">&gt; Streamer.bot Websocket endpoint</span></label>
 									</div>
 								</div>
 								<div>
-									<label class="switch">
-										<input type="checkbox" data-setting="streamerbotaction" />
-										<span class="slider round"></span>
-									</label>
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="text" id="streamerbotpassword" class="textInput" autocomplete="off" placeholder="Enter Streamer.bot Websocket Password" data-textsetting="streamerbotpassword" />
+										<label for="streamerbotpassword"><span data-translate="streamerbotpassword">&gt; Streamer.bot password</span></label>
+									</div>
+								</div>
+								<div>
 									<div class="textInputContainer" style="display: inline-block; width: 250px;">
 										<input type="text" id="streamerbotactionid" class="textInput" autocomplete="off" placeholder="Enter Streamer.bot Action GUID" data-textsetting="streamerbotactionid" />
 										<label for="streamerbotactionid"><span data-translate="streamerbot-action-id">&gt; Streamer.bot Action ID</span></label>
 									</div>
 								</div>
+								<p>
+								<span>
+									The Streamer.bot support is experimental and challenging to setup. I have a <a href='https://socialstream.ninja/streamerbot.html' class='lightblue' target='_blank'>GUIDE HERE</a>, but I'd welcome support from Streamer.bot devs to improve it all further.
+									<br />
+								</span></p>
+								<hr>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-setting="h2r" />

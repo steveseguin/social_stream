@@ -69,413 +69,140 @@
     </style>
 </head>
 <body>
-    <h1>SocialStream.Ninja Integration with Streamer.bot</h1>
-    
-    <p>This guide explains how to integrate SocialStream.Ninja with Streamer.bot using WebSockets, allowing you to process chat messages from multiple platforms in one unified system.</p>
-    
-    <div class="toc">
-        <h2>Table of Contents</h2>
-        <ul>
-            <li><a href="#prerequisites">Prerequisites</a></li>
-            <li><a href="#installation">Installation</a></li>
-            <li><a href="#setting-up-streamerbot">Setting Up Streamer.bot</a></li>
-            <li><a href="#configuring-socialstreamninja">Configuring SocialStream.Ninja</a></li>
-            <li><a href="#integration-features">Integration Features</a></li>
-            <li><a href="#troubleshooting">Troubleshooting</a></li>
-            <li><a href="#advanced-usage">Advanced Usage</a></li>
-        </ul>
-    </div>
-    
-    <div id="prerequisites" class="section">
-        <h2>Prerequisites</h2>
-        <ul>
-            <li><a href="https://streamer.bot/">Streamer.bot</a> installed on your computer (v0.2.0 or higher)</li>
-            <li>SocialStream.Ninja's Standalone app installed and configured</li>
-            <li>Basic familiarity with Streamer.bot's interface</li>
-        </ul>
-    </div>
-    
-    <div id="installation" class="section">
-        <h2>Installation</h2>
-        
-        <h3>1. Install Streamer.bot</h3>
-        <ul>
-            <li>Download from <a href="https://streamer.bot/download">streamer.bot</a></li>
-            <li>Complete the installation process</li>
-            <li>Run Streamer.bot as administrator (recommended)</li>
-        </ul>
-        
-        <h3>2. Enable WebSocket Server</h3>
-        <ul>
-            <li>In Streamer.bot, go to <strong>Servers/Clients</strong> → <strong>WebSocket Server</strong></li>
-            <li>Enable the server by checking <strong>Enabled</strong></li>
-            <li>Optionally check <strong>Auto Start</strong> to start the server automatically when Streamer.bot launches</li>
-            <li>Default settings (127.0.0.1:8080) are recommended</li>
-            <li>Optionally enable <strong>Authentication</strong> and set a password if security is a concern</li>
-            <li>Click <strong>Apply</strong> to save settings</li>
-            <li>Click <strong>Start</strong> to start the WebSocket server if it's not already running</li>
-        </ul>
-    </div>
-    
-    <div id="setting-up-streamerbot" class="section">
-        <h2>Setting Up Streamer.bot</h2>
-        
-        <h3>Using Chat Overlay Only (No Action ID Required)</h3>
-        <p>If you don't specify an action ID in SocialStream.Ninja settings, messages will be sent directly to Streamer.bot's chat system for display in overlays. No additional setup is required for this basic functionality.</p>
-        
-        <h3>Setting Up the Chat Overlay</h3>
-        <ol>
-            <li>In Streamer.bot, click on the <strong>Chat</strong> tab</li>
-            <li>Click on the settings icon (gear) in the top-right</li>
-            <li>Go to the <strong>Overlay</strong> tab</li>
-            <li>Configure your overlay settings:
-                <ul>
-                    <li>Background color</li>
-                    <li>Text color</li>
-                    <li>Font size</li>
-                    <li>Layout options</li>
-                </ul>
-            </li>
-            <li>Click <strong>Save & Copy Overlay URL</strong></li>
-            <li>Add this URL as a browser source in your streaming software (OBS, Streamlabs, etc.)</li>
+  <h1>SocialStream.Ninja Integration with Streamer.bot</h1>
+
+    <p>This guide explains how to integrate SocialStream.Ninja with Streamer.bot using WebSockets. This allows Streamer.bot to receive chat messages captured by SocialStream.Ninja and trigger custom actions based on them.</p>
+
+    <div class="toc">        <h2>Table of Contents</h2>        <ul>            <li><a href="#prerequisites">Prerequisites</a></li>            <li><a href="#setting-up-streamerbot-ws">Setting Up Streamer.bot WebSocket Server</a></li>
+            <li><a href="#setting-up-streamerbot-action">Setting Up the Streamer.bot Action <span class="required">(Required)</span></a></li>            <li><a href="#configuring-socialstreamninja">Configuring SocialStream.Ninja</a></li>            <li><a href="#integration-features">Integration Features</a></li>            <li><a href="#troubleshooting">Troubleshooting</a></li>            <li><a href="#important-note">Important Note on Direct Chat Display</a></li>
+        </ul>    </div>
+
+    <div id="prerequisites" class="section">        <h2>Prerequisites</h2>        <ul>            <li><a href="https://streamer.bot/">Streamer.bot</a> installed on your computer (v0.2.0 or higher recommended)</li>            <li>SocialStream.Ninja's Standalone app installed and configured</li>            <li>Basic familiarity with Streamer.bot's interface (Actions, Sub-Actions)</li>        </ul>    </div>
+
+    <div id="setting-up-streamerbot-ws" class="section">        <h2>Setting Up Streamer.bot WebSocket Server</h2>
+        <ol>            <li>In Streamer.bot, go to <strong>Servers/Clients</strong> → <strong>WebSocket Server</strong></li>            <li>Enable the server by checking <strong>Enabled</strong></li>            <li>Check <strong>Auto Start</strong> to start the server automatically when Streamer.bot launches</li>            <li>Note the <strong>Port</strong> (default is 8080)</li>            <li>Optionally enable <strong>Authentication</strong> and set a password if required. If you set a password here, you *must* enter it in SocialStream.Ninja settings.</li>
+            <li>Click <strong>Start</strong> if the server isn't running. The status should show "Listening".</li>
+            <li>Click <strong>Apply</strong> or <strong>Save</strong> (depending on SB version)</li>
+        </ol>    </div>
+
+    <div id="setting-up-streamerbot-action" class="section">        <h2>Setting Up the Streamer.bot Action <span class="required">(Required)</span></h2>
+        <p>To process messages from SocialStream.Ninja, you <span class="required">must</span> create an Action in Streamer.bot. SocialStream.Ninja will trigger this action for each incoming message.</p>
+
+        <ol>            <li>In Streamer.bot, navigate to the <strong>Actions</strong> tab</li>            <li>Right-click in the actions pane and select <strong>Add</strong></li>            <li>Name your action clearly (e.g., "Process SocialStream Message")</li>            <li><strong><span class="required">Very Important:</span></strong> After creating the action, right-click on it and select <strong>Copy Action ID</strong>. You will paste this ID into the SocialStream.Ninja settings.</li>
+            <li>Add sub-actions to handle the message data. A common first step is to extract the data using C#. Right-click the action → <strong>Add Sub-Action</strong> → <strong>Core</strong> → <strong>C#</strong> → <strong>Execute C# Code</strong></li>
+            <li>Paste the following C# code. This code extracts the chat data sent by SocialStream.Ninja from the `chatData` argument:</li>
         </ol>
-        
-        <h3>Creating a Custom Action (Optional)</h3>
-        <p>If you want to process messages with custom logic, you can create an action in Streamer.bot:</p>
-        
-        <ol>
-            <li>In Streamer.bot, navigate to the <strong>Actions</strong> tab</li>
-            <li>Right-click in the actions pane and select <strong>Add</strong></li>
-            <li>Name it appropriately (e.g., "Process SocialStream Chat")</li>
-            <li><strong>Important:</strong> After creating the action, right-click on it and select <strong>Copy Action ID</strong>. You'll need this ID for SocialStream.Ninja configuration.</li>
-            <li>Add a C# code sub-action:
-                <ul>
-                    <li>Right-click the action → <strong>Add Sub-Action</strong> → <strong>Core</strong> → <strong>C#</strong> →<strong>Execute C# Code</strong></li>
-                    <li>Paste the following code:</li>
-                </ul>
-                <pre><code>using System;
-using Newtonsoft.Json.Linq;
+        <pre><code>using System;
+using Newtonsoft.Json.Linq; // Make sure Newtonsoft.Json is referenced
 
 public class CPHInline
 {
     public bool Execute()
     {
-        // Extract data from the incoming request safely
-        string platform = args.ContainsKey("platform") ? args["platform"].ToString() : "unknown";
-        string source = args.ContainsKey("source") ? args["source"].ToString() : "unknown";
-        string event_type = args.ContainsKey("event") ? args["event"].ToString() : "unknown";
-        
-        string username = "Unknown User";
-        string message = "";
-        string userId = "";
-        string avatar = "";
-        bool isBot = false;
-        string originalData = "{}";
-        
-        // Safely extract nested data
-        if (args.ContainsKey("data"))
+        // --- Get the main chatData object sent from SocialStream.Ninja ---
+        JObject chatData = null;
+        if (args.ContainsKey("chatData") && args["chatData"] is JObject)
         {
-            var data = args["data"] as dynamic;
-            if (data != null)
-            {
-                username = GetValue(data, "username", "Unknown User");
-                message = GetValue(data, "message", "");
-                userId = GetValue(data, "userId", "");
-                avatar = GetValue(data, "avatar", "");
-                isBot = GetValue(data, "isBot", false);
-                originalData = GetValue(data, "originalData", "{}");
-            }
+            chatData = (JObject)args["chatData"];
         }
-        
-        // Log the message to Streamer.bot console
-        CPH.LogInfo($"[SocialStream] [{platform}] {username}: {message}");
-        
-        // Set arguments for sub-actions
-        CPH.SetArgument("platform", platform);
-        CPH.SetArgument("source", source);
-        CPH.SetArgument("event", event_type);
-        CPH.SetArgument("username", username);
-        CPH.SetArgument("message", message);
-        CPH.SetArgument("userId", userId);
-        CPH.SetArgument("avatar", avatar);
-        CPH.SetArgument("isBot", isBot);
-        CPH.SetArgument("originalData", originalData);
-        
-        // Optional: Process the message based on platform
-        if (platform.Equals("youtube", StringComparison.OrdinalIgnoreCase))
+        else
         {
-            // Handle YouTube messages specifically
+             CPH.LogWarn("[SocialStream] Action triggered but 'chatData' argument was missing or not a JSON object.");
+             // Try converting if it's a string representation of JSON (less ideal)
+             if (args.ContainsKey("chatData") && args["chatData"] is string) {
+                try {
+                    chatData = JObject.Parse((string)args["chatData"]);
+                } catch (Exception ex) {
+                    CPH.LogError($"[SocialStream] Failed to parse chatData string: {ex.Message}");
+                    return false;
+                }
+             } else {
+                 return false; // Exit if we definitely don't have chatData
+             }
         }
-        else if (platform.Equals("twitch", StringComparison.OrdinalIgnoreCase))
-        {
-            // Handle Twitch messages specifically
-        }
-        
-        return true;
+
+        // --- Extract specific fields from the chatData object ---
+        string message = GetValue<string>(chatData, "chatmessage", ""); // Renamed from 'message' in previous C# example
+        string username = GetValue<string>(chatData, "chatname", "Unknown User"); // Renamed from 'username'
+        string userId = GetValue<string>(chatData, "userid", ""); // Renamed from 'userId'
+        string avatar = GetValue<string>(chatData, "chatimg", ""); // Renamed from 'avatar'
+        bool isBot = GetValue<bool>(chatData, "isBot", false);
+        string originalPlatform = GetValue<string>(chatData, "originalPlatform", "unknown"); // Get the original platform
+        string source = GetValue<string>(chatData, "source", "unknown"); // Get the source (should be SocialStream.Ninja)
+
+        // Log the received message to Streamer.bot's Action Queue logs for debugging
+        CPH.LogInfo($"[SocialStream][{originalPlatform}] {username}: {message}");
+
+        // --- Set arguments for subsequent sub-actions ---
+        // These arguments can be used in other sub-actions (like Send Twitch Message) using %argumentName%
+        CPH.SetArgument("ss_message", message);
+        CPH.SetArgument("ss_username", username);
+        CPH.SetArgument("ss_userId", userId);
+        CPH.SetArgument("ss_avatar", avatar);
+        CPH.SetArgument("ss_isBot", isBot);
+        CPH.SetArgument("ss_platform", originalPlatform);
+        CPH.SetArgument("ss_source", source);
+
+        // --- Add your custom logic here ---
+        // Example: Send the message to Twitch chat
+        // CPH.SendMessage($"[{originalPlatform}] {username}: {message}", true); // The 'true' sends as broadcaster
+
+        // Example: Play a sound only for YouTube messages
+        // if (originalPlatform.Equals("youtube", StringComparison.OrdinalIgnoreCase))
+        // {
+        //    CPH.PlaySound("path/to/your/sound.mp3");
+        // }
+
+        return true; // Indicate the C# sub-action completed successfully
     }
-    
-    // Helper method to safely extract values from dynamic object
-    private T GetValue<T>(dynamic obj, string key, T defaultValue)
+
+    // Helper method to safely get values from JObject
+    private T GetValue<T>(JObject obj, string key, T defaultValue)
     {
         try
         {
-            if (obj[key] != null)
+            if (obj != null && obj.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out JToken token))
             {
-                return (T)obj[key];
+                return token.ToObject<T>();
             }
         }
-        catch {}
-        
+        catch (Exception ex) {
+             CPH.LogWarn($"[SocialStream] Error getting value for key '{key}': {ex.Message}");
+        }
         return defaultValue;
     }
 }</code></pre>
-            </li>
-            <li>Click <strong>Compile</strong> to check for errors</li>
-            <li>Click <strong>OK</strong> to save the code</li>
-            <li>Click <strong>Save</strong> to save the action</li>
+        <ol start="6">
+            <li>Click <strong>Compile</strong>. If it shows "Compiled successfully!", click <strong>OK</strong>.</li>
+            <li>Add more sub-actions *after* the C# code sub-action to use the data (e.g., send messages, play sounds). Use the arguments set in the C# code (like `%ss_message%`, `%ss_username%`, `%ss_platform%`). For example:                <ul>                    <li>Right-click → Add Sub-Action → Twitch → Chat → Send Message</li>                    <li>Set Message to: `[%ss_platform%] %ss_username%: %ss_message%`</li>                    <li>Check "Use Arguments" (or ensure variables are enabled)</li>                </ul>            </li>
+            <li>Click <strong>Save</strong> to save the entire action.</li>
         </ol>
-        
-        <h3>Add Additional Sub-Actions (Optional)</h3>
-        <p>You can add more sub-actions to process the messages further:</p>
-        
-        <ul>
-            <li>Add a message in Twitch chat:
-                <ul>
-                    <li>Right-click → <strong>Add Sub-Action</strong> → <strong>Twitch</strong> → <strong>Chat</strong> → <strong>Send Message</strong></li>
-                    <li>Set Message to: <code>[{platform}] {username}: {message}</code></li>
-                    <li>Enable <strong>Use Arguments</strong></li>
-                </ul>
-            </li>
-            <li>Play a sound for messages from specific platforms:
-                <ul>
-                    <li>Right-click → <strong>Add Sub-Action</strong> → <strong>Core</strong> → <strong>Logic</strong> → <strong>If/Else</strong></li>
-                    <li>Set Condition: <code>platform</code> Equals <code>youtube</code></li>
-                    <li>Add a sound sub-action in the "Then" section</li>
-                </ul>
-            </li>
-        </ul>
     </div>
-    
-    <div id="configuring-socialstreamninja" class="section">
-        <h2>Configuring SocialStream.Ninja</h2>
-        
-        <h3>Enable Streamer.bot WebSocket in SocialStream.Ninja</h3>
-        <ol>
-            <li>In SSN's menu, go to <strong>Global settings and tools</strong> → <strong>Mechanics</strong></li>
-            <li>Ensure the Streamer.bot integration is toggled on</li>
-            <li>Set the WebSocket URL to <code>ws://127.0.0.1:8080</code> (or your custom port if changed)</li>
-            <li>If you set a password in Streamer.bot, enter it in the password field</li>
-            <li><strong>Action ID (Optional):</strong>
-                <ul>
-                    <li>If left empty: Messages will be sent directly to Streamer.bot's chat overlay</li>
-                    <li>If specified: Messages will trigger the custom action with that ID for advanced processing</li>
-                </ul>
-            </li>
-            <li>Save your settings</li>
+
+    <div id="configuring-socialstreamninja" class="section">        <h2>Configuring SocialStream.Ninja</h2>
+        <ol>            <li>In SocialStream.Ninja's menu, go to <strong>Global settings and tools</strong> → <strong>Mechanics</strong> (or similar path).</li>
+            <li>Find the <strong>Streamer.bot</strong> integration section.</li>
+            <li>Toggle the integration **ON**.</li>
+            <li>Set the **WebSocket URL** to match Streamer.bot (e.g., `ws://127.0.0.1:8080`). Use `127.0.0.1` if SSN is on the same PC as Streamer.bot.</li>
+            <li>If you set a password in Streamer.bot's WebSocket Server settings, enter it in the **Password** field here.</li>
+            <li>**Action ID <span class="required">(Required)</span>:** Paste the Action ID you copied from Streamer.bot into this field. <span class="required">This is required for the integration to function.</span></li>
+            <li>Save your settings in SocialStream.Ninja.</li>
         </ol>
-        
-        <div class="note">
-            <p><strong>Note:</strong> When an Action ID is specified, SocialStream.Ninja will send messages to trigger that action instead of sending directly to the chat overlay. If you want both functionalities, you can modify your action to forward messages to the chat system.</p>
+    </div>
+
+    <div id="integration-features" class="section">        <h2>Integration Features</h2>
+        <ul>            <li><strong>Centralized Processing:</strong> Receive messages from various platforms supported by SocialStream.Ninja and process them within Streamer.bot.</li>            <li><strong>Custom Actions:</strong> Trigger any Streamer.bot action based on incoming messages (play sounds, show alerts, send messages to Twitch/YouTube, control OBS, etc.).</li>            <li><strong>Filtering/Routing:</strong> Use Streamer.bot's logic (C#, If/Else sub-actions) to handle messages differently based on platform, user, or content.</li>            <li><strong>Reliable Connection:</strong> Uses WebSockets for a persistent, low-latency connection.</li>        </ul>
+    </div>
+
+    <div id="troubleshooting" class="section">        <h2>Troubleshooting</h2>
+        <ul>            <li>                <strong>Cannot connect to WebSocket</strong>:                <ul>                    <li>Verify the WebSocket Server is **Enabled** and **Running** (Status: Listening) in Streamer.bot (Servers/Clients → WebSocket Server).</li>                    <li>Ensure the **Port** in SocialStream.Ninja matches the Port in Streamer.bot.</li>                    <li>Check firewall rules on your PC aren't blocking the connection (especially if not using `127.0.0.1`).</li>                    <li>Verify the **Password** matches exactly if authentication is enabled in Streamer.bot (or that it's blank in both if disabled).</li>                    <li>Check the SocialStream.Ninja console logs (usually F12 in the app/browser) for connection errors.</li>                </ul>            </li>            <li>                <strong>Messages not triggering Action in Streamer.bot</strong>:                <ul>                    <li>Verify the **Action ID** in SocialStream.Ninja settings exactly matches the ID copied from Streamer.bot (right-click action -> Copy Action ID).</li>                    <li>Check the Streamer.bot **Action Queues** tab (under Processing) to see if the action is being triggered but failing. Look for errors.</li>                    <li>Ensure the C# code in your action compiles successfully.</li>                    <li>Add a simple `Core -> Log Message` sub-action as the *first* sub-action in your Streamer.bot action to confirm it's being triggered at all.</li>                    <li>Check the SocialStream.Ninja console logs for errors when sending the `DoAction` request.</li>                </ul>            </li>            <li>                <strong>Arguments not working in Sub-Actions</strong>:                <ul>                    <li>Ensure the C# sub-action runs *before* the sub-actions that use the arguments.</li>                    <li>Double-check the argument names set in C# (`CPH.SetArgument("ss_message", ...)` correspond to the variables used in sub-actions (`%ss_message%`).</li>                    <li>Ensure the "Use Arguments" option (or similar) is enabled in the sub-actions that need them.</li>                </ul>            </li>        </ul>    </div>
+
+    <div id="important-note" class="section">        <h2>Important Note on Direct Chat Display</h2>
+        <div class="warning">            <p><strong>Limitation:</strong> Sending messages from an external application (like SocialStream.Ninja) via WebSocket to directly appear within Streamer.bot's own "Chat" tab or integrated overlays (using the `ChatMessage` request type) is currently **not a reliably supported feature** of the Streamer.bot WebSocket server.</p>
+            <p>While the WebSocket specification includes a `ChatMessage` request, its behaviour for *injecting* messages *into* Streamer.bot's display seems inconsistent or non-functional for this purpose. Its primary role is typically to report messages *from* Streamer.bot *to* connected clients.</p>
+            <p>Therefore, **you MUST use the Action ID method** described above to send message data to Streamer.bot. You can then use sub-actions within Streamer.bot (like sending a message to your Twitch/YouTube channel) if you want the message content to appear in chat overlays that monitor those platforms.</p>
+            <p>Please do not report issues related to messages not appearing directly in Streamer.bot's chat tab when *not* using an Action ID, as this relies on functionality that may need to be specifically added or modified by the Streamer.bot developers.</p>
         </div>
     </div>
-    
-    <div id="integration-features" class="section">
-        <h2>Integration Features</h2>
-        
-        <h3>Two Integration Modes</h3>
-        <ul>
-            <li><strong>Chat Overlay Mode (No Action ID):</strong>
-                <ul>
-                    <li>Messages appear directly in Streamer.bot's chat overlay</li>
-                    <li>No custom processing or filtering</li>
-                    <li>Simplest setup - just enable the WebSocket and leave Action ID blank</li>
-                </ul>
-            </li>
-            <li><strong>Custom Action Mode (With Action ID):</strong>
-                <ul>
-                    <li>Messages trigger a custom action in Streamer.bot</li>
-                    <li>Allows custom processing, filtering, and routing</li>
-                    <li>Can trigger sounds, alerts, or other actions based on message content</li>
-                </ul>
-            </li>
-        </ul>
-        
-        <h3>Benefits of WebSocket Integration</h3>
-        <ul>
-            <li>More reliable than HTTP - maintains a persistent connection</li>
-            <li>Lower latency for real-time chat</li>
-            <li>No CORS issues (common with HTTP API)</li>
-            <li>Works with Streamer.bot's built-in chat system</li>
-        </ul>
-        
-        <h3>Customizing the Chat Overlay</h3>
-        <p>With Streamer.bot's built-in chat overlay:</p>
-        <ul>
-            <li>Customize colors, fonts, and layout directly in Streamer.bot</li>
-            <li>Messages from different platforms are automatically color-coded</li>
-            <li>User avatars can be displayed (if provided by the platform)</li>
-            <li>Custom styling for highlighted messages, donations, etc.</li>
-        </ul>
-    </div>
-    
-    <div id="troubleshooting" class="section">
-        <h2>Troubleshooting</h2>
-        
-        <h3>Common Issues</h3>
-        <ul>
-            <li>
-                <strong>Cannot connect to WebSocket</strong>:
-                <ul>
-                    <li>Verify the WebSocket Server is enabled and running in Streamer.bot</li>
-                    <li>Check that the port is correct (default: 8080)</li>
-                    <li>Ensure no firewall is blocking the connection</li>
-                    <li>Try restarting both applications</li>
-                </ul>
-            </li>
-            <li>
-                <strong>Authentication failures</strong>:
-                <ul>
-                    <li>Double-check that the password in SocialStream.Ninja matches exactly what's set in Streamer.bot</li>
-                    <li>Try disabling authentication temporarily to test the connection</li>
-                </ul>
-            </li>
-            <li>
-                <strong>Action not triggered</strong>:
-                <ul>
-                    <li>Verify the Action ID is correct (copy it directly from Streamer.bot)</li>
-                    <li>Check Streamer.bot logs for any errors</li>
-                    <li>Ensure the action is enabled in Streamer.bot</li>
-                </ul>
-            </li>
-            <li>
-                <strong>Messages not appearing in overlay</strong>:
-                <ul>
-                    <li>Make sure no Action ID is specified if you want direct chat overlay integration</li>
-                    <li>Check that the chat overlay is properly set up in OBS</li>
-                    <li>Verify that the WebSocket connection is established</li>
-                </ul>
-            </li>
-        </ul>
-        
-        <h3>Debugging</h3>
-        <ol>
-            <li>Enable debug logging in SocialStream.Ninja settings</li>
-            <li>Check the browser console for any WebSocket errors</li>
-            <li>In Streamer.bot, monitor the <strong>Action Queues</strong> → <strong>Action History</strong> to see if actions are being triggered</li>
-            <li>Test with a simple action first before adding complex logic</li>
-        </ol>
-    </div>
-    
-    <div id="advanced-usage" class="section">
-        <h2>Advanced Usage</h2>
-        
-        <h3>Combining Both Modes</h3>
-        <p>If you want both custom action processing AND chat overlay display:</p>
-        <ol>
-            <li>Specify an Action ID in SocialStream.Ninja</li>
-            <li>In your custom action, add a C# sub-action with the following code:</li>
-            <pre><code>using System;
 
-public class CPHInline
-{
-    public bool Execute()
-    {
-        // Extract message data from arguments
-        string platform = args.ContainsKey("platform") ? args["platform"].ToString() : "unknown";
-        string username = args.ContainsKey("username") ? args["username"].ToString() : "Unknown User";
-        string message = args.ContainsKey("message") ? args["message"].ToString() : "";
-        string avatar = args.ContainsKey("avatar") ? args["avatar"].ToString() : "";
-        
-        // Format the platform name more nicely
-        platform = char.ToUpper(platform[0]) + platform.Substring(1).ToLowerInvariant();
-        
-        // Create the payload for a raw chat message
-        var payload = new
-        {
-            request = "ChatMessage",
-            id = "chat-message-" + DateTime.Now.Ticks,
-            data = new
-            {
-                message = message,
-                platforms = new[] { platform },
-                userName = username,
-                userId = args.ContainsKey("userId") ? args["userId"].ToString() : username,
-                role = 1, // 1=Regular viewer
-                avatar = avatar,
-                isBot = args.ContainsKey("isBot") && (bool)args["isBot"],
-                source = "SocialStream.Ninja"
-            }
-        };
-        
-        // Send to Streamer.bot's chat system
-        CPH.WebsocketSend(Newtonsoft.Json.JsonConvert.SerializeObject(payload));
-        
-        return true;
-    }
-}</code></pre>
-        </ol>
-        
-        <h3>Custom Message Formatting</h3>
-        <p>You can customize how messages appear by modifying the WebSocket payload:</p>
-        <ul>
-            <li>Add platform icons as prefixes</li>
-            <li>Format usernames differently based on platform</li>
-            <li>Apply custom colors to specific users or platforms</li>
-        </ul>
-        
-        <h3>Command Processing</h3>
-        <p>Process commands from any platform:</p>
-        <pre><code>// Inside your C# code action
-if (message.StartsWith("!"))
-{
-    string command = message.Split(' ')[0].Substring(1).ToLowerInvariant();
-    CPH.SetArgument("command", command);
-    
-    // Get any parameters after the command
-    string parameters = message.Contains(" ") ? message.Substring(message.IndexOf(' ') + 1) : "";
-    CPH.SetArgument("parameters", parameters);
-    
-    // Run specific command action
-    switch (command)
-    {
-        case "help":
-            CPH.RunAction("Command - Help");
-            break;
-        case "socials":
-            CPH.RunAction("Command - Socials");
-            break;
-        default:
-            // Process unknown command
-            break;
-    }
-}</code></pre>
-        
-        <h3>Handling Special Events</h3>
-        <p>Beyond chat messages, you can handle donations, memberships, etc.:</p>
-        <pre><code>// Inside your C# code action
-string eventType = args.ContainsKey("event") ? args["event"].ToString() : "chat";
-
-switch (eventType)
-{
-    case "donation":
-        // Process donation event
-        CPH.RunAction("Process Donation");
-        break;
-    case "membership":
-        // Process membership event
-        CPH.RunAction("Process Membership");
-        break;
-    case "subscription":
-        // Process subscription event
-        CPH.RunAction("Process Subscription");
-        break;
-}</code></pre>
-    </div>
-    
-    <hr>
-    
-    <p>With this WebSocket integration, you can unify chat from over 150 sources into Streamer.bot, providing a seamless experience for both you and your viewers. The setup leverages Streamer.bot's powerful WebSocket capabilities with SocialStream.Ninja's multi-platform support.</p>
-    
-    <p>For more information, visit the <a href="https://wiki.streamer.bot/">Streamer.bot Wiki</a> or join their Discord community.</p>
-</body>
-</html>
+</body></html>
