@@ -36,6 +36,8 @@
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
+		if (element.skip){return resp;}
+		
 		if (!element){return resp;}
 		
 		if (!element.childNodes || !element.childNodes.length){
@@ -47,7 +49,10 @@
 		}
 		
 		element.childNodes.forEach(node=>{
-			if (node.childNodes.length){
+			
+			if (node.skip){
+			//
+			} else if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent)+" ";
@@ -80,6 +85,7 @@
 		
 		var name="";
 		try {
+			ele.querySelector("[class^='ChatMessageAuthorPanel_name']").skip = true;
 			name = escapeHtml(ele.querySelector("[class^='ChatMessageAuthorPanel_name']").textContent.split(":")[0].trim());
 		} catch(e){
 		}
@@ -93,6 +99,7 @@
 		var badges=[];
 		try {
 			ele.querySelectorAll("img[class^='ChatBadge_image_'][src]").forEach(badge=>{
+				badge.skip = true;
 				badges.push(badge.src);
 			});
 		} catch(e){
