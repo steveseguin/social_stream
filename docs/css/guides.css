@@ -142,3 +142,519 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Add these styles to your guides.css file */
+
+/* Sticky Navigation */
+.guide-navigation.sticky {
+    position: sticky;
+    top: 0;
+    background-color: var(--background-light);
+    z-index: 100;
+    box-shadow: var(--shadow-md);
+    transition: box-shadow 0.3s ease;
+}
+
+.guide-nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.5rem 0;
+}
+
+.guide-nav-link {
+    padding: 0.8rem 1.5rem;
+    background-color: var(--background-card);
+    border-radius: var(--radius-md);
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+}
+
+.guide-nav-link:hover, .guide-nav-link.active {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Improved Troubleshooting Grid */
+.troubleshooting-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 3rem;
+    margin-bottom: 4rem;
+}
+
+@media (min-width: 992px) {
+    .troubleshooting-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.troubleshooting-card {
+    position: relative;
+    background-color: var(--background-card);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.troubleshooting-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.issue-header {
+    display: flex;
+    align-items: center;
+    padding: 2rem;
+    background-color: var(--background-dark);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.issue-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    background-color: rgba(98, 0, 234, 0.1);
+    border-radius: 50%;
+    margin-right: 1.5rem;
+    flex-shrink: 0;
+}
+
+.issue-icon img {
+    width: 2.6rem;
+    height: 2.6rem;
+}
+
+.issue-header h3 {
+    margin-bottom: 0;
+    font-size: 1.8rem;
+    line-height: 1.3;
+}
+
+.issue-content {
+    padding: 2rem;
+}
+
+.issue-description {
+    margin-bottom: 2.5rem;
+    color: var(--text-secondary);
+    font-size: 1.6rem;
+    line-height: 1.5;
+}
+
+.solution {
+    position: relative;
+    margin-bottom: 3rem;
+    padding-left: 1.5rem;
+    border-left: 3px solid var(--primary-color);
+}
+
+.solution:last-child {
+    margin-bottom: 0;
+}
+
+.solution h5 {
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    font-size: 1.7rem;
+    display: flex;
+    align-items: center;
+}
+
+.solution h5::before {
+    content: '';
+    display: inline-block;
+    width: 0.8rem;
+    height: 0.8rem;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    margin-right: 1rem;
+    margin-left: -2.2rem;
+}
+
+.solution-steps {
+    padding-left: 2rem;
+}
+
+.solution-steps li {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.solution-steps li::before {
+    content: '•';
+    color: var(--primary-color);
+    font-weight: bold;
+    position: absolute;
+    left: -1.5rem;
+}
+
+.solution-steps ol {
+    margin-top: 1rem;
+    padding-left: 2rem;
+    counter-reset: item;
+}
+
+.solution-steps ol li {
+    margin-bottom: 0.8rem;
+    counter-increment: item;
+}
+
+.solution-steps ol li::before {
+    content: counter(item) ".";
+    left: -2rem;
+}
+
+.solution-image {
+    margin-top: 1.5rem;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+.solution-image img {
+    max-width: 100%;
+    display: block;
+}
+
+.code-block {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius-sm);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    overflow-x: auto;
+    position: relative;
+}
+
+pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+}
+
+.support-cta {
+    text-align: center;
+    background-color: var(--primary-color);
+    padding: 4rem;
+    border-radius: var(--radius-md);
+    color: white;
+    margin-top: 5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.support-cta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    pointer-events: none;
+}
+
+.support-cta h3 {
+    color: white;
+    margin-bottom: 1.5rem;
+    font-size: 2.8rem;
+}
+
+.support-cta p {
+    margin-bottom: 2.5rem;
+    font-size: 1.8rem;
+    max-width: 60rem;
+    margin-left: auto;
+    margin-right: auto;
+    opacity: 0.9;
+}
+
+.support-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.support-buttons .btn-primary {
+    background-color: white;
+    color: var(--primary-color);
+    border: none;
+}
+
+.support-buttons .btn-primary:hover {
+    background-color: var(--background-light);
+    transform: translateY(-3px);
+}
+
+.support-buttons .btn-secondary {
+    background-color: transparent;
+    border: 2px solid white;
+    color: white;
+}
+
+.support-buttons .btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-3px);
+}
+
+/* Section transitions */
+.guide-section {
+    position: relative;
+    padding: 6rem 0;
+}
+
+.guide-section::before {
+    content: '';
+    position: absolute;
+    top: -3rem;
+    left: 0;
+    right: 0;
+    height: 3rem;
+    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.02));
+    pointer-events: none;
+}
+
+.guide-section.alt {
+    background-color: var(--background-dark);
+}
+
+/* Guide Cards */
+.guide-card {
+    background-color: var(--background-card);
+    border-radius: var(--radius-md);
+    padding: 2.5rem;
+    margin-bottom: 3rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.guide-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.guide-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.guide-list li, .guide-steps li {
+    margin-bottom: 1.2rem;
+}
+
+.guide-note {
+    background-color: rgba(98, 0, 234, 0.1);
+    border-left: 4px solid var(--primary-color);
+    padding: 1.5rem;
+    margin: 2rem 0;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.guide-image {
+    margin: 2rem 0;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Platform Guides */
+.platform-guide {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.platform-guide:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.platform-guide h4 {
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+/* Templates Grid */
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.5rem;
+    margin: 3rem 0;
+}
+
+.template-card {
+    background-color: var(--background-light);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.template-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.template-preview {
+    height: 180px;
+    overflow: hidden;
+}
+
+.template-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.template-card:hover .template-preview img {
+    transform: scale(1.05);
+}
+
+.template-card h4 {
+    padding: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.template-card p {
+    padding: 0 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.template-card a {
+    margin: 0 1.5rem 1.5rem;
+    display: inline-block;
+}
+
+.template-note {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+/* Accordion styling for FAQ */
+.accordion {
+    margin: 3rem 0;
+}
+
+.accordion-item {
+    background-color: var(--background-card);
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.accordion-header {
+    width: 100%;
+    padding: 2rem;
+    text-align: left;
+    background-color: var(--background-card);
+    border: none;
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    position: relative;
+    transition: background-color 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.accordion-header:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.accordion-icon {
+    position: relative;
+    width: 2rem;
+    height: 2rem;
+}
+
+.accordion-icon::before,
+.accordion-icon::after {
+    content: '';
+    position: absolute;
+    background-color: var(--primary-color);
+    transition: transform 0.3s ease;
+}
+
+.accordion-icon::before {
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    transform: translateY(-50%);
+}
+
+.accordion-icon::after {
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 100%;
+    transform: translateX(-50%);
+}
+
+.accordion-item.active .accordion-icon::after {
+    transform: translateX(-50%) rotate(90deg);
+}
+
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding: 0 2rem;
+}
+
+.accordion-item.active .accordion-content {
+    max-height: 500px;
+    padding-bottom: 2rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .guide-nav-links {
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 1rem;
+    }
+    
+    .guide-nav-link {
+        flex: 0 0 auto;
+    }
+    
+    .troubleshooting-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .templates-grid,
+    .support-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .solution-steps {
+        padding-left: 1rem;
+    }
+    
+    .issue-header h3 {
+        font-size: 1.6rem;
+    }
+}
