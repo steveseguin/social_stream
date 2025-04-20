@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supported Sites - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/featured.css">
+    <link rel="stylesheet" href="css/sites.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Complete list of platforms supported by Social Stream Ninja with setup instructions for each site.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="../icons/icon-128.png" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="download.html">Download</a></li>
+                    <li><a href="guides.html">Guides</a></li>
+                    <li><a href="commands.html">Commands & API</a></li>
+                    <li><a href="supported-sites.html" class="active">Supported Sites</a></li>
+                    <li><a href="support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="mobile-nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Supported Sites</h1>
+            <p>Social Stream Ninja works with 100+ platforms and services. Click on any site to learn how to set it up.</p>
+        </div>
+    </section>
+
+    <section class="sites-section">
+        <div class="container">
+            <div class="sites-search">
+                <input type="text" id="siteSearch" placeholder="Search for a platform...">
+            </div>
+            
+            <div class="sites-grid" id="sitesGrid">
+                <!-- Sites will be populated here by JavaScript -->
+            </div>
+            
+            <div id="siteModal" class="site-modal">
+                <div class="site-modal-content">
+                    <span class="close-modal">&times;</span>
+                    <div class="site-modal-header">
+                        <img id="modalIcon" src="" alt="Site Icon">
+                        <h2 id="modalTitle"></h2>
+                    </div>
+                    <div class="site-modal-body">
+                        <p id="modalDescription"></p>
+                        <h3>Setup Instructions:</h3>
+                        <div id="modalInstructions"></div>
+                        <div id="modalNotes" class="site-notes"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="get-started">
+        <div class="container">
+            <h2>Don't See Your Platform?</h2>
+            <p>If your preferred streaming or chat platform isn't listed, we can help add support for it.</p>
+            <div class="get-started-cta">
+                <a href="support.html#request" class="btn btn-primary">Request a Platform</a>
+                <a href="guides.html#custom-integration" class="btn btn-secondary">Create Custom Integration</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Consolidates your live social messaging streams and more. Free and open source.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../icons/discord.svg" alt="Discord"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="features.html">Features</a></li>
+                        <li><a href="download.html">Download</a></li>
+                        <li><a href="guides.html">Guides</a></li>
+                        <li><a href="commands.html">Commands & API</a></li>
+                        <li><a href="supported-sites.html">Supported Sites</a></li>
+                        <li><a href="support.html">Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="guides.html#installation">Installation Guide</a></li>
+                        <li><a href="guides.html#customization">Customization Guide</a></li>
+                        <li><a href="guides.html#faq">FAQ</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Report an Issue</a></li>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Community</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Join our Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub Repository</a></li>
+                        <li><a href="support.html#contribute">Contribute</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License. Created by <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> with contributions from the community.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/sites.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

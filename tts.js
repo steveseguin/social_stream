@@ -544,7 +544,11 @@ TTS.configure = function(urlParams) {
     if (urlParams.has("readevents")) {
         TTS.doNotReadEvents = false;
     }
-
+	
+	if (urlParams.has("readouturls")) {
+        TTS.replaceURLInLink = false;
+    }
+	
     if (urlParams.has("neurosync")) {
         TTS.neuroSyncEnabled = true;
     }

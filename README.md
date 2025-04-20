@@ -1024,6 +1024,8 @@ Some icons used are licensed as attribution-required:
 
 <a href="https://www.flaticon.com/free-icons/vip" target="_blank" title="vip icons">Vip icons created by Freepik - Flaticon</a>
 
+Some vectors and icons by <a href="https://www.svgrepo.com" target="_blank">SVG Repo</a>
+
 Icons and any additional attribution for credits can be found <a href="https://socialstream.ninja/icons/" target="_blank">here</a>
 
 If there is missing attribution or concerns over any media, please contact us.

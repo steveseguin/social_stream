@@ -1,0 +1,220 @@
+/* Features Page Specific Styles */
+
+/* Page Hero */
+.page-hero {
+    padding: 12rem 0 6rem;
+    background-color: var(--background-dark);
+    text-align: center;
+}
+
+.page-hero h1 {
+    margin-bottom: 2rem;
+}
+
+.page-hero p {
+    font-size: 2rem;
+    color: var(--text-secondary);
+    max-width: 80rem;
+    margin: 0 auto;
+}
+
+/* Feature Items */
+.features-section {
+    padding: 8rem 0;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 6rem;
+    margin-bottom: 10rem;
+}
+
+.feature-item.reverse {
+    flex-direction: row-reverse;
+}
+
+.feature-image {
+    flex: 1;
+}
+
+.feature-image img {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+
+.feature-image img:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.feature-details {
+    flex: 1;
+}
+
+.feature-details h2 {
+    margin-bottom: 2rem;
+    color: var(--primary-color);
+}
+
+.feature-details p {
+    font-size: 1.8rem;
+    margin-bottom: 2.5rem;
+    color: var(--text-secondary);
+}
+
+.feature-list {
+    list-style: none;
+}
+
+.feature-list li {
+    position: relative;
+    padding-left: 3rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.6rem;
+}
+
+.feature-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    width: 1.8rem;
+    height: 1.8rem;
+    background-image: url('../images/icons/checkmark.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+/* Supported Platforms */
+.supported-platforms {
+    padding: 8rem 0;
+    background-color: var(--background-dark);
+}
+
+.platforms-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4rem;
+    margin: 5rem 0;
+}
+
+.platform-category {
+    background-color: var(--background-card);
+    border-radius: var(--radius-md);
+    padding: 3rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+
+.platform-category:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.platform-category h3 {
+    margin-bottom: 2rem;
+    color: var(--primary-color);
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.platform-category ul {
+    list-style: none;
+}
+
+.platform-category li {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1.6rem;
+}
+
+.platform-category li:last-child {
+    border-bottom: none;
+}
+
+.platform-note {
+    text-align: center;
+    margin-top: 3rem;
+    font-size: 1.8rem;
+}
+
+/* Comparison Table */
+.comparison {
+    padding: 8rem 0;
+}
+
+.comparison h2 {
+    text-align: center;
+    margin-bottom: 5rem;
+}
+
+.comparison-table {
+    overflow-x: auto;
+}
+
+.comparison-table table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.comparison-table th {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 2rem;
+    text-align: left;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.comparison-table td {
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1.6rem;
+}
+
+.comparison-table tr:last-child td {
+    border-bottom: none;
+}
+
+.comparison-table tr:nth-child(even) {
+    background-color: var(--background-dark);
+}
+
+.highlight {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Media Queries */
+@media (max-width: 992px) {
+    .feature-item {
+        flex-direction: column;
+        gap: 4rem;
+    }
+    
+    .feature-item.reverse {
+        flex-direction: column;
+    }
+    
+    .platforms-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .platforms-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .comparison-table th, 
+    .comparison-table td {
+        padding: 1.5rem 1rem;
+        font-size: 1.4rem;
+    }
+}

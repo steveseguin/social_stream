@@ -1,0 +1,357 @@
+/* Download Page Specific Styles */
+
+/* Download Tabs */
+.download-options {
+    padding: 6rem 0;
+}
+
+.download-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.tab-btn {
+    padding: 1.2rem 2.4rem;
+    background-color: var(--background-dark);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1.6rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+}
+
+.tab-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Download Cards */
+.download-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+}
+
+.download-card {
+    background-color: var(--background-card);
+    border-radius: var(--radius-md);
+    padding: 3rem;
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.download-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.download-card.highlight {
+    border: 2px solid var(--primary-color);
+}
+
+.badge {
+    position: absolute;
+    top: -1.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 2rem;
+    font-size: 1.4rem;
+    font-weight: 500;
+}
+
+.download-icon {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.download-icon img {
+    width: 8rem;
+    height: 8rem;
+}
+
+.download-card h3 {
+    margin-bottom: 1.5rem;
+}
+
+.download-card p {
+    margin-bottom: 2rem;
+    color: var(--text-secondary);
+}
+
+.download-card p.note {
+    font-size: 1.4rem;
+    font-style: italic;
+    color: var(--text-secondary);
+    margin-bottom: 3rem;
+}
+
+.download-card .btn {
+    margin-top: auto;
+    margin-bottom: 1rem;
+}
+
+/* Source Code */
+.source-code {
+    display: flex;
+    justify-content: center;
+}
+
+.github-card {
+    background-color: var(--background-card);
+    border-radius: var(--radius-md);
+    padding: 4rem;
+    box-shadow: var(--shadow-md);
+    max-width: 80rem;
+    width: 100%;
+}
+
+.github-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.github-header img {
+    width: 5rem;
+    height: 5rem;
+}
+
+.github-header h3 {
+    margin-bottom: 0;
+}
+
+.github-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+/* Installation Guide */
+.installation-guide {
+    padding: 8rem 0;
+    background-color: var(--background-dark);
+}
+
+.installation-guide.alt {
+    background-color: var(--background-light);
+}
+
+.installation-guide h2 {
+    text-align: center;
+    margin-bottom: 5rem;
+}
+
+.installation-steps {
+    max-width: 80rem;
+    margin: 0 auto;
+}
+
+.step {
+    display: flex;
+    margin-bottom: 5rem;
+    position: relative;
+}
+
+.step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 8rem;
+    left: 3rem;
+    height: calc(100% - 6rem);
+    width: 2px;
+    background-color: var(--border-color);
+}
+
+.step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 2.4rem;
+    font-weight: 600;
+    margin-right: 3rem;
+    z-index: 1;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-content h3 {
+    margin-bottom: 1.5rem;
+}
+
+.step-content p {
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.step-content code {
+    display: inline-block;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.3rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    margin: 0.5rem 0;
+}
+
+.step-image {
+    max-width: 100%;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    margin-top: 2rem;
+}
+
+/* FAQ Section */
+.faq {
+    padding: 8rem 0;
+}
+
+.faq h2 {
+    text-align: center;
+    margin-bottom: 5rem;
+}
+
+.accordion {
+    max-width: 80rem;
+    margin: 0 auto;
+}
+
+.accordion-item {
+    margin-bottom: 2rem;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    background-color: var(--background-card);
+}
+
+.accordion-header {
+    width: 100%;
+    text-align: left;
+    padding: 2rem;
+    font-size: 1.8rem;
+    font-weight: 500;
+    background-color: var(--background-card);
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease;
+}
+
+.accordion-header:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.accordion-icon {
+    position: relative;
+    width: 2rem;
+    height: 2rem;
+}
+
+.accordion-icon::before,
+.accordion-icon::after {
+    content: '';
+    position: absolute;
+    background-color: var(--primary-color);
+    transition: transform var(--transition-speed) ease;
+}
+
+.accordion-icon::before {
+    width: 2rem;
+    height: 2px;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+}
+
+.accordion-icon::after {
+    width: 2px;
+    height: 2rem;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+}
+
+.accordion-item.active .accordion-icon::after {
+    transform: translateX(-50%) rotate(90deg);
+}
+
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition-speed) ease;
+}
+
+.accordion-item.active .accordion-content {
+    max-height: 500px;
+}
+
+.accordion-content p {
+    padding: 0 2rem 2rem;
+    color: var(--text-secondary);
+}
+
+/* Media Queries */
+@media (max-width: 992px) {
+    .download-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .download-tabs {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .download-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .step {
+        flex-direction: column;
+    }
+    
+    .step-number {
+        margin-bottom: 2rem;
+        margin-right: 0;
+    }
+    
+    .step:not(:last-child)::after {
+        left: 3rem;
+        top: 6rem;
+        height: calc(100% - 6rem);
+        display: none;
+    }
+    
+    .github-buttons {
+        flex-direction: column;
+    }
+}
