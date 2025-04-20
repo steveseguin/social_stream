@@ -783,3 +783,279 @@ footer {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* Dark Mode Toggle Button */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 2rem;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease;
+}
+
+.theme-toggle:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode .theme-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.theme-toggle svg {
+    width: 2.2rem;
+    height: 2.2rem;
+    transition: fill var(--transition-speed) ease;
+    fill: var(--text-primary);
+}
+
+.dark-mode .theme-toggle svg {
+    fill: #fff;
+}
+
+.sun-icon, .dark-mode .moon-icon {
+    display: none;
+}
+
+.moon-icon, .dark-mode .sun-icon {
+    display: block;
+}
+
+/* Dark Mode Variables */
+:root {
+    /* Light Theme Variables (default) */
+    --primary-color: #6200ea;
+    --primary-light: #9d46ff;
+    --primary-dark: #0a00b6;
+    --secondary-color: #00e676;
+    --secondary-light: #66ffa6;
+    --secondary-dark: #00b248;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --background-light: #ffffff;
+    --background-dark: #f5f5f5;
+    --background-card: #ffffff;
+    --border-color: #e0e0e0;
+    --success-color: #00c853;
+    --error-color: #d50000;
+    --warning-color: #ffd600;
+    --info-color: #2196f3;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 16px;
+    --transition-speed: 0.3s;
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    --font-secondary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    --font-mono: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+/* Dark Theme Variables */
+.dark-mode {
+    --primary-color: #9d46ff;
+    --primary-light: #b975ff;
+    --primary-dark: #6200ea;
+    --secondary-color: #00e676;
+    --secondary-light: #66ffa6;
+    --secondary-dark: #00b248;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --background-light: #121212;
+    --background-dark: #1e1e1e;
+    --background-card: #2d2d2d;
+    --border-color: #444444;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Additional Dark Mode Specific Styles */
+.dark-mode body {
+    background-color: var(--background-light);
+    color: var(--text-primary);
+}
+
+.dark-mode header {
+    background-color: var(--background-light);
+    box-shadow: var(--shadow-sm);
+}
+
+.dark-mode footer {
+    background-color: #0f0f0f;
+}
+
+.dark-mode .code-block {
+    background-color: #2f2f2f;
+}
+
+.dark-mode .feature-card,
+.dark-mode .download-card,
+.dark-mode .support-card,
+.dark-mode .troubleshooting-card,
+.dark-mode .guide-card,
+.dark-mode .accordion-item,
+.dark-mode .accordion-header {
+    background-color: var(--background-card);
+}
+
+.dark-mode .feature-icon,
+.dark-mode .issue-icon {
+    background-color: rgba(157, 70, 255, 0.2);
+}
+
+.dark-mode .page-hero,
+.dark-mode .guide-section.alt,
+.dark-mode .how-to-use,
+.dark-mode .faq {
+    background-color: var(--background-dark);
+}
+
+.dark-mode .btn-outline {
+    border-color: var(--primary-color);
+}
+
+.dark-mode .btn-text:hover {
+    background-color: rgba(157, 70, 255, 0.1);
+}
+
+/* Smooth Transition for Theme Toggle */
+body {
+    transition: background-color var(--transition-speed) ease,
+                color var(--transition-speed) ease;
+}
+
+header, footer, .feature-card, .download-card, .support-card, 
+.troubleshooting-card, .guide-card, .accordion-item, 
+.page-hero, .guide-section, .how-to-use, .faq {
+    transition: background-color var(--transition-speed) ease,
+                box-shadow var(--transition-speed) ease;
+}
+
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 2rem;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease;
+}
+
+.theme-toggle:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode .theme-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.theme-toggle svg {
+    width: 2.2rem;
+    height: 2.2rem;
+    transition: fill var(--transition-speed) ease;
+    fill: var(--text-primary);
+}
+
+.dark-mode .theme-toggle svg {
+    fill: #fff;
+}
+
+.sun-icon, .dark-mode .moon-icon {
+    display: none;
+}
+
+.moon-icon, .dark-mode .sun-icon {
+    display: block;
+}
+
+header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+}
+
+/* Add these CSS rules at the end of styles.css */
+
+/* Apply dark mode variable transitions to the root element */
+:root {
+    transition: 
+        --primary-color var(--transition-speed) ease,
+        --primary-light var(--transition-speed) ease,
+        --primary-dark var(--transition-speed) ease,
+        --text-primary var(--transition-speed) ease,
+        --text-secondary var(--transition-speed) ease,
+        --background-light var(--transition-speed) ease,
+        --background-dark var(--transition-speed) ease,
+        --background-card var(--transition-speed) ease,
+        --border-color var(--transition-speed) ease,
+        --shadow-sm var(--transition-speed) ease,
+        --shadow-md var(--transition-speed) ease,
+        --shadow-lg var(--transition-speed) ease;
+}
+
+/* Fix dark mode header transitions */
+.dark-mode header {
+    background-color: var(--background-light) !important;
+}
+
+.dark-mode .theme-toggle svg {
+    stroke: var(--text-primary);
+}
+
+/* Make sure template cards work in dark mode */
+.dark-mode .template-card {
+    background-color: var(--background-card);
+}
+
+.dark-mode .template-content {
+    color: var(--text-primary);
+}
+
+.dark-mode .template-description {
+    color: var(--text-secondary);
+}
+
+.dark-mode .template-author {
+    color: var(--text-secondary);
+}
+
+/* Fix inputs in dark mode */
+.dark-mode input {
+    background-color: var(--background-card);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.dark-mode .template-search input {
+    background-color: var(--background-card);
+    color: var(--text-primary);
+}
+
+/* Fix modal in dark mode */
+.dark-mode #css-modal pre {
+    background-color: #2d2d2d;
+    color: #f8f8f8;
+}
+
+/* Fix media queries for dark mode */
+@media (max-width: 768px) {
+    .dark-mode nav {
+        background-color: var(--background-light);
+    }
+}

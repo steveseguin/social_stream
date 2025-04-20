@@ -426,33 +426,51 @@
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="logo">
-                <a href="index.html">
-                    <img src="../icons/icon-128.png" alt="Social Stream Ninja Logo">
-                    <span>Social Stream Ninja</span>
-                </a>
-            </div>
-            <nav>
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="features.html">Features</a></li>
-                    <li><a href="download.html">Download</a></li>
-                    <li><a href="guides.html">Guides</a></li>
-                    <li><a href="commands.html">Commands & API</a></li>
-                    <li><a href="supported-sites.html">Supported Sites</a></li>
+	<header>
+		<div class="container">
+			<div class="logo">
+				<a href="index.html">
+					<img src="../icons/icon-128.png" alt="Social Stream Ninja Logo">
+					<span>Social Stream Ninja</span>
+				</a>
+			</div>
+			<nav>
+				<ul>
+					<li><a href="index.html">Home</a></li>
+					<li><a href="features.html">Features</a></li>
+					<li><a href="download.html">Download</a></li>
+					<li><a href="guides.html">Guides</a></li>
+					<li><a href="commands.html">Commands & API</a></li>
+					<li><a href="supported-sites.html">Supported Sites</a></li>
 					<li><a href="templates.html" class="active">Templates</a></li>
-                    <li><a href="support.html">Support</a></li>
-                </ul>
-            </nav>
-            <div class="mobile-nav-toggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </div>
-    </header>
+					<li><a href="support.html">Support</a></li>
+				</ul>
+			</nav>
+			<div class="header-controls">
+				<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+					<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+						<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+					</svg>
+					<svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+						<circle cx="12" cy="12" r="5"></circle>
+						<line x1="12" y1="1" x2="12" y2="3"></line>
+						<line x1="12" y1="21" x2="12" y2="23"></line>
+						<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+						<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+						<line x1="1" y1="12" x2="3" y2="12"></line>
+						<line x1="21" y1="12" x2="23" y2="12"></line>
+						<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+						<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+					</svg>
+				</button>
+				<div class="mobile-nav-toggle">
+					<span></span>
+					<span></span>
+					<span></span>
+				</div>
+			</div>
+		</div>
+	</header>
 
     <section class="page-hero">
         <div class="container">
@@ -1043,7 +1061,7 @@
                         <li><a href="guides.html">Guides</a></li>
                         <li><a href="commands.html">Commands & API</a></li>
                         <li><a href="supported-sites.html">Supported Sites</a></li>
-						<li><a href="templates.html class="active">Templates</a></li>
+                        <li><a href="templates.html">Templates</a></li>
                         <li><a href="support.html">Support</a></li>
                     </ul>
                 </div>
@@ -1072,7 +1090,7 @@
             </div>
         </div>
     </footer>
-
+	<script src="js/main.js"></script>
     <script>
         // Current year for copyright
         document.getElementById('current-year').textContent = new Date().getFullYear();
@@ -1134,352 +1152,6 @@
             });
         }
         
-        // CSS Modal Functionality
-        const cssSnippets = {
-            'dark-theme': `/* Dark Theme with Neon Accents */
-body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: transparent;
-    overflow: hidden;
-}
-
-#chat-container {
-    padding: 25px;
-    max-width: 350px;
-    margin: auto;
-}
-
-.message {
-    background: linear-gradient(145deg, #121212, #1a1a1a);
-    padding: 18px;
-    margin-bottom: 20px;
-    border-radius: 10px;
-    border: 1px solid #333;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    color: #eee;
-    opacity: 0;
-    transform: translateY(-20px);
-    animation: slideFadeIn 0.5s ease forwards;
-}
-
-@keyframes slideFadeIn {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.name {
-    color: #0fe;
-    font-size: 1.2em;
-    font-weight: 700;
-    text-shadow: 0 0 5px rgba(0, 255, 238, 0.5);
-}
-
-.text {
-    font-size: 0.95em;
-    line-height: 1.4;
-    margin: 8px 0;
-}
-
-.donation {
-    color: #f0f;
-    font-weight: 600;
-    text-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
-}
-
-.avatar-wrapper {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 15px;
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(45deg, #0fe, #f0f);
-    padding: 3px;
-    vertical-align: middle;
-}
-
-.source-icon {
-    width: 20px;
-    height: 20px;
-    vertical-align: middle;
-    filter: drop-shadow(0 0 2px rgba(0, 255, 238, 0.5));
-}
-
-.badge {
-    display: inline-block;
-    height: 1em;
-    margin-left: 5px;
-    vertical-align: middle;
-    filter: drop-shadow(0 0 2px rgba(255, 0, 255, 0.5));
-}`,
-            
-            'minimalist': `/* Minimalist Style */
-body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    font-family: 'Inter', -apple-system, sans-serif;
-    background-color: transparent;
-    overflow: hidden;
-}
-
-#chat-container {
-    padding: 20px;
-    max-width: 320px;
-    margin: auto;
-}
-
-.message {
-    background-color: rgba(255, 255, 255, 0.85);
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    color: #333;
-    transition: all 0.2s ease;
-    opacity: 0;
-    transform: translateY(10px);
-    animation: fadeIn 0.3s ease forwards;
-}
-
-@keyframes fadeIn {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.name {
-    color: #111;
-    font-size: 1em;
-    font-weight: 600;
-}
-
-.text {
-    font-size: 0.9em;
-    line-height: 1.5;
-    margin: 8px 0 0 0;
-}
-
-.donation {
-    color: #2e7d32;
-    font-weight: 500;
-    font-size: 0.85em;
-    margin-top: 5px;
-}
-
-.avatar-wrapper {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 10px;
-    overflow: hidden;
-    vertical-align: middle;
-}
-
-.source-icon, .badge {
-    width: 16px;
-    height: 16px;
-    vertical-align: middle;
-    opacity: 0.7;
-}`,
-            
-            'rounded': `/* Rounded Style with Gradients */
-body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: transparent;
-    overflow: hidden;
-}
-
-#chat-container {
-    padding: 25px;
-    max-width: 380px;
-    margin: auto;
-}
-
-.message {
-    background: linear-gradient(135deg, #6e8efb, #a777e3);
-    padding: 18px;
-    margin-bottom: 22px;
-    border-radius: 24px;
-    box-shadow: 0 4px 15px rgba(107, 142, 251, 0.3);
-    color: white;
-    opacity: 0;
-    transform: scale(0.95);
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes popIn {
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-.name-bg {
-    background-color: rgba(255, 255, 255, 0.2);
-    padding: 5px 15px;
-    border-radius: 20px;
-    display: inline-block;
-}
-
-.name {
-    color: white;
-    font-size: 1.1em;
-    font-weight: 600;
-}
-
-.text {
-    font-size: 0.95em;
-    line-height: 1.5;
-    margin: 12px 5px 5px 5px;
-}
-
-.donation {
-    background-color: rgba(255, 255, 255, 0.25);
-    color: white;
-    font-weight: 600;
-    padding: 5px 15px;
-    border-radius: 20px;
-    display: inline-block;
-    margin-top: 8px;
-}
-
-.avatar-wrapper {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 12px;
-    position: relative;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.3);
-    padding: 3px;
-    vertical-align: middle;
-}
-
-.source-icon {
-    width: 20px;
-    height: 20px;
-    vertical-align: middle;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.2));
-}`,
-            
-            'retro': `/* Retro Computer Terminal Style */
-@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-
-body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    font-family: 'VT323', monospace;
-    background-color: transparent;
-    overflow: hidden;
-}
-
-#chat-container {
-    padding: 20px;
-    max-width: 450px;
-    margin: auto;
-}
-
-.message {
-    background-color: rgba(0, 0, 0, 0.8);
-    padding: 15px;
-    margin-bottom: 15px;
-    border: 2px solid #00ff00;
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-    color: #00ff00;
-    position: relative;
-    opacity: 0;
-    animation: scanline 0.5s linear forwards;
-}
-
-@keyframes scanline {
-    0% {
-        opacity: 0;
-        box-shadow: 0 0 0 rgba(0, 255, 0, 0.5);
-    }
-    50% {
-        opacity: 1;
-        box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
-    }
-    100% {
-        opacity: 1;
-        box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-    }
-}
-
-.message::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        rgba(0, 255, 0, 0.1) 50%, 
-        rgba(0, 0, 0, 0) 50%
-    );
-    background-size: 100% 4px;
-    pointer-events: none;
-    z-index: 1;
-}
-
-.name {
-    color: #ffffff;
-    font-size: 1.5em;
-    font-weight: 400;
-    text-shadow: 0 0 5px #ffffff;
-}
-
-.text {
-    font-size: 1.3em;
-    line-height: 1.3;
-    margin: 8px 0;
-    text-shadow: 0 0 2px #00ff00;
-}
-
-.text::after {
-    content: "_";
-    animation: blink 1s infinite;
-}
-
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-}
-
-.donation {
-    color: #ff00ff;
-    font-weight: 400;
-    font-size: 1.4em;
-    text-shadow: 0 0 5px #ff00ff;
-}
-
-.source-icon, .badge {
-    filter: brightness(0) invert(1);
-    opacity: 0.8;
-}`
-        };
-        
         function showCssModal(cssType) {
             const modal = document.getElementById('css-modal');
             const title = document.getElementById('css-modal-title');
@@ -1497,16 +1169,21 @@ body, html {
             document.body.style.overflow = 'auto';
         }
         
-        function copyCss() {
+		function copyCss() {
             const content = document.getElementById('css-modal-content').textContent;
             navigator.clipboard.writeText(content)
                 .then(() => {
+                    alert('CSS copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
                     alert('Failed to copy. Try selecting and copying manually.');
                 });
         }
+		
+		
         
-        // Add step numbering
-        document.addEventListener('DOMContentLoaded', () => {
+       document.addEventListener('DOMContentLoaded', () => {
             // Number the steps
             const stepNumbers = document.querySelectorAll('.step-number');
             stepNumbers.forEach((el, index) => {
@@ -1529,8 +1206,7 @@ body, html {
                     }
                 });
             });
-        });('CSS copied to clipboard!');
-                })
-                .catch(err => {
-                    console.error('Could not copy text: ', err);
-                    alert
+        });
+ </script>
+</body>
+</html>
