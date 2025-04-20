@@ -1,0 +1,222 @@
+/* Sites Page Specific Styles */
+
+.sites-search {
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.sites-search input {
+    width: 100%;
+    max-width: 60rem;
+    padding: 1.2rem 2rem;
+    font-size: 1.6rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-speed) ease;
+}
+
+.sites-search input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(98, 0, 234, 0.1);
+}
+
+.sites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    gap: 2.5rem;
+    margin-bottom: 5rem;
+}
+
+.site-item {
+    position: relative;
+    background-color: var(--background-card);
+    border-radius: var(--radius-md);
+    padding: 2.5rem 2rem 2rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+    text-align: center;
+    cursor: pointer;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.site-item:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.site-icon {
+    width: 5rem;
+    height: 5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 15%;
+    object-fit: contain;
+}
+
+.site-item h3 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.site-item-tag {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: var(--radius-sm);
+    background-color: var(--primary-light);
+    color: white;
+    font-weight: 500;
+}
+
+.site-item-tag.popout {
+    background-color: var(--secondary-color);
+}
+
+.site-item-tag.websocket {
+    background-color: var(--primary-dark);
+}
+
+.site-item-tag.toggle {
+    background-color: var(--warning-color);
+    color: var(--text-primary);
+}
+
+/* Modal Styles */
+.site-modal {
+    display: none;
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity var(--transition-speed) ease;
+}
+
+.site-modal.show {
+    display: block;
+    opacity: 1;
+}
+
+.site-modal-content {
+    background-color: var(--background-light);
+    margin: 10rem auto;
+    max-width: 80rem;
+    width: 90%;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: 3rem;
+    transform: translateY(-20px);
+    transition: transform var(--transition-speed) ease;
+}
+
+.site-modal.show .site-modal-content {
+    transform: translateY(0);
+}
+
+.close-modal {
+    position: absolute;
+    right: 2rem;
+    top: 2rem;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color var(--transition-speed) ease;
+}
+
+.close-modal:hover {
+    color: var(--text-primary);
+}
+
+.site-modal-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.site-modal-header img {
+    width: 6rem;
+    height: 6rem;
+    margin-right: 2rem;
+    border-radius: 15%;
+}
+
+.site-modal-header h2 {
+    margin: 0;
+    text-align: left;
+}
+
+.site-modal-body {
+    font-size: 1.6rem;
+}
+
+.site-modal-body h3 {
+    margin: 2.5rem 0 1.5rem;
+}
+
+.site-modal-body ul {
+    list-style: disc;
+    padding-left: 2rem;
+    margin-bottom: 2rem;
+}
+
+.site-modal-body ul li {
+    margin-bottom: 0.8rem;
+}
+
+.site-notes {
+    margin-top: 2.5rem;
+    padding: 1.5rem;
+    background-color: rgba(98, 0, 234, 0.05);
+    border-left: 3px solid var(--primary-color);
+    border-radius: var(--radius-sm);
+}
+
+.site-notes h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .sites-grid {
+        grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    }
+    
+    .site-modal-content {
+        padding: 2rem;
+        margin: 5rem auto;
+        width: 95%;
+    }
+    
+    .site-modal-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .site-modal-header img {
+        margin-right: 0;
+        margin-bottom: 1.5rem;
+    }
+    
+    .site-modal-header h2 {
+        text-align: center;
+    }
+}
