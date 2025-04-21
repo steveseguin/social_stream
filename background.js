@@ -1037,69 +1037,80 @@ async function loadmidi() {
 
 var newFileHandle = false;
 async function overwriteFile(data = false) {
-	if (data == "setup") {
-		const opts = {
-			types: [
-				{
-					description: "JSON data",
-					accept: { "text/plain": [".txt"], "application/json": [".json"] }
-				}
-			]
-		};
-
-		if (!window.showSaveFilePicker) {
-			console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
-		}
-		newFileHandle = await window.showSaveFilePicker(opts);
-	} else if (newFileHandle && data) {
-		if (typeof newFileHandle == "string") {
-			ipcRenderer.send("write-to-file", { filePath: newFileHandle, data: data });
-		} else {
-			const writableStream = await newFileHandle.createWritable();
-			await writableStream.write(data);
-			await writableStream.close();
-		}
-	}
+    if (data == "setup") {
+        const opts = {
+            types: [
+                {
+                    description: "JSON data",
+                    accept: { "text/plain": [".txt"], "application/json": [".json"] }
+                }
+            ]
+        };
+        if (!window.showSaveFilePicker) {
+            console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
+        }
+        newFileHandle = await window.showSaveFilePicker(opts);
+        
+        // Store file path when isSSAPP is true
+        if (isSSAPP && typeof newFileHandle === "string") {
+            localStorage.setItem("savedFilePath", newFileHandle);
+        }
+    } else if (newFileHandle && data) {
+        if (typeof newFileHandle == "string") {
+            ipcRenderer.send("write-to-file", { filePath: newFileHandle, data: data });
+        } else {
+            const writableStream = await newFileHandle.createWritable();
+            await writableStream.write(data);
+            await writableStream.close();
+        }
+    }
 }
 
 var newSavedNamesFileHandle = false;
 var uniqueNameSet = [];
 async function overwriteSavedNames(data = false) {
-	if (data == "setup") {
-		uniqueNameSet = [];
-
-		const opts = {
-			types: [
-				{
-					description: "Text file",
-					accept: { "text/plain": [".txt"] }
-				}
-			]
-		};
-		if (!window.showSaveFilePicker) {
-			console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
-		}
-		newSavedNamesFileHandle = await window.showSaveFilePicker(opts);
-	} else if (data == "clear") {
-		uniqueNameSet = [];
-		
-	} else if (data == "stop") {
-		newSavedNamesFileHandle = false;
-		uniqueNameSet = [];
-		
-	} else if (newSavedNamesFileHandle && data) {
-		if (uniqueNameSet.includes(data)) {
-			return;
-		}
-		uniqueNameSet.push(data);
-		if (typeof newSavedNamesFileHandle == "string") {
-			ipcRenderer.send("write-to-file", { filePath: newSavedNamesFileHandle, data: uniqueNameSet.join("\r\n") });
-		} else {
-			const writableStream = await newSavedNamesFileHandle.createWritable();
-			await writableStream.write(uniqueNameSet.join("\r\n"));
-			await writableStream.close();
-		}
-	}
+    if (data == "setup") {
+        uniqueNameSet = [];
+        const opts = {
+            types: [
+                {
+                    description: "Text file",
+                    accept: { "text/plain": [".txt"] }
+                }
+            ]
+        };
+        if (!window.showSaveFilePicker) {
+            console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
+        }
+        newSavedNamesFileHandle = await window.showSaveFilePicker(opts);
+        
+        // Store file path when isSSAPP is true
+        if (isSSAPP && typeof newSavedNamesFileHandle === "string") {
+            localStorage.setItem("savedNamesFilePath", newSavedNamesFileHandle);
+        }
+    } else if (data == "clear") {
+        uniqueNameSet = [];
+    } else if (data == "stop") {
+        newSavedNamesFileHandle = false;
+        uniqueNameSet = [];
+        
+        // Clear saved path
+        if (isSSAPP) {
+            localStorage.removeItem("savedNamesFilePath");
+        }
+    } else if (newSavedNamesFileHandle && data) {
+        if (uniqueNameSet.includes(data)) {
+            return;
+        }
+        uniqueNameSet.push(data);
+        if (typeof newSavedNamesFileHandle == "string") {
+            ipcRenderer.send("write-to-file", { filePath: newSavedNamesFileHandle, data: uniqueNameSet.join("\r\n") });
+        } else {
+            const writableStream = await newSavedNamesFileHandle.createWritable();
+            await writableStream.write(uniqueNameSet.join("\r\n"));
+            await writableStream.close();
+        }
+    }
 }
 
 /* var newFileHandleExcel = false;
@@ -8658,55 +8669,60 @@ async function fetchData(url) {
 }
 
 window.onload = async function () {
-	let programmedSettings = await fetchData("settings.json"); // allows you to load the settings from a file.
-	if (programmedSettings && typeof programmedSettings === "object") {
-		log("Loading override settings via settongs.json");
-		loadSettings(programmedSettings, true);
-	} else {
-		log("Loading settings from the main file into the background.js");
-		chrome.storage.sync.get(properties, function (item) { // sync shouldn't have our settings ; just stream ID and current extension state
-			// we load this at the end, so not to have a race condition loading MIDI or whatever else. (essentially, __main__)
-			
-			//console.warn(item);
-			
-			//log("properties", item);
-			if (isSSAPP && item) {
-				loadSettings(item, false); 
-				return;
-			}
-			
-			if (item?.settings) {
-				// ssapp
-				alert("upgrading from old storage structure format to new...");
-				chrome.storage.sync.remove(["settings"], function (Items) {
-					// ignored
-					log("upgrading from sync to local storage");
-				});
-				chrome.storage.local.get(["settings"], function (item2) {
-					if (item2?.settings){
-						item = [...item, ...item2];
-					}
-					if (item?.settings){
-						chrome.storage.local.set({
-							settings: item.settings
-						});
-					}
-					if (item){
-						loadSettings(item, false);
-					}
-				});
-				
-			} else {
-				loadSettings(item, false);
-				chrome.storage.local.get(["settings"], function (item2) {
-					if (item2){
-						//console.warn(item2);
-						loadSettings(item2, false);
-					}
-				});
-			}
-		});
-	}
+    let programmedSettings = await fetchData("settings.json");
+    if (programmedSettings && typeof programmedSettings === "object") {
+        log("Loading override settings via settongs.json");
+        loadSettings(programmedSettings, true);
+    } else {
+        log("Loading settings from the main file into the background.js");
+        chrome.storage.sync.get(properties, function (item) {
+            if (isSSAPP && item) {
+                loadSettings(item, false); 
+                
+                // Initialize file handles after settings are loaded
+                initializeFileHandles();
+                return;
+            }
+            
+            if (item?.settings) {
+                alert("upgrading from old storage structure format to new...");
+                chrome.storage.sync.remove(["settings"], function (Items) {
+                    log("upgrading from sync to local storage");
+                });
+                chrome.storage.local.get(["settings"], function (item2) {
+                    if (item2?.settings){
+                        item = [...item, ...item2];
+                    }
+                    if (item?.settings){
+                        chrome.storage.local.set({
+                            settings: item.settings
+                        });
+                    }
+                    if (item){
+                        loadSettings(item, false);
+                        
+                        // Initialize file handles after settings are loaded
+                        if (isSSAPP) {
+                            initializeFileHandles();
+                        }
+                    }
+                });
+                
+            } else {
+                loadSettings(item, false);
+                chrome.storage.local.get(["settings"], function (item2) {
+                    if (item2){
+                        loadSettings(item2, false);
+                        
+                        // Initialize file handles after settings are loaded
+                        if (isSSAPP) {
+                            initializeFileHandles();
+                        }
+                    }
+                });
+            }
+        });
+    }
 };
 
 var jokes = [
@@ -10986,25 +11002,60 @@ let fileContentTicker = "";
 let fileSizeTicker = 0;
 let monitorInterval = null;
 
- 
 async function selectTickerFile() {
-	
-	fileHandleTicker = await window.showOpenFilePicker({
-		types: [{
-			description: 'Text Files',
-			accept: {'text/plain': ['.txt']},
-		}],
-	});
-	
-	if (!isSSAPP){
-		fileHandleTicker = fileHandleTicker[0];
-	}
-	 
-	try {
-		await loadFileTicker();
-	} catch(e){}
-	
-};
+    fileHandleTicker = await window.showOpenFilePicker({
+        types: [{
+            description: 'Text Files',
+            accept: {'text/plain': ['.txt']},
+        }],
+    });
+    
+    if (!isSSAPP) {
+        fileHandleTicker = fileHandleTicker[0];
+    } else if (typeof fileHandleTicker === "string") {
+        // Store file path when isSSAPP is true
+        localStorage.setItem("tickerFilePath", fileHandleTicker);
+    }
+     
+    try {
+        await loadFileTicker();
+    } catch(e){}
+}
+async function initializeFileHandles() {
+    if (!isSSAPP) return;
+    
+    // Restore main file handle
+    const savedFilePath = localStorage.getItem("savedFilePath");
+    if (savedFilePath) {
+        newFileHandle = savedFilePath;
+    }
+    
+    // Restore saved names file handle
+    const savedNamesFilePath = localStorage.getItem("savedNamesFilePath");
+    if (savedNamesFilePath) {
+        newSavedNamesFileHandle = savedNamesFilePath;
+        try {
+            // Load the existing names
+            const data = await ipcRenderer.invoke("read-from-file", savedNamesFilePath);
+            if (data) {
+                uniqueNameSet = data.split("\r\n").filter(name => name.trim() !== "");
+            }
+        } catch(e) {
+            console.warn("Could not load saved names file:", e);
+        }
+    }
+    
+    // Restore ticker file handle
+    const tickerFilePath = localStorage.getItem("tickerFilePath");
+    if (tickerFilePath && settings.ticker) {
+        fileHandleTicker = tickerFilePath;
+        try {
+            await loadFileTicker();
+        } catch(e) {
+            console.warn("Could not load ticker file:", e);
+        }
+    }
+}
 
 function processTicker(){ 
 	if (fileContentTicker && settings.ticker){
