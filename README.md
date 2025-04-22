@@ -738,6 +738,24 @@ The default display name if none provided by the user will be `Anonymous`.
 
 `support_note` and amount donated, with currency type, will be used as fields for the donation event.
 
+##### Fourthwall webhook donation support
+
+This is similar to the other donation platform integrations described above.
+
+To set up Fourthwall support, login to your Fourthwall admin dashboard and navigate to Settings > For Developers > Webhooks section (https://yourusername.fourthwall.com/admin/dashboard/settings/for-developers).
+
+Create a new webhook and set the URL to: `https://io.socialstream.ninja/XXXXXXXX/fourthwall` where XXXXXXXX is your Social Stream Ninja session ID.
+
+Configure the webhook to listen for the `ORDER_PLACED` event type, which will capture both product purchases and donations. No verification is required, but keep your session ID private to prevent fake donations.
+
+![image](https://github.com/user-attachments/assets/d7bdf536-54cc-4883-a15c-a725462129d3)
+
+On your `dock.html` page, append `&server` to the URL (at the end is fine). This has the dock connecting to the Social Stream Ninja API service, which is where your Fourthwall notifications will come from.
+
+Social Stream Ninja will automatically extract the buyer's name, message, and donation amount from the webhook payload. If a user makes a purchase with a donation component, both will be displayed appropriately in the chat interface.
+
+Please note: Do not share your Social Stream Ninja session ID with others as they will be able to create fake donations to Social Stream Ninja via posting to the API.
+
 ### Text to Speech
 
 Text messages can be converted to speech for free, utilizing your system's built-in TTS capabilities. This works on Windows, macOS, and Linux systems running compatible browsers like Chrome, Edge, Firefox, or within OBS browser sources. The default language is English-US, but you can easily change this by modifying the URL parameter.
