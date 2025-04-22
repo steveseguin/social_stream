@@ -5718,6 +5718,69 @@
 						return;
 					}	
 				}
+				// Dorthwall
+				else if ("fourthwall" in data) {
+				  try {
+					if (!data.fourthwall.data || data.fourthwall.type !== "ORDER_PLACED") {
+					  return false;
+					}
+					
+					const fourthwallData = data.fourthwall.data;
+					
+					var message = {};
+					message.chatname = fourthwallData.username || 
+									   (fourthwallData.billing?.address?.name || "Anonymous");
+					message.chatmessage = fourthwallData.message || "";
+					
+					var currency = "";
+					try {
+					  currency = fourthwallData.amounts.total.currency.toLowerCase() || "";
+					} catch (e) {
+					  console.error(e);
+					}
+					
+					var symbol = {};
+					if (currency && currency in Currencies) {
+					  symbol = Currencies[currency];
+					}
+					
+					if (fourthwallData.amounts && fourthwallData.amounts.total) {
+					  message.hasDonation = (symbol.s || "") + 
+										   (fourthwallData.amounts.total.value || "") + 
+										   " " + (fourthwallData.amounts.total.currency || "");
+					  message.hasDonation = message.hasDonation.trim();
+					}
+					
+					// Add product info to the subtitle
+					if (fourthwallData.offers && fourthwallData.offers.length) {
+					  let productInfo = [];
+					  fourthwallData.offers.forEach(offer => {
+						if (offer.name && offer.variant && offer.variant.quantity) {
+						  productInfo.push(`${offer.variant.quantity}× ${offer.name}`);
+						}
+					  });
+					  
+					  if (productInfo.length) {
+						message.subtitle = productInfo.join(", ");
+					  }
+					}
+					
+					message.id = parseInt(Math.random() * 100000 + 1000000);
+					message.chatbadges = "";
+					message.backgroundColor = "";
+					message.textColor = "";
+					message.nameColor = "";
+					message.chatimg = "";
+					message.membership = "";
+					message.contentimg = "";
+					message.type = "fourthwall";
+					
+					data = message; // replace inbound fourthwall message with new message
+				  } catch (e) {
+					console.error(e);
+					return;
+				  }
+				}
 				
 				else if ("obsCommand" in data) {
 					// console.log(data);
