@@ -2719,10 +2719,14 @@ async function checkVersion(){
 
 var urlParams = new URLSearchParams(window.location.search);
 const devmode = urlParams.has("devmode");
+var sourcemode = urlParams.get("sourcemode") || false;
 ssapp = urlParams.has("ssapp") || ssapp;
 
 var baseURL = "https://socialstream.ninja/";
-if (devmode) {
+
+if (sourcemode){
+	baseURL = sourcemode;
+} else if (devmode) {
     if (location.protocol === "file:") {
         baseURL = location.href.substring(0, location.href.lastIndexOf('/') + 1);
     } else {
