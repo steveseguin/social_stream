@@ -7621,6 +7621,14 @@
 						}
 					}
 					
+					if (data.event) {
+						if (data.event===true){
+							node.dataset.event = "true";
+						} else {
+							node.dataset.event = data.event;
+						}
+					}
+					
 					if (data.hasDonation) {
 						if (highlightDonos && !bubble) {
 							node.classList.add("dono-highlight");
