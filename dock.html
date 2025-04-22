@@ -5249,7 +5249,7 @@
 						document.body.appendChild(modal);
 					}
 
-					const span = modal.getElementById("tabslistclose");
+					const span = document.getElementById("tabslistclose");
 					const chatDestinationsList = getById("chatDestinationsList");
 					const messagesFor = getById("chatDestinationsFor");
 					chatDestinationsList.innerHTML = "";
@@ -5257,85 +5257,85 @@
 					messagesFor.innerText = "Custom Message Destinations. (if none set, it goes to all)";
 
 					data.tabsList.forEach(tab => {
-						const para = document.createElement("p");
-						const checkbox = document.createElement("input");
-						para.append(checkbox);
-						chatDestinationsList.appendChild(para);
+					  const para = document.createElement("p");
+					  const checkbox = document.createElement("input");
+					  para.append(checkbox);
+					  chatDestinationsList.appendChild(para);
 
-						checkbox.type = "checkbox";
-						checkbox.dataset.tab = tab.id;
-						checkbox.checked = activeChatDestinations.has(checkbox.dataset.tab.toString());
-						checkbox.value = activeChatDestinations.has(checkbox.dataset.tab.toString());
-						checkbox.style.cursor = "pointer";
+					  checkbox.type = "checkbox";
+					  checkbox.dataset.tab = tab.id;
+					  checkbox.checked = activeChatDestinations.has(checkbox.dataset.tab.toString());
+					  checkbox.value = activeChatDestinations.has(checkbox.dataset.tab.toString());
+					  checkbox.style.cursor = "pointer";
 
-						para.title = "TabID: "+tab.id;
+					  para.title = "TabID: "+tab.id;
 
-						var titleText = false;
-						if (tab.title) {
-							titleText = document.createTextNode(tab.title.slice(0, 100));
-						}
-						const smallText = document.createElement("small");
-						const italicsText = document.createElement("i");
-						if (tab.url){
-							italicsText.textContent = ` - (${tab.url.slice(0, 100)})`;
-							smallText.appendChild(italicsText);
-						}
+					  var titleText = false;
+					  if (tab.title) {
+						titleText = document.createTextNode(tab.title.slice(0, 100));
+					  }
+					  const smallText = document.createElement("small");
+					  const italicsText = document.createElement("i");
+					  if (tab.url){
+						italicsText.textContent = ` - (${tab.url.slice(0, 100)})`;
+						smallText.appendChild(italicsText);
+					  }
 
-						if (tab.favIconUrl) {
-							const img = document.createElement("img");
-							img.src = tab.favIconUrl;
-							img.style.marginRight = "5px";
-							img.style.maxHeight = "18px";
-							para.appendChild(img);
+					  if (tab.favIconUrl) {
+						const img = document.createElement("img");
+						img.src = tab.favIconUrl;
+						img.style.marginRight = "5px";
+						img.style.maxHeight = "18px";
+						para.appendChild(img);
+					  } else {
+						const pageIcon = document.createTextNode("📄 ");
+						para.appendChild(pageIcon);
+					  }
+					  if (titleText) {
+						para.appendChild(titleText);
+					  }
+
+					  para.appendChild(smallText);
+
+					  checkbox.onclick = function (event) {
+						if (this.checked) {
+						  activeChatDestinations.add(this.dataset.tab.toString());
 						} else {
-							const pageIcon = document.createTextNode("📄 ");
-							para.appendChild(pageIcon);
+						  activeChatDestinations.delete(this.dataset.tab.toString());
 						}
-						if (titleText) {
-							para.appendChild(titleText);
+						if (activeChatDestinations.size) {
+						  getById("getChatSources").innerHTML = "🎯";
+						  getById("getChatSources").title = "Sending to selected end points only";
+						} else {
+						  getById("getChatSources").innerHTML = "🌐";
+						  getById("getChatSources").title = "Sending to all end points";
 						}
-
-						para.appendChild(smallText);
-
-						checkbox.onclick = function (event) {
-							if (this.checked) {
-								activeChatDestinations.add(this.dataset.tab.toString());
-							} else {
-								activeChatDestinations.delete(this.dataset.tab.toString());
-							}
-							if (activeChatDestinations.size) {
-								getById("getChatSources").innerHTML = "🎯";
-								getById("getChatSources").title = "Sending to selected end points only";
-							} else {
-								getById("getChatSources").innerHTML = "🌐";
-								getById("getChatSources").title = "Sending to all end points";
-							}
-						};
+					  };
 					});
 					modal.classList.remove("hidden");
 					span.onclick = function () {
-						modal.classList.add("hidden");
-						chatDestinationsList.innerHTML = "";
+					  modal.classList.add("hidden");
+					  chatDestinationsList.innerHTML = "";
 					};
 					window.onclick = function (event) {
-						if (event.target == modal) {
-							modal.classList.add("hidden");
-							chatDestinationsList.innerHTML = "";
-						} else if (event.target && event.target.dataset && event.target.dataset.tab) {
-							if (event.target.checked) {
-								activeChatDestinations.add(event.target.dataset.tab);
-							} else {
-								activeChatDestinations.delete(event.target.dataset.tab);
-							}
-
-							if (activeChatDestinations.size) {
-								getById("getChatSources").innerHTML = "🎯";
-								getById("getChatSources").title = "Sending to selected end points only";
-							} else {
-								getById("getChatSources").innerHTML = "🌐";
-								getById("getChatSources").title = "Sending to all end points";
-							}
+					  if (event.target == modal) {
+						modal.classList.add("hidden");
+						chatDestinationsList.innerHTML = "";
+					  } else if (event.target && event.target.dataset && event.target.dataset.tab) {
+						if (event.target.checked) {
+						  activeChatDestinations.add(event.target.dataset.tab);
+						} else {
+						  activeChatDestinations.delete(event.target.dataset.tab);
 						}
+
+						if (activeChatDestinations.size) {
+						  getById("getChatSources").innerHTML = "🎯";
+						  getById("getChatSources").title = "Sending to selected end points only";
+						} else {
+						  getById("getChatSources").innerHTML = "🌐";
+						  getById("getChatSources").title = "Sending to all end points";
+						}
+					  }
 					};
 				} else if (data.recentHistory) {
 					//console.log(data);
