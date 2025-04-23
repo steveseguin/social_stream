@@ -25,28 +25,6 @@
     font-family: var(--font-mono);
 }
 
-.code-block-wrapper {
-    position: relative;
-    margin-bottom: 2rem;
-}
-
-.code-block {
-    position: relative;
-    background-color: #1e1e2e;
-    color: #f8f8f2;
-    border-radius: var(--radius-sm);
-    padding: 1.5rem;
-    overflow-x: auto;
-    margin-bottom: 0;
-}
-
-.code-block pre {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 1.4rem;
-    line-height: 1.5;
-}
-
 .line-number {
     display: inline-block;
     width: 2rem;
@@ -420,7 +398,7 @@ img {
 
 .feature-highlight {
     display: flex;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--background-card);
     border-radius: var(--radius-md);
     padding: 1.5rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -461,7 +439,7 @@ img {
 
 .api-capability {
     display: flex;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--background-card);
     border-radius: var(--radius-md);
     padding: 1.5rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -482,8 +460,6 @@ img {
 }
 
 .capability-content h4 {
-    margin-top: 0;
-    margin-bottom: 0.8rem;
     color: var(--primary-color);
 }
 
@@ -501,7 +477,7 @@ img {
 }
 
 .api-method {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--background-card);
     border-radius: var(--radius-md);
     padding: 1.5rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -544,22 +520,40 @@ img {
 }
 
 /* Command Tables */
+.command-card {
+    margin-bottom: 4rem;
+}
+
+.command-card h3 {
+    padding: 0;
+}
+
+.midi-commands,
+.midi-setup,
+.streamdeck-setup {
+    margin-top: 3rem;
+}
+
+.view-more-link {
+    margin-top: 2rem;
+}
+
 .command-table-responsive {
     overflow-x: auto;
-    margin: 2rem 0;
 }
 
 .command-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 1.4rem;
+    margin: 1rem 0rem;
 }
 
 .command-table th,
 .command-table td {
     padding: 1rem;
     text-align: left;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--background-dark);
 }
 
 .command-table th {
@@ -572,9 +566,53 @@ img {
     background-color: rgba(255, 255, 255, 0.05);
 }
 
-.command-table code {
-    background-color: rgba(0, 0, 0, 0.2);
-    padding: 0.3rem 0.5rem;
+/* sandbox */
+.sandbox-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sandbox-feature {
+    padding: 1rem;
     border-radius: var(--radius-sm);
-    
+    background-color: var(--background-card);
+}
+
+.sandbox-api-preview,
+.sandbox-api-note {
+    margin: 2rem 0rem;
+}
+
+/* Ai setup */
+.step,
+.ai-step {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+}
+
+.step-number,
+.ai-step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    width: 30px;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: -20px;
+    margin-left: -10px;
+    z-index: 10;
+}
+
+.step-content,
+.ai-step-content {
+    background-color: var(--background-card);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
 }

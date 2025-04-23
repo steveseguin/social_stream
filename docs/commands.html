@@ -315,8 +315,7 @@
             <h3>Interactive API Sandbox</h3>
             <p>Try out the API with our interactive sandbox that provides easy access to all commands and features:</p>
             
-            <div class="api-sandbox-preview">
-                <img src="../icons/api-sandbox.png" alt="API Sandbox Preview">
+            <div class="sandbox-api-preview">
                 <div class="sandbox-overlay">
                     <a href="https://socialstream.ninja/sampleapi.html" class="btn btn-primary" target="_blank">
                         <i class="fas fa-external-link-alt"></i> Open API Sandbox
@@ -350,7 +349,7 @@
                 </div>
             </div>
             
-            <div class="api-note">
+            <div class="sandbox-api-note">
                 <p><strong>Note:</strong> Remember to replace <code>SESSIONID</code> with your actual session ID from Social Stream Ninja!</p>
             </div>
         </div>
@@ -458,11 +457,11 @@ ollama serve</pre>
                 <h4>Detailed Documentation</h4>
                 <p>For complete setup instructions and advanced configuration options, see our detailed guides:</p>
                 <div class="doc-links">
-                    <a href="https://socialstream.ninja/ai" class="doc-link" target="_blank">
+                    <a href="https://socialstream.ninja/ai" class="btn btn-primary" target="_blank">
                         <i class="fas fa-file-alt"></i>
                         <span>Complete AI Integration Guide</span>
                     </a>
-                    <a href="https://github.com/steveseguin/social_stream/blob/master/ai.md" class="doc-link" target="_blank">
+                    <a href="https://github.com/steveseguin/social_stream/blob/master/ai.md" class="btn btn-secondary" target="_blank">
                         <i class="fab fa-github"></i>
                         <span>AI Setup Documentation on GitHub</span>
                     </a>
@@ -485,46 +484,48 @@ ollama serve</pre>
                     <p><strong>Important:</strong> You must enable the MIDI Support toggle in the extension menu for this feature to work.</p>
                 </div>
                 
-                <h4>Supported MIDI Commands</h4>
-                <p>Using Control Change MIDI Commands on channel 1:</p>
-                <div class="command-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Command</th>
-                                <th>Value</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>102</td>
-                                <td>1</td>
-                                <td>Say "1" into all connected chats</td>
-                            </tr>
-                            <tr>
-                                <td>102</td>
-                                <td>2</td>
-                                <td>Say "LUL" into all connected chats</td>
-                            </tr>
-                            <tr>
-                                <td>102</td>
-                                <td>3</td>
-                                <td>Tell a random joke into all connected chats</td>
-                            </tr>
-                            <tr>
-                                <td>102</td>
-                                <td>4</td>
-                                <td>Clear all featured chat overlays</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="midi-commands">
+                    <h4>Supported MIDI Commands</h4>
+                    <p>Using Control Change MIDI Commands on channel 1:</p>
+                    <div class="command-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Command</th>
+                                    <th>Value</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>102</td>
+                                    <td>1</td>
+                                    <td>Say "1" into all connected chats</td>
+                                </tr>
+                                <tr>
+                                    <td>102</td>
+                                    <td>2</td>
+                                    <td>Say "LUL" into all connected chats</td>
+                                </tr>
+                                <tr>
+                                    <td>102</td>
+                                    <td>3</td>
+                                    <td>Tell a random joke into all connected chats</td>
+                                </tr>
+                                <tr>
+                                    <td>102</td>
+                                    <td>4</td>
+                                    <td>Clear all featured chat overlays</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="command-card">
-                <h3>Stream Deck Integration</h3>
-                <p>You can use a Stream Deck to control Social Stream Ninja through MIDI commands:</p>
+
+                <div class="streamdeck-setup">
+                    <h3>Stream Deck Integration</h3>
+                    <p>You can use a Stream Deck to control Social Stream Ninja through MIDI commands:</p>
+                </div>
                 
                 <div class="midi-setup">
 					<h3>Setting Up MIDI Controls</h3>
@@ -653,13 +654,13 @@ ollama serve</pre>
 						</div>
 						<h4>Stripe</h4>
 						<p>Process credit card donations directly through your Stripe account.</p>
-						<ol class="webhook-steps">
+						<ul class="webhook-steps">
 							<li>Create a payment link at <a href="https://stripe.com" target="_blank">stripe.com</a></li>
 							<li>In Stripe Dashboard, go to Developers → Webhooks</li>
 							<li>Add endpoint: <code>https://io.socialstream.ninja/SESSIONID/stripe</code></li>
 							<li>Select the event <code>checkout.session.completed</code></li>
 							<li>Add <code>&server</code> to your dock URL</li>
-						</ol>
+						</ul>
 					</div>
 					
 					<div class="webhook-item">
@@ -668,13 +669,13 @@ ollama serve</pre>
 						</div>
 						<h4>Ko-Fi</h4>
 						<p>Receive coffee donations from your supporters.</p>
-						<ol class="webhook-steps">
+						<ul class="webhook-steps">
 							<li>Sign in to your Ko-Fi account</li>
 							<li>Go to <a href="https://ko-fi.com/manage/webhooks" target="_blank">Webhook settings</a></li>
 							<li>Add <code>https://io.socialstream.ninja/SESSIONID/kofi</code> as the webhook URL</li>
 							<li>Add <code>&server</code> to your dock URL</li>
 							<li>Test with the "Send Single Donation Test" button</li>
-						</ol>
+						</ul>
 					</div>
 					
 					<div class="webhook-item">
@@ -683,13 +684,13 @@ ollama serve</pre>
 						</div>
 						<h4>Buy Me A Coffee</h4>
 						<p>Collect donations through the popular Buy Me A Coffee platform.</p>
-						<ol class="webhook-steps">
+						<ul class="webhook-steps">
 							<li>Sign in to your Buy Me A Coffee account</li>
 							<li>Navigate to webhook settings</li>
 							<li>Add <code>https://io.socialstream.ninja/SESSIONID/bmac</code> as the webhook URL</li>
 							<li>Add <code>&server</code> to your dock URL to receive events</li>
 							<li>Both donations and membership events are supported</li>
-						</ol>
+						</ul>
 					</div>
 				</div>
 
@@ -828,71 +829,71 @@ registerMessageProcessor(process_chat_message);
                     <h5>Timed Messages</h5>
                     <p>Send automatic messages at regular intervals:</p>
                     <div class="code-block">
-						<pre>
-						// Send a message every 15 minutes
-						if (urlParams.has('timer')) {
-							setInterval(function(){
-								sendMessage("Don't forget to like and subscribe!");
-							}, 15 * 60 * 1000);
-						}
-						</pre>
-											</div>
-										</div>
-										
-										<div class="scenario-card">
-											<h5>Keyword Reactions</h5>
-											<p>React to specific keywords in chat:</p>
-											<div class="code-block">
-						<pre>
-						function process_keywords(msg){
-							if (urlParams.has('keywords')) {
-								const keywords = {
-									"lurk": `Thanks for lurking, ${msg.chatname}!`,
-									"hype": "HYPE HYPE HYPE!",
-									"gg": "GG!"
-								};
-								
-								for (const [keyword, response] of Object.entries(keywords)) {
-									if (msg.chatmessage.toLowerCase().includes(keyword)) {
-										setTimeout(() => sendMessage(response), 500);
-										return true;
-									}
-								}
-							}
-							return false;
-						}
-						registerMessageProcessor(process_keywords);
-						</pre>
-											</div>
-										</div>
-										
-										<div class="scenario-card">
-											<h5>Commands with Parameters</h5>
-											<p>Create commands that accept parameters:</p>
-											<div class="code-block">
-						<pre>
-						function process_commands(msg){
-							if (urlParams.has('commands')) {
-								// Match !shoutout username
-								const shoutoutMatch = msg.chatmessage.match(/^!shoutout\s+(.+)$/i);
-								if (shoutoutMatch) {
-									const username = shoutoutMatch[1];
-									setTimeout(() => {
-										sendMessage(`Check out ${username} at twitch.tv/${username}!`);
-									}, 500);
-									return true;
-								}
-							}
-							return false;
-						}
-						registerMessageProcessor(process_commands);
-						</pre>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
+                        <pre>
+// Send a message every 15 minutes
+if (urlParams.has('timer')) {
+    setInterval(function(){
+        sendMessage("Don't forget to like and subscribe!");
+    }, 15 * 60 * 1000);
+}
+                            </pre>
+                        </div>
+                    </div>
+                    
+                    <div class="scenario-card">
+                        <h5>Keyword Reactions</h5>
+                        <p>React to specific keywords in chat:</p>
+                        <div class="code-block">
+                            <pre>
+function process_keywords(msg){
+    if (urlParams.has('keywords')) {
+        const keywords = {
+            "lurk": `Thanks for lurking, ${msg.chatname}!`,
+            "hype": "HYPE HYPE HYPE!",
+            "gg": "GG!"
+        };
+        
+        for (const [keyword, response] of Object.entries(keywords)) {
+            if (msg.chatmessage.toLowerCase().includes(keyword)) {
+                setTimeout(() => sendMessage(response), 500);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+registerMessageProcessor(process_keywords);
+                            </pre>
+                        </div>
+                    </div>
+                    
+                    <div class="scenario-card">
+                        <h5>Commands with Parameters</h5>
+                        <p>Create commands that accept parameters:</p>
+                        <div class="code-block">
+                            <pre>
+function process_commands(msg){
+    if (urlParams.has('commands')) {
+        // Match !shoutout username
+        const shoutoutMatch = msg.chatmessage.match(/^!shoutout\s+(.+)$/i);
+        if (shoutoutMatch) {
+            const username = shoutoutMatch[1];
+            setTimeout(() => {
+                sendMessage(`Check out ${username} at twitch.tv/${username}!`);
+            }, 500);
+            return true;
+        }
+    }
+    return false;
+}
+registerMessageProcessor(process_commands);
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
             
 <section id="custom-overlays" class="command-section">
     <div class="container">
@@ -942,20 +943,20 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
                 <p>When creating a custom overlay, make sure to keep these essential components:</p>
                 <div class="code-block">
 					<pre>
-					<!-- WebRTC connection - essential for receiving messages -->
-					&lt;script src="https://vdo.ninja/socket.io.js"&gt;&lt;/script&gt;
-					&lt;script src="https://vdo.ninja/WebRTC.js"&gt;&lt;/script&gt;
+<!-- WebRTC connection - essential for receiving messages -->
+&lt;script src="https://vdo.ninja/socket.io.js"&gt;&lt;/script&gt;
+&lt;script src="https://vdo.ninja/WebRTC.js"&gt;&lt;/script&gt;
 
-					// Connection code - always needed
-					const session = new URLSearchParams(window.location.search).get("session") || randomID(8);
-					const connection = new WebRTC();
-					connection.connect("wss://vdo.ninja:443");
-					connection.join(session);
+// Connection code - always needed
+const session = new URLSearchParams(window.location.search).get("session") || randomID(8);
+const connection = new WebRTC();
+connection.connect("wss://vdo.ninja:443");
+connection.join(session);
 
-					// Message handler - customize this to process messages your way
-					connection.on("message", (data) => {
-						// Your custom message processing code here
-					});
+// Message handler - customize this to process messages your way
+connection.on("message", (data) => {
+    // Your custom message processing code here
+});
 					</pre>
                 </div>
             </div>
@@ -967,43 +968,43 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
             
             <div class="code-block">
 				<pre>
-				// CSS for animation
-				.message {
-					opacity: 0;
-					transform: translateY(20px);
-					transition: opacity 0.5s ease, transform 0.5s ease;
-				}
+// CSS for animation
+.message {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
 
-				.message.visible {
-					opacity: 1;
-					transform: translateY(0);
-				}
+.message.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
 
-				// JavaScript to apply animation
-				function addMessage(messageData) {
-					const messageEl = document.createElement('div');
-					messageEl.className = 'message';
-					
-					// Create your message content here
-					messageEl.innerHTML = `
-						&lt;div class="user"&gt;${messageData.chatname}&lt;/div&gt;
-						&lt;div class="text"&gt;${messageData.chatmessage}&lt;/div&gt;
-					`;
-					
-					// Add to container
-					document.getElementById('messages').appendChild(messageEl);
-					
-					// Trigger animation after a small delay
-					setTimeout(() => {
-						messageEl.classList.add('visible');
-					}, 10);
-					
-					// Optional: Remove old messages if there are too many
-					const messages = document.querySelectorAll('.message');
-					if (messages.length > 10) {
-						messages[0].remove();
-					}
-				}
+// JavaScript to apply animation
+function addMessage(messageData) {
+    const messageEl = document.createElement('div');
+    messageEl.className = 'message';
+    
+    // Create your message content here
+    messageEl.innerHTML = `
+        &lt;div class="user"&gt;${messageData.chatname}&lt;/div&gt;
+        &lt;div class="text"&gt;${messageData.chatmessage}&lt;/div&gt;
+    `;
+    
+    // Add to container
+    document.getElementById('messages').appendChild(messageEl);
+    
+    // Trigger animation after a small delay
+    setTimeout(() => {
+        messageEl.classList.add('visible');
+    }, 10);
+    
+    // Optional: Remove old messages if there are too many
+    const messages = document.querySelectorAll('.message');
+    if (messages.length > 10) {
+        messages[0].remove();
+    }
+}
 				</pre>
 							</div>
 							
