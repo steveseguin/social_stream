@@ -1,16 +1,16 @@
 /* Base Styles */
 :root {
-    --primary-color: #6200ea;
-    --primary-light: #9d46ff;
-    --primary-dark: #0a00b6;
+    --primary-color: #9d46ff;
+    --primary-light: #b975ff;
+    --primary-dark: #6200ea;
     --secondary-color: #00e676;
     --secondary-light: #66ffa6;
     --secondary-dark: #00b248;
     --text-primary: #212121;
     --text-secondary: #757575;
     --background-light: #ffffff;
-    --background-dark: #f5f5f5;
-    --background-card: #ffffff;
+    --background-dark: #eeeeee;
+    --background-card: #f5f5f5;
     --border-color: #e0e0e0;
     --success-color: #00c853;
     --error-color: #d50000;
@@ -27,6 +27,26 @@
     --font-secondary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     --font-mono: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 }
+
+/* Dark Theme Variables */
+.dark-mode {
+    --primary-color: #9d46ff;
+    --primary-light: #b975ff;
+    --primary-dark: #6200ea;
+    --secondary-color: #00e676;
+    --secondary-light: #66ffa6;
+    --secondary-dark: #00b248;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --background-light: #1e1e1e;
+    --background-dark: #121212;
+    --background-card: #2d2d2d;
+    --border-color: #444444;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
 
 
 /* Typography Setup */
@@ -72,70 +92,76 @@ ul {
     list-style: none;
 }
 
+ol {
+    padding-left: 3rem;
+    margin-bottom: 1.6rem;
+}
+
 .container {
     width: 100%;
     max-width: 128rem;
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 2rem;
 }
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-secondary);
     line-height: 1.3;
-    margin-bottom: 2rem;
     font-weight: 600;
     color: var(--text-primary);
 }
 
 h1 {
     font-size: 4.8rem;
+    padding: 0rem 0rem 4rem 0rem;
 }
 
 h2 {
     font-size: 3.6rem;
-    margin-bottom: 3rem;
 	text-align: center;
+    padding: 0rem 0rem 3rem 0rem;
 }
 
 h3 {
     font-size: 2.4rem;
+    padding: 0rem 0rem 2rem 0rem;
 }
 
 h4 {
     font-size: 2rem;
+    padding: 0rem 0rem 1rem 0rem;
 }
 
 p {
-    margin-bottom: 1.6rem;
+    /* margin-bottom: 1.6rem; */
 }
 
 .section-subtitle {
     font-size: 1.8rem;
     color: var(--text-secondary);
     margin-top: -2rem;
-    margin-bottom: 4rem;
+    margin-bottom: 2rem;
     text-align: center;
 }
 .page-hero {
-    padding: 12rem 0 6rem;
+    padding: 15rem 0 4rem;
     background-color: var(--background-dark);
     text-align: center;
-}
-
-.page-hero h1 {
-    margin-bottom: 2rem;
 }
 
 .page-hero p {
     font-size: 2rem;
     color: var(--text-secondary);
     max-width: 80rem;
-    margin: 0 auto;
+    margin: auto;
 }
+
 /* Button Styles */
 .btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 1.2rem 2.4rem;
     font-size: 1.6rem;
     font-weight: 500;
@@ -184,14 +210,13 @@ p {
 
 .btn-text {
     background: none;
-    padding: 0.8rem 1.2rem;
     color: var(--primary-color);
     font-weight: 500;
 }
 
 .btn-text:hover {
+    color: var(--font-secondary);
     background-color: rgba(98, 0, 234, 0.05);
-    color: var(--primary-dark);
 }
 
 /* Header */
@@ -204,13 +229,6 @@ header {
     background-color: var(--background-light);
     box-shadow: var(--shadow-sm);
     transition: all var(--transition-speed) ease;
-}
-
-header .container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 8rem;
 }
 
 .logo {
@@ -234,6 +252,9 @@ header .container {
 nav ul {
     display: flex;
     gap: 3rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 2rem 0rem;
 }
 
 nav a {
@@ -276,7 +297,7 @@ nav a:hover::after, nav a.active::after {
 
 /* Hero Section */
 .hero {
-    padding: 12rem 0 8rem;
+    padding: 14rem 0 6rem;
     overflow: hidden;
     background-color: var(--background-dark);
     position: relative;
@@ -308,6 +329,7 @@ nav a:hover::after, nav a.active::after {
 .hero-buttons {
     display: flex;
     gap: 2rem;
+    justify-content: center;
 }
 
 .hero-image {
@@ -328,7 +350,7 @@ nav a:hover::after, nav a.active::after {
 
 /* Features Section */
 .features-preview {
-    padding: 10rem 0;
+    padding: 8rem 0;
     background-color: var(--background-light);
     text-align: center;
 }
@@ -414,7 +436,7 @@ nav a:hover::after, nav a.active::after {
 
 /* Testimonials */
 .testimonials {
-    padding: 10rem 0;
+    padding: 8rem 0;
     background-color: var(--background-light);
     text-align: center;
 }
@@ -455,7 +477,6 @@ nav a:hover::after, nav a.active::after {
 .testimonial-content p {
     font-size: 1.8rem;
     font-style: italic;
-    margin-bottom: 0;
 }
 
 .testimonial-author {
@@ -474,11 +495,6 @@ nav a:hover::after, nav a.active::after {
 
 .testimonial-author div {
     text-align: left;
-}
-
-.testimonial-author h4 {
-    margin-bottom: 0.5rem;
-    font-size: 1.8rem;
 }
 
 .testimonial-author span {
@@ -535,7 +551,8 @@ nav a:hover::after, nav a.active::after {
 }
 
 .get-started .btn-primary:hover {
-    background-color: var(--background-light);
+    background-color: var(--primary-light);
+    color: white;
 }
 
 .get-started .btn-secondary {
@@ -550,7 +567,6 @@ nav a:hover::after, nav a.active::after {
 
 /* Footer */
 footer {
-    padding: 8rem 0 4rem;
     background-color: #1a1a1a;
     color: #fff;
 }
@@ -559,7 +575,7 @@ footer {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 4rem;
-    margin-bottom: 6rem;
+    margin: 3rem 0rem;
 }
 
 .footer-column h3 {
@@ -627,7 +643,7 @@ footer {
 }
 
 .footer-bottom {
-    padding-top: 3rem;
+    padding-top: 2rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     text-align: center;
 }
@@ -635,12 +651,45 @@ footer {
 .footer-bottom p {
     color: #bbb;
     font-size: 1.4rem;
-    margin-bottom: 0;
 }
 
 .footer-bottom a {
     color: white;
 }
+
+/* Code block generic styling */
+
+.code-block {
+    background-color: rgba(0, 0, 0, 0.25);
+    border-radius: var(--radius-sm);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    overflow-x: auto;
+    position: relative;
+}
+
+.code-block-wrapper {
+    position: relative;
+}
+
+.code-block pre {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    line-height: 1.5;
+}
+
+code {
+    background-color: rgba(0, 0, 0, 0.25);
+    border: 1px var(--background-dark) dashed;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    padding: 0rem 0.5rem;
+}
+
 
 /* Media Queries */
 @media (max-width: 1200px) {
@@ -826,57 +875,9 @@ footer {
     display: block;
 }
 
-/* Dark Mode Variables */
-:root {
-    /* Light Theme Variables (default) */
-    --primary-color: #6200ea;
-    --primary-light: #9d46ff;
-    --primary-dark: #0a00b6;
-    --secondary-color: #00e676;
-    --secondary-light: #66ffa6;
-    --secondary-dark: #00b248;
-    --text-primary: #212121;
-    --text-secondary: #757575;
-    --background-light: #ffffff;
-    --background-dark: #f5f5f5;
-    --background-card: #ffffff;
-    --border-color: #e0e0e0;
-    --success-color: #00c853;
-    --error-color: #d50000;
-    --warning-color: #ffd600;
-    --info-color: #2196f3;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 16px;
-    --transition-speed: 0.3s;
-    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    --font-secondary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    --font-mono: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-}
-
-/* Dark Theme Variables */
-.dark-mode {
-    --primary-color: #9d46ff;
-    --primary-light: #b975ff;
-    --primary-dark: #6200ea;
-    --secondary-color: #00e676;
-    --secondary-light: #66ffa6;
-    --secondary-dark: #00b248;
-    --text-primary: #ffffff;
-    --text-secondary: #b0b0b0;
-    --background-light: #121212;
-    --background-dark: #1e1e1e;
-    --background-card: #2d2d2d;
-    --border-color: #444444;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
-}
-
+/* :::::::::::::::::::::::::::::::::::: */
 /* Additional Dark Mode Specific Styles */
+/* :::::::::::::::::::::::::::::::::::: */
 .dark-mode body {
     background-color: var(--background-light);
     color: var(--text-primary);
@@ -891,17 +892,11 @@ footer {
     background-color: #0f0f0f;
 }
 
-.dark-mode .code-block {
-    background-color: #2f2f2f;
-}
-
 .dark-mode .feature-card,
 .dark-mode .download-card,
 .dark-mode .support-card,
 .dark-mode .troubleshooting-card,
-.dark-mode .guide-card,
-.dark-mode .accordion-item,
-.dark-mode .accordion-header {
+.dark-mode .guide-card{
     background-color: var(--background-card);
 }
 
@@ -910,11 +905,8 @@ footer {
     background-color: rgba(157, 70, 255, 0.2);
 }
 
-.dark-mode .page-hero,
-.dark-mode .guide-section.alt,
-.dark-mode .how-to-use,
-.dark-mode .faq {
-    background-color: var(--background-dark);
+.dark-mode .download-icon {
+    filter: invert(1);
 }
 
 .dark-mode .btn-outline {
@@ -929,13 +921,6 @@ footer {
 body {
     transition: background-color var(--transition-speed) ease,
                 color var(--transition-speed) ease;
-}
-
-header, footer, .feature-card, .download-card, .support-card, 
-.troubleshooting-card, .guide-card, .accordion-item, 
-.page-hero, .guide-section, .how-to-use, .faq {
-    transition: background-color var(--transition-speed) ease,
-                box-shadow var(--transition-speed) ease;
 }
 
 .theme-toggle {
@@ -983,6 +968,7 @@ header .container {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-height: 8rem;
 }
 
 .header-controls {
@@ -1058,4 +1044,102 @@ header .container {
     .dark-mode nav {
         background-color: var(--background-light);
     }
+}
+
+/* Accordion styling */
+/* Accordion styling for FAQ */
+.accordion {
+    margin: 3rem 0;
+}
+
+.accordion-item {
+    background-color: var(--background-card);
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.accordion-header {
+    width: 100%;
+    padding: 2rem;
+    text-align: left;
+    background-color: var(--background-card);
+    border: none;
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--text-primary);
+    position: relative;
+    transition: background-color 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.accordion-header:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.accordion-icon {
+    position: relative;
+    width: 2rem;
+    height: 2rem;
+}
+
+.accordion-icon::before,
+.accordion-icon::after {
+    content: '';
+    position: absolute;
+    background-color: var(--primary-color);
+    transition: transform 0.3s ease;
+}
+
+.accordion-icon::before {
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    transform: translateY(-50%);
+}
+
+.accordion-icon::after {
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 100%;
+    transform: translateX(-50%);
+}
+
+.accordion-item.active .accordion-icon::after {
+    transform: translateX(-50%) rotate(90deg);
+}
+
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding: 0 2rem;
+}
+
+.accordion-content p {
+    font-weight: bold;
+}
+
+.accordion-item.active .accordion-content {
+    max-height: 500px;
+    padding-bottom: 2rem;
+}
+
+.accordion-content ul {
+    padding-left: 2rem;
+    list-style: disc;
+}
+
+.accordion-content li {
+    margin: 1rem 0rem;
+}
+
+.accordion-content li::marker {
+    color: var(--primary-dark);
 }
