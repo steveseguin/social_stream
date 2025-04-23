@@ -134,7 +134,7 @@ h4 {
 }
 
 p {
-    margin-bottom: 1.6rem;
+    /* margin-bottom: 1.6rem; */
 }
 
 .section-subtitle {
@@ -154,7 +154,7 @@ p {
     font-size: 2rem;
     color: var(--text-secondary);
     max-width: 80rem;
-    margin: 0 auto;
+    margin: auto;
 }
 
 /* Button Styles */
@@ -329,6 +329,7 @@ nav a:hover::after, nav a.active::after {
 .hero-buttons {
     display: flex;
     gap: 2rem;
+    justify-content: center;
 }
 
 .hero-image {
@@ -476,7 +477,6 @@ nav a:hover::after, nav a.active::after {
 .testimonial-content p {
     font-size: 1.8rem;
     font-style: italic;
-    margin-bottom: 0;
 }
 
 .testimonial-author {
@@ -651,7 +651,6 @@ footer {
 .footer-bottom p {
     color: #bbb;
     font-size: 1.4rem;
-    margin-bottom: 0;
 }
 
 .footer-bottom a {
@@ -1123,7 +1122,24 @@ header .container {
     padding: 0 2rem;
 }
 
+.accordion-content p {
+    font-weight: bold;
+}
+
 .accordion-item.active .accordion-content {
     max-height: 500px;
     padding-bottom: 2rem;
+}
+
+.accordion-content ul {
+    padding-left: 2rem;
+    list-style: disc;
+}
+
+.accordion-content li {
+    margin: 1rem 0rem;
+}
+
+.accordion-content li::marker {
+    color: var(--primary-dark);
 }
