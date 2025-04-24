@@ -487,6 +487,7 @@ TTS.configure = function(urlParams) {
     TTS.googleSettings.pitch = urlParams.has("googlepitch") ? parseFloat(urlParams.get("googlepitch")) || 0 : 0;
     TTS.googleSettings.audioProfile = urlParams.get("googleaudioprofile") || false;
     TTS.googleSettings.voiceName = urlParams.get("voicegoogle") || false;
+	TTS.googleSettings.lang = urlParams.get("googlelang") || false;
 
     // ElevenLabs settings
     TTS.elevenLabsSettings.latency = urlParams.has("elevenlatency") ? parseInt(urlParams.get("elevenlatency")) || 0 : TTS.voiceLatency;
@@ -1360,7 +1361,7 @@ TTS.googleTTS = function(tts) {
                 text: tts
             },
             voice: {
-                languageCode: TTS.speechLang.toLowerCase(),
+                languageCode: TTS.googleSettings.lang || TTS.speechLang,
                 name: TTS.googleSettings.voiceName || "en-GB-Standard-A",
                 ssmlGender: TTS.voiceGender ? TTS.voiceGender.toUpperCase() : "FEMALE"
             },
