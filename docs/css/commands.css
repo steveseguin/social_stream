@@ -36,13 +36,14 @@
 
 .copy-button {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background-color: rgba(255, 255, 255, 0.1);
+    top: -2rem;
+    right: -1rem;
+    background-color: var(--primary-color);
     color: #f8f8f2;
     border: none;
     border-radius: var(--radius-sm);
     padding: 0.5rem 1rem;
+    aspect-ratio: 1 / 1;
     font-size: 1.2rem;
     cursor: pointer;
     transition: background-color var(--transition-speed) ease;
@@ -258,50 +259,6 @@ img {
     color: var(--text-secondary);
 }
 
-/* Sticky Command Navigation */
-.command-navigation {
-    position: sticky;
-    top: 80px;
-    background-color: var(--background-light);
-    z-index: 99;
-    padding: 10px 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
-
-.command-nav-links {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
-    padding: 1rem 0;
-}
-
-.command-nav-link {
-    display: flex;
-    align-items: center;
-    padding: 0.8rem 1.5rem;
-    background-color: var(--background-card);
-    border-radius: var(--radius-md);
-    transition: all 0.3s ease;
-    font-weight: 500;
-    color: var(--text-primary);
-    text-decoration: none;
-}
-
-.command-nav-link:hover, 
-.command-nav-link.active {
-    background-color: var(--primary-color);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
-}
-
-.command-nav-link i {
-    margin-right: 8px;
-    font-size: 1.2rem;
-}
-
 /* Dropdown Menu */
 .command-nav-dropdown {
     position: relative;
@@ -414,7 +371,8 @@ img {
     font-size: 2.5rem;
     color: var(--primary-color);
     flex-shrink: 0;
-    width: 3rem;
+    width: 5rem;
+    height: 5rem;
     text-align: center;
 }
 
@@ -579,6 +537,16 @@ img {
     background-color: var(--background-card);
 }
 
+.sandbox-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sandbox-title h4 {
+    padding: 0;
+}
+
 .sandbox-api-preview,
 .sandbox-api-note {
     margin: 2rem 0rem;
@@ -599,6 +567,7 @@ img {
     align-items: center;
     justify-content: center;
     background-color: var(--primary-color);
+    color: white;
     width: 30px;
     aspect-ratio: 1 / 1;
     border-radius: var(--radius-sm);
