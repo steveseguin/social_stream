@@ -797,45 +797,45 @@ TTS.speak = function(text, allow = false) {
 	TTS.initAudioContext();
 
     // Use the selected provider
-    switch (TTS.TTSProvider) {
-        case "kokoro":
-            if (!TTS.premiumQueueActive) {
-                TTS.kokoroTTS(text);
-            } else {
-                TTS.premiumQueueTTS.push(text);
-            }
-            return;
-        case "google":
-            if (TTS.GoogleAPIKey) {
-                if (!TTS.premiumQueueActive) {
-                    TTS.googleTTS(text);
-                } else {
-                    TTS.premiumQueueTTS.push(text);
-                }
-                return;
-            }
-            break;
-        case "elevenlabs":
-            if (TTS.ElevenLabsKey) {
-                if (!TTS.premiumQueueActive) {
-                    TTS.ElevenLabsTTS(text);
-                } else {
-                    TTS.premiumQueueTTS.push(text);
-                }
-                return;
-            }
-            break;
-        case "speechify":
-            if (TTS.SpeechifyAPIKey) {
-                if (!TTS.premiumQueueActive) {
-                    TTS.SpeechifyTTS(text);
-                } else {
-                    TTS.premiumQueueTTS.push(text);
-                }
-                return;
-            }
-            break;
-    }
+	switch (TTS.TTSProvider) {
+		case "kokoro":
+			if (!TTS.premiumQueueActive) {
+				TTS.kokoroTTS(text);
+			} else {
+				TTS.premiumQueueTTS.push(text);
+			}
+			return;
+		case "google":
+			if (TTS.GoogleAPIKey) {
+				if (!TTS.premiumQueueActive) {
+					TTS.googleTTS(text);
+				} else {
+					TTS.premiumQueueTTS.push(text);
+				}
+				return;
+			}
+			return; // Change from break to return
+		case "elevenlabs":
+			if (TTS.ElevenLabsKey) {
+				if (!TTS.premiumQueueActive) {
+					TTS.ElevenLabsTTS(text);
+				} else {
+					TTS.premiumQueueTTS.push(text);
+				}
+				return;
+			}
+			return; // Change from break to return
+		case "speechify":
+			if (TTS.SpeechifyAPIKey) {
+				if (!TTS.premiumQueueActive) {
+					TTS.SpeechifyTTS(text);
+				} else {
+					TTS.premiumQueueTTS.push(text);
+				}
+				return;
+			}
+			return; // Change from break to return
+	}
 
     if (!TTS.voices && TTS.voices === null) {
         return;
