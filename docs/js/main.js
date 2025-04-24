@@ -113,6 +113,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+	
+	document.querySelectorAll('img').forEach(img => {
+		
+		if (window.location.protocol === 'file:') {
+			return;
+		}
+		  
+		if (img.complete && img.naturalHeight === 0) {
+		  img.style.display = 'none';
+		}
+		
+		img.addEventListener('error', function() {
+		  this.style.display = 'none';
+		});
+	});
+	  
 
 	
 	    // Dark Mode Toggle Logic - Fixed Version
