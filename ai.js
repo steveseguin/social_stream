@@ -1047,9 +1047,18 @@ function checkTriggerWords(triggerString, sentence) {
     // For phrase matching, first check if it's a simple space-separated phrase (no commas or modifiers)
     if (!triggerString.includes(',') && !triggerString.includes('+') && !triggerString.includes('-') && !triggerString.includes('"')) {
         const phrase = triggerString.toLowerCase().trim();
-        // Create a regex with word boundaries for the phrase
-        const regex = new RegExp(`\\b${phrase}\\b`, 'i');
-        return regex.test(sentence.toLowerCase());
+        // Special characters like ! need special handling with word boundaries
+        if (/^[!@#$%^&*]/.test(phrase)) {
+            // For phrases starting with special chars, don't use word boundary at start
+            const wordPart = phrase.replace(/^[!@#$%^&*]+/, '');
+            const specialPart = phrase.substring(0, phrase.length - wordPart.length);
+            const regex = new RegExp(`${specialPart}\\b${wordPart}\\b`, 'i');
+            return regex.test(sentence.toLowerCase());
+        } else {
+            // Create a regex with word boundaries for the phrase
+            const regex = new RegExp(`\\b${phrase}\\b`, 'i');
+            return regex.test(sentence.toLowerCase());
+        }
     }
     
     // Rest of the function remains the same
@@ -1108,12 +1117,13 @@ function checkTriggerWords(triggerString, sentence) {
         const lcWord = word.toLowerCase();
         const lcSentence = sentence.toLowerCase();
         
-        const matches = lcSentence.match(/[!/@#$%^&*]?\w+(?:'\w+)*|[.,;]|\s+/g) || [];
+        // Improved regex to properly capture special characters with words
+        const matches = lcSentence.match(/[!@#$%^&*]+\w+|\w+(?:'\w+)*|[.,;]|\s+/g) || [];
         
         for (let i = 0; i < matches.length; i++) {
-            const current = matches[i];
+            const current = matches[i].trim();
             
-            if (!/\w/.test(current)) continue;
+            if (!current || !/\w/.test(current)) continue;
             
             if (current === lcWord) {
                 if (startBoundary && i > 0 && /\w/.test(matches[i - 1])) continue;
@@ -1235,7 +1245,7 @@ async function processMessageWithOllama(data, idx=null) {
     }
 
     // Trigger words check
-    if (settings.bottriggerwords?.textsetting.trim()) {
+    if (settings.bottriggerwords?.textsetting.trim()) { // bottriggerwords
       if (!checkTriggerWords(settings.bottriggerwords.textsetting, data.chatmessage)) {
         isProcessing = false;
         return;
