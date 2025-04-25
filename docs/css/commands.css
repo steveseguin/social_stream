@@ -1,3 +1,38 @@
+/* Sticky Navigation */
+.navigation {
+    position: relative;
+    background-color: var(--background-light);
+    z-index: 999; /* Changed to be below header */
+}
+
+.navigation.sticky {
+    position: fixed;
+    top: 80px; /* Adjust based on header height */
+    left: 0;
+    right: 0;
+    width: 100%;
+    background-color: var(--background-light);
+    z-index: 999; /* Below header but above content */
+    box-shadow: var(--shadow-md);
+    transition: box-shadow 0.3s ease;
+}
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+.dark-mode .navigation.sticky {
+    background-color: var(--background-light);
+}
+
+body.sticky-nav-active {
+    padding-top: 70px; /* Adjust this value based on your nav height */
+}
+
 .api-explorer {
     background-color: var(--background-dark);
     border-radius: var(--radius-md);
