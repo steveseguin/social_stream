@@ -859,15 +859,6 @@
 				// Make sure FAQ is visible when either tab is active
 				faqSection.style.display = 'block';
 				
-				// Scroll to top of navigation when switching tabs
-				const guideNav = document.getElementById('guides-nav');
-				if (guideNav) {
-					const headerHeight = document.querySelector('header').offsetHeight;
-					window.scrollTo({
-						top: guideNav.offsetTop - headerHeight,
-						behavior: 'smooth'
-					});
-				}
 			});
 		});
 		
@@ -994,9 +985,9 @@
 		});
 		
 		const firstTab = document.querySelector('.tab-btn[data-tab="extension-guides"]');
-    if (firstTab) {
-        firstTab.click();
-    }
+		if (firstTab) {
+			firstTab.click();
+		}
 	});
 	</script>
 </body>
