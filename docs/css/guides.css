@@ -1,5 +1,4 @@
-/* Add these styles to your guides.css file */
-/* Improved Troubleshooting Grid */
+/* guides.css  */
 .troubleshooting-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -29,6 +28,10 @@
 
 .troubleshooting-card p {
     margin-bottom: 1rem;
+}
+
+.dark-mode .troubleshooting-grid .issue-icon {
+	filter: invert(1);
 }
 
 .issue-header {
@@ -350,5 +353,114 @@ pre {
     
     .issue-header h3 {
         font-size: 1.6rem;
+    }
+}
+
+/* Guide tabs styling */
+.guide-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 1rem;
+}
+
+.tab-btn {
+    padding: 0.8rem 2rem;
+    font-size: 1.6rem;
+    font-weight: 500;
+    background: none;
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-secondary);
+}
+
+.tab-btn:hover {
+    color: var(--primary-color);
+    background-color: rgba(157, 70, 255, 0.05);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background-color: rgba(157, 70, 255, 0.1);
+}
+
+.guide-section-wrapper {
+    display: none;
+}
+
+.guide-section-wrapper.active {
+    display: block;
+}
+
+.nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.dark-mode .tab-btn {
+    color: var(--text-secondary);
+}
+
+.dark-mode .tab-btn:hover {
+    color: var(--primary-light);
+    background-color: rgba(157, 70, 255, 0.1);
+}
+
+.dark-mode .tab-btn.active {
+    color: var(--primary-light);
+    border-color: var(--primary-light);
+    background-color: rgba(157, 70, 255, 0.15);
+}
+
+/* Video container for tutorial videos */
+.video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    max-width: 100%;
+    margin: 2rem 0;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* Mobile responsiveness for tabs */
+@media (max-width: 768px) {
+    .guide-tabs {
+        gap: 1rem;
+    }
+    
+    .tab-btn {
+        padding: 0.6rem 1.5rem;
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .guide-tabs {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .tab-btn {
+        width: 100%;
+        max-width: 280px;
     }
 }

@@ -13,10 +13,10 @@ https://ollama.com
 
 There's many choices available; go to https://ollama.com/library for a list of options.
 
-Social Stream Ninja targets Llama3.2 by default, but you can specify the model to use the Social Stream Ninja menu. For now though, let's just use `llama3.2`
+Social Stream Ninja targets Gemma3:1B by default, but you can specify the model to use the Social Stream Ninja menu. For now though, let's just use `gemma3:1b`
 
 To install the model, lets open Command Prompt (or Terminal)
-`> ollama pull llama3.2`
+`> ollama pull gemma3:1b`
 
 ![image](https://github.com/user-attachments/assets/4852506e-7761-47d1-99ce-8b2b01f34bac)
 
