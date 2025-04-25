@@ -169,7 +169,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 	
 	
-	const header = document.querySelector('header');
 	if (header && !document.querySelector('.discord-help-button')) {
 		const navContainer = header.querySelector('nav');
 		const discordButton = document.createElement('a');
