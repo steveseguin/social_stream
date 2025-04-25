@@ -73,11 +73,14 @@
 				<a href="#server-api" class="nav-link">
 					<i class="fas fa-server"></i> Server API
 				</a>
-				<a href="#ai-integration" class="nav-link">
-					<i class="fas fa-brain"></i> AI Integration
+				<a href="#streamdeck-companion" class="nav-link">
+					<i class="fas fa-th"></i> StreamDeck & Companion
 				</a>
 				<a href="#midi-hotkey" class="nav-link">
 					<i class="fas fa-music"></i> MIDI & Hotkeys
+				</a>
+				<a href="#ai-integration" class="nav-link">
+					<i class="fas fa-brain"></i> AI Integration
 				</a>
 				<a href="#webhook" class="nav-link">
 					<i class="fas fa-plug"></i> Webhooks
@@ -150,696 +153,691 @@
     </section>
 
     
-<section id="server-api" class="command-section alt">
-    <div class="container">
-        <h2>Server API</h2>
-        
-        <div class="command-card">
-            <h3>Overview</h3>
-            <p>Social Stream Ninja provides a powerful API that allows you to control every aspect of your streaming setup programmatically.</p>
-            
-            <div class="api-capabilities">
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-comment-alt"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>Chat Control</h4>
-                        <p>Send messages to all connected chat platforms simultaneously or to specific platforms only.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-tv"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>Overlay Management</h4>
-                        <p>Control featured messages, clear overlays, and manipulate content appearance in your stream.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-list"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>Queue Operations</h4>
-                        <p>Programmatically manage queued messages for highlighting during your stream.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>Webhook Integration</h4>
-                        <p>Receive events from third-party services like Stripe, Ko-Fi, and Buy Me A Coffee.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="command-note">
-                <p><strong>Important:</strong> You must enable the Server API toggle in the extension menu for API functionality to work.</p>
-            </div>
-        </div>
-        
-        <div class="command-card">
-            <h3>API Endpoints and Connection Methods</h3>
-            
-            <div class="api-methods">
-                <div class="api-method">
-                    <h4><i class="fas fa-globe"></i> HTTP GET/POST</h4>
-                    <div class="code-block">
-                        <pre>https://io.socialstream.ninja/{sessionID}/{action}/{target}/{value}</pre>
-                    </div>
-                    <p>Perfect for simple commands from Stream Deck or custom scripts.</p>
-                </div>
-                
-                <div class="api-method">
-                    <h4><i class="fas fa-exchange-alt"></i> WebSocket</h4>
-                    <div class="code-block">
-                        <pre>wss://io.socialstream.ninja:443</pre>
-                    </div>
-                    <p>For real-time bidirectional communication with auto-reconnection.</p>
-                </div>
-                
-                <div class="api-method">
-                    <h4><i class="fas fa-broadcast-tower"></i> Server-Sent Events</h4>
-                    <div class="code-block">
-                        <pre>https://io.socialstream.ninja/sse/{sessionID}</pre>
-                    </div>
-                    <p>For one-way real-time updates from the server.</p>
-                </div>
-            </div>
-            
-            <div class="channel-system">
-                <h4>Channel System</h4>
-                <p>The API uses a channel system for message routing control:</p>
-                <div class="code-block">
-                    <pre>
-- Channel 1: Main communication channel (default)
-- Channel 2: Typically used for dock.html communication
-- Channel 3: Often used for extension communication
-- Channel 4: Commonly used for featured.html communication
-- Channel 5: Used for waitlist.html communication
-- Channels 6-9: Reserved for future use</pre>
-                </div>
-                <p>You can specify input and output channels when connecting:</p>
-                <div class="code-block">
-                    <pre>wss://io.socialstream.ninja/join/SESSION_ID/IN_CHANNEL/OUT_CHANNEL</pre>
-                </div>
-            </div>
-        </div>
-        
-        <div class="command-card">
-            <h3>Common API Commands</h3>
-            
-            <div class="command-table-responsive">
-                <table class="command-table">
-                    <thead>
-                        <tr>
-                            <th>Action</th>
-                            <th>Description</th>
-                            <th>Example</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>sendChat</code></td>
-                            <td>Sends a message to all connected chat platforms</td>
-                            <td><code>https://io.socialstream.ninja/SESSIONID/sendChat/null/Hello everyone!</code></td>
-                        </tr>
-                        <tr>
-                            <td><code>sendEncodedChat</code></td>
-                            <td>Sends a URL-encoded message to all platforms</td>
-                            <td><code>https://io.socialstream.ninja/SESSIONID/sendEncodedChat/null/Hello%20everyone%21</code></td>
-                        </tr>
-                        <tr>
-                            <td><code>clearOverlay</code></td>
-                            <td>Clears the featured message from the overlay</td>
-                            <td><code>https://io.socialstream.ninja/SESSIONID/clearOverlay</code></td>
-                        </tr>
-                        <tr>
-                            <td><code>nextInQueue</code></td>
-                            <td>Displays the next message in the queue</td>
-                            <td><code>https://io.socialstream.ninja/SESSIONID/nextInQueue</code></td>
-                        </tr>
-                        <tr>
-                            <td><code>autoShow</code></td>
-                            <td>Toggles automatic featuring of messages</td>
-                            <td><code>https://io.socialstream.ninja/SESSIONID/autoShow/toggle</code></td>
-                        </tr>
-                        <tr>
-                            <td><code>blockUser</code></td>
-                            <td>Blocks a user from a specific platform</td>
-                            <td><code>https://io.socialstream.ninja/SESSIONID/blockUser/null/{"chatname":"username","type":"twitch"}</code></td>
-                        </tr>
-                        <tr>
-                            <td><code>extContent</code></td>
-                            <td>Sends external content as a chat message</td>
-                            <td><code>https://io.socialstream.ninja/SESSIONID/extContent/null/{"chatname":"User","chatmessage":"Hello"}</code></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="view-more-link">
-                <a href="https://github.com/steveseguin/social_stream/blob/master/api.md" target="_blank" class="btn btn-secondary">
-                    <i class="fab fa-github"></i> View Complete API Documentation
-                </a>
-            </div>
-        </div>
-        
-        <div class="command-card">
-            <h3>Interactive API Sandbox</h3>
-            <p>Try out the API with our interactive sandbox that provides easy access to all commands and features:</p>
-            
-            <div class="sandbox-api-preview">
-                <div class="sandbox-overlay">
-                    <a href="https://socialstream.ninja/sampleapi.html" class="btn btn-primary" target="_blank">
-                        <i class="fas fa-external-link-alt"></i> Open API Sandbox
-                    </a>
-                </div>
-            </div>
-            
-            <div class="sandbox-features">
-                <div class="sandbox-feature">
-                    <div class="sandbox-title">
-                        <i class="fas fa-flask"></i>
-                        <h4>Test Commands</h4>
-                    </div>
-                    <p>Try all API commands in a safe environment</p>
-                </div>
-                
-                <div class="sandbox-feature">
-                    <div class="sandbox-title">
-                        <i class="fas fa-code"></i>
-                        <h4>Generate Code</h4>
-                    </div>
-                    <p>Get code examples for HTTP, WebSocket, and SSE</p>
-                </div>
-                
-                <div class="sandbox-feature">
-                    <div class="sandbox-title">
-                        <i class="fas fa-eye"></i>
-                        <h4>View Results</h4>
-                    </div>
-                    <p>See real-time responses from your commands</p>
-                </div>
-                
-                <div class="sandbox-feature">
-                    <div class="sandbox-title">
-                        <i class="fas fa-magic"></i>
-                        <h4>Create Tests</h4>
-                    </div>
-                    <p>Generate test messages with random content</p>
-                </div>
-            </div>
-            
-            <div class="sandbox-api-note">
-                <p><strong>Note:</strong> Remember to replace <code>SESSIONID</code> with your actual session ID from Social Stream Ninja!</p>
-            </div>
-        </div>
-    </div>
-</section>
+	<section id="server-api" class="command-section alt">
+		<div class="container">
+			<h2>Server API</h2>
+			
+			<div class="command-card">
+				<h3>Overview</h3>
+				<p>Social Stream Ninja provides a powerful API that allows you to control every aspect of your streaming setup programmatically. The API server can both issue commands to your setup and listen to incoming messages from consolidated chat services.</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-tv"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Overlay Management</h4>
+							<p>Control featured messages, clear overlays, and manipulate content appearance in your stream.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-exchange-alt"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Webhook Integration</h4>
+							<p>Receive events from third-party services like Stripe, Ko-Fi, and Buy Me A Coffee.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-download"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Message Export</h4>
+							<p>Export chat messages to file or forward them via webhook (POST) for custom integrations.</p>
+						</div>
+					</div>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>Important:</strong> You must enable the Server API toggle in the extension menu for API functionality to work.</p>
+				</div>
+			
+			<div class="command-card">
+				<h3>API Endpoints and Connection Methods</h3>
+				
+				<div class="api-methods">
+					<div class="api-method">
+						<h4><i class="fas fa-globe"></i> HTTP GET/POST</h4>
+						<div class="code-block">
+							<pre>https://io.socialstream.ninja/{sessionID}/{action}/{target}/{value}</pre>
+						</div>
+						<p>Perfect for simple commands from Stream Deck or custom scripts.</p>
+					</div>
+					
+					<div class="api-method">
+						<h4><i class="fas fa-exchange-alt"></i> WebSocket</h4>
+						<div class="code-block">
+							<pre>wss://io.socialstream.ninja:443</pre>
+						</div>
+						<p>For real-time bidirectional communication with auto-reconnection.</p>
+					</div>
+					
+					<div class="api-method">
+						<h4><i class="fas fa-broadcast-tower"></i> Server-Sent Events</h4>
+						<div class="code-block">
+							<pre>https://io.socialstream.ninja/sse/{sessionID}</pre>
+						</div>
+						<p>For one-way real-time updates from the server.</p>
+					</div>
+				</div>
+				
+				<div class="channel-system">
+					<h4>Channel System</h4>
+					<p>The API uses a channel system for message routing control:</p>
+					<div class="code-block">
+						<pre>
+	- Channel 1: Main communication channel (default)
+	- Channel 2: Typically used for dock.html communication
+	- Channel 3: Often used for extension communication
+	- Channel 4: Commonly used for featured.html communication
+	- Channel 5: Used for waitlist.html communication
+	- Channels 6-9: Reserved for future use</pre>
+					</div>
+					<p>You can specify input and output channels when connecting:</p>
+					<div class="code-block">
+						<pre>wss://io.socialstream.ninja/join/SESSION_ID/IN_CHANNEL/OUT_CHANNEL</pre>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Common API Commands</h3>
+				
+				<div class="command-table-responsive">
+					<table class="command-table">
+						<thead>
+							<tr>
+								<th>Action</th>
+								<th>Description</th>
+								<th>Example</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>sendChat</code></td>
+								<td>Sends a message to all connected chat platforms</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/sendChat/null/Hello everyone!</code></td>
+							</tr>
+							<tr>
+								<td><code>sendEncodedChat</code></td>
+								<td>Sends a URL-encoded message to all platforms</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/sendEncodedChat/null/Hello%20everyone%21</code></td>
+							</tr>
+							<tr>
+								<td><code>clearOverlay</code></td>
+								<td>Clears the featured message from the overlay</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/clearOverlay</code></td>
+							</tr>
+							<tr>
+								<td><code>nextInQueue</code></td>
+								<td>Displays the next message in the queue</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/nextInQueue</code></td>
+							</tr>
+							<tr>
+								<td><code>autoShow</code></td>
+								<td>Toggles automatic featuring of messages</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/autoShow/toggle</code></td>
+							</tr>
+							<tr>
+								<td><code>blockUser</code></td>
+								<td>Blocks a user from a specific platform</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/blockUser/null/{"chatname":"username","type":"twitch"}</code></td>
+							</tr>
+							<tr>
+								<td><code>extContent</code></td>
+								<td>Sends external content as a chat message</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/extContent/null/{"chatname":"User","chatmessage":"Hello"}</code></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="view-more-link">
+					<a href="https://github.com/steveseguin/social_stream/blob/master/api.md" target="_blank" class="btn btn-secondary">
+						<i class="fab fa-github"></i> View Complete API Documentation
+					</a>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Interactive API Sandbox</h3>
+				<p>Try out the API with our interactive sandbox that provides easy access to all commands and features:</p>
+				
+				<div class="sandbox-api-preview">
+					<div class="sandbox-overlay">
+						<a href="https://socialstream.ninja/sampleapi.html" class="btn btn-primary" target="_blank">
+							<i class="fas fa-external-link-alt"></i> Open API Sandbox
+						</a>
+					</div>
+				</div>
+				
+				<div class="sandbox-features">
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-flask"></i>
+							<h4>Test Commands</h4>
+						</div>
+						<p>Try all API commands in a safe environment</p>
+					</div>
+					
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-code"></i>
+							<h4>Generate Code</h4>
+						</div>
+						<p>Get code examples for HTTP, WebSocket, and SSE</p>
+					</div>
+					
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-eye"></i>
+							<h4>View Results</h4>
+						</div>
+						<p>See real-time responses from your commands</p>
+					</div>
+					
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-magic"></i>
+							<h4>Create Tests</h4>
+						</div>
+						<p>Generate test messages with random content</p>
+					</div>
+				</div>
+				
+				<div class="sandbox-api-note">
+					<p><strong>Note:</strong> Remember to replace <code>SESSIONID</code> with your actual session ID from Social Stream Ninja!</p>
+				</div>
+			</div>
+		</div>
+	</section>
 
-<section id="ai-integration" class="command-section">
-    <div class="container">
-        <h2>AI Integration</h2>
-        
-        <div class="command-card">
-            <h3>AI Chat Bot Mode</h3>
-            <p>Social Stream Ninja provides comprehensive AI integration to enhance your streams with AI-powered chat responses, moderation, and more. Choose from local or cloud-based AI providers to match your needs.</p>
-            
-            <div class="feature-highlights">
-                <div class="feature-highlight">
-                    <div class="feature-icon">
-                        <i class="fas fa-comment-dots"></i>
-                    </div>
-                    <div class="feature-content">
-                        <h4>Automated Chat Responses</h4>
-                        <p>Let the AI engage with your viewers automatically, answering questions and keeping the conversation lively even when you're focused on your content.</p>
-                    </div>
-                </div>
-                
-                <div class="feature-highlight">
-                    <div class="feature-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <div class="feature-content">
-                        <h4>Content Moderation</h4>
-                        <p>Use AI to help moderate chat by identifying potentially harmful messages and automatically handling them based on your preferences. Choose between non-blocking or strict blocking modes.</p>
-                    </div>
-                </div>
-                
-                <div class="feature-highlight">
-                    <div class="feature-icon">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <div class="feature-content">
-                        <h4>RAG Search</h4>
-                        <p>Retrieval-Augmented Generation allows the AI to search through your custom knowledge base to provide accurate answers specific to your content.</p>
-                    </div>
-                </div>
-                
-                <div class="feature-highlight">
-                    <div class="feature-icon">
-                        <i class="fas fa-user-friends"></i>
-                    </div>
-                    <div class="feature-content">
-                        <h4>Multiple Bot Instances</h4>
-                        <p>Run different bot instances for various purposes: public chat bot, private 1-on-1 bot, censor bot, and even a multimodal AI co-host that can see and hear.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="command-card">
-            <h3>Supported AI Providers</h3>
-            <p>Social Stream Ninja supports multiple AI service providers, giving you flexibility in choosing the right solution for your stream:</p>
-            
-            <div class="api-capabilities">
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>Ollama (Local)</h4>
-                        <p>Free, privacy-focused, self-hosted AI models running on your own computer.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fab fa-openai"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>ChatGPT</h4>
-                        <p>OpenAI's powerful chat models via API key integration (gpt-4, gpt-3.5-turbo).</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fab fa-google"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>Google Gemini</h4>
-                        <p>Google's multimodal AI models including Gemini Pro and Gemini Flash.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>DeepSeek</h4>
-                        <p>Efficient, cost-effective AI models optimized for conversational tasks.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-rocket"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>xAI (Grok)</h4>
-                        <p>Elon Musk's xAI models offering unique perspectives and real-time information.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fab fa-aws"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>AWS Bedrock</h4>
-                        <p>Enterprise-grade AI models from various providers including Claude and Llama.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-route"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>OpenRouter</h4>
-                        <p>Access to multiple AI models through a unified API interface.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-tools"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>Custom API</h4>
-                        <p>Connect to any OpenAI-compatible endpoint for maximum flexibility.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="command-card">
-            <h3>Text-to-Speech Integration</h3>
-            <p>Social Stream Ninja includes comprehensive TTS support for bot messages and featured chat content:</p>
-            
-            <div class="api-capabilities">
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-laptop"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>System TTS</h4>
-                        <p>Free, built-in TTS using your operating system's voice synthesizer.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-microphone-alt"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>ElevenLabs</h4>
-                        <p>Premium voice synthesis with natural-sounding, customizable voices.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fab fa-google"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>Google Cloud TTS</h4>
-                        <p>High-quality voices with extensive language and customization options.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-volume-up"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>Speechify</h4>
-                        <p>AI-powered text-to-speech with natural voice conversion capabilities.</p>
-                    </div>
-                </div>
-                
-                <div class="api-capability">
-                    <div class="capability-icon">
-                        <i class="fas fa-heart"></i>
-                    </div>
-                    <div class="capability-content">
-                        <h4>Kokoro</h4>
-                        <p>Free, locally-running TTS using WebGPU/CPU for privacy-conscious users.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="command-note">
-                <p><strong>Note:</strong> TTS functionality requires the appropriate overlay page to be open in OBS. Each TTS provider offers different voice options, quality levels, and pricing models.</p>
-            </div>
-        </div>
-        
-        <div class="command-card">
-            <h3>Bot Instances and Overlays</h3>
-            <p>Social Stream Ninja provides multiple bot instances for different use cases:</p>
-            
-            <div class="command-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Bot Type</th>
-                            <th>URL</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Primary Chat Bot</td>
-                            <td><code>/bot.html</code></td>
-                            <td>Main bot overlay with TTS support, responds to chat and displays messages</td>
-                        </tr>
-                        <tr>
-                            <td>Private Chat Interface</td>
-                            <td><code>/chatbot.html</code></td>
-                            <td>Standalone 1-on-1 interface for private conversations with the AI</td>
-                        </tr>
-                        <tr>
-                            <td>Censor Bot</td>
-                            <td>(runs in background)</td>
-                            <td>Filters and moderates incoming messages automatically</td>
-                        </tr>
-                        <tr>
-                            <td>AI Co-Host</td>
-                            <td><code>/cohost.html</code></td>
-                            <td>Multimodal AI that can see your screen, hear audio, and interact</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div class="command-card">
-            <h3>Setting Up AI Integration</h3>
-            <p>Follow these steps to set up AI integration with your preferred provider:</p>
-            
-            <div class="ai-setup-steps">
-                <div class="ai-step">
-                    <div class="ai-step-number">1</div>
-                    <div class="ai-step-content">
-                        <h4>Choose Your AI Provider</h4>
-                        <p>Select from the supported providers in the extension settings. Each provider requires different setup:</p>
-                        <ul>
-                            <li><strong>Ollama:</strong> Install locally and set up CORS</li>
-                            <li><strong>ChatGPT/Gemini/etc:</strong> Add your API key</li>
-                            <li><strong>Custom:</strong> Configure your endpoint URL</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="ai-step">
-                    <div class="ai-step-number">2</div>
-                    <div class="ai-step-content">
-                        <h4>Configure Bot Settings</h4>
-                        <p>Customize your bot behavior:</p>
-                        <ul>
-                            <li>Set trigger words or allow all responses</li>
-                            <li>Enable/disable context memory</li>
-                            <li>Configure rate limiting</li>
-                            <li>Choose moderation level</li>
-                            <li>Set custom instructions</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="ai-step">
-                    <div class="ai-step-number">3</div>
-                    <div class="ai-step-content">
-                        <h4>Set Up TTS (Optional)</h4>
-                        <p>Choose your TTS provider and configure voice settings:</p>
-                        <ul>
-                            <li>Select voice language and style</li>
-                            <li>Adjust speed, pitch, and volume</li>
-                            <li>Configure URL and name reading preferences</li>
-                            <li>Set up audio routing options</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="ai-step">
-                    <div class="ai-step-number">4</div>
-                    <div class="ai-step-content">
-                        <h4>Add Knowledge Base (Optional)</h4>
-                        <p>Upload files for RAG (Retrieval-Augmented Generation):</p>
-                        <ul>
-                            <li>Add text, markdown, or PDF documents</li>
-                            <li>Enable enhanced processing for better results</li>
-                            <li>Manage and update your knowledge database</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="documentation-links">
-                <h4>Detailed Documentation</h4>
-                <p>For complete setup instructions and advanced configuration options, see our detailed guides:</p>
-                <div class="doc-links">
-                    <a href="https://socialstream.ninja/ai" class="btn btn-primary" target="_blank">
-                        <i class="fas fa-file-alt"></i>
-                        <span>Complete AI Integration Guide</span>
-                    </a>
-                    <a href="https://github.com/steveseguin/social_stream/blob/master/ai.md" class="btn btn-secondary" target="_blank">
-                        <i class="fab fa-github"></i>
-                        <span>AI Setup Documentation on GitHub</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+	<section id="streamdeck-companion" class="command-section">
+		<div class="container">
+			<h2>StreamDeck & Companion</h2>
+			
+			<div class="command-card">
+				<h3>StreamDeck Integration</h3>
+				<p>Social Stream Ninja integrates with StreamDeck through multiple methods: native HTTP actions and Bitfocus Companion integration.</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-globe"></i>
+						</div>
+						<div class="capability-content">
+							<h4>HTTP/API Method</h4>
+							<p>Use StreamDeck's "Website" action with "GET request in background" enabled to send commands directly to the API.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-boxes"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Bitfocus Companion</h4>
+							<p>Native integration with pre-built actions, real-time feedback, and variables for dynamic content.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Companion Integration</h3>
+				<p>Bitfocus Companion provides powerful control of Social Stream Ninja using either WebSocket or HTTP APIs.</p>
+				
+				<div class="command-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Action</th>
+								<th>Description</th>
+								<th>API Method</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Clear Featured Message</td>
+								<td>Removes the currently featured message from overlay</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+							<tr>
+								<td>Next in Queue</td>
+								<td>Displays the next queued message</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+							<tr>
+								<td>Toggle Auto-Show</td>
+								<td>Enables/disables automatic message featuring</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+							<tr>
+								<td>Send Chat Message</td>
+								<td>Sends a message to all connected platforms</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="companion-features">
+					<h4>Dynamic Variables</h4>
+					<ul class="feature-list">
+						<li><code>featured_message</code> - Current featured message text</li>
+						<li><code>featured_username</code> - Current featured username</li>
+						<li><code>queue_size</code> - Number of messages in queue</li>
+					</ul>
+				</div>
+				
+				<div class="documentation-links">
+					<h4>Setup Resources</h4>
+					<div class="doc-links">
+						<a href="https://bitfocus.io/companion" target="_blank" class="btn btn-secondary">
+							<i class="fas fa-external-link-alt"></i> Get Companion
+						</a>
+						<a href="https://github.com/bitfocus/companion-module-socialstream-ninja" target="_blank" class="btn btn-secondary">
+							<i class="fab fa-github"></i> Module Documentation
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<section id="ai-integration" class="command-section">
+		<div class="container">
+			<h2>AI Integration</h2>
+			
+			<div class="command-card">
+				<h3>AI Chat Bot Mode</h3>
+				<p>Social Stream Ninja provides comprehensive AI integration to enhance your streams with AI-powered chat responses, moderation, and more. Choose from local or cloud-based AI providers to match your needs.</p>
+				
+				<div class="feature-highlights">
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-comment-dots"></i>
+						</div>
+						<div class="feature-content">
+							<h4>Automated Chat Responses</h4>
+							<p>Let the AI engage with your viewers automatically, answering questions and keeping the conversation lively even when you're focused on your content.</p>
+						</div>
+					</div>
+					
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-shield-alt"></i>
+						</div>
+						<div class="feature-content">
+							<h4>Content Moderation</h4>
+							<p>Use AI to help moderate chat by identifying potentially harmful messages and automatically handling them based on your preferences. Choose between non-blocking or strict blocking modes.</p>
+						</div>
+					</div>
+					
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-search"></i>
+						</div>
+						<div class="feature-content">
+							<h4>RAG Search</h4>
+							<p>Retrieval-Augmented Generation allows the AI to search through your custom knowledge base to provide accurate answers specific to your content.</p>
+						</div>
+					</div>
+					
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-user-friends"></i>
+						</div>
+						<div class="feature-content">
+							<h4>Multiple Bot Instances</h4>
+							<p>Run different bot instances for various purposes: public chat bot, private 1-on-1 bot, censor bot, and even a multimodal AI co-host that can see and hear.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Supported AI Providers</h3>
+				<p>Social Stream Ninja supports multiple AI service providers, giving you flexibility in choosing the right solution for your stream:</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-robot"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Ollama (Local)</h4>
+							<p>Free, privacy-focused, self-hosted AI models running on your own computer.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-openai"></i>
+						</div>
+						<div class="capability-content">
+							<h4>ChatGPT</h4>
+							<p>OpenAI's powerful chat models via API key integration (gpt-4, gpt-3.5-turbo).</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-google"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Google Gemini</h4>
+							<p>Google's multimodal AI models including Gemini Pro and Gemini Flash.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-brain"></i>
+						</div>
+						<div class="capability-content">
+							<h4>DeepSeek</h4>
+							<p>Efficient, cost-effective AI models optimized for conversational tasks.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-rocket"></i>
+						</div>
+						<div class="capability-content">
+							<h4>xAI (Grok)</h4>
+							<p>Elon Musk's xAI models offering unique perspectives and real-time information.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-aws"></i>
+						</div>
+						<div class="capability-content">
+							<h4>AWS Bedrock</h4>
+							<p>Enterprise-grade AI models from various providers including Claude and Llama.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-route"></i>
+						</div>
+						<div class="capability-content">
+							<h4>OpenRouter</h4>
+							<p>Access to multiple AI models through a unified API interface.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-tools"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Custom API</h4>
+							<p>Connect to any OpenAI-compatible endpoint for maximum flexibility.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Text-to-Speech Integration</h3>
+				<p>Social Stream Ninja includes comprehensive TTS support for bot messages and featured chat content:</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-laptop"></i>
+						</div>
+						<div class="capability-content">
+							<h4>System TTS</h4>
+							<p>Free, built-in TTS using your operating system's voice synthesizer.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-microphone-alt"></i>
+						</div>
+						<div class="capability-content">
+							<h4>ElevenLabs</h4>
+							<p>Premium voice synthesis with natural-sounding, customizable voices.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-google"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Google Cloud TTS</h4>
+							<p>High-quality voices with extensive language and customization options.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-volume-up"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Speechify</h4>
+							<p>AI-powered text-to-speech with natural voice conversion capabilities.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-heart"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Kokoro</h4>
+							<p>Free, locally-running TTS using WebGPU/CPU for privacy-conscious users.</p>
+						</div>
+					</div>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>Note:</strong> TTS functionality requires the appropriate overlay page to be open in OBS. Each TTS provider offers different voice options, quality levels, and pricing models.</p>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Bot Instances and Overlays</h3>
+				<p>Social Stream Ninja provides multiple bot instances for different use cases:</p>
+				
+				<div class="command-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Bot Type</th>
+								<th>URL</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Primary Chat Bot</td>
+								<td><code>/bot.html</code></td>
+								<td>Main bot overlay with TTS support, responds to chat and displays messages</td>
+							</tr>
+							<tr>
+								<td>Private Chat Interface</td>
+								<td><code>/chatbot.html</code></td>
+								<td>Standalone 1-on-1 interface for private conversations with the AI</td>
+							</tr>
+							<tr>
+								<td>Censor Bot</td>
+								<td>(runs in background)</td>
+								<td>Filters and moderates incoming messages automatically</td>
+							</tr>
+							<tr>
+								<td>AI Co-Host</td>
+								<td><code>/cohost.html</code></td>
+								<td>Multimodal AI that can see your screen, hear audio, and interact</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Setting Up AI Integration</h3>
+				<p>Follow these steps to set up AI integration with your preferred provider:</p>
+				
+				<div class="ai-setup-steps">
+					<div class="ai-step">
+						<div class="ai-step-number">1</div>
+						<div class="ai-step-content">
+							<h4>Choose Your AI Provider</h4>
+							<p>Select from the supported providers in the extension settings. Each provider requires different setup:</p>
+							<ul>
+								<li><strong>Ollama:</strong> Install locally and set up CORS</li>
+								<li><strong>ChatGPT/Gemini/etc:</strong> Add your API key</li>
+								<li><strong>Custom:</strong> Configure your endpoint URL</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="ai-step">
+						<div class="ai-step-number">2</div>
+						<div class="ai-step-content">
+							<h4>Configure Bot Settings</h4>
+							<p>Customize your bot behavior:</p>
+							<ul>
+								<li>Set trigger words or allow all responses</li>
+								<li>Enable/disable context memory</li>
+								<li>Configure rate limiting</li>
+								<li>Choose moderation level</li>
+								<li>Set custom instructions</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="ai-step">
+						<div class="ai-step-number">3</div>
+						<div class="ai-step-content">
+							<h4>Set Up TTS (Optional)</h4>
+							<p>Choose your TTS provider and configure voice settings:</p>
+							<ul>
+								<li>Select voice language and style</li>
+								<li>Adjust speed, pitch, and volume</li>
+								<li>Configure URL and name reading preferences</li>
+								<li>Set up audio routing options</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="ai-step">
+						<div class="ai-step-number">4</div>
+						<div class="ai-step-content">
+							<h4>Add Knowledge Base (Optional)</h4>
+							<p>Upload files for RAG (Retrieval-Augmented Generation):</p>
+							<ul>
+								<li>Add text, markdown, or PDF documents</li>
+								<li>Enable enhanced processing for better results</li>
+								<li>Manage and update your knowledge database</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+				
+				<div class="documentation-links">
+					<h4>Detailed Documentation</h4>
+					<p>For complete setup instructions and advanced configuration options, see our detailed guides:</p>
+					<div class="doc-links">
+						<a href="https://socialstream.ninja/ai" class="btn btn-primary" target="_blank">
+							<i class="fas fa-file-alt"></i>
+							<span>Complete AI Integration Guide</span>
+						</a>
+						<a href="https://github.com/steveseguin/social_stream/blob/master/ai.md" class="btn btn-secondary" target="_blank">
+							<i class="fab fa-github"></i>
+							<span>AI Setup Documentation on GitHub</span>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
 
 
-<section id="midi-hotkey" class="command-section">
-    <div class="container">
-        <h2>StreamDeck, MIDI & Hotkey Support</h2>
-        
-        <div class="command-card">
-            <h3>StreamDeck Integration</h3>
-            <p>Social Stream Ninja offers multiple ways to control your stream setup using a StreamDeck or similar control devices.</p>
-            
-            <div class="streamdeck-methods">
-                <div class="streamdeck-method">
-                    <h4><i class="fas fa-globe"></i> HTTP/API Method</h4>
-                    <p>The simplest way to set up StreamDeck control is using the "Website" action to send HTTP requests:</p>
-                    <ol class="command-steps">
-                        <li>Add a "Website" action to your StreamDeck</li>
-                        <li>Check "GET request in background"</li>
-                        <li>Configure the URL with your session ID and command</li>
-                    </ol>
-                    
-                    <div class="code-block">
-                        <pre>
-# Send chat message
-https://io.socialstream.ninja/SESSIONID/sendChat/null/Hello world!
-
-# Clear overlay
-https://io.socialstream.ninja/SESSIONID/clearOverlay
-
-# URL-encoded message
-https://io.socialstream.ninja/SESSIONID/sendEncodedChat/null/Hello%20Stream!</pre>
-                    </div>
-                    
-                    <p class="command-note">For special characters, use URL encoding or the sendEncodedChat endpoint.</p>
-                </div>
-                
-                <div class="streamdeck-method">
-                    <h4><i class="fas fa-boxes"></i> Bitfocus Companion</h4>
-                    <p>Companion provides native integration with Social Stream Ninja, offering a simpler setup:</p>
-                    <ol class="command-steps">
-                        <li>Install Bitfocus Companion</li>
-                        <li>Add the Social Stream Ninja module</li>
-                        <li>Enter your Session ID in the module settings</li>
-                        <li>Use pre-built actions and variables</li>
-                    </ol>
-                    
-                    <div class="companion-features">
-                        <h5>Available Actions:</h5>
-                        <ul class="feature-list">
-                            <li>Clear featured message</li>
-                            <li>Clear all messages</li>
-                            <li>Next in queue</li>
-                            <li>Toggle auto-show</li>
-                            <li>Feature next message</li>
-                            <li>Reset/Close polls</li>
-                            <li>Waitlist controls</li>
-                            <li>Text-to-Speech controls</li>
-                            <li>Send chat messages</li>
-                        </ul>
-                        
-                        <h5>Available Variables:</h5>
-                        <ul class="feature-list">
-                            <li><code>featured_message</code> - Current featured message</li>
-                            <li><code>featured_username</code> - Current featured username</li>
-                            <li><code>queue_size</code> - Message queue size</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="command-note">
-                        <p><strong>Advantages:</strong> No URL encoding required, real-time feedback, and native integration.</p>
-                    </div>
-                    
-                    <div class="documentation-links">
-                        <a href="https://bitfocus.io/companion" target="_blank" class="btn btn-secondary">
-                            <i class="fas fa-external-link-alt"></i> Get Companion
-                        </a>
-                        <a href="https://github.com/bitfocus/companion-module-socialstream-ninja" target="_blank" class="btn btn-secondary">
-                            <i class="fab fa-github"></i> Module Documentation
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="streamdeck-method">
-                    <h4><i class="fas fa-music"></i> MIDI Control</h4>
-                    <p>Use MIDI controllers or StreamDeck MIDI plugins for control:</p>
-                    
-                    <div class="midi-requirements">
-                        <h5>Requirements</h5>
-                        <ul class="feature-list">
-                            <li>MIDI controller or StreamDeck with MIDI plugin</li>
-                            <li>Virtual MIDI loopback device (e.g., loopMIDI)</li>
-                            <li>MIDI support enabled in extension settings</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="command-table">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>CC Number</th>
-                                    <th>Value</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>102</td>
-                                    <td>1</td>
-                                    <td>Send "1" to chat</td>
-                                </tr>
-                                <tr>
-                                    <td>102</td>
-                                    <td>2</td>
-                                    <td>Send "LUL" to chat</td>
-                                </tr>
-                                <tr>
-                                    <td>102</td>
-                                    <td>3</td>
-                                    <td>Tell a joke</td>
-                                </tr>
-                                <tr>
-                                    <td>102</td>
-                                    <td>4</td>
-                                    <td>Clear overlay</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="command-card">
-            <h3>Advanced StreamDeck API Usage</h3>
-            <p>Create more complex integrations using Multi Actions and channel-specific messaging:</p>
-            
-            <div class="advanced-examples">
-                <div class="example-card">
-                    <h4>Channel-Specific Messages</h4>
-                    <div class="code-block">
-                        <pre>
-# Send to dock (channel 2)
-https://io.socialstream.ninja/SESSIONID/sendChat/null/Message?channel=2
-
-# Send to featured (channel 4)  
-https://io.socialstream.ninja/SESSIONID/sendChat/null/Message?channel=4
-
-# Send custom content
-https://io.socialstream.ninja/SESSIONID/extContent/null/{"chatname":"Bot","chatmessage":"Hello!"}</pre>
-                    </div>
-                </div>
-                
-            </div>
-            
-            <div class="command-note">
-                <p><strong>Testing:</strong> Use the <a href="https://socialstream.ninja/sampleapi.html" target="_blank">API Sandbox</a> to test and generate URLs for your commands.</p>
-            </div>
-        </div>
-    </div>
-</section>
+	<section id="midi-hotkey" class="command-section alt">
+		<div class="container">
+			<h2>MIDI & Hotkey Control</h2>
+			
+			<div class="command-card">
+				<h3>MIDI Integration</h3>
+				<p>Control Social Stream Ninja using MIDI controllers, keyboard shortcuts, or StreamDeck with MIDI plugins.</p>
+				
+				<div class="midi-setup">
+					<h4>Setup Requirements</h4>
+					<ol class="command-steps">
+						<li>Enable MIDI support in the extension settings</li>
+						<li>Install a virtual MIDI loopback device (e.g., loopMIDI)</li>
+						<li>Configure your MIDI controller or StreamDeck MIDI plugin</li>
+					</ol>
+				</div>
+				
+				<div class="command-table">
+					<table>
+						<thead>
+							<tr>
+								<th>CC Number</th>
+								<th>Value</th>
+								<th>Action</th>
+								<th>Notes</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>102</td>
+								<td>1</td>
+								<td>Send "1" to chat</td>
+								<td>Quick reaction</td>
+							</tr>
+							<tr>
+								<td>102</td>
+								<td>2</td>
+								<td>Send "LUL" to chat</td>
+								<td>Emote reaction</td>
+							</tr>
+							<tr>
+								<td>102</td>
+								<td>3</td>
+								<td>Tell a joke</td>
+								<td>Triggers bot response</td>
+							</tr>
+							<tr>
+								<td>102</td>
+								<td>4</td>
+								<td>Clear overlay</td>
+								<td>Removes featured message</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>Tip:</strong> MIDI control works best with physical controllers but can also be triggered via virtual MIDI devices.</p>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Hotkey Support</h3>
+				<p>Use keyboard shortcuts for quick access to common functions.</p>
+				
+				<div class="hotkey-info">
+					<p>Hotkeys can be configured within the menu settings and work system-wide when the browser is focused or when the app is used.</p>
+				</div>
+			</div>
+		</div>
+	</section>
 
     <section id="webhook" class="command-section alt">
         <div class="container">
@@ -847,7 +845,7 @@ https://io.socialstream.ninja/SESSIONID/extContent/null/{"chatname":"Bot","chatm
             
             <div class="command-card">
                 <h3>Donation Services</h3>
-                <p>Social Stream Ninja can receive donations and events from third-party services via webhooks.</p>
+                <p>Social Stream Ninja can receive donations and events from third-party services via webhooks; a few popular ones are below:</p>
                 
                 <div class="webhook-grid">
 					<div class="webhook-item">

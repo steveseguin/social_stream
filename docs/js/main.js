@@ -167,6 +167,24 @@ document.addEventListener('DOMContentLoaded', function() {
             updateTheme(!isDarkMode);
         });
     }
+	
+	
+	const header = document.querySelector('header');
+	if (header && !document.querySelector('.discord-help-button')) {
+		const navContainer = header.querySelector('nav');
+		const discordButton = document.createElement('a');
+		discordButton.href = 'https://discord.socialstream.ninja';
+		discordButton.target = '_blank';
+		discordButton.className = 'discord-help-button';
+		discordButton.innerHTML = '<img src="../icons/discord.svg" alt="Discord"> Get Help';
+		if (navContainer) {
+			const ul = navContainer.querySelector('ul');
+			const li = document.createElement('li');
+			li.className = 'discord-help-item';
+			li.appendChild(discordButton);
+			ul.appendChild(li);
+		}
+	}
     
     // Listen for system theme changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
