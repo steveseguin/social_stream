@@ -117,8 +117,8 @@
 					<h3>1. Installation</h3>
 					<p>Before you can use Social Stream Ninja, you'll need to install it first. There are multiple ways to install the browser extension:</p>
 					<ul class="guide-list">
-						<li><strong>Chrome Web Store (recommended):</strong> Install via Chrome Web Store for the easiest setup experience.</li>
-						<li><strong>Manual Installation:</strong> For the most up-to-date version, install manually in developer mode.</li>
+						<li><strong>Manual Installation (recommended)::</strong> For the most up-to-date version, install manually in developer mode.</li>
+						<li><strong>Chrome Web Store:</strong> Install via Chrome Web Store for the easiest setup experience.</li>
 					</ul>
 					<p>For detailed installation instructions, please visit the <a href="download.html">Download page</a>.</p>
 				</div>
@@ -135,9 +135,6 @@
 					</ol>
 					<div class="guide-note">
 						<p><strong>Note:</strong> For the best experience, keep chat windows visible (not minimized) when using the browser extension.</p>
-					</div>
-					<div class="guide-image">
-						<img src="../icons/basic-setup.png" alt="Basic Setup Process">
 					</div>
 				</div>
 				
@@ -215,7 +212,7 @@
 				
 				<div class="guide-card">
 					<h3>CSS Customization</h3>
-					<p>You can completely change the look of your chat overlay by customizing the CSS. Here are two ways to do it:</p>
+					<p>There are several ways to customize the appearance with CSS:</p>
 					
 					<h4>Method 1: OBS Browser Source CSS</h4>
 					<p>In OBS, you can add custom CSS to the browser source:</p>
@@ -246,11 +243,25 @@
 }</pre>
 					</div>
 					
-					<h4>Method 2: URL Parameter</h4>
-					<p>You can also add CSS via URL parameters:</p>
-					<div class="code-block">
-						<code>&css=https://yourdomain.com/style.css</code> - Link to a CSS file<br>
-						<code>&b64css=YOUR_BASE64_ENCODED_CSS</code> - Directly embed CSS
+					<h4>Method 2: Extension Menu Settings</h4>
+					<p>Add CSS directly through the extension menu:</p>
+					<ol class="guide-steps">
+						<li>Click the Social Stream Ninja extension icon</li>
+						<li>Find the CSS/JavaScript settings section</li>
+						<li>Enter your custom CSS or JavaScript</li>
+						<li>The CSS will be appended to the URL as base64 encoded data</li>
+					</ol>
+					
+					<h4>Method 3: Use Custom Templates</h4>
+					<p>Choose from pre-styled templates that include CSS built-in:</p>
+					<ul class="guide-list">
+						<li>Browse our <a href="templates.html">Templates Gallery</a></li>
+						<li>Select a template that matches your stream's style</li>
+						<li>Replace <code>YOURSESSIONID</code> in the template URL with your session ID</li>
+						<li>Add the template URL as a browser source in OBS</li>
+					</ul>
+					<div class="guide-note">
+						<p><strong>Example:</strong> <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code></p>
 					</div>
 				</div>
 			</div>
@@ -496,6 +507,40 @@
 						<code>&fade</code> - Makes featured messages fade in instead of popping up<br>
 						<code>&swipe</code> - Makes featured messages swipe in from the left<br>
 						<code>&center</code> - Centers featured messages on screen
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>CSS Customization</h3>
+					<p>The standalone app supports the same CSS customization methods as the extension:</p>
+					
+					<h4>Method 1: OBS Browser Source CSS</h4>
+					<p>When using the app's overlay URL in OBS:</p>
+					<ol class="guide-steps">
+						<li>Add the app's overlay URL as a Browser Source in OBS</li>
+						<li>Check the "Custom CSS" option</li>
+						<li>Enter your custom CSS in the text box</li>
+					</ol>
+					
+					<h4>Method 2: App Menu Settings</h4>
+					<p>Add CSS directly through the app's menu:</p>
+					<ol class="guide-steps">
+						<li>Open the app's settings menu</li>
+						<li>Find the CSS/JavaScript settings section</li>
+						<li>Enter your custom CSS or JavaScript</li>
+						<li>The CSS will be appended to the URL as base64 encoded data</li>
+					</ol>
+					
+					<h4>Method 3: Use Custom Templates</h4>
+					<p>Choose from pre-styled templates that include CSS built-in:</p>
+					<ul class="guide-list">
+						<li>Browse our <a href="templates.html">Templates Gallery</a></li>
+						<li>Select a template that matches your stream's style</li>
+						<li>Replace <code>YOURSESSIONID</code> in the template URL with your session ID</li>
+						<li>Add the template URL as a browser source in OBS</li>
+					</ul>
+					<div class="guide-note">
+						<p><strong>Example:</strong> <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code></p>
 					</div>
 				</div>
 				
@@ -780,11 +825,11 @@
 	<script src="js/main.js"></script>
 	<script>
 	document.addEventListener('DOMContentLoaded', function() {
-		// Tab switching for extension vs standalone guides
 		const tabButtons = document.querySelectorAll('.tab-btn');
 		const guideSections = document.querySelectorAll('.guide-section-wrapper');
 		const navSections = document.querySelectorAll('.nav-links');
-		
+		const faqSection = document.getElementById('faq');
+
 		tabButtons.forEach(button => {
 			button.addEventListener('click', () => {
 				// Remove active class from all buttons
@@ -807,6 +852,19 @@
 				} else {
 					document.getElementById('standalone-nav').style.display = 'flex';
 				}
+				
+				// Make sure FAQ is visible when either tab is active
+				faqSection.style.display = 'block';
+				
+				// Scroll to top of navigation when switching tabs
+				const guideNav = document.getElementById('guides-nav');
+				if (guideNav) {
+					const headerHeight = document.querySelector('header').offsetHeight;
+					window.scrollTo({
+						top: guideNav.offsetTop - headerHeight,
+						behavior: 'smooth'
+					});
+				}
 			});
 		});
 		
@@ -814,43 +872,113 @@
 		document.querySelectorAll('.nav-link').forEach(anchor => {
 			anchor.addEventListener('click', function(e) {
 				e.preventDefault();
+				e.stopPropagation();
 				
 				const targetId = this.getAttribute('href');
 				const targetElement = document.querySelector(targetId);
 				
 				if (targetElement) {
-					const headerHeight = document.querySelector('header').offsetHeight;
-					const navHeight = document.querySelector('.navigation').offsetHeight;
-					const offsetPosition = targetElement.offsetTop - headerHeight - navHeight - 20;
+					// Check if we need to switch tabs first
+					const isExtensionSection = targetId.includes('extension-');
+					const isStandaloneSection = targetId.includes('standalone-');
 					
-					window.scrollTo({
-						top: offsetPosition,
-						behavior: 'smooth'
-					});
+					if (isExtensionSection && document.getElementById('extension-guides').style.display === 'none') {
+						document.querySelector('[data-tab="extension-guides"]').click();
+					} else if (isStandaloneSection && document.getElementById('standalone-guides').style.display === 'none') {
+						document.querySelector('[data-tab="standalone-guides"]').click();
+					}
 					
-					// Update active class on navigation
-					const parentNav = this.closest('.nav-links');
-					parentNav.querySelectorAll('.nav-link').forEach(link => {
-						link.classList.remove('active');
-					});
-					this.classList.add('active');
+					// Wait for tab switch to complete if needed
+					setTimeout(() => {
+						const headerHeight = document.querySelector('header').offsetHeight;
+						const navHeight = document.querySelector('.navigation').offsetHeight;
+						const offsetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight - navHeight - 20;
+						
+						window.scrollTo({
+							top: offsetPosition,
+							behavior: 'smooth'
+						});
+						
+						// Update active class on navigation
+						const parentNav = this.closest('.nav-links');
+						parentNav.querySelectorAll('.nav-link').forEach(link => {
+							link.classList.remove('active');
+						});
+						this.classList.add('active');
+					}, isExtensionSection || isStandaloneSection ? 100 : 0);
 				}
 			});
 		});
 		
-		// Sticky navigation on scroll
-		const guideNav = document.getElementById('guides-nav');
-		const navOffset = guideNav.offsetTop;
-		
-		window.addEventListener('scroll', function() {
-			if (window.pageYOffset >= navOffset) {
-				guideNav.classList.add('sticky');
-			} else {
-				guideNav.classList.remove('sticky');
+		// Auto-activate menu items based on scroll position
+		function updateActiveNav() {
+			const scrollPosition = window.scrollY;
+			const headerHeight = document.querySelector('header').offsetHeight;
+			const navElement = document.getElementById('guides-nav');
+			const navHeight = navElement ? navElement.offsetHeight : 0;
+			const offset = headerHeight + navHeight + 50;
+			
+			// Determine which tab is currently active
+			const isExtensionView = document.getElementById('extension-guides').style.display !== 'none';
+			const currentNavLinks = isExtensionView ? 
+				document.querySelectorAll('#extension-nav .nav-link') : 
+				document.querySelectorAll('#standalone-nav .nav-link');
+			
+			let activeSet = false;
+			
+			// Loop through each section to find which one is in view
+			document.querySelectorAll('.guide-section').forEach(section => {
+				const sectionTop = section.offsetTop - offset;
+				const sectionBottom = sectionTop + section.offsetHeight;
+				const sectionId = section.getAttribute('id');
+				
+				// Check if this section is in view
+				if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+					currentNavLinks.forEach(link => {
+						link.classList.remove('active');
+						if (link.getAttribute('href') === `#${sectionId}`) {
+							link.classList.add('active');
+							activeSet = true;
+						}
+					});
+				}
+			});
+			
+			// If no section is active (user scrolled to top), activate first link
+			if (!activeSet && currentNavLinks.length > 0) {
+				currentNavLinks[0].classList.add('active');
 			}
+		}
+		
+		// Debounce scroll event for better performance
+		let scrollTimeout;
+		window.addEventListener('scroll', function() {
+			if (scrollTimeout) {
+				window.cancelAnimationFrame(scrollTimeout);
+			}
+			scrollTimeout = window.requestAnimationFrame(function() {
+				updateActiveNav();
+			});
 		});
 		
-		// Accordion functionality for FAQ section
+		// Update active nav on page load
+		updateActiveNav();
+		
+		// Sticky navigation on scroll
+		const guideNav = document.getElementById('guides-nav');
+		if (guideNav) {
+			const navOffset = guideNav.offsetTop;
+			
+			window.addEventListener('scroll', function() {
+				if (window.pageYOffset >= navOffset) {
+					guideNav.classList.add('sticky');
+				} else {
+					guideNav.classList.remove('sticky');
+				}
+			});
+		}
+		
+		// Accordion functionality
 		const accordionHeaders = document.querySelectorAll('.accordion-header');
 		
 		accordionHeaders.forEach(header => {
@@ -859,6 +987,11 @@
 				accordionItem.classList.toggle('active');
 			});
 		});
+		
+		const firstTab = document.querySelector('.tab-btn[data-tab="extension-guides"]');
+    if (firstTab) {
+        firstTab.click();
+    }
 	});
 	</script>
 </body>
