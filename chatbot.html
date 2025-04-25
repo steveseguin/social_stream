@@ -328,7 +328,7 @@
 				<circle cx="12" cy="13" r="4"/>
 			</svg>
 		`;
-		uploadButton.title = "Requires an LLM model that supports images; llama3.2-vision, for example";
+		uploadButton.title = "Requires an LLM model that supports images; gemma3:1b-vision, for example";
 		
 		if (!imageSupport){
 			uploadButton.style.display = "none";
@@ -392,7 +392,7 @@
 					imageInput.value = '';
 					currentImageFile = null;
 					currentImage = null;
-					// data.model = "x/llama3.2-vision:latest";
+					// data.model = "x/gemma3:1b-vision:latest";
 				}
 				
 				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs" }, "*");
