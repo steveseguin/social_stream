@@ -14,21 +14,21 @@
 	<header>
 		<div class="container">
 			<div class="logo">
-				<a href="index.html">
+				<a href="../index.html">
 					<img src="../icons/icon-128.png" alt="Social Stream Ninja Logo">
 					<span>Social Stream Ninja</span>
 				</a>
 			</div>
 			<nav>
 				<ul>
-					<li><a href="index.html">Home</a></li>
-					<li><a href="features.html">Features</a></li>
-					<li><a href="download.html">Download</a></li>
-					<li><a href="guides.html">Guides</a></li>
-					<li><a href="commands.html" class="active">Commands & API</a></li>
-					<li><a href="supported-sites.html">Supported Sites</a></li>
-					<li><a href="templates.html">Templates</a></li>
-					<li><a href="support.html">Support</a></li>
+					<li><a href="../index.html">Home</a></li>
+					<li><a href="../docs/features.html">Features</a></li>
+					<li><a href="../docs/download.html">Download</a></li>
+					<li><a href="../docs/guides.html">Guides</a></li>
+					<li><a href="../docs/commands.html" class="active">Commands & API</a></li>
+					<li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+					<li><a href="../docs/templates.html">Templates</a></li>
+					<li><a href="../docs/support.html">Support</a></li>
 				</ul>
 			</nav>
 			<div class="header-controls">
@@ -1032,8 +1032,8 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
             <h2>Ready to Take Your Stream to the Next Level?</h2>
             <p>With these powerful commands and API options, you can create a truly unique and interactive streaming experience.</p>
             <div class="get-started-cta">
-                <a href="download.html" class="btn btn-primary">Download Now</a>
-                <a href="support.html" class="btn btn-secondary">Get Support</a>
+                <a href="../docs/download.html" class="btn btn-primary">Download Now</a>
+                <a href="../docs/support.html" class="btn btn-secondary">Get Support</a>
             </div>
         </div>
     </section>
@@ -1053,25 +1053,25 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
                 <div class="footer-column">
                     <h3>Quick Links</h3>
                     <ul>
-                        <li><a href="index.html">Home</a></li>
-                        <li><a href="features.html">Features</a></li>
-                        <li><a href="download.html">Download</a></li>
-                        <li><a href="guides.html">Guides</a></li>
-                        <li><a href="commands.html">Commands & API</a></li>
-                        <li><a href="supported-sites.html">Supported Sites</a></li>
-                        <li><a href="templates.html">Templates</a></li>
-                        <li><a href="support.html">Support</a></li>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../docs/features.html">Features</a></li>
+                        <li><a href="../docs/download.html">Download</a></li>
+                        <li><a href="../docs/guides.html">Guides</a></li>
+                        <li><a href="../docs/commands.html">Commands & API</a></li>
+                        <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                        <li><a href="../docs/templates.html">Templates</a></li>
+                        <li><a href="../docs/support.html">Support</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
                     <h3>Resources</h3>
                     <ul>
-                        <li><a href="guides.html#installation">Installation Guide</a></li>
-                        <li><a href="guides.html#customization">Customization Guide</a></li>
-                        <li><a href="guides.html#faq">FAQ</a></li>
+                        <li><a href="../docs/guides.html#installation">Installation Guide</a></li>
+                        <li><a href="../docs/guides.html#customization">Customization Guide</a></li>
+                        <li><a href="../docs/guides.html#faq">FAQ</a></li>
                         <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Report an Issue</a></li>
-                        <li><a href="privacy.html">Privacy Policy</a></li>
-                        <li><a href="terms.html">Terms of Service</a></li>
+                        <li><a href="../privacy.html">Privacy Policy</a></li>
+                        <li><a href="../TOS.html">Terms of Service</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
@@ -1079,7 +1079,7 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
                     <ul>
                         <li><a href="https://discord.socialstream.ninja" target="_blank">Join our Discord</a></li>
                         <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub Repository</a></li>
-                        <li><a href="support.html#contribute">Contribute</a></li>
+                        <li><a href="../docs/support.html#contribute">Contribute</a></li>
                     </ul>
                 </div>
             </div>
@@ -1092,11 +1092,75 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
     <script src="js/main.js"></script>
     <script>
         // Set current year in footer
-        document.getElementById('current-year').textContent = new Date().getFullYear();
-		// Add this to your main.js file or in a script tag at the bottom of commands.html
+		document.getElementById('current-year').textContent = new Date().getFullYear();
+
 		document.addEventListener('DOMContentLoaded', function() {
+			// Sticky navigation functionality
+			const commandsNav = document.getElementById('commands-nav');
+			const header = document.querySelector('header');
+			const navOffset = commandsNav ? commandsNav.offsetTop : 0;
+			
+			// Make navigation sticky on scroll
+			function makeNavSticky() {
+				if (!commandsNav) return;
+				
+				const scrollPosition = window.pageYOffset;
+				const headerHeight = header ? header.offsetHeight : 0;
+				
+				if (scrollPosition > (navOffset - headerHeight)) {
+					commandsNav.classList.add('sticky');
+					document.body.classList.add('sticky-nav-active');
+					document.body.style.paddingTop = commandsNav.offsetHeight + 'px';
+				} else {
+					commandsNav.classList.remove('sticky');
+					document.body.classList.remove('sticky-nav-active');
+					document.body.style.paddingTop = '0';
+				}
+			}
+			
+			// Update active nav item based on scroll
+			function updateActiveNav() {
+				const scrollPosition = window.scrollY;
+				const headerHeight = header.offsetHeight;
+				const navElement = document.getElementById('commands-nav');
+				const navHeight = navElement ? navElement.offsetHeight : 0;
+				const offset = headerHeight + navHeight + 50;
+				
+				document.querySelectorAll('.command-section').forEach(section => {
+					const sectionTop = section.offsetTop - offset;
+					const sectionBottom = sectionTop + section.offsetHeight;
+					const sectionId = section.getAttribute('id');
+					
+					if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+						document.querySelectorAll('.nav-link').forEach(link => {
+							link.classList.remove('active');
+							if (link.getAttribute('href') === `#${sectionId}`) {
+								link.classList.add('active');
+							}
+						});
+					}
+				});
+			}
+			
+			// Combined scroll handler
+			let scrollTimeout;
+			window.addEventListener('scroll', function() {
+				makeNavSticky();
+				
+				if (scrollTimeout) {
+					window.cancelAnimationFrame(scrollTimeout);
+				}
+				scrollTimeout = window.requestAnimationFrame(function() {
+					updateActiveNav();
+				});
+			});
+			
+			// Initial checks
+			makeNavSticky();
+			updateActiveNav();
+			
 			// Smooth scroll for command navigation
-			document.querySelectorAll('.command-nav-link').forEach(anchor => {
+			document.querySelectorAll('.nav-link').forEach(anchor => {
 				anchor.addEventListener('click', function(e) {
 					e.preventDefault();
 					
@@ -1105,8 +1169,8 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
 					
 					if (targetElement) {
 						const headerHeight = document.querySelector('header').offsetHeight;
-						const navHeight = document.querySelector('.command-navigation').offsetHeight;
-						const offsetPosition = targetElement.offsetTop - headerHeight - navHeight - 20;
+						const navHeight = document.querySelector('.navigation').offsetHeight;
+						const offsetPosition = targetElement.offsetTop - headerHeight - navHeight;
 						
 						window.scrollTo({
 							top: offsetPosition,
@@ -1114,59 +1178,12 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
 						});
 						
 						// Update active class on navigation
-						document.querySelectorAll('.command-nav-link').forEach(link => {
+						document.querySelectorAll('.nav-link').forEach(link => {
 							link.classList.remove('active');
 						});
 						this.classList.add('active');
 					}
 				});
-			});
-			
-			// Update active nav item on scroll
-			window.addEventListener('scroll', function() {
-				const scrollPosition = window.scrollY;
-				const headerHeight = document.querySelector('header').offsetHeight;
-				const navHeight = document.querySelector('.command-navigation').offsetHeight;
-				const offset = headerHeight + navHeight + 50;
-				
-				document.querySelectorAll('.command-section').forEach(section => {
-					const sectionTop = section.offsetTop - offset;
-					const sectionBottom = sectionTop + section.offsetHeight;
-					
-					if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
-						const id = section.getAttribute('id');
-						document.querySelectorAll('.command-nav-link').forEach(link => {
-							link.classList.remove('active');
-							if (link.getAttribute('href') === `#${id}`) {
-								link.classList.add('active');
-							}
-						});
-					}
-				});
-			});
-
-			// Add copy functionality to code blocks
-			document.querySelectorAll('.code-block pre').forEach(block => {
-				const copyButton = document.createElement('button');
-				copyButton.className = 'copy-button';
-				copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-				copyButton.setAttribute('title', 'Copy to clipboard');
-				
-				copyButton.addEventListener('click', function() {
-					const code = block.textContent;
-					navigator.clipboard.writeText(code).then(() => {
-						copyButton.innerHTML = '<i class="fas fa-check"></i>';
-						setTimeout(() => {
-							copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-						}, 2000);
-					});
-				});
-				
-				const wrapper = document.createElement('div');
-				wrapper.className = 'code-block-wrapper';
-				block.parentNode.insertBefore(wrapper, block);
-				wrapper.appendChild(block);
-				wrapper.appendChild(copyButton);
 			});
 			
 			// Add anchor links to headings
