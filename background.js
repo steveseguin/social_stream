@@ -3467,7 +3467,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} else if (Math.random() > 0.6) {
 				data.hasDonation = "";
 				data.membership = "";
-				data.chatimg = "https://socialstream.ninja/sampleavatar.png";
+				data.chatimg = "https://socialstream.ninja/media/sampleavatar.png";
 				data.chatname = "Steve";
 				data.vip = true;
 				var score = parseInt(Math.random() * 378);
@@ -3476,7 +3476,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				data.hasDonation = "";
 				data.nameColor = "#107516";
 				data.membership = "SPONSORSHIP";
-				data.chatimg = parseInt(Math.random() * 2) ? "" : "https://socialstream.ninja/sampleavatar.png";
+				data.chatimg = parseInt(Math.random() * 2) ? "" : "https://socialstream.ninja/media/sampleavatar.png";
 				data.chatname = "Steve_" + randomDigits();
 				data.type = parseInt(Math.random() * 2) ? "slack" : "facebook";
 				data.chatmessage = "!join The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
