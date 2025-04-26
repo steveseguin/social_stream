@@ -148,7 +148,7 @@
       <li>Add sub-actions to handle the message data. A common first step is to extract the data using C#. Right-click the action → <strong>Add Sub-Action</strong> → <strong>Core</strong> → <strong>C#</strong> → <strong>Execute C# Code</strong></li>
       <li>Paste the following C# code. This code extracts the chat data sent by SocialStream.Ninja from the `chatData` argument:</li>
    </ol>
-   <pre><code>using System;
+<pre><code>using System;
 using Newtonsoft.Json.Linq; // Make sure Newtonsoft.Json is referenced
 public class CPHInline
 {
@@ -221,7 +221,7 @@ public class CPHInline
         {
             if (obj != null && obj.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out JToken token))
             {
-                return token.ToObject<bool>();
+                return token.ToObject&lt;bool&gt;();
             }
         }
         catch (Exception ex) {
