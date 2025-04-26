@@ -24,17 +24,18 @@
             opacity: 1;
         }
 
-        /* Your existing CSS styles here */
         @keyframes stars {
             0% { background-position: 0 0; }
             100% { background-position: 798px -798px; }
         }
 		
 		.footer-text {
-			color: white;
+			color: var(--text-color, white);
 			font-size: 14vh;
 			text-align: center;
-			padding-top:20%;
+			padding-top: 20%;
+			position: relative;
+			z-index: 1;
 		}
 
 		/* Star Wars style (default) */
@@ -98,7 +99,7 @@
 		.text {
 			font-size: 9vh;
 			line-height: 1.4;
-			color: var(--text-color, #ebbc3c); /* Uses custom color if set, otherwise defaults to #ebbc3c */
+			color: var(--text-color, #ebbc3c);
 			text-align: center;
 			text-shadow: 0 0 16px #ffeb3b60, 0 0 3px #3bbeff88, 0 0 10px #ffffff83;
 			width: 80%;
@@ -108,12 +109,11 @@
 
 		.category-header {
 			font-size: 11vh;
-			color: var(--text-color, #ebbc3c); /* Uses custom color if set, otherwise defaults to #ebbc3c */
+			color: var(--text-color, #ebbc3c);
 			margin: 2.5em 0 0.8em;
 			text-shadow: 0 0 16px #ffeb3b60, 0 0 3px #3bbeff88, 0 0 10px #ffffff83;
 			text-transform: uppercase;
 		}
-
 
         #app {
             width: 100vw;
