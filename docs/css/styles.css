@@ -325,6 +325,8 @@ nav a:hover::after, nav a.active::after {
     flex-direction: column;
     width: 3rem;
     cursor: pointer;
+    position: relative; /* Add position */
+    z-index: 1001; /* Ensure it's above other elements */
 }
 
 .mobile-nav-toggle span {
@@ -789,6 +791,14 @@ code {
     h2 {
         font-size: 3.2rem;
     }
+	
+	.header-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        position: relative;
+        z-index: 1002;
+    }
     
     nav {
         position: fixed;
@@ -802,6 +812,10 @@ code {
         transition: right var(--transition-speed) ease;
         z-index: 100;
     }
+	
+	.dark-mode nav {
+        background-color: var(--background-light);
+    }
     
     nav.active {
         right: 0;
@@ -813,8 +827,18 @@ code {
     }
     
     .mobile-nav-toggle {
-        display: flex;
-        z-index: 101;
+         display: flex !important;
+         z-index: 101;
+    }
+	
+	.mobile-nav-toggle span {
+        height: 3px;
+        width: 100%;
+        background-color: var(--text-primary);
+        margin-bottom: 5px;
+        border-radius: 3px;
+        transition: all 0.3s ease;
+        display: block; /* Ensure spans are visible */
     }
     
     .mobile-nav-toggle.active span:first-child {
@@ -1082,12 +1106,6 @@ header .container {
     color: #f8f8f8;
 }
 
-/* Fix media queries for dark mode */
-@media (max-width: 768px) {
-    .dark-mode nav {
-        background-color: var(--background-light);
-    }
-}
 
 /* Accordion styling */
 /* Accordion styling for FAQ */
