@@ -515,37 +515,42 @@ CPH.SetArgument("ss_obsText", obsText);</code></pre>
 	  <p>-steve</p>
    </div>
 </div>
-	<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add copy button to all code blocks
-        document.querySelectorAll('pre code').forEach(function(codeBlock) {
-            const pre = codeBlock.parentElement;
-            const button = document.createElement('button');
-            button.className = 'copy-button';
-            button.textContent = 'Copy';
-            
-            button.addEventListener('click', function() {
-                // Get the code text content
-                const code = codeBlock.textContent;
-                
-                // Copy to clipboard
-                navigator.clipboard.writeText(code).then(function() {
-                    // Show success feedback
-                    button.textContent = 'Copied!';
-                    button.classList.add('copied');
-                    
-                    // Reset button after 2 seconds
-                    setTimeout(function() {
-                        button.textContent = 'Copy';
-                        button.classList.remove('copied');
-                    }, 2000);
-                }).catch(function(err) {
-                    console.error('Failed to copy text: ', err);
-                });
-            });
-            
-            pre.insertBefore(button, pre.firstChild);
-        });
-    });
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+	    // Add copy button to all code blocks
+	    document.querySelectorAll('pre').forEach(function(pre) {
+	        // Check if this pre already has a button
+	        if (pre.querySelector('.copy-button')) return;
+	        
+	        const codeBlock = pre.querySelector('code');
+	        if (!codeBlock) return; // Skip if no code element inside pre
+	        
+	        const button = document.createElement('button');
+	        button.className = 'copy-button';
+	        button.textContent = 'Copy';
+	        
+	        button.addEventListener('click', function() {
+	            // Get the code text content
+	            const code = codeBlock.textContent;
+	            
+	            // Copy to clipboard
+	            navigator.clipboard.writeText(code).then(function() {
+	                // Show success feedback
+	                button.textContent = 'Copied!';
+	                button.classList.add('copied');
+	                
+	                // Reset button after 2 seconds
+	                setTimeout(function() {
+	                    button.textContent = 'Copy';
+	                    button.classList.remove('copied');
+	                }, 2000);
+	            }).catch(function(err) {
+	                console.error('Failed to copy text: ', err);
+	            });
+	        });
+	        
+	        pre.appendChild(button);
+	    });
+	});
 </script>
 </body></html>
