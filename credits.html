@@ -107,16 +107,15 @@
 			text-transform: uppercase;
 		}
 
-        #app {
-            width: 100vw;
-            height: 100vh;
-            font-family: "Nunito Sans", sans-serif;
-            perspective: 400px;
-            perspective-origin: center 100%;
-            overflow: hidden;
-            display: none;
-        }
-
+		#app {
+			width: 100vw;
+			height: 100vh;
+			/* font-family: "Nunito Sans", sans-serif; */ /* Remove or comment out this line */
+			perspective: 400px;
+			perspective-origin: center 100%;
+			overflow: hidden;
+			display: none;
+		}
         /* Style-specific class overrides */
         #app.starwars {
             perspective: 400px;
@@ -629,18 +628,23 @@
 	if (endMessage) {
 		document.getElementById("endmessage").innerText = endMessage;
 	}
+	
+	
 
 	// Apply style classes
 	const creditsStyle = urlParams.get('style') || "starwars";
 	const appElement = document.getElementById('app');
 	appElement.classList.add(creditsStyle);
+	
+	const footerText = document.querySelector('.footer-text');
+	footerText.classList.add(creditsStyle);
 
 	// Apply style to text container and content
 	const textContainer = document.querySelector('.text-container');
 	textContainer.classList.add(creditsStyle);
 
 	// Apply style to all necessary elements
-	document.querySelectorAll('.text, .category-header').forEach(el => {
+	document.querySelectorAll('.text, .category-header, .footer-text').forEach(el => {
 		el.classList.add(creditsStyle);
 	});
 
@@ -696,11 +700,15 @@
 		link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(googlefont)}&display=swap`;
 		document.head.appendChild(link);
 		
-		// Apply the font
+		// Apply the font to body, app element, and footer
 		document.body.style.fontFamily = `'${googlefont}', sans-serif`;
+		appElement.style.fontFamily = `'${googlefont}', sans-serif`;
+		footerText.style.fontFamily = `'${googlefont}', sans-serif`;
 	} else if (fontFamily) {
-		// Apply predefined font
+		// Apply predefined font to body, app element, and footer
 		document.body.style.fontFamily = `'${fontFamily}', sans-serif`;
+		appElement.style.fontFamily = `'${fontFamily}', sans-serif`;
+		footerText.style.fontFamily = `'${fontFamily}', sans-serif`;
 		
 		// Load the OpenDyslexic font if specified
 		if (fontFamily === 'opendyslexic') {
