@@ -143,7 +143,7 @@ function renderMessages() {
         return `
             <div class="message-wrapper" id="message-${message.id}">
                 <div class="message">
-                    <img src="${message.chatimg || 'https://socialstream.ninja/unknown.png'}" alt="Avatar" class="avatar" data-error-hide="message">
+                    <img src="${message.chatimg || 'https://socialstream.ninja/sources/images/unknown.png'}" alt="Avatar" class="avatar" data-error-hide="message">
                     <div class="message-content">
                         <div class="message-header">
                             <span class="user-name">${message.chatname || 'Anonymous'}</span>
@@ -169,7 +169,7 @@ function handleImageError(event) {
     
     // If it's an avatar, replace with default placeholder
     if (img.classList.contains('avatar')) {
-        img.src = 'https://socialstream.ninja/unknown.png';
+        img.src = 'https://socialstream.ninja/sources/images/unknown.png';
         img.style.display = 'block';
     }
 }
