@@ -178,10 +178,13 @@
 							
 							mutation.addedNodes[i].skip = true;
 
-							if (mutation.addedNodes[i].children.length){
+							if (mutation.addedNodes[i].dataset.index){
 								setTimeout(function(xx){
-									processMessage(xx);
-								},100,mutation.addedNodes[i]);
+									if (xx.isConnected){
+										console.log(xx);
+										processMessage(xx);
+									}
+								},200,mutation.addedNodes[i]);
 							}							
 							
 						} catch(e){}
@@ -203,13 +206,13 @@
 		try {
 			if (document.getElementById("app")){
 				if (!document.getElementById("app").marked){
-					document.getElementById("app").marked=true;
+					document.querySelector("#app, #«rn», [data-testid='virtuoso-item-list']").marked=true;
 
 					console.log("CONNECTED chat detected");
 
 					setTimeout(function(){
 
-						onElementInserted(document.getElementById("app"));
+						onElementInserted(document.querySelector("#app, #«rn», [data-testid='virtuoso-item-list']"));
 
 					},3000);
 				}

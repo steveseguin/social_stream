@@ -4970,7 +4970,7 @@ function sendAllToDiscord(data) {
         
         const payload = {
             username: (data.chatname || "Unknown") + " @ "+capitalizeFirstLetter(data.type), // Custom webhook name
-            avatar_url: avatarUrl || "https://socialstream.ninja/unknown.png", 
+            avatar_url: avatarUrl || "https://socialstream.ninja/sources/images/unknown.png", 
             embeds: [{
                 description: decodeAndCleanHtml(data.chatmessage||""),
                 color: 0xFFFFFF, // Green color for donations
