@@ -67,39 +67,109 @@
 		return resp;
 	}
 	
+	var dataindex = 0;
+	
+	function extractLargestSrc(srcset) {
+		const sources = srcset.split(',').map(src => {
+			const parts = src.trim().split(' ');
+			return {
+				url: parts[0],
+				size: parseInt(parts[1]) || 0
+			};
+		});
+		
+		return sources.reduce((largest, current) => {
+			return current.size > largest.size ? current : largest;
+		}, sources[0]).url;
+	}
 	
 	async function processMessage(ele){
 		
-		var chatimg = ""
-
-		try {
-			chatimg = ele.childNodes[0].querySelector("img[srcset][src][alt]").src;
-		} catch(e){
-			//console.error(e);
+		
+		if (ele.dataset.index){
+			let ind = parseInt(ele.dataset.index);
+			if (ind<dataindex){return;}
+			dataindex = ind;
 		}
 		
+		
+		var chatimg = ""
+		var chatbadges = [];
+		
+		try {
+			chatimg = ele.querySelectorAll("img[srcset],img[src]");
+			
+			if (chatimg.length >= 1) {
+				// Process all images to find badges and main images
+				let mainImages = [];
+				
+				for (let img of chatimg) {
+					if (img.src.includes('badge') || img.src.includes('Badge')) {
+						if (!chatbadges.includes(img.src)){
+							chatbadges.push(img.src);
+						}
+					} else if (img.srcset.includes('badge') || img.srcset.includes('Badge')) {
+						let ii = extractLargestSrc(img.srcset);
+						if (!chatbadges.includes(ii)){
+							chatbadges.push(ii);
+						}
+					} else {
+						// Handle srcset or src
+						if (img.srcset) {
+							mainImages.push(extractLargestSrc(img.srcset));
+						} else {
+							mainImages.push(img.src);
+						}
+					}
+				}
+				
+				// Set chatimg to the first non-badge image if available
+				chatimg = mainImages.length > 0 ? mainImages[0] : "";
+			} else {
+				chatimg = "";
+			}
+		} catch(e) {
+			console.error(e);
+		}
+
+
 		
 		var name="";
 		try {
 			name = escapeHtml(ele.childNodes[1].childNodes[0].childNodes[0].textContent.trim());
 		} catch(e){
-			//console.error(e);
+			try {
+				name = escapeHtml(ele.querySelector("a").nextSibling.children[0].children[0].textContent.trim());
+			} catch(e){
+				//console.error(e);
+			}
 		}
 
 		var msg="";
 		try {
 			msg = getAllContentNodes(ele.childNodes[1].childNodes[0].childNodes[1]).trim();
 		} catch(e){
+			try {
+				msg = getAllContentNodes(ele.querySelector("a").nextSibling.children[1]).trim();
+			} catch(e){
+			}
 		}
 		
-		var chatbadges = [];
+		
 		
 		try {
 			ele.childNodes[1].childNodes[0].childNodes[0].querySelectorAll("img[alt][src]").forEach(img=>{
 				chatbadges.push(img.src);
 			});
 		} catch(e){
+			try {
+				ele.querySelector("a").nextSibling.children[0].children[1].querySelectorAll("img[alt][src]").forEach(img=>{
+					chatbadges.push(img.src);
+				});
+			} catch(e){
+			}
 			
+			//ele.querySelector("a").nextSibling.children[0].children[0]
 		}
 		
 		var data = {};
@@ -120,7 +190,8 @@
 		} else {
 			data.event = false;
 		}
-		if (!msg || !name){
+		
+		if (!msg && !name){
 			return;
 		}
 		pushMessage(data);
@@ -175,13 +246,11 @@
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
-							
 							mutation.addedNodes[i].skip = true;
 
 							if (mutation.addedNodes[i].dataset.index){
 								setTimeout(function(xx){
 									if (xx.isConnected){
-										console.log(xx);
 										processMessage(xx);
 									}
 								},200,mutation.addedNodes[i]);
@@ -204,8 +273,8 @@
 
 	setInterval(function(){
 		try {
-			if (document.getElementById("app")){
-				if (!document.getElementById("app").marked){
+			if (document.querySelector("#app, #«rn», [data-testid='virtuoso-item-list']")){
+				if (!document.querySelector("#app, #«rn», [data-testid='virtuoso-item-list']").marked){
 					document.querySelector("#app, #«rn», [data-testid='virtuoso-item-list']").marked=true;
 
 					console.log("CONNECTED chat detected");
