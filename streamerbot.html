@@ -38,6 +38,8 @@
             border-radius: 4px;
             padding: 15px;
             overflow: auto;
+            position: relative;
+            margin-top: 24px;
         }
         code {
             font-family: 'Courier New', monospace;
@@ -89,6 +91,25 @@
         }
         tr:nth-child(even) {
             background-color: #f9f9f9;
+        }
+        .copy-button {
+            position: absolute;
+            top: -22px;
+            right: 5px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        .copy-button:hover {
+            background-color: #2980b9;
+        }
+        .copy-button.copied {
+            background-color: #27ae60;
         }
     </style>
 </head>
@@ -483,4 +504,37 @@ CPH.SetArgument("ss_obsText", obsText);</code></pre>
 	  <p>-steve</p>
    </div>
 </div>
+	<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add copy button to all code blocks
+        document.querySelectorAll('pre code').forEach(function(codeBlock) {
+            const pre = codeBlock.parentElement;
+            const button = document.createElement('button');
+            button.className = 'copy-button';
+            button.textContent = 'Copy';
+            
+            button.addEventListener('click', function() {
+                // Get the code text content
+                const code = codeBlock.textContent;
+                
+                // Copy to clipboard
+                navigator.clipboard.writeText(code).then(function() {
+                    // Show success feedback
+                    button.textContent = 'Copied!';
+                    button.classList.add('copied');
+                    
+                    // Reset button after 2 seconds
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                        button.classList.remove('copied');
+                    }, 2000);
+                }).catch(function(err) {
+                    console.error('Failed to copy text: ', err);
+                });
+            });
+            
+            pre.insertBefore(button, pre.firstChild);
+        });
+    });
+</script>
 </body></html>
