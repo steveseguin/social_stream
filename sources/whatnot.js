@@ -248,7 +248,7 @@
 							if (mutation.addedNodes[i].skip){continue;}
 							mutation.addedNodes[i].skip = true;
 
-							if (mutation.addedNodes[i].dataset.index){
+							if (mutation.addedNodes[i].dataset.index || mutation.addedNodes[i].children.length ){
 								setTimeout(function(xx){
 									if (xx.isConnected){
 										processMessage(xx);
