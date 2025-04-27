@@ -143,6 +143,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("odysee");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 					document.querySelector('#create__comment').focus();
 					sendResponse(true);

@@ -210,6 +210,10 @@
 					sendResponse(true);
 					return;
 				}
+				if ("getSource" == request){
+					sendResponse("soulbound");
+					return;
+				}
 				if (typeof request === "object"){
 					if ("state" in request) {
 						isExtensionOn = request.state;

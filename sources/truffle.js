@@ -204,6 +204,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("truffle");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('.input[contenteditable="true"]').focus();
 					

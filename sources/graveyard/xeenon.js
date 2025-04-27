@@ -169,6 +169,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("xeenon");	return;	}
 				if ("focusChat" == request){ // doesn't support/have chat
 					sendResponse(false);
 					return;

@@ -139,6 +139,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("rokfin");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('#comment-form_comment').focus();
 					sendResponse(true);

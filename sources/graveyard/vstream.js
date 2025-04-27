@@ -188,6 +188,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("vstream");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 					document.querySelector('form div[contenteditable="true"] > p').focus();
 					sendResponse(true);

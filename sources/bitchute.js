@@ -210,6 +210,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("bitchute");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('textarea[tabindex="0"], textarea').focus();
 					

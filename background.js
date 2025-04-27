@@ -701,8 +701,9 @@ function validateRoomId(roomId) {
 	// throw new Error('Invalid room ID');
 	return sanitizedId;
 }
-
+var relaytargets = false;
 var loadedFirst = false;
+
 function loadSettings(item, resave = false) {
 	log("loadSettings (or saving new settings)", item);
 	let reloadNeeded = false;
@@ -821,6 +822,18 @@ function loadSettings(item, resave = false) {
 				checkIntervalState(i);
 			}
 		}
+	}
+	
+	if (settings.relaytargets && settings.relaytargets.textsetting){
+		relaytargets = settings.relaytargets.textsetting
+			.split(",")
+			.map(item => item.trim().toLowerCase())
+			.filter(item => item !== "");
+		if (!relaytargets.length){
+			relaytargets = false;
+		}
+	} else {
+		relaytargets = false;
 	}
 
 	if (settings.translationlanguage) {
@@ -2746,7 +2759,7 @@ async function processIncomingMessage(message, sender=null){
 		let reflection = false;
 		
 		// checkExactDuplicateAlreadyReceived only does work if there was a message responsein the last 10 seconds.
-		reflection = checkExactDuplicateAlreadyReceived(message.chatmessage,message.textonly, message.tid, message.type);
+		reflection = checkExactDuplicateAlreadyReceived(message.chatmessage, message.textonly, message.tid, message.type);
 		if (reflection && (settings.firstsourceonly || settings.hideallreplies || settings.thissourceonly)){
 			return;
 		}
@@ -3010,6 +3023,20 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "autoLiveYoutube") {
 				pushSettingChange();
 			}
+			if (request.setting == "relaytargets") {	
+				if (settings.relaytargets && settings.relaytargets.textsetting){
+					relaytargets = settings.relaytargets.textsetting
+						.split(",")
+						.map(item => item.trim().toLowerCase())
+						.filter(item => item !== "");
+					if (!relaytargets.length){
+						relaytargets = false;
+					}
+				} else {
+					relaytargets = false;
+				}
+			}
+			
 			if (request.setting == "ticker") {
 				try {
 					await loadFileTicker();
@@ -4100,6 +4127,11 @@ function checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, sav
 
 var alreadyCaptured = [];
 function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false, type=null) { // FOR RELAY PURPOSES ONLY.
+
+	if (!msg){
+		return false;
+	}
+	
 	const now = Date.now();
 	if (now - lastSentTimestamp > 10000) {// 10 seconds has passed; assume good.
 		return false;
@@ -6900,6 +6932,9 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
         return false;
     }
 
+	if (!data.response){
+		return false;
+	}
     if (antispam && settings["dynamictiming"] && lastAntiSpam + 10 > messageCounter) {
         return false;
     }
@@ -6938,7 +6973,8 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
         for (const tab of tabs) {
             try {
                 // Skip invalid tabs
-                if (!isValidTab(tab, data, reverse, published, now, overrideTimeout)) {
+				let isValid = await isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode);
+                if (!isValid) {
                     continue;
                 }
 
@@ -7033,7 +7069,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 }
 
 // Helper function to check if a tab is valid for processing
-function isValidTab(tab, data, reverse, published, now, overrideTimeout) {
+async function isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) {
     // First check URLs that we can't or shouldn't process
     if (!tab.url) return false;
     if (tab.url.startsWith("chrome://")) return false;  // Add this line
@@ -7062,7 +7098,14 @@ function isValidTab(tab, data, reverse, published, now, overrideTimeout) {
             return false;
         }
     }
-    
+	
+	if (relayMode && relaytargets){
+		let sourceType = await getSourceType(tab.id);
+		if (!sourceType || !relaytargets.includes(sourceType)){
+			return false;
+		}
+	}
+	
     return true;
 }
 
@@ -7250,6 +7293,15 @@ async function insertText(tabId, text) {
 async function focusChat(tabId) {
   return new Promise((resolve) => {
     chrome.tabs.sendMessage(tabId, "focusChat", (response = false) => {
+      chrome.runtime.lastError;
+      resolve(response);
+    });
+  });
+}
+
+async function getSourceType(tabId) {
+  return new Promise((resolve) => {
+    chrome.tabs.sendMessage(tabId, "getSource", (response = false) => {
       chrome.runtime.lastError;
       resolve(response);
     });

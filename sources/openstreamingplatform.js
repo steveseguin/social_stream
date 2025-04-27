@@ -132,6 +132,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("openstreamingplatform");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('#chatinput').focus();
 					sendResponse(true);

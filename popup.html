@@ -97,6 +97,26 @@
   animation: flash 0.5s linear 1;
 }
 
+.source-list-container {
+    max-height: 80px;
+    overflow-y: auto;
+    padding: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.source-list-container .username-tag {
+    display: inline-flex;
+    align-items: center;
+}
+
+
+
+.add-source-container input {
+    width: 150px;
+}
+
 .username-list-container {
 	max-height: 80px;
 	overflow-y: auto;
@@ -164,6 +184,7 @@ hr {
   padding: 0 4px;
   background: #e0e0e0;
   border-radius: 2px;
+  display:inline-block;
 }
 .add-username-container input {
   width: 150px;
@@ -1607,6 +1628,8 @@ input:checked + .slider:before {
 									<span data-translate="text-to-speech-incoming-messages">🚦🗣️ Text-to-speech incoming messages </span>
 								</div>
 							</div>
+							
+							<i><a class="lightblue" target="_blank" href="https://socialstream.ninja/docs/tts">Check out the TTS help guide here!</a></i>
 							
 							<!-- Global TTS Behavior Options -->
 							<div class="options_group tts-behavior-options">
@@ -5799,6 +5822,18 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="relay-all-messages-not-recommended">🔀 Relay all messages (!NOT RECOMMENDED!)</span>
                                 </div>
+								<div>
+									<div
+										class="textInputContainer"
+										style="width: 95%;"
+										title="Note:
+								List of sources that you want to allow the relay to work with. Nothing implies all."
+									>
+										<input type="text" id="relaytargets" class="textInput" autocomplete="off" placeholder="Enter source types" data-textsetting="relaytargets" />
+										🎯 <span data-translate="relaytargets">Pick <b>relay destinations</b>. (None implies all)</span>
+									</div>
+								</div>
+								<br />
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" id="norelaysaid" data-setting="nosaid" />

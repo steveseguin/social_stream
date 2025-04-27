@@ -95,7 +95,8 @@
         chrome.runtime.onMessage.addListener(
             function (request, sender, sendResponse) {
                 try {
-                    if ("focusChat" == request) {
+                    if ("getSource" == request){sendResponse("cherrytv");	return;	}
+					if ("focusChat" == request) {
                         document.querySelector('input[data-test="field-message-box-public"]').focus();
                         sendResponse(true);
                         return;
@@ -133,26 +134,6 @@
                 setTimeout(() => onElementInserted(containerSelector), 1000);
             }
         }
-
-        chrome.runtime.onMessage.addListener(
-            function (request, sender, sendResponse) {
-                try {
-                    if ("focusChat" == request) {
-                        document.querySelector('input[data-test="field-message-box-public"]').focus();
-                        sendResponse(true);
-                        return;
-                    }
-                    if (typeof request === "object") {
-                        if ("settings" in request) {
-                            settings = request.settings;
-                            sendResponse(true);
-                            return;
-                        }
-                    }
-                } catch (e) { }
-                sendResponse(false);
-            }
-        );
 
     } catch (e) {
         console.error(e);

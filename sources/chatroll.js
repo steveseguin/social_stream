@@ -145,6 +145,7 @@
 		chrome.runtime.onMessage.addListener(
 			function (request, sender, sendResponse) {
 				try{
+					if ("getSource" == request){sendResponse("chatroll");	return;	}
 					if ("focusChat" == request){
 						try {
 							var ele = document.body.querySelector(".chat-input");

@@ -129,6 +129,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("owncast");	return;	}
 				if ("focusChat" == request){
 					document.querySelector("div#message-input").focus();
 					sendResponse(true);

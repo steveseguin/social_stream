@@ -19,7 +19,8 @@ function pushMessage(data) {
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
         try {
-            if ("focusChat" == request) {
+            if ("getSource" == request){sendResponse("irc");	return;	}
+			if ("focusChat" == request) {
                 document.getElementById('messageInput').focus();
                 sendResponse(true);
                 return;

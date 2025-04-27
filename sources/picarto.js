@@ -244,6 +244,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("picarto");	return;	}
 				if ("focusChat" == request){
 					if (!document.querySelector("textarea[placeholder]")){
 						sendResponse(false);

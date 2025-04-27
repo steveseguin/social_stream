@@ -176,7 +176,8 @@ chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(
 chrome.runtime.onMessage.addListener(
 	function (request, sender, sendResponse) {
 		try{
-			if ("focusChat" == request){
+			if ("getSource" == request){sendResponse("vimm");	return;	}
+				if ("focusChat" == request){
 				sendResponse(true);
 				return;
 			}

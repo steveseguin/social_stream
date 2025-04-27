@@ -200,6 +200,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("pilled");	return;	}
 				if ("focusChat" == request){ 
 					document.querySelector('textarea, [contenteditable="true"], #chat-input, #chat, [placeholder]').focus();
 					sendResponse(true);

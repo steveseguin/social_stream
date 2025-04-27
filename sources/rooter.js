@@ -131,6 +131,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("rooter");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('#commentInput').focus();
 					sendResponse(true);

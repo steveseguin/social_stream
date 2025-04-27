@@ -87,7 +87,17 @@
     chrome.runtime.onMessage.addListener(
         function(request, sender, sendResponse) {
             try {
-                if ("focusChat" == request) { // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+                if ("getSource" == request){
+					
+					if (settings.detweet) {
+						sendResponse("twitter");
+					} else {
+						sendResponse("x");
+					}
+					return;	
+					
+				}
+				if ("focusChat" == request) { // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
                     return;
                 }
                 if (typeof request === "object") {

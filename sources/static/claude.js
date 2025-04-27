@@ -82,7 +82,8 @@
     chrome.runtime.onMessage.addListener(
         function(request, sender, sendResponse) {
             try {
-                if ("focusChat" == request) { // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+                if ("getSource" == request){sendResponse("claude");	return;	}
+				if ("focusChat" == request) { // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
                     return;
                 }
                 if (typeof request === "object") {

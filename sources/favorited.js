@@ -147,6 +147,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("favorited");	return;	}
 				if ("focusChat" == request){ 
 					document.querySelector('input[placeholder]').focus();
 					sendResponse(true);

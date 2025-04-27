@@ -258,6 +258,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("telegram");	return;	}
 				if ("focusChat" == request){
 					if (!document.querySelector('.public-DraftEditorPlaceholder-inner')){
 						sendResponse(false);

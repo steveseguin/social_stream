@@ -234,6 +234,16 @@
 		function (request, sender, sendResponse) {
 			try{
 				if (isExtensionOn){
+					if ("getSource" == request){
+						
+						if (settings.detweet) {
+							sendResponse("twitter");
+						} else {
+							sendResponse("x");
+						}
+						return;	
+						
+					}
 					if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 						document.querySelector('textarea').focus();
 						sendResponse(true);

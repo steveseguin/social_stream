@@ -238,6 +238,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("webex");	return;	}
 				if ("focusChat" == request){
 					document.querySelector("div[class^='style-text-container-']>textarea").focus();
 					sendResponse(true);

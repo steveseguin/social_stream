@@ -316,6 +316,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("kick");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('#message-input').focus();
 					sendResponse(true);

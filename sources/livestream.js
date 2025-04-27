@@ -139,6 +139,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("livestream");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('#liveChatContainer').contentWindow.document.body.querySelector('textarea[ng-switch-when="message"]').focus();
 					sendResponse(true);

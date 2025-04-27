@@ -164,6 +164,7 @@
   chrome.runtime.onMessage.addListener(
 	function (request, sender, sendResponse) {
 		try{
+			if ("getSource" == request){sendResponse("chime");	return;	}
 			if ("focusChat" == request){
 				document.querySelector('.DraftEditor-editorContainer .public-DraftStyleDefault-block[data-offset-key]').click();
 				document.querySelector('.DraftEditor-editorContainer .public-DraftStyleDefault-block[data-offset-key]').focus();

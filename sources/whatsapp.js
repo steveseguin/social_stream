@@ -251,6 +251,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("whatsapp");	return;	}
 				if ("focusChat" == request){
 					try{
 						document.querySelector("footer").querySelector("div[contenteditable='true'][role='textbox']").focus();

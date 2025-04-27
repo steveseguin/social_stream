@@ -828,6 +828,7 @@
 	
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		try {
+			if ("getSource" == request){sendResponse("youtube");	return;	}
 			if ("focusChat" == request) {
 				document.querySelector("div#input").focus();
 				simulateFocus(document.querySelector("div#input"));

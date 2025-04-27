@@ -144,6 +144,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("noice");	return;	}
 				if ("focusChat" == request){ // doesn't support/have chat
 					document.querySelector('[role="textbox"], [contenteditable="true"]').focus();
 					sendResponse(true);

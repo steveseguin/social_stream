@@ -193,6 +193,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("omlet");	return;	}
 				if ("focusChat" == request){
 					if (!document.querySelector("div[class^='textarea__chat-input-bar']")){
 						sendResponse(false);

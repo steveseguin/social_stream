@@ -185,8 +185,8 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("arenasocial");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-				
 					document.querySelector('#type-a-message').focus();
 					sendResponse(true);
 					return;

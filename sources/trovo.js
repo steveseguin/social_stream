@@ -162,6 +162,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("trovo");	return;	}
 				if ("focusChat" == request){
 					try{
 						var target = document.querySelector("[class='editor'][contenteditable='true']");

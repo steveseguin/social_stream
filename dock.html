@@ -8,6 +8,7 @@
 		<link rel="icon" href="./favicon.ico" />
 		<link href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
 		<meta name="robots" content="noindex">
+		<script src="currency.js"></script>
 
 		<style>
 			:root {
@@ -3500,54 +3501,8 @@
 			}
 			
 			function toUSD(value) {
-			  const rates = {
-				EUR: 1.08,
-				GBP: 1.26,
-				JPY: 0.0067,
-				CHF: 1.12,
-				AUD: 0.66,
-				CAD: 0.74,
-				CNY: 0.14,
-				HKD: 0.13,
-				NZD: 0.61,
-				KRW: 0.00075
-			  };
-
-			  const items = {
-				diamond: 0.005,
-				gold: 0.01,
-				coin: 0.01,
-				rose: 0.01,
-				gift: 0.02 // this is just a guess
-			  };
-
-			  if (typeof value !== 'string') value = String(value);
-			  value = value.trim().toLowerCase();
-			  
-			  const numericValue = value.replace(/[^\d.-]/g, '');
-			  const amount = parseFloat(numericValue);
-			  
-			  if (isNaN(amount)) return 0;
-
-			  // Handle items like "3 coins" or "2 roses"
-			  for (const [item, rate] of Object.entries(items)) {
-				if (value.includes(item) || value.includes(item + 's')) {
-				  return amount * rate;
-				}
-			  }
-			  
-			  // Strip common currency symbols for better detection
-			  const cleanValue = value.replace(/[$€£¥]/g, '').trim();
-			  
-			  // Handle currency codes with symbols like "$1 CAD"
-			  for (const [currency, rate] of Object.entries(rates)) {
-				if (cleanValue.includes(currency.toLowerCase())) {
-				  return amount * rate;
-				}
-			  }
-			  
-			  // Default to USD if no other currency found
-			  return amount;
+				 // Use the new convertToUSD function
+				 return convertToUSD(value);
 			}
 			
 			const tiers = processTierParam(urlParams);

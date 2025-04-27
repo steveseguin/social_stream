@@ -472,27 +472,81 @@ function removeUsername(username, sourceType='', type='blacklistusers') {
   }
 }
 
-function updateUsernameList(type='blacklistusers') {
+function updateUsernameList(type = 'blacklistusers') {
+	
+	if (!userTypes.includes(type)) return;
+	
   const input = document.querySelector(`[data-textsetting="${type}"]`);
   const list = document.getElementById(`${type}List`);
+  
   if (!input || !list) return;
   
   const usernames = input.value.split(',')
     .map(u => u.trim())
     .filter(u => u)
     .map(entry => {
-      const [name, sourceType] = entry.split(':').map(part => part.trim());
+      const parts = entry.split(':').map(part => part.trim());
+      const name = parts[0];
+      const sourceType = parts[1] || ''; 
       return { name, sourceType };
     });
-  
+
   list.innerHTML = usernames.map(({ name, sourceType }) => `
     <div class="username-tag">
-      <span>${name}${sourceType ? `<span class="source-type"><img class="icon" src="./sources/images/${sourceType}.png" /> ${sourceType} </span>` : ''}</span>
+      <span>${name}${sourceType ? `<span class="source-type"><img class="icon" src="./sources/images/${sourceType}.png" /></span>` : ''}</span>
       <button class="remove-username" data-username="${name}" data-source-type="${sourceType || ''}">×</button>
     </div>
   `).join('');
 }
 
+function addSourceType(sourceType, type) {
+    const input = document.getElementById(type);
+    if (!input) return;
+    
+    const sources = input.value.split(',').map(t => t.trim()).filter(t => t);
+    
+    if (!sources.includes(sourceType)) {
+        sources.push(sourceType);
+        input.value = sources.join(', ');
+        updateSourceTypeList(type);
+        updateSettings(input);
+    }
+}
+
+function removeSourceType(sourceType, type) {
+    const input = document.getElementById(type);
+    if (!input) return;
+    
+    const sources = input.value.split(',').map(t => t.trim()).filter(t => t);
+    const index = sources.indexOf(sourceType);
+    
+    if (index > -1) {
+        sources.splice(index, 1);
+        input.value = sources.join(', ');
+        updateSourceTypeList(type);
+        updateSettings(input);
+    }
+}
+
+function updateSourceTypeList(type) {
+	
+	if (!sourceTypes.includes(type)) return;
+	
+    const input = document.getElementById(type);
+    const list = document.getElementById(`${type}List`);
+    if (!input || !list) return;
+    
+    const sources = input.value.split(',')
+        .map(t => t.trim())
+        .filter(t => t);
+    
+    list.innerHTML = sources.map(source => `
+        <div class="username-tag">
+            <span>${source} <img class="icon" src="./sources/images/${source}.png" /></span>
+            <button class="remove-source" data-source-type="${source}">×</button>
+        </div>
+    `).join('');
+}
 
 // Templates for different event types
 const eventTemplates = {
@@ -919,6 +973,10 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 	  }
 }
 
+const sourceTypes = ['relaytargets'];
+const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
+const sourcesList = new Set();
+
 document.addEventListener("DOMContentLoaded", async function(event) {
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
@@ -957,7 +1015,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		
 		if (manifestData && manifestData.content_scripts) {
 		  // Set to store unique source files
-		  const sources = new Set();
+		  
 		  
 		  // Extract source filenames from content_scripts
 		  manifestData.content_scripts.forEach(script => {
@@ -966,14 +1024,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
 				  // Extract just the filename without path and extension
 				  const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
-				  sources.add(sourceName);
+				  sourcesList.add(sourceName);
 				}
 			  });
 			}
 		  });
 		  
 		  // Create and add options for each source
-		  Array.from(sources).sort().forEach(source => {
+		  Array.from(sourcesList).sort().forEach(source => {
 			const option = document.createElement('option');
 			option.value = source;
 			// Capitalize first letter for display
@@ -1007,7 +1065,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		ele.onclick = copyToClipboard;
 	});
 	
+	
 	try {
+		
 		
 		const textInputs = document.querySelectorAll('.textInputContainer');
 		textInputs.forEach(container => {
@@ -1015,7 +1075,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		  if (!input) return;
 		  
 		  const id = input.id;
-		  if (['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'].includes(id)) {
+		  if (userTypes.includes(id)) {
 			input.classList.add('hidden');
 			
 			const listContainer = document.createElement('div');
@@ -1024,11 +1084,26 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			
 			const addContainer = document.createElement('div');
 			addContainer.className = 'add-username-container';
-			addContainer.innerHTML = `
-			  <input type="text" id="new${id}" placeholder="Add username">
-			  <input type="text" id="new${id}Type" placeholder="Source type (optional)">
-			  <button id="add${id}">Add</button>
-			`;
+			
+			// Replace text input with select dropdown if sourcesList is available
+			if (sourcesList && sourcesList.size > 0) {
+			  addContainer.innerHTML = `
+				<input type="text" id="new${id}" placeholder="Add username">
+				<select id="new${id}Type">
+				  <option value="" selected>All sources</option>
+				  ${Array.from(sourcesList).sort().map(source => 
+					`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
+				  ).join('')}
+				</select>
+				<button id="add${id}">Add</button>
+			  `;
+			} else {
+			  addContainer.innerHTML = `
+				<input type="text" id="new${id}" placeholder="Add username">
+				<input type="text" id="new${id}Type" placeholder="Source type (optional)">
+				<button id="add${id}">Add</button>
+			  `;
+			}
 			
 			container.parentNode.classList.add("isolate");
 			container.parentNode.insertBefore(listContainer, container.nextSibling);
@@ -1036,11 +1111,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		  }
 		});
 		
-		
-		const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 		userTypes.forEach(type => {
 		  try {
-			  
 			document.getElementById(`${type}List`).addEventListener('click', (e) => {
 			  if (e.target.classList.contains('remove-username')) {
 				removeUsername(
@@ -1057,7 +1129,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			  if (username) {
 				addUsername(username, type);
 				input.value = '';
-				document.getElementById(`new${type}Type`).value = '';
+				const sourceInput = document.getElementById(`new${type}Type`);
+				if (sourceInput) {
+				  sourceInput.value = '';
+				}
 			  }
 			});
 		  } catch(e) {
@@ -1068,6 +1143,95 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	} catch(e){
 		console.error(e);
 	}
+
+	try {
+		
+		const textInputs = document.querySelectorAll('.textInputContainer');
+		textInputs.forEach(container => {
+			const input = container.querySelector('.textInput');
+			if (!input) return;
+			
+			const id = input.id;
+			if (sourceTypes.includes(id)) {
+				input.classList.add('hidden');
+				
+				const listContainer = document.createElement('div');
+				listContainer.className = 'source-list-container';
+				listContainer.id = `${id}List`;
+				
+				const addContainer = document.createElement('div');
+				addContainer.className = 'add-source-container';
+				
+				// Replace text input with select dropdown if sourcesList is available
+				if (sourcesList && sourcesList.size > 0) {
+				  addContainer.innerHTML = `
+					<select id="new${id}Type">
+					  <option value="" selected>All sources</option>
+					  ${Array.from(sourcesList).sort().map(source => 
+						`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
+					  ).join('')}
+					</select>
+					<button id="add${id}">Add</button>
+				  `;
+				} else {
+				  addContainer.innerHTML = `
+					<input type="text" id="new${id}Type" placeholder="Source type">
+					<button id="add${id}">Add</button>
+				  `;
+				}
+				
+				container.parentNode.classList.add("isolate");
+				container.parentNode.insertBefore(listContainer, container.nextSibling);
+				container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+			}
+		});
+		
+		sourceTypes.forEach(type => {
+			try {
+				document.getElementById(`${type}List`).addEventListener('click', (e) => {
+					if (e.target.classList.contains('remove-source')) {
+						removeSourceType(
+							e.target.dataset.sourceType,
+							type
+						);
+					}
+				});
+				document.getElementById(`add${type}`).addEventListener('click', () => {
+					const input = document.getElementById(`new${type}Type`);
+					const sourceType = input.value.trim();
+					if (sourceType) {
+						addSourceType(sourceType, type);
+						input.value = '';
+					}
+				});
+			} catch(e) {
+				console.error(e);
+			}
+		});
+		
+	} catch(e){
+		console.error(e);
+	}
+	
+/* 	userTypes.forEach(type => {
+	  try {
+		updateUsernameList(type);
+	  } catch(e) {
+		console.error(e);
+	  }
+	});
+
+	// Add this after the sourceTypes setup and event listeners
+	sourceTypes.forEach(type => {
+	  try {
+		updateSourceTypeList(type);
+	  } catch(e) {
+		console.error(e);
+	  }
+	}); */
+	
+	//userTypes.forEach(type => updateUsernameList(type));
+    //sourceTypes.forEach(type => updateSourceTypeList(type));
 	
 	setTimeout(function(){
 		populateFontDropdown(); 
@@ -2116,7 +2280,8 @@ function update(response, sync=true){
 									
 									updateSettings(ele, sync);
 									
-									updateUsernameList(key); // may or may not trigger based on if it can find things
+									updateUsernameList(key); 
+									updateSourceTypeList(key);
 								}
 								
 							} 
@@ -2672,7 +2837,7 @@ async function checkVersion(){
 		return;
 	}
 	
-	try {
+	try { 
 		fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/manifest.json').then(response => response.json()).then(data => {
 			var manifestData = chrome.runtime.getManifest();
 			if ("version" in data){
@@ -2694,6 +2859,22 @@ async function checkVersion(){
 				} else {
 					document.getElementById("newVersion").classList.remove('show')
 					document.getElementById("newVersion").innerHTML = "";
+				}
+				
+				
+				if (manifestData && manifestData.content_scripts) {
+				  // Extract source filenames from content_scripts
+				  manifestData.content_scripts.forEach(script => {
+					if (script.js && script.js.length > 0) {
+					  script.js.forEach(jsFile => {
+						if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
+						  // Extract just the filename without path and extension
+						  const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
+						  sourcesList.add(sourceName);
+						}
+					  });
+					}
+				  });
 				}
 			}
 		});

@@ -133,6 +133,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("fc2");	return;	}
 				if ("focusChat" == request){ // doesn't support/have chat
 					sendResponse(false);
 					return;

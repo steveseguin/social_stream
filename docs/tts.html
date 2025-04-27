@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja - TTS Voice Guide</title>
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --secondary-color: #1976D2;
+            --accent-color: #FF9800;
+            --text-color: #212121;
+            --text-light: #757575;
+            --bg-color: #FFFFFF;
+            --card-bg: #F5F5F5;
+            --border-color: #E0E0E0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+        
+        h3 {
+            color: var(--secondary-color);
+            margin-top: 30px;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .warning {
+            background-color: #FFF3E0;
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .info {
+            background-color: #E3F2FD;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .code {
+            background-color: #263238;
+            color: #ECEFF1;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #F9F9F9;
+        }
+        
+        .browser-support {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .browser-card {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        
+        .supported {
+            color: #4CAF50;
+        }
+        
+        .partial {
+            color: var(--accent-color);
+        }
+        
+        .not-supported {
+            color: #F44336;
+        }
+        
+        ul {
+            padding-left: 20px;
+        }
+        
+        li {
+            margin: 10px 0;
+        }
+        
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .tts-test {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .parameter-table td:first-child {
+            font-family: monospace;
+            background-color: #F5F5F5;
+        }
+        
+        nav {
+            background-color: #F5F5F5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        nav li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Social Stream Ninja TTS Guide</h1>
+            <p>Complete guide to Text-to-Speech voice options, browser compatibility, and audio capture</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <nav>
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#providers">TTS Providers</a></li>
+                <li><a href="#browser-support">Browser Support</a></li>
+                <li><a href="#audio-capture">Audio Capture in OBS</a></li>
+                <li><a href="#language-installation">Installing Language Packs</a></li>
+                <li><a href="#parameters">URL Parameters</a></li>
+                <li><a href="#premium-options">Premium TTS Options</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+            </ul>
+        </nav>
+        
+        <h2 id="overview">Overview</h2>
+        <div class="card">
+            <p>Social Stream Ninja offers multiple Text-to-Speech (TTS) options, from free system voices to premium services. This guide covers everything you need to know about configuring and using TTS effectively.</p>
+            
+            <div class="info">
+                <strong>Quick Start:</strong> Add <code>?speech=en-US</code> to your URL to enable English TTS
+            </div>
+            
+            <h3>Where is TTS Used?</h3>
+            <ul>
+                <li><strong>Social Stream Ninja:</strong> Reads out messages from audiences in multiple areas</li>
+                <li><strong>CAPTION.Ninja:</strong> Offers closed-captioning, transcription, and translation with TTS</li>
+                <li>Both services offer premium and free TTS options</li>
+            </ul>
+            
+            <div class="warning">
+                <strong>Free TTS Limitations:</strong>
+                <ul>
+                    <li>OBS browser sources cannot capture system TTS audio directly</li>
+                    <li>Requires complex audio routing solutions</li>
+                    <li>Limited browser support (Opera, Firefox may lack TTS)</li>
+                    <li>Premium services are recommended for easier integration</li>
+                </ul>
+            </div>
+        </div>
+        
+        <h2 id="providers">TTS Provider Options</h2>
+        <div class="card">
+            <h3>System TTS (Free)</h3>
+            <ul>
+                <li>Uses your operating system's built-in voices</li>
+                <li>Limited language support based on system installation</li>
+                <li>Audio plays through system speakers - requires special capture methods</li>
+                <li>Browser compatibility varies significantly</li>
+            </ul>
+            
+            <h3>Premium TTS Options (Direct Browser Audio)</h3>
+            <table>
+                <tr>
+                    <th>Provider</th>
+                    <th>Cost</th>
+                    <th>OBS Capture</th>
+                    <th>Features</th>
+                </tr>
+                <tr>
+                    <td>Kokoro TTS</td>
+                    <td>Free</td>
+                    <td>Direct</td>
+                    <td>Browser-based, requires powerful computer</td>
+                </tr>
+                <tr>
+                    <td>Google Cloud</td>
+                    <td>API costs apply</td>
+                    <td>Direct</td>
+                    <td>Professional quality, multiple languages</td>
+                </tr>
+                <tr>
+                    <td>ElevenLabs</td>
+                    <td>Free tier available</td>
+                    <td>Direct</td>
+                    <td>Custom voice training, natural sounding</td>
+                </tr>
+                <tr>
+                    <td>Speechify</td>
+                    <td>API costs apply</td>
+                    <td>Direct</td>
+                    <td>High-quality voices, multiple languages</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2 id="browser-support">Browser Support</h2>
+        <div class="browser-support">
+            <div class="browser-card">
+                <h3>Chrome</h3>
+                <p class="supported">✓ Full Support</p>
+                <p>Google-powered voices + system voices</p>
+            </div>
+            <div class="browser-card">
+                <h3>Edge</h3>
+                <p class="supported">✓ Full Support</p>
+                <p>Microsoft voices + Windows TTS packs</p>
+            </div>
+            <div class="browser-card">
+                <h3>Firefox</h3>
+                <p class="partial">⚠ Limited Support</p>
+                <p>Local system languages only</p>
+            </div>
+            <div class="browser-card">
+                <h3>Opera</h3>
+                <p class="not-supported">✗ No Support</p>
+                <p>May lack TTS functionality</p>
+            </div>
+        </div>
+        
+        <div class="warning">
+            <strong>Browser Limitations:</strong>
+            <ul>
+                <li>Not all browsers support text-to-speech (Opera, some Firefox versions)</li>
+                <li>Chrome offers Google-powered TTS options</li>
+                <li>Edge supports Microsoft TTS and Windows service pack add-ons</li>
+                <li>Safari requires user interaction to start audio</li>
+                <li>Check <a href="https://socialstream.ninja/tts" target="_blank">available voices</a> for your browser</li>
+            </ul>
+        </div>
+        
+        <h2 id="audio-capture">Windows TTS Audio Capture Methods for OBS</h2>
+        <div class="card">
+            <h3>Premium TTS Services (Recommended)</h3>
+            <p>All premium services play audio directly through the browser:</p>
+            <ul>
+                <li>Simply enable "Control audio via OBS" in browser source</li>
+                <li>No virtual audio cables needed</li>
+                <li>Works with SSN app and OBS browser sources</li>
+            </ul>
+            
+            <h3>System TTS Capture Methods</h3>
+            <div class="warning">
+                <strong>Important:</strong> OBS Studio's browser source cannot capture system-level TTS audio directly. 
+                This limitation affects all browsers and requires special audio routing methods.
+            </div>
+            
+            <p>Free text-to-speech comes with limitations:</p>
+            <ul>
+                <li>Cannot be captured directly by OBS browser sources</li>
+                <li>Limited support across browsers (Opera, Firefox may lack TTS)</li>
+                <li>Chrome offers Google-powered options, Edge has Microsoft options</li>
+                <li>Requires complex audio routing for capture</li>
+            </ul>
+            
+            <h4>Method 1: Default Audio Route (Most Common)</h4>
+            <div class="code">
+1. Set Virtual Cable as Windows default output
+   - Sound Settings > Output > Virtual Cable
+2. OBS:
+   - Add Audio Input Capture
+   - Source: Virtual Cable
+   - Monitor: Monitor Only
+            </div>
+            
+            <h4>Method 2: Windows 10 App Route</h4>
+            <div class="code">
+1. Sound Settings > App volume and device preferences
+2. Find browser in list
+3. Output: Virtual Cable
+4. OBS setup same as Method 1
+            </div>
+            
+            <h4>Method 3: Windows 11 App Route</h4>
+            <div class="code">
+1. Settings > System > Sound > Volume Mixer
+2. Locate browser
+3. Output: Virtual Cable
+4. OBS setup same as Method 1
+            </div>
+            
+            <h4>Method 4: Audio Router Software</h4>
+            <div class="code">
+1. Install Audio Router
+2. Route browser to Virtual Cable
+3. OBS setup same as Method 1
+            </div>
+            
+            <h4>Method 5: Voicemeeter (Advanced)</h4>
+            <div class="code">
+1. Install Voicemeeter
+2. Set as Windows default output
+3. Route:
+   - Hardware out > speakers
+   - Virtual out > OBS
+4. OBS captures Voicemeeter output
+            </div>
+            
+            <h3>Testing Your Setup</h3>
+            <div class="code">
+1. Play TTS
+2. Check OBS meter
+3. Verify system audio
+4. Adjust levels if needed
+            </div>
+            
+            <div class="info">
+                <strong>Alternatives:</strong> If these methods don't work, consider using premium options 
+                (Google Cloud, ElevenLabs, Speechify) or explore self-hosted open-source TTS solutions.
+            </div>
+        </div>
+        
+        <h2 id="language-installation">Installing Additional Language Packs</h2>
+        <div class="card">
+            <h3>Windows 11</h3>
+            <ol>
+                <li>Navigate to <strong>Start > Settings > Time & Language > Speech</strong></li>
+                <li>Under <strong>Manage Voices</strong>, click <strong>Add Voices</strong></li>
+                <li>Select desired languages and click <strong>Add</strong></li>
+                <li>Restart browsers to refresh available voices</li>
+            </ol>
+            
+            <h3>Windows 10</h3>
+            <p>Follow <a href="https://support.microsoft.com/en-us/windows/download-language-pack-for-speech-24d06ef3-ca09-ddcc-70a0-63606fd16394" target="_blank">Microsoft's official guide</a> for installing language packs.</p>
+            
+            <div class="info">
+                <strong>Tip:</strong> Some third-party voices may not appear in browsers due to compatibility issues. Firefox often shows more system voices than Chromium-based browsers.
+            </div>
+        </div>
+        
+        <h2 id="parameters">URL Parameters for TTS Configuration</h2>
+        <div class="card">
+            <h3>Basic Parameters</h3>
+            <table class="parameter-table">
+                <tr>
+                    <th>Parameter</th>
+                    <th>Description</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td>&speech</td>
+                    <td>Enable TTS with language code</td>
+                    <td>&speech=en-US</td>
+                </tr>
+                <tr>
+                    <td>&pitch</td>
+                    <td>Voice pitch (0.1 to 2.0)</td>
+                    <td>&pitch=1.2</td>
+                </tr>
+                <tr>
+                    <td>&volume</td>
+                    <td>Volume level (0.0 to 1.0)</td>
+                    <td>&volume=0.8</td>
+                </tr>
+                <tr>
+                    <td>&rate</td>
+                    <td>Speaking rate (0.1 to 10.0)</td>
+                    <td>&rate=1.5</td>
+                </tr>
+                <tr>
+                    <td>&voice</td>
+                    <td>Partial voice name match</td>
+                    <td>&voice=google</td>
+                </tr>
+                <tr>
+                    <td>&ttsprovider</td>
+                    <td>Select provider (system/kokoro/elevenlabs/google/speechify)</td>
+                    <td>&ttsprovider=kokoro</td>
+                </tr>
+            </table>
+            
+            <h3>Advanced Parameters</h3>
+            <table class="parameter-table">
+                <tr>
+                    <th>Parameter</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>&simpletts</td>
+                    <td>Don't say "says" or "someone says"</td>
+                </tr>
+                <tr>
+                    <td>&simpletts2</td>
+                    <td>Don't read chatnames at all</td>
+                </tr>
+                <tr>
+                    <td>&ttscommand</td>
+                    <td>Enable custom TTS command (default: !say)</td>
+                </tr>
+                <tr>
+                    <td>&readevents</td>
+                    <td>Include stream events in TTS</td>
+                </tr>
+                <tr>
+                    <td>&skipmessages=3</td>
+                    <td>Read every 3rd message only</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2 id="premium-options">Premium TTS Service Configuration</h2>
+        <div class="card">
+            <h3>Kokoro TTS (Free, Browser-based)</h3>
+            <ul>
+                <li>Enable with <code>?ttsprovider=kokoro</code></li>
+                <li>Requires powerful computer</li>
+                <li>Works directly with OBS browser source</li>
+                <li>Voice selection: <code>&voicekokoro=af_bella</code></li>
+                <li>Speed control: <code>&kokorospeed=1.2</code></li>
+            </ul>
+            
+            <h3>Google Cloud TTS</h3>
+            <ul>
+                <li>Enable with <code>?ttsprovider=google&ttskey=YOUR_API_KEY</code></li>
+                <li>Professional quality voices</li>
+                <li>Voice selection: <code>&voicegoogle=en-GB-Standard-A</code></li>
+                <li>Language: <code>&googlelang=en-US</code></li>
+            </ul>
+            
+            <h3>ElevenLabs TTS</h3>
+            <ul>
+                <li>Enable with <code>?ttsprovider=elevenlabs&elevenlabskey=YOUR_API_KEY</code></li>
+                <li>Voice ID: <code>&voice11=YOUR_VOICE_ID</code></li>
+                <li>Model: <code>&elevenlabsmodel=eleven_multilingual_v2</code></li>
+                <li>Parameters: stability, similarity, style can be adjusted</li>
+            </ul>
+            
+            <h3>Speechify TTS</h3>
+            <ul>
+                <li>Enable with <code>?ttsprovider=speechify&speechifykey=YOUR_API_KEY</code></li>
+                <li>Voice: <code>&voicespeechify=henry</code></li>
+                <li>Model: <code>&speechifymodel=simba-english</code></li>
+            </ul>
+        </div>
+        
+        <h2 id="troubleshooting">Troubleshooting</h2>
+        <div class="card">
+            <h3>Common Issues</h3>
+            <ul>
+                <li><strong>No audio playing:</strong> Click on the page first - browsers require user interaction for audio</li>
+                <li><strong>Voices not showing:</strong> Restart browser after installing language packs</li>
+                <li><strong>OBS not capturing:</strong> For system TTS, use one of the capture methods above</li>
+                <li><strong>Safari issues:</strong> Safari has limited automatic TTS support</li>
+                <li><strong>Premium service not working:</strong> Check API key and ensure provider is correctly specified</li>
+            </ul>
+            
+            <h3>Best Practices</h3>
+            <ul>
+                <li>Use premium TTS services for easiest OBS integration</li>
+                <li>Test your setup with simple phrases before going live</li>
+                <li>Consider user-generated content risks with TTS</li>
+                <li>Have a toggle to quickly disable TTS if needed</li>
+            </ul>
+        </div>
+        
+        <div class="tts-test">
+            <h3>Test Your Browser's TTS Support</h3>
+            <p>Click the button below to see available voices in your browser:</p>
+            <button onclick="window.open('https://socialstream.ninja/tts', '_blank')">Check Available Voices</button>
+        </div>
+        
+        <footer style="text-align: center; margin-top: 40px; padding: 20px; background-color: #F5F5F5;">
+            <p>Social Stream Ninja TTS Guide - For the latest updates, visit the <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub repository</a></p>
+        </footer>
+    </div>
+</body>
+</html>

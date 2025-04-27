@@ -157,6 +157,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("vimeo");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('#interaction-chat-input-field').focus();
 					sendResponse(true);
