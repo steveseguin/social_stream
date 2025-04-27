@@ -14,6 +14,21 @@
             --bg-color: #FFFFFF;
             --card-bg: #F5F5F5;
             --border-color: #E0E0E0;
+            --code-bg: #263238;
+            --code-text: #ECEFF1;
+        }
+        
+        [data-theme="dark"] {
+            --primary-color: #64B5F6;
+            --secondary-color: #42A5F5;
+            --accent-color: #FFB74D;
+            --text-color: #E0E0E0;
+            --text-light: #BDBDBD;
+            --bg-color: #121212;
+            --card-bg: #1E1E1E;
+            --border-color: #424242;
+            --code-bg: #000000;
+            --code-text: #ECEFF1;
         }
         
         body {
@@ -23,6 +38,7 @@
             margin: 0;
             padding: 0;
             background-color: var(--bg-color);
+            transition: background-color 0.3s, color 0.3s;
         }
         
         .container {
@@ -36,6 +52,27 @@
             color: white;
             padding: 40px 0;
             text-align: center;
+            position: relative;
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
         
         h1 {
@@ -70,6 +107,11 @@
             margin: 20px 0;
         }
         
+        [data-theme="dark"] .warning {
+            background-color: #5D4037;
+            color: #FFCC80;
+        }
+        
         .info {
             background-color: #E3F2FD;
             border-left: 4px solid var(--primary-color);
@@ -77,9 +119,14 @@
             margin: 20px 0;
         }
         
+        [data-theme="dark"] .info {
+            background-color: #1565C0;
+            color: #BBDEFB;
+        }
+        
         .code {
-            background-color: #263238;
-            color: #ECEFF1;
+            background-color: var(--code-bg);
+            color: var(--code-text);
             padding: 15px;
             border-radius: 4px;
             font-family: 'Consolas', monospace;
@@ -106,6 +153,10 @@
         
         tr:nth-child(even) {
             background-color: #F9F9F9;
+        }
+        
+        [data-theme="dark"] tr:nth-child(even) {
+            background-color: #2A2A2A;
         }
         
         .browser-support {
@@ -175,8 +226,12 @@
             background-color: #F5F5F5;
         }
         
+        [data-theme="dark"] .parameter-table td:first-child {
+            background-color: #2A2A2A;
+        }
+        
         nav {
-            background-color: #F5F5F5;
+            background-color: var(--card-bg);
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
@@ -190,11 +245,22 @@
         nav li {
             margin: 5px 0;
         }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background-color: var(--card-bg);
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span class="theme-icon">🌓</span>
+                <span class="theme-text">Toggle Dark Mode</span>
+            </button>
             <h1>Social Stream Ninja TTS Guide</h1>
             <p>Complete guide to Text-to-Speech voice options, browser compatibility, and audio capture</p>
         </div>
@@ -551,9 +617,38 @@
             <button onclick="window.open('https://socialstream.ninja/tts', '_blank')">Check Available Voices</button>
         </div>
         
-        <footer style="text-align: center; margin-top: 40px; padding: 20px; background-color: #F5F5F5;">
+        <footer>
             <p>Social Stream Ninja TTS Guide - For the latest updates, visit the <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub repository</a></p>
         </footer>
     </div>
+    
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const themeText = document.querySelector('.theme-text');
+            const currentTheme = body.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                body.removeAttribute('data-theme');
+                themeText.textContent = 'Toggle Dark Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeText.textContent = 'Toggle Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Check for saved theme preference
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeText = document.querySelector('.theme-text');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                themeText.textContent = 'Toggle Light Mode';
+            }
+        });
+    </script>
 </body>
 </html>
