@@ -622,13 +622,20 @@ function processVoteSingle(vote, name, source) {
         }
 
         // For multiple choice, cached option lookup
+        let cleanVote = vote;
+        
+        // Remove hashtag if it exists
+        if (cleanVote.startsWith('#')) {
+            cleanVote = cleanVote.substring(1);
+        }
+        
         for (let i = 0; i < settings.pollOptions.length; i++) {
             const option = settings.pollOptions[i];
             const normalizedOption = option.toLowerCase();
             
-            if (vote === normalizedOption || 
-                normalizedOption === vote + 's' || 
-                vote === normalizedOption + 's') {
+            if (cleanVote === normalizedOption || 
+                normalizedOption === cleanVote + 's' || 
+                cleanVote === normalizedOption + 's') {
                 
                 results[option] = (results[option] || 0) + 1;
                 totalVotes++;
@@ -651,14 +658,13 @@ function processVoteSingle(vote, name, source) {
             const resultsKeys = Object.keys(results);
             if (!isNaN(numericVote) && numericVote > 0 && numericVote <= resultsKeys.length) {
                 const selectedOption = resultsKeys[numericVote - 1];
-                results[selectedOption]++;
+                results[selectedOption] = (results[selectedOption] || 0) + 1;
                 totalVotes++;
                 if (!settings.pollSpam) alreadyVoted[voterKey] = true;
             }
         }
     }
 }
-
 function updatePollVisibility() {
     if (settings.pollEnabled) {
         pollContainer.classList.remove('hidden');
@@ -774,9 +780,16 @@ function processInput(data) {
     } else if (data.chatmessage) {
         queueVote(data.chatmessage, data.chatname, data.type);
         return true;
-    } else {
-        return false;
+    } else if (data.settings) {
+        // Process settings updates
+        processData(data);
+        return true;
+    } else if (data.cmd) {
+        // Process commands
+        processData(data);
+        return true;
     }
+    return false;
 }
 
 // Memory optimization - create connection manager
