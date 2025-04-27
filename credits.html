@@ -95,7 +95,7 @@
 			color: var(--text-color, #ebbc3c);
 			text-align: center;
 			text-shadow: 0 0 16px #ffeb3b60, 0 0 3px #3bbeff88, 0 0 10px #ffffff83;
-			width: 80%;
+			width: 100%;
 			margin: 0 auto;
 			transform: translateZ(0);
 		}
@@ -416,12 +416,14 @@
 				transform: translateY(-300vh);
 			}
 		}
+		
+
 
         /* Avatar styles */
         .avatar {
             display: inline-block;
-            max-width: 10vh;
-            height: 10vh;
+            max-width: 1.45em;
+            height: 1.45em;
             border-radius: 50%;
             margin-right: 1vh;
             vertical-align: middle;
@@ -429,6 +431,14 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
         }
+		
+		.source-type-img {
+			width: 1.4em;
+			height: 1.4em;
+			vertical-align: middle;
+			margin-left: 0.7vh;
+			padding-bottom: 0.04em;
+		}
 
         .user-entry {
             display: flex;
@@ -491,7 +501,8 @@
 	
 	// Get URL parameters
 	const urlParams = new URLSearchParams(window.location.search);
-
+	const donationPriority = urlParams.has('donationpriority');
+	
 	// User tracking
 	const users = new Map();
 
@@ -521,7 +532,9 @@
 			
 			const nameDisplay = this.name;
 			const badgesDisplay = badges.length > 0 ? badges.join(' ') : '';
-			const typeImage = `<img src="./source/images/${this.type}.png" alt="${this.type}" style="width: 1.5em; height: 1.5em; vertical-align: middle; margin-left: 0.3em;">`;
+			
+			const showsourcetype = !urlParams.has('nosourcetype');
+			const typeImage = showsourcetype ? `<img src="./sources/images/${this.type}.png" alt="${this.type}" class="source-type-img">` : '';
 			
 			const showamounts = urlParams.has('showamounts');
 			const donationDisplay = (showamounts && this.donations > 0) ? ` ($${this.donations.toFixed(2)})` : '';
@@ -593,32 +606,77 @@
 	}
 
 	function generateCreditsContent() {
-		const sortedUsers = Array.from(users.values())
-			.sort((a, b) => b.score - a.score);
-
-		const vips = sortedUsers.filter(u => u.score >= 150);
-		const regulars = sortedUsers.filter(u => u.score >= 50 && u.score < 150);
-		const participants = sortedUsers.filter(u => u.score < 50);
-
-		const hidecategories = urlParams.has('hidecategories');
-		let content = '';
-
-		if (vips.length > 0) {
-			content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">VIP Supporters</div>`;
-			content += vips.map(u => u.generateHtml()).join('') + '<br><br>';
+		const sortedUsers = Array.from(users.values());
+		
+		if (donationPriority) {
+			// Separate users into donors and non-donors
+			const donors = sortedUsers.filter(u => u.donations > 0)
+				.sort((a, b) => {
+					// First sort by donation amount
+					if (b.donations !== a.donations) {
+						return b.donations - a.donations;
+					}
+					// If donation amounts are equal, sort by membership
+					if (b.isMember !== a.isMember) {
+						return b.isMember - a.isMember;
+					}
+					// Finally by participation
+					return b.messageCount - a.messageCount;
+				});
+			
+			const members = sortedUsers.filter(u => u.donations === 0 && u.isMember)
+				.sort((a, b) => b.messageCount - a.messageCount);
+			
+			const participants = sortedUsers.filter(u => u.donations === 0 && !u.isMember)
+				.sort((a, b) => b.messageCount - a.messageCount);
+			
+			const hidecategories = urlParams.has('hidecategories');
+			let content = '';
+			
+			if (donors.length > 0) {
+				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Donors</div>`;
+				content += donors.map(u => u.generateHtml()).join('') + '<br><br>';
+			}
+			
+			if (members.length > 0) {
+				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Channel Members</div>`;
+				content += members.map(u => u.generateHtml()).join('') + '<br><br>';
+			}
+			
+			if (participants.length > 0) {
+				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Participants</div>`;
+				content += participants.map(u => u.generateHtml()).join('');
+			}
+			
+			return content;
+		} else {
+			// Original scoring system
+			sortedUsers.sort((a, b) => b.score - a.score);
+			
+			const vips = sortedUsers.filter(u => u.score >= 150);
+			const regulars = sortedUsers.filter(u => u.score >= 50 && u.score < 150);
+			const participants = sortedUsers.filter(u => u.score < 50);
+			
+			const hidecategories = urlParams.has('hidecategories');
+			let content = '';
+			
+			if (vips.length > 0) {
+				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">VIP Supporters</div>`;
+				content += vips.map(u => u.generateHtml()).join('') + '<br><br>';
+			}
+			
+			if (regulars.length > 0) {
+				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Regular Supporters</div>`;
+				content += regulars.map(u => u.generateHtml()).join('') + '<br><br>';
+			}
+			
+			if (participants.length > 0) {
+				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Participants</div>`;
+				content += participants.map(u => u.generateHtml()).join('');
+			}
+			
+			return content;
 		}
-
-		if (regulars.length > 0) {
-			content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Regular Supporters</div>`;
-			content += regulars.map(u => u.generateHtml()).join('') + '<br><br>';
-		}
-
-		if (participants.length > 0) {
-			content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Participants</div>`;
-			content += participants.map(u => u.generateHtml()).join('');
-		}
-
-		return content;
 	}
 
 	// IFRAME setup for Social Stream Ninja
@@ -713,7 +771,7 @@
 
 
 	// Apply custom font if specified
-	const fontFamily = urlParams.get('font');
+	const fontFamily = urlParams.get('font') || "Nunito Sans";
 	const googlefont = urlParams.get('googlefont');
 
 	if (googlefont) {
