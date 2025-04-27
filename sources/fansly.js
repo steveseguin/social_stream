@@ -92,7 +92,17 @@
 			return;
 		}
 		
-		if (!msg && !name){return;}
+		var donations = "";
+		if (ele.querySelector(".tip .fa-dollar-sign")){
+			donations = getAllContentNodes(ele.querySelector(".tip"));
+			if (donations){
+				donations = "$"+donations;
+			}
+		} else if (ele.querySelector(".tip")){
+			donations = getAllContentNodes(ele.querySelector(".tip")) || "";
+		}
+		
+		if (!(msg || donations) && !name){return;}
 		
 		var data = {};
 		data.chatname = name;
@@ -103,10 +113,12 @@
 		data.nameColor = nameColor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
-		data.hasDonation = "";
+		data.hasDonation = donations;
 		data.membership = "";;
 		data.textonly = settings.textonlymode || false;
 		data.type = "fansly";
+		
+		//console.log(data);
 		
 		pushMessage(data);
 	}
@@ -132,6 +144,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("fansly");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 					document.querySelector('textarea').focus();
 					sendResponse(true);
@@ -153,10 +166,7 @@
 	var observer = null;
 	
 	
-	function onElementInserted(containerSelector) {
-		var target = document.querySelector(containerSelector);
-		if (!target){return;}
-		
+	function onElementInserted(target) {
 		
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
@@ -166,7 +176,7 @@
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
 							mutation.addedNodes[i].skip = true;
-							processMessage(mutation.addedNodes[i]);
+							//processMessage(mutation.addedNodes[i]);
 						} catch(e){}
 					}
 				}
@@ -189,10 +199,10 @@
 				document.querySelector('.chat-container').marked=true;
 				document.querySelector('.chat-container').childNodes.forEach(ele=>{
 					ele.skip = true;
-					//processMessage(ele);
+					processMessage(ele);
 				});
 				
-				onElementInserted('app-chat-room-message');
+				onElementInserted(document.querySelector('.chat-container'));
 			}
 		}} catch(e){}
 	},2000);
