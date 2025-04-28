@@ -3285,6 +3285,11 @@
 			if (urlParams.has("hidecommands")) {
 				filtercommands = true;
 			}
+			
+			var doNotTTSBeep = false;
+			if (urlParams.has("quietcommands")) {
+				doNotTTSBeep = true;
+			}
 
 			if (urlParams.has("reverse")) {
 				reversed = true;
@@ -7284,8 +7289,11 @@
 						data.chatmessage = data.message;
 					}
 
-					if (filtercommands && data.chatmessage && data.chatmessage.startsWith("!")) {
-						return;
+					if (data.chatmessage && data.chatmessage.startsWith("!")) {
+						if (filtercommands){
+							return;
+						}
+						data.command = true;
 					}
 					if (startstop && data.chatmessage && data.chatname && data.admin && window.obsstudio) {
 						if (data.chatmessage == "!start"){
@@ -7993,7 +8001,7 @@
 					});
 					
 					if (beep) { 
-						if (!(nobeepbot && bot) && !(nobeephost && host) && !(nobeepmod && mod) && !(nobeepevent && data.event)){
+						if (!(nobeepbot && bot) && !(nobeephost && host) && !(nobeepmod && mod) && !(nobeepevent && data.event) && !(data.command && doNotTTSBeep)){
 							playtone();
 						}
 					}
@@ -8257,7 +8265,9 @@
 						updateQueueButton();
 					}
 					
-					if (TTS.ttscommand && data.chatmessage && data.chatmessage.includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
+					if (data.command && doNotTTSBeep){
+						// skipp TTS
+					} else if (TTS.ttscommand && data.chatmessage && data.chatmessage.includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
 						if (!node.classList.contains("hide")) {
 							TTS.speechMeta(data);
 						}
