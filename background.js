@@ -6431,6 +6431,59 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 			if (isExtensionOn) {
 				sendToDestinations({ vipUser: userToVIP });
 			}
+		} else if (request.action === "markUser" && request.value && request.value.chatname && request.value.type && request.value.role) {
+    
+			if (request.value.role=="bot"){
+				if (!settings.botnamesext) {
+					settings.botnamesext = { textsetting: "" };
+				}
+				const markedlist = settings.botnamesext.textsetting.split(",").map(user => {
+					const parts = user.split(":").map(part => part.trim());
+					return { username: parts[0], type: parts[1] || "" };
+				}); 
+				
+				var altSourceType = request.value.type || "";
+				if (altSourceType == "youtubeshorts"){
+					altSourceType = "youtube";
+				}
+				
+				const userToMark = { username: (request.value.userid || request.value.chatname), type: altSourceType };
+				const isAlreadyMarked = markedlist.some(({ username, type }) => userToMark.username === username && (userToMark.type === type || type === ""));
+				
+				if (!isAlreadyMarked) {
+					settings.botnamesext.textsetting += (settings.botnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
+					chrome.storage.local.set({ settings: settings });
+					// Check for errors in chrome storage operations
+					if (chrome.runtime.lastError) {
+						console.error("Error updating settings:", chrome.runtime.lastError.message);
+					}
+				}
+			} else if (request.value.role=="mod"){
+				if (!settings.modnamesext) {
+					settings.modnamesext = { textsetting: "" };
+				}
+				const markedlist = settings.modnamesext.textsetting.split(",").map(user => {
+					const parts = user.split(":").map(part => part.trim());
+					return { username: parts[0], type: parts[1] || "" };
+				}); 
+				
+				var altSourceType = request.value.type || "";
+				if (altSourceType == "youtubeshorts"){
+					altSourceType = "youtube";
+				}
+				
+				const userToMark = { username: (request.value.userid || request.value.chatname), type: altSourceType };
+				const isAlreadyMarked = markedlist.some(({ username, type }) => userToMark.username === username && (userToMark.type === type || type === ""));
+				
+				if (!isAlreadyMarked) {
+					settings.modnamesext.textsetting += (settings.modnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
+					chrome.storage.local.set({ settings: settings });
+					// Check for errors in chrome storage operations
+					if (chrome.runtime.lastError) {
+						console.error("Error updating settings:", chrome.runtime.lastError.message);
+					}
+				}
+			}
 		} else if (request.action === "getChatSources") {
 			if (isExtensionOn && chrome.debugger) {
 				chrome.tabs.query({}, function (tabs) {

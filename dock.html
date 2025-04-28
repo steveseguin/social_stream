@@ -2470,12 +2470,6 @@
 								<span>VIP User</span>
 							</a>
 						</li>
-						<li class="context-menu__item" data-action="MarkHost">
-							<a href="#" class="context-menu__link" data-action="MarkHost">
-								🎙️
-								<span>Mark as Host</span>
-							</a>
-						</li>
 						<li class="context-menu__item" data-action="MarkMod">
 							<a href="#" class="context-menu__link" data-action="MarkMod">
 								🛡️
@@ -4215,7 +4209,7 @@
 					if (blockMessageSelecting2 || blockMessageSelecting) {
 						document.querySelector('[data-action="Block"]').classList.add("hidden");
 						document.querySelector('[data-action="Timeout"]').classList.add("hidden");
-						document.querySelector('[data-action="MarkHost"]').classList.add("hidden");
+						//document.querySelector('[data-action="MarkHost"]').classList.add("hidden");
 						document.querySelector('[data-action="MarkMod"]').classList.add("hidden");
 						document.querySelector('[data-action="MarkBot"]').classList.add("hidden");
 					}
@@ -4224,7 +4218,7 @@
 				try {
 					document.querySelector('[data-action="Delete"]').title = "Enable &sync mode to have messages be deleted in other synced docks also";
 					document.querySelector('[data-action="Timeout"]').title = "Enable &sync mode to timeout users across all synced docks";
-					document.querySelector('[data-action="MarkHost"]').title = "Enable &sync mode to mark users as host across all synced docks";
+					//document.querySelector('[data-action="MarkHost"]').title = "Enable &sync mode to mark users as host across all synced docks";
 					document.querySelector('[data-action="MarkMod"]').title = "Enable &sync mode to mark users as mod across all synced docks";
 					document.querySelector('[data-action="MarkBot"]').title = "Enable &sync mode to mark users as bot across all synced docks";
 				} catch (e) {}
@@ -5524,7 +5518,7 @@
 					return;
 				} else if ("markUser" in data) {
 					try {
-						if (data.markUser.username && data.markUser.type && data.markUser.role) {
+/* 						if (data.markUser.username && data.markUser.type && data.markUser.role) {
 							// Add marker class to all messages from this user
 							document.querySelectorAll("[data-chatname='" + data.markUser.username + "'][data-source-type='" + data.markUser.type + "']").forEach(ele => {
 								ele.classList.add(`marked-${data.markUser.role}`);
@@ -5535,7 +5529,7 @@
 									ele.classList.add(`marked-${data.markUser.role}`);
 								});
 							}
-						}
+						} */
 						return true;
 					} catch (e) {
 						console.error(e);
@@ -6567,39 +6561,6 @@
 				}
 			}
 			
-			function markUserAs(element, role) {
-				const userId = element.getAttribute("data-chatname");
-				const userType = element.getAttribute("data-source-type");
-				
-				if (userId && userType) {
-					// Send mark request to backend
-					syncDataAny({
-						markUser: {
-							username: userId,
-							type: userType,
-							role: role
-						}
-					});
-					
-					// Add visual indicator
-					element.classList.add(`marked-${role}`);
-					console.log(`Marked ${userId} as ${role}`);
-				
-					if (userId && userType && role) {
-						// Add marker class to all messages from this user
-						document.querySelectorAll("[data-chatname='" + userId+ "'][data-source-type='" + userType + "']").forEach(ele => {
-							ele.classList.add(`marked-${role}`);
-						});
-						
-						if (userType=="youtube"){
-							document.querySelectorAll("[data-chatname='" + userId + "'][data-source-type='youtubeshorts']").forEach(ele => {
-								ele.classList.add(`marked-${role}`);
-							});
-						}
-					}
-				}
-			}
-			
 			function timeoutUser(element, duration) {
 				const userId = element.getAttribute("data-chatname");
 				const userType = element.getAttribute("data-source-type");
@@ -6718,14 +6679,26 @@
 					}
 				};
 			}
-		
+			
+						
+			function markUserAs(element, role) {
+				const userId = element.getAttribute("data-chatname");
+				const userType = element.getAttribute("data-source-type");
+				
+				if (userId && userType) {
+					
+					send2Extension({ action: "markUser", value: { chatname: userId, type: userType, role: role} });
+				
+				}
+			}
+		 
 
 			function toggleVIPUser(element) {
-				var chatName = element.dataset.chatname;
-				var type = element.dataset.sourceType;
+				const userId = element.getAttribute("data-chatname");
+				const userType = element.getAttribute("data-source-type");
 
-				if (chatName && type) {
-					send2Extension({ action: "toggleVIPUser", value: { chatname: chatName, type: type } });
+				if (userId && userType) {
+					send2Extension({ action: "toggleVIPUser", value: { chatname: userId, type: userType } });
 				}
 			}
 
@@ -8864,16 +8837,19 @@
 							if (duration) {
 								timeoutUser(taskItemInContext, duration);
 							}
-						} else if (link.getAttribute("data-action") === "MarkHost") {
-							markUserAs(taskItemInContext, "host");
 						} else if (link.getAttribute("data-action") === "MarkMod") {
 							markUserAs(taskItemInContext, "mod");
 						} else if (link.getAttribute("data-action") === "MarkBot") {
 							markUserAs(taskItemInContext, "bot");
 						}
 						
-						// Close menu only if not hovering over a submenu item
-						if (!link.closest('.context-menu__item--has-submenu')) {
+						// Always close menu after an action is performed from a submenu
+						// Only keep menu open if we're on a parent menu item with submenu
+						if (link.getAttribute("data-action") === "UserActions" || link.getAttribute("data-action") === "Timeout") {
+							// Don't close when clicking parent menu items with submenus
+							return;
+						} else {
+							// Close menu for all other actions including submenu items
 							toggleMenuOff();
 						}
 					}
