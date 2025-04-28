@@ -512,11 +512,11 @@ function updatePollResults() {
         
         html += `<span class="option-text">${option}</span>`;
         
-        if (settings.pollTally) {
-            html += `<span class="option-percentage">${votes} votes</span>`;
-        } else {
-            html += `<span class="option-percentage">${percentage}%</span>`;
-        }
+		if (settings.pollTally) {
+			html += `<span class="option-tally">${votes} votes</span>`;
+		} else {
+			html += `<span class="option-percentage">${percentage}%</span>`;
+		}
         
         html += `<div class="poll-bar" style="width: ${percentage}%;"></div>`;
         
@@ -672,18 +672,26 @@ function updatePollVisibility() {
         pollContainer.classList.add('hidden');
     }
 }
-
 function processData(data) {
     if (data.setting && !data.settings) {
-        data.settings = {
-            [data.setting]: {
-                [data.type]: data.value !== undefined ? data.value : false
-            }
-        };
-    }
-
+        if (data.type === "setting") {
+            data.settings = {
+                [data.setting]: {
+                    setting: data.value
+                }
+            };
+        } else {
+            data.settings = {
+                [data.setting]: {
+                    [data.type]: data.value !== undefined ? data.value : false
+                }
+            };
+        }
+    } 
+	
     if (data.settings) {
         let settingsChanged = false;
+        let justUIChange = false;
         
         if (data.settings.pollEnabled) {
             settings.pollEnabled = data.settings.pollEnabled.setting;
@@ -699,15 +707,16 @@ function processData(data) {
         }
         if (data.settings.pollTally) {
             settings.pollTally = data.settings.pollTally.setting;
-            settingsChanged = true;
+            justUIChange = true;
         }
         if (data.settings.pollStyle) {
             settings.styleType = data.settings.pollStyle.optionsetting || 'default';
-            settingsChanged = true;
+            let pollContainer = document.getElementById('poll-container');
+			pollContainer.className = `poll-container style-${settings.styleType} ${settings.pollEnabled ? '' : 'hidden'}`;
         }
         if (data.settings.pollSpam) {
             settings.pollSpam = data.settings.pollSpam.setting;
-            settingsChanged = true;
+            justUIChange = true;
         }
         if (data.settings.multipleChoiceOptions) {
             settings.pollOptions = data.settings.multipleChoiceOptions.textsetting
@@ -725,9 +734,12 @@ function processData(data) {
             results = {};
             totalVotes = 0;
             alreadyVoted = {};
-            settings.pollClosed = false; // Reset closed state when settings change
+            settings.pollClosed = false;
             initializePoll();
             updatePollVisibility();
+        }
+		if (justUIChange) {
+            updatePollResults();
         }
     } else if (data.chatmessage) {
         queueVote(data.chatmessage, data.chatname, data.type);
@@ -768,6 +780,9 @@ function resetPoll() {
 
 function processInput(data) {
     if (!data) return false;
+	
+	console.log(data);
+	
     if ("action" in data) {
         if (data.action === "closepoll") {
             closePoll();
