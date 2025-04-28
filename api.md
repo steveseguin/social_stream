@@ -220,7 +220,7 @@ Connect to the SSE endpoint to receive real-time updates:
 const eventSource = new EventSource(`https://io.socialstream.ninja/sse/SESSION_ID`);
 ```
 
-There is a demo overlay that uses SSE here: <a href="https://socialstream.ninja/test/sse.html">https://socialstream.ninja/test/sse.html</a>
+There is a demo overlay that uses SSE here: <a href="https://socialstream.ninja/tests/sse.html">https://socialstream.ninja/tests/sse.html</a>
 
 ### Receiving Responses
 
