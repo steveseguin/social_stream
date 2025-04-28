@@ -140,7 +140,7 @@ hr {
     border-radius: 3px;
     flex-direction: row;
 }
-.remove-username {
+.remove-username, .remove-source {
 	cursor: pointer;
 	color: #ff0000;
 	font-weight: bold;
@@ -178,13 +178,22 @@ hr {
 	color:white;
 }
 .source-type {
-  font-size: 0.8em;
-  color: #666;
-  margin-left: 5px;
-  padding: 0 4px;
-  background: #e0e0e0;
-  border-radius: 2px;
-  display:inline-block;
+	font-size: 0.8em;
+	color: #666;
+	margin-left: 5px;
+	padding: 0;
+	background: #e0e0e0;
+	border-radius: 10px;
+	display:inline-block;
+	overflow: hidden;
+	vertical-align: middle;
+}
+.source-type .icon {
+	margin:0;
+	padding: 0;
+	border-radius: 5px;
+	max-height: 18px;
+	max-width: 18px;
 }
 .add-username-container input {
   width: 150px;
@@ -6212,7 +6221,15 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="colorofsource" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="colorofsource">🌈🎯 Set name colors to match the site's branding</span>
+                                    <span data-translate="colorofsource">🌈🎯 Set username color to match the site's branding</span>
+                                </div>
+								
+								<div title="Sets the color for a background to the color of the source's branding. Featured messages only.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="colorofsourcebg" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="colorofsourcebg">🌈 Featured messages have their background color match their source branding color</span>
                                 </div>
 								
                                 <div title="If a name lacks color data, randomly add one. This does not cause a name to be displayed as colorful though- you need to enable that option.">

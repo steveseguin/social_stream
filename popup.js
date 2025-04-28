@@ -542,7 +542,7 @@ function updateSourceTypeList(type) {
     
     list.innerHTML = sources.map(source => `
         <div class="username-tag">
-            <span>${source} <img class="icon" src="./sources/images/${source}.png" /></span>
+            <span>${source}<span class="source-type"><img class="icon" src="./sources/images/${source}.png" /></span></span>
             <button class="remove-source" data-source-type="${source}">×</button>
         </div>
     `).join('');

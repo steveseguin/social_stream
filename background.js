@@ -3811,6 +3811,9 @@ async function sendToDestinations(message) {
 			}
 		}
 		
+		if (settings.colorofsourcebg && message && message.chatname) {
+			message.backgroundColor = getColorFromType(message.type);
+		}
 
 		if (settings.randomcolor && message && !message.nameColor && message.chatname) {
 			message.nameColor = getColorFromName(message.chatname);

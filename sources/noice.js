@@ -146,7 +146,7 @@
 			try{
 				if ("getSource" == request){sendResponse("noice");	return;	}
 				if ("focusChat" == request){ // doesn't support/have chat
-					document.querySelector('[role="textbox"], [contenteditable="true"]').focus();
+					document.querySelector('[role="textbox"][contenteditable="true"], [role="textbox"], [contenteditable="true"]').focus();
 					sendResponse(true);
 					return;
 				}

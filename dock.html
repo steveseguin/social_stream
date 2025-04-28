@@ -2459,11 +2459,8 @@
 								<li class="context-menu__item" data-action="Timeout10m">
 									<a href="#" class="context-menu__link" data-action="Timeout10m">10 minutes</a>
 								</li>
-								<li class="context-menu__item" data-action="Timeout1h">
-									<a href="#" class="context-menu__link" data-action="Timeout1h">1 hour</a>
-								</li>
-								<li class="context-menu__item" data-action="Timeout24h">
-									<a href="#" class="context-menu__link" data-action="Timeout24h">24 hours</a>
+								<li class="context-menu__item" data-action="Timeout30m">
+									<a href="#" class="context-menu__link" data-action="Timeout30m">30 minutes</a>
 								</li>
 							</ul>
 						</li>
@@ -8859,7 +8856,9 @@
 								"Timeout30s": 30,
 								"Timeout2m": 120,
 								"Timeout10m": 600,
-								"Timeout30m": 1800
+								"Timeout30m": 1800,
+								"Timeout1h": 3600,
+								"Timeout24h": 86400
 							};
 							const duration = timeouts[link.getAttribute("data-action")];
 							if (duration) {
