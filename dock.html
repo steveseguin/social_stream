@@ -3230,6 +3230,8 @@
 				}
 			}
 
+			var timedOutUsers = {};
+			
 			var transitionType = [];
 
 			if (urlParams.has("fadein")) {
@@ -5505,20 +5507,16 @@
 					try {
 						if (data.timeoutUser.username && data.timeoutUser.type && data.timeoutUser.duration) {
 							// Optional: Add visual feedback for timed out users
+							
+							timedOutUsers[data.timeoutUser.username+":"+data.timeoutUser.type] = Date.now() + data.timeoutUser.duration*1000;
+							
 							document.querySelectorAll("[data-chatname='" + data.timeoutUser.username + "'][data-source-type='" + data.timeoutUser.type + "']").forEach(ele => {
-								ele.classList.add("timed-out");
-								// Remove timeout after duration
-								setTimeout(() => {
-									ele.classList.remove("timed-out");
-								}, data.timeoutUser.duration * 1000);
+								ele.remove();
 							});
 							
 							if (data.timeoutUser.type=="youtube"){
 								document.querySelectorAll("[data-chatname='" + data.timeoutUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
-									ele.classList.add("timed-out");
-									setTimeout(() => {
-										ele.classList.remove("timed-out");
-									}, data.timeoutUser.duration * 1000);
+									ele.remove();
 								});
 							}
 						}
@@ -6628,20 +6626,16 @@
 					try {
 						if (userId && userType && duration) {
 							// Optional: Add visual feedback for timed out users
+							
+							timedOutUsers[userId+":"+userType] = Date.now() + duration*1000;
+							
 							document.querySelectorAll("[data-chatname='" + userId + "'][data-source-type='" + userType + "']").forEach(ele => {
-								ele.classList.add("timed-out");
-								// Remove timeout after duration
-								setTimeout(() => {
-									ele.classList.remove("timed-out");
-								}, duration * 1000);
+								ele.remove();
 							});
 							
 							if (userType=="youtube"){
 								document.querySelectorAll("[data-chatname='" + userId + "'][data-source-type='youtubeshorts']").forEach(ele => {
-									ele.classList.add("timed-out");
-									setTimeout(() => {
-										ele.classList.remove("timed-out");
-									}, duration * 1000);
+									ele.remove();
 								});
 							}
 						}
@@ -7465,6 +7459,14 @@
 								} else if (localBlockUserList[rawName].includes("*")) {
 									return; // blocked locally
 								}
+							}
+						}
+						
+						if (timedOutUsers[data.chatname+":"+data.type]){
+							if (timedOutUsers[data.chatname+":"+data.type] < Date.now()){
+								delete timedOutUsers[data.chatname+":"+data.type];
+							} else {
+								return
 							}
 						}
 					} else {
@@ -8857,8 +8859,7 @@
 								"Timeout30s": 30,
 								"Timeout2m": 120,
 								"Timeout10m": 600,
-								"Timeout1h": 3600,
-								"Timeout24h": 86400
+								"Timeout30m": 1800
 							};
 							const duration = timeouts[link.getAttribute("data-action")];
 							if (duration) {
