@@ -629,6 +629,55 @@ try {
 		});
 } catch (e) {}
 
+///////////////////
+// Add this placeholder function to background.js
+window.customUserFunction = function(data) {
+    // This is a placeholder function that can be overridden by custom user JavaScript
+    console.log("Default customUserFunction - no custom implementation loaded");
+    // Return false to indicate no custom processing was done
+    return false;
+};
+
+// Function to load custom JavaScript by creating a script element
+function loadCustomJs(code) {
+    try {
+        // Remove any existing custom script
+        const existingScript = document.getElementById('custom-user-js');
+        if (existingScript) {
+            existingScript.remove();
+        }
+        
+        // Create a new script element with the custom code
+        const script = document.createElement('script');
+        script.id = 'custom-user-js';
+        script.textContent = code;
+        document.body.appendChild(script);
+        
+        console.log("Custom JavaScript loaded successfully");
+        return true;
+    } catch (error) {
+        console.error("Error loading custom JavaScript:", error);
+        return false;
+    }
+}
+
+// Function to reset the custom function to default
+function resetCustomJs() {
+    // Remove any existing custom script
+    const existingScript = document.getElementById('custom-user-js');
+    if (existingScript) {
+        existingScript.remove();
+    }
+    
+    // Reset to default function
+    window.customUserFunction = function(data) {
+        console.log("Default customUserFunction - no custom implementation loaded");
+        return false;
+    };
+    
+    console.log("Custom JavaScript function reset to default");
+}
+//////////////
 
 function replaceURLsWithSubstring(text, replacement = "[Link]") {
   if (typeof text !== "string") return text;
@@ -839,6 +888,16 @@ function loadSettings(item, resave = false) {
 	if (settings.translationlanguage) {
 		changeLg(settings.translationlanguage.optionsetting);
 	}
+	/////
+    const customJs = localStorage.getItem('customJavaScript');
+    const isEnabled = settings.customJsEnabled || false;
+    
+    if (customJs && isEnabled) {
+        loadCustomJs(customJs);
+    } else {
+        resetCustomJs();
+    }
+	/////////
 	
 	setupSocket();
 	setupSocketDock();
@@ -3611,7 +3670,25 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} else {
 				sendResponse({ state: isExtensionOn, streamID: streamID, password: password });
 			}
-			
+		} else if (request.cmd && (request.cmd === 'uploadCustomJs')) {
+			localStorage.setItem('customJavaScript', request.data);
+			try {
+				// Load the custom JavaScript immediately using script injection
+				const success = loadCustomJs(request.data);
+				if (success) {
+					sendResponse({success: true, state: isExtensionOn });
+				} else {
+					throw new Error("Failed to load custom JavaScript");
+				}
+			} catch(e){
+				console.error("Custom JS loading error:", e);
+				sendResponse({success: false, error: e.message, state: isExtensionOn });
+			}
+		} else if (request.cmd && (request.cmd === 'deleteCustomJs')) {
+			localStorage.removeItem('customJavaScript');
+			// Reset the custom function to default
+			resetCustomJs();
+			sendResponse({success: true, state: isExtensionOn });
 		} else if (request.cmd && (request.cmd === 'uploadBadwords')) {
 			localStorage.setItem('customBadwords', request.data);
 			try {

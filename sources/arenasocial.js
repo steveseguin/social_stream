@@ -100,7 +100,7 @@
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".flex-grow.text-sm > div.inline > span")).trim();
+			msg = getAllContentNodes(ele.querySelector(".flex-grow.text-sm > div.inline > span, .flex-grow.text-sm > div.mt-1 > span")).trim();
 		} catch(e){
 		}
 		
@@ -221,7 +221,9 @@
 
 							mutation.addedNodes[i].skip = true;
 
-							processMessage(mutation.addedNodes[i]); // maybe here
+							setTimeout(function(ee){
+									processMessage(ee); // maybe here
+							},200, mutation.addedNodes[i]);
 							
 						} catch(e){}
 					}
@@ -242,6 +244,7 @@
 
 	setInterval(function(){
 		try {
+			if (!window.location.href.startsWith("https://arena.social/live/")){return;}
 			var container = document.querySelector("[data-testid='virtuoso-item-list']");
 			if (!container.marked){
 				container.marked=true;

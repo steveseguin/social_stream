@@ -988,6 +988,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
 	}
 	
+	const uploadCustomJsButton = document.getElementById('uploadCustomJsButton');
+	const deleteCustomJsButton = document.getElementById('deleteCustomJsButton');
+
+	if (uploadCustomJsButton) {
+	  uploadCustomJsButton.addEventListener('click', uploadCustomJsFile);
+	}
+
+	if (deleteCustomJsButton) {
+	  deleteCustomJsButton.addEventListener('click', deleteCustomJsFile);
+	}
+	
 	//document.body.className = "extension-disabled";
 	document.getElementById("disableButton").style.display = "";
 	//chrome.browserAction.setIcon({path: "/icons/off.png"});
@@ -1637,6 +1648,71 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		},3000);
 	} catch(e){ console.error(e);}
 });
+
+
+// Function to handle custom JS file upload
+function uploadCustomJsFile() {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'actions.js';
+  
+  fileInput.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Check file size before reading (1MB limit)
+    if (file.size > 1 * 1024 * 1024) {
+      alert('File is too large. Maximum size is 1MB.');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const contents = e.target.result;
+      // Limit content size
+      const maxLength = 100000;
+      const truncatedContents = contents.length > maxLength ? 
+        contents.substring(0, maxLength) : contents;
+        
+      chrome.runtime.sendMessage({
+        cmd: 'uploadCustomJs', 
+        data: truncatedContents
+      }, function(response) {
+        if (response && response.success) {
+          alert('Custom JavaScript file uploaded and activated successfully.');
+          // Update the UI to show the file is now active
+          document.getElementById('customJsEnabled').checked = true;
+          updateSettings(document.getElementById('customJsEnabled'), true);
+        } else {
+          alert('Failed to upload custom JavaScript file: ' + (response && response.error ? response.error : 'Unknown error'));
+        }
+      });
+    };
+    
+    reader.onerror = function() {
+      alert('Error reading file.');
+    };
+    
+    reader.readAsText(file);
+  });
+  
+  fileInput.click();
+}
+
+function deleteCustomJsFile() {
+  if (confirm('Are you sure you want to delete the custom JavaScript file?')) {
+    chrome.runtime.sendMessage({cmd: 'deleteCustomJs'}, function(response) {
+      if (response && response.success) {
+        alert('Custom JavaScript file deleted and deactivated successfully.');
+        // Update the UI to show the file is now inactive
+        document.getElementById('customJsEnabled').checked = false;
+        updateSettings(document.getElementById('customJsEnabled'), true);
+      } else {
+        alert('Failed to delete custom JavaScript file.');
+      }
+    });
+  }
+}
 
 let tabsInitialized = false;
 
