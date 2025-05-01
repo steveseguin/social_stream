@@ -214,6 +214,8 @@ body, html {
         if (!((data.type === "youtube" || data.type === "twitch") && (data.event || data.hasDonation))) {
             return;
         }
+		
+		if (!data.chatname && !data.chatmessage && !data.hasDonation){return;}
         
         // Remove the "no events" message if it exists
         if (noEventsMessage) {
