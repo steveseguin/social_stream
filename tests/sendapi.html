@@ -89,35 +89,10 @@
   <h1>Social Stream Ninja API</h1>
   
   <div class="section">
-    <h2>Connection Settings</h2>
-    <div class="input-group">
-      <label for="sessionID">Session ID:</label>
-      <input type="text" id="sessionID" value="UyN6CjzGjX" placeholder="Enter session ID">
-    </div>
-    <div id="connectionStatus"></div>
-  </div>
-
-  <div class="section">
     <h2>Send Simple Message</h2>
     <div class="input-group">
       <label for="chatMessage">Message:</label>
       <input type="text" id="chatMessage" placeholder="Enter your message">
-    </div>
-    <div class="input-group">
-      <label for="messageTarget">Message Type:</label>
-      <select id="messageTarget">
-        <option value="sendChat">Send to Social Media (YouTube, Twitch, etc.)</option>
-        <option value="extContent">Send to Overlay (appear as message from platform)</option>
-      </select>
-    </div>
-    <div class="input-group" id="platformSelector" style="display:none;">
-      <label for="platformType">Platform:</label>
-      <select id="platformType">
-        <option value="twitch">Twitch</option>
-        <option value="youtube">YouTube</option>
-        <option value="facebook">Facebook</option>
-        <option value="discord">Discord</option>
-      </select>
     </div>
     <div class="input-group">
       <label for="senderName" id="senderNameLabel" style="display:none;">Sender Name:</label>
@@ -125,127 +100,8 @@
     </div>
     <button onclick="sendMessage()">Send Message</button>
     <div id="messageStatus" class="status"></div>
-    <div class="note">Note: To send messages, make sure your session ID matches the one in Social Stream Ninja.</div>
   </div>
   
-  <div class="reference">
-    <h2>API Reference & Implementation Notes</h2>
-    
-    <h3>Important Setup Requirements</h3>
-    <p>For this API connection to work, the user must enable appropriate server modes in Social Stream Ninja:</p>
-    <ol>
-      <li>Open Social Stream Ninja extension settings</li>
-      <li>Go to "Global settings and tools" &gt; "Mechanics"</li>
-      <li>Enable "Enable remote API control of extension"</li>
-      <li>For featured/overlay pages, add <code>&server</code> or <code>&server2</code> parameter to the URL</li>
-    </ol>
-    
-    <h3>Communication Channels</h3>
-    <table>
-      <tr>
-        <th>Channel</th>
-        <th>Purpose</th>
-        <th>Used By</th>
-      </tr>
-      <tr>
-        <td>1</td>
-        <td>Main communication channel (default)</td>
-        <td>General API communication</td>
-      </tr>
-      <tr>
-        <td>2</td>
-        <td>Dock communication</td>
-        <td>dock.html</td>
-      </tr>
-      <tr>
-        <td>3</td>
-        <td>Extension communication</td>
-        <td>SSN extension</td>
-      </tr>
-      <tr>
-        <td>4</td>
-        <td>Featured content communication</td>
-        <td>featured.html</td>
-      </tr>
-      <tr>
-        <td>5</td>
-        <td>Waitlist communication</td>
-        <td>waitlist.html</td>
-      </tr>
-    </table>
-    
-    <h3>Key API Commands</h3>
-    <table>
-      <tr>
-        <th>Command</th>
-        <th>Purpose</th>
-        <th>Example</th>
-      </tr>
-      <tr>
-        <td><code>sendChat</code></td>
-        <td>Send message to social platforms</td>
-        <td><code>{"action": "sendChat", "value": "Hello world"}</code></td>
-      </tr>
-      <tr>
-        <td><code>sendEncodedChat</code></td>
-        <td>Send URL-encoded message</td>
-        <td><code>{"action": "sendEncodedChat", "value": "Hello%20world"}</code></td>
-      </tr>
-      <tr>
-        <td><code>extContent</code></td>
-        <td>Send custom message to appear in overlay</td>
-        <td><code>{"action": "extContent", "value": "{\"chatname\":\"User\",\"chatmessage\":\"Hello\",\"type\":\"youtube\"}"}</code></td>
-      </tr>
-      <tr>
-        <td><code>clearOverlay</code></td>
-        <td>Clear the overlay</td>
-        <td><code>{"action": "clearOverlay"}</code></td>
-      </tr>
-      <tr>
-        <td><code>clearAll</code></td>
-        <td>Clear all messages</td>
-        <td><code>{"action": "clearAll"}</code></td>
-      </tr>
-      <tr>
-        <td><code>feature</code></td>
-        <td>Feature next unfeatured message</td>
-        <td><code>{"action": "feature"}</code></td>
-      </tr>
-    </table>
-    
-    <h3>HTTP vs WebSocket</h3>
-    <p>This implementation uses HTTP methods (POST with GET fallback) for simplicity, but WebSocket connections provide more functionality:</p>
-    <ul>
-      <li><strong>HTTP Methods:</strong>
-        <ul>
-          <li>GET: <code>https://io.socialstream.ninja/SESSION_ID/ACTION/TARGET/VALUE?channel=CHANNEL</code></li>
-          <li>POST: <code>https://io.socialstream.ninja/SESSION_ID?channel=CHANNEL</code> with JSON body</li>
-        </ul>
-      </li>
-      <li><strong>WebSocket:</strong>
-        <ul>
-          <li>Connect to <code>wss://io.socialstream.ninja</code></li>
-          <li>Send join message: <code>{"join": "SESSION_ID", "in": IN_CHANNEL, "out": OUT_CHANNEL}</code></li>
-          <li>Enables real-time, bidirectional communication</li>
-        </ul>
-      </li>
-    </ul>
-    
-    <h3>CORS Considerations</h3>
-    <p>This implementation handles Cross-Origin Resource Sharing (CORS) issues by:</p>
-    <ol>
-      <li>Attempting a direct fetch POST request first</li>
-      <li>If POST fails due to CORS, falling back to an image-based GET request which bypasses CORS restrictions</li>
-    </ol>
-    
-    <h3>Debugging Tips</h3>
-    <ul>
-      <li>Check browser console for detailed error messages</li>
-      <li>Verify the session ID matches exactly what's shown in SSN</li>
-      <li>Ensure proper server modes are enabled in SSN settings</li>
-      <li>Try both GET and POST requests if one method fails</li>
-    </ul>
-  </div>
   
   <script>
     // Show/hide platform selector based on message type
@@ -257,9 +113,9 @@
     });
 
     function sendMessage() {
-      const sessionID = document.getElementById('sessionID').value;
+      const sessionID = "UyN6CjzGjX";
       const message = document.getElementById('chatMessage').value;
-      const messageType = document.getElementById('messageTarget').value;
+      const messageType = "extContent";
       const statusElement = document.getElementById('messageStatus');
       
       if (!sessionID || !message) {
@@ -278,7 +134,7 @@
       if (messageType === 'sendChat') {
         data.value = message;
       } else if (messageType === 'extContent') {
-        const platformType = document.getElementById('platformType').value;
+        const platformType = "generic";
         const senderName = document.getElementById('senderName').value || 'User';
         
         data.value = JSON.stringify({
