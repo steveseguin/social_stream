@@ -12,7 +12,7 @@
             padding: 20px;
             max-width: 1200px;
             margin: 0 auto;
-			background-color: white;
+            background-color: white;
         }
         
         .container {
@@ -297,6 +297,7 @@
                     error: [],
                     connection: []
                 };
+                this.roomInfo = null;
             }
             
             async connect() {
@@ -350,7 +351,7 @@
                         const roomInfoData = await roomInfoResponse.json();
                         
                         if (roomInfoData.code === 0) {
-                            const roomInfo = {
+                            this.roomInfo = {
                                 roomId: this.realRoomId,
                                 title: roomInfoData.data.room_info.title,
                                 cover: roomInfoData.data.room_info.cover,
@@ -366,7 +367,7 @@
                                 }
                             };
                             
-                            this.trigger('roomInfo', roomInfo);
+                            this.trigger('roomInfo', this.roomInfo);
                         }
                         
                         return this.realRoomId;
@@ -499,6 +500,16 @@
                             const popularity = new DataView(body.buffer).getUint32(0);
                             this.log(`Heartbeat reply: ${popularity} online users`);
                             this.trigger('roomInfo', { online: popularity });
+                            
+                            // Send viewer count event to extension
+                            if (window.messageBridge) {
+                                window.messageBridge.broadcast({
+                                    type: "bilibili",
+                                    event: "viewer_update",
+                                    meta: popularity,
+                                    textonly: true
+                                });
+                            }
                             break;
                             
                         case WS_OP_MESSAGE:
@@ -586,47 +597,132 @@
                 // Handle different command types
                 if (cmd.startsWith(CMD_DANMU_MSG)) {
                     // Chat message
+                    this.processChatMessage(data);
+                } else if (cmd === CMD_SEND_GIFT) {
+                    // Gift
+                    this.processGiftMessage(data);
+                } else if (cmd === CMD_SUPER_CHAT_MESSAGE) {
+                    // Super Chat
+                    this.processSuperChatMessage(data);
+                } else if (cmd === CMD_INTERACT_WORD || cmd === CMD_WELCOME || cmd === CMD_WELCOME_GUARD) {
+                    // User interactions/entry
+                    this.processUserEnterMessage(data, cmd);
+                } else if (cmd === "ROOM_REAL_TIME_MESSAGE_UPDATE") {
+                    // Room updates like follower count
+                    this.processRoomUpdate(data);
+                } else if (cmd === "PREPARING" || cmd === "LIVE") {
+                    // Stream status
+                    this.processStreamStatusChange(data, cmd);
+                }
+                // Other command types can be added as needed
+            }
+            
+            processChatMessage(data) {
+                try {
                     const info = data.info;
-                    const message = {
-                        type: 'message',
-                        text: info[1],
-                        userId: info[2][0],
-                        username: info[2][1],
-                        isAdmin: info[2][2] === 1,
-                        isVIP: info[2][3] === 1,
-                        isSVIP: info[2][4] === 1,
-                        medal: info[3] ? {
+                    if (!info || !Array.isArray(info) || info.length < 3) return;
+                    
+                    const text = info[1];
+                    const userId = info[2][0];
+                    const username = info[2][1];
+                    const isAdmin = info[2][2] === 1;
+                    const isVIP = info[2][3] === 1;
+                    const isSVIP = info[2][4] === 1;
+                    
+                    // Check for medal info
+                    let medalInfo = null;
+                    if (info[3] && Array.isArray(info[3]) && info[3].length > 1) {
+                        medalInfo = {
                             level: info[3][0],
                             name: info[3][1],
                             ownerName: info[3][2],
-                            roomId: info[3][3],
-                            color: info[3][4],
-                            specialColor: info[3][5]
-                        } : null,
-                        userLevel: info[4][0],
-                        timestamp: info[0][4],
-                        dmID: info[0][5]
-                    };
+                        };
+                    }
                     
-                    // Try to get avatar URL if available
+                    // Get user level
+                    const userLevel = info[4] && Array.isArray(info[4]) ? info[4][0] : 0;
+                    
+                    // Try to get avatar URL if available (fallback to default)
+                    let avatarUrl = "";
                     if (data.dm_v2) {
                         try {
                             const dmV2 = JSON.parse(data.dm_v2);
                             if (dmV2.user && dmV2.user.face) {
-                                message.avatar = dmV2.user.face;
+                                avatarUrl = dmV2.user.face;
                             }
-                        } catch (e) {
-                            // Ignore parsing errors
-                        }
+                        } catch (e) {}
                     }
                     
-                    this.trigger('message', message);
+                    // Default avatar URL fallback
+                    if (!avatarUrl) {
+                        avatarUrl = `https://api.bilibili.com/x/space/acc/info?mid=${userId}`;
+                    }
                     
-                } else if (cmd === CMD_SEND_GIFT) {
-                    // Gift
+                    // Format message for UI display
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message';
+                    
+                    const header = document.createElement('div');
+                    header.className = 'message-header';
+                    
+                    const avatar = document.createElement('img');
+                    avatar.className = 'avatar';
+                    avatar.src = avatarUrl;
+                    avatar.onerror = function() {
+                        this.src = 'https://static.hdslb.com/images/member/noface.gif';
+                    };
+                    header.appendChild(avatar);
+                    
+                    const usernameSpan = document.createElement('span');
+                    usernameSpan.className = 'username';
+                    usernameSpan.textContent = username;
+                    header.appendChild(usernameSpan);
+                    
+                    messageDiv.appendChild(header);
+                    
+                    const content = document.createElement('div');
+                    content.className = 'message-content';
+                    content.textContent = text;
+                    messageDiv.appendChild(content);
+                    
+                    document.getElementById('messageContainer').prepend(messageDiv);
+                    
+                    // Format message for extension
+                    const formattedMessage = {
+                        type: "bilibili",
+                        chatname: username,
+                        chatmessage: text,
+                        chatimg: avatarUrl,
+                        textonly: true,
+                        chatbadges: [],
+                        userId: userId.toString(),
+                        admin: isAdmin,
+                        moderator: isAdmin || isVIP || isSVIP
+                    };
+                    
+                    // Add medal badge if available
+                    if (medalInfo) {
+                        formattedMessage.membership = `Lv${medalInfo.level} ${medalInfo.name}`;
+                    }
+                    
+                    // Send to extension
+                    if (window.messageBridge) {
+                        window.messageBridge.broadcast(formattedMessage);
+                    }
+                    
+                    // Trigger message event
+                    this.trigger('message', formattedMessage);
+                } catch (error) {
+                    this.error(`Failed to process chat message: ${error.message}`);
+                }
+            }
+            
+            processGiftMessage(data) {
+                try {
                     const giftData = data.data;
+                    if (!giftData) return;
+                    
                     const gift = {
-                        type: 'gift',
                         userId: giftData.uid,
                         username: giftData.uname,
                         avatar: giftData.face,
@@ -638,13 +734,73 @@
                         action: giftData.action
                     };
                     
-                    this.trigger('gift', gift);
+                    // Format for UI display
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message gift-message';
                     
-                } else if (cmd === CMD_SUPER_CHAT_MESSAGE) {
-                    // Super Chat
+                    const header = document.createElement('div');
+                    header.className = 'message-header';
+                    
+                    if (gift.avatar) {
+                        const avatar = document.createElement('img');
+                        avatar.className = 'avatar';
+                        avatar.src = gift.avatar;
+                        avatar.onerror = function() {
+                            this.src = 'https://static.hdslb.com/images/member/noface.gif';
+                        };
+                        header.appendChild(avatar);
+                    }
+                    
+                    const username = document.createElement('span');
+                    username.className = 'username';
+                    username.textContent = gift.username;
+                    header.appendChild(username);
+                    
+                    messageDiv.appendChild(header);
+                    
+                    const content = document.createElement('div');
+                    content.className = 'message-content';
+                    content.textContent = `${gift.action} ${gift.num} × ${gift.giftName}`;
+                    messageDiv.appendChild(content);
+                    
+                    document.getElementById('messageContainer').prepend(messageDiv);
+                    
+                    // Format message for extension
+                    const formattedMessage = {
+                        type: "bilibili",
+                        chatname: gift.username,
+                        chatmessage: `${gift.action} ${gift.num} × ${gift.giftName}`,
+                        chatimg: gift.avatar,
+                        textonly: true,
+                        hasDonation: `${gift.num} × ${gift.giftName}`,
+                        event: "gift",
+                        userId: gift.userId.toString(),
+                        title: "DONATION"
+                    };
+                    
+                    // Send to extension
+                    if (window.messageBridge) {
+                        window.messageBridge.broadcast(formattedMessage);
+                    }
+                    
+                    // Send to extension
+                    if (window.messageBridge) {
+                        window.messageBridge.broadcast(formattedMessage);
+                    }
+                    
+                    // Trigger gift event
+                    this.trigger('gift', formattedMessage);
+                } catch (error) {
+                    this.error(`Failed to process gift message: ${error.message}`);
+                }
+            }
+            
+            processSuperChatMessage(data) {
+                try {
                     const scData = data.data;
+                    if (!scData) return;
+                    
                     const superChat = {
-                        type: 'superChat',
                         userId: scData.uid,
                         username: scData.user_info.uname,
                         avatar: scData.user_info.face,
@@ -656,40 +812,195 @@
                         color: scData.background_color
                     };
                     
-                    this.trigger('superChat', superChat);
+                    // Format for UI display
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message super-chat';
+                    messageDiv.style.backgroundColor = superChat.color;
                     
-                } else if (cmd === CMD_INTERACT_WORD) {
-                    // User interactions (e.g., entering the room)
-                    const userInfo = data.data;
-                    const userInteraction = {
-                        type: 'userEnter',
-                        userId: userInfo.uid,
-                        username: userInfo.uname,
-                        timestamp: userInfo.timestamp,
-                        medalInfo: userInfo.fans_medal ? {
-                            level: userInfo.fans_medal.medal_level,
-                            name: userInfo.fans_medal.medal_name,
-                            anchorUsername: userInfo.fans_medal.anchor_uname,
-                            anchorRoomId: userInfo.fans_medal.anchor_roomid
-                        } : null
+                    // Adjust text color based on background brightness
+                    const brightness = getBrightness(superChat.color);
+                    const textColor = brightness > 160 ? '#000' : '#fff';
+                    
+                    const header = document.createElement('div');
+                    header.className = 'message-header';
+                    
+                    if (superChat.avatar) {
+                        const avatar = document.createElement('img');
+                        avatar.className = 'avatar';
+                        avatar.src = superChat.avatar;
+                        avatar.onerror = function() {
+                            this.src = 'https://static.hdslb.com/images/member/noface.gif';
+                        };
+                        header.appendChild(avatar);
+                    }
+                    
+                    const username = document.createElement('span');
+                    username.className = 'username';
+                    username.textContent = superChat.username;
+                    username.style.color = textColor;
+                    header.appendChild(username);
+                    
+                    const price = document.createElement('span');
+                    price.style.marginLeft = '10px';
+                    price.style.color = textColor;
+                    price.textContent = `¥${superChat.price}`;
+                    header.appendChild(price);
+                    
+                    messageDiv.appendChild(header);
+                    
+                    const content = document.createElement('div');
+                    content.className = 'message-content';
+                    content.textContent = superChat.message;
+                    content.style.color = textColor;
+                    messageDiv.appendChild(content);
+                    
+                    document.getElementById('messageContainer').prepend(messageDiv);
+                    
+                    // Format message for extension
+                    const formattedMessage = {
+                        type: "bilibili",
+                        chatname: superChat.username,
+                        chatmessage: superChat.message,
+                        chatimg: superChat.avatar,
+                        textonly: true,
+                        hasDonation: `¥${superChat.price}`,
+                        event: "superchat",
+                        userId: superChat.userId.toString(),
+                        title: "SUPER CHAT"
                     };
                     
-                    this.trigger('userEnter', userInteraction);
+                    // Send to extension
+                    if (window.messageBridge) {
+                        window.messageBridge.broadcast(formattedMessage);
+                    }
                     
-                } else if (cmd === CMD_WELCOME || cmd === CMD_WELCOME_GUARD) {
-                    // User welcome
-                    const welcomeData = data.data;
-                    const welcome = {
-                        type: 'welcome',
-                        userId: welcomeData.uid,
-                        username: welcomeData.uname,
-                        isAdmin: welcomeData.is_admin === 1,
-                        isGuard: cmd === CMD_WELCOME_GUARD
-                    };
-                    
-                    this.trigger('userEnter', welcome);
+                    // Trigger superChat event
+                    this.trigger('superChat', formattedMessage);
+                } catch (error) {
+                    this.error(`Failed to process super chat message: ${error.message}`);
                 }
-                // Other command types can be added as needed
+            }
+            
+            processUserEnterMessage(data, cmdType) {
+                try {
+                    let userInfo;
+                    let isGuard = false;
+                    let isAdmin = false;
+                    
+                    if (cmdType === CMD_INTERACT_WORD) {
+                        userInfo = data.data;
+                        if (!userInfo) return;
+                    } else if (cmdType === CMD_WELCOME || cmdType === CMD_WELCOME_GUARD) {
+                        userInfo = data.data;
+                        isGuard = cmdType === CMD_WELCOME_GUARD;
+                        isAdmin = userInfo && userInfo.is_admin === 1;
+                        if (!userInfo) return;
+                    } else {
+                        return;
+                    }
+                    
+                    // Format for UI display
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message entry-message';
+                    
+                    const content = document.createElement('div');
+                    content.className = 'message-content';
+                    content.textContent = `${userInfo.uname || userInfo.username} has entered the room`;
+                    if (isGuard) content.textContent += ' (Guard)';
+                    if (isAdmin) content.textContent += ' (Admin)';
+                    messageDiv.appendChild(content);
+                    
+                    document.getElementById('messageContainer').prepend(messageDiv);
+                    
+                    // Format message for extension
+                    const formattedMessage = {
+                        type: "bilibili",
+                        chatname: userInfo.uname || userInfo.username,
+                        chatmessage: `has entered the room`,
+                        textonly: true,
+                        event: "user_enter",
+                        userId: (userInfo.uid || userInfo.userId).toString(),
+                        admin: isAdmin,
+                        moderator: isAdmin || isGuard
+                    };
+                    
+                    // Add medal info if available
+                    if (userInfo.fans_medal) {
+                        formattedMessage.membership = `Lv${userInfo.fans_medal.medal_level} ${userInfo.fans_medal.medal_name}`;
+                    }
+                    
+                    // Send to extension
+                    if (window.messageBridge) {
+                        window.messageBridge.broadcast(formattedMessage);
+                    }
+                    
+                    // Trigger userEnter event
+                    this.trigger('userEnter', formattedMessage);
+                } catch (error) {
+                    this.error(`Failed to process user enter message: ${error.message}`);
+                }
+            }
+            
+            processRoomUpdate(data) {
+                try {
+                    if (!data.data) return;
+                    
+                    // Update follower count or other room stats
+                    if (data.data.fans) {
+                        const followerCount = data.data.fans;
+                        
+                        // Format message for extension
+                        const formattedMessage = {
+                            type: "bilibili",
+                            event: "follower_update",
+                            meta: followerCount,
+                            textonly: true
+                        };
+                        
+                        // Send to extension
+                        if (window.messageBridge) {
+                            window.messageBridge.broadcast(formattedMessage);
+                        }
+                        
+                        // Trigger roomInfo event
+                        this.trigger('roomInfo', { followerCount });
+                    }
+                } catch (error) {
+                    this.error(`Failed to process room update: ${error.message}`);
+                }
+            }
+            
+            processStreamStatusChange(data, status) {
+                try {
+                    // Format message for extension
+                    const formattedMessage = {
+                        type: "bilibili",
+                        event: "stream_status",
+                        meta: status === "LIVE" ? "live" : "offline",
+                        textonly: true,
+                        chatname: "System",
+                        chatmessage: status === "LIVE" ? "Stream is now LIVE" : "Stream is now OFFLINE"
+                    };
+                    
+                    // Send to extension
+                    if (window.messageBridge) {
+                        window.messageBridge.broadcast(formattedMessage);
+                    }
+                    
+                    // Add to UI
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${status === "LIVE" ? "entry-message" : ""}`;
+                    
+                    const content = document.createElement('div');
+                    content.className = 'message-content';
+                    content.textContent = status === "LIVE" ? "Stream is now LIVE" : "Stream is now OFFLINE";
+                    content.style.fontWeight = "bold";
+                    messageDiv.appendChild(content);
+                    
+                    document.getElementById('messageContainer').prepend(messageDiv);
+                } catch (error) {
+                    this.error(`Failed to process stream status change: ${error.message}`);
+                }
             }
             
             async sendMessage(text) {
@@ -805,6 +1116,9 @@
             const disconnectBtn = document.getElementById('disconnectBtn');
             const sendBtn = document.getElementById('sendBtn');
             
+            // Initialize messageBridge for extension communication
+            window.messageBridge = new MessageBridge();
+            
             // Connect button click handler
             connectBtn.addEventListener('click', async function() {
                 const roomId = roomIdInput.value.trim();
@@ -864,164 +1178,52 @@
             
             // Handle messages from the server
             function handleMessage(message) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message';
-                
-                const header = document.createElement('div');
-                header.className = 'message-header';
-                
-                if (message.avatar) {
-                    const avatar = document.createElement('img');
-                    avatar.className = 'avatar';
-                    avatar.src = message.avatar;
-                    avatar.onerror = function() {
-                        this.src = 'https://static.hdslb.com/images/member/noface.gif';
-                    };
-                    header.appendChild(avatar);
-                }
-                
-                const username = document.createElement('span');
-                username.className = 'username';
-                username.textContent = message.username;
-                header.appendChild(username);
-                
-                const time = document.createElement('span');
-                time.className = 'message-time';
-                const date = new Date(message.timestamp * 1000);
-                time.textContent = date.toLocaleTimeString();
-                header.appendChild(time);
-                
-                messageDiv.appendChild(header);
-                
-                const content = document.createElement('div');
-                content.className = 'message-content';
-                content.textContent = message.text;
-                messageDiv.appendChild(content);
-                
-                messageContainer.prepend(messageDiv);
-                
-                // Limit number of messages to prevent memory issues
-                if (messageContainer.children.length > 100) {
-                    messageContainer.removeChild(messageContainer.lastChild);
-                }
+                // Message is already displayed in the UI in the processCommand methods
+                // No additional handling needed here
             }
             
             function handleGift(gift) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message gift-message';
-                
-                const header = document.createElement('div');
-                header.className = 'message-header';
-                
-                if (gift.avatar) {
-                    const avatar = document.createElement('img');
-                    avatar.className = 'avatar';
-                    avatar.src = gift.avatar;
-                    avatar.onerror = function() {
-                        this.src = 'https://static.hdslb.com/images/member/noface.gif';
-                    };
-                    header.appendChild(avatar);
-                }
-                
-                const username = document.createElement('span');
-                username.className = 'username';
-                username.textContent = gift.username;
-                header.appendChild(username);
-                
-                const time = document.createElement('span');
-                time.className = 'message-time';
-                const date = new Date(gift.timestamp * 1000);
-                time.textContent = date.toLocaleTimeString();
-                header.appendChild(time);
-                
-                messageDiv.appendChild(header);
-                
-                const content = document.createElement('div');
-                content.className = 'message-content';
-                content.textContent = `${gift.action} ${gift.num} × ${gift.giftName}`;
-                messageDiv.appendChild(content);
-                
-                messageContainer.prepend(messageDiv);
+                // Gift is already displayed in the UI in the processCommand methods
+                // No additional handling needed here
             }
             
             function handleSuperChat(sc) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message super-chat';
-                messageDiv.style.backgroundColor = sc.color;
-                
-                // Adjust text color based on background brightness
-                const brightness = getBrightness(sc.color);
-                const textColor = brightness > 160 ? '#000' : '#fff';
-                
-                const header = document.createElement('div');
-                header.className = 'message-header';
-                
-                if (sc.avatar) {
-                    const avatar = document.createElement('img');
-                    avatar.className = 'avatar';
-                    avatar.src = sc.avatar;
-                    avatar.onerror = function() {
-                        this.src = 'https://static.hdslb.com/images/member/noface.gif';
-                    };
-                    header.appendChild(avatar);
-                }
-                
-                const username = document.createElement('span');
-                username.className = 'username';
-                username.textContent = sc.username;
-                username.style.color = textColor;
-                header.appendChild(username);
-                
-                const price = document.createElement('span');
-                price.style.marginLeft = '10px';
-                price.style.color = textColor;
-                price.textContent = `¥${sc.price}`;
-                header.appendChild(price);
-                
-                const time = document.createElement('span');
-                time.className = 'message-time';
-                time.style.color = textColor;
-                const remainingTime = Math.floor((sc.endTime - (Date.now() / 1000)) / 60);
-                time.textContent = `${remainingTime} mins remaining`;
-                header.appendChild(time);
-                
-                messageDiv.appendChild(header);
-                
-                const content = document.createElement('div');
-                content.className = 'message-content';
-                content.textContent = sc.message;
-                content.style.color = textColor;
-                messageDiv.appendChild(content);
-                
-                messageContainer.prepend(messageDiv);
+                // SuperChat is already displayed in the UI in the processCommand methods
+                // No additional handling needed here
             }
             
             function handleUserEnter(user) {
-                // Optionally display user enter messages
-                if (user.type === 'welcome') {
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'message entry-message';
-                    
-                    const content = document.createElement('div');
-                    content.className = 'message-content';
-                    content.textContent = `Welcome ${user.username}${user.isGuard ? ' (Guard)' : ''}${user.isAdmin ? ' (Admin)' : ''}`;
-                    messageDiv.appendChild(content);
-                    
-                    messageContainer.prepend(messageDiv);
-                }
+                // User enter is already displayed in the UI in the processCommand methods
+                // No additional handling needed here
             }
             
             function handleRoomInfo(info) {
                 // Update room information display
-                roomInfoContainer.innerHTML = '';
+                if (info.online) {
+                    const viewerCountElement = document.querySelector('.stat-item:contains("👥")');
+                    if (viewerCountElement) {
+                        viewerCountElement.innerHTML = `<i>👥</i> ${info.online}`;
+                    } else {
+                        const stats = document.querySelector('.stats');
+                        if (stats) {
+                            const onlineDiv = document.createElement('div');
+                            onlineDiv.className = 'stat-item';
+                            onlineDiv.innerHTML = `<i>👥</i> ${info.online}`;
+                            stats.appendChild(onlineDiv);
+                        }
+                    }
+                }
                 
-                if (info.anchor) {
+                // Complete room info refresh
+                if (client && client.roomInfo && !info.online) {
+                    roomInfoContainer.innerHTML = '';
+                    
                     const roomInfoDiv = document.createElement('div');
                     roomInfoDiv.className = 'room-info';
                     
                     const avatar = document.createElement('img');
                     avatar.className = 'room-avatar';
-                    avatar.src = info.anchor.face;
+                    avatar.src = client.roomInfo.anchor.face;
                     avatar.onerror = function() {
                         this.src = 'https://static.hdslb.com/images/member/noface.gif';
                     };
@@ -1031,16 +1233,16 @@
                     
                     const title = document.createElement('div');
                     title.className = 'room-title';
-                    title.textContent = info.title || `Room ${info.roomId}`;
+                    title.textContent = client.roomInfo.title || `Room ${client.roomInfo.roomId}`;
                     infoDiv.appendChild(title);
                     
                     const streamer = document.createElement('div');
-                    streamer.textContent = info.anchor.name;
+                    streamer.textContent = client.roomInfo.anchor.name;
                     infoDiv.appendChild(streamer);
                     
-                    const area = document.createElement('div');
-                    if (info.area) {
-                        area.textContent = `${info.area.parentName} - ${info.area.name}`;
+                    if (client.roomInfo.area) {
+                        const area = document.createElement('div');
+                        area.textContent = `${client.roomInfo.area.parentName} - ${client.roomInfo.area.name}`;
                         infoDiv.appendChild(area);
                     }
                     
@@ -1052,7 +1254,7 @@
                     
                     const onlineDiv = document.createElement('div');
                     onlineDiv.className = 'stat-item';
-                    onlineDiv.innerHTML = `<i>👥</i> ${info.online || 0}`;
+                    onlineDiv.innerHTML = `<i>👥</i> ${client.roomInfo.online || 0}`;
                     stats.appendChild(onlineDiv);
                     
                     roomInfoContainer.appendChild(stats);
@@ -1060,17 +1262,11 @@
             }
             
             function handleLog(log) {
-                const logLine = document.createElement('div');
-                logLine.className = `system-log ${log.type}`;
-                logLine.textContent = `[${new Date().toLocaleTimeString()}] ${log.message}`;
-                
-                const systemLog = document.getElementById('systemLog');
-                systemLog.appendChild(logLine);
-                systemLog.scrollTop = systemLog.scrollHeight;
+                addSystemLog(log.type, log.message);
             }
             
             function handleError(error) {
-                handleLog({ type: 'error', message: error.message });
+                addSystemLog('error', error.message);
             }
             
             function handleConnection(data) {
@@ -1093,9 +1289,8 @@
                 logLine.className = `system-log ${type}`;
                 logLine.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
                 
-                const systemLog = document.getElementById('systemLog');
-                systemLog.appendChild(logLine);
-                systemLog.scrollTop = systemLog.scrollHeight;
+                systemLogContainer.appendChild(logLine);
+                systemLogContainer.scrollTop = systemLogContainer.scrollHeight;
             }
             
             // Helper function to determine background brightness for text color
@@ -1113,9 +1308,23 @@
                 return (0.299 * r + 0.587 * g + 0.114 * b);
             }
             
+            // Check URL params for auto-connect
+            function checkUrlParams() {
+                const searchParams = new URLSearchParams(window.location.search);
+                const roomId = searchParams.get('channel') || searchParams.get('roomId');
+                
+                if (roomId) {
+                    roomIdInput.value = roomId;
+                    connectBtn.click();
+                }
+            }
+            
             // Initialize with some system logs
             addSystemLog('info', 'Bilibili Live Chat WebSocket Client initialized');
             addSystemLog('info', 'Enter a room ID and click Connect to start');
+            
+            // Check URL params for auto-connect
+            checkUrlParams();
         });
     </script>
 </body>
