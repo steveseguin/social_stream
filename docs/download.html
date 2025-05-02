@@ -249,6 +249,41 @@
         </div>
     </section>
 	
+	<section id="linux-install" class="installation-guide">
+		<div class="container">
+			<h2>Linux AppImage Installation</h2>
+			<div class="tips-section">
+				<h4>Tips for Linux Users</h4>
+				<p>Some distributions may encounter sandbox errors when running our AppImage. 
+				<a href="https://socialstream.ninja/docs/appImage" class="help-link">View our sandbox troubleshooting guide</a> if you see errors about SUID sandbox configuration.</p>
+			</div>
+			
+			<div class="installation-steps">
+				<div class="step">
+					<div class="step-number">1</div>
+					<div class="step-content">
+						<h3>Download the AppImage</h3>
+						<p>Download the AppImage file to your computer.</p>
+					</div>
+				</div>
+				<div class="step">
+					<div class="step-number">2</div>
+					<div class="step-content">
+						<h3>Make it Executable</h3>
+						<p>Right-click the file and select Properties, then Permissions, and check "Allow executing file as program". Alternatively, use terminal: <code>chmod +x SocialStreamNinja.AppImage</code></p>
+					</div>
+				</div>
+				<div class="step">
+					<div class="step-number">3</div>
+					<div class="step-content">
+						<h3>Run the Application</h3>
+						<p>Double-click the AppImage to run Social Stream Ninja, or run it from terminal: <code>./SocialStreamNinja.AppImage</code></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	
 	<section class="discord-banner">
 		<div class="container">
 			<div>
@@ -383,36 +418,65 @@
         // Set current year in footer
         document.getElementById('current-year').textContent = new Date().getFullYear();
         
-        // Download tabs functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // Remove active class from all buttons and contents
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.remove('active'));
-                    
-                    // Add active class to clicked button
-                    button.classList.add('active');
-                    
-                    // Show corresponding content
-                    const tabId = button.getAttribute('data-tab');
-                    document.getElementById(tabId).classList.add('active');
-                });
-            });
-            
-            // Accordion functionality
-            const accordionHeaders = document.querySelectorAll('.accordion-header');
-            
-            accordionHeaders.forEach(header => {
-                header.addEventListener('click', () => {
-                    const accordionItem = header.parentElement;
-                    accordionItem.classList.toggle('active');
-                });
-            });
-        });
+		document.addEventListener('DOMContentLoaded', function() {
+			const tabButtons = document.querySelectorAll('.tab-btn');
+			const tabContents = document.querySelectorAll('.tab-content');
+			const manualInstall = document.getElementById('manual-install');
+			const firefoxInstall = document.getElementById('firefox-install');
+			const linuxInstall = document.getElementById('linux-install');
+			
+			// Update visibility of installation guides based on active tab
+			function updateInstallationGuides() {
+				const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-tab');
+				
+				// Hide all installation guides first
+				manualInstall.style.display = 'none';
+				firefoxInstall.style.display = 'none';
+				
+				// Show appropriate guides based on active tab
+				if (activeTab === 'extension') {
+					manualInstall.style.display = 'block';
+					firefoxInstall.style.display = 'block';
+				} else if (activeTab === 'standalone') {
+					// Only show Linux install section for standalone tab
+					linuxInstall.style.display = 'block';
+				} else {
+					// Hide Linux install section for other tabs
+					linuxInstall.style.display = 'none';
+				}
+			}
+			
+			tabButtons.forEach(button => {
+				button.addEventListener('click', () => {
+					// Remove active class from all buttons and contents
+					tabButtons.forEach(btn => btn.classList.remove('active'));
+					tabContents.forEach(content => content.classList.remove('active'));
+					
+					// Add active class to clicked button
+					button.classList.add('active');
+					
+					// Show corresponding content
+					const tabId = button.getAttribute('data-tab');
+					document.getElementById(tabId).classList.add('active');
+					
+					// Update installation guides visibility
+					updateInstallationGuides();
+				});
+			});
+			
+			// Set initial state
+			updateInstallationGuides();
+					
+			// Accordion functionality
+			const accordionHeaders = document.querySelectorAll('.accordion-header');
+			
+			accordionHeaders.forEach(header => {
+				header.addEventListener('click', () => {
+					const accordionItem = header.parentElement;
+					accordionItem.classList.toggle('active');
+				});
+			});
+		});
     </script>
 </body>
 </html>

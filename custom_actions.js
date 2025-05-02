@@ -13,7 +13,7 @@ window.customUserFunction = function(data) {
     if (data.chatmessage && data.chatmessage.toLowerCase().includes("hello stream")) {
       // Automatically respond to greetings from Twitch
       sendCustomReply(data, "Hey there, welcome to the stream!");
-      return true; // handled specially
+      return data; // handled specially
     }
   } else if (data.type === "youtube") {
     // Handle YouTube messages differently
@@ -32,10 +32,10 @@ window.customUserFunction = function(data) {
     switch (command) {
       case "!hello":
         sendCustomReply(data, `Hello, @${data.chatname}!`);
-        return true;
+        return data;
       case "!time":
         sendCustomReply(data, `Current time is ${new Date().toLocaleTimeString()}`);
-        return true;
+        return data;
       case "!shoutout":
         if (data.mod || data.admin) { // Only mods/admins can use this
           const username = commandParts[1];
@@ -43,7 +43,7 @@ window.customUserFunction = function(data) {
             sendCustomReply(data, `Check out @${username} at https://twitch.tv/${username}`);
           }
         }
-        return true;
+        return data;
     }
   }
 
@@ -111,6 +111,7 @@ window.customUserFunction = function(data) {
         /product123/gi, 
         "<span style='color:#ff0000;font-weight:bold;'>Product123™</span>"
       );
+	  data.textonly = false;
     }
   }
 
@@ -159,8 +160,8 @@ window.customUserFunction = function(data) {
     sendCustomReply(data, `Wow! Thank you so much for the ${data.hasDonation} donation, @${data.chatname}!`);
   }
 
-  // Return undefined to allow normal processing to continue
-  return undefined;
+  // Return data to allow normal processing to continue
+  return data;
 };
 
 // Helper function to send replies

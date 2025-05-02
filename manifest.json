@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.19.2",
+  "version": "3.19.3",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -27,6 +27,7 @@
 	"http://localhost:8080/fav.html",
     "http://localhost:11434/api/generate",
     "http://127.0.0.1:11434/api/generate",
+	"https://xeenon.xyz/*",
     "https://zap.stream/*",
     "https://www.bigo.tv/*",
 	"https://soulbound.tv/*",
@@ -256,6 +257,10 @@
       "js": [ "./sources/openstreamingplatform.js" ],
       "matches": [ "https://demo.openstreamingplatform.com/view/*chatOnly=True*" ]
     },
+	{
+      "js": [ "./sources/xeenon.js" ],
+      "matches": [ "https://xeenon.xyz/*" ]
+    },
     {
       "js": [ "./sources/soulbound.js" ],
       "matches": [ "https://soulbound.tv/*" ]
@@ -473,7 +478,7 @@
 	{
       "js": [ "./sources/youtube.js" ],
       "matches": [
-        "https://www.youtube.com/watch*&socialstream",
+        "https://www.youtube.com/watch?v=*&socialstream",
         "https://youtube.com/live_chat*",
         "https://www.youtube.com/live_chat*"
       ]

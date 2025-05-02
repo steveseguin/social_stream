@@ -1654,7 +1654,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 function uploadCustomJsFile() {
   const fileInput = document.createElement('input');
   fileInput.type = 'file';
-  fileInput.accept = 'actions.js';
+  fileInput.accept = '.js';
   
   fileInput.addEventListener('change', function(event) {
     const file = event.target.files[0];

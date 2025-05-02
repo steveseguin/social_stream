@@ -1223,13 +1223,9 @@
 				background-color: var(--highlight-compact2);
 			}
 
-			.dono-highlight {
-				background-color: var(--donation-bgcolor);
-			}
 
-			.odd.dono-highlight:not(.expand) {
-				background-color: var(--donation-bgcolor-odd);
-			}
+
+
 
 			.bubble {
 				border-radius: 13px;
@@ -1242,14 +1238,7 @@
 				background-color: var(--bgcolor-bubble-odd);
 			}
 
-			.bubble.dono-highlight {
-				background-color: var(--donation-bgcolor-bubble);
-				box-shadow: inset 0 0 2px #ffff00a1;
-			}
-			.bubble.odd.dono-highlight:not(.expand) {
-				background-color: var(--donation-bgcolor-bubble-odd);
-				box-shadow: inset 0 0 2px #ffff00a1;
-			}
+
 
 			.member {
 				background-color: var(--member-bgcolor);
@@ -1257,6 +1246,23 @@
 
 			.odd.member:not(.expand) {
 				background-color: var(--member-bgcolor-odd);
+			}
+			
+			.dono-highlight {
+				background-color: var(--donation-bgcolor);
+			}
+			
+			.odd.dono-highlight:not(.expand) {
+				background-color: var(--donation-bgcolor-odd);
+			}
+			
+			.bubble.dono-highlight {
+				background-color: var(--donation-bgcolor-bubble);
+				box-shadow: inset 0 0 2px #ffff00a1;
+			}
+			.bubble.odd.dono-highlight:not(.expand) {
+				background-color: var(--donation-bgcolor-bubble-odd);
+				box-shadow: inset 0 0 2px #ffff00a1;
 			}
 
 			.bubble.member {
@@ -8022,7 +8028,7 @@
 
 					var svgs = node.querySelectorAll("svg");
 					svgs.forEach(svg => {
-						svg.setAttribute("width", "100%");
+						// svg.setAttribute("width", "100%");
 						svg.setAttribute("height", "100%");
 						if (!svg.getAttribute("fill") && !svg.innerHTML.includes(" fill=")) {
 							svg.setAttribute("fill", "currentColor");
