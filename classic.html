@@ -831,10 +831,8 @@
 				roomID = urlParams.get("s");
 			} else if (urlParams.has("id")) {
 				roomID = urlParams.get("id");
-			} else if (window.location.protocol == "file:") {
-				roomID = prompt("Enter your session ID here, or add it to the URL.");
 			} else {
-				window.location.href = "https://socialstream.ninja/landing";
+				roomID = prompt("Enter your session ID here, or add it to the URL.");
 			}
 
 			var password = "false";
