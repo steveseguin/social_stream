@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta content="utf-8" http-equiv="encoding" />
+    <title>Social Stream - YouTube</title>
+    <link rel="icon" href="https://www.youtube.com/favicon.ico" type="image/x-icon">
+    <style>
+        .hidden { display: none!important; }
+        body {
+            background-color: #ddd;
+            font-size: 14px;
+            margin: 0;
+            padding: 20px;
+        }
+        .auth-button, .sign-out-button, .connect-button {
+            background-color: #FF0000;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .auth-button:hover, .connect-button:hover {
+            background-color: #D30000;
+        }
+        .sign-out-button {
+            background-color: #f44336;
+        }
+        .sign-out-button:hover {
+            background-color: #d32f2f;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .chat-badge {
+            margin-right: 2px;
+            vertical-align: middle;
+            height: 18px;
+            width: auto;
+        }
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .text-center { text-align: center; }
+        
+        /* Header styles */
+        .channel-header {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-grow: 1;
+        }
+        .header-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .header-item span:first-child {
+            font-weight: bold;
+            color: #FF0000;
+        }
+        
+        /* Channel input */
+        .channel-input-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .channel-input {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 150px;
+        }
+        
+        /* Stats grid */
+        .stats-container {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stats-container h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .stat-box {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FF0000;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        /* Chat container */
+        .chat-container {
+            background: white;
+            border-radius: 4px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-container h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        #textarea {
+            flex-grow: 1;
+            min-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .chat-input {
+            display: flex;
+            gap: 8px;
+        }
+        .chat-input input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        /* Sidebar components */
+        .permissions-container,
+        .recent-events {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        #permissions-info:empty {
+            display: none!important;
+        }
+        .permissions-header {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #FF0000;
+        }
+        .permission-item {
+            padding: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+        .recent-events h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+        }
+        .event-item {
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        #textarea div {
+            padding-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="auth text-center">
+                <a id="auth-link" class="auth-button">Sign in to YouTube</a>
+            </div>
+            
+            <div class="hidden socket">
+                <!-- Header with channel input -->
+                <div class="channel-header">
+                    <div class="header-info">
+                        <div class="header-item">
+                            <span>User:</span>
+                            <span id="current-user">Not signed in</span>
+                        </div>
+                        <div class="header-item">
+                            <span>Channel:</span>
+                            <span id="current-channel">No channel</span>
+                        </div>
+                        <div class="channel-input-container">
+                            <input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
+                            <button id="connect-button" class="connect-button">Connect</button>
+                        </div>
+                    </div>
+                    <button id="sign-out-button" class="sign-out-button">Sign Out</button>
+                </div>
+
+                <!-- Stats section -->
+                <div class="stats-container">
+                    <h3>Channel Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value" id="subscriber-count">-</div>
+                            <div class="stat-label">Subscribers</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="viewer-count">-</div>
+                            <div class="stat-label">Live Viewers</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="likes-count">-</div>
+                            <div class="stat-label">Likes</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat section -->
+                <div class="chat-container">
+                    <h3>Chat Messages</h3>
+                    <div id="textarea" class="ws-output"></div>
+                    <div class="chat-input">
+                        <input type="text" id="input-text" placeholder="Send Message">
+                        <button id="sendmessage" class="auth-button">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar hidden socket">
+            <div class="permissions-container" id="permissions-info"></div>
+            <div class="recent-events">
+                <h4>Recent Events</h4>
+                <div id="events-list"></div>
+            </div>
+        </div>
+    </div>
+<script>
+try {
+    var clientId = 'AIzaSyBzetXMyrKD5FIsSx_G8pHlIzJ6MHw97_I'; // Replace with your YouTube client ID
+    var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
+    var scope = 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl';
+    var username = "";
+    var channel = '';
+    let pollInterval;
+    var lastMessageTime = null;
+    var liveChatId = null;
+    var nextPageToken = null;
+    var isPolling = false;
+    var userDetails = {};
+    var currentStream = null;
+
+    var urlParams = new URLSearchParams(window.location.search);
+    var hashParams = new URLSearchParams(window.location.hash.slice(1));
+    channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("youtubeChannel") || "";
+
+    // Token management functions
+    function getStoredToken() {
+        return localStorage.getItem('youtubeOAuthToken');
+    }
+    
+    function setStoredToken(token) {
+        localStorage.setItem('youtubeOAuthToken', token);
+    }
+    
+    function clearStoredToken() {
+        localStorage.removeItem('youtubeOAuthToken');
+        localStorage.removeItem('youtubeChannel');
+    }
+    
+    function showAuthButton() {
+        const authElement = document.querySelector('.auth');
+        if (authElement) authElement.classList.remove("hidden");
+    }
+    
+    function showSocketInterface() {
+        const authElement = document.querySelector('.auth');
+        document.querySelectorAll('.socket').forEach(ele=>ele.classList.remove('hidden'));
+        if (authElement) authElement.classList.add("hidden");
+    }
+    
+    function initializePage() {
+        urlParams = new URLSearchParams(window.location.search);
+        hashParams = new URLSearchParams(window.location.hash.slice(1));
+        channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("youtubeChannel") || channel;
+        
+        // Set up event listeners
+        const signOutButton = document.getElementById('sign-out-button');
+        if (signOutButton) {
+            signOutButton.addEventListener('click', signOut);
+        }
+
+        const authLink = document.getElementById('auth-link');
+        if (authLink) {
+            authLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                const authURL = authUrl();
+                window.location.href = authURL;
+            });
+        }
+
+        const sendButton = document.querySelector('#sendmessage');
+        if (sendButton) {
+            sendButton.onclick = handleSendMessage;
+        }
+
+        const inputText = document.querySelector('#input-text');
+        if (inputText) {
+            inputText.addEventListener('keypress', handleEnterKey);
+        }
+
+        const connectButton = document.getElementById('connect-button');
+        if (connectButton) {
+            connectButton.addEventListener('click', handleConnect);
+        }
+
+        const channelInput = document.getElementById('channel-input');
+        if (channelInput) {
+            channelInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    handleConnect();
+                }
+            });
+        }
+
+        // Check authentication state
+        const storedToken = getStoredToken();
+        if (storedToken) {
+            verifyAndUseToken(storedToken);
+        } else if (window.location.hash) {
+            parseFragment(window.location.hash);
+        } else {
+            showAuthButton();
+        }
+    }
+
+    async function verifyAndUseToken(token) {
+        try {
+            const userInfo = await getUserInfo(token);
+            if (userInfo && userInfo.items && userInfo.items.length > 0) {
+                setStoredToken(token);
+                username = userInfo.items[0].snippet.title;
+                updateHeaderInfo(username, channel);
+                
+                if (channel) {
+                    localStorage.setItem("youtubeChannel", channel);
+                    connect();
+                }
+                
+                showSocketInterface();
+            } else {
+                clearStoredToken();
+                showAuthButton();
+            }
+        } catch (error) {
+            console.error('Error validating token:', error);
+            clearStoredToken();
+            showAuthButton();
+        }
+    }
+
+    function parseFragment(hash) {
+        const tokens = {};
+        hash.replace('#', '').split('&').forEach(param => {
+            const [key, value] = param.split('=');
+            tokens[key] = value;
+        });
+        
+        if (tokens.access_token) {
+            verifyAndUseToken(tokens.access_token);
+        } else {
+            console.error('No access token found in URL');
+            showAuthButton();
+        }
+    }
+
+    function authUrl() {
+        const state = nonce(15);
+        sessionStorage.youtubeOAuthState = state;
+        
+        return 'https://accounts.google.com/o/oauth2/v2/auth' +
+            '?response_type=token' +
+            '&client_id=' + clientId + 
+            '&redirect_uri=' + encodeURIComponent(redirectURI) +
+            '&scope=' + encodeURIComponent(scope) +
+            '&state=' + state + 
+            '&include_granted_scopes=true' +
+            '&prompt=consent';
+    }
+
+    // Source: https://www.thepolyglotdeveloper.com/2015/03/create-a-random-nonce-string-using-javascript/
+    function nonce(length) {
+        var text = "";
+        var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for (var i = 0; i < length; i++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
+    }
+
+    function signOut() {
+        clearPolling();
+        clearStoredToken();
+        
+        updateHeaderInfo(null, null);
+        document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'));
+        document.querySelector('.auth').classList.remove('hidden');
+        document.querySelector('#textarea').innerHTML = '';
+        
+        // Reset stats
+        document.getElementById('viewer-count').textContent = '-';
+        document.getElementById('subscriber-count').textContent = '-';
+        document.getElementById('likes-count').textContent = '-';
+        document.getElementById('events-list').innerHTML = '';
+
+        console.log('Signed out successfully');
+    }
+
+    function handleEnterKey(event) {
+        if (event.key === 'Enter') {
+            handleSendMessage(event);
+        }
+    }
+
+    function handleSendMessage(event) {
+        event.preventDefault();
+        const inputElement = document.querySelector('#input-text');
+        if (inputElement) {
+            var msg = inputElement.value.trim();
+            if (msg && liveChatId) {
+                sendChatMessage(msg).then(response => {
+                    if (response && response.success) {
+                        inputElement.value = "";
+                        // Display own message in chat
+                        processMessage({
+                            authorName: username,
+                            message: msg,
+                            profileImageUrl: response.authorDetails?.profileImageUrl || '',
+                            isChatOwner: response.authorDetails?.isChatOwner || false,
+                            isChatSponsor: response.authorDetails?.isChatSponsor || false,
+                            isChatModerator: response.authorDetails?.isChatModerator || false
+                        });
+                    }
+                });
+            }
+        }
+    }
+
+    function handleConnect() {
+        const channelInput = document.getElementById('channel-input');
+        const channelName = channelInput.value.trim();
+        if (channelName) {
+            localStorage.setItem('youtubeChannel', channelName);
+            channel = channelName;
+            channelInput.value = '';
+            connect();
+        }
+    }
+
+    async function getUserInfo(token) {
+        try {
+            const response = await fetchWithTimeout('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', 5000, 
+                {
+                    'Authorization': `Bearer ${token}`
+                }
+            );
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching user info:', error);
+            return null;
+        }
+    }
+
+    async function getChannelInfo(channelName) {
+        const token = getStoredToken();
+        if (!token) return null;
+        
+        if (userDetails[channelName]) {
+            return userDetails[channelName];
+        }
+        
+        try {
+            // First try by ID
+            let response = await fetchWithTimeout(
+                `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelName}`, 
+                5000, 
+                {
+                    'Authorization': `Bearer ${token}`
+                }
+            );
+            
+            let data = await response.json();
+            
+            // If no results, try by username
+            if (!data.items || data.items.length === 0) {
+                response = await fetchWithTimeout(
+                    `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${channelName}`, 
+                    5000, 
+                    {
+                        'Authorization': `Bearer ${token}`
+                    }
+                );
+                data = await response.json();
+            }
+            
+            // If still no results, try search
+            if (!data.items || data.items.length === 0) {
+                response = await fetchWithTimeout(
+                    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channelName}&type=channel&maxResults=1`, 
+                    5000, 
+                    {
+                        'Authorization': `Bearer ${token}`
+                    }
+                );
+                
+                const searchData = await response.json();
+                
+                if (searchData.items && searchData.items.length > 0) {
+                    const channelId = searchData.items[0].id.channelId;
+                    
+                    response = await fetchWithTimeout(
+                        `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}`, 
+                        5000, 
+                        {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    );
+                    
+                    data = await response.json();
+                }
+            }
+            
+            if (data.items && data.items.length > 0) {
+                userDetails[channelName] = data.items[0];
+                return data.items[0];
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('Error fetching channel info:', error);
+            return null;
+        }
+    }
+
+    async function getLiveStreamInfo(channelId) {
+        const token = getStoredToken();
+        if (!token) return null;
+        
+        try {
+            const response = await fetchWithTimeout(
+                `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&maxResults=1`, 
+                5000, 
+                {
+                    'Authorization': `Bearer ${token}`
+                }
+            );
+            
+            const data = await response.json();
+            
+            if (data.items && data.items.length > 0) {
+                const videoId = data.items[0].id.videoId;
+                
+                const detailsResponse = await fetchWithTimeout(
+                    `https://www.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails,statistics&id=${videoId}`, 
+                    5000, 
+                    {
+                        'Authorization': `Bearer ${token}`
+                    }
+                );
+                
+                const detailsData = await detailsResponse.json();
+                
+                if (detailsData.items && detailsData.items.length > 0) {
+                    return detailsData.items[0];
+                }
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('Error fetching live stream info:', error);
+            return null;
+        }
+    }
+
+    async function getLiveChatId(videoId) {
+        const token = getStoredToken();
+        if (!token) return null;
+        
+        try {
+            const response = await fetchWithTimeout(
+                `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${videoId}`, 
+                5000, 
+                {
+                    'Authorization': `Bearer ${token}`
+                }
+            );
+            
+            const data = await response.json();
+            
+            if (data.items && data.items.length > 0 && data.items[0].liveStreamingDetails) {
+                return data.items[0].liveStreamingDetails.activeLiveChatId;
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('Error fetching live chat ID:', error);
+            return null;
+        }
+    }
+
+    async function fetchChatMessages() {
+        if (!liveChatId || isPolling) return;
+        
+        isPolling = true;
+        const token = getStoredToken();
+        
+        try {
+            let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=200`;
+            
+            if (nextPageToken) {
+                url += `&pageToken=${nextPageToken}`;
+            }
+            
+            const response = await fetchWithTimeout(url, 5000, {
+                'Authorization': `Bearer ${token}`
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    const message = item.snippet.displayMessage;
+                    const authorName = item.authorDetails.displayName;
+                    const profileImageUrl = item.authorDetails.profileImageUrl;
+                    const isChatOwner = item.authorDetails.isChatOwner;
+                    const isChatSponsor = item.authorDetails.isChatSponsor;
+                    const isChatModerator = item.authorDetails.isChatModerator;
+                    const publishedAt = new Date(item.snippet.publishedAt);
+                    
+                    // Only process new messages
+                    if (!lastMessageTime || publishedAt > lastMessageTime) {
+                        processMessage({
+                            authorName,
+                            message,
+                            profileImageUrl,
+                            isChatOwner,
+                            isChatSponsor,
+                            isChatModerator,
+                            publishedAt
+                        });
+                        
+                        if (!lastMessageTime || publishedAt > lastMessageTime) {
+                            lastMessageTime = publishedAt;
+                        }
+                    }
+                });
+            }
+            
+            nextPageToken = data.nextPageToken;
+            
+            // Check for super chats (donations)
+            if (data.items) {
+                data.items.forEach(item => {
+                    if (item.snippet.superChatDetails) {
+                        const superChat = item.snippet.superChatDetails;
+                        processSuperChat({
+                            authorName: item.authorDetails.displayName,
+                            amount: superChat.amountDisplayString,
+                            message: superChat.userComment,
+                            tier: superChat.tier,
+                            profileImageUrl: item.authorDetails.profileImageUrl
+                        });
+                    }
+                    
+                    // Check for new members (sponsorships)
+                    if (item.snippet.membershipDetails) {
+                        processMembership({
+                            authorName: item.authorDetails.displayName,
+                            level: item.snippet.membershipDetails.memberLevelName,
+                            profileImageUrl: item.authorDetails.profileImageUrl
+                        });
+                    }
+                });
+            }
+            
+            // Set up next polling interval based on API response
+            const pollingInterval = data.pollingIntervalMillis || 5000;
+            setTimeout(fetchChatMessages, pollingInterval);
+        } catch (error) {
+            console.error('Error fetching chat messages:', error);
+            setTimeout(fetchChatMessages, 10000); // Retry after 10 seconds on error
+        } finally {
+            isPolling = false;
+        }
+    }
+
+    async function sendChatMessage(message) {
+        const token = getStoredToken();
+        if (!token || !liveChatId) return { success: false };
+        
+        try {
+            const response = await fetchWithTimeout('https://www.googleapis.com/youtube/v3/liveChat/messages?part=snippet,authorDetails', 5000, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    snippet: {
+                        liveChatId: liveChatId,
+                        type: 'textMessageEvent',
+                        textMessageDetails: {
+                            messageText: message
+                        }
+                    }
+                })
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error sending chat message:', errorText);
+                return { success: false };
+            }
+            
+            const data = await response.json();
+            return { 
+                success: true, 
+                authorDetails: {
+                    profileImageUrl: data.authorDetails?.profileImageUrl,
+                    isChatOwner: data.authorDetails?.isChatOwner,
+                    isChatSponsor: data.authorDetails?.isChatSponsor,
+                    isChatModerator: data.authorDetails?.isChatModerator
+                }
+            };
+        } catch (error) {
+            console.error('Error sending chat message:', error);
+            return { success: false };
+        }
+    }
+
+    async function getStreamStats() {
+        if (!currentStream || !currentStream.id) return;
+        
+        const token = getStoredToken();
+        if (!token) return;
+        
+        try {
+            const response = await fetchWithTimeout(
+                `https://www.googleapis.com/youtube/v3/videos?part=statistics,liveStreamingDetails&id=${currentStream.id}`, 
+                5000, 
+                {
+                    'Authorization': `Bearer ${token}`
+                }
+            );
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.items && data.items.length > 0) {
+                const stats = data.items[0];
+                
+                // Update viewer count
+                if (stats.liveStreamingDetails && stats.liveStreamingDetails.concurrentViewers) {
+                    updateStats('viewer_update', { meta: stats.liveStreamingDetails.concurrentViewers });
+                }
+                
+                // Update likes count
+                if (stats.statistics && stats.statistics.likeCount) {
+                    updateStats('likes_update', { meta: stats.statistics.likeCount });
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching stream stats:', error);
+        }
+    }
+
+    async function getSubscriberCount(channelId) {
+        const token = getStoredToken();
+        if (!token) return;
+        
+        try {
+            const response = await fetchWithTimeout(
+                `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}`, 
+                5000, 
+                {
+                    'Authorization': `Bearer ${token}`
+                }
+            );
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.items && data.items.length > 0 && data.items[0].statistics) {
+                const subscriberCount = data.items[0].statistics.subscriberCount;
+                updateStats('subscriber_update', { meta: subscriberCount });
+            }
+        } catch (error) {
+            console.error('Error fetching subscriber count:', error);
+        }
+    }
+
+    function clearPolling() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+        liveChatId = null;
+        nextPageToken = null;
+        lastMessageTime = null;
+        isPolling = false;
+        currentStream = null;
+    }
+
+    async function connect() {
+        // Clean up any existing connections
+        clearPolling();
+        
+        const token = getStoredToken();
+        if (!token) {
+            console.error('No token available');
+            showAuthButton();
+            return;
+        }
+        
+        try {
+            // Get channel information
+            const channelInfo = await getChannelInfo(channel);
+            
+            if (!channelInfo) {
+                console.error('Channel not found:', channel);
+                updateHeaderInfo(username, 'Channel not found');
+                
+                const textarea = document.querySelector("#textarea");
+                if (textarea) {
+                    var span = document.createElement("div");
+                    span.innerText = `Channel not found: ${channel}`;
+                    textarea.appendChild(span);
+                }
+                
+                return;
+            }
+            
+            // Update the channel name with the actual display name
+            const displayName = channelInfo.snippet.title;
+            channel = channelInfo.id;
+            updateHeaderInfo(username, displayName);
+            
+            // Get subscriber count
+            if (channelInfo.statistics && channelInfo.statistics.subscriberCount) {
+                updateStats('subscriber_update', { meta: channelInfo.statistics.subscriberCount });
+            }
+            
+            // Check for live stream
+            const streamInfo = await getLiveStreamInfo(channelInfo.id);
+            
+            if (!streamInfo) {
+                console.log('No active live stream found for this channel');
+                const textarea = document.querySelector("#textarea");
+                if (textarea) {
+                    var span = document.createElement("div");
+                    span.innerText = `No active live stream found for channel: ${displayName}`;
+                    textarea.appendChild(span);
+                }
+                return;
+            }
+            
+            // Store current stream info
+            currentStream = {
+                id: streamInfo.id,
+                title: streamInfo.snippet.title,
+                channelId: channelInfo.id
+            };
+            
+            // Get live chat ID
+            liveChatId = await getLiveChatId(streamInfo.id);
+            
+            if (!liveChatId) {
+                console.log('No live chat available for this stream');
+                const textarea = document.querySelector("#textarea");
+                if (textarea) {
+                    var span = document.createElement("div");
+                    span.innerText = `No live chat available for stream: ${streamInfo.snippet.title}`;
+                    textarea.appendChild(span);
+                }
+                return;
+            }
+            
+            // Update viewer count
+            if (streamInfo.liveStreamingDetails && streamInfo.liveStreamingDetails.concurrentViewers) {
+                updateStats('viewer_update', { meta: streamInfo.liveStreamingDetails.concurrentViewers });
+            }
+            
+            // Update likes count
+            if (streamInfo.statistics && streamInfo.statistics.likeCount) {
+                updateStats('likes_update', { meta: streamInfo.statistics.likeCount });
+            }
+            
+            // Announce connection in the chat box
+            const textarea = document.querySelector("#textarea");
+            if (textarea) {
+                var span = document.createElement("div");
+                span.innerText = `Connected to live stream: ${streamInfo.snippet.title}`;
+                textarea.appendChild(span);
+            }
+            
+            // Start polling for chat messages
+            fetchChatMessages();
+            
+            // Set up periodic stats updates
+            pollInterval = setInterval(() => {
+                getStreamStats();
+                getSubscriberCount(channelInfo.id);
+            }, 60000); // Update every minute
+            
+            console.log('Successfully connected to YouTube live chat');
+        } catch (error) {
+            console.error('Error connecting to YouTube:', error);
+            
+            // Display error message in chat
+            const textarea = document.querySelector("#textarea");
+            if (textarea) {
+                var span = document.createElement("div");
+                span.innerText = `Error connecting to channel: ${error.message}`;
+                textarea.appendChild(span);
+            }
+        }
+    }
+	
+	function pushMessage(data){} // temp
+
+    function processMessage(messageData) {
+        try {
+            // Create HTML element for chat message
+            var span = document.createElement("div");
+            
+            // Add author badges if applicable
+            let badgeHtml = '';
+            if (messageData.isChatOwner) {
+                badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/owner.svg" class="chat-badge" title="Channel Owner">';
+            }
+            if (messageData.isChatModerator) {
+                badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/moderator.svg" class="chat-badge" title="Moderator">';
+            }
+            if (messageData.isChatSponsor) {
+                badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/sponsor.svg" class="chat-badge" title="Member">';
+            }
+            
+            // Add message to chat display
+            span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageData.message}`;
+            document.querySelector("#textarea").appendChild(span);
+            
+            // Keep chat at a reasonable size
+            if (document.querySelector("#textarea").childNodes.length > 100) {
+                document.querySelector("#textarea").childNodes[0].remove();
+            }
+            
+            // Prepare data for external message handlers
+            var data = {
+                chatname: messageData.authorName,
+                chatbadges: badgeHtml,
+                backgroundColor: "",
+                textColor: "", // YouTube doesn't have user text colors
+                chatmessage: messageData.message,
+                chatimg: messageData.profileImageUrl || "",
+                hasDonation: "",
+                membership: messageData.isChatSponsor ? "member" : "",
+                type: "youtube"
+            };
+            
+            // Push message to any external handlers
+            pushMessage(data);
+        } catch (e) {
+            console.error('Error processing message:', e);
+        }
+    }
+
+    function processSuperChat(superChatData) {
+        try {
+            // Add super chat to recent events
+            addEvent(`Super Chat: ${superChatData.authorName} - ${superChatData.amount}`);
+            
+            // Create chat message with donation info
+            var span = document.createElement("div");
+            span.innerHTML = `<strong>${superChatData.authorName}</strong> <span style="color:#00c851">${superChatData.amount}</span>: ${superChatData.message}`;
+            document.querySelector("#textarea").appendChild(span);
+            
+            // Keep chat at a reasonable size
+            if (document.querySelector("#textarea").childNodes.length > 100) {
+                document.querySelector("#textarea").childNodes[0].remove();
+            }
+            
+            // Prepare data for external message handlers
+            var data = {
+                chatname: superChatData.authorName,
+                chatbadges: "",
+                backgroundColor: "",
+                textColor: "#00c851", // Green color for donations
+                chatmessage: superChatData.message,
+                chatimg: superChatData.profileImageUrl || "",
+                hasDonation: superChatData.amount,
+                membership: "",
+                type: "youtube",
+                event: "donation"
+            };
+            
+            // Push message to any external handlers
+            pushMessage(data);
+        } catch (e) {
+            console.error('Error processing super chat:', e);
+        }
+    }
+
+    function processMembership(membershipData) {
+        try {
+            // Add membership to recent events
+            addEvent(`New Member: ${membershipData.authorName} - ${membershipData.level}`);
+            
+            // Create chat message for new member
+            var span = document.createElement("div");
+            span.innerHTML = `<strong>${membershipData.authorName}</strong> <span style="color:#2196f3">joined as a member (${membershipData.level})</span>`;
+            document.querySelector("#textarea").appendChild(span);
+            
+            // Keep chat at a reasonable size
+            if (document.querySelector("#textarea").childNodes.length > 100) {
+                document.querySelector("#textarea").childNodes[0].remove();
+            }
+            
+            // Prepare data for external message handlers
+            var data = {
+                chatname: membershipData.authorName,
+                chatbadges: '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/sponsor.svg" class="chat-badge" title="Member">',
+                backgroundColor: "",
+                textColor: "#2196f3", // Blue color for memberships
+                chatmessage: `joined as a member (${membershipData.level})`,
+                chatimg: membershipData.profileImageUrl || "",
+                hasDonation: "",
+                membership: "new_member",
+                membershipLevel: membershipData.level,
+                type: "youtube",
+                event: "new_member"
+            };
+            
+            // Push message to any external handlers
+            pushMessage(data);
+        } catch (e) {
+            console.error('Error processing membership:', e);
+        }
+    }
+
+    function updateStats(type, data) {
+        switch(type) {
+            case 'viewer_update':
+                document.getElementById('viewer-count').textContent = data.meta;
+                break;
+            case 'subscriber_update':
+                document.getElementById('subscriber-count').textContent = data.meta;
+                break;
+            case 'likes_update':
+                document.getElementById('likes-count').textContent = data.meta;
+                break;
+        }
+    }
+
+    function addEvent(text) {
+        const eventslist = document.getElementById('events-list');
+        const event = document.createElement('div');
+        event.className = 'event-item';
+        event.textContent = text;
+        eventslist.insertBefore(event, eventslist.firstChild);
+        
+        // Keep only last 10 events
+        while (eventslist.children.length > 10) {
+            eventslist.removeChild(eventslist.lastChild);
+        }
+    }
+
+    function updateHeaderInfo(username, channelName) {
+        const currentUserElement = document.getElementById('current-user');
+        const currentChannelElement = document.getElementById('current-channel');
+        
+        if (currentUserElement) {
+            currentUserElement.textContent = username || 'Not signed in';
+        }
+        if (currentChannelElement) {
+            currentChannelElement.textContent = channelName || 'No channel';
+        }
+    }
+
+
+    // Helper function for fetch with timeout
+    async function fetchWithTimeout(URL, timeout = 8000, headers=false) {
+        try {
+            const controller = new AbortController();
+            const timeout_id = setTimeout(() => controller.abort(), timeout);
+            
+            if (!headers) {
+                const response = await fetch(URL, {
+                    timeout: timeout,
+                    signal: controller.signal
+                });
+                clearTimeout(timeout_id);
+                return response;
+            } else {
+                const response = await fetch(URL, {
+                    timeout: timeout,
+                    signal: controller.signal,
+                    headers: headers
+                });
+                clearTimeout(timeout_id);
+                return response;
+            }
+            
+        } catch (e) {
+            console.error(e);
+            return await fetch(URL); // Fallback for iOS 11.x/12.0
+        }
+    }
+	
+
+    // Initialize the page when the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', initializePage);
+	
+    
+} catch(e) {
+    console.error('YouTube integration error:', e);
+}
+</script>
+</body>
+</html>

@@ -502,7 +502,7 @@
                             this.trigger('roomInfo', { online: popularity });
                             
                             // Send viewer count event to extension
-                            if (window.messageBridge) {
+                            if (window?.messageBridge) {
                                 window.messageBridge.broadcast({
                                     type: "bilibili",
                                     event: "viewer_update",
@@ -684,8 +684,14 @@
                     content.className = 'message-content';
                     content.textContent = text;
                     messageDiv.appendChild(content);
+					
+					const messageContainer = document.getElementById('messageContainer');
+					
+					while (messageContainer.children.length > 11) {
+						messageContainer.removeChild(messageContainer.children[1]);
+					}
                     
-                    document.getElementById('messageContainer').prepend(messageDiv);
+                    messageContainer.prepend(messageDiv);
                     
                     // Format message for extension
                     const formattedMessage = {
@@ -706,7 +712,7 @@
                     }
                     
                     // Send to extension
-                    if (window.messageBridge) {
+                    if (window?.messageBridge) {
                         window.messageBridge.broadcast(formattedMessage);
                     }
                     
@@ -779,12 +785,12 @@
                     };
                     
                     // Send to extension
-                    if (window.messageBridge) {
+                    if (window?.messageBridge) {
                         window.messageBridge.broadcast(formattedMessage);
                     }
                     
                     // Send to extension
-                    if (window.messageBridge) {
+                    if (window?.messageBridge) {
                         window.messageBridge.broadcast(formattedMessage);
                     }
                     
@@ -870,7 +876,7 @@
                     };
                     
                     // Send to extension
-                    if (window.messageBridge) {
+                    if (window?.messageBridge) {
                         window.messageBridge.broadcast(formattedMessage);
                     }
                     
@@ -930,7 +936,7 @@
                     }
                     
                     // Send to extension
-                    if (window.messageBridge) {
+                    if (window?.messageBridge) {
                         window.messageBridge.broadcast(formattedMessage);
                     }
                     
@@ -958,7 +964,7 @@
                         };
                         
                         // Send to extension
-                        if (window.messageBridge) {
+                        if (window?.messageBridge) {
                             window.messageBridge.broadcast(formattedMessage);
                         }
                         
@@ -983,7 +989,7 @@
                     };
                     
                     // Send to extension
-                    if (window.messageBridge) {
+                    if (window?.messageBridge) {
                         window.messageBridge.broadcast(formattedMessage);
                     }
                     
@@ -1309,23 +1315,62 @@
             }
             
             // Check URL params for auto-connect
-            function checkUrlParams() {
-                const searchParams = new URLSearchParams(window.location.search);
-                const roomId = searchParams.get('channel') || searchParams.get('roomId');
-                
-                if (roomId) {
-                    roomIdInput.value = roomId;
-                    connectBtn.click();
-                }
-            }
+            const searchParams = new URLSearchParams(window.location.search);
+			const roomId = searchParams.get('channel') || searchParams.get('roomId');
+			
+			if (roomId) {
+				roomIdInput.value = roomId;
+				connectBtn.click();
+			}
             
             // Initialize with some system logs
             addSystemLog('info', 'Bilibili Live Chat WebSocket Client initialized');
             addSystemLog('info', 'Enter a room ID and click Connect to start');
             
-            // Check URL params for auto-connect
-            checkUrlParams();
         });
+		
+		
+var settings = {};
+
+// Create a MessageBridge class to handle communication with the page
+class MessageBridge {
+    constructor() {
+        this.initialized = false;
+        this.initializeMessaging();
+    }
+
+    initializeMessaging() {
+        if (this.initialized) return;
+        
+        // Listen for messages from the extension
+        window.addEventListener('ExtensionMessage', (e) => {
+            if (e.detail && e.detail.type === 'SEND_BILIBILI_MESSAGE') {
+                const messageInput = document.getElementById('messageInput');
+                const sendBtn = document.getElementById('sendBtn');
+                
+                if (messageInput && sendBtn) {
+                    messageInput.value = e.detail.message;
+                    sendBtn.click();
+                }
+            }
+        });
+
+        this.initialized = true;
+    }
+
+    broadcast(messageData) {
+        // Create a new CustomEvent each time
+        const messageEvent = new CustomEvent('bilibiliMessage', {
+            detail: messageData,
+            bubbles: true
+        });
+        window.dispatchEvent(messageEvent);
+    }
+}
+
+// Initialize the message bridge
+const messageBridge = new MessageBridge();
+
     </script>
 </body>
 </html>
