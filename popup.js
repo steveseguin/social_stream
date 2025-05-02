@@ -1372,7 +1372,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 	
-	
 	document.getElementById('searchIcon').addEventListener('click', function() {
 		var searchInput = document.getElementById('searchInput');
 		if (searchInput.style.display === 'none' || searchInput.style.display === '') {

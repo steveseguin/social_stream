@@ -737,6 +737,108 @@ function resetCustomJs() {
     console.log("Custom JavaScript function reset to default");
 }
 //////////////
+function printThermal(htmlContent, options = {}) {  // --kiosk --kiosk-printing
+  // Default options
+  const defaultOptions = {
+    width: '58mm',
+    margin: '0mm',
+    fontSize: '10pt',
+    fontFamily: 'monospace',
+    lineHeight: '1.2',
+    printerName: settings.printerName?.textsetting || null 
+  };
+  
+  // Merge provided options with defaults
+  const printOptions = {...defaultOptions, ...options};
+  
+  // Create an iframe to handle the print job
+  const printFrame = document.createElement('iframe');
+  
+  // Make iframe invisible
+  printFrame.style.position = 'fixed';
+  printFrame.style.width = '0';
+  printFrame.style.height = '0';
+  printFrame.style.border = '0';
+  printFrame.style.opacity = '0';
+  
+  document.body.appendChild(printFrame);
+  
+  // Get iframe's document object
+  const frameDoc = printFrame.contentWindow.document;
+  
+  // Open document and write HTML
+  frameDoc.open();
+  
+  // Create style for printing
+  const printStyles = `
+    @page {
+      size: ${printOptions.width} auto;
+      margin: ${printOptions.margin};
+    }
+    body {
+      width: ${printOptions.width};
+      font-family: ${printOptions.fontFamily};
+      font-size: ${printOptions.fontSize};
+      line-height: ${printOptions.lineHeight};
+      margin: 0;
+      padding: 0;
+    }
+    * {
+      box-sizing: border-box;
+    }
+  `;
+  
+  // Write HTML to iframe with styles
+  frameDoc.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Print</title>
+        <style>${printStyles}</style>
+      </head>
+      <body>
+        ${htmlContent}
+      </body>
+    </html>
+  `);
+  
+  frameDoc.close();
+  
+  // Wait for content to load before printing
+  printFrame.onload = function() {
+    const printWindow = printFrame.contentWindow;
+    
+    // If a specific printer name is provided, attempt to use it
+    if (printOptions.printerName) {
+      // Use the print API with specific printer
+      const printOpts = {
+        printer: printOptions.printerName,
+        silent: true
+      };
+      
+      // Print with specified options
+      if (printWindow.navigator && printWindow.navigator.serviceWorker) {
+        printWindow.print(printOpts).catch(error => {
+          console.warn('Failed to select printer:', error);
+          // Fallback to default print
+          printWindow.print();
+        });
+      } else {
+        // Fallback to default print
+        printWindow.print();
+      }
+    } else {
+      // Use default print dialog
+      printWindow.print();
+    }
+    
+    // Remove iframe after printing is complete
+    setTimeout(() => {
+      document.body.removeChild(printFrame);
+    }, 1000);
+  };
+}
+////////
 
 function replaceURLsWithSubstring(text, replacement = "[Link]") {
   if (typeof text !== "string") return text;
