@@ -162,8 +162,8 @@
 			return;
 		}
 		
-		if (messageHistory.some(entry => {
-			// Parse stored entries which may be in different formats
+		const currentMsg = (username || chatname)+"_"+msg;
+		const existingIndex = messageHistory.findIndex(entry => {
 			let storedMsg, storedTime;
 			
 			if (typeof entry === 'string') {
@@ -174,11 +174,23 @@
 				storedTime = entry.time;
 			}
 			
-			const currentMsg = (username || chatname)+"_"+msg;
 			// Check if message exists and isn't older than 30 minutes (1800000 ms)
 			return storedMsg === currentMsg && (Date.now() - storedTime) < 1800000;
-		})) {
-			console.log("Message already exists within the last 30 minutes");
+		});
+
+		if (existingIndex >= 0) {
+			console.log("Message already exists within the last 30 minutes - updating timestamp");
+			// Update the timestamp of the existing entry
+			if (typeof messageHistory[existingIndex] === 'string') {
+				// Convert string format to object format
+				messageHistory[existingIndex] = {
+					msg: messageHistory[existingIndex],
+					time: Date.now()
+				};
+			} else {
+				// Update timestamp of existing object
+				messageHistory[existingIndex].time = Date.now();
+			}
 			return;
 		} else {
 			// Store as object with timestamp
@@ -187,7 +199,7 @@
 				time: Date.now()
 			});
 			// Keep last 50 messages instead of just 10
-			messageHistory = messageHistory.slice(-50);
+			messageHistory = messageHistory.slice(-100);
 		}
 		
 		var data = {};
