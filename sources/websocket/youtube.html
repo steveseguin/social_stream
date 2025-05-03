@@ -859,17 +859,72 @@ try {
         isPolling = false;
         currentStream = null;
     }
+	
+	async function getChannelStats(channelId) {
+		const token = getStoredToken();
+		if (!token) return;
+		
+		try {
+			// Get subscriber count
+			const response = await fetchWithTimeout(
+				`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}`, 
+				5000, 
+				{
+					'Authorization': `Bearer ${token}`
+				}
+			);
+			
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			
+			const data = await response.json();
+			
+			if (data.items && data.items.length > 0 && data.items[0].statistics) {
+				const stats = data.items[0].statistics;
+				
+				// Update subscriber count
+				if (stats.subscriberCount) {
+					updateStats('subscriber_update', { meta: stats.subscriberCount });
+					
+					// Push message for subscriber count
+					pushMessage({
+						type: "youtube",
+						event: 'subscriber_update',
+						meta: stats.subscriberCount
+					});
+				}
+				
+				// Update view count (total channel views)
+				if (stats.viewCount) {
+					pushMessage({
+						type: "youtube",
+						event: 'view_update',
+						meta: stats.viewCount
+					});
+				}
+			}
+		} catch (error) {
+			console.error('Error fetching channel stats:', error);
+		}
+	}
 
     async function connect() {
         // Clean up any existing connections
         clearPolling();
         
-        const token = getStoredToken();
-        if (!token) {
-            console.error('No token available');
-            showAuthButton();
-            return;
-        }
+		// Hide the channel input once connected
+		const channelInputContainer = document.querySelector('.channel-input-container');
+		if (channelInputContainer) {
+			channelInputContainer.classList.add('hidden');
+		}
+		
+		const token = getStoredToken();
+		if (!token) {
+			console.error('No token available');
+			showAuthButton();
+			return;
+		}
         
         try {
             // Get channel information
@@ -923,16 +978,22 @@ try {
             // Get live chat ID
             liveChatId = await getLiveChatId(streamInfo.id);
             
-            if (!liveChatId) {
-                console.log('No live chat available for this stream');
-                const textarea = document.querySelector("#textarea");
-                if (textarea) {
-                    var span = document.createElement("div");
-                    span.innerText = `No live chat available for stream: ${streamInfo.snippet.title}`;
-                    textarea.appendChild(span);
-                }
-                return;
-            }
+			if (!liveChatId) {
+				console.log('No live chat available for this stream');
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					var span = document.createElement("div");
+					span.innerText = `No live chat available for stream: ${streamInfo.snippet.title}`;
+					textarea.appendChild(span);
+				}
+				
+				// Add message about unavailable events
+				const eventslist = document.getElementById('events-list');
+				if (eventslist) {
+					eventslist.innerHTML = '<div class="event-item">Events unavailable - require channel permissions</div>';
+				}
+				return;
+			}
             
             // Update viewer count
             if (streamInfo.liveStreamingDetails && streamInfo.liveStreamingDetails.concurrentViewers) {
@@ -956,10 +1017,10 @@ try {
             fetchChatMessages();
             
             // Set up periodic stats updates
-            pollInterval = setInterval(() => {
-                getStreamStats();
-                getSubscriberCount(channelInfo.id);
-            }, 60000); // Update every minute
+			pollInterval = setInterval(() => {
+				getStreamStats();
+				getChannelStats(channelInfo.id);
+			}, 30000); // Update every 30 seconds
             
             console.log('Successfully connected to YouTube live chat');
         } catch (error) {
@@ -975,12 +1036,12 @@ try {
         }
     }
 	
-	function pushMessage(data){
+	function pushMessage(data) {
 		const messageEvent = new CustomEvent('youtubeMessage', {
-            detail: data,
-            bubbles: true
-        });
-        window.dispatchEvent(messageEvent);
+			detail: data,
+			bubbles: true
+		});
+		window.dispatchEvent(messageEvent);
 		
 	}
 
@@ -1116,20 +1177,31 @@ try {
         }
     }
 
-    function updateStats(type, data) {
-        switch(type) {
-            case 'viewer_update':
-                document.getElementById('viewer-count').textContent = data.meta;
-                break;
-            case 'subscriber_update':
-                document.getElementById('subscriber-count').textContent = data.meta;
-                break;
-            case 'likes_update':
-                document.getElementById('likes-count').textContent = data.meta;
-                break;
-        }
-    }
-
+	function updateStats(type, data) {
+		switch(type) {
+			case 'viewer_update':
+				document.getElementById('viewer-count').textContent = data.meta;
+				// Push message for viewer count
+				pushMessage({
+					type: "youtube",
+					event: 'viewer_update',
+					meta: data.meta
+				});
+				break;
+			case 'subscriber_update':
+				document.getElementById('subscriber-count').textContent = data.meta;
+				break;
+			case 'likes_update':
+				document.getElementById('likes-count').textContent = data.meta;
+				// Push message for likes count
+				pushMessage({
+					type: "youtube",
+					event: 'likes_update',
+					meta: data.meta
+				});
+				break;
+		}
+	}
     function addEvent(text) {
         const eventslist = document.getElementById('events-list');
         const event = document.createElement('div');
