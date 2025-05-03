@@ -975,7 +975,14 @@ try {
         }
     }
 	
-	function pushMessage(data){} // temp
+	function pushMessage(data){
+		const messageEvent = new CustomEvent('youtubeMessage', {
+            detail: messageData,
+            bubbles: true
+        });
+        window.dispatchEvent(messageEvent);
+		
+	}
 
     function processMessage(messageData) {
         try {

@@ -1,9 +1,18 @@
 var settings = {};
 
+
+// Listen for IRC messages from the page
+window.addEventListener('youtubeMessage', function(e) {
+    if (e.detail) {
+        pushMessage(e.detail);
+    }
+});
+
+
 function pushMessage(data) {
 	try {
 		// Send message to Chrome extension
-		chrome.runtime.sendMessage(chrome.runtime.id, { 
+		chrome.runtime.sendMessage(chrome.runtime.id, {
 			"message": data 
 		}, function(response) {
 			// Handle response if needed
