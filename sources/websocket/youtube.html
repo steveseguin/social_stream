@@ -993,6 +993,11 @@ try {
             if (messageData.isChatSponsor) {
                 badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/sponsor.svg" class="chat-badge" title="Member">';
             }
+			
+			if (document.querySelector("#textarea").childNodes.length > 20) {
+				document.querySelector("#textarea").childNodes[0].remove();
+			}
+
             
             // Add message to chat display
             span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageData.message}`;
@@ -1037,6 +1042,10 @@ try {
             if (document.querySelector("#textarea").childNodes.length > 100) {
                 document.querySelector("#textarea").childNodes[0].remove();
             }
+			
+			if (document.querySelector("#textarea").childNodes.length > 20) {
+				document.querySelector("#textarea").childNodes[0].remove();
+			}
             
             // Prepare data for external message handlers
             var data = {
@@ -1073,6 +1082,10 @@ try {
             if (document.querySelector("#textarea").childNodes.length > 100) {
                 document.querySelector("#textarea").childNodes[0].remove();
             }
+			
+			if (document.querySelector("#textarea").childNodes.length > 20) {
+				document.querySelector("#textarea").childNodes[0].remove();
+			}
             
             // Prepare data for external message handlers
             var data = {
