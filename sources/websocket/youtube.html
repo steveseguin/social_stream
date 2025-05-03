@@ -290,19 +290,45 @@ try {
     var hashParams = new URLSearchParams(window.location.hash.slice(1));
     channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("youtubeChannel") || "";
 
-    // Token management functions
-    function getStoredToken() {
-        return localStorage.getItem('youtubeOAuthToken');
-    }
-    
-    function setStoredToken(token) {
-        localStorage.setItem('youtubeOAuthToken', token);
-    }
-    
-    function clearStoredToken() {
-        localStorage.removeItem('youtubeOAuthToken');
-        localStorage.removeItem('youtubeChannel');
-    }
+	function getStoredToken() {
+		const storedToken = localStorage.getItem('youtubeOAuthToken');
+		const tokenExpiry = localStorage.getItem('youtubeOAuthExpiry');
+		const refreshToken = localStorage.getItem('youtubeRefreshToken');
+		
+		// Check if token exists and isn't expired
+		if (storedToken && tokenExpiry && new Date().getTime() < parseInt(tokenExpiry)) {
+			return storedToken;
+		} else if (refreshToken) {
+			// Token expired but we have a refresh token
+			// Let's try to refresh it
+			refreshAccessToken(refreshToken);
+			return null; // Return null for now, will retry after refresh
+		} else {
+			// No valid token or refresh token
+			clearStoredToken();
+			return null;
+		}
+	}
+
+	
+	function setStoredToken(token, expiresIn = 3600, refresh = null) {
+		// Store the token with an expiration timestamp (usually 1 hour)
+		const expiryTime = new Date().getTime() + (expiresIn * 1000);
+		localStorage.setItem('youtubeOAuthToken', token);
+		localStorage.setItem('youtubeOAuthExpiry', expiryTime.toString());
+		
+		// If refresh token provided, store it too
+		if (refresh) {
+			localStorage.setItem('youtubeRefreshToken', refresh);
+		}
+	}
+	
+	function clearStoredToken() {
+		localStorage.removeItem('youtubeOAuthToken');
+		localStorage.removeItem('youtubeOAuthExpiry');
+		localStorage.removeItem('youtubeRefreshToken');
+		localStorage.removeItem('youtubeChannel');
+	}
     
     function showAuthButton() {
         const authElement = document.querySelector('.auth');
@@ -315,25 +341,25 @@ try {
         if (authElement) authElement.classList.add("hidden");
     }
     
-    function initializePage() {
-        urlParams = new URLSearchParams(window.location.search);
-        hashParams = new URLSearchParams(window.location.hash.slice(1));
-        channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("youtubeChannel") || channel;
-        
-        // Set up event listeners
-        const signOutButton = document.getElementById('sign-out-button');
-        if (signOutButton) {
-            signOutButton.addEventListener('click', signOut);
-        }
+	function initializePage() {
+		urlParams = new URLSearchParams(window.location.search);
+		hashParams = new URLSearchParams(window.location.hash.slice(1));
+		channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("youtubeChannel") || channel;
+		
+		// Set up event listeners
+		const signOutButton = document.getElementById('sign-out-button');
+		if (signOutButton) {
+			signOutButton.addEventListener('click', signOut);
+		}
 
-        const authLink = document.getElementById('auth-link');
-        if (authLink) {
-            authLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                const authURL = authUrl();
-                window.location.href = authURL;
-            });
-        }
+		const authLink = document.getElementById('auth-link');
+		if (authLink) {
+			authLink.addEventListener('click', function(e) {
+				e.preventDefault();
+				const authURL = authUrl();
+				window.location.href = authURL;
+			});
+		}
 
         const sendButton = document.querySelector('#sendmessage');
         if (sendButton) {
@@ -359,70 +385,181 @@ try {
             });
         }
 
-        // Check authentication state
-        const storedToken = getStoredToken();
-        if (storedToken) {
-            verifyAndUseToken(storedToken);
-        } else if (window.location.hash) {
-            parseFragment(window.location.hash);
-        } else {
-            showAuthButton();
-        }
-    }
+         // Check if this is an OAuth callback
+		if (urlParams.has('code')) {
+			handleAuthCallback();
+			return;
+		}
+		
+		// Continue with normal flow
+		const storedToken = getStoredToken();
+		if (storedToken) {
+			verifyAndUseToken(storedToken);
+		} else if (window.location.hash) {
+			parseFragment(window.location.hash); // Keep this for backward compatibility
+		} else {
+			showAuthButton();
+		}
+	}
 
-    async function verifyAndUseToken(token) {
-        try {
-            const userInfo = await getUserInfo(token);
-            if (userInfo && userInfo.items && userInfo.items.length > 0) {
-                setStoredToken(token);
-                username = userInfo.items[0].snippet.title;
-                updateHeaderInfo(username, channel);
-                
-                if (channel) {
-                    localStorage.setItem("youtubeChannel", channel);
-                    connect();
-                }
-                
-                showSocketInterface();
-            } else {
-                clearStoredToken();
-                showAuthButton();
-            }
-        } catch (error) {
-            console.error('Error validating token:', error);
-            clearStoredToken();
-            showAuthButton();
-        }
-    }
+	async function verifyAndUseToken(token) {
+		try {
+			const userInfo = await getUserInfo(token);
+			if (userInfo && userInfo.items && userInfo.items.length > 0) {
+				// Valid token, update UI and continue
+				username = userInfo.items[0].snippet.title;
+				updateHeaderInfo(username, channel);
+				
+				if (channel) {
+					localStorage.setItem("youtubeChannel", channel);
+					connect();
+				}
+				
+				showSocketInterface();
+			} else {
+				// Invalid token, try refreshing or clear
+				await refreshToken();
+			}
+		} catch (error) {
+			if (error.message.includes('401')) {
+				// Token expired or invalid, try refreshing
+				await refreshToken();
+			} else {
+				console.error('Error validating token:', error);
+				clearStoredToken();
+				showAuthButton();
+			}
+		}
+	}
 
-    function parseFragment(hash) {
-        const tokens = {};
-        hash.replace('#', '').split('&').forEach(param => {
-            const [key, value] = param.split('=');
-            tokens[key] = value;
-        });
-        
-        if (tokens.access_token) {
-            verifyAndUseToken(tokens.access_token);
-        } else {
-            console.error('No access token found in URL');
-            showAuthButton();
-        }
-    }
+	function parseFragment(hash) {
+		const tokens = {};
+		hash.replace('#', '').split('&').forEach(param => {
+			const [key, value] = param.split('=');
+			tokens[key] = value;
+		});
+		
+		if (tokens.access_token) {
+			// Get the expires_in value if available, or use default (1 hour)
+			const expiresIn = tokens.expires_in ? parseInt(tokens.expires_in) : 3600;
+			// Store token with expiry time
+			setStoredToken(tokens.access_token, expiresIn);
+			verifyAndUseToken(tokens.access_token);
+		} else {
+			console.error('No access token found in URL');
+			showAuthButton();
+		}
+	}
+	
+	async function refreshToken() {
+		// This is a placeholder for future implementation
+		// Note: To fully implement token refresh, you'd need a backend service
+		// OAuth 2.0 implicit flow used here doesn't support refresh tokens directly in the browser
+		console.log('Token refresh would happen here with a backend service');
+		
+		// For now, just clear the token and show auth button
+		clearStoredToken();
+		showAuthButton();
+	}
 
-    function authUrl() {
-        const state = nonce(15);
-        sessionStorage.youtubeOAuthState = state;
-        
-        return 'https://accounts.google.com/o/oauth2/v2/auth' +
-            '?response_type=token' +
-            '&client_id=' + clientId + 
-            '&redirect_uri=' + encodeURIComponent(redirectURI) +
-            '&scope=' + encodeURIComponent(scope) +
-            '&state=' + state + 
-            '&include_granted_scopes=true' +
-            '&prompt=consent';
-    }
+	function authUrl() {
+		const state = nonce(15);
+		sessionStorage.youtubeOAuthState = state;
+		
+		// Redirect to our Cloudflare Worker which will handle the OAuth flow
+		return 'https://ytauth.socialstream.ninja/auth' +
+			'?client_id=' + clientId + 
+			'&redirect_uri=' + encodeURIComponent(redirectURI) +
+			'&state=' + state;
+	}
+	
+	async function refreshAccessToken(refreshToken) {
+		try {
+			const response = await fetch('https://ytauth.socialstream.ninja/refresh', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ refresh_token: refreshToken })
+			});
+			
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			
+			const data = await response.json();
+			
+			// Store new access token
+			setStoredToken(
+				data.access_token, 
+				data.expires_in, 
+				data.refresh_token || refreshToken // Use new refresh token if provided
+			);
+			
+			// Retry with new token
+			setTimeout(() => {
+				verifyAndUseToken(data.access_token);
+			}, 500);
+			
+			return true;
+		} catch (error) {
+			console.error('Error refreshing token:', error);
+			clearStoredToken();
+			showAuthButton();
+			return false;
+		}
+	}
+	
+	async function handleAuthCallback() {
+		const urlParams = new URLSearchParams(window.location.search);
+		const code = urlParams.get('code');
+		const state = urlParams.get('state');
+		
+		// Verify state to prevent CSRF
+		if (state !== sessionStorage.youtubeOAuthState) {
+			console.error('State mismatch - possible CSRF attack');
+			showAuthButton();
+			return;
+		}
+		
+		if (code) {
+			try {
+				// Exchange code for tokens via our worker
+				const response = await fetch('https://ytauth.socialstream.ninja/token', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ 
+						code: code,
+						redirect_uri: redirectURI
+					})
+				});
+				
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				
+				const data = await response.json();
+				
+				// Store tokens
+				setStoredToken(
+					data.access_token, 
+					data.expires_in, 
+					data.refresh_token
+				);
+				
+				// Clean up URL
+				window.history.replaceState({}, document.title, redirectURI);
+				
+				// Continue with authentication flow
+				verifyAndUseToken(data.access_token);
+			} catch (error) {
+				console.error('Error exchanging code for tokens:', error);
+				showAuthButton();
+			}
+		}
+	}
 
     // Source: https://www.thepolyglotdeveloper.com/2015/03/create-a-random-nonce-string-using-javascript/
     function nonce(length) {
