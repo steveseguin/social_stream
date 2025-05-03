@@ -3,6 +3,7 @@ var settings = {};
 
 // Listen for IRC messages from the page
 window.addEventListener('youtubeMessage', function(e) {
+	console.log(e);
     if (e.detail) {
         pushMessage(e.detail);
     }
