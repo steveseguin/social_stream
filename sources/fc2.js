@@ -99,6 +99,15 @@
 			return;
 		}
 		
+		var chatimg = "";
+		try {
+			chatimg = ele.querySelector('img[src]').src;
+			if (chatimg == "https://live.fc2.com/common/live/img/thumb_profile_small.png"){
+				chatimg = "";
+			}
+		} catch(e){
+		}
+		
 		//data.sourceImg = brandedImageURL;
 		
 		var sourceImg = "fc2.png";
@@ -109,7 +118,7 @@
 		data.textColor = "";
 		data.nameColor = nameColor;
 		data.chatmessage = msg;
-		data.chatimg = "";
+		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";
 		data.contentimg = "";
