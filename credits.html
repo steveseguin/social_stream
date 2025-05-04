@@ -7,6 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@900&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=News+Cycle:wght@400;700&display=swap" rel="stylesheet" />
+
 	<script src="currency.js"></script>
 	
     <style>
@@ -14,7 +16,7 @@
             margin: 0;
             padding: 0;
             background-color: black;
-            background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
+            background-image: url("./media/stardust.png");
             animation: stars 30s linear infinite;
             overflow: hidden;
             opacity: 0;
@@ -34,15 +36,15 @@
 		/* Star Wars style (default) */
 		@keyframes translateText {
 			0% {
-				transform: rotateX(15deg) scale(1.0, 1.0) translateY(66vh);
+				transform: rotateX(20deg) scale(1.0, 1.0) translateY(66vh);
 			}
 			
 			10% {
-				transform: rotateX(20deg) scale(0.965, .95) translateY(-315.6vh);
+				transform: rotateX(25deg) scale(0.965, .95) translateY(-315.6vh);
 			}
 			
 			100% {
-				transform: rotateX(25deg) scale(0.65, 0.5) translateY(-3750vh);
+				transform: rotateX(30deg) scale(0.65, 0.5) translateY(-3750vh);
 			}
 		}
 
@@ -117,11 +119,27 @@
 			overflow: hidden;
 			display: none;
 		}
-        /* Style-specific class overrides */
-        #app.starwars {
-            perspective: 400px;
-            perspective-origin: center 100%;
-        }
+       
+	    #app.starwars {
+			perspective: 400px;
+			perspective-origin: center 100%;
+		}
+
+		.text.starwars, .category-header.starwars {
+			font-family: 'News Gothic MT', 'News Gothic', sans-serif;
+			font-weight: 700;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+			color: #feda4a;
+			text-shadow: 0 0 16px rgba(255, 235, 59, 0.6), 0 0 3px rgba(59, 190, 255, 0.8), 0 0 10px rgba(255, 255, 255, 0.3);
+			line-height: 1.6;
+		}
+		
+		.category-header.starwars {
+			transform: scaleY(1.8); /* Makes the text 30% taller without affecting width */
+			transform-origin: center; /* Centers the scaling effect */
+			padding: 3px 0; 
+		}
 
         #app.standard {
             perspective: none;
@@ -356,7 +374,6 @@
 			display: block;
 		}
 
-		/* Fix animation duration settings */
 		.text-container.animate {
 			animation-duration: var(--animation-speed, 600s);
 			animation-timing-function: linear;
@@ -368,7 +385,6 @@
 			display: none;
 		}
 
-		/* Fix animation speed issue */
 		:root {
 			--animation-speed: 600s;
 		}
@@ -380,6 +396,19 @@
 			padding-top: 20%;
 			position: relative;
 			z-index: 1;
+		}
+		
+		.footer-text.starwars {
+			font-family: 'News Gothic MT', 'News Gothic', sans-serif;
+			font-weight: 700;
+			letter-spacing: 0.2em;
+			text-transform: uppercase;
+		}
+
+		.text-container.animate.starwars {
+			animation-name: translateText;
+			animation-duration: var(--animation-speed, 600s);
+			transform-origin: 50% 100%;
 		}
 
 		/* StarWars style stays at default speed (long duration) */
