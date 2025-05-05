@@ -209,6 +209,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("parti");	return;	}
 				if ("focusChat" == request) {
                         document.querySelector('.chat-input input[placeholder][type="text"]').focus();
                         sendResponse(true);

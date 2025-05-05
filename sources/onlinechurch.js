@@ -184,6 +184,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("onlinechurch");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('#publicchat textarea[placeholder][maxlength]').focus();
 					sendResponse(true);

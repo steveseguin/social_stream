@@ -676,6 +676,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("instagram");	return;	}
 				if ("focusChat" == request){
 					if (!document.querySelector("textarea[class]")){
 						sendResponse(false);

@@ -411,6 +411,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 </ul>
             `
         },
+		{
+            name: 'Whop',
+            icon: 'whop.png',
+            description: 'Pay to view crypto videos.',
+            type: 'standard',
+            instructions: `
+                <ul>
+                    <li>Use the regular view page with chat; no pop out needed</li>
+                    <li>URL: https://whop.com/*</li>
+                </ul>
+            `
+        },
         {
             name: 'Bilibili.com',
             icon: 'bilibili.png',
@@ -1302,6 +1314,18 @@ document.addEventListener('DOMContentLoaded', function() {
 				</ul>
 			`,
 			notes: 'Also works with: https://manage.wix.com/dashboard/*/live-video/* and embedded widgets at https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*'
+		},
+		{
+			name: 'Xeenon',
+			icon: 'xeenon.png',
+			description: 'Live streaming on Xeenon dashboard.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://xeenon.xyz/dashboard</li>
+					<li>Pop out not supported</li>
+				</ul>
+			`
 		}
     ];
     

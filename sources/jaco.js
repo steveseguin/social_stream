@@ -134,6 +134,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("jaco");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('input[type="text"][placeholder]').focus();
 					sendResponse(true);

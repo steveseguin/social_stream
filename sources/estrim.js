@@ -162,6 +162,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("estrim");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('textarea.native-textarea').focus();
 					sendResponse(true);

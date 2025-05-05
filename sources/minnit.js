@@ -351,6 +351,7 @@
 		chrome.runtime.onMessage.addListener(
 			function (request, sender, sendResponse) {
 				try{
+					if ("getSource" == request){sendResponse("minnit");	return;	}
 					if ("focusChat" == request){
 						try {
 							var ele = document.querySelector('iframe').contentWindow.document.body.querySelector("#textbox");

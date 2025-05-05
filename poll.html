@@ -512,11 +512,11 @@ function updatePollResults() {
         
         html += `<span class="option-text">${option}</span>`;
         
-        if (settings.pollTally) {
-            html += `<span class="option-percentage">${votes} votes</span>`;
-        } else {
-            html += `<span class="option-percentage">${percentage}%</span>`;
-        }
+		if (settings.pollTally) {
+			html += `<span class="option-tally">${votes} votes</span>`;
+		} else {
+			html += `<span class="option-percentage">${percentage}%</span>`;
+		}
         
         html += `<div class="poll-bar" style="width: ${percentage}%;"></div>`;
         
@@ -622,13 +622,20 @@ function processVoteSingle(vote, name, source) {
         }
 
         // For multiple choice, cached option lookup
+        let cleanVote = vote;
+        
+        // Remove hashtag if it exists
+        if (cleanVote.startsWith('#')) {
+            cleanVote = cleanVote.substring(1);
+        }
+        
         for (let i = 0; i < settings.pollOptions.length; i++) {
             const option = settings.pollOptions[i];
             const normalizedOption = option.toLowerCase();
             
-            if (vote === normalizedOption || 
-                normalizedOption === vote + 's' || 
-                vote === normalizedOption + 's') {
+            if (cleanVote === normalizedOption || 
+                normalizedOption === cleanVote + 's' || 
+                cleanVote === normalizedOption + 's') {
                 
                 results[option] = (results[option] || 0) + 1;
                 totalVotes++;
@@ -651,14 +658,13 @@ function processVoteSingle(vote, name, source) {
             const resultsKeys = Object.keys(results);
             if (!isNaN(numericVote) && numericVote > 0 && numericVote <= resultsKeys.length) {
                 const selectedOption = resultsKeys[numericVote - 1];
-                results[selectedOption]++;
+                results[selectedOption] = (results[selectedOption] || 0) + 1;
                 totalVotes++;
                 if (!settings.pollSpam) alreadyVoted[voterKey] = true;
             }
         }
     }
 }
-
 function updatePollVisibility() {
     if (settings.pollEnabled) {
         pollContainer.classList.remove('hidden');
@@ -666,18 +672,26 @@ function updatePollVisibility() {
         pollContainer.classList.add('hidden');
     }
 }
-
 function processData(data) {
     if (data.setting && !data.settings) {
-        data.settings = {
-            [data.setting]: {
-                [data.type]: data.value !== undefined ? data.value : false
-            }
-        };
-    }
-
+        if (data.type === "setting") {
+            data.settings = {
+                [data.setting]: {
+                    setting: data.value
+                }
+            };
+        } else {
+            data.settings = {
+                [data.setting]: {
+                    [data.type]: data.value !== undefined ? data.value : false
+                }
+            };
+        }
+    } 
+	
     if (data.settings) {
         let settingsChanged = false;
+        let justUIChange = false;
         
         if (data.settings.pollEnabled) {
             settings.pollEnabled = data.settings.pollEnabled.setting;
@@ -693,15 +707,16 @@ function processData(data) {
         }
         if (data.settings.pollTally) {
             settings.pollTally = data.settings.pollTally.setting;
-            settingsChanged = true;
+            justUIChange = true;
         }
         if (data.settings.pollStyle) {
             settings.styleType = data.settings.pollStyle.optionsetting || 'default';
-            settingsChanged = true;
+            let pollContainer = document.getElementById('poll-container');
+			pollContainer.className = `poll-container style-${settings.styleType} ${settings.pollEnabled ? '' : 'hidden'}`;
         }
         if (data.settings.pollSpam) {
             settings.pollSpam = data.settings.pollSpam.setting;
-            settingsChanged = true;
+            justUIChange = true;
         }
         if (data.settings.multipleChoiceOptions) {
             settings.pollOptions = data.settings.multipleChoiceOptions.textsetting
@@ -719,9 +734,12 @@ function processData(data) {
             results = {};
             totalVotes = 0;
             alreadyVoted = {};
-            settings.pollClosed = false; // Reset closed state when settings change
+            settings.pollClosed = false;
             initializePoll();
             updatePollVisibility();
+        }
+		if (justUIChange) {
+            updatePollResults();
         }
     } else if (data.chatmessage) {
         queueVote(data.chatmessage, data.chatname, data.type);
@@ -762,6 +780,9 @@ function resetPoll() {
 
 function processInput(data) {
     if (!data) return false;
+	
+	console.log(data);
+	
     if ("action" in data) {
         if (data.action === "closepoll") {
             closePoll();
@@ -774,9 +795,16 @@ function processInput(data) {
     } else if (data.chatmessage) {
         queueVote(data.chatmessage, data.chatname, data.type);
         return true;
-    } else {
-        return false;
+    } else if (data.settings) {
+        // Process settings updates
+        processData(data);
+        return true;
+    } else if (data.cmd) {
+        // Process commands
+        processData(data);
+        return true;
     }
+    return false;
 }
 
 // Memory optimization - create connection manager

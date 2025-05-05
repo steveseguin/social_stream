@@ -146,6 +146,7 @@
 		function (request, sender, sendResponse) {
 			if (!isExtensionOn){return;}
 			try{
+				if ("getSource" == request){sendResponse("substack");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 					document.querySelector('input[class^="input-"], textarea, input[type="text"]').focus();
 					sendResponse(true);

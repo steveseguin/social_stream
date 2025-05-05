@@ -135,6 +135,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("vdoninja");	return;	}
 				if ("focusChat" == request){
 					document.querySelector("#chatInput").focus();
 					sendResponse(true);

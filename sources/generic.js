@@ -319,7 +319,8 @@
   chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
       try {
-        if ("focusChat" == request) {
+        if ("getSource" == request){sendResponse("generic");	return;	}
+		if ("focusChat" == request) {
           // Enhanced chat input detection
           const inputSelectors = [
             'textarea', 'textarea[placeholder]', 'input[type="text"][placeholder]', 

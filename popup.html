@@ -97,6 +97,26 @@
   animation: flash 0.5s linear 1;
 }
 
+.source-list-container {
+    max-height: 80px;
+    overflow-y: auto;
+    padding: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.source-list-container .username-tag {
+    display: inline-flex;
+    align-items: center;
+}
+
+
+
+.add-source-container input {
+    width: 150px;
+}
+
 .username-list-container {
 	max-height: 80px;
 	overflow-y: auto;
@@ -120,7 +140,7 @@ hr {
     border-radius: 3px;
     flex-direction: row;
 }
-.remove-username {
+.remove-username, .remove-source {
 	cursor: pointer;
 	color: #ff0000;
 	font-weight: bold;
@@ -158,12 +178,22 @@ hr {
 	color:white;
 }
 .source-type {
-  font-size: 0.8em;
-  color: #666;
-  margin-left: 5px;
-  padding: 0 4px;
-  background: #e0e0e0;
-  border-radius: 2px;
+	font-size: 0.8em;
+	color: #666;
+	margin-left: 5px;
+	padding: 0;
+	background: #e0e0e0;
+	border-radius: 10px;
+	display:inline-block;
+	overflow: hidden;
+	vertical-align: middle;
+}
+.source-type .icon {
+	margin:0;
+	padding: 0;
+	border-radius: 5px;
+	max-height: 18px;
+	max-width: 18px;
 }
 .add-username-container input {
   width: 150px;
@@ -1608,6 +1638,8 @@ input:checked + .slider:before {
 								</div>
 							</div>
 							
+							<i><a class="lightblue" target="_blank" href="https://socialstream.ninja/docs/tts">Check out the TTS help guide here!</a></i>
+							
 							<!-- Global TTS Behavior Options -->
 							<div class="options_group tts-behavior-options">
 								<h4>TTS Behaviors</h4>
@@ -2259,6 +2291,13 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="hide-messages-starting-with">❗💬 Hide messages that start with: </span><b><i>!</i></b>
+                                </div>
+								<div title="Do not TTS or Beep on messages that start with !">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="quietcommands" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="silence-messages-starting-with">❗🔇 "Don't TTS/Beep if messages starts with </span><b><i>!</i></b>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -3804,7 +3843,17 @@ input:checked + .slider:before {
                                     </label>
                                     <div class="textInputContainer" style="display: inline-block; width: 250px;">
                                         <input type="text" id="postserver10" class="textInput" autocomplete="off" placeholder="http://127.0.0.1:8000" data-textparam10="postserver" />
-                                        <label for="postserver10"><span data-translate="send-bot-to-post-server">&gt; Send bot replies to POST server</span></label>
+                                        <label for="postserver10"><span data-translate="send-bot-to-post-server">&gt; Send bot replies to a POST server</span></label>
+                                    </div>
+                                </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param10="putserver" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                        <input type="text" id="putserver10" class="textInput" autocomplete="off" placeholder="http://127.0.0.1:3000" data-textparam10="putserver" />
+                                        <label for="putserver10"><span data-translate="send-bot-to-put-server">&gt; Send bot replies to a PUT server</span></label>
                                     </div>
                                 </div>
 								<div title="The volume has a max of 1.0 (100%)">
@@ -4932,8 +4981,15 @@ input:checked + .slider:before {
 											💰 Only include donors
 										</span>
 									</div>
-									<br>
-									
+									<div title="This will enable the alternate scoring system where donors are prioritized and shown in their own category at the top, followed by members and then regular participants.">
+										<label class="switch">
+											<input type="checkbox" data-param13="donationpriority" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="donation-priority">
+											🏆 Prioritize donors (show donors first)
+										</span>
+									</div>
 									<div>
 										<label class="switch">
 										<input type="checkbox" data-param13="speed" />
@@ -4982,7 +5038,6 @@ input:checked + .slider:before {
 									<input type="text" style="width: 50px;" data-palette="text_color_palette" id="text_color" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam13="textcolor" />
 									<input type="color" data-color="text_color" id="text_color_palette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 								</div>
-								<br>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param13="hidecategories" />
@@ -4992,7 +5047,6 @@ input:checked + .slider:before {
 										🏷️ Hide category headers (Donors, Chatters, etc.)
 									</span>
 								</div>
-								<br>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param13="showamounts" />
@@ -5002,7 +5056,6 @@ input:checked + .slider:before {
 										💲 Show donation amounts
 									</span>
 								</div>
-								<br>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param13="showavatar" />
@@ -5012,7 +5065,17 @@ input:checked + .slider:before {
 										😀 Show avatar images
 									</span>
 								</div>
-								<br> 
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param13="nosourcetype" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="hide-sourcetype">
+										🏢 Hide source type images
+									</span>
+								</div>
+								<br>
+								
 								<div class="textInputContainer" style="width: 95%;" title="Custom message to show at the end">
 									<input type="text" id="endmessage13" class="textInput instant" autocomplete="off" placeholder="eg: Thanks for watching!" value="Thank you all for being part of the stream! ❤️" data-textparam13="endmessage" />
 									<label for="endmessage13"><span data-translate="end-message">&gt; Custom end message</span></label>
@@ -5601,7 +5664,14 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="filter-out-messages-with-bad-karma"> 😈😇 Add sentiment scores to messages </span>
                                 </div>
-                               
+								<div>
+									<h3>Printer Control</h3>
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="text" id="printerName" class="textInput" autocomplete="off" data-textsetting="printerName" placeholder="Enter printer name (e.g., 'POS-58')" />
+										
+									</div>
+									<p>You make need to add <i>--kiosk --kiosk-printing</i> to your browser's command line to disable the system print pop-up window</p>
+								</div>
                                 <div title="Some sites may wish to access your stream ID for custom third party integrations">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="sharestreamid" />
@@ -5800,6 +5870,18 @@ input:checked + .slider:before {
                                     <span data-translate="relay-all-messages-not-recommended">🔀 Relay all messages (!NOT RECOMMENDED!)</span>
                                 </div>
 								<div>
+									<div
+										class="textInputContainer"
+										style="width: 95%;"
+										title="Note:
+								List of sources that you want to allow the relay to work with. Nothing implies all."
+									>
+										<input type="text" id="relaytargets" class="textInput" autocomplete="off" placeholder="Enter source types" data-textsetting="relaytargets" />
+										🎯 <span data-translate="relaytargets">Pick <b>relay destinations</b>. (None implies all)</span>
+									</div>
+								</div>
+								<br />
+								<div>
                                     <label class="switch">
                                         <input type="checkbox" id="norelaysaid" data-setting="nosaid" />
                                         <span class="slider round"></span>
@@ -5871,7 +5953,16 @@ input:checked + .slider:before {
                                         <span><span data-translate="tell-a-joke-now">Tell a joke now</span></span>
                                     </button>
                                 </div>
-
+								<h3><span data-translate="custom-javascript">Custom JavaScript</span></h3>
+								<div title="Upload custom JavaScript to extend functionality">
+									<label class="switch">
+										<input type="checkbox" id="customJsEnabled" data-setting="customJsEnabled" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="enable-custom-javascript">⚙️ Enable custom JavaScript </span><br>
+									<button id="uploadCustomJsButton" class="glowingButton" style="width: 160px; margin-left: 0px;" title="Upload custom JavaScript file"><span>⬆️ Upload Script</span></button>
+									<button id="deleteCustomJsButton" class="glowingButton" style="width: 160px; margin-left: 0px;" title="Delete uploaded JavaScript file"><span>⛔ Delete</span></button>
+								</div>
                                 <h3><span data-translate="giphy-support">Giphy/Tenor support</span></h3>
                                 <div>
                                     <label class="switch">
@@ -6118,31 +6209,7 @@ input:checked + .slider:before {
                                     <span data-translate="strip-html-from-messages-and-donations">📤 Strip HTML/images from messages and donations </span>
                                 </div>
 								
-								<h3><span data-translate="white-black-list">Blocked / Allowed Users:</span></h3>
-								<p>Source type can be something like 'twitch', 'kick', or 'youtube'</p> 
 								
-								<div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-setting="whitelistuserstoggle" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; only values that match a username will be allowed.">
-                                        <input type="text" id="whitelistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="whitelistusers" />
-										🤍 <span data-translate="only-allow-specified-users">Show only the specified users (whitelist)</span>
-                                    </div>
-                                </div>
-								
-								
-								<div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-setting="blacklistuserstoggle" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; only values that match a username will be allowed.">
-                                        <input type="text" id="blacklistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="blacklistusers" />
-										🔮 <span data-translate="">Blocked users (blacklisted)</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -6163,7 +6230,15 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="colorofsource" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="colorofsource">🌈🎯 Set name colors to match the site's branding</span>
+                                    <span data-translate="colorofsource">🌈🎯 Set username color to match the site's branding</span>
+                                </div>
+								
+								<div title="Sets the color for a background to the color of the source's branding. Featured messages only.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="colorofsourcebg" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="colorofsourcebg">🌈 Featured messages have their background color match their source branding color</span>
                                 </div>
 								
                                 <div title="If a name lacks color data, randomly add one. This does not cause a name to be displayed as colorful though- you need to enable that option.">
@@ -6231,11 +6306,36 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-privhostbot-options-ext" />
 					<label class="collapsible-label" for="wrapper-privhostbot-options-ext">
-						<span data-translate="identify-hosts">🦸 Identify who is a host, mod, bot, vip</span>
+						<span data-translate="identify-hosts">🦸 Manage blocked users, hosts, mods, bots, VIPs</span>
 					</label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat">
+								<h3><span data-translate="white-black-list">Blocked / Allowed Users:</span></h3>
+								<p>Source type can be something like 'twitch', 'kick', or 'youtube'</p> 
+								
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="whitelistuserstoggle" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; only values that match a username will be allowed.">
+                                        <input type="text" id="whitelistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="whitelistusers" />
+										🤍 <span data-translate="only-allow-specified-users">Show only the specified users (whitelist)</span>
+                                    </div>
+                                </div>
+								
+								
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="blacklistuserstoggle" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; only values that match a username will be allowed.">
+                                        <input type="text" id="blacklistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="blacklistusers" />
+										🔮 <span data-translate="">Blocked users (blacklisted)</span>
+                                    </div>
+                                </div>
 							
 								<h3><span data-translate="special-user-types">Assign roles/classes to certain users</span></h3>
 								<p>Source type can be something like 'twitch', 'kick', or 'youtube'</p> 

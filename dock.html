@@ -8,6 +8,7 @@
 		<link rel="icon" href="./favicon.ico" />
 		<link href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
 		<meta name="robots" content="noindex">
+		<script src="currency.js"></script>
 
 		<style>
 			:root {
@@ -734,6 +735,40 @@
 			svg.regular-emote, img.regular-emote {
 				margin: auto 0;
 			}
+			
+			.marked-host {
+				border-left: 3px solid #ff4444 !important;
+			}
+
+			.marked-mod {
+				border-left: 3px solid #44ff44 !important;
+			}
+
+			.marked-bot {
+				border-left: 3px solid #4444ff !important;
+			}
+
+			.timed-out {
+				opacity: 0.5;
+				text-decoration: line-through;
+				filter: blur(5px);
+			}
+
+			/* Optionally add badges for roles */
+			.marked-host:before {
+				content: "🎙️";
+				margin-right: 3px;
+			}
+
+			.marked-mod:before {
+				content: "🛡️";
+				margin-right: 3px;
+			}
+
+			.marked-bot:before {
+				content: "🤖";
+				margin-right: 3px;
+			}
 
 			img,
 			svg {
@@ -1188,13 +1223,9 @@
 				background-color: var(--highlight-compact2);
 			}
 
-			.dono-highlight {
-				background-color: var(--donation-bgcolor);
-			}
 
-			.odd.dono-highlight:not(.expand) {
-				background-color: var(--donation-bgcolor-odd);
-			}
+
+
 
 			.bubble {
 				border-radius: 13px;
@@ -1207,14 +1238,7 @@
 				background-color: var(--bgcolor-bubble-odd);
 			}
 
-			.bubble.dono-highlight {
-				background-color: var(--donation-bgcolor-bubble);
-				box-shadow: inset 0 0 2px #ffff00a1;
-			}
-			.bubble.odd.dono-highlight:not(.expand) {
-				background-color: var(--donation-bgcolor-bubble-odd);
-				box-shadow: inset 0 0 2px #ffff00a1;
-			}
+
 
 			.member {
 				background-color: var(--member-bgcolor);
@@ -1222,6 +1246,23 @@
 
 			.odd.member:not(.expand) {
 				background-color: var(--member-bgcolor-odd);
+			}
+			
+			.dono-highlight {
+				background-color: var(--donation-bgcolor);
+			}
+			
+			.odd.dono-highlight:not(.expand) {
+				background-color: var(--donation-bgcolor-odd);
+			}
+			
+			.bubble.dono-highlight {
+				background-color: var(--donation-bgcolor-bubble);
+				box-shadow: inset 0 0 2px #ffff00a1;
+			}
+			.bubble.odd.dono-highlight:not(.expand) {
+				background-color: var(--donation-bgcolor-bubble-odd);
+				box-shadow: inset 0 0 2px #ffff00a1;
 			}
 
 			.bubble.member {
@@ -2279,6 +2320,56 @@
 		.OBS .output-container #output::-webkit-scrollbar {
 			 display: none; /* Chrome, Safari, Opera */
 		}
+		
+		.context-menu__submenu {
+			display: none;
+			position: absolute;
+			left: 100%;
+			top: 0;
+			background-color: #f4f4f4;
+			border: solid 1px #dfdfdf;
+			box-shadow: 1px 1px 2px #cfcfcf;
+			list-style: none;
+			padding: 8px 0;
+			margin: 0;
+			width: 180px;
+			z-index: 11;
+		}
+
+		.context-menu__item--has-submenu:hover > .context-menu__submenu {
+			display: block;
+		}
+
+		.context-menu__item--has-submenu {
+			position: relative;
+		}
+
+		.context-menu__item--has-submenu:hover {
+			background-color: #0066aa;
+			color: #fff;
+		}
+
+		.context-menu__submenu .context-menu__item {
+			margin: 0;
+		}
+
+		.context-menu__submenu .context-menu__link {
+			padding: 4px 12px;
+			color: #0066aa;
+			text-decoration: none;
+			display: block;
+			white-space: nowrap;
+		}
+
+		.context-menu__submenu .context-menu__item:hover > .context-menu__link {
+			background-color: #0066aa;
+			color: #fff;
+		}
+
+		.context-menu--left .context-menu__submenu {
+			left: auto;
+			right: 100%;
+		}
 
 		</style>
 	</head>
@@ -2333,6 +2424,7 @@
 			<source src="./audio/tone.mp3" type="audio/mpeg" />
 			<source src="./audio/tone.ogg" type="audio/ogg" />
 		</audio>
+		
 		<nav id="context-menu" class="context-menu">
 			<div class="closeBtn">X</div>
 			<ul class="context-menu__items">
@@ -2342,12 +2434,63 @@
 						<span>Delete Message</span>
 					</a>
 				</li>
-				<li class="context-menu__item" data-action="Block" title="All messages from user will be deleted; user will also get added to the hide-user list">
-					<a href="#" class="context-menu__link" data-action="Block">
-						🚫
-						<span>Block User</span> 
+				
+				<!-- User Actions submenu -->
+				<li class="context-menu__item context-menu__item--has-submenu" data-action="UserActions">
+					<a href="#" class="context-menu__link" data-action="UserActions">
+						👤
+						<span>User Actions</span>
+						<span style="float:right">▸</span>
 					</a>
+					<ul class="context-menu__submenu">
+						<li class="context-menu__item" data-action="Block" title="All messages from user will be deleted; user will also get added to the hide-user list">
+							<a href="#" class="context-menu__link" data-action="Block">
+								🚫
+								<span>Block User</span>
+							</a>
+						</li>
+						<li class="context-menu__item context-menu__item--has-submenu" data-action="Timeout">
+							<a href="#" class="context-menu__link" data-action="Timeout">
+								⏳
+								<span>Timeout User</span>
+								<span style="float:right">▸</span>
+							</a>
+							<ul class="context-menu__submenu">
+								<li class="context-menu__item" data-action="Timeout30s">
+									<a href="#" class="context-menu__link" data-action="Timeout30s">30 seconds</a>
+								</li>
+								<li class="context-menu__item" data-action="Timeout2m">
+									<a href="#" class="context-menu__link" data-action="Timeout2m">2 minutes</a>
+								</li>
+								<li class="context-menu__item" data-action="Timeout10m">
+									<a href="#" class="context-menu__link" data-action="Timeout10m">10 minutes</a>
+								</li>
+								<li class="context-menu__item" data-action="Timeout30m">
+									<a href="#" class="context-menu__link" data-action="Timeout30m">30 minutes</a>
+								</li>
+							</ul>
+						</li>
+						<li class="context-menu__item" data-action="VIP">
+							<a href="#" class="context-menu__link" data-action="VIP">
+								⭐
+								<span>VIP User</span>
+							</a>
+						</li>
+						<li class="context-menu__item" data-action="MarkMod">
+							<a href="#" class="context-menu__link" data-action="MarkMod">
+								🛡️
+								<span>Mark as Mod</span>
+							</a>
+						</li>
+						<li class="context-menu__item" data-action="MarkBot">
+							<a href="#" class="context-menu__link" data-action="MarkBot">
+								🤖
+								<span>Mark as Bot</span>
+							</a>
+						</li>
+					</ul>
 				</li>
+				
 				<li class="context-menu__item" data-action="History" title="Previous 10 messages from the user will be displayed">
 					<a href="#" class="context-menu__link" data-action="History">
 						📖
@@ -2372,12 +2515,6 @@
 						<span>Text to Speech</span>
 					</a>
 				</li>
-				<li class="context-menu__item" data-action="VIP">
-					<a href="#" class="context-menu__link" data-action="VIP">
-						⭐
-						<span>VIP User</span>
-					</a>
-				</li>
 				<li class="context-menu__item" data-action="Copy">
 					<a href="#" class="context-menu__link" data-action="Copy">
 						📋
@@ -2393,9 +2530,9 @@
 				<li class="hidden" id="TipRightClick">
 					<hr />
 					<span href="#">
-						<small
-							><i data-translate="hold-ctrl">tip: <b>CTRL</b>(⌘) + <b>Click</b> for alt-menu</i></small
-						>
+						<small>
+							<i data-translate="hold-ctrl">tip: <b>CTRL</b>(⌘) + <b>Click</b> for alt-menu</i>
+						</small>
 					</span>
 				</li>
 			</ul>
@@ -3090,6 +3227,8 @@
 				}
 			}
 
+			var timedOutUsers = {};
+			
 			var transitionType = [];
 
 			if (urlParams.has("fadein")) {
@@ -3151,6 +3290,11 @@
 			var filtercommands = false;
 			if (urlParams.has("hidecommands")) {
 				filtercommands = true;
+			}
+			
+			var doNotTTSBeep = false;
+			if (urlParams.has("quietcommands")) {
+				doNotTTSBeep = true;
 			}
 
 			if (urlParams.has("reverse")) {
@@ -3500,54 +3644,8 @@
 			}
 			
 			function toUSD(value) {
-			  const rates = {
-				EUR: 1.08,
-				GBP: 1.26,
-				JPY: 0.0067,
-				CHF: 1.12,
-				AUD: 0.66,
-				CAD: 0.74,
-				CNY: 0.14,
-				HKD: 0.13,
-				NZD: 0.61,
-				KRW: 0.00075
-			  };
-
-			  const items = {
-				diamond: 0.005,
-				gold: 0.01,
-				coin: 0.01,
-				rose: 0.01,
-				gift: 0.02 // this is just a guess
-			  };
-
-			  if (typeof value !== 'string') value = String(value);
-			  value = value.trim().toLowerCase();
-			  
-			  const numericValue = value.replace(/[^\d.-]/g, '');
-			  const amount = parseFloat(numericValue);
-			  
-			  if (isNaN(amount)) return 0;
-
-			  // Handle items like "3 coins" or "2 roses"
-			  for (const [item, rate] of Object.entries(items)) {
-				if (value.includes(item) || value.includes(item + 's')) {
-				  return amount * rate;
-				}
-			  }
-			  
-			  // Strip common currency symbols for better detection
-			  const cleanValue = value.replace(/[$€£¥]/g, '').trim();
-			  
-			  // Handle currency codes with symbols like "$1 CAD"
-			  for (const [currency, rate] of Object.entries(rates)) {
-				if (cleanValue.includes(currency.toLowerCase())) {
-				  return amount * rate;
-				}
-			  }
-			  
-			  // Default to USD if no other currency found
-			  return amount;
+				 // Use the new convertToUSD function
+				 return convertToUSD(value);
 			}
 			
 			const tiers = processTierParam(urlParams);
@@ -4121,11 +4219,19 @@
 					}
 					if (blockMessageSelecting2 || blockMessageSelecting) {
 						document.querySelector('[data-action="Block"]').classList.add("hidden");
+						document.querySelector('[data-action="Timeout"]').classList.add("hidden");
+						//document.querySelector('[data-action="MarkHost"]').classList.add("hidden");
+						document.querySelector('[data-action="MarkMod"]').classList.add("hidden");
+						document.querySelector('[data-action="MarkBot"]').classList.add("hidden");
 					}
 				} catch (e) {}
 			} else {
 				try {
 					document.querySelector('[data-action="Delete"]').title = "Enable &sync mode to have messages be deleted in other synced docks also";
+					document.querySelector('[data-action="Timeout"]').title = "Enable &sync mode to timeout users across all synced docks";
+					//document.querySelector('[data-action="MarkHost"]').title = "Enable &sync mode to mark users as host across all synced docks";
+					document.querySelector('[data-action="MarkMod"]').title = "Enable &sync mode to mark users as mod across all synced docks";
+					document.querySelector('[data-action="MarkBot"]').title = "Enable &sync mode to mark users as bot across all synced docks";
 				} catch (e) {}
 			}
 
@@ -5399,6 +5505,47 @@
 							messagesList.innerHTML = "";
 						}
 					};
+				} else if ("timeoutUser" in data) {
+					try {
+						if (data.timeoutUser.username && data.timeoutUser.type && data.timeoutUser.duration) {
+							// Optional: Add visual feedback for timed out users
+							
+							timedOutUsers[data.timeoutUser.username+":"+data.timeoutUser.type] = Date.now() + data.timeoutUser.duration*1000;
+							
+							document.querySelectorAll("[data-chatname='" + data.timeoutUser.username + "'][data-source-type='" + data.timeoutUser.type + "']").forEach(ele => {
+								ele.remove();
+							});
+							
+							if (data.timeoutUser.type=="youtube"){
+								document.querySelectorAll("[data-chatname='" + data.timeoutUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
+									ele.remove();
+								});
+							}
+						}
+						return true;
+					} catch (e) {
+						console.error(e);
+					}
+					return;
+				} else if ("markUser" in data) {
+					try {
+/* 						if (data.markUser.username && data.markUser.type && data.markUser.role) {
+							// Add marker class to all messages from this user
+							document.querySelectorAll("[data-chatname='" + data.markUser.username + "'][data-source-type='" + data.markUser.type + "']").forEach(ele => {
+								ele.classList.add(`marked-${data.markUser.role}`);
+							});
+							
+							if (data.markUser.type=="youtube"){
+								document.querySelectorAll("[data-chatname='" + data.markUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
+									ele.classList.add(`marked-${data.markUser.role}`);
+								});
+							}
+						} */
+						return true;
+					} catch (e) {
+						console.error(e);
+					}
+					return;
 				} else if ("blockUser" in data) {
 					try {
 						if (data.blockUser.username && data.blockUser.type) {
@@ -6424,6 +6571,48 @@
 					console.error(e);
 				}
 			}
+			
+			function timeoutUser(element, duration) {
+				const userId = element.getAttribute("data-chatname");
+				const userType = element.getAttribute("data-source-type");
+				
+				if (userId && userType) {
+					// Send timeout request to backend
+					syncDataAny({
+						timeoutUser: {
+							username: userId,
+							type: userType,
+							duration: duration
+						}
+					});
+					
+					// Show feedback
+					const durationText = duration >= 3600 ? `${duration/3600} hour(s)` : 
+										 duration >= 60 ? `${duration/60} minute(s)` : 
+										 `${duration} second(s)`;
+					console.log(`Timed out ${userId} for ${durationText}`);
+				
+					try {
+						if (userId && userType && duration) {
+							// Optional: Add visual feedback for timed out users
+							
+							timedOutUsers[userId+":"+userType] = Date.now() + duration*1000;
+							
+							document.querySelectorAll("[data-chatname='" + userId + "'][data-source-type='" + userType + "']").forEach(ele => {
+								ele.remove();
+							});
+							
+							if (userType=="youtube"){
+								document.querySelectorAll("[data-chatname='" + userId + "'][data-source-type='youtubeshorts']").forEach(ele => {
+									ele.remove();
+								});
+							}
+						}
+					} catch (e) {
+						console.error(e);
+					}
+				}
+			}
 
 			function replyToUser(element) {
 				if (isOBSBrowserSource) {
@@ -6501,14 +6690,26 @@
 					}
 				};
 			}
-		
+			
+						
+			function markUserAs(element, role) {
+				const userId = element.getAttribute("data-chatname");
+				const userType = element.getAttribute("data-source-type");
+				
+				if (userId && userType) {
+					
+					send2Extension({ action: "markUser", value: { chatname: userId, type: userType, role: role} });
+				
+				}
+			}
+		 
 
 			function toggleVIPUser(element) {
-				var chatName = element.dataset.chatname;
-				var type = element.dataset.sourceType;
+				const userId = element.getAttribute("data-chatname");
+				const userType = element.getAttribute("data-source-type");
 
-				if (chatName && type) {
-					send2Extension({ action: "toggleVIPUser", value: { chatname: chatName, type: type } });
+				if (userId && userType) {
+					send2Extension({ action: "toggleVIPUser", value: { chatname: userId, type: userType } });
 				}
 			}
 
@@ -7094,8 +7295,11 @@
 						data.chatmessage = data.message;
 					}
 
-					if (filtercommands && data.chatmessage && data.chatmessage.startsWith("!")) {
-						return;
+					if (data.chatmessage && data.chatmessage.startsWith("!")) {
+						if (filtercommands){
+							return;
+						}
+						data.command = true;
 					}
 					if (startstop && data.chatmessage && data.chatname && data.admin && window.obsstudio) {
 						if (data.chatmessage == "!start"){
@@ -7239,6 +7443,14 @@
 								} else if (localBlockUserList[rawName].includes("*")) {
 									return; // blocked locally
 								}
+							}
+						}
+						
+						if (timedOutUsers[data.chatname+":"+data.type]){
+							if (timedOutUsers[data.chatname+":"+data.type] < Date.now()){
+								delete timedOutUsers[data.chatname+":"+data.type];
+							} else {
+								return
 							}
 						}
 					} else {
@@ -7795,7 +8007,7 @@
 					});
 					
 					if (beep) { 
-						if (!(nobeepbot && bot) && !(nobeephost && host) && !(nobeepmod && mod) && !(nobeepevent && data.event)){
+						if (!(nobeepbot && bot) && !(nobeephost && host) && !(nobeepmod && mod) && !(nobeepevent && data.event) && !(data.command && doNotTTSBeep)){
 							playtone();
 						}
 					}
@@ -7816,7 +8028,7 @@
 
 					var svgs = node.querySelectorAll("svg");
 					svgs.forEach(svg => {
-						svg.setAttribute("width", "100%");
+						// svg.setAttribute("width", "100%");
 						svg.setAttribute("height", "100%");
 						if (!svg.getAttribute("fill") && !svg.innerHTML.includes(" fill=")) {
 							svg.setAttribute("fill", "currentColor");
@@ -8059,7 +8271,9 @@
 						updateQueueButton();
 					}
 					
-					if (TTS.ttscommand && data.chatmessage && data.chatmessage.includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
+					if (data.command && doNotTTSBeep){
+						// skipp TTS
+					} else if (TTS.ttscommand && data.chatmessage && data.chatmessage.includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
 						if (!node.classList.contains("hide")) {
 							TTS.speechMeta(data);
 						}
@@ -8565,14 +8779,16 @@
 						windowWidth = window.innerWidth;
 						windowHeight = window.innerHeight;
 
+						// Position main menu
 						if (windowWidth - clickCoordsX < menuWidth) {
 							menu.style.left = windowWidth - menuWidth + "px";
+							menu.classList.add('context-menu--left');
 						} else {
 							menu.style.left = clickCoordsX + "px";
+							menu.classList.remove('context-menu--left');
 						}
-						menu.style.top = "unset";
-						//menu.style.position = "relative"; // remove this line if using quirks mode
 						
+						menu.style.top = "unset";
 						var offset = document.body.scrollTop + document.body.clientHeight - clickCoordsY - menuHeight;
 						if (offset < -10) {
 							offset = -10;
@@ -8618,8 +8834,40 @@
 								updateQueueButton();
 								syncQueueP2P(false, taskItemInContext);
 							}
+						} else if (link.getAttribute("data-action") === "UserActions") {
+							// Do nothing - let the submenu handle it
+							return;
+						} else if (link.getAttribute("data-action") === "Timeout") {
+							// Do nothing - let the submenu handle it
+							return;
+						} else if (link.getAttribute("data-action").startsWith("Timeout")) {
+							const timeouts = {
+								"Timeout30s": 30,
+								"Timeout2m": 120,
+								"Timeout10m": 600,
+								"Timeout30m": 1800,
+								"Timeout1h": 3600,
+								"Timeout24h": 86400
+							};
+							const duration = timeouts[link.getAttribute("data-action")];
+							if (duration) {
+								timeoutUser(taskItemInContext, duration);
+							}
+						} else if (link.getAttribute("data-action") === "MarkMod") {
+							markUserAs(taskItemInContext, "mod");
+						} else if (link.getAttribute("data-action") === "MarkBot") {
+							markUserAs(taskItemInContext, "bot");
 						}
-						toggleMenuOff();
+						
+						// Always close menu after an action is performed from a submenu
+						// Only keep menu open if we're on a parent menu item with submenu
+						if (link.getAttribute("data-action") === "UserActions" || link.getAttribute("data-action") === "Timeout") {
+							// Don't close when clicking parent menu items with submenus
+							return;
+						} else {
+							// Close menu for all other actions including submenu items
+							toggleMenuOff();
+						}
 					}
 
 					contextListener();

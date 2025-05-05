@@ -87,6 +87,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("tradingview");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('textarea.message-input').focus();
 					sendResponse(true);

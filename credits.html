@@ -7,13 +7,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@900&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=News+Cycle:wght@400;700&display=swap" rel="stylesheet" />
 
+	<script src="currency.js"></script>
+	
     <style>
         body {
             margin: 0;
             padding: 0;
             background-color: black;
-            background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
+            background-image: url("./media/stardust.png");
             animation: stars 30s linear infinite;
             overflow: hidden;
             opacity: 0;
@@ -33,15 +36,15 @@
 		/* Star Wars style (default) */
 		@keyframes translateText {
 			0% {
-				transform: rotateX(15deg) scale(1.0, 1.0) translateY(66vh);
+				transform: rotateX(20deg) scale(1.0, 1.0) translateY(66vh);
 			}
 			
 			10% {
-				transform: rotateX(20deg) scale(0.965, .95) translateY(-315.6vh);
+				transform: rotateX(25deg) scale(0.965, .95) translateY(-315.6vh);
 			}
 			
 			100% {
-				transform: rotateX(25deg) scale(0.65, 0.5) translateY(-3750vh);
+				transform: rotateX(30deg) scale(0.65, 0.5) translateY(-3750vh);
 			}
 		}
 
@@ -94,7 +97,7 @@
 			color: var(--text-color, #ebbc3c);
 			text-align: center;
 			text-shadow: 0 0 16px #ffeb3b60, 0 0 3px #3bbeff88, 0 0 10px #ffffff83;
-			width: 80%;
+			width: 100%;
 			margin: 0 auto;
 			transform: translateZ(0);
 		}
@@ -116,11 +119,27 @@
 			overflow: hidden;
 			display: none;
 		}
-        /* Style-specific class overrides */
-        #app.starwars {
-            perspective: 400px;
-            perspective-origin: center 100%;
-        }
+       
+	    #app.starwars {
+			perspective: 400px;
+			perspective-origin: center 100%;
+		}
+
+		.text.starwars, .category-header.starwars {
+			font-family: 'News Gothic MT', 'News Gothic', sans-serif;
+			font-weight: 700;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+			color: #feda4a;
+			text-shadow: 0 0 16px rgba(255, 235, 59, 0.6), 0 0 3px rgba(59, 190, 255, 0.8), 0 0 10px rgba(255, 255, 255, 0.3);
+			line-height: 1.6;
+		}
+		
+		.category-header.starwars {
+			transform: scaleY(1.8); /* Makes the text 30% taller without affecting width */
+			transform-origin: center; /* Centers the scaling effect */
+			padding: 3px 0; 
+		}
 
         #app.standard {
             perspective: none;
@@ -221,21 +240,7 @@
             animation-fill-mode: forwards;
 		}
 
-        /* Style-specific text styles */
-        .text.standard, .category-header.standard {
-            color: white;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
 
-        .text.minimal, .category-header.minimal {
-            color: #ffffff;
-            text-shadow: none;
-        }
-
-        .text.elegant, .category-header.elegant {
-            color: #d3d3d3;
-            text-shadow: 0 0 8px rgba(211, 211, 211, 0.6);
-        }
 
         .stars {
 			overflow: visible;
@@ -369,7 +374,6 @@
 			display: block;
 		}
 
-		/* Fix animation duration settings */
 		.text-container.animate {
 			animation-duration: var(--animation-speed, 600s);
 			animation-timing-function: linear;
@@ -381,7 +385,6 @@
 			display: none;
 		}
 
-		/* Fix animation speed issue */
 		:root {
 			--animation-speed: 600s;
 		}
@@ -393,6 +396,19 @@
 			padding-top: 20%;
 			position: relative;
 			z-index: 1;
+		}
+		
+		.footer-text.starwars {
+			font-family: 'News Gothic MT', 'News Gothic', sans-serif;
+			font-weight: 700;
+			letter-spacing: 0.2em;
+			text-transform: uppercase;
+		}
+
+		.text-container.animate.starwars {
+			animation-name: translateText;
+			animation-duration: var(--animation-speed, 600s);
+			transform-origin: 50% 100%;
 		}
 
 		/* StarWars style stays at default speed (long duration) */
@@ -429,12 +445,14 @@
 				transform: translateY(-300vh);
 			}
 		}
+		
+
 
         /* Avatar styles */
         .avatar {
             display: inline-block;
-            width: 6vh;
-            height: 6vh;
+            max-width: 1.45em;
+            height: 1.45em;
             border-radius: 50%;
             margin-right: 1vh;
             vertical-align: middle;
@@ -442,6 +460,14 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
         }
+		
+		.source-type-img {
+			width: 1.4em;
+			height: 1.4em;
+			vertical-align: middle;
+			margin-left: 0.7vh;
+			padding-bottom: 0.04em;
+		}
 
         .user-entry {
             display: flex;
@@ -459,10 +485,22 @@
             vertical-align: middle;
         }
 		
-		.text.standard, .category-header.standard,
-		.text.minimal, .category-header.minimal,
+		
+		/* Style-specific text styles */
+		/* Style-specific text styles */
+		.text.standard, .category-header.standard {
+			color: var(--text-color, white);
+			text-shadow: var(--custom-text-shadow, 0 0 10px rgba(255, 255, 255, 0.5));
+		}
+
+		.text.minimal, .category-header.minimal {
+			color: var(--text-color, #ffffff);
+			text-shadow: var(--custom-text-shadow, none);
+		}
+
 		.text.elegant, .category-header.elegant {
-			color: var(--text-color, initial);
+			color: var(--text-color, #d3d3d3);
+			text-shadow: var(--custom-text-shadow, 0 0 8px rgba(211, 211, 211, 0.6));
 		}
 	</style>
 </head>
@@ -492,7 +530,8 @@
 	
 	// Get URL parameters
 	const urlParams = new URLSearchParams(window.location.search);
-
+	const donationPriority = urlParams.has('donationpriority');
+	
 	// User tracking
 	const users = new Map();
 
@@ -503,7 +542,7 @@
 			this.messageCount = 0;
 			this.donations = 0;
 			this.isMember = false;
-            this.avatarUrl = null;
+			this.avatarUrl = null;
 		}
 
 		get score() {
@@ -522,26 +561,28 @@
 			
 			const nameDisplay = this.name;
 			const badgesDisplay = badges.length > 0 ? badges.join(' ') : '';
-			const typeDisplay = `[${this.type}]`;
+			
+			const showsourcetype = !urlParams.has('nosourcetype');
+			const typeImage = showsourcetype ? `<img src="./sources/images/${this.type}.png" alt="${this.type}" class="source-type-img">` : '';
 			
 			const showamounts = urlParams.has('showamounts');
 			const donationDisplay = (showamounts && this.donations > 0) ? ` ($${this.donations.toFixed(2)})` : '';
 			
-			return `${nameDisplay} ${badgesDisplay} ${typeDisplay}${donationDisplay}`;
+			return `${nameDisplay} ${badgesDisplay}${typeImage}${donationDisplay}`;
 		}
 
-        generateHtml() {
-            const showAvatars = urlParams.has('showavatar') || urlParams.has('showavatars');
-            
-            if (showAvatars && this.avatarUrl) {
-                return `<div class="user-entry with-avatar">
-                    <img src="${this.avatarUrl}" alt="${this.name}" class="avatar">
-                    <span class="user-info">${this.displayName}</span>
-                </div>`;
-            } else {
-                return `<div class="user-entry">${this.displayName}</div>`;
-            }
-        }
+		generateHtml() {
+			const showAvatars = urlParams.has('showavatar') || urlParams.has('showavatars');
+			
+			if (showAvatars && this.avatarUrl) {
+				return `<div class="user-entry with-avatar">
+					<img src="${this.avatarUrl}" alt="${this.name}" class="avatar">
+					<span class="user-info">${this.displayName}</span>
+				</div>`;
+			} else {
+				return `<div class="user-entry">${this.displayName}</div>`;
+			}
+		}
 	}
 
 	function getOrCreateUser(name, type) {
@@ -553,8 +594,6 @@
 	}
 
 	function processData(data) {
-		console.log(data);
-		
 		if (data.content) {
 			data = data.content;
 		}
@@ -567,48 +606,106 @@
 		const user = getOrCreateUser(data.chatname, data.type);
 		user.messageCount++;
 
-        // Store avatar URL if available
-        if (data.chatimg) {
-            user.avatarUrl = data.chatimg;
-        }
+		// Store avatar URL if available
+		if (data.chatimg) {
+			user.avatarUrl = data.chatimg;
+		}
 
 		if (data.membership) {
 			user.isMember = true;
 		}
 
 		if (data.hasDonation) {
-			const [amount] = data.hasDonation.split(' ');
-			user.donations += parseFloat(amount);
+			try {
+				// Use convertToUSD function to handle donation conversion
+				const source = data.type ? data.type.toLowerCase() : '';
+				const donationAmount = convertToUSD(data.hasDonation, source);
+				
+				// Only add if we have a valid amount
+				if (!isNaN(donationAmount) && donationAmount > 0) {
+					user.donations += donationAmount;
+					console.log(`Added donation of ${donationAmount} for ${data.chatname}`);
+				} else {
+					console.warn(`Invalid donation format for ${data.chatname}:`, data.hasDonation);
+				}
+			} catch (error) {
+				console.error(`Error processing donation for ${data.chatname}:`, error, data.hasDonation);
+			}
 		}
 	}
 
 	function generateCreditsContent() {
-		const sortedUsers = Array.from(users.values())
-			.sort((a, b) => b.score - a.score);
-
-		const vips = sortedUsers.filter(u => u.score >= 150);
-		const regulars = sortedUsers.filter(u => u.score >= 50 && u.score < 150);
-		const participants = sortedUsers.filter(u => u.score < 50);
-
-		const hidecategories = urlParams.has('hidecategories');
-		let content = '';
-
-		if (vips.length > 0) {
-			content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">VIP Supporters</div>`;
-			content += vips.map(u => u.generateHtml()).join('') + '<br><br>';
+		const sortedUsers = Array.from(users.values());
+		
+		if (donationPriority) {
+			// Separate users into donors and non-donors
+			const donors = sortedUsers.filter(u => u.donations > 0)
+				.sort((a, b) => {
+					// First sort by donation amount
+					if (b.donations !== a.donations) {
+						return b.donations - a.donations;
+					}
+					// If donation amounts are equal, sort by membership
+					if (b.isMember !== a.isMember) {
+						return b.isMember - a.isMember;
+					}
+					// Finally by participation
+					return b.messageCount - a.messageCount;
+				});
+			
+			const members = sortedUsers.filter(u => u.donations === 0 && u.isMember)
+				.sort((a, b) => b.messageCount - a.messageCount);
+			
+			const participants = sortedUsers.filter(u => u.donations === 0 && !u.isMember)
+				.sort((a, b) => b.messageCount - a.messageCount);
+			
+			const hidecategories = urlParams.has('hidecategories');
+			let content = '';
+			
+			if (donors.length > 0) {
+				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Donors</div>`;
+				content += donors.map(u => u.generateHtml()).join('') + '<br><br>';
+			}
+			
+			if (members.length > 0) {
+				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Channel Members</div>`;
+				content += members.map(u => u.generateHtml()).join('') + '<br><br>';
+			}
+			
+			if (participants.length > 0) {
+				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Participants</div>`;
+				content += participants.map(u => u.generateHtml()).join('');
+			}
+			
+			return content;
+		} else {
+			// Original scoring system
+			sortedUsers.sort((a, b) => b.score - a.score);
+			
+			const vips = sortedUsers.filter(u => u.score >= 150);
+			const regulars = sortedUsers.filter(u => u.score >= 50 && u.score < 150);
+			const participants = sortedUsers.filter(u => u.score < 50);
+			
+			const hidecategories = urlParams.has('hidecategories');
+			let content = '';
+			
+			if (vips.length > 0) {
+				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">VIP Supporters</div>`;
+				content += vips.map(u => u.generateHtml()).join('') + '<br><br>';
+			}
+			
+			if (regulars.length > 0) {
+				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Regular Supporters</div>`;
+				content += regulars.map(u => u.generateHtml()).join('') + '<br><br>';
+			}
+			
+			if (participants.length > 0) {
+				content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Participants</div>`;
+				content += participants.map(u => u.generateHtml()).join('');
+			}
+			
+			return content;
 		}
-
-		if (regulars.length > 0) {
-			content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Regular Supporters</div>`;
-			content += regulars.map(u => u.generateHtml()).join('') + '<br><br>';
-		}
-
-		if (participants.length > 0) {
-			content += hidecategories ? "" : `<div class="category-header ${creditsStyle}">Stream Participants</div>`;
-			content += participants.map(u => u.generateHtml()).join('');
-		}
-
-		return content;
 	}
 
 	// IFRAME setup for Social Stream Ninja
@@ -686,11 +783,24 @@
 
 	if (textColor) {
 		document.documentElement.style.setProperty('--text-color', textColor);
+		
+		// Create matching text shadow for custom color
+		const r = parseInt(textColor.slice(1, 3), 16);
+		const g = parseInt(textColor.slice(3, 5), 16);
+		const b = parseInt(textColor.slice(5, 7), 16);
+		
+		// Generate a glow effect based on the custom color
+		const textShadow = `0 0 16px rgba(${r}, ${g}, ${b}, 0.6), 0 0 3px rgba(${r}, ${g}, ${b}, 0.8), 0 0 10px rgba(255, 255, 255, 0.3)`;
+		document.documentElement.style.setProperty('--custom-text-shadow', textShadow);
+		
+		// Apply shadow to all text elements including footer
+		const footerText = document.querySelector('.footer-text');
+		footerText.style.textShadow = textShadow;
 	}
 
 
 	// Apply custom font if specified
-	const fontFamily = urlParams.get('font');
+	const fontFamily = urlParams.get('font') || "Nunito Sans";
 	const googlefont = urlParams.get('googlefont');
 
 	if (googlefont) {

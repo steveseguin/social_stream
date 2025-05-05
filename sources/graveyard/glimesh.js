@@ -190,6 +190,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("glimesh");	return;	}
 				if ("focusChat" == request){
 					if (!document.querySelector("#chat_message-form_message")){
 						sendResponse(false);

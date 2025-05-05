@@ -162,12 +162,44 @@
 			return;
 		}
 		
-		if (messageHistory.includes((username || chatname)+"_"+msg)) {
-			console.log("Message already exists");
+		const currentMsg = (username || chatname)+"_"+msg;
+		const existingIndex = messageHistory.findIndex(entry => {
+			let storedMsg, storedTime;
+			
+			if (typeof entry === 'string') {
+				storedMsg = entry;
+				storedTime = 0; // Default for legacy format
+			} else {
+				storedMsg = entry.msg;
+				storedTime = entry.time;
+			}
+			
+			// Check if message exists and isn't older than 30 minutes (1800000 ms)
+			return storedMsg === currentMsg && (Date.now() - storedTime) < 1800000;
+		});
+
+		if (existingIndex >= 0) {
+			console.log("Message already exists within the last 30 minutes - updating timestamp");
+			// Update the timestamp of the existing entry
+			if (typeof messageHistory[existingIndex] === 'string') {
+				// Convert string format to object format
+				messageHistory[existingIndex] = {
+					msg: messageHistory[existingIndex],
+					time: Date.now()
+				};
+			} else {
+				// Update timestamp of existing object
+				messageHistory[existingIndex].time = Date.now();
+			}
 			return;
 		} else {
-			messageHistory.push((username || chatname)+"_"+msg);
-			messageHistory = messageHistory.slice(-10);
+			// Store as object with timestamp
+			messageHistory.push({
+				msg: (username || chatname)+"_"+msg,
+				time: Date.now()
+			});
+			// Keep last 50 messages instead of just 10
+			messageHistory = messageHistory.slice(-100);
 		}
 		
 		var data = {};
@@ -211,13 +243,10 @@
 	
 	window.addEventListener('beforeunload', (e) => {
 		if (isExtensionOn) {
-			//e.preventDefault();
-			//e.returnValue = '';
 			localStorage.setItem('messageHistory', JSON.stringify(messageHistory));
 			localStorage.setItem('messageHistoryTimestamp', Date.now());
 		}
 	});
-	
 	
 	var isExtensionOn = true;
 	
@@ -234,6 +263,16 @@
 		function (request, sender, sendResponse) {
 			try{
 				if (isExtensionOn){
+					if ("getSource" == request){
+						
+						if (settings.detweet) {
+							sendResponse("twitter");
+						} else {
+							sendResponse("x");
+						}
+						return;	
+						
+					}
 					if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 						document.querySelector('textarea').focus();
 						sendResponse(true);
@@ -258,12 +297,12 @@
 	var messageHistory = (() => {
 		const stored = localStorage.getItem('messageHistory');
 		const timestamp = localStorage.getItem('messageHistoryTimestamp');
-		if (stored && timestamp && (Date.now() - timestamp) < 10000) {
+		// Check if stored data exists and is less than 24 hours old (24 * 60 * 60 * 1000 = 86400000 ms)
+		if (stored && timestamp && (Date.now() - timestamp) < 86400000) {
 			return JSON.parse(stored);
 		}
 		return [];
 	})();
-	
 	
 	
 	function findViewerSpan() {

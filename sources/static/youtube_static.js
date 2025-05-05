@@ -79,6 +79,7 @@
 					sendResponse(true);
 					return;
 				}
+				if ("getSource" == request){sendResponse("youtube");	return;	}
 				if ("focusChat" == request){ 
 					return;
 				}

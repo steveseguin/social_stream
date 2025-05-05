@@ -320,6 +320,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("stageten");	return;	}
 				if ("focusChat" == request){
 					if (!document.querySelector("form>div>input")){
 						sendResponse(false);

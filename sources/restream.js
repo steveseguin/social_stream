@@ -219,6 +219,7 @@
 		chrome.runtime.onMessage.addListener(
 			function (request, sender, sendResponse) {
 				try{
+					if ("getSource" == request){sendResponse("restream");	return;	}
 					if ("focusChat" == request){
 						try {
 							ele = document.querySelector("input");

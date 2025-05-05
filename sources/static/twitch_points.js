@@ -30,7 +30,8 @@
                             return;
                         }
                     }
-                    if ("focusChat" == request) {
+                    if ("getSource" == request){sendResponse("twitch_points");	return;	}
+					if ("focusChat" == request) {
                         return;
                     }
                 } catch(e) {}

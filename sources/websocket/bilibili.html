@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilibili Live Chat WebSocket Client</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .config-panel {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .message-panel {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            height: 400px;
+            overflow-y: auto;
+        }
+        
+        .system-panel {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+            height: 200px;
+            overflow-y: auto;
+        }
+        
+        .info-panel {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            height: 200px;
+            overflow-y: auto;
+        }
+        
+        h3 {
+            margin-top: 0;
+        }
+        
+        .input-group {
+            margin-bottom: 10px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .username {
+            font-weight: bold;
+            color: #2196F3;
+        }
+        
+        .message-time {
+            margin-left: auto;
+            color: #777;
+            font-size: 0.85em;
+        }
+        
+        .message-content {
+            color: #333;
+        }
+        
+        .gift-message {
+            background-color: #FFF8E1;
+        }
+        
+        .entry-message {
+            background-color: #E8F5E9;
+        }
+        
+        .super-chat {
+            background-color: #FFEBEE;
+        }
+        
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        
+        .system-log {
+            margin-bottom: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .error {
+            color: #f44336;
+        }
+        
+        .warning {
+            color: #ff9800;
+        }
+        
+        .info {
+            color: #2196F3;
+        }
+        
+        .room-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .room-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+        
+        .room-title {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .stat-item i {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bilibili Live Chat WebSocket Client</h1>
+    
+    <div class="container">
+        <div class="left-panel">
+            <div class="config-panel">
+                <h3>Configuration</h3>
+                <div class="input-group">
+                    <label for="roomId">Room ID:</label>
+                    <input type="text" id="roomId" placeholder="Enter Bilibili room ID">
+                </div>
+                <div class="input-group">
+                    <label for="cookie">Cookie (Optional, for sending messages):</label>
+                    <textarea id="cookie" placeholder="SESSDATA=xxx; bili_jct=xxx; buvid3=xxx"></textarea>
+                </div>
+                <button id="connectBtn">Connect</button>
+                <button id="disconnectBtn" disabled>Disconnect</button>
+            </div>
+            
+            <div class="message-panel" id="messageContainer">
+                <h3>Chat Messages</h3>
+                <!-- Messages will be displayed here -->
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="info-panel" id="roomInfoContainer">
+                <h3>Room Information</h3>
+                <div id="roomInfo">
+                    <!-- Room info will be displayed here -->
+                </div>
+            </div>
+            
+            <div class="system-panel" id="systemLogContainer">
+                <h3>System Logs</h3>
+                <div id="systemLog">
+                    <!-- System logs will be displayed here -->
+                </div>
+            </div>
+            
+            <div class="input-group" style="margin-top: 20px;">
+                <label for="messageInput">Send Message:</label>
+                <input type="text" id="messageInput" placeholder="Enter message to send" disabled>
+                <button id="sendBtn" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants for WebSocket protocol
+        const WS_OP_HEARTBEAT = 2;          // Heartbeat
+        const WS_OP_HEARTBEAT_REPLY = 3;    // Heartbeat response
+        const WS_OP_MESSAGE = 5;            // Messages, gifts, etc.
+        const WS_OP_USER_AUTHENTICATION = 7; // Authentication
+        const WS_OP_CONNECT_SUCCESS = 8;    // Connection confirmation
+        
+        const WS_BODY_PROTOCOL_NORMAL = 0;  // Normal messages
+        const WS_BODY_PROTOCOL_ZLIB = 2;    // Zlib compressed messages
+        const WS_BODY_PROTOCOL_BROTLI = 3;  // Brotli compressed messages
+        
+        const WS_HEADER_SIZE = 16;          // Header size in bytes
+        
+        // Command types
+        const CMD_DANMU_MSG = "DANMU_MSG";  // Chat message
+        const CMD_SEND_GIFT = "SEND_GIFT";  // Gift
+        const CMD_WELCOME = "WELCOME";      // User welcome
+        const CMD_WELCOME_GUARD = "WELCOME_GUARD"; // Guard welcome
+        const CMD_SUPER_CHAT_MESSAGE = "SUPER_CHAT_MESSAGE"; // Super chat
+        const CMD_INTERACT_WORD = "INTERACT_WORD"; // User interactions
+        
+        class BilibiliLiveClient {
+            constructor(roomId, cookie = "") {
+                this.roomId = roomId;
+                this.cookie = cookie;
+                this.realRoomId = null;
+                this.socket = null;
+                this.heartbeatInterval = null;
+                this.connected = false;
+                this.listeners = {
+                    message: [],
+                    gift: [],
+                    superChat: [],
+                    userEnter: [],
+                    roomInfo: [],
+                    log: [],
+                    error: [],
+                    connection: []
+                };
+                this.roomInfo = null;
+            }
+            
+            async connect() {
+                try {
+                    // Get real room ID and WebSocket connection info
+                    await this.getRoomInfo();
+                    
+                    // Connect to WebSocket server
+                    const wsUrl = await this.getWebSocketUrl();
+                    this.log(`Connecting to WebSocket server: ${wsUrl}`);
+                    
+                    this.socket = new WebSocket(wsUrl);
+                    this.socket.binaryType = "arraybuffer";
+                    
+                    this.socket.onopen = () => this.onOpen();
+                    this.socket.onmessage = (event) => this.onMessage(event);
+                    this.socket.onclose = () => this.onClose();
+                    this.socket.onerror = (error) => this.onError(error);
+                    
+                    return true;
+                } catch (error) {
+                    this.error(`Connection error: ${error.message}`);
+                    return false;
+                }
+            }
+            
+            disconnect() {
+                if (this.socket) {
+                    this.log("Disconnecting from WebSocket server");
+                    clearInterval(this.heartbeatInterval);
+                    this.socket.close();
+                    this.socket = null;
+                    this.connected = false;
+                    this.trigger('connection', { connected: false });
+                }
+            }
+            
+            async getRoomInfo() {
+                try {
+                    const response = await fetch(`https://api.live.bilibili.com/room/v1/Room/room_init?id=${this.roomId}`);
+                    const data = await response.json();
+                    
+                    if (data.code === 0) {
+                        this.realRoomId = data.data.room_id;
+                        const uid = data.data.uid;
+                        
+                        this.log(`Got real room ID: ${this.realRoomId}`);
+                        
+                        // Get additional room info
+                        const roomInfoResponse = await fetch(`https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=${this.realRoomId}`);
+                        const roomInfoData = await roomInfoResponse.json();
+                        
+                        if (roomInfoData.code === 0) {
+                            this.roomInfo = {
+                                roomId: this.realRoomId,
+                                title: roomInfoData.data.room_info.title,
+                                cover: roomInfoData.data.room_info.cover,
+                                online: roomInfoData.data.room_info.online,
+                                anchor: {
+                                    uid: roomInfoData.data.room_info.uid,
+                                    name: roomInfoData.data.anchor_info.base_info.uname,
+                                    face: roomInfoData.data.anchor_info.base_info.face
+                                },
+                                area: {
+                                    name: roomInfoData.data.room_info.area_name,
+                                    parentName: roomInfoData.data.room_info.parent_area_name
+                                }
+                            };
+                            
+                            this.trigger('roomInfo', this.roomInfo);
+                        }
+                        
+                        return this.realRoomId;
+                    } else {
+                        throw new Error(`Failed to get room info: ${data.message}`);
+                    }
+                } catch (error) {
+                    this.error(`Failed to get room info: ${error.message}`);
+                    throw error;
+                }
+            }
+            
+            async getWebSocketUrl() {
+                try {
+                    const response = await fetch(`https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id=${this.realRoomId}&type=0`);
+                    const data = await response.json();
+                    
+                    if (data.code === 0) {
+                        this.token = data.data.token;
+                        const hostList = data.data.host_list;
+                        const host = hostList[0]; // Use the first host
+                        
+                        return `wss://${host.host}:${host.wss_port}/sub`;
+                    } else {
+                        throw new Error(`Failed to get WebSocket URL: ${data.message}`);
+                    }
+                } catch (error) {
+                    this.error(`Failed to get WebSocket URL: ${error.message}`);
+                    throw error;
+                }
+            }
+            
+            onOpen() {
+                this.log("WebSocket connection established");
+                
+                // Send authentication packet
+                this.sendAuthPacket();
+                
+                // Start sending heartbeats
+                this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 30000);
+                
+                this.connected = true;
+                this.trigger('connection', { connected: true });
+            }
+            
+            onMessage(event) {
+                const data = new Uint8Array(event.data);
+                this.parseMessage(data);
+            }
+            
+            onClose() {
+                this.log("WebSocket connection closed");
+                clearInterval(this.heartbeatInterval);
+                this.connected = false;
+                this.trigger('connection', { connected: false });
+            }
+            
+            onError(error) {
+                this.error(`WebSocket error: ${error}`);
+                this.trigger('error', error);
+            }
+            
+            sendAuthPacket() {
+                const authPacket = {
+                    uid: 0,
+                    roomid: this.realRoomId,
+                    protover: 2,  // Use zlib compression
+                    platform: "web",
+                    type: 2,
+                    key: this.token
+                };
+                
+                const packet = this.createPacket(WS_OP_USER_AUTHENTICATION, JSON.stringify(authPacket));
+                this.socket.send(packet);
+                this.log("Sent authentication packet");
+            }
+            
+            sendHeartbeat() {
+                const packet = this.createPacket(WS_OP_HEARTBEAT, "");
+                this.socket.send(packet);
+                this.log("Sent heartbeat");
+            }
+            
+            createPacket(operation, body) {
+                const bodyData = typeof body === 'string' ? new TextEncoder().encode(body) : body;
+                const packetLength = WS_HEADER_SIZE + bodyData.length;
+                
+                // Create header
+                const header = new ArrayBuffer(WS_HEADER_SIZE);
+                const headerView = new DataView(header);
+                
+                // Packet Length (4 bytes)
+                headerView.setUint32(0, packetLength);
+                // Header Length (2 bytes)
+                headerView.setUint16(4, WS_HEADER_SIZE);
+                // Protocol Version (2 bytes)
+                headerView.setUint16(6, 1);
+                // Operation (4 bytes)
+                headerView.setUint32(8, operation);
+                // Sequence ID (4 bytes)
+                headerView.setUint32(12, 1);
+                
+                // Combine header and body
+                const packet = new Uint8Array(packetLength);
+                packet.set(new Uint8Array(header), 0);
+                packet.set(bodyData, WS_HEADER_SIZE);
+                
+                return packet.buffer;
+            }
+            
+            parseMessage(data) {
+                try {
+                    const headerView = new DataView(data.buffer);
+                    const packetLength = headerView.getUint32(0);
+                    const headerLength = headerView.getUint16(4);
+                    const protocolVersion = headerView.getUint16(6);
+                    const operation = headerView.getUint32(8);
+                    const sequenceId = headerView.getUint32(12);
+                    
+                    // Extract packet body
+                    const body = data.slice(headerLength);
+                    
+                    switch (operation) {
+                        case WS_OP_CONNECT_SUCCESS:
+                            this.log("Authentication successful");
+                            break;
+                            
+                        case WS_OP_HEARTBEAT_REPLY:
+                            // Parse popularity value (usually a 4-byte integer)
+                            const popularity = new DataView(body.buffer).getUint32(0);
+                            this.log(`Heartbeat reply: ${popularity} online users`);
+                            this.trigger('roomInfo', { online: popularity });
+                            
+                            // Send viewer count event to extension
+                            if (window?.messageBridge) {
+                                window.messageBridge.broadcast({
+                                    type: "bilibili",
+                                    event: "viewer_update",
+                                    meta: popularity,
+                                    textonly: true
+                                });
+                            }
+                            break;
+                            
+                        case WS_OP_MESSAGE:
+                            this.handleDataPacket(protocolVersion, body);
+                            break;
+                            
+                        default:
+                            this.log(`Unknown operation: ${operation}`);
+                    }
+                } catch (error) {
+                    this.error(`Failed to parse message: ${error.message}`);
+                }
+            }
+            
+            handleDataPacket(version, data) {
+                try {
+                    let messageData;
+                    
+                    // Handle different protocol versions
+                    if (version === WS_BODY_PROTOCOL_ZLIB) {
+                        // Decompress using zlib (via pako)
+                        messageData = pako.inflate(data);
+                        
+                        // If message contains multiple packets, process each one
+                        if (messageData.length > 0) {
+                            this.handleMultipleMessages(messageData);
+                            return;
+                        }
+                    } else if (version === WS_BODY_PROTOCOL_BROTLI) {
+                        // Brotli decompression is not supported in this implementation
+                        this.error("Brotli decompression is not supported");
+                        return;
+                    } else {
+                        messageData = data;
+                    }
+                    
+                    // Parse the message data as JSON
+                    const jsonStr = new TextDecoder().decode(messageData);
+                    const jsonData = JSON.parse(jsonStr);
+                    
+                    // Process the command
+                    this.processCommand(jsonData);
+                } catch (error) {
+                    this.error(`Failed to handle data packet: ${error.message}`);
+                }
+            }
+            
+            handleMultipleMessages(data) {
+                try {
+                    let offset = 0;
+                    
+                    while (offset < data.length) {
+                        // Parse packet header
+                        const headerView = new DataView(data.buffer, data.byteOffset + offset);
+                        const packetLength = headerView.getUint32(0);
+                        const headerLength = headerView.getUint16(4);
+                        const protocolVersion = headerView.getUint16(6);
+                        const operation = headerView.getUint32(8);
+                        
+                        // Extract packet body
+                        const body = data.slice(offset + headerLength, offset + packetLength);
+                        
+                        // Process based on operation type
+                        if (operation === WS_OP_MESSAGE) {
+                            const jsonStr = new TextDecoder().decode(body);
+                            try {
+                                const jsonData = JSON.parse(jsonStr);
+                                this.processCommand(jsonData);
+                            } catch (e) {
+                                // Skip malformed JSON
+                            }
+                        }
+                        
+                        // Move to the next packet
+                        offset += packetLength;
+                    }
+                } catch (error) {
+                    this.error(`Failed to handle multiple messages: ${error.message}`);
+                }
+            }
+            
+            processCommand(data) {
+                const cmd = data.cmd || "";
+                
+                // Handle different command types
+                if (cmd.startsWith(CMD_DANMU_MSG)) {
+                    // Chat message
+                    this.processChatMessage(data);
+                } else if (cmd === CMD_SEND_GIFT) {
+                    // Gift
+                    this.processGiftMessage(data);
+                } else if (cmd === CMD_SUPER_CHAT_MESSAGE) {
+                    // Super Chat
+                    this.processSuperChatMessage(data);
+                } else if (cmd === CMD_INTERACT_WORD || cmd === CMD_WELCOME || cmd === CMD_WELCOME_GUARD) {
+                    // User interactions/entry
+                    this.processUserEnterMessage(data, cmd);
+                } else if (cmd === "ROOM_REAL_TIME_MESSAGE_UPDATE") {
+                    // Room updates like follower count
+                    this.processRoomUpdate(data);
+                } else if (cmd === "PREPARING" || cmd === "LIVE") {
+                    // Stream status
+                    this.processStreamStatusChange(data, cmd);
+                }
+                // Other command types can be added as needed
+            }
+            
+            processChatMessage(data) {
+                try {
+                    const info = data.info;
+                    if (!info || !Array.isArray(info) || info.length < 3) return;
+                    
+                    const text = info[1];
+                    const userId = info[2][0];
+                    const username = info[2][1];
+                    const isAdmin = info[2][2] === 1;
+                    const isVIP = info[2][3] === 1;
+                    const isSVIP = info[2][4] === 1;
+                    
+                    // Check for medal info
+                    let medalInfo = null;
+                    if (info[3] && Array.isArray(info[3]) && info[3].length > 1) {
+                        medalInfo = {
+                            level: info[3][0],
+                            name: info[3][1],
+                            ownerName: info[3][2],
+                        };
+                    }
+                    
+                    // Get user level
+                    const userLevel = info[4] && Array.isArray(info[4]) ? info[4][0] : 0;
+                    
+                    // Try to get avatar URL if available (fallback to default)
+                    let avatarUrl = "";
+                    if (data.dm_v2) {
+                        try {
+                            const dmV2 = JSON.parse(data.dm_v2);
+                            if (dmV2.user && dmV2.user.face) {
+                                avatarUrl = dmV2.user.face;
+                            }
+                        } catch (e) {}
+                    }
+                    
+                    // Default avatar URL fallback
+                    if (!avatarUrl) {
+                        avatarUrl = `https://api.bilibili.com/x/space/acc/info?mid=${userId}`;
+                    }
+                    
+                    // Format message for UI display
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message';
+                    
+                    const header = document.createElement('div');
+                    header.className = 'message-header';
+                    
+                    const avatar = document.createElement('img');
+                    avatar.className = 'avatar';
+                    avatar.src = avatarUrl;
+                    avatar.onerror = function() {
+                        this.src = 'https://static.hdslb.com/images/member/noface.gif';
+                    };
+                    header.appendChild(avatar);
+                    
+                    const usernameSpan = document.createElement('span');
+                    usernameSpan.className = 'username';
+                    usernameSpan.textContent = username;
+                    header.appendChild(usernameSpan);
+                    
+                    messageDiv.appendChild(header);
+                    
+                    const content = document.createElement('div');
+                    content.className = 'message-content';
+                    content.textContent = text;
+                    messageDiv.appendChild(content);
+					
+					const messageContainer = document.getElementById('messageContainer');
+					
+					while (messageContainer.children.length > 11) {
+						messageContainer.removeChild(messageContainer.children[1]);
+					}
+                    
+                    messageContainer.prepend(messageDiv);
+                    
+                    // Format message for extension
+                    const formattedMessage = {
+                        type: "bilibili",
+                        chatname: username,
+                        chatmessage: text,
+                        chatimg: avatarUrl,
+                        textonly: true,
+                        chatbadges: [],
+                        userId: userId.toString(),
+                        admin: isAdmin,
+                        moderator: isAdmin || isVIP || isSVIP
+                    };
+                    
+                    // Add medal badge if available
+                    if (medalInfo) {
+                        formattedMessage.membership = `Lv${medalInfo.level} ${medalInfo.name}`;
+                    }
+                    
+                    // Send to extension
+                    if (window?.messageBridge) {
+                        window.messageBridge.broadcast(formattedMessage);
+                    }
+                    
+                    // Trigger message event
+                    this.trigger('message', formattedMessage);
+                } catch (error) {
+                    this.error(`Failed to process chat message: ${error.message}`);
+                }
+            }
+            
+            processGiftMessage(data) {
+                try {
+                    const giftData = data.data;
+                    if (!giftData) return;
+                    
+                    const gift = {
+                        userId: giftData.uid,
+                        username: giftData.uname,
+                        avatar: giftData.face,
+                        giftId: giftData.giftId,
+                        giftName: giftData.giftName,
+                        price: giftData.price,
+                        num: giftData.num,
+                        timestamp: giftData.timestamp,
+                        action: giftData.action
+                    };
+                    
+                    // Format for UI display
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message gift-message';
+                    
+                    const header = document.createElement('div');
+                    header.className = 'message-header';
+                    
+                    if (gift.avatar) {
+                        const avatar = document.createElement('img');
+                        avatar.className = 'avatar';
+                        avatar.src = gift.avatar;
+                        avatar.onerror = function() {
+                            this.src = 'https://static.hdslb.com/images/member/noface.gif';
+                        };
+                        header.appendChild(avatar);
+                    }
+                    
+                    const username = document.createElement('span');
+                    username.className = 'username';
+                    username.textContent = gift.username;
+                    header.appendChild(username);
+                    
+                    messageDiv.appendChild(header);
+                    
+                    const content = document.createElement('div');
+                    content.className = 'message-content';
+                    content.textContent = `${gift.action} ${gift.num} × ${gift.giftName}`;
+                    messageDiv.appendChild(content);
+                    
+                    document.getElementById('messageContainer').prepend(messageDiv);
+                    
+                    // Format message for extension
+                    const formattedMessage = {
+                        type: "bilibili",
+                        chatname: gift.username,
+                        chatmessage: `${gift.action} ${gift.num} × ${gift.giftName}`,
+                        chatimg: gift.avatar,
+                        textonly: true,
+                        hasDonation: `${gift.num} × ${gift.giftName}`,
+                        event: "gift",
+                        userId: gift.userId.toString(),
+                        title: "DONATION"
+                    };
+                    
+                    // Send to extension
+                    if (window?.messageBridge) {
+                        window.messageBridge.broadcast(formattedMessage);
+                    }
+                    
+                    // Send to extension
+                    if (window?.messageBridge) {
+                        window.messageBridge.broadcast(formattedMessage);
+                    }
+                    
+                    // Trigger gift event
+                    this.trigger('gift', formattedMessage);
+                } catch (error) {
+                    this.error(`Failed to process gift message: ${error.message}`);
+                }
+            }
+            
+            processSuperChatMessage(data) {
+                try {
+                    const scData = data.data;
+                    if (!scData) return;
+                    
+                    const superChat = {
+                        userId: scData.uid,
+                        username: scData.user_info.uname,
+                        avatar: scData.user_info.face,
+                        message: scData.message,
+                        price: scData.price,
+                        startTime: scData.start_time,
+                        endTime: scData.end_time,
+                        time: scData.time,
+                        color: scData.background_color
+                    };
+                    
+                    // Format for UI display
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message super-chat';
+                    messageDiv.style.backgroundColor = superChat.color;
+                    
+                    // Adjust text color based on background brightness
+                    const brightness = getBrightness(superChat.color);
+                    const textColor = brightness > 160 ? '#000' : '#fff';
+                    
+                    const header = document.createElement('div');
+                    header.className = 'message-header';
+                    
+                    if (superChat.avatar) {
+                        const avatar = document.createElement('img');
+                        avatar.className = 'avatar';
+                        avatar.src = superChat.avatar;
+                        avatar.onerror = function() {
+                            this.src = 'https://static.hdslb.com/images/member/noface.gif';
+                        };
+                        header.appendChild(avatar);
+                    }
+                    
+                    const username = document.createElement('span');
+                    username.className = 'username';
+                    username.textContent = superChat.username;
+                    username.style.color = textColor;
+                    header.appendChild(username);
+                    
+                    const price = document.createElement('span');
+                    price.style.marginLeft = '10px';
+                    price.style.color = textColor;
+                    price.textContent = `¥${superChat.price}`;
+                    header.appendChild(price);
+                    
+                    messageDiv.appendChild(header);
+                    
+                    const content = document.createElement('div');
+                    content.className = 'message-content';
+                    content.textContent = superChat.message;
+                    content.style.color = textColor;
+                    messageDiv.appendChild(content);
+                    
+                    document.getElementById('messageContainer').prepend(messageDiv);
+                    
+                    // Format message for extension
+                    const formattedMessage = {
+                        type: "bilibili",
+                        chatname: superChat.username,
+                        chatmessage: superChat.message,
+                        chatimg: superChat.avatar,
+                        textonly: true,
+                        hasDonation: `¥${superChat.price}`,
+                        event: "superchat",
+                        userId: superChat.userId.toString(),
+                        title: "SUPER CHAT"
+                    };
+                    
+                    // Send to extension
+                    if (window?.messageBridge) {
+                        window.messageBridge.broadcast(formattedMessage);
+                    }
+                    
+                    // Trigger superChat event
+                    this.trigger('superChat', formattedMessage);
+                } catch (error) {
+                    this.error(`Failed to process super chat message: ${error.message}`);
+                }
+            }
+            
+            processUserEnterMessage(data, cmdType) {
+                try {
+                    let userInfo;
+                    let isGuard = false;
+                    let isAdmin = false;
+                    
+                    if (cmdType === CMD_INTERACT_WORD) {
+                        userInfo = data.data;
+                        if (!userInfo) return;
+                    } else if (cmdType === CMD_WELCOME || cmdType === CMD_WELCOME_GUARD) {
+                        userInfo = data.data;
+                        isGuard = cmdType === CMD_WELCOME_GUARD;
+                        isAdmin = userInfo && userInfo.is_admin === 1;
+                        if (!userInfo) return;
+                    } else {
+                        return;
+                    }
+                    
+                    // Format for UI display
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message entry-message';
+                    
+                    const content = document.createElement('div');
+                    content.className = 'message-content';
+                    content.textContent = `${userInfo.uname || userInfo.username} has entered the room`;
+                    if (isGuard) content.textContent += ' (Guard)';
+                    if (isAdmin) content.textContent += ' (Admin)';
+                    messageDiv.appendChild(content);
+                    
+                    document.getElementById('messageContainer').prepend(messageDiv);
+                    
+                    // Format message for extension
+                    const formattedMessage = {
+                        type: "bilibili",
+                        chatname: userInfo.uname || userInfo.username,
+                        chatmessage: `has entered the room`,
+                        textonly: true,
+                        event: "user_enter",
+                        userId: (userInfo.uid || userInfo.userId).toString(),
+                        admin: isAdmin,
+                        moderator: isAdmin || isGuard
+                    };
+                    
+                    // Add medal info if available
+                    if (userInfo.fans_medal) {
+                        formattedMessage.membership = `Lv${userInfo.fans_medal.medal_level} ${userInfo.fans_medal.medal_name}`;
+                    }
+                    
+                    // Send to extension
+                    if (window?.messageBridge) {
+                        window.messageBridge.broadcast(formattedMessage);
+                    }
+                    
+                    // Trigger userEnter event
+                    this.trigger('userEnter', formattedMessage);
+                } catch (error) {
+                    this.error(`Failed to process user enter message: ${error.message}`);
+                }
+            }
+            
+            processRoomUpdate(data) {
+                try {
+                    if (!data.data) return;
+                    
+                    // Update follower count or other room stats
+                    if (data.data.fans) {
+                        const followerCount = data.data.fans;
+                        
+                        // Format message for extension
+                        const formattedMessage = {
+                            type: "bilibili",
+                            event: "follower_update",
+                            meta: followerCount,
+                            textonly: true
+                        };
+                        
+                        // Send to extension
+                        if (window?.messageBridge) {
+                            window.messageBridge.broadcast(formattedMessage);
+                        }
+                        
+                        // Trigger roomInfo event
+                        this.trigger('roomInfo', { followerCount });
+                    }
+                } catch (error) {
+                    this.error(`Failed to process room update: ${error.message}`);
+                }
+            }
+            
+            processStreamStatusChange(data, status) {
+                try {
+                    // Format message for extension
+                    const formattedMessage = {
+                        type: "bilibili",
+                        event: "stream_status",
+                        meta: status === "LIVE" ? "live" : "offline",
+                        textonly: true,
+                        chatname: "System",
+                        chatmessage: status === "LIVE" ? "Stream is now LIVE" : "Stream is now OFFLINE"
+                    };
+                    
+                    // Send to extension
+                    if (window?.messageBridge) {
+                        window.messageBridge.broadcast(formattedMessage);
+                    }
+                    
+                    // Add to UI
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${status === "LIVE" ? "entry-message" : ""}`;
+                    
+                    const content = document.createElement('div');
+                    content.className = 'message-content';
+                    content.textContent = status === "LIVE" ? "Stream is now LIVE" : "Stream is now OFFLINE";
+                    content.style.fontWeight = "bold";
+                    messageDiv.appendChild(content);
+                    
+                    document.getElementById('messageContainer').prepend(messageDiv);
+                } catch (error) {
+                    this.error(`Failed to process stream status change: ${error.message}`);
+                }
+            }
+            
+            async sendMessage(text) {
+                if (!this.connected || !this.cookie) {
+                    this.error("Cannot send message: Not connected or no cookie provided");
+                    return false;
+                }
+                
+                // Parse cookie to get SESSDATA and bili_jct
+                const cookies = this.parseCookie(this.cookie);
+                const sessdata = cookies.SESSDATA;
+                const csrf = cookies.bili_jct;
+                
+                if (!sessdata || !csrf) {
+                    this.error("Cannot send message: Missing SESSDATA or bili_jct in cookie");
+                    return false;
+                }
+                
+                try {
+                    const form = new FormData();
+                    form.append('color', '16777215'); // White color
+                    form.append('fontsize', '25');
+                    form.append('mode', '1');
+                    form.append('msg', text);
+                    form.append('roomid', this.realRoomId);
+                    form.append('rnd', Math.floor(Date.now() / 1000));
+                    form.append('csrf', csrf);
+                    form.append('csrf_token', csrf);
+                    
+                    const response = await fetch('https://api.live.bilibili.com/msg/send', {
+                        method: 'POST',
+                        body: form,
+                        headers: {
+                            'Cookie': this.cookie
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.code === 0) {
+                        this.log("Message sent successfully");
+                        return true;
+                    } else {
+                        this.error(`Failed to send message: ${result.message}`);
+                        return false;
+                    }
+                } catch (error) {
+                    this.error(`Failed to send message: ${error.message}`);
+                    return false;
+                }
+            }
+            
+            parseCookie(cookieStr) {
+                const result = {};
+                const cookies = cookieStr.split(';');
+                
+                for (let cookie of cookies) {
+                    const parts = cookie.trim().split('=');
+                    if (parts.length === 2) {
+                        result[parts[0]] = parts[1];
+                    }
+                }
+                
+                return result;
+            }
+            
+            // Event handling methods
+            on(event, callback) {
+                if (this.listeners[event]) {
+                    this.listeners[event].push(callback);
+                }
+                return this;
+            }
+            
+            off(event, callback) {
+                if (this.listeners[event]) {
+                    this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+                }
+                return this;
+            }
+            
+            trigger(event, data) {
+                if (this.listeners[event]) {
+                    for (const callback of this.listeners[event]) {
+                        callback(data);
+                    }
+                }
+            }
+            
+            log(message) {
+                console.log(message);
+                this.trigger('log', { type: 'info', message });
+            }
+            
+            error(message) {
+                console.error(message);
+                this.trigger('log', { type: 'error', message });
+                this.trigger('error', { message });
+            }
+        }
+        
+        // UI management
+        document.addEventListener('DOMContentLoaded', function() {
+            let client = null;
+            
+            const roomIdInput = document.getElementById('roomId');
+            const cookieInput = document.getElementById('cookie');
+            const messageInput = document.getElementById('messageInput');
+            const messageContainer = document.getElementById('messageContainer');
+            const systemLogContainer = document.getElementById('systemLog');
+            const roomInfoContainer = document.getElementById('roomInfo');
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            // Initialize messageBridge for extension communication
+            window.messageBridge = new MessageBridge();
+            
+            // Connect button click handler
+            connectBtn.addEventListener('click', async function() {
+                const roomId = roomIdInput.value.trim();
+                if (!roomId) {
+                    addSystemLog('error', 'Please enter a room ID');
+                    return;
+                }
+                
+                // Disable connect button during connection
+                connectBtn.disabled = true;
+                
+                // Create new client
+                client = new BilibiliLiveClient(roomId, cookieInput.value.trim());
+                
+                // Set up event listeners
+                client.on('message', handleMessage);
+                client.on('gift', handleGift);
+                client.on('superChat', handleSuperChat);
+                client.on('userEnter', handleUserEnter);
+                client.on('roomInfo', handleRoomInfo);
+                client.on('log', handleLog);
+                client.on('error', handleError);
+                client.on('connection', handleConnection);
+                
+                // Connect to WebSocket server
+                const connected = await client.connect();
+                
+                if (!connected) {
+                    connectBtn.disabled = false;
+                }
+            });
+            
+            // Disconnect button click handler
+            disconnectBtn.addEventListener('click', function() {
+                if (client) {
+                    client.disconnect();
+                }
+            });
+            
+            // Send button click handler
+            sendBtn.addEventListener('click', function() {
+                const message = messageInput.value.trim();
+                if (!message) return;
+                
+                if (client && client.connected) {
+                    client.sendMessage(message);
+                    messageInput.value = '';
+                }
+            });
+            
+            // Also send on Enter key
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendBtn.click();
+                }
+            });
+            
+            // Handle messages from the server
+            function handleMessage(message) {
+                // Message is already displayed in the UI in the processCommand methods
+                // No additional handling needed here
+            }
+            
+            function handleGift(gift) {
+                // Gift is already displayed in the UI in the processCommand methods
+                // No additional handling needed here
+            }
+            
+            function handleSuperChat(sc) {
+                // SuperChat is already displayed in the UI in the processCommand methods
+                // No additional handling needed here
+            }
+            
+            function handleUserEnter(user) {
+                // User enter is already displayed in the UI in the processCommand methods
+                // No additional handling needed here
+            }
+            
+            function handleRoomInfo(info) {
+                // Update room information display
+                if (info.online) {
+                    const viewerCountElement = document.querySelector('.stat-item:contains("👥")');
+                    if (viewerCountElement) {
+                        viewerCountElement.innerHTML = `<i>👥</i> ${info.online}`;
+                    } else {
+                        const stats = document.querySelector('.stats');
+                        if (stats) {
+                            const onlineDiv = document.createElement('div');
+                            onlineDiv.className = 'stat-item';
+                            onlineDiv.innerHTML = `<i>👥</i> ${info.online}`;
+                            stats.appendChild(onlineDiv);
+                        }
+                    }
+                }
+                
+                // Complete room info refresh
+                if (client && client.roomInfo && !info.online) {
+                    roomInfoContainer.innerHTML = '';
+                    
+                    const roomInfoDiv = document.createElement('div');
+                    roomInfoDiv.className = 'room-info';
+                    
+                    const avatar = document.createElement('img');
+                    avatar.className = 'room-avatar';
+                    avatar.src = client.roomInfo.anchor.face;
+                    avatar.onerror = function() {
+                        this.src = 'https://static.hdslb.com/images/member/noface.gif';
+                    };
+                    roomInfoDiv.appendChild(avatar);
+                    
+                    const infoDiv = document.createElement('div');
+                    
+                    const title = document.createElement('div');
+                    title.className = 'room-title';
+                    title.textContent = client.roomInfo.title || `Room ${client.roomInfo.roomId}`;
+                    infoDiv.appendChild(title);
+                    
+                    const streamer = document.createElement('div');
+                    streamer.textContent = client.roomInfo.anchor.name;
+                    infoDiv.appendChild(streamer);
+                    
+                    if (client.roomInfo.area) {
+                        const area = document.createElement('div');
+                        area.textContent = `${client.roomInfo.area.parentName} - ${client.roomInfo.area.name}`;
+                        infoDiv.appendChild(area);
+                    }
+                    
+                    roomInfoDiv.appendChild(infoDiv);
+                    roomInfoContainer.appendChild(roomInfoDiv);
+                    
+                    const stats = document.createElement('div');
+                    stats.className = 'stats';
+                    
+                    const onlineDiv = document.createElement('div');
+                    onlineDiv.className = 'stat-item';
+                    onlineDiv.innerHTML = `<i>👥</i> ${client.roomInfo.online || 0}`;
+                    stats.appendChild(onlineDiv);
+                    
+                    roomInfoContainer.appendChild(stats);
+                }
+            }
+            
+            function handleLog(log) {
+                addSystemLog(log.type, log.message);
+            }
+            
+            function handleError(error) {
+                addSystemLog('error', error.message);
+            }
+            
+            function handleConnection(data) {
+                const { connected } = data;
+                
+                connectBtn.disabled = connected;
+                disconnectBtn.disabled = !connected;
+                messageInput.disabled = !connected || !cookieInput.value.trim();
+                sendBtn.disabled = !connected || !cookieInput.value.trim();
+                
+                if (connected) {
+                    addSystemLog('info', 'Connected to Bilibili live chat');
+                } else {
+                    addSystemLog('info', 'Disconnected from Bilibili live chat');
+                }
+            }
+            
+            function addSystemLog(type, message) {
+                const logLine = document.createElement('div');
+                logLine.className = `system-log ${type}`;
+                logLine.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                
+                systemLogContainer.appendChild(logLine);
+                systemLogContainer.scrollTop = systemLogContainer.scrollHeight;
+            }
+            
+            // Helper function to determine background brightness for text color
+            function getBrightness(hexColor) {
+                // Remove # if present
+                hexColor = hexColor.replace('#', '');
+                
+                // Parse hex value to RGB
+                const r = parseInt(hexColor.substr(0, 2), 16);
+                const g = parseInt(hexColor.substr(2, 2), 16);
+                const b = parseInt(hexColor.substr(4, 2), 16);
+                
+                // Calculate perceived brightness using the formula
+                // (0.299*R + 0.587*G + 0.114*B)
+                return (0.299 * r + 0.587 * g + 0.114 * b);
+            }
+            
+            // Check URL params for auto-connect
+            const searchParams = new URLSearchParams(window.location.search);
+			const roomId = searchParams.get('channel') || searchParams.get('roomId');
+			
+			if (roomId) {
+				roomIdInput.value = roomId;
+				connectBtn.click();
+			}
+            
+            // Initialize with some system logs
+            addSystemLog('info', 'Bilibili Live Chat WebSocket Client initialized');
+            addSystemLog('info', 'Enter a room ID and click Connect to start');
+            
+        });
+		
+		
+var settings = {};
+
+// Create a MessageBridge class to handle communication with the page
+class MessageBridge {
+    constructor() {
+        this.initialized = false;
+        this.initializeMessaging();
+    }
+
+    initializeMessaging() {
+        if (this.initialized) return;
+        
+        // Listen for messages from the extension
+        window.addEventListener('ExtensionMessage', (e) => {
+            if (e.detail && e.detail.type === 'SEND_BILIBILI_MESSAGE') {
+                const messageInput = document.getElementById('messageInput');
+                const sendBtn = document.getElementById('sendBtn');
+                
+                if (messageInput && sendBtn) {
+                    messageInput.value = e.detail.message;
+                    sendBtn.click();
+                }
+            }
+        });
+
+        this.initialized = true;
+    }
+
+    broadcast(messageData) {
+        // Create a new CustomEvent each time
+        const messageEvent = new CustomEvent('bilibiliMessage', {
+            detail: messageData,
+            bubbles: true
+        });
+        window.dispatchEvent(messageEvent);
+    }
+}
+
+// Initialize the message bridge
+const messageBridge = new MessageBridge();
+
+    </script>
+</body>
+</html>

@@ -160,6 +160,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try {
+				if ("getSource" == request){sendResponse("bilibili");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 					document.querySelector('textarea.comment-sender_input').focus();
 					sendResponse(true);

@@ -151,6 +151,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("sessions");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('input').focus();
 					sendResponse(true);

@@ -224,6 +224,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("piczel");	return;	}
 				if ("focusChat" == request){
 					if (!document.querySelector("[class='cm-line']")){
 						sendResponse(false);

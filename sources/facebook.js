@@ -323,6 +323,7 @@
 	chrome.runtime.onMessage.addListener(
 		function(request, sender, sendResponse) {
 			try {
+				if ("getSource" == request){sendResponse("facebook");	return;	}
 				if ("focusChat" == request) {
 					
 					if (document.querySelectorAll('div[role="textbox"][contenteditable="true"] p').length){

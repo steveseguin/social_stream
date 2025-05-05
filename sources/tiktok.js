@@ -1572,7 +1572,8 @@
         chrome.runtime.onMessage.addListener(
             function(request, sender, sendResponse) {
                 try {
-                    if ("focusChat" == request) {
+                    if ("getSource" == request){sendResponse("tiktok");	return;	}
+					if ("focusChat" == request) {
 						
 						if (!StreamState.isValid() && StreamState.getCurrentChannel()){
 							return;

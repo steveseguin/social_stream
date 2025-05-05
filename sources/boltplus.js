@@ -180,6 +180,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("boltplus");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('.public-DraftEditor-content[ contenteditable="true"]').focus();
 					

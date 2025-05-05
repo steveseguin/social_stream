@@ -156,6 +156,7 @@
 		function (request, sender, sendResponse) {
 			try{
 				
+				if ("getSource" == request){sendResponse("peertube");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('textarea').focus();
 					sendResponse(true);

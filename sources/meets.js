@@ -189,7 +189,8 @@
   chrome.runtime.onMessage.addListener(
 	function (request, sender, sendResponse) {
 		try{
-			if ("focusChat" == request){
+			if ("getSource" == request){sendResponse("meets");	return;	}
+				if ("focusChat" == request){
 				document.querySelector('.DraftEditor-editorContainer .public-DraftStyleDefault-block[data-offset-key], textarea[maxlength="500"], textarea').click();
 				document.querySelector('.DraftEditor-editorContainer .public-DraftStyleDefault-block[data-offset-key], textarea[maxlength="500"], textarea').focus();
 

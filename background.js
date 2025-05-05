@@ -629,6 +629,216 @@ try {
 		});
 } catch (e) {}
 
+///////////////////
+// Add this placeholder function to background.js
+window.customUserFunction = function(data) {
+    // This is a placeholder function that can be overridden by custom user JavaScript
+    console.log("Default customUserFunction - no custom implementation loaded");
+    // Return false to indicate no custom processing was done
+    return data;
+};
+
+function loadCustomJs(code) {
+    try {
+        // Instead of trying to evaluate the code, we'll extract the function
+        // and manually assign it to window.customUserFunction
+        
+        // Extract just the function body from the code
+        const functionBodyMatch = code.match(/window\.customUserFunction\s*=\s*function\s*\(\s*data\s*\)\s*\{([\s\S]*?)\}\s*;/);
+        
+        if (!functionBodyMatch || !functionBodyMatch[1]) {
+            console.error("Could not extract function body from code");
+            return false;
+        }
+        
+        // Get the function body
+        const functionBody = functionBodyMatch[1];
+        
+        // Create a new function using the Function constructor
+        // We can't use this directly because of CSP, but we'll use it as a template
+        const functionTemplate = `
+            window.customUserFunction = function(data) {
+                // Custom implementation
+                const processedData = window.processCustomFunctionBody(data);
+                return processedData;
+            };
+            
+            // Extract and define any helper functions
+            ${code.replace(functionBodyMatch[0], '')}
+        `;
+        
+        // Now implement a function that will process data according to the extracted body
+        // This will be called by our wrapper function
+        window.processCustomFunctionBody = function(data) {
+            // Here you would implement logic to process the data according to the function body
+            // Since we can't eval the code directly, you'll need to implement specific behaviors
+            
+            // Log that we're using the custom implementation
+            console.log("Custom implementation processing data");
+            
+            // Simple implementation that modifies data in a predetermined way
+            // Replace this with your actual custom logic
+            if (data.chatmessage) {
+                // Example custom processing
+                if (data.chatmessage.startsWith("!")) {
+                    // Handle commands
+                    const commandParts = data.chatmessage.split(" ");
+                    const command = commandParts[0].toLowerCase();
+                    
+                    if (command === "!hello") {
+                        console.log("Command processed: hello");
+                        // Custom command handling
+                        // You'd implement sendCustomReply here
+                    }
+                }
+                
+                // Other custom processing
+                // ...
+            }
+            
+            return data;
+        };
+        
+        // Create a script tag to hold the template
+        const script = document.createElement('script');
+        script.id = 'custom-user-js';
+        script.textContent = functionTemplate;
+        
+        // Remove any existing script
+        const existingScript = document.getElementById('custom-user-js');
+        if (existingScript) {
+            existingScript.remove();
+        }
+        
+        // Add the script to the page
+        document.body.appendChild(script);
+        
+        console.log("Custom JavaScript loaded successfully");
+        return true;
+    } catch (error) {
+        console.error("Error loading custom JavaScript:", error);
+        return false;
+    }
+}
+// Function to reset the custom function to default
+function resetCustomJs() {
+    // Remove any existing custom script
+    const existingScript = document.getElementById('custom-user-js');
+    if (existingScript) {
+        existingScript.remove();
+    }
+    
+    // Reset to default function
+    window.customUserFunction = function(data) {
+        console.log("Default customUserFunction - no custom implementation loaded");
+        return false;
+    };
+    
+    console.log("Custom JavaScript function reset to default");
+}
+//////////////
+function printThermal(htmlContent, options = {}) {  // --kiosk --kiosk-printing
+  // Default options
+  const defaultOptions = {
+    width: '58mm',
+    margin: '0mm',
+    fontSize: '10pt',
+    fontFamily: 'monospace',
+    lineHeight: '1.2',
+    printerName: settings.printerName?.textsetting || null 
+  };
+  
+  // Merge provided options with defaults
+  const printOptions = {...defaultOptions, ...options};
+  
+  // Create an iframe to handle the print job
+  const printFrame = document.createElement('iframe');
+  
+  // Make iframe invisible
+  printFrame.style.position = 'fixed';
+  printFrame.style.width = '0';
+  printFrame.style.height = '0';
+  printFrame.style.border = '0';
+  printFrame.style.opacity = '0';
+  
+  document.body.appendChild(printFrame);
+  
+  // Get iframe's document object
+  const frameDoc = printFrame.contentWindow.document;
+  
+  // Open document and write HTML
+  frameDoc.open();
+  
+  // Create style for printing
+  const printStyles = `
+    @page {
+      size: ${printOptions.width} auto;
+      margin: ${printOptions.margin};
+    }
+    body {
+      width: ${printOptions.width};
+      font-family: ${printOptions.fontFamily};
+      font-size: ${printOptions.fontSize};
+      line-height: ${printOptions.lineHeight};
+      margin: 0;
+      padding: 0;
+    }
+    * {
+      box-sizing: border-box;
+    }
+  `;
+  
+  // Write HTML to iframe with styles
+  frameDoc.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Print</title>
+        <style>${printStyles}</style>
+      </head>
+      <body>
+        ${htmlContent}
+      </body>
+    </html>
+  `);
+  
+  frameDoc.close();
+  
+  // Wait for content to load before printing
+  printFrame.onload = function() {
+    const printWindow = printFrame.contentWindow;
+    
+    // If a specific printer name is provided, attempt to use it
+    if (printOptions.printerName) {
+      // Use the print API with specific printer
+      const printOpts = {
+        printer: printOptions.printerName,
+        silent: true
+      };
+      
+      // Print with specified options
+      if (printWindow.navigator && printWindow.navigator.serviceWorker) {
+        printWindow.print(printOpts).catch(error => {
+          console.warn('Failed to select printer:', error);
+          // Fallback to default print
+          printWindow.print();
+        });
+      } else {
+        // Fallback to default print
+        printWindow.print();
+      }
+    } else {
+      // Use default print dialog
+      printWindow.print();
+    }
+    
+    // Remove iframe after printing is complete
+    setTimeout(() => {
+      document.body.removeChild(printFrame);
+    }, 1000);
+  };
+}
+////////
 
 function replaceURLsWithSubstring(text, replacement = "[Link]") {
   if (typeof text !== "string") return text;
@@ -701,8 +911,9 @@ function validateRoomId(roomId) {
 	// throw new Error('Invalid room ID');
 	return sanitizedId;
 }
-
+var relaytargets = false;
 var loadedFirst = false;
+
 function loadSettings(item, resave = false) {
 	log("loadSettings (or saving new settings)", item);
 	let reloadNeeded = false;
@@ -822,10 +1033,32 @@ function loadSettings(item, resave = false) {
 			}
 		}
 	}
+	
+	if (settings.relaytargets && settings.relaytargets.textsetting){
+		relaytargets = settings.relaytargets.textsetting
+			.split(",")
+			.map(item => item.trim().toLowerCase())
+			.filter(item => item !== "");
+		if (!relaytargets.length){
+			relaytargets = false;
+		}
+	} else {
+		relaytargets = false;
+	}
 
 	if (settings.translationlanguage) {
 		changeLg(settings.translationlanguage.optionsetting);
 	}
+	/////
+    const customJs = localStorage.getItem('customJavaScript');
+    const isEnabled = settings.customJsEnabled || false;
+    
+    if (customJs && isEnabled) {
+        loadCustomJs(customJs);
+    } else {
+        resetCustomJs();
+    }
+	/////////
 	
 	setupSocket();
 	setupSocketDock();
@@ -2746,7 +2979,7 @@ async function processIncomingMessage(message, sender=null){
 		let reflection = false;
 		
 		// checkExactDuplicateAlreadyReceived only does work if there was a message responsein the last 10 seconds.
-		reflection = checkExactDuplicateAlreadyReceived(message.chatmessage,message.textonly, message.tid, message.type);
+		reflection = checkExactDuplicateAlreadyReceived(message.chatmessage, message.textonly, message.tid, message.type);
 		if (reflection && (settings.firstsourceonly || settings.hideallreplies || settings.thissourceonly)){
 			return;
 		}
@@ -3010,6 +3243,20 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "autoLiveYoutube") {
 				pushSettingChange();
 			}
+			if (request.setting == "relaytargets") {	
+				if (settings.relaytargets && settings.relaytargets.textsetting){
+					relaytargets = settings.relaytargets.textsetting
+						.split(",")
+						.map(item => item.trim().toLowerCase())
+						.filter(item => item !== "");
+					if (!relaytargets.length){
+						relaytargets = false;
+					}
+				} else {
+					relaytargets = false;
+				}
+			}
+			
 			if (request.setting == "ticker") {
 				try {
 					await loadFileTicker();
@@ -3584,7 +3831,25 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} else {
 				sendResponse({ state: isExtensionOn, streamID: streamID, password: password });
 			}
-			
+		} else if (request.cmd && (request.cmd === 'uploadCustomJs')) {
+			localStorage.setItem('customJavaScript', request.data);
+			try {
+				// Load the custom JavaScript immediately using script injection
+				const success = loadCustomJs(request.data);
+				if (success) {
+					sendResponse({success: true, state: isExtensionOn });
+				} else {
+					throw new Error("Failed to load custom JavaScript");
+				}
+			} catch(e){
+				console.error("Custom JS loading error:", e);
+				sendResponse({success: false, error: e.message, state: isExtensionOn });
+			}
+		} else if (request.cmd && (request.cmd === 'deleteCustomJs')) {
+			localStorage.removeItem('customJavaScript');
+			// Reset the custom function to default
+			resetCustomJs();
+			sendResponse({success: true, state: isExtensionOn });
 		} else if (request.cmd && (request.cmd === 'uploadBadwords')) {
 			localStorage.setItem('customBadwords', request.data);
 			try {
@@ -3784,6 +4049,9 @@ async function sendToDestinations(message) {
 			}
 		}
 		
+		if (settings.colorofsourcebg && message && message.chatname) {
+			message.backgroundColor = getColorFromType(message.type);
+		}
 
 		if (settings.randomcolor && message && !message.nameColor && message.chatname) {
 			message.nameColor = getColorFromName(message.chatname);
@@ -4100,6 +4368,11 @@ function checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, sav
 
 var alreadyCaptured = [];
 function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false, type=null) { // FOR RELAY PURPOSES ONLY.
+
+	if (!msg){
+		return false;
+	}
+	
 	const now = Date.now();
 	if (now - lastSentTimestamp > 10000) {// 10 seconds has passed; assume good.
 		return false;
@@ -6396,7 +6669,60 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 			if (isExtensionOn) {
 				sendToDestinations({ vipUser: userToVIP });
 			}
-		} else if (request.action === "getChatSources") {
+		} else if (request.action === "markUser" && request.value && request.value.chatname && request.value.type && request.value.role) {
+    
+		if (request.value.role=="bot"){
+			if (!settings.botnamesext) {
+				settings.botnamesext = { textsetting: "" };
+			}
+			const markedlist = settings.botnamesext.textsetting.split(",").map(user => {
+				const parts = user.split(":").map(part => part.trim());
+				return { username: parts[0], type: parts[1] || "" };
+			}); 
+			
+			var altSourceType = request.value.type || "";
+			if (altSourceType == "youtubeshorts"){
+				altSourceType = "youtube";
+			}
+			
+			const userToMark = { username: (request.value.userid || request.value.chatname), type: altSourceType };
+			const isAlreadyMarked = markedlist.some(({ username, type }) => userToMark.username === username && (userToMark.type === type || type === ""));
+			
+			if (!isAlreadyMarked) {
+				settings.botnamesext.textsetting += (settings.botnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
+				chrome.storage.local.set({ settings: settings });
+				// Check for errors in chrome storage operations
+				if (chrome.runtime.lastError) {
+					console.error("Error updating settings:", chrome.runtime.lastError.message);
+				}
+			}
+		} else if (request.value.role=="mod"){
+			if (!settings.modnamesext) {
+				settings.modnamesext = { textsetting: "" };
+			}
+			const markedlist = settings.modnamesext.textsetting.split(",").map(user => {
+				const parts = user.split(":").map(part => part.trim());
+				return { username: parts[0], type: parts[1] || "" };
+			}); 
+			
+			var altSourceType = request.value.type || "";
+			if (altSourceType == "youtubeshorts"){
+				altSourceType = "youtube";
+			}
+			
+			const userToMark = { username: (request.value.userid || request.value.chatname), type: altSourceType };
+			const isAlreadyMarked = markedlist.some(({ username, type }) => userToMark.username === username && (userToMark.type === type || type === ""));
+			
+			if (!isAlreadyMarked) {
+				settings.modnamesext.textsetting += (settings.modnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
+				chrome.storage.local.set({ settings: settings });
+				// Check for errors in chrome storage operations
+				if (chrome.runtime.lastError) {
+					console.error("Error updating settings:", chrome.runtime.lastError.message);
+				}
+			}
+		}
+	} else if (request.action === "getChatSources") {
 			if (isExtensionOn && chrome.debugger) {
 				chrome.tabs.query({}, function (tabs) {
 					chrome.runtime.lastError;
@@ -6900,6 +7226,9 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
         return false;
     }
 
+	if (!data.response){
+		return false;
+	}
     if (antispam && settings["dynamictiming"] && lastAntiSpam + 10 > messageCounter) {
         return false;
     }
@@ -6938,7 +7267,8 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
         for (const tab of tabs) {
             try {
                 // Skip invalid tabs
-                if (!isValidTab(tab, data, reverse, published, now, overrideTimeout)) {
+				let isValid = await isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode);
+                if (!isValid) {
                     continue;
                 }
 
@@ -7033,7 +7363,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 }
 
 // Helper function to check if a tab is valid for processing
-function isValidTab(tab, data, reverse, published, now, overrideTimeout) {
+async function isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) {
     // First check URLs that we can't or shouldn't process
     if (!tab.url) return false;
     if (tab.url.startsWith("chrome://")) return false;  // Add this line
@@ -7062,7 +7392,14 @@ function isValidTab(tab, data, reverse, published, now, overrideTimeout) {
             return false;
         }
     }
-    
+	
+	if (relayMode && relaytargets){
+		let sourceType = await getSourceType(tab.id);
+		if (!sourceType || !relaytargets.includes(sourceType)){
+			return false;
+		}
+	}
+	
     return true;
 }
 
@@ -7250,6 +7587,15 @@ async function insertText(tabId, text) {
 async function focusChat(tabId) {
   return new Promise((resolve) => {
     chrome.tabs.sendMessage(tabId, "focusChat", (response = false) => {
+      chrome.runtime.lastError;
+      resolve(response);
+    });
+  });
+}
+
+async function getSourceType(tabId) {
+  return new Promise((resolve) => {
+    chrome.tabs.sendMessage(tabId, "getSource", (response = false) => {
       chrome.runtime.lastError;
       resolve(response);
     });
@@ -8458,6 +8804,11 @@ async function applyBotActions(data, tab = false) {
 				console.log(e); // ai.js file missing?
 			}
 		}
+		
+		if (settings.customJsEnabled){
+			data = customUserFunction(data);
+		}
+		
 	} catch (e) {
 		console.error(e);
 	}

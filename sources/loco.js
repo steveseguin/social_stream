@@ -185,6 +185,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("loco");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('input[placeholder][maxlength="200"]').focus();
 					sendResponse(true);

@@ -143,6 +143,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("gala");	return;	}
 				if ("focusChat" == request){ 
 					document.querySelector('textarea').focus();
 					sendResponse(true);

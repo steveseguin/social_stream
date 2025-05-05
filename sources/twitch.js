@@ -686,6 +686,7 @@
 	if (chrome && chrome.runtime) {
 		chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			try {
+				if ("getSource" == request){sendResponse("twitch");	return;	}
 				if ("focusChat" == request) {
 					if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
 						return;
@@ -697,6 +698,7 @@
 					sendResponse(true);
 					return;
 				}
+				
 				if (typeof request === "object") {
 					if ("state" in request) {
 						isExtensionOn = request.state;

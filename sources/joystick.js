@@ -151,6 +151,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("joystick");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('input[flow-id="chat-message-text-input"]').focus();
 					sendResponse(true);

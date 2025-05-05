@@ -189,6 +189,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - fansly - pop out chat
 - nextcloud (requires domain added)
 - favorited (studio pop out chat)
+- xeenon (not pop out ; dashboard)
 
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   

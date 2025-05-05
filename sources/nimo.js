@@ -168,6 +168,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("nimo");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('.chat-input-wrapper > textarea').focus();
 					sendResponse(true);

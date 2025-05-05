@@ -1,4 +1,5 @@
 // To use, rename custom_sample.js to custom.js
+// This is for use with the dock.html and featured.html page; not uploaded via the menu.
 
 
 

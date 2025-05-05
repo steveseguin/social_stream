@@ -333,6 +333,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){sendResponse("zoom");	return;	}
 				if ("focusChat" == request){
 					//console.log("Focusing");
 					var sent=false;

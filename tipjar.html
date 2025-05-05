@@ -8,7 +8,8 @@
     <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
     <!-- Matter.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-    
+    <script src="currency.js"></script>
+	
     <style>
 	* { 
 		margin: 0; 
@@ -209,26 +210,19 @@
             }, 3000);
         }
 
-        function processTip(amount, currency, donator) {
-			let tipValue = 0;
+		function processTip(amount, currency, donator) {
+		   // Use convertToUSD function from currency.js
+		   let tipValue = convertToUSD(`${amount} ${currency}`);
 
-			if (['bits', 'bit', 'cheer', 'gold', 'rose', 'roses'].includes(currency.toLowerCase())) {
-				tipValue = amount / 100;
-			} else if (currency.toLowerCase() === 'usd') {
-				tipValue = amount;
-			} else {
-				tipValue = amount;
-			}
+		   // Add multiple hearts with varying delays and positions
+		   const heartCount = Math.min(Math.ceil(tipValue / 5), 10);
+		   for (let i = 0; i < heartCount; i++) {
+			   setTimeout(() => {
+				   addHeart(tipValue / heartCount);
+			   }, i * 200 + Math.random() * 300); // Randomized delay between hearts
+		   }
 
-			// Add multiple hearts with varying delays and positions
-			const heartCount = Math.min(Math.ceil(tipValue / 5), 10);
-			for (let i = 0; i < heartCount; i++) {
-				setTimeout(() => {
-					addHeart(tipValue / heartCount);
-				}, i * 200 + Math.random() * 300); // Randomized delay between hearts
-			}
-
-			showNotification(`${donator} tipped ${amount} ${currency}!`);
+		   showNotification(`${donator} tipped ${amount} ${currency}!`);
 		}
 
         function processData(data) {
