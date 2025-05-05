@@ -8,7 +8,6 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const MAX_DIFF_SIZE = 20000; // Characters - truncate if larger
 const MAX_FILES_TO_SAMPLE = 5; // Maximum number of files to include in the diff
 const SAMPLE_LINES_PER_FILE = 200; // Maximum lines to include per file
-const BRANCH = "beta";
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -175,6 +174,22 @@ async function shouldSkipEnhancement(message) {
   return false;
 }
 
+async function getRecentBranchCommits(branchName) {
+  // We'll completely rewrite this function to avoid relying on merge-base
+  if (branchName === 'main' || branchName === 'master' || branchName === 'unknown') {
+    return []; // Don't show history for main/master itself
+  }
+  
+  try {
+    // Just get the most recent 3 commits on current branch
+    const log = await runCommand(`git log --pretty=%s -n 3`);
+    return log.split('\n').filter(s => s.trim() !== '');
+  } catch (error) {
+    console.warn('Could not get recent branch commits:', error.message);
+    return [];
+  }
+}
+
 async function enhanceCommitMessage(originalMessage, diff, branchName, dirSummary, recentCommits) {
   const recentCommitLines = recentCommits.length > 0
      ? `* **Recent Steps on Branch:**\n${recentCommits.map(s => `    - ${s}`).join('\n')}`
@@ -241,6 +256,17 @@ async function updateCommitMessage(commitSha, newMessage) {
     await runCommand(`git commit --amend -F ${tempFile}`);
     
     console.log('Pushing changes with no-verify to skip hooks...');
+    
+    // Check if we need to set up credentials for push
+    if (isGitHubAction) {
+      // When running in GitHub Actions, we need to adjust the URL to include the token
+      const repoUrl = process.env.GITHUB_SERVER_URL + '/' + process.env.GITHUB_REPOSITORY;
+      const tokenUrl = repoUrl.replace('https://', `https://x-access-token:${process.env.GITHUB_TOKEN}@`);
+      
+      await runCommand(`git remote set-url origin ${tokenUrl}`);
+      console.log('Configured git remote with authentication token');
+    }
+    
     // Use --no-verify to bypass any pre-push hooks
     await runCommand(`git push --force --no-verify`);
     
@@ -276,8 +302,14 @@ async function updatePRDescription() {
       return;
     }
     
-    // Get PR diff
-    const prDiff = await runCommand(`git diff origin/$(git rev-parse --abbrev-ref HEAD)^...origin/$(git rev-parse --abbrev-ref HEAD)`);
+    // Get PR diff - using a simpler method to avoid issues
+    let prDiff;
+    try {
+      prDiff = await runCommand(`git diff HEAD~1 HEAD`);
+    } catch (error) {
+      console.warn('Error getting PR diff, using simple diff instead:', error.message);
+      prDiff = await runCommand(`git show HEAD`);
+    }
     
     // Generate enhanced description
     const prompt = `As a developer assistant, please create an improved, detailed pull request description based on the original description and the code changes shown in the diff.
@@ -330,27 +362,17 @@ async function getBranchName() {
   }
 }
 
-async function getRecentBranchCommits(branchName) {
-  if (branchName === BRANCH || branchName === 'main' || branchName === 'master' || branchName === 'unknown') {
-    return []; // Don't show history relative to main/master/beta itself
-  }
-  try {
-    // Find the merge base with branch (adjust 'main' if needed)
-    const mergeBase = await runCommand(`git merge-base origin/${BRANCH} HEAD`);
-    // Get log subjects since the merge base, limit to 3
-    const log = await runCommand(`git log --pretty=%s ${mergeBase}..HEAD -n 3`);
-    return log.split('\n').filter(s => s.trim() !== '');
-  } catch (error) {
-    console.warn('Could not get recent branch commits:', error.message);
-    return [];
-  }
-}
-
 async function main() {
   try {
     console.log('Starting commit enhancement process...');
     
-    // Check if we're running in GitHub Actions and this commit was triggered by our own enhancement
+    // Check if we're running in GitHub Actions
+    if (isGitHubAction) {
+      // Configure git to work in CI - important for proper credential handling
+      await runCommand('git config --global --add safe.directory /github/workspace');
+    }
+    
+    // Get branch and commit info
     const branchName = await getBranchName();
     const commitSha = await getLastCommit();
     const originalMessage = await getLastCommitMessage(commitSha);
