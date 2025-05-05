@@ -1072,37 +1072,50 @@
 				return chatimg;
 			}
 			
-			var postServer = "http://127.0.0.1:8000";
+			var thirdPartyAPIs = [];
+
+			// Original thirdPartyAPI variable now becomes legacy support
 			var thirdPartyAPI = false;
+
 			if (urlParams.has("singular")) {
-				thirdPartyAPI = function (data) {
-					var API = "https://app.singular.live/apiv1/datanodes/" + urlParams.get("singular") + "/data";
-
+				const singularAPI = "https://app.singular.live/apiv1/datanodes/" + urlParams.get("singular") + "/data";
+				thirdPartyAPIs.push(function (data) {
 					data.chatimg = upscaleImages(data);
-
 					var message = { payload: data };
-					ajax(message, API, "PUT");
-				};
-			} else if (urlParams.has("postserver")) {
-				postServer = urlParams.get("postserver") || postServer;
-				thirdPartyAPI = function (data) {
+					ajax(message, singularAPI, "PUT");
+				});
+			} 
+
+			if (urlParams.has("postserver")) {
+				const postServerUrl = urlParams.get("postserver") || "http://127.0.0.1:8000";
+				thirdPartyAPIs.push(function (data) {
 					data.chatimg = upscaleImages(data);
+					ajax(data, postServerUrl, "POST");
+				});
+			}
 
-					ajax(data, postServer, "POST");
-				};
-			} else if (urlParams.has("putserver")) {
-				postServer = urlParams.get("putserver") || postServer;
-				thirdPartyAPI = function (data) {
+			if (urlParams.has("postserver2")) {
+				const postServer2Url = urlParams.get("postserver2") || "http://127.0.0.1:3000";
+				thirdPartyAPIs.push(function (data) {
 					data.chatimg = upscaleImages(data);
+					ajax(data, postServer2Url, "POST");
+				});
+			}
 
-					ajax(data, postServer, "PUT");
-				};
-			} else if (urlParams.has("spxserver") && urlParams.has("spxfunction") && urlParams.has("spxlayer")) {
-				let spxserver = urlParams.get("spxserver") || postServer;
-				let spxfunction = urlParams.get("spxfunction") || "";
-				let spxlayer = urlParams.get("spxlayer") || "";
+			if (urlParams.has("putserver")) {
+				const putServerUrl = urlParams.get("putserver") || "http://127.0.0.1:3000";
+				thirdPartyAPIs.push(function (data) {
+					data.chatimg = upscaleImages(data);
+					ajax(data, putServerUrl, "PUT");
+				});
+			}
 
-				thirdPartyAPI = function (data) {
+			if (urlParams.has("spxserver") && urlParams.has("spxfunction") && urlParams.has("spxlayer")) {
+				const spxserver = urlParams.get("spxserver") || "http://127.0.0.1:8000";
+				const spxfunction = urlParams.get("spxfunction") || "";
+				const spxlayer = urlParams.get("spxlayer") || "";
+
+				thirdPartyAPIs.push(function (data) {
 					var msg = {};
 					if ("id" in data) {
 						msg.id = data.id;
@@ -1128,28 +1141,31 @@
 
 					if (params.length > 3000) {
 						console.log("dropping message due to request length");
-						return; // HTTP request too long due to twitch emoji spam, skipping this message.
+						return;
 					}
-					postServer = spxserver + "/api/v1/invokeTemplateFunction?webplayout=" + spxlayer + "&function=" + spxfunction + "&params=" + params;
+					const spxEndpoint = spxserver + "/api/v1/invokeTemplateFunction?webplayout=" + spxlayer + "&function=" + spxfunction + "&params=" + params;
 
 					const spxRequest = new XMLHttpRequest();
 					spxRequest.onreadystatechange = function () {
 						if (spxRequest.readyState === 4 && spxRequest.status === 200) {
 						}
 					};
-					spxRequest.open("GET", postServer);
+					spxRequest.open("GET", spxEndpoint);
 					spxRequest.send();
-				};
-			} else if (urlParams.has("h2r") || urlParams.has("h2rurl")) {
-				postServer = "http://127.0.0.1:4001/data/";
+				});
+			}
+
+			if (urlParams.has("h2r") || urlParams.has("h2rurl")) {
+				let h2rServer = "http://127.0.0.1:4001/data/";
 
 				if (urlParams.has("h2rurl")) {
-					postServer = urlParams.get("h2rurl") || postServer;
+					h2rServer = urlParams.get("h2rurl") || h2rServer;
 				}
 				if (urlParams.has("h2r")) {
-					postServer = postServer + urlParams.get("h2r");
+					h2rServer = h2rServer + urlParams.get("h2r");
 				}
-				thirdPartyAPI = function (data) {
+				
+				thirdPartyAPIs.push(function (data) {
 					var msg = {};
 
 					if ("id" in data) {
@@ -1163,19 +1179,17 @@
 					}
 
 					msg.snippet = {};
-					//
 					if (data.textonly) {
 						msg.snippet.displayMessage = data.chatmessage;
 					} else if (!stripHTML) {
-						// lets try to strip HTML just in case, for h2r since it can't use HTML, but only if the alternative way isn't used.
-						msg.snippet.displayMessage = stripHtmlFunction(data.chatmessage); // strip HTML for H2R, if we haven't striped it so far
+						msg.snippet.displayMessage = stripHtmlFunction(data.chatmessage);
 					} else {
-						msg.snippet.displayMessage = data.chatmessage; // stripHTML already should have processed this, so lets not reprocess it.
+						msg.snippet.displayMessage = data.chatmessage;
 					}
 
 					if (!msg.snippet.displayMessage) {
 						return;
-					} // we won't send a featured message if no message body?
+					}
 
 					msg.authorDetails = {};
 					msg.authorDetails.displayName = data.chatname || "";
@@ -1190,8 +1204,8 @@
 					var h2r = {};
 					h2r.messages = [];
 					h2r.messages.push(msg);
-					ajax(h2r, postServer, "POST");
-				};
+					ajax(h2r, h2rServer, "POST");
+				});
 			}
 			
 
@@ -2321,9 +2335,9 @@
 						overwriteImage(contents.chatimg);
 					}
 					
-					if (thirdPartyAPI){
-						thirdPartyAPI(contents);
-					}
+					thirdPartyAPIs.forEach(function(api) {
+						api(contents);
+					});
 					
 				} catch(e){
 					console.error(e);
