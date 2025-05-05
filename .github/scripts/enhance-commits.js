@@ -33,6 +33,61 @@ async function getLastCommitMessage(commitSha) {
   return await runCommand(`git log -1 --pretty=%B ${commitSha}`);
 }
 
+function getDirectorySummary(changedFiles) {
+  const directories = new Set();
+  const componentMapping = {
+    'sources': 'Platform Integrations',
+    'themes': 'Theming',
+    'dock.html': 'Consolidated Chat Dashboard and Overlay UI',
+    'featured.html': 'Featured Overlay UI',
+    'background.js': 'Extension Core Logic and Message Routing',
+    'manifest.json': 'Extension Manifest'
+  };
+  const knownComponents = new Set();
+
+  for (const { file } of changedFiles) {
+    const dirname = path.dirname(file);
+    if (dirname !== '.') {
+      directories.add(dirname);
+    }
+    // Check direct file mapping
+    if (componentMapping[file]) {
+        knownComponents.add(componentMapping[file]);
+    } else {
+        // Check directory mapping
+        const topLevelDir = file.split('/')[0];
+        if (componentMapping[topLevelDir]) {
+            knownComponents.add(componentMapping[topLevelDir]);
+        }
+        // Simple keyword check (adjust as needed)
+        if (file.includes('tts') || dirname.includes('tts')) knownComponents.add('TTS Module');
+        if (file.includes('api') || dirname.includes('api')) knownComponents.add('API Handling');
+    }
+  }
+
+  let summary = 'Areas changed: ';
+  if (knownComponents.size > 0) {
+      summary += [...knownComponents].join(', ');
+  } else if (directories.size > 0) {
+      // Fallback to directories if no components identified
+       summary += [...directories].slice(0, 3).join(', ') + (directories.size > 3 ? ', ...' : '');
+  } else {
+      summary += 'Root level or single file changes.';
+  }
+  return summary;
+}
+
+async function getChangedFiles(commitSha) {
+  const fullDiff = await runCommand(`git show ${commitSha} --name-status`);
+  return fullDiff
+    .split('\n')
+    .filter(line => /^[AMDRT]\t/.test(line))
+    .map(line => {
+      const [status, file] = line.split('\t');
+      return { status, file };
+    });
+}
+
 async function getCommitDiff(commitSha) {
   const fullDiff = await runCommand(`git show ${commitSha} --name-status`);
   const changedFiles = fullDiff
@@ -99,15 +154,21 @@ async function getCommitDiff(commitSha) {
   return combinedDiff;
 }
 
-async function enhanceCommitMessage(originalMessage, diff) {
+async function enhanceCommitMessage(originalMessage, diff, branchName, dirSummary, recentCommits) { // Added params
+  const recentCommitLines = recentCommits.length > 0
+     ? `* **Recent Steps on Branch:**\n${recentCommits.map(s => `    - ${s}`).join('\n')}`
+     : '* **Recent Steps on Branch:** (N/A or first commit)';
   const prompt = `As a developer assistant, please create an improved, detailed git commit message based on the original message, the code changes shown in the diff, and the provided context about the repository.
 
 **Project Context: Social Stream Ninja**
 
 * **Purpose:** Consolidates live social messaging streams (Twitch, YouTube, Facebook, etc.) for content creators.
 * **Core Features:** Multi-platform chat aggregation, customizable chat overlay (for OBS/streaming), Text-to-Speech (TTS), bot commands & automation, API support (message ingest/egress, webhooks for donations like Stripe/Ko-Fi), theming, standalone desktop app, and browser extension.
-* **Key Components:** `dock.html` (main dashboard/controller), `featured.html` (chat overlay), `sources/` directory (specific platform integrations), `custom.js` (user scripting), TTS functionality, API handling logic.
+* **Key Components:** \`dock.html\` (main dashboard/controller), \`featured.html\` (chat overlay), \`sources/\` directory (specific platform integrations), \`custom.js\` (user scripting), TTS functionality, API handling logic.
 * **Technology Stack:** Primarily JavaScript, HTML, CSS, leveraging Browser Extension APIs, WebRTC (via VDO.Ninja), and potentially Electron for the standalone app.
+* **Branch Context:** You are currently on branch \`${branchName}\`
+* ${dirSummary}
+${recentCommitLines}
 
 **Input:**
 
@@ -125,7 +186,7 @@ Please generate a professional, detailed commit message that:
 2.  Uses the project context to better understand the purpose and impact of the code changes.
 3.  Adds bullets for key changes, explaining *what* was modified (e.g., which feature, platform integration, or component like the dock/overlay/TTS).
 4.  Explains *why* changes were made if possible, linking back to project goals (e.g., improving usability, adding a requested feature, fixing a bug on a specific platform).
-5.  Mentions key files or components (e.g., `dock.html`, `twitch.js`, TTS module) that were modified.
+5.  Mentions key files or components (e.g., \`dock.html\`, \`twitch.js\`, TTS module) that were modified.
 6.  Maintains a professional tone suitable for a project like Social Stream Ninja.
 
 Keep your response short and focused on just the enhanced commit message itself, without any explanations or additional text introducing it.`;
@@ -219,6 +280,31 @@ Keep your response focused on just the enhanced PR description without any expla
   }
 }
 
+async function getBranchName() {
+  try {
+    return await runCommand('git rev-parse --abbrev-ref HEAD');
+  } catch (error) {
+    console.warn('Could not get branch name:', error.message);
+    return 'unknown';
+  }
+}
+
+async function getRecentBranchCommits(branchName) {
+  if (branchName === 'main' || branchName === 'master' || branchName === 'unknown') {
+    return []; // Don't show history relative to main/master itself
+  }
+  try {
+    // Find the merge base with main (adjust 'main' if needed)
+    const mergeBase = await runCommand(`git merge-base origin/main HEAD`);
+    // Get log subjects since the merge base, limit to 3
+    const log = await runCommand(`git log --pretty=%s ${mergeBase}..HEAD -n 3`);
+    return log.split('\n').filter(s => s.trim() !== '');
+  } catch (error) {
+    console.warn('Could not get recent branch commits:', error.message);
+    return [];
+  }
+}
+
 async function main() {
   try {
     // Check if PR update is needed
@@ -227,12 +313,24 @@ async function main() {
     // Get the latest commit
     const commitSha = await getLastCommit();
     const originalMessage = await getLastCommitMessage(commitSha);
+    const branchName = await getBranchName();
+    const recentCommits = await getRecentBranchCommits(branchName);
+    
+    // Get the list of changed files for directory summary
+    const changedFiles = await getChangedFiles(commitSha);
+    const dirSummary = getDirectorySummary(changedFiles);
     
     // Get the diff of the commit
     const diff = await getCommitDiff(commitSha);
     
-    // Generate enhanced commit message
-    const enhancedMessage = await enhanceCommitMessage(originalMessage, diff);
+    // Generate enhanced commit message with the additional context
+    const enhancedMessage = await enhanceCommitMessage(
+      originalMessage, 
+      diff, 
+      branchName, 
+      dirSummary, 
+      recentCommits
+    );
     
     if (!enhancedMessage) {
       console.log('Failed to enhance commit message');
