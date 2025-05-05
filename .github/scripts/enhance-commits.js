@@ -13,10 +13,20 @@ const SAMPLE_LINES_PER_FILE = 200; // Maximum lines to include per file
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' });
 
+// Check if running in GitHub Actions
+const isGitHubAction = process.env.GITHUB_ACTIONS === 'true';
+
+// Check for loop prevention flag
+const AUTO_COMMIT_MSG = '[auto-enhance] '; // This prefix will help identify auto-enhanced commits
+const SKIP_CI_MSG = '[skip ci]'; // This tells GitHub Actions to skip CI for this commit
+
 async function runCommand(command) {
+  console.log(`Running command: ${command}`);
   return new Promise((resolve, reject) => {
     exec(command, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
       if (error) {
+        console.error(`Command error: ${error.message}`);
+        if (stderr) console.error(`stderr: ${stderr}`);
         reject(error);
         return;
       }
@@ -31,6 +41,61 @@ async function getLastCommit() {
 
 async function getLastCommitMessage(commitSha) {
   return await runCommand(`git log -1 --pretty=%B ${commitSha}`);
+}
+
+function getDirectorySummary(changedFiles) {
+  const directories = new Set();
+  const componentMapping = {
+    'sources': 'Platform Integrations',
+    'themes': 'Theming',
+    'dock.html': 'Consolidated Chat Dashboard and Overlay UI',
+    'featured.html': 'Featured Overlay UI',
+    'background.js': 'Extension Core Logic and Message Routing',
+    'manifest.json': 'Extension Manifest'
+  };
+  const knownComponents = new Set();
+
+  for (const { file } of changedFiles) {
+    const dirname = path.dirname(file);
+    if (dirname !== '.') {
+      directories.add(dirname);
+    }
+    // Check direct file mapping
+    if (componentMapping[file]) {
+        knownComponents.add(componentMapping[file]);
+    } else {
+        // Check directory mapping
+        const topLevelDir = file.split('/')[0];
+        if (componentMapping[topLevelDir]) {
+            knownComponents.add(componentMapping[topLevelDir]);
+        }
+        // Simple keyword check (adjust as needed)
+        if (file.includes('tts') || dirname.includes('tts')) knownComponents.add('TTS Module');
+        if (file.includes('api') || dirname.includes('api')) knownComponents.add('API Handling');
+    }
+  }
+
+  let summary = 'Areas changed: ';
+  if (knownComponents.size > 0) {
+      summary += [...knownComponents].join(', ');
+  } else if (directories.size > 0) {
+      // Fallback to directories if no components identified
+       summary += [...directories].slice(0, 3).join(', ') + (directories.size > 3 ? ', ...' : '');
+  } else {
+      summary += 'Root level or single file changes.';
+  }
+  return summary;
+}
+
+async function getChangedFiles(commitSha) {
+  const fullDiff = await runCommand(`git show ${commitSha} --name-status`);
+  return fullDiff
+    .split('\n')
+    .filter(line => /^[AMDRT]\t/.test(line))
+    .map(line => {
+      const [status, file] = line.split('\t');
+      return { status, file };
+    });
 }
 
 async function getCommitDiff(commitSha) {
@@ -99,8 +164,33 @@ async function getCommitDiff(commitSha) {
   return combinedDiff;
 }
 
-async function enhanceCommitMessage(originalMessage, diff) {
-  const prompt = `As a developer assistant, please create an improved, detailed git commit message based on the original message and the code changes shown in the diff.
+async function shouldSkipEnhancement(message) {
+  // Skip if commit message already has the auto-enhance prefix
+  if (message.includes(AUTO_COMMIT_MSG) || message.includes(SKIP_CI_MSG)) {
+    console.log('Skipping enhancement: Commit already enhanced or marked to skip CI');
+    return true;
+  }
+  
+  return false;
+}
+
+async function enhanceCommitMessage(originalMessage, diff, branchName, dirSummary, recentCommits) {
+  const recentCommitLines = recentCommits.length > 0
+     ? `* **Recent Steps on Branch:**\n${recentCommits.map(s => `    - ${s}`).join('\n')}`
+     : '* **Recent Steps on Branch:** (N/A or first commit)';
+  const prompt = `As a developer assistant, please create an improved, detailed git commit message based on the original message, the code changes shown in the diff, and the provided context about the repository.
+
+**Project Context: Social Stream Ninja**
+
+* **Purpose:** Consolidates live social messaging streams (Twitch, YouTube, Facebook, etc.) for content creators.
+* **Core Features:** Multi-platform chat aggregation, customizable chat overlay (for OBS/streaming), Text-to-Speech (TTS), bot commands & automation, API support (message ingest/egress, webhooks for donations like Stripe/Ko-Fi), theming, standalone desktop app, and browser extension.
+* **Key Components:** \`dock.html\` (main dashboard/controller), \`featured.html\` (chat overlay), \`sources/\` directory (specific platform integrations), \`custom.js\` (user scripting), TTS functionality, API handling logic.
+* **Technology Stack:** Primarily JavaScript, HTML, CSS, leveraging Browser Extension APIs, WebRTC (via VDO.Ninja), and potentially Electron for the standalone app.
+* **Branch Context:** You are currently on branch \`${branchName}\`
+* ${dirSummary}
+${recentCommitLines}
+
+**Input:**
 
 Original commit message: "${originalMessage}"
 
@@ -109,41 +199,54 @@ Diff of changes:
 ${diff}
 \`\`\`
 
-Please generate a professional, detailed commit message that:
-1. Summarizes what was changed in a clear first line (< 72 chars)
-2. Adds bullets for key changes
-3. Explains why changes were made if possible
-4. Keeps a professional tone
-5. Mentions key files that were modified
+**Instructions for Generating the Commit Message:**
 
-Keep your response short and focused on just the enhanced commit message without any explanations or additional text.`;
+Please generate a professional, detailed commit message that:
+1.  Summarizes what was changed in a clear first line (< 72 chars), relevant to the Social Stream Ninja project.
+2.  Uses the project context to better understand the purpose and impact of the code changes.
+3.  Adds bullets for key changes, explaining *what* was modified (e.g., which feature, platform integration, or component like the dock/overlay/TTS).
+4.  Explains *why* changes were made if possible, linking back to project goals (e.g., improving usability, adding a requested feature, fixing a bug on a specific platform).
+5.  Mentions key files or components (e.g., \`dock.html\`, \`twitch.js\`, TTS module) that were modified.
+6.  Maintains a professional tone suitable for a project like Social Stream Ninja.
+
+Keep your response short and focused on just the enhanced commit message itself, without any explanations or additional text introducing it.`;
 
   try {
+    console.log('Calling Gemini API...');
     const result = await model.generateContent(prompt);
-    return result.response.text();
+    const enhancedMessage = result.response.text();
+    console.log('Successfully received response from Gemini API');
+    
+    // Add the auto-enhance prefix and skip CI marker to prevent loops
+    return `${AUTO_COMMIT_MSG}${enhancedMessage}\n\n${SKIP_CI_MSG}`;
   } catch (error) {
     console.error('Error calling Gemini API:', error.message);
-    return null;
+    // Return a modified original message that won't trigger another workflow run
+    return `${AUTO_COMMIT_MSG}${originalMessage}\n\nAuto-enhancement failed: ${error.message}\n\n${SKIP_CI_MSG}`;
   }
 }
 
 async function updateCommitMessage(commitSha, newMessage) {
   try {
-    // Set git identity using GitHub Actions info
-    await runCommand(`git config --global user.name "GitHub Actions"`);
-    await runCommand(`git config --global user.email "actions@github.com"`);
-    
     // Create a temporary file with the new message
     const tempFile = path.join(process.cwd(), '.temp-commit-msg');
     await fs.writeFile(tempFile, newMessage);
     
-    // Amend the commit with the new message
+    console.log('Amending commit with new message...');
+    await runCommand(`git config --global user.name "Commit Enhancer"`);
+    await runCommand(`git config --global user.email "commit-enhancer@example.com"`);
+    
+    // Amend commit with skip CI flag to prevent triggering another workflow run
     await runCommand(`git commit --amend -F ${tempFile}`);
-    await runCommand(`git push --force`);
+    
+    console.log('Pushing changes with no-verify to skip hooks...');
+    // Use --no-verify to bypass any pre-push hooks
+    await runCommand(`git push --force --no-verify`);
     
     // Clean up temp file
     await fs.unlink(tempFile);
     
+    console.log('Git operations completed successfully');
     return true;
   } catch (error) {
     console.error('Error updating commit message:', error.message);
@@ -154,6 +257,7 @@ async function updateCommitMessage(commitSha, newMessage) {
 async function updatePRDescription() {
   // Only run for PRs
   if (!process.env.GITHUB_EVENT_NAME || process.env.GITHUB_EVENT_NAME !== 'pull_request') {
+    console.log('Not a PR event, skipping PR description update');
     return;
   }
   
@@ -164,11 +268,15 @@ async function updatePRDescription() {
     const prNumber = eventData.pull_request.number;
     const repoFullName = process.env.GITHUB_REPOSITORY;
     
+    // Check if PR description already has the auto-enhance prefix to prevent loops
+    const prDescription = eventData.pull_request.body || '';
+    if (prDescription.includes(AUTO_COMMIT_MSG)) {
+      console.log('PR description already enhanced, skipping');
+      return;
+    }
+    
     // Get PR diff
     const prDiff = await runCommand(`git diff origin/$(git rev-parse --abbrev-ref HEAD)^...origin/$(git rev-parse --abbrev-ref HEAD)`);
-    
-    // Get existing PR description
-    const prDescription = eventData.pull_request.body || '';
     
     // Generate enhanced description
     const prompt = `As a developer assistant, please create an improved, detailed pull request description based on the original description and the code changes shown in the diff.
@@ -190,6 +298,7 @@ Please generate a professional, detailed PR description that:
 Keep your response focused on just the enhanced PR description without any explanations or additional text.`;
 
     const enhancedDescription = await model.generateContent(prompt);
+    const newDescription = `${AUTO_COMMIT_MSG}\n\n${enhancedDescription.response.text()}`;
     
     // Update PR description via GitHub API
     const [owner, repo] = repoFullName.split('/');
@@ -201,7 +310,7 @@ Keep your response focused on just the enhanced PR description without any expla
         'Accept': 'application/vnd.github.v3+json'
       },
       data: {
-        body: enhancedDescription.response.text()
+        body: newDescription
       }
     });
     
@@ -211,20 +320,75 @@ Keep your response focused on just the enhanced PR description without any expla
   }
 }
 
+async function getBranchName() {
+  try {
+    return await runCommand('git rev-parse --abbrev-ref HEAD');
+  } catch (error) {
+    console.warn('Could not get branch name:', error.message);
+    return 'unknown';
+  }
+}
+
+async function getRecentBranchCommits(branchName) {
+  if (branchName === 'main' || branchName === 'master' || branchName === 'unknown') {
+    return []; // Don't show history relative to main/master itself
+  }
+  try {
+    // Find the merge base with main (adjust 'main' if needed)
+    const mergeBase = await runCommand(`git merge-base origin/main HEAD`);
+    // Get log subjects since the merge base, limit to 3
+    const log = await runCommand(`git log --pretty=%s ${mergeBase}..HEAD -n 3`);
+    return log.split('\n').filter(s => s.trim() !== '');
+  } catch (error) {
+    console.warn('Could not get recent branch commits:', error.message);
+    return [];
+  }
+}
+
 async function main() {
   try {
-    // Check if PR update is needed
-    await updatePRDescription();
+    console.log('Starting commit enhancement process...');
     
-    // Get the latest commit
+    // Check if we're running in GitHub Actions and this commit was triggered by our own enhancement
+    const branchName = await getBranchName();
     const commitSha = await getLastCommit();
     const originalMessage = await getLastCommitMessage(commitSha);
+    
+    console.log(`Processing commit: ${commitSha}`);
+    console.log(`Branch: ${branchName}`);
+    
+    // Check if we should skip enhancement
+    if (await shouldSkipEnhancement(originalMessage)) {
+      console.log('Skipping enhancement: Commit already has auto-enhance prefix or skip CI marker');
+      process.exit(0);
+    }
+    
+    // Check if PR update is needed
+    if (process.env.GITHUB_EVENT_NAME === 'pull_request') {
+      await updatePRDescription().catch(err => {
+        console.warn('PR description update failed:', err.message);
+      });
+    }
+    
+    // Get the list of changed files for directory summary
+    const changedFiles = await getChangedFiles(commitSha);
+    const dirSummary = getDirectorySummary(changedFiles);
+    console.log(`Directory changes: ${dirSummary}`);
+    
+    const recentCommits = await getRecentBranchCommits(branchName);
     
     // Get the diff of the commit
     const diff = await getCommitDiff(commitSha);
     
-    // Generate enhanced commit message
-    const enhancedMessage = await enhanceCommitMessage(originalMessage, diff);
+    // Generate enhanced commit message with the additional context
+    console.log('Generating enhanced commit message...');
+    const enhancedMessage = await enhanceCommitMessage(
+      originalMessage, 
+      diff, 
+      branchName, 
+      dirSummary, 
+      recentCommits
+    );
     
     if (!enhancedMessage) {
       console.log('Failed to enhance commit message');
@@ -232,6 +396,7 @@ async function main() {
     }
     
     // Update the commit message
+    console.log('Updating commit message...');
     const updated = await updateCommitMessage(commitSha, enhancedMessage);
     
     if (updated) {
@@ -241,10 +406,24 @@ async function main() {
       process.exit(1);
     }
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Error in main process:', error.message);
     process.exit(1);
   }
 }
 
+// Add a timeout to prevent endless execution
+const timeoutId = setTimeout(() => {
+  console.error('Script execution timed out after 2 minutes');
+  process.exit(1);
+}, 120000);
+
+// Properly handle process cleanup
+process.on('exit', () => {
+  clearTimeout(timeoutId);
+});
+
 // Run the script
-main();
+main().catch(error => {
+  console.error('Unhandled error in main process:', error);
+  process.exit(1);
+});
