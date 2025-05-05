@@ -411,6 +411,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 </ul>
             `
         },
+		{
+            name: 'Whop',
+            icon: 'whop.png',
+            description: 'Pay to view crypto videos.',
+            type: 'standard',
+            instructions: `
+                <ul>
+                    <li>Use the regular view page with chat; no pop out needed</li>
+                    <li>URL: https://whop.com/*</li>
+                </ul>
+            `
+        },
         {
             name: 'Bilibili.com',
             icon: 'bilibili.png',
