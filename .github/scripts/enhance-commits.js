@@ -7,11 +7,11 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 // Configuration
 const MAX_DIFF_SIZE = 20000; // Characters - truncate if larger
 const MAX_FILES_TO_SAMPLE = 5; // Maximum number of files to include in the diff
-const SAMPLE_LINES_PER_FILE = 200; // Maximum lines to include per file
+const SAMPLE_LINES_PER_FILE = 30; // Maximum lines to include per file
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' });
+const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
 async function runCommand(command) {
   return new Promise((resolve, reject) => {
@@ -129,6 +129,10 @@ Keep your response short and focused on just the enhanced commit message without
 
 async function updateCommitMessage(commitSha, newMessage) {
   try {
+    // Set git identity using GitHub Actions info
+    await runCommand(`git config --global user.name "GitHub Actions"`);
+    await runCommand(`git config --global user.email "actions@github.com"`);
+    
     // Create a temporary file with the new message
     const tempFile = path.join(process.cwd(), '.temp-commit-msg');
     await fs.writeFile(tempFile, newMessage);
