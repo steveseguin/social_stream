@@ -7,7 +7,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 // Configuration
 const MAX_DIFF_SIZE = 20000; // Characters - truncate if larger
 const MAX_FILES_TO_SAMPLE = 5; // Maximum number of files to include in the diff
-const SAMPLE_LINES_PER_FILE = 100; // Maximum lines to include per file
+const SAMPLE_LINES_PER_FILE = 200; // Maximum lines to include per file
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
