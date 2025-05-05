@@ -56,6 +56,7 @@ async function runCommand(command) {
         reject(new ScriptError(`Command failed: ${command}`, { stderr, error }));
         return;
       }
+      // Log stderr as warning, as some git commands output info here (like fetch)
       if (stderr) {
         log('warn', `Command stderr: ${command}`, { stderr });
       }
@@ -212,8 +213,8 @@ async function getCommitDiff(commitSha, changedFiles) {
     let fileDiffContent = '';
     try {
       // Check if the file is binary *before* trying to get diff content
-      // Note: `git show` might still output "Binary files a/... and b/... differ"
       // Using `git diff --numstat` is a safer way to check type before `git show`
+      // Use commitSha^! which means "diff between parent and commitSha"
       const diffStat = await runCommand(`git diff --numstat ${commitSha}^! -- "${file}"`);
       const isBinary = diffStat.startsWith('-\t-'); // Binary files show as "- -" for added/deleted lines
 
@@ -320,7 +321,23 @@ async function getRecentBranchCommits(branchName) {
 
     // Get log subjects since the merge base, limit to 5 (excluding the current one being amended)
     // Use a format that helps distinguish commits if needed
-    const logOutput = await runCommand(`git log --pretty="format:%h %s" ${mergeBase}..HEAD~1 -n 5`); // HEAD~1 excludes the current commit
+    // Ensure HEAD~1 doesn't cause an error if there's only one commit since merge base
+    const commitRange = `${mergeBase}..HEAD`;
+    const logCheck = await runCommand(`git rev-list --count ${commitRange}`);
+    const commitCount = parseInt(logCheck, 10);
+
+    let logCommand = `git log --pretty="format:%h %s" ${commitRange} -n 5`;
+    if (commitCount > 1) {
+        // Only use HEAD~1 if there's more than one commit to avoid errors
+        logCommand = `git log --pretty="format:%h %s" ${mergeBase}..HEAD~1 -n 5`;
+    } else {
+         log('info', 'Only one commit found since merge base, cannot exclude HEAD~1.');
+         // If only one commit, there are no *previous* commits on the branch
+         return [];
+    }
+
+
+    const logOutput = await runCommand(logCommand);
     if (!logOutput) {
         log('info', 'No previous commits found on this branch since merge base.');
         return [];
@@ -652,10 +669,12 @@ async function main() {
     // Fetch depth might need adjustment in checkout step if merge base is far back
     log('debug', 'Fetching remote history (needed for diffs/merge-base)...');
     try {
-        await runCommand('git fetch --prune --unshallow --tags'); // Get more history if shallow
+        // Use --quiet to reduce stderr noise unless there's an actual error
+        await runCommand('git fetch --prune --unshallow --tags --quiet');
     } catch {
-        log('debug', 'Repository likely not shallow, proceeding with standard fetch.');
-        await runCommand('git fetch --prune --tags'); // Standard fetch
+        log('debug', 'Repository likely not shallow or unshallow failed, proceeding with standard fetch.');
+        // Use --quiet here too
+        await runCommand('git fetch --prune --tags --quiet');
     }
 
 
@@ -682,14 +701,14 @@ async function main() {
       recentCommits // Pass the list of recent commit subjects
     );
 
-    // Check if enhancement was successful
-    if (!enhancedMessage || enhancedMessage.trim() === '' || enhancedMessage.toLowerCase().includes("error")) {
-      log('error', 'Failed to generate a valid enhanced commit message from Gemini API. Aborting update.');
-      // Consider exiting with error or just skipping the update
+    // Check if enhancement was successful (API returned something)
+    // REMOVED: || enhancedMessage.toLowerCase().includes("error")
+    if (!enhancedMessage || enhancedMessage.trim() === '') {
+      log('error', 'Failed to generate a valid enhanced commit message from Gemini API (empty response). Aborting update.');
       process.exit(1); // Exit with error if enhancement failed critically
     }
 
-    // Compare original and enhanced messages (optional, prevents unnecessary amends)
+    // Compare original and enhanced messages (prevents unnecessary amends/loops)
     if (enhancedMessage.trim() === originalMessage.trim()) {
         log('info', 'Enhanced message is identical to the original. No update needed.');
         process.exit(0); // Exit gracefully
