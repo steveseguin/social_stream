@@ -100,7 +100,16 @@ async function getCommitDiff(commitSha) {
 }
 
 async function enhanceCommitMessage(originalMessage, diff) {
-  const prompt = `As a developer assistant, please create an improved, detailed git commit message based on the original message and the code changes shown in the diff.
+  const prompt = `As a developer assistant, please create an improved, detailed git commit message based on the original message, the code changes shown in the diff, and the provided context about the repository.
+
+**Project Context: Social Stream Ninja**
+
+* **Purpose:** Consolidates live social messaging streams (Twitch, YouTube, Facebook, etc.) for content creators.
+* **Core Features:** Multi-platform chat aggregation, customizable chat overlay (for OBS/streaming), Text-to-Speech (TTS), bot commands & automation, API support (message ingest/egress, webhooks for donations like Stripe/Ko-Fi), theming, standalone desktop app, and browser extension.
+* **Key Components:** `dock.html` (main dashboard/controller), `featured.html` (chat overlay), `sources/` directory (specific platform integrations), `custom.js` (user scripting), TTS functionality, API handling logic.
+* **Technology Stack:** Primarily JavaScript, HTML, CSS, leveraging Browser Extension APIs, WebRTC (via VDO.Ninja), and potentially Electron for the standalone app.
+
+**Input:**
 
 Original commit message: "${originalMessage}"
 
@@ -109,14 +118,17 @@ Diff of changes:
 ${diff}
 \`\`\`
 
-Please generate a professional, detailed commit message that:
-1. Summarizes what was changed in a clear first line (< 72 chars)
-2. Adds bullets for key changes
-3. Explains why changes were made if possible
-4. Keeps a professional tone
-5. Mentions key files that were modified
+**Instructions for Generating the Commit Message:**
 
-Keep your response short and focused on just the enhanced commit message without any explanations or additional text.`;
+Please generate a professional, detailed commit message that:
+1.  Summarizes what was changed in a clear first line (< 72 chars), relevant to the Social Stream Ninja project.
+2.  Uses the project context to better understand the purpose and impact of the code changes.
+3.  Adds bullets for key changes, explaining *what* was modified (e.g., which feature, platform integration, or component like the dock/overlay/TTS).
+4.  Explains *why* changes were made if possible, linking back to project goals (e.g., improving usability, adding a requested feature, fixing a bug on a specific platform).
+5.  Mentions key files or components (e.g., `dock.html`, `twitch.js`, TTS module) that were modified.
+6.  Maintains a professional tone suitable for a project like Social Stream Ninja.
+
+Keep your response short and focused on just the enhanced commit message itself, without any explanations or additional text introducing it.`;
 
   try {
     const result = await model.generateContent(prompt);
