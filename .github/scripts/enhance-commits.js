@@ -8,6 +8,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const MAX_DIFF_SIZE = 20000; // Characters - truncate if larger
 const MAX_FILES_TO_SAMPLE = 5; // Maximum number of files to include in the diff
 const SAMPLE_LINES_PER_FILE = 200; // Maximum lines to include per file
+const BRANCH = "beta";
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -330,12 +331,12 @@ async function getBranchName() {
 }
 
 async function getRecentBranchCommits(branchName) {
-  if (branchName === 'main' || branchName === 'master' || branchName === 'unknown') {
-    return []; // Don't show history relative to main/master itself
+  if (branchName === BRANCH || branchName === 'main' || branchName === 'master' || branchName === 'unknown') {
+    return []; // Don't show history relative to main/master/beta itself
   }
   try {
-    // Find the merge base with main (adjust 'main' if needed)
-    const mergeBase = await runCommand(`git merge-base origin/main HEAD`);
+    // Find the merge base with branch (adjust 'main' if needed)
+    const mergeBase = await runCommand(`git merge-base origin/${BRANCH} HEAD`);
     // Get log subjects since the merge base, limit to 3
     const log = await runCommand(`git log --pretty=%s ${mergeBase}..HEAD -n 3`);
     return log.split('\n').filter(s => s.trim() !== '');
