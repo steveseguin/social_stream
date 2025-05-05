@@ -9,7 +9,7 @@
             font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
-            max-width: 800px;
+            max-width: 880px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -32,13 +32,7 @@
         a:hover {
             text-decoration: underline;
         }
-        pre {
-            background-color: #f8f8f8;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 15px;
-            overflow: auto;
-        }
+       
         code {
             font-family: 'Courier New', monospace;
         }
@@ -90,6 +84,40 @@
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+	    
+	pre {
+	        background-color: #f8f8f8;
+	        border: 1px solid #ddd;
+	        border-radius: 4px;
+	        padding: 15px;
+	        overflow-x: visible; 
+	        position: relative;
+	        margin-top: 35px;
+	        white-space: pre; 
+	    }
+	    
+	    .copy-button {
+	        position: absolute;
+	        top: -32px;
+	        right: 0;
+	        background-color: #3498db;
+	        color: white;
+	        border: none;
+	        padding: 4px 8px;
+	        border-radius: 3px;
+	        cursor: pointer;
+	        font-size: 12px;
+	        transition: background-color 0.2s;
+	        z-index: 10;  /* Ensure button is above other elements */
+	    }
+		
+	.copy-button:hover {
+		background-color: #2980b9;
+	}
+	
+	.copy-button.copied {
+		background-color: #27ae60;
+	}
     </style>
 </head>
 <body>
@@ -148,7 +176,7 @@
       <li>Add sub-actions to handle the message data. A common first step is to extract the data using C#. Right-click the action → <strong>Add Sub-Action</strong> → <strong>Core</strong> → <strong>C#</strong> → <strong>Execute C# Code</strong></li>
       <li>Paste the following C# code. This code extracts the chat data sent by SocialStream.Ninja from the `chatData` argument:</li>
    </ol>
-   <pre><code>using System;
+<pre><code>using System;
 using Newtonsoft.Json.Linq; // Make sure Newtonsoft.Json is referenced
 public class CPHInline
 {
@@ -221,7 +249,7 @@ public class CPHInline
         {
             if (obj != null && obj.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out JToken token))
             {
-                return token.ToObject<bool>();
+                return token.ToObject&lt;bool&gt;();
             }
         }
         catch (Exception ex) {
@@ -483,4 +511,44 @@ CPH.SetArgument("ss_obsText", obsText);</code></pre>
 	  <p>-steve</p>
    </div>
 </div>
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+	    // Add copy button to all code blocks
+	    document.querySelectorAll('pre').forEach(function(pre) {
+	        // Check if this pre already has a button
+	        if (pre.querySelector('.copy-button')) return;
+	        
+	        const codeBlock = pre.querySelector('code');
+	        if (!codeBlock) return; // Skip if no code element inside pre
+	        
+	        const button = document.createElement('button');
+	        button.className = 'copy-button';
+	        button.textContent = 'Copy';
+	        
+	        button.addEventListener('click', function() {
+	            // Get the code text content
+	            const code = codeBlock.textContent;
+	            
+	            // Copy to clipboard
+	            navigator.clipboard.writeText(code).then(function() {
+	                // Show success feedback
+	                button.textContent = 'Copied!';
+	                button.classList.add('copied');
+	                
+	                // Reset button after 2 seconds
+	                setTimeout(function() {
+	                    button.textContent = 'Copy';
+	                    button.classList.remove('copied');
+	                }, 2000);
+	            }).catch(function(err) {
+	                console.error('Failed to copy text: ', err);
+	            });
+	        });
+	        
+	        // The button is already positioned absolutely within the pre element
+	        // which is positioned relatively, so this should work correctly
+	        pre.appendChild(button);
+	    });
+	});
+</script>
 </body></html>

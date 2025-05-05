@@ -1,0 +1,35 @@
+name: Enhance Commit Messages
+
+on:
+  push:
+    branches: [ beta ]
+  pull_request:
+    types: [ opened, synchronize ]
+
+jobs:
+  enhance-commits:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install @google/generative-ai axios
+
+      - name: Enhance commit messages
+        id: enhance
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/enhance-commits.js
