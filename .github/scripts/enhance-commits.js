@@ -11,7 +11,7 @@ const SAMPLE_LINES_PER_FILE = 30; // Maximum lines to include per file
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' });
 
 async function runCommand(command) {
   return new Promise((resolve, reject) => {
