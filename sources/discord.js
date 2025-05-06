@@ -177,6 +177,10 @@
 			}
 		}
 		
+		if (name.includes(" @ ")){ // this is s relayed webhook that we can likely ignore.
+			return;
+		}
+		
 
 		var data = {};
 		data.id = mid;
