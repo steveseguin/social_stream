@@ -104,7 +104,7 @@
 			msg.shift();
 			msg = msg.join(":");
 		} catch(e){
-			/console.error(e);
+			//console.error(e);
 		}
 		
 		
