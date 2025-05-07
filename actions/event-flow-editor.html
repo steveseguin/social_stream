@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja - Event Flow Editor</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Flow Editor Specific Styles */
+        :root {
+            /* Base colors */
+            --primary-color: #9d46ff;
+            --primary-light: #b975ff;
+            --primary-dark: #6200ea;
+            --secondary-color: #00e676;
+            --secondary-light: #66ffa6;
+            --secondary-dark: #00b248;
+            
+            /* Text colors */
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            
+            /* Background colors */
+            --background-light: #ffffff;
+            --background-dark: #eeeeee;
+            --background-card: #f5f5f5;
+            
+            /* Border colors */
+            --border-color: #e0e0e0;
+            
+            /* Status colors */
+            --success-color: #00c853;
+            --error-color: #d50000;
+            --warning-color: #ffd600;
+            --info-color: #2196f3;
+            
+            /* Shadows */
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+            
+            /* Border radius */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 16px;
+            
+            /* Node dimensions */
+            --node-width: 200px;
+            --node-min-height: 100px;
+            --port-size: 12px;
+            
+            /* Flow editor specific */
+            --trigger-color: #03a9f4;
+            --trigger-light: #e1f5fe;
+            --action-color: #4caf50;
+            --action-light: #e8f5e9;
+            --logic-color: #ff9800;
+            --logic-light: #fff3e0;
+        }
+
+        /* Dark theme variables */
+        .dark-mode {
+            --primary-color: #9d46ff;
+            --primary-light: #b975ff;
+            --primary-dark: #6200ea;
+            
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            
+            --background-light: #1e1e1e;
+            --background-dark: #121212;
+            --background-card: #2d2d2d;
+            
+            --border-color: #444444;
+            
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
+            
+            --trigger-light: #01579b;
+            --action-light: #1b5e20;
+            --logic-light: #e65100;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: var(--font-primary);
+        }
+        
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        .editor-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .editor-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        #editor-container {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Flow editor container styles */
+        .flow-editor-container {
+            display: flex;
+            height: 100%;
+            font-family: var(--font-primary);
+            color: var(--text-primary);
+        }
+        
+        .flow-sidebar {
+            width: 250px;
+            background-color: var(--background-card);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .flow-list-container {
+            margin-bottom: 20px;
+        }
+        
+        .flow-list {
+            margin-bottom: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .flow-item {
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            background-color: var(--background-light);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .flow-item.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .flow-item-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .flow-item-active {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            line-height: 16px;
+            text-align: center;
+        }
+
+        .flow-item-delete {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            line-height: 16px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .flow-item-delete:hover {
+            color: var(--error-color);
+        }
+        
+        .node-list {
+            margin-bottom: 15px;
+        }
+        
+        .node-item {
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .node-item.trigger {
+            background-color: var(--trigger-color);
+            color: white;
+        }
+        
+        .node-item.action {
+            background-color: var(--action-color);
+            color: white;
+        }
+        
+        .flow-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .flow-editor-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--background-card);
+        }
+        
+        #flow-name {
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            padding: 5px;
+            width: 300px;
+            background-color: var(--background-light);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+        
+        #flow-name:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .flow-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .flow-active-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        
+        .flow-active-toggle input {
+            display: none;
+        }
+        
+        .slider {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+            background-color: var(--border-color);
+            border-radius: 10px;
+            transition: 0.3s all ease;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.3s all ease;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(16px);
+        }
+        
+        .flow-canvas-container {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            background-color: var(--background-light);
+        }
+        
+        .flow-canvas {
+            position: relative;
+            min-height: 100%;
+            min-width: 100%;
+            height: 2000px;
+            width: 2000px;
+        }
+        
+        .node {
+            position: absolute;
+            width: 200px;
+            background-color: var(--background-card);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            user-select: none;
+            z-index: 1;
+        }
+        
+        .node.selected {
+            box-shadow: 0 0 0 2px var(--primary-color), var(--shadow-md);
+        }
+        
+        .node-header {
+            padding: 10px;
+            border-top-left-radius: var(--radius-md);
+            border-top-right-radius: var(--radius-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .node.trigger .node-header {
+            background-color: var(--trigger-color);
+            color: white;
+        }
+        
+        .node.action .node-header {
+            background-color: var(--action-color);
+            color: white;
+        }
+        
+        .node-body {
+            padding: 10px;
+        }
+        
+        .node-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .node-delete {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 12px;
+        }
+        
+        .connection-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: var(--background-light);
+            border: 2px solid var(--primary-dark);
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 2;
+        }
+        
+        .connection-point.input {
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .connection-point.output {
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .connection {
+            position: absolute;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .node-properties {
+            width: 300px;
+            background-color: var(--background-card);
+            border-left: 1px solid var(--border-color);
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .property-group {
+            margin-bottom: 15px;
+        }
+        
+        .property-label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .property-input {
+            width: 100%;
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background-color: var(--background-light);
+            color: var(--text-primary);
+        }
+        
+        .property-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        textarea.property-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        select.property-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+        }
+        
+        .property-help {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* Additional styles for dark mode */
+        .dark-mode .flow-canvas-container {
+            background-color: var(--background-dark);
+        }
+        
+        .dark-mode .node {
+            background-color: var(--background-card);
+        }
+        
+        .dark-mode #flow-name {
+            background-color: var(--background-card);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+        
+        .dark-mode .slider {
+            background-color: var(--border-color);
+        }
+        
+        .dark-mode .property-input {
+            background-color: var(--background-card);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        /* Test panel styles */
+        .test-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            background-color: var(--background-card);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            display: none;
+            padding: 20px;
+        }
+
+        .test-panel h3 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .test-group {
+            margin-bottom: 15px;
+        }
+
+        .test-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .test-group input, 
+        .test-group select, 
+        .test-group textarea {
+            width: 100%;
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background-color: var(--background-light);
+        }
+
+        .test-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .test-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .test-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .test-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .test-results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--background-light);
+            border-radius: var(--radius-sm);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+            border-radius: var(--radius-md);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            background-color: var(--background-dark);
+            color: var(--text-primary);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--secondary-dark);
+        }
+        
+        /* Dark mode adaptations */
+        .dark-mode .test-panel {
+            background-color: var(--background-card);
+            color: var(--text-primary);
+        }
+
+        .dark-mode .test-group input,
+        .dark-mode .test-group select,
+        .dark-mode .test-group textarea {
+            background-color: var(--background-light);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .dark-mode .test-results {
+            background-color: var(--background-dark);
+            color: var(--text-primary);
+        }
+		
+		.flow-list-container {
+			margin-bottom: 20px;
+			max-height: 30vh; /* Limit height of flow list */
+			overflow-y: auto; /* Add scroll if many flows */
+		}
+
+		.flow-list {
+			/* Removed max-height from here, already on container */
+			overflow-y: auto; /* Keep scroll for flow list itself if needed */
+		}
+
+		.flow-item {
+			padding: 8px 12px;
+			margin-bottom: 5px;
+			background-color: var(--background-light);
+			border-radius: var(--radius-sm);
+			cursor: pointer;
+			border: 1px solid var(--border-color);
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			transition: background-color 0.2s ease; /* Smooth transition */
+		}
+
+		.flow-item:hover {
+			background-color: var(--background-dark);
+		}
+
+		/* Style for the currently selected/open flow in the editor */
+		.flow-item.selected-flow {
+			background-color: var(--primary-light); /* A distinct color for the open flow */
+			color: white;
+			border-color: var(--primary-dark);
+		}
+		.flow-item.selected-flow:hover {
+			 background-color: var(--primary-color);
+		}
+
+
+		.flow-item-name {
+			flex-grow: 1;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			margin-right: 10px; /* Space before controls */
+		}
+
+		.flow-item-controls {
+			display: flex;
+			gap: 8px;
+			align-items: center; /* Vertically align controls */
+		}
+
+		.flow-item-status { /* General status indicator styling */
+			display: inline-block;
+			width: 20px; /* Increased size for better visibility */
+			height: 20px;
+			line-height: 20px; /* Center character */
+			text-align: center;
+			border-radius: 50%; /* Make it circular */
+			font-weight: bold;
+			font-size: 14px; /* Slightly larger icon */
+		}
+
+		.flow-item-status.active {
+			color: var(--success-color); /* Green for active */
+			/* background-color: #e8f5e9; */ /* Optional: light green background */
+		}
+
+		.flow-item-status.inactive {
+			color: var(--text-secondary); /* Grey for inactive */
+			/* background-color: #f1f1f1; */ /* Optional: light grey background */
+		}
+		.flow-item.selected-flow .flow-item-status.active {
+			color: white; /* Ensure visibility on selected background */
+		}
+		.flow-item.selected-flow .flow-item-status.inactive {
+			color: #eee; /* Ensure visibility on selected background */
+		}
+
+
+		.flow-item-delete {
+			display: inline-block;
+			width: 20px; /* Consistency */
+			height: 20px;
+			line-height: 20px;
+			text-align: center;
+			cursor: pointer;
+			color: var(--text-secondary); /* Default color */
+			border-radius: 3px;
+			font-size: 16px;
+		}
+
+		.flow-item-delete:hover {
+			color: var(--error-color);
+			background-color: rgba(213, 0, 0, 0.1); /* Light red background on hover */
+		}
+		.flow-item.selected-flow .flow-item-delete {
+			color: white;
+		}
+		.flow-item.selected-flow .flow-item-delete:hover {
+			background-color: rgba(255, 255, 255, 0.2);
+		}
+
+
+		/* Style for unsaved changes indicator on flow name input */
+		#flow-name {
+			/* ... existing styles ... */
+			transition: box-shadow 0.3s ease;
+		}
+
+		#flow-name.unsaved { /* You might not need this if appending '*' is enough */
+			box-shadow: 0 0 5px var(--warning-color);
+		}
+
+		/* Ensure connection SVGs are behind nodes */
+		.flow-canvas {
+			position: relative; /* Needed for absolute positioning of nodes and SVGs */
+		}
+
+		.node {
+			/* ... existing styles ... */
+			z-index: 10; /* Nodes above connections */
+		}
+
+		.connection {
+			position: absolute;
+			left:0; /* Ensure SVG starts at canvas origin */
+			top:0;   /* Ensure SVG starts at canvas origin */
+			width: 100%; /* SVG should span the canvas */
+			height: 100%;
+			pointer-events: none; /* So connections don't block clicks on nodes */
+			z-index: 1; /* Connections behind nodes */
+		}
+
+		.temp-connection { /* For the line being dragged */
+			z-index: 100; /* Above everything while dragging */
+		}
+		
+		.node.logic .node-header {
+			background-color: var(--logic-color, #ff9800); /* Or another distinct color */
+			color: white;
+		}
+		.node-item.logic { /* Palette item style */
+			background-color: var(--logic-color, #ff9800);
+			color: white;
+		}
+		
+		.connection-point[data-logic-type="AND"] { /* If you want specific icons/styles */ }
+
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-header">
+            <div class="editor-title">Event Flow Editor</div>
+            <div class="editor-actions">
+                <button id="open-test-panel" class="btn">Test Flow</button>
+                <a href="index.html" class="btn">Back to Dashboard</a>
+            </div>
+        </div>
+        
+        <div class="editor-body">
+            <div id="editor-container"></div>
+        </div>
+    </div>
+
+    <!-- Test Panel -->
+    <div class="test-overlay" id="test-overlay"></div>
+    <div class="test-panel" id="test-panel">
+        <h3>Test Flow</h3>
+        <div class="test-group">
+            <label for="test-source">Source Platform:</label>
+            <select id="test-source">
+                <option value="twitch">Twitch</option>
+                <option value="youtube">YouTube</option>
+                <option value="facebook">Facebook</option>
+                <option value="kick">Kick</option>
+                <option value="tiktok">TikTok</option>
+                <option value="instagram">Instagram</option>
+                <option value="discord">Discord</option>
+                <option value="slack">Slack</option>
+            </select>
+        </div>
+        
+        <div class="test-group">
+            <label for="test-username">Username:</label>
+            <input type="text" id="test-username" value="TestUser">
+        </div>
+        
+        <div class="test-group">
+            <label for="test-message">Message:</label>
+            <textarea id="test-message" rows="3">Hello, world!</textarea>
+        </div>
+        
+        <div class="test-options">
+            <label class="test-checkbox">
+                <input type="checkbox" id="test-mod">
+                Moderator
+            </label>
+            
+            <label class="test-checkbox">
+                <input type="checkbox" id="test-vip">
+                VIP
+            </label>
+            
+            <label class="test-checkbox">
+                <input type="checkbox" id="test-admin">
+                Admin
+            </label>
+            
+            <label class="test-checkbox">
+                <input type="checkbox" id="test-donation">
+                Has Donation
+            </label>
+        </div>
+        
+        <div id="donation-amount" class="test-group" style="display: none;">
+            <label for="test-donation-amount">Donation Amount:</label>
+            <input type="text" id="test-donation-amount" value="$5.00">
+        </div>
+        
+        <div class="test-results" id="test-results">
+            <p>Test results will appear here after running a test.</p>
+        </div>
+        
+        <div class="test-buttons">
+            <button id="close-test-btn" class="btn">Close</button>
+            <button id="run-test-btn" class="btn btn-primary">Run Test</button>
+        </div>
+    </div>
+    
+    <script src="EventFlowSystem.js"></script>
+    <script src="EventFlowEditor.js"></script>
+    <script>
+        // Initialize system when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create necessary mock functions if they don't exist in this context
+            if (!window.sendMessageToTabs) {
+                window.sendMessageToTabs = function(message, toAll, tabId, respond, fromMain, timeout) {
+                    console.log('Mock: Send message to tabs:', message, toAll, tabId, respond, fromMain, timeout);
+                    return true;
+                };
+            }
+            
+            if (!window.sendToDestinations) {
+                window.sendToDestinations = function(data) {
+                    console.log('Mock: Send to destinations:', data);
+                    return true;
+                };
+            }
+            
+            if (!window.checkExactDuplicateAlreadyReceived) {
+                window.checkExactDuplicateAlreadyReceived = function(message, textonly, tid, type) {
+                    return false;
+                };
+            }
+            
+            // Initialize the event flow system
+            const eventFlowSystem = new EventFlowSystem({
+                // Pass references to required functions
+                sendMessageToTabs: window.sendMessageToTabs || null,
+                sendToDestinations: window.sendToDestinations || null,
+                pointsSystem: window.pointsSystem || null
+            });
+            
+            // Initialize editor
+            const editor = new EventFlowEditor('editor-container', eventFlowSystem);
+            
+            // Add the event flow system to the global scope for testing
+            window.eventFlowSystem = eventFlowSystem;
+            window.flowEditor = editor;
+
+            // Setup test panel functionality
+            const testOverlay = document.getElementById('test-overlay');
+            const testPanel = document.getElementById('test-panel');
+            const openTestBtn = document.getElementById('open-test-panel');
+            const closeTestBtn = document.getElementById('close-test-btn');
+            const runTestBtn = document.getElementById('run-test-btn');
+            const donationCheckbox = document.getElementById('test-donation');
+            const donationAmountField = document.getElementById('donation-amount');
+
+            // Show/hide donation amount field based on checkbox
+            donationCheckbox.addEventListener('change', function() {
+                donationAmountField.style.display = this.checked ? 'block' : 'none';
+            });
+
+            // Open test panel
+            openTestBtn.addEventListener('click', function() {
+                testOverlay.style.display = 'block';
+                testPanel.style.display = 'block';
+            });
+
+            // Close test panel
+            closeTestBtn.addEventListener('click', function() {
+                testOverlay.style.display = 'none';
+                testPanel.style.display = 'none';
+            });
+
+            // Click outside to close
+            testOverlay.addEventListener('click', function() {
+                testOverlay.style.display = 'none';
+                testPanel.style.display = 'none';
+            });
+
+            // Run test
+            runTestBtn.addEventListener('click', async function() {
+                const source = document.getElementById('test-source').value;
+                const username = document.getElementById('test-username').value;
+                const message = document.getElementById('test-message').value;
+                const isMod = document.getElementById('test-mod').checked;
+                const isVIP = document.getElementById('test-vip').checked;
+                const isAdmin = document.getElementById('test-admin').checked;
+                const hasDonation = document.getElementById('test-donation').checked;
+                const donationAmount = hasDonation ? document.getElementById('test-donation-amount').value : '';
+
+                // Create test message
+                const testMessage = {
+                    chatname: username,
+                    chatmessage: message,
+                    type: source,
+                    mod: isMod,
+                    vip: isVIP,
+                    admin: isAdmin,
+                    hasDonation: donationAmount,
+                    id: Date.now()
+                };
+
+                // Display original message
+                console.log('Test message:', testMessage);
+
+                // Process through the current flow only
+                let result = null;
+                
+                if (editor.currentFlow && editor.currentFlow.id) {
+                    const flow = await eventFlowSystem.getFlowById(editor.currentFlow.id);
+                    if (flow) {
+                        result = await eventFlowSystem.evaluateFlow(flow, testMessage);
+                    } else {
+                        alert('Please select a flow to test');
+                        return;
+                    }
+                } else {
+                    alert('Please select a flow to test');
+                    return;
+                }
+
+                // Display results
+                const resultsEl = document.getElementById('test-results');
+                
+                if (result && result.blocked) {
+                    resultsEl.innerHTML = `
+                        <h4>Result: Message Blocked</h4>
+                        <p>The flow system blocked this message.</p>
+                        <h4>Original Message:</h4>
+                        <pre>${JSON.stringify(testMessage, null, 2)}</pre>
+                    `;
+                } else if (result && result.modified) {
+                    resultsEl.innerHTML = `
+                        <h4>Result: Message Modified</h4>
+                        <h4>Original Message:</h4>
+                        <pre>${JSON.stringify(testMessage, null, 2)}</pre>
+                        <h4>Modified Message:</h4>
+                        <pre>${JSON.stringify(result.message, null, 2)}</pre>
+                    `;
+                } else {
+                    resultsEl.innerHTML = `
+                        <h4>Result: No Changes</h4>
+                        <p>The message passed through the flow without changes.</p>
+                        <h4>Message:</h4>
+                        <pre>${JSON.stringify(testMessage, null, 2)}</pre>
+                    `;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
