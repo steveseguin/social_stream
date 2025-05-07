@@ -4579,39 +4579,43 @@
 			}
 
 			function donos() {
-				var ele = getById("only_donos");
-				if (ele.dataset.state == "0") {
-					hideNotDonos = true;
-					ele.dataset.state = "1";
-					//document.documentElement.style.setProperty("--show-donos-only", "none");
-					
-					ele.style["background-image"] = "url(./icons/filter_showpaidonly_on.png)";
-					ele.title = "Filter — 📄 Stop filtering for messages that have donations/cheer";
-				} else {
-					hideNotDonos = false;
-					ele.dataset.state = "0";
-					//document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
-					ele.style["background-image"] = "url(./icons/filter_showpaidonly_off.png)";
-					ele.title = "Filter — 💲 Filter for messages that have donations/cheer";
-				}
+				try{
+					var ele = getById("only_donos");
+					if (ele.dataset.state == "0") {
+						hideNotDonos = true;
+						ele.dataset.state = "1";
+						//document.documentElement.style.setProperty("--show-donos-only", "none");
+						
+						ele.style["background-image"] = "url(./icons/filter_showpaidonly_on.png)";
+						ele.title = "Filter — 📄 Stop filtering for messages that have donations/cheer";
+					} else {
+						hideNotDonos = false;
+						ele.dataset.state = "0";
+						//document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
+						ele.style["background-image"] = "url(./icons/filter_showpaidonly_off.png)";
+						ele.title = "Filter — 💲 Filter for messages that have donations/cheer";
+					}
+				} catch(e){}
 				redoOdd();
 			}
 
 			function members() {
-				var ele = getById("only_members");
-				if (ele.dataset.state == "0") {
-					hideNotMembers = true;
-					ele.dataset.state = "1";
-					//document.documentElement.style.setProperty("--show-donos-only", "none");
-					ele.style["background-image"] = "url(./icons/filter_showmembers_on.png)";
-					ele.title = "Filter — 📄 Stop filtering for messages that are from members";
-				} else {
-					//document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
-					hideNotMembers = false;
-					ele.dataset.state = "0";
-					ele.style["background-image"] = "url(./icons/filter_showmembers_off.png)";
-					ele.title = "Filter — 👑 Filter for messages that are from members";
-				}
+				try {
+					var ele = getById("only_members");
+					if (ele.dataset.state == "0") {
+						hideNotMembers = true;
+						ele.dataset.state = "1";
+						//document.documentElement.style.setProperty("--show-donos-only", "none");
+						ele.style["background-image"] = "url(./icons/filter_showmembers_on.png)";
+						ele.title = "Filter — 📄 Stop filtering for messages that are from members";
+					} else {
+						//document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
+						hideNotMembers = false;
+						ele.dataset.state = "0";
+						ele.style["background-image"] = "url(./icons/filter_showmembers_off.png)";
+						ele.title = "Filter — 👑 Filter for messages that are from members";
+					}
+				} catch(e){}
 				redoOdd();
 			}
 
@@ -7360,14 +7364,21 @@
 						return;
 					}
 					
-					if (hardFilter && hideNotDonos){
-						if (!data.donation && !data.hasDonation){
-							return;
+					if (hardFilter) {
+						// Check donation requirements
+						if (hideNotDonos && !data.donation && !data.hasDonation) {
+							// If members are allowed and this is a member, let it through
+							if (!(hideNotMembers && (data.membership || data.member || data.hasMembershp))) {
+								return;
+							}
 						}
-					}
-					if (hardFilter && hideNotMembers){
-						if (!data.membership && !data.member && !data.hasMembershp){
-							return;
+						
+						// Check membership requirements
+						if (hideNotMembers && !data.membership && !data.member && !data.hasMembershp) {
+							// If donations are allowed and this is a donation, let it through
+							if (!(hideNotDonos && (data.donation || data.hasDonation))) {
+								return;
+							}
 						}
 					}
 
