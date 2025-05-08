@@ -1916,126 +1916,6 @@ function removeTTSProviderParams(url, selectedProvider=null) {
   return cleanedUrl;
 }
 
-function update(response, sync=true) {
-    log("update-> response: ", response);
-    if (response !== undefined) {
-        
-        if (response.documents) {
-            updateDocumentList(response.documents);
-        }
-        
-        if (response.streamID) { 
-            lastResponse = response;
-            streamID = true;
-            
-            var password = "";
-            if ('password' in response && response.password) {
-                password = "&password=" + response.password;
-            }
-            
-            var localServer = urlParams.has("localserver") ? "&localserver" : "";
-            password += localServer;
-            
-            let hideLinks = false;
-            document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x => {
-                if (x.checked) {
-                    hideLinks = true;
-                }
-            });
-            
-            if (hideLinks) {
-                document.body.classList.add("hidelinks");
-            } else {
-                document.body.classList.remove("hidelinks");
-            }
-            
-            document.getElementById("sessionid").value = response.streamID;
-            document.getElementById("sessionpassword").value = response.password || "";
-
-            setupPageLinks(hideLinks, baseURL, response.streamID, password);
-            
-            document.getElementById("remote_control_url").href = baseURL + "sampleapi.html?session=" + response.streamID + password;
-            
-            hideLinks = false;
-            
-            if ('settings' in response) {
-                // Handle TTS provider setting initialization
-                setupTtsProviders(response);
-                
-                // Use the target map for consistent parameter processing
-                const targetMap = getTargetMap();
-                const paramNums = Object.values(targetMap);
-                
-                // Process all settings
-                for (var key in response.settings) {
-                    try {
-                        // Handle special case for MIDI config
-                        if (key === "midiConfig") {
-                            if (response.settings[key]) {
-                                document.getElementById("midiConfig").classList.add("pressed");
-                                document.getElementById("midiConfig").innerText = " Config Loaded";
-                            } else {
-                                document.getElementById("midiConfig").classList.remove("pressed");
-                                document.getElementById("midiConfig").innerText = " Load Config";
-                            }
-                            continue;
-                        }
-                        
-                        if (typeof response.settings[key] == "object") {
-                            // Process object-based settings
-                            processObjectSetting(key, response.settings[key], sync, paramNums);
-                        } else {
-                            // Process legacy settings
-                            processLegacySetting(key, response.settings[key], sync);
-                        }
-                    } catch(e) {
-                        console.error(e);
-                    }
-                }
-                
-                // Handle translation settings
-                if ("translation" in response.settings) {
-                    translation = response.settings["translation"];
-                    miniTranslate(document.body);
-                }
-            }
-            
-            createTabsFromSettings(response);
-            
-            // Refresh all page links based on settings and target map
-            refreshLinks();
-        }
-        
-        if (("state" in response) && streamID) {
-            isExtensionOn = response.state;
-            if (isExtensionOn) {
-                document.body.classList.add("extension-enabled");
-                document.body.classList.remove("extension-disabled");
-                
-                if (ssapp) {
-                    document.getElementById("disableButtonText").innerHTML = "⚡ Service Active";
-                } else {
-                    document.getElementById("disableButtonText").innerHTML = "⚡ Extension active";
-                }
-                document.getElementById("disableButton").style.display = "";
-                document.getElementById("extensionState").checked = true;
-                chrome.browserAction.setIcon({path: "/icons/on.png"});
-            } else {
-                if (ssapp) {
-                    document.getElementById("disableButtonText").innerHTML = "🔌 Service Disabled";
-                } else {
-                    document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
-                }
-                document.body.classList.remove("extension-enabled");
-                document.body.classList.add("extension-disabled");
-                
-                document.getElementById("disableButton").style.display = "";
-                chrome.browserAction.setIcon({path: "/icons/off.png"});
-                document.getElementById("extensionState").checked = null;
-            }
-        }
-    }
-}
 
 function setupTtsProviders(response) {
     // Handle main TTS provider
@@ -2068,7 +1948,7 @@ function setupTtsProviders(response) {
 }
 
 // Process parameter settings from objects with a consistent approach
-function processObjectSetting(key, settingObj, sync, paramNums) {
+function processObjectSetting(key, settingObj, sync, paramNums, response) { // Added 'response'
     // Process all the different param types dynamically using the paramNums array
     paramNums.forEach(paramNum => {
         // Process basic param settings
@@ -2076,7 +1956,7 @@ function processObjectSetting(key, settingObj, sync, paramNums) {
         if (paramKey in settingObj) {
             processParam(key, paramNum, settingObj, sync);
         }
-        
+
         // Process number settings
         const numSettingKey = `numbersetting${paramNum}`;
         if (numSettingKey in settingObj) {
@@ -2084,15 +1964,14 @@ function processObjectSetting(key, settingObj, sync, paramNums) {
             if (ele) {
                 ele.value = settingObj[numSettingKey];
                 updateSettings(ele, sync);
-                
-                // Update related param element if checked
+
                 const paramEle = document.querySelector(`input[data-param${paramNum}='${key}']`);
                 if (paramEle && paramEle.checked) {
                     updateSettings(paramEle, false, parseFloat(settingObj[numSettingKey]));
                 }
             }
         }
-        
+
         // Process text parameters
         const textParamKey = `textparam${paramNum}`;
         if (textParamKey in settingObj) {
@@ -2100,15 +1979,14 @@ function processObjectSetting(key, settingObj, sync, paramNums) {
             if (ele) {
                 ele.value = settingObj[textParamKey];
                 updateSettings(ele, sync);
-                
-                // Update related param element if checked
+
                 const paramEle = document.querySelector(`input[data-param${paramNum}='${key}']`);
                 if (paramEle && paramEle.checked) {
                     updateSettings(paramEle, false, settingObj[textParamKey]);
                 }
             }
         }
-        
+
         // Process option parameters
         const optionParamKey = `optionparam${paramNum}`;
         if (optionParamKey in settingObj) {
@@ -2116,13 +1994,11 @@ function processObjectSetting(key, settingObj, sync, paramNums) {
             if (ele) {
                 ele.value = settingObj[optionParamKey];
                 updateSettings(ele, sync);
-                
-                // Handle special case for TTS provider with param10
-                if (key == "ttsprovider" && paramNum == 10) {
+
+                if (key == "ttsprovider" && paramNum == 10) { // Ensure paramNum is compared as number or string consistently
                     handleTTSProvider10Visibility(ele.value);
                 }
-                
-                // Update related param element if checked
+
                 const paramEle = document.querySelector(`input[data-param${paramNum}='${key}']`);
                 if (paramEle && paramEle.checked) {
                     updateSettings(paramEle, false, settingObj[optionParamKey]);
@@ -2130,8 +2006,7 @@ function processObjectSetting(key, settingObj, sync, paramNums) {
             }
         }
     });
-    
-    // Process 'both' parameter
+
     if ("both" in settingObj) {
         const ele = document.querySelector(`input[data-both='${key}']`);
         if (ele) {
@@ -2139,77 +2014,108 @@ function processObjectSetting(key, settingObj, sync, paramNums) {
             updateSettings(ele, sync);
         }
     }
-    
-    // Process 'setting' parameter
+
     if ("setting" in settingObj) {
         const ele = document.querySelector(`input[data-setting='${key}']`);
         if (ele) {
             ele.checked = settingObj.setting;
             updateSettings(ele, sync);
-            
-            // Handle special settings
+
             if (key == "sentiment") {
                 handleDeprecatedSentiment();
             } else if (key == "hideyourlinks") {
-                document.body.classList.add("hidelinks");
+                // Class is added/removed based on checkbox state; refreshLinks should handle text
+                if (ele.checked) {
+                    document.body.classList.add("hidelinks");
+                } else {
+                    document.body.classList.remove("hidelinks");
+                }
             } else if (key == "ollamaRagEnabled") {
-                document.getElementById('ragFileManagement').style.display = 'block';
+                document.getElementById('ragFileManagement').style.display = ele.checked ? 'block' : 'none'; // Show/hide based on check
             }
         }
     }
-    
-    // Process text settings
+
     if ("textsetting" in settingObj) {
-        // Handle legacy name conversion
-        if (key == "mynameext") {
-            if (!response.settings["botnamesext"]) {
-                response.settings["botnamesext"] = response.settings["mynameext"];
-                key = "botnamesext";
-            } else {
-                return;
+        let currentKey = key; // Use a local variable for the key to query with
+        let valueToSet = settingObj.textsetting;
+
+        if (key === "mynameext") {
+            if (response && response.settings && !response.settings["botnamesext"]) { // Check original response
+                // If botnamesext is not in the original response, we are migrating mynameext
+                if (response.settings["mynameext"]) { // Ensure mynameext exists
+                    if (!response.settings["botnamesext"]) response.settings["botnamesext"] = {}; // Create if not exists
+                    response.settings["botnamesext"].textsetting = response.settings["mynameext"].textsetting; // Migrate the value
+                }
+                currentKey = "botnamesext"; // Intend to query and update using botnamesext from now on if applicable
+                                          // This change of 'currentKey' will affect the querySelector below
+                                          // However, the element might still be data-textsetting='mynameext'
+                                          // If the data attribute is also changing, this is more complex.
+                                          // For now, let's assume the element is found by original 'key' but data is also put in 'botnamesext'
+                                          // The original code would have modified `key` and thus queried for `botnamesext`.
+                                          // To replicate:
+                if (!response.settings["botnamesext"]) { // if still no botnamesext in modified response
+                   // This logic means mynameext is processed as botnamesext
+                   // The value is from settingObj.textsetting which is response.settings.mynameext.textsetting
+                } else { // botnamesext was already present in the original response.settings
+                  return; // skip, as per original logic's `else { continue; }`
+                }
+                // If we are here, it means mynameext is active, and botnamesext was not in original response.
+                // The original 'key' was "mynameext"
+                // The element will be found by document.querySelector(`...[data-textsetting='mynameext']`)
+                // And its value set. The `response.settings.botnamesext` is also populated.
+            } else if (response && response.settings && response.settings["botnamesext"]) {
+                 // if original key is mynameext AND botnamesext is already in response, then we should skip mynameext
+                 return;
             }
         }
-        
+        // If key was 'mynameext' and we fell through, we process 'mynameext' elements.
+        // If key was 'mynameext' and we returned, this part is skipped.
+        // If key was 'botnamesext' from the start, it's processed here.
+
         const ele = document.querySelector(`input[data-textsetting='${key}'],textarea[data-textsetting='${key}']`);
         if (ele) {
-            ele.value = settingObj.textsetting;
-            
-            // Handle palette if needed
+            ele.value = valueToSet; // valueToSet is settingObj.textsetting
+
             if (ele.dataset.palette) {
                 try {
                     document.getElementById(ele.dataset.palette).value = ele.value;
-                } catch(e) {
+                } catch (e) {
                     log(e);
                 }
             }
-            
             updateSettings(ele, sync);
-            
-            // Update specialized lists
             updateUsernameList(key);
             updateSourceTypeList(key);
         }
     }
-    
-    // Process option settings
+
     if ("optionsetting" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting='${key}']`);
         if (ele) {
-            // Handle MIDI device settings
             if (key == "midiOutputDevice" || key.startsWith("mididevice")) {
                 if (settingObj.optionsetting && (ele.value !== settingObj.optionsetting)) {
-                    const option = document.createElement("option");
-                    option.textContent = settingObj.optionsetting;
-                    option.value = settingObj.optionsetting;
-                    ele.appendChild(option);
-                    option.selected = true;
+                    // Check if option already exists
+                    let optionExists = false;
+                    for (let i = 0; i < ele.options.length; i++) {
+                        if (ele.options[i].value === settingObj.optionsetting) {
+                            optionExists = true;
+                            break;
+                        }
+                    }
+                    if (!optionExists) {
+                        const option = document.createElement("option");
+                        option.textContent = settingObj.optionsetting;
+                        option.value = settingObj.optionsetting;
+                        ele.appendChild(option);
+                    }
+                    // ele.value will set it to selected below
                 }
             }
-            
+
             ele.value = settingObj.optionsetting;
             updateSettings(ele, sync);
-            
-            // Handle special provider settings
+
             if (key == "aiProvider") {
                 handleAIProviderVisibility(ele.value);
             } else if (key == "ttsProvider") {
@@ -2217,27 +2123,181 @@ function processObjectSetting(key, settingObj, sync, paramNums) {
             }
         }
     }
-    
-    // Process option setting 10 (special case)
+
     if ("optionsetting10" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting10='${key}']`);
         if (ele) {
             ele.value = settingObj.optionsetting10;
             updateSettings(ele, sync);
+            // Note: handleTTSProvider10Visibility is called from processObjectSetting's main loop for optionparam10
+            // if key is "ttsprovider", which seems to be the case where optionsetting10 is used.
         }
     }
-    
-    // Process custom JSON-based settings
+
     if (key === 'customGifCommands' && settingObj.json) {
-        const commands = JSON.parse(settingObj.json || '[]');
-        const commandsList = document.getElementById('customGifCommandsList');
-        commandsList.innerHTML = '';
-        commands.forEach(cmd => {
-            commandsList.appendChild(createCommandEntry(cmd.command, cmd.url));
-        });
+        try {
+            const commands = JSON.parse(settingObj.json || '[]');
+            const commandsList = document.getElementById('customGifCommandsList');
+            if (commandsList) {
+                commandsList.innerHTML = '';
+                commands.forEach(cmd => {
+                    commandsList.appendChild(createCommandEntry(cmd.command, cmd.url)); // Assuming createCommandEntry is defined
+                });
+            }
+        } catch(e) { console.error("Error parsing customGifCommands JSON:", e); }
     } else if (key === 'savedPolls' && settingObj.json) {
-        PollManager.savedPolls = JSON.parse(settingObj.json || '[]');
-        PollManager.updatePollsList();
+        try {
+            PollManager.savedPolls = JSON.parse(settingObj.json || '[]'); // Assuming PollManager is defined
+            PollManager.updatePollsList();
+        } catch(e) { console.error("Error parsing savedPolls JSON:", e); }
+    }
+}
+
+
+function update(response, sync = true) {
+    log("update-> response: ", response);
+    if (response !== undefined) {
+        if (response.documents) {
+            updateDocumentList(response.documents);
+        }
+
+        if (response.streamID) {
+            lastResponse = response;
+            streamID = true;
+
+            var password = "";
+            if ('password' in response && response.password) {
+                password = "&password=" + response.password;
+            }
+
+            var localServer = urlParams.has("localserver") ? "&localserver" : "";
+            password += localServer;
+
+            // Determine hideLinks status initially
+            let hideLinksInitial = false;
+            document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x => {
+                if (x.checked) {
+                    hideLinksInitial = true;
+                }
+            });
+
+            if (hideLinksInitial) {
+                document.body.classList.add("hidelinks");
+            } else {
+                document.body.classList.remove("hidelinks");
+            }
+
+            document.getElementById("sessionid").value = response.streamID;
+            document.getElementById("sessionpassword").value = response.password || "";
+
+            setupPageLinks(hideLinksInitial, baseURL, response.streamID, password); // Pass current hideLinks state
+
+            document.getElementById("remote_control_url").href = baseURL + "sampleapi.html?session=" + response.streamID + password;
+            // The hideLinks variable is not reset to false globally here, its state is managed by the checkbox and classList.
+
+            if ('settings' in response) {
+                setupTtsProviders(response); // Handle TTS provider setting initialization
+
+                const targetMap = getTargetMap(); // Assuming getTargetMap() is defined
+                const paramNums = Object.values(targetMap);
+
+                for (var key in response.settings) {
+                    try {
+                        if (key === "midiConfig") {
+                            if (response.settings[key]) {
+                                document.getElementById("midiConfig").classList.add("pressed");
+                                document.getElementById("midiConfig").innerText = " Config Loaded";
+                            } else {
+                                document.getElementById("midiConfig").classList.remove("pressed");
+                                document.getElementById("midiConfig").innerText = " Load Config";
+                            }
+                            continue; // Continue to next setting
+                        }
+
+                        if (typeof response.settings[key] == "object") {
+                            // Pass 'response' to handle 'mynameext' correctly within processObjectSetting
+                            processObjectSetting(key, response.settings[key], sync, paramNums, response);
+                        } else {
+                            processLegacySetting(key, response.settings[key], sync);
+                        }
+                    } catch (e) {
+                        console.error(`Error processing setting ${key}:`, e);
+                    }
+                }
+
+                if ("translation" in response.settings) {
+                    translation = response.settings["translation"];
+                    miniTranslate(document.body); // Assuming miniTranslate is defined
+                }
+            }
+
+            createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
+
+            // Refresh all page links.
+            refreshLinks();
+
+            try {
+                // Define your link configurations: { linkId: 'idOfLinkElement', sourcePropertyProvider: () => document.getElementById('sourceElementId')?.raw || document.getElementById('idOfLinkElement').href }
+                // A more robust way is if refreshLinks stores the raw URLs on the elements or returns them.
+                // For now, let's assume link elements have an href that needs cleaning.
+                const linkIdsToClean = [
+                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
+                    'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
+                    'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink',
+                    'battlelink', 'custom-gif-commands-link', 'creditslink', 'giveawaylink'
+                    // Add other link IDs that are generated and need cleaning
+                ];
+
+                // Get current hideLinks status as it might have been changed by settings
+                const currentHideLinks = document.body.classList.contains("hidelinks");
+
+                linkIdsToClean.forEach(linkId => {
+                    const linkElement = document.getElementById(linkId);
+                    if (linkElement && typeof linkElement.href === 'string' && linkElement.href.startsWith('http')) {
+                        const originalHref = linkElement.href; // Or from a 'data-raw-url' attribute if refreshLinks sets one
+                        const cleanedUrl = removeTTSProviderParams(originalHref);
+                        linkElement.href = cleanedUrl;
+                        if (linkElement.innerText !== "Click to open link" || !currentHideLinks) { // Avoid overwriting "Click to open" if links are hidden
+                           linkElement.innerText = currentHideLinks ? "Click to open link" : cleanedUrl;
+                        }
+                        // If your old `sourceElement.raw` was important, you might need to update a similar attribute
+                        // if (linkElement.raw) linkElement.raw = cleanedUrl;
+                    }
+                });
+
+                // Also clean the remote_control_url if it can have TTS params (usually not)
+                const remoteCtrlUrlElement = document.getElementById("remote_control_url");
+                if (remoteCtrlUrlElement && remoteCtrlUrlElement.href) {
+                   remoteCtrlUrlElement.href = removeTTSProviderParams(remoteCtrlUrlElement.href);
+                }
+
+            } catch (e) {
+                console.error("Error cleaning TTS params from links:", e);
+            }
+        }
+
+        if (("state" in response) && streamID) {
+            isExtensionOn = response.state;
+            if (isExtensionOn) {
+                document.body.classList.add("extension-enabled");
+                document.body.classList.remove("extension-disabled");
+                document.getElementById("disableButtonText").innerHTML = ssapp ? "⚡ Service Active" : "⚡ Extension active"; // Assuming ssapp is defined
+                document.getElementById("disableButton").style.display = "";
+                document.getElementById("extensionState").checked = true;
+                if (typeof chrome !== 'undefined' && chrome.browserAction) {
+                    chrome.browserAction.setIcon({ path: "/icons/on.png" });
+                }
+            } else {
+                document.getElementById("disableButtonText").innerHTML = ssapp ? "🔌 Service Disabled" : "🔌 Extension Disabled";
+                document.body.classList.remove("extension-enabled");
+                document.body.classList.add("extension-disabled");
+                document.getElementById("disableButton").style.display = "";
+                if (typeof chrome !== 'undefined' && chrome.browserAction) {
+                    chrome.browserAction.setIcon({ path: "/icons/off.png" });
+                }
+                document.getElementById("extensionState").checked = false; // Use false for unchecked state
+            }
+        }
     }
 }
 
