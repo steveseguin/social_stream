@@ -1,5 +1,8 @@
 (function () {
 	 
+	 
+	var checking = false;
+	
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
@@ -67,9 +70,29 @@
 	// settings.textonlymode
 	// settings.captureevents
 	
+	
+	var dataIndex = -5;
+	
 	var channelName = "";
 	
 	function processMessage(ele){
+	//	console.log(ele);
+		if (!ele || !ele.isConnected){
+		//	console.log("no connected");
+			return;
+		}
+		
+		if (ele.dataset.knownSize){
+			if (!parseInt(ele.dataset.knownSize)){
+		//		console.log("no knownSize");
+				return;
+			}
+		}
+		
+		if (ele.skip){
+			return;
+		}
+
 		
 		var chatimg = ""
 
@@ -106,8 +129,21 @@
 		
 		
 		if (!msg || !name){
+	//		console.log("no name");
 			return;
 		}
+		
+		if (ele.dataset.index){
+			let indexx = parseInt(ele.dataset.index);
+			if (indexx>dataIndex){
+				dataIndex = indexx;
+			} else {
+				//console.log("bad dataIndex");
+				return;
+			}
+		}
+		
+		ele.skip = true;
 		
 		
 		var data = {};
@@ -180,11 +216,19 @@
 		if ("state" in response){
 			isExtensionOn = response.state;
 		}
+		if (!checking){
+			startCheck();
+		}
 	});
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				
+				if (!checking){
+					startCheck();
+				}
+				
 				if ("getSource" == request){sendResponse("arenasocial");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 					document.querySelector('#type-a-message').focus();
@@ -194,13 +238,20 @@
 				if (typeof request === "object"){
 					if ("state" in request) {
 						isExtensionOn = request.state;
+						
+						if (!checking){
+							startCheck();
+						}
+					
 					}
+					
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
 						return;
 					}
 				}
+				
 				
 			} catch(e){}
 			sendResponse(false);
@@ -215,17 +266,21 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
+				//	console.log(mutation.addedNodes);
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].skip){continue;}
+							const addedNode = mutation.addedNodes[i];
+							if (addedNode.nodeType !== 1) continue; // Only process element nodes
 
-							mutation.addedNodes[i].skip = true;
+							if (addedNode.skip){continue;}
 
-							setTimeout(function(ee){
-									processMessage(ee); // maybe here
-							},200, mutation.addedNodes[i]);
-							
-						} catch(e){}
+							setTimeout(()=>{
+									processMessage(addedNode);
+							},300);
+
+						} catch(e){
+							console.error("Error processing added node:", e);
+						}
 					}
 				}
 			});
@@ -241,22 +296,109 @@
 	console.log("social stream injected");
 
 
+	function startCheck(){
+		if (isExtensionOn && checking){return;}
 
-	setInterval(function(){
-		try {
-			if (!window.location.href.startsWith("https://arena.social/live/")){return;}
-			var container = document.querySelector("[data-testid='virtuoso-item-list']");
-			if (!container.marked){
-				container.marked=true;
+		clearInterval(checking);
+		checking = false;
+		if (!isExtensionOn){
+			return;
+		}
+		checking = setInterval(function(){
+			try {
+				if (!window.location.href.startsWith("https://arena.social/live/")){return;}
+				var container = document.querySelector("[data-testid='virtuoso-item-list']");
+				if (!container.marked){
+					container.marked=true;
 
-				console.log("CONNECTED chat detected");
+					console.log("CONNECTED chat detected");
 
-				setTimeout(function(){
-					onElementInserted(container);
-				},2000);
+					setTimeout(function(){
+						dataIndex = 0;
+						onElementInserted(container);
+					},2000);
+				}
+				checkViewers();
+			} catch(e){}
+		},2000);
+	}
+	
+	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
+	try {
+		var receiveChannelCallback = function (e) {
+			remoteConnection.datachannel = event.channel;
+			remoteConnection.datachannel.onmessage = function (e) {};
+			remoteConnection.datachannel.onopen = function (e) {};
+			remoteConnection.datachannel.onclose = function (e) {};
+			setInterval(function () {
+				remoteConnection.datachannel.send("KEEPALIVE");
+			}, 1000);
+		};
+		var errorHandle = function (e) {};
+		var localConnection = new RTCPeerConnection();
+		var remoteConnection = new RTCPeerConnection();
+		localConnection.onicecandidate = e => !e.candidate || remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.onicecandidate = e => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.ondatachannel = receiveChannelCallback;
+		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
+		localConnection.sendChannel.onopen = function (e) {
+			localConnection.sendChannel.send("CONNECTED");
+		};
+		localConnection.sendChannel.onclose = function (e) {};
+		localConnection.sendChannel.onmessage = function (e) {};
+		localConnection
+			.createOffer()
+			.then(offer => localConnection.setLocalDescription(offer))
+			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
+			.then(() => remoteConnection.createAnswer())
+			.then(answer => remoteConnection.setLocalDescription(answer))
+			.then(() => {
+				localConnection.setRemoteDescription(remoteConnection.localDescription);
+				console.log("KEEP ALIVE TRICk ENABLED");
+			})
+			.catch(errorHandle);
+	} catch (e) {
+		console.log(e);
+	}
+	
+	
+	function preventBackgroundThrottling() {
+		window.onblur = null;
+		window.blurred = false;
+		document.hidden = false;
+		document.mozHidden = false;
+		document.webkitHidden = false;
+		
+		document.hasFocus = () => true;
+		window.onFocus = () => true;
+
+		Object.defineProperties(document, {
+			mozHidden: { value: false, configurable: true },
+			msHidden: { value: false, configurable: true },
+			webkitHidden: { value: false, configurable: true },
+			hidden: { value: false, configurable: true, writable: true },
+			visibilityState: { 
+				get: () => "visible",
+				configurable: true
 			}
-			checkViewers();
-		} catch(e){}
-	},2000);
+		});
+	}
+
+	const events = [
+		"visibilitychange",
+		"webkitvisibilitychange",
+		"blur",
+		"mozvisibilitychange",
+		"msvisibilitychange"
+	];
+
+	events.forEach(event => {
+		window.addEventListener(event, (e) => {
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}, true);
+	});
+
+	setInterval(preventBackgroundThrottling, 200);
 
 })();
