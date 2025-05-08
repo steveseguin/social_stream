@@ -286,12 +286,16 @@
 	  
 	  if (!chatmessage){return;}
 	  
-	  	  
+	  var originalMessage = "";
+	  var replyMessage = "";
+	  
 	  if (settings.replyingto){
 		  let reply = ele.querySelector(".text-xs button");
 		  if (reply){
 				reply = getAllContentNodes(reply).trim();
 				if (reply){
+					replyMessage = reply;
+					originalMessage = chatmessage;
 					if (settings.textonlymode) {
 						chatmessage = "@"+reply + ": " + chatmessage;
 					} else {
@@ -334,6 +338,14 @@
 	  }
 	  
 	  var data = {};
+	  
+	    if (replyMessage){
+			data.initial = replyMessage;
+		}
+	    if (originalMessage){
+			data.reply = originalMessage;
+		}
+		
 	  data.chatname = chatname;
 	  data.chatbadges = chatbadges;
 	  data.nameColor = nameColor;

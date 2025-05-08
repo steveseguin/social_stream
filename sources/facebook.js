@@ -223,21 +223,19 @@
 		}
 		
 		var dupMessage = msg; // I dont want to include original replies in the dup check; just the message.
+		var originalMessage = "";
+		var replyMessage = "";
 		
 		try {
 			if (settings.replyingto && msg && ele.previousSibling) {
-				try {
-					//console.log(ele);
-					var replyMessage = getAllContentNodes(ele.previousSibling.querySelector("div>div>span>span"), true);
-					if (replyMessage) {
-						if (settings.textonlymode) {
-							msg = replyMessage + ": " + msg;
-						} else {
-							msg = "<i><small>" + replyMessage + ":&nbsp;</small></i> " + msg;
-						}
+				replyMessage = getAllContentNodes(ele.previousSibling.querySelector("div>div>span>span"), true);
+				if (replyMessage) {
+					originalMessage = msg;
+					if (settings.textonlymode) {
+						msg = replyMessage + ": " + msg;
+					} else {
+						msg = "<i><small>" + replyMessage + ":&nbsp;</small></i> " + msg;
 					}
-				} catch (e) {
-					//console.error(e);
 				}
 			}
 		} catch (e) {}
@@ -268,7 +266,7 @@
 		} catch (e) {
 		}
 
-		var data = {};
+		
 		data.chatname = name;
 		data.chatbadges = badges;
 		data.backgroundColor = "";
@@ -280,6 +278,12 @@
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
 		
+		if (replyMessage){
+			data.initial = replyMessage;
+		}
+		if (originalMessage){
+			data.reply = originalMessage;
+		}
 		if (window.location.href.includes("workplace.com")){
 			data.type = "workplace";
 		} else {
