@@ -10,12 +10,14 @@ class EventFlowEditor {
             nodes: [],
             connections: []
         };
-        this.selectedNode = null; // ID of the selected node
-        this.draggedNode = null; // ID of the node being dragged
-        this.draggedConnection = null; // Info about connection being dragged
+		this.draggedFlowItem = null;
+        this.selectedNode = null;
+        this.draggedNode = null;
+        this.draggedConnection = null;
         this.dragOffset = { x: 0, y: 0 };
         this.unsavedChanges = false;
-
+		
+        // Initialize all node type definitions here
         this.triggerTypes = [
             { id: 'messageContains', name: 'Message Contains' },
             { id: 'messageStartsWith', name: 'Message Starts With' },
@@ -28,21 +30,31 @@ class EventFlowEditor {
             { id: 'customJs', name: 'Custom JavaScript' }
         ];
 
-        this.actionTypes = [
-            { id: 'blockMessage', name: 'Block Message' },
-            { id: 'modifyMessage', name: 'Modify Message' },
-            { id: 'setProperty', name: 'Set Property' },
-            { id: 'relay', name: 'Relay Message' },
-            { id: 'webhook', name: 'Call Webhook' },
-            { id: 'spendPoints', name: 'Spend Points' },
-            { id: 'customJs', name: 'Custom JavaScript' }
+		this.actionTypes = [
+			{ id: 'blockMessage', name: 'Block Message' },
+			{ id: 'modifyMessage', name: 'Modify Message' },
+			{ id: 'setProperty', name: 'Set Property' },
+			{ id: 'relay', name: 'Relay Message' },
+			{ id: 'webhook', name: 'Call Webhook' },
+			{ id: 'spendPoints', name: 'Spend Points' },
+			{ id: 'playTenorGiphy', name: 'Play TENOR/GIPHY' }, // <-- New Action
+			{ id: 'triggerOBSScene', name: 'Trigger OBS Scene' }, // <-- New Action
+			{ id: 'playAudioClip', name: 'Play Audio Clip' },   // <-- New Action
+			{ id: 'customJs', name: 'Custom JavaScript' }
+		];
+
+        // Ensure logicNodeTypes is initialized HERE
+        this.logicNodeTypes = [
+            { id: 'AND', name: 'AND Gate', type: 'logic', logicType: 'AND' }, // Added type/logicType for consistency if needed elsewhere
+            { id: 'OR', name: 'OR Gate', type: 'logic', logicType: 'OR' },
+            { id: 'NOT', name: 'NOT Gate', type: 'logic', logicType: 'NOT' }
         ];
 
-        this.init();
+        this.init(); // init() will call createEditorLayout()
     }
 
     init() {
-        this.createEditorLayout();
+        this.createEditorLayout(); // Now this.logicNodeTypes will be defined
         this.initEventListeners();
         this.loadFlowList();
     }
@@ -73,7 +85,6 @@ class EventFlowEditor {
                                 </div>
                             `).join('')}
                         </div>
-                        {/* NEW: Logic Gates Palette */}
                         <h3>Logic Gates</h3>
                         <div class="node-list" id="logic-list">
                             ${this.logicNodeTypes.map(logicNode => `
@@ -84,7 +95,29 @@ class EventFlowEditor {
                         </div>
                     </div>
                 </div>
-                {/* ... (rest of existing layout) ... */}
+                <div class="flow-editor">
+                    <div class="flow-editor-header">
+						<input type="text" id="flow-name" placeholder="Flow Name">
+						<div class="flow-controls">
+							<button id="save-flow-btn" class="btn btn-primary">Save Flow</button>
+							<button id="duplicate-flow-btn" class="btn">Duplicate</button>
+							<label class="flow-active-toggle">
+								<input type="checkbox" id="flow-active">
+								<span class="slider round"></span>
+								Active
+							</label>
+						</div>
+					</div>
+                    <div class="flow-canvas-container">
+                        <div class="flow-canvas" id="flow-canvas"></div>
+                    </div>
+                </div>
+                <div class="node-properties" id="node-properties">
+                    <h3>Node Properties</h3>
+                    <div class="node-properties-content" id="node-properties-content">
+                        <p>Select a node to view properties</p>
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -103,19 +136,20 @@ class EventFlowEditor {
         document.getElementById('flow-name').addEventListener('input', (e) => {
             if (this.currentFlow) {
                 this.currentFlow.name = e.target.value;
-                this.markUnsavedChanges(true);
+                // Do not mark unsaved changes here directly, let the save process handle the asterisk.
+                // Or, if you want the asterisk to appear on name change:
+                this.markUnsavedChanges(true); 
             }
         });
 
         const triggerItems = document.querySelectorAll('#trigger-list .node-item');
         triggerItems.forEach(item => {
-            item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'trigger', item.dataset.type));
+            item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'trigger', item.dataset.subtype)); // Changed to subtype
         });
         const actionItems = document.querySelectorAll('#action-list .node-item');
         actionItems.forEach(item => {
-            item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'action', item.dataset.type));
+            item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'action', item.dataset.subtype)); // Changed to subtype
         });
-
 		const logicItems = document.querySelectorAll('#logic-list .node-item');
         logicItems.forEach(item => {
             item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'logic', item.dataset.subtype));
@@ -152,25 +186,42 @@ class EventFlowEditor {
         if (!flowNameInput || !this.currentFlow) return;
 
         let currentDisplayName = flowNameInput.value;
-        const hasAsterisk = currentDisplayName.endsWith('*');
-
+        // Remove any existing asterisk for clean check
+        if (currentDisplayName.endsWith('*')) {
+            currentDisplayName = currentDisplayName.slice(0, -1);
+        }
+        
         if (hasChanges) {
-            if (!hasAsterisk && this.currentFlow.id) { // Add asterisk only if it's an existing/saved flow
-                flowNameInput.value += '*';
+            // Add asterisk only if it's an existing/saved flow and doesn't already have one
+            // For a new flow (no id), the name will be set, and the asterisk isn't strictly for "unsaved *from DB*"
+            if (this.currentFlow.id && !flowNameInput.value.endsWith('*')) { 
+                flowNameInput.value = currentDisplayName + '*';
+            } else if (!this.currentFlow.id && !flowNameInput.value.endsWith('*') && flowNameInput.value !== "New Flow") {
+                 // For new flows, if name is changed from "New Flow", show asterisk
+                flowNameInput.value = currentDisplayName + '*';
             }
         } else {
-            if (hasAsterisk) {
-                flowNameInput.value = currentDisplayName.slice(0, -1);
+            // Remove asterisk if no changes
+            if (flowNameInput.value.endsWith('*')) {
+                flowNameInput.value = currentDisplayName;
             }
         }
     }
 
     async loadFlowList() {
-        const flows = await this.eventFlowSystem.getAllFlows();
+        const flows = await this.eventFlowSystem.getAllFlows(); // Should be pre-sorted by order
         const flowListEl = document.getElementById('flow-list');
+        flowListEl.innerHTML = ''; // Clear previous list
 
-        flowListEl.innerHTML = flows.map(flow => `
-            <div class="flow-item ${this.currentFlow && this.currentFlow.id === flow.id ? 'selected-flow' : ''}" data-id="${flow.id}">
+        flows.forEach(flow => {
+            const item = document.createElement('div');
+            item.className = `flow-item ${this.currentFlow && this.currentFlow.id === flow.id ? 'selected-flow' : ''}`;
+            item.dataset.id = flow.id;
+            item.dataset.order = flow.order; // Store order for reference if needed
+            item.draggable = true;
+
+            item.innerHTML = `
+                <span class="drag-handle">⠿</span>
                 <div class="flow-item-name">${flow.name || 'Unnamed Flow'}</div>
                 <div class="flow-item-controls">
                     <span class="flow-item-status ${flow.active ? 'active' : 'inactive'}" title="${flow.active ? 'Active' : 'Inactive'}">
@@ -178,23 +229,120 @@ class EventFlowEditor {
                     </span>
                     <span class="flow-item-delete" data-id="${flow.id}" title="Delete Flow">×</span>
                 </div>
-            </div>
-        `).join('');
+            `;
+            flowListEl.appendChild(item);
 
-        flowListEl.querySelectorAll('.flow-item').forEach(item => {
+            // Event listeners for each item
             item.addEventListener('click', (e) => {
-                if (e.target.classList.contains('flow-item-delete') || e.target.parentElement.classList.contains('flow-item-delete')) {
-                    return;
+                if (e.target.classList.contains('flow-item-delete') || (e.target.parentElement && e.target.parentElement.classList.contains('flow-item-delete'))) {
+                    return; // Deletion handled by its own listener
                 }
+                if (e.target.classList.contains('drag-handle')) return; // Don't load if interacting with drag handle
                 this.loadFlow(item.dataset.id);
             });
+
+            item.addEventListener('dragstart', this.handleFlowDragStart.bind(this));
+            item.addEventListener('dragover', this.handleFlowDragOver.bind(this));
+            item.addEventListener('dragleave', this.handleFlowDragLeave.bind(this));
+            item.addEventListener('drop', this.handleFlowDrop.bind(this));
+            item.addEventListener('dragend', this.handleFlowDragEnd.bind(this));
         });
+
         flowListEl.querySelectorAll('.flow-item-delete').forEach(button => {
             button.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.deleteFlow(button.dataset.id);
+                this.deleteFlow(button.dataset.id); // Calls system's deleteFlow
             });
         });
+    }
+	
+	handleFlowDragStart(e) {
+        const targetItem = e.target.closest('.flow-item');
+        if (!targetItem) return;
+        this.draggedFlowItem = targetItem;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', targetItem.dataset.id);
+        targetItem.classList.add('dragging');
+    }
+	
+	handleFlowDragOver(e) {
+        e.preventDefault();
+        const targetItem = e.target.closest('.flow-item');
+        if (!targetItem || targetItem === this.draggedFlowItem) return;
+        
+        targetItem.classList.remove('drag-over-top', 'drag-over-bottom'); // Clear previous
+        const rect = targetItem.getBoundingClientRect();
+        const offsetY = e.clientY - rect.top;
+        if (offsetY < rect.height / 2) {
+            targetItem.classList.add('drag-over-top');
+        } else {
+            targetItem.classList.add('drag-over-bottom');
+        }
+    }
+	
+	handleFlowDragLeave(e) {
+        const targetItem = e.target.closest('.flow-item');
+        if (targetItem) {
+            targetItem.classList.remove('drag-over-top', 'drag-over-bottom');
+        }
+    }
+
+    async handleFlowDrop(e) {
+        e.preventDefault();
+        if (!this.draggedFlowItem) return;
+
+        const targetItem = e.target.closest('.flow-item');
+        if (targetItem) {
+            targetItem.classList.remove('drag-over-top', 'drag-over-bottom');
+        }
+        
+        if (!targetItem || targetItem === this.draggedFlowItem) {
+            this.draggedFlowItem.classList.remove('dragging');
+            this.draggedFlowItem = null;
+            return;
+        }
+
+        const flowListEl = document.getElementById('flow-list');
+        const rect = targetItem.getBoundingClientRect();
+        const offsetY = e.clientY - rect.top;
+
+        if (offsetY < rect.height / 2) {
+            flowListEl.insertBefore(this.draggedFlowItem, targetItem);
+        } else {
+            flowListEl.insertBefore(this.draggedFlowItem, targetItem.nextSibling);
+        }
+        
+        this.draggedFlowItem.classList.remove('dragging');
+
+        // Get the new order of flow IDs from the DOM
+        const orderedFlowElements = Array.from(flowListEl.querySelectorAll('.flow-item'));
+        const orderedFlowIds = orderedFlowElements.map(item => item.dataset.id);
+
+        try {
+            const result = await this.eventFlowSystem.updateFlowsOrder(orderedFlowIds);
+            if (result.success) {
+                console.log('Flows reordered and saved successfully.');
+            } else {
+                console.error("Failed to save new flow order:", result.message, result.error || '');
+                // Optionally, show an alert to the user.
+            }
+        } catch (error) {
+            console.error('Error during flow order update process:', error);
+        } finally {
+            this.draggedFlowItem = null;
+            await this.loadFlowList(); // Refresh list from the source of truth (system)
+                                       // to ensure UI consistency with DB state.
+        }
+    }
+
+    handleFlowDragEnd(e) {
+        if (this.draggedFlowItem) {
+            this.draggedFlowItem.classList.remove('dragging');
+        }
+        document.querySelectorAll('.flow-item.drag-over-top, .flow-item.drag-over-bottom').forEach(el => {
+            el.classList.remove('drag-over-top', 'drag-over-bottom');
+        });
+        this.draggedFlowItem = null;
     }
 
     async loadFlow(flowId) {
@@ -225,38 +373,126 @@ class EventFlowEditor {
                 return;
             }
         }
+        
+        // Determine the next order number
+        // getAllFlows() from the system should give the current, sorted list
+        const currentFlows = this.eventFlowSystem.flows; // Access the internal, sorted array
+        let maxOrder = -1;
+        if (currentFlows && currentFlows.length > 0) {
+             currentFlows.forEach(f => {
+                if (typeof f.order === 'number' && f.order > maxOrder) {
+                    maxOrder = f.order;
+                }
+            });
+        }
+        const newOrder = (currentFlows.length > 0 && maxOrder > -1) ? maxOrder + 1 : 0;
+
         this.currentFlow = {
-            id: null, name: 'New Flow', description: '', active: true, nodes: [], connections: []
+            id: null, 
+            name: 'New Flow', 
+            description: '', 
+            active: true, 
+            nodes: [], 
+            connections: [],
+            order: newOrder // Assign new order
         };
-        this.markUnsavedChanges(false); // New flow doesn't have server-side unsaved changes yet
+        this.markUnsavedChanges(false); 
 
         document.getElementById('flow-name').value = this.currentFlow.name;
         document.getElementById('flow-active').checked = this.currentFlow.active;
-        document.querySelectorAll('.flow-item').forEach(item => item.classList.remove('selected-flow'));
+        document.querySelectorAll('.flow-item.selected-flow').forEach(item => item.classList.remove('selected-flow'));
         
         this.renderFlow();
         this.selectNode(null);
     }
 
+    async generateFlowName() {
+        if (!this.currentFlow || !this.currentFlow.nodes) {
+            return `Untitled Flow - ${new Date().toLocaleTimeString()}`;
+        }
+
+        const firstTrigger = this.currentFlow.nodes.find(node => node.type === 'trigger');
+        let firstActionOrLogic = this.currentFlow.nodes.find(node => node.type === 'action' || node.type === 'logic');
+
+        let baseName = "";
+        if (firstTrigger) {
+            baseName += `${this.getNodeTitle(firstTrigger).replace('Message ', '')}`; // Shorten
+            if (firstActionOrLogic) {
+                 // Try to find an action/logic connected to this trigger
+                const findConnectedNode = (startNodeId) => {
+                    const connection = this.currentFlow.connections.find(c => c.from === startNodeId);
+                    if (connection) {
+                        return this.currentFlow.nodes.find(n => n.id === connection.to && (n.type === 'action' || n.type === 'logic'));
+                    }
+                    return null;
+                };
+                const connectedActionLogic = findConnectedNode(firstTrigger.id);
+                if (connectedActionLogic) {
+                    firstActionOrLogic = connectedActionLogic;
+                }
+                baseName += ` to ${this.getNodeTitle(firstActionOrLogic)}`;
+            }
+        } else if (firstActionOrLogic) { // No trigger, but has action/logic
+            baseName += `${this.getNodeTitle(firstActionOrLogic)}`;
+        } else { // Empty flow
+            baseName = `Untitled Flow`;
+        }
+        
+        // Ensure name is not overly long
+        if (baseName.length > 50) {
+            baseName = baseName.substring(0, 47) + "...";
+        }
+
+        // Ensure uniqueness
+        const allFlows = await this.eventFlowSystem.getAllFlows();
+        let finalName = baseName;
+        let counter = 1;
+        // Check against current name too if it's an edit of an existing flow but name was cleared
+        while (allFlows.some(flow => flow.name === finalName && (!this.currentFlow.id || flow.id !== this.currentFlow.id))) {
+            finalName = `${baseName} ${counter}`;
+            counter++;
+        }
+        return finalName;
+    }
+
+
     async saveCurrentFlow() {
         if (!this.currentFlow) {
             alert('No flow is currently active to save.'); return;
         }
-        if (!this.currentFlow.name || this.currentFlow.name.trim() === '') {
-            alert('Please enter a flow name.'); document.getElementById('flow-name').focus(); return;
+
+        // Auto-generate name if current name is empty, whitespace, or the default "New Flow"
+        let currentNameTrimmed = this.currentFlow.name ? this.currentFlow.name.trim() : '';
+        if (currentNameTrimmed === '' || currentNameTrimmed === 'New Flow' || currentNameTrimmed === 'New Flow*') {
+            this.currentFlow.name = await this.generateFlowName();
+            document.getElementById('flow-name').value = this.currentFlow.name; // Update UI immediately
+            // No asterisk needed yet as it's a "new" name until saved
+        } else if (document.getElementById('flow-name').value.trim() === '') { // User manually cleared the name
+            this.currentFlow.name = await this.generateFlowName();
+            document.getElementById('flow-name').value = this.currentFlow.name;
         }
 
+
         let flowToSave = JSON.parse(JSON.stringify(this.currentFlow)); // Deep copy
+        
+        // Remove trailing asterisk if present, as that's a UI indicator for unsaved changes
         if (flowToSave.name.endsWith('*')) {
             flowToSave.name = flowToSave.name.slice(0, -1);
         }
+        // Ensure the name in currentFlow (internal state) also doesn't have the asterisk
+        if (this.currentFlow.name.endsWith('*')) {
+             this.currentFlow.name = this.currentFlow.name.slice(0, -1);
+        }
+
 
         try {
             const savedFlow = await this.eventFlowSystem.saveFlow(flowToSave);
             this.currentFlow.id = savedFlow.id; // Update current flow with ID from DB
-            this.currentFlow.name = savedFlow.name; // Reflect cleaned name
-            document.getElementById('flow-name').value = this.currentFlow.name; // Update input field without asterisk
-            this.markUnsavedChanges(false);
+            this.currentFlow.name = savedFlow.name; // Reflect cleaned name from DB (e.g. if system modified it)
+            
+            document.getElementById('flow-name').value = this.currentFlow.name; // Update input field without asterisk AFTER save
+            this.markUnsavedChanges(false); // Reset flag AFTER successful save
+
             alert('Flow saved successfully!');
             await this.loadFlowList(); // Refresh list
             
@@ -317,68 +553,92 @@ class EventFlowEditor {
         this.currentFlow.connections.forEach(connection => this.renderConnection(connection));
     }
 
-    renderNode(node) {
-        const canvas = document.getElementById('flow-canvas');
-        const nodeEl = document.createElement('div');
-        // Add 'logic' class for logic nodes
-        nodeEl.className = `node ${node.type === 'logic' ? 'logic' : node.type}`;
-        nodeEl.dataset.id = node.id;
-        nodeEl.style.left = `${node.x}px`;
-        nodeEl.style.top = `${node.y}px`;
+	renderNode(node) {
+		const canvas = document.getElementById('flow-canvas');
+		
+		// It's good practice to remove the old element if re-rendering a specific node
+		// However, if renderNode is always called as part of a full renderFlow that clears the canvas, this might not be strictly necessary.
+		// For robustness if you later call renderNode to update a single node:
+		const existingNodeEl = canvas.querySelector(`.node[data-id="${node.id}"]`);
+		if (existingNodeEl) {
+			existingNodeEl.remove();
+		}
 
-        let inputPointsHTML = '';
-        let outputPointsHTML = '';
+		const nodeEl = document.createElement('div');
+		// Add 'logic' class for general styling of logic nodes if node.type is 'logic'
+		nodeEl.className = `node ${node.type}`; 
+		if (this.selectedNode === node.id) {
+			nodeEl.classList.add('selected');
+		}
+		nodeEl.dataset.id = node.id;
+		nodeEl.style.left = `${node.x}px`;
+		nodeEl.style.top = `${node.y}px`;
 
-        if (node.type === 'trigger') {
-            outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
-        } else if (node.type === 'action') {
-            inputPointsHTML = '<div class="connection-point input" data-point-type="input"></div>';
-            // Actions can also have outputs if they chain to other actions, keep if your system supports this
-            // outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
-        } else if (node.type === 'logic') {
-            // Logic nodes: input(s) and one output.
-            // For AND/OR, one visual input point that can accept multiple connections.
-            // For NOT, one visual input point.
-            inputPointsHTML = `<div class="connection-point input" data-point-type="input" data-logic-type="${node.logicType}"></div>`;
-            outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
-        }
+		let inputPointsHTML = '';
+		let outputPointsHTML = '';
 
-        nodeEl.innerHTML = `
-            <div class="node-header">
-                <div class="node-title">${this.getNodeTitle(node)}</div>
-                <div class="node-delete" title="Delete Node">×</div>
-            </div>
-            <div class="node-body">${this.getNodeDescription(node)}</div>
-            ${inputPointsHTML}
-            ${outputPointsHTML}
-        `;
-        canvas.appendChild(nodeEl);
+		if (node.type === 'trigger') {
+			outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
+		} else if (node.type === 'action') {
+			inputPointsHTML = '<div class="connection-point input" data-point-type="input"></div>';
+			// outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>'; // If actions can lead to other nodes
+		} else if (node.type === 'logic') {
+			let pointClasses = "connection-point input"; // Base classes for the input point
+			
+			// Check for AND/OR gates and count incoming connections
+			if (node.logicType === 'AND' || node.logicType === 'OR') {
+				let incomingConnectionsCount = 0;
+				if (this.currentFlow && this.currentFlow.connections) {
+					incomingConnectionsCount = this.currentFlow.connections.filter(conn => conn.to === node.id).length;
+				}
 
-        nodeEl.addEventListener('mousedown', (e) => {
-            if (e.target.classList.contains('node-delete')) {
-                this.deleteNode(node.id);
-                return;
-            }
-            // Check if the mousedown is on a connection point
-            if (e.target.classList.contains('connection-point')) {
-                 if (e.target.dataset.pointType === 'output') { // Only start dragging from output points
-                    this.startConnection(node.id, e.target.dataset.pointType, e);
-                 }
-                return;
-            }
-            // If not on delete or connection point, then it's for dragging the node or selecting
-            this.selectNode(node.id);
+				if (incomingConnectionsCount > 1) {
+					pointClasses += " logic-input-multiple"; // Add class for multiple connections
+				} else {
+					pointClasses += " logic-input-single"; // Class for single or zero connections
+				}
+			} else if (node.logicType === 'NOT') {
+				pointClasses += " logic-input-single"; // NOT gates expect a single input
+			}
+			
+			inputPointsHTML = `<div class="${pointClasses}" data-point-type="input" data-logic-type="${node.logicType}"></div>`;
+			outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
+		}
 
-            // Dragging logic (if not a connection point)
-            if (!e.target.classList.contains('connection-point')) {
-                this.draggedNode = node.id;
-                const rect = nodeEl.getBoundingClientRect();
-                this.dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-                document.addEventListener('mousemove', this.handleNodeDragMove);
-                document.addEventListener('mouseup', this.handleNodeDragEnd);
-            }
-        });
-    }
+		nodeEl.innerHTML = `
+			<div class="node-header">
+				<div class="node-title">${this.getNodeTitle(node)}</div>
+				<div class="node-delete" title="Delete Node">×</div>
+			</div>
+			<div class="node-body">${this.getNodeDescription(node)}</div>
+			${inputPointsHTML}
+			${outputPointsHTML}
+		`;
+		canvas.appendChild(nodeEl);
+
+		// Attach event listeners for the new node
+		nodeEl.addEventListener('mousedown', (e) => {
+			if (e.target.classList.contains('node-delete')) {
+				this.deleteNode(node.id);
+				return;
+			}
+			if (e.target.classList.contains('connection-point')) {
+				 if (e.target.dataset.pointType === 'output') { // Only start dragging from output points
+					this.startConnection(node.id, e.target.dataset.pointType, e);
+				 }
+				return;
+			}
+			this.selectNode(node.id);
+
+			if (!e.target.classList.contains('connection-point') && !e.target.classList.contains('node-delete')) {
+				this.draggedNode = node.id;
+				const rect = nodeEl.getBoundingClientRect();
+				this.dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+				document.addEventListener('mousemove', this.handleNodeDragMove);
+				document.addEventListener('mouseup', this.handleNodeDragEnd);
+			}
+		});
+	}
 
     getNodeTitle(node) {
         let typesArray;
@@ -520,13 +780,29 @@ class EventFlowEditor {
         } else if (type === 'action') {
             node.actionType = subtype;
             switch (subtype) { /* Populate default configs */
-                case 'blockMessage': node.config = {}; break;
-                case 'modifyMessage': node.config = { newMessage: 'modified text' }; break;
-                case 'setProperty': node.config = { property: 'chatmessage', value: 'new value' }; break;
-                case 'relay': node.config = { destination: 'discord', template: '[{source}] {username}: {message}', toAll: false, timeout: 0 }; break;
-                case 'webhook': node.config = { url: 'https://example.com/hook', method: 'POST', body: '{}', includeMessage: true }; break;
-                case 'spendPoints': node.config = { amount: 100 }; break;
-                case 'customJs': node.config = { code: 'message.chatmessage += " (edited)";\nreturn { modified: true, message };' }; break;
+                case 'blockMessage':
+					node.config = {}; break;
+                case 'modifyMessage':
+					node.config = { newMessage: 'modified text' }; break;
+                case 'setProperty':
+					node.config = { property: 'chatmessage', value: 'new value' }; break;
+                case 'relay':
+					node.config = { destination: 'discord', template: '[{source}] {username}: {message}', toAll: false, timeout: 0 }; break;
+                case 'webhook':
+					node.config = { url: 'https://example.com/hook', method: 'POST', body: '{}', includeMessage: true }; break;
+                case 'spendPoints':
+					node.config = { amount: 100 }; break;
+                case 'customJs': 
+					node.config = { code: 'message.chatmessage += " (edited)";\nreturn { modified: true, message };' }; break;
+				case 'playTenorGiphy':
+					node.config = { mediaUrl: 'https://media.giphy.com/media/KEYEpIngcmXlNH2h4m/giphy.gif', mediaType: 'iframe', duration: 10000 };
+					break;
+				case 'triggerOBSScene':
+					node.config = { sceneName: 'Your Scene Name' };
+					break;
+				case 'playAudioClip':
+					node.config = { audioUrl: 'https://example.com/path/to/sound.mp3', volume: 1.0 };
+					break;
             }
         } else if (type === 'logic') { // NEW
             node.logicType = subtype; // subtype will be 'AND', 'OR', 'NOT'
@@ -781,6 +1057,44 @@ class EventFlowEditor {
 				break;
 			case 'NOT':
 				html += `<p class="property-help">This gate inverts its single input. It outputs TRUE if the input is FALSE, and FALSE if the input is TRUE.</p>`;
+				break;
+			case 'playTenorGiphy': // This is node.actionType if node.type is 'action'
+				html += `<div class="property-group">
+							 <label class="property-label">Media URL (TENOR/GIPHY)</label>
+							 <input type="url" class="property-input" id="prop-mediaUrl" value="${node.config.mediaUrl || ''}">
+							 <div class="property-help">Direct URL to the GIF or video. For GIPHY, use the embed link or direct GIF link.</div>
+						 </div>
+						 <div class="property-group">
+							 <label class="property-label">Media Type</label>
+							 <select class="property-input" id="prop-mediaType">
+								 <option value="iframe" ${node.config.mediaType === 'iframe' ? 'selected' : ''}>Video/Embed (iframe)</option>
+								 <option value="image" ${node.config.mediaType === 'image' ? 'selected' : ''}>Image (direct GIF/image link)</option>
+							 </select>
+						 </div>
+						 <div class="property-group">
+							<label class="property-label">Duration (ms, 0 for manual close)</label>
+							<input type="number" class="property-input" id="prop-duration" value="${node.config.duration || 10000}" min="0">
+							<div class="property-help">How long the media stays on screen. 0 means it stays until the next 'play_media' action or manual intervention.</div>
+						</div>`;
+				break;
+
+			case 'triggerOBSScene':
+				html += `<div class="property-group">
+							 <label class="property-label">OBS Scene Name</label>
+							 <input type="text" class="property-input" id="prop-sceneName" value="${node.config.sceneName || ''}">
+							 <div class="property-help">The exact name of the OBS scene to switch to.</div>
+						 </div>`;
+				break;
+
+			case 'playAudioClip':
+				html += `<div class="property-group">
+							 <label class="property-label">Audio File URL</label>
+							 <input type="url" class="property-input" id="prop-audioUrl" value="${node.config.audioUrl || ''}">
+						 </div>
+						 <div class="property-group">
+							<label class="property-label">Volume (0.0 to 1.0)</label>
+							<input type="number" class="property-input" id="prop-volume" value="${node.config.volume || 1.0}" min="0" max="1" step="0.1">
+						</div>`;
 				break;
 
 			default:

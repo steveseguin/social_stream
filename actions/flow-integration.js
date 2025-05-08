@@ -4,91 +4,53 @@
 // Initialize the event flow system for Social Stream Ninja
 function initializeEventFlowSystem() {
     const eventFlowSystem = new EventFlowSystem({
-        // Pass references to required functions
         sendMessageToTabs: window.sendMessageToTabs || null,
         sendToDestinations: window.sendToDestinations || null,
-        pointsSystem: window.pointsSystem || null
+        pointsSystem: window.pointsSystem || null,
+        fetchWithTimeout: window.fetchWithTimeout // Assuming fetchWithTimeout is on window from background.js
     });
-
+	
     eventFlowSystem.initPromise.then(() => {
         console.log('Event Flow System initialized for Social Stream Ninja');
 
-        // Create reference to the original processIncomingMessage function
-        // const originalProcessIncomingMessage = window.processIncomingMessage || function(message) { return message; };
-        // It's better to grab it if it exists, otherwise no-op. If processIncomingMessage doesn't exist at all,
-        // this script is likely being loaded before the main application logic that defines it.
-        // For this completion, we assume originalProcessIncomingMessage is available or correctly handled by the application.
+        // Create reference to the original applyBotActions function
+        const originalapplyBotActions = window.applyBotActions || function(message) { return message; };
 
         // Replace with enhanced version that applies flows
-        window.processIncomingMessage = async function(message, sender = null) {
-            let processedMessage = message;
-
-            try {
-                if (sender?.tab) {
-                    processedMessage.tid = sender.tab.id;
-                }
-            } catch (e) {
-                // console.warn('Error accessing sender tab ID:', e);
-            }
-
-            if (window.isExtensionOn !== false && processedMessage?.type) {
-                // Check for duplicate messages that were relayed moments ago
-                let reflection = false;
-
-                if (window.checkExactDuplicateAlreadyReceived) {
-                    reflection = window.checkExactDuplicateAlreadyReceived(
-                        processedMessage.chatmessage,
-                        processedMessage.textonly,
-                        processedMessage.tid,
-                        processedMessage.type
-                    );
-                }
-
-                if (reflection === null) { // Treat null as a positive reflection if the function returns that
-                    reflection = true;
-                }
-
-                if (reflection) {
-                    processedMessage.reflection = true;
-                }
-
-                if (!processedMessage.id) {
-                    window.messageCounter = (window.messageCounter || 0) + 1;
-                    processedMessage.id = window.messageCounter;
-                }
-
-                try {
-                    // Apply the event flow actions
-                    processedMessage = await eventFlowSystem.processMessage(processedMessage);
-
-                    // If message was blocked by the flow system
-                    if (!processedMessage) {
-                        return null; // Or return undefined, depending on how the rest of the system handles it
-                    }
-                } catch (e) {
-                    console.warn('Error in event flow processing:', e);
-                    // Decide if you want to return the original message or null in case of error
-                    // For now, it will continue with potentially unprocessed/partially processed message
-                }
-
-                // Send to destinations if not blocked and sendToDestinations function exists
-                // The original lib.js calls sendToDestinations *within* the if (window.isExtensionOn...) block
-                // The social-stream-ninja-flow-integration-fixed.js also does this.
-                if (processedMessage && window.sendToDestinations) {
-                    window.sendToDestinations(processedMessage);
-                }
-            }
+        window.applyBotActions = async function(message) { // The input is 'message'
+            
+            if (!window.isExtensionOn){
+				return null;
+			}
+           
+		   
+			let processedMessage = await originalapplyBotActions(message); // Initialize processedMessage with the input message
+			
+			if (!processedMessage) {
+				return null; // Or return undefined, depending on how the rest of the system handles it
+			}
+				
+			try {
+				// Apply the event flow actions
+				processedMessage = await eventFlowSystem.processMessage(processedMessage); // Now use the declared processedMessage
+				console.log(processedMessage);
+				// If message was blocked by the flow system, it will be null, but the parent function will handle that.
+				if (!processedMessage) {
+					console.log("returned null 2");
+					return null; // Or return undefined, depending on how the rest of the system handles it
+				}
+			} catch (e) {
+				console.warn('Error in event flow processing:', e);
+				// Decide if you want to return the original message or null in case of error
+				// For now, it will continue with potentially unprocessed/partially processed message
+			}
 
             // It's important that this function *always* returns the message object
             // (or null/undefined if intentionally blocked),
             // especially if it's part of a chain or if other parts of the application expect a return value.
-            // The original `processIncomingMessage` (before override) might have been called for its return value.
-            // If the original `originalProcessIncomingMessage` call is desired to still happen for messages
-            // not processed by flows, or after flow processing, that logic would need to be re-introduced.
-            // Based on lib.js and social-stream-ninja-flow-integration-fixed.js, the flow system
-            // takes over and the original is not called again after this point.
+            // The original `applyBotActions` (before override) might have been called for its return value.
 
-            return processedMessage;
+            return processedMessage; // Return the (potentially) modified message
         };
 
         // Add button to access Event Flow Editor from main dashboard
@@ -132,7 +94,7 @@ function initializeEventFlowSystem() {
 
                 // Open editor on click
                 editorButton.addEventListener('click', function() {
-                    window.open('event-flow-editor.html', '_blank');
+                    window.open('actions/event-flow-editor.html', '_blank');
                 });
             }
         }
@@ -155,7 +117,6 @@ function initializeEventFlowSystem() {
 }
 
 // Create a message generator for testing flows
-// This part is from social-stream-ninja-flow-integration-fixed.js and is useful for testing
 function createTestMessage(options = {}) {
     return {
         chatname: options.chatname || "TestUser",
@@ -178,25 +139,14 @@ function createTestMessage(options = {}) {
     };
 }
 
-// Expose functions to global scope if needed by other parts of your application or for manual calls
-window.initializeEventFlowSystemForSocialStreamNinja = initializeEventFlowSystem; // Renamed to be more specific
-window.createTestMessageForSocialStreamNinja = createTestMessage; // Renamed
-
 // Automatically initialize the system when this script is loaded.
 // Ensure EventFlowSystem class is defined before this script runs.
 // Also, ensure this script runs after the main application has set up any necessary global functions
 // like window.sendMessageToTabs, window.sendToDestinations, etc.
-if (typeof EventFlowSystem !== 'undefined') {
-    initializeEventFlowSystem();
-} else {
-    console.error('EventFlowSystem class is not defined. Make sure EventFlowSystem.js is loaded before flow-integration.js.');
-    // Optionally, retry initialization after a delay or on DOMContentLoaded,
-    // but proper script ordering is preferred.
-    document.addEventListener('DOMContentLoaded', () => {
-        if (typeof EventFlowSystem !== 'undefined') {
-            initializeEventFlowSystem();
-        } else {
-             console.error('EventFlowSystem still not defined after DOMContentLoaded.');
-        }
-    });
-}
+document.addEventListener('DOMContentLoaded', () => {
+	if (typeof EventFlowSystem !== 'undefined') {
+		initializeEventFlowSystem();
+	} else {
+		console.error('EventFlowSystem class is not defined. Make sure EventFlowSystem.js is loaded before flow-integration.js.');
+	}
+});

@@ -1074,19 +1074,40 @@ var miscTranslations = {
 	someonesaid: "Someone said: ",
 	someone: "Someone"
 };
-async function fetchWithTimeout(URL, timeout = 8000) {
-	// ref: https://dmitripavlutin.com/timeout-fetch-request/
-	try {
-		const controller = new AbortController();
-		const timeout_id = setTimeout(() => controller.abort(), timeout);
-		const response = await fetch(URL, { ...{ timeout: timeout }, signal: controller.signal });
-		clearTimeout(timeout_id);
-		return response;
-	} catch (e) {
-		errorlog(e);
-		return await fetch(URL);
-	}
+// In background.js or a shared utility file
+async function fetchWithTimeout(url, options = {}, timeout = 8000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    const fetchOptions = {
+        ...options, // User-provided options (method, headers, body)
+        signal: controller.signal
+    };
+
+    try {
+        const response = await fetch(url, fetchOptions);
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId); // Ensure timeout is cleared on error too
+        if (error.name === 'AbortError') {
+            console.warn(`[fetchWithTimeout] Request to ${url} timed out after ${timeout}ms.`);
+            // You might want to throw a specific timeout error or return a custom object
+            // For now, re-throwing to let the caller handle it.
+            throw new Error(`Timeout: Request to ${url} aborted after ${timeout}ms.`);
+        }
+        // Assuming errorlog is defined elsewhere
+        if (typeof errorlog === 'function') {
+            errorlog(`[fetchWithTimeout] Fetch error for ${url}:`, error);
+        } else {
+            console.error(`[fetchWithTimeout] Fetch error for ${url}:`, error);
+        }
+        throw error; // Re-throw the original error for the caller to handle
+    }
 }
+// Make it globally available if needed by other parts of background.js, or export if using modules
+window.fetchWithTimeout = fetchWithTimeout;
+
 async function changeLg(lang) {
 	log("changeLg: " + lang);
 	if (!lang) {
@@ -2877,48 +2898,92 @@ class CheckDuplicateSources { // doesn't need to be text-only, as from the same 
 
 
 
-
 function extractVideoId(url) {
   if (!url) return null;
-  const match = url.match(/[?&]v=([^&]+)/);
-  return match ? match[1] : null;
+  
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname;
+    const pathname = urlObj.pathname.replace(/\/+$/, '');
+    const searchParams = urlObj.searchParams;
+    
+    // Standard YouTube domains
+    if (!['youtube.com', 'www.youtube.com', 'youtu.be', 'm.youtube.com', 'studio.youtube.com'].includes(hostname)) {
+      return null;
+    }
+    
+    // Handle youtu.be short links
+    if (hostname === 'youtu.be') {
+      return pathname.split('/')[1]?.split('?')[0] || null;
+    }
+    
+    // Handle /live/ format
+    if (pathname.startsWith('/live/')) {
+      return pathname.split('/live/')[1]?.split('?')[0] || null;
+    }
+    
+    // Handle /watch?v= format
+    if (pathname === '/watch') {
+      return searchParams.get('v');
+    }
+    
+    // Handle /embed/ format
+    if (pathname.startsWith('/embed/')) {
+      return pathname.split('/embed/')[1]?.split('?')[0] || null;
+    }
+    
+    // Handle studio.youtube.com/video/ format
+    if (pathname.startsWith('/video/')) {
+      return pathname.split('/video/')[1]?.split('/')[0] || null;
+    }
+    
+    // Get v parameter regardless of URL structure
+    const vParam = searchParams.get('v');
+    if (vParam) return vParam;
+    
+    return null;
+  } catch (e) {
+    console.warn('Error extracting video ID:', e);
+    return null;
+  }
 }
 
+// The rest of your active chat sources code remains the same
 let activeChatSources = new Map();
-
 try {
-	if (chrome.tabs.onRemoved){
-		chrome.tabs.onRemoved.addListener((tabId) => {
-		  for (let key of activeChatSources.keys()) {
-			if (key.startsWith(`${tabId}-`)) {
-			  activeChatSources.delete(key);
-			}
-		  }
-		});
-	}
-	if (chrome.tabs.onUpdated){
-		chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-		  if (changeInfo.status === 'complete' && tab.url) {
-			const videoId = extractVideoId(tab.url);
-			if (videoId && (
-			  tab.url.includes('https://studio.youtube.com/live_chat?') ||
-			   tab.url.includes('https://www.youtube.com/live_chat?') ||
-			  (tab.url.includes('https://studio.youtube.com/video/') && tab.url.includes('/livestreaming'))
-			)) {
-			  const isPopout = tab.url.includes('live_chat?is_popout=1');
-			  activeChatSources.set(`${tabId}-0`, { url: tab.url, videoId: videoId, isPopout: isPopout });
-			} else {
-			  for (let key of activeChatSources.keys()) {
-				if (key.startsWith(`${tabId}-`)) {
-				  activeChatSources.delete(key);
-				}
-			  }
-			}
-		  }
-		});
-	}
+  if (chrome.tabs.onRemoved){
+    chrome.tabs.onRemoved.addListener((tabId) => {
+      for (let key of activeChatSources.keys()) {
+        if (key.startsWith(`${tabId}-`)) {
+          activeChatSources.delete(key);
+        }
+      }
+    });
+  }
+  if (chrome.tabs.onUpdated){
+    chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+      if (changeInfo.status === 'complete' && tab.url) {
+        const videoId = extractVideoId(tab.url);
+        if (videoId && (
+          tab.url.includes('https://studio.youtube.com/live_chat?') ||
+          tab.url.includes('https://www.youtube.com/live_chat?') ||
+          tab.url.includes('https://www.youtube.com/live/') ||
+          (tab.url.includes('https://studio.youtube.com/video/') && tab.url.includes('/livestreaming'))
+        )) {
+          const isPopout = tab.url.includes('live_chat?is_popout=1');
+          activeChatSources.set(`${tabId}-0`, { url: tab.url, videoId: videoId, isPopout: isPopout });
+        } else {
+          for (let key of activeChatSources.keys()) {
+            if (key.startsWith(`${tabId}-`)) {
+              activeChatSources.delete(key);
+            }
+          }
+        }
+      }
+    });
+  }
 } catch(e){
-	console.warn(e);
+  console.warn(e);
 }
 
 function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
@@ -2996,7 +3061,7 @@ async function processIncomingMessage(message, sender=null){
 			checkDuplicateSources.isDuplicate(message.type, (message.userid || message.chatname), 
 				(message.chatmessage || message.hasDonation || (message.membership && message.event)))) {
 					return;
-		}
+		} 
 		
 		if ((message.type == "youtube") || (message.type == "youtubeshorts")){
 			if (settings.blockpremiumshorts && (message.type == "youtubeshorts")){
@@ -3401,6 +3466,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						loadSentimentAnalysis();
 					}
 				}
+			}
+			
+			if (request.setting === "hypeCombineAll" || 
+				  request.setting === "hypeCombineYouTube" || 
+				  request.setting === "hypeCombineSameType") {
+				clearAndRefreshHypeSources();
 			}
 
 			if (request.setting == "hypemode") {
@@ -4071,43 +4142,59 @@ async function sendToDestinations(message) {
 		}
 		
 		if (message.event && message.tid && ("meta" in message)) {
-			if (["viewer_update", "follower_update"].includes(message.event)){
+			if (["viewer_update", "follower_update"].includes(message.event)) {
 				let tabData = metaDataStore.get(message.tid);
 				if (!tabData) {
-					tabData = {};
-					metaDataStore.set(message.tid, tabData);
+				  tabData = {};
+				  metaDataStore.set(message.tid, tabData);
 				}
 				
 				tabData[message.event] = message;
 				
 				if (!cleanUpLastTabs) {
-					cleanUpLastTabs = setTimeout(() => {
-						cleanUpLastTabs = null;
-						chrome.tabs.query({}, (tabs) => {
-							const activeTabIds = new Set(
-								tabs
-									.map(tab => tab.id)
-									.filter(Boolean)
-							);
+				  cleanUpLastTabs = setTimeout(() => {
+					cleanUpLastTabs = null;
+					chrome.tabs.query({}, (tabs) => {
+					  const activeTabIds = new Set(
+						tabs
+						  .map(tab => tab.id)
+						  .filter(Boolean)
+					  );
 
-							// Cleanup closed tabs
-							for (const [tabId] of metaDataStore) {
-								if (!activeTabIds.has(tabId)) {
-									metaDataStore.delete(tabId);
-								}
-							}
-						});
-					}, 600000); 
+					  // Cleanup closed tabs
+					  for (const [tabId] of metaDataStore) {
+						if (!activeTabIds.has(tabId)) {
+						  metaDataStore.delete(tabId);
+						}
+					  }
+					});
+				  }, 600000); 
 				}
 				
-				if (settings.hypemode){
-					sendTargetP2P(message, "hype");
+				if (settings.hypemode) {
+					// ONLY update viewer counts if it's a viewer_update
+					if (message.event === 'viewer_update') {
+						updateViewerCount(message); // updateViewerCount already calls combineHypeData and sends
+					} else if (message.event === 'follower_update') {
+					}
 				}
 			
 				try {
-					sendDataP2P(message); 
+				  // Only send data to P2P for non-hype targets
+				  const peersToSend = [];
+				  for (const UUID in connectedPeers) {
+					if (connectedPeers[UUID] !== "hype") {
+					  peersToSend.push(UUID);
+					}
+				  }
+				  
+				  if (peersToSend.length > 0) {
+					for (const UUID of peersToSend) {
+					  iframe.contentWindow.postMessage({ sendData: { overlayNinja: message }, type: "pcs", UUID: UUID }, "*");
+					}
+				  }
 				} catch (e) {
-					console.error(e);
+				  console.error(e);
 				}
 				return true;
 			}
@@ -6031,81 +6118,318 @@ function sendDataP2P(data, UUID = false) {
 		}
 	}
 }
-
+/////
 var users = {};
 var hype = {};
+var viewerCounts = {};
+var lastUpdated = {};
 var hypeInterval = null;
-function processHype(data) {
-	if (!settings.hypemode) {
-		return;
-	}
-	if (!hypeInterval) {
-		hypeInterval = setInterval(processHype2, 10000);
-	}
-	if (users[data.type]) {
-		if (!users[data.type][data.chatname]) {
-			if (hype[data.type]) {
-				hype[data.type] += 1;
-			} else {
-				hype[data.type] = 1;
-			}
-		}
-		users[data.type][data.chatname] = Date.now() + 60000 * 5;
-	} else {
-		var site = {};
-		site[data.chatname] = Date.now() + 60000 * 5;
-		users[data.type] = site;
-		hype[data.type] = 1;
-	}
-	sendHypeP2P(hype);
+
+function clearAndRefreshHypeSources() {
+  // Don't do anything if hype mode is disabled
+  if (!settings.hypemode) return;
+
+  // Reset data structures
+  users = {};
+  hype = {};
+  viewerCounts = {};
+  lastUpdated = {}; // Important to clear this too
+
+  // Create a clear action object
+  let clearAction = {
+    action: "refreshSources",
+    combineAll: settings.hypeCombineAll,
+    combineYouTube: settings.hypeCombineYouTube,
+    combineSameType: settings.hypeCombineSameType,
+    timestamp: Date.now()
+  };
+
+  // Add uniqueId if set
+  if (settings.hypeUniqueId) {
+    clearAction.uniqueId = settings.hypeUniqueId;
+  }
+
+  // Send the clear action to hype.html
+  sendHypeP2P({ clear: clearAction });
+
+  // Force an immediate update with the now cleared data and new settings
+  processHype2();
 }
+
+function processHype(data) { // data here should be a chat message
+    if (!settings.hypemode) {
+        return;
+    }
+
+    if (!hypeInterval) {
+        hypeInterval = setInterval(processHype2, 10000);
+    }
+
+    // Handle viewer count updates separately
+    if (data.event === 'viewer_update' && data.meta) {
+        updateViewerCount(data); // This updates viewers and sends combined data via its own path
+        // return; // Return here so it doesn't process as a chatter
+    }
+	
+    // If it's not a viewer_update, proceed to process as a chatter
+    const sourceType = getEffectiveSourceType(data);
+	
+    let newSource = false;
+	
+    if (users[sourceType] && data.chatname) { // Site exists
+        if (!users[sourceType][data.chatname]) { // New user for this site
+            if (hype[sourceType]) {
+                hype[sourceType] += 1;
+            } else {
+                hype[sourceType] = 1; // If hype[sourceType] is undefined, it becomes 1
+				newSource = true;
+            }
+        }
+        users[sourceType][data.chatname] = Date.now() + 60000 * 5;
+    } else if (data.chatname){ // New site
+        var site = {};
+        site[data.chatname] = Date.now() + 60000 * 5;
+        users[sourceType] = site;
+        hype[sourceType] = 1;
+		newSource = true;
+    } else if (!(sourceType in hype)){
+		hype[sourceType] = 0;
+		newSource = true;
+	}
+    
+	if (newSource){
+		const combinedData = combineHypeData();
+		sendHypeP2P(combinedData);
+	}
+}
+
+
+function updateViewerCount(data) {
+    // Store the viewer count with the tab ID
+    const sourceKey = data.tid ? `${data.type}-${data.tid}` : data.type;
+    viewerCounts[sourceKey] = data.meta;
+    lastUpdated[sourceKey] = Date.now();
+    
+    // Combine and send the updated counts
+    const combinedData = combineHypeData();
+    sendHypeP2P(combinedData);
+}
+
+function getEffectiveSourceType(data) {
+    // Apply source combination logic
+    if (settings.hypeCombineAll) {
+        return "global";
+    }
+    
+    if (settings.hypeCombineYouTube && (data.type === "youtube" || data.type === "youtubeshorts")) {
+        return "youtube-combined";
+    }
+    
+    if (settings.hypeCombineSameType && data.tid) {
+        // When combining same types, we return just the type without the tab ID
+        return data.type;
+    }
+    
+    // Default: return type-tabid as the unique source identifier
+    return data.tid ? `${data.type}-${data.tid}` : data.type;
+}
+
 function processHype2() {
-	hype = {};
-	if (!settings.hypemode) {
-		clearInterval(hypeInterval);
-		// users = {};
-	} else {
-		var now = Date.now();
-		var sites = Object.keys(users);
-		for (var i = 0; i < sites.length; i++) {
-			var user = Object.keys(users[sites[i]]);
-			if (user.length) {
-				hype[sites[i]] = 0;
-				for (var j = 0; j < user.length; j++) {
-					if (users[sites[i]][user[j]] < now) {
-						delete users[sites[i]][user[j]];
-					} else {
-						hype[sites[i]] += 1;
-					}
+    if (!settings.hypemode) {
+        if (hypeInterval) clearInterval(hypeInterval);
+        hypeInterval = null;
+        return;
+    }
+
+    hype = {}; // Reset active chatters counts for this interval's calculation
+    var now = Date.now();
+
+    if (typeof metaDataStore !== 'undefined' && metaDataStore.forEach) {
+		metaDataStore.forEach((tabData, tabId) => {
+			if (tabData && tabData.type) {
+				const rawSourceKey = tabData.tid ? `${tabData.type}-${tabData.tid}` : tabData.type;
+				if (viewerCounts[rawSourceKey] === undefined) {
+					viewerCounts[rawSourceKey] = 0; // Initialize with 0 viewers
+				}
+				if (lastUpdated[rawSourceKey] === undefined) {
+					lastUpdated[rawSourceKey] = now;
 				}
 			}
-		}
+		});
 	}
-	sendHypeP2P(hype);
+
+    // Track sources with actual viewer data (>0)
+    var sourcesWithActualViewers = {};
+    for (const sourceKey in viewerCounts) {
+        if (viewerCounts[sourceKey] > 0) {
+            sourcesWithActualViewers[sourceKey] = true;
+        }
+    }
+
+    // Clean up inactive sources
+    if (settings.hypeAutoCleanup) {
+        for (const sourceKey in lastUpdated) {
+            let shouldDelete = false;
+            if (sourcesWithActualViewers[sourceKey] && (now - lastUpdated[sourceKey] > 33000)) { // Has actual viewers, short timeout
+                shouldDelete = true;
+            } else if (!sourcesWithActualViewers[sourceKey] && (now - lastUpdated[sourceKey] > 300000)) { // No actual viewers (or just chatters), long timeout
+                shouldDelete = true;
+            }
+
+            if (shouldDelete) {
+                delete viewerCounts[sourceKey];
+                delete lastUpdated[sourceKey];
+                // Also remove from users if this source is only tracked via lastUpdated/viewerCounts
+                // Note: `users` are cleaned based on their own chatter activity timeout.
+                // If a sourceKey from lastUpdated/viewerCounts represents an effective type (e.g. "global"),
+                // be careful deleting from `users` which might use different keys.
+            }
+        }
+    }
+
+    // Process active chatters from `users`
+    var currentActiveUsersPerSource = {}; // Temporary object to build fresh `hype` counts
+    var activeUsersSites = Object.keys(users);
+    for (var i = 0; i < activeUsersSites.length; i++) {
+        const sourceName = activeUsersSites[i];
+        var chatterNames = Object.keys(users[sourceName]);
+        let liveChattersForThisSource = 0;
+        let hasLiveChatters = false;
+        for (var j = 0; j < chatterNames.length; j++) {
+            const chatterName = chatterNames[j];
+            if (users[sourceName][chatterName] < now) { // User expired
+                delete users[sourceName][chatterName];
+            } else {
+                liveChattersForThisSource++;
+                hasLiveChatters = true;
+            }
+        }
+        if (hasLiveChatters) {
+            currentActiveUsersPerSource[sourceName] = liveChattersForThisSource;
+        } else {
+            // If no live chatters, remove the source from users if it's empty
+            if (Object.keys(users[sourceName]).length === 0) {
+                delete users[sourceName];
+            }
+        }
+    }
+    hype = currentActiveUsersPerSource; // `hype` is now rebuilt
+
+    const combinedData = combineHypeData();
+    sendHypeP2P(combinedData);
+}
+
+function combineHypeData() {
+    const result = { chatters: {}, viewers: {}, combined: {} };
+    for (const sourceType in hype) { // If hype[sourceType] was not set (0 chatters), it's not in this loop.
+        result.chatters[sourceType] = hype[sourceType];
+        if (!result.combined[sourceType]) result.combined[sourceType] = { chatters: 0, viewers: 0 };
+        result.combined[sourceType].chatters = hype[sourceType];
+    }
+
+    // Copy active chatters data
+    for (const sourceType in hype) { // `hype` here is from processHype2's calculation
+        result.chatters[sourceType] = hype[sourceType];
+        // Initialize combined structure for this source
+        if (!result.combined[sourceType]) result.combined[sourceType] = { chatters: 0, viewers: 0};
+        result.combined[sourceType].chatters = hype[sourceType];
+    }
+    
+    // Process viewer counts with combination logic
+    if (settings.hypeCombineAll) {
+        let totalViewers = 0;
+        for (const sourceKey in viewerCounts) {
+            totalViewers += viewerCounts[sourceKey];
+        }
+        result.viewers["global"] = totalViewers;
+        if (result.combined["global"]) {
+            result.combined["global"].viewers = totalViewers;
+        } else {
+            result.combined["global"] = { chatters: 0, viewers: totalViewers };
+        }
+    } else if (settings.hypeCombineYouTube) {
+        // Combine YouTube and YouTube Shorts
+        let youtubeViewers = 0;
+        for (const sourceKey in viewerCounts) {
+            if (sourceKey.startsWith("youtube-") || sourceKey.startsWith("youtubeshorts-") || 
+                sourceKey === "youtube" || sourceKey === "youtubeshorts") {
+                youtubeViewers += viewerCounts[sourceKey];
+            } else {
+                result.viewers[sourceKey] = viewerCounts[sourceKey];
+                if (result.combined[sourceKey]) {
+                    result.combined[sourceKey].viewers = viewerCounts[sourceKey];
+                } else {
+                    result.combined[sourceKey] = { chatters: 0, viewers: viewerCounts[sourceKey] };
+                }
+            }
+        }
+        result.viewers["youtube-combined"] = youtubeViewers;
+        if (result.combined["youtube-combined"]) {
+            result.combined["youtube-combined"].viewers = youtubeViewers;
+        } else {
+            result.combined["youtube-combined"] = { chatters: 0, viewers: youtubeViewers };
+        }
+    } else if (settings.hypeCombineSameType) {
+        // Combine by type
+        const typeViewers = {};
+        for (const sourceKey in viewerCounts) {
+            const type = sourceKey.split('-')[0];
+            if (!typeViewers[type]) {
+                typeViewers[type] = 0;
+            }
+            typeViewers[type] += viewerCounts[sourceKey];
+        }
+        
+        for (const type in typeViewers) {
+            result.viewers[type] = typeViewers[type];
+            if (result.combined[type]) {
+                result.combined[type].viewers = typeViewers[type];
+            } else {
+                result.combined[type] = { chatters: 0, viewers: typeViewers[type] };
+            }
+        }
+    } else {
+        // No combination, use raw data
+        for (const sourceKey in viewerCounts) {
+            result.viewers[sourceKey] = viewerCounts[sourceKey];
+            if (result.combined[sourceKey]) {
+                result.combined[sourceKey].viewers = viewerCounts[sourceKey];
+            } else {
+                result.combined[sourceKey] = { chatters: 0, viewers: viewerCounts[sourceKey] };
+            }
+        }
+    }
+    
+    // Add unique ID if specified
+    if (settings.hypeUniqueId) {
+        result.uniqueId = settings.hypeUniqueId;
+    }
+    
+    return result;
 }
 function sendHypeP2P(data, uid = null) {
-	// function to send data to the DOCk via the VDO.Ninja API
-
-	if (iframe) {
-		if (!uid) {
-			var keys = Object.keys(connectedPeers);
-			for (var i = 0; i < keys.length; i++) {
-				try {
-					var UUID = keys[i];
-					var label = connectedPeers[UUID];
-					if (label === "hype") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { hype: data } }, type: "pcs", UUID: UUID }, "*");
-					}
-				} catch (e) {}
-			}
-		} else {
-			var label = connectedPeers[uid];
-			if (label === "hype") {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { hype: data } }, type: "pcs", UUID: uid }, "*");
-			}
-		}
-	}
+  // function to send data to the DOCK via the VDO.Ninja API
+  if (iframe) {
+    if (!uid) {
+      var keys = Object.keys(connectedPeers);
+      for (var i = 0; i < keys.length; i++) {
+        try {
+          var UUID = keys[i];
+          var label = connectedPeers[UUID];
+          if (label === "hype") {
+            iframe.contentWindow.postMessage({ sendData: { overlayNinja: { hype: data } }, type: "pcs", UUID: UUID }, "*");
+          }
+        } catch (e) {}
+      }
+    } else {
+      var label = connectedPeers[uid];
+      if (label === "hype") {
+        iframe.contentWindow.postMessage({ sendData: { overlayNinja: { hype: data } }, type: "pcs", UUID: uid }, "*");
+      }
+    }
+  }
 }
+//////
 function sendTargetP2P(data, target) {
 	// function to send data to the DOCk via the VDO.Ninja API
 
@@ -7960,9 +8284,16 @@ async function applyBotActions(data, tab = false) {
 		if (data.host && settings.hidehostsext) {
 			return false;
 		}
+		
+		if (data.host && data.reflection && data.nohostreflections){
+			return false;
+		}
+		
 		if (data.host && data.chatname && settings.hidehostnamesext) {
 			data.chatname = "";
 		}
+		
+
 		
 		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {

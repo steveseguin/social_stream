@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actions Overlay - Social Stream Ninja</title>
+    <style>
+		body, html {
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+			background-color: transparent; /* Already set to transparent */
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			font-family: Arial, sans-serif;
+		}
+
+        .fullscreen-media-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Optional: dim background */
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+		
+		#status-message {
+			color: rgba(204, 204, 204, 0.5); /* Make semi-transparent */
+			font-size: 18px;
+			background-color: transparent;
+		}
+
+		.fullscreen-media-container {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: transparent; /* Changed from rgba(0, 0, 0, 0.8) to transparent */
+			display: none; /* Hidden by default */
+			justify-content: center;
+			align-items: center;
+			z-index: 9999;
+			overflow: hidden;
+		}
+
+		.fullscreen-media-container iframe {
+			width: 100%;
+			height: 100%;
+			border: none;
+			overflow: hidden;
+			background-color: transparent;
+		}
+
+		.fullscreen-media-container img {
+			max-width: 95%;
+			max-height: 95%;
+			border: none;
+		}
+		}
+    </style>
+</head>
+<body>
+    <div id="status-message"></div>
+    <div id="fullscreen-media-container" class="fullscreen-media-container"></div>
+
+    <script>
+        window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
+            console.error(errorMsg);
+            console.error(lineNumber);
+            console.error("Unhandled Error occurred");
+            return false;
+        };
+
+        function getById(id) {
+            var el = document.getElementById(id);
+            if (!el) {
+                el = document.createElement("span");
+            }
+            return el;
+        }
+
+        (function (w) {
+            w.URLSearchParams = w.URLSearchParams || function (searchString) {
+                var self = this;
+                self.searchString = searchString;
+                self.get = function (name) {
+                    var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(self.searchString);
+                    if (results == null) {
+                        return null;
+                    } else {
+                        return decodeURI(results[1]) || 0;
+                    }
+                };
+            };
+        })(window);
+
+        var urlParams = new URLSearchParams(window.location.search);
+        var iframe = null;
+        var roomID = "test";
+        var password = "false";
+        var mediaContainer = document.getElementById('fullscreen-media-container');
+        var statusMessage = document.getElementById('status-message');
+        var obsStudio = null;
+        var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Attempt to connect to OBS Studio API if available
+        if (window.obsstudio) {
+            obsStudio = window.obsstudio;
+            console.log('OBS Studio API found.');
+            statusMessage.textContent = 'Actions Page Loaded. OBS API Connected. Waiting for events...';
+        } else {
+            console.warn('OBS Studio API (window.obsstudio) not found.');
+        }
+
+        // Get session/room ID from URL parameters
+        if (urlParams.has("session")) {
+            roomID = urlParams.get("session");
+        } else if (urlParams.has("s")) {
+            roomID = urlParams.get("s");
+        } else if (urlParams.has("id")) {
+            roomID = urlParams.get("id");
+        } else if (window.location.protocol == "file:") {
+            roomID = prompt("Enter your session ID here, or add it to the URL.");
+            if (roomID) {
+                var href = window.location.href;
+                var arr = href.split('?');
+                var newurl;
+                if (arr.length > 1 && arr[1] !== '') {
+                    newurl = href + '&session=' + roomID;
+                } else {
+                    newurl = href + '?session=' + roomID;
+                }
+                window.history.pushState({path: newurl.toString()}, '', newurl.toString());
+            } else {
+                alert("You need to provide your extension's session ID for this page to work");
+            }
+        } else {
+            window.location.href = "https://github.com/steveseguin/social_stream#readme";
+        }
+
+        // Get password from URL parameters
+        if (urlParams.has("password")) {
+            password = urlParams.get("password") || "false";
+        }
+
+        // Fix for electron dragging
+        try {
+            if (window.electronApi) {
+                document.body.style.width = "95%";
+                setTimeout(function() {
+                    document.body.style.width = "100%";
+                }, 1000);
+
+                setTimeout(function() {
+                    document.body.style.width = "98%";
+                }, 2000);
+
+                setTimeout(function() {
+                    document.body.style.width = "100%";
+                }, 5000);
+            }
+        } catch(e) {}
+
+        // Load CSS if provided
+        if (urlParams.has('css')) {
+            var cssURL = urlParams.get('css');
+            cssURL = decodeURI(cssURL);
+
+            var cssStylesheet = document.createElement('link');
+            cssStylesheet.rel = 'stylesheet';
+            cssStylesheet.type = 'text/css';
+            cssStylesheet.media = 'screen';
+            cssStylesheet.href = cssURL;
+            document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
+        }
+
+        // Load Base64 CSS if provided
+        if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
+            try {
+                var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
+                var css = decodeURIComponent(atob(base64Css));
+                var cssStyleSheet = document.createElement("style");
+                cssStyleSheet.innerText = css;
+                document.querySelector("head").appendChild(cssStyleSheet);
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        // Load JavaScript if provided
+        if (urlParams.has('js')) {
+            console.warn("Third-party JavaScript has been injected into the code. Security cannot be ensured.");
+            var jsURL = urlParams.get('js');
+            jsURL = decodeURI(jsURL);
+            console.log(jsURL);
+            var externalJavaascript = document.createElement('script');
+            externalJavaascript.type = 'text/javascript';
+            externalJavaascript.crossorigin = 'anonymous';
+            externalJavaascript.src = jsURL;
+            externalJavaascript.onerror = function() {
+                console.warn("Third-party JavaScript failed to load");
+            };
+            externalJavaascript.onload = function() {
+                console.log("Third-party JavaScript loaded");
+            };
+            document.head.appendChild(externalJavaascript);
+        }
+
+        // WebSocket connection setup
+        var conCon = 1;
+        var socketserver = false;
+        var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension";
+
+        function setupSocket() {
+            socketserver.onclose = function() {
+                setTimeout(function() {
+                    conCon += 1;
+                    socketserver = new WebSocket(serverURL);
+                    setupSocket();
+                }, 100 * conCon);
+            };
+            socketserver.onopen = function() {
+                conCon = 1;
+                socketserver.send(JSON.stringify({"join": roomID, "out": 5, "in": 6}));
+            };
+            socketserver.addEventListener('message', function(event) {
+                var resp = false;
+                if (event.data) {
+                    try {
+                        var data = JSON.parse(event.data);
+                        processInput(data);
+                        if (data.get) {
+                            var ret = {};
+                            ret.callback = {};
+                            ret.callback.get = data.get;
+                            ret.callback.result = true;
+                            socketserver.send(JSON.stringify(ret));
+                        }
+                    } catch(e) {
+                        console.error("Error processing WebSocket message:", e);
+                    }
+                }
+            });
+        }
+
+        // Setup WebSocket if server parameter is provided
+        if (urlParams.has("server") || urlParams.has("server2")) {
+            serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
+            socketserver = new WebSocket(serverURL);
+            setupSocket();
+        }
+
+		function processInput(data) {
+			console.log("Processing input:", data);
+			
+			if (data.actionType) {
+				// Handle direct action object
+				handleAction(data);
+			} else if (data.action) {
+				handleAction(data.action);
+			} else if (data.content && data.content.action) {
+				handleAction(data.content.action);
+			} else if (data.overlayNinja) {
+				handleAction(data.overlayNinja);
+			} else if (data.dataReceived && data.dataReceived.overlayNinja) {
+				// Handle WebRTC data channel format
+				processInput(data.dataReceived.overlayNinja);
+			}
+		}
+
+        // Function to handle different action types
+        function handleAction(payload) {
+            if (!payload || !payload.actionType) {
+                console.warn("Received an empty or invalid payload:", payload);
+                return;
+            }
+
+            statusMessage.style.display = 'none'; // Hide status message when an action is received
+
+            switch (payload.actionType) {
+                case 'play_media':
+                    if (payload.url) {
+                        playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration || 10000);
+                    } else {
+                        console.warn("Play media action received without a URL.");
+                    }
+                    break;
+                    
+                case 'obs_scene_change':
+                    if (obsStudio && payload.sceneName) {
+                        console.log(`Attempting to change OBS scene to: ${payload.sceneName}`);
+                        obsStudio.setCurrentScene(payload.sceneName)
+                            .then(() => console.log(`OBS Scene changed to ${payload.sceneName}`))
+                            .catch(err => console.error("Error changing OBS scene:", err));
+                    } else if (!obsStudio) {
+                        console.warn("OBS API not available to change scene.");
+                    } else {
+                        console.warn("OBS scene change action received without a scene name.");
+                    }
+                    break;
+                    
+                case 'play_audio':
+                    if (payload.audioUrl) {
+                        playAudio(payload.audioUrl, payload.volume);
+                    } else {
+                        console.warn("Play audio action received without an audio URL.");
+                    }
+                    break;
+                    
+                default:
+                    console.warn("Unknown action type received:", payload.actionType);
+            }
+        }
+
+        // Function to play media in fullscreen
+		function playMediaFullscreen(url, mediaType, duration = 10000) {
+			mediaContainer.innerHTML = ''; // Clear previous media
+
+			let mediaElement;
+			if (mediaType === 'image') {
+				mediaElement = document.createElement('img');
+				mediaElement.src = url;
+			} else { // Default to iframe for videos/gifs
+				mediaElement = document.createElement('iframe');
+				mediaElement.src = url;
+				mediaElement.setAttribute('allow', 'autoplay; fullscreen');
+				mediaElement.setAttribute('frameborder', '0');
+				mediaElement.setAttribute('allowtransparency', 'true');
+				mediaElement.style.width = '100%';
+				mediaElement.style.height = '100%';
+				mediaElement.style.overflow = 'hidden';
+				mediaElement.style.backgroundColor = 'transparent';
+			}
+			
+			mediaContainer.appendChild(mediaElement);
+			mediaContainer.style.display = 'flex';
+
+			// Hide after specified duration
+			setTimeout(() => {
+				mediaContainer.style.display = 'none';
+				mediaContainer.innerHTML = ''; // Clean up
+				statusMessage.style.display = 'block'; // Show status message again
+			}, duration);
+		}
+
+        // Function to play audio
+        async function playAudio(audioUrl, volume = 1.0) {
+            try {
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                
+                const audio = new Audio(audioUrl);
+                audio.volume = parseFloat(volume);
+                await audio.play();
+                console.log("Playing audio:", audioUrl);
+            } catch (e) {
+                console.error("Error playing audio:", e);
+            }
+        }
+
+        // Create iframe for receiving WebRTC data channel messages
+        iframe = document.createElement("iframe");
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + 
+            "&solo&view=" + roomID + "&novideo&noaudio&label=actions&cleanoutput&room=" + roomID;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+
+        // Listen for messages from the iframe
+        var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+        var eventer = window[eventMethod];
+        var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+		eventer(messageEvent, function(e) {
+			// Check if the message is from our iframe
+			if (e.source != iframe.contentWindow) return;
+			
+			// Process data from the WebRTC data channel
+			if (e.data && e.data.dataReceived) {
+				if (e.data.dataReceived.overlayNinja) {
+					processInput(e.data.dataReceived.overlayNinja);
+				} else {
+					// Handle direct action object in dataReceived
+					processInput(e.data.dataReceived);
+				}
+			} else if (e.data && e.data.actionType) {
+				// Handle direct action object
+				processInput(e.data);
+			}
+		});
+        // Handle audio context for browsers that require user interaction
+        document.addEventListener('click', () => {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    console.log('AudioContext resumed successfully');
+                }).catch(error => {
+                    console.error('Failed to resume AudioContext:', error);
+                });
+            }
+        });
+		
+		function testAction(actionData) {
+			processInput(actionData);
+		}
+
+		window.testAction = testAction;
+
+        console.log("Actions page initialized with session ID:", roomID);
+    </script>
+</body>
+</html>
