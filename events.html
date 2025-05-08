@@ -247,11 +247,12 @@ body.light-mode .no-events {
 <script src="currency.js"></script>
 <script>
     var urlParams = new URLSearchParams(window.location.search);
-    var roomID = "iWWnKL28tQ";
+    var roomID = false;
     
     if (urlParams.has("session")){
         roomID = urlParams.get("session");
     }
+	
     var password = "false";
     var featuredMode = false;
     
@@ -265,8 +266,8 @@ body.light-mode .no-events {
 
 	// Add parameters for display options
 	var donationsOnly = urlParams.has("donationsonly");
-	var showUSD = urlParams.has("showusd") ? urlParams.get("showusd") !== "false" : true;
-	var highlightValue = urlParams.has("highlightvalue") ? urlParams.get("highlightvalue") !== "false" : true;
+	var showUSD = urlParams.has("currency") ? true : false;
+	var highlightValue = urlParams.has("highlightvalue") ? true : false;
 	var lightMode = urlParams.has("lightmode");
 	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 100;
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
@@ -351,7 +352,7 @@ body.light-mode .no-events {
 		
 		// Calculate USD value if donation
 		let usdValue = 0;
-		if (data.hasDonation && showUSD) {
+		if (data.hasDonation) {
 			usdValue = convertToUSD(data.hasDonation, data.type);
 			
 			// Add value-based class if highlighting is enabled
@@ -361,6 +362,9 @@ body.light-mode .no-events {
 				} else if (usdValue >= 10) {
 					messageDiv.classList.add('medium-value');
 				}
+			}
+			if (!showUSD){
+				usdValue = 0;
 			}
 		}
 		
@@ -393,19 +397,22 @@ body.light-mode .no-events {
     
     // The IFrame allows for peer to peer mode; used by default
     var iframe = document.createElement("iframe");
-    if (featuredMode){
-        iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
-    } else {
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
-    }
-    iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
-    document.body.appendChild(iframe);
-    window.addEventListener("message", function (e) {
-        if (e.source != iframe.contentWindow) return;
-        if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
-            addMessageToOverlay(e.data.dataReceived.overlayNinja);
-        }
-    });
+	if (roomID){
+		if (featuredMode){
+			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+		} else {
+			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+		}
+		iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+	
+		document.body.appendChild(iframe);
+		window.addEventListener("message", function (e) {
+			if (e.source != iframe.contentWindow) return;
+			if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+				addMessageToOverlay(e.data.dataReceived.overlayNinja);
+			}
+		});
+	}
     
     // The Websocket mode as alternative
     var conCon = 1;
@@ -422,6 +429,7 @@ body.light-mode .no-events {
         };
         socketserver.onopen = function (){
             conCon = 1;
+			
             socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
         };
         socketserver.addEventListener('message', function (event) {
@@ -442,8 +450,10 @@ body.light-mode .no-events {
     
     if (urlParams.has("server") || urlParams.has("server2")){
         serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
-        socketserver = new WebSocket(serverURL);
-        setupSocket();
+		if (roomID){
+			socketserver = new WebSocket(serverURL);
+			setupSocket();
+		}
     }
 </script>
 </body>
