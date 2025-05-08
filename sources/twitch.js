@@ -561,6 +561,9 @@
 		} else if (!chatmessage && !hasDonation && !username) {
 			return;
 		}
+		
+		var originalMessage = "";
+	    var ReplyMessage = "";
 
 		try {
 			if (settings.replyingto && chatmessage) {
@@ -580,6 +583,8 @@
 				}
 
 				if (replyMessage) {
+					ReplyMessage = replyMessage;
+					originalMessage = chatmessage;
 					if (settings.textonlymode) {
 						chatmessage = replyMessage + ": " + chatmessage;
 					} else {
@@ -635,6 +640,14 @@
 		}
 
 		var data = {};
+		
+		if (ReplyMessage){
+			data.initial = ReplyMessage;
+		}
+	    if (originalMessage){
+			data.reply = originalMessage;
+		}
+		
 		data.chatname = displayName;
 		data.username = username;
 		data.chatbadges = chatbadges;

@@ -236,11 +236,18 @@
 		  } catch(e){}
 	  }
 	  
+	  if (!chatmessage){return;}
+	  
+	  var originalMessage = "";
+	  var replyMessage = "";
+	  
 	  if (settings.replyingto){
 		  let reply = ele.querySelector(".chat-entry");
 		  if (reply?.children.length == 2){
 				reply = escapeHtml(reply.children[0].textContent);
 				if (reply){
+					replyMessage = reply;
+					originalMessage = chatmessage;
 					if (settings.textonlymode) {
 						chatmessage = reply + ": " + chatmessage;
 					} else {
@@ -251,7 +258,7 @@
 	  }
 	  
 	  
-	  if (!chatmessage){return;}
+	  
 	  
 	  
 	  ele.querySelector(".chat-message-identity").querySelectorAll(".badge-tooltip img[src], .badge-tooltip svg, .base-badge img[src], .base-badge svg, .badge img[src], .badge svg").forEach(badge=>{
@@ -286,6 +293,14 @@
 	  }
 	  
 	  var data = {};
+	  
+	  if (replyMessage){
+			data.initial = replyMessage;
+		}
+	   if (originalMessage){
+			data.reply = originalMessage;
+		}
+		
 	  data.chatname = chatname;
 	  data.chatbadges = chatbadges;
 	  data.nameColor = nameColor;

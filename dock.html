@@ -3947,6 +3947,11 @@
 			}
 			
 			
+			var DoNotShowInitialReply = false;
+			if (urlParams.has("stripreplyto")) {
+				DoNotShowInitialReply = true;
+			}
+			
 			var stripDonationData = false;
 			if (urlParams.has("stripdonations")) {
 				stripDonationData = true;
@@ -7300,6 +7305,10 @@
 					
 					if (data.message && !data.chatmessage){
 						data.chatmessage = data.message;
+					}
+					
+					if (DoNotShowInitialReply && data.reply){
+						data.chatmessage = data.reply;
 					}
 
 					if (data.chatmessage && data.chatmessage.startsWith("!")) {
