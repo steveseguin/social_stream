@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shop the Stream Overlay</title>
+    <style>
+        :root {
+            --background-color: rgba(0, 0, 0, 0.7);
+            --text-color: white;
+            --link-color: #a0c4ff;
+            --border-color: #555;
+            --item-bg-color: rgba(255, 255, 255, 0.1);
+            --description-color: #ccc;
+            --disclosure-color: #aaa;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: transparent;
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .product-list-container {
+            background-color: var(--background-color);
+            border-radius: 8px;
+            padding: 15px;
+            max-width: 350px;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-list-container.visible {
+            display: block;
+            opacity: 1;
+        }
+
+        .product-list-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        .product-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: var(--item-bg-color);
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .product-item:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .product-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            margin-right: 10px;
+            border-radius: 4px;
+        }
+
+        .product-info {
+            flex-grow: 1;
+        }
+
+        .product-info a {
+            text-decoration: none;
+            color: var(--link-color);
+            font-weight: bold;
+        }
+
+        .product-info a:hover {
+            text-decoration: underline;
+        }
+
+        .product-description {
+            font-size: 0.8em;
+            color: var(--description-color);
+            margin-top: 3px;
+        }
+
+        .amazon-disclosure {
+            font-size: 0.7em;
+            color: var(--disclosure-color);
+            text-align: center;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 10px;
+        }
+
+        .product-qr {
+            margin-left: 10px;
+        }
+
+        .product-qr img {
+            width: 60px;
+            height: 60px;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-align: center;
+            line-height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .overlay-controls {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            display: flex;
+        }
+
+        .overlay-control-button {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            margin-left: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="product-list-container" id="productListContainer">
+    <div class="close-button" id="closeButton">✕</div>
+    <div class="amazon-disclosure">
+        As an Amazon Associate I earn from qualifying purchases. (Paid Link)
+    </div>
+</div>
+
+<div class="overlay-controls" id="debugControls" style="display: none;">
+    <button class="overlay-control-button" id="showStreamingSetup">Show Setup</button>
+    <button class="overlay-control-button" id="showGames">Show Games</button>
+    <button class="overlay-control-button" id="hideOverlay">Hide</button>
+</div>
+
+<script>
+const config = {
+    sessionId: null,
+    password: null,
+    inChannel: 1,
+    outChannel: 1,
+    socket: null,
+    hideTimeout: null,
+    hideDelay: 60000, // 60 seconds
+    autoHide: true,
+    debug: false,
+    currentList: null
+};
+
+function getUrlParams() {
+    const params = {};
+    window.location.search.substring(1).split('&').forEach(item => {
+        const [key, value] = item.split('=');
+        if (key && value) params[decodeURIComponent(key)] = decodeURIComponent(value);
+    });
+    return params;
+}
+
+function generateQRCode(url) {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(url)}`;
+}
+
+function renderProductList(listData) {
+    if (!listData || !listData.products || !listData.products.length) return;
+    
+    const container = document.getElementById('productListContainer');
+    let titleElement = container.querySelector('.product-list-title');
+    const items = container.querySelectorAll('.product-item');
+    
+    items.forEach(item => item.remove());
+    
+    if (titleElement) {
+        titleElement.textContent = listData.title;
+    } else {
+        titleElement = document.createElement('div');
+        titleElement.className = 'product-list-title';
+        titleElement.textContent = listData.title;
+        container.insertBefore(titleElement, container.firstChild);
+    }
+    
+    let productItemsHtml = '';
+    
+    listData.products.forEach(product => {
+        const qrCodeUrl = generateQRCode(product.url);
+        
+        productItemsHtml += `
+            <div class="product-item">
+                ${product.imageUrl ? `<img src="${product.imageUrl}" alt="${product.name}">` : ''}
+                <div class="product-info">
+                    <a href="${product.url}" target="_blank">${product.name}</a>
+                    ${product.description ? `<div class="product-description">${product.description}</div>` : ''}
+                </div>
+                <div class="product-qr">
+                    <img src="${qrCodeUrl}" alt="QR Code">
+                </div>
+            </div>
+        `;
+    });
+    
+    const disclosureDiv = container.querySelector('.amazon-disclosure');
+    disclosureDiv.insertAdjacentHTML('beforebegin', productItemsHtml);
+    
+    container.classList.add('visible');
+    
+    if (config.autoHide) {
+        clearTimeout(config.hideTimeout);
+        config.hideTimeout = setTimeout(() => {
+            hideProductList();
+        }, config.hideDelay);
+    }
+    
+    config.currentList = listData;
+}
+
+function hideProductList() {
+    const container = document.getElementById('productListContainer');
+    container.classList.remove('visible');
+    clearTimeout(config.hideTimeout);
+}
+
+function connectWebSocket() {
+    if (!config.sessionId) return;
+    
+    if (config.socket) {
+        config.socket.close();
+    }
+    
+    const wsUrl = `wss://io.socialstream.ninja/join/${config.sessionId}/${config.inChannel}/${config.outChannel}`;
+    config.socket = new WebSocket(wsUrl);
+    
+    config.socket.onopen = () => {
+        if (config.password) {
+            config.socket.send(JSON.stringify({ password: config.password }));
+        }
+        console.log('Connected to SSN WebSocket');
+    };
+    
+    config.socket.onmessage = (event) => {
+        try {
+            const message = JSON.parse(event.data);
+            
+            if (message.action === 'displayProductList' && message.value) {
+                renderProductList(message.value);
+            } else if (message.action === 'hideProductList') {
+                hideProductList();
+            }
+            
+            // Support for chat commands
+            if (message.chatmessage && message.type) {
+                handleChatCommand(message);
+            }
+        } catch (e) {
+            console.error('Error processing message:', e);
+        }
+    };
+    
+    config.socket.onerror = (error) => {
+        console.error('WebSocket Error:', error);
+    };
+    
+    config.socket.onclose = () => {
+        console.log('WebSocket Closed. Reconnecting in 5s...');
+        setTimeout(connectWebSocket, 5000);
+    };
+}
+
+function handleChatCommand(message) {
+    const cmd = message.chatmessage.trim().toLowerCase();
+    
+    // Simple command handler - can be expanded
+    if (cmd === '!gear' || cmd === '!setup') {
+        loadExampleList('streaming_setup');
+    } else if (cmd === '!games') {
+        loadExampleList('favorite_games');
+    } else if (cmd === '!cleargear' || cmd === '!hidegear') {
+        hideProductList();
+    }
+}
+
+function loadExampleList(listId) {
+    let exampleProductListData;
+    
+    if (listId === 'streaming_setup') {
+        exampleProductListData = {
+            title: "My Streaming Setup",
+            products: [
+                { name: "Pro Streamer Microphone X", url: "https://amazon.com/your-affiliate-link-mic", imageUrl: "https://via.placeholder.com/50/aabbcc?text=Mic", description: "Crystal clear audio." },
+                { name: "HD Webcam 1080p", url: "https://amazon.com/your-affiliate-link-webcam", imageUrl: "https://via.placeholder.com/50/ccbbaa?text=Webcam", description: "Sharp video quality." },
+                { name: "Comfort Gaming Chair Z", url: "https://amazon.com/your-affiliate-link-chair", imageUrl: "https://via.placeholder.com/50/bbaacc?text=Chair" }
+            ]
+        };
+    } else if (listId === 'favorite_games') {
+        exampleProductListData = {
+            title: "My Favorite Games",
+            products: [
+                { name: "Epic Adventure Game", url: "https://amazon.com/your-affiliate-link-game1", imageUrl: "https://via.placeholder.com/50/112233?text=Game1", description: "Hours of fun!" },
+                { name: "Indie Gem Puzzle", url: "https://amazon.com/your-affiliate-link-game2", imageUrl: "https://via.placeholder.com/50/332211?text=Game2" }
+            ]
+        };
+    } else {
+        return;
+    }
+    
+    renderProductList(exampleProductListData);
+}
+
+function setupEventListeners() {
+    const closeButton = document.getElementById('closeButton');
+    closeButton.addEventListener('click', hideProductList);
+    
+    // Debug control buttons
+    if (config.debug) {
+        const debugControls = document.getElementById('debugControls');
+        debugControls.style.display = 'flex';
+        
+        document.getElementById('showStreamingSetup').addEventListener('click', () => loadExampleList('streaming_setup'));
+        document.getElementById('showGames').addEventListener('click', () => loadExampleList('favorite_games'));
+        document.getElementById('hideOverlay').addEventListener('click', hideProductList);
+    }
+}
+
+function initOverlay() {
+    const params = getUrlParams();
+    
+    config.sessionId = params.sessionId || params.streamid || '';
+    config.password = params.password || '';
+    config.inChannel = parseInt(params.inChannel || params.in || '1');
+    config.outChannel = parseInt(params.outChannel || params.out || '1');
+    config.autoHide = params.autoHide !== 'false';
+    config.hideDelay = parseInt(params.hideDelay || params.delay || '60000');
+    config.debug = params.debug === 'true';
+    
+    setupEventListeners();
+    connectWebSocket();
+    
+    // Process initial listId if provided
+    if (params.listId) {
+        loadExampleList(params.listId);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initOverlay);
+</script>
+
+</body>
+</html>

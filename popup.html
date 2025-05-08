@@ -81,6 +81,7 @@
 		--ticker-color: #dd3334dd;
 		--poll-color: #a3ff3bdd;
         --download-link: lightblue;
+		--eventsdashboard-color: white;
     }
 }
 
@@ -682,6 +683,11 @@ h2.tipjar_title {
 h2.emotes_wall_title {
     color: var(--emotes-wall-color);
 }
+
+h2.events_dashboard_title {
+ color: var(--eventsdashboard-color);
+}
+
 h2.chatbot_wall_title {
     color: var(--chatbot-wall-color);
 }
@@ -4305,8 +4311,93 @@ input:checked + .slider:before {
                 </div>
             </div>
 			
+			<div class="link" title="Monitor donation events and activity in real-time">
+				<h2 class="events_dashboard_title">
+					<span data-translate="eventsdashboard">📊 Events Dashboard</span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#eventsdashboard-options" title="Jump to the events dashboard options."><span data-translate="options">[options]</span></a>
+				</h2>
+				<h3>
+					<span data-translate="when-enabled-donation-events">
+						A real-time dashboard displaying donations and stream events. Create a customized view for monitoring.
+					</span>
+				</h3>
+				<div id="eventsdashboard" data-raw="" class="eventsdashboard"><a href="" id="eventsdashboardlink"></a></div>
+			</div>
+			<a href="" id="eventsdashboard-options"></a>
 			
-			
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-eventsdashboard-options" />
+					<label class="collapsible-label" for="wrapper-eventsdashboard-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group events_dashboard">
+								<h3><span data-translate="source-selection">Sources to Monitor</span></h3>
+								
+								<div class="source-selection-container">
+									<div class="textInputContainer" style="width: 95%;">
+										<span data-translate="select-sources">Defaults to monitoring all if no source(s) selected:</span>
+										<input type="text" id="eventsSources" class="textInput" autocomplete="off" placeholder="youtube,twitch,tiktok,etc" data-textparam17="sources" data-textsetting="eventsSources" />
+									</div>
+								</div>
+								
+								<h3><span data-translate="display-options">Display Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param17="donationsonly" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="only-show-donations">💰 Only show donations (hide other events)</span>
+								</div>
+								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param17="showusd" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="show-usd-conversion">💵 Show USD conversion for all donations</span>
+								</div>
+								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param17="highlightvalue" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="highlight-high-value">✨ Highlight high-value donations</span>
+								</div>
+								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param17="lightmode" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="light-theme">☀️ Use light theme instead of dark</span>
+								</div>
+								
+								<div>
+									<span data-translate="max-events">Maximum events to display:</span>
+									<input type="number" id="maxEvents" class="numberInput" min="10" max="500" value="100" data-numberparam17="maxevents">
+								</div>
+								
+								<div>
+									<span data-translate="font-family">Font Family</span>
+									<select data-optionparam17="font">
+										<option value="Roboto" style="font-family: 'Roboto';">Roboto - abc123XYZ</option>
+										<option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
+										<option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
+									</select>
+								</div>
+								
+								<div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
+									<input type="text" id="googlefont17" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam17="googlefont" />
+									<label for="googlefont17"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 			
 
             <div class="link" title="This link will only show the inbound emotes, bouncing them around the full page.">
@@ -4820,7 +4911,7 @@ input:checked + .slider:before {
                 </h2>
 				<h3>
                     <span data-translate="giveaway-made">
-                       A giveaway made by a community member
+                       A giveaway made by a community member -- ⚠️ it's not yet considered "stable", so I may avoid this for now.
                     </span>
                 </h3>
                 <div id="giveaway" data-raw="" class="streaming_chat"><a href="" id="giveawaylink"></a></div>

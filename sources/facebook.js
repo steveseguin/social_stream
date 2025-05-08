@@ -228,19 +228,14 @@
 		
 		try {
 			if (settings.replyingto && msg && ele.previousSibling) {
-				try {
-					//console.log(ele);
-					replyMessage = getAllContentNodes(ele.previousSibling.querySelector("div>div>span>span"), true);
-					if (replyMessage) {
-						originalMessage = msg;
-						if (settings.textonlymode) {
-							msg = replyMessage + ": " + msg;
-						} else {
-							msg = "<i><small>" + replyMessage + ":&nbsp;</small></i> " + msg;
-						}
+				replyMessage = getAllContentNodes(ele.previousSibling.querySelector("div>div>span>span"), true);
+				if (replyMessage) {
+					originalMessage = msg;
+					if (settings.textonlymode) {
+						msg = replyMessage + ": " + msg;
+					} else {
+						msg = "<i><small>" + replyMessage + ":&nbsp;</small></i> " + msg;
 					}
-				} catch (e) {
-					//console.error(e);
 				}
 			}
 		} catch (e) {}
