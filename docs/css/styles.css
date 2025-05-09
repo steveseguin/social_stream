@@ -799,6 +799,7 @@ code {
         gap: 1rem;
         position: relative;
         z-index: 1002;
+		min-width: unset;
     }
     
     nav {
@@ -1298,4 +1299,25 @@ header .container {
     border-radius: 2rem;
     font-size: 1.2rem;
     font-weight: 600;
+}
+
+.github-link {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.github-link svg {
+    fill: currentColor;
+    transition: fill 0.3s ease;
+}
+
+.github-link:hover svg {
+    fill: #6ed5a1;
+}
+
+@media (max-width: 768px) {
+    .hide-mobile {
+        display: none;
+    }
 }
