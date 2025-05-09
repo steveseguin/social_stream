@@ -266,7 +266,7 @@
 		} catch (e) {
 		}
 
-		
+		var data = {};
 		data.chatname = name;
 		data.chatbadges = badges;
 		data.backgroundColor = "";
