@@ -587,7 +587,7 @@
 			}
 			
 			.allowfat .hl-message{
-				max-width: 300px;
+				max-width: 400px;
 				word-break: keep-all;
 				line-break: loose;
 				overflow-wrap: break-word;
@@ -3521,6 +3521,7 @@
 				
 				document.body.classList.remove("notcompactmode");
 				compactmode = true;
+				document.documentElement.style.setProperty("--padding-rows", "2px");
 				customNodeLimit = 15;
 			}
 
@@ -3905,7 +3906,7 @@
 				document.body.style.backgroundColor = "#" + chroma;
 			}
 
-			if (urlParams.has("compact") || urlParams.has("overlaymode")) {
+			if (!compactmode && urlParams.has("compact") || urlParams.has("overlaymode")) {
 				compactmode = true;
 				document.body.classList.remove("notcompactmode");
 				document.documentElement.style.setProperty("--padding-rows", "2px");
