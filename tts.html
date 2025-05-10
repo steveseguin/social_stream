@@ -44,6 +44,18 @@
         tr:nth-child(even) {
             background-color: #555;
         }
+        .test-btn {
+            background-color: #666;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .test-btn:hover {
+            background-color: #777;
+        }
     </style>
 </head>
 <body>
@@ -57,6 +69,7 @@
                 <th>Language</th>
                 <th>Local Service</th>
                 <th>Default</th>
+                <th>Test</th>
             </tr>
             <!-- Rows will be populated here -->
         </table>
@@ -66,29 +79,86 @@
         document.addEventListener('DOMContentLoaded', () => {
             const select = document.getElementById('languageSelect');
             const table = document.getElementById('voicesTable');
-
             speechSynthesis.onvoiceschanged = populateVoices;
         });
 		
 		function populateVoices() {
-		
 			const select = document.getElementById('languageSelect');
 			select.innerHTML = "";
 			const table = document.getElementById('voicesTable');
-			table.innerHTML = "<tr><th>Name</th><th>Language</th><th>Local Service</th><th>Default</th></tr>";
+			table.innerHTML = "<tr><th>Name</th><th>Language</th><th>Local Service</th><th>Default</th><th>Test</th></tr>";
 			const voices = speechSynthesis.getVoices();
-			voices.forEach(voice => {
+			voices.forEach((voice, index) => {
 				if (document.getElementById("asdf")){document.getElementById("asdf").remove();};
 				const option = document.createElement('option');
 				option.textContent = `${voice.name} (${voice.lang})`;
 				select.appendChild(option);
-
 				const row = table.insertRow();
 				row.insertCell().textContent = voice.name;
 				row.insertCell().textContent = voice.lang;
 				row.insertCell().textContent = voice.localService ? 'Yes' : 'No';
 				row.insertCell().textContent = voice.default ? 'Yes' : 'No';
+				
+				const testCell = row.insertCell();
+				const testBtn = document.createElement('button');
+				testBtn.textContent = 'Test';
+				testBtn.className = 'test-btn';
+				testBtn.onclick = function() { testVoice(index); };
+				testCell.appendChild(testBtn);
 			});
+		}
+		
+		function testVoice(voiceIndex) {
+			const voices = speechSynthesis.getVoices();
+			const selectedVoice = voices[voiceIndex];
+			const message = new SpeechSynthesisUtterance(getTestPhrase(selectedVoice.lang));
+			message.voice = selectedVoice;
+			speechSynthesis.speak(message);
+		}
+		
+		function getTestPhrase(lang) {
+			const phrases = {
+				'en': 'The quick brown fox jumps over the lazy dog',
+				'es': 'El rápido zorro marrón salta sobre el perro perezoso',
+				'fr': 'Le rapide renard brun saute par-dessus le chien paresseux',
+				'de': 'Der schnelle braune Fuchs springt über den faulen Hund',
+				'it': 'La rapida volpe marrone salta sopra il cane pigro',
+				'pt': 'A rápida raposa marrom salta sobre o cão preguiçoso',
+				'ru': 'Быстрая коричневая лиса перепрыгивает через ленивую собаку',
+				'ja': '素早い茶色の狐が怠け者の犬を飛び越える',
+				'ko': '빠른 갈색 여우가 게으른 개 위로 점프합니다',
+				'zh': '快速的棕色狐狸跳过懒狗',
+				'nl': 'De snelle bruine vos springt over de luie hond',
+				'pl': 'Szybki brązowy lis przeskakuje nad leniwym psem',
+				'sv': 'Den snabba bruna räven hoppar över den lata hunden',
+				'da': 'Den hurtige brune ræv hopper over den dovne hund',
+				'fi': 'Nopea ruskea kettu hyppää laiskan koiran yli',
+				'no': 'Den raske brune reven hopper over den late hunden',
+				'tr': 'Hızlı kahverengi tilki tembel köpeğin üzerinden atlar',
+				'ar': 'يقفز الثعلب البني السريع فوق الكلب الكسول',
+				'he': 'השועל החום המהיר קופץ מעל הכלב העצלן',
+				'hi': 'तेज भूरी लोमड़ी आलसी कुत्ते के ऊपर कूदती है',
+				'th': 'สุนัขจิ้งจอกสีน้ำตาลเร็วกระโดดข้ามสุนัขขี้เกียจ',
+				'vi': 'Con cáo nâu nhanh nhẹn nhảy qua con chó lười',
+				'uk': 'Швидка коричнева лисиця перестрибує через ледачого пса',
+				'el': 'Η γρήγορη καφέ αλεπού πηδάει πάνω από τον τεμπέλικο σκύλο',
+				'cs': 'Rychlá hnědá liška skáče přes líného psa',
+				'hu': 'A gyors barna róka átugrik a lusta kutya felett'
+			};
+			
+			// Check for exact match
+			if (phrases[lang]) {
+				return phrases[lang];
+			}
+			
+			// Check for language prefix (e.g., en-US -> en)
+			const langPrefix = lang.split('-')[0];
+			if (phrases[langPrefix]) {
+				return phrases[langPrefix];
+			}
+			
+			// Default to English
+			return phrases['en'];
 		}
     </script>
 </body>
