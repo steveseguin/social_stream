@@ -1,24 +1,3 @@
-// flow-integration.js
-// This file integrates the Event Flow System with Social Stream Ninja
-
-// Initialize the event flow system for Social Stream Ninja
-function initializeEventFlowSystem() {
-    const eventFlowSystem = new EventFlowSystem({
-        sendMessageToTabs: window.sendMessageToTabs || null,
-        sendToDestinations: window.sendToDestinations || null,
-        pointsSystem: window.pointsSystem || null,
-        fetchWithTimeout: window.fetchWithTimeout // Assuming fetchWithTimeout is on window from background.js
-    });
-	
-    eventFlowSystem.initPromise.then(() => {
-        window.eventFlowSystem = eventFlowSystem;
-    }).catch(error => {
-        console.error('Failed to initialize Event Flow System for Social Stream Ninja:', error);
-    });
-
-    return eventFlowSystem; // Return the instance
-}
-
 // Create a message generator for testing flows
 function createTestMessage(options = {}) {
     return {
@@ -42,14 +21,15 @@ function createTestMessage(options = {}) {
     };
 }
 
-// Automatically initialize the system when this script is loaded.
-// Ensure EventFlowSystem class is defined before this script runs.
-// Also, ensure this script runs after the main application has set up any necessary global functions
-// like window.sendMessageToTabs, window.sendToDestinations, etc.
-document.addEventListener('DOMContentLoaded', () => {
-	if (typeof EventFlowSystem !== 'undefined') {
-		initializeEventFlowSystem();
-	} else {
-		console.error('EventFlowSystem class is not defined. Make sure EventFlowSystem.js is loaded before flow-integration.js.');
-	}
+let tmp = new EventFlowSystem({
+	sendMessageToTabs: window.sendMessageToTabs || null,
+	sendToDestinations: window.sendToDestinations || null,
+	pointsSystem: window.pointsSystem || null,
+	fetchWithTimeout: window.fetchWithTimeout // Assuming fetchWithTimeout is on window from background.js
+});
+
+tmp.initPromise.then(() => {
+	window.eventFlowSystem = tmp;
+}).catch(error => {
+	console.error('Failed to initialize Event Flow System for Social Stream Ninja:', error);
 });
