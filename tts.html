@@ -5,104 +5,156 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Speech Synthesis Languages</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #333;
-            color: #ddd;
-            margin: 0;
-            padding: 10px;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 100%;
-            width: 100%;
-        }
-        h1 {
-            font-size: 1.5rem;
-            text-align: center;
-            margin: 10px 0;
-        }
-        p {
-            font-size: 0.9rem;
-            text-align: center;
-            margin: 10px 0;
-            padding: 0 10px;
-        }
-        #loadBtn {
-            display: block;
-            width: 90%;
-            max-width: 300px;
-            margin: 20px auto;
-            padding: 15px;
-            font-size: 1.2rem;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-        #loadBtn:hover {
-            background-color: #0056b3;
-        }
-        #languageSelect {
-            display: none;
-        }
-        .table-container {
-            overflow-x: auto;
-            margin-top: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: #555;
-            font-size: 0.9rem;
-        }
-        th, td {
-            border: 1px solid #777;
-            padding: 8px 4px;
-            text-align: left;
-        }
-        th {
-            background-color: #444;
-            position: sticky;
-            top: 0;
-            z-index: 1;
-        }
-        tr:nth-child(even) {
-            background-color: #555;
-        }
-        .test-btn {
-            background-color: #666;
-            color: #fff;
-            border: none;
-            padding: 6px 8px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            white-space: nowrap;
-        }
-        .test-btn:hover {
-            background-color: #777;
-        }
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.3rem;
-            }
-            p {
-                font-size: 0.85rem;
-            }
-            table {
-                font-size: 0.8rem;
-            }
-            th, td {
-                padding: 6px 2px;
-            }
-            .test-btn {
-                padding: 4px 6px;
-                font-size: 0.75rem;
-            }
-        }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #222;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+h1 {
+    font-size: clamp(1.3rem, 4vw, 1.8rem);
+    text-align: center;
+    margin: 15px 0;
+    color: #fff;
+}
+
+p {
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
+    text-align: center;
+    margin: 15px auto;
+    max-width: 600px;
+    line-height: 1.5;
+}
+
+#loadBtn {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 25px auto;
+    padding: 15px;
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#loadBtn:hover {
+    background-color: #0056b3;
+}
+
+#languageSelect {
+    display: none;
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-top: 25px;
+    border-radius: 8px;
+    background-color: #333;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+    font-size: clamp(0.8rem, 2vw, 0.95rem);
+}
+
+th, td {
+    border: 1px solid #444;
+    padding: 12px 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #2a2a2a;
+    color: #fff;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+tr:nth-child(even) {
+    background-color: #3a3a3a;
+}
+
+tr:nth-child(odd) {
+    background-color: #333;
+}
+
+tr:hover {
+    background-color: #444 !important;
+}
+
+.test-btn {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: clamp(0.75rem, 2vw, 0.9rem);
+    transition: background-color 0.2s;
+    min-width: 60px;
+}
+
+.test-btn:hover {
+    background-color: #0056b3;
+}
+
+.test-btn:active {
+    background-color: #004494;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    th, td {
+        padding: 8px 4px;
+    }
+    
+    table {
+        font-size: 0.85rem;
+    }
+    
+    .test-btn {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    td:nth-child(3), th:nth-child(3),
+    td:nth-child(4), th:nth-child(4) {
+        display: none;
+    }
+    
+    th, td {
+        padding: 6px 3px;
+    }
+    
+    .test-btn {
+        padding: 5px 6px;
+        font-size: 0.75rem;
+        min-width: 45px;
+    }
+}
     </style>
 </head>
 <body>
@@ -162,58 +214,53 @@
             });
         }
         
-        function testVoice(voiceIndex) {
-            const voices = speechSynthesis.getVoices();
-            const selectedVoice = voices[voiceIndex];
-            const message = new SpeechSynthesisUtterance(getTestPhrase(selectedVoice.lang));
-            message.voice = selectedVoice;
-            speechSynthesis.speak(message);
-        }
+		function testVoice(voiceIndex) {
+			const voices = speechSynthesis.getVoices();
+			const selectedVoice = voices[voiceIndex];
+			
+			// Cancel any ongoing speech
+			speechSynthesis.cancel();
+			
+			const message = new SpeechSynthesisUtterance(getTestPhrase(selectedVoice.lang));
+			message.voice = selectedVoice;
+			message.rate = 1;
+			message.pitch = 1;
+			message.volume = 1;
+			
+			speechSynthesis.speak(message);
+		}
         
         function getTestPhrase(lang) {
-            const phrases = {
-                'en': 'The quick brown fox jumps over the lazy dog',
-                'es': 'El rápido zorro marrón salta sobre el perro perezoso',
-                'fr': 'Le rapide renard brun saute par-dessus le chien paresseux',
-                'de': 'Der schnelle braune Fuchs springt über den faulen Hund',
-                'it': 'La rapida volpe marrone salta sopra il cane pigro',
-                'pt': 'A rápida raposa marrom salta sobre o cão preguiçoso',
-                'ru': 'Быстрая коричневая лиса перепрыгивает через ленивую собаку',
-                'ja': '素早い茶色の狐が怠け者の犬を飛び越える',
-                'ko': '빠른 갈색 여우가 게으른 개 위로 점프합니다',
-                'zh': '快速的棕色狐狸跳过懒狗',
-                'nl': 'De snelle bruine vos springt over de luie hond',
-                'pl': 'Szybki brązowy lis przeskakuje nad leniwym psem',
-                'sv': 'Den snabba bruna räven hoppar över den lata hunden',
-                'da': 'Den hurtige brune ræv hopper over den dovne hund',
-                'fi': 'Nopea ruskea kettu hyppää laiskan koiran yli',
-                'no': 'Den raske brune reven hopper over den late hunden',
-                'tr': 'Hızlı kahverengi tilki tembel köpeğin üzerinden atlar',
-                'ar': 'يقفز الثعلب البني السريع فوق الكلب الكسول',
-                'he': 'השועל החום המהיר קופץ מעל הכלב העצלן',
-                'hi': 'तेज भूरी लोमड़ी आलसी कुत्ते के ऊपर कूदती है',
-                'th': 'สุนัขจิ้งจอกสีน้ำตาลเร็วกระโดดข้ามสุนัขขี้เกียจ',
-                'vi': 'Con cáo nâu nhanh nhẹn nhảy qua con chó lười',
-                'uk': 'Швидка коричнева лисиця перестрибує через ледачого пса',
-                'el': 'Η γρήγορη καφέ αλεπού πηδάει πάνω από τον τεμπέλικο σκύλο',
-                'cs': 'Rychlá hnědá liška skáče přes líného psa',
-                'hu': 'A gyors barna róka átugrik a lusta kutya felett'
-            };
-            
-            // Check for exact match
-            if (phrases[lang]) {
-                return phrases[lang];
-            }
-            
-            // Check for language prefix (e.g., en-US -> en)
-            const langPrefix = lang.split('-')[0];
-            if (phrases[langPrefix]) {
-                return phrases[langPrefix];
-            }
-            
-            // Default to English
-            return phrases['en'];
-        }
+			const phrases = {
+				'en': 'The quick brown fox jumps over the lazy dog',
+				'es': 'El rápido zorro marrón salta sobre el perro perezoso',
+				'fr': 'Le rapide renard brun saute par-dessus le chien paresseux',
+				'de': 'Der schnelle braune Fuchs springt über den faulen Hund',
+				'it': 'La rapida volpe marrone salta sopra il cane pigro',
+				'pt': 'A rápida raposa marrom salta sobre o cão preguiçoso',
+				'ru': 'Быстрая коричневая лиса перепрыгивает через ленивую собаку',
+				'ja': '素早い茶色の狐が怠け者の犬を飛び越える',
+				'ko': '빠른 갈색 여우가 게으른 개 위로 점프합니다',
+				'zh': '快速的棕色狐狸跳过懒狗',
+				'nl': 'De snelle bruine vos springt over de luie hond',
+				'pl': 'Szybki brązowy lis przeskakuje nad leniwym psem',
+				'id': 'Rubah cokelat yang cepat melompati anjing yang malas',
+				'hi': 'तेज भूरी लोमड़ी आलसी कुत्ते के ऊपर कूदती है'
+			};
+			
+			// Normalize language code
+			const normalizedLang = lang.toLowerCase();
+			
+			// First try exact match
+			for (const [key, phrase] of Object.entries(phrases)) {
+				if (normalizedLang === key || normalizedLang.startsWith(key + '-')) {
+					return phrase;
+				}
+			}
+			
+			// Default fallback
+			return 'This is a test of the speech synthesis system';
+		}
     </script>
 </body>
 </html>
