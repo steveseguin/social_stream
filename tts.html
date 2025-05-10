@@ -248,73 +248,84 @@ tr:hover {
             }
         }
 
-        function populateVoices() {
-            const select = document.getElementById('languageSelect');
-            select.innerHTML = "";
-            const table = document.getElementById('voicesTable');
-            table.innerHTML = "<tr><th>Name</th><th>Language</th><th>Local</th><th>Default</th><th>Test</th></tr>";
+		function populateVoices() {
+			const select = document.getElementById('languageSelect');
+			select.innerHTML = "";
+			const table = document.getElementById('voicesTable');
+			table.innerHTML = "<tr><th>Name</th><th>Language</th><th>Local</th><th>Default</th><th>Test</th></tr>";
 
-            document.getElementById('loadBtn').style.display = 'none';
+			document.getElementById('loadBtn').style.display = 'none';
 
-            const voices = speechSynthesis.getVoices();
-            voices.forEach((voice, index) => {
-                const option = document.createElement('option');
-                option.textContent = `${voice.name} (${voice.lang})`;
-                select.appendChild(option);
-                const row = table.insertRow();
-                row.insertCell().textContent = voice.name;
-                row.insertCell().textContent = voice.lang;
-                
-                const localCell = row.insertCell();
-                const localStatus = document.createElement('div');
-                localStatus.className = 'local-status';
-                
-                const indicator = document.createElement('span');
-                indicator.className = 'local-indicator ' + (voice.localService ? 'local-yes' : 'local-no');
-                
-                const text = document.createElement('span');
-                text.textContent = voice.localService ? 'Yes' : 'No';
-                
-                localStatus.appendChild(indicator);
-                localStatus.appendChild(text);
-                localCell.appendChild(localStatus);
-                
-                row.insertCell().textContent = voice.default ? 'Yes' : 'No';
+			const voices = speechSynthesis.getVoices();
+			
+			// Sort voices to put English ones first
+			const sortedVoices = voices.sort((a, b) => {
+				const aIsEnglish = a.lang.toLowerCase().startsWith('en');
+				const bIsEnglish = b.lang.toLowerCase().startsWith('en');
+				
+				if (aIsEnglish && !bIsEnglish) return -1;
+				if (!aIsEnglish && bIsEnglish) return 1;
+				return 0;
+			});
+			
+			sortedVoices.forEach((voice, index) => {
+				const option = document.createElement('option');
+				option.textContent = `${voice.name} (${voice.lang})`;
+				select.appendChild(option);
+				const row = table.insertRow();
+				row.insertCell().textContent = voice.name;
+				row.insertCell().textContent = voice.lang;
+				
+				const localCell = row.insertCell();
+				const localStatus = document.createElement('div');
+				localStatus.className = 'local-status';
+				
+				const indicator = document.createElement('span');
+				indicator.className = 'local-indicator ' + (voice.localService ? 'local-yes' : 'local-no');
+				
+				const text = document.createElement('span');
+				text.textContent = voice.localService ? 'Yes' : 'No';
+				
+				localStatus.appendChild(indicator);
+				localStatus.appendChild(text);
+				localCell.appendChild(localStatus);
+				
+				row.insertCell().textContent = voice.default ? 'Yes' : 'No';
 
-                const testCell = row.insertCell();
-                const testBtn = document.createElement('button');
-                testBtn.textContent = 'Test';
-                testBtn.className = 'test-btn';
-                testBtn.onclick = function() { testVoice(index); };
-                testCell.appendChild(testBtn);
-            });
-        }
+				const testCell = row.insertCell();
+				const testBtn = document.createElement('button');
+				testBtn.textContent = 'Test';
+				testBtn.className = 'test-btn';
+				testBtn.onclick = function() { testVoice(index, sortedVoices); };
+				testCell.appendChild(testBtn);
+			});
+		}
 
-        function testVoice(voiceIndex) {
-            const voices = speechSynthesis.getVoices();
-            const selectedVoice = voices[voiceIndex];
+		function testVoice(voiceIndex, voicesList = null) {
+			const voices = voicesList || speechSynthesis.getVoices();
+			const selectedVoice = voices[voiceIndex];
 
-            speechSynthesis.cancel();
+			speechSynthesis.cancel();
 
-            const message = new SpeechSynthesisUtterance(getTestPhrase(selectedVoice.lang));
-            message.voice = selectedVoice;
-            message.lang = selectedVoice.lang;
-            message.rate = 1;
-            message.pitch = 1;
-            message.volume = 1;
+			const message = new SpeechSynthesisUtterance(getTestPhrase(selectedVoice.lang));
+			message.voice = selectedVoice;
+			message.lang = selectedVoice.lang;
+			message.rate = 1;
+			message.pitch = 1;
+			message.volume = 1;
 
-            message.onerror = function(event) {
-                const status = document.getElementById('status');
-                status.className = 'error';
-                status.style.display = 'block';
-                status.textContent = `Error playing voice: ${event.error}. This voice may require an internet connection.`;
-                setTimeout(() => {
-                    status.style.display = 'none';
-                }, 3000);
-            };
+			message.onerror = function(event) {
+				const status = document.getElementById('status');
+				status.className = 'error';
+				status.style.display = 'block';
+				status.textContent = `Error playing voice: ${event.error}. This voice may require an internet connection.`;
+				setTimeout(() => {
+					status.style.display = 'none';
+				}, 3000);
+			};
 
-            speechSynthesis.speak(message);
-        }
+			speechSynthesis.speak(message);
+		}
 
         function getTestPhrase(lang) {
             const phrases = {
