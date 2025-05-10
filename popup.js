@@ -999,6 +999,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
 	}
 	
+	if (ssapp && urlParams.get("ssapp")){
+		document.body.classList.add('ssapp');
+	}
+	if (ssapp){
+		const style = document.createElement('style');
+		style.textContent = 'body .ssapp { display: none !important; }';
+		style.id = 'hide-ssapp-style';
+		document.head.appendChild(style);
+	}
+
+	
 	const uploadCustomJsButton = document.getElementById('uploadCustomJsButton');
 	const deleteCustomJsButton = document.getElementById('deleteCustomJsButton');
 
@@ -2583,6 +2594,7 @@ const devmode = urlParams.has("devmode");
 var sourcemode = urlParams.get("sourcemode") || false;
 ssapp = urlParams.has("ssapp") || ssapp;
 
+
 var baseURL = "https://socialstream.ninja/";
 
 if (sourcemode){
@@ -2602,12 +2614,7 @@ if (sourcemode){
 	}
 }
 
-if (ssapp){
-	const style = document.createElement('style');
-	style.textContent = '.ssapp { display: none !important; }';
-	style.id = 'hide-ssapp-style';
-	document.head.appendChild(style);
-} 
+
 
 function removeQueryParamWithValue(url, paramWithValue) {
     let [baseUrl, queryString] = url.split('?');

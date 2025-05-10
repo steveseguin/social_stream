@@ -100,11 +100,11 @@ function initializeEventFlowSystem() {
         }
 
         // Add the menu item when DOM is ready or immediately if already ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', addEventFlowMenuItem);
-        } else {
-            addEventFlowMenuItem();
-        }
+        //if (document.readyState === 'loading') {
+        //    document.addEventListener('DOMContentLoaded', addEventFlowMenuItem);
+        //} else {
+        //    addEventFlowMenuItem();
+       // }
 
         // Add the event flow system to the global scope for the admin UI or other debugging tools
         window.eventFlowSystem = eventFlowSystem;

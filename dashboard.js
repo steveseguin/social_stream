@@ -209,6 +209,9 @@ function setupConsoleHook() {
 
 // Main initialization function
 function initDashboard() {
+	if (new URLSearchParams(window.location.search).has('ssapp')) {
+	 document.body.classList.add('ssapp');
+	}
     setupConsoleHook();
     setupPeriodicUpdates();
 }

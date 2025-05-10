@@ -3052,6 +3052,12 @@
 				passTTS = true;
 			}
 			
+			var passTTSMod = false;
+			if (urlParams.has("passttsmod")) {
+				passTTSMod = true;
+			}
+			
+			
 			if (urlParams.has("border")) {
 				if (urlParams.get("border")) {
 					document.documentElement.style.setProperty("--profile-pic-border", "3px solid " + urlParams.get("border"));
@@ -8326,9 +8332,15 @@
 					getById("msg_" + data.id).classList.add("highlight"); // sample method of highlighting
 				}
 
-				if (passTTS && data.chatmessage.includes("!pass")) {
-					if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
-						window.speechSynthesis.cancel();
+				if ((passTTS || passTTSMod) && data.chatmessage.includes("!pass")) {
+					if (data.mod){
+						if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
+							window.speechSynthesis.cancel();
+						}
+					} else if (!passTTSMod){
+						if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
+							window.speechSynthesis.cancel();
+						}
 					}
 				}
 				
