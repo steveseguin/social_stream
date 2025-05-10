@@ -3119,6 +3119,15 @@ async function processIncomingMessage(message, sender=null){
 			return message;
 		}
 		
+		try {
+			message = await eventFlowSystem(message, sender?.tab); // perform any immediate actions
+		} catch (e) {
+			console.warn(e);
+		}
+		if (!message) {
+			return message;
+		}
+		
 		sendToDestinations(message); // send the data to the dock
 	}
 	return message;
@@ -3842,6 +3851,16 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (!data) {
 				return response;
 			}
+			
+			try {
+				data = await eventFlowSystem(data); // perform any immediate actions
+			} catch (e) {
+				console.warn(e);
+			}
+			if (!data) {
+				return response;
+			}
+			
 			sendToDestinations(data);
 		} else if (request.cmd && request.cmd === "sidUpdated") {
 			if (request.streamID) {
@@ -5716,8 +5735,17 @@ function setupSocket() {
 				try {
 					let msg = JSON.parse(data.value);
 					msg = await applyBotActions(msg); // perform any immediate actions, including modifying the message before sending it out
-					if (msg) {
-						resp = await sendToDestinations(msg);
+					
+					if (msg){
+						try {
+							msg = await eventFlowSystem(msg); // perform any immediate actions
+						} catch (e) {
+							console.warn(e);
+						}
+						
+						if (msg) {
+							resp = await sendToDestinations(msg);
+						}
 					}
 				} catch (e) {
 					console.error(e);
@@ -7227,8 +7255,16 @@ eventer(messageEvent, async function (e) {
 					data.type = "youtube";
 
 					data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
+					
 					if (data) {
-						sendToDestinations(data);
+						try {
+							data = await eventFlowSystem(data); // perform any immediate actions
+						} catch (e) {
+							console.warn(e);
+						}
+						if (data) {
+							sendToDestinations(data);
+						}
 					}
 				}
 			} else if (e.data.action == "view-stats-updated") {
@@ -8534,15 +8570,17 @@ async function applyBotActions(data, tab = false) {
 		
 		
 		if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(miscTranslations.said)){
+			console.log("1");
 			return null;
 			
 		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && !data.event && tab) {
-			
+			console.log("2");
 			if (checkExactDuplicateAlreadyRelayed(data.chatmessage, data.textonly, tab.id, false)) { 
 				return null;
 			}
 			
 			if (!data.bot && (!settings.relayhostonly || data.host)) {
+				console.log("3");
 				//messageTimeout = Date.now();
 				var msg = {};
 				
@@ -8702,8 +8740,6 @@ async function applyBotActions(data, tab = false) {
 				data.highlightColor = "#fff387";
 			}
 		}
-
-		// applyBotActions nor applyCustomActions ; I'm going to allow for copy/paste here I think instead.
 
 		if (settings.relaydonos && data.hasDonation && data.chatname && data.type) {
 			//if (Date.now() - messageTimeout > 100) {
