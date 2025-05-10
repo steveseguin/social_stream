@@ -66,44 +66,51 @@
 	var lastUser  = "";
 	
 	async function processMessage(ele){	// twitch
-	
+	//	console.log(ele);
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
+	  var chatname= "";
 	  
 	  try {
-		  try {
-			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1)");
-			var chatname = escapeHtml(nameEle.innerText);
-		  } catch(e){
-			 return;
-		  }
+		var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1)") || ele.querySelector("[alt='avatar']").parentNode.nextSibling.childNodes[0].childNodes[0];
+		if (nameEle?.textContent){
+			chatname = escapeHtml(nameEle.textContent);
+		} else if (nameEle){
+			chatname = escapeHtml(nameEle);
+		}
 	 } catch(e){
 		try {
-			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)");
-			var chatname = escapeHtml(nameEle.innerText);
+			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)") || ele.querySelector("[alt='avatar']").parentNode.nextSibling.childNodes[0].childNodes[0];;
+			chatname = escapeHtml(nameEle.innerText);
 		  } catch(e){
+			//   console.warn(e);
 			return;
 		  }
 	  }
 	  
 	  chatname = chatname.trim();
-	  if (!chatname){return;}
+	  chatname = chatname.replaceAll('"','');
+	  if (!chatname){
+	//	   console.warn("1");
+		  return;}
 	  
 	  var chatbadges = [];
 	  var hasDonation = '';
 	  var contentimg = "";
 	  
 	  try {
-		var eleContent = ele.querySelector("span[class]:not([role])");
+		var eleContent = ele.querySelector("span[class]:not([role])") || ele.querySelector("[alt='avatar']").parentNode.nextSibling.childNodes[1];
 		chatmessage = getAllContentNodes(eleContent).trim();
 	  } catch(e){ // donation?
+	 // console.warn("123");
 	  }
 	  
 	  if (!chatmessage){
 		  try {
 			contentimg = ele.querySelector("button>img[src][alt='stickers']").src;
 		  } catch(e){
+			//  console.warn("21");
 		  }
 	  }
 	  
@@ -112,12 +119,14 @@
 	 }
 	 
 	  if (chatmessage && chatmessage.startsWith("[Message ")){
+		 // console.warn("144");
 		  return; // I'm assuming this is a deleted message
 	  }
 	 
 	 if (chatmessage && (lastMessage === chatmessage) && (lastUser === chatname)){
 		  lastMessage = "";
 		  chatname = "";
+		 // console.warn("144");
 		  return;
 	  } else {
 		lastMessage = chatmessage;
@@ -147,18 +156,18 @@
 				  } catch(e){
 					  chatimg = "";
 				  }
-			  }
-	  
-			
-			if (chatimg && !chatimg.startsWith("https://loco.com/")){
-				chatimg = "https://loco.com" + chatimg;
 			}
-			chatimg = chatimg.replace(".jpg&w=48&q=25", ".jpg&w=128&q=80");
+			if (chatimg && !chatimg.startsWith("https://")){
+				chatimg = "https://loco.com" + chatimg;
+				chatimg = chatimg.replace(".jpg&w=48&q=25", ".jpg&w=128&q=80");
+			}
+			
 	  } catch(e){}
 
 	  
 	 
 	  if (!chatmessage && !hasDonation && !contentimg){
+		//  console.warn("1345345");
 		return;
 	  }
 
@@ -174,6 +183,7 @@
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "loco";
 	  
+	  console.log(data);
 	 
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
@@ -219,6 +229,7 @@
 		var onMutationsObserved = function(mutations) {
 			
 			mutations.forEach(function(mutation) {
+			//	console.log(mutation.addedNodes);
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
@@ -243,14 +254,15 @@
 	
 	var checkReady = setInterval(function(){
 		
-		if (!window.location.pathname.startsWith("/streamers/") && !window.location.pathname.startsWith("/chat/")){return;}
+		if (!window.location.pathname.startsWith("/streamers/") && !window.location.pathname.startsWith("/chat/") && !window.location.pathname.startsWith("/dashboard/")){return;}
 		
 		var mainChat = document.querySelector(".chat-elements-list");
 		if (mainChat){ // just in case 
-			console.log("Social Stream Start");
+			
 			if (mainChat.set){
 				return;
 			}
+			console.log("Social Stream Start");
 			mainChat.set = true;
 			
 			setTimeout(()=>{
