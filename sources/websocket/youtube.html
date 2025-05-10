@@ -285,6 +285,11 @@ try {
     var isPolling = false;
     var userDetails = {};
     var currentStream = null;
+	
+	var messageQueue = [];
+	var displayInterval;
+	var isDisplaying = false;
+	var quickPollCount = 0
 
     var urlParams = new URLSearchParams(window.location.search);
     var hashParams = new URLSearchParams(window.location.hash.slice(1));
@@ -785,96 +790,159 @@ try {
             return null;
         }
     }
+	
+	function queueMessage(messageData) {
+		messageQueue.push(messageData);
+		if (!isDisplaying) {
+			startDisplayQueue();
+		}
+	}
+
+	function startDisplayQueue() {
+		if (isDisplaying || messageQueue.length === 0) return;
+		
+		isDisplaying = true;
+		displayNextMessage();
+	}
+
+	function displayNextMessage() {
+		if (messageQueue.length === 0) {
+			isDisplaying = false;
+			return;
+		}
+		
+		const message = messageQueue.shift();
+		processMessage(message);
+		
+		// Calculate display rate based on queue size
+		// More messages = faster display to catch up
+		let delay = 100; // Base delay of 100ms between messages
+		
+		if (messageQueue.length > 50) {
+			delay = 20; // Very fast if way behind
+		} else if (messageQueue.length > 20) {
+			delay = 50; // Faster if moderately behind
+		} else if (messageQueue.length > 5) {
+			delay = 75; // Slightly faster
+		}
+		
+		setTimeout(displayNextMessage, delay);
+	}
 
     async function fetchChatMessages() {
-        if (!liveChatId || isPolling) return;
-        
-        isPolling = true;
-        const token = getStoredToken();
-        
-        try {
-            let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=200`;
-            
-            if (nextPageToken) {
-                url += `&pageToken=${nextPageToken}`;
-            }
-            
-            const response = await fetchWithTimeout(url, 5000, {
-                'Authorization': `Bearer ${token}`
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data.items && data.items.length > 0) {
-                data.items.forEach(item => {
-                    const message = item.snippet.displayMessage;
-                    const authorName = item.authorDetails.displayName;
-                    const profileImageUrl = item.authorDetails.profileImageUrl;
-                    const isChatOwner = item.authorDetails.isChatOwner;
-                    const isChatSponsor = item.authorDetails.isChatSponsor;
-                    const isChatModerator = item.authorDetails.isChatModerator;
-                    const publishedAt = new Date(item.snippet.publishedAt);
-                    
-                    // Only process new messages
-                    if (!lastMessageTime || publishedAt > lastMessageTime) {
-                        processMessage({
-                            authorName,
-                            message,
-                            profileImageUrl,
-                            isChatOwner,
-                            isChatSponsor,
-                            isChatModerator,
-                            publishedAt
-                        });
-                        
-                        if (!lastMessageTime || publishedAt > lastMessageTime) {
-                            lastMessageTime = publishedAt;
-                        }
-                    }
-                });
-            }
-            
-            nextPageToken = data.nextPageToken;
-            
-            // Check for super chats (donations)
-            if (data.items) {
-                data.items.forEach(item => {
-                    if (item.snippet.superChatDetails) {
-                        const superChat = item.snippet.superChatDetails;
-                        processSuperChat({
-                            authorName: item.authorDetails.displayName,
-                            amount: superChat.amountDisplayString,
-                            message: superChat.userComment,
-                            tier: superChat.tier,
-                            profileImageUrl: item.authorDetails.profileImageUrl
-                        });
-                    }
-                    
-                    // Check for new members (sponsorships)
-                    if (item.snippet.membershipDetails) {
-                        processMembership({
-                            authorName: item.authorDetails.displayName,
-                            level: item.snippet.membershipDetails.memberLevelName,
-                            profileImageUrl: item.authorDetails.profileImageUrl
-                        });
-                    }
-                });
-            }
-            
-            // Set up next polling interval based on API response
-            const pollingInterval = data.pollingIntervalMillis || 5000;
-            setTimeout(fetchChatMessages, pollingInterval);
-        } catch (error) {
-            console.error('Error fetching chat messages:', error);
-            setTimeout(fetchChatMessages, 10000); // Retry after 10 seconds on error
-        } finally {
-            isPolling = false;
-        }
-    }
+		if (!liveChatId || isPolling) return;
+		
+		isPolling = true;
+		const token = getStoredToken();
+		
+		try {
+			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=200`;
+			
+			if (nextPageToken) {
+				url += `&pageToken=${nextPageToken}`;
+			}
+			
+			const response = await fetchWithTimeout(url, 5000, {
+				'Authorization': `Bearer ${token}`
+			});
+			
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			
+			const data = await response.json();
+			
+			if (data.items && data.items.length > 0) {
+				data.items.forEach(item => {
+					const message = item.snippet.displayMessage;
+					const authorName = item.authorDetails.displayName;
+					const profileImageUrl = item.authorDetails.profileImageUrl;
+					const isChatOwner = item.authorDetails.isChatOwner;
+					const isChatSponsor = item.authorDetails.isChatSponsor;
+					const isChatModerator = item.authorDetails.isChatModerator;
+					const publishedAt = new Date(item.snippet.publishedAt);
+					
+					// Only queue new messages
+					if (!lastMessageTime || publishedAt > lastMessageTime) {
+						queueMessage({
+							authorName,
+							message,
+							profileImageUrl,
+							isChatOwner,
+							isChatSponsor,
+							isChatModerator,
+							publishedAt
+						});
+						
+						if (!lastMessageTime || publishedAt > lastMessageTime) {
+							lastMessageTime = publishedAt;
+						}
+					}
+				});
+				
+				// Check if we maxed out the results
+				const isMaxedOut = data.items.length === 200;
+				
+				if (isMaxedOut && quickPollCount < 10) {
+					// If we got 200 messages, there might be more waiting
+					// Poll faster to catch up, but limit consecutive quick polls
+					quickPollCount++;
+					nextPageToken = data.nextPageToken;
+					setTimeout(fetchChatMessages, 100); // Quick poll
+					
+				} else {
+					// Normal polling with API suggested interval
+					quickPollCount = 0;
+					nextPageToken = data.nextPageToken;
+					const pollingInterval = data.pollingIntervalMillis || 5000;
+					
+					// Adjust polling based on queue size
+					let adjustedInterval = pollingInterval;
+					if (messageQueue.length > 100) {
+						adjustedInterval = Math.max(1000, pollingInterval * 0.5); // Poll 50% faster if way behind
+					} else if (messageQueue.length > 50) {
+						adjustedInterval = Math.max(2000, pollingInterval * 0.75); // Poll 25% faster if moderately behind
+					}
+					
+					setTimeout(fetchChatMessages, adjustedInterval);
+				}
+			} else {
+				// No new messages, use standard interval
+				const pollingInterval = data.pollingIntervalMillis || 5000;
+				setTimeout(fetchChatMessages, pollingInterval);
+			}
+			
+			// Process super chats and memberships immediately
+			if (data.items) {
+				data.items.forEach(item => {
+					if (item.snippet.superChatDetails) {
+						const superChat = item.snippet.superChatDetails;
+						processSuperChat({
+							authorName: item.authorDetails.displayName,
+							amount: superChat.amountDisplayString,
+							message: superChat.userComment,
+							tier: superChat.tier,
+							profileImageUrl: item.authorDetails.profileImageUrl
+						});
+					}
+					
+					if (item.snippet.membershipDetails) {
+						processMembership({
+							authorName: item.authorDetails.displayName,
+							level: item.snippet.membershipDetails.memberLevelName,
+							profileImageUrl: item.authorDetails.profileImageUrl
+						});
+					}
+				});
+			}
+			
+		} catch (error) {
+			console.error('Error fetching chat messages:', error);
+			setTimeout(fetchChatMessages, 10000); // Retry after 10 seconds on error
+		} finally {
+			isPolling = false;
+		}
+	}
 
     async function sendChatMessage(message) {
         const token = getStoredToken();
@@ -987,17 +1055,21 @@ try {
         }
     }
 
-    function clearPolling() {
-        if (pollInterval) {
-            clearInterval(pollInterval);
-            pollInterval = null;
-        }
-        liveChatId = null;
-        nextPageToken = null;
-        lastMessageTime = null;
-        isPolling = false;
-        currentStream = null;
-    }
+	function clearPolling() {
+		if (pollInterval) {
+			clearInterval(pollInterval);
+			pollInterval = null;
+		}
+		liveChatId = null;
+		nextPageToken = null;
+		lastMessageTime = null;
+		isPolling = false;
+		currentStream = null;
+		// Clear message queue
+		messageQueue = [];
+		isDisplaying = false;
+		quickPollCount = 0;
+	}
 	
 	async function getChannelStats(channelId) {
 		const token = getStoredToken();
