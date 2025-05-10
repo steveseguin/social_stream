@@ -55,8 +55,6 @@ function errorlog(msg) {
 }
 var priorityTabs = new Set();
 
-window.eventFlowSystem = function(data,sid=null){return data;}
-
 function generateStreamID() {
 	var text = "";
 	var possible = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
@@ -3122,7 +3120,7 @@ async function processIncomingMessage(message, sender=null){
 		}
 		
 		try {
-			message = await window.eventFlowSystem(message, sender?.tab); // perform any immediate actions
+			message = await window.eventFlowSystem.processMessage(message); // perform any immediate actions
 		} catch (e) {
 			console.warn(e);
 		}
@@ -3855,7 +3853,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			
 			try {
-				data = await window.eventFlowSystem(data); // perform any immediate actions
+				data = await window.eventFlowSystem.processMessage(data); // perform any immediate actions
 			} catch (e) {
 				console.warn(e);
 			}
@@ -5740,7 +5738,7 @@ function setupSocket() {
 					
 					if (msg){
 						try {
-							msg = await window.eventFlowSystem(msg); // perform any immediate actions
+							msg = await window.eventFlowSystem.processMessage(msg); // perform any immediate actions
 						} catch (e) {
 							console.warn(e);
 						}
@@ -7260,7 +7258,7 @@ eventer(messageEvent, async function (e) {
 					
 					if (data) {
 						try {
-							data = await window.eventFlowSystem(data); // perform any immediate actions
+							data = await window.eventFlowSystem.processMessage(data); // perform any immediate actions
 						} catch (e) {
 							console.warn(e);
 						}
