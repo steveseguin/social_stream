@@ -124,15 +124,15 @@ tr:hover {
     .container {
         padding: 10px;
     }
-    
+
     th, td {
         padding: 8px 4px;
     }
-    
+
     table {
         font-size: 0.85rem;
     }
-    
+
     .test-btn {
         padding: 6px 8px;
         font-size: 0.8rem;
@@ -144,11 +144,11 @@ tr:hover {
     td:nth-child(4), th:nth-child(4) {
         display: none;
     }
-    
+
     th, td {
         padding: 6px 3px;
     }
-    
+
     .test-btn {
         padding: 5px 6px;
         font-size: 0.75rem;
@@ -185,15 +185,15 @@ tr:hover {
                 }
             };
         });
-        
+
         function populateVoices() {
             const select = document.getElementById('languageSelect');
             select.innerHTML = "";
             const table = document.getElementById('voicesTable');
             table.innerHTML = "<tr><th>Name</th><th>Language</th><th>Local</th><th>Default</th><th>Test</th></tr>";
-            
+
             document.getElementById('loadBtn').style.display = 'none';
-            
+
             const voices = speechSynthesis.getVoices();
             voices.forEach((voice, index) => {
                 const option = document.createElement('option');
@@ -204,7 +204,7 @@ tr:hover {
                 row.insertCell().textContent = voice.lang;
                 row.insertCell().textContent = voice.localService ? 'Yes' : 'No';
                 row.insertCell().textContent = voice.default ? 'Yes' : 'No';
-                
+
                 const testCell = row.insertCell();
                 const testBtn = document.createElement('button');
                 testBtn.textContent = 'Test';
@@ -213,53 +213,71 @@ tr:hover {
                 testCell.appendChild(testBtn);
             });
         }
-        
+
 		function testVoice(voiceIndex) {
 			const voices = speechSynthesis.getVoices();
 			const selectedVoice = voices[voiceIndex];
-			
-			// Cancel any ongoing speech
+
 			speechSynthesis.cancel();
-			
+
 			const message = new SpeechSynthesisUtterance(getTestPhrase(selectedVoice.lang));
 			message.voice = selectedVoice;
+			message.lang = selectedVoice.lang;
 			message.rate = 1;
 			message.pitch = 1;
 			message.volume = 1;
-			
+
 			speechSynthesis.speak(message);
 		}
-        
+
         function getTestPhrase(lang) {
 			const phrases = {
-				'en': 'The quick brown fox jumps over the lazy dog',
-				'es': 'El rápido zorro marrón salta sobre el perro perezoso',
-				'fr': 'Le rapide renard brun saute par-dessus le chien paresseux',
-				'de': 'Der schnelle braune Fuchs springt über den faulen Hund',
-				'it': 'La rapida volpe marrone salta sopra il cane pigro',
-				'pt': 'A rápida raposa marrom salta sobre o cão preguiçoso',
-				'ru': 'Быстрая коричневая лиса перепрыгивает через ленивую собаку',
-				'ja': '素早い茶色の狐が怠け者の犬を飛び越える',
-				'ko': '빠른 갈색 여우가 게으른 개 위로 점프합니다',
-				'zh': '快速的棕色狐狸跳过懒狗',
-				'nl': 'De snelle bruine vos springt over de luie hond',
-				'pl': 'Szybki brązowy lis przeskakuje nad leniwym psem',
-				'id': 'Rubah cokelat yang cepat melompati anjing yang malas',
-				'hi': 'तेज भूरी लोमड़ी आलसी कुत्ते के ऊपर कूदती है'
+				'en': [ // English phrases - will be chosen randomly
+                    'The quick brown fox jumps over the lazy dog.',
+                    'Pack my box with five dozen liquor jugs.',
+                    'How quickly daft jumping zebras vex.',
+                    'Sphinx of black quartz, judge my vow.',
+                    'Testing speech synthesis for the English language.',
+                    'Hello, this is a voice test.',
+                    'Can you hear me now?'
+                ],
+				'es': 'El rápido zorro marrón salta sobre el perro perezoso.',
+				'fr': 'Le rapide renard brun saute par-dessus le chien paresseux.',
+				'de': 'Der schnelle braune Fuchs springt über den faulen Hund.',
+				'it': 'La rapida volpe marrone salta sopra il cane pigro.',
+				'pt': 'A rápida raposa marrom salta sobre o cão preguiçoso.',
+				'ru': 'Быстрая коричневая лиса перепрыгивает через ленивую собаку.',
+				'ja': '素早い茶色の狐が怠け者の犬を飛び越える。', // Subayai chairo no kitsune ga namakemono no inu o tobikoeru.
+				'ko': '빠른 갈색 여우가 게으른 개 위로 점프합니다.', // Ppareun galsaek yeouga geeureun gae wiro jeompeuhamnida.
+				'zh': '快速的棕色狐狸跳过懒狗。', // Kuàisù de zōngsè húlí tiàoguò lǎn gǒu. (Mandarin)
+                'nl': 'De snelle bruine vos springt over de luie hond.',
+				'pl': 'Szybki brązowy lis przeskakuje nad leniwym psem.',
+				'id': 'Rubah cokelat yang cepat melompati anjing yang malas.',
+				'hi': 'तेज भूरी लोमड़ी आलसी कुत्ते के ऊपर कूदती है।', // Tej bhuri lomdi aalsi kutte ke upar kudti hai.
+                'ar': 'الثعلب البني السريع يقفز فوق الكلب الكسول.', // Ath-thaʻlab al-bunī as-sarīʻ yaqfiz fawq al-kalb al-kasūl. (Arabic)
+                'sv': 'Snabba bruna räven hoppar över den lata hunden.', // (Swedish)
+                'tr': 'Hızlı kahverengi tilki tembel köpeğin üzerinden atlar.', // (Turkish)
+                'cs': 'Rychlá hnědá liška skáče přes líného psa.', // (Czech)
+                'el': 'Η γρήγορη καφέ αλεπού πηδάει πάνω από τον τεμπέλη σκύλο.', // I grígori kafé alepoú pidáei páno apó ton tempéli skýlo. (Greek)
+                'fi': 'Nopea ruskea kettu hyppää laiskan koiran yli.', // (Finnish)
+                'da': 'Den hurtige brune ræv hopper over den dovne hund.', // (Danish)
+                'no': 'Den raske brune reven hopper over den late hunden.' // (Norwegian)
 			};
-			
-			// Normalize language code
+
 			const normalizedLang = lang.toLowerCase();
-			
-			// First try exact match
-			for (const [key, phrase] of Object.entries(phrases)) {
+
+			for (const [key, phraseOrArray] of Object.entries(phrases)) {
 				if (normalizedLang === key || normalizedLang.startsWith(key + '-')) {
-					return phrase;
+					if (Array.isArray(phraseOrArray)) { // Check if it's an array (for English)
+                        const randomIndex = Math.floor(Math.random() * phraseOrArray.length);
+                        return phraseOrArray[randomIndex];
+                    }
+					return phraseOrArray; // Return single phrase for other languages
 				}
 			}
-			
-			// Default fallback
-			return 'This is a test of the speech synthesis system';
+
+			// Default fallback if no specific language phrase is found or if lang is undefined
+			return 'This is a test of the speech synthesis system.';
 		}
     </script>
 </body>
