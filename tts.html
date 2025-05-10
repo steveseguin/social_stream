@@ -390,7 +390,7 @@ tr:hover {
            const normalizedLang = lang.toLowerCase();
 
            for (const [key, phraseOrArray] of Object.entries(phrases)) {
-               if (normalizedLang === key || normalizedLang.startsWith(key + '-')) {
+               if (normalizedLang === key || normalizedLang.startsWith(key + '-') || normalizedLang.startsWith(key + '_')) {
                    if (Array.isArray(phraseOrArray)) {
                        const phrase = phraseOrArray[englishPhraseIndex % phraseOrArray.length];
                        englishPhraseIndex++;
