@@ -140,13 +140,13 @@
 			
 			 if (chatimg.startsWith("data:")){
 				  try {
-					 await new Promise(r => setTimeout(r, 50));
+					 await new Promise(r => setTimeout(r, 100));
 					 chatimg =  ele.querySelector("div:nth-of-type(1) > span>img[src]").src;
 					  if (chatimg.startsWith("data:")){
-						  await new Promise(r => setTimeout(r, 100));
+						  await new Promise(r => setTimeout(r, 200));
 						  chatimg =  ele.querySelector("div:nth-of-type(1) > span>img[src]").src;
 						  if (chatimg.startsWith("data:")){
-								await new Promise(r => setTimeout(r, 200));
+								await new Promise(r => setTimeout(r, 700));
 								chatimg =  ele.querySelector("div:nth-of-type(1) > span>img[src]").src;
 								if (chatimg.startsWith("data:")){
 									chatimg = ""; // and I give up if it still isn't loaded.

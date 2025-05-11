@@ -376,6 +376,36 @@ When sending content to be displayed, the content object should have the followi
   "id": "Unique message ID"
 }
 ```
+`chatname`, `chatmessage`, and `type` tend to be the most important.
+
+A full break down of different keys though used in SSN are the following:
+
+key name | value type | description
+--- | --- | ---
+chatname | string | Display name
+chatmessage | string | Chat message
+chatimg | string | URL or DataBlob (under ~55KB) of the user's avatar image
+type | lower-case string | the pre-qualified name of the source, eg: `twitch`, also used as the source png image
+sourceImg | string | an alternative URL to the source image; relative or absolute
+textonly | boolean | Whether the chat message is only plain text; or does it contain HTML, etc.
+hasDonation | string | The donation amount with its units.  eg: "3 roses" or "$50 USD".
+chatbadges | array | An array of URLs/Objects. If an object, it may define itself as an img/svg and other attributes
+contentimg | string | URL to a single image or mp4/webm video
+membership | string | Membership event description / membership action / type or whatever
+title | string | An alternative name given for a donation event; CHEERS / DONATION are typical defaults
+subtitle | string | For added detail of a membership event, like number of months they have been a member.
+moderator | boolean | Whether they are a moderator in chat or not
+event | string or boolean | Whether this message should be treated as an event, and possible, what type of event it is
+admin | boolean | Whether they are a "priviledged" user or not
+bot | boolean | Whether the user is a bot / host or not
+question | boolean | Whether the message is a certified question or not
+userid | string | Some form of unique user ID / username for the source type. Useful if the display name isn't unique or if needing the user ID external API needs, like user blocking
+karma | float | 1.0 is a happy message; 0.0 is negative message, so 0.1 is likely bad. AI generated
+id | integer | This is maintained mostly internally, but it's an internal message ID value
+private | boolean | whether this is a private/direct message; typically won't be made public by default
+nameColor | string | Manually specify the color of a display name by passing a color value
+textColor | string | Manually specify the background color of a featured message
+backgroundColor | string | Manually specify the color of a featured message's main text color
 
 ### Additional Features
 
