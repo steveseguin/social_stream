@@ -2728,7 +2728,7 @@
 			
 
 			try {
-				if (window.electronApi) {
+				if ((window.ninjafy || window.electronApi)) {
 					// fix for electron dragging.
 					document.body.style.width = "95%";
 					setTimeout(function () {
@@ -2751,7 +2751,8 @@
 					};
 					  
 					document.addEventListener('DOMContentLoaded', () => {
-						window.electronApi.onCloseFileStream(writerCloseHandler);
+						let ninjafy = window.ninjafy || window.electronApi;
+						ninjafy.onCloseFileStream(writerCloseHandler);
 					});
 				}
 			} catch (e) {
@@ -9170,7 +9171,7 @@
 
 			if (urlParams.has("js")) {
 				try {
-					if (window.obsstudio || window.electronApi || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
+					if (window.obsstudio || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
 						var jsURL = urlParams.get("js");
 						try {
 							jsURL = decodeURI(jsURL);
@@ -9200,7 +9201,7 @@
 
 			if (urlParams.has("base64js") || urlParams.has("b64js") || urlParams.has("jsbase64") || urlParams.has("jsb64")) {
 				try {
-					if (window.obsstudio || window.electronApi || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
+					if (window.obsstudio || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
 						var base64js = urlParams.get("base64js") || urlParams.get("b64js") || urlParams.get("jsbase64") || urlParams.get("jsb64");
 						base64js = decodeURIComponent(atob(base64js));
 						var externalJavaascript = document.createElement("script");

@@ -524,7 +524,7 @@ var uniqueId = "";
 var sourceTypes = {};
 var computedStyle = getComputedStyle(document.documentElement);
 try {
-    if (window.electronApi) {
+    if ((window.ninjafy || window.electronApi)) {
         document.body.style.width = "95%";
         setTimeout(function() {
             document.body.style.width = "100%";

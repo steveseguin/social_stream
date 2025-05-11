@@ -1151,7 +1151,7 @@ TTS.speechMeta = function(data, allow = false) {
  * @returns {Promise<boolean>} - Whether initialization was successful
  */
 TTS.initKokoro = async function() {
-    if (window.electronApi) {
+    if ((window.ninjafy || window.electronApi)) {
         return true; // Electron already handles this
     }
     if (TTS.kokoroDownloadInProgress) return false;
@@ -1517,10 +1517,11 @@ TTS.SpeechifyTTS = function(tts) {
  */
 TTS.kokoroTTS = async function(text) {
   try {
-    if (window.electronApi) {
+    if ((window.ninjafy || window.electronApi)) {
       try {
         // Electron implementation remains the same
-        const wavBuffer = await window.electronApi.tts(text, TTS.kokoroSettings);
+		let ninjafy = window.ninjafy || window.electronApi;
+        const wavBuffer = await ninjafy.tts(text, TTS.kokoroSettings);
         const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
         
         if (TTS.neuroSyncEnabled) {

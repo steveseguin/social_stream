@@ -212,7 +212,7 @@
 	var isOBSBrowserSource = false;
 	
 	try {
-		if (window.electronApi){ // fix for electron dragging.
+		if ((window.ninjafy || window.electronApi)){ // fix for electron dragging.
 			document.body.style.width = "95%";
 			setTimeout(function(){
 				document.body.style.width = "100%";
